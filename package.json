@@ -4,11 +4,11 @@
   "description": "The repository for the Process for Teams project.",
   "scripts": {
     "start": "node SO4/dist/main.js",
-    "watch": "concurrently \"npm:watch:server\" \"nodemon SO4/dist/main.js\"",
+    "watch": "concurrently \"npm:watch:server\" \"npm:watch:client\" \"nodemon SO4/dist/main.js\"",
     "build:client": "webpack --config WebClient/webpack.config.js",
     "build:server": "webpack --config SO4/webpack.config.js",
     "watch:server": "webpack --config SO4/webpack.config.js --watch",
-    "watch:client": "webpack --config SO4/webpack.config.js --watch",
+    "watch:client": "webpack --config WebClient/webpack.config.js --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -32,8 +32,13 @@
     "webpack-node-externals": "^1.7.2"
   },
   "dependencies": {
+    "@types/bluebird": "^3.5.24",
     "@types/express": "^4.16.0",
+    "@types/pify": "^3.0.2",
+    "browserfs": "^1.4.3",
     "concurrently": "^4.0.1",
-    "express": "^4.16.4"
+    "es6-promise": "^4.2.5",
+    "express": "^4.16.4",
+    "isomorphic-git": "^0.39.4"
   }
 }

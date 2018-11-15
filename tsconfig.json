@@ -4,6 +4,9 @@
       "noImplicitAny": true,
       "module": "es6",
       "target": "es5",
-      "allowJs": false
+      "allowJs": false,
+      "moduleResolution": "node",
+      "lib": [ "es2015.promise", "es5" ],
     }
+    
   }
