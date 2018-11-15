@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+      "outDir": "./temp/",
+      "noImplicitAny": true,
+      "module": "es6",
+      "target": "es5",
+      "allowJs": false
+    }
+  }
