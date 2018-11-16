@@ -37,7 +37,7 @@ async function start() {
     git.plugins.set('fs', fs);
 
     pfs = pify(fs);
-    let dir = 'tutorial';
+    let dir = 'test-project';
 
     let dirExists = await exists(dir);
 
@@ -47,11 +47,8 @@ async function start() {
         try {
             await git.clone({
                 dir,
-                corsProxy: 'https://cors.isomorphic-git.org',
-                url: 'https://github.com/isomorphic-git/isomorphic-git',
-                ref: 'master',
-                singleBranch: true,
-                depth: 10
+                url: 'http://localhost:3000/git/root/test-project.git',
+                ref: 'master'
             });
             console.log("Cloned!");
         } catch (ex) {
