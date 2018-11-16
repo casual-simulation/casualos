@@ -1,23 +1,24 @@
 
-import * as express from 'express';
+import { Server, Config } from './server';
 import * as path from 'path';
-import * as httpProxy from 'http-proxy';
 
-const app = express();
-const port = 3000;
-const proxy = httpProxy.createProxyServer({
+const config: Config = {
+    socket: {
+        pingInterval: 2000,
+        pingTimeout: 10000,
+        transports: ['websocket']
+    },
+    socketPort: 4567,
+    httpPort: 3000,
+    client: {
+        dist: path.resolve(__dirname, '..', '..', 'WebClient', 'dist')
+    },
+    git: {
+        proxy: {}
+    }
+};
 
-});
+const server = new Server(config);
 
-console.log(__dirname);
-var a = path.resolve(__dirname, '..', '..', 'WebClient', 'dist');
-console.log("path a: " + a);
-
-app.use('/git', (req, res) => {
-    proxy.web(req, res, {
-        target: 'http://localhost:4330/git'
-    });
-});
-app.use('/', express.static(a));
-
-app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+server.configure();
+server.start();
