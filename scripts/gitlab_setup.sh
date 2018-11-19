@@ -1,9 +1,10 @@
 #!/bin/bash
 
-if [ "$EUID" -ne 0 ]
-  then echo "Please run as sudo -u *your_username*"
-  exit
-fi
+# TODO: Fix to work for sudo -u
+# if [ "$EUID" -ne 0 ]
+#   then echo "Please run as sudo -u *your_username*"
+#   exit
+# fi
 
 # Create the folders that are needed
 mkdir -p /data/gitlab/config
