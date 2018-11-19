@@ -1,6 +1,7 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import Axios from 'axios';
+import {appManager} from '../AppManager';
 
 @Component
 export default class Welcome extends Vue {
@@ -9,15 +10,10 @@ export default class Welcome extends Vue {
     async createUser() {
         console.log('[Welcome] Email submitted: ' + this.email);
 
-        // TODO: Create user and get their access token
-        const result = await Axios.post('/api/users', {
-            email: this.email
-        });
-
-        if (result.status === 200) {
-            console.log('Success!', result);
+        if(await appManager.loginOrCreateUser(this.email)) {
+            this.$router.push({ path: 'home' });
         } else {
-            console.error(result);
+            // TODO: Show an error message
         }
     }
 };

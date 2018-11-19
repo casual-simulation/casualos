@@ -1,17 +1,20 @@
 
 import Vue from 'vue';
-import VueRouter from 'vue-router';
+import VueRouter, { RouteConfig } from 'vue-router';
 import VueMaterial from 'vue-material';
 import 'vue-material/dist/vue-material.min.css'
 import 'vue-material/dist/theme/default.css'
 
 import App from './App/App';
 import Welcome from './Welcome/Welcome';
+import Home from './Home/Home';
 // import * as git from 'isomorphic-git';
 // import * as BrowserFS from 'browserfs';
 // import * as pify from 'pify';
 // import { FSModule } from 'browserfs/dist/node/core/FS';
 import { polyfill } from 'es6-promise';
+
+import { appManager } from './AppManager';
 
 // Setup the Promise shim for browsers that don't support promises.
 polyfill();
@@ -19,12 +22,37 @@ polyfill();
 Vue.use(VueRouter);
 Vue.use(VueMaterial);
 
-const routes = [
-    { path: '/', component: Welcome },
+const routes: RouteConfig[] = [
+    {
+        path: '/',
+        component: Welcome,
+        beforeEnter: (to, from, next) => {
+            if (appManager.user !== null) {
+                next({ path: '/home' });
+            }
+            else {
+                next();
+            }
+        }
+    },
+    {
+        path: '/home',
+        component: Home
+    },
 ]
 
 const router = new VueRouter({
     routes
+});
+
+router.beforeEach((to, from, next) => {
+    if (to.path !== '/') {
+        if (appManager.user === null) {
+            next({ path: '/' });
+            return;
+        }
+    }
+    next();
 });
 
 const app = new Vue({
