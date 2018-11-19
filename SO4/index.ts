@@ -14,7 +14,9 @@ const config: Config = {
         dist: path.resolve(__dirname, '..', '..', 'WebClient', 'dist')
     },
     git: {
-        proxy: {}
+        gitlab_server: 'http://localhost:4330/git',
+        proxy: {},
+        personal_access_token: 'L6-KYvscyrdRtwVB8jhF'
     }
 };
 

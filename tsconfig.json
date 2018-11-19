@@ -6,7 +6,9 @@
       "target": "es5",
       "allowJs": false,
       "moduleResolution": "node",
+      "sourceMap": true,
       "lib": [ "es2015.promise", "es5" ],
+      "experimentalDecorators": true
     }
     
   }

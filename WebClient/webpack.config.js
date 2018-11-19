@@ -1,8 +1,10 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const VueLoaderPlugin = require('vue-loader/lib/plugin')
 
 module.exports = {
   mode: 'development',
+  devtool: 'inline-source-map',
   entry: path.resolve(__dirname, 'index.ts'),
   output: {
     filename: 'main.js',
@@ -11,16 +13,28 @@ module.exports = {
   module: {
     rules: [
       {
+        test: /\.vue$/,
+        loader: 'vue-loader',
+        exclude: /node_modules/
+      },
+      {
         test: /\.tsx?$/,
         use: 'ts-loader',
         exclude: /node_modules/
+      },
+      {
+        test: /\.css$/,
+        loaders: ['style-loader', 'css-loader'],
       }
     ]
   },
   resolve: {
-    extensions: [ '.ts', '.js' ]
+    extensions: ['.vue', '.ts', '.js', '.css']
   },
   plugins: [
-    new HtmlWebpackPlugin()
+    new VueLoaderPlugin(),
+    new HtmlWebpackPlugin({
+      template: 'WebClient/index.html'
+    })
   ]
 };

@@ -1,5 +1,6 @@
 import * as Http from 'http';
 import * as express from 'express';
+import * as bodyParser from 'body-parser';
 import * as SocketIO from 'socket.io';
 import { RealtimeServer, Config as RealtimeConfig } from './RealtimeRepo/realtime-server';
 
@@ -36,7 +37,9 @@ export class Server {
     }
 
     configure() {
+        this._app.use(bodyParser.json());
         this._repoServer.configure(this._app, this._socket);
+
         this._app.use('/', express.static(this._config.client.dist));
     }
 
