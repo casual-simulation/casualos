@@ -2,6 +2,20 @@
 <template>
   <div>
       Welcome Home {{user.name}}!
+      <h4>Files</h4>
+      <ul>
+        <li v-for="file in files" :key="file">
+          {{file}}
+        </li>
+      </ul>
+
+      <h4>Commits</h4>
+      <ul>
+        <li v-for="commit in commits" :key="commit.oid">
+          {{commit.message}}
+        </li>
+      </ul>
+
       <p>
         {{status}}
       </p>

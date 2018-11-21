@@ -3,6 +3,8 @@ import * as git from 'isomorphic-git';
 import * as BrowserFS from 'browserfs';
 import * as pify from 'pify';
 import { FSModule } from 'browserfs/dist/node/core/FS';
+import * as uuid from 'uuid/v4';
+import { SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION } from 'constants';
 
 export interface User {
     email: string;
@@ -13,6 +15,71 @@ export interface User {
 export interface Config {
     default_project_url: string;
     local_project_dir: string;
+}
+
+export interface Vector2 {
+    x: number;
+    y: number;
+}
+
+export interface FileData {
+    id: string;
+    position: Vector2;
+}
+
+/**
+ * Represents a file. That is, an object that has an ID and can be saved to 
+ * a .file file.
+ */
+export class File {
+    /**
+     * The GUID of the file.
+     */
+    id: string;
+
+    /**
+     * The data contained in the file.
+     */
+    data: FileData;
+
+    /**
+     * Gets the filename of the file.
+     */
+    get filename(): string {
+        return `${this.id}.file`;
+    }
+
+    /**
+     * Gets the text content contained in this file.
+     * For the parsed version, use the data property.
+     */
+    get content(): string {
+        return JSON.stringify(this.data);
+    }
+
+    constructor(id: string, data?: FileData) {
+        this.id = id;
+        this.data = data || {
+            id: this.id,
+            position: { x: 0, y: 0 }
+        };
+    }
+
+    /**
+     * Creates a new file with a random UUID.
+     */
+    static createFile(): File {
+        return new File(uuid());
+    }
+
+    /**
+     * Parses the given JSON into a file.
+     * @param json 
+     */
+    static parseFile(json: string): File {
+        const data: FileData = JSON.parse(json);
+        return new File(data.id, data);
+    }
 }
 
 export class AppManager {
@@ -133,12 +200,41 @@ export class AppManager {
         });
     }
 
+    async commitLog(): Promise<git.CommitDescription[]> {
+        return await git.log({
+            dir: this._config.local_project_dir
+        });
+    }
+
+    /**
+     * Creates a new file.
+     */
+    createNewFile():File {
+        return File.createFile();
+    }
+
+    /**
+     * Saves the given file to the filesystem and adds it to the index.
+     */
+    async saveFile(file: File): Promise<any> {
+        await this._pfs.writeFile(this._path(file), file.content);
+
+        await git.add({
+            dir: this._config.local_project_dir,
+            filepath: file.filename
+        });
+    }
+
     async exists(path: string): Promise<boolean> {
         try {
             return await this._pfs.exists(path);
         } catch(ex) {
             return ex;
         }
+    }
+
+    private _path(file: File): string {
+        return `${this._config.local_project_dir}/${file.filename}`;
     }
 }
 
