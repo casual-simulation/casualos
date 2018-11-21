@@ -19,6 +19,8 @@
       <p>
         {{status}}
       </p>
+
+      <game-view></game-view>
   </div>
   
 </template>
