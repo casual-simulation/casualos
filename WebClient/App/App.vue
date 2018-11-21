@@ -3,7 +3,7 @@
     <div>
         <md-app>
             <md-app-toolbar class="md-primary">
-                <span class="md-title">Process for Teams</span>
+                <router-link to="/" class="md-title">Process for Teams</router-link>
             </md-app-toolbar>
             <md-app-content>
                 <router-view></router-view>

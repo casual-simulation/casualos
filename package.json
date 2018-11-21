@@ -7,6 +7,7 @@
     "watch": "concurrently \"npm:watch:server\" \"npm:watch:client\" \"nodemon SO4/dist/main.js\"",
     "build": "npm run build:client && npm run build:server",
     "build:client": "webpack --config WebClient/webpack.config.js",
+    "build:client:profile": "webpack --config WebClient/webpack.config.js --profile --json > bundle_stats.json && webpack-bundle-analyzer bundle_stats.json",
     "build:server": "webpack --config SO4/webpack.config.js",
     "watch:server": "webpack --config SO4/webpack.config.js --watch",
     "watch:client": "webpack --config WebClient/webpack.config.js --watch",
@@ -40,6 +41,7 @@
     "vue-loader": "^15.4.2",
     "vue-template-compiler": "^2.5.17",
     "webpack": "^4.25.1",
+    "webpack-bundle-analyzer": "^3.0.3",
     "webpack-cli": "^3.1.2",
     "webpack-node-externals": "^1.7.2"
   },

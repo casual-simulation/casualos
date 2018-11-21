@@ -34,7 +34,8 @@ module.exports = {
   plugins: [
     new VueLoaderPlugin(),
     new HtmlWebpackPlugin({
-      template: 'WebClient/index.html'
+      template: 'WebClient/index.html',
+      title: 'Process for Teams'
     })
   ]
 };

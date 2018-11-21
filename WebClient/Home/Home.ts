@@ -1,8 +1,8 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
-import { appManager } from '../AppManager';
 import GameView from '../GameView/GameView';
-import * as git from 'isomorphic-git';
+import { appManager } from '../AppManager';
+import { gitManager } from '../GitManager';
 
 @Component({
     components: {
@@ -21,21 +21,21 @@ export default class Home extends Vue {
 
     async created() {
         this.status = 'Starting...';
-        await appManager.startIfNeeded();
+        await gitManager.startIfNeeded();
 
         this.status = 'Checking for project...';
 
-        if(!(await appManager.isProjectCloned())) {
+        if(!(await gitManager.isProjectCloned())) {
             this.status = 'Cloning project...';
-            await appManager.cloneProject();
+            await gitManager.cloneProject();
         } else {
             this.status = 'Updating project...';
-            await appManager.updateProject();
+            await gitManager.updateProject();
         }
-        const files: string[] = await appManager.fs.readdir(appManager.projectDir);
+        const files: string[] = await gitManager.fs.readdir(gitManager.projectDir);
         this.files = files.filter(f => f !== '.git').sort();
 
-        this.commits = await appManager.commitLog();
+        this.commits = await gitManager.commitLog();
         
         this.status = 'Waiting for input...';
     }

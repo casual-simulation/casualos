@@ -12,7 +12,7 @@
             <div class="md-layout-item md-small-size-100">
               <md-field>
                 <label for="name">Email</label>
-                <md-input name="email" id="email" autocomplete="none" v-model="email"/>
+                <md-input name="email" id="email" autocomplete="email" v-model="email"/>
                 <!-- <span class="md-error" v-if="!$v.form.firstName.required">The first name is required</span>
                 <span class="md-error" v-else-if="!$v.form.firstName.minlength">Invalid first name</span> -->
               </md-field>

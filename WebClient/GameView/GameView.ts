@@ -1,5 +1,18 @@
-import * as THREE from 'three';
-import {Camera, Clock} from 'three';
+import { 
+  Scene,
+  Camera, 
+  Renderer, 
+  Clock, 
+  Mesh, 
+  Light,
+  Color,
+  PerspectiveCamera,
+  WebGLRenderer,
+  AmbientLight,
+  DirectionalLight,
+  BoxGeometry,
+  MeshStandardMaterial,
+} from 'three';
 import Vue, {ComponentOptions} from 'vue';
 import Component from 'vue-class-component';
 
@@ -7,25 +20,25 @@ import {appManager} from '../AppManager';
 
 @Component
 export default class GameView extends Vue {
-  private _scene: THREE.Scene;
-  private _camera: THREE.Camera;
-  private _renderer: THREE.Renderer;
-  private _clock: THREE.Clock;
+  private _scene: Scene;
+  private _camera: Camera;
+  private _renderer: Renderer;
+  private _clock: Clock;
 
-  private _sun: THREE.Light;
-  private _ambient: THREE.Light;
+  private _sun: Light;
+  private _ambient: Light;
 
-  private _cube: THREE.Mesh;
+  private _cube: Mesh;
 
   private _frames: number;
 
   async mounted() {
-    this._scene = new THREE.Scene();
-    this._scene.background = new THREE.Color(0x00bfff);
-    this._camera = new THREE.PerspectiveCamera(
+    this._scene = new Scene();
+    this._scene.background = new Color(0x00bfff);
+    this._camera = new PerspectiveCamera(
         60, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-    this._renderer = new THREE.WebGLRenderer({});
+    this._renderer = new WebGLRenderer({});
     this._renderer.setSize(window.innerWidth, window.innerHeight);
 
     this._clock = new Clock();
@@ -41,18 +54,18 @@ export default class GameView extends Vue {
   }
 
   private _setupScene() {
-    this._ambient = new THREE.AmbientLight(0xffffff, 0.1);
+    this._ambient = new AmbientLight(0xffffff, 0.1);
     this._scene.add(this._ambient);
 
-    this._sun = new THREE.DirectionalLight(0xffffff, 0.7);
+    this._sun = new DirectionalLight(0xffffff, 0.7);
     this._sun.position.set(1, 1, -0.2);
     this._sun.castShadow = true;
     this._scene.add(this._sun);
 
-    var geometry = new THREE.BoxGeometry(1, 1, 1);
-    var material = new THREE.MeshStandardMaterial(
+    var geometry = new BoxGeometry(1, 1, 1);
+    var material = new MeshStandardMaterial(
         {color: 0x00ff00, metalness: 0, roughness: 0.6});
-    this._cube = new THREE.Mesh(geometry, material);
+    this._cube = new Mesh(geometry, material);
     this._scene.add(this._cube);
 
     this._camera.position.z = 5;
