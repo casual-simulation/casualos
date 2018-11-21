@@ -16,7 +16,16 @@ const config: Config = {
     git: {
         gitlab_server: 'http://localhost:4330/git',
         proxy: {},
-        personal_access_token: 'L6-KYvscyrdRtwVB8jhF'
+        personal_access_token: 'F3xKGrGVJKdaWfZspjC_', // 'L6-KYvscyrdRtwVB8jhF' <-- Ryans laptop,
+        default_project: {
+            namespace: 'root',
+            name: 'default'
+        },
+        user: {
+            email: 'devops@yeticgi.com',
+            name: 'Dev Ops'
+        },
+        admin_username: 'root'
     }
 };
 
