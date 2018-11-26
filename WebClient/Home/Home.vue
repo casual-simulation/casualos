@@ -28,7 +28,6 @@
                     {{file}}
                   </li>
                 </ul>
-                <md-button @click="checkStatus()">Check Status</md-button>
               </div>
               <div class="status-container">
                 <md-progress-spinner v-if="isLoading" :md-mode="progressMode" :md-value="progress"></md-progress-spinner>
@@ -38,6 +37,7 @@
               </div>
             </md-card-content>
             <md-card-actions>
+              <md-button @click="checkStatus()">Check Status</md-button>
               <md-button @click="close()">Close</md-button>
             </md-card-actions>
           </md-card>

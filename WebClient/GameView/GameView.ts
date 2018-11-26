@@ -23,6 +23,8 @@ import {appManager} from '../AppManager';
 import {FileCreatedEvent} from '../Core/Event';
 import {File} from '../Core/File';
 
+import { vg } from "von-grid";
+
 @Component
 export default class GameView extends Vue {
   private _scene: Scene;
@@ -109,6 +111,7 @@ export default class GameView extends Vue {
   }
 
   private _createCube(size: number): Mesh {
+    
     var geometry = new BoxGeometry(size, size, size);
     var material = new MeshStandardMaterial(
         {color: 0x00ff00, metalness: 0, roughness: 0.6});
@@ -132,6 +135,16 @@ export default class GameView extends Vue {
     this._cube.rotation.y = 0;
     this._cube.rotation.z = 2;
     this._scene.add(this._cube);
+
+    const grid = new vg.HexGrid();
+    grid.generate({
+      size: 4
+    });
+
+    const board = new vg.Board(grid);
+    board.generateTilemap();
+
+    this._scene.add(board.group);
   }
 
   private _renderGame() {
