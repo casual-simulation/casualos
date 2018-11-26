@@ -51,6 +51,7 @@
     "browserfs": "^1.4.3",
     "concurrently": "^4.0.1",
     "es6-promise": "^4.2.5",
+    "event-stream": "^4.0.1",
     "express": "^4.16.4",
     "http-proxy": "^1.17.0",
     "isomorphic-git": "^0.39.4",
