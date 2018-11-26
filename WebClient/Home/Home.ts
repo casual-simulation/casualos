@@ -36,6 +36,12 @@ export default class Home extends Vue {
         this.isOpen = false;
     }
 
+    addNewFile() {
+        appManager.events.next({
+            type: 'new_file'
+        });
+    }
+
     async created() {
         this.open();
         
