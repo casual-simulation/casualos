@@ -7,14 +7,17 @@ import {
   Light,
   Color,
   PerspectiveCamera,
+  OrthographicCamera,
   WebGLRenderer,
   AmbientLight,
   DirectionalLight,
   BoxGeometry,
   MeshStandardMaterial,
+  Vector3
 } from 'three';
 import Vue, {ComponentOptions} from 'vue';
 import Component from 'vue-class-component';
+import { SubscriptionLike } from 'rxjs';
 
 import {appManager} from '../AppManager';
 
@@ -32,17 +35,20 @@ export default class GameView extends Vue {
 
   private _frames: number;
 
+  private _sub: SubscriptionLike;
+
   async mounted() {
     this._scene = new Scene();
-    this._scene.background = new Color(0x00bfff);
+    this._scene.background = new Color(0xffffff);
     this._camera = new PerspectiveCamera(
         60, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-    const container: HTMLElement = <HTMLElement>this.$refs.container;
-
-    this._renderer = new WebGLRenderer({});
-
+    this._renderer = new WebGLRenderer({
+      antialias: true
+    });
+        
     // TODO: Call each time the screen size changes
+    const container: HTMLElement = <HTMLElement>this.$refs.container;
     this._renderer.setSize(window.innerWidth, window.innerHeight - container.getBoundingClientRect().top);
     container.style.height = this._renderer.domElement.style.height;
 
@@ -56,6 +62,17 @@ export default class GameView extends Vue {
     this._clock.start();
     this._frames = 0;
     this._renderGame();
+
+    this._sub = appManager.events.subscribe(event => {
+      console.log("New File!");
+    });
+  }
+
+  beforeDestroy() {
+    if(this._sub) {
+      this._sub.unsubscribe();
+      this._sub = null;
+    }
   }
 
   private _setupScene() {
@@ -63,17 +80,21 @@ export default class GameView extends Vue {
     this._scene.add(this._ambient);
 
     this._sun = new DirectionalLight(0xffffff, 0.7);
-    this._sun.position.set(1, 1, -0.2);
+    this._sun.position.set(1, 1, 1.5);
     this._sun.castShadow = true;
     this._scene.add(this._sun);
 
-    var geometry = new BoxGeometry(1, 1, 1);
+    this._camera.position.z = 5;
+    this._camera.updateMatrixWorld(false);
+
+    var geometry = new BoxGeometry(.5, .5, .5);
     var material = new MeshStandardMaterial(
         {color: 0x00ff00, metalness: 0, roughness: 0.6});
     this._cube = new Mesh(geometry, material);
+    this._cube.rotation.x = 2;
+    this._cube.rotation.y = 0;
+    this._cube.rotation.z = 2;
     this._scene.add(this._cube);
-
-    this._camera.position.z = 5;
   }
 
   private _renderGame() {
@@ -88,12 +109,7 @@ export default class GameView extends Vue {
   }
 
   private _updateGame(deltaTime: number) {
-    this._animateCube(deltaTime);
-  }
-
-  private _animateCube(deltaTime: number) {
-    this._cube.rotation.x += 1 * deltaTime;
-    this._cube.rotation.y += 1 * deltaTime;
+    // this._animateCube(deltaTime);
   }
 
   private _fps(): number {

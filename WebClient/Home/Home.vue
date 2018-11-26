@@ -6,28 +6,44 @@
           <md-card class="info-card" v-if="isOpen">
             <md-card-content>
               Welcome Home {{user.name}}!
-              <h4>Files</h4>
-              <ul>
-                <li v-for="file in files" :key="file">
-                  {{file}}
-                </li>
-              </ul>
 
-              <h4>Commits</h4>
-              <ul>
-                <li v-for="commit in commits" :key="commit.oid">
-                  {{commit.message}}
-                </li>
-              </ul>
+              <div v-if="!isLoading">
+                <h4>Files</h4>
+                <ul>
+                  <li v-for="file in files" :key="file">
+                    {{file}}
+                  </li>
+                </ul>
 
-              <p>
-                {{status}}
-              </p>
+                <h4>Commits</h4>
+                <ul>
+                  <li v-for="commit in commits" :key="commit.oid">
+                    {{commit.message}}
+                  </li>
+                </ul>
+              </div>
+              <div class="status-container">
+                <md-progress-spinner v-if="isLoading" :md-mode="progressMode" :md-value="progress"></md-progress-spinner>
+                <p>
+                  {{status}}
+                </p>
+              </div>
             </md-card-content>
             <md-card-actions>
               <md-button @click="close()">Close</md-button>
             </md-card-actions>
           </md-card>
+
+          <div class="toolbar">
+            <div class="toolbar-layout">
+              <strong class="toolbar-label">Tools</strong>
+              <div class="divider"></div>
+              <md-button class="new-file-button" @click="addNewFile()">
+                <cube-icon class="icon-cube" />
+                <span>New File</span>
+              </md-button>
+            </div>
+          </div>
         </div>
       </game-view>
   </div>
