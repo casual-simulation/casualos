@@ -1,7 +1,7 @@
 
 import Vue from 'vue';
 import VueRouter, { RouteConfig } from 'vue-router';
-import { MdButton, MdContent, MdApp, MdCard, MdToolbar, MdField } from 'vue-material/dist/components';
+import { MdButton, MdContent, MdApp, MdCard, MdToolbar, MdField, MdProgress } from 'vue-material/dist/components';
 import 'vue-material/dist/vue-material.min.css'
 import 'vue-material/dist/theme/default.css'
 
@@ -22,6 +22,7 @@ Vue.use(MdApp);
 Vue.use(MdCard);
 Vue.use(MdToolbar);
 Vue.use(MdField);
+Vue.use(MdProgress);
 
 const routes: RouteConfig[] = [
     {
