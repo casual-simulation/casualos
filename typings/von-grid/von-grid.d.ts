@@ -6,11 +6,15 @@ declare module 'von-grid' {
       class Grid {
   
       }
+
+      interface HexGridConfig {
+        size: number;
+        cellSize?: number;
+      }
   
       class HexGrid extends Grid {
-          generate(options: {
-              size: number
-          }): void;
+          constructor(options?: HexGridConfig);
+          generate(options?: HexGridConfig): void;
       }
   
       class Board {

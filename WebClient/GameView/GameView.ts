@@ -136,13 +136,16 @@ export default class GameView extends Vue {
     this._cube.rotation.z = 2;
     this._scene.add(this._cube);
 
-    const grid = new vg.HexGrid();
-    grid.generate({
-      size: 4
+    const grid = new vg.HexGrid({
+      size: 4,
+      cellSize: .3
     });
+    grid.generate();
 
     const board = new vg.Board(grid);
     board.generateTilemap();
+
+    board.group.position.y = -3;
 
     this._scene.add(board.group);
   }
