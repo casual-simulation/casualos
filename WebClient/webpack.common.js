@@ -3,8 +3,6 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin')
 
 module.exports = {
-  mode: 'development',
-  devtool: 'inline-source-map',
   entry: path.resolve(__dirname, 'index.ts'),
   output: {
     filename: 'main.js',
