@@ -11,6 +11,7 @@ import { gitManager } from '../GitManager';
 })
 export default class Home extends Vue {
 
+    isOpen: boolean = false;
     status: string = '';
     files: string[] = [];
     commits: git.CommitDescription[] = [];
@@ -19,7 +20,17 @@ export default class Home extends Vue {
         return appManager.user;
     }
 
+    open() {
+        this.isOpen = true;
+    }
+
+    close() {
+        this.isOpen = false;
+    }
+
     async created() {
+        this.open();
+
         this._setStatus('Starting...');
         await gitManager.startIfNeeded();
 
@@ -41,6 +52,7 @@ export default class Home extends Vue {
     }
 
     private _setStatus(status: string) {
+        this.status = status;
         console.log('[Home] Status:', status);
     }
 };

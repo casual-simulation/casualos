@@ -3,7 +3,7 @@
   <div>
       <game-view class="game-view">
         <div class="ui-container">
-          <md-card>
+          <md-card class="info-card" v-if="isOpen">
             <md-card-content>
               Welcome Home {{user.name}}!
               <h4>Files</h4>
@@ -24,6 +24,9 @@
                 {{status}}
               </p>
             </md-card-content>
+            <md-card-actions>
+              <md-button @click="close()">Close</md-button>
+            </md-card-actions>
           </md-card>
         </div>
       </game-view>

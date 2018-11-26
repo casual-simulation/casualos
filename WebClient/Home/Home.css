@@ -6,3 +6,7 @@
 .ui-container {
     padding: 16px;
 }
+
+.info-card {
+    max-width: 350px;
+}
