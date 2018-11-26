@@ -3,6 +3,7 @@ import Component from 'vue-class-component';
 import GameView from '../GameView/GameView';
 import { appManager } from '../AppManager';
 import { gitManager } from '../GitManager';
+import {createFile} from '../Core/Event';
 import CubeIcon from './Cube.svg';
 
 const numLoadingSteps: number = 4;
@@ -18,6 +19,7 @@ export default class Home extends Vue {
     isOpen: boolean = false;
     status: string = '';
     files: string[] = [];
+    index: string[] = [];
     commits: git.CommitDescription[] = [];
 
     isLoading: boolean = false;
@@ -37,9 +39,11 @@ export default class Home extends Vue {
     }
 
     addNewFile() {
-        appManager.events.next({
-            type: 'new_file'
-        });
+        appManager.events.next(createFile());
+    }
+
+    async checkStatus() {
+        this.index = await gitManager.index();
     }
 
     async created() {

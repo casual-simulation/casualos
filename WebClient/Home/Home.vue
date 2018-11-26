@@ -21,6 +21,14 @@
                     {{commit.message}}
                   </li>
                 </ul>
+
+                <h4>Status</h4>
+                <ul>
+                  <li v-for="file in index" :key="file"> 
+                    {{file}}
+                  </li>
+                </ul>
+                <md-button @click="checkStatus()">Check Status</md-button>
               </div>
               <div class="status-container">
                 <md-progress-spinner v-if="isLoading" :md-mode="progressMode" :md-value="progress"></md-progress-spinner>
