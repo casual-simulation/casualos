@@ -2,3 +2,7 @@
 .game-view {
     position: relative;
 }
+
+.ui-container {
+    padding: 16px;
+}

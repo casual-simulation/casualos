@@ -38,12 +38,17 @@ export default class GameView extends Vue {
     this._camera = new PerspectiveCamera(
         60, window.innerWidth / window.innerHeight, 0.1, 1000);
 
+    const container: HTMLElement = <HTMLElement>this.$refs.container;
+
     this._renderer = new WebGLRenderer({});
-    this._renderer.setSize(window.innerWidth, window.innerHeight);
+
+    // TODO: Call each time the screen size changes
+    this._renderer.setSize(window.innerWidth, window.innerHeight - container.getBoundingClientRect().top);
+    container.style.height = this._renderer.domElement.style.height;
 
     this._clock = new Clock();
 
-    const gameView: Element = <Element>this.$refs.gameView;
+    const gameView: HTMLElement = <HTMLElement>this.$refs.gameView;
     gameView.appendChild(this._renderer.domElement);
 
     this._setupScene();

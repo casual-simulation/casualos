@@ -1,7 +1,8 @@
 <!-- App.vue -->
 <template>
-  <div>
-      <div ref="gameView"></div>
+  <div ref="container" class="game-container">
+      <div class="game-canvas" ref="gameView"></div>
+      <slot></slot>
   </div>
 </template>
 <script src="./GameView.ts"></script>
