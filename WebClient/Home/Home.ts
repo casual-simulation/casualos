@@ -20,16 +20,16 @@ export default class Home extends Vue {
     }
 
     async created() {
-        this.status = 'Starting...';
+        this._setStatus('Starting...');
         await gitManager.startIfNeeded();
 
-        this.status = 'Checking for project...';
+        this._setStatus('Checking for project...');
 
         if(!(await gitManager.isProjectCloned())) {
-            this.status = 'Cloning project...';
+            this._setStatus('Cloning project...');
             await gitManager.cloneProject();
         } else {
-            this.status = 'Updating project...';
+            this._setStatus('Updating project...');
             await gitManager.updateProject();
         }
         const files: string[] = await gitManager.fs.readdir(gitManager.projectDir);
@@ -37,6 +37,10 @@ export default class Home extends Vue {
 
         this.commits = await gitManager.commitLog();
         
-        this.status = 'Waiting for input...';
+        this._setStatus('Waiting for input...');
+    }
+
+    private _setStatus(status: string) {
+        console.log('[Home] Status:', status);
     }
 };
