@@ -14,6 +14,7 @@ export default class App extends Vue {
     logout() {
         appManager.logout();
         this.showNavigation = false;
+        this.$router.push('/');
     }
 
     getUser(): User {
