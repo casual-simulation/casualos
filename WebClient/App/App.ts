@@ -1,5 +1,6 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
+import { appManager } from '../AppManager';
 
 @Component({
     components: {
@@ -9,7 +10,14 @@ import Component from 'vue-class-component';
 
 export default class App extends Vue {
     showNavigation: boolean = false;
-    message: string = 'Hello, App!';
+
+    logout() {
+        appManager.logout();
+    }
+
+    get user() {
+        return appManager.user;
+    }
 
     menuClicked() {
         this.showNavigation = !this.showNavigation;

@@ -38,6 +38,7 @@ export class AppManager {
     }
 
     logout() {
+        console.log("[AppManager] Logout");
         this._user = null;
         this._saveUser();
     }
