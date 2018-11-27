@@ -1,6 +1,6 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
-import { appManager } from '../AppManager';
+import { appManager, User } from '../AppManager';
 
 @Component({
     components: {
@@ -13,9 +13,10 @@ export default class App extends Vue {
 
     logout() {
         appManager.logout();
+        this.showNavigation = false;
     }
 
-    get user() {
+    getUser(): User {
         return appManager.user;
     }
 

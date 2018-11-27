@@ -13,6 +13,7 @@
              <md-app-drawer :md-active.sync="showNavigation">
                 <div class="menu-header">
                     <span class="md-title">Process for Teams</span><br>
+                    <span class="md-subheading" v-if="getUser() != null">{{getUser().name}}</span>
                 </div>
                 <md-list>
                     <md-list-item @click="logout">Logout</md-list-item>
