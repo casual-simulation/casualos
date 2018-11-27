@@ -13,13 +13,18 @@ import {
   DirectionalLight,
   BoxGeometry,
   MeshStandardMaterial,
-  Vector3
+  Vector3,
+  Math
 } from 'three';
 import Vue, {ComponentOptions} from 'vue';
 import Component from 'vue-class-component';
 import { SubscriptionLike } from 'rxjs';
 
 import {appManager} from '../AppManager';
+import {FileCreatedEvent} from '../Core/Event';
+import {File} from '../Core/File';
+
+import { vg } from "von-grid";
 
 @Component
 export default class GameView extends Vue {
@@ -33,11 +38,24 @@ export default class GameView extends Vue {
 
   private _cube: Mesh;
 
+  private _files: {
+    [id: string]: {
+      mesh: Mesh,
+      file: File
+    }
+  } = {};
+
+  private _meshses: {
+    [mesh: number]: string
+  } = {};
+
   private _frames: number;
 
   private _sub: SubscriptionLike;
 
   async mounted() {
+    this._files = {};
+    this._meshses = {};
     this._scene = new Scene();
     this._scene.background = new Color(0xffffff);
     this._camera = new PerspectiveCamera(
@@ -64,7 +82,9 @@ export default class GameView extends Vue {
     this._renderGame();
 
     this._sub = appManager.events.subscribe(event => {
-      console.log("New File!");
+      if(event.type === 'file_created') {
+        this._fileAdded(event);
+      }
     });
   }
 
@@ -73,6 +93,30 @@ export default class GameView extends Vue {
       this._sub.unsubscribe();
       this._sub = null;
     }
+  }
+
+  private _fileAdded(event: FileCreatedEvent) {
+    console.log('File was added!');
+
+    const cube = this._createCube(0.1);
+    cube.rotation.x = 2;
+    cube.position.x = 2;
+    const obj = this._files[event.file.id] = {
+      file: event.file,
+      mesh: cube
+    };
+
+    this._meshses[obj.mesh.id] = obj.file.id;
+
+    this._scene.add(obj.mesh);
+  }
+
+  private _createCube(size: number): Mesh {
+    
+    var geometry = new BoxGeometry(size, size, size);
+    var material = new MeshStandardMaterial(
+        {color: 0x00ff00, metalness: 0, roughness: 0.6});
+    return new Mesh(geometry, material);
   }
 
   private _setupScene() {
@@ -85,16 +129,27 @@ export default class GameView extends Vue {
     this._scene.add(this._sun);
 
     this._camera.position.z = 5;
+    this._camera.rotation.x = Math.degToRad(-30);
     this._camera.updateMatrixWorld(false);
 
-    var geometry = new BoxGeometry(.5, .5, .5);
-    var material = new MeshStandardMaterial(
-        {color: 0x00ff00, metalness: 0, roughness: 0.6});
-    this._cube = new Mesh(geometry, material);
-    this._cube.rotation.x = 2;
-    this._cube.rotation.y = 0;
-    this._cube.rotation.z = 2;
+    this._cube = this._createCube(0.5);
+    this._cube.position.y = -1;
+    this._cube.rotation.y = 2;
+    this._cube.rotation.z = 0;
     this._scene.add(this._cube);
+
+    const grid = new vg.HexGrid({
+      size: 4,
+      cellSize: .3
+    });
+    grid.generate();
+
+    const board = new vg.Board(grid);
+    board.generateTilemap();
+
+    board.group.position.y = -3;
+
+    this._scene.add(board.group);
   }
 
   private _renderGame() {

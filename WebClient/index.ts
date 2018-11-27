@@ -9,6 +9,7 @@ import App from './App/App';
 import Welcome from './Welcome/Welcome';
 import { polyfill } from 'es6-promise';
 import { appManager } from './AppManager';
+import { fileManager } from './FileManager';
 
 const Home = () => import('./Home/Home');
 
@@ -64,3 +65,5 @@ const app = new Vue({
     router,
     render: createEle => createEle(App)
 }).$mount('#app');
+
+fileManager.init();

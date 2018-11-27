@@ -9,6 +9,7 @@ import {
     merge,
     branch,
     resolveRef,
+    listFiles,
 } from 'isomorphic-git';
 import * as BrowserFS from 'browserfs';
 import * as pify from 'pify';
@@ -145,12 +146,21 @@ export class GitManager {
     /**
      * Saves the given file to the filesystem and adds it to the index.
      */
-    async saveFile(file: File): Promise<any> {
+    async saveFile(file: File): Promise<void> {
         await this._pfs.writeFile(this._path(file), file.content);
 
         await add({
             dir: this.projectDir,
             filepath: file.filename
+        });
+    }
+
+    /**
+     * Gets the list of files added to the git index.
+     */
+    async index(): Promise<string[]> {
+        return await listFiles({
+            dir: this.projectDir
         });
     }
 

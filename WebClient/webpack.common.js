@@ -1,6 +1,7 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const VueLoaderPlugin = require('vue-loader/lib/plugin')
+const VueLoaderPlugin = require('vue-loader/lib/plugin');
+const webpack = require('webpack');
 
 module.exports = {
   entry: path.resolve(__dirname, 'index.ts'),
@@ -28,16 +29,26 @@ module.exports = {
         test: /\.svg$/,
         loader: 'vue-svg-loader'
       },
+      {
+        test: /von-grid.min.js$/,
+        loader: 'exports-loader?vg=vg'
+      }
     ]
   },
   resolve: {
-    extensions: ['.vue', '.ts', '.js', '.css']
+    extensions: ['.vue', '.ts', '.js', '.css'],
+    alias: {
+      'von-grid': path.resolve(__dirname, 'public/von-grid.min.js')
+    }
   },
   plugins: [
     new VueLoaderPlugin(),
     new HtmlWebpackPlugin({
       template: 'WebClient/index.html',
       title: 'Process for Teams'
+    }),
+    new webpack.ProvidePlugin({
+      THREE: 'three'
     })
   ]
 };
