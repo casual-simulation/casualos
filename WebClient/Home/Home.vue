@@ -46,9 +46,13 @@
             <div class="toolbar-layout">
               <strong class="toolbar-label">Tools</strong>
               <div class="divider"></div>
-              <md-button class="new-file-button" @click="addNewFile()">
-                <cube-icon class="icon-cube" />
+              <md-button class="toolbar-button" @click="addNewFile()">
+                <cube-icon class="toolbar-button-icon" />
                 <span>New File</span>
+              </md-button>
+              <div class="divider"></div>
+              <md-button class="toolbar-button" @click="addNewWorkspace()">
+                <span>New Workspace</span>
               </md-button>
             </div>
           </div>

@@ -44,10 +44,10 @@
     border-left: #333 1px solid;
 }
 
-.icon-cube {
+.toolbar-button-icon {
     vertical-align: middle;
 }
 
-.new-file-button {
+.toolbar-button {
     margin: 0;
 }

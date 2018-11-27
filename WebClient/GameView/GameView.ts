@@ -13,7 +13,8 @@ import {
   DirectionalLight,
   BoxGeometry,
   MeshStandardMaterial,
-  Vector3
+  Vector3,
+  Math
 } from 'three';
 import Vue, {ComponentOptions} from 'vue';
 import Component from 'vue-class-component';
@@ -128,12 +129,13 @@ export default class GameView extends Vue {
     this._scene.add(this._sun);
 
     this._camera.position.z = 5;
+    this._camera.rotation.x = Math.degToRad(-30);
     this._camera.updateMatrixWorld(false);
 
     this._cube = this._createCube(0.5);
-    this._cube.rotation.x = 2;
-    this._cube.rotation.y = 0;
-    this._cube.rotation.z = 2;
+    this._cube.position.y = -1;
+    this._cube.rotation.y = 2;
+    this._cube.rotation.z = 0;
     this._scene.add(this._cube);
 
     const grid = new vg.HexGrid({
