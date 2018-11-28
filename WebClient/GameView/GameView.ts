@@ -120,7 +120,7 @@ export default class GameView extends Vue {
   }
 
   private _setupScene() {
-    this._ambient = new AmbientLight(0xffffff, 0.1);
+    this._ambient = new AmbientLight(0xffffff, 0.2);
     this._scene.add(this._ambient);
 
     this._sun = new DirectionalLight(0xffffff, 0.7);
@@ -140,12 +140,20 @@ export default class GameView extends Vue {
 
     const grid = new vg.HexGrid({
       size: 4,
-      cellSize: .3
+      cellSize: .3,
+      cellHeight: 0.5
     });
     grid.generate();
 
     const board = new vg.Board(grid);
-    board.generateTilemap();
+    board.generateTilemap({
+      extrudeSettings: {
+        bevelEnabled: true,
+        steps: 1,
+        bevelSize: 0.05,
+        bevelThickness: 0.05
+      }
+    });
 
     board.group.position.y = -3;
 
