@@ -1,4 +1,4 @@
-import {Group} from "three";
+import {Group, ExtrudeGeometryOptions} from "three";
 
 declare module 'von-grid' {
     namespace vg {
@@ -10,6 +10,14 @@ declare module 'von-grid' {
       interface HexGridConfig {
         size: number;
         cellSize?: number;
+        cellHeight?: number;
+      }
+
+      interface TilemapConfig {
+          tileScale?: number;
+          cellSize?: number;
+          material?: any;
+          extrudeSettings?: ExtrudeGeometryOptions;
       }
   
       class HexGrid extends Grid {
@@ -19,7 +27,7 @@ declare module 'von-grid' {
   
       class Board {
           constructor(grid: Grid);
-          generateTilemap(): void;
+          generateTilemap(config?: TilemapConfig): void;
           group: Group;
       }
   
