@@ -200,7 +200,7 @@ export class FileManager {
   private async _createFile(event: CreateFileEvent) {
     console.log('[FileManager] Create File');
 
-    const file = this._gitManager.createNewFile();
+    const file = event.file_type === 'file' ? this._gitManager.createNewFile() : this._gitManager.createNewWorkspace();
     await this._gitManager.saveFile(file);
 
     this._appManager.events.next(fileCreated(file));

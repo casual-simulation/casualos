@@ -47,7 +47,11 @@ export default class Home extends Vue {
     
 
     addNewFile() {
-        appManager.events.next(createFile());
+        appManager.events.next(createFile('file'));
+    }
+
+    addNewWorkspace() {
+        appManager.events.next(createFile('workspace'));
     }
 
     save() {

@@ -1,10 +1,11 @@
 
-import {File} from './File';
+import {File, FileType} from './File';
 
 export type Event = CreateFileEvent | FileCreatedEvent | FileDiscoveredEvent | FileRemovedEvent;
 
 export interface CreateFileEvent {
     type: 'create_file';
+    file_type: FileType;
 }
 
 export interface FileCreatedEvent {
@@ -22,9 +23,10 @@ export interface FileRemovedEvent {
     file: File
 }
 
-export function createFile(): CreateFileEvent {
+export function createFile(fileType: FileType): CreateFileEvent {
     return {
-        type: 'create_file'
+        type: 'create_file',
+        file_type: fileType
     };
 }
 

@@ -5,29 +5,38 @@
         <div class="ui-container">
           <md-card class="info-card" v-if="isOpen">
             <md-card-content>
-              Welcome Home {{user.name}}!
-
               <div v-if="!isLoading">
-                <h4>Files</h4>
-                <ul>
-                  <li v-for="file in files" :key="file.id">
-                    {{file.id}}
-                  </li>
-                </ul>
+                Welcome Home {{user.name}}!
 
-                <h4>Commits</h4>
-                <ul>
-                  <li v-for="commit in commits" :key="commit.oid">
-                    {{commit.message}}
-                  </li>
-                </ul>
+                <md-tabs>
+                  <md-tab id="tab-files" md-label="Files">
+                    <h4>Files</h4>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>Type</th>
+                        </tr>
+                      </thead>
+                      <tbody>
 
-                <h4>Status</h4>
-                <ul>
-                  <li v-for="file in index" :key="file"> 
-                    {{file}}
-                  </li>
-                </ul>
+                        <tr v-for="file in files" :key="file.id">
+                          <td>{{file.id}}</td>
+                          <td>{{file.type}}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </md-tab>
+
+                  <md-tab id="tab-commits" md-label="Commits">
+                    <h4>Commits</h4>
+                    <ul>
+                      <li v-for="commit in commits" :key="commit.oid">
+                        {{commit.message}}
+                      </li>
+                    </ul>
+                  </md-tab>
+                </md-tabs>
               </div>
               <div class="status-container">
                 <md-progress-spinner v-if="isLoading" :md-mode="progressMode" :md-value="progress"></md-progress-spinner>
