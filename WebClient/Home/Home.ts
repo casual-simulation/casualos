@@ -4,6 +4,8 @@ import GameView from '../GameView/GameView';
 import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';
 import { gitManager } from '../GitManager';
+import { fileManager } from '../FileManager';
+import {File} from '../Core/File';
 import {createFile} from '../Core/Event';
 import CubeIcon from './Cube.svg';
 
@@ -19,7 +21,7 @@ export default class Home extends Vue {
 
     isOpen: boolean = false;
     status: string = '';
-    files: string[] = [];
+    files: File[] = [];
     index: string[] = [];
     commits: git.CommitDescription[] = [];
 
@@ -29,6 +31,10 @@ export default class Home extends Vue {
 
     get user() {
         return appManager.user;
+    }
+    
+    canSave(): boolean {
+        return fileManager.canSave();
     }
 
     open() {
@@ -44,6 +50,10 @@ export default class Home extends Vue {
         appManager.events.next(createFile());
     }
 
+    save() {
+        fileManager.save();
+    }
+
     async checkStatus() {
         this.index = await gitManager.index();
     }
@@ -53,28 +63,11 @@ export default class Home extends Vue {
         this.open();
         
         this.isLoading = true;
-        this.progressMode = "determinate";
-        this._setStatus('Starting...');
-        this.progress = (0/numLoadingSteps) * 100;
-        await gitManager.startIfNeeded();
+        this._setStatus('Pulling...');
+        await fileManager.pull();
 
-        this._setStatus('Checking for project...');
-        this.progress = (1/numLoadingSteps) * 100;
-        if(!(await gitManager.isProjectCloned())) {
-            this._setStatus('Cloning project...');
-            this.progress = (2/numLoadingSteps) * 100;
-            await gitManager.cloneProject();
-        } else {
-            this._setStatus('Updating project...');
-            this.progress = (2/numLoadingSteps) * 100;
-            await gitManager.updateProject();
-        }
+        this.files = fileManager.files;
 
-        this.progress = (3/numLoadingSteps) * 100;
-        const files: string[] = await gitManager.fs.readdir(gitManager.projectDir);
-        this.files = files.filter(f => f !== '.git').sort();
-
-        this.progress = (4/numLoadingSteps) * 100;
         this.commits = await gitManager.commitLog();
         this.isLoading = false;
         

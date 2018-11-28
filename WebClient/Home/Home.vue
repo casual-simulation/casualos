@@ -10,8 +10,8 @@
               <div v-if="!isLoading">
                 <h4>Files</h4>
                 <ul>
-                  <li v-for="file in files" :key="file">
-                    {{file}}
+                  <li v-for="file in files" :key="file.id">
+                    {{file.id}}
                   </li>
                 </ul>
 
@@ -53,6 +53,10 @@
               <div class="divider"></div>
               <md-button class="toolbar-button" @click="addNewWorkspace()">
                 <span>New Workspace</span>
+              </md-button>
+              <div v-if="canSave()" class="divider"></div>
+              <md-button v-if="canSave()" class="toolbar-button" @click="save()">
+                <span>Save</span>
               </md-button>
             </div>
           </div>

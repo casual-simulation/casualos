@@ -3,12 +3,19 @@ import {FileData} from './FileData';
 import {WorkspaceData} from './WorkspaceData';
 
 export type FileType = "file" | "workspace";
+export type Data = FileData | WorkspaceData;
+
 
 /**
  * Represents a file. That is, an object that has an ID and can be saved to 
  * a .file file.
  */
 export class File {
+    /**
+     * The data that was in the original file.
+     */
+    private _data: Data;
+
     /**
      * The GUID of the file.
      */
@@ -20,9 +27,18 @@ export class File {
     type: FileType;
 
     /**
-     * The data contained in the file.
+     * The data currently contained in the file.
      */
-    data: FileData | WorkspaceData;
+    data: Data;
+
+    /**
+     * Gets whether this file has changed.
+     */
+    get changed(): boolean {
+        const old = JSON.stringify(this._data);
+        const newData = JSON.stringify(this.data);
+        return old !== newData;
+    }
 
     /**
      * Gets the filename of the file.
@@ -50,9 +66,17 @@ export class File {
         return JSON.stringify(this.data);
     }
 
+    /**
+     * Tells the file that it was saved to the disk and therefore does not have changes.
+     */
+    saved(): void {
+        this._data = JSON.parse(JSON.stringify(this.data));
+    }
+
     constructor(id: string, type: FileType, data?: FileData | WorkspaceData) {
         this.id = id;
         this.type = type;
+        this._data = data || null;
         this.data = data || {
             id: this.id,
             position: { x: 0, y: 0 }

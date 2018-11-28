@@ -10,12 +10,13 @@ import {
     branch,
     resolveRef,
     listFiles,
+    commit,
 } from 'isomorphic-git';
 import * as BrowserFS from 'browserfs';
 import * as pify from 'pify';
 import { FSModule } from 'browserfs/dist/node/core/FS';
 import { AppManager, appManager } from './AppManager';
-import {File} from './Core/File';
+import {File, FileType} from './Core/File';
 
 export interface Config {
     default_project_url: string;
@@ -29,10 +30,12 @@ export class GitManager {
     private _started: boolean = false;
     private _startPromise: Promise<any> = null;
     private _appManager: AppManager;
+    private _index: string[];
 
     constructor(config: Config, appManager: AppManager) {
         this._config = config;
         this._appManager = appManager;
+        this._index = [];
     }
     
     get fs(): any {
@@ -53,6 +56,10 @@ export class GitManager {
 
     get username(): string {
         return this._appManager.user.username;
+    }
+
+    get email(): string {
+        return this._appManager.user.email;
     }
 
     get password(): string {
@@ -113,10 +120,12 @@ export class GitManager {
         await this.checkoutOrCreate(this.localUserBranch);
 
         console.log(`[GitManager] Merging "master" into "${this.localUserBranch}"...`);
-        await merge({
+        const report = await merge({
             dir: this._config.local_project_dir,
             theirs: 'master'
         });
+        
+        console.log('[GitManager] Merge Report', report);
 
         await this.pushIfNeeded(this.localUserBranch);
 
@@ -144,24 +153,66 @@ export class GitManager {
     }
 
     /**
+     * Gets a list of files (.file or .ws) that are currently in the repository.
+     */
+    async listFiles(): Promise<File[]> {
+        const list: string[] = await this.fs.readdir(this.projectDir);
+        const fileList = list.filter(filename => /\.file$/.test(filename) || /\.ws$/.test(filename));
+
+        const files = await Promise.all(
+            fileList.map(async file => {
+                const type = /\.file$/.test(file) ? "file" : "workspace";
+                const data: string = await this.fs.readFile(`${this.projectDir}/${file}`, 'utf8');
+                return File.parseFile(type, data);
+            })
+        );
+
+        return files;
+    }
+
+    /**
      * Saves the given file to the filesystem and adds it to the index.
      */
     async saveFile(file: File): Promise<void> {
+        if (!file.changed) {
+            return;
+        }
         await this._pfs.writeFile(this._path(file), file.content);
+        file.saved();
 
-        await add({
+        await this._add(file.filename);
+    }
+
+    /**
+     * Determines if a commit can be created.
+     * Basically just checks if anything has been added to the index.
+     */
+    canCommit(): boolean {
+        const changedFiles = this.index();
+        return changedFiles.length > 0;
+    }
+
+    /**
+     * Commits the files that were added to the index.
+     */
+    async commit(message: string): Promise<void> {
+        console.log(`[GitManager] Committing...`);
+        const sha = await commit({
             dir: this.projectDir,
-            filepath: file.filename
+            message: message,
+            author: {
+                email: this.email,
+                name: this.username
+            }
         });
+        console.log(`[GitManager] Committed ${sha}.`);
     }
 
     /**
      * Gets the list of files added to the git index.
      */
-    async index(): Promise<string[]> {
-        return await listFiles({
-            dir: this.projectDir
-        });
+    index(): string[] {
+        return this._index;
     }
 
     async exists(path: string): Promise<boolean> {
@@ -175,20 +226,14 @@ export class GitManager {
     async checkoutOrCreate(branchName: string): Promise<void> {
         console.log(`[GitManager] Checking out "${this.localUserBranch}"...`);
         try {
-            await checkout({
-                dir: this.projectDir,
-                ref: branchName
-            });
+            await this._checkout(branchName);
         } catch(err) {
             await branch({
                 dir: this.projectDir,
                 ref: branchName
             });
 
-            await checkout({
-                dir: this.projectDir,
-                ref: branchName
-            });
+            await this._checkout(branchName);
 
             await push({
                 dir: this.projectDir,
@@ -215,15 +260,20 @@ export class GitManager {
                 username: this.username,
                 password: this.password
             });
+            console.log(`[GitManager] Pushed.`);
+        } else {
+            console.log(`[GitManager] Push not needed.`);
         }
     }
 
     async resolveRef(ref: string): Promise<string> {
         try {
-            const remoteCommit = await resolveRef({
+            const commitSha = await resolveRef({
                 dir: this.projectDir,
-                ref: this.remoteUserBranch
+                ref: ref
             });
+
+            return commitSha;
         } catch(err) {
             return null;
         }
@@ -231,6 +281,22 @@ export class GitManager {
 
     private _path(file: File): string {
         return `${this._config.local_project_dir}/${file.filename}`;
+    }
+
+    private async _checkout(branch: string) {
+        this._index.splice(0, this._index.length);
+        await checkout({
+            dir: this.projectDir,
+            ref: branch
+        });
+    }
+
+    private async _add(path: string) {
+        this._index.push(path);
+        await add({
+            dir: this.projectDir,
+            filepath: path
+        });
     }
 }
 

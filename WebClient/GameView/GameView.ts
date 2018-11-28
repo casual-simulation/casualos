@@ -21,8 +21,10 @@ import Component from 'vue-class-component';
 import { SubscriptionLike } from 'rxjs';
 
 import {appManager} from '../AppManager';
+import {fileManager} from '../FileManager';
 import {FileCreatedEvent} from '../Core/Event';
 import {File} from '../Core/File';
+import {WorkspaceData} from '../Core/WorkspaceData';
 
 import { vg } from "von-grid";
 
@@ -81,11 +83,11 @@ export default class GameView extends Vue {
     this._frames = 0;
     this._renderGame();
 
-    this._sub = appManager.events.subscribe(event => {
-      if(event.type === 'file_created') {
-        this._fileAdded(event);
-      }
-    });
+    // this._sub = appManager.events.subscribe(event => {
+    //   if(event.type === 'file_created') {
+    //     this._fileAdded(event);
+    //   }
+    // });
   }
 
   beforeDestroy() {
@@ -95,21 +97,21 @@ export default class GameView extends Vue {
     }
   }
 
-  private _fileAdded(event: FileCreatedEvent) {
-    console.log('File was added!');
+  // private _fileAdded(event: FileCreatedEvent) {
+  //   console.log('File was added!');
 
-    const cube = this._createCube(0.1);
-    cube.rotation.x = 2;
-    cube.position.x = 2;
-    const obj = this._files[event.file.id] = {
-      file: event.file,
-      mesh: cube
-    };
+  //   const cube = this._createCube(0.1);
+  //   cube.rotation.x = 2;
+  //   cube.position.x = 2;
+  //   const obj = this._files[event.file.id] = {
+  //     file: event.file,
+  //     mesh: cube
+  //   };
 
-    this._meshses[obj.mesh.id] = obj.file.id;
+  //   this._meshses[obj.mesh.id] = obj.file.id;
 
-    this._scene.add(obj.mesh);
-  }
+  //   this._scene.add(obj.mesh);
+  // }
 
   private _createCube(size: number): Mesh {
     
@@ -129,6 +131,7 @@ export default class GameView extends Vue {
     this._scene.add(this._sun);
 
     this._camera.position.z = 5;
+    this._camera.position.y = 3;
     this._camera.rotation.x = Math.degToRad(-30);
     this._camera.updateMatrixWorld(false);
 
@@ -138,6 +141,27 @@ export default class GameView extends Vue {
     this._cube.rotation.z = 0;
     this._scene.add(this._cube);
 
+    this._setupWorkSurfaces();
+    this._setupFiles();
+  }
+
+  private _setupFiles() {
+    
+  }
+
+  private _setupWorkSurfaces() {
+    const board = this._createWorkSurface({
+      id: 'dummy',
+      position: {
+        x: 0,
+        y: 0
+      }
+    });
+
+    this._scene.add(board.group);
+  }
+
+  private _createWorkSurface(data: WorkspaceData) {
     const grid = new vg.HexGrid({
       size: 4,
       cellSize: .3,
@@ -155,9 +179,11 @@ export default class GameView extends Vue {
       }
     });
 
-    board.group.position.y = -3;
+    board.group.position.x = data.position.x;
+    board.group.position.z = data.position.y;
+    board.group.position.y = 0;
 
-    this._scene.add(board.group);
+    return board;
   }
 
   private _renderGame() {
