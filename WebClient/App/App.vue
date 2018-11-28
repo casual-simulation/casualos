@@ -16,6 +16,10 @@
                     <span class="md-body-1" v-if="getUser() != null">Logged In: {{getUser().name}}</span>
                 </div>
                 <md-list>
+                    <md-list-item @click="openInfoCard" v-if="getUser() != null">
+                        <md-icon>info</md-icon>
+                        <span class="md-list-item-text">Info Card</span>
+                    </md-list-item>
                     <md-list-item @click="logout" v-if="getUser() != null">
                         <md-icon>exit_to_app</md-icon>
                         <span class="md-list-item-text">Logout</span>

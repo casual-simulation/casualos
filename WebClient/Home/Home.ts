@@ -1,6 +1,7 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import GameView from '../GameView/GameView';
+import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';
 import { gitManager } from '../GitManager';
 import {createFile} from '../Core/Event';
@@ -25,7 +26,7 @@ export default class Home extends Vue {
     isLoading: boolean = false;
     progress: number = 0;
     progressMode: "indeterminate" | "determinate" = "determinate";
-    
+
     get user() {
         return appManager.user;
     }
@@ -37,6 +38,7 @@ export default class Home extends Vue {
     close() {
         this.isOpen = false;
     }
+    
 
     addNewFile() {
         appManager.events.next(createFile());
@@ -47,6 +49,7 @@ export default class Home extends Vue {
     }
 
     async created() {
+        EventBus.$on('openInfoCard', this.open);
         this.open();
         
         this.isLoading = true;

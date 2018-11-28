@@ -1,6 +1,7 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { appManager, User } from '../AppManager';
+import { EventBus } from '../EventBus/EventBus';
 
 @Component({
     components: {
@@ -9,12 +10,22 @@ import { appManager, User } from '../AppManager';
 })
 
 export default class App extends Vue {
-    showNavigation: boolean = false;
+    
+    showNavigation:boolean = false;
 
+    created() {
+        EventBus.$on('showNavigation', this._handleShowNavigation);
+    }
+    
     logout() {
         appManager.logout();
         this.showNavigation = false;
         this.$router.push('/');
+    }
+
+    openInfoCard() {
+        EventBus.$emit('openInfoCard');
+        this.showNavigation = false;
     }
 
     getUser(): User {
@@ -23,6 +34,15 @@ export default class App extends Vue {
 
     menuClicked() {
         this.showNavigation = !this.showNavigation;
-        console.log("[App] Menu Clicked showNavigation === " + this.showNavigation);
+    }
+    
+    private _handleShowNavigation(show: boolean) {
+        if (show == undefined) {
+            console.error('[App] Missing expected boolean arguement for showNavigation event.');
+            return;
+        }
+
+        console.log('[App] handleShowNavigation: ' + show);
+        this.showNavigation = show
     }
 }
