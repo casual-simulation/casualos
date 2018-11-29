@@ -7,7 +7,8 @@ import {
 } from 'rxjs/operators';
 
 import {
-  flatMap
+  flatMap,
+  sortBy,
 } from 'lodash';
 
 import {AppManager, appManager} from './AppManager';
@@ -236,6 +237,7 @@ export class FileManager {
 
   private async _fileDiscovered(event: FileDiscoveredEvent) {
     this._files.push(event.file);
+    this._files = sortBy(this._files, f => f.id);
   }
 
   private _fileRemoved(event: FileRemovedEvent) {

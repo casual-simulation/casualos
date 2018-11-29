@@ -13,6 +13,7 @@ import {
     commit,
     currentBranch,
 } from 'isomorphic-git';
+import {EventEmitter} from 'events';
 import * as BrowserFS from 'browserfs';
 import * as pify from 'pify';
 import { FSModule } from 'browserfs/dist/node/core/FS';
@@ -34,11 +35,16 @@ export class GitManager {
     private _startPromise: Promise<any> = null;
     private _appManager: AppManager;
     private _index: string[];
+    private _emitter: EventEmitter;
 
     constructor(config: Config, appManager: AppManager) {
         this._config = config;
         this._appManager = appManager;
         this._index = [];
+        this._emitter = new EventEmitter();
+
+        this._emitter.on('message', (message) => this._handleGitMessage(message));
+        this._emitter.on('progress', (progress) => this._handleGitProgress(progress));
     }
     
     get fs(): any {
@@ -81,8 +87,11 @@ export class GitManager {
         await configureAsync(fsOptions);
         this._fs = BrowserFS.BFSRequire('fs');
     
+        window.localStorage.setItem('debug', 'isomorphic-git');
+
         // Initialize isomorphic-git with our new file system
         (<any>gitPlugins).set('fs', this._fs);
+        (<any>gitPlugins).set('emitter', this._emitter);
     
         this._pfs = pify(this._fs);
         let dir = 'default';
@@ -110,13 +119,17 @@ export class GitManager {
             ref: 'master'
         });
 
-        await this.checkoutOrCreate(this.localUserBranch);
     }
 
     async updateProject(): Promise<any> {
         console.log('[GitManager] Updating Project...');
         
         console.log('[GitManager] Pulling "master"...');
+        await checkout({
+            dir: this.projectDir,
+            ref: 'master'
+        });
+
         await pull({
             dir: this.projectDir,
             ref: 'master'
@@ -131,12 +144,12 @@ export class GitManager {
         });
 
         console.log(`[GitManager] Merging "master" into "${this.localUserBranch}"...`);
-        const report = await merge({
+        const masterIntoLocalReport = await merge({
             dir: this._config.local_project_dir,
             theirs: 'master'
         });
-        
-        console.log('[GitManager] Merge Report', report);
+
+        console.log('[GitManager] Merge Report', masterIntoLocalReport);
 
         await this.pushIfNeeded(this.localUserBranch);
 
@@ -219,12 +232,24 @@ export class GitManager {
             }
         });
         this._clearIndex();
+        console.log(`[GitManager] Committed ${sha}.`);
         
         const branch = await currentBranch({
             dir: this.projectDir
         });
+
+        console.log(`[GitManager] Merging "${branch}" into "master"...`);
+
+        await merge({
+            dir: this.projectDir,
+            theirs: branch,
+            ours: 'master'
+        });
+
+        await this.pushIfNeeded('master');
+
         this._appManager.events.next(commitAdded(sha, branch, this.email, this.username));
-        console.log(`[GitManager] Committed ${sha}.`);
+        console.log(`[GitManager] Sent commit notification.`);
     }
 
     /**
@@ -267,15 +292,15 @@ export class GitManager {
      * Pushes the given branch to the remote repository if the reference has been updated.
      */
     async pushIfNeeded(branchName: string): Promise<void> {
-        console.log(`[GitManager] Pushing "${this.localUserBranch}"...`);
+        console.log(`[GitManager] Pushing "${branchName}"...`);
 
-        const remoteCommit = await this.resolveRef(this.remoteUserBranch);
-        const localCommit = await this.resolveRef(this.localUserBranch);
+        const remoteCommit = await this.resolveRef(`refs/remotes/origin/${branchName}`);
+        const localCommit = await this.resolveRef(branchName);
 
         if (remoteCommit !== localCommit) {
             await push({
                 dir: this.projectDir,
-                ref: this.localUserBranch,
+                ref: branchName,
                 username: this.username,
                 password: this.password
             });
@@ -320,6 +345,14 @@ export class GitManager {
 
     private _clearIndex() {
         this._index.splice(0, this._index.length);
+    }
+
+    private _handleGitMessage(message: string) {
+        console.log('[GitManager]:', message);
+    }
+
+    private _handleGitProgress(progress: any) {
+        // console.log(`[GitManager]: ${Math.floor((progress.loaded / progress.total) * 100)}%`);
     }
 }
 

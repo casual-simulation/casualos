@@ -11,6 +11,11 @@
     max-width: 350px;
 }
 
+.info-card .md-card-content {
+    max-height: 500px;
+    overflow-y: scroll;
+}
+
 .status-container {
     margin-top: 24px;
     text-align: center;
