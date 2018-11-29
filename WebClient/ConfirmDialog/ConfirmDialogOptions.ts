@@ -1,6 +1,6 @@
 export default class ConfirmDialogOptions {
-    public title: string = null;
-    public body: string = null;
-    public okCallback: () => void;
-    public cancelCallback: () => void;
+    public title: string = '';
+    public body: string = '';
+    public okEvent: string = null;
+    public cancelEvent: string = null;
 }

@@ -1,27 +1,19 @@
 <!-- App.vue -->
 <template>
-    <div>
-        <md-app>
+    <div id="app">
 
-            <confirm-dialog
-            v-if="showConfirmDialog"
-            active="showConfirmDialog" 
-            app="this" 
-            options="confirmDialogOptions">
-            </confirm-dialog>
-
-            <md-app-toolbar class="md-primary">
+            <md-toolbar class="md-primary">
                 <md-button class="md-icon-button" @click="menuClicked()">
                     <md-icon>menu</md-icon>
                 </md-button>
                 <router-link to="/" class="md-title">Process for Teams</router-link>
-            </md-app-toolbar>
+            </md-toolbar>
 
-             <md-app-drawer :md-active.sync="showNavigation">
+             <md-drawer :md-active.sync="showNavigation">
                 <div class="menu-header">
                     <span class="md-title">Process for Teams</span><br>
                     <span class="md-body-1" v-if="getUser() != null">Logged In: {{getUser().name}}</span>
-                </div>
+                </div>s
                 <md-list>
                     <md-list-item @click="testConfirmDialog">
                         <span class="md-list-item-text">Test Confirm Dialog</span>
@@ -35,13 +27,19 @@
                         <span class="md-list-item-text">Logout</span>
                     </md-list-item>
                 </md-list>
-            </md-app-drawer>
+            </md-drawer>
 
-            <md-app-content>
+            <confirm-dialog
+            v-bind:active="showConfirmDialog" 
+            v-bind:app="this"
+            v-bind:title="confirmDialogOptions.title"
+            v-bind:body="confirmDialogOptions.body"
+            v-bind:okEvent="confirmDialogOptions.okEvent"
+            v-bind:cancelEvent="confirmDialogOptions.cancelEvent" />
+
+            <!-- <md-content>
                 <router-view></router-view>
-            </md-app-content>
-
-        </md-app>
+            </md-content> -->
     </div>
 </template>
 <script src="./App.ts"></script>

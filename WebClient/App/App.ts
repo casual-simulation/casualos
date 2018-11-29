@@ -16,7 +16,7 @@ export default class App extends Vue {
     
     showNavigation:boolean = false;
     showConfirmDialog: boolean = false;
-    confirmDialogOptions: ConfirmDialogOptions = null;
+    confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
 
     created() {
         EventBus.$on('showNavigation', this._handleShowNavigation);
@@ -46,9 +46,24 @@ export default class App extends Vue {
         var options = new ConfirmDialogOptions();
         options.title = 'Title goes here';
         options.body = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
-        options.okCallback = () => { console.log('pressed ok on test confirm dialog'); };
-        options.cancelCallback = () => { console.log('pressed cancel on test confirm dialog')};
+        options.okEvent = 'ok-clicked';
+        options.cancelEvent = 'cancel-clicked';
 
+        // Hook up event listeners
+        var handleOk = () => {
+            console.log('Test dialog ok clicked.');
+            EventBus.$off('ok-clicked', handleOk);
+            EventBus.$off('cancel-clicked', handleCancel);
+        };
+        var handleCancel = () => {
+            console.log('Test dialog cancel clicked.');
+            EventBus.$off('ok-clicked', handleOk);
+            EventBus.$off('cancel-clicked', handleCancel);
+        };
+        EventBus.$on('ok-clicked', handleOk);
+        EventBus.$on('cancel-clicked', handleCancel);
+
+        // Emit dialog event.
         EventBus.$emit('showConfirmDialog', options);
     }
     
@@ -68,7 +83,8 @@ export default class App extends Vue {
             return;
         }
 
+        this.confirmDialogOptions = options;
         this.showConfirmDialog = true;
-        console.log('[App] handleShowConfirmDialog ' + this.showConfirmDialog);
+        console.log('[App] handleShowConfirmDialog ' + this.showConfirmDialog + ' ' + JSON.stringify(this.confirmDialogOptions));
     }
 }

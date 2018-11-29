@@ -1,7 +1,21 @@
 
 import Vue from 'vue';
 import VueRouter, { RouteConfig } from 'vue-router';
-import { MdButton, MdContent, MdApp, MdCard, MdToolbar, MdField, MdProgress, MdDrawer, MdList, MdMenu, MdDialog, MdTabs } from 'vue-material/dist/components';
+// import { 
+//     MdButton, 
+//     MdContent, 
+//     MdApp, 
+//     MdCard, 
+//     MdToolbar, 
+//     MdField, 
+//     MdProgress, 
+//     MdDrawer, 
+//     MdList, 
+//     MdMenu, 
+//     MdDialog, 
+//     MdTabs 
+// } from 'vue-material/dist/components';
+import VueMaterial from 'vue-material';
 import 'vue-material/dist/vue-material.min.css'
 import 'vue-material/dist/theme/default.css'
 
@@ -18,18 +32,19 @@ const Home = () => import('./Home/Home');
 polyfill();
 
 Vue.use(VueRouter);
-Vue.use(MdButton);
-Vue.use(MdContent);
-Vue.use(MdApp);
-Vue.use(MdCard);
-Vue.use(MdToolbar);
-Vue.use(MdField);
-Vue.use(MdProgress);
-Vue.use(MdDrawer);
-Vue.use(MdList);
-Vue.use(MdMenu);
-Vue.use(MdDialog);
-Vue.use(MdTabs);
+Vue.use(VueMaterial);
+// Vue.use(MdButton);
+// Vue.use(MdContent);
+// Vue.use(MdApp);
+// Vue.use(MdCard);
+// Vue.use(MdToolbar);
+// Vue.use(MdField);
+// Vue.use(MdProgress);
+// Vue.use(MdDrawer);
+// Vue.use(MdList);
+// Vue.use(MdMenu);
+// Vue.use(MdDialog);
+// Vue.use(MdTabs);
 
 const routes: RouteConfig[] = [
     {

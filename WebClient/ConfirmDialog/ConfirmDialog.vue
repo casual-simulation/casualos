@@ -1,9 +1,9 @@
 <template>
     <div>
         <md-dialog-confirm
-        :md-active.sync="active"
-        md-title="options.title"
-        md-content="options.body"
+        :md-active.sync="dialogActive"
+        v-bind:md-title="title"
+        v-bind:md-content="body"
         md-confirm-text="OK"
         md-cancel-text="Cancel"
         @md-cancel="cancelClicked"
