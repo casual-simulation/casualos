@@ -124,7 +124,7 @@ export class RealtimeServer {
 
         const gitlabAddUserToProjectResponse = await Axios.post(this._url('projects', this.defaultProject, 'members'), {
             user_id: user.id,
-            access_level: GitlabAccessLevels.Developer
+            access_level: GitlabAccessLevels.Maintainer
         });
 
         console.log('[RealtimeServer] User added to project.');
