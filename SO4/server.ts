@@ -44,7 +44,6 @@ export class Server {
     }
 
     start() {
-        this._socket.attach(this._config.socketPort);
-        this._app.listen(this._config.httpPort, () => console.log(`Example app listening on port ${this._config.httpPort}!`));
+        this._http.listen(this._config.httpPort, () => console.log(`Example app listening on port ${this._config.httpPort}!`));
     }
 };

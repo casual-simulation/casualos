@@ -6,7 +6,6 @@ import { appManager } from '../AppManager';
 import { gitManager } from '../GitManager';
 import { fileManager } from '../FileManager';
 import {File} from '../Core/File';
-import {createFile} from '../Core/Event';
 import CubeIcon from './Cube.svg';
 
 const numLoadingSteps: number = 4;
@@ -32,9 +31,13 @@ export default class Home extends Vue {
     get user() {
         return appManager.user;
     }
+
+    get tags() {
+        return fileManager.tags;
+    }
     
     canSave(): boolean {
-        return fileManager.canSave();
+        return fileManager.canSave;
     }
 
     open() {
@@ -47,11 +50,11 @@ export default class Home extends Vue {
     
 
     addNewFile() {
-        appManager.events.next(createFile('file'));
+        fileManager.createFile();
     }
 
     addNewWorkspace() {
-        appManager.events.next(createFile('workspace'));
+        fileManager.createWorkspace();
     }
 
     save() {

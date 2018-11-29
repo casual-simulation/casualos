@@ -1,38 +1,60 @@
 
 import {File, FileType} from './File';
 
-export type Event = CreateFileEvent | FileCreatedEvent | FileDiscoveredEvent | FileRemovedEvent;
+export type Event = 
+    FileCreatedEvent | 
+    FileDiscoveredEvent | 
+    FileRemovedEvent | 
+    CommitAddedEvent;
 
-export interface CreateFileEvent {
-    type: 'create_file';
-    file_type: FileType;
+export interface EventBase {
+    /**
+     * Whether this event was from a remote server.
+     */
+    remote: boolean;
 }
 
-export interface FileCreatedEvent {
-    type: 'file_created'
+export interface FileCreatedEvent extends EventBase {
+    type: 'file_created';
     file: File;
 }
 
-export interface FileDiscoveredEvent {
-    type: 'file_discovered',
-    file: File
+export interface FileDiscoveredEvent extends EventBase {
+    type: 'file_discovered';
+    file: File;
 }
 
-export interface FileRemovedEvent {
-    type: 'file_removed',
-    file: File
+export interface FileRemovedEvent extends EventBase {
+    type: 'file_removed';
+    file: File;
 }
 
-export function createFile(fileType: FileType): CreateFileEvent {
-    return {
-        type: 'create_file',
-        file_type: fileType
+export interface CommitAddedEvent extends EventBase {
+    type: 'commit_added';
+
+    /**
+     * The SHA1 hash of the commit.
+     */
+    hash: string;
+
+    /**
+     * The branch that the commit was made on.
+     */
+    branch: string;
+
+    /**
+     * The author of the commit.
+     */
+    author: {
+        email: string;
+        username: string;
     };
 }
 
 export function fileCreated(file: File): FileCreatedEvent {
     return {
         type: 'file_created',
+        remote: false,
         file: file
     };
 }
@@ -40,6 +62,7 @@ export function fileCreated(file: File): FileCreatedEvent {
 export function fileDiscovered(file: File): FileDiscoveredEvent {
     return {
         type: 'file_discovered',
+        remote: false,
         file: file
     };
 }
@@ -47,6 +70,20 @@ export function fileDiscovered(file: File): FileDiscoveredEvent {
 export function fileRemoved(file: File): FileRemovedEvent {
     return {
         type: 'file_removed',
+        remote: false,
         file: file
+    };
+}
+
+export function commitAdded(hash: string, branch: string, email: string, username: string): CommitAddedEvent {
+    return {
+        type: 'commit_added',
+        remote: false,
+        hash: hash,
+        branch: branch,
+        author: {
+            email,
+            username
+        },
     };
 }

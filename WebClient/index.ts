@@ -10,6 +10,7 @@ import Welcome from './Welcome/Welcome';
 import { polyfill } from 'es6-promise';
 import { appManager } from './AppManager';
 import { fileManager } from './FileManager';
+import { socketManager } from './SocketManager';
 
 const Home = () => import('./Home/Home');
 
@@ -69,3 +70,4 @@ const app = new Vue({
 }).$mount('#app');
 
 fileManager.init();
+socketManager.init();

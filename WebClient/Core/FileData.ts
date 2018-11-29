@@ -4,4 +4,8 @@ export interface FileData {
     id: string;
     workspace: string;
     position: Vector2;
+
+    tags: {
+        [key: string]: any;
+    };
 }

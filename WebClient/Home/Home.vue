@@ -16,6 +16,10 @@
                         <tr>
                           <th>ID</th>
                           <th>Type</th>
+
+                          <th v-for="tag in tags" :key="tag">
+                            {{tag}}
+                          </th>
                         </tr>
                       </thead>
                       <tbody>

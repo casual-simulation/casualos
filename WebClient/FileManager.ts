@@ -6,18 +6,23 @@ import {
   shareReplay,
 } from 'rxjs/operators';
 
-import {AppManager, appManager} from './AppManager';
 import {
-  CreateFileEvent, 
-  FileCreatedEvent, 
-  FileDiscoveredEvent, 
-  fileCreated, 
+  flatMap
+} from 'lodash';
+
+import {AppManager, appManager} from './AppManager';
+import { 
+  FileCreatedEvent,
+  FileDiscoveredEvent,
+  CommitAddedEvent,
+  fileCreated,
   fileDiscovered,
   FileRemovedEvent,
   fileRemoved
 } from './Core/Event';
 import {GitManager, gitManager} from './GitManager';
 import {File} from './Core/File';
+import {FileData} from './Core/FileData';
 
 /**
  * Defines a class that interfaces with the AppManager and GitManager
@@ -34,6 +39,16 @@ export class FileManager {
 
   // TODO: Dispose of the subscription
   private _sub: SubscriptionLike;
+
+  get tags(): string[] {
+    return flatMap(this._files, f => {
+      if(f.type === 'file') {
+        const data: FileData = <FileData>f.data;
+        return data.tags;
+      }
+      return [];
+    });
+  }
 
   /**
    * Gets the list of files that are stored.
@@ -102,7 +117,7 @@ export class FileManager {
   /**
    * Gets whether the files can be saved.
    */
-  canSave(): boolean {
+  get canSave(): boolean {
     return gitManager.canCommit();
   }
 
@@ -126,18 +141,36 @@ export class FileManager {
     }
   }
 
+  async createFile() {
+    console.log('[FileManager] Create File');
+
+    const file = this._gitManager.createNewFile();
+    await this._gitManager.saveFile(file);
+
+    this._appManager.events.next(fileCreated(file));
+  }
+
+  async createWorkspace() {
+    console.log('[FileManager] Create File');
+
+    const file = this._gitManager.createNewWorkspace();
+    await this._gitManager.saveFile(file);
+
+    this._appManager.events.next(fileCreated(file));
+  }
+
   private async _init() {
     this._setStatus("Starting...");
 
     this._sub = this._appManager.events.subscribe(event => {
-      if (event.type === 'create_file') {
-        this._createFile(event);
-      } else if(event.type === 'file_created') {
+      if(event.type === 'file_created') {
         this._fileCreated(event);
       } else if(event.type === 'file_discovered') {
         this._fileDiscovered(event);
       } else if(event.type === 'file_removed') {
         this._fileRemoved(event);
+      } else if(event.type === 'commit_added') {
+        this._commitAdded(event);
       }
     });
 
@@ -197,15 +230,6 @@ export class FileManager {
     });
   }
 
-  private async _createFile(event: CreateFileEvent) {
-    console.log('[FileManager] Create File');
-
-    const file = event.file_type === 'file' ? this._gitManager.createNewFile() : this._gitManager.createNewWorkspace();
-    await this._gitManager.saveFile(file);
-
-    this._appManager.events.next(fileCreated(file));
-  }
-
   private async _fileCreated(event: FileCreatedEvent) {
     this._appManager.events.next(fileDiscovered(event.file));
   }
@@ -218,6 +242,13 @@ export class FileManager {
     const index = this._files.indexOf(event.file);
     if(index >= 0) {
       this._files.splice(index, 1);
+    }
+  }
+
+  private async _commitAdded(event: CommitAddedEvent) {
+    this._setStatus(`Commit ${event.hash} added on ${event.branch}.`);
+    if (!this.canSave) {
+      await this.pull();
     }
   }
 

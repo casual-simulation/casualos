@@ -11,12 +11,15 @@ import {
     resolveRef,
     listFiles,
     commit,
+    currentBranch,
 } from 'isomorphic-git';
 import * as BrowserFS from 'browserfs';
 import * as pify from 'pify';
 import { FSModule } from 'browserfs/dist/node/core/FS';
+import {Subject} from 'rxjs';
 import { AppManager, appManager } from './AppManager';
 import {File, FileType} from './Core/File';
+import {commitAdded, CommitAddedEvent} from './Core/Event';
 
 export interface Config {
     default_project_url: string;
@@ -79,7 +82,7 @@ export class GitManager {
         this._fs = BrowserFS.BFSRequire('fs');
     
         // Initialize isomorphic-git with our new file system
-        gitPlugins.set('fs', this._fs);
+        (<any>gitPlugins).set('fs', this._fs);
     
         this._pfs = pify(this._fs);
         let dir = 'default';
@@ -106,6 +109,8 @@ export class GitManager {
             url: this._config.default_project_url,
             ref: 'master'
         });
+
+        await this.checkoutOrCreate(this.localUserBranch);
     }
 
     async updateProject(): Promise<any> {
@@ -119,6 +124,12 @@ export class GitManager {
 
         await this.checkoutOrCreate(this.localUserBranch);
 
+        console.log(`[GitManager] Pulling ${this.localUserBranch}...`);
+        await pull({
+            dir: this.projectDir,
+            ref: this.localUserBranch
+        });
+
         console.log(`[GitManager] Merging "master" into "${this.localUserBranch}"...`);
         const report = await merge({
             dir: this._config.local_project_dir,
@@ -128,6 +139,8 @@ export class GitManager {
         console.log('[GitManager] Merge Report', report);
 
         await this.pushIfNeeded(this.localUserBranch);
+
+        await this.checkoutOrCreate(this.localUserBranch);
 
         console.log('[GitManager] Project Updated!');
     }
@@ -205,6 +218,12 @@ export class GitManager {
                 name: this.username
             }
         });
+        this._clearIndex();
+        
+        const branch = await currentBranch({
+            dir: this.projectDir
+        });
+        this._appManager.events.next(commitAdded(sha, branch, this.email, this.username));
         console.log(`[GitManager] Committed ${sha}.`);
     }
 
@@ -284,11 +303,11 @@ export class GitManager {
     }
 
     private async _checkout(branch: string) {
-        this._index.splice(0, this._index.length);
         await checkout({
             dir: this.projectDir,
             ref: branch
         });
+        this._clearIndex();
     }
 
     private async _add(path: string) {
@@ -297,6 +316,10 @@ export class GitManager {
             dir: this.projectDir,
             filepath: path
         });
+    }
+
+    private _clearIndex() {
+        this._index.splice(0, this._index.length);
     }
 }
 

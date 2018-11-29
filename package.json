@@ -49,6 +49,8 @@
     "webpack-node-externals": "^1.7.2"
   },
   "dependencies": {
+    "@types/lodash": "^4.14.118",
+    "@types/socket.io-client": "^1.4.32",
     "axios": "^0.18.0",
     "browserfs": "^1.4.3",
     "concurrently": "^4.0.1",
@@ -57,8 +59,10 @@
     "express": "^4.16.4",
     "http-proxy": "^1.17.0",
     "isomorphic-git": "^0.39.4",
+    "lodash": "^4.17.11",
     "rxjs": "^6.3.3",
     "socket.io": "^2.1.1",
+    "socket.io-client": "^2.2.0",
     "three": "^0.98.0",
     "uuid": "^3.3.2",
     "vue": "^2.5.17",
