@@ -14,11 +14,24 @@ import {
   BoxGeometry,
   MeshStandardMaterial,
   Vector3,
-  Math
+  Vector2,
+  Math,
+  Group,
+  Raycaster,
+  Intersection,
 } from 'three';
 import Vue, {ComponentOptions} from 'vue';
 import Component from 'vue-class-component';
-import { SubscriptionLike } from 'rxjs';
+import { 
+  SubscriptionLike, 
+  Observable, 
+  fromEvent,
+  combineLatest,
+} from 'rxjs';
+import { 
+  filter,
+  map,
+} from 'rxjs/operators';
 
 import {appManager} from '../AppManager';
 import {fileManager} from '../FileManager';
@@ -28,11 +41,111 @@ import {WorkspaceData} from '../Core/WorkspaceData';
 
 import { vg } from "von-grid";
 
+interface Ray {
+  origin: Vector3;
+  direction: Vector3;
+}
+
+const mouseUp = fromEvent<MouseEvent>(document, 'mouseup');
+const mouseDown = fromEvent<MouseEvent>(document, 'mousedown');
+const mouseMove = fromEvent<MouseEvent>(document, 'mousemove');
+
+function isButton(observable: Observable<MouseEvent>, button: number): Observable<MouseEvent> {
+  return observable.pipe(
+    filter(e => e.button === button)
+  )
+}
+
+function buttonActive(button: number): Observable<boolean> {
+  const clickUp = isButton(mouseUp, button);
+  const clickDown = isButton(mouseDown, button);
+
+  const active = combineLatest(
+    clickUp,
+    clickDown,
+    (e1, e2) => e2.timeStamp > e1.timeStamp
+  );  
+
+  return active;
+}
+
+const leftClickActive = buttonActive(0);
+const rightClickActive = buttonActive(1);
+
+function buttonDrag(active: Observable<boolean>): Observable<MouseEvent> {
+  return combineLatest(
+    active,
+    mouseMove,
+    (a, m) => ({a, m})
+  ).pipe(
+    filter(o => o.a),
+    map(o => o.m)
+  );
+}
+
+const leftDrag = buttonDrag(leftClickActive);
+const rightDrag = buttonDrag(rightClickActive);
+
+function screenPosition(gameView: HTMLElement) {
+  return (e: MouseEvent) => {
+    const globalPos = new Vector2(e.pageX, e.pageY);
+    const gameViewRect = gameView.getBoundingClientRect();
+    const gameViewPos = globalPos.sub(new Vector2(gameViewRect.left, gameViewRect.top));
+    return new Vector2((gameViewPos.x / gameViewRect.width) * 2 - 1, -(gameViewPos.y / gameViewRect.height) * 2 + 1);
+  };
+}
+
+interface RaycastTest {
+  mouse: Vector2;
+  intersects: Intersection[];
+}
+
+function raycast(raycaster: Raycaster, scene: Scene, camera: Camera) {
+  return (pos: Vector2) => {
+    raycaster.setFromCamera(pos, camera);
+    const intersects = raycaster.intersectObjects(scene.children);
+
+    return {
+      mouse: pos,
+      intersects
+    };
+  };
+}
+
+function raycastSuccess() {
+  return (test: RaycastTest) => test.intersects.length > 0;
+}
+
+function screenToRay(camera: Camera) {
+  return (pos: Vector2) => {
+    const v3d = new Vector3(pos.x, pos.y, 0.5);
+
+    v3d.unproject(camera);
+
+    v3d.sub(camera.position);
+    v3d.normalize();
+    
+    return {
+      origin: camera.position,
+      direction: v3d
+    };
+  };
+}
+
+function pointOnRay(ray: Ray, distance: function): Vector3 {
+  let pos = new Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
+  pos.multiplyScalar(distance);
+  pos.add(ray.origin);
+
+  return pos;
+}
+
 @Component
 export default class GameView extends Vue {
   private _scene: Scene;
-  private _camera: Camera;
+  private _camera: PerspectiveCamera;
   private _renderer: Renderer;
+  private _raycaster: Raycaster;
   private _clock: Clock;
 
   private _sun: Light;
@@ -42,7 +155,7 @@ export default class GameView extends Vue {
 
   private _files: {
     [id: string]: {
-      mesh: Mesh,
+      mesh: Mesh | Group,
       file: File
     }
   } = {};
@@ -66,6 +179,8 @@ export default class GameView extends Vue {
     this._renderer = new WebGLRenderer({
       antialias: true
     });
+
+    this._raycaster = new Raycaster();
         
     // TODO: Call each time the screen size changes
     const container: HTMLElement = <HTMLElement>this.$refs.container;
@@ -83,11 +198,55 @@ export default class GameView extends Vue {
     this._frames = 0;
     this._renderGame();
 
-    // this._sub = appManager.events.subscribe(event => {
-    //   if(event.type === 'file_created') {
-    //     this._fileAdded(event);
-    //   }
+    fileManager.fileDiscovered.subscribe(file => {
+      this._fileAdded(file);
+    });
+    fileManager.fileRemoved.subscribe(file => {
+      this._fileRemoved(file);
+    });
+
+    const selectedObjects = isButton(mouseDown, 0)
+      .pipe(
+        map(screenPosition(gameView)),
+        map(raycast(this._raycaster, this._scene, this._camera)),
+        map(r => r.intersects.length > 0 ? r.intersects[0] : null)
+      );
+    
+    const dragPositions = leftDrag.pipe(
+      map(screenPosition(gameView)),
+      map(screenToRay(this._camera)),
+      map(ray => pointOnRay(ray, 2))
+    );
+
+    const dragOperations = combineLatest(
+      selectedObjects,
+      dragPositions,
+      (obj, drag) => ({
+        obj,
+        drag
+      })
+    ).pipe(
+      filter(op => op.obj !== null)
+    );
+
+    dragOperations.subscribe(op => {
+      console.log('drag object', op);
+      op.obj.object.position.x = op.drag.x;
+      op.obj.object.position.y = op.drag.y;
+      op.obj.object.position.z = op.drag.z;
+    });
+
+    // dragPositions.subscribe(op => {
+    //   console.log('drag object');
+    //   // op.obj.object.position.x = op.drag.x;
+    //   // op.obj.object.position.y = op.drag.y;
+    //   // op.obj.object.position.z = op.drag.z;
     // });
+
+    // selectedObjects.subscribe(obj => {
+    //   console.log('selected object', obj);
+    // });
+
   }
 
   beforeDestroy() {
@@ -97,21 +256,34 @@ export default class GameView extends Vue {
     }
   }
 
-  // private _fileAdded(event: FileCreatedEvent) {
-  //   console.log('File was added!');
+  private _fileAdded(file: File) {
+    console.log("File Added!");
+    let mesh;
+    if(file.type === 'file') {
+      const cube = this._createCube(0.2);
+      mesh = cube;
+    } else {
+      const board = this._createWorkSurface(file.data);
+      mesh = board.group;
+    }
+    const obj = this._files[file.id] = {
+      file: file,
+      mesh: mesh
+    };
 
-  //   const cube = this._createCube(0.1);
-  //   cube.rotation.x = 2;
-  //   cube.position.x = 2;
-  //   const obj = this._files[event.file.id] = {
-  //     file: event.file,
-  //     mesh: cube
-  //   };
+    this._meshses[obj.mesh.id] = obj.file.id;
 
-  //   this._meshses[obj.mesh.id] = obj.file.id;
+    this._scene.add(obj.mesh);
+  }
 
-  //   this._scene.add(obj.mesh);
-  // }
+  private _fileRemoved(file: File) {
+    const obj = this._files[file.id];
+    if (obj) {
+      delete this._meshses[obj.mesh.id];
+      delete this._files[file.id];
+      this._scene.remove(obj.mesh);
+    }
+  }
 
   private _createCube(size: number): Mesh {
     
@@ -135,30 +307,11 @@ export default class GameView extends Vue {
     this._camera.rotation.x = Math.degToRad(-30);
     this._camera.updateMatrixWorld(false);
 
-    this._cube = this._createCube(0.5);
-    this._cube.position.y = -1;
-    this._cube.rotation.y = 2;
-    this._cube.rotation.z = 0;
-    this._scene.add(this._cube);
-
-    this._setupWorkSurfaces();
-    this._setupFiles();
-  }
-
-  private _setupFiles() {
-    
-  }
-
-  private _setupWorkSurfaces() {
-    const board = this._createWorkSurface({
-      id: 'dummy',
-      position: {
-        x: 0,
-        y: 0
-      }
-    });
-
-    this._scene.add(board.group);
+    // this._cube = this._createCube(0.5);
+    // this._cube.position.y = -1;
+    // this._cube.rotation.y = 2;
+    // this._cube.rotation.z = 0;
+    // this._scene.add(this._cube);
   }
 
   private _createWorkSurface(data: WorkspaceData) {
@@ -181,7 +334,7 @@ export default class GameView extends Vue {
 
     board.group.position.x = data.position.x;
     board.group.position.z = data.position.y;
-    board.group.position.y = 0;
+    board.group.position.y = -1;
 
     return board;
   }
