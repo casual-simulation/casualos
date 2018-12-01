@@ -1,6 +1,9 @@
 import * as uuid from 'uuid/v4';
 import {FileData} from './FileData';
 import {WorkspaceData} from './WorkspaceData';
+import {
+    cloneDeep
+} from 'lodash';
 
 export type FileType = "file" | "workspace";
 export type Data = FileData | WorkspaceData;
@@ -76,11 +79,21 @@ export class File {
     constructor(id: string, type: FileType, data?: FileData | WorkspaceData) {
         this.id = id;
         this.type = type;
-        this._data = data || null;
-        this.data = data || {
-            id: this.id,
-            position: { x: 0, y: 0 }
-        };
+        this._data = data ? cloneDeep(data) : null;
+        this.data = data;
+        if (!this.data && this.type === 'file') {
+            this.data = {
+                id: id,
+                position: {x: 0, y: 0},
+                tags: {},
+                workspace: null
+            };
+        } else if(!this.data) {
+            this.data = {
+                id: id,
+                position: {x: 0, y: 0}
+            };
+        }
     }
 
     /**

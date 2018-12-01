@@ -7,6 +7,7 @@ import { gitManager } from '../GitManager';
 import { fileManager } from '../FileManager';
 import {File} from '../Core/File';
 import CubeIcon from './Cube.svg';
+import { FileData } from 'WebClient/Core/FileData';
 
 const numLoadingSteps: number = 4;
 
@@ -23,6 +24,10 @@ export default class Home extends Vue {
     files: File[] = [];
     index: string[] = [];
     commits: git.CommitDescription[] = [];
+    tags: string[] = [];
+    isMakingNewTag: boolean = false;
+    newTag: string = 'myNewTag';
+    canSave: boolean = false;
 
     isLoading: boolean = false;
     progress: number = 0;
@@ -32,14 +37,6 @@ export default class Home extends Vue {
         return appManager.user;
     }
 
-    get tags() {
-        return fileManager.tags;
-    }
-    
-    canSave(): boolean {
-        return fileManager.canSave;
-    }
-
     open() {
         this.isOpen = true;
     }
@@ -47,7 +44,6 @@ export default class Home extends Vue {
     close() {
         this.isOpen = false;
     }
-    
 
     addNewFile() {
         fileManager.createFile();
@@ -59,6 +55,27 @@ export default class Home extends Vue {
 
     save() {
         fileManager.save();
+    }
+
+    addTag() {
+        if (this.isMakingNewTag) {
+            this.tags.push(this.newTag);
+        }
+        this.isMakingNewTag = !this.isMakingNewTag;
+    }
+
+    valueChanged(file: File, tag: string, value: string) {
+        if (file.type === 'file') {
+            const data = <FileData>file.data;
+            if(value) {
+                data.tags[tag] = value;
+            } else {
+                delete data.tags[tag];
+            }
+            fileManager.markDirty(file).then(canSave => {
+                this.canSave = canSave;
+            });
+        }
     }
 
     async checkStatus() {
@@ -74,6 +91,8 @@ export default class Home extends Vue {
         await fileManager.pull();
 
         this.files = fileManager.files;
+        this.tags = fileManager.tags;
+        this.canSave = fileManager.canSave;
 
         this.commits = await gitManager.commitLog();
         this.isLoading = false;

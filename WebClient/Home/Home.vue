@@ -17,8 +17,18 @@
                           <th>ID</th>
                           <th>Type</th>
 
-                          <th v-for="tag in tags" :key="tag">
-                            {{tag}}
+                          <th v-for="(tag, index) in tags" :key="index">
+                            #{{tag}}
+                          </th>
+
+                          <th v-if="isMakingNewTag">
+                            #<input v-model="newTag">
+                          </th>
+
+                          <th>
+                            <md-button @click="addTag()">
+                              {{isMakingNewTag ? "Done": "+ New Tag"}}
+                            </md-button>
                           </th>
                         </tr>
                       </thead>
@@ -27,6 +37,9 @@
                         <tr v-for="file in files" :key="file.id">
                           <td>{{file.id}}</td>
                           <td>{{file.type}}</td>
+                          <th v-if="file.type === 'file'" v-for="tag in tags" :key="tag">
+                            <input @input="valueChanged(file, tag, $event.target.value)" :value="file.data.tags[tag]">
+                          </th>
                         </tr>
                       </tbody>
                     </table>
@@ -67,8 +80,8 @@
               <md-button class="toolbar-button" @click="addNewWorkspace()">
                 <span>New Workspace</span>
               </md-button>
-              <div v-if="canSave()" class="divider"></div>
-              <md-button v-if="canSave()" class="toolbar-button" @click="save()">
+              <div v-if="canSave" class="divider"></div>
+              <md-button v-if="canSave" class="toolbar-button" @click="save()">
                 <span>Save</span>
               </md-button>
             </div>

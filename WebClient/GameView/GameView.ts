@@ -132,7 +132,7 @@ function screenToRay(camera: Camera) {
   };
 }
 
-function pointOnRay(ray: Ray, distance: function): Vector3 {
+function pointOnRay(ray: Ray, distance: number): Vector3 {
   let pos = new Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
   pos.multiplyScalar(distance);
   pos.add(ray.origin);

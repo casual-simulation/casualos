@@ -9,6 +9,7 @@ import {
 import {
   flatMap,
   sortBy,
+  keys
 } from 'lodash';
 
 import {AppManager, appManager} from './AppManager';
@@ -45,7 +46,7 @@ export class FileManager {
     return flatMap(this._files, f => {
       if(f.type === 'file') {
         const data: FileData = <FileData>f.data;
-        return data.tags;
+        return keys(data.tags);
       }
       return [];
     });
@@ -133,9 +134,9 @@ export class FileManager {
       return gitManager.saveFile(file);
     }));
 
+    
     if(await gitManager.canCommit()) {
       await gitManager.commit("Save files");
-
       await gitManager.pushIfNeeded(gitManager.localUserBranch);
     } else {
       this._setStatus('No changes. Commit & push skipped.');
@@ -158,6 +159,11 @@ export class FileManager {
     await this._gitManager.saveFile(file);
 
     this._appManager.events.next(fileCreated(file));
+  }
+
+  async markDirty(file: File) {
+    await this._gitManager.saveFile(file);
+    return this.canSave;
   }
 
   private async _init() {
