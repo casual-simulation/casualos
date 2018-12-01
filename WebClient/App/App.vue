@@ -13,7 +13,7 @@
                 <div class="menu-header">
                     <span class="md-title">Process for Teams</span><br>
                     <span class="md-body-1" v-if="getUser() != null">Logged In: {{getUser().name}}</span>
-                </div>s
+                </div>
                 <md-list>
                     <md-list-item @click="testConfirmDialog">
                         <span class="md-list-item-text">Test Confirm Dialog</span>
@@ -37,9 +37,9 @@
             v-bind:okEvent="confirmDialogOptions.okEvent"
             v-bind:cancelEvent="confirmDialogOptions.cancelEvent" />
 
-            <!-- <md-content>
+            <md-content class="app-content">
                 <router-view></router-view>
-            </md-content> -->
+            </md-content>
     </div>
 </template>
 <script src="./App.ts"></script>
