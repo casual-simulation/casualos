@@ -24,7 +24,10 @@ module.exports = {
     ]
   },
   resolve: {
-    extensions: [ '.ts', '.js' ]
+    extensions: [ '.ts', '.js' ],
+    alias: {
+      'common': path.resolve(__dirname, '../common')
+    }
   },
   externals: [nodeExternals()], // in order to ignore all modules in node_modules folder
 };

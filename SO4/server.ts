@@ -2,7 +2,10 @@ import * as Http from 'http';
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import * as SocketIO from 'socket.io';
-import { RealtimeServer, Config as RealtimeConfig } from './RealtimeRepo/realtime-server';
+import { SocketIOChannelServer } from './channels';
+import { ChannelClient } from 'common/channels-core';
+import { ChannelServer, ChannelServerConfig } from './ChannelServer';
+import { Config as GitConfig, RealtimeServer } from './RealtimeRepo/realtime-server';
 
 /**
  * The server config.
@@ -14,7 +17,8 @@ export interface Config {
     client: {
         dist: string;
     },
-    git: RealtimeConfig
+    channels: ChannelServerConfig,
+    git: GitConfig
 };
 
 /**
@@ -25,7 +29,8 @@ export class Server {
     _app: express.Express;
     _http: Http.Server;
     _socket: SocketIO.Server;
-    _repoServer: RealtimeServer;
+    _channelServer: ChannelServer;
+    _realtimeServer: RealtimeServer;
     _config: Config;
 
     constructor(config: Config) {
@@ -33,12 +38,15 @@ export class Server {
         this._app = express();
         this._http = new Http.Server(this._app);
         this._socket = SocketIO(this._http, config.socket);
-        this._repoServer = new RealtimeServer(config.git);
+
+        this._channelServer = new ChannelServer(config.channels);
+        this._realtimeServer = new RealtimeServer(config.git);
     }
 
     configure() {
         this._app.use(bodyParser.json());
-        this._repoServer.configure(this._app, this._socket);
+        this._channelServer.configure(this._app, this._socket);
+        this._realtimeServer.configure(this._app, this._socket);
 
         this._app.use('/', express.static(this._config.client.dist));
     }

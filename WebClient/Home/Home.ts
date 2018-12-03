@@ -1,13 +1,12 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
+import {File} from 'common/FilesChannel';
 import GameView from '../GameView/GameView';
 import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';
 import { gitManager } from '../GitManager';
 import { fileManager } from '../FileManager';
-import {File} from '../Core/File';
 import CubeIcon from './Cube.svg';
-import { FileData } from 'WebClient/Core/FileData';
 
 const numLoadingSteps: number = 4;
 
@@ -71,7 +70,7 @@ export default class Home extends Vue {
     }
 
     valueChanged(file: File, tag: string, value: string) {
-        if (file.data.type === 'file') {
+        if (file.type === 'object') {
             fileManager.updateFile(file, {
                 tags: {
                     [tag]: value
@@ -95,15 +94,18 @@ export default class Home extends Vue {
             this.fileLookup[file.id] = file;
             this.tags = fileManager.fileTags(this.files);
         });
-        fileManager.fileRemoved.subscribe(file => {
+        fileManager.fileRemoved.subscribe(id => {
+            const file = this.fileLookup[id];
             const index = this.files.indexOf(file);
             this.files.splice(index, 1);
             delete this.fileLookup[file.id];
             this.tags = fileManager.fileTags(this.files);
         });
         fileManager.fileUpdated.subscribe(file => {
-            const currentFile = this.fileLookup[file.id];
-            currentFile.data = file.data;
+            const old = this.fileLookup[file.id];
+            this.fileLookup[file.id] = file;
+            const index = this.files.indexOf(old);
+            this.files[index] = file;
             this.tags = fileManager.fileTags(this.files);
             this.$nextTick();
         });

@@ -38,7 +38,8 @@ module.exports = {
   resolve: {
     extensions: ['.vue', '.ts', '.js', '.css'],
     alias: {
-      'von-grid': path.resolve(__dirname, 'public/von-grid.min.js')
+      'von-grid': path.resolve(__dirname, 'public/von-grid.min.js'),
+      'common': path.resolve(__dirname, '../common')
     }
   },
   plugins: [

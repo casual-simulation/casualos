@@ -41,9 +41,7 @@ import {merge} from 'lodash';
 
 import {appManager} from '../AppManager';
 import {fileManager} from '../FileManager';
-import {File} from '../Core/File';
-import {FileData} from '../Core/FileData';
-import {WorkspaceData} from '../Core/WorkspaceData';
+import {File, Object, Workspace} from 'common/FilesChannel';
 
 import { vg } from "von-grid";
 
@@ -281,7 +279,7 @@ export default class GameView extends Vue {
         const file = this._fileForMesh(op.obj.object);
         if (good) {
           fileManager.updateFile(file.file, {
-            workspace: workspace.file.data.id,
+            workspace: workspace.file.id,
             position: {
               x: point.x,
               y: point.y
@@ -364,7 +362,7 @@ export default class GameView extends Vue {
     const hasParent = !!obj.object.parent && !!obj.object.parent.parent;
     const fileId = hasParent ? this._meshses[obj.object.parent.parent.id] : null;
     const file = fileId ? this._files[fileId] : null;
-    if (file && file.file.data.type === 'workspace') {
+    if (file && file.file.type === 'workspace') {
       return file;
     } else {
       return null;
@@ -373,14 +371,14 @@ export default class GameView extends Vue {
 
   private _fileUpdated(file: File) {
     const obj = this._files[file.id];
-    if(file.data.type === 'file') {
-      this._updateFile(obj, file.data);
+    if(file.type === 'object') {
+      this._updateFile(obj, file);
     } else {
-      this._updateWorkspace(obj, file.data);
+      this._updateWorkspace(obj, file);
     }
   }
 
-  private _updateFile(obj: File3D, data: FileData) {
+  private _updateFile(obj: File3D, data: Object) {
     const workspace = this._files[data.workspace];
       if (workspace) {
         obj.mesh.parent = workspace.mesh;
@@ -391,7 +389,7 @@ export default class GameView extends Vue {
       obj.mesh.position.y = data.position.y;
   }
 
-  private _updateWorkspace(obj: File3D, data: WorkspaceData) {
+  private _updateWorkspace(obj: File3D, data: Workspace) {
     obj.mesh.position.x = obj.grid.group.position.x = data.position.x || 0;
     obj.mesh.position.y = obj.grid.group.position.y = data.position.y || 0;
     obj.mesh.position.z = obj.grid.group.position.z = data.position.z || 0;
@@ -402,11 +400,11 @@ export default class GameView extends Vue {
     let mesh;
     let grid;
     let board;
-    if(file.data.type === 'file') {
+    if(file.type === 'object') {
       const cube = this._createCube(0.2);
       mesh = cube;
     } else {
-      const surface = this._createWorkSurface(file.data);
+      const surface = this._createWorkSurface(file);
       mesh = surface.board.group;
       grid = surface.sqrBoard;
       board = surface.board;
@@ -430,11 +428,11 @@ export default class GameView extends Vue {
     this._fileUpdated(file);
   }
 
-  private _fileRemoved(file: File) {
-    const obj = this._files[file.id];
+  private _fileRemoved(id: string) {
+    const obj = this._files[id];
     if (obj) {
       delete this._meshses[obj.mesh.id];
-      delete this._files[file.id];
+      delete this._files[id];
       this._scene.remove(obj.mesh);
     }
   }
@@ -471,7 +469,7 @@ export default class GameView extends Vue {
     this._workspacePlane.updateMatrixWorld(false);
   }
 
-  private _createWorkSurface(data: WorkspaceData) {
+  private _createWorkSurface(data: Workspace) {
     const grid = new vg.HexGrid({
       size: 4,
       cellSize: .3,

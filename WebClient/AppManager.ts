@@ -1,6 +1,5 @@
 import Axios from 'axios';
 import { Subject } from 'rxjs';
-import { Event } from './Core/Event';
 
 export interface User {
     email: string;
@@ -12,8 +11,6 @@ export interface User {
 export class AppManager {
 
     private _user: User = null;
-
-    public events: Subject<Event> = new Subject<Event>();
 
     constructor() {
         const localStorage = window.localStorage;

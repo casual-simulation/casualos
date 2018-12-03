@@ -12,6 +12,7 @@ const config: Config = {
     client: {
         dist: path.resolve(__dirname, '..', '..', 'WebClient', 'dist')
     },
+    channels: {},
     git: {
         gitlab_server: 'http://localhost:4330/git',
         proxy: {},

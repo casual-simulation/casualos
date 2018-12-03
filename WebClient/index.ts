@@ -79,10 +79,15 @@ router.beforeEach((to, from, next) => {
     next();
 });
 
-const app = new Vue({
-    router,
-    render: createEle => createEle(App)
-}).$mount('#app');
 
-fileManager.init();
-socketManager.init();
+async function init() {
+    await socketManager.init();
+    await fileManager.init();
+
+    const app = new Vue({
+        router,
+        render: createEle => createEle(App)
+    }).$mount('#app');
+}
+
+init();

@@ -19,8 +19,8 @@ import * as pify from 'pify';
 import { FSModule } from 'browserfs/dist/node/core/FS';
 import {Subject} from 'rxjs';
 import { AppManager, appManager } from './AppManager';
-import {File, FileType} from './Core/File';
-import {commitAdded, CommitAddedEvent} from './Core/Event';
+// import {File, FileType} from './Core/File';
+// import {commitAdded, CommitAddedEvent} from './Core/Event';
 
 export interface Config {
     default_project_url: string;
@@ -164,50 +164,50 @@ export class GitManager {
         });
     }
 
-    /**
-     * Creates a new file.
-     */
-    createNewFile():File {
-        return File.createFile("file");
-    }
+    // /**
+    //  * Creates a new file.
+    //  */
+    // createNewFile():File {
+    //     return File.createFile("file");
+    // }
 
-    /**
-     * Creates a new workspace.
-     */
-    createNewWorkspace(): File {
-        return File.createFile("workspace");
-    }
+    // /**
+    //  * Creates a new workspace.
+    //  */
+    // createNewWorkspace(): File {
+    //     return File.createFile("workspace");
+    // }
 
-    /**
-     * Gets a list of files (.file or .ws) that are currently in the repository.
-     */
-    async listFiles(): Promise<File[]> {
-        const list: string[] = await this.fs.readdir(this.projectDir);
-        const fileList = list.filter(filename => /\.file$/.test(filename) || /\.ws$/.test(filename));
+    // /**
+    //  * Gets a list of files (.file or .ws) that are currently in the repository.
+    //  */
+    // async listFiles(): Promise<File[]> {
+    //     const list: string[] = await this.fs.readdir(this.projectDir);
+    //     const fileList = list.filter(filename => /\.file$/.test(filename) || /\.ws$/.test(filename));
 
-        const files = await Promise.all(
-            fileList.map(async file => {
-                const type = /\.file$/.test(file) ? "file" : "workspace";
-                const data: string = await this.fs.readFile(`${this.projectDir}/${file}`, 'utf8');
-                return File.parseFile(type, data);
-            })
-        );
+    //     const files = await Promise.all(
+    //         fileList.map(async file => {
+    //             const type = /\.file$/.test(file) ? "file" : "workspace";
+    //             const data: string = await this.fs.readFile(`${this.projectDir}/${file}`, 'utf8');
+    //             return File.parseFile(type, data);
+    //         })
+    //     );
 
-        return files;
-    }
+    //     return files;
+    // }
 
-    /**
-     * Saves the given file to the filesystem and adds it to the index.
-     */
-    async saveFile(file: File): Promise<void> {
-        if (!file.changed) {
-            return;
-        }
-        await this._pfs.writeFile(this._path(file), file.content);
-        file.saved();
+    // /**
+    //  * Saves the given file to the filesystem and adds it to the index.
+    //  */
+    // async saveFile(file: File): Promise<void> {
+    //     if (!file.changed) {
+    //         return;
+    //     }
+    //     await this._pfs.writeFile(this._path(file), file.content);
+    //     file.saved();
 
-        await this._add(file.filename);
-    }
+    //     await this._add(file.filename);
+    // }
 
     /**
      * Determines if a commit can be created.
@@ -254,7 +254,7 @@ export class GitManager {
 
         await this.pushIfNeeded('master');
 
-        this._appManager.events.next(commitAdded(sha, branch, this.email, this.username));
+        // this._appManager.events.next(commitAdded(sha, branch, this.email, this.username));
         console.log(`[GitManager] Sent commit notification.`);
     }
 
@@ -329,9 +329,9 @@ export class GitManager {
         }
     }
 
-    private _path(file: File): string {
-        return `${this._config.local_project_dir}/${file.filename}`;
-    }
+    // private _path(file: File): string {
+    //     return `${this._config.local_project_dir}/${file.filename}`;
+    // }
 
     private async _checkout(branch: string) {
         await checkout({

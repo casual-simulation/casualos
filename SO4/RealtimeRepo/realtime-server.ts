@@ -192,16 +192,16 @@ export class RealtimeServer {
             }
         }));
 
-        socket.on('connection', (user) => {
-            console.log("[RealtimeServer] User connected to socket.");
+        // socket.on('connection', (user) => {
+        //     console.log("[RealtimeServer] User connected to socket.");
 
-            user.on('event', (event) => {
-                user.broadcast.emit('event', event);
-            });
+        //     user.on('event', (event) => {
+        //         user.broadcast.emit('event', event);
+        //     });
 
-            user.on('disconnect', (reason) => {
-                console.log("[RealtimeServer] User disconnected from socket:", reason);
-            });
-        });
+        //     user.on('disconnect', (reason) => {
+        //         console.log("[RealtimeServer] User disconnected from socket:", reason);
+        //     });
+        // });
     }
 }

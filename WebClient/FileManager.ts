@@ -1,48 +1,60 @@
 
-import {SubscriptionLike, Observable} from 'rxjs';
+import * as uuid from 'uuid/v4';
+import {SubscriptionLike, Observable, from} from 'rxjs';
 import {
   filter,
   map,
   shareReplay,
+  merge as mergeObservables,
 } from 'rxjs/operators';
 
 import {
   flatMap,
   sortBy,
   keys,
+  values,
   merge,
   uniq,
+  findIndex,
 } from 'lodash';
 
 import {AppManager, appManager} from './AppManager';
-import { 
-  FileDiscoveredEvent,
-  CommitAddedEvent,
-  fileDiscovered,
+import {socketManager} from './SocketManager';
+// import {GitManager, gitManager} from './GitManager';
+import {
+  fileAdded, 
+  fileRemoved, 
+  fileUpdated, 
+  File, 
+  Object, 
+  Workspace,
+  FileAddedEvent,
   FileRemovedEvent,
-  fileRemoved,
-  fileUpdated
-} from './Core/Event';
-import {GitManager, gitManager} from './GitManager';
-import {File, PartialData} from './Core/File';
-import {FileData} from './Core/FileData';
+  FileUpdatedEvent,
+  PartialFile,
+} from 'common/FilesChannel';
+
 
 /**
  * Defines a class that interfaces with the AppManager and GitManager
  * to reactively edit files.
  */
 export class FileManager {
-  private _gitManager: GitManager;
+  // private _gitManager: GitManager;
   private _appManager: AppManager;
   private _files: File[];
   private _status: string;
   private _initPromise: Promise<void>;
   private _fileDiscoveredObservable: Observable<File>;
-  private _fileRemovedObservable: Observable<File>;
+  private _fileRemovedObservable: Observable<string>;
   private _fileUpdatedObservable: Observable<File>;
 
   // TODO: Dispose of the subscription
   private _sub: SubscriptionLike;
+
+  get files(): File[] {
+    return values(socketManager.state);
+  }
 
   /**
    * Gets an observable that resolves whenever a new file is discovered.
@@ -57,7 +69,7 @@ export class FileManager {
    * That is, it was deleted from the working directory either by checking out a branch that
    * does not contain the file or by deleting it.
    */
-  get fileRemoved(): Observable<File> {
+  get fileRemoved(): Observable<string> {
     return this._fileRemovedObservable;
   }
 
@@ -72,9 +84,9 @@ export class FileManager {
     return this._status;
   }
 
-  constructor(app: AppManager, git: GitManager) {
+  constructor(app: AppManager) {
     this._appManager = app;
-    this._gitManager = git;
+    // this._gitManager = git;
     this._files = [];
   }
 
@@ -91,9 +103,8 @@ export class FileManager {
    */
   fileTags(files: File[]) {
     return uniq(flatMap(files, f => {
-      if(f.data.type === 'file') {
-        const data: FileData = <FileData>f.data;
-        return keys(data.tags);
+      if(f.type === 'object') {
+        return keys(f.tags);
       }
       return [];
     }));
@@ -102,10 +113,8 @@ export class FileManager {
   /**
    * Updates the given file with the given data.
    */
-  async updateFile(file: File, newData: PartialData) {
-    file.data = merge({}, file.data, newData);
-    // await this._gitManager.saveFile(file);
-    this._appManager.events.next(fileUpdated(file));
+  async updateFile(file: File, newData: PartialFile) {
+    socketManager.emit(fileUpdated(file.id, newData));
   }
 
   /**
@@ -161,123 +170,143 @@ export class FileManager {
   async createFile() {
     console.log('[FileManager] Create File');
 
-    const file = this._gitManager.createNewFile();
-    // await this._gitManager.saveFile(file);
+    const file: Object = {
+      id: uuid(),
+      type: 'object',
+      position: {
+        x: 0,
+        y: 0
+      },
+      workspace: null,
+      tags: {}
+    };
 
-    this._appManager.events.next(fileDiscovered(file));
+    socketManager.emit(fileAdded(file));
   }
 
   async createWorkspace() {
     console.log('[FileManager] Create File');
 
-    const file = this._gitManager.createNewWorkspace();
-    // await this._gitManager.saveFile(file);
+    const workspace: Workspace = {
+      id: uuid(),
+      type: 'workspace',
+      position: {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+    };
 
-    this._appManager.events.next(fileDiscovered(file));
+    socketManager.emit(fileAdded(workspace));
   }
 
   private async _init() {
     this._setStatus("Starting...");
 
-    this._sub = this._appManager.events.subscribe(event => {
-      if(event.type === 'file_discovered') {
+    this._sub = socketManager.events.subscribe(event => {
+      if(event.type === 'file_added') {
         this._fileDiscovered(event);
       } else if(event.type === 'file_removed') {
         this._fileRemoved(event);
-      } else if(event.type === 'commit_added') {
-        this._commitAdded(event);
       }
     });
 
-    this._fileDiscoveredObservable = this._appManager.events.pipe(
-      filter(event => event.type === 'file_discovered'),
-      map((event: FileDiscoveredEvent) => event.file),
-      shareReplay()
-    );
-
-    this._fileRemovedObservable = this._appManager.events.pipe(
-      filter(event => event.type === 'file_removed'),
-      map((event: FileRemovedEvent) => event.file),
-      shareReplay()
-    );
-
-    this._fileUpdatedObservable = this._appManager.events.pipe(
-      filter(event => event.type === 'file_updated'),
-      map((event: FileRemovedEvent) => event.file)
-    );
-
     // await gitManager.startIfNeeded();
+
+    // Replay the existing files for the components that need it this way
+    const state = socketManager.state;
+    const files = values(state);
+    const ordered = sortBy(files, f => f.type === 'object');
+    const newlyDiscovered = from(ordered);
+
+    this._fileDiscoveredObservable = socketManager.events.pipe(
+      filter(event => event.type === 'file_added'),
+      map((event: FileAddedEvent) => event.file),
+      mergeObservables(newlyDiscovered),
+      shareReplay()
+    );
+
+    this._fileRemovedObservable = socketManager.events.pipe(
+      filter(event => event.type === 'file_removed'),
+      map((event: FileRemovedEvent) => event.id),
+      shareReplay()
+    );
+
+    this._fileUpdatedObservable = socketManager.events.pipe(
+      filter(event => event.type === 'file_updated'),
+      map((event: FileUpdatedEvent) => socketManager.state[event.id])
+    );
 
     this._setStatus("Initialized.");
   }
 
-  private _updateFiles(currentFiles: File[]) {
+  // private _updateFiles(currentFiles: File[]) {
 
-    let newFiles: File[] = [];
-    let removedFiles: File[] = [];
+  //   let newFiles: File[] = [];
+  //   let removedFiles: File[] = [];
 
-    let old: {
-      [id: string]: File
-    } = {};
-    this._files.forEach(f => {
-      old[f.id] = f;
-    });
+  //   let old: {
+  //     [id: string]: File
+  //   } = {};
+  //   this._files.forEach(f => {
+  //     old[f.id] = f;
+  //   });
 
-    let current: {
-      [id: string]: File
-    } = {};
+  //   let current: {
+  //     [id: string]: File
+  //   } = {};
 
-    currentFiles.forEach(f => {
-      current[f.id] = f;
-      if(!old[f.id]) {
-        newFiles.push(f);
-      }
-    });
+  //   currentFiles.forEach(f => {
+  //     current[f.id] = f;
+  //     if(!old[f.id]) {
+  //       newFiles.push(f);
+  //     }
+  //   });
 
-    this._files.forEach(f => {
-      if(!current[f.id]) {
-        removedFiles.push(f);
-      }
-    });
+  //   this._files.forEach(f => {
+  //     if(!current[f.id]) {
+  //       removedFiles.push(f);
+  //     }
+  //   });
     
-    newFiles = sortBy(newFiles, f => f.data.type === 'file');
-    removedFiles = sortBy(removedFiles, f => f.data.type === 'file');
+  //   newFiles = sortBy(newFiles, f => f.data.type === 'file');
+  //   removedFiles = sortBy(removedFiles, f => f.data.type === 'file');
 
-    newFiles.forEach(file => {
-      this._appManager.events.next(fileDiscovered(file));
-    });
+  //   newFiles.forEach(file => {
+  //     this._appManager.events.next(fileDiscovered(file));
+  //   });
 
-    removedFiles.forEach(file => {
-      this._appManager.events.next(fileRemoved(file));
-    });
+  //   removedFiles.forEach(file => {
+  //     this._appManager.events.next(fileRemoved(file));
+  //   });
 
-    currentFiles.forEach(file => {
-      if (old[file.id]) {
-        console.log(`Updating file: '${file.id}'...`);
-        // Only notify of files that weren't added or removed.
-        this._appManager.events.next(fileUpdated(file));
-      }
-    })
-  }
+  //   currentFiles.forEach(file => {
+  //     if (old[file.id]) {
+  //       console.log(`Updating file: '${file.id}'...`);
+  //       // Only notify of files that weren't added or removed.
+  //       this._appManager.events.next(fileUpdated(file));
+  //     }
+  //   })
+  // }
 
-  private async _fileDiscovered(event: FileDiscoveredEvent) {
+  private async _fileDiscovered(event: FileAddedEvent) {
     this._files.push(event.file);
     this._files = sortBy(this._files, f => f.id);
   }
 
   private _fileRemoved(event: FileRemovedEvent) {
-    const index = this._files.indexOf(event.file);
+    const index = findIndex(this._files, f => f.id === event.id);
     if(index >= 0) {
       this._files.splice(index, 1);
     }
   }
 
-  private async _commitAdded(event: CommitAddedEvent) {
-    this._setStatus(`Commit ${event.hash} added on ${event.branch}.`);
-    if (!this.canSave) {
-      await this.pull();
-    }
-  }
+  // private async _commitAdded(event: CommitAddedEvent) {
+  //   this._setStatus(`Commit ${event.hash} added on ${event.branch}.`);
+  //   if (!this.canSave) {
+  //     await this.pull();
+  //   }
+  // }
 
   private _setStatus(status: string) {
     this._status = status;
@@ -285,4 +314,4 @@ export class FileManager {
   }
 }
 
-export const fileManager = new FileManager(appManager, gitManager);
+export const fileManager = new FileManager(appManager);
