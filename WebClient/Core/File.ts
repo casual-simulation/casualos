@@ -25,11 +25,6 @@ export class File {
     id: string;
 
     /**
-     * The type of the file.
-     */
-    type: FileType;
-
-    /**
      * The data currently contained in the file.
      */
     data: Data;
@@ -54,7 +49,7 @@ export class File {
      * Gets the extension of the file.
      */
     get extension(): string {
-        if(this.type === "file") {
+        if(this.data.type === "file") {
             return "file";
         } else {
             return "ws";
@@ -78,12 +73,12 @@ export class File {
 
     constructor(id: string, type: FileType, data?: FileData | WorkspaceData) {
         this.id = id;
-        this.type = type;
         this._data = data ? cloneDeep(data) : null;
         this.data = data;
-        if (!this.data && this.type === 'file') {
+        if (!this.data && type === 'file') {
             this.data = {
                 id: id,
+                type: 'file',
                 position: {x: 0, y: 0},
                 tags: {},
                 workspace: null
@@ -91,8 +86,13 @@ export class File {
         } else if(!this.data) {
             this.data = {
                 id: id,
-                position: {x: 0, y: 0}
+                type: 'workspace',
+                position: {x: 0, y: 0, z: 0}
             };
+        }
+
+        if (!this.data.type) {
+            this.data.type = type;
         }
     }
 

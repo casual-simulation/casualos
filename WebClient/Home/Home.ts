@@ -65,7 +65,7 @@ export default class Home extends Vue {
     }
 
     valueChanged(file: File, tag: string, value: string) {
-        if (file.type === 'file') {
+        if (file.data.type === 'file') {
             const data = <FileData>file.data;
             if(value) {
                 data.tags[tag] = value;

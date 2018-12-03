@@ -1,6 +1,9 @@
-import {Vector2} from './Vector2';
-
 export interface WorkspaceData {
     id: string;
-    position: Vector2;
+    type: 'workspace';
+    position: {
+        x: number;
+        y: number;
+        z: number;
+    };
 }

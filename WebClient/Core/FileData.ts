@@ -1,9 +1,12 @@
-import {Vector2} from './Vector2';
-
 export interface FileData {
     id: string;
     workspace: string;
-    position: Vector2;
+    type: 'file',
+    position: {
+        x: number;
+        y: number;
+        z?: number;
+    };
 
     tags: {
         [key: string]: any;

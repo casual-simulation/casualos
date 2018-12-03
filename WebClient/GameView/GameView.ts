@@ -263,28 +263,38 @@ export default class GameView extends Vue {
       if (op.workspace) {
         const point = pointOnPlane(op.drag, this._workspacePlane);
         if (point) {
-          op.workspace.mesh.position.x = point.x;
-          op.workspace.mesh.position.y = point.y + 0.4;
-          op.workspace.mesh.position.z = point.z;
+          this._moveWorkspace(op.workspace, point);
 
-          op.workspace.grid.group.position.x = point.x;
-          op.workspace.grid.group.position.y = point.y;
-          op.workspace.grid.group.position.z = point.z;
         }
       } else {
         const { good, point, workspace } = this._pointOnGrid(op.drag);
+        const file = this._fileForMesh(op.obj.object);
         if (good) {
           op.obj.object.parent = workspace.mesh;
           op.obj.object.position.x = point.x;
           op.obj.object.position.y = point.y;
           op.obj.object.position.z = point.z;
+
+          if (file && file.file.data.type === 'file') {
+            file.file.data.workspace = workspace.file.data.id;
+            file.file.data.position = {
+              x: point.x,
+              y: point.y
+            };
+          }
         } else {
           const p = pointOnRay(op.drag, 2);
           op.obj.object.parent = null;
           op.obj.object.position.x = p.x;
           op.obj.object.position.y = p.y;
           op.obj.object.position.z = p.z;
+
+          if (file && file.file.data.type === 'file') {
+            file.file.data.workspace = null;
+          }
         }
+
+        fileManager.markDirty(file.file);
       }
     });
 
@@ -305,6 +315,15 @@ export default class GameView extends Vue {
     if(this._sub) {
       this._sub.unsubscribe();
       this._sub = null;
+    }
+  }
+
+  private _fileForMesh(mesh: Object3D): File3D {
+    const id = this._meshses[mesh.id];
+    if (id) {
+      return this._files[id];
+    } else {
+      return null;
     }
   }
 
@@ -343,7 +362,7 @@ export default class GameView extends Vue {
     const hasParent = !!obj.object.parent && !!obj.object.parent.parent;
     const fileId = hasParent ? this._meshses[obj.object.parent.parent.id] : null;
     const file = fileId ? this._files[fileId] : null;
-    if (file && file.file.type === 'workspace') {
+    if (file && file.file.data.type === 'workspace') {
       return file;
     } else {
       return null;
@@ -355,7 +374,7 @@ export default class GameView extends Vue {
     let mesh;
     let grid;
     let board;
-    if(file.type === 'file') {
+    if(file.data.type === 'file') {
       const cube = this._createCube(0.2);
       mesh = cube;
     } else {
@@ -379,6 +398,36 @@ export default class GameView extends Vue {
       this._scene.add(grid.group);
       this._grids.push(grid.group);
     }
+
+    if(file.data.type === 'file') {
+      if (file.data.workspace) {
+        const workspace = this._files[file.data.workspace];
+        if (workspace) {
+          mesh.parent = workspace.mesh;
+        }
+      }
+
+      mesh.position.x = file.data.position.x || 0;
+      mesh.position.y = file.data.position.y || 0;
+      mesh.updateMatrixWorld(false);
+    } else {
+      this._moveWorkspace(obj, file.data.position);
+      mesh.updateMatrixWorld(false);
+    }
+  }
+
+  private _moveWorkspace(workspace: File3D, newPosition: {x: number, y: number, z:number}) {
+    workspace.mesh.position.x = workspace.grid.group.position.x = newPosition.x || 0;
+    workspace.mesh.position.y = workspace.grid.group.position.y = newPosition.y || 0;
+    workspace.mesh.position.z = workspace.grid.group.position.z = newPosition.z || 0;
+
+    workspace.file.data.position = {
+      x: newPosition.x,
+      y: newPosition.y,
+      z: newPosition.z
+    };
+
+    fileManager.markDirty(workspace.file);
   }
 
   private _fileRemoved(file: File) {

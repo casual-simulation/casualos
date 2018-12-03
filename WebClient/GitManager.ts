@@ -223,6 +223,12 @@ export class GitManager {
      */
     async commit(message: string): Promise<void> {
         console.log(`[GitManager] Committing...`);
+
+        await Promise.all(this._index.map(f => add({
+            dir: this.projectDir,
+            filepath: f
+        })));
+
         const sha = await commit({
             dir: this.projectDir,
             message: message,
@@ -336,11 +342,13 @@ export class GitManager {
     }
 
     private async _add(path: string) {
-        this._index.push(path);
-        await add({
-            dir: this.projectDir,
-            filepath: path
-        });
+        if(this._index.indexOf(path) < 0) {
+            this._index.push(path);
+        }
+        // await add({
+        //     dir: this.projectDir,
+        //     filepath: path
+        // });
     }
 
     private _clearIndex() {

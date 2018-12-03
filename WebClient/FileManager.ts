@@ -9,7 +9,7 @@ import {
 import {
   flatMap,
   sortBy,
-  keys
+  keys,
 } from 'lodash';
 
 import {AppManager, appManager} from './AppManager';
@@ -44,7 +44,7 @@ export class FileManager {
 
   get tags(): string[] {
     return flatMap(this._files, f => {
-      if(f.type === 'file') {
+      if(f.data.type === 'file') {
         const data: FileData = <FileData>f.data;
         return keys(data.tags);
       }
@@ -227,6 +227,8 @@ export class FileManager {
       }
     });
     
+    newFiles = sortBy(newFiles, f => f.data.type === 'file');
+    removedFiles = sortBy(removedFiles, f => f.data.type === 'file');
 
     newFiles.forEach(file => {
       this._appManager.events.next(fileDiscovered(file));
