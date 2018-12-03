@@ -22,6 +22,9 @@ export default class Home extends Vue {
     isOpen: boolean = false;
     status: string = '';
     files: File[] = [];
+    fileLookup: {
+        [id: string]: File
+    } = {};
     index: string[] = [];
     commits: git.CommitDescription[] = [];
     tags: string[] = [];
@@ -89,8 +92,25 @@ export default class Home extends Vue {
         this._setStatus('Pulling...');
         await fileManager.pull();
 
-        this.files = fileManager.files;
-        this.tags = fileManager.tags;
+        this.files = [];
+        this.tags = [];
+        fileManager.fileDiscovered.subscribe(file => {
+            this.files.push(file);
+            this.fileLookup[file.id] = file;
+            this.tags = fileManager.fileTags(this.files);
+        });
+        fileManager.fileRemoved.subscribe(file => {
+            const index = this.files.indexOf(file);
+            this.files.splice(index, 1);
+            delete this.fileLookup[file.id];
+            this.tags = fileManager.fileTags(this.files);
+        });
+        fileManager.fileUpdated.subscribe(file => {
+            const currentFile = this.fileLookup[file.id];
+            currentFile.data = file.data;
+            this.tags = fileManager.fileTags(this.files);
+            this.$nextTick();
+        });
 
         this.commits = await gitManager.commitLog();
         this.isLoading = false;

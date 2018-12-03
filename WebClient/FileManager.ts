@@ -45,23 +45,6 @@ export class FileManager {
   // TODO: Dispose of the subscription
   private _sub: SubscriptionLike;
 
-  get tags(): string[] {
-    return flatMap(this._files, f => {
-      if(f.data.type === 'file') {
-        const data: FileData = <FileData>f.data;
-        return keys(data.tags);
-      }
-      return [];
-    });
-  }
-
-  /**
-   * Gets the list of files that are stored.
-   */
-  get files(): File[] {
-    return this._files;
-  }
-
   /**
    * Gets an observable that resolves whenever a new file is discovered.
    * That is, it was created or added by another user.
@@ -102,6 +85,19 @@ export class FileManager {
     } else {
       return this._initPromise = this._init();
     }
+  }
+
+  /**
+   * Gets a list of tags that the given files contain.
+   */
+  fileTags(files: File[]) {
+    return flatMap(files, f => {
+      if(f.data.type === 'file') {
+        const data: FileData = <FileData>f.data;
+        return keys(data.tags);
+      }
+      return [];
+    });
   }
 
   /**
@@ -149,7 +145,7 @@ export class FileManager {
     await this.init();
 
     this._setStatus('Saving files...');
-    await Promise.all(this.files.map(file => {
+    await Promise.all(this._files.map(file => {
       return gitManager.saveFile(file);
     }));
 
@@ -256,6 +252,14 @@ export class FileManager {
     removedFiles.forEach(file => {
       this._appManager.events.next(fileRemoved(file));
     });
+
+    currentFiles.forEach(file => {
+      if (old[file.id]) {
+        console.log(`Updating file: '${file.id}'...`);
+        // Only notify of files that weren't added or removed.
+        this._appManager.events.next(fileUpdated(file));
+      }
+    })
   }
 
   private async _fileCreated(event: FileCreatedEvent) {
