@@ -10,6 +10,7 @@ import {
   flatMap,
   sortBy,
   keys,
+  merge,
 } from 'lodash';
 
 import {AppManager, appManager} from './AppManager';
@@ -20,10 +21,11 @@ import {
   fileCreated,
   fileDiscovered,
   FileRemovedEvent,
-  fileRemoved
+  fileRemoved,
+  fileUpdated
 } from './Core/Event';
 import {GitManager, gitManager} from './GitManager';
-import {File} from './Core/File';
+import {File, PartialData} from './Core/File';
 import {FileData} from './Core/FileData';
 
 /**
@@ -38,6 +40,7 @@ export class FileManager {
   private _initPromise: Promise<void>;
   private _fileDiscoveredObservable: Observable<File>;
   private _fileRemovedObservable: Observable<File>;
+  private _fileUpdatedObservable: Observable<File>;
 
   // TODO: Dispose of the subscription
   private _sub: SubscriptionLike;
@@ -76,6 +79,13 @@ export class FileManager {
     return this._fileRemovedObservable;
   }
 
+  /**
+   * Gets an observable that resolves whenever a file is updated.
+   */
+  get fileUpdated(): Observable<File> {
+    return this._fileUpdatedObservable;
+  }
+
   get status(): string {
     return this._status;
   }
@@ -92,6 +102,15 @@ export class FileManager {
     } else {
       return this._initPromise = this._init();
     }
+  }
+
+  /**
+   * Updates the given file with the given data.
+   */
+  async updateFile(file: File, newData: PartialData) {
+    file.data = merge({}, file.data, newData);
+    await this._gitManager.saveFile(file);
+    this._appManager.events.next(fileUpdated(file));
   }
 
   /**
@@ -161,11 +180,6 @@ export class FileManager {
     this._appManager.events.next(fileCreated(file));
   }
 
-  async markDirty(file: File) {
-    await this._gitManager.saveFile(file);
-    return this.canSave;
-  }
-
   private async _init() {
     this._setStatus("Starting...");
 
@@ -191,6 +205,11 @@ export class FileManager {
       filter(event => event.type === 'file_removed'),
       map((event: FileRemovedEvent) => event.file),
       shareReplay()
+    );
+
+    this._fileUpdatedObservable = this._appManager.events.pipe(
+      filter(event => event.type === 'file_updated'),
+      map((event: FileRemovedEvent) => event.file)
     );
 
     await gitManager.startIfNeeded();

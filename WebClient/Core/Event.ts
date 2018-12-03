@@ -5,7 +5,8 @@ export type Event =
     FileCreatedEvent | 
     FileDiscoveredEvent | 
     FileRemovedEvent | 
-    CommitAddedEvent;
+    CommitAddedEvent |
+    FileUpdatedEvent;
 
 export interface EventBase {
     /**
@@ -26,6 +27,11 @@ export interface FileDiscoveredEvent extends EventBase {
 
 export interface FileRemovedEvent extends EventBase {
     type: 'file_removed';
+    file: File;
+}
+
+export interface FileUpdatedEvent extends EventBase {
+    type: 'file_updated';
     file: File;
 }
 
@@ -70,6 +76,14 @@ export function fileDiscovered(file: File): FileDiscoveredEvent {
 export function fileRemoved(file: File): FileRemovedEvent {
     return {
         type: 'file_removed',
+        remote: false,
+        file: file
+    };
+}
+
+export function fileUpdated(file: File): FileUpdatedEvent {
+    return {
+        type: 'file_updated',
         remote: false,
         file: file
     };

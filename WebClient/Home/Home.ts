@@ -27,7 +27,6 @@ export default class Home extends Vue {
     tags: string[] = [];
     isMakingNewTag: boolean = false;
     newTag: string = 'myNewTag';
-    canSave: boolean = false;
 
     isLoading: boolean = false;
     progress: number = 0;
@@ -35,6 +34,10 @@ export default class Home extends Vue {
 
     get user() {
         return appManager.user;
+    }
+
+    canSave() {
+        return fileManager.canSave;
     }
 
     open() {
@@ -66,14 +69,10 @@ export default class Home extends Vue {
 
     valueChanged(file: File, tag: string, value: string) {
         if (file.data.type === 'file') {
-            const data = <FileData>file.data;
-            if(value) {
-                data.tags[tag] = value;
-            } else {
-                delete data.tags[tag];
-            }
-            fileManager.markDirty(file).then(canSave => {
-                this.canSave = canSave;
+            fileManager.updateFile(file, {
+                tags: {
+                    [tag]: value
+                }
             });
         }
     }
@@ -92,7 +91,6 @@ export default class Home extends Vue {
 
         this.files = fileManager.files;
         this.tags = fileManager.tags;
-        this.canSave = fileManager.canSave;
 
         this.commits = await gitManager.commitLog();
         this.isLoading = false;

@@ -345,10 +345,6 @@ export class GitManager {
         if(this._index.indexOf(path) < 0) {
             this._index.push(path);
         }
-        // await add({
-        //     dir: this.projectDir,
-        //     filepath: path
-        // });
     }
 
     private _clearIndex() {

@@ -8,6 +8,19 @@ import {
 export type FileType = "file" | "workspace";
 export type Data = FileData | WorkspaceData;
 
+export interface PartialData {
+    id?: string;
+    type?: string;
+    workspace?: string;
+    position?: {
+        x?: number;
+        y?: number;
+        z?: number;
+    };
+    tags?: {
+        [key: string]: any;
+    }
+}
 
 /**
  * Represents a file. That is, an object that has an ID and can be saved to 

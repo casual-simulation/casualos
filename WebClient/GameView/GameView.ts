@@ -37,10 +37,13 @@ import {
   map,
 } from 'rxjs/operators';
 
+import {merge} from 'lodash';
+
 import {appManager} from '../AppManager';
 import {fileManager} from '../FileManager';
 import {FileCreatedEvent} from '../Core/Event';
 import {File} from '../Core/File';
+import {FileData} from '../Core/FileData';
 import {WorkspaceData} from '../Core/WorkspaceData';
 
 import { vg } from "von-grid";
@@ -229,6 +232,9 @@ export default class GameView extends Vue {
     fileManager.fileRemoved.subscribe(file => {
       this._fileRemoved(file);
     });
+    fileManager.fileUpdated.subscribe(file => {
+      this._fileUpdated(file);
+    }); 
 
     const selectedObjects = isButton(mouseDown, 0)
       .pipe(
@@ -263,38 +269,35 @@ export default class GameView extends Vue {
       if (op.workspace) {
         const point = pointOnPlane(op.drag, this._workspacePlane);
         if (point) {
-          this._moveWorkspace(op.workspace, point);
-
+          fileManager.updateFile(op.workspace.file, {
+            position: {
+              x: point.x,
+              y: point.y,
+              z: point.z
+            }
+          });
         }
       } else {
         const { good, point, workspace } = this._pointOnGrid(op.drag);
         const file = this._fileForMesh(op.obj.object);
         if (good) {
-          op.obj.object.parent = workspace.mesh;
-          op.obj.object.position.x = point.x;
-          op.obj.object.position.y = point.y;
-          op.obj.object.position.z = point.z;
-
-          if (file && file.file.data.type === 'file') {
-            file.file.data.workspace = workspace.file.data.id;
-            file.file.data.position = {
+          fileManager.updateFile(file.file, {
+            workspace: workspace.file.data.id,
+            position: {
               x: point.x,
               y: point.y
-            };
-          }
+            }
+          });
         } else {
           const p = pointOnRay(op.drag, 2);
-          op.obj.object.parent = null;
-          op.obj.object.position.x = p.x;
-          op.obj.object.position.y = p.y;
-          op.obj.object.position.z = p.z;
-
-          if (file && file.file.data.type === 'file') {
-            file.file.data.workspace = null;
-          }
+          fileManager.updateFile(file.file, {
+            workspace: null,
+            position: {
+              x: p.x,
+              y: p.y
+            }
+          });
         }
-
-        fileManager.markDirty(file.file);
       }
     });
 
@@ -369,6 +372,32 @@ export default class GameView extends Vue {
     }
   }
 
+  private _fileUpdated(file: File) {
+    const obj = this._files[file.id];
+    if(file.data.type === 'file') {
+      this._updateFile(obj, file.data);
+    } else {
+      this._updateWorkspace(obj, file.data);
+    }
+  }
+
+  private _updateFile(obj: File3D, data: FileData) {
+    const workspace = this._files[data.workspace];
+      if (workspace) {
+        obj.mesh.parent = workspace.mesh;
+      } else {
+        obj.mesh.parent = null;
+      }
+      obj.mesh.position.x = data.position.x;
+      obj.mesh.position.y = data.position.y;
+  }
+
+  private _updateWorkspace(obj: File3D, data: WorkspaceData) {
+    obj.mesh.position.x = obj.grid.group.position.x = data.position.x || 0;
+    obj.mesh.position.y = obj.grid.group.position.y = data.position.y || 0;
+    obj.mesh.position.z = obj.grid.group.position.z = data.position.z || 0;
+  }
+
   private _fileAdded(file: File) {
     console.log("File Added!");
     let mesh;
@@ -399,35 +428,7 @@ export default class GameView extends Vue {
       this._grids.push(grid.group);
     }
 
-    if(file.data.type === 'file') {
-      if (file.data.workspace) {
-        const workspace = this._files[file.data.workspace];
-        if (workspace) {
-          mesh.parent = workspace.mesh;
-        }
-      }
-
-      mesh.position.x = file.data.position.x || 0;
-      mesh.position.y = file.data.position.y || 0;
-      mesh.updateMatrixWorld(false);
-    } else {
-      this._moveWorkspace(obj, file.data.position);
-      mesh.updateMatrixWorld(false);
-    }
-  }
-
-  private _moveWorkspace(workspace: File3D, newPosition: {x: number, y: number, z:number}) {
-    workspace.mesh.position.x = workspace.grid.group.position.x = newPosition.x || 0;
-    workspace.mesh.position.y = workspace.grid.group.position.y = newPosition.y || 0;
-    workspace.mesh.position.z = workspace.grid.group.position.z = newPosition.z || 0;
-
-    workspace.file.data.position = {
-      x: newPosition.x,
-      y: newPosition.y,
-      z: newPosition.z
-    };
-
-    fileManager.markDirty(workspace.file);
+    this._fileUpdated(file);
   }
 
   private _fileRemoved(file: File) {
