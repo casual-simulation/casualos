@@ -27,9 +27,7 @@ export class SocketManager {
             if (event.remote) {
                 return;
             }
-            if(event.type === 'commit_added') {
-                this._socket.emit('event', event);
-            }
+            this._socket.emit('event', event);
         });
     }
 

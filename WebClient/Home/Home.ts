@@ -80,10 +80,6 @@ export default class Home extends Vue {
         }
     }
 
-    async checkStatus() {
-        this.index = await gitManager.index();
-    }
-
     async created() {
         EventBus.$on('openInfoCard', this.open);
         this.open();
@@ -112,7 +108,7 @@ export default class Home extends Vue {
             this.$nextTick();
         });
 
-        this.commits = await gitManager.commitLog();
+        // this.commits = await gitManager.commitLog();
         this.isLoading = false;
         
         this._setStatus('Waiting for input...');

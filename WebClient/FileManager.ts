@@ -11,14 +11,13 @@ import {
   sortBy,
   keys,
   merge,
+  uniq,
 } from 'lodash';
 
 import {AppManager, appManager} from './AppManager';
 import { 
-  FileCreatedEvent,
   FileDiscoveredEvent,
   CommitAddedEvent,
-  fileCreated,
   fileDiscovered,
   FileRemovedEvent,
   fileRemoved,
@@ -91,13 +90,13 @@ export class FileManager {
    * Gets a list of tags that the given files contain.
    */
   fileTags(files: File[]) {
-    return flatMap(files, f => {
+    return uniq(flatMap(files, f => {
       if(f.data.type === 'file') {
         const data: FileData = <FileData>f.data;
         return keys(data.tags);
       }
       return [];
-    });
+    }));
   }
 
   /**
@@ -105,7 +104,7 @@ export class FileManager {
    */
   async updateFile(file: File, newData: PartialData) {
     file.data = merge({}, file.data, newData);
-    await this._gitManager.saveFile(file);
+    // await this._gitManager.saveFile(file);
     this._appManager.events.next(fileUpdated(file));
   }
 
@@ -115,18 +114,18 @@ export class FileManager {
   async pull() {
     await this.init();
 
-    this._setStatus('Checking for project...');
-    if(!(await gitManager.isProjectCloned())) {
-        this._setStatus('Cloning project...');
-        await gitManager.cloneProject();
-    } else {
-        this._setStatus('Updating project...');
-        await gitManager.updateProject();
-    }
+    // this._setStatus('Checking for project...');
+    // if(!(await gitManager.isProjectCloned())) {
+    //     this._setStatus('Cloning project...');
+    //     await gitManager.cloneProject();
+    // } else {
+    //     this._setStatus('Updating project...');
+    //     await gitManager.updateProject();
+    // }
 
-    this._setStatus("Grabbing files...");
-    const currentFiles = await this._gitManager.listFiles();
-    this._updateFiles(currentFiles);
+    // this._setStatus("Grabbing files...");
+    // const currentFiles = await this._gitManager.listFiles();
+    // this._updateFiles(currentFiles);
     
     this._setStatus('Waiting for input...');
   }
@@ -135,7 +134,8 @@ export class FileManager {
    * Gets whether the files can be saved.
    */
   get canSave(): boolean {
-    return gitManager.canCommit();
+    // return gitManager.canCommit();
+    return false;
   }
 
   /**
@@ -144,45 +144,43 @@ export class FileManager {
   async save() {
     await this.init();
 
-    this._setStatus('Saving files...');
-    await Promise.all(this._files.map(file => {
-      return gitManager.saveFile(file);
-    }));
+    // this._setStatus('Saving files...');
+    // await Promise.all(this._files.map(file => {
+    //   return gitManager.saveFile(file);
+    // }));
 
     
-    if(await gitManager.canCommit()) {
-      await gitManager.commit("Save files");
-      await gitManager.pushIfNeeded(gitManager.localUserBranch);
-    } else {
-      this._setStatus('No changes. Commit & push skipped.');
-    }
+    // if(await gitManager.canCommit()) {
+    //   await gitManager.commit("Save files");
+    //   await gitManager.pushIfNeeded(gitManager.localUserBranch);
+    // } else {
+    //   this._setStatus('No changes. Commit & push skipped.');
+    // }
   }
 
   async createFile() {
     console.log('[FileManager] Create File');
 
     const file = this._gitManager.createNewFile();
-    await this._gitManager.saveFile(file);
+    // await this._gitManager.saveFile(file);
 
-    this._appManager.events.next(fileCreated(file));
+    this._appManager.events.next(fileDiscovered(file));
   }
 
   async createWorkspace() {
     console.log('[FileManager] Create File');
 
     const file = this._gitManager.createNewWorkspace();
-    await this._gitManager.saveFile(file);
+    // await this._gitManager.saveFile(file);
 
-    this._appManager.events.next(fileCreated(file));
+    this._appManager.events.next(fileDiscovered(file));
   }
 
   private async _init() {
     this._setStatus("Starting...");
 
     this._sub = this._appManager.events.subscribe(event => {
-      if(event.type === 'file_created') {
-        this._fileCreated(event);
-      } else if(event.type === 'file_discovered') {
+      if(event.type === 'file_discovered') {
         this._fileDiscovered(event);
       } else if(event.type === 'file_removed') {
         this._fileRemoved(event);
@@ -208,7 +206,7 @@ export class FileManager {
       map((event: FileRemovedEvent) => event.file)
     );
 
-    await gitManager.startIfNeeded();
+    // await gitManager.startIfNeeded();
 
     this._setStatus("Initialized.");
   }
@@ -260,10 +258,6 @@ export class FileManager {
         this._appManager.events.next(fileUpdated(file));
       }
     })
-  }
-
-  private async _fileCreated(event: FileCreatedEvent) {
-    this._appManager.events.next(fileDiscovered(event.file));
   }
 
   private async _fileDiscovered(event: FileDiscoveredEvent) {

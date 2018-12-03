@@ -2,7 +2,6 @@
 import {File, FileType} from './File';
 
 export type Event = 
-    FileCreatedEvent | 
     FileDiscoveredEvent | 
     FileRemovedEvent | 
     CommitAddedEvent |
@@ -13,11 +12,6 @@ export interface EventBase {
      * Whether this event was from a remote server.
      */
     remote: boolean;
-}
-
-export interface FileCreatedEvent extends EventBase {
-    type: 'file_created';
-    file: File;
 }
 
 export interface FileDiscoveredEvent extends EventBase {
@@ -54,14 +48,6 @@ export interface CommitAddedEvent extends EventBase {
     author: {
         email: string;
         username: string;
-    };
-}
-
-export function fileCreated(file: File): FileCreatedEvent {
-    return {
-        type: 'file_created',
-        remote: false,
-        file: file
     };
 }
 

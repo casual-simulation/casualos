@@ -41,7 +41,6 @@ import {merge} from 'lodash';
 
 import {appManager} from '../AppManager';
 import {fileManager} from '../FileManager';
-import {FileCreatedEvent} from '../Core/Event';
 import {File} from '../Core/File';
 import {FileData} from '../Core/FileData';
 import {WorkspaceData} from '../Core/WorkspaceData';
