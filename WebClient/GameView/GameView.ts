@@ -22,6 +22,7 @@ import {
   Plane,
   PlaneGeometry,
   MeshBasicMaterial,
+  Object3D,
 } from 'three';
 import Vue, {ComponentOptions} from 'vue';
 import Component from 'vue-class-component';
@@ -49,10 +50,11 @@ interface Ray {
   direction: Vector3;
 }
 
-interface Workspace {
-  data: WorkspaceData;
+interface File3D {
+  mesh: Mesh | Group;
+  surface: vg.Board;
+  grid: vg.Board;
   file: File;
-  object: Group;
 }
 
 const mouseUp = fromEvent<MouseEvent>(document, 'mouseup');
@@ -109,10 +111,10 @@ interface RaycastTest {
   intersects: Intersection[];
 }
 
-function raycast(raycaster: Raycaster, scene: Scene, camera: Camera) {
+function raycast(raycaster: Raycaster, objects: Object3D[], camera: Camera) {
   return (pos: Vector2) => {
     raycaster.setFromCamera(pos, camera);
-    const intersects = raycaster.intersectObjects(scene.children, true);
+    const intersects = raycaster.intersectObjects(objects, true);
 
     return {
       mouse: pos,
@@ -168,15 +170,14 @@ export default class GameView extends Vue {
 
   private _cube: Mesh;
   private _workspacePlane: Mesh;
+  private _draggableObjects: Object3D[];
+  private _grids: Object3D[];
 
   /**
    * A map of file IDs to files and meshes.
    */
   private _files: {
-    [id: string]: {
-      mesh: Mesh | Group,
-      file: File
-    }
+    [id: string]: File3D
   } = {};
 
   /**
@@ -193,6 +194,8 @@ export default class GameView extends Vue {
   async mounted() {
     this._files = {};
     this._meshses = {};
+    this._draggableObjects = [];
+    this._grids = [];
     this._scene = new Scene();
     this._scene.background = new Color(0xffffff);
     this._camera = new PerspectiveCamera(
@@ -230,7 +233,7 @@ export default class GameView extends Vue {
     const selectedObjects = isButton(mouseDown, 0)
       .pipe(
         map(screenPosition(gameView)),
-        map(raycast(this._raycaster, this._scene, this._camera)),
+        map(raycast(this._raycaster, this._draggableObjects, this._camera)),
         map(r => r.intersects.length > 0 ? r.intersects[0] : null),
       );
     
@@ -259,14 +262,29 @@ export default class GameView extends Vue {
       console.log('drag object', op);
       if (op.workspace) {
         const point = pointOnPlane(op.drag, this._workspacePlane);
-        op.workspace.object.position.x = point.x;
-        op.workspace.object.position.y = point.y;
-        op.workspace.object.position.z = point.z;
+        if (point) {
+          op.workspace.mesh.position.x = point.x;
+          op.workspace.mesh.position.y = point.y + 0.4;
+          op.workspace.mesh.position.z = point.z;
+
+          op.workspace.grid.group.position.x = point.x;
+          op.workspace.grid.group.position.y = point.y;
+          op.workspace.grid.group.position.z = point.z;
+        }
       } else {
-        const point = pointOnRay(op.drag, 2);
-        op.obj.object.position.x = point.x;
-        op.obj.object.position.y = point.y;
-        op.obj.object.position.z = point.z;
+        const { good, point, workspace } = this._pointOnGrid(op.drag);
+        if (good) {
+          op.obj.object.parent = workspace.mesh;
+          op.obj.object.position.x = point.x;
+          op.obj.object.position.y = point.y;
+          op.obj.object.position.z = point.z;
+        } else {
+          const p = pointOnRay(op.drag, 2);
+          op.obj.object.parent = null;
+          op.obj.object.position.x = p.x;
+          op.obj.object.position.y = p.y;
+          op.obj.object.position.z = p.z;
+        }
       }
     });
 
@@ -290,7 +308,35 @@ export default class GameView extends Vue {
     }
   }
 
-  private _workspaceForIntersection(obj: Intersection): Workspace | null {
+  private _pointOnGrid(ray: Ray) {
+    const raycaster = new Raycaster(ray.origin, ray.direction, 0, Number.POSITIVE_INFINITY);
+    const hits = raycaster.intersectObjects(this._grids, true);
+    
+    if (hits.length > 0) {
+      const hit = hits[0];
+      const workspace = this._workspaceForIntersection(hit);
+      if (workspace) {
+        const point = hit.point;
+        const cell = workspace.grid.grid.pixelToCell(point);
+        const pos = workspace.grid.grid.cellToPixel(cell);
+        return { 
+          good: true,
+          point: pos, 
+          workspace
+        };
+      } else {
+        return {
+          good: false
+        };
+      }
+    } else {
+      return {
+        good: false
+      };
+    }
+  }
+
+  private _workspaceForIntersection(obj: Intersection): File3D | null {
     if (!obj) {
       return null;
     }
@@ -298,11 +344,7 @@ export default class GameView extends Vue {
     const fileId = hasParent ? this._meshses[obj.object.parent.parent.id] : null;
     const file = fileId ? this._files[fileId] : null;
     if (file && file.file.type === 'workspace') {
-      return {
-        file: file.file,
-        data: file.file.data,
-        object: <Group>obj.object.parent
-      };
+      return file;
     } else {
       return null;
     }
@@ -311,21 +353,32 @@ export default class GameView extends Vue {
   private _fileAdded(file: File) {
     console.log("File Added!");
     let mesh;
+    let grid;
+    let board;
     if(file.type === 'file') {
       const cube = this._createCube(0.2);
       mesh = cube;
     } else {
-      const board = this._createWorkSurface(file.data);
-      mesh = board.group;
+      const surface = this._createWorkSurface(file.data);
+      mesh = surface.board.group;
+      grid = surface.sqrBoard;
+      board = surface.board;
     }
     const obj = this._files[file.id] = {
       file: file,
+      grid: grid,
+      surface: board,
       mesh: mesh
     };
 
     this._meshses[obj.mesh.id] = obj.file.id;
-
+    this._draggableObjects.push(obj.mesh);
     this._scene.add(obj.mesh);
+    if (grid) {
+      this._meshses[grid.group.id] = obj.file.id;
+      this._scene.add(grid.group);
+      this._grids.push(grid.group);
+    }
   }
 
   private _fileRemoved(file: File) {
@@ -359,7 +412,7 @@ export default class GameView extends Vue {
     this._camera.rotation.x = Math.degToRad(-30);
     this._camera.updateMatrixWorld(false);
 
-    const plane = new PlaneGeometry(1000, 1000);
+    const plane = new PlaneGeometry(10000, 10000);
 
     this._workspacePlane = new Mesh(plane, new MeshBasicMaterial());
     this._workspacePlane.position.x = 0;
@@ -389,9 +442,22 @@ export default class GameView extends Vue {
 
     board.group.position.x = data.position.x;
     board.group.position.z = data.position.y;
-    board.group.position.y = -1;
+    board.group.position.y = 0.4;
 
-    return board;
+    const sqrGrid = new vg.SqrGrid({
+      size: 20,
+      cellSize: .1
+    });
+    sqrGrid.generate();
+
+    const sqrBoard = new vg.Board(sqrGrid);
+    sqrBoard.generateOverlay(20);
+
+    sqrBoard.group.position.x = data.position.x;
+    sqrBoard.group.position.z = data.position.y;
+    sqrBoard.group.position.y = 0;
+
+    return { board, sqrBoard };
   }
 
   private _renderGame() {
