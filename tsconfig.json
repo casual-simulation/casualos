@@ -1,12 +1,18 @@
 {
     "compilerOptions": {
       "outDir": "./temp/",
+      "baseUrl": ".",
       "noImplicitAny": true,
-      "module": "es6",
+      "module": "esNext",
       "target": "es5",
       "allowJs": false,
       "moduleResolution": "node",
-      "lib": [ "es2015.promise", "es5" ],
+      "sourceMap": true,
+      "lib": [ "es2015.promise", "es5", "dom" ],
+      "experimentalDecorators": true,
+      "paths": {
+        "von-grid": ["./typings/von-grid/von-grid.d.ts"]
+      }
     }
     
   }

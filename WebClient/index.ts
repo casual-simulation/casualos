@@ -1,67 +1,88 @@
 
-import * as git from 'isomorphic-git';
-import * as BrowserFS from 'browserfs';
-import * as pify from 'pify';
-import { FSModule } from 'browserfs/dist/node/core/FS';
+import Vue from 'vue';
+import VueRouter, { RouteConfig } from 'vue-router';
+import { 
+    MdButton, 
+    MdContent, 
+    MdApp, 
+    MdCard, 
+    MdToolbar, 
+    MdField, 
+    MdProgress, 
+    MdDrawer, 
+    MdList, 
+    MdMenu, 
+    MdDialog, 
+    MdDialogConfirm,
+    MdTabs,
+} from 'vue-material/dist/components';
+import 'vue-material/dist/vue-material.min.css'
+import 'vue-material/dist/theme/default.css'
+
+import App from './App/App';
+import Welcome from './Welcome/Welcome';
 import { polyfill } from 'es6-promise';
+import { appManager } from './AppManager';
+import { fileManager } from './FileManager';
+import { socketManager } from './SocketManager';
+
+const Home = () => import('./Home/Home');
 
 // Setup the Promise shim for browsers that don't support promises.
 polyfill();
 
-let fs: FSModule;
-let pfs: any;
+Vue.use(VueRouter);
+Vue.use(MdButton);
+Vue.use(MdContent);
+Vue.use(MdApp);
+Vue.use(MdCard);
+Vue.use(MdToolbar);
+Vue.use(MdField);
+Vue.use(MdProgress);
+Vue.use(MdDrawer);
+Vue.use(MdList);
+Vue.use(MdMenu);
+Vue.use(MdDialog);
+Vue.use(MdDialogConfirm);
+Vue.use(MdTabs);
 
-async function exists(path: string) {
-    try {
-        return await pfs.exists(path);
-    } catch(ex) {
-        return ex;
-    }
-}
+const routes: RouteConfig[] = [
+    {
+        path: '/',
+        component: Welcome,
+        beforeEnter: (to, from, next) => {
+            if (appManager.user !== null) {
+                next({ path: '/home' });
+            }
+            else {
+                next();
+            }
+        }
+    },
+    {
+        path: '/home',
+        component: Home
+    },
+]
 
-async function start() {
+const router = new VueRouter({
+    routes
+});
 
-    console.log("Start!");
-
-    let fsOptions = {
-        fs: 'IndexedDB',
-        options: {}
-    };
-
-    let configureAsync = pify(BrowserFS.configure);
-
-    await configureAsync(fsOptions);
-    fs = BrowserFS.BFSRequire('fs');
-
-    // Initialize isomorphic-git with our new file system
-    git.plugins.set('fs', fs);
-
-    pfs = pify(fs);
-    let dir = 'tutorial';
-
-    let dirExists = await exists(dir);
-
-    if (!dirExists) {
-        console.log("Cloning...");
-
-        try {
-            await git.clone({
-                dir,
-                corsProxy: 'https://cors.isomorphic-git.org',
-                url: 'https://github.com/isomorphic-git/isomorphic-git',
-                ref: 'master',
-                singleBranch: true,
-                depth: 10
-            });
-            console.log("Cloned!");
-        } catch (ex) {
-            console.error(ex);
+router.beforeEach((to, from, next) => {
+    if (to.path !== '/') {
+        if (appManager.user === null) {
+            next({ path: '/' });
+            return;
         }
     }
+    next();
+});
 
-    let files = await pfs.readdir(dir);
+const app = new Vue({
+    router,
+    render: createEle => createEle(App)
+}).$mount('#app');
 
-    console.log(files);
-}
-
-start();
+fileManager.init();
+socketManager.init();
