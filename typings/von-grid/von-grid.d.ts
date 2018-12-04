@@ -6,6 +6,7 @@ import {
   Intersection,
   Camera,
   Object3D,
+  LineBasicMaterial,
 } from 'three';
 
 declare module 'von-grid' {
@@ -69,7 +70,7 @@ declare module 'von-grid' {
     class Board {
       constructor(grid: Grid);
       generateTilemap(config?: TilemapConfig): void;
-      generateOverlay(size: number): void;
+      generateOverlay(size: number, mat?: LineBasicMaterial): void;
       group: Group;
       grid: Grid;
     }
