@@ -262,7 +262,6 @@ export default class GameView extends Vue {
     );
 
     dragOperations.subscribe(op => {
-      console.log('drag object', op);
       if (op.workspace) {
         const point = pointOnPlane(op.drag, this._workspacePlane);
         if (point) {
