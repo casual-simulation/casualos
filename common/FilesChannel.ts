@@ -14,6 +14,7 @@ export interface Object {
     position: {
         x: number;
         y: number;
+        z: number;
     };
 
     tags: {

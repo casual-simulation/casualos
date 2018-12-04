@@ -78,7 +78,7 @@ export default class Home extends Vue {
             this.tags = fileManager.fileTags(this.files);
         });
         fileManager.fileRemoved.subscribe(id => {
-            this.files.splice(index, 1);
+            this.files = fileManager.files;
             this.tags = fileManager.fileTags(this.files);
         });
         fileManager.fileUpdated.subscribe(file => {
