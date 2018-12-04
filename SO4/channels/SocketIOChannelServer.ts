@@ -52,7 +52,6 @@ export class SocketIOChannelServer {
                             callback(null);
                         });
     
-                        console.log('Sending state: ' + connection.store.state());
                         callback(null, connection.info, connection.store.state());
                     }, err => {
                         callback(err);

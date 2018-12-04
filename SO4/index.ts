@@ -12,7 +12,12 @@ const config: Config = {
     client: {
         dist: path.resolve(__dirname, '..', '..', 'WebClient', 'dist')
     },
-    channels: {},
+    channels: {
+        mongodb: {
+            url: 'mongodb://localhost:27017',
+            dbName: 'SO4'
+        }
+    },
     git: {
         gitlab_server: 'http://localhost:4330/git',
         proxy: {},

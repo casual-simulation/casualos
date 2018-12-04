@@ -3,7 +3,7 @@ import { ChannelConnector, ChannelConnection, ChannelConnectionRequest } from '.
 import { IChannel } from '../Channel';
 import { Subject } from 'rxjs';
 import { Event } from '../Event';
-import { BaseConnector } from './BaseConnector';
+import { BaseConnector, ConnectionHelper } from './BaseConnector';
 
 interface ChannelList {
     [key: string]: ChannelConnection<any>;
@@ -23,17 +23,22 @@ export class MemoryConnector extends BaseConnector {
     }
 
     connectToChannel<T>(connection_request: ChannelConnectionRequest<T>): Promise<ChannelConnection<T>> {
-
-        let connection: ChannelConnection<T>;
         if(this._channels[connection_request.info.id]) {
-            connection = this._channels[connection_request.info.id];
+            return Promise.resolve(this._channels[connection_request.info.id]);
         } else {
-            let helper = this.newConnection(connection_request);
-            connection = helper.build();
-            this._channels[connection_request.info.id] = connection;
+            return this._createNewConnection(connection_request);
         }
+    }
 
-        return Promise.resolve<ChannelConnection<T>>(connection);
+    protected async _createNewConnection<T>(connection_request: ChannelConnectionRequest<T>): Promise<ChannelConnection<T>> {
+        let helper = this.newConnection(connection_request);
+        await this._initConnection(connection_request, helper);
+        let connection = helper.build();
+        this._channels[connection_request.info.id] = connection;
+        return connection;
+    }
+
+    protected async _initConnection<T>(request: ChannelConnectionRequest<T>, helper: ConnectionHelper<T>): Promise<void> {
     }
 
 }

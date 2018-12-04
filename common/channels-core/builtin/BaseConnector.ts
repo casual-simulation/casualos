@@ -1,5 +1,5 @@
 import { Subject, Observable, SubscriptionLike } from 'rxjs'
-import { filter, map, first } from 'rxjs/operators';
+import { filter, map, first, tap } from 'rxjs/operators';
 import { ChannelInfo } from '../Channel';
 import { Event } from '../Event';
 import { StateStore } from '../StateStore';
@@ -30,6 +30,11 @@ export interface ConnectionHelper<T> {
      * Sets the function that is used to emit events to the server.
      */
     setEmitToServerFunction: (emit: (event: Event) => void) => void;
+
+    /**
+     * Sets the function that is used to emit events to the local store.
+     */
+    setEmitToStoreFunction: (emit: (event: Event) => void) => void;
     
     /**
      * The observable that is resolved a single time when 
@@ -61,6 +66,7 @@ export class BaseConnector implements ChannelConnector {
         let serverEvents: Observable<Event>;
         let onUnsubscribe: Subject<{}> = new Subject<{}>();
         let emitToServer: ((event: Event) => void);
+        let emitToStore: ((event: Event) => void);
 
         let build: () => ChannelConnection<T> = () => {
             let subs: SubscriptionLike[] = [];
@@ -73,14 +79,23 @@ export class BaseConnector implements ChannelConnector {
             }
 
             if (emitToServer != null) {
-                subs.push(subject.pipe(filter(e => e.isLocal))
-                    .pipe(map(e => e.event))
-                    .subscribe(e => emitToServer(e)));
+                subs.push(subject.pipe(
+                     filter(e => e.isLocal),
+                     map(e => e.event),
+                     tap(e => emitToServer(e))
+                ).subscribe());
             }
 
-            subs.push(subject.subscribe(e => {
-                store.process(e.event);
-            }));
+            if (!emitToStore) {
+                emitToStore = e => {
+                    store.process(e);
+                };
+            }
+            
+            subs.push(subject.pipe(
+                    map(e => e.event),
+                    tap(emitToStore)
+                ).subscribe());
 
             return {
                 emit: (event) => {
@@ -109,6 +124,9 @@ export class BaseConnector implements ChannelConnector {
             },
             setEmitToServerFunction: (fn) => {
                 emitToServer = fn;
+            },
+            setEmitToStoreFunction: (fn) => {
+                emitToStore = fn;
             },
             onUnsubscribe: onUnsubscribe.pipe(first())
         };

@@ -3,9 +3,13 @@ import { StoreFactory, Event, ReducingStateStore, ChannelClient, MemoryConnector
 import { SocketIOChannelServer } from "./channels";
 
 import {reducer, FilesStateStore} from 'common/FilesChannel';
+import { MongoDBConnector } from './channels/MongoDBConnector';
 
 export interface ChannelServerConfig {
-
+    mongodb: {
+        url: string;
+        dbName: string;
+    }
 }
 
 export const storeFactory = new StoreFactory({
@@ -16,14 +20,15 @@ export class ChannelServer {
 
     _server: SocketIOChannelServer;
     _client: ChannelClient;
-    _connector: ChannelConnector;
+    _connector: MongoDBConnector;
 
     constructor(config: ChannelServerConfig) {
-        this._connector = new MemoryConnector();
+        this._connector = new MongoDBConnector(config.mongodb.url, config.mongodb.dbName);
         this._client = new ChannelClient(this._connector, storeFactory);
     }
 
-    configure(app: Express, socket: SocketIO.Server) {
+    async configure(app: Express, socket: SocketIO.Server) {
+        await this._connector.init();
         this._server = new SocketIOChannelServer(socket, this._client)
     }
 }
