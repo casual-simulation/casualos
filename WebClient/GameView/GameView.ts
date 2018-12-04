@@ -24,6 +24,7 @@ import {
   MeshBasicMaterial,
   Object3D,
   LineBasicMaterial,
+  PCFSoftShadowMap,
 } from 'three';
 import Vue, {ComponentOptions} from 'vue';
 import Component from 'vue-class-component';
@@ -36,6 +37,7 @@ import {
 import { 
   filter,
   map,
+  tap,
 } from 'rxjs/operators';
 
 import {merge} from 'lodash';
@@ -84,14 +86,14 @@ function buttonActive(button: number): Observable<boolean> {
 const leftClickActive = buttonActive(0);
 const rightClickActive = buttonActive(1);
 
-function buttonDrag(active: Observable<boolean>): Observable<MouseEvent> {
+function buttonDrag(active: Observable<boolean>) {
   return combineLatest(
     active,
     mouseMove,
-    (a, m) => ({a, m})
-  ).pipe(
-    filter(o => o.a),
-    map(o => o.m)
+    (a, m) => ({
+      isDragging: a,
+      event: m
+    })
   );
 }
 
@@ -213,7 +215,7 @@ export default class GameView extends Vue {
     });
     fileManager.fileUpdated.subscribe(file => {
       this._fileUpdated(file);
-    }); 
+    });
 
     const selectedObjects = isButton(mouseDown, 0)
       .pipe(
@@ -223,29 +225,38 @@ export default class GameView extends Vue {
       );
     
     const dragPositions = leftDrag.pipe(
-      map(e => screenPosition(e, this.gameView)),
-      map(pos => screenPosToRay(pos, this._camera))
+      map(drag => ({...drag, screenPos: screenPosition(drag.event, this.gameView)})),
+      map(drag => ({...drag, ray: screenPosToRay(drag.screenPos, this._camera)}))
     );
 
-    const dragOperations = combineLatest(
+    const draggedObjects = combineLatest(
       selectedObjects,
       dragPositions,
-      (hit, mouseDir) => ({
+      (hit, drag) => ({
+        ...drag,
         hit,
-        mouseDir
       })
-    ).pipe(
-      map(op => ({
-        hit: op.hit,
-        workspace: this._findWorkspaceForIntersection(op.hit),
-        mouseDir: op.mouseDir
-      })),
-      filter(op => op.hit !== null)
     );
 
-    dragOperations.subscribe(op => {
-      this._handleDrag(op.mouseDir, op.workspace, op.hit);
+    const dragOperations = draggedObjects.pipe(
+      filter(drag => drag.isDragging),
+      map(drag => ({
+        ...drag,
+        workspace: this._findWorkspaceForIntersection(drag.hit),
+      })),
+      filter(drag => drag.hit !== null)
+    );
+
+    dragOperations.subscribe(drag => {
+      this._handleDrag(drag.ray, drag.workspace, drag.hit);
     });
+
+    const gridsVisible = draggedObjects.pipe(
+      map(drag => drag.isDragging && drag.hit !== null && this._isFile(drag.hit)),
+      tap(visible => this._grids.visible = visible)
+    );
+
+    gridsVisible.subscribe();
   }
 
   beforeDestroy() {
@@ -253,6 +264,10 @@ export default class GameView extends Vue {
       this._sub.unsubscribe();
       this._sub = null;
     }
+  }
+
+  private _isFile(hit: Intersection): boolean {
+    return  this._findWorkspaceForIntersection(hit) === null;
   }
 
   private _handleDrag(mouseDir: Ray, workspace: File3D, hit: Intersection) {
@@ -328,16 +343,11 @@ export default class GameView extends Vue {
           point: pos,
           workspace
         };
-      } else {
-        return {
-          good: false
-        };
       }
-    } else {
-      return {
-        good: false
-      };
-    }
+    } 
+    return {
+      good: false
+    };
   }
 
   private _findWorkspaceForIntersection(obj: Intersection): File3D | null {
@@ -432,7 +442,10 @@ export default class GameView extends Vue {
     var geometry = new BoxGeometry(size, size, size);
     var material = new MeshStandardMaterial(
         {color: 0x00ff00, metalness: 0, roughness: 0.6});
-    return new Mesh(geometry, material);
+    const cube = new Mesh(geometry, material);
+    cube.castShadow = true;
+    cube.receiveShadow = false;
+    return cube;
   }
 
   private _setupScene() {
@@ -442,9 +455,11 @@ export default class GameView extends Vue {
     this._camera = new PerspectiveCamera(
         60, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-    this._renderer = new WebGLRenderer({
-      antialias: true
+    const webGlRenderer = this._renderer = new WebGLRenderer({
+      antialias: true,
     });
+    webGlRenderer.shadowMapEnabled = true;
+    webGlRenderer.shadowMapType = PCFSoftShadowMap;
 
     this._raycaster = new Raycaster();
         
@@ -458,14 +473,19 @@ export default class GameView extends Vue {
     this.gameView.appendChild(this._renderer.domElement);
 
     this._grids = new Group();
+    this._grids.visible = false;
     this._scene.add(this._grids);
 
     this._ambient = new AmbientLight(0xffffff, 0.2);
     this._scene.add(this._ambient);
 
     this._sun = new DirectionalLight(0xffffff, 0.7);
-    this._sun.position.set(1, 1, 1.5);
+    this._sun.position.set(3, 3, 3);
     this._sun.castShadow = true;
+    this._sun.shadowCameraRight =  5;
+    this._sun.shadowCameraLeft = -5;
+    this._sun.shadowCameraTop =  5;
+    this._sun.shadowCameraBottom = -5;
     this._scene.add(this._sun);
 
     this._camera.position.z = 5;
@@ -499,6 +519,11 @@ export default class GameView extends Vue {
         bevelSize: 0.05,
         bevelThickness: 0.05
       }
+    });
+
+    board.group.children[0].children.forEach(c => {
+      c.castShadow = false;
+      c.receiveShadow = true;
     });
 
     board.group.position.x = data.position.x;
