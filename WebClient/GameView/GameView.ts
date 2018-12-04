@@ -39,6 +39,7 @@ import {
   filter,
   map,
   tap,
+  scan,
 } from 'rxjs/operators';
 
 import {merge} from 'lodash';
@@ -87,12 +88,47 @@ function buttonActive(button: number): Observable<boolean> {
 const leftClickActive = buttonActive(0);
 const rightClickActive = buttonActive(1);
 
+/**
+ * Returns an observable that is able to signal
+ * when the given observable goes from false to true values (rising edge)
+ * and also when it goes from true back to false. (falling edge)
+ */
+function detectEdges(observable: Observable<boolean>) {
+  return observable.pipe(
+    map(a => ({
+      active: a,
+      started: false,
+      ended: false
+    })),
+    scan((prev, curr) => {
+      if(!prev.active && curr.active) {
+        return {
+          active: curr.active,
+          started: true,
+          ended: false
+        };
+      } else if(prev.active && !curr.active) {
+        return {
+          active: curr.active,
+          started: false,
+          ended: true
+        };
+      } else {
+        return curr;
+      }
+    }, { active: false, started: false, ended: false })
+  );
+}
+
 function buttonDrag(active: Observable<boolean>) {
+  const dragging = detectEdges(active);
   return combineLatest(
-    active,
+    dragging,
     mouseMove,
     (a, m) => ({
-      isDragging: a,
+      isDragging: a.active,
+      justStartedDragging: a.started,
+      justEndedDragging: a.ended,
       event: m
     })
   );
@@ -159,6 +195,11 @@ function pointOnPlane(ray: Ray, plane: Mesh): Vector3 | null {
   return hits.length > 0 ? hits[0].point : null;
 }
 
+function eventIsOverElement(event: MouseEvent, element: HTMLElement): boolean {
+  const mouseOver = document.elementFromPoint(event.clientX, event.clientY);
+  return mouseOver === element;
+}
+
 @Component
 export default class GameView extends Vue {
   private _scene: Scene;
@@ -174,6 +215,7 @@ export default class GameView extends Vue {
   private _workspacePlane: Mesh;
   private _draggableObjects: Object3D[];
   private _grids: Group;
+  private _canvas: HTMLElement;
 
   /**
    * A map of file IDs to files and meshes.
@@ -220,6 +262,7 @@ export default class GameView extends Vue {
 
     const selectedObjects = isButton(mouseDown, 0)
       .pipe(
+        filter(e => eventIsOverElement(e, this._canvas)),
         map(e => screenPosition(e, this.gameView)),
         map(pos => raycastAtScreenPos(pos, this._raycaster, this._draggableObjects, this._camera)),
         map(r => firstRaycastHit(r)),
@@ -240,7 +283,7 @@ export default class GameView extends Vue {
     );
 
     const dragOperations = draggedObjects.pipe(
-      filter(drag => drag.isDragging),
+      filter(drag => drag.isDragging && eventIsOverElement(drag.event, this._canvas)),
       map(drag => ({
         ...drag,
         workspace: this._findWorkspaceForIntersection(drag.hit),
@@ -520,7 +563,8 @@ export default class GameView extends Vue {
     this._renderer.setSize(width, height);
     container.style.height = this._renderer.domElement.style.height;
 
-    this.gameView.appendChild(this._renderer.domElement);
+    this._canvas = this._renderer.domElement;
+    this.gameView.appendChild(this._canvas);
 
   }
 
