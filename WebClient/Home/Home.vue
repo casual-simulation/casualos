@@ -13,7 +13,6 @@
                   <thead>
                     <tr>
                       <th>ID</th>
-                      <th>Type</th>
 
                       <th v-for="(tag, index) in tags" :key="index">
                         #{{tag}}
@@ -33,8 +32,7 @@
                   <tbody>
 
                     <tr v-for="file in files" :key="file.id">
-                      <td>{{file.id}}</td>
-                      <td>{{file.type}}</td>
+                      <td><strong>{{file.id.substring(0, 5)}}</strong></td>
                       <th v-if="file.type === 'object'" v-for="tag in tags" :key="tag">
                         <input @input="valueChanged(file, tag, $event.target.value)" :value="file.tags[tag]">
                       </th>

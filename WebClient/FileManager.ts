@@ -55,6 +55,13 @@ export class FileManager {
   }
 
   /**
+   * Gets all the files that represent an object.
+   */
+  get objects(): File[] {
+    return this.files.filter(f => f.type === 'object');
+  }
+
+  /**
    * Gets an observable that resolves whenever a new file is discovered.
    * That is, it was created or added by another user.
    */

@@ -73,16 +73,19 @@ export default class Home extends Vue {
 
         this.files = [];
         this.tags = [];
+
         fileManager.fileDiscovered.subscribe(file => {
-            this.files.push(file);
-            this.tags = fileManager.fileTags(this.files);
+            if (file.type === 'object') {
+                this.files.push(file);
+                this.tags = fileManager.fileTags(this.files);
+            }
         });
         fileManager.fileRemoved.subscribe(id => {
-            this.files = fileManager.files;
+            this.files = fileManager.objects;
             this.tags = fileManager.fileTags(this.files);
         });
         fileManager.fileUpdated.subscribe(file => {
-            this.files = fileManager.files;
+            this.files = fileManager.objects;
             this.tags = fileManager.fileTags(this.files);
             this.$nextTick();
         });
