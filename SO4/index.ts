@@ -36,5 +36,9 @@ const config: Config = {
 
 const server = new Server(config);
 
-server.configure();
-server.start();
+async function init() {
+    await server.configure();
+    server.start();
+}
+
+init();

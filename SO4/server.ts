@@ -43,9 +43,9 @@ export class Server {
         this._realtimeServer = new RealtimeServer(config.git);
     }
 
-    configure() {
+    async configure() {
         this._app.use(bodyParser.json());
-        this._channelServer.configure(this._app, this._socket);
+        await this._channelServer.configure(this._app, this._socket);
         this._realtimeServer.configure(this._app, this._socket);
 
         this._app.use('/', express.static(this._config.client.dist));
