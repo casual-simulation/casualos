@@ -394,17 +394,12 @@ export default class GameView extends Vue {
 
     obj.mesh.position.set(
       data.position.x + 0,
-      data.position.y + 0.1,
+      data.position.y + 0.095,
       data.position.z + 0);
   }
 
   private _getColor(color: string): Color {
     return new Color(color);
-    // color = color.trim();
-    // if(color[0] === '#') {
-    //   // interpret as hex
-    //   new Color()
-    // }
   }
 
   private _updateWorkspace(obj: File3D, data: Workspace) {
@@ -474,23 +469,11 @@ export default class GameView extends Vue {
     this._scene.background = new Color(0xffffff);
     this._camera = new PerspectiveCamera(
         60, window.innerWidth / window.innerHeight, 0.1, 1000);
-
-    const webGlRenderer = this._renderer = new WebGLRenderer({
-      antialias: true,
-    });
-    webGlRenderer.shadowMapEnabled = true;
-    webGlRenderer.shadowMapType = PCFSoftShadowMap;
-
+    
     this._raycaster = new Raycaster();
-        
-    // TODO: Call each time the screen size changes
-    const container: HTMLElement = <HTMLElement>this.$refs.container;
-    this._renderer.setSize(window.innerWidth, window.innerHeight - container.getBoundingClientRect().top);
-    container.style.height = this._renderer.domElement.style.height;
-
     this._clock = new Clock();
 
-    this.gameView.appendChild(this._renderer.domElement);
+    this._setupRenderer();
 
     this._grids = new Group();
     this._grids.visible = false;
@@ -502,10 +485,10 @@ export default class GameView extends Vue {
     this._sun = new DirectionalLight(0xffffff, 0.7);
     this._sun.position.set(3, 3, 3);
     this._sun.castShadow = true;
-    this._sun.shadowCameraRight =  5;
-    this._sun.shadowCameraLeft = -5;
-    this._sun.shadowCameraTop =  5;
-    this._sun.shadowCameraBottom = -5;
+    // this._sun.shadow.camera.right =  5;
+    // this._sun.shadow.camera.left = -5;
+    // this._sun.shadow.camera.top =  5;
+    // this._sun.shadow.camera.bottom = -5;
     this._scene.add(this._sun);
 
     this._camera.position.z = 5;
@@ -521,6 +504,24 @@ export default class GameView extends Vue {
     this._workspacePlane.position.x = 0;
     this._workspacePlane.rotation.x = Math.DEG2RAD * -90;
     this._workspacePlane.updateMatrixWorld(false);
+  }
+
+  private _setupRenderer() {
+    const webGlRenderer = this._renderer = new WebGLRenderer({
+      antialias: true,
+    });
+    webGlRenderer.shadowMap.enabled = true;
+    webGlRenderer.shadowMap.type = PCFSoftShadowMap;
+        
+    // TODO: Call each time the screen size changes
+    const container: HTMLElement = <HTMLElement>this.$refs.container;
+    const width = window.innerWidth;
+    const height = window.innerHeight - container.getBoundingClientRect().top;
+    this._renderer.setSize(width, height);
+    container.style.height = this._renderer.domElement.style.height;
+
+    this.gameView.appendChild(this._renderer.domElement);
+
   }
 
   private _createWorkSurface(data: Workspace) {
