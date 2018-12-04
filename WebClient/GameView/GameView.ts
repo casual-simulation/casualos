@@ -23,6 +23,7 @@ import {
   PlaneGeometry,
   MeshBasicMaterial,
   Object3D,
+  LineBasicMaterial,
 } from 'three';
 import Vue, {ComponentOptions} from 'vue';
 import Component from 'vue-class-component';
@@ -97,13 +98,11 @@ function buttonDrag(active: Observable<boolean>): Observable<MouseEvent> {
 const leftDrag = buttonDrag(leftClickActive);
 const rightDrag = buttonDrag(rightClickActive);
 
-function screenPosition(gameView: HTMLElement) {
-  return (e: MouseEvent) => {
-    const globalPos = new Vector2(e.pageX, e.pageY);
-    const gameViewRect = gameView.getBoundingClientRect();
-    const gameViewPos = globalPos.sub(new Vector2(gameViewRect.left, gameViewRect.top));
-    return new Vector2((gameViewPos.x / gameViewRect.width) * 2 - 1, -(gameViewPos.y / gameViewRect.height) * 2 + 1);
-  };
+function screenPosition(event: MouseEvent, view: HTMLElement) {
+  const globalPos = new Vector2(event.pageX, event.pageY);
+  const viewRect = view.getBoundingClientRect();
+  const viewPos = globalPos.sub(new Vector2(viewRect.left, viewRect.top));
+  return new Vector2((viewPos.x / viewRect.width) * 2 - 1, -(viewPos.y / viewRect.height) * 2 + 1);
 }
 
 interface RaycastTest {
@@ -111,35 +110,35 @@ interface RaycastTest {
   intersects: Intersection[];
 }
 
-function raycast(raycaster: Raycaster, objects: Object3D[], camera: Camera) {
-  return (pos: Vector2) => {
-    raycaster.setFromCamera(pos, camera);
-    const intersects = raycaster.intersectObjects(objects, true);
+function raycastAtScreenPos(pos: Vector2, raycaster: Raycaster, objects: Object3D[], camera: Camera) {
+  raycaster.setFromCamera(pos, camera);
+  const intersects = raycaster.intersectObjects(objects, true);
 
-    return {
-      mouse: pos,
-      intersects
-    };
+  return {
+    mouse: pos,
+    intersects
   };
 }
 
-function raycastSuccess() {
-  return (test: RaycastTest) => test.intersects.length > 0;
+function isRaycastSuccess(test: RaycastTest) {
+  return test.intersects.length > 0
 }
 
-function screenToRay(camera: Camera) {
-  return (pos: Vector2) => {
-    const v3d = new Vector3(pos.x, pos.y, 0.5);
+function firstRaycastHit(test: RaycastTest) {
+  return test.intersects.length > 0 ? test.intersects[0] : null;
+}
 
-    v3d.unproject(camera);
+function screenPosToRay(pos: Vector2, camera: Camera) {
+  const v3d = new Vector3(pos.x, pos.y, 0.5);
 
-    v3d.sub(camera.position);
-    v3d.normalize();
-    
-    return {
-      origin: camera.position,
-      direction: v3d
-    };
+  v3d.unproject(camera);
+
+  v3d.sub(camera.position);
+  v3d.normalize();
+  
+  return {
+    origin: camera.position,
+    direction: v3d
   };
 }
 
@@ -191,34 +190,15 @@ export default class GameView extends Vue {
 
   private _sub: SubscriptionLike;
 
+  get gameView() {
+    const gameView: HTMLElement = <HTMLElement>this.$refs.gameView;
+    return gameView;
+  }
+
   async mounted() {
     this._files = {};
     this._meshses = {};
     this._draggableObjects = [];
-    this._scene = new Scene();
-    this._scene.background = new Color(0xffffff);
-    this._camera = new PerspectiveCamera(
-        60, window.innerWidth / window.innerHeight, 0.1, 1000);
-
-    this._renderer = new WebGLRenderer({
-      antialias: true
-    });
-
-    this._raycaster = new Raycaster();
-        
-    // TODO: Call each time the screen size changes
-    const container: HTMLElement = <HTMLElement>this.$refs.container;
-    this._renderer.setSize(window.innerWidth, window.innerHeight - container.getBoundingClientRect().top);
-    container.style.height = this._renderer.domElement.style.height;
-
-    this._clock = new Clock();
-
-    const gameView: HTMLElement = <HTMLElement>this.$refs.gameView;
-    gameView.appendChild(this._renderer.domElement);
-
-    this._grids = new Group();
-    this._scene.add(this._grids);
-
     this._setupScene();
 
     this._clock.start();
@@ -237,87 +217,87 @@ export default class GameView extends Vue {
 
     const selectedObjects = isButton(mouseDown, 0)
       .pipe(
-        map(screenPosition(gameView)),
-        map(raycast(this._raycaster, this._draggableObjects, this._camera)),
-        map(r => r.intersects.length > 0 ? r.intersects[0] : null),
+        map(e => screenPosition(e, this.gameView)),
+        map(pos => raycastAtScreenPos(pos, this._raycaster, this._draggableObjects, this._camera)),
+        map(r => firstRaycastHit(r)),
       );
     
     const dragPositions = leftDrag.pipe(
-      map(screenPosition(gameView)),
-      map(screenToRay(this._camera))
+      map(e => screenPosition(e, this.gameView)),
+      map(pos => screenPosToRay(pos, this._camera))
     );
 
     const dragOperations = combineLatest(
       selectedObjects,
       dragPositions,
-      (obj, drag) => ({
-        obj,
-        drag
+      (hit, mouseDir) => ({
+        hit,
+        mouseDir
       })
     ).pipe(
       map(op => ({
-        obj: op.obj,
-        workspace: this._workspaceForIntersection(op.obj),
-        drag: op.drag
+        hit: op.hit,
+        workspace: this._findWorkspaceForIntersection(op.hit),
+        mouseDir: op.mouseDir
       })),
-      filter(op => op.obj !== null)
+      filter(op => op.hit !== null)
     );
 
     dragOperations.subscribe(op => {
-      if (op.workspace) {
-        const point = pointOnPlane(op.drag, this._workspacePlane);
-        if (point) {
-          fileManager.updateFile(op.workspace.file, {
-            position: {
-              x: point.x,
-              y: point.y,
-              z: point.z
-            }
-          });
-        }
-      } else {
-        const { good, point, workspace } = this._pointOnGrid(op.drag);
-        const file = this._fileForMesh(op.obj.object);
-        if (good) {
-          fileManager.updateFile(file.file, {
-            workspace: workspace.file.id,
-            position: {
-              x: point.x,
-              y: point.y,
-              z: point.z
-            }
-          });
-        } else {
-          const p = pointOnRay(op.drag, 2);
-          fileManager.updateFile(file.file, {
-            workspace: null,
-            position: {
-              x: p.x,
-              y: p.y,
-              z: p.z
-            }
-          });
-        }
-      }
+      this._handleDrag(op.mouseDir, op.workspace, op.hit);
     });
-
-    // dragPositions.subscribe(op => {
-    //   console.log('drag object');
-    //   // op.obj.object.position.x = op.drag.x;
-    //   // op.obj.object.position.y = op.drag.y;
-    //   // op.obj.object.position.z = op.drag.z;
-    // });
-
-    // selectedObjects.subscribe(obj => {
-    //   console.log('selected object', obj);
-    // });
-
   }
 
   beforeDestroy() {
     if(this._sub) {
       this._sub.unsubscribe();
       this._sub = null;
+    }
+  }
+
+  private _handleDrag(mouseDir: Ray, workspace: File3D, hit: Intersection) {
+    if (workspace) {
+      this._dragWorkspace(mouseDir, workspace);
+    } else {
+      this._dragFile(mouseDir, hit);
+    }
+  }
+
+  private _dragWorkspace(mouseDir: Ray, workspace: File3D) {
+    const point = pointOnPlane(mouseDir, this._workspacePlane);
+    if (point) {
+      fileManager.updateFile(workspace.file, {
+        position: {
+          x: point.x,
+          y: point.y,
+          z: point.z
+        }
+      });
+    }
+  }
+
+  private _dragFile(mouseDir: Ray, hit: Intersection) {
+    const { good, point, workspace } = this._pointOnGrid(mouseDir);
+    const file = this._fileForMesh(hit.object);
+    if (good) {
+      fileManager.updateFile(file.file, {
+        workspace: workspace.file.id,
+        position: {
+          x: point.x,
+          y: point.y,
+          z: point.z
+        }
+      });
+    } else {
+      const p = pointOnRay(mouseDir, 2);
+      fileManager.updateFile(file.file, {
+        workspace: null,
+        position: {
+          x: p.x,
+          y: p.y,
+          z: p.z
+        }
+      });
     }
   }
 
@@ -337,7 +317,7 @@ export default class GameView extends Vue {
     const hit = hits[0];
     if (hit) {
       const point = hit.point;
-      const workspace = this._workspaceForIntersection(hit);
+      const workspace = this._findWorkspaceForIntersection(hit);
       if (workspace) {
         workspace.mesh.worldToLocal(point);
         const cell = workspace.grid.grid.pixelToCell(point);
@@ -360,7 +340,7 @@ export default class GameView extends Vue {
     }
   }
 
-  private _workspaceForIntersection(obj: Intersection): File3D | null {
+  private _findWorkspaceForIntersection(obj: Intersection): File3D | null {
     if (!obj) {
       return null;
     }
@@ -456,6 +436,30 @@ export default class GameView extends Vue {
   }
 
   private _setupScene() {
+
+    this._scene = new Scene();
+    this._scene.background = new Color(0xffffff);
+    this._camera = new PerspectiveCamera(
+        60, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+    this._renderer = new WebGLRenderer({
+      antialias: true
+    });
+
+    this._raycaster = new Raycaster();
+        
+    // TODO: Call each time the screen size changes
+    const container: HTMLElement = <HTMLElement>this.$refs.container;
+    this._renderer.setSize(window.innerWidth, window.innerHeight - container.getBoundingClientRect().top);
+    container.style.height = this._renderer.domElement.style.height;
+
+    this._clock = new Clock();
+
+    this.gameView.appendChild(this._renderer.domElement);
+
+    this._grids = new Group();
+    this._scene.add(this._grids);
+
     this._ambient = new AmbientLight(0xffffff, 0.2);
     this._scene.add(this._ambient);
 
@@ -502,12 +506,16 @@ export default class GameView extends Vue {
     board.group.position.z = data.position.z;
 
     const sqrGrid = new vg.SqrGrid({
-      size: 20,
+      size: 14,
       cellSize: .12
     });
 
     const sqrBoard = new vg.Board(sqrGrid);
-    sqrBoard.generateOverlay(20);
+    const mat = new LineBasicMaterial({
+      color: 0xFFFFFF,
+      opacity: 1
+    });
+    sqrBoard.generateOverlay(18, mat);
 
     sqrBoard.group.position.x = data.position.x;
     sqrBoard.group.position.y = data.position.y;
