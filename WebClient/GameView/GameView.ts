@@ -339,10 +339,10 @@ export default class GameView extends Vue {
       const point = hit.point;
       const workspace = this._workspaceForIntersection(hit);
       if (workspace) {
+        workspace.mesh.worldToLocal(point);
         const cell = workspace.grid.grid.pixelToCell(point);
         const pos = workspace.grid.grid.cellToPixel(cell).clone();
         pos.y = point.y;
-        workspace.mesh.worldToLocal(pos);
         return { 
           good: true,
           point: pos,
@@ -391,7 +391,10 @@ export default class GameView extends Vue {
       obj.mesh.parent = null;
     }
 
-    obj.mesh.position.set(data.position.x, data.position.y, data.position.z);
+    obj.mesh.position.set(
+      data.position.x + 0,
+      data.position.y + 0.1,
+      data.position.z + 0);
   }
 
   private _updateWorkspace(obj: File3D, data: Workspace) {
@@ -500,7 +503,7 @@ export default class GameView extends Vue {
 
     const sqrGrid = new vg.SqrGrid({
       size: 20,
-      cellSize: .1
+      cellSize: .12
     });
 
     const sqrBoard = new vg.Board(sqrGrid);
