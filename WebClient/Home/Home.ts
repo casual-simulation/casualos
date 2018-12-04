@@ -20,9 +20,6 @@ export default class Home extends Vue {
     isOpen: boolean = false;
     status: string = '';
     files: File[] = [];
-    fileLookup: {
-        [id: string]: File
-    } = {};
     tags: string[] = [];
     isMakingNewTag: boolean = false;
     newTag: string = 'myNewTag';
@@ -78,21 +75,14 @@ export default class Home extends Vue {
         this.tags = [];
         fileManager.fileDiscovered.subscribe(file => {
             this.files.push(file);
-            this.fileLookup[file.id] = file;
             this.tags = fileManager.fileTags(this.files);
         });
         fileManager.fileRemoved.subscribe(id => {
-            const file = this.fileLookup[id];
-            const index = this.files.indexOf(file);
             this.files.splice(index, 1);
-            delete this.fileLookup[file.id];
             this.tags = fileManager.fileTags(this.files);
         });
         fileManager.fileUpdated.subscribe(file => {
-            const old = this.fileLookup[file.id];
-            this.fileLookup[file.id] = file;
-            const index = this.files.indexOf(old);
-            this.files[index] = file;
+            this.files = fileManager.files;
             this.tags = fileManager.fileTags(this.files);
             this.$nextTick();
         });
