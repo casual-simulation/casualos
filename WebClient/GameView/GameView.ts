@@ -25,6 +25,7 @@ import {
   Object3D,
   LineBasicMaterial,
   PCFSoftShadowMap,
+  Material,
 } from 'three';
 import Vue, {ComponentOptions} from 'vue';
 import Component from 'vue-class-component';
@@ -381,10 +382,29 @@ export default class GameView extends Vue {
       obj.mesh.parent = null;
     }
 
+    if (data.tags.color) {
+      const mesh = <Mesh>obj.mesh;
+      const material = <MeshStandardMaterial>mesh.material;
+      material.color = this._getColor(data.tags.color);
+    } else {
+      const mesh = <Mesh>obj.mesh;
+      const material = <MeshStandardMaterial>mesh.material;
+      material.color = new Color(0x00FF00);
+    }
+
     obj.mesh.position.set(
       data.position.x + 0,
       data.position.y + 0.1,
       data.position.z + 0);
+  }
+
+  private _getColor(color: string): Color {
+    return new Color(color);
+    // color = color.trim();
+    // if(color[0] === '#') {
+    //   // interpret as hex
+    //   new Color()
+    // }
   }
 
   private _updateWorkspace(obj: File3D, data: Workspace) {
