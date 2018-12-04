@@ -15,17 +15,20 @@ export class SocketIOChannelServer {
     private _server: Server;
     private _client: ChannelClient;
     private _serverList: ServerList;
+    private _userCount: number;
 
     constructor(server: Server, client: ChannelClient) {
         this._serverList = {};
         this._client = client;
         this._server = server;
+        this._userCount = 0;
 
         this._server.on('connection', socket => {
-            console.log('A user connected!');
+            this._userCount += 1;
+            console.log('[SocketIOChannelServer] A user connected! There are now', this._userCount, 'users connected.');
 
             socket.on('join_server', (info: ChannelInfo, callback: Function) => {
-                console.log('Joining server ' + info.id);
+                console.log('[SocketIOChannelServer] Joining user to server', info.id);
                 socket.join(info.id, (err) => {
                     if (err) {
                         callback(err);
@@ -39,7 +42,6 @@ export class SocketIOChannelServer {
                         const eventName = `new_event_${info.id}`;
     
                         const listener = (event: Event) => {
-                            console.log('Emitting event: ', event.type);
                             connection.emit(event);
                             socket.to(info.id).emit(eventName, event);
                         };
@@ -60,6 +62,11 @@ export class SocketIOChannelServer {
                     
                 });
             });
+
+            socket.on('disconnect', () => {
+                this._userCount -= 1;
+                console.log('[SocketIOChannelServer] A user disconnected! There are now', this._userCount, 'users connected.');
+            })
         });
     }
 
