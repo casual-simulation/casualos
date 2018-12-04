@@ -7,7 +7,6 @@ export interface User {
     name: string;
 }
 
-
 export class AppManager {
 
     private _user: User = null;
@@ -52,7 +51,7 @@ export class AppManager {
             if (result.status === 200) {
                 this._user = result.data;
                 this._saveUser();
-                console.log('Success!', result);
+                console.log('[AppManager] Login Success!', result);
                 return true;
             } else {
                 console.error(result);

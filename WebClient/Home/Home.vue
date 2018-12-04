@@ -66,10 +66,6 @@
               <md-button class="toolbar-button" @click="addNewWorkspace()">
                 <span>New Workspace</span>
               </md-button>
-              <div v-if="canSave()" class="divider"></div>
-              <md-button v-if="canSave()" class="toolbar-button" @click="save()">
-                <span>Save</span>
-              </md-button>
             </div>
           </div>
         </div>

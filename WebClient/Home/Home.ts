@@ -4,7 +4,6 @@ import {File} from 'common/FilesChannel';
 import GameView from '../GameView/GameView';
 import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';
-import { gitManager } from '../GitManager';
 import { fileManager } from '../FileManager';
 import CubeIcon from './Cube.svg';
 
@@ -24,8 +23,6 @@ export default class Home extends Vue {
     fileLookup: {
         [id: string]: File
     } = {};
-    index: string[] = [];
-    commits: git.CommitDescription[] = [];
     tags: string[] = [];
     isMakingNewTag: boolean = false;
     newTag: string = 'myNewTag';
@@ -36,10 +33,6 @@ export default class Home extends Vue {
 
     get user() {
         return appManager.user;
-    }
-
-    canSave() {
-        return fileManager.canSave;
     }
 
     open() {
@@ -56,10 +49,6 @@ export default class Home extends Vue {
 
     addNewWorkspace() {
         fileManager.createWorkspace();
-    }
-
-    save() {
-        fileManager.save();
     }
 
     addTag() {
@@ -84,8 +73,6 @@ export default class Home extends Vue {
         this.open();
         
         this.isLoading = true;
-        this._setStatus('Pulling...');
-        await fileManager.pull();
 
         this.files = [];
         this.tags = [];
@@ -110,7 +97,6 @@ export default class Home extends Vue {
             this.$nextTick();
         });
 
-        // this.commits = await gitManager.commitLog();
         this.isLoading = false;
         
         this._setStatus('Waiting for input...');

@@ -20,7 +20,6 @@ import {
 
 import {AppManager, appManager} from './AppManager';
 import {socketManager} from './SocketManager';
-// import {GitManager, gitManager} from './GitManager';
 import {
   fileAdded, 
   fileRemoved, 
@@ -36,11 +35,10 @@ import {
 
 
 /**
- * Defines a class that interfaces with the AppManager and GitManager
+ * Defines a class that interfaces with the AppManager and SocketManager
  * to reactively edit files.
  */
 export class FileManager {
-  // private _gitManager: GitManager;
   private _appManager: AppManager;
   private _files: File[];
   private _status: string;
@@ -86,7 +84,6 @@ export class FileManager {
 
   constructor(app: AppManager) {
     this._appManager = app;
-    // this._gitManager = git;
     this._files = [];
   }
 
@@ -115,56 +112,6 @@ export class FileManager {
    */
   async updateFile(file: File, newData: PartialFile) {
     socketManager.emit(fileUpdated(file.id, newData));
-  }
-
-  /**
-   * Updates the local files with files from the server.
-   */
-  async pull() {
-    await this.init();
-
-    // this._setStatus('Checking for project...');
-    // if(!(await gitManager.isProjectCloned())) {
-    //     this._setStatus('Cloning project...');
-    //     await gitManager.cloneProject();
-    // } else {
-    //     this._setStatus('Updating project...');
-    //     await gitManager.updateProject();
-    // }
-
-    // this._setStatus("Grabbing files...");
-    // const currentFiles = await this._gitManager.listFiles();
-    // this._updateFiles(currentFiles);
-    
-    this._setStatus('Waiting for input...');
-  }
-
-  /**
-   * Gets whether the files can be saved.
-   */
-  get canSave(): boolean {
-    // return gitManager.canCommit();
-    return false;
-  }
-
-  /**
-   * Saves the changes that the local user has made.
-   */
-  async save() {
-    await this.init();
-
-    // this._setStatus('Saving files...');
-    // await Promise.all(this._files.map(file => {
-    //   return gitManager.saveFile(file);
-    // }));
-
-    
-    // if(await gitManager.canCommit()) {
-    //   await gitManager.commit("Save files");
-    //   await gitManager.pushIfNeeded(gitManager.localUserBranch);
-    // } else {
-    //   this._setStatus('No changes. Commit & push skipped.');
-    // }
   }
 
   async createFile() {
@@ -210,8 +157,6 @@ export class FileManager {
         this._fileRemoved(event);
       }
     });
-
-    // await gitManager.startIfNeeded();
 
     // Replay the existing files for the components that need it this way
     const state = socketManager.state;
