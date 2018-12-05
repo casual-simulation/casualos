@@ -588,8 +588,11 @@ export default class GameView extends Vue {
   private _createCube(size: number): Mesh {
     
     var geometry = new BoxGeometry(size, size, size);
-    var material = new MeshStandardMaterial(
-        {color: 0x00ff00, metalness: 0, roughness: 0.6});
+    var material = new MeshStandardMaterial({
+      color: 0x00ff00, 
+      metalness: .1, 
+      roughness: 0.6
+    });
     const cube = new Mesh(geometry, material);
     cube.castShadow = true;
     cube.receiveShadow = false;
@@ -673,7 +676,11 @@ export default class GameView extends Vue {
         steps: 1,
         bevelSize: 0.05,
         bevelThickness: 0.05
-      }
+      },
+      material: new MeshStandardMaterial({
+        color: 0x999999,
+        roughness: .7
+      })
     });
 
     board.group.children[0].children.forEach(c => {
