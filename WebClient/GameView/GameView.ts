@@ -46,7 +46,7 @@ import {merge} from 'lodash';
 
 import {appManager} from '../AppManager';
 import {fileManager} from '../FileManager';
-import {File, Object, Workspace} from 'common/FilesChannel';
+import {File, Object, Workspace} from 'common';
 
 import { vg } from "von-grid";
 
@@ -409,7 +409,7 @@ export default class GameView extends Vue {
   }
 
   private _selectFile(file: File3D) {
-    console.log('Select file:', file.file.id);
+    fileManager.selectFile(file.file);
   }
 
   private _dragFile(mouseDir: Ray, hit: Intersection) {

@@ -1,42 +1,35 @@
 import * as io from 'socket.io-client';
-import {Observable, Subject} from 'rxjs';
+import {Observable, Subject, BehaviorSubject, Observer} from 'rxjs';
+import {filter, switchMap} from 'rxjs/operators';
 import {appManager} from './AppManager';
 
-import {ChannelClient, StoreFactory, ChannelConnection} from 'common/channels-core';
+import {ChannelClient, StoreFactory, ChannelConnection, ChannelInfo} from 'common/channels-core';
 import {SocketIOConnector} from './channels';
-import { reducer, FilesStateStore, FileEvent, FilesState } from 'common/FilesChannel';
-
-const factory = new StoreFactory({
-    files: () => new FilesStateStore({})
-});
+import {
+    FileEvent,
+    FilesState,
+    UIEvent,
+    UIState,
+    storeFactory,
+    channelTypes,
+} from 'common';
 
 export class SocketManager {
     private _socket: SocketIOClient.Socket;
     private _connector: SocketIOConnector;
     private _client: ChannelClient;
-    private _connection: ChannelConnection<FilesState>;
-    private _events: Subject<FileEvent>;
+    private _files: ChannelConnection<FilesState>;
+    private _ui: ChannelConnection<UIState>;
 
-    get events(): Observable<FileEvent> {
-        return this._events;
+    get files(): ChannelConnection<FilesState> {
+        return this._files;
     }
 
-    get state(): FilesState {
-        if (this._connection) {
-            return this._connection.store.state();
-        } else {
-            return {};
-        }
-    }
-
-    emit(event: FileEvent) {
-        if (this._connection) {
-            this._connection.emit(event);
-        }
+    get ui(): ChannelConnection<UIState> {
+        return this._ui;
     }
 
     constructor() {
-        this._events = new Subject<FileEvent>();
     }
 
     async init() {
@@ -53,17 +46,57 @@ export class SocketManager {
         })
 
         this._connector = new SocketIOConnector(this._socket);
-        this._client = new ChannelClient(this._connector, factory);
+        this._client = new ChannelClient(this._connector, storeFactory);
 
         console.log('[SocketManager] Getting files channel...');
-        this._connection = await this._client.getChannel<FilesState>({
+        this._files = await this._client.getChannel<FilesState>({
             id: 'files',
-            type: 'files',
+            type: channelTypes.files,
             name: 'Files!'
         }).subscribe();
         console.log('[SocketManager] Connected to files channel.');
 
-        this._connection.events.subscribe(this._events);
+        console.log('[SocketManager] Getting UI channel...');
+
+        this._ui = await this._client.getChannel<UIState>({
+            id: `${appManager.user.username}-ui`,
+            type: channelTypes.ui,
+            name: `${appManager.user.username}'s UI`
+        }).subscribe();
+
+        // const uiChannels = appManager.userObservable
+        //     .pipe(
+        //         filter(u => u !== null),
+        //         switchMap(user => this.getChannel<UIState>({
+        //             id: `${user.username}-ui`,
+        //             type: channelTypes.ui,
+        //             name: `${user.username}'s UI`
+        //         }))
+        //     );
+        
+        // uiChannels.subscribe(this._ui);
+
+        console.log('[SocketManager] Connected to UI channel.');
+    }
+
+    getChannel<T>(info: ChannelInfo): Observable<ChannelConnection<T>> {
+        return Observable.create((observer: Observer<ChannelConnection<T>>) => {
+            let connection: ChannelConnection<T>;
+            const channel = this._client.getChannel<T>(info);
+            channel.subscribe()
+                .then(c => {
+                    connection = c;
+                    observer.next(connection);
+                }).catch(ex => {
+                    observer.error(ex);
+                });
+
+            return () => {
+                if (connection) {
+                    connection.unsubscribe();
+                }
+            };
+        });
     }
 }
 

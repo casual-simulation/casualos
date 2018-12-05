@@ -31,7 +31,10 @@ import {
   FileRemovedEvent,
   FileUpdatedEvent,
   PartialFile,
-} from 'common/FilesChannel';
+  selectFile,
+  FileEvent,
+  FileSelectedEvent
+} from 'common';
 
 
 /**
@@ -44,6 +47,7 @@ export class FileManager {
   private _status: string;
   private _initPromise: Promise<void>;
   private _fileDiscoveredObservable: Observable<File>;
+  private _fileSelectedObservable: Observable<File>;
   private _fileRemovedObservable: Observable<string>;
   private _fileUpdatedObservable: Observable<File>;
 
@@ -51,7 +55,13 @@ export class FileManager {
   private _sub: SubscriptionLike;
 
   get files(): File[] {
-    return values(socketManager.state);
+    return values(socketManager.files.store.state());
+  }
+
+  get selectedFiles(): File[] {
+    const selected = socketManager.ui.store.state().selected_files;
+    const files = socketManager.files.store.state();
+    return selected.map(f => files[f]).filter(f => f);
   }
 
   /**
@@ -59,6 +69,13 @@ export class FileManager {
    */
   get objects(): File[] {
     return this.files.filter(f => f.type === 'object');
+  }
+
+  /**
+   * Gets all the selected files that represent an object.
+   */
+  get selectedObjects(): File[] {
+    return this.selectedFiles.filter(f => f.type === 'object');
   }
 
   /**
@@ -83,6 +100,10 @@ export class FileManager {
    */
   get fileUpdated(): Observable<File> {
     return this._fileUpdatedObservable;
+  }
+
+  get fileSelected(): Observable<File> {
+    return this._fileSelectedObservable;
   }
 
   get status(): string {
@@ -114,11 +135,16 @@ export class FileManager {
     }));
   }
 
+  selectFile(file: File) {
+    console.log('[FileManager] Select File:', file.id);
+    socketManager.ui.emit(selectFile(file.id));
+  }
+
   /**
    * Updates the given file with the given data.
    */
   async updateFile(file: File, newData: PartialFile) {
-    socketManager.emit(fileUpdated(file.id, newData));
+    socketManager.files.emit(fileUpdated(file.id, newData));
   }
 
   async createFile() {
@@ -136,7 +162,7 @@ export class FileManager {
       tags: {}
     };
 
-    socketManager.emit(fileAdded(file));
+    socketManager.files.emit(fileAdded(file));
   }
 
   async createWorkspace() {
@@ -152,13 +178,13 @@ export class FileManager {
       },
     };
 
-    socketManager.emit(fileAdded(workspace));
+    socketManager.files.emit(fileAdded(workspace));
   }
 
   private async _init() {
     this._setStatus("Starting...");
 
-    this._sub = socketManager.events.subscribe(event => {
+    this._sub = socketManager.files.events.subscribe((event: FileEvent) => {
       if(event.type === 'file_added') {
         this._fileDiscovered(event);
       } else if(event.type === 'file_removed') {
@@ -167,27 +193,36 @@ export class FileManager {
     });
 
     // Replay the existing files for the components that need it this way
-    const state = socketManager.state;
+    const state = socketManager.files.store.state();
     const files = values(state);
     const ordered = sortBy(files, f => f.type === 'object');
     const newlyDiscovered = from(ordered);
 
-    this._fileDiscoveredObservable = socketManager.events.pipe(
+    this._fileDiscoveredObservable = socketManager.files.events.pipe(
       filter(event => event.type === 'file_added'),
       map((event: FileAddedEvent) => event.file),
       mergeObservables(newlyDiscovered),
       shareReplay()
     );
 
-    this._fileRemovedObservable = socketManager.events.pipe(
+    this._fileRemovedObservable = socketManager.files.events.pipe(
       filter(event => event.type === 'file_removed'),
       map((event: FileRemovedEvent) => event.id),
       shareReplay()
     );
 
-    this._fileUpdatedObservable = socketManager.events.pipe(
+    this._fileUpdatedObservable = socketManager.files.events.pipe(
       filter(event => event.type === 'file_updated'),
-      map((event: FileUpdatedEvent) => socketManager.state[event.id])
+      map((event: FileUpdatedEvent) => socketManager.files.store.state()[event.id])
+    );
+
+    const uiState = socketManager.ui.store.state();
+    const selectedFiles = from(uiState.selected_files.map(f => selectFile(f)));
+  
+    this._fileSelectedObservable = socketManager.ui.events.pipe(
+      filter(event => event.type === 'file_selected'),
+      mergeObservables(selectedFiles),
+      map((event: FileSelectedEvent) => socketManager.files.store.state()[event.id])
     );
 
     this._setStatus("Initialized.");

@@ -9,7 +9,7 @@
                 Welcome Home {{user.name}}!
 
                 <h4>Files</h4>
-                <table>
+                <table v-if="hasFiles">
                   <thead>
                     <tr>
                       <th>ID</th>
@@ -39,6 +39,10 @@
                     </tr>
                   </tbody>
                 </table>
+
+                <p v-if="!hasFiles">
+                  Select a file
+                </p>
               </div>
               <div class="status-container">
                 <md-progress-spinner v-if="isLoading" :md-mode="progressMode" :md-value="progress"></md-progress-spinner>

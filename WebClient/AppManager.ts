@@ -1,5 +1,5 @@
 import Axios from 'axios';
-import { Subject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 export interface User {
     email: string;
@@ -9,18 +9,24 @@ export interface User {
 
 export class AppManager {
 
-    private _user: User = null;
+    private _user: BehaviorSubject<User>;
 
     constructor() {
         const localStorage = window.localStorage;
         const u = localStorage.getItem("user");
         if (u) {
-            this._user = JSON.parse(u);
+            this._user = new BehaviorSubject<User>(JSON.parse(u));
+        } else {
+            this._user = new BehaviorSubject<User>(null);
         }
     }
 
-    get user(): User {
+    get userObservable(): Observable<User> {
         return this._user;
+    }
+
+    get user(): User {
+        return this._user.value;
     }
 
     private _saveUser() {
@@ -34,9 +40,11 @@ export class AppManager {
     }
 
     logout() {
-        console.log("[AppManager] Logout");
-        this._user = null;
-        this._saveUser();
+        if (this.user) {
+            console.log("[AppManager] Logout");
+            this._user.next(null);
+            this._saveUser();
+        }
     }
 
     async loginOrCreateUser(email: string): Promise<boolean> {
@@ -49,7 +57,7 @@ export class AppManager {
             });
 
             if (result.status === 200) {
-                this._user = result.data;
+                this._user.next(result.data);
                 this._saveUser();
                 console.log('[AppManager] Login Success!', result);
                 return true;

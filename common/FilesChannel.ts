@@ -1,35 +1,9 @@
 import { ReducingStateStore, Event } from "./channels-core";
+import {File, Object, Workspace} from './File';
 import {merge, filter} from 'lodash';
 
 export interface FilesState {
     [id: string]: File;
-}
-
-export type File = Object | Workspace;
-
-export interface Object {
-    type: 'object';
-    id: string;
-    workspace: string;
-    position: {
-        x: number;
-        y: number;
-        z: number;
-    };
-
-    tags: {
-        [key: string]: any;
-    };
-}
-
-export interface Workspace {
-    type: 'workspace';
-    id: string;
-    position: {
-        x: number;
-        y: number;
-        z: number;
-    };
 }
 
 export interface PartialFile {
@@ -51,7 +25,7 @@ export type FileEvent =
     FileRemovedEvent | 
     FileUpdatedEvent;
 
-export function reducer(state: FilesState, event: FileEvent) {
+export function filesReducer(state: FilesState, event: FileEvent) {
     state = state || {};
 
     if (event.type === 'file_added') {
@@ -72,7 +46,7 @@ export function reducer(state: FilesState, event: FileEvent) {
 
 export class FilesStateStore extends ReducingStateStore<FilesState> {
     constructor(defaultState: FilesState) {
-        super(defaultState, reducer);
+        super(defaultState, filesReducer);
     }
 }
 

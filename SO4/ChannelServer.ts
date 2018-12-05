@@ -2,7 +2,7 @@ import {Express} from 'express';
 import { StoreFactory, Event, ReducingStateStore, ChannelClient, MemoryConnector, ChannelConnector } from "common/channels-core";
 import { SocketIOChannelServer } from "./channels";
 
-import {reducer, FilesStateStore} from 'common/FilesChannel';
+import {filesReducer, FilesStateStore, storeFactory} from 'common';
 import { MongoDBConnector } from './channels/MongoDBConnector';
 
 export interface ChannelServerConfig {
@@ -11,10 +11,6 @@ export interface ChannelServerConfig {
         dbName: string;
     }
 }
-
-export const storeFactory = new StoreFactory({
-    files: () => new FilesStateStore({})
-});
 
 export class ChannelServer {
 

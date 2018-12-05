@@ -1,6 +1,6 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
-import {File} from 'common/FilesChannel';
+import {File} from 'common';
 import GameView from '../GameView/GameView';
 import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';
@@ -30,6 +30,10 @@ export default class Home extends Vue {
 
     get user() {
         return appManager.user;
+    }
+
+    get hasFiles() {
+        return this.files.length > 0;
     }
 
     open() {
@@ -74,20 +78,13 @@ export default class Home extends Vue {
         this.files = [];
         this.tags = [];
 
-        fileManager.fileDiscovered.subscribe(file => {
-            if (file.type === 'object') {
-                this.files.push(file);
-                this.tags = fileManager.fileTags(this.files);
-            }
-        });
-        fileManager.fileRemoved.subscribe(id => {
-            this.files = fileManager.objects;
-            this.tags = fileManager.fileTags(this.files);
-        });
         fileManager.fileUpdated.subscribe(file => {
-            this.files = fileManager.objects;
+            this.files = fileManager.selectedObjects;
             this.tags = fileManager.fileTags(this.files);
-            this.$nextTick();
+        });
+        fileManager.fileSelected.subscribe(file => {
+            this.files = fileManager.selectedObjects;
+            this.tags = fileManager.fileTags(this.files);
         });
 
         this.isLoading = false;
