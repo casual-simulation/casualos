@@ -599,7 +599,7 @@ export default class GameView extends Vue {
   private _setupScene() {
 
     this._scene = new Scene();
-    this._scene.background = new Color(0xffffff);
+    this._scene.background = new Color(0xCCE6FF);
     this._camera = new PerspectiveCamera(
         60, window.innerWidth / window.innerHeight, 0.1, 1000);
     
