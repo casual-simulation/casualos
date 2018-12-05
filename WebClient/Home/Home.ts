@@ -1,10 +1,12 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
+import {Provide} from 'vue-property-decorator';
 import {File} from 'common';
 import GameView from '../GameView/GameView';
 import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';
-import { fileManager } from '../FileManager';
+import { FileManager } from '../FileManager';
+import { SocketManager } from '../SocketManager';
 import CubeIcon from './Cube.svg';
 
 const numLoadingSteps: number = 4;
@@ -16,6 +18,9 @@ const numLoadingSteps: number = 4;
     }
 })
 export default class Home extends Vue {
+
+    private _socketManager: SocketManager;
+    @Provide('fileManager') private _fileManager: FileManager = new FileManager(appManager, this._socketManager);
 
     isOpen: boolean = false;
     status: string = '';
@@ -45,11 +50,11 @@ export default class Home extends Vue {
     }
 
     addNewFile() {
-        fileManager.createFile();
+        this._fileManager.createFile();
     }
 
     addNewWorkspace() {
-        fileManager.createWorkspace();
+        this._fileManager.createWorkspace();
     }
 
     addTag() {
@@ -61,7 +66,7 @@ export default class Home extends Vue {
 
     valueChanged(file: File, tag: string, value: string) {
         if (file.type === 'object') {
-            fileManager.updateFile(file, {
+            this._fileManager.updateFile(file, {
                 tags: {
                     [tag]: value
                 }
@@ -69,27 +74,40 @@ export default class Home extends Vue {
         }
     }
 
+    constructor() {
+        super();
+    }
+
+    beforeCreate() {
+        this._socketManager = new SocketManager();
+        this._fileManager = new FileManager(appManager, this._socketManager);
+    }
+
     async created() {
+        this.isLoading = true;
+
+        await this._fileManager.init();
+
         EventBus.$on('openInfoCard', this.open);
         this.open();
-        
-        this.isLoading = true;
 
         this.files = [];
         this.tags = [];
 
-        fileManager.fileUpdated.subscribe(file => {
-            this.files = fileManager.selectedObjects;
-            this.tags = fileManager.fileTags(this.files);
-        });
-        fileManager.fileSelected.subscribe(file => {
-            this.files = fileManager.selectedObjects;
-            this.tags = fileManager.fileTags(this.files);
+        this._fileManager.selectedFilesUpdated.subscribe(event => {
+            this.files = event.files;
+            this.tags = event.tags;
         });
 
         this.isLoading = false;
         
         this._setStatus('Waiting for input...');
+    }
+
+    provide() {
+        return {
+            fileManager: this._fileManager
+        };
     }
 
     private _setStatus(status: string) {

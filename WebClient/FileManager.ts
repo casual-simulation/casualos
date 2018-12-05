@@ -1,11 +1,18 @@
 
 import * as uuid from 'uuid/v4';
-import {SubscriptionLike, Observable, from} from 'rxjs';
+import {
+  SubscriptionLike, 
+  Observable, 
+  from, 
+  ReplaySubject, 
+  Subject, 
+  BehaviorSubject,
+  merge as mergeObservables,
+} from 'rxjs';
 import {
   filter,
   map,
   shareReplay,
-  merge as mergeObservables,
 } from 'rxjs/operators';
 
 import {
@@ -19,7 +26,7 @@ import {
 } from 'lodash';
 
 import {AppManager, appManager} from './AppManager';
-import {socketManager} from './SocketManager';
+import {SocketManager} from './SocketManager';
 import {
   fileAdded, 
   fileRemoved, 
@@ -33,9 +40,16 @@ import {
   PartialFile,
   selectFile,
   FileEvent,
-  FileSelectedEvent
+  FileSelectedEvent,
+  FilesState,
+  UIState
 } from 'common';
+import { ChannelConnection } from 'common/channels-core';
 
+export interface SelectedFilesUpdatedEvent {
+  files: File[];
+  tags: string[];
+}
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -43,24 +57,27 @@ import {
  */
 export class FileManager {
   private _appManager: AppManager;
-  private _files: File[];
+  private _socketManager: SocketManager;
+
   private _status: string;
   private _initPromise: Promise<void>;
-  private _fileDiscoveredObservable: Observable<File>;
-  private _fileSelectedObservable: Observable<File>;
-  private _fileRemovedObservable: Observable<string>;
-  private _fileUpdatedObservable: Observable<File>;
+  private _fileDiscoveredObservable: ReplaySubject<File>;
+  private _fileRemovedObservable: ReplaySubject<string>;
+  private _fileUpdatedObservable: Subject<File>;
+  private _selectedFilesUpdated: BehaviorSubject<SelectedFilesUpdatedEvent>;
+  private _files: ChannelConnection<FilesState>;
+  private _ui: ChannelConnection<UIState>;
 
   // TODO: Dispose of the subscription
   private _sub: SubscriptionLike;
 
   get files(): File[] {
-    return values(socketManager.files.store.state());
+    return values(this._filesState);
   }
 
   get selectedFiles(): File[] {
-    const selected = socketManager.ui.store.state().selected_files;
-    const files = socketManager.files.store.state();
+    const selected = this._uiState.selected_files;
+    const files = this._filesState;
     return selected.map(f => files[f]).filter(f => f);
   }
 
@@ -102,17 +119,33 @@ export class FileManager {
     return this._fileUpdatedObservable;
   }
 
-  get fileSelected(): Observable<File> {
-    return this._fileSelectedObservable;
+  get selectedFilesUpdated(): Observable<SelectedFilesUpdatedEvent> {
+    return this._selectedFilesUpdated;
   }
 
   get status(): string {
     return this._status;
   }
 
-  constructor(app: AppManager) {
+  private get _filesState() {
+    return this._files.store.state();
+  }
+
+  private get _uiState() {
+    return this._ui.store.state();
+  }
+
+  constructor(app: AppManager, socket: SocketManager) {
     this._appManager = app;
-    this._files = [];
+    this._socketManager = socket;
+
+    this._fileDiscoveredObservable = new ReplaySubject<File>();
+    this._fileRemovedObservable = new ReplaySubject<string>();
+    this._fileUpdatedObservable = new Subject<File>();
+    this._selectedFilesUpdated = new BehaviorSubject<SelectedFilesUpdatedEvent>({
+      files: [],
+      tags: []
+    });
   }
 
   init(): Promise<void> {
@@ -137,14 +170,14 @@ export class FileManager {
 
   selectFile(file: File) {
     console.log('[FileManager] Select File:', file.id);
-    socketManager.ui.emit(selectFile(file.id));
+    this._ui.emit(selectFile(file.id));
   }
 
   /**
    * Updates the given file with the given data.
    */
   async updateFile(file: File, newData: PartialFile) {
-    socketManager.files.emit(fileUpdated(file.id, newData));
+    this._files.emit(fileUpdated(file.id, newData));
   }
 
   async createFile() {
@@ -162,7 +195,7 @@ export class FileManager {
       tags: {}
     };
 
-    socketManager.files.emit(fileAdded(file));
+    this._files.emit(fileAdded(file));
   }
 
   async createWorkspace() {
@@ -178,128 +211,83 @@ export class FileManager {
       },
     };
 
-    socketManager.files.emit(fileAdded(workspace));
+    this._files.emit(fileAdded(workspace));
   }
 
   private async _init() {
     this._setStatus("Starting...");
 
-    this._sub = socketManager.files.events.subscribe((event: FileEvent) => {
-      if(event.type === 'file_added') {
-        this._fileDiscovered(event);
-      } else if(event.type === 'file_removed') {
-        this._fileRemoved(event);
-      }
-    });
+    this._files = await this._socketManager.getFilesChannel();
+    this._ui = await this._socketManager.getUIChannel();
 
     // Replay the existing files for the components that need it this way
-    const state = socketManager.files.store.state();
-    const files = values(state);
-    const ordered = sortBy(files, f => f.type === 'object');
-    const newlyDiscovered = from(ordered);
+    const filesState = this._files.store.state();
+    const existingFiles = values(filesState);
+    const orderedFiles = sortBy(existingFiles, f => f.type === 'object');
+    const existingFilesObservable = from(orderedFiles);
 
-    this._fileDiscoveredObservable = socketManager.files.events.pipe(
+    const fileAdded = this._files.events.pipe(
       filter(event => event.type === 'file_added'),
-      map((event: FileAddedEvent) => event.file),
-      mergeObservables(newlyDiscovered),
-      shareReplay()
+      map((event: FileAddedEvent) => event.file)
     );
 
-    this._fileRemovedObservable = socketManager.files.events.pipe(
+    const allFilesAdded = mergeObservables(
+      fileAdded,
+      existingFilesObservable
+    );
+
+    const fileRemoved = this._files.events.pipe(
       filter(event => event.type === 'file_removed'),
-      map((event: FileRemovedEvent) => event.id),
-      shareReplay()
+      map((event: FileRemovedEvent) => event.id)
     );
-
-    this._fileUpdatedObservable = socketManager.files.events.pipe(
+    
+    const fileUpdated = this._files.events.pipe(
       filter(event => event.type === 'file_updated'),
-      map((event: FileUpdatedEvent) => socketManager.files.store.state()[event.id])
+      map((event: FileUpdatedEvent) => this._filesState[event.id])
+    );
+    
+    allFilesAdded.subscribe(this._fileDiscoveredObservable);
+    fileRemoved.subscribe(this._fileRemovedObservable);
+    fileUpdated.subscribe(this._fileUpdatedObservable);
+
+    const uiState = this._uiState;
+    const alreadySelected = uiState.selected_files.map(f => f);
+    const alreadySelectedObservable = from(alreadySelected);
+    
+    const fileSelected = this._ui.events.pipe(
+      filter(event => event.type === 'file_selected'),
+      map((event: FileSelectedEvent) => event.id)
     );
 
-    const uiState = socketManager.ui.store.state();
-    const selectedFiles = from(uiState.selected_files.map(f => selectFile(f)));
-  
-    this._fileSelectedObservable = socketManager.ui.events.pipe(
-      filter(event => event.type === 'file_selected'),
-      mergeObservables(selectedFiles),
-      map((event: FileSelectedEvent) => socketManager.files.store.state()[event.id])
+    const allFilesSelected = mergeObservables(
+      fileSelected,
+      alreadySelectedObservable
     );
+
+    const allFilesSelectedUpdatedAddedAndRemoved = mergeObservables(
+      allFilesSelected,
+      fileAdded.pipe(map(f => f.id)),
+      fileUpdated.pipe(map(f => f.id)),
+      fileRemoved
+    );
+
+    const allSelectedFilesUpdated = allFilesSelectedUpdatedAddedAndRemoved.pipe(
+      map(file => {
+        const selectedFiles = this.selectedObjects;
+        return {
+          files: selectedFiles,
+          tags: this.fileTags(selectedFiles)
+        };
+      })
+    );
+
+    allSelectedFilesUpdated.subscribe(this._selectedFilesUpdated);
 
     this._setStatus("Initialized.");
   }
-
-  // private _updateFiles(currentFiles: File[]) {
-
-  //   let newFiles: File[] = [];
-  //   let removedFiles: File[] = [];
-
-  //   let old: {
-  //     [id: string]: File
-  //   } = {};
-  //   this._files.forEach(f => {
-  //     old[f.id] = f;
-  //   });
-
-  //   let current: {
-  //     [id: string]: File
-  //   } = {};
-
-  //   currentFiles.forEach(f => {
-  //     current[f.id] = f;
-  //     if(!old[f.id]) {
-  //       newFiles.push(f);
-  //     }
-  //   });
-
-  //   this._files.forEach(f => {
-  //     if(!current[f.id]) {
-  //       removedFiles.push(f);
-  //     }
-  //   });
-    
-  //   newFiles = sortBy(newFiles, f => f.data.type === 'file');
-  //   removedFiles = sortBy(removedFiles, f => f.data.type === 'file');
-
-  //   newFiles.forEach(file => {
-  //     this._appManager.events.next(fileDiscovered(file));
-  //   });
-
-  //   removedFiles.forEach(file => {
-  //     this._appManager.events.next(fileRemoved(file));
-  //   });
-
-  //   currentFiles.forEach(file => {
-  //     if (old[file.id]) {
-  //       console.log(`Updating file: '${file.id}'...`);
-  //       // Only notify of files that weren't added or removed.
-  //       this._appManager.events.next(fileUpdated(file));
-  //     }
-  //   })
-  // }
-
-  private async _fileDiscovered(event: FileAddedEvent) {
-    this._files.push(event.file);
-    this._files = sortBy(this._files, f => f.id);
-  }
-
-  private _fileRemoved(event: FileRemovedEvent) {
-    const index = findIndex(this._files, f => f.id === event.id);
-    if(index >= 0) {
-      this._files.splice(index, 1);
-    }
-  }
-
-  // private async _commitAdded(event: CommitAddedEvent) {
-  //   this._setStatus(`Commit ${event.hash} added on ${event.branch}.`);
-  //   if (!this.canSave) {
-  //     await this.pull();
-  //   }
-  // }
 
   private _setStatus(status: string) {
     this._status = status;
     console.log('[FileManager] Status:', status);
   }
 }
-
-export const fileManager = new FileManager(appManager);

@@ -29,6 +29,7 @@ import {
 } from 'three';
 import Vue, {ComponentOptions} from 'vue';
 import Component from 'vue-class-component';
+import { Prop, Inject } from 'vue-property-decorator';
 import { 
   SubscriptionLike, 
   Observable, 
@@ -45,7 +46,7 @@ import {
 import {merge} from 'lodash';
 
 import {appManager} from '../AppManager';
-import {fileManager} from '../FileManager';
+import {FileManager} from '../FileManager';
 import {File, Object, Workspace} from 'common';
 
 import { vg } from "von-grid";
@@ -260,8 +261,15 @@ function eventIsOverElement(event: MouseEvent, element: HTMLElement): boolean {
   return mouseOver === element;
 }
 
-@Component
+@Component({
+  inject: {
+    fileManager: 'fileManager'
+  }
+})
 export default class GameView extends Vue {
+
+  @Inject() fileManager!: FileManager;
+
   private _scene: Scene;
   private _camera: PerspectiveCamera;
   private _renderer: Renderer;
@@ -310,13 +318,13 @@ export default class GameView extends Vue {
     this._frames = 0;
     this._renderGame();
 
-    fileManager.fileDiscovered.subscribe(file => {
+    this.fileManager.fileDiscovered.subscribe(file => {
       this._fileAdded(file);
     });
-    fileManager.fileRemoved.subscribe(file => {
+    this.fileManager.fileRemoved.subscribe(file => {
       this._fileRemoved(file);
     });
-    fileManager.fileUpdated.subscribe(file => {
+    this.fileManager.fileUpdated.subscribe(file => {
       this._fileUpdated(file);
     });
 
@@ -398,7 +406,7 @@ export default class GameView extends Vue {
   private _dragWorkspace(mouseDir: Ray, workspace: File3D) {
     const point = pointOnPlane(mouseDir, this._workspacePlane);
     if (point) {
-      fileManager.updateFile(workspace.file, {
+      this.fileManager.updateFile(workspace.file, {
         position: {
           x: point.x,
           y: point.y,
@@ -409,14 +417,14 @@ export default class GameView extends Vue {
   }
 
   private _selectFile(file: File3D) {
-    fileManager.selectFile(file.file);
+    this.fileManager.selectFile(file.file);
   }
 
   private _dragFile(mouseDir: Ray, hit: Intersection) {
     const { good, point, workspace } = this._pointOnGrid(mouseDir);
     const file = this._fileForMesh(hit.object);
     if (good) {
-      fileManager.updateFile(file.file, {
+      this.fileManager.updateFile(file.file, {
         workspace: workspace.file.id,
         position: {
           x: point.x,
@@ -426,7 +434,7 @@ export default class GameView extends Vue {
       });
     } else {
       const p = pointOnRay(mouseDir, 2);
-      fileManager.updateFile(file.file, {
+      this.fileManager.updateFile(file.file, {
         workspace: null,
         position: {
           x: p.x,

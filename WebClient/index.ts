@@ -23,8 +23,6 @@ import App from './App/App';
 import Welcome from './Welcome/Welcome';
 import { polyfill } from 'es6-promise';
 import { appManager } from './AppManager';
-import { fileManager } from './FileManager';
-import { socketManager } from './SocketManager';
 
 const Home = () => import('./Home/Home');
 
@@ -79,15 +77,7 @@ router.beforeEach((to, from, next) => {
     next();
 });
 
-
-async function init() {
-    await socketManager.init();
-    await fileManager.init();
-
-    const app = new Vue({
-        router,
-        render: createEle => createEle(App)
-    }).$mount('#app');
-}
-
-init();
+const app = new Vue({
+    router,
+    render: createEle => createEle(App)
+}).$mount('#app');
