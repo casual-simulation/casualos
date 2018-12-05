@@ -98,44 +98,94 @@ function detectEdges(observable: Observable<boolean>) {
     map(a => ({
       active: a,
       started: false,
-      ended: false
+      ended: false,
+      startTime: null,
+      endTime: null
     })),
     scan((prev, curr) => {
       if(!prev.active && curr.active) {
         return {
           active: curr.active,
           started: true,
-          ended: false
+          ended: false,
+          startTime: Date.now(),
+          endTime: null
         };
       } else if(prev.active && !curr.active) {
         return {
           active: curr.active,
           started: false,
-          ended: true
+          ended: true,
+          startTime: curr.startTime,
+          endTime: Date.now()
         };
       } else {
-        return curr;
+        return {
+          ...curr,
+          started: false,
+          ended: false
+        };
       }
-    }, { active: false, started: false, ended: false })
+    }, { active: false, started: false, ended: false, startTime: <number>null, endTime: <number>null }),
   );
 }
 
+function mouseDistance(first: MouseEvent, second: MouseEvent) {
+  const pos1 = new Vector2(first.pageX, first.pageY);
+  const pos2 = new Vector2(second.pageX, second.pageY);
+  return pos1.distanceTo(pos2);
+}
+
 function buttonDrag(active: Observable<boolean>) {
+  active = combineLatest(
+    active,
+    mouseMove,
+    (active, move) => active
+  );
   const dragging = detectEdges(active);
   return combineLatest(
     dragging,
     mouseMove,
-    (a, m) => ({
-      isDragging: a.active,
-      justStartedDragging: a.started,
-      justEndedDragging: a.ended,
-      event: m
+    (active, mouse) => ({
+      isDragging: active.active,
+      justStartedDragging: active.started,
+      startDragTime: active.startTime,
+      justEndedDragging: active.ended,
+      endDragTime: active.endTime,
+      event: mouse,
+      startDragEvent: null
     })
+  ).pipe(
+    scan((prev, curr) => {
+      if(curr.justStartedDragging) {
+        return {
+          ...curr,
+          startDragEvent: curr.event
+        }
+      } else {
+        return {
+          ...curr,
+          startDragEvent: prev.startDragEvent
+        };
+      }
+    }, {
+      isDragging: false,
+      justStartedDragging: false,
+      startDragTime: <number>null,
+      justEndedDragging: false,
+      endDragTime: <number>null,
+      event: null,
+      startDragEvent: null
+    }),
+    map(event => ({
+      ...event,
+      isDragging: event.isDragging && event.startDragEvent && mouseDistance(event.startDragEvent, event.event) > 10
+    }))
   );
 }
 
 const leftDrag = buttonDrag(leftClickActive);
-const rightDrag = buttonDrag(rightClickActive);
+// const rightDrag = buttonDrag(rightClickActive);
 
 function screenPosition(event: MouseEvent, view: HTMLElement) {
   const globalPos = new Vector2(event.pageX, event.pageY);
