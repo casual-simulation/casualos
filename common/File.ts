@@ -9,7 +9,7 @@ export interface Object {
         x: number;
         y: number;
         z: number;
-    };
+    } | null;
 
     tags: {
         [key: string]: any;

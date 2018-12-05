@@ -520,10 +520,15 @@ export default class GameView extends Vue {
       material.color = new Color(0x00FF00);
     }
 
-    obj.mesh.position.set(
-      data.position.x + 0,
-      data.position.y + 0.095,
-      data.position.z + 0);
+    if (data.position) {
+        obj.mesh.position.set(
+          data.position.x + 0,
+          data.position.y + 0.095,
+          data.position.z + 0);
+    } else {
+      // Default position
+      obj.mesh.position.set(0, 1, 0);
+    }
   }
 
   private _getColor(color: string): Color {

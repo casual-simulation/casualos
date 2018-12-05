@@ -186,11 +186,7 @@ export class FileManager {
     const file: Object = {
       id: uuid(),
       type: 'object',
-      position: {
-        x: 0,
-        y: 0,
-        z: 0
-      },
+      position: null,
       workspace: null,
       tags: {}
     };
