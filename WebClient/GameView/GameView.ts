@@ -147,45 +147,55 @@ function buttonDrag(active: Observable<boolean>) {
     dragging,
     mouseMove,
     (active, mouse) => ({
-      isDragging: active.active,
-      justStartedDragging: active.started,
+      isActive: active.active,
+      justStartedClicking: active.started,
       startDragTime: active.startTime,
-      justEndedDragging: active.ended,
+      justEndedClicking: active.ended,
       endDragTime: active.endTime,
       event: mouse,
-      startDragEvent: null
+      startClickEvent: null
     })
   ).pipe(
     scan((prev, curr) => {
-      if(curr.justStartedDragging) {
+      if(curr.justStartedClicking) {
         return {
           ...curr,
-          startDragEvent: curr.event
+          startClickEvent: curr.event
         }
       } else {
         return {
           ...curr,
-          startDragEvent: prev.startDragEvent
+          startClickEvent: prev.startClickEvent
         };
       }
     }, {
-      isDragging: false,
-      justStartedDragging: false,
+      isActive: false,
+      justStartedClicking: false,
       startDragTime: <number>null,
-      justEndedDragging: false,
+      justEndedClicking: false,
       endDragTime: <number>null,
       event: null,
-      startDragEvent: null
+      startClickEvent: null
     }),
-    map(event => ({
-      ...event,
-      isDragging: event.isDragging && event.startDragEvent && mouseDistance(event.startDragEvent, event.event) > 10
-    }))
+    map(event => {
+      const wasDragging = event.startClickEvent && mouseDistance(event.startClickEvent, event.event) > 10;
+      const isDragging = event.isActive && wasDragging;
+      const isClicking = !isDragging && !wasDragging && event.justEndedClicking;
+      return {
+        ...event,
+        isDragging,
+        isClicking
+      }
+    })
   );
 }
 
+function buttonClick() {
+  return mouseUp;
+}
+
 const leftDrag = buttonDrag(leftClickActive);
-// const rightDrag = buttonDrag(rightClickActive);
+const rightDrag = buttonDrag(rightClickActive);
 
 function screenPosition(event: MouseEvent, view: HTMLElement) {
   const globalPos = new Vector2(event.pageX, event.pageY);
@@ -341,9 +351,22 @@ export default class GameView extends Vue {
       filter(drag => drag.hit !== null)
     );
 
+    const clickOperations = dragPositions.pipe(
+      filter(e => e.isClicking && eventIsOverElement(e.event, this._canvas)),
+      map(e => screenPosition(e.event, this.gameView)),
+      map(pos => raycastAtScreenPos(pos, this._raycaster, this._draggableObjects, this._camera)),
+      map(r => firstRaycastHit(r)),
+      filter(hit => hit !== null),
+      map(hit => this._fileForMesh(hit.object)),
+      filter(file => file !== null && file.file.type === 'object'),
+      tap(file => this._selectFile(file))
+    )
+
     dragOperations.subscribe(drag => {
       this._handleDrag(drag.ray, drag.workspace, drag.hit);
     });
+
+    clickOperations.subscribe();
 
     const gridsVisible = draggedObjects.pipe(
       map(drag => drag.isDragging && drag.hit !== null && this._isFile(drag.hit)),
@@ -383,6 +406,10 @@ export default class GameView extends Vue {
         }
       });
     }
+  }
+
+  private _selectFile(file: File3D) {
+    console.log('Select file:', file.file.id);
   }
 
   private _dragFile(mouseDir: Ray, hit: Intersection) {
