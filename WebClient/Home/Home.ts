@@ -115,6 +115,9 @@ export default class Home extends Vue {
         this._fileManager.selectedFilesUpdated.subscribe(event => {
             this.files = event.files;
             this.selected = this.files.map(f => true);
+            if (this.files.length > 0) {
+                this.isOpen = true;
+            }
             this.tags = this._fileManager.fileTags(this.files, this.tags, this.lastEditedTag ? [this.lastEditedTag] : []);
         });
 
