@@ -36,9 +36,18 @@ export function filesReducer(state: FilesState, event: FileEvent) {
         const { [event.id]: removed, ...others } = state;
         return others;
     } else if(event.type === 'file_updated') {
-        return merge({}, state, {
+        const newData = merge({}, state, {
             [event.id]: event.update
         });
+
+        for(let property in newData[event.id].tags) {
+            let value = newData[event.id].tags[property];
+            if (value === null) {
+                delete newData[event.id].tags[property];
+            }
+        }
+
+        return newData;
     }
 
     return state;

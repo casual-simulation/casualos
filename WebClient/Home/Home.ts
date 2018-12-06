@@ -7,6 +7,7 @@ import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';
 import { FileManager } from '../FileManager';
 import { SocketManager } from '../SocketManager';
+import {uniq} from 'lodash';
 import CubeIcon from './Cube.svg';
 
 const numLoadingSteps: number = 4;
@@ -25,7 +26,9 @@ export default class Home extends Vue {
     isOpen: boolean = false;
     status: string = '';
     files: File[] = [];
+    selected: boolean[] = [];
     tags: string[] = [];
+    lastEditedTag: string = null;
     isMakingNewTag: boolean = false;
     newTag: string = 'myNewTag';
 
@@ -60,12 +63,27 @@ export default class Home extends Vue {
     addTag() {
         if (this.isMakingNewTag) {
             this.tags.push(this.newTag);
+        } else {
+            this.newTag = 'newTag';
         }
         this.isMakingNewTag = !this.isMakingNewTag;
     }
 
+    cancelNewTag() {
+        this.isMakingNewTag = false;
+    }
+
+    clearSelection() {
+        this._fileManager.clearSelection();
+    }
+
+    unselectFile(file: File) {
+        this._fileManager.selectFile(file);
+    }
+
     valueChanged(file: File, tag: string, value: string) {
         if (file.type === 'object') {
+            this.lastEditedTag = tag;
             this._fileManager.updateFile(file, {
                 tags: {
                     [tag]: value
@@ -96,7 +114,8 @@ export default class Home extends Vue {
 
         this._fileManager.selectedFilesUpdated.subscribe(event => {
             this.files = event.files;
-            this.tags = event.tags;
+            this.selected = this.files.map(f => true);
+            this.tags = this._fileManager.fileTags(this.files, this.tags, this.lastEditedTag ? [this.lastEditedTag] : []);
         });
 
         this.isLoading = false;

@@ -9,9 +9,11 @@
                 Welcome Home {{user.name}}!
 
                 <h4>Files</h4>
-                <table v-if="hasFiles">
+
+                <table v-if="hasFiles" class="file-table">
                   <thead>
                     <tr>
+                      <th></th>
                       <th>ID</th>
 
                       <th v-for="(tag, index) in tags" :key="index">
@@ -23,19 +25,27 @@
                       </th>
 
                       <th>
-                        <md-button @click="addTag()">
+                        <md-button class="new-tag-button" @click="addTag()">
                           {{isMakingNewTag ? "Done": "+ New Tag"}}
+                        </md-button>
+                        <md-button class="new-tag-button" @click="cancelNewTag()" v-if="isMakingNewTag">
+                          Cancel
                         </md-button>
                       </th>
                     </tr>
                   </thead>
                   <tbody>
 
-                    <tr v-for="file in files" :key="file.id">
-                      <td><strong>{{file.id.substring(0, 5)}}</strong></td>
-                      <th v-if="file.type === 'object'" v-for="tag in tags" :key="tag">
+                    <tr v-for="(file, index) in files" :key="file.id" class="file-row">
+                      <td class="file-close">
+                        <md-button class="md-icon-button md-dense" @click="unselectFile(file)">
+                          <md-icon>close</md-icon>
+                        </md-button>
+                      </td>
+                      <td class="file-id">{{file.id.substring(0, 5)}}</td>
+                      <td v-if="file.type === 'object'" v-for="tag in tags" :key="tag">
                         <input @input="valueChanged(file, tag, $event.target.value)" :value="file.tags[tag]">
-                      </th>
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -52,6 +62,7 @@
               </div>
             </md-card-content>
             <md-card-actions>
+              <md-button v-if="hasFiles" @click="clearSelection()">Clear Selection</md-button>
               <md-button @click="close()">Close</md-button>
             </md-card-actions>
           </md-card>

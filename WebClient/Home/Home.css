@@ -56,3 +56,67 @@
 .toolbar-button {
     margin: 0;
 }
+
+.md-checkbox.no-margin {
+    margin: 0;
+}
+
+.file-table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+.file-table .new-tag-button {
+    margin: 0;
+}
+
+.file-table th {
+    border-left: 1px solid rgba(0,0,0,.2);
+}
+
+.file-table th:not(:last-child) {
+    border-top: 1px solid rgba(0,0,0,.2);
+    background-color: rgba(0,0,0,.05);
+}
+
+.file-row td {
+    /* border-top: 1px solid rgba(0,0,0,.2); */
+    padding: 0;
+}
+
+.file-row:hover td {
+    background-color: rgba(0,0,0,.12);
+}
+
+.file-row:hover input {
+    background-color: transparent;
+}
+
+.file-row input {
+    padding: 2px;
+    border: none;
+    height: 32px;
+}
+
+.file-row:last-child {
+    border-bottom: 1px solid rgba(0,0,0,.2);
+}
+
+.file-row td {
+    border-right: 1px solid rgba(0,0,0,.2);
+    border-top: 1px solid rgba(0,0,0,.2);
+}
+
+.file-row td:first-child {
+    border-left: 1px solid rgba(0,0,0,.2);
+}
+
+.file-row .file-id {
+    font-weight: 700;
+    padding: 0 8px;
+    border-right: 1px solid rgba(0,0,0,.2);
+}
+
+.file-row .file-close .md-icon {
+    color: #ff0000;
+}

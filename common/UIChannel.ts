@@ -5,11 +5,15 @@ import {
 import {File} from './File';
 import { ReducingStateStore, Event } from './channels-core';
 
-export type UIEvent = FileSelectedEvent;
+export type UIEvent = FileSelectedEvent | ClearSelectedFilesEvent;
 
 export interface FileSelectedEvent extends Event {
     type: 'file_selected';
     id: string;
+}
+
+export interface ClearSelectedFilesEvent extends Event {
+    type: 'clear_selected_files';
 }
 
 export interface UIState {
@@ -37,6 +41,11 @@ export function uiReducer(state: UIState, event: UIEvent) {
                 ]
             };
         }
+    } else if (event.type === 'clear_selected_files') {
+        return {
+            ...state,
+            selected_files: []
+        };
     }
 
     return state;
@@ -55,5 +64,12 @@ export function selectFile(id: string): FileSelectedEvent {
         type: 'file_selected',
         creation_time: new Date(),
         id: id
+    };
+}
+
+export function clearSelection(): ClearSelectedFilesEvent {
+    return {
+        type: 'clear_selected_files',
+        creation_time: new Date()
     };
 }

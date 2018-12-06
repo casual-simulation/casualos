@@ -15,6 +15,7 @@ import {
     MdDialog, 
     MdDialogConfirm,
     MdTabs,
+    MdCheckbox,
 } from 'vue-material/dist/components';
 import 'vue-material/dist/vue-material.min.css'
 import 'vue-material/dist/theme/default.css'
@@ -31,6 +32,7 @@ polyfill();
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
+Vue.use(MdCheckbox);
 Vue.use(MdContent);
 Vue.use(MdApp);
 Vue.use(MdCard);

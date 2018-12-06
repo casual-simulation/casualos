@@ -22,7 +22,9 @@ import {
   values,
   merge,
   uniq,
+  union,
   findIndex,
+  intersection,
 } from 'lodash';
 
 import {AppManager, appManager} from './AppManager';
@@ -42,13 +44,13 @@ import {
   FileEvent,
   FileSelectedEvent,
   FilesState,
-  UIState
+  UIState,
+  clearSelection 
 } from 'common';
 import { ChannelConnection } from 'common/channels-core';
 
 export interface SelectedFilesUpdatedEvent {
   files: File[];
-  tags: string[];
 }
 
 /**
@@ -143,8 +145,7 @@ export class FileManager {
     this._fileRemovedObservable = new ReplaySubject<string>();
     this._fileUpdatedObservable = new Subject<File>();
     this._selectedFilesUpdated = new BehaviorSubject<SelectedFilesUpdatedEvent>({
-      files: [],
-      tags: []
+      files: []
     });
   }
 
@@ -158,14 +159,27 @@ export class FileManager {
 
   /**
    * Gets a list of tags that the given files contain.
+   * 
+   * @param files The array of files that the list of tags should be retrieved for.
+   * @param currentTags The current array of tags that is being displayed. 
+   *                    The new list will try to preserve the order of the tags in this list.
+   * @param extraTags The list of tags that should not be removed from the output list.
    */
-  fileTags(files: File[]) {
-    return uniq(flatMap(files, f => {
+  fileTags(files: File[], currentTags: string[], extraTags: string[]) {
+    const fileTags = flatMap(files, f => {
       if(f.type === 'object') {
         return keys(f.tags);
       }
       return [];
-    }));
+    });
+    const tagsToKeep = union(fileTags,extraTags);
+    const allTags = union(currentTags, tagsToKeep);
+    const onlyTagsToKeep = intersection(
+      allTags,
+      tagsToKeep
+    );
+
+    return onlyTagsToKeep;
   }
 
   selectFile(file: File) {
@@ -173,10 +187,24 @@ export class FileManager {
     this._ui.emit(selectFile(file.id));
   }
 
+  clearSelection() {
+    this._ui.emit(clearSelection());
+  }
+
   /**
    * Updates the given file with the given data.
    */
   async updateFile(file: File, newData: PartialFile) {
+
+    if (newData.tags) {
+      for (let property in newData.tags) {
+        let value = newData.tags[property];
+        if (!value) {
+          newData.tags[property] = null;
+        }
+      }
+    }
+
     this._files.emit(fileUpdated(file.id, newData));
   }
 
@@ -260,8 +288,14 @@ export class FileManager {
       alreadySelectedObservable
     );
 
+    const selectionCleared = this._ui.events.pipe(
+      filter(event => event.type === 'clear_selected_files'),
+      map((event) => '')
+    );
+
     const allFilesSelectedUpdatedAddedAndRemoved = mergeObservables(
       allFilesSelected,
+      selectionCleared,
       fileAdded.pipe(map(f => f.id)),
       fileUpdated.pipe(map(f => f.id)),
       fileRemoved
@@ -271,8 +305,7 @@ export class FileManager {
       map(file => {
         const selectedFiles = this.selectedObjects;
         return {
-          files: selectedFiles,
-          tags: this.fileTags(selectedFiles)
+          files: selectedFiles
         };
       })
     );
