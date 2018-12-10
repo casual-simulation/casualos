@@ -14,11 +14,11 @@ const numLoadingSteps: number = 4;
     watch: {
         file: function(newFile: Object, oldFile: Object) {
             const _this: FileRow = this;
-            this.value = _this.fileManager.calculateFileValue(this.file, this.tag);
+            _this._updateValue();
         },
         tag: function(newTag: string, oldTag: string) {
             const _this: FileRow = this;
-            this.value = _this.fileManager.calculateFileValue(this.file, this.tag);
+            _this._updateValue();
         },
     }
 })
@@ -26,6 +26,7 @@ export default class FileRow extends Vue {
     @Prop() file: Object;
     @Prop() tag: string;
     value: string = '';
+    isFocused: boolean = false;
 
     @Inject() fileManager!: FileManager;
 
@@ -46,7 +47,25 @@ export default class FileRow extends Vue {
         }
     }
 
+    focus() {
+        this.isFocused = true;
+        this._updateValue();
+    }
+
+    blur() {
+        this.isFocused = false;
+        this._updateValue();
+    }
+
     created() {
-        this.value = this.fileManager.calculateFileValue(this.file, this.tag);
+        this._updateValue();
+    }
+
+    private _updateValue() {
+        if (!this.isFocused) {
+            this.value = this.fileManager.calculateFileValue(this.file, this.tag);
+        } else {
+            this.value = this.file.tags[this.tag];
+        }
     }
 };
