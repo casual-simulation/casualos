@@ -1,7 +1,7 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Provide} from 'vue-property-decorator';
-import {File} from 'common';
+import {File, Object} from 'common';
 import GameView from '../GameView/GameView';
 import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';
@@ -28,6 +28,9 @@ export default class Home extends Vue {
     files: File[] = [];
     selected: boolean[] = [];
     tags: string[] = [];
+    hiddenTags: string[] = [
+        '_selected'
+    ];
     lastEditedTag: string = null;
     isMakingNewTag: boolean = false;
     newTag: string = 'myNewTag';
@@ -77,7 +80,7 @@ export default class Home extends Vue {
         this._fileManager.clearSelection();
     }
 
-    unselectFile(file: File) {
+    toggleFile(file: Object) {
         this._fileManager.selectFile(file);
     }
 
@@ -114,11 +117,12 @@ export default class Home extends Vue {
 
         this._fileManager.selectedFilesUpdated.subscribe(event => {
             this.files = event.files;
+            console.log(this.files);
             this.selected = this.files.map(f => true);
             if (this.files.length > 0) {
                 this.isOpen = true;
             }
-            this.tags = this._fileManager.fileTags(this.files, this.tags, this.lastEditedTag ? [this.lastEditedTag] : []);
+            this.tags = this._fileManager.fileTags(this.files, this.tags, this.lastEditedTag ? [this.lastEditedTag] : [], this.hiddenTags);
         });
 
         this.isLoading = false;

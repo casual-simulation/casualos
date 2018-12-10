@@ -38,7 +38,7 @@
 
                     <tr v-for="(file, index) in files" :key="file.id" class="file-row">
                       <td class="file-close">
-                        <md-button class="md-icon-button md-dense" @click="unselectFile(file)">
+                        <md-button class="md-icon-button md-dense" @click="toggleFile(file)">
                           <md-icon>close</md-icon>
                         </md-button>
                       </td>

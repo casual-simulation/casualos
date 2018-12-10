@@ -417,7 +417,7 @@ export default class GameView extends Vue {
   }
 
   private _selectFile(file: File3D) {
-    this.fileManager.selectFile(file.file);
+    this.fileManager.selectFile(<Object>file.file);
   }
 
   private _dragFile(mouseDir: Ray, hit: Intersection) {
@@ -504,6 +504,7 @@ export default class GameView extends Vue {
 
   private _updateFile(obj: File3D, data: Object) {
     const workspace = this._files[data.workspace];
+    obj.file = data;
     if (workspace) {
       obj.mesh.parent = workspace.mesh;
     } else {
