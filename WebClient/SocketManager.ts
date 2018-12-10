@@ -8,8 +8,6 @@ import {SocketIOConnector} from './channels';
 import {
     FileEvent,
     FilesState,
-    UIEvent,
-    UIState,
     storeFactory,
     channelTypes,
 } from 'common';
@@ -46,18 +44,5 @@ export class SocketManager {
         console.log('[SocketManager] Connected to files channel.');
 
         return files;
-    }
-
-    async getUIChannel(): Promise<ChannelConnection<UIState>> {
-        console.log('[SocketManager] Getting UI channel...');
-
-        const ui = await this._client.getChannel<UIState>({
-            id: `${appManager.user.username}-ui`,
-            type: channelTypes.ui,
-            name: `${appManager.user.username}'s UI`
-        }).subscribe();
-
-        console.log('[SocketManager] Connected to UI channel.');
-        return ui;
     }
 }

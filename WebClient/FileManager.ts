@@ -1,8 +1,40 @@
 
-import {clearSelection, File, fileAdded, FileAddedEvent, FileEvent, fileRemoved, FileRemovedEvent, FileSelectedEvent, FilesState, fileUpdated, FileUpdatedEvent, Object, PartialFile, selectFile, UIState, Workspace} from 'common';
+import {
+  File, 
+  fileAdded, 
+  FileAddedEvent, 
+  FileEvent, 
+  fileRemoved, 
+  FileRemovedEvent, 
+  FilesState, 
+  fileUpdated, 
+  FileUpdatedEvent, 
+  Object, 
+  PartialFile, 
+  Workspace
+} from 'common';
 import {ChannelConnection} from 'common/channels-core';
-import {findIndex, flatMap, intersection, keys, merge, sortBy, union, uniq, values,difference} from 'lodash';
-import {BehaviorSubject, from, merge as mergeObservables, Observable, ReplaySubject, Subject, SubscriptionLike,} from 'rxjs';
+import {
+  findIndex, 
+  flatMap, 
+  intersection, 
+  keys, 
+  merge, 
+  sortBy, 
+  union, 
+  uniq, 
+  values,
+  difference
+} from 'lodash';
+import {
+  BehaviorSubject, 
+  from, 
+  merge as mergeObservables, 
+  Observable, 
+  ReplaySubject, 
+  Subject, 
+  SubscriptionLike,
+} from 'rxjs';
 import {filter, map, shareReplay,} from 'rxjs/operators';
 import * as uuid from 'uuid/v4';
 
