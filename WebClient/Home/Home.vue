@@ -35,18 +35,7 @@
                     </tr>
                   </thead>
                   <tbody>
-
-                    <tr v-for="(file, index) in files" :key="file.id" class="file-row">
-                      <td class="file-close">
-                        <md-button class="md-icon-button md-dense" @click="toggleFile(file)">
-                          <md-icon>close</md-icon>
-                        </md-button>
-                      </td>
-                      <td class="file-id">{{file.id.substring(0, 5)}}</td>
-                      <td v-if="file.type === 'object'" v-for="tag in tags" :key="tag">
-                        <input @input="valueChanged(file, tag, $event.target.value)" :value="file.tags[tag]">
-                      </td>
-                    </tr>
+                    <file-row v-for="(file, index) in files" :key="file.id" :file="file" :tags="tags"></file-row>
                   </tbody>
                 </table>
 

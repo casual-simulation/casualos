@@ -40,6 +40,7 @@ import * as uuid from 'uuid/v4';
 
 import {AppManager, appManager} from './AppManager';
 import {SocketManager} from './SocketManager';
+import { Sandbox } from './Sandbox';
 
 export interface SelectedFilesUpdatedEvent { files: File[]; }
 
@@ -58,6 +59,7 @@ export class FileManager {
   private _fileUpdatedObservable: Subject<File>;
   private _selectedFilesUpdated: BehaviorSubject<SelectedFilesUpdatedEvent>;
   private _files: ChannelConnection<FilesState>;
+  private _sandbox: Sandbox;
 
   // TODO: Dispose of the subscription
   private _sub: SubscriptionLike;
@@ -122,6 +124,43 @@ export class FileManager {
     this._appManager = app;
     this._socketManager = socket;
 
+    this._sandbox = new Sandbox((js, value) => {
+      const _this = this;
+
+      function sum(list: any[]) {
+        let carry = 0;
+        list.forEach(l => {
+          carry += parseFloat(_this.calculateValue(l));
+        });
+        return carry;
+      }
+
+      function list(tag: string) {
+        return _this.objects.map(o => o.tags[tag]).filter(t => t);
+      }
+
+      try {
+        const result = eval(js);
+        return result;
+      } catch(e) {
+        return value;
+      }
+    });
+
+    // #color -> list('color')
+    this._sandbox.addMacro({
+      test: /#\w+/g,
+      replacement: (sub: string) => {
+        const tagName = sub.substr(1);
+        return `list('${tagName}')`;
+      }
+    });
+
+    this._sandbox.addMacro({
+      test: /^\=/,
+      replacement: (sub) => ''
+    });
+
     this._fileDiscoveredObservable = new ReplaySubject<File>();
     this._fileRemovedObservable = new ReplaySubject<string>();
     this._fileUpdatedObservable = new Subject<File>();
@@ -163,28 +202,55 @@ export class FileManager {
   }
 
   selectFile(file: Object) {
+    this.selectFileForUser(file, this._appManager.user.username);
+  }
+
+  selectFileForUser(file: Object, username: string) {
     console.log('[FileManager] Select File:', file.id);
     this.updateFile(file, {
       tags: {
           _selected: {
-              [this._appManager.user.username]: !(file.tags._selected && file.tags._selected[this._appManager.user.username])
+              [username]: !(file.tags._selected && file.tags._selected[username])
           }
       }
     });
   }
 
   clearSelection() {
-    console.log('[FileManager] Clear selection.');
+    this.clearSelectionForUser(this._appManager.user.username);
+  }
+
+  clearSelectionForUser(username: string) {
+    console.log('[FileManager] Clear selection for', username);
     this.selectedObjects.forEach(file => {
       this.updateFile(file, {
         tags: {
             _selected: {
-                [this._appManager.user.username]: false
+                [username]: false
             }
         }
       });
     });
   }
+
+  calculateFileValue(file: Object, tag: string) {
+    const formula = file.tags[tag];
+    return this.calculateValue(formula);
+  }
+
+  calculateValue(formula: string) {
+    const isString = typeof formula === 'string';
+    if (isString && formula.indexOf('=') === 0) {
+      return this.calculateFormulaValue(formula);
+    } else {
+      return formula;
+    }
+  }
+
+  calculateFormulaValue(formula: string) {
+    return this._sandbox.run(formula, formula);
+  }
+
 
   /**
    * Updates the given file with the given data.
@@ -254,11 +320,13 @@ export class FileManager {
     const alreadySelected = this.selectedObjects;
     const alreadySelectedObservable = from(alreadySelected);
 
-    const allFilesSelected = mergeObservables(fileUpdated, alreadySelectedObservable);
+    const allFilesSelected = alreadySelectedObservable;
 
     const allFilesSelectedUpdatedAddedAndRemoved = mergeObservables(
-        allFilesSelected, fileAdded.pipe(map(f => f.id)),
-        fileUpdated.pipe(map(f => f.id)), fileRemoved);
+        allFilesSelected, 
+        fileAdded.pipe(map(f => f.id)),
+        fileUpdated.pipe(map(f => f.id)), 
+        fileRemoved);
 
     const allSelectedFilesUpdated =
         allFilesSelectedUpdatedAddedAndRemoved.pipe(map(file => {
