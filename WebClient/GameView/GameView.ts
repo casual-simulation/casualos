@@ -12,6 +12,7 @@ import {
   AmbientLight,
   DirectionalLight,
   BoxGeometry,
+  SphereGeometry,
   MeshStandardMaterial,
   Vector3,
   Vector2,
@@ -26,8 +27,12 @@ import {
   LineBasicMaterial,
   PCFSoftShadowMap,
   Material,
+  BackSide,
+  TextureLoader,
+  OrbitControls
 } from 'three';
-import Vue, {ComponentOptions} from 'vue';
+import 'three-examples/controls/OrbitControls';
+import Vue, {ComponentOptions} from 'vue'; 
 import Component from 'vue-class-component';
 import { Prop, Inject } from 'vue-property-decorator';
 import { 
@@ -50,6 +55,8 @@ import {FileManager} from '../FileManager';
 import {File, Object, Workspace} from 'common';
 
 import { vg } from "von-grid";
+
+import skyTextureUrl from '../public/images/CGSkies_0132_free.jpg';
 
 interface Ray {
   origin: Vector3;
@@ -272,6 +279,8 @@ export default class GameView extends Vue {
 
   private _scene: Scene;
   private _camera: PerspectiveCamera;
+  private _cameraControls: OrbitControls;
+  private _cameraControlsEnabled: boolean = true;
   private _renderer: Renderer;
   private _raycaster: Raycaster;
   private _clock: Clock;
@@ -328,13 +337,43 @@ export default class GameView extends Vue {
       this._fileUpdated(file);
     });
 
-    const selectedObjects = isButton(mouseDown, 0)
+    const leftClickObjects = isButton(mouseDown, 0)
       .pipe(
         filter(e => eventIsOverElement(e, this._canvas)),
         map(e => screenPosition(e, this.gameView)),
         map(pos => raycastAtScreenPos(pos, this._raycaster, this._draggableObjects, this._camera)),
         map(r => firstRaycastHit(r)),
       );
+
+    leftClickObjects.subscribe(intersection => {
+      this.enableCameraControls(intersection === null);
+    });
+
+    const rightClickObjects = isButton(mouseDown, 2)
+      .pipe(
+        filter(e => eventIsOverElement(e, this._canvas)),
+        map(e => screenPosition(e, this.gameView)),
+        map(pos => raycastAtScreenPos(pos, this._raycaster, this._draggableObjects, this._camera)),
+        map(r => firstRaycastHit(r)),
+      );
+
+    rightClickObjects.subscribe(intersection => {
+      // Always allow camera control with right clicks.
+      this.enableCameraControls(true);
+    });
+
+    const middleClickObjects = isButton(mouseDown, 1)
+      .pipe(
+        filter(e => eventIsOverElement(e, this._canvas)),
+        map(e => screenPosition(e, this.gameView)),
+        map(pos => raycastAtScreenPos(pos, this._raycaster, this._draggableObjects, this._camera)),
+        map(r => firstRaycastHit(r)),
+      );
+
+      middleClickObjects.subscribe(intersection => {
+        // Always allow camera control with middle clicks.
+        this.enableCameraControls(true);
+    });
     
     const dragPositions = leftDrag.pipe(
       map(drag => ({...drag, screenPos: screenPosition(drag.event, this.gameView)})),
@@ -342,7 +381,7 @@ export default class GameView extends Vue {
     );
 
     const draggedObjects = combineLatest(
-      selectedObjects,
+      leftClickObjects,
       dragPositions,
       (hit, drag) => ({
         ...drag,
@@ -370,7 +409,7 @@ export default class GameView extends Vue {
       tap(file => this._selectFile(file))
     )
 
-    dragOperations.subscribe(drag => {
+    dragOperations.subscribe(drag => {      
       this._handleDrag(drag.ray, drag.workspace, drag.hit);
     });
 
@@ -400,6 +439,38 @@ export default class GameView extends Vue {
       this._dragWorkspace(mouseDir, workspace);
     } else {
       this._dragFile(mouseDir, hit);
+    }
+  }
+
+  private enableCameraControls(enabled: boolean) {
+    console.log('[GameView] Enable Camera Controls === ' + enabled);
+    if (this._cameraControls !== null) {
+      if (this._cameraControlsEnabled !== enabled) {
+        this._cameraControlsEnabled = enabled;
+        if (enabled) {
+          // Camera controls are being enabled.
+          var controls = <any>this._cameraControls;
+          controls.panSpeed = 1.0;
+          controls.rotateSpeed = 1.0;
+
+          // Use the saved internal transform state to set the camera's initial transform state when re-enabling the controls.
+          controls.target.copy( controls.target0 );
+          controls.object.position.copy( controls.position0 );
+          controls.object.zoom = controls.zoom0
+
+          // controls.object.updateProjectionMatrix();
+          // controls.update();
+        }
+        else {
+          // Camera controls are being disabled.
+          var controls = <any>this._cameraControls;
+          controls.panSpeed = 0.0;
+          controls.rotateSpeed = 0.0;
+
+          // Tell orbit controls to save the internal transform state of the camera.
+          controls.saveState();
+        }
+      }
     }
   }
 
@@ -605,7 +676,7 @@ export default class GameView extends Vue {
     this._scene = new Scene();
     this._scene.background = new Color(0xCCE6FF);
     this._camera = new PerspectiveCamera(
-        60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        60, window.innerWidth / window.innerHeight, 0.1, 10000);
     
     this._raycaster = new Raycaster();
     this._clock = new Clock();
@@ -633,6 +704,8 @@ export default class GameView extends Vue {
     this._camera.rotation.x = Math.degToRad(-30);
     this._camera.updateMatrixWorld(false);
 
+    this._cameraControls = new OrbitControls(this._camera, this._canvas);
+
     const plane = new PlaneGeometry(10000, 10000);
 
     this._workspacePlane = new Mesh(plane, new MeshBasicMaterial());
@@ -641,6 +714,21 @@ export default class GameView extends Vue {
     this._workspacePlane.position.x = 0;
     this._workspacePlane.rotation.x = Math.DEG2RAD * -90;
     this._workspacePlane.updateMatrixWorld(false);
+
+    // Skydome
+    const skydomeGeometry = new SphereGeometry(3000, 16, 16);
+    // const skydomeGeometry = new BoxGeometry(5, 5, 5, 1, 1, 1);
+    const skydomeTexture = new TextureLoader().load(skyTextureUrl);
+    const skydomeMaterial = new MeshBasicMaterial({
+      side: BackSide,
+      map: skydomeTexture
+    });
+
+    const skydomeMesh = new Mesh(skydomeGeometry, skydomeMaterial);
+    skydomeMesh.position.set(0, 0, 0);
+
+    this._scene.add(skydomeMesh);
+    console.log("[GameView] Added Skydome to scene.");
   }
 
   private _setupRenderer() {
@@ -719,6 +807,7 @@ export default class GameView extends Vue {
     const deltaTime = this._clock.getDelta();
 
     this._updateGame(deltaTime);
+    // this._cameraControls.update();
 
     this._renderer.render(this._scene, this._camera);
   }

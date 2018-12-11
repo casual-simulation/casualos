@@ -32,6 +32,19 @@ module.exports = {
       {
         test: /von-grid.min.js$/,
         loader: 'exports-loader?vg=vg'
+      },
+      {
+        test: /\.(png|jpg|gif)$/,
+        use: [
+          {
+            loader: 'file-loader',
+            options: {}
+          }
+        ]
+      },
+      {
+        test: /three\/examples\/js/,
+        use: 'imports-loader?THREE=three'
       }
     ]
   },
@@ -39,7 +52,8 @@ module.exports = {
     extensions: ['.vue', '.ts', '.js', '.css'],
     alias: {
       'von-grid': path.resolve(__dirname, 'public/von-grid.min.js'),
-      'common': path.resolve(__dirname, '../common')
+      'common': path.resolve(__dirname, '../common'),
+      'three-examples': path.join(__dirname, '../node_modules/three/examples/js')
     }
   },
   plugins: [
@@ -49,7 +63,7 @@ module.exports = {
       title: 'Process for Teams'
     }),
     new webpack.ProvidePlugin({
-      THREE: 'three'
+      THREE: 'three',
     })
   ]
 };

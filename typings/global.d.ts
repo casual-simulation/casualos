@@ -5,3 +5,8 @@ declare module '*.svg' {
   const icon: Vue;
   export default icon;
 }
+
+declare module '*.jpg' {
+  const url: string;
+  export default url;
+}

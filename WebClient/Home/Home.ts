@@ -117,7 +117,6 @@ export default class Home extends Vue {
 
         this._fileManager.selectedFilesUpdated.subscribe(event => {
             this.files = event.files;
-            console.log(this.files);
             this.selected = this.files.map(f => true);
             if (this.files.length > 0) {
                 this.isOpen = true;
