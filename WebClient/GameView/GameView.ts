@@ -11,8 +11,6 @@ import {
   WebGLRenderer,
   AmbientLight,
   DirectionalLight,
-  BoxGeometry,
-  SphereGeometry,
   MeshStandardMaterial,
   Vector3,
   Vector2,
@@ -21,7 +19,6 @@ import {
   Raycaster,
   Intersection,
   Plane,
-  PlaneGeometry,
   MeshBasicMaterial,
   Object3D,
   LineBasicMaterial,
@@ -29,7 +26,10 @@ import {
   Material,
   BackSide,
   TextureLoader,
-  OrbitControls
+  OrbitControls,
+  SphereBufferGeometry,
+  PlaneBufferGeometry,
+  BoxBufferGeometry
 } from 'three';
 import 'three-examples/controls/OrbitControls';
 import Vue, {ComponentOptions} from 'vue'; 
@@ -659,7 +659,7 @@ export default class GameView extends Vue {
 
   private _createCube(size: number): Mesh {
     
-    var geometry = new BoxGeometry(size, size, size);
+    var geometry = new BoxBufferGeometry(size, size, size);
     var material = new MeshStandardMaterial({
       color: 0x00ff00, 
       metalness: .1, 
@@ -706,7 +706,7 @@ export default class GameView extends Vue {
 
     this._cameraControls = new OrbitControls(this._camera, this._canvas);
 
-    const plane = new PlaneGeometry(10000, 10000);
+    const plane = new PlaneBufferGeometry(10000, 10000);
 
     this._workspacePlane = new Mesh(plane, new MeshBasicMaterial());
     this._workspacePlane.position.x = 0;
@@ -716,8 +716,7 @@ export default class GameView extends Vue {
     this._workspacePlane.updateMatrixWorld(false);
 
     // Skydome
-    const skydomeGeometry = new SphereGeometry(3000, 16, 16);
-    // const skydomeGeometry = new BoxGeometry(5, 5, 5, 1, 1, 1);
+    const skydomeGeometry = new SphereBufferGeometry(3000, 16, 16,);
     const skydomeTexture = new TextureLoader().load(skyTextureUrl);
     const skydomeMaterial = new MeshBasicMaterial({
       side: BackSide,
