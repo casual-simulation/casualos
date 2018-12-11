@@ -10,12 +10,15 @@ import { SocketManager } from '../SocketManager';
 import {uniq} from 'lodash';
 import CubeIcon from './Cube.svg';
 
+import FileRow from '../FileRow/FileRow';
+
 const numLoadingSteps: number = 4;
 
 @Component({
     components: {
         'game-view': GameView,
-        'cube-icon': CubeIcon
+        'cube-icon': CubeIcon,
+        'file-row': FileRow
     }
 })
 export default class Home extends Vue {
@@ -78,21 +81,6 @@ export default class Home extends Vue {
 
     clearSelection() {
         this._fileManager.clearSelection();
-    }
-
-    toggleFile(file: Object) {
-        this._fileManager.selectFile(file);
-    }
-
-    valueChanged(file: File, tag: string, value: string) {
-        if (file.type === 'object') {
-            this.lastEditedTag = tag;
-            this._fileManager.updateFile(file, {
-                tags: {
-                    [tag]: value
-                }
-            });
-        }
     }
 
     constructor() {
