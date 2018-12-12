@@ -15,5 +15,6 @@ declare module 'acorn' {
         finishToken(token: TokenType): any;
         finishNode(node: Node, type: string): Node;
         parseExprAtom(refShortHandDefaultPos: any): Node;
+        parseParenAndDistinguishExpression(canBeArrow: boolean): Node;
     }
 }
