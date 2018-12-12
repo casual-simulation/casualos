@@ -124,41 +124,10 @@ export class FileManager {
     this._appManager = app;
     this._socketManager = socket;
 
-    this._sandbox = new Sandbox((js, value) => {
-      const _this = this;
-
-      function sum(list: any[]) {
-        let carry = 0;
-        list.forEach(l => {
-          carry += parseFloat(_this.calculateValue(l));
-        });
-        return carry;
+    this._sandbox = new Sandbox({
+      listTagValues: (tag, filter) => {
+        return this.objects.map(o => this.calculateValue(o.tags[tag])).filter(t => t);
       }
-
-      function list(tag: string) {
-        return _this.objects.map(o => o.tags[tag]).filter(t => t);
-      }
-
-      try {
-        const result = eval(js);
-        return result;
-      } catch(e) {
-        return value;
-      }
-    });
-
-    // #color -> list('color')
-    this._sandbox.addMacro({
-      test: /#\w+/g,
-      replacement: (sub: string) => {
-        const tagName = sub.substr(1);
-        return `list('${tagName}')`;
-      }
-    });
-
-    this._sandbox.addMacro({
-      test: /^\=/,
-      replacement: (sub) => ''
     });
 
     this._fileDiscoveredObservable = new ReplaySubject<File>();

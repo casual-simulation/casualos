@@ -1,20 +1,65 @@
+import {Transpiler} from './Transpiler';
 
 export interface SandboxMacro {
     test: RegExp;
     replacement: (val: string) => string;
 }
 
-export class Sandbox {
-    macros: SandboxMacro[] = [];
-    eval: (js: string, extras: any) => any;
+export interface SandboxInterface {
+    listTagValues(tag: string, filter?: (value: any) => boolean): any;
+}
 
-    constructor(evalFunc: (js: string, extras: any) => any) {
-        this.eval = evalFunc;
+/**
+ * Not a real sandbox BTW. No security is gained from using this right now.
+ */
+export class Sandbox {
+    private _transpiler: Transpiler;
+
+    macros: SandboxMacro[] = [
+        {
+            test: /^\=/g,
+            replacement: (val) => ''
+        }
+    ];
+    interface: SandboxInterface;
+
+    constructor(interface_: SandboxInterface) {
+        this._transpiler = new Transpiler();
+        this.interface = interface_;
     }
 
     run(formula: string, extras: any) {
         const macroed = this._replaceMacros(formula);
-        return this.eval(macroed, extras);
+        return this._runJs(macroed, extras);
+    }
+
+    _runJs(js: string, value: string) {
+        const _this = this;
+
+        function sum(list: any[]) {
+            let carry = 0;
+            list.forEach(l => {
+                carry += parseFloat(l);
+            });
+            return carry;
+        }
+
+        function _listTagValues(tag: string, filter?: (value: any) => boolean) {
+            return _this.interface.listTagValues(tag, filter);
+        }
+
+        try {
+            const transpiled = this._transpile(js);
+            const result = eval(transpiled);
+            return result;
+        } catch(e) {
+            console.warn(e);
+            return value;
+        }
+    }
+
+    _transpile(exJs: string): string {
+        return this._transpiler.transpile(exJs);
     }
 
     addMacro(macro: SandboxMacro) {
@@ -31,6 +76,4 @@ export class Sandbox {
 
         return formula;
     }
-
-
 }
