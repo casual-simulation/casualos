@@ -60,6 +60,7 @@
   "dependencies": {
     "@types/lodash": "^4.14.118",
     "@types/socket.io-client": "^1.4.32",
+    "acorn": "^6.0.4",
     "axios": "^0.18.0",
     "browserfs": "^1.4.3",
     "concurrently": "^4.0.1",
