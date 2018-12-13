@@ -26,3 +26,10 @@ gitlab:
      - '/data/gitlab/config:/etc/gitlab'
      - '/data/gitlab/logs:/var/log/gitlab'
      - '/data/gitlab/data:/var/opt/gitlab'
+mongo:
+   image: 'mongo:latest'
+   restart: always
+   ports:
+     - '27017:27017'
+   volumes:
+    - '/data/db:/data/db'

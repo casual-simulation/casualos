@@ -12,23 +12,19 @@ const config: Config = {
     client: {
         dist: path.resolve(__dirname, '..', '..', 'WebClient', 'dist')
     },
-    git: {
-        gitlab_server: 'http://localhost:4330/git',
-        proxy: {},
-        personal_access_token: 'F3xKGrGVJKdaWfZspjC_', // 'L6-KYvscyrdRtwVB8jhF' <-- Ryans laptop,
-        default_project: {
-            namespace: 'root',
-            name: 'default'
-        },
-        user: {
-            email: 'devops@yeticgi.com',
-            name: 'Dev Ops'
-        },
-        admin_username: 'root'
+    channels: {
+        mongodb: {
+            url: 'mongodb://localhost:27017',
+            dbName: 'SO4'
+        }
     }
 };
 
 const server = new Server(config);
 
-server.configure();
-server.start();
+async function init() {
+    await server.configure();
+    server.start();
+}
+
+init();

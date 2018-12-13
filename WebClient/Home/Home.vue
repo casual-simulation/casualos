@@ -8,52 +8,46 @@
               <div v-if="!isLoading">
                 Welcome Home {{user.name}}!
 
-                <md-tabs>
-                  <md-tab id="tab-files" md-label="Files">
-                    <h4>Files</h4>
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>ID</th>
-                          <th>Type</th>
+                <h4>Files</h4>
 
-                          <th v-for="(tag, index) in tags" :key="index">
-                            #{{tag}}
-                          </th>
+                <table v-if="hasFiles" class="file-table">
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th>ID</th>
 
-                          <th v-if="isMakingNewTag">
-                            #<input v-model="newTag">
-                          </th>
+                      <th v-for="(tag, index) in tags" :key="index">
+                        #{{tag}}
+                        <!-- Show X button for tags that don't have values -->
 
-                          <th>
-                            <md-button @click="addTag()">
-                              {{isMakingNewTag ? "Done": "+ New Tag"}}
-                            </md-button>
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                        <md-button class="remove-tag md-icon-button md-dense" v-if="!tagHasValue(tag)" @click="removeTag(tag)">
+                          <md-icon>close</md-icon>
+                          <md-tooltip md-delay="1000" md-direction="top">Remove #{{tag}}</md-tooltip>
+                        </md-button>
+                      </th>
 
-                        <tr v-for="file in files" :key="file.id">
-                          <td>{{file.id}}</td>
-                          <td>{{file.data.type}}</td>
-                          <th v-if="file.data.type === 'file'" v-for="tag in tags" :key="tag">
-                            <input @input="valueChanged(file, tag, $event.target.value)" :value="file.data.tags[tag]">
-                          </th>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </md-tab>
+                      <th v-if="isMakingNewTag">
+                        #<input v-model="newTag">
+                      </th>
 
-                  <md-tab id="tab-commits" md-label="Commits">
-                    <h4>Commits</h4>
-                    <ul>
-                      <li v-for="commit in commits" :key="commit.oid">
-                        {{commit.message}}
-                      </li>
-                    </ul>
-                  </md-tab>
-                </md-tabs>
+                      <th>
+                        <md-button class="new-tag-button" @click="addTag()">
+                          {{isMakingNewTag ? "Done": "+ New Tag"}}
+                        </md-button>
+                        <md-button class="new-tag-button" @click="cancelNewTag()" v-if="isMakingNewTag">
+                          Cancel
+                        </md-button>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <file-row v-for="(file, index) in files" :key="file.id" :file="file" :tags="tags" @tagChanged="onTagChanged"></file-row>
+                  </tbody>
+                </table>
+
+                <p v-if="!hasFiles">
+                  Select a file
+                </p>
               </div>
               <div class="status-container">
                 <md-progress-spinner v-if="isLoading" :md-mode="progressMode" :md-value="progress"></md-progress-spinner>
@@ -63,7 +57,7 @@
               </div>
             </md-card-content>
             <md-card-actions>
-              <md-button @click="checkStatus()">Check Status</md-button>
+              <md-button v-if="hasFiles" @click="clearSelection()">Clear Selection</md-button>
               <md-button @click="close()">Close</md-button>
             </md-card-actions>
           </md-card>
@@ -79,10 +73,6 @@
               <div class="divider"></div>
               <md-button class="toolbar-button" @click="addNewWorkspace()">
                 <span>New Workspace</span>
-              </md-button>
-              <div v-if="canSave()" class="divider"></div>
-              <md-button v-if="canSave()" class="toolbar-button" @click="save()">
-                <span>Save</span>
               </md-button>
             </div>
           </div>

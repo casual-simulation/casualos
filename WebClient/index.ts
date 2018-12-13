@@ -15,6 +15,8 @@ import {
     MdDialog, 
     MdDialogConfirm,
     MdTabs,
+    MdCheckbox,
+    MdTooltip
 } from 'vue-material/dist/components';
 import 'vue-material/dist/vue-material.min.css'
 import 'vue-material/dist/theme/default.css'
@@ -23,8 +25,6 @@ import App from './App/App';
 import Welcome from './Welcome/Welcome';
 import { polyfill } from 'es6-promise';
 import { appManager } from './AppManager';
-import { fileManager } from './FileManager';
-import { socketManager } from './SocketManager';
 
 const Home = () => import('./Home/Home');
 
@@ -33,6 +33,7 @@ polyfill();
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
+Vue.use(MdCheckbox);
 Vue.use(MdContent);
 Vue.use(MdApp);
 Vue.use(MdCard);
@@ -45,6 +46,7 @@ Vue.use(MdMenu);
 Vue.use(MdDialog);
 Vue.use(MdDialogConfirm);
 Vue.use(MdTabs);
+Vue.use(MdTooltip);
 
 const routes: RouteConfig[] = [
     {
@@ -83,6 +85,3 @@ const app = new Vue({
     router,
     render: createEle => createEle(App)
 }).$mount('#app');
-
-fileManager.init();
-socketManager.init();
