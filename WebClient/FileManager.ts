@@ -40,9 +40,71 @@ import * as uuid from 'uuid/v4';
 
 import {AppManager, appManager} from './AppManager';
 import {SocketManager} from './SocketManager';
-import { Sandbox } from './Sandbox';
+import { Sandbox, SandboxInterface, FilterFunction } from './Sandbox';
 
 export interface SelectedFilesUpdatedEvent { files: File[]; }
+
+class InterfaceImpl implements SandboxInterface {
+  private _fileManager: FileManager;
+
+  constructor(fileManager: FileManager) {
+    this._fileManager = fileManager;
+  }
+
+  listTagValues(tag: string, filter?: FilterFunction) {
+    const tags = flatMap(this.objects.map(o => this._calculateValue(o.tags[tag])).filter(t => t));
+    const filtered = this._filterValues(tags, filter);
+    if (filtered.length === 1) {
+      return filtered[0];
+    } else {
+      return filtered;
+    }
+  }
+
+  listObjectsWithTag(tag: string, filter?: FilterFunction) {
+    const objs = this.objects.filter(o => this._calculateValue(o.tags[tag])).map(o => ({
+      ...o.tags
+    }));
+    const filtered = this._filterObjects(objs, filter, tag);
+    if (filtered.length === 1) {
+      return filtered[0];
+    } else {
+      return filtered;
+    }
+  }
+
+  private _filterValues(values: any[], filter: FilterFunction) {
+    if (filter) {
+      if(typeof filter === 'function') {
+        return values.filter(filter);
+      } else {
+        return values.filter(t => t === filter);
+      }
+    } else {
+      return values;
+    }
+  }
+
+  private _filterObjects(objs: any[], filter: FilterFunction, tag: string) {
+    if (filter) {
+      if(typeof filter === 'function') {
+        return objs.filter(o => filter(this._calculateValue(o[tag])));
+      } else {
+        return objs.filter(o => this._calculateValue(o[tag]) === filter);
+      }
+    } else {
+      return objs;
+    }
+  }
+
+  private get objects(): Object[] {
+    return this._fileManager.objects;
+  }
+
+  private _calculateValue(value: any) {
+    return this._fileManager.calculateValue(value);
+  }
+}
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -124,34 +186,7 @@ export class FileManager {
     this._appManager = app;
     this._socketManager = socket;
 
-    this._sandbox = new Sandbox({
-      listTagValues: (tag, filter) => {
-        const tags = this.objects.map(o => this.calculateValue(o.tags[tag])).filter(t => t);
-        if(filter) {
-          if(typeof filter === 'function') {
-            return tags.filter(filter);
-          } else {
-            return tags.filter(t => t === filter);
-          }
-        } else {
-          return tags;
-        }
-      },
-      listObjectsWithTag: (tag, filter) => {
-        const objs = this.objects.filter(o => this.calculateValue(o.tags[tag])).map(o => ({
-          ...o.tags
-        }));
-        if(filter) {
-          if(typeof filter === 'function') {
-            return objs.filter(o => filter(o[tag]));
-          } else {
-            return objs.filter(o => o[tag] === filter);
-          }
-        } else {
-          return objs;
-        }
-      }
-    });
+    this._sandbox = new Sandbox(new InterfaceImpl(this));
 
     this._fileDiscoveredObservable = new ReplaySubject<File>();
     this._fileRemovedObservable = new ReplaySubject<string>();
@@ -230,12 +265,35 @@ export class FileManager {
     return this.calculateValue(formula);
   }
 
-  calculateValue(formula: string) {
+  calculateFormattedFileValue(file: Object, tag: string): string {
+    const value = this.calculateFileValue(file, tag);
+    if(Array.isArray(value)) {
+      return value.join(',');
+    } else if(typeof value === 'object') {
+      return JSON.stringify(value);
+    } else {
+      return value.toString();
+    }
+  }
+
+  calculateValue(formula: string): any {
     const isString = typeof formula === 'string';
     if (isString && formula.indexOf('=') === 0) {
       return this.calculateFormulaValue(formula);
+    } else if(isString && formula.indexOf(',') >= 0) {
+      const split = formula.split(',');
+      return split.map(s => this.calculateValue(s));
     } else {
-      return formula;
+      const num = parseFloat(formula);
+      if(!isNaN(num)) {
+        return num;
+      } else if(formula === 'true') {
+        return true;
+      } else if(formula === 'false') {
+        return false;
+      } else {
+        return formula;
+      }
     }
   }
 

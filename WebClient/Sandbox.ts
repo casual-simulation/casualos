@@ -5,9 +5,11 @@ export interface SandboxMacro {
     replacement: (val: string) => string;
 }
 
+export type FilterFunction = (value: any) => boolean;
+
 export interface SandboxInterface {
-    listTagValues(tag: string, filter?: (value: any) => boolean): any;
-    listObjectsWithTag(tag: string, filter?: (value: any) => boolean): any;
+    listTagValues(tag: string, filter?: FilterFunction): any;
+    listObjectsWithTag(tag: string, filter?: FilterFunction): any;
 }
 
 /**
@@ -37,7 +39,11 @@ export class Sandbox {
     _runJs(js: string, value: string) {
         const _this = this;
 
-        function sum(list: any[]) {
+        function sum(list: any) {
+            if(!Array.isArray(list)) {
+                return parseFloat(list);
+            }
+
             let carry = 0;
             for (let i = 0; i < list.length; i++) {
                 const l = list[i];

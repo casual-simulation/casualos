@@ -63,7 +63,7 @@ export default class FileRow extends Vue {
 
     private _updateValue() {
         if (!this.isFocused) {
-            this.value = this.fileManager.calculateFileValue(this.file, this.tag);
+            this.value = this.fileManager.calculateFormattedFileValue(this.file, this.tag); // this.fileManager.calculateFileValue(this.file, this.tag);
         } else {
             this.value = this.file.tags[this.tag];
         }
