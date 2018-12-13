@@ -14,7 +14,7 @@ import {
   MeshStandardMaterial,
   Vector3,
   Vector2,
-  Math,
+  Math as ThreeMath,
   Group,
   Raycaster,
   Intersection,
@@ -29,14 +29,18 @@ import {
   OrbitControls,
   SphereBufferGeometry,
   PlaneBufferGeometry,
-  BoxBufferGeometry
+  BoxBufferGeometry,
+  PlaneGeometry,
+  MeshPhongMaterial,
+  HemisphereLight,
+  DirectionalLightHelper,
 } from 'three';
 import 'three-examples/controls/OrbitControls';
 import Vue, {ComponentOptions} from 'vue'; 
 import Component from 'vue-class-component';
 import { Prop, Inject } from 'vue-property-decorator';
 import { 
-  SubscriptionLike, 
+  SubscriptionLike,
   Observable, 
   fromEvent,
   combineLatest,
@@ -57,6 +61,7 @@ import {File, Object, Workspace} from 'common';
 import { vg } from "von-grid";
 
 import skyTextureUrl from '../public/images/CGSkies_0132_free.jpg';
+import groundGradientUrl from '../public/images/ground_gradient.png';
 
 interface Ray {
   origin: Vector3;
@@ -285,11 +290,11 @@ export default class GameView extends Vue {
   private _raycaster: Raycaster;
   private _clock: Clock;
 
-  private _sun: Light;
-  private _ambient: Light;
+  private _sun: DirectionalLight;
+  private _ambient: AmbientLight;
 
-  private _cube: Mesh;
   private _workspacePlane: Mesh;
+  private _skydome: Mesh;
   private _draggableObjects: Object3D[];
   private _grids: Group;
   private _canvas: HTMLElement;
@@ -675,59 +680,74 @@ export default class GameView extends Vue {
 
     this._scene = new Scene();
     this._scene.background = new Color(0xCCE6FF);
-    this._camera = new PerspectiveCamera(
-        60, window.innerWidth / window.innerHeight, 0.1, 10000);
     
     this._raycaster = new Raycaster();
     this._clock = new Clock();
 
     this._setupRenderer();
-
+    
+    // Grid group.
     this._grids = new Group();
     this._grids.visible = false;
     this._scene.add(this._grids);
 
-    this._ambient = new AmbientLight(0xffffff, 0.2);
-    this._scene.add(this._ambient);
-
-    this._sun = new DirectionalLight(0xffffff, 0.7);
-    this._sun.position.set(3, 3, 3);
-    this._sun.castShadow = true;
-    // this._sun.shadow.camera.right =  5;
-    // this._sun.shadow.camera.left = -5;
-    // this._sun.shadow.camera.top =  5;
-    // this._sun.shadow.camera.bottom = -5;
-    this._scene.add(this._sun);
-
+    // User's camera
+    this._camera = new PerspectiveCamera(
+      60, window.innerWidth / window.innerHeight, 0.1, 20000);
     this._camera.position.z = 5;
     this._camera.position.y = 3;
-    this._camera.rotation.x = Math.degToRad(-30);
+    this._camera.rotation.x = ThreeMath.degToRad(-30);
     this._camera.updateMatrixWorld(false);
 
     this._cameraControls = new OrbitControls(this._camera, this._canvas);
 
-    const plane = new PlaneBufferGeometry(10000, 10000);
+    // Ambient light.
+    this._ambient = new AmbientLight(0xffffff, 0.6);
+    this._scene.add(this._ambient);
+    
+    // Sun light.
+    this._sun = new DirectionalLight(0xffffff, 0.7);
+    this._sun.shadow.camera = new OrthographicCamera(-10, 10, 10, -10, 0.1, 100);
+    this._sun.shadow.mapSize = new Vector2(2048, 2048);
+    this._sun.position.set(10, 10, 10);
+    this._sun.castShadow = true;
+    var helper = new DirectionalLightHelper(<DirectionalLight>this._sun, 10, "red");
+    this._scene.add(helper);
+    // this._camera.add(this._sun);
+    this._scene.add(this._sun);
 
-    this._workspacePlane = new Mesh(plane, new MeshBasicMaterial());
+    // Workspace plane.
+    const planeGeometry = new PlaneGeometry(18000, 18000);
+    const planeTexture = new TextureLoader().load(groundGradientUrl);
+    planeGeometry.faceVertexUvs[1] = planeGeometry.faceVertexUvs[0];
+    let planeMaterial = new MeshPhongMaterial({
+      map: planeTexture
+    });
+    this._workspacePlane = new Mesh(planeGeometry, planeMaterial);
+    this._workspacePlane.castShadow = true;
+    this._workspacePlane.receiveShadow = true;
     this._workspacePlane.position.x = 0;
     this._workspacePlane.position.y = 0;
     this._workspacePlane.position.x = 0;
-    this._workspacePlane.rotation.x = Math.DEG2RAD * -90;
+    this._workspacePlane.rotation.x = ThreeMath.DEG2RAD * -90;
     this._workspacePlane.updateMatrixWorld(false);
 
+    this._scene.add(this._workspacePlane);
+
     // Skydome
-    const skydomeGeometry = new SphereBufferGeometry(3000, 16, 16,);
+    const skydomeGeometry = new SphereBufferGeometry(9000, 64, 8, 0, Math.PI * 2, 0, Math.PI * 0.5);
     const skydomeTexture = new TextureLoader().load(skyTextureUrl);
     const skydomeMaterial = new MeshBasicMaterial({
       side: BackSide,
-      map: skydomeTexture
+      map: skydomeTexture,
     });
 
-    const skydomeMesh = new Mesh(skydomeGeometry, skydomeMaterial);
-    skydomeMesh.position.set(0, 0, 0);
+    this._skydome = new Mesh(skydomeGeometry, skydomeMaterial);
+    this._skydome.castShadow = false;
+    this._skydome.receiveShadow = false;
+    this._skydome.position.set(0, 0, 0);
 
-    this._scene.add(skydomeMesh);
-    console.log("[GameView] Added Skydome to scene.");
+    this._scene.add(this._skydome);
   }
 
   private _setupRenderer() {
@@ -767,12 +787,12 @@ export default class GameView extends Vue {
       },
       material: new MeshStandardMaterial({
         color: 0x999999,
-        roughness: .7
+        roughness: .7,
       })
     });
 
     board.group.children[0].children.forEach(c => {
-      c.castShadow = false;
+      c.castShadow = true;
       c.receiveShadow = true;
     });
 
@@ -806,12 +826,29 @@ export default class GameView extends Vue {
     const deltaTime = this._clock.getDelta();
 
     this._updateGame(deltaTime);
-    // this._cameraControls.update();
 
     this._renderer.render(this._scene, this._camera);
   }
 
   private _updateGame(deltaTime: number) {
+    // Update sun camera to be offest from user's camera.
+    // this._sun.position.copy(this._camera.position);
+    // this._sun.rotation.copy(this._camera.rotation);
+    // this._sun.target = this._camera;
+
+    // var camPos = this._camera.position.clone();
+    // console.log('camPos: ' + JSON.stringify(camPos));
+
+    // var sunPos = this._sun.position.clone();
+    // console.log('sunPos: ' + JSON.stringify(sunPos));
+
+    // var sunCamOffset = sunPos.sub(camPos);
+    // console.log('sunCamOffset: ' + JSON.stringify(sunCamOffset));
+
+    // var newSunPos = camPos.add(sunCamOffset);
+    // console.log('newSunPos: ' + JSON.stringify(newSunPos));
+
+    // this._sun.position.copy(newSunPos);
   }
 
   private _fps(): number {
