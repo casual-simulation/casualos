@@ -284,7 +284,7 @@ export class FileManager {
       return this.calculateFormulaValue(object, formula);
     } else if(this.isArray(formula)) {
       const split = formula.split(',');
-      return split.map(s => this.calculateValue(object, s));
+      return split.map(s => this.calculateValue(object, s.trim()));
     } else if(this.isNumber(formula)) {
       return parseFloat(formula);
     } else if(formula === 'true') {
@@ -329,16 +329,19 @@ export class FileManager {
     let converted: {
       [tag: string]: any
     } = {
-      _converted: true
+      _converted: true,
+      id: object.id
     };
     for(let key in object.tags) {
-      const val = object.tags[key];
-      if(this.isFormula(val)) {
-        Object.defineProperty(converted, key, {
-          get: () => this.calculateValue(object, val)
-        });
-      } else {
-        converted[key] = this.calculateValue(object, val);
+      if (typeof converted[key] === 'undefined') {
+        const val = object.tags[key];
+        if(this.isFormula(val)) {
+          Object.defineProperty(converted, key, {
+            get: () => this.calculateValue(object, val)
+          });
+        } else {
+          converted[key] = this.calculateValue(object, val);
+        }
       }
     }
     return converted;
