@@ -267,9 +267,7 @@ export class FileManager {
 
   calculateFormattedFileValue(file: Object, tag: string): string {
     const value = this.calculateFileValue(file, tag);
-    if(Array.isArray(value)) {
-      return value.join(',');
-    } else if(typeof value === 'object') {
+    if(typeof value === 'object') {
       return JSON.stringify(value);
     } else if(typeof value !== 'undefined' && value !== null) {
       return value.toString();
