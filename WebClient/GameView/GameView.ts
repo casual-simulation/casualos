@@ -1,9 +1,9 @@
-import { 
+import {
   Scene,
-  Camera, 
-  Renderer, 
-  Clock, 
-  Mesh, 
+  Camera,
+  Renderer,
+  Clock,
+  Mesh,
   Light,
   Color,
   PerspectiveCamera,
@@ -34,29 +34,31 @@ import {
   MeshPhongMaterial,
   HemisphereLight,
   DirectionalLightHelper,
+  PCFShadowMap,
+  BasicShadowMap,
 } from 'three';
 import 'three-examples/controls/OrbitControls';
-import Vue, {ComponentOptions} from 'vue'; 
+import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Inject } from 'vue-property-decorator';
-import { 
+import {
   SubscriptionLike,
-  Observable, 
+  Observable,
   fromEvent,
   combineLatest,
 } from 'rxjs';
-import { 
+import {
   filter,
   map,
   tap,
   scan,
 } from 'rxjs/operators';
 
-import {merge} from 'lodash';
+import { merge } from 'lodash';
 
-import {appManager} from '../AppManager';
-import {FileManager} from '../FileManager';
-import {File, Object, Workspace} from 'common';
+import { appManager } from '../AppManager';
+import { FileManager } from '../FileManager';
+import { File, Object, Workspace } from 'common';
 
 import { vg } from "von-grid";
 
@@ -93,7 +95,7 @@ function buttonActive(button: number): Observable<boolean> {
     clickUp,
     clickDown,
     (e1, e2) => e2.timeStamp > e1.timeStamp
-  );  
+  );
 
   return active;
 }
@@ -116,7 +118,7 @@ function detectEdges(observable: Observable<boolean>) {
       endTime: null
     })),
     scan((prev, curr) => {
-      if(!prev.active && curr.active) {
+      if (!prev.active && curr.active) {
         return {
           active: curr.active,
           started: true,
@@ -124,7 +126,7 @@ function detectEdges(observable: Observable<boolean>) {
           startTime: Date.now(),
           endTime: null
         };
-      } else if(prev.active && !curr.active) {
+      } else if (prev.active && !curr.active) {
         return {
           active: curr.active,
           started: false,
@@ -170,7 +172,7 @@ function buttonDrag(active: Observable<boolean>) {
     })
   ).pipe(
     scan((prev, curr) => {
-      if(curr.justStartedClicking) {
+      if (curr.justStartedClicking) {
         return {
           ...curr,
           startClickEvent: curr.event
@@ -182,14 +184,14 @@ function buttonDrag(active: Observable<boolean>) {
         };
       }
     }, {
-      isActive: false,
-      justStartedClicking: false,
-      startDragTime: <number>null,
-      justEndedClicking: false,
-      endDragTime: <number>null,
-      event: null,
-      startClickEvent: null
-    }),
+        isActive: false,
+        justStartedClicking: false,
+        startDragTime: <number>null,
+        justEndedClicking: false,
+        endDragTime: <number>null,
+        event: null,
+        startClickEvent: null
+      }),
     map(event => {
       const wasDragging = event.startClickEvent && mouseDistance(event.startClickEvent, event.event) > 10;
       const isDragging = event.isActive && wasDragging;
@@ -247,7 +249,7 @@ function screenPosToRay(pos: Vector2, camera: Camera) {
 
   v3d.sub(camera.position);
   v3d.normalize();
-  
+
   return {
     origin: camera.position,
     direction: v3d
@@ -375,14 +377,14 @@ export default class GameView extends Vue {
         map(r => firstRaycastHit(r)),
       );
 
-      middleClickObjects.subscribe(intersection => {
-        // Always allow camera control with middle clicks.
-        this.enableCameraControls(true);
+    middleClickObjects.subscribe(intersection => {
+      // Always allow camera control with middle clicks.
+      this.enableCameraControls(true);
     });
-    
+
     const dragPositions = leftDrag.pipe(
-      map(drag => ({...drag, screenPos: screenPosition(drag.event, this.gameView)})),
-      map(drag => ({...drag, ray: screenPosToRay(drag.screenPos, this._camera)}))
+      map(drag => ({ ...drag, screenPos: screenPosition(drag.event, this.gameView) })),
+      map(drag => ({ ...drag, ray: screenPosToRay(drag.screenPos, this._camera) }))
     );
 
     const draggedObjects = combineLatest(
@@ -414,7 +416,7 @@ export default class GameView extends Vue {
       tap(file => this._selectFile(file))
     )
 
-    dragOperations.subscribe(drag => {      
+    dragOperations.subscribe(drag => {
       this._handleDrag(drag.ray, drag.workspace, drag.hit);
     });
 
@@ -429,14 +431,14 @@ export default class GameView extends Vue {
   }
 
   beforeDestroy() {
-    if(this._sub) {
+    if (this._sub) {
       this._sub.unsubscribe();
       this._sub = null;
     }
   }
 
   private _isFile(hit: Intersection): boolean {
-    return  this._findWorkspaceForIntersection(hit) === null;
+    return this._findWorkspaceForIntersection(hit) === null;
   }
 
   private _handleDrag(mouseDir: Ray, workspace: File3D, hit: Intersection) {
@@ -459,8 +461,8 @@ export default class GameView extends Vue {
           controls.rotateSpeed = 1.0;
 
           // Use the saved internal transform state to set the camera's initial transform state when re-enabling the controls.
-          controls.target.copy( controls.target0 );
-          controls.object.position.copy( controls.position0 );
+          controls.target.copy(controls.target0);
+          controls.object.position.copy(controls.position0);
           controls.object.zoom = controls.zoom0
 
           // controls.object.updateProjectionMatrix();
@@ -543,13 +545,13 @@ export default class GameView extends Vue {
         const cell = workspace.grid.grid.pixelToCell(point);
         const pos = workspace.grid.grid.cellToPixel(cell).clone();
         pos.y = point.y;
-        return { 
+        return {
           good: true,
           point: pos,
           workspace
         };
       }
-    } 
+    }
     return {
       good: false
     };
@@ -571,7 +573,7 @@ export default class GameView extends Vue {
 
   private _fileUpdated(file: File) {
     const obj = this._files[file.id];
-    if(file.type === 'object') {
+    if (file.type === 'object') {
       this._updateFile(obj, file);
     } else {
       this._updateWorkspace(obj, file);
@@ -598,10 +600,10 @@ export default class GameView extends Vue {
     }
 
     if (data.position) {
-        obj.mesh.position.set(
-          data.position.x + 0,
-          data.position.y + 0.095,
-          data.position.z + 0);
+      obj.mesh.position.set(
+        data.position.x + 0,
+        data.position.y + 0.095,
+        data.position.z + 0);
     } else {
       // Default position
       obj.mesh.position.set(0, 1, 0);
@@ -626,7 +628,7 @@ export default class GameView extends Vue {
     let mesh;
     let grid;
     let board;
-    if(file.type === 'object') {
+    if (file.type === 'object') {
       const cube = this._createCube(0.2);
       mesh = cube;
     } else {
@@ -663,11 +665,11 @@ export default class GameView extends Vue {
   }
 
   private _createCube(size: number): Mesh {
-    
+
     var geometry = new BoxBufferGeometry(size, size, size);
     var material = new MeshStandardMaterial({
-      color: 0x00ff00, 
-      metalness: .1, 
+      color: 0x00ff00,
+      metalness: .1,
       roughness: 0.6
     });
     const cube = new Mesh(geometry, material);
@@ -680,12 +682,12 @@ export default class GameView extends Vue {
 
     this._scene = new Scene();
     this._scene.background = new Color(0xCCE6FF);
-    
+
     this._raycaster = new Raycaster();
     this._clock = new Clock();
 
     this._setupRenderer();
-    
+
     // Grid group.
     this._grids = new Group();
     this._grids.visible = false;
@@ -704,16 +706,22 @@ export default class GameView extends Vue {
     // Ambient light.
     this._ambient = new AmbientLight(0xffffff, 0.6);
     this._scene.add(this._ambient);
-    
+
     // Sun light.
-    this._sun = new DirectionalLight(0xffffff, 0.7);
-    this._sun.shadow.camera = new OrthographicCamera(-10, 10, 10, -10, 0.1, 100);
-    this._sun.shadow.mapSize = new Vector2(2048, 2048);
-    this._sun.position.set(10, 10, 10);
+    this._sun = new DirectionalLight(0xffffff, 1);
+    this._sun.position.set(5, 5, 5);
+    this._sun.position.multiplyScalar(50);
+    this._sun.name = "sun";
     this._sun.castShadow = true;
-    var helper = new DirectionalLightHelper(<DirectionalLight>this._sun, 10, "red");
-    this._scene.add(helper);
-    // this._camera.add(this._sun);
+    this._sun.shadowMapWidth = this._sun.shadowMapHeight = 1024 * 2;
+
+    var d = 30;
+    this._sun.shadow.camera.left = -d;
+    this._sun.shadow.camera.right = d;
+    this._sun.shadow.camera.top = d;
+    this._sun.shadow.camera.bottom = -d;
+    this._sun.shadow.camera.far = 3500;
+
     this._scene.add(this._sun);
 
     // Workspace plane.
@@ -756,7 +764,7 @@ export default class GameView extends Vue {
     });
     webGlRenderer.shadowMap.enabled = true;
     webGlRenderer.shadowMap.type = PCFSoftShadowMap;
-        
+
     // TODO: Call each time the screen size changes
     const container: HTMLElement = <HTMLElement>this.$refs.container;
     const width = window.innerWidth;
@@ -831,24 +839,6 @@ export default class GameView extends Vue {
   }
 
   private _updateGame(deltaTime: number) {
-    // Update sun camera to be offest from user's camera.
-    // this._sun.position.copy(this._camera.position);
-    // this._sun.rotation.copy(this._camera.rotation);
-    // this._sun.target = this._camera;
-
-    // var camPos = this._camera.position.clone();
-    // console.log('camPos: ' + JSON.stringify(camPos));
-
-    // var sunPos = this._sun.position.clone();
-    // console.log('sunPos: ' + JSON.stringify(sunPos));
-
-    // var sunCamOffset = sunPos.sub(camPos);
-    // console.log('sunCamOffset: ' + JSON.stringify(sunCamOffset));
-
-    // var newSunPos = camPos.add(sunCamOffset);
-    // console.log('newSunPos: ' + JSON.stringify(newSunPos));
-
-    // this._sun.position.copy(newSunPos);
   }
 
   private _fps(): number {
