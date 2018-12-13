@@ -126,7 +126,30 @@ export class FileManager {
 
     this._sandbox = new Sandbox({
       listTagValues: (tag, filter) => {
-        return this.objects.map(o => this.calculateValue(o.tags[tag])).filter(t => t);
+        const tags = this.objects.map(o => this.calculateValue(o.tags[tag])).filter(t => t);
+        if(filter) {
+          if(typeof filter === 'function') {
+            return tags.filter(filter);
+          } else {
+            return tags.filter(t => t === filter);
+          }
+        } else {
+          return tags;
+        }
+      },
+      listObjectsWithTag: (tag, filter) => {
+        const objs = this.objects.filter(o => this.calculateValue(o.tags[tag])).map(o => ({
+          ...o.tags
+        }));
+        if(filter) {
+          if(typeof filter === 'function') {
+            return objs.filter(o => filter(o[tag]));
+          } else {
+            return objs.filter(o => o[tag] === filter);
+          }
+        } else {
+          return objs;
+        }
       }
     });
 

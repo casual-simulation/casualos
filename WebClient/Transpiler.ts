@@ -1,7 +1,10 @@
 import {Parser, Node, TokenType, TokContext, tokTypes} from 'acorn';
+import {generate, baseGenerator} from 'astring';
+import {replace} from 'estraverse';
+import {assign} from 'lodash';
+import * as LRU from 'lru-cache';
 
 export type ExJsNode = TokenValueNode | ObjectValueNode;
-
 
 export interface TokenValueNode extends Node {
     type: 'TokenValue';
@@ -24,6 +27,17 @@ function isTagStart(char: number) {
 
 function isObjectStart(char: number) {
     return char === 64; // '@' char
+}
+
+function callExpr(name: string, args: any[]) {
+    return {
+        type: 'CallExpression',
+        callee: {
+            type: 'Identifier',
+            name: name
+        },
+        arguments: args
+    };
 }
 
 function exJsParser(parser: typeof Parser) {
@@ -94,16 +108,76 @@ function exJsParser(parser: typeof Parser) {
     }
 }
 
+const exJsGenerator = assign({}, baseGenerator, {});
+
 export class Transpiler {
     private _parser: typeof Parser;
+    private _cache: LRU.Cache<string, string>;
 
     constructor() {
+        this._cache = new LRU<string, string>({
+            max: 1000,
+        });
         this._parser = Parser.extend(<any>exJsParser);
     }
 
     transpile(code: string): string {
+        const cached = this._cache.get(code);
+        if (cached) {
+            return cached;
+        }
         const node = this._parser.parse(code);
-        console.log(node);
-        return code;
+        const replaced = this.replace(node);
+        const final = this.toJs(replaced);
+        this._cache.set(code, final);
+        return final;
+    }
+
+    replace(node: Node): Node {
+        return <any>replace(<any>node, {
+            enter: <any>((n: any) => {
+                // #tag syntax
+                if (n.type === 'TagValue' && n.identifier) {
+                    // _listTagValues('tag')
+                    return callExpr('_listTagValues', [{
+                        type: 'Literal',
+                        value: n.identifier.name
+                    }]);
+
+                    // #tag(filter) syntax
+                } else if(n.type === 'CallExpression' && 
+                          n.callee.type === 'TagValue' &&
+                          n.callee.identifier) {
+                    return callExpr('_listTagValues', [{
+                        type: 'Literal',
+                        value: n.callee.identifier.name
+                    }, ...n.arguments]);
+
+                    // @tag syntax
+                } else if(n.type === 'ObjectValue' && n.identifier) {
+                    // _listObjectsWithTag('tag')
+                    return callExpr('_listObjectsWithTag', [{
+                        type: 'Literal',
+                        value: n.identifier.name
+                    }]);
+
+                    // @tag(filter) syntax
+                } else if(n.type === 'CallExpression' &&
+                          n.callee.type === 'ObjectValue' &&
+                          n.callee.identifier){
+                    // _listObjectsWithTag('tag', filter)
+                    return callExpr('_listObjectsWithTag', [{
+                        type: 'Literal',
+                        value: n.callee.identifier.name
+                    }, ...n.arguments]);
+                }
+            })
+        });
+    }
+
+    toJs(node: Node): string {
+        return generate(node, {
+            generator: exJsGenerator
+        });
     }
 }

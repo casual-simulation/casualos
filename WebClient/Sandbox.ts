@@ -7,6 +7,7 @@ export interface SandboxMacro {
 
 export interface SandboxInterface {
     listTagValues(tag: string, filter?: (value: any) => boolean): any;
+    listObjectsWithTag(tag: string, filter?: (value: any) => boolean): any;
 }
 
 /**
@@ -38,14 +39,29 @@ export class Sandbox {
 
         function sum(list: any[]) {
             let carry = 0;
-            list.forEach(l => {
-                carry += parseFloat(l);
-            });
+            for (let i = 0; i < list.length; i++) {
+                const l = list[i];
+                if (!Array.isArray(l)) {
+                    carry += parseFloat(l);
+                } else {
+                    carry += sum(l);
+                }
+            }
             return carry;
+        }
+
+        function avg(list: any[]) {
+            let total = sum(list);
+            let count = list.length;
+            return total/count;
         }
 
         function _listTagValues(tag: string, filter?: (value: any) => boolean) {
             return _this.interface.listTagValues(tag, filter);
+        }
+
+        function _listObjectsWithTag(tag: string, filter?: (value: any) => boolean) {
+            return _this.interface.listObjectsWithTag(tag, filter);
         }
 
         try {
