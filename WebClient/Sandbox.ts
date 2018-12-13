@@ -31,12 +31,12 @@ export class Sandbox {
         this.interface = interface_;
     }
 
-    run(formula: string, extras: any) {
+    run(formula: string, extras: any, context: any) {
         const macroed = this._replaceMacros(formula);
-        return this._runJs(macroed, extras);
+        return this._runJs(macroed, extras, context);
     }
 
-    _runJs(js: string, value: string) {
+    _runJs(js: string, value: string, context: any) {
         const _this = this;
 
         function sum(list: any) {
@@ -70,9 +70,13 @@ export class Sandbox {
             return _this.interface.listObjectsWithTag(tag, filter);
         }
 
+        function evalWrapper(js: string): any {
+            return eval(js);
+        }
+
         try {
             const transpiled = this._transpile(js);
-            const result = eval(transpiled);
+            const result = context ? evalWrapper.call(context, transpiled) : evalWrapper(js);
             return result;
         } catch(e) {
             console.warn(e);

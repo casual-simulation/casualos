@@ -19,6 +19,7 @@ import {
   flatMap, 
   intersection, 
   keys, 
+  mapValues,
   merge, 
   sortBy, 
   union, 
@@ -52,7 +53,7 @@ class InterfaceImpl implements SandboxInterface {
   }
 
   listTagValues(tag: string, filter?: FilterFunction) {
-    const tags = flatMap(this.objects.map(o => this._calculateValue(o.tags[tag])).filter(t => t));
+    const tags = flatMap(this.objects.map(o => this._calculateValue(o, o.tags[tag])).filter(t => t));
     const filtered = this._filterValues(tags, filter);
     if (filtered.length === 1) {
       return filtered[0];
@@ -62,9 +63,8 @@ class InterfaceImpl implements SandboxInterface {
   }
 
   listObjectsWithTag(tag: string, filter?: FilterFunction) {
-    const objs = this.objects.filter(o => this._calculateValue(o.tags[tag])).map(o => ({
-      ...o.tags
-    }));
+    const objs = this.objects.filter(o => this._calculateValue(o, o.tags[tag]))
+      .map(o => this._fileManager.convertToFormulaObject(o));
     const filtered = this._filterObjects(objs, filter, tag);
     if (filtered.length === 1) {
       return filtered[0];
@@ -88,9 +88,9 @@ class InterfaceImpl implements SandboxInterface {
   private _filterObjects(objs: any[], filter: FilterFunction, tag: string) {
     if (filter) {
       if(typeof filter === 'function') {
-        return objs.filter(o => filter(this._calculateValue(o[tag])));
+        return objs.filter(o => filter(this._calculateValue(o, o[tag])));
       } else {
-        return objs.filter(o => this._calculateValue(o[tag]) === filter);
+        return objs.filter(o => this._calculateValue(o, o[tag]) === filter);
       }
     } else {
       return objs;
@@ -101,8 +101,8 @@ class InterfaceImpl implements SandboxInterface {
     return this._fileManager.objects;
   }
 
-  private _calculateValue(value: any) {
-    return this._fileManager.calculateValue(value);
+  private _calculateValue(object: Object, value: any) {
+    return this._fileManager.calculateValue(object, value);
   }
 }
 
@@ -262,7 +262,7 @@ export class FileManager {
 
   calculateFileValue(file: Object, tag: string) {
     const formula = file.tags[tag];
-    return this.calculateValue(formula);
+    return this.calculateValue(file, formula);
   }
 
   calculateFormattedFileValue(file: Object, tag: string): string {
@@ -271,36 +271,78 @@ export class FileManager {
       return value.join(',');
     } else if(typeof value === 'object') {
       return JSON.stringify(value);
-    } else {
+    } else if(typeof value !== 'undefined' && value !== null) {
       return value.toString();
+    } else {
+      return value;
     }
   }
 
-  calculateValue(formula: string): any {
+  calculateValue(object: any, formula: string): any {
     const isString = typeof formula === 'string';
-    if (isString && formula.indexOf('=') === 0) {
-      return this.calculateFormulaValue(formula);
-    } else if(isString && formula.indexOf(',') >= 0) {
+    if (this.isFormula(formula)) {
+      return this.calculateFormulaValue(object, formula);
+    } else if(this.isArray(formula)) {
       const split = formula.split(',');
-      return split.map(s => this.calculateValue(s));
+      return split.map(s => this.calculateValue(object, s));
+    } else if(this.isNumber(formula)) {
+      return parseFloat(formula);
+    } else if(formula === 'true') {
+      return true;
+    } else if(formula === 'false') {
+      return false;
     } else {
-      const num = parseFloat(formula);
-      if(!isNaN(num)) {
-        return num;
-      } else if(formula === 'true') {
-        return true;
-      } else if(formula === 'false') {
-        return false;
+      return formula;
+    }
+  }
+
+  /**
+   * Determines if the given value represents a formula.
+   */
+  isFormula(value: string): boolean {
+    return typeof value === 'string' && value.indexOf('=') === 0;
+  }
+
+  /**
+   * Determines if the given string value represents an array.
+   */
+  isArray(value: string): boolean {
+    return typeof value === 'string' && value.indexOf(',') >= 0;
+  }
+
+  isNumber(value: string): boolean {
+    return (/^-?\d+\.?\d*$/).test(value) || (typeof value === 'string' && 'infinity' === value.toLowerCase());
+  }
+
+  calculateFormulaValue(object: any, formula: string) {
+    return this._sandbox.run(formula, formula, this.convertToFormulaObject(object));
+  }
+
+  /**
+   * Creates a new object that contains the tags that the given object has
+   * and is usable in a formula.
+   */
+  convertToFormulaObject(object: any) {
+    if (object._converted) {
+      return object;
+    }
+    let converted: {
+      [tag: string]: any
+    } = {
+      _converted: true
+    };
+    for(let key in object.tags) {
+      const val = object.tags[key];
+      if(this.isFormula(val)) {
+        Object.defineProperty(converted, key, {
+          get: () => this.calculateValue(object, val)
+        });
       } else {
-        return formula;
+        converted[key] = this.calculateValue(object, val);
       }
     }
+    return converted;
   }
-
-  calculateFormulaValue(formula: string) {
-    return this._sandbox.run(formula, formula);
-  }
-
 
   /**
    * Updates the given file with the given data.
