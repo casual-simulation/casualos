@@ -38,7 +38,7 @@ export default class FileRow extends Vue {
 
     valueChanged(file: File, tag: string, value: string) {
         if (file.type === 'object') {
-            (<any>this.$parent.$parent).lastEditedTag = tag;
+            this.$emit('tagChanged', tag);
             this.fileManager.updateFile(file, {
                 tags: {
                     [tag]: value

@@ -35,7 +35,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <file-row v-for="(file, index) in files" :key="file.id" :file="file" :tags="tags"></file-row>
+                    <file-row v-for="(file, index) in files" :key="file.id" :file="file" :tags="tags" @tagChanged="onTagChanged"></file-row>
                   </tbody>
                 </table>
 

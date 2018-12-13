@@ -31,4 +31,8 @@ export default class FileRow extends Vue {
     toggleFile(file: Object) {
         this.fileManager.selectFile(file);
     }
+
+    onTagChanged(tag: string) {
+        this.$emit('tagChanged', tag);
+    }
 };

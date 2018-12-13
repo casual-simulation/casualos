@@ -83,6 +83,10 @@ export default class Home extends Vue {
         this._fileManager.clearSelection();
     }
 
+    onTagChanged(tag: string) {
+        this.lastEditedTag = tag;
+    }
+
     constructor() {
         super();
     }
