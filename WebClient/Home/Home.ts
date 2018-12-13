@@ -1,6 +1,7 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Provide} from 'vue-property-decorator';
+import { some } from 'lodash';
 import {File, Object} from 'common';
 import GameView from '../GameView/GameView';
 import { EventBus } from '../EventBus/EventBus';
@@ -28,7 +29,7 @@ export default class Home extends Vue {
 
     isOpen: boolean = false;
     status: string = '';
-    files: File[] = [];
+    files: Object[] = [];
     selected: boolean[] = [];
     tags: string[] = [];
     hiddenTags: string[] = [
@@ -85,6 +86,17 @@ export default class Home extends Vue {
 
     onTagChanged(tag: string) {
         this.lastEditedTag = tag;
+    }
+
+    removeTag(tag: string) {
+        if (tag === this.lastEditedTag || tag === this.newTag) {
+            this.lastEditedTag = null;
+            this.tags = this._fileManager.fileTags(this.files, this.tags, [], this.hiddenTags);
+        }
+    }
+
+    tagHasValue(tag: string): boolean {
+        return some(this.files, f => f.tags[tag]);
     }
 
     constructor() {

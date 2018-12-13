@@ -43,7 +43,7 @@ import {AppManager, appManager} from './AppManager';
 import {SocketManager} from './SocketManager';
 import { Sandbox, SandboxInterface, FilterFunction } from './Sandbox';
 
-export interface SelectedFilesUpdatedEvent { files: File[]; }
+export interface SelectedFilesUpdatedEvent { files: Object[]; }
 
 class InterfaceImpl implements SandboxInterface {
   private _fileManager: FileManager;

@@ -16,6 +16,7 @@ import {
     MdDialogConfirm,
     MdTabs,
     MdCheckbox,
+    MdTooltip
 } from 'vue-material/dist/components';
 import 'vue-material/dist/vue-material.min.css'
 import 'vue-material/dist/theme/default.css'
@@ -45,6 +46,7 @@ Vue.use(MdMenu);
 Vue.use(MdDialog);
 Vue.use(MdDialogConfirm);
 Vue.use(MdTabs);
+Vue.use(MdTooltip);
 
 const routes: RouteConfig[] = [
     {

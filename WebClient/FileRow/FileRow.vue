@@ -3,6 +3,7 @@
     <td class="file-close">
       <md-button class="md-icon-button md-dense" @click="toggleFile(file)">
         <md-icon>close</md-icon>
+        <md-tooltip md-delay="1000" md-direction="top">Unselect Item</md-tooltip>
       </md-button>
     </td>
     <td class="file-id">{{file.id.substring(0, 5)}}</td>
