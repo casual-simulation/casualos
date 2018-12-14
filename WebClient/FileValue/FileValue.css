@@ -1,4 +1,5 @@
 
 .value-input.focused.formula {
-    /* TODO: Make formulas have a monospaced font */
+    font-family: Consolas, "Courier New", monospace;
+    letter-spacing: 0;
 }
