@@ -4,6 +4,7 @@ import {Prop, Inject} from 'vue-property-decorator';
 import { FileManager } from 'WebClient/FileManager';
 import { SubscriptionLike } from 'rxjs';
 import {Object, File} from 'common';
+import {invertColor, colorConvert} from '../utils';
 
 const numLoadingSteps: number = 4;
 
@@ -27,8 +28,28 @@ export default class FileRow extends Vue {
     @Prop() tag: string;
     value: string = '';
     isFocused: boolean = false;
+    isFormula: boolean = false;
 
     @Inject() fileManager!: FileManager;
+
+    get backgroundColor(): string {
+        if (this.tag === 'color') {
+            return this.value || '#00ff00';
+        } else {
+            return 'inherit';
+        }
+    }
+
+    get color(): string {
+        const background = this.backgroundColor;
+        if (background === 'inherit') {
+            return 'inherit';
+        } else if(background[0] === '#' && background.length !== 7 && background.length !== 4) {
+            return '#000000';
+        }else {
+            return invertColor(colorConvert.toHex(this.backgroundColor), true);
+        }
+    }
 
     private _sub: SubscriptionLike;
 
@@ -62,8 +83,9 @@ export default class FileRow extends Vue {
     }
 
     private _updateValue() {
+        this.isFormula = this.fileManager.isFormula(this.file.tags[this.tag]);
         if (!this.isFocused) {
-            this.value = this.fileManager.calculateFormattedFileValue(this.file, this.tag); // this.fileManager.calculateFileValue(this.file, this.tag);
+            this.value = this.fileManager.calculateFormattedFileValue(this.file, this.tag);
         } else {
             this.value = this.file.tags[this.tag];
         }

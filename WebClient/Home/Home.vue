@@ -6,10 +6,7 @@
           <md-card class="info-card" v-if="isOpen">
             <md-card-content>
               <div v-if="!isLoading">
-                Welcome Home {{user.name}}!
-
-                <h4>Files</h4>
-
+                <h4 class="files-header">Files</h4>
                 <table v-if="hasFiles" class="file-table">
                   <thead>
                     <tr>
@@ -47,12 +44,6 @@
 
                 <p v-if="!hasFiles">
                   Select a file
-                </p>
-              </div>
-              <div class="status-container">
-                <md-progress-spinner v-if="isLoading" :md-mode="progressMode" :md-value="progress"></md-progress-spinner>
-                <p>
-                  {{status}}
                 </p>
               </div>
             </md-card-content>
