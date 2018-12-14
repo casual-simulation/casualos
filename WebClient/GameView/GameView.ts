@@ -4,10 +4,8 @@ import {
   Renderer,
   Clock,
   Mesh,
-  Light,
   Color,
   PerspectiveCamera,
-  OrthographicCamera,
   WebGLRenderer,
   AmbientLight,
   DirectionalLight,
@@ -18,29 +16,23 @@ import {
   Group,
   Raycaster,
   Intersection,
-  Plane,
   MeshBasicMaterial,
   Object3D,
   LineBasicMaterial,
   PCFSoftShadowMap,
-  Material,
   BackSide,
   TextureLoader,
   OrbitControls,
   SphereBufferGeometry,
-  PlaneBufferGeometry,
   BoxBufferGeometry,
-  PlaneGeometry,
-  MeshPhongMaterial,
+  GLTFLoader,
   HemisphereLight,
-  DirectionalLightHelper,
-  PCFShadowMap,
-  BasicShadowMap,
 } from 'three';
 import 'three-examples/controls/OrbitControls';
-import Vue, { ComponentOptions } from 'vue';
+import 'three-examples/loaders/GLTFLoader';
+import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Prop, Inject } from 'vue-property-decorator';
+import { Inject } from 'vue-property-decorator';
 import {
   SubscriptionLike,
   Observable,
@@ -54,16 +46,14 @@ import {
   scan,
 } from 'rxjs/operators';
 
-import { merge } from 'lodash';
 
-import { appManager } from '../AppManager';
 import { FileManager } from '../FileManager';
 import { File, Object, Workspace } from 'common';
 
 import { vg } from "von-grid";
 
 import skyTextureUrl from '../public/images/CGSkies_0132_free.jpg';
-import groundGradientUrl from '../public/images/ground_gradient.png';
+import groundModelUrl from '../public/models/ground.gltf';
 
 interface Ray {
   origin: Vector3;
@@ -155,7 +145,7 @@ function buttonDrag(active: Observable<boolean>) {
   active = combineLatest(
     active,
     mouseMove,
-    (active, move) => active
+    (active) => active
   );
   const dragging = detectEdges(active);
   return combineLatest(
@@ -205,12 +195,8 @@ function buttonDrag(active: Observable<boolean>) {
   );
 }
 
-function buttonClick() {
-  return mouseUp;
-}
 
 const leftDrag = buttonDrag(leftClickActive);
-const rightDrag = buttonDrag(rightClickActive);
 
 function screenPosition(event: MouseEvent, view: HTMLElement) {
   const globalPos = new Vector2(event.pageX, event.pageY);
@@ -234,9 +220,6 @@ function raycastAtScreenPos(pos: Vector2, raycaster: Raycaster, objects: Object3
   };
 }
 
-function isRaycastSuccess(test: RaycastTest) {
-  return test.intersects.length > 0
-}
 
 function firstRaycastHit(test: RaycastTest) {
   return test.intersects.length > 0 ? test.intersects[0] : null;
@@ -294,6 +277,7 @@ export default class GameView extends Vue {
 
   private _sun: DirectionalLight;
   private _ambient: AmbientLight;
+  private _skylight: HemisphereLight;
 
   private _workspacePlane: Mesh;
   private _skydome: Mesh;
@@ -364,7 +348,7 @@ export default class GameView extends Vue {
         map(r => firstRaycastHit(r)),
       );
 
-    rightClickObjects.subscribe(intersection => {
+    rightClickObjects.subscribe(() => {
       // Always allow camera control with right clicks.
       this.enableCameraControls(true);
     });
@@ -377,7 +361,7 @@ export default class GameView extends Vue {
         map(r => firstRaycastHit(r)),
       );
 
-    middleClickObjects.subscribe(intersection => {
+    middleClickObjects.subscribe(() => {
       // Always allow camera control with middle clicks.
       this.enableCameraControls(true);
     });
@@ -704,11 +688,16 @@ export default class GameView extends Vue {
     this._cameraControls = new OrbitControls(this._camera, this._canvas);
 
     // Ambient light.
-    this._ambient = new AmbientLight(0xffffff, 0.6);
+    this._ambient = new AmbientLight(0xffffff, 0.8);
     this._scene.add(this._ambient);
 
+    // Sky light.
+    this._skylight = new HemisphereLight(0xc1e0fd, 0xffffff, .6);
+    this._scene.add(this._skylight);
+
+
     // Sun light.
-    this._sun = new DirectionalLight(0xffffff, 1);
+    this._sun = new DirectionalLight(0xffffff, .6);
     this._sun.position.set(5, 5, 5);
     this._sun.position.multiplyScalar(50);
     this._sun.name = "sun";
@@ -724,23 +713,30 @@ export default class GameView extends Vue {
 
     this._scene.add(this._sun);
 
-    // Workspace plane.
-    const planeGeometry = new PlaneGeometry(18000, 18000);
-    const planeTexture = new TextureLoader().load(groundGradientUrl);
-    planeGeometry.faceVertexUvs[1] = planeGeometry.faceVertexUvs[0];
-    let planeMaterial = new MeshPhongMaterial({
-      map: planeTexture
-    });
-    this._workspacePlane = new Mesh(planeGeometry, planeMaterial);
-    this._workspacePlane.castShadow = true;
-    this._workspacePlane.receiveShadow = true;
-    this._workspacePlane.position.x = 0;
-    this._workspacePlane.position.y = 0;
-    this._workspacePlane.position.x = 0;
-    this._workspacePlane.rotation.x = ThreeMath.DEG2RAD * -90;
-    this._workspacePlane.updateMatrixWorld(false);
 
-    this._scene.add(this._workspacePlane);
+    // Workspace plane.
+    var gltfLoader = new GLTFLoader();
+    gltfLoader.load(groundModelUrl, gltf => {
+      gltf.scene.traverse((child) => {
+        if ((<any>child).isMesh) {
+          console.log('[GameView] Assigned workspace plane mesh from gltf file.');
+          this._workspacePlane = <Mesh>child;
+          this._workspacePlane.castShadow = true;
+          this._workspacePlane.receiveShadow = true;
+          this._workspacePlane.position.x = 0;
+          this._workspacePlane.position.y = 0;
+          this._workspacePlane.position.x = 0;
+          this._workspacePlane.rotation.x = ThreeMath.DEG2RAD * -90;
+          this._workspacePlane.updateMatrixWorld(false);
+
+          // Scale up the workspace plane.
+          this._workspacePlane.scale.multiplyScalar(18000);
+      
+          this._scene.add(this._workspacePlane);
+          return;
+        }
+      });
+    });
 
     // Skydome
     const skydomeGeometry = new SphereBufferGeometry(9000, 64, 8, 0, Math.PI * 2, 0, Math.PI * 0.5);
@@ -833,16 +829,12 @@ export default class GameView extends Vue {
 
     const deltaTime = this._clock.getDelta();
 
-    this._updateGame(deltaTime);
+    this._updateGame();
 
     this._renderer.render(this._scene, this._camera);
   }
 
-  private _updateGame(deltaTime: number) {
+  private _updateGame() {
   }
 
-  private _fps(): number {
-    const seconds = this._clock.getElapsedTime();
-    return this._frames / seconds;
-  }
 };
