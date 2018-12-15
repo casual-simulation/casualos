@@ -48,16 +48,6 @@ module.exports = {
         test: /three\/examples\/js/,
         use: 'imports-loader?THREE=three'
       },
-      {
-        test: /\.m?js/,
-        include: /(astring|lru\-cache|yallist)/, // NPM modules that use ES6 and need to be transpiled
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: ['@babel/preset-env']
-          }
-        }
-      }
     ]
   },
   resolve: {
