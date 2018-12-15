@@ -1,12 +1,14 @@
 const path = require('path');
+const CleanWebpackPlugin = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const webpack = require('webpack');
 
 module.exports = {
   entry: path.resolve(__dirname, 'index.ts'),
   output: {
-    filename: 'main.js',
+    filename: '[name].js',
     path: path.resolve(__dirname, 'dist')
   },
   module: {
@@ -45,6 +47,16 @@ module.exports = {
       {
         test: /three\/examples\/js/,
         use: 'imports-loader?THREE=three'
+      },
+      {
+        test: /\.m?js/,
+        include: /(astring|lru\-cache|yallist)/, // NPM modules that use ES6 and need to be transpiled
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env']
+          }
+        }
       }
     ]
   },
@@ -57,6 +69,9 @@ module.exports = {
     }
   },
   plugins: [
+    new CleanWebpackPlugin([
+      path.resolve(__dirname, 'dist')
+    ]),
     new VueLoaderPlugin(),
     new HtmlWebpackPlugin({
       template: 'WebClient/index.html',
