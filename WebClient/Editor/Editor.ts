@@ -1,7 +1,9 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
-import {Provide} from 'vue-property-decorator';
+import {Provide, Inject} from 'vue-property-decorator';
+import {filter} from 'rxjs/operators';
 import {Object} from 'common';
+import { FileManager } from '../FileManager';
 
 import FileTable from '../FileTable/FileTable';
 import TagEditor from '../TagEditor/TagEditor';
@@ -10,10 +12,15 @@ import TagEditor from '../TagEditor/TagEditor';
     components: {
         'file-table': FileTable,
         'tag-editor': TagEditor
+    },
+    inject: {
+        fileManager: 'fileManager'
     }
 })
 export default class Editor extends Vue {
     
+    @Inject() private fileManager: FileManager;
+
     focusedFile: Object = null;
     focusedTag: string = null;
 
@@ -22,5 +29,19 @@ export default class Editor extends Vue {
             this.focusedFile = event.file;
             this.focusedTag = event.tag;
         }
+    }
+
+    async created() {
+        await this.fileManager.init();
+
+        this.fileManager.fileUpdated
+            .pipe(filter(f => f.type === 'object'))
+            .subscribe((file: Object) => {
+                if (this.focusedFile !== null) {
+                    if (file.id === this.focusedFile.id) {
+                        this.focusedFile = file;
+                    }
+                }
+            });
     }
 };

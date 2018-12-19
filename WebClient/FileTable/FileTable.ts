@@ -23,7 +23,6 @@ const numLoadingSteps: number = 4;
 })
 export default class FileTable extends Vue {
 
-    private _socketManager: SocketManager;
     @Inject() private fileManager: FileManager;
 
     files: Object[] = [];
