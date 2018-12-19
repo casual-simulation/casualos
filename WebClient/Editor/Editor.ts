@@ -3,8 +3,11 @@ import Component from 'vue-class-component';
 import {Provide} from 'vue-property-decorator';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
+import FileTable from '../FileTable/FileTable';
+
 @Component({
     components: {
+        'file-table': FileTable
     }
 })
 export default class Editor extends Vue {

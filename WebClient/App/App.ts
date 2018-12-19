@@ -1,9 +1,12 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
+import {Provide} from 'vue-property-decorator';
 import { appManager, User } from '../AppManager';
 import { EventBus } from '../EventBus/EventBus';
 import ConfirmDialog from '../ConfirmDialog/ConfirmDialog';
 import ConfirmDialogOptions from '../ConfirmDialog/ConfirmDialogOptions';
+import { FileManager } from '../FileManager';
+import { SocketManager } from '../SocketManager';
 
 @Component({
     components: {
@@ -13,14 +16,28 @@ import ConfirmDialogOptions from '../ConfirmDialog/ConfirmDialogOptions';
 })
 
 export default class App extends Vue {
+    private _socketManager: SocketManager;
     
+    @Provide('fileManager') private _fileManager: FileManager = new FileManager(appManager, this._socketManager);
+
     showNavigation:boolean = false;
     showConfirmDialog: boolean = false;
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
 
+    beforeCreate() {
+        this._socketManager = new SocketManager();
+        this._fileManager = new FileManager(appManager, this._socketManager);
+    }
+
     created() {
         EventBus.$on('showNavigation', this._handleShowNavigation);
         EventBus.$on('showConfirmDialog', this._handleShowConfirmDialog);
+    }
+
+    provide() {
+        return {
+            fileManager: this._fileManager
+        };
     }
     
     logout() {

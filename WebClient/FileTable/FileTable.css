@@ -1,0 +1,33 @@
+
+.file-table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+.file-table .new-tag-button {
+    margin: 0;
+}
+
+.file-table th {
+    border-left: 1px solid rgba(0,0,0,.2);
+}
+
+.file-table th:not(:last-child) {
+    border-top: 1px solid rgba(0,0,0,.2);
+    background-color: rgba(0,0,0,.05);
+}
+
+.remove-tag.md-button {
+    width: 24px;
+    min-width: 24px;
+    height: 24px;
+    margin: 0;
+}
+
+.remove-tag .md-icon {
+    font-size: 16px !important;
+}
+
+.remove-tag .md-icon:hover {
+    cursor: pointer;
+}
