@@ -1,24 +1,26 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Provide} from 'vue-property-decorator';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import {Object} from 'common';
 
 import FileTable from '../FileTable/FileTable';
+import TagEditor from '../TagEditor/TagEditor';
 
 @Component({
     components: {
-        'file-table': FileTable
+        'file-table': FileTable,
+        'tag-editor': TagEditor
     }
 })
 export default class Editor extends Vue {
-    code: string = 'console.log("Hello world!")';
+    
+    focusedFile: Object = null;
+    focusedTag: string = null;
 
-    editor: monaco.editor.ICodeEditor;
-
-    mounted() {
-        this.editor = monaco.editor.create(<HTMLElement>this.$refs.editor, {
-            value: 'console.log("Hello, world!")',
-            language: 'javascript'
-        });
+    onTagFocusChanged(event: { file: Object, tag: string, focused: boolean }) {
+        if (event.focused) {
+            this.focusedFile = event.file;
+            this.focusedTag = event.tag;
+        }
     }
 };

@@ -71,11 +71,15 @@ export default class FileRow extends Vue {
     focus() {
         this.isFocused = true;
         this._updateValue();
+
+        this.$emit('focusChanged', true);
     }
 
     blur() {
         this.isFocused = false;
         this._updateValue();
+        
+        this.$emit('focusChanged', false);
     }
 
     created() {

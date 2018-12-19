@@ -8,12 +8,14 @@ import { FileManager } from '../FileManager';
 import { SocketManager } from '../SocketManager';
 
 import FileRow from '../FileRow/FileRow';
+import TagEditor from '../TagEditor/TagEditor';
 
 const numLoadingSteps: number = 4;
 
 @Component({
     components: {
-        'file-row': FileRow
+        'file-row': FileRow,
+        'tag-editor': TagEditor
     },
     inject: {
       fileManager: 'fileManager'
@@ -60,6 +62,10 @@ export default class FileTable extends Vue {
 
     onTagChanged(tag: string) {
         this.lastEditedTag = tag;
+    }
+
+    onTagFocusChanged(event: { file: Object, tag: string, focused: boolean }) {
+        this.$emit('tagFocusChanged', event);
     }
 
     removeTag(tag: string) {

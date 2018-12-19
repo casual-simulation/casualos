@@ -38,6 +38,7 @@
         :file="file"
         :tags="tags"
         @tagChanged="onTagChanged"
+        @tagFocusChanged="onTagFocusChanged"
       ></file-row>
     </tbody>
   </table>

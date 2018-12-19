@@ -8,7 +8,11 @@
     </td>
     <td class="file-id">{{file.id.substring(0, 5)}}</td>
     <td v-if="file.type === 'object'" v-for="tag in tags" :key="tag">
-      <file-value :file="file" :tag="tag" @tagChanged="onTagChanged"></file-value>
+      <file-value 
+        :file="file" 
+        :tag="tag" 
+        @tagChanged="onTagChanged"
+        @focusChanged="tagFocusChanged(file, tag, $event)"></file-value>
     </td>
   </tr>
 </template>
