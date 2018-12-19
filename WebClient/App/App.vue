@@ -6,12 +6,12 @@
                 <md-button class="md-icon-button" @click="menuClicked()">
                     <md-icon>menu</md-icon>
                 </md-button>
-                <router-link to="/" class="md-title">Process for Teams</router-link>
+                <router-link to="/" class="md-title">File Simulator</router-link>
             </md-toolbar>
 
              <md-drawer :md-active.sync="showNavigation">
                 <div class="menu-header">
-                    <span class="md-title">Process for Teams</span><br>
+                    <span class="md-title">File Simulator</span><br>
                     <span class="md-body-1" v-if="getUser() != null">Logged In: {{getUser().name}}</span>
                 </div>
                 <md-list>

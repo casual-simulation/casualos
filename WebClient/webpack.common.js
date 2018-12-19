@@ -65,7 +65,7 @@ module.exports = {
     new VueLoaderPlugin(),
     new HtmlWebpackPlugin({
       template: 'WebClient/index.html',
-      title: 'Process for Teams'
+      title: 'File Simulator'
     }),
     new webpack.ProvidePlugin({
       THREE: 'three',
