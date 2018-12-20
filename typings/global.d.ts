@@ -22,3 +22,8 @@ declare module '*.gltf' {
 }
 
 declare module 'monaco-editor/esm/vs/editor/standalone/browser/simpleServices';
+
+declare module 'formula-lib' {
+  const lib: string;
+  export default lib; 
+}

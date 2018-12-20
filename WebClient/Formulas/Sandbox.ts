@@ -1,4 +1,5 @@
 import {Transpiler} from './Transpiler';
+import lib from 'formula-lib';
 
 export interface SandboxMacro {
     test: RegExp;
@@ -39,29 +40,6 @@ export class Sandbox {
     _runJs(js: string, value: string, context: any) {
         const _this = this;
 
-        function sum(list: any) {
-            if(!Array.isArray(list)) {
-                return parseFloat(list);
-            }
-
-            let carry = 0;
-            for (let i = 0; i < list.length; i++) {
-                const l = list[i];
-                if (!Array.isArray(l)) {
-                    carry += parseFloat(l);
-                } else {
-                    carry += sum(l);
-                }
-            }
-            return carry;
-        }
-
-        function avg(list: any[]) {
-            let total = sum(list);
-            let count = list.length;
-            return total/count;
-        }
-
         function _listTagValues(tag: string, filter?: (value: any) => boolean) {
             return _this.interface.listTagValues(tag, filter);
         }
@@ -71,7 +49,8 @@ export class Sandbox {
         }
 
         function evalWrapper(js: string): any {
-            return eval(js);
+            const final = lib + js;
+            return eval(final);
         }
 
         try {

@@ -5,6 +5,7 @@ import { FileManager } from 'WebClient/FileManager';
 import { Object } from 'common';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import * as LRU from 'lru-cache';
+import lib from 'formula-lib';
 
 import './MonacoShims';
 
@@ -14,11 +15,7 @@ monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
 });
 monaco.languages.typescript.javascriptDefaults.setEagerModelSync(true);
 
-monaco.editor.createModel(`
-function sum(values) {
-    return 0;
-}
-`, 'javascript', monaco.Uri.parse('file://global.js'));
+monaco.editor.createModel(lib, 'javascript', monaco.Uri.parse('file://lib.js'));
 
 @Component({
     inject: {

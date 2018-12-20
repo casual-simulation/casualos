@@ -43,5 +43,25 @@ export default class Editor extends Vue {
                     }
                 }
             });
+
+        let userFile = this.fileManager.userFile;
+        if (userFile) {
+            await this.fileManager.updateFile(userFile, {
+                tags: {
+                    _editorCount: 1
+                }
+            });
+        }
+    }
+
+    async destroyed() {
+        let userFile = this.fileManager.userFile;
+        if (userFile) {
+            await this.fileManager.updateFile(userFile, {
+                tags: {
+                    _editorCount: 0
+                }
+            });
+        }
     }
 };

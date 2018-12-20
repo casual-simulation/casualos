@@ -41,7 +41,7 @@ import * as uuid from 'uuid/v4';
 
 import {AppManager, appManager} from './AppManager';
 import {SocketManager} from './SocketManager';
-import { Sandbox, SandboxInterface, FilterFunction } from './Sandbox';
+import { Sandbox, SandboxInterface, FilterFunction } from './Formulas/Sandbox';
 
 export interface SelectedFilesUpdatedEvent { files: Object[]; }
 
