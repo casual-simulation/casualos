@@ -90,8 +90,6 @@ export default class Editor extends Vue {
                     this.editor.restoreViewState(newModel);
                 }
             }
-
-            this.editor.focus();
         }
     }
 
