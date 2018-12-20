@@ -81,8 +81,11 @@ export default class Home extends Vue {
 
         this.fileManager.selectedFilesUpdated.subscribe(event => {
             this.files = event.files;
-            if (this.files.length > 0) {
-                this.isOpen = true;
+            const editorCount = this.fileManager.userFile.tags._editorCount;
+            if (!editorCount || editorCount <= 0) {
+                if (this.files.length > 0) {
+                    this.isOpen = true;
+                }
             }
         });
 

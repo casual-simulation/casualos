@@ -130,7 +130,6 @@ export class FileManager {
     return values(this._filesState);
   }
 
-
   /**
    * Gets all the files that represent an object.
    */
@@ -176,6 +175,14 @@ export class FileManager {
 
   get status(): string {
     return this._status;
+  }
+
+  get userFile(): Object {
+    var objs = this.objects.filter(o => o.id === this._appManager.user.username);
+    if (objs.length > 0) {
+      return objs[0];
+    }
+    return null;
   }
 
   private get _filesState() {
@@ -361,11 +368,11 @@ export class FileManager {
     this._files.emit(fileUpdated(file.id, newData));
   }
 
-  async createFile() {
+  async createFile(id = uuid()) {
     console.log('[FileManager] Create File');
 
     const file: Object =
-        {id: uuid(), type: 'object', position: null, workspace: null, tags: {}};
+        {id: id, type: 'object', position: null, workspace: null, tags: {}};
 
     this._files.emit(fileAdded(file));
   }
@@ -428,6 +435,13 @@ export class FileManager {
         }));
 
     allSelectedFilesUpdated.subscribe(this._selectedFilesUpdated);
+
+    this._setStatus('Getting user file...');
+
+    let userFile = this.userFile;
+    if (!userFile) {
+      await this.createFile(this._appManager.user.username);
+    }
 
     this._setStatus('Initialized.');
   }
