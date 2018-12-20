@@ -368,11 +368,11 @@ export class FileManager {
     this._files.emit(fileUpdated(file.id, newData));
   }
 
-  async createFile(id = uuid()) {
+  async createFile(id = uuid(), tags = {}) {
     console.log('[FileManager] Create File');
 
     const file: Object =
-        {id: id, type: 'object', position: null, workspace: null, tags: {}};
+        {id: id, type: 'object', position: null, workspace: null, tags: tags};
 
     this._files.emit(fileAdded(file));
   }
@@ -440,7 +440,9 @@ export class FileManager {
 
     let userFile = this.userFile;
     if (!userFile) {
-      await this.createFile(this._appManager.user.username);
+      await this.createFile(this._appManager.user.username, {
+        _hidden: true
+      });
     }
 
     this._setStatus('Initialized.');

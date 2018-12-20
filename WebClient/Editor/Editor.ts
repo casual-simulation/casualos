@@ -19,6 +19,8 @@ import TagEditor from '../TagEditor/TagEditor';
 })
 export default class Editor extends Vue {
     
+    private _intervalId: any;
+
     @Inject() private fileManager: FileManager;
 
     focusedFile: Object = null;
@@ -44,24 +46,37 @@ export default class Editor extends Vue {
                 }
             });
 
-        let userFile = this.fileManager.userFile;
-        if (userFile) {
-            await this.fileManager.updateFile(userFile, {
-                tags: {
-                    _editorCount: 1
-                }
-            });
-        }
+        this._intervalId = setInterval(async () => {
+            let userFile = this.fileManager.userFile;
+            if (userFile) {
+                await this.fileManager.updateFile(userFile, {
+                    tags: {
+                        _editorOpenTime: Date.now()
+                    }
+                });
+            }
+        }, 2500);
+
+        document.addEventListener('beforeunload', async () => {
+            await this._signalEditorClosed();
+        });
     }
 
     async destroyed() {
+        clearInterval(this._intervalId);
+        await this._signalEditorClosed();
+    }
+
+    private async _signalEditorClosed() {
+        console.log('[Editor] Closing...');
         let userFile = this.fileManager.userFile;
         if (userFile) {
             await this.fileManager.updateFile(userFile, {
                 tags: {
-                    _editorCount: 0
+                    _editorOpenTime: 0
                 }
             });
         }
+        console.log('[Editor] Closed.');
     }
 };

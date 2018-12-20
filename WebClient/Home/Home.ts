@@ -12,6 +12,7 @@ import {uniq} from 'lodash';
 import CubeIcon from './Cube.svg';
 
 import FileTable from '../FileTable/FileTable';
+import { editor } from 'monaco-editor';
 
 const numLoadingSteps: number = 4;
 
@@ -81,8 +82,12 @@ export default class Home extends Vue {
 
         this.fileManager.selectedFilesUpdated.subscribe(event => {
             this.files = event.files;
-            const editorCount = this.fileManager.userFile.tags._editorCount;
-            if (!editorCount || editorCount <= 0) {
+            const editorOpenTime = this.fileManager.userFile.tags._editorOpenTime;
+            const now = Date.now();
+
+            // TODO: Fix to support different time zones
+            // (like if the user is using two PCs but with different time zones set)
+            if (!editorOpenTime || editorOpenTime <= 0 || (now - editorOpenTime) > 5000) {
                 if (this.files.length > 0) {
                     this.isOpen = true;
                 }

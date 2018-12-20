@@ -557,10 +557,12 @@ export default class GameView extends Vue {
 
   private _fileUpdated(file: File) {
     const obj = this._files[file.id];
-    if (file.type === 'object') {
-      this._updateFile(obj, file);
-    } else {
-      this._updateWorkspace(obj, file);
+    if (obj) {
+      if (file.type === 'object') {
+        this._updateFile(obj, file);
+      } else {
+        this._updateWorkspace(obj, file);
+      }
     }
   }
 
@@ -609,6 +611,11 @@ export default class GameView extends Vue {
 
   private _fileAdded(file: File) {
     console.log("File Added!");
+
+    if (file.type === 'object' && file.tags._hidden) {
+      return;
+    }
+
     let mesh;
     let grid;
     let board;
