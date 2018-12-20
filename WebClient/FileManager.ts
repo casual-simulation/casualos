@@ -25,7 +25,8 @@ import {
   union, 
   uniq, 
   values,
-  difference
+  difference,
+  some
 } from 'lodash';
 import {
   BehaviorSubject, 
@@ -53,7 +54,7 @@ class InterfaceImpl implements SandboxInterface {
   }
 
   listTagValues(tag: string, filter?: FilterFunction) {
-    const tags = flatMap(this.objects.map(o => this._calculateValue(o, o.tags[tag])).filter(t => t));
+    const tags = flatMap(this.objects.map(o => this._calculateValue(o, tag)).filter(t => t));
     const filtered = this._filterValues(tags, filter);
     if (filtered.length === 1) {
       return filtered[0];
@@ -63,7 +64,7 @@ class InterfaceImpl implements SandboxInterface {
   }
 
   listObjectsWithTag(tag: string, filter?: FilterFunction) {
-    const objs = this.objects.filter(o => this._calculateValue(o, o.tags[tag]))
+    const objs = this.objects.filter(o => this._calculateValue(o, tag))
       .map(o => this._fileManager.convertToFormulaObject(o));
     const filtered = this._filterObjects(objs, filter, tag);
     if (filtered.length === 1) {
@@ -88,9 +89,9 @@ class InterfaceImpl implements SandboxInterface {
   private _filterObjects(objs: any[], filter: FilterFunction, tag: string) {
     if (filter) {
       if(typeof filter === 'function') {
-        return objs.filter(o => filter(this._calculateValue(o, o[tag])));
+        return objs.filter(o => filter(this._calculateValue(o, tag)));
       } else {
-        return objs.filter(o => this._calculateValue(o, o[tag]) === filter);
+        return objs.filter(o => this._calculateValue(o, tag) === filter);
       }
     } else {
       return objs;
@@ -101,8 +102,14 @@ class InterfaceImpl implements SandboxInterface {
     return this._fileManager.objects;
   }
 
-  private _calculateValue(object: Object, value: any) {
-    return this._fileManager.calculateValue(object, value);
+  private _calculateValue(object: any, tag: string) {
+    if (tag === 'id') {
+      return object.id;
+    } else if (this._fileManager.isFormulaObject(object)) {
+      return this._fileManager.calculateValue(object, object[tag]);
+    } else {
+      return this._fileManager.calculateValue(object, object.tags[tag]);
+    }
   }
 }
 
@@ -288,7 +295,7 @@ export class FileManager {
     if (this.isFormula(formula)) {
       return this.calculateFormulaValue(object, formula);
     } else if(this.isArray(formula)) {
-      const split = formula.split(',');
+      const split = this._parseArray(formula);
       return split.map(s => this.calculateValue(object, s.trim()));
     } else if(this.isNumber(formula)) {
       return parseFloat(formula);
@@ -306,6 +313,15 @@ export class FileManager {
    */
   isFormula(value: string): boolean {
     return typeof value === 'string' && value.indexOf('=') === 0;
+  }
+
+  /**
+   * Determines if the given value contains a formula.
+   * This is different from isFormula() because it checks arrays for containing formulas in their elements.
+   * @param value The value to check.
+   */
+  containsFormula(value: string): boolean {
+    return this.isFormula(value) || (this.isArray(value) && some(this._parseArray(value), v => this.isFormula(v)));
   }
 
   /**
@@ -328,7 +344,7 @@ export class FileManager {
    * and is usable in a formula.
    */
   convertToFormulaObject(object: any) {
-    if (object._converted) {
+    if (this.isFormulaObject(object)) {
       return object;
     }
     let converted: {
@@ -340,7 +356,7 @@ export class FileManager {
     for(let key in object.tags) {
       if (typeof converted[key] === 'undefined') {
         const val = object.tags[key];
-        if(this.isFormula(val)) {
+        if(this.containsFormula(val)) {
           Object.defineProperty(converted, key, {
             get: () => this.calculateValue(object, val)
           });
@@ -350,6 +366,10 @@ export class FileManager {
       }
     }
     return converted;
+  }
+
+  isFormulaObject(object: any) {
+    return !!object._converted;
   }
 
   /**
@@ -387,6 +407,10 @@ export class FileManager {
     };
 
     this._files.emit(fileAdded(workspace));
+  }
+
+  private _parseArray(value: string): string[] {
+    return value.split(',');
   }
 
   private async _init() {
