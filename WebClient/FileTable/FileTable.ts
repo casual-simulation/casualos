@@ -27,9 +27,6 @@ export default class FileTable extends Vue {
 
     files: Object[] = [];
     tags: string[] = [];
-    hiddenTags: string[] = [
-        '_selected'
-    ];
     lastEditedTag: string = null;
     isMakingNewTag: boolean = false;
     newTag: string = 'myNewTag';
@@ -70,7 +67,7 @@ export default class FileTable extends Vue {
     removeTag(tag: string) {
         if (tag === this.lastEditedTag || tag === this.newTag) {
             this.lastEditedTag = null;
-            this.tags = this.fileManager.fileTags(this.files, this.tags, [], this.hiddenTags);
+            this.tags = this.fileManager.fileTags(this.files, this.tags, []);
         }
     }
 
@@ -90,7 +87,7 @@ export default class FileTable extends Vue {
 
         this.fileManager.selectedFilesUpdated.subscribe(event => {
             this.files = event.files;
-            this.tags = this.fileManager.fileTags(this.files, this.tags, this.lastEditedTag ? [this.lastEditedTag] : [], this.hiddenTags);
+            this.tags = this.fileManager.fileTags(this.files, this.tags, this.lastEditedTag ? [this.lastEditedTag] : []);
         });
     }
 };

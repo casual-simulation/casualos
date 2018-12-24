@@ -228,16 +228,19 @@ export class FileManager {
    * @param extraTags The list of tags that should not be removed from the
    * output list.
    */
-  fileTags(files: File[], currentTags: string[], extraTags: string[], hiddenTags: string[]) {
+  fileTags(files: File[], currentTags: string[], extraTags: string[]) {
     const fileTags = flatMap(files, f => {
       if (f.type === 'object') {
         return keys(f.tags);
       }
       return [];
     });
-    const tagsToKeep = union(fileTags, extraTags);
+    // Only keep tags that don't start with an underscore (_)
+    const nonHiddenTags = fileTags.filter(t => !(/^_/.test(t)))
+    const tagsToKeep = union(nonHiddenTags, extraTags);
     const allTags = union(currentTags, tagsToKeep);
-    const onlyTagsToKeep = difference(intersection(allTags, tagsToKeep), hiddenTags);
+
+    const onlyTagsToKeep = intersection(allTags, tagsToKeep);
 
     return onlyTagsToKeep;
   }
