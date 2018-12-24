@@ -73,7 +73,6 @@ function stdDev(list: any) {
     return sqrt(standardMean);
 }
 
-
 /**
  * Sorts the given array in ascending order and returns the sorted values in a new array.
  * @param array The array of numbers to sort.
@@ -85,5 +84,21 @@ function sort(array: any[], direction: ('ASC' | 'DESC') = 'ASC'): any[] {
         return newArray.sort((a, b) => a - b);
     } else {
         return newArray.sort((a, b) => b - a);
+    }
+}
+
+/**
+ * Generates a random integer number between min and max.
+ * @param min The smallest allowed value.
+ * @param max The largest allowed value.
+ */
+function random(min: number = 0, max?: number): number {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    const rand = Math.random();
+    if (max) {
+        return Math.floor(rand * (max - min)) + min;
+    } else {
+        return Math.floor(rand) + min;
     }
 }

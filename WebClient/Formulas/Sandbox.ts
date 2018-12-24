@@ -9,8 +9,15 @@ export interface SandboxMacro {
 export type FilterFunction = (value: any) => boolean;
 
 export interface SandboxInterface {
-    listTagValues(tag: string, filter?: FilterFunction): any;
-    listObjectsWithTag(tag: string, filter?: FilterFunction): any;
+    listTagValues(tag: string, filter?: FilterFunction, extras?: any): any;
+    listObjectsWithTag(tag: string, filter?: FilterFunction, extras?: any): any;
+}
+
+export interface SandboxResult<TExtra> {
+    success: boolean;
+    extras: TExtra;
+    result?: any;
+    error?: Error;
 }
 
 /**
@@ -32,34 +39,44 @@ export class Sandbox {
         this.interface = interface_;
     }
 
-    run(formula: string, extras: any, context: any) {
+    run<TExtra>(formula: string, extras: TExtra, context: any) : SandboxResult<TExtra> {
         const macroed = this._replaceMacros(formula);
         return this._runJs(macroed, extras, context);
     }
 
-    _runJs(js: string, value: string, context: any) {
-        const _this = this;
+    _runJs<TExtra>(__js: string, __extras: TExtra, __context: any): SandboxResult<TExtra> {
+        const __this = this;
 
+        // Using underscores to make these functions and parameters not collide
+        // with other stuff the user might use.
         function _listTagValues(tag: string, filter?: (value: any) => boolean) {
-            return _this.interface.listTagValues(tag, filter);
+            return __this.interface.listTagValues(tag, filter, __extras);
         }
 
         function _listObjectsWithTag(tag: string, filter?: (value: any) => boolean) {
-            return _this.interface.listObjectsWithTag(tag, filter);
+            return __this.interface.listObjectsWithTag(tag, filter, __extras);
         }
 
-        function evalWrapper(js: string): any {
+        function __evalWrapper(js: string): any {
             const final = lib + js;
             return eval(final);
         }
 
         try {
-            const transpiled = this._transpile(js);
-            const result = context ? evalWrapper.call(context, transpiled) : evalWrapper(js);
-            return result;
+            const __transpiled = this._transpile(__js);
+            const result = __context ? __evalWrapper.call(__context, __transpiled) : __evalWrapper(__js);
+            return {
+                success: true,
+                extras: __extras,
+                result
+            };
         } catch(e) {
             console.warn(e);
-            return value;
+            return {
+                success: false,
+                extras: __extras,
+                error: e
+            };
         }
     }
 

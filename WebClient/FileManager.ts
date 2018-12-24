@@ -53,7 +53,7 @@ class InterfaceImpl implements SandboxInterface {
     this._fileManager = fileManager;
   }
 
-  listTagValues(tag: string, filter?: FilterFunction) {
+  listTagValues(tag: string, filter?: FilterFunction, extras?: any) {
     const tags = flatMap(this.objects.map(o => this._calculateValue(o, tag)).filter(t => t));
     const filtered = this._filterValues(tags, filter);
     if (filtered.length === 1) {
@@ -63,7 +63,7 @@ class InterfaceImpl implements SandboxInterface {
     }
   }
 
-  listObjectsWithTag(tag: string, filter?: FilterFunction) {
+  listObjectsWithTag(tag: string, filter?: FilterFunction, extras?: any) {
     const objs = this.objects.filter(o => this._calculateValue(o, tag))
       .map(o => this._fileManager.convertToFormulaObject(o));
     const filtered = this._filterObjects(objs, filter, tag);
@@ -103,13 +103,7 @@ class InterfaceImpl implements SandboxInterface {
   }
 
   private _calculateValue(object: any, tag: string) {
-    if (tag === 'id') {
-      return object.id;
-    } else if (this._fileManager.isFormulaObject(object)) {
-      return this._fileManager.calculateValue(object, object[tag]);
-    } else {
-      return this._fileManager.calculateValue(object, object.tags[tag]);
-    }
+    return this._fileManager.calculateFileValue(object, tag);
   }
 }
 
@@ -277,9 +271,15 @@ export class FileManager {
     });
   }
 
-  calculateFileValue(file: Object, tag: string) {
-    const formula = file.tags[tag];
-    return this.calculateValue(file, formula);
+  calculateFileValue(object: Object, tag: string) {
+    if (tag === 'id') {
+      return object.id;
+    } else if (this.isFormulaObject(object)) {
+      const o: any = object;
+      return this._calculateValue(object, tag, o[tag]);
+    } else {
+      return this._calculateValue(object, tag, object.tags[tag]);
+    }
   }
 
   calculateFormattedFileValue(file: Object, tag: string): string {
@@ -293,13 +293,18 @@ export class FileManager {
     }
   }
 
-  calculateValue(object: any, formula: string): any {
+  private _calculateValue(object: any, tag: string, formula: string): any {
     const isString = typeof formula === 'string';
     if (this.isFormula(formula)) {
-      return this.calculateFormulaValue(object, formula);
+      const result = this._calculateFormulaValue(object, tag, formula);
+      if (result.success) {
+        return result.result;
+      } else {
+        return result.extras.formula;
+      }
     } else if(this.isArray(formula)) {
       const split = this._parseArray(formula);
-      return split.map(s => this.calculateValue(object, s.trim()));
+      return split.map(s => this._calculateValue(object, tag, s.trim()));
     } else if(this.isNumber(formula)) {
       return parseFloat(formula);
     } else if(formula === 'true') {
@@ -338,10 +343,6 @@ export class FileManager {
     return (/^-?\d+\.?\d*$/).test(value) || (typeof value === 'string' && 'infinity' === value.toLowerCase());
   }
 
-  calculateFormulaValue(object: any, formula: string) {
-    return this._sandbox.run(formula, formula, this.convertToFormulaObject(object));
-  }
-
   /**
    * Creates a new object that contains the tags that the given object has
    * and is usable in a formula.
@@ -361,10 +362,10 @@ export class FileManager {
         const val = object.tags[key];
         if(this.containsFormula(val)) {
           Object.defineProperty(converted, key, {
-            get: () => this.calculateValue(object, val)
+            get: () => this._calculateValue(object, key, val)
           });
         } else {
-          converted[key] = this.calculateValue(object, val);
+          converted[key] = this._calculateValue(object, key, val);
         }
       }
     }
@@ -410,6 +411,13 @@ export class FileManager {
     };
 
     this._files.emit(fileAdded(workspace));
+  }
+
+  private _calculateFormulaValue(object: any, tag: string, formula: string) {
+    return this._sandbox.run(formula, {
+      formula,
+      tag
+    }, this.convertToFormulaObject(object));
   }
 
   private _parseArray(value: string): string[] {
