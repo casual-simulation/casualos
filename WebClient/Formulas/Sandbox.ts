@@ -28,7 +28,7 @@ export class Sandbox {
 
     macros: SandboxMacro[] = [
         {
-            test: /^\=/g,
+            test: /^(?:\=|\:\=)/g,
             replacement: (val) => ''
         }
     ];

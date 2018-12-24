@@ -26,7 +26,8 @@ import {
   uniq, 
   values,
   difference,
-  some
+  some,
+  assign
 } from 'lodash';
 import {
   BehaviorSubject, 
@@ -43,6 +44,19 @@ import * as uuid from 'uuid/v4';
 import {AppManager, appManager} from './AppManager';
 import {SocketManager} from './SocketManager';
 import { Sandbox, SandboxInterface, FilterFunction } from './Formulas/Sandbox';
+
+/**
+ * Defines an interface for objects that represent assignment formula expressions.
+ * Assignment formula expressions are formulas that are only evaluated once.
+ * Internally we store them as objects in the tag and display the calculated result.
+ * This way, we can preserve the formula value if needed.
+ */
+export interface Assignment {
+  _assignment: boolean;
+  editing: boolean;
+  formula: string;
+  value?: any;
+}
 
 export interface SelectedFilesUpdatedEvent { files: Object[]; }
 
@@ -302,6 +316,9 @@ export class FileManager {
       } else {
         return result.extras.formula;
       }
+    } else if (this.isAssignment(formula)) {
+      const obj: Assignment = <any>formula;
+      return obj.value;
     } else if(this.isArray(formula)) {
       const split = this._parseArray(formula);
       return split.map(s => this._calculateValue(object, tag, s.trim()));
@@ -324,6 +341,13 @@ export class FileManager {
   }
 
   /**
+   * Determines if the given value represents an assignment.
+   */
+  isAssignment(object: any): any {
+    return typeof object === 'object' && object && !!object._assignment;
+  }
+
+  /**
    * Determines if the given value contains a formula.
    * This is different from isFormula() because it checks arrays for containing formulas in their elements.
    * @param value The value to check.
@@ -339,6 +363,9 @@ export class FileManager {
     return typeof value === 'string' && value.indexOf(',') >= 0;
   }
 
+  /**
+   * Determines if the given value represents a number.
+   */
   isNumber(value: string): boolean {
     return (/^-?\d+\.?\d*$/).test(value) || (typeof value === 'string' && 'infinity' === value.toLowerCase());
   }
@@ -372,6 +399,29 @@ export class FileManager {
     return converted;
   }
 
+  _convertToAssignment(object: any): Assignment {
+    if (this.isAssignment(object)) {
+      return object;
+    }
+
+    return {
+      _assignment: true,
+      editing: true,
+      formula: object,
+    };
+  }
+
+  /**
+   * Determines if the given value is an assignment expression or an assignment object.
+   */
+  _isAssignmentFormula(value: any): boolean {
+    if(typeof value === 'string') {
+      return value.indexOf(':') === 0 && value.indexOf('=') === 1;
+    } else {
+      return this.isAssignment(value);
+    }
+  }
+
   isFormulaObject(object: any) {
     return !!object._converted;
   }
@@ -381,16 +431,25 @@ export class FileManager {
    */
   async updateFile(file: File, newData: PartialFile) {
     if (newData.tags) {
+
+      // Cleanup/preprocessing
       for (let property in newData.tags) {
         let value = newData.tags[property];
         if (!value) {
           newData.tags[property] = null;
+        } else {
+          if (this._isAssignmentFormula(value)) {
+            const assignment = this._convertToAssignment(value);
+            const result = this._calculateFormulaValue(file, property, assignment.formula);
+            newData.tags[property] = assign(assignment, { value: result.result });
+          }
         }
       }
     }
 
     this._files.emit(fileUpdated(file.id, newData));
   }
+  
 
   async createFile(id = uuid(), tags = {}) {
     console.log('[FileManager] Create File');
