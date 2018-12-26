@@ -29,6 +29,7 @@ export default class Editor extends Vue {
     private _cache: LRU.Cache<string, monaco.editor.ICodeEditorViewState>;
     private _fileId: string;
     private _prevTag: string;
+    private _completionProvider: monaco.IDisposable;
 
     @Prop() file: Object;
     @Prop() tag: string;
@@ -131,8 +132,52 @@ export default class Editor extends Vue {
             }
         });
 
+        this._completionProvider = monaco.languages.registerCompletionItemProvider('javascript', {
+            triggerCharacters: ['#', '@'],
+            provideCompletionItems: (model, position, ctx, token) => {
+                const text = model.getValueInRange({
+                    startLineNumber: position.lineNumber,
+                    startColumn: 0,
+                    endLineNumber: position.lineNumber,
+                    endColumn: position.column
+                });
+
+                const lastIndex = text.lastIndexOf('#');
+                if (lastIndex >= 0) {
+                    const tagPrefix = text.slice(lastIndex + 1);
+                    const tags = this.fileManager.tags.map(t => ({
+                        tag: t,
+                        index: t.indexOf(tagPrefix)
+                    }));
+                    const filtered = tags.filter(t => t.index >= 0);
+                    const suggestions = filtered.map(t => ({
+                        label: t.tag,
+                        insertText: t.tag,
+                        sortText: t.tag.indexOf('_') >= 0 ? t.tag.slice(1) : t.tag,
+                        kind: monaco.languages.CompletionItemKind.Variable
+                    }));
+
+                    return {
+                        suggestions: suggestions
+                    };
+                }
+                
+                return {
+                    suggestions: []
+                };
+            }
+        });
+
+
         this.editor.onDidChangeModelContent(e => {
             this._updateFile();
         });
+    }
+
+    destroyed() {
+        if (this._completionProvider) {
+            this._completionProvider.dispose();
+            this._completionProvider = null;
+        }
     }
 };

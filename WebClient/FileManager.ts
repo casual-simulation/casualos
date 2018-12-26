@@ -153,6 +153,13 @@ export class FileManager {
   }
 
   /**
+   * Gets all of the available tags.
+   */
+  get tags(): string[] {
+    return union(...this.objects.map(o => keys(o.tags)));
+  }
+
+  /**
    * Gets all the selected files that represent an object.
    */
   get selectedObjects(): File[] {

@@ -110,6 +110,12 @@ function exJsParser(parser: typeof Parser) {
 
 const exJsGenerator = assign({}, baseGenerator, {});
 
+/**
+ * Defines a class that is able to compile code from File Simulator's custom JavaScript dialect
+ * into pure ES6 JavaScript. Does not preserve spacing or comments.
+ * 
+ * See https://docs.google.com/document/d/1WQXQPjdXxyx_lau15WPpwTTYvt66_wPCu3x-08rpLoY/edit?usp=sharing
+ */
 export class Transpiler {
     private _parser: typeof Parser;
     private _cache: LRU.Cache<string, string>;
@@ -121,19 +127,22 @@ export class Transpiler {
         this._parser = Parser.extend(<any>exJsParser);
     }
 
+    /**
+     * Transpiles the given code into ES6 JavaScript Code.
+     */
     transpile(code: string): string {
         const cached = this._cache.get(code);
         if (cached) {
             return cached;
         }
         const node = this._parser.parse(code);
-        const replaced = this.replace(node);
-        const final = this.toJs(replaced);
+        const replaced = this._replace(node);
+        const final = this._toJs(replaced);
         this._cache.set(code, final);
         return final;
     }
 
-    replace(node: Node): Node {
+    private _replace(node: Node): Node {
         return <any>replace(<any>node, {
             enter: <any>((n: any) => {
                 // #tag syntax
@@ -175,7 +184,7 @@ export class Transpiler {
         });
     }
 
-    toJs(node: Node): string {
+    private _toJs(node: Node): string {
         return generate(node, {
             generator: exJsGenerator
         });
