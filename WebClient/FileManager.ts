@@ -70,22 +70,14 @@ class InterfaceImpl implements SandboxInterface {
   listTagValues(tag: string, filter?: FilterFunction, extras?: any) {
     const tags = flatMap(this.objects.map(o => this._calculateValue(o, tag)).filter(t => t));
     const filtered = this._filterValues(tags, filter);
-    if (filtered.length === 1) {
-      return filtered[0];
-    } else {
-      return filtered;
-    }
+    return filtered;
   }
 
   listObjectsWithTag(tag: string, filter?: FilterFunction, extras?: any) {
     const objs = this.objects.filter(o => this._calculateValue(o, tag))
       .map(o => this._fileManager.convertToFormulaObject(o));
     const filtered = this._filterObjects(objs, filter, tag);
-    if (filtered.length === 1) {
-      return filtered[0];
-    } else {
-      return filtered;
-    }
+    return filtered;
   }
 
   private _filterValues(values: any[], filter: FilterFunction) {
@@ -305,8 +297,20 @@ export class FileManager {
 
   calculateFormattedFileValue(file: Object, tag: string): string {
     const value = this.calculateFileValue(file, tag);
-    if(typeof value === 'object') {
-      return JSON.stringify(value);
+    return this._formatValue(value);
+  }
+
+  private _formatValue(value: any): string {
+    if (typeof value === 'object') {
+      if (Array.isArray(value)) {
+        return `[${value.map(v => this._formatValue(v)).join(',')}]`;
+      } else {
+        if (value.id) {
+          return value.id.substr(0, 5);
+        } else {
+          return JSON.stringify(value);
+        }
+      }
     } else if(typeof value !== 'undefined' && value !== null) {
       return value.toString();
     } else {
