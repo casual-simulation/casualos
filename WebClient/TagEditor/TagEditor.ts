@@ -142,7 +142,10 @@ export default class Editor extends Vue {
                     endColumn: position.column
                 });
 
-                const lastIndex = text.lastIndexOf('#');
+                let lastIndex = text.lastIndexOf('#');
+                if(lastIndex < 0) {
+                    lastIndex = text.lastIndexOf('@');
+                }
                 if (lastIndex >= 0) {
                     const tagPrefix = text.slice(lastIndex + 1);
                     const tags = this.fileManager.tags.map(t => ({
