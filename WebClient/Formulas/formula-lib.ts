@@ -92,7 +92,7 @@ function sort(array: any[], direction: ('ASC' | 'DESC') = 'ASC'): any[] {
  * @param min The smallest allowed value.
  * @param max The largest allowed value.
  */
-function random(min: number = 0, max?: number): number {
+function randomInt(min: number = 0, max?: number): number {
     min = Math.ceil(min);
     max = Math.floor(max);
     const rand = Math.random();
@@ -100,5 +100,19 @@ function random(min: number = 0, max?: number): number {
         return Math.floor(rand * (max - min)) + min;
     } else {
         return Math.floor(rand) + min;
+    }
+}
+
+/**
+ * Generates a random number between min and max.
+ * @param min The smallest allowed value.
+ * @param max The largest allowed value.
+ */
+function random(min: number = 0, max?: number): number {
+    const rand = Math.random();
+    if (max) {
+        return rand * (max - min) + min;
+    } else {
+        return rand + min;
     }
 }
