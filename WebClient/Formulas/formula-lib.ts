@@ -116,3 +116,16 @@ function random(min: number = 0, max?: number): number {
         return rand + min;
     }
 }
+
+/**
+ * Joins the given list of values into a single string.
+ * @param values The values to make the string out of.
+ * @param separator The separator used to separate values.
+ */
+function join(values: any, separator: string = ','): string {
+    if (Array.isArray(values)) {
+        return values.join(separator);
+    } else {
+        return values;
+    }
+}
