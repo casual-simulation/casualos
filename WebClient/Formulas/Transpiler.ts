@@ -150,7 +150,7 @@ export class Transpiler {
                     // _listTagValues('tag')
                     return callExpr('_listTagValues', [{
                         type: 'Literal',
-                        value: n.identifier.name
+                        value: (n.identifier.name || n.identifier.value)
                     }]);
 
                     // #tag(filter) syntax
@@ -159,7 +159,7 @@ export class Transpiler {
                           n.callee.identifier) {
                     return callExpr('_listTagValues', [{
                         type: 'Literal',
-                        value: n.callee.identifier.name
+                        value: (n.callee.identifier.name || n.callee.identifier.value)
                     }, ...n.arguments]);
 
                     // @tag syntax
@@ -167,7 +167,7 @@ export class Transpiler {
                     // _listObjectsWithTag('tag')
                     return callExpr('_listObjectsWithTag', [{
                         type: 'Literal',
-                        value: n.identifier.name
+                        value: (n.identifier.name || n.identifier.value)
                     }]);
 
                     // @tag(filter) syntax
@@ -177,7 +177,7 @@ export class Transpiler {
                     // _listObjectsWithTag('tag', filter)
                     return callExpr('_listObjectsWithTag', [{
                         type: 'Literal',
-                        value: n.callee.identifier.name
+                        value: (n.callee.identifier.name || n.callee.identifier.value)
                     }, ...n.arguments]);
                 }
             })
