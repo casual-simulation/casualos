@@ -67,6 +67,18 @@ interface File3D {
   file: File;
 }
 
+interface MouseDrag {
+    isActive: boolean;
+    justStartedClicking: boolean;
+    startDragTime: number;
+    justEndedClicking: boolean;
+    endDragTime: number;
+    event: MouseEvent;
+    startClickEvent: MouseEvent;  
+    isClicking: boolean;
+    isDragging: boolean;
+}
+
 const mouseUp = fromEvent<MouseEvent>(document, 'mouseup');
 const mouseDown = fromEvent<MouseEvent>(document, 'mousedown');
 const mouseMove = fromEvent<MouseEvent>(document, 'mousemove');
@@ -91,7 +103,7 @@ function buttonActive(button: number): Observable<boolean> {
 }
 
 const leftClickActive = buttonActive(0);
-const rightClickActive = buttonActive(1);
+const rightClickActive = buttonActive(2);
 
 /**
  * Returns an observable that is able to signal
@@ -141,7 +153,12 @@ function mouseDistance(first: MouseEvent, second: MouseEvent) {
   return pos1.distanceTo(pos2);
 }
 
-function buttonDrag(active: Observable<boolean>) {
+/**
+ * Creates an observable that is able to determine whether the mouse is currently clicking or dragging an object in realtime.
+ * Works such that when isClicking is true, isDragging is false and vice-versa.
+ * @param active An observable that determines whether the target mouse button is active or not.
+ */
+function buttonDrag(active: Observable<boolean>): Observable<MouseDrag> {
   active = combineLatest(
     active,
     mouseMove,
@@ -197,6 +214,7 @@ function buttonDrag(active: Observable<boolean>) {
 
 
 const leftDrag = buttonDrag(leftClickActive);
+const rightDrag = buttonDrag(rightClickActive);
 
 function screenPosition(event: MouseEvent, view: HTMLElement) {
   const globalPos = new Vector2(event.pageX, event.pageY);
@@ -328,51 +346,70 @@ export default class GameView extends Vue {
       this._fileUpdated(file);
     });
 
-    const leftClickObjects = isButton(mouseDown, 0)
-      .pipe(
-        filter(e => eventIsOverElement(e, this._canvas)),
-        map(e => screenPosition(e, this.gameView)),
-        map(pos => raycastAtScreenPos(pos, this._raycaster, this._draggableObjects, this._camera)),
-        map(r => firstRaycastHit(r)),
-      );
+    const leftClickObjects = this._clickedObjects(isButton(mouseDown, 0));
 
     leftClickObjects.subscribe(intersection => {
       this.enableCameraControls(intersection === null);
     });
 
-    const rightClickObjects = isButton(mouseDown, 2)
-      .pipe(
-        filter(e => eventIsOverElement(e, this._canvas)),
-        map(e => screenPosition(e, this.gameView)),
-        map(pos => raycastAtScreenPos(pos, this._raycaster, this._draggableObjects, this._camera)),
-        map(r => firstRaycastHit(r)),
-      );
+    const rightClickObjects = this._clickedObjects(isButton(mouseDown, 2));
+      
 
-    rightClickObjects.subscribe(() => {
-      // Always allow camera control with right clicks.
-      this.enableCameraControls(true);
+    rightClickObjects.subscribe(intersection => {
+      this.enableCameraControls(intersection === null);
     });
 
-    const middleClickObjects = isButton(mouseDown, 1)
-      .pipe(
-        filter(e => eventIsOverElement(e, this._canvas)),
-        map(e => screenPosition(e, this.gameView)),
-        map(pos => raycastAtScreenPos(pos, this._raycaster, this._draggableObjects, this._camera)),
-        map(r => firstRaycastHit(r)),
-      );
+    const middleClickObjects = this._clickedObjects(isButton(mouseDown, 1));
 
     middleClickObjects.subscribe(() => {
       // Always allow camera control with middle clicks.
       this.enableCameraControls(true);
     });
 
-    const dragPositions = leftDrag.pipe(
+    const {
+      dragOperations: leftDragOperations,
+      clickOperations: leftClickOperations,
+      gridsVisible
+    } = this._draggedObjects(leftDrag, leftClickObjects);
+
+    leftDragOperations.subscribe(drag => {
+      this._handleDrag(drag.ray, drag.workspace, drag.hit);
+    });
+
+    leftClickOperations.subscribe(file => {
+      if(file !== null && file.file.type === 'object') {
+        this._selectFile(file);
+      }
+    });
+
+    gridsVisible.subscribe(visible => {
+      this._grids.visible = visible;
+    });
+
+    const {
+      clickOperations: rightClickOperations
+    } = this._draggedObjects(rightDrag, rightClickObjects);
+
+    rightClickOperations.subscribe(file => {
+      this._rightClickFile(file);
+    });
+  }
+
+  beforeDestroy() {
+    if (this._sub) {
+      this._sub.unsubscribe();
+      this._sub = null;
+    }
+  }
+
+  private _draggedObjects(observable: Observable<MouseDrag>, clicks: Observable<Intersection>) {
+    const dragPositions = observable.pipe(
       map(drag => ({ ...drag, screenPos: screenPosition(drag.event, this.gameView) })),
       map(drag => ({ ...drag, ray: screenPosToRay(drag.screenPos, this._camera) }))
     );
 
     const draggedObjects = combineLatest(
-      leftClickObjects,
+      clicks,
       dragPositions,
       (hit, drag) => ({
         ...drag,
@@ -395,30 +432,29 @@ export default class GameView extends Vue {
       map(pos => raycastAtScreenPos(pos, this._raycaster, this._draggableObjects, this._camera)),
       map(r => firstRaycastHit(r)),
       filter(hit => hit !== null),
-      map(hit => this._fileForMesh(hit.object)),
-      filter(file => file !== null && file.file.type === 'object'),
-      tap(file => this._selectFile(file))
-    )
-
-    dragOperations.subscribe(drag => {
-      this._handleDrag(drag.ray, drag.workspace, drag.hit);
-    });
-
-    clickOperations.subscribe();
-
-    const gridsVisible = draggedObjects.pipe(
-      map(drag => drag.isDragging && drag.hit !== null && this._isFile(drag.hit)),
-      tap(visible => this._grids.visible = visible)
+      map(hit => this._fileForIntersection(hit)),
     );
 
-    gridsVisible.subscribe();
+    const gridsVisible = draggedObjects.pipe(
+      map(drag => drag.isDragging && drag.hit !== null && this._isFile(drag.hit))
+    );
+
+    return {
+      dragPositions,
+      draggedObjects,
+      dragOperations,
+      clickOperations,
+      gridsVisible
+    };
   }
 
-  beforeDestroy() {
-    if (this._sub) {
-      this._sub.unsubscribe();
-      this._sub = null;
-    }
+  private _clickedObjects(observable: Observable<MouseEvent>) {
+    return observable.pipe(
+      filter(e => eventIsOverElement(e, this._canvas)),
+      map(e => screenPosition(e, this.gameView)),
+      map(pos => raycastAtScreenPos(pos, this._raycaster, this._draggableObjects, this._camera)),
+      map(r => firstRaycastHit(r)),
+    );
   }
 
   private _isFile(hit: Intersection): boolean {
@@ -478,13 +514,19 @@ export default class GameView extends Vue {
     }
   }
 
+  private _rightClickFile(file: File3D) {
+    if (file.file.type === 'workspace') {
+      console.log('Right Click!');
+    }
+  }
+
   private _selectFile(file: File3D) {
     this.fileManager.selectFile(<Object>file.file);
   }
 
   private _dragFile(mouseDir: Ray, hit: Intersection) {
     const { good, point, workspace } = this._pointOnGrid(mouseDir);
-    const file = this._fileForMesh(hit.object);
+    const file = this._fileForIntersection(hit);
     if (good) {
       this.fileManager.updateFile(file.file, {
         tags: {
@@ -511,12 +553,12 @@ export default class GameView extends Vue {
     }
   }
 
-  private _fileForMesh(mesh: Object3D): File3D {
-    const id = this._meshses[mesh.id];
+  private _fileForIntersection(hit: Intersection): File3D {
+    const id = this._meshses[hit.object.id];
     if (id) {
       return this._files[id];
     } else {
-      return null;
+      return this._findWorkspaceForIntersection(hit);
     }
   }
 
