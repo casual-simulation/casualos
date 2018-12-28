@@ -462,11 +462,14 @@ export class FileManager {
   }
   
 
-  async createFile(id = uuid(), tags = {}) {
+  async createFile(id = uuid(), tags: Object['tags'] = {
+    position: { x: 0, y: 0, z: 0},
+    workspace: <string>null
+  }) {
     console.log('[FileManager] Create File');
 
     const file: Object =
-        {id: id, type: 'object', position: null, workspace: null, tags: tags};
+        {id: id, type: 'object', tags: tags};
 
     this._files.emit(fileAdded(file));
   }
@@ -546,7 +549,9 @@ export class FileManager {
     let userFile = this.userFile;
     if (!userFile) {
       await this.createFile(this._appManager.user.username, {
-        _hidden: true
+        _hidden: true,
+        position: { x: 0, y: 0, z: 0},
+        workspace: null
       });
     }
 

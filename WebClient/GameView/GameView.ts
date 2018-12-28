@@ -487,21 +487,25 @@ export default class GameView extends Vue {
     const file = this._fileForMesh(hit.object);
     if (good) {
       this.fileManager.updateFile(file.file, {
-        workspace: workspace.file.id,
-        position: {
-          x: point.x,
-          y: point.y,
-          z: point.z
+        tags: {
+          _workspace: workspace.file.id,
+          _position: {
+            x: point.x,
+            y: point.y,
+            z: point.z
+          }
         }
       });
     } else {
       const p = pointOnRay(mouseDir, 2);
       this.fileManager.updateFile(file.file, {
-        workspace: null,
-        position: {
-          x: p.x,
-          y: p.y,
-          z: p.z
+        tags: {
+          _workspace: null,
+          _position: {
+            x: p.x,
+            y: p.y,
+            z: p.z
+          }
         }
       });
     }
@@ -567,7 +571,7 @@ export default class GameView extends Vue {
   }
 
   private _updateFile(obj: File3D, data: Object) {
-    const workspace = this._files[data.workspace];
+    const workspace = this._files[data.tags._workspace];
     obj.file = data;
     if (workspace) {
       obj.mesh.parent = workspace.mesh;
@@ -585,11 +589,11 @@ export default class GameView extends Vue {
       material.color = new Color(0x00FF00);
     }
 
-    if (data.position) {
+    if (data.tags._position) {
       obj.mesh.position.set(
-        data.position.x + 0,
-        data.position.y + 0.095,
-        data.position.z + 0);
+        data.tags._position.x + 0,
+        data.tags._position.y + 0.095,
+        data.tags._position.z + 0);
     } else {
       // Default position
       obj.mesh.position.set(0, 1, 0);

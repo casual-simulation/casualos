@@ -9,13 +9,18 @@ export interface FilesState {
 export interface PartialFile {
     id?: string;
     type?: string;
-    workspace?: string;
     position?: {
-        x?: number;
-        y?: number;
-        z?: number;
+        x: number;
+        y: number;
+        z: number;
     };
     tags?: {
+        _workspace?: string;
+        _position?: {
+            x?: number;
+            y?: number;
+            z?: number;
+        };
         [key: string]: any;
     }
 }
