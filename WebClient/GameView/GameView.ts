@@ -54,227 +54,26 @@ import { vg } from "von-grid";
 
 import skyTextureUrl from '../public/images/CGSkies_0132_free.jpg';
 import groundModelUrl from '../public/models/ground.gltf';
-
-interface Ray {
-  origin: Vector3;
-  direction: Vector3;
-}
-
-interface File3D {
-  mesh: Mesh | Group;
-  surface: vg.Board;
-  grid: vg.Board;
-  file: File;
-}
-
-interface MouseDrag {
-    isActive: boolean;
-    justStartedClicking: boolean;
-    startDragTime: number;
-    justEndedClicking: boolean;
-    endDragTime: number;
-    event: MouseEvent;
-    startClickEvent: MouseEvent;  
-    isClicking: boolean;
-    isDragging: boolean;
-}
-
-const mouseUp = fromEvent<MouseEvent>(document, 'mouseup');
-const mouseDown = fromEvent<MouseEvent>(document, 'mousedown');
-const mouseMove = fromEvent<MouseEvent>(document, 'mousemove');
-
-function isButton(observable: Observable<MouseEvent>, button: number): Observable<MouseEvent> {
-  return observable.pipe(
-    filter(e => e.button === button)
-  )
-}
-
-function buttonActive(button: number): Observable<boolean> {
-  const clickUp = isButton(mouseUp, button);
-  const clickDown = isButton(mouseDown, button);
-
-  const active = combineLatest(
-    clickUp,
-    clickDown,
-    (e1, e2) => e2.timeStamp > e1.timeStamp
-  );
-
-  return active;
-}
-
-const leftClickActive = buttonActive(0);
-const rightClickActive = buttonActive(2);
-
-/**
- * Returns an observable that is able to signal
- * when the given observable goes from false to true values (rising edge)
- * and also when it goes from true back to false. (falling edge)
- */
-function detectEdges(observable: Observable<boolean>) {
-  return observable.pipe(
-    map(a => ({
-      active: a,
-      started: false,
-      ended: false,
-      startTime: null,
-      endTime: null
-    })),
-    scan((prev, curr) => {
-      if (!prev.active && curr.active) {
-        return {
-          active: curr.active,
-          started: true,
-          ended: false,
-          startTime: Date.now(),
-          endTime: null
-        };
-      } else if (prev.active && !curr.active) {
-        return {
-          active: curr.active,
-          started: false,
-          ended: true,
-          startTime: curr.startTime,
-          endTime: Date.now()
-        };
-      } else {
-        return {
-          ...curr,
-          started: false,
-          ended: false
-        };
-      }
-    }, { active: false, started: false, ended: false, startTime: <number>null, endTime: <number>null }),
-  );
-}
-
-function mouseDistance(first: MouseEvent, second: MouseEvent) {
-  const pos1 = new Vector2(first.pageX, first.pageY);
-  const pos2 = new Vector2(second.pageX, second.pageY);
-  return pos1.distanceTo(pos2);
-}
-
-/**
- * Creates an observable that is able to determine whether the mouse is currently clicking or dragging an object in realtime.
- * Works such that when isClicking is true, isDragging is false and vice-versa.
- * @param active An observable that determines whether the target mouse button is active or not.
- */
-function buttonDrag(active: Observable<boolean>): Observable<MouseDrag> {
-  active = combineLatest(
-    active,
-    mouseMove,
-    (active) => active
-  );
-  const dragging = detectEdges(active);
-  return combineLatest(
-    dragging,
-    mouseMove,
-    (active, mouse) => ({
-      isActive: active.active,
-      justStartedClicking: active.started,
-      startDragTime: active.startTime,
-      justEndedClicking: active.ended,
-      endDragTime: active.endTime,
-      event: mouse,
-      startClickEvent: null
-    })
-  ).pipe(
-    scan((prev, curr) => {
-      if (curr.justStartedClicking) {
-        return {
-          ...curr,
-          startClickEvent: curr.event
-        }
-      } else {
-        return {
-          ...curr,
-          startClickEvent: prev.startClickEvent
-        };
-      }
-    }, {
-        isActive: false,
-        justStartedClicking: false,
-        startDragTime: <number>null,
-        justEndedClicking: false,
-        endDragTime: <number>null,
-        event: null,
-        startClickEvent: null
-      }),
-    map(event => {
-      const wasDragging = event.startClickEvent && mouseDistance(event.startClickEvent, event.event) > 10;
-      const isDragging = event.isActive && wasDragging;
-      const isClicking = !isDragging && !wasDragging && event.justEndedClicking;
-      return {
-        ...event,
-        isDragging,
-        isClicking
-      }
-    })
-  );
-}
-
-
-const leftDrag = buttonDrag(leftClickActive);
-const rightDrag = buttonDrag(rightClickActive);
-
-function screenPosition(event: MouseEvent, view: HTMLElement) {
-  const globalPos = new Vector2(event.pageX, event.pageY);
-  const viewRect = view.getBoundingClientRect();
-  const viewPos = globalPos.sub(new Vector2(viewRect.left, viewRect.top));
-  return new Vector2((viewPos.x / viewRect.width) * 2 - 1, -(viewPos.y / viewRect.height) * 2 + 1);
-}
-
-interface RaycastTest {
-  mouse: Vector2;
-  intersects: Intersection[];
-}
-
-function raycastAtScreenPos(pos: Vector2, raycaster: Raycaster, objects: Object3D[], camera: Camera) {
-  raycaster.setFromCamera(pos, camera);
-  const intersects = raycaster.intersectObjects(objects, true);
-
-  return {
-    mouse: pos,
-    intersects
-  };
-}
-
-
-function firstRaycastHit(test: RaycastTest) {
-  return test.intersects.length > 0 ? test.intersects[0] : null;
-}
-
-function screenPosToRay(pos: Vector2, camera: Camera) {
-  const v3d = new Vector3(pos.x, pos.y, 0.5);
-
-  v3d.unproject(camera);
-
-  v3d.sub(camera.position);
-  v3d.normalize();
-
-  return {
-    origin: camera.position,
-    direction: v3d
-  };
-}
-
-function pointOnRay(ray: Ray, distance: number): Vector3 {
-  let pos = new Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
-  pos.multiplyScalar(distance);
-  pos.add(ray.origin);
-
-  return pos;
-}
-
-function pointOnPlane(ray: Ray, plane: Mesh): Vector3 | null {
-  const raycaster = new Raycaster(ray.origin, ray.direction, 0, Number.POSITIVE_INFINITY);
-  const hits = raycaster.intersectObject(plane, true);
-  return hits.length > 0 ? hits[0].point : null;
-}
-
-function eventIsOverElement(event: MouseEvent, element: HTMLElement): boolean {
-  const mouseOver = document.elementFromPoint(event.clientX, event.clientY);
-  return mouseOver === element;
-}
+import { 
+  isButton, 
+  mouseDown, 
+  leftDrag, 
+  rightDrag, 
+  screenPosToRay, 
+  eventIsOverElement, 
+  firstRaycastHit,
+  screenPosition,
+  raycastAtScreenPos,
+  pointOnPlane,
+  pointOnRay,
+  Ray,
+  File3D,
+  MouseDrag, 
+  ClickOperation,
+  DragOperation,
+  MouseDragPosition,
+  DraggedObject,
+} from '../Input';
 
 @Component({
   inject: {
@@ -376,9 +175,9 @@ export default class GameView extends Vue {
       this._handleDrag(drag.ray, drag.workspace, drag.hit);
     });
 
-    leftClickOperations.subscribe(file => {
-      if(file !== null && file.file.type === 'object') {
-        this._selectFile(file);
+    leftClickOperations.subscribe(click => {
+      if(click.file !== null && click.file.file.type === 'object') {
+        this._selectFile(click.file);
       }
     });
 
@@ -390,8 +189,8 @@ export default class GameView extends Vue {
       clickOperations: rightClickOperations
     } = this._draggedObjects(rightDrag, rightClickObjects);
 
-    rightClickOperations.subscribe(file => {
-      this._rightClickFile(file);
+    rightClickOperations.subscribe(click => {
+      this._rightClickFile(click);
     });
   }
 
@@ -403,12 +202,12 @@ export default class GameView extends Vue {
   }
 
   private _draggedObjects(observable: Observable<MouseDrag>, clicks: Observable<Intersection>) {
-    const dragPositions = observable.pipe(
+    const dragPositions: Observable<MouseDragPosition> = observable.pipe(
       map(drag => ({ ...drag, screenPos: screenPosition(drag.event, this.gameView) })),
       map(drag => ({ ...drag, ray: screenPosToRay(drag.screenPos, this._camera) }))
     );
 
-    const draggedObjects = combineLatest(
+    const draggedObjects: Observable<DraggedObject> = combineLatest(
       clicks,
       dragPositions,
       (hit, drag) => ({
@@ -417,7 +216,7 @@ export default class GameView extends Vue {
       })
     );
 
-    const dragOperations = draggedObjects.pipe(
+    const dragOperations: Observable<DragOperation> = draggedObjects.pipe(
       filter(drag => drag.isDragging && eventIsOverElement(drag.event, this._canvas)),
       map(drag => ({
         ...drag,
@@ -426,13 +225,12 @@ export default class GameView extends Vue {
       filter(drag => drag.hit !== null)
     );
 
-    const clickOperations = dragPositions.pipe(
+    const clickOperations: Observable<ClickOperation> = dragPositions.pipe(
       filter(e => e.isClicking && eventIsOverElement(e.event, this._canvas)),
-      map(e => screenPosition(e.event, this.gameView)),
-      map(pos => raycastAtScreenPos(pos, this._raycaster, this._draggableObjects, this._camera)),
-      map(r => firstRaycastHit(r)),
-      filter(hit => hit !== null),
-      map(hit => this._fileForIntersection(hit)),
+      map(e => ({...e, raycast: raycastAtScreenPos(e.screenPos, this._raycaster, this._draggableObjects, this._camera)})),
+      map(e => ({...e, hit: firstRaycastHit(e.raycast)})),
+      filter(e => e.hit !== null),
+      map(e => ({...e, file: this._fileForIntersection(e.hit)})),
     );
 
     const gridsVisible = draggedObjects.pipe(
@@ -470,7 +268,6 @@ export default class GameView extends Vue {
   }
 
   private enableCameraControls(enabled: boolean) {
-    console.log('[GameView] Enable Camera Controls === ' + enabled);
     if (this._cameraControls !== null) {
       if (this._cameraControlsEnabled !== enabled) {
         this._cameraControlsEnabled = enabled;
@@ -514,9 +311,9 @@ export default class GameView extends Vue {
     }
   }
 
-  private _rightClickFile(file: File3D) {
-    if (file.file.type === 'workspace') {
-      console.log('Right Click!');
+  private _rightClickFile(click: ClickOperation) {
+    if (click.file && click.file.file.type === 'workspace') {
+      this.$emit('onRightClick', click);
     }
   }
 

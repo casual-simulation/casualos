@@ -1,7 +1,7 @@
 <!-- App.vue -->
 <template>
   <div>
-      <game-view class="game-view">
+      <game-view class="game-view" @onRightClick="handleRightClick">
         <div class="ui-container">
           <md-card class="info-card" v-if="isOpen">
             <md-card-content>

@@ -66,6 +66,10 @@ export default class Home extends Vue {
         this.fileManager.clearSelection();
     }
 
+    handleRightClick(file: any, pos: any) {
+        
+    }
+
     constructor() {
         super();
     }
