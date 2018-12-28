@@ -1,7 +1,7 @@
 <!-- App.vue -->
 <template>
   <div>
-      <game-view class="game-view" @onRightClick="handleRightClick">
+      <game-view class="game-view" @onContextMenu="handleContextMenu">
         <div class="ui-container">
           <md-card class="info-card" v-if="isOpen">
             <md-card-content>
@@ -36,6 +36,14 @@
           </div>
         </div>
       </game-view>
+
+      <div class="context-menu" :style="{ left: contextMenuPosX, top: contextMenuPosY }">
+        <md-menu :md-active.sync="contextMenuVisible">
+          <md-menu-content>
+            <md-menu-item @click="expandWorkspace">Expand</md-menu-item>
+          </md-menu-content>
+        </md-menu>
+      </div>
   </div>
   
 </template>

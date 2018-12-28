@@ -64,3 +64,8 @@
 .md-checkbox.no-margin {
     margin: 0;
 }
+
+.context-menu {
+    position: absolute;
+    background-color: #fff;
+}

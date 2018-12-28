@@ -5,6 +5,7 @@ import {
   Observable,
   fromEvent,
   combineLatest,
+  merge,
 } from 'rxjs';
 import {
   filter,
@@ -12,6 +13,7 @@ import {
   tap,
   scan,
 } from 'rxjs/operators';
+import { some } from 'lodash';
 
 import { File, Workspace } from 'common';
 
@@ -105,11 +107,21 @@ export interface DetectedEdge {
 }
 
 /**
+ * Defines an interface for a mouse event wrapper.
+ */
+export interface EventWrapper {
+  /**
+   * The mouse event that this event was built from.
+   */
+  event: MouseEvent;
+}
+
+/**
  * Defines an interface for a mouse drag event.
  * Can indicate whether the mouse is being dragged or clicked
  * in addition to whether the mouse is currently being pressed.
  */
-export interface MouseDrag {
+export interface MouseDrag extends EventWrapper {
   /**
    * Whether the mouse is currently being pressed.
    */
@@ -134,11 +146,6 @@ export interface MouseDrag {
    * The time that the mouse stopped dragging.
    */
   endDragTime: number;
-
-  /**
-   * The mouse event that this event was built from.
-   */
-  event: MouseEvent;
   
   /**
    * The mouse event that started the drag events.
@@ -208,6 +215,32 @@ export interface ClickOperation extends DraggedObject {
 }
 
 /**
+ * Defines an interface that represents the action of showing/hiding a context menu.
+ */
+export interface ContextMenuEvent extends EventWrapper {
+
+  /**
+   * Whether the context menu should be visible.
+   */
+  shouldBeVisible: boolean;
+}
+
+/**
+ * Defines an interface that represents the action of showing/hiding a context menu with respect to a file.
+ */
+export interface ContextMenuOperation extends ContextMenuEvent {
+  /**
+   * The file or workspace that was clicked.
+   */
+  file: File3D;
+}
+
+/**
+ * An observable that resolves whenever the document 'contextmenu' event triggers.
+ */
+export const contextMenu = fromEvent<MouseEvent>(document, 'contextmenu');
+
+/**
  * An observable that resolves whenever the document 'mouseup' event triggers.
  */
 export const mouseUp = fromEvent<MouseEvent>(document, 'mouseup');
@@ -241,6 +274,11 @@ export const leftDrag = buttonDrag(leftClickActive);
  * An observable that maps the right mouse button into mouse drag events.
  */
 export const rightDrag = buttonDrag(rightClickActive);
+
+/**
+ * An observable that maps the context menu events and left/right click events to show/hide events.
+ */
+export const showHideContextMenu = contextMenuEvents(contextMenu, mouseDown);
 
 /**
  * Filters the given mouse event observable based on whether it matches the given button number.
@@ -469,7 +507,35 @@ export function pointOnPlane(ray: Ray, plane: Mesh): Vector3 | null {
  * @param event The event to test.
  * @param element The HTML element to test against.
  */
-export function eventIsOverElement(event: MouseEvent, element: HTMLElement): boolean {
+export function eventIsDirectlyOverElement(event: MouseEvent, element: HTMLElement): boolean {
   const mouseOver = document.elementFromPoint(event.clientX, event.clientY);
   return mouseOver === element;
+}
+
+/**
+ * Determines if the mouse is over the given element.
+ * @param event The event to test.
+ * @param element The HTML element to test against.
+ */
+export function eventIsOverElement(event: MouseEvent, element: HTMLElement): boolean {
+  const elements = document.elementsFromPoint(event.clientX, event.clientY);
+  return some(elements, e => e === element);
+}
+
+/**
+ * Disables the right-click context menu within the given element.
+ * @param element The element that the context menu request has to be in.
+ */
+export function disableContextMenuWithin(element: HTMLElement): SubscriptionLike {
+  return contextMenu.pipe(
+    filter(e => eventIsOverElement(e, element)),
+    tap(e => e.preventDefault())
+  ).subscribe();
+}
+
+function contextMenuEvents(contextMenu: Observable<MouseEvent>, others: Observable<MouseEvent>): Observable<ContextMenuEvent> {
+  return merge(
+    contextMenu.pipe(map(e => ({ event: e, shouldBeVisible: true }))),
+    others.pipe(map(e => ({ event: e, shouldBeVisible: false }))),
+  );
 }

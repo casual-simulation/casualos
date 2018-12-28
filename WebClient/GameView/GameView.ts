@@ -59,8 +59,9 @@ import {
   mouseDown, 
   leftDrag, 
   rightDrag, 
+  showHideContextMenu,
   screenPosToRay, 
-  eventIsOverElement, 
+  eventIsDirectlyOverElement, 
   firstRaycastHit,
   screenPosition,
   raycastAtScreenPos,
@@ -73,6 +74,11 @@ import {
   DragOperation,
   MouseDragPosition,
   DraggedObject,
+  disableContextMenuWithin,
+  EventWrapper,
+  ContextMenuEvent,
+  ContextMenuOperation,
+  eventIsOverElement,
 } from '../Input';
 
 @Component({
@@ -118,7 +124,7 @@ export default class GameView extends Vue {
 
   private _frames: number;
 
-  private _sub: SubscriptionLike;
+  private _subs: SubscriptionLike[];
 
   get gameView() {
     const gameView: HTMLElement = <HTMLElement>this.$refs.gameView;
@@ -129,41 +135,41 @@ export default class GameView extends Vue {
     this._files = {};
     this._meshses = {};
     this._draggableObjects = [];
+    this._subs = [];
     this._setupScene();
 
     this._clock.start();
     this._frames = 0;
     this._renderGame();
 
-    this.fileManager.fileDiscovered.subscribe(file => {
+    this._subs.push(this.fileManager.fileDiscovered.subscribe(file => {
       this._fileAdded(file);
-    });
-    this.fileManager.fileRemoved.subscribe(file => {
+    }));
+    this._subs.push(this.fileManager.fileRemoved.subscribe(file => {
       this._fileRemoved(file);
-    });
-    this.fileManager.fileUpdated.subscribe(file => {
+    }));
+    this._subs.push(this.fileManager.fileUpdated.subscribe(file => {
       this._fileUpdated(file);
-    });
+    }));
 
     const leftClickObjects = this._clickedObjects(isButton(mouseDown, 0));
 
-    leftClickObjects.subscribe(intersection => {
+    this._subs.push(leftClickObjects.subscribe(intersection => {
       this.enableCameraControls(intersection === null);
-    });
+    }));
 
     const rightClickObjects = this._clickedObjects(isButton(mouseDown, 2));
       
-
-    rightClickObjects.subscribe(intersection => {
+    this._subs.push(rightClickObjects.subscribe(intersection => {
       this.enableCameraControls(intersection === null);
-    });
+    }));
 
     const middleClickObjects = this._clickedObjects(isButton(mouseDown, 1));
 
-    middleClickObjects.subscribe(() => {
+    this._subs.push(middleClickObjects.subscribe(() => {
       // Always allow camera control with middle clicks.
       this.enableCameraControls(true);
-    });
+    }));
 
     const {
       dragOperations: leftDragOperations,
@@ -171,33 +177,42 @@ export default class GameView extends Vue {
       gridsVisible
     } = this._draggedObjects(leftDrag, leftClickObjects);
 
-    leftDragOperations.subscribe(drag => {
+    this._subs.push(leftDragOperations.subscribe(drag => {
       this._handleDrag(drag.ray, drag.workspace, drag.hit);
-    });
+    }));
 
-    leftClickOperations.subscribe(click => {
+    this._subs.push(leftClickOperations.subscribe(click => {
       if(click.file !== null && click.file.file.type === 'object') {
         this._selectFile(click.file);
       }
-    });
+    }));
 
-    gridsVisible.subscribe(visible => {
+    this._subs.push(gridsVisible.subscribe(visible => {
       this._grids.visible = visible;
-    });
+    }));
 
-    const {
-      clickOperations: rightClickOperations
-    } = this._draggedObjects(rightDrag, rightClickObjects);
+    const contextMenuEvents: Observable<ContextMenuOperation> = showHideContextMenu.pipe(
+      map(e => ({ ...e, screenPos: screenPosition(e.event, this.gameView) })),
+      map(e => ({ ...e, ray: screenPosToRay(e.screenPos, this._camera) })),
+      filter(e => eventIsOverElement(e.event, this._canvas)),
+      map(e => ({...e, raycast: raycastAtScreenPos(e.screenPos, this._raycaster, this._draggableObjects, this._camera)})),
+      map(e => ({...e, hit: firstRaycastHit(e.raycast)})),
+      map(e => ({...e, file: e.hit ? this._fileForIntersection(e.hit) : null})),
+    );
 
-    rightClickOperations.subscribe(click => {
-      this._rightClickFile(click);
-    });
+    this._subs.push(contextMenuEvents.subscribe(click => {
+      this._contextMenuClick(click);
+    }));
+
+    this._subs.push(disableContextMenuWithin(this.gameView));
   }
 
   beforeDestroy() {
-    if (this._sub) {
-      this._sub.unsubscribe();
-      this._sub = null;
+    if (this._subs) {
+      this._subs.forEach(sub => {
+        sub.unsubscribe();
+      });
+      this._subs = [];
     }
   }
 
@@ -217,7 +232,7 @@ export default class GameView extends Vue {
     );
 
     const dragOperations: Observable<DragOperation> = draggedObjects.pipe(
-      filter(drag => drag.isDragging && eventIsOverElement(drag.event, this._canvas)),
+      filter(drag => drag.isDragging && eventIsDirectlyOverElement(drag.event, this._canvas)),
       map(drag => ({
         ...drag,
         workspace: this._findWorkspaceForIntersection(drag.hit),
@@ -226,7 +241,7 @@ export default class GameView extends Vue {
     );
 
     const clickOperations: Observable<ClickOperation> = dragPositions.pipe(
-      filter(e => e.isClicking && eventIsOverElement(e.event, this._canvas)),
+      filter(e => e.isClicking && eventIsDirectlyOverElement(e.event, this._canvas)),
       map(e => ({...e, raycast: raycastAtScreenPos(e.screenPos, this._raycaster, this._draggableObjects, this._camera)})),
       map(e => ({...e, hit: firstRaycastHit(e.raycast)})),
       filter(e => e.hit !== null),
@@ -248,7 +263,7 @@ export default class GameView extends Vue {
 
   private _clickedObjects(observable: Observable<MouseEvent>) {
     return observable.pipe(
-      filter(e => eventIsOverElement(e, this._canvas)),
+      filter(e => eventIsDirectlyOverElement(e, this._canvas)),
       map(e => screenPosition(e, this.gameView)),
       map(pos => raycastAtScreenPos(pos, this._raycaster, this._draggableObjects, this._camera)),
       map(r => firstRaycastHit(r)),
@@ -260,6 +275,7 @@ export default class GameView extends Vue {
   }
 
   private _handleDrag(mouseDir: Ray, workspace: File3D, hit: Intersection) {
+    console.log("drag");
     if (workspace) {
       this._dragWorkspace(mouseDir, workspace);
     } else {
@@ -311,9 +327,9 @@ export default class GameView extends Vue {
     }
   }
 
-  private _rightClickFile(click: ClickOperation) {
-    if (click.file && click.file.file.type === 'workspace') {
-      this.$emit('onRightClick', click);
+  private _contextMenuClick(event: ContextMenuOperation) {
+    if (!event.file || event.file.file.type === 'workspace') {
+      this.$emit('onContextMenu', event);
     }
   }
 
@@ -324,29 +340,31 @@ export default class GameView extends Vue {
   private _dragFile(mouseDir: Ray, hit: Intersection) {
     const { good, point, workspace } = this._pointOnGrid(mouseDir);
     const file = this._fileForIntersection(hit);
-    if (good) {
-      this.fileManager.updateFile(file.file, {
-        tags: {
-          _workspace: workspace.file.id,
-          _position: {
-            x: point.x,
-            y: point.y,
-            z: point.z
+    if (file) {
+      if (good) {
+        this.fileManager.updateFile(file.file, {
+          tags: {
+            _workspace: workspace.file.id,
+            _position: {
+              x: point.x,
+              y: point.y,
+              z: point.z
+            }
           }
-        }
-      });
-    } else {
-      const p = pointOnRay(mouseDir, 2);
-      this.fileManager.updateFile(file.file, {
-        tags: {
-          _workspace: null,
-          _position: {
-            x: p.x,
-            y: p.y,
-            z: p.z
+        });
+      } else {
+        const p = pointOnRay(mouseDir, 2);
+        this.fileManager.updateFile(file.file, {
+          tags: {
+            _workspace: null,
+            _position: {
+              x: p.x,
+              y: p.y,
+              z: p.z
+            }
           }
-        }
-      });
+        });
+      }
     }
   }
 
@@ -401,6 +419,7 @@ export default class GameView extends Vue {
   private _fileUpdated(file: File) {
     const obj = this._files[file.id];
     if (obj) {
+      obj.file = file;
       if (file.type === 'object') {
         this._updateFile(obj, file);
       } else {
@@ -448,11 +467,12 @@ export default class GameView extends Vue {
     obj.mesh.position.y = obj.grid.group.position.y = data.position.y || 0;
     obj.mesh.position.z = obj.grid.group.position.z = data.position.z || 0;
 
-    if (typeof data.size !== 'undefined' && obj.grid.grid.size !== data.size) {
-      obj.grid.grid.generate({
+    if (typeof data.size !== 'undefined' && obj.surface.grid.size !== data.size) {
+      obj.surface.grid.generate({
         size: data.size || 0
       });
-      this._generateTilemap(obj.grid, data);
+      this._generateTilemap(obj.surface, data);
+      obj.surface.group.position.y -= .4;
     }
 
     obj.grid.group.position.y -= .45;

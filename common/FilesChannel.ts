@@ -9,6 +9,7 @@ export interface FilesState {
 export interface PartialFile {
     id?: string;
     type?: string;
+    size?: number;
     position?: {
         x: number;
         y: number;
