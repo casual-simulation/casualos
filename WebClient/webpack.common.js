@@ -14,6 +14,10 @@ module.exports = {
   module: {
     rules: [
       {
+        test: /formula\-lib/,
+        use: 'raw-loader'
+      },
+      {
         test: /\.vue$/,
         loader: 'vue-loader',
         exclude: /node_modules/
@@ -47,7 +51,7 @@ module.exports = {
       {
         test: /three\/examples\/js/,
         use: 'imports-loader?THREE=three'
-      },
+      }
     ]
   },
   resolve: {
@@ -55,7 +59,9 @@ module.exports = {
     alias: {
       'von-grid': path.resolve(__dirname, 'public/von-grid.min.js'),
       'common': path.resolve(__dirname, '../common'),
-      'three-examples': path.join(__dirname, '../node_modules/three/examples/js')
+      'three-examples': path.join(__dirname, '../node_modules/three/examples/js'),
+      'fs': 'browserfs',
+      'formula-lib': path.join(__dirname, 'Formulas/formula-lib.ts')
     }
   },
   plugins: [
@@ -69,6 +75,12 @@ module.exports = {
     }),
     new webpack.ProvidePlugin({
       THREE: 'three',
+    }),
+    new MonacoWebpackPlugin({
+      languages: [
+        'javascript',
+        'typescript'
+      ],
     })
   ]
 };

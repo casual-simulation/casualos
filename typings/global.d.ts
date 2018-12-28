@@ -20,3 +20,10 @@ declare module '*.gltf' {
   const url: string;
   export default url;
 }
+
+declare module 'monaco-editor/esm/vs/editor/standalone/browser/simpleServices';
+
+declare module 'formula-lib' {
+  const lib: string;
+  export default lib; 
+}

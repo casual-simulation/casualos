@@ -35,4 +35,12 @@ export default class FileRow extends Vue {
     onTagChanged(tag: string) {
         this.$emit('tagChanged', tag);
     }
+
+    tagFocusChanged(file: Object, tag: string, focused: boolean) {
+        this.$emit('tagFocusChanged', {
+            file,
+            tag,
+            focused
+        });
+    }
 };

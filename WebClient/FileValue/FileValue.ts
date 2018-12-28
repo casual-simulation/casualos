@@ -1,10 +1,11 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Prop, Inject} from 'vue-property-decorator';
-import { FileManager } from 'WebClient/FileManager';
+import { FileManager, Assignment } from '../FileManager';
 import { SubscriptionLike } from 'rxjs';
 import {Object, File} from 'common';
 import {invertColor, colorConvert} from '../utils';
+import {assign} from 'lodash';
 
 const numLoadingSteps: number = 4;
 
@@ -71,11 +72,16 @@ export default class FileRow extends Vue {
     focus() {
         this.isFocused = true;
         this._updateValue();
+
+        this.$emit('focusChanged', true);
     }
 
     blur() {
         this.isFocused = false;
         this._updateValue();
+        this._updateAssignment();
+
+        this.$emit('focusChanged', false);
     }
 
     created() {
@@ -87,7 +93,29 @@ export default class FileRow extends Vue {
         if (!this.isFocused) {
             this.value = this.fileManager.calculateFormattedFileValue(this.file, this.tag);
         } else {
-            this.value = this.file.tags[this.tag];
+            const val = this.file.tags[this.tag];
+            if (this.fileManager.isAssignment(val)) {
+                const assignment: Assignment = val;
+                this.value = assignment.editing ? assignment.formula : assignment.value;
+            } else {
+                this.value = val;
+            }
+        }
+    }
+
+    private _updateAssignment() {
+        const val = this.file.tags[this.tag];
+        if (this.fileManager.isAssignment(val)) {
+            const assignment: Assignment = val;
+            if (assignment.editing) {
+                this.fileManager.updateFile(this.file, {
+                    tags: {
+                        [this.tag]: assign(assignment, {
+                            editing: false
+                        })
+                    }
+                });
+            }
         }
     }
 };

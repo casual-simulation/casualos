@@ -15,6 +15,12 @@
                     <span class="md-body-1" v-if="getUser() != null">Logged In: {{getUser().name}}</span>
                 </div>
                 <md-list>
+                    <router-link tag="md-list-item" to="/Home">
+                        Home
+                    </router-link>
+                    <router-link tag="md-list-item" to="/editor">
+                        Editor
+                    </router-link>
                     <md-list-item @click="testConfirmDialog">
                         <span class="md-list-item-text">Test Confirm Dialog</span>
                     </md-list-item>

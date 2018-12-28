@@ -27,6 +27,7 @@ import { polyfill } from 'es6-promise';
 import { appManager } from './AppManager';
 
 const Home = () => import('./Home/Home');
+const Editor = () => import('./Editor/Editor');
 
 // Setup the Promise shim for browsers that don't support promises.
 polyfill();
@@ -65,6 +66,10 @@ const routes: RouteConfig[] = [
         path: '/home',
         component: Home
     },
+    {
+        path: '/editor',
+        component: Editor
+    }
 ]
 
 const router = new VueRouter({

@@ -25,7 +25,9 @@ import {
   union, 
   uniq, 
   values,
-  difference
+  difference,
+  some,
+  assign
 } from 'lodash';
 import {
   BehaviorSubject, 
@@ -41,7 +43,20 @@ import * as uuid from 'uuid/v4';
 
 import {AppManager, appManager} from './AppManager';
 import {SocketManager} from './SocketManager';
-import { Sandbox, SandboxInterface, FilterFunction } from './Sandbox';
+import { Sandbox, SandboxInterface, FilterFunction } from './Formulas/Sandbox';
+
+/**
+ * Defines an interface for objects that represent assignment formula expressions.
+ * Assignment formula expressions are formulas that are only evaluated once.
+ * Internally we store them as objects in the tag and display the calculated result.
+ * This way, we can preserve the formula value if needed.
+ */
+export interface Assignment {
+  _assignment: boolean;
+  editing: boolean;
+  formula: string;
+  value?: any;
+}
 
 export interface SelectedFilesUpdatedEvent { files: Object[]; }
 
@@ -52,25 +67,17 @@ class InterfaceImpl implements SandboxInterface {
     this._fileManager = fileManager;
   }
 
-  listTagValues(tag: string, filter?: FilterFunction) {
-    const tags = flatMap(this.objects.map(o => this._calculateValue(o, o.tags[tag])).filter(t => t));
+  listTagValues(tag: string, filter?: FilterFunction, extras?: any) {
+    const tags = flatMap(this.objects.map(o => this._calculateValue(o, tag)).filter(t => t));
     const filtered = this._filterValues(tags, filter);
-    if (filtered.length === 1) {
-      return filtered[0];
-    } else {
-      return filtered;
-    }
+    return filtered;
   }
 
-  listObjectsWithTag(tag: string, filter?: FilterFunction) {
-    const objs = this.objects.filter(o => this._calculateValue(o, o.tags[tag]))
+  listObjectsWithTag(tag: string, filter?: FilterFunction, extras?: any) {
+    const objs = this.objects.filter(o => this._calculateValue(o, tag))
       .map(o => this._fileManager.convertToFormulaObject(o));
     const filtered = this._filterObjects(objs, filter, tag);
-    if (filtered.length === 1) {
-      return filtered[0];
-    } else {
-      return filtered;
-    }
+    return filtered;
   }
 
   private _filterValues(values: any[], filter: FilterFunction) {
@@ -88,9 +95,9 @@ class InterfaceImpl implements SandboxInterface {
   private _filterObjects(objs: any[], filter: FilterFunction, tag: string) {
     if (filter) {
       if(typeof filter === 'function') {
-        return objs.filter(o => filter(this._calculateValue(o, o[tag])));
+        return objs.filter(o => filter(this._calculateValue(o, tag)));
       } else {
-        return objs.filter(o => this._calculateValue(o, o[tag]) === filter);
+        return objs.filter(o => this._calculateValue(o, tag) === filter);
       }
     } else {
       return objs;
@@ -101,8 +108,8 @@ class InterfaceImpl implements SandboxInterface {
     return this._fileManager.objects;
   }
 
-  private _calculateValue(object: Object, value: any) {
-    return this._fileManager.calculateValue(object, value);
+  private _calculateValue(object: any, tag: string) {
+    return this._fileManager.calculateFileValue(object, tag);
   }
 }
 
@@ -130,12 +137,18 @@ export class FileManager {
     return values(this._filesState);
   }
 
-
   /**
    * Gets all the files that represent an object.
    */
   get objects(): Object[] {
     return <any[]>this.files.filter(f => f.type === 'object');
+  }
+
+  /**
+   * Gets all of the available tags.
+   */
+  get tags(): string[] {
+    return union(...this.objects.map(o => keys(o.tags)));
   }
 
   /**
@@ -178,6 +191,14 @@ export class FileManager {
     return this._status;
   }
 
+  get userFile(): Object {
+    var objs = this.objects.filter(o => o.id === this._appManager.user.username);
+    if (objs.length > 0) {
+      return objs[0];
+    }
+    return null;
+  }
+
   private get _filesState() {
     return this._files.store.state();
   }
@@ -214,16 +235,19 @@ export class FileManager {
    * @param extraTags The list of tags that should not be removed from the
    * output list.
    */
-  fileTags(files: File[], currentTags: string[], extraTags: string[], hiddenTags: string[]) {
+  fileTags(files: File[], currentTags: string[], extraTags: string[]) {
     const fileTags = flatMap(files, f => {
       if (f.type === 'object') {
         return keys(f.tags);
       }
       return [];
     });
-    const tagsToKeep = union(fileTags, extraTags);
+    // Only keep tags that don't start with an underscore (_)
+    const nonHiddenTags = fileTags.filter(t => !(/^_/.test(t)))
+    const tagsToKeep = union(nonHiddenTags, extraTags);
     const allTags = union(currentTags, tagsToKeep);
-    const onlyTagsToKeep = difference(intersection(allTags, tagsToKeep), hiddenTags);
+
+    const onlyTagsToKeep = intersection(allTags, tagsToKeep);
 
     return onlyTagsToKeep;
   }
@@ -260,15 +284,33 @@ export class FileManager {
     });
   }
 
-  calculateFileValue(file: Object, tag: string) {
-    const formula = file.tags[tag];
-    return this.calculateValue(file, formula);
+  calculateFileValue(object: Object, tag: string) {
+    if (tag === 'id') {
+      return object.id;
+    } else if (this.isFormulaObject(object)) {
+      const o: any = object;
+      return this._calculateValue(object, tag, o[tag]);
+    } else {
+      return this._calculateValue(object, tag, object.tags[tag]);
+    }
   }
 
   calculateFormattedFileValue(file: Object, tag: string): string {
     const value = this.calculateFileValue(file, tag);
-    if(typeof value === 'object') {
-      return JSON.stringify(value);
+    return this._formatValue(value);
+  }
+
+  private _formatValue(value: any): string {
+    if (typeof value === 'object') {
+      if (Array.isArray(value)) {
+        return `[${value.map(v => this._formatValue(v)).join(',')}]`;
+      } else {
+        if (value.id) {
+          return value.id.substr(0, 5);
+        } else {
+          return JSON.stringify(value);
+        }
+      }
     } else if(typeof value !== 'undefined' && value !== null) {
       return value.toString();
     } else {
@@ -276,13 +318,21 @@ export class FileManager {
     }
   }
 
-  calculateValue(object: any, formula: string): any {
+  private _calculateValue(object: any, tag: string, formula: string): any {
     const isString = typeof formula === 'string';
     if (this.isFormula(formula)) {
-      return this.calculateFormulaValue(object, formula);
+      const result = this._calculateFormulaValue(object, tag, formula);
+      if (result.success) {
+        return result.result;
+      } else {
+        return result.extras.formula;
+      }
+    } else if (this.isAssignment(formula)) {
+      const obj: Assignment = <any>formula;
+      return obj.value;
     } else if(this.isArray(formula)) {
-      const split = formula.split(',');
-      return split.map(s => this.calculateValue(object, s.trim()));
+      const split = this._parseArray(formula);
+      return split.map(s => this._calculateValue(object, tag, s.trim()));
     } else if(this.isNumber(formula)) {
       return parseFloat(formula);
     } else if(formula === 'true') {
@@ -302,18 +352,33 @@ export class FileManager {
   }
 
   /**
+   * Determines if the given value represents an assignment.
+   */
+  isAssignment(object: any): any {
+    return typeof object === 'object' && object && !!object._assignment;
+  }
+
+  /**
+   * Determines if the given value contains a formula.
+   * This is different from isFormula() because it checks arrays for containing formulas in their elements.
+   * @param value The value to check.
+   */
+  containsFormula(value: string): boolean {
+    return this.isFormula(value) || (this.isArray(value) && some(this._parseArray(value), v => this.isFormula(v)));
+  }
+
+  /**
    * Determines if the given string value represents an array.
    */
   isArray(value: string): boolean {
     return typeof value === 'string' && value.indexOf(',') >= 0;
   }
 
+  /**
+   * Determines if the given value represents a number.
+   */
   isNumber(value: string): boolean {
     return (/^-?\d+\.?\d*$/).test(value) || (typeof value === 'string' && 'infinity' === value.toLowerCase());
-  }
-
-  calculateFormulaValue(object: any, formula: string) {
-    return this._sandbox.run(formula, formula, this.convertToFormulaObject(object));
   }
 
   /**
@@ -321,7 +386,7 @@ export class FileManager {
    * and is usable in a formula.
    */
   convertToFormulaObject(object: any) {
-    if (object._converted) {
+    if (this.isFormulaObject(object)) {
       return object;
     }
     let converted: {
@@ -333,16 +398,43 @@ export class FileManager {
     for(let key in object.tags) {
       if (typeof converted[key] === 'undefined') {
         const val = object.tags[key];
-        if(this.isFormula(val)) {
+        if(this.containsFormula(val)) {
           Object.defineProperty(converted, key, {
-            get: () => this.calculateValue(object, val)
+            get: () => this._calculateValue(object, key, val)
           });
         } else {
-          converted[key] = this.calculateValue(object, val);
+          converted[key] = this._calculateValue(object, key, val);
         }
       }
     }
     return converted;
+  }
+
+  _convertToAssignment(object: any): Assignment {
+    if (this.isAssignment(object)) {
+      return object;
+    }
+
+    return {
+      _assignment: true,
+      editing: true,
+      formula: object,
+    };
+  }
+
+  /**
+   * Determines if the given value is an assignment expression or an assignment object.
+   */
+  _isAssignmentFormula(value: any): boolean {
+    if(typeof value === 'string') {
+      return value.indexOf(':') === 0 && value.indexOf('=') === 1;
+    } else {
+      return this.isAssignment(value);
+    }
+  }
+
+  isFormulaObject(object: any) {
+    return !!object._converted;
   }
 
   /**
@@ -350,22 +442,31 @@ export class FileManager {
    */
   async updateFile(file: File, newData: PartialFile) {
     if (newData.tags) {
+
+      // Cleanup/preprocessing
       for (let property in newData.tags) {
         let value = newData.tags[property];
         if (!value) {
           newData.tags[property] = null;
+        } else {
+          if (this._isAssignmentFormula(value)) {
+            const assignment = this._convertToAssignment(value);
+            const result = this._calculateFormulaValue(file, property, assignment.formula);
+            newData.tags[property] = assign(assignment, { value: result.result });
+          }
         }
       }
     }
 
     this._files.emit(fileUpdated(file.id, newData));
   }
+  
 
-  async createFile() {
+  async createFile(id = uuid(), tags = {}) {
     console.log('[FileManager] Create File');
 
     const file: Object =
-        {id: uuid(), type: 'object', position: null, workspace: null, tags: {}};
+        {id: id, type: 'object', position: null, workspace: null, tags: tags};
 
     this._files.emit(fileAdded(file));
   }
@@ -380,6 +481,17 @@ export class FileManager {
     };
 
     this._files.emit(fileAdded(workspace));
+  }
+
+  private _calculateFormulaValue(object: any, tag: string, formula: string) {
+    return this._sandbox.run(formula, {
+      formula,
+      tag
+    }, this.convertToFormulaObject(object));
+  }
+
+  private _parseArray(value: string): string[] {
+    return value.split(',');
   }
 
   private async _init() {
@@ -428,6 +540,15 @@ export class FileManager {
         }));
 
     allSelectedFilesUpdated.subscribe(this._selectedFilesUpdated);
+
+    this._setStatus('Getting user file...');
+
+    let userFile = this.userFile;
+    if (!userFile) {
+      await this.createFile(this._appManager.user.username, {
+        _hidden: true
+      });
+    }
 
     this._setStatus('Initialized.');
   }
