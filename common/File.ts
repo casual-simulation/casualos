@@ -24,4 +24,5 @@ export interface Workspace {
         y: number;
         z: number;
     };
+    size: number;
 }

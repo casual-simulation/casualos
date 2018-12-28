@@ -37,17 +37,14 @@ declare module 'von-grid' {
     class Grid {
       pixelToCell(pos: Vector3): Cell;
       cellToPixel(cell: Cell): Vector3;
+      generate(options?: GridConfig): void;
+      size: number;
     }
 
-    interface HexGridConfig {
-      size: number;
+    interface GridConfig {
+      size?: number;
       cellSize?: number;
       cellHeight?: number;
-    }
-
-    interface SqrGridConfig {
-      size: number;
-      cellSize?: number;
     }
 
     interface TilemapConfig {
@@ -58,13 +55,11 @@ declare module 'von-grid' {
     }
 
     class HexGrid extends Grid {
-      constructor(options?: HexGridConfig);
-      generate(options?: HexGridConfig): void;
+      constructor(options?: GridConfig);
     }
 
     class SqrGrid extends Grid {
-      constructor(options?: SqrGridConfig);
-      generate(options?: SqrGridConfig): void;
+      constructor(options?: GridConfig);
     }
 
     class Board {

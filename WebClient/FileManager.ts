@@ -463,8 +463,8 @@ export class FileManager {
   
 
   async createFile(id = uuid(), tags: Object['tags'] = {
-    position: { x: 0, y: 0, z: 0},
-    workspace: <string>null
+    _position: { x: 0, y: 0, z: 0},
+    _workspace: <string>null
   }) {
     console.log('[FileManager] Create File');
 
@@ -481,6 +481,7 @@ export class FileManager {
       id: uuid(),
       type: 'workspace',
       position: {x: 0, y: 0, z: 0},
+      size: 0
     };
 
     this._files.emit(fileAdded(workspace));
@@ -550,8 +551,8 @@ export class FileManager {
     if (!userFile) {
       await this.createFile(this._appManager.user.username, {
         _hidden: true,
-        position: { x: 0, y: 0, z: 0},
-        workspace: null
+        _position: { x: 0, y: 0, z: 0},
+        _workspace: null
       });
     }
 

@@ -609,6 +609,13 @@ export default class GameView extends Vue {
     obj.mesh.position.y = obj.grid.group.position.y = data.position.y || 0;
     obj.mesh.position.z = obj.grid.group.position.z = data.position.z || 0;
 
+    if (typeof data.size !== 'undefined' && obj.grid.grid.size !== data.size) {
+      obj.grid.grid.generate({
+        size: data.size || 0
+      });
+      this._generateTilemap(obj.grid, data);
+    }
+
     obj.grid.group.position.y -= .45;
     obj.grid.group.updateMatrixWorld(false);
   }
@@ -786,13 +793,36 @@ export default class GameView extends Vue {
 
   private _createWorkSurface(data: Workspace) {
     const grid = new vg.HexGrid({
-      size: 4,
       cellSize: .3,
       cellHeight: 0.5
     });
-    grid.generate();
+    grid.generate({
+      size: data.size || 0
+    });
 
     const board = new vg.Board(grid);
+    this._generateTilemap(board, data);
+
+    const sqrGrid = new vg.SqrGrid({
+      size: 14,
+      cellSize: .12
+    });
+
+    const sqrBoard = new vg.Board(sqrGrid);
+    const mat = new LineBasicMaterial({
+      color: 0xFFFFFF,
+      opacity: 1
+    });
+    sqrBoard.generateOverlay(18, mat);
+
+    sqrBoard.group.position.x = data.position.x;
+    sqrBoard.group.position.y = data.position.y;
+    sqrBoard.group.position.z = data.position.z;
+
+    return { board, sqrBoard };
+  }
+
+  private _generateTilemap(board: vg.Board, data: Workspace) {
     board.generateTilemap({
       extrudeSettings: {
         bevelEnabled: true,
@@ -814,24 +844,6 @@ export default class GameView extends Vue {
     board.group.position.x = data.position.x;
     board.group.position.y = data.position.y + 0.4;
     board.group.position.z = data.position.z;
-
-    const sqrGrid = new vg.SqrGrid({
-      size: 14,
-      cellSize: .12
-    });
-
-    const sqrBoard = new vg.Board(sqrGrid);
-    const mat = new LineBasicMaterial({
-      color: 0xFFFFFF,
-      opacity: 1
-    });
-    sqrBoard.generateOverlay(18, mat);
-
-    sqrBoard.group.position.x = data.position.x;
-    sqrBoard.group.position.y = data.position.y;
-    sqrBoard.group.position.z = data.position.z;
-
-    return { board, sqrBoard };
   }
 
   private _renderGame() {
