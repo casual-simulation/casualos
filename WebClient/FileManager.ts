@@ -155,8 +155,7 @@ export class FileManager {
    * Gets all the selected files that represent an object.
    */
   get selectedObjects(): File[] {
-    return this.objects.filter(
-        f => f.tags._selected && f.tags._selected[this._appManager.user.username]);
+    return this.selectedFilesForUser(this.userFile);
   }
 
   /**
@@ -252,36 +251,94 @@ export class FileManager {
     return onlyTagsToKeep;
   }
 
+  /**
+   * Gets a list of files that the given user has selected.
+   * @param user The file of the user.
+   */
+  selectedFilesForUser(user: Object) {
+    return this.filterFilesBySelection(this.objects, user.tags._selection);
+  }
+
+  filterFilesBySelection(files: Object[], selectionId: string) {
+    return files.filter(
+      f => {
+        for(let prop in f.tags) {
+          const val = f.tags[prop];
+          if (prop === selectionId && val) {
+            return true;
+          }
+        }
+        return false;
+      });
+  }
+
   selectFile(file: Object) {
     this.selectFileForUser(file, this._appManager.user.username);
   }
 
   selectFileForUser(file: Object, username: string) {
     console.log('[FileManager] Select File:', file.id);
-    this.updateFile(file, {
+    
+    const {id, newId} = this.selectionIdForUser(this.userFile);
+    if (newId) {
+      this.setUserSelection(this.userFile, newId);
+    }
+    if (id) {
+      this.updateFile(file, {
+        tags: {
+            [id]: !(file.tags[id])
+        }
+      });
+    } 
+  }
+
+  /**
+   * Sets the selection ID that the user refers to.
+   * @param user The user file.
+   * @param selectionId The ID of the selection.
+   */
+  setUserSelection(user: Object, selectionId: string) {
+    this.updateFile(this.userFile, {
       tags: {
-          _selected: {
-              [username]: !(file.tags._selected && file.tags._selected[username])
-          }
+        _selection: selectionId
       }
     });
   }
 
   clearSelection() {
-    this.clearSelectionForUser(this._appManager.user.username);
+    this.clearSelectionForUser(this.userFile);
   }
 
-  clearSelectionForUser(username: string) {
-    console.log('[FileManager] Clear selection for', username);
-    this.selectedObjects.forEach(file => {
-      this.updateFile(file, {
-        tags: {
-            _selected: {
-                [username]: false
-            }
-        }
-      });
-    });
+  /**
+   * The ID of the selection that the user is using.
+   * If the user doesn't have a selection, returns null.
+   * @param user The user's file.
+   */
+  selectionIdForUser(user: Object) {
+    const userFile = this.userFile;
+    
+    if (userFile && userFile.tags._selection) {
+        return { id: userFile.tags._selection || null, newId: <string>null };
+    } else {
+      const id = this.newSelectionId();
+      return { id: id, newId: id };
+    }
+  }
+
+  /**
+   * Creates a new selection id.
+   */
+  newSelectionId() {
+    return `_selection_${uuid()}`;
+  }
+
+  /**
+   * Clears the selection that the given user has.
+   * @param user The file for the user to clear the selection of.
+   */
+  clearSelectionForUser(user: Object) {
+    console.log('[FileManager] Clear selection for', user.id);
+    this.setUserSelection(user, null);
   }
 
   calculateFileValue(object: Object, tag: string) {
