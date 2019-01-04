@@ -321,6 +321,7 @@ export class FileManager {
         return { id: userFile.tags._selection || null, newId: <string>null };
     } else {
       const id = this.newSelectionId();
+      console.log(`[FileManager] New selection for ${user.id}: ${id}`);
       return { id: id, newId: id };
     }
   }
