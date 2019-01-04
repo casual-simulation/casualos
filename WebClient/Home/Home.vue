@@ -41,6 +41,7 @@
         <md-menu :md-active.sync="contextMenuVisible">
           <md-menu-content>
             <md-menu-item @click="expandWorkspace">Expand</md-menu-item>
+            <md-menu-item v-if="canShrinkWorkspace" @click="shrinkWorkspace">Shrink</md-menu-item>
           </md-menu-content>
         </md-menu>
       </div>

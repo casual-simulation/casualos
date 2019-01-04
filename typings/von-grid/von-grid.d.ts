@@ -39,6 +39,10 @@ declare module 'von-grid' {
       cellToPixel(cell: Cell): Vector3;
       generate(options?: GridConfig): void;
       size: number;
+      cells: {
+        [key: string]: Cell
+      };
+      numCells: number;
     }
 
     interface GridConfig {
