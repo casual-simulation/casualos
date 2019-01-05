@@ -8,9 +8,10 @@ import {
     some,
     assign,
 } from 'lodash';
-import { Sandbox } from './Formulas/Sandbox';
-import { FilterFunction, SandboxInterface } from './Formulas/SandboxInterface';
-import { PartialFile } from 'common';
+import { Sandbox } from '../Formulas/Sandbox';
+import formulaLib from 'formula-lib';
+import { FilterFunction, SandboxInterface } from '../Formulas/SandboxInterface';
+import { PartialFile } from 'common/Files';
 
 /**
  * Defines an interface for objects that represent assignment formula expressions.
@@ -185,6 +186,9 @@ export function newSelectionId() {
     return `_selection_${uuid()}`;
 }
 
+/**
+ * Creates a new Workspace with default values.
+ */
 export function createWorkspace(): Workspace {
     return {
         id: uuid(),
@@ -194,6 +198,12 @@ export function createWorkspace(): Workspace {
     };
 }
 
+/**
+ * Performs a pre-process step for updating the given file by nulling out falsy tags and also calculating assignments.
+ * @param file The file to update.
+ * @param newData The new data to assign to the file.
+ * @param createContext A function that, when called, returns a new FileCalculationContext that can be used to calculate formulas for assignment expressions.
+ */
 export function updateFile(file: File, newData: PartialFile, createContext: () => FileCalculationContext) {
     if (newData.tags) {
         // Cleanup/preprocessing
@@ -244,13 +254,24 @@ export function convertToFormulaObject(context: FileCalculationContext, object: 
 /**
  * Creates a new file calculation context.
  * @param objects The objects that should be included in the context.
+ * @param lib The library JavaScript that should be used.
  */
-export function createCalculationContext(objects: Object[]): FileCalculationContext {
+export function createCalculationContext(objects: Object[], lib: string = formulaLib): FileCalculationContext {
     const context = {
-        sandbox: new Sandbox()
+        sandbox: new Sandbox(lib)
     };
     context.sandbox.interface = new SandboxInterfaceImpl(objects, context);
     return context;
+}
+
+/**
+ * Gets a list of tags for the given object that match the given event name.
+ * @param file The file to test.
+ * @param other The other file to test against.
+ * @param eventName The event name to test.
+ */
+export function tagsMatchingFilter(file: Object, other: Object, eventName: string): string[] {
+    return [];
 }
 
 function _convertToAssignment(object: any): Assignment {
@@ -354,6 +375,10 @@ class SandboxInterfaceImpl implements SandboxInterface {
         .map(o => convertToFormulaObject(this.context, o));
       const filtered = this._filterObjects(objs, filter, tag);
       return filtered;
+    }
+
+    uuid(): string {
+        return uuid();
     }
   
     private _filterValues(values: any[], filter: FilterFunction) {

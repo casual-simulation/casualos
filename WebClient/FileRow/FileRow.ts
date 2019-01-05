@@ -3,7 +3,7 @@ import Component from 'vue-class-component';
 import {Prop, Inject} from 'vue-property-decorator';
 import { FileManager } from 'WebClient/FileManager';
 import { SubscriptionLike } from 'rxjs';
-import {Object, File} from 'common';
+import {Object, File} from 'common/Files';
 import FileValue from '../FileValue/FileValue';
 
 const numLoadingSteps: number = 4;

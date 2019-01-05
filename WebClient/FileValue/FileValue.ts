@@ -2,9 +2,9 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Prop, Inject} from 'vue-property-decorator';
 import { FileManager } from '../FileManager';
-import { Assignment, isFormula, isAssignment } from 'common/FileCalculations';
+import { Assignment, isFormula, isAssignment } from 'common/Files/FileCalculations';
 import { SubscriptionLike } from 'rxjs';
-import {Object, File} from 'common';
+import {Object, File} from 'common/Files';
 import {invertColor, colorConvert} from '../utils';
 import {assign} from 'lodash';
 

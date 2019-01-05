@@ -2,7 +2,7 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Provide, Inject} from 'vue-property-decorator';
 import { some } from 'lodash';
-import {File, Object} from 'common';
+import {File, Object} from 'common/Files';
 import GameView from '../GameView/GameView';
 import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';

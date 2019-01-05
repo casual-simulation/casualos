@@ -28,3 +28,23 @@ export interface Workspace {
     };
     size: number;
 }
+
+export interface PartialFile {
+    id?: string;
+    type?: string;
+    size?: number;
+    position?: {
+        x: number;
+        y: number;
+        z: number;
+    };
+    tags?: {
+        _workspace?: string;
+        _position?: {
+            x?: number;
+            y?: number;
+            z?: number;
+        };
+        [key: string]: any;
+    }
+}

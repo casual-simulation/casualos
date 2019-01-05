@@ -1,12 +1,25 @@
 import {Transpiler} from './Transpiler';
 import {SandboxInterface} from './SandboxInterface';
-import lib from 'formula-lib';
 
 export interface SandboxMacro {
     test: RegExp;
     replacement: (val: string) => string;
 }
 
+/**
+ * Defines an interface for variables that should be passed into the sandbox.
+ */
+export interface SandboxVariable {
+    /**
+     * The name of the variable to define.
+     */
+    name: string;
+
+    /**
+     * The value that should be placed into the variable.
+     */
+    value: any;
+}
 
 /**
  * Defines an interface for objects that represent the result of a calculation from the sandbox.
@@ -35,6 +48,7 @@ export interface SandboxResult<TExtra> {
  */
 export class Sandbox {
     private _transpiler: Transpiler;
+    private _lib: string;
 
     /**
      * The list of macros that the sandbox uses on the input code before transpiling it.
@@ -51,8 +65,9 @@ export class Sandbox {
      */
     interface: SandboxInterface;
 
-    constructor(interface_?: SandboxInterface) {
+    constructor(lib: string, interface_?: SandboxInterface) {
         this._transpiler = new Transpiler();
+        this._lib = lib;
         this.interface = interface_;
     }
 
@@ -62,12 +77,12 @@ export class Sandbox {
      * @param extras The extra data to include in the run. These extras are passed to the interface during execution.
      * @param context The object that should be mapped to "this" during execution. Enables usage of "this" inside formulas.
      */
-    run<TExtra>(formula: string, extras: TExtra, context: any) : SandboxResult<TExtra> {
+    run<TExtra>(formula: string, extras: TExtra, context: any, variables: SandboxVariable[] = [], ) : SandboxResult<TExtra> {
         const macroed = this._replaceMacros(formula);
-        return this._runJs(macroed, extras, context);
+        return this._runJs(macroed, extras, context, variables);
     }
 
-    _runJs<TExtra>(__js: string, __extras: TExtra, __context: any): SandboxResult<TExtra> {
+    private _runJs<TExtra>(__js: string, __extras: TExtra, __context: any, __variables: SandboxVariable[]): SandboxResult<TExtra> {
         const __this = this;
 
         // Using underscores to make these functions and parameters not collide
@@ -81,7 +96,7 @@ export class Sandbox {
         }
 
         function __evalWrapper(js: string): any {
-            const final = lib + js;
+            const final = __this._lib + __variables.map(v => `${v.name} = __variables["${v.name}"].value;`).join('\n') + js;
             return eval(final);
         }
 
@@ -102,7 +117,7 @@ export class Sandbox {
         }
     }
 
-    _transpile(exJs: string): string {
+    private _transpile(exJs: string): string {
         return this._transpiler.transpile(exJs);
     }
 

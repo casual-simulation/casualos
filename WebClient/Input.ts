@@ -15,7 +15,7 @@ import {
 } from 'rxjs/operators';
 import { some } from 'lodash';
 
-import { File, Workspace } from 'common';
+import { File, Workspace } from 'common/Files';
 
 /**
  * Defines a ray.

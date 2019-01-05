@@ -17,6 +17,10 @@ module.exports = {
   module: {
     rules: [
       {
+        test: /formula\-lib/,
+        use: 'raw-loader'
+      },
+      {
         test: /\.tsx?$/,
         use: 'ts-loader',
         exclude: /node_modules/
@@ -26,7 +30,8 @@ module.exports = {
   resolve: {
     extensions: [ '.ts', '.js' ],
     alias: {
-      'common': path.resolve(__dirname, '../common')
+      'common': path.resolve(__dirname, '../common'),
+      'formula-lib': path.join(__dirname, '../common/Formulas/formula-lib.ts')
     }
   },
   externals: [nodeExternals()], // in order to ignore all modules in node_modules folder

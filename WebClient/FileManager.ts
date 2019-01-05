@@ -12,7 +12,7 @@ import {
   Object, 
   PartialFile, 
   Workspace,
-} from 'common';
+} from 'common/Files';
 import { 
   filterFilesBySelection, 
   createWorkspace, 
@@ -23,7 +23,7 @@ import {
   updateUserSelection,
   toggleFileSelection,
   calculateFormattedFileValue
-} from 'common/FileCalculations';
+} from 'common/Files/FileCalculations';
 import {ChannelConnection} from 'common/channels-core';
 import {
   findIndex, 

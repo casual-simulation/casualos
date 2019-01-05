@@ -10,7 +10,7 @@ import {
     FilesState,
     storeFactory,
     channelTypes,
-} from 'common';
+} from 'common/Files';
 
 export class SocketManager {
     private _socket: SocketIOClient.Socket;

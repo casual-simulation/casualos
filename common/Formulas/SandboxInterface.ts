@@ -7,4 +7,9 @@ export type FilterFunction = (value: any) => boolean;
 export interface SandboxInterface {
     listTagValues(tag: string, filter?: FilterFunction, extras?: any): any;
     listObjectsWithTag(tag: string, filter?: FilterFunction, extras?: any): any;
+
+    /**
+     * Calculates a new UUID.
+     */
+    uuid(): string;
 }

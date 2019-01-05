@@ -48,7 +48,7 @@ import {
 
 
 import { FileManager } from '../FileManager';
-import { File, Object, Workspace } from 'common';
+import { File, Object, Workspace } from 'common/Files';
 
 import { vg } from "von-grid";
 
