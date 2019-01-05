@@ -275,7 +275,6 @@ export default class GameView extends Vue {
   }
 
   private _handleDrag(mouseDir: Ray, workspace: File3D, hit: Intersection) {
-    console.log("drag");
     if (workspace) {
       this._dragWorkspace(mouseDir, workspace);
     } else {
@@ -468,6 +467,8 @@ export default class GameView extends Vue {
     obj.mesh.position.z = obj.grid.group.position.z = data.position.z || 0;
 
     if (typeof data.size !== 'undefined' && obj.surface.grid.size !== data.size) {
+      obj.surface.grid.cells = {};
+      obj.surface.grid.numCells = 0;
       obj.surface.grid.generate({
         size: data.size || 0
       });
@@ -508,7 +509,9 @@ export default class GameView extends Vue {
     this._meshses[obj.mesh.id] = obj.file.id;
     this._draggableObjects.push(obj.mesh);
     this._scene.add(obj.mesh);
+    obj.mesh.name = `${file.type}_${file.id}`;
     if (grid) {
+      grid.group.name = `grid_${file.type}_${file.id}`;
       this._meshses[grid.group.id] = obj.file.id;
       this._grids.add(grid.group);
     }

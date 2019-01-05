@@ -3,7 +3,7 @@
     <thead>
       <tr>
         <th></th>
-        <th>ID</th>
+        <th>#id</th>
 
         <th v-for="(tag, index) in tags" :key="index">
           #{{tag}}

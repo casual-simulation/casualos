@@ -51,6 +51,11 @@ export default class Home extends Vue {
         return this.files.length > 0;
     }
 
+    get canShrinkWorkspace() {
+        return this.context && this.context.file && this.context.file.file.type === 'workspace' &&
+            this.context.file.file.size >= 1;
+    }
+
     open() {
         this.isOpen = true;
     }
@@ -76,6 +81,15 @@ export default class Home extends Vue {
             const size = this.context.file.file.size;
             this.fileManager.updateFile(this.context.file.file, {
                 size: (size || 0) + 1
+            });
+        }
+    }
+
+    shrinkWorkspace() {
+        if (this.context && this.context.file && this.context.file.file.type === 'workspace') {
+            const size = this.context.file.file.size;
+            this.fileManager.updateFile(this.context.file.file, {
+                size: (size || 0) - 1
             });
         }
     }
