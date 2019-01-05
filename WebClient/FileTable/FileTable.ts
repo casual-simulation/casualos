@@ -3,6 +3,7 @@ import Component from 'vue-class-component';
 import {Provide, Prop, Inject} from 'vue-property-decorator';
 import { some } from 'lodash';
 import {File, Object} from 'common';
+import { fileTags } from 'common/FileCalculations';
 import { appManager } from '../AppManager';
 import { FileManager } from '../FileManager';
 import { SocketManager } from '../SocketManager';
@@ -67,7 +68,7 @@ export default class FileTable extends Vue {
     removeTag(tag: string) {
         if (tag === this.lastEditedTag || tag === this.newTag) {
             this.lastEditedTag = null;
-            this.tags = this.fileManager.fileTags(this.files, this.tags, []);
+            this.tags = fileTags(this.files, this.tags, []);
         }
     }
 
@@ -87,7 +88,7 @@ export default class FileTable extends Vue {
 
         this.fileManager.selectedFilesUpdated.subscribe(event => {
             this.files = event.files;
-            this.tags = this.fileManager.fileTags(this.files, this.tags, this.lastEditedTag ? [this.lastEditedTag] : []);
+            this.tags = fileTags(this.files, this.tags, this.lastEditedTag ? [this.lastEditedTag] : []);
         });
     }
 };

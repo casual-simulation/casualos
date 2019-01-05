@@ -61,7 +61,7 @@ module.exports = {
       'common': path.resolve(__dirname, '../common'),
       'three-examples': path.join(__dirname, '../node_modules/three/examples/js'),
       'fs': 'browserfs',
-      'formula-lib': path.join(__dirname, 'Formulas/formula-lib.ts')
+      'formula-lib': path.join(__dirname, '../common/Formulas/formula-lib.ts')
     }
   },
   plugins: [

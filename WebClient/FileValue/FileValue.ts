@@ -1,7 +1,8 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Prop, Inject} from 'vue-property-decorator';
-import { FileManager, Assignment } from '../FileManager';
+import { FileManager } from '../FileManager';
+import { Assignment, isFormula, isAssignment } from 'common/FileCalculations';
 import { SubscriptionLike } from 'rxjs';
 import {Object, File} from 'common';
 import {invertColor, colorConvert} from '../utils';
@@ -89,12 +90,12 @@ export default class FileRow extends Vue {
     }
 
     private _updateValue() {
-        this.isFormula = this.fileManager.isFormula(this.file.tags[this.tag]);
+        this.isFormula = isFormula(this.file.tags[this.tag]);
         if (!this.isFocused) {
             this.value = this.fileManager.calculateFormattedFileValue(this.file, this.tag);
         } else {
             const val = this.file.tags[this.tag];
-            if (this.fileManager.isAssignment(val)) {
+            if (isAssignment(val)) {
                 const assignment: Assignment = val;
                 this.value = assignment.editing ? assignment.formula : assignment.value;
             } else {
@@ -105,7 +106,7 @@ export default class FileRow extends Vue {
 
     private _updateAssignment() {
         const val = this.file.tags[this.tag];
-        if (this.fileManager.isAssignment(val)) {
+        if (isAssignment(val)) {
             const assignment: Assignment = val;
             if (assignment.editing) {
                 this.fileManager.updateFile(this.file, {

@@ -1,4 +1,5 @@
 import {Transpiler} from './Transpiler';
+import {SandboxInterface} from './SandboxInterface';
 import lib from 'formula-lib';
 
 export interface SandboxMacro {
@@ -6,16 +7,6 @@ export interface SandboxMacro {
     replacement: (val: string) => string;
 }
 
-export type FilterFunction = (value: any) => boolean;
-
-/**
- * Defines an interface for objects that can allow the sandbox to communicate with the outside world.
- * In particular, this interface allows the sandbox to request tag values and tag objects.
- */
-export interface SandboxInterface {
-    listTagValues(tag: string, filter?: FilterFunction, extras?: any): any;
-    listObjectsWithTag(tag: string, filter?: FilterFunction, extras?: any): any;
-}
 
 /**
  * Defines an interface for objects that represent the result of a calculation from the sandbox.
@@ -60,7 +51,7 @@ export class Sandbox {
      */
     interface: SandboxInterface;
 
-    constructor(interface_: SandboxInterface) {
+    constructor(interface_?: SandboxInterface) {
         this._transpiler = new Transpiler();
         this.interface = interface_;
     }

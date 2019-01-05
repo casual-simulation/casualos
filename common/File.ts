@@ -12,6 +12,8 @@ export interface Object {
             y: number;
             z: number;
         } | null;
+        _hidden?: boolean;
+        _selection?: string;
         [key: string]: any;
     };
 }
