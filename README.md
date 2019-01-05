@@ -2,21 +2,23 @@
 
 The repository for the Process for Teams project.
 
-# Setup
+# Developer Setup
 
-1. Make sure you have Node 10.13.0 installed.
-2. Make sure you have [Docker for Mac][docker-for-mac] installed.
-3. `npm install`
+1. Make sure you have Node 10.13.0 or later installed.
+    - If this is your first time installing Node.js, install Node Version Manager ([Mac][nvm-mac], [Windows][nvm-windows]) to help manage different Node versions.
+    - If/once you have NVM installed, you can install node 10.13.0 by running `nvm install 10.13.0`.
+2. Make sure you have Docker ([Mac][docker-for-mac], [Windows][docker-for-windows]) installed.
+3. Run `npm install` in the project directory
     - This command might take a while as NPM downloads and installs dependencies.
-4. `sudo -u *username* ./scripts/gitlab_setup.sh`
-    - This command creates a couple of folders that will be used for the Gitlab installation.
-5. Go to Docker Menu (On top bar) -> Preferences... -> File Sharing and add the `/data` directory.
-6. `docker-compose up -d`
-    - This command will take a while as docker downloads and runs the gitlab image and then boots up.
-    - Run `docker logs -f process-for-teams_gitlab_1` to see the logs as gitlab sets up.
-7. `npm run watch`
+4. Go to Docker Menu (On top bar) -> Preferences... -> File Sharing and add the `/data` directory.
+5. Run `docker-compose up -d`
+    - This command might take a while as docker downloads and runs the mongo image and then boots up.
+6. Run `npm run watch`
     - This will build the TypeScript into JavaScript and start the node server.
     - You can view the server at http://localhost:3000
 
 
 [docker-for-mac]: https://docs.docker.com/v17.12/docker-for-mac/install/
+[docker-for-windows]: https://docs.docker.com/docker-for-windows/install/
+[nvm-mac]: https://github.com/creationix/nvm
+[nvm-windows]: https://github.com/coreybutler/nvm-windows

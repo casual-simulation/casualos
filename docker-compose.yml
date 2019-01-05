@@ -1,31 +1,3 @@
-gitlab:
-   image: 'gitlab/gitlab-ce:latest'
-   restart: always
-   hostname: 'gitlab.example.com'
-   environment:
-     GITLAB_OMNIBUS_CONFIG: |
-       external_url 'http://localhost:4330/git'
-
-       # Disable some email features
-       gitlab_rails['gitlab_email_enabled'] = false
-       gitlab_rails['incoming_email_enabled'] = false
-
-       # Disable LetsEncrypt
-       letsencrypt['enable'] = false
-
-       # Disable HTTPS
-       # nginx['listen_port'] = 8088
-       nginx['listen_https'] = false
-       # Add any other gitlab.rb configuration here, each on its own line
-   ports:
-    # Bind to other ports that aren't the defaults
-    # so we can proxy them from node.
-     - '4330:4330'
-     - '2222:22'
-   volumes:
-     - '/data/gitlab/config:/etc/gitlab'
-     - '/data/gitlab/logs:/var/log/gitlab'
-     - '/data/gitlab/data:/var/opt/gitlab'
 mongo:
    image: 'mongo:latest'
    restart: always
