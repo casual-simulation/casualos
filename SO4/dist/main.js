@@ -450,7 +450,7 @@ var config = {
     },
     channels: {
         mongodb: {
-            url: 'mongodb://db-04.0.back-end.io:27017',
+            url: 'mongodb://db-04.1.back-end.io:27017',
             dbName: 'SO4'
         }
     }
