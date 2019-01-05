@@ -11,7 +11,7 @@
     "build:server": "webpack --config SO4/webpack.config.js",
     "watch:server": "webpack --config SO4/webpack.config.js --watch",
     "watch:client": "webpack --config WebClient/webpack.dev.js --watch",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -49,12 +49,15 @@
     "file-loader": "^2.0.0",
     "html-webpack-plugin": "^3.2.0",
     "imports-loader": "^0.8.0",
+    "jest": "^23.6.0",
+    "jest-raw-loader": "^1.0.1",
     "mocha": "^5.2.0",
     "monaco-editor-webpack-plugin": "^1.7.0",
     "nodemon": "^1.18.6",
     "raw-loader": "^1.0.0",
     "sinon": "^7.1.1",
     "style-loader": "^0.23.1",
+    "ts-jest": "^23.10.5",
     "ts-loader": "^5.3.0",
     "typescript": "^3.1.6",
     "uglifyjs-webpack-plugin": "^2.0.1",
@@ -68,6 +71,7 @@
     "webpack-node-externals": "^1.7.2"
   },
   "dependencies": {
+    "@types/jest": "^23.3.11",
     "@types/lodash": "^4.14.118",
     "@types/socket.io-client": "^1.4.32",
     "acorn": "^6.0.4",
