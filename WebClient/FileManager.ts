@@ -257,6 +257,12 @@ export class FileManager {
 
     this._files = await this._socketManager.getFilesChannel();
 
+    this._appManager.userObservable.subscribe(async u => {
+      if (u) {
+        await this._initUserFile();
+      }
+    });
+
     // Replay the existing files for the components that need it this way
     const filesState = this._files.store.state();
     const existingFiles = values(filesState);
@@ -299,8 +305,11 @@ export class FileManager {
 
     allSelectedFilesUpdated.subscribe(this._selectedFilesUpdated);
 
-    this._setStatus('Getting user file...');
+    this._setStatus('Initialized.');
+  }
 
+  private async _initUserFile() {
+    this._setStatus('Updating user file...');
     let userFile = this.userFile;
     if (!userFile) {
       await this.createFile(this._appManager.user.username, {
@@ -309,8 +318,6 @@ export class FileManager {
         _workspace: null
       });
     }
-
-    this._setStatus('Initialized.');
   }
 
   private _setStatus(status: string) {
