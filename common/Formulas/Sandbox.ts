@@ -1,24 +1,10 @@
 import {Transpiler} from './Transpiler';
 import {SandboxInterface} from './SandboxInterface';
+import {keys} from 'lodash';
 
 export interface SandboxMacro {
     test: RegExp;
     replacement: (val: string) => string;
-}
-
-/**
- * Defines an interface for variables that should be passed into the sandbox.
- */
-export interface SandboxVariable {
-    /**
-     * The name of the variable to define.
-     */
-    name: string;
-
-    /**
-     * The value that should be placed into the variable.
-     */
-    value: any;
 }
 
 /**
@@ -77,12 +63,12 @@ export class Sandbox {
      * @param extras The extra data to include in the run. These extras are passed to the interface during execution.
      * @param context The object that should be mapped to "this" during execution. Enables usage of "this" inside formulas.
      */
-    run<TExtra>(formula: string, extras: TExtra, context: any, variables: SandboxVariable[] = [], ) : SandboxResult<TExtra> {
+    run<TExtra>(formula: string, extras: TExtra, context: any, variables: { [key: string]: any } = {}) : SandboxResult<TExtra> {
         const macroed = this._replaceMacros(formula);
         return this._runJs(macroed, extras, context, variables);
     }
 
-    private _runJs<TExtra>(__js: string, __extras: TExtra, __context: any, __variables: SandboxVariable[]): SandboxResult<TExtra> {
+    private _runJs<TExtra>(__js: string, __extras: TExtra, __context: any, __variables: { [key: string]: any }): SandboxResult<TExtra> {
         const __this = this;
 
         // Using underscores to make these functions and parameters not collide
@@ -95,8 +81,12 @@ export class Sandbox {
             return __this.interface.listObjectsWithTag(tag, filter, __extras);
         }
 
+        function uuid(): string {
+            return __this.interface.uuid();
+        }
+
         function __evalWrapper(js: string): any {
-            const final = __this._lib + __variables.map(v => `${v.name} = __variables["${v.name}"].value;`).join('\n') + js;
+            const final = __this._lib + '\n' + keys(__variables).map(v => `var ${v} = __variables["${v}"];`).join('\n') + '\n' + js;
             return eval(final);
         }
 

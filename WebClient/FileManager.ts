@@ -4,7 +4,6 @@ import {
   fileAdded, 
   FileAddedEvent, 
   FileEvent, 
-  fileRemoved, 
   FileRemovedEvent, 
   FilesState, 
   fileUpdated, 
@@ -22,7 +21,8 @@ import {
   createCalculationContext,
   updateUserSelection,
   toggleFileSelection,
-  calculateFormattedFileValue
+  calculateFormattedFileValue,
+  createFile
 } from 'common/Files/FileCalculations';
 import {ChannelConnection} from 'common/channels-core';
 import {
@@ -50,7 +50,7 @@ import {
   SubscriptionLike,
 } from 'rxjs';
 import {filter, map, shareReplay,} from 'rxjs/operators';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 
 import {AppManager, appManager} from './AppManager';
 import {SocketManager} from './SocketManager';
@@ -204,16 +204,10 @@ export class FileManager {
     this._files.emit(fileUpdated(file.id, newData));
   }
 
-  async createFile(id = uuid(), tags: Object['tags'] = {
-    _position: { x: 0, y: 0, z: 0},
-    _workspace: <string>null
-  }) {
+  async createFile(id?: string, tags?: Object['tags']) {
     console.log('[FileManager] Create File');
 
-    const file: Object =
-        {id: id, type: 'object', tags: tags};
-
-    this._files.emit(fileAdded(file));
+    this._files.emit(fileAdded(createFile(id, tags)));
   }
 
   async createWorkspace() {

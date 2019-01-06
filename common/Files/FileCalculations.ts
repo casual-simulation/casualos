@@ -1,5 +1,5 @@
 import { Object, File, Workspace } from './File';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import {
     flatMap,
     union,
@@ -126,7 +126,7 @@ export function containsFormula(value: string): boolean {
  * Determines if the given string value represents an array.
  */
 export function isArray(value: string): boolean {
-    return typeof value === 'string' && value.indexOf(',') >= 0;
+    return typeof value === 'string' && value.indexOf('[') === 0 && value.lastIndexOf(']') === value.length - 1;
 }
 
 /**
@@ -184,6 +184,15 @@ export function toggleFileSelection(file: Object, selectionId: string) {
  */
 export function newSelectionId() {
     return `_selection_${uuid()}`;
+}
+
+export function createFile(id = uuid(), tags: Object['tags'] = {
+    _position: { x: 0, y: 0, z: 0},
+    _workspace: <string>null
+}) {
+    const file: Object = {id: id, type: 'object', tags: tags};
+
+    return file;
 }
 
 /**
@@ -271,7 +280,28 @@ export function createCalculationContext(objects: Object[], lib: string = formul
  * @param eventName The event name to test.
  */
 export function tagsMatchingFilter(file: Object, other: Object, eventName: string): string[] {
-    return [];
+    const tags = keys(other.tags);
+    return tags.filter(t => tagMatchesFilter(t, file, eventName));
+}
+
+/**
+ * Determines if the given tag matches the given object and event.
+ * @param tag 
+ * @param file 
+ * @param eventName 
+ */
+export function tagMatchesFilter(tag: string, file: Object, eventName: string): boolean {
+    const eventIndex = tag.indexOf(eventName);
+    const tagIndex = tag.indexOf('#');
+    const colonIndex = tag.indexOf(':');
+    const tagName = tag.slice(tagIndex + 1, colonIndex);
+    if (tagName) {
+        const firstQuote = tag.indexOf('"');
+        const lastQuote = tag.lastIndexOf('"');
+        const value = tag.slice(firstQuote + 1, lastQuote);
+        return eventIndex === 0 && file.tags[tagName] === value;
+    }
+    return false;
 }
 
 function _convertToAssignment(object: any): Assignment {
@@ -350,7 +380,7 @@ function _calculateFormulaValue(context: FileCalculationContext, object: any, ta
 }
 
 function _parseArray(value: string): string[] {
-    return value.split(',');
+    return value.slice(1, value.length - 1).split(',');
 }
 
 

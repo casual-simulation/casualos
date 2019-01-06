@@ -95,13 +95,24 @@ function actionReducer(state: FilesState, event: ActionEvent) {
 
 function eventActions(objects: Object[], context: FileCalculationContext, file: Object, other: Object, eventName: string): FileEvent[] {
     const filters = tagsMatchingFilter(file, other, eventName);
-    const scripts = filters.map(f => calculateFileValue(context, file, f));
-    let actions: FileEvent[] = [];
+    const scripts = filters.map(f => calculateFileValue(context, other, f));
+    let actions: FileEvent[] = [
+        fileUpdated(file.id, {
+            tags: {
+                _destroyed: true
+            }
+        }),
+        fileUpdated(other.id, {
+            tags: {
+                _destroyed: true
+            }
+        })
+    ];
     
-    scripts.forEach(s => context.sandbox.run(s, {}, file, [
-        { name: 'that', value: convertToFormulaObject(context, other) },
-        { name: '__actions', value: actions }
-    ]));
+    scripts.forEach(s => context.sandbox.run(s, {}, convertToFormulaObject(context, other), {
+        that: convertToFormulaObject(context, file),
+        __actions: actions
+    }));
 
     return actions;
 }
@@ -170,10 +181,10 @@ export function fileAdded(file: File): FileAddedEvent {
     };
 }
 
-export function fileRemoved(file: File): FileRemovedEvent {
+export function fileRemoved(fileId: string): FileRemovedEvent {
     return {
         type: 'file_removed',
-        id: file.id,
+        id: fileId,
         creation_time: new Date()
     };
 }
@@ -183,6 +194,16 @@ export function fileUpdated(id: string, update: PartialFile): FileUpdatedEvent {
         type: 'file_updated',
         id: id,
         update: update,
+        creation_time: new Date()
+    };
+}
+
+export function action(senderFileId: string, receiverFileId: string, eventName: string): ActionEvent {
+    return {
+        type: 'action',
+        senderFileId,
+        receiverFileId,
+        eventName,
         creation_time: new Date()
     };
 }

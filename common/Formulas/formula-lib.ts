@@ -163,7 +163,9 @@ function copy(file: any, newData?: any) {
         file: {
             tags: {
                 ...file,
-                ...newData
+                ...newData,
+                id: undefined,
+                _converted: undefined
             },
             type: 'object',
             id: id
