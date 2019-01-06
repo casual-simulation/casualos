@@ -1,5 +1,5 @@
 import { MongoClient, Db, Collection } from 'mongodb';
-import * as pify from 'pify';
+import pify from 'pify';
 import { Subject } from 'rxjs';
 import { ChannelConnector, ChannelConnection, ChannelConnectionRequest, IChannel, Event, MemoryConnector, ConnectionHelper } from 'common/channels-core';
 

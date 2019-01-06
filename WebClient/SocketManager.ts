@@ -1,4 +1,4 @@
-import * as io from 'socket.io-client';
+import io from 'socket.io-client';
 import {Observable, Subject, BehaviorSubject, Observer} from 'rxjs';
 import {filter, switchMap} from 'rxjs/operators';
 import {appManager} from './AppManager';
