@@ -88,6 +88,16 @@ function actionReducer(state: FilesState, event: ActionEvent) {
     const events = [
         ...eventActions(objects, context, sender, receiver, event.eventName),
         ...eventActions(objects, context, receiver, sender, event.eventName),
+        fileUpdated(sender.id, {
+            tags: {
+                _destroyed: true
+            }
+        }),
+        fileUpdated(receiver.id, {
+            tags: {
+                _destroyed: true
+            }
+        })
     ];
 
     return applyEvents(state, events);
@@ -96,18 +106,7 @@ function actionReducer(state: FilesState, event: ActionEvent) {
 function eventActions(objects: Object[], context: FileCalculationContext, file: Object, other: Object, eventName: string): FileEvent[] {
     const filters = tagsMatchingFilter(file, other, eventName);
     const scripts = filters.map(f => calculateFileValue(context, other, f));
-    let actions: FileEvent[] = [
-        fileUpdated(file.id, {
-            tags: {
-                _destroyed: true
-            }
-        }),
-        fileUpdated(other.id, {
-            tags: {
-                _destroyed: true
-            }
-        })
-    ];
+    let actions: FileEvent[] = [];
     
     scripts.forEach(s => context.sandbox.run(s, {}, convertToFormulaObject(context, other), {
         that: convertToFormulaObject(context, file),
