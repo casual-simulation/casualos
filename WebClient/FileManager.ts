@@ -11,6 +11,7 @@ import {
   Object, 
   PartialFile, 
   Workspace,
+  action,
 } from 'common/Files';
 import { 
   filterFilesBySelection, 
@@ -216,6 +217,11 @@ export class FileManager {
     const workspace: Workspace = createWorkspace();
 
     this._files.emit(fileAdded(workspace));
+  }
+
+  async action(sender: File, receiver: File, eventName: string) {
+    console.log('[FileManager] Run event:', eventName, 'on files:', sender, receiver);
+    this._files.emit(action(sender.id, receiver.id, eventName));
   }
 
   /**

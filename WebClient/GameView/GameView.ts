@@ -45,7 +45,9 @@ import {
   tap,
   scan,
 } from 'rxjs/operators';
-
+import {
+  find
+} from 'lodash';
 
 import { FileManager } from '../FileManager';
 import { File, Object, Workspace } from 'common/Files';
@@ -179,6 +181,10 @@ export default class GameView extends Vue {
 
     this._subs.push(leftDragOperations.subscribe(drag => {
       this._handleDrag(drag.ray, drag.workspace, drag.hit);
+
+      if (drag.justEndedClicking) {
+        this._tryCombineFiles(drag);
+      }
     }));
 
     this._subs.push(leftClickOperations.subscribe(click => {
@@ -208,6 +214,18 @@ export default class GameView extends Vue {
     }));
 
     this._subs.push(disableContextMenuWithin(this.gameView));
+  }
+
+  private _tryCombineFiles(drag: DragOperation) {
+    const raycast = raycastAtScreenPos(drag.screenPos, this._raycaster, this._draggableObjects, this._camera);
+    const other = find(raycast.intersects, (val, index, col) => val.object !== drag.hit.object);
+    if (other) {
+      const file = this._fileForIntersection(drag.hit);
+      const otherFile = this._fileForIntersection(other);
+      if (file && otherFile && file.file.type === 'object' && otherFile.file.type === 'object') {
+        this.fileManager.action(file.file, otherFile.file, '+');
+      }
+    }
   }
 
   private _contextMenuActions(file: File3D): ContextMenuAction[] {

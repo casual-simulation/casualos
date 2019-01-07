@@ -420,7 +420,7 @@ export function buttonDrag(active: Observable<boolean>): Observable<MouseDrag> {
       }),
     map(event => {
       const wasDragging = event.startClickEvent && mouseDistance(event.startClickEvent, event.event) > 10;
-      const isDragging = event.isActive && wasDragging;
+      const isDragging = (event.isActive || event.justEndedClicking) && wasDragging;
       const isClicking = !isDragging && !wasDragging && event.justEndedClicking;
       return {
         ...event,
