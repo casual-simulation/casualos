@@ -223,16 +223,26 @@ export interface ContextMenuEvent extends EventWrapper {
    * Whether the context menu should be visible.
    */
   shouldBeVisible: boolean;
+
+  /**
+   * The actions that the context menu should show.
+   */
+  actions: ContextMenuAction[];
 }
 
 /**
- * Defines an interface that represents the action of showing/hiding a context menu with respect to a file.
+ * Defines an interface that represents a single action in a context menu.
  */
-export interface ContextMenuOperation extends ContextMenuEvent {
+export interface ContextMenuAction {
   /**
-   * The file or workspace that was clicked.
+   * The label for the action.
    */
-  file: File3D;
+  label: string;
+
+  /**
+   * The function that should be trigered when the action is selected.
+   */
+  onClick: () => void;
 }
 
 /**
@@ -535,7 +545,7 @@ export function disableContextMenuWithin(element: HTMLElement): SubscriptionLike
 
 function contextMenuEvents(contextMenu: Observable<MouseEvent>, others: Observable<MouseEvent>): Observable<ContextMenuEvent> {
   return merge(
-    contextMenu.pipe(map(e => ({ event: e, shouldBeVisible: true }))),
-    others.pipe(map(e => ({ event: e, shouldBeVisible: false }))),
+    contextMenu.pipe(map(e => ({ event: e, shouldBeVisible: true, actions: [] }))),
+    others.pipe(map(e => ({ event: e, shouldBeVisible: false, actions: [] }))),
   );
 }

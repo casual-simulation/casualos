@@ -77,7 +77,7 @@ import {
   disableContextMenuWithin,
   EventWrapper,
   ContextMenuEvent,
-  ContextMenuOperation,
+  ContextMenuAction,
   eventIsOverElement,
 } from '../Input';
 
@@ -191,20 +191,55 @@ export default class GameView extends Vue {
       this._grids.visible = visible;
     }));
 
-    const contextMenuEvents: Observable<ContextMenuOperation> = showHideContextMenu.pipe(
+    const contextMenuEvents = showHideContextMenu.pipe(
       map(e => ({ ...e, screenPos: screenPosition(e.event, this.gameView) })),
       map(e => ({ ...e, ray: screenPosToRay(e.screenPos, this._camera) })),
       filter(e => eventIsOverElement(e.event, this._canvas)),
       map(e => ({...e, raycast: raycastAtScreenPos(e.screenPos, this._raycaster, this._draggableObjects, this._camera)})),
       map(e => ({...e, hit: firstRaycastHit(e.raycast)})),
       map(e => ({...e, file: e.hit ? this._fileForIntersection(e.hit) : null})),
+      map(e => ({...e, actions: this._contextMenuActions(e.file) }))
     );
 
     this._subs.push(contextMenuEvents.subscribe(click => {
-      this._contextMenuClick(click);
+      if (click.file && click.file.file.type === 'workspace') {
+        this._showContextMenu(click);
+      }
     }));
 
     this._subs.push(disableContextMenuWithin(this.gameView));
+  }
+
+  private _contextMenuActions(file: File3D): ContextMenuAction[] {
+    let actions = [
+      { label: 'Expand', onClick: () => this._expandWorkspace(file) },
+    ];
+    if (this._canShrinkWorkspace(file)) {
+      actions.push({ label: 'Shrink', onClick: () => this._shrinkWorkspace(file) });
+    }
+    return actions;
+  }
+
+  private _canShrinkWorkspace(file: File3D) {
+    return file && file.file.type === 'workspace' && file.file.size >= 1;
+  }
+
+  private _expandWorkspace(file: File3D) {
+      if (file && file.file.type === 'workspace') {
+          const size = file.file.size;
+          this.fileManager.updateFile(file.file, {
+              size: (size || 0) + 1
+          });
+      }
+  }
+
+  private _shrinkWorkspace(file: File3D) {
+      if (file && file.file.type === 'workspace') {
+          const size = file.file.size;
+          this.fileManager.updateFile(file.file, {
+              size: (size || 0) - 1
+          });
+      }
   }
 
   beforeDestroy() {
@@ -326,10 +361,8 @@ export default class GameView extends Vue {
     }
   }
 
-  private _contextMenuClick(event: ContextMenuOperation) {
-    if (!event.file || event.file.file.type === 'workspace') {
-      this.$emit('onContextMenu', event);
-    }
+  private _showContextMenu(event: ContextMenuEvent) {
+    this.$emit('onContextMenu', event);
   }
 
   private _selectFile(file: File3D) {
