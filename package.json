@@ -11,7 +11,8 @@
     "build:server": "webpack --config SO4/webpack.config.js",
     "watch:server": "webpack --config SO4/webpack.config.js --watch",
     "watch:client": "webpack --config WebClient/webpack.dev.js --watch",
-    "test": "jest"
+    "test": "jest",
+    "test:watch": "jest --watchAll"
   },
   "repository": {
     "type": "git",
