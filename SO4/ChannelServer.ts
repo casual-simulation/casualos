@@ -2,7 +2,7 @@ import {Express} from 'express';
 import { StoreFactory, Event, ReducingStateStore, ChannelClient, MemoryConnector, ChannelConnector } from "common/channels-core";
 import { SocketIOChannelServer } from "./channels";
 
-import {filesReducer, FilesStateStore, storeFactory} from 'common';
+import {filesReducer, FilesStateStore, storeFactory} from 'common/Files';
 import { MongoDBConnector } from './channels/MongoDBConnector';
 
 export interface ChannelServerConfig {

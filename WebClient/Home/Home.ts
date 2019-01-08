@@ -2,7 +2,7 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Provide, Inject} from 'vue-property-decorator';
 import { some } from 'lodash';
-import {File, Object} from 'common';
+import {File, Object} from 'common/Files';
 import GameView from '../GameView/GameView';
 import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';
@@ -13,7 +13,7 @@ import CubeIcon from './Cube.svg';
 
 import FileTable from '../FileTable/FileTable';
 import { editor } from 'monaco-editor';
-import { ContextMenuOperation } from '../Input';
+import { ContextMenuEvent } from '../Input';
 
 const numLoadingSteps: number = 4;
 
@@ -35,7 +35,7 @@ export default class Home extends Vue {
     contextMenuVisible: boolean = false;
     contextMenuPosX: string = '0';
     contextMenuPosY: string = '0';
-    context: ContextMenuOperation = null;
+    context: ContextMenuEvent = null;
     status: string = '';
     files: Object[] = [];
 
@@ -49,11 +49,6 @@ export default class Home extends Vue {
 
     get hasFiles() {
         return this.files.length > 0;
-    }
-
-    get canShrinkWorkspace() {
-        return this.context && this.context.file && this.context.file.file.type === 'workspace' &&
-            this.context.file.file.size >= 1;
     }
 
     open() {
@@ -76,33 +71,13 @@ export default class Home extends Vue {
         this.fileManager.clearSelection();
     }
 
-    expandWorkspace() {
-        if (this.context && this.context.file && this.context.file.file.type === 'workspace') {
-            const size = this.context.file.file.size;
-            this.fileManager.updateFile(this.context.file.file, {
-                size: (size || 0) + 1
-            });
-        }
-    }
-
-    shrinkWorkspace() {
-        if (this.context && this.context.file && this.context.file.file.type === 'workspace') {
-            const size = this.context.file.file.size;
-            this.fileManager.updateFile(this.context.file.file, {
-                size: (size || 0) - 1
-            });
-        }
-    }
-
-    handleContextMenu(event: ContextMenuOperation) {
+    handleContextMenu(event: ContextMenuEvent) {
         if (event.shouldBeVisible) {
             this.context = event;
         }
-        if (event.file && event.file.file.type === 'workspace'){
-            this.contextMenuVisible = event.shouldBeVisible;
-            this.contextMenuPosX = event.event.pageX + 'px';
-            this.contextMenuPosY = event.event.pageY + 'px';
-        }
+        this.contextMenuVisible = event.shouldBeVisible;
+        this.contextMenuPosX = event.event.pageX + 'px';
+        this.contextMenuPosY = event.event.pageY + 'px';
     }
 
     constructor() {

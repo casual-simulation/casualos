@@ -38,10 +38,11 @@
       </game-view>
 
       <div class="context-menu" :style="{ left: contextMenuPosX, top: contextMenuPosY }">
-        <md-menu :md-active.sync="contextMenuVisible">
+        <md-menu v-if="context" :md-active.sync="contextMenuVisible">
           <md-menu-content>
-            <md-menu-item @click="expandWorkspace">Expand</md-menu-item>
-            <md-menu-item v-if="canShrinkWorkspace" @click="shrinkWorkspace">Shrink</md-menu-item>
+            <md-menu-item v-for="item of context.actions" v-bind:key="item.label" @click="item.onClick">
+              {{item.label}}
+            </md-menu-item>
           </md-menu-content>
         </md-menu>
       </div>

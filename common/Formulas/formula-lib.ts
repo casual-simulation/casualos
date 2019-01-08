@@ -1,3 +1,5 @@
+declare var __actions: any[];
+declare function uuid(): string;
 
 /**
  * Sums the given array of numbers and returns the result.
@@ -128,4 +130,45 @@ function join(values: any, separator: string = ','): string {
     } else {
         return values;
     }
+}
+
+function destroy(file: any) {
+    __actions.push({
+        type: 'file_updated',
+        id: (typeof file === 'object' ? file.id : file),
+        update: {
+            _destroyed: true
+        }
+    });
+}
+
+function create(data: any) {
+    var id = uuid();
+    __actions.push({
+        type: 'file_added',
+        id: id,
+        file: {
+            tags: data,
+            type: 'object',
+            id: id
+        }
+    });
+}
+
+function copy(file: any, newData?: any) {
+    var id = uuid();
+    __actions.push({
+        type: 'file_added',
+        id: id,
+        file: {
+            tags: {
+                ...file,
+                ...newData,
+                id: undefined,
+                _converted: undefined
+            },
+            type: 'object',
+            id: id
+        }
+    });
 }

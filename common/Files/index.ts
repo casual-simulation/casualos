@@ -1,4 +1,4 @@
-import { StoreFactory } from './channels-core';
+import { StoreFactory } from '../channels-core';
 import { FilesStateStore } from './FilesChannel';
 
 export * from './File';

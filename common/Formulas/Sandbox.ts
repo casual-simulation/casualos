@@ -1,20 +1,10 @@
 import {Transpiler} from './Transpiler';
-import lib from 'formula-lib';
+import {SandboxInterface} from './SandboxInterface';
+import {keys} from 'lodash';
 
 export interface SandboxMacro {
     test: RegExp;
     replacement: (val: string) => string;
-}
-
-export type FilterFunction = (value: any) => boolean;
-
-/**
- * Defines an interface for objects that can allow the sandbox to communicate with the outside world.
- * In particular, this interface allows the sandbox to request tag values and tag objects.
- */
-export interface SandboxInterface {
-    listTagValues(tag: string, filter?: FilterFunction, extras?: any): any;
-    listObjectsWithTag(tag: string, filter?: FilterFunction, extras?: any): any;
 }
 
 /**
@@ -44,6 +34,7 @@ export interface SandboxResult<TExtra> {
  */
 export class Sandbox {
     private _transpiler: Transpiler;
+    private _lib: string;
 
     /**
      * The list of macros that the sandbox uses on the input code before transpiling it.
@@ -60,8 +51,9 @@ export class Sandbox {
      */
     interface: SandboxInterface;
 
-    constructor(interface_: SandboxInterface) {
+    constructor(lib: string, interface_?: SandboxInterface) {
         this._transpiler = new Transpiler();
+        this._lib = lib;
         this.interface = interface_;
     }
 
@@ -71,12 +63,12 @@ export class Sandbox {
      * @param extras The extra data to include in the run. These extras are passed to the interface during execution.
      * @param context The object that should be mapped to "this" during execution. Enables usage of "this" inside formulas.
      */
-    run<TExtra>(formula: string, extras: TExtra, context: any) : SandboxResult<TExtra> {
+    run<TExtra>(formula: string, extras: TExtra, context: any, variables: { [key: string]: any } = {}) : SandboxResult<TExtra> {
         const macroed = this._replaceMacros(formula);
-        return this._runJs(macroed, extras, context);
+        return this._runJs(macroed, extras, context, variables);
     }
 
-    _runJs<TExtra>(__js: string, __extras: TExtra, __context: any): SandboxResult<TExtra> {
+    private _runJs<TExtra>(__js: string, __extras: TExtra, __context: any, __variables: { [key: string]: any }): SandboxResult<TExtra> {
         const __this = this;
 
         // Using underscores to make these functions and parameters not collide
@@ -89,8 +81,12 @@ export class Sandbox {
             return __this.interface.listObjectsWithTag(tag, filter, __extras);
         }
 
+        function uuid(): string {
+            return __this.interface.uuid();
+        }
+
         function __evalWrapper(js: string): any {
-            const final = lib + js;
+            const final = __this._lib + '\n' + keys(__variables).map(v => `var ${v} = __variables["${v}"];`).join('\n') + '\n' + js;
             return eval(final);
         }
 
@@ -111,7 +107,7 @@ export class Sandbox {
         }
     }
 
-    _transpile(exJs: string): string {
+    private _transpile(exJs: string): string {
         return this._transpiler.transpile(exJs);
     }
 

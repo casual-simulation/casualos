@@ -1,7 +1,7 @@
 import * as Http from 'http';
-import * as express from 'express';
+import express from 'express';
 import * as bodyParser from 'body-parser';
-import * as SocketIO from 'socket.io';
+import SocketIO from 'socket.io';
 import { SocketIOChannelServer } from './channels';
 import { ChannelClient } from 'common/channels-core';
 import { ChannelServer, ChannelServerConfig } from './ChannelServer';

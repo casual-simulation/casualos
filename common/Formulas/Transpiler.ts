@@ -2,7 +2,7 @@ import {Parser, Node, TokenType, TokContext, tokTypes} from 'acorn';
 import {generate, baseGenerator} from 'astring';
 import {replace} from 'estraverse';
 import {assign} from 'lodash';
-import * as LRU from 'lru-cache';
+import LRU from 'lru-cache';
 
 export type ExJsNode = TokenValueNode | ObjectValueNode;
 

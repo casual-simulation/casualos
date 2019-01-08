@@ -4,6 +4,7 @@
       "baseUrl": ".",
       "noImplicitAny": true,
       "module": "esNext",
+      "esModuleInterop": true,
       "target": "es5",
       "allowJs": false,
       "moduleResolution": "node",

@@ -2,9 +2,9 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Inject, Prop, Watch } from 'vue-property-decorator';
 import { FileManager } from 'WebClient/FileManager';
-import { Object } from 'common';
+import { Object } from 'common/Files';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
-import * as LRU from 'lru-cache';
+import LRU from 'lru-cache';
 import lib from 'formula-lib';
 
 import './MonacoShims';
