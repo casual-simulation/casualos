@@ -50,7 +50,7 @@ import {
   Subject, 
   SubscriptionLike,
 } from 'rxjs';
-import {filter, map, shareReplay,} from 'rxjs/operators';
+import {filter, map, shareReplay, scan, pairwise,} from 'rxjs/operators';
 import uuid from 'uuid/v4';
 
 import {AppManager, appManager} from './AppManager';
@@ -268,6 +268,19 @@ export class FileManager {
     const existingFiles = values(filesState);
     const orderedFiles = sortBy(existingFiles, f => f.type === 'object');
     const existingFilesObservable = from(orderedFiles);
+
+    const states = this._files.events.pipe(map(e => this._files.store.state()));
+
+    // pair new states with their previous values
+    const statePairs = states.pipe(pairwise());
+
+    // calculate the difference between the current state and new state.
+    const stateDiffs = statePairs.pipe(map(pair => {
+      const prev = pair[0];
+      const curr = pair[1];
+
+      return calculateStateChanges(prev, curr);
+    }));
 
     const fileAdded = this._files.events.pipe(
         filter(event => event.type === 'file_added'),

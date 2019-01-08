@@ -1,10 +1,19 @@
 import { ReducingStateStore, Event } from "../channels-core";
 import {File, Object, Workspace, PartialFile} from './File';
-import {merge, filter, values} from 'lodash';
+import {merge, filter, values, union, keys} from 'lodash';
 import { tagsMatchingFilter, createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject } from './FileCalculations';
 
 export interface FilesState {
     [id: string]: File;
+}
+
+export interface FilesStateDiff {
+    prev: FilesState;
+    current: FilesState;
+
+    addedFiles: File[];
+    removedFiles: File[];
+    updatedFiles: File[];
 }
 
 export type FileEvent = 
@@ -14,7 +23,7 @@ export type FileEvent =
     ActionEvent;
 
 /**
- * Defines the base reducer for the files channel.
+ * Defines the base reducer for the files channel. For more info google "Redux reducer".
  * @param state The current state.
  * @param event The event that should be used to manipulate the state.
  */
@@ -32,6 +41,42 @@ export function filesReducer(state: FilesState, event: FileEvent) {
     }
 
     return state;
+}
+
+/**
+ * Calculates the difference between the two given states.
+ * In particular, it calculates which operations need to be performed on prev in order to get current.
+ * The returned object contains the files that were added, removed, and/or updated between the two states.
+ * This operation runs in O(n) time where n is the number of files.
+ * @param prev The previous state.
+ * @param current The current state.
+ */
+export function calculateStateDiff(prev: FilesState, current: FilesState): FilesStateDiff {
+
+    let diff: FilesStateDiff = {
+        prev: prev,
+        current: current,
+        addedFiles: [],
+        removedFiles: [],
+        updatedFiles: []
+    };
+
+    const ids = union(keys(prev), keys(current));
+
+    ids.forEach(id => {
+        const prevVal = prev[id];
+        const currVal = current[id];
+        
+        if (prevVal && !currVal) {
+            diff.removedFiles.push(prevVal);
+        } else if(!prevVal && currVal) {
+            diff.addedFiles.push(currVal);
+        } else if(prevVal !== currVal) {
+            diff.updatedFiles.push(currVal);
+        }
+    });
+
+    return diff;
 }
 
 /**
