@@ -12,6 +12,7 @@ import {
   PartialFile, 
   Workspace,
   action,
+  calculateStateDiff,
 } from 'common/Files';
 import { 
   filterFilesBySelection, 
@@ -279,7 +280,7 @@ export class FileManager {
       const prev = pair[0];
       const curr = pair[1];
 
-      return calculateStateChanges(prev, curr);
+      return calculateStateDiff(prev, curr);
     }));
 
     const fileAdded = this._files.events.pipe(
