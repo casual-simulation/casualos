@@ -50,8 +50,37 @@ export function filesReducer(state: FilesState, event: FileEvent) {
  * This operation runs in O(n) time where n is the number of files.
  * @param prev The previous state.
  * @param current The current state.
+ * @param event If provided, this event will be used to help short-circut the diff calculation to be O(1) whenever the event is a 'file_added', 'file_removed', or 'file_updated' event.
  */
-export function calculateStateDiff(prev: FilesState, current: FilesState): FilesStateDiff {
+export function calculateStateDiff(prev: FilesState, current: FilesState, event?: FileEvent): FilesStateDiff {
+
+    if (event) {
+        if (event.type === 'file_added') {
+            return {
+                prev: prev,
+                current: current,
+                addedFiles: [current[event.id]],
+                removedFiles: [],
+                updatedFiles: []
+            };
+        } else if(event.type === 'file_removed') {
+            return {
+                prev: prev,
+                current: current,
+                addedFiles: [],
+                removedFiles: [prev[event.id]],
+                updatedFiles: []
+            };
+        } else if(event.type === 'file_updated') {
+            return {
+                prev: prev,
+                current: current,
+                addedFiles: [],
+                removedFiles: [],
+                updatedFiles: [current[event.id]]
+            };
+        }
+    }
 
     let diff: FilesStateDiff = {
         prev: prev,

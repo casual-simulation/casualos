@@ -1,4 +1,4 @@
-import { filesReducer, fileAdded, FilesState, fileRemoved, action } from './FilesChannel';
+import { filesReducer, fileAdded, FilesState, fileRemoved, action, calculateStateDiff } from './FilesChannel';
 import { Workspace, Object } from './File';
 import { values } from 'lodash';
 import uuid from 'uuid/v4';
@@ -110,6 +110,188 @@ describe('FilesChannel', () => {
                     }
                 });
             });
+        });
+
+    });
+
+    describe('calculateStateDiff()', () => {
+
+        it('should return the same previous and current states', () => {
+            const prevState: FilesState = {};
+            const currState: FilesState = {};
+
+            const result = calculateStateDiff(prevState, currState);
+
+            expect(result.prev).toBe(prevState);
+            expect(result.current).toBe(currState);
+            expect(prevState).not.toBe(currState);
+        });
+
+        it('should return no changes', () => {
+            const prevState: FilesState = {
+                'test': {
+                    type: 'workspace',
+                    id: 'test',
+                    position: {x:0, y:0, z:0},
+                    size: 1
+                }
+            };
+            const currState: FilesState = {
+                'test': prevState['test']
+            };
+
+            const result = calculateStateDiff(prevState, currState);
+
+            expect(result.addedFiles.length).toBe(0);
+            expect(result.removedFiles.length).toBe(0);
+            expect(result.updatedFiles.length).toBe(0);
+        });
+
+        it('should detect that a file was added', () => {
+            const prevState: FilesState = {
+                'test': {
+                    type: 'workspace',
+                    id: 'test',
+                    position: {x:0, y:0, z:0},
+                    size: 1
+                }
+            };
+            const currState: FilesState = {
+                'new': {
+                    type:'object',
+                    id: 'new',
+                    tags: {
+                        _position: {x:0,y:0,z:0},
+                        _workspace: 'test',
+                    }
+                },
+                'test': prevState['test']
+            };
+
+            const result = calculateStateDiff(prevState, currState);
+
+            expect(result.removedFiles.length).toBe(0);
+            expect(result.updatedFiles.length).toBe(0);
+            expect(result.addedFiles.length).toBe(1);
+            expect(result.addedFiles[0]).toBe(currState['new']);
+        });
+
+        it('should detect that a file was removed', () => {
+            const prevState: FilesState = {
+                'test': {
+                    type: 'workspace',
+                    id: 'test',
+                    position: {x:0, y:0, z:0},
+                    size: 1
+                }
+            };
+            const currState: FilesState = {};
+
+            const result = calculateStateDiff(prevState, currState);
+
+            expect(result.addedFiles.length).toBe(0);
+            expect(result.updatedFiles.length).toBe(0);
+            expect(result.removedFiles.length).toBe(1);
+            expect(result.removedFiles[0]).toBe(prevState['test']);
+        });
+
+        it('should detect that a file was updated', () => {
+            const prevState: FilesState = {
+                'test': {
+                    type: 'workspace',
+                    id: 'test',
+                    position: {x:0, y:0, z:0},
+                    size: 1
+                },
+                'updated': {
+                    type: 'object',
+                    id: 'updated',
+                    tags: {
+                        _position: {x:0, y:0, z:0},
+                        _workspace: 'test'
+                    }
+                }
+            };
+            const currState: FilesState = {
+                'test': prevState['test'],
+                'updated': {
+                    type: 'object',
+                    id: 'updated',
+                    tags: {
+                        _position: {x:0, y:0, z:0},
+                        _workspace: null
+                    }
+                }
+            };
+
+            const result = calculateStateDiff(prevState, currState);
+
+            expect(result.addedFiles.length).toBe(0);
+            expect(result.removedFiles.length).toBe(0);
+            expect(result.updatedFiles.length).toBe(1);
+            expect(result.updatedFiles[0]).toBe(currState['updated']);
+        });
+
+        it('should handle multiple changes at once', () => {
+            const prevState: FilesState = {
+                'test': {
+                    type: 'workspace',
+                    id: 'test',
+                    position: {x:0, y:0, z:0},
+                    size: 1
+                },
+                'removed': {
+                    type: 'workspace',
+                    id: 'removed',
+                    position: {x:0, y:0, z:0},
+                    size: 2
+                },
+                'updated': {
+                    type: 'object',
+                    id: 'updated',
+                    tags: {
+                        _position: {x:0, y:0, z:0},
+                        _workspace: 'test'
+                    }
+                }
+            };
+            const currState: FilesState = {
+                'test': prevState['test'],
+                'updated': {
+                    type: 'object',
+                    id: 'updated',
+                    tags: {
+                        _position: {x:0, y:0, z:0},
+                        _workspace: null
+                    }
+                },
+                'new': {
+                    type: 'object',
+                    id: 'new',
+                    tags: {
+                        _position: {x:1, y:0, z:3},
+                        _workspace: null
+                    }
+                },
+                'new2': {
+                    type: 'object',
+                    id: 'new',
+                    tags: {
+                        _position: {x:1, y:15, z:3},
+                        _workspace: 'test'
+                    }
+                }
+            };
+
+            const result = calculateStateDiff(prevState, currState);
+
+            expect(result.addedFiles.length).toBe(2);
+            expect(result.addedFiles[0]).toBe(currState['new']);
+            expect(result.addedFiles[1]).toBe(currState['new2']);
+            expect(result.removedFiles.length).toBe(1);
+            expect(result.removedFiles[0]).toBe(prevState['removed']);
+            expect(result.updatedFiles.length).toBe(1);
+            expect(result.updatedFiles[0]).toBe(currState['updated']);
         });
     });
 });
