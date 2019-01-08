@@ -1,24 +1,17 @@
 
+import process from 'process';
 import { Server, Config } from './server';
-import * as path from 'path';
 
-const config: Config = {
-    socket: {
-        pingInterval: 2000,
-        pingTimeout: 10000,
-    },
-    socketPort: 4567,
-    httpPort: 3000,
-    client: {
-        dist: path.resolve(__dirname, '..', '..', 'WebClient', 'dist')
-    },
-    channels: {
-        mongodb: {
-            url: 'mongodb://db-04.1.back-end.io:27017',
-            dbName: 'SO4'
-        }
-    }
-};
+import prodConfig from './config.prod';
+import devConfig from './config.dev'; 
+
+const env = process.env.NODE_ENV;
+let config: Config;
+if(env === 'production') {
+    config = prodConfig;
+} else {
+    config = devConfig;
+}
 
 const server = new Server(config);
 
