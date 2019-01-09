@@ -12,7 +12,8 @@
     "watch:server": "webpack --config SO4/webpack.config.js --watch",
     "watch:client": "webpack --config WebClient/webpack.dev.js --watch",
     "test": "jest",
-    "test:watch": "jest --watchAll"
+    "test:watch": "jest --watchAll",
+    "test:ci": "jest --ci --reporters=default --reporters=jest-junit"
   },
   "repository": {
     "type": "git",
@@ -51,6 +52,7 @@
     "html-webpack-plugin": "^3.2.0",
     "imports-loader": "^0.8.0",
     "jest": "^23.6.0",
+    "jest-junit": "^5.2.0",
     "jest-raw-loader": "^1.0.1",
     "mini-css-extract-plugin": "^0.5.0",
     "mocha": "^5.2.0",
