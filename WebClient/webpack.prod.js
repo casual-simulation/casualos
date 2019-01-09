@@ -1,5 +1,6 @@
 const path = require('path');
 const merge = require('webpack-merge');
+const webpack = require('webpack');
 const TerserPlugin = require('terser-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
@@ -43,7 +44,8 @@ module.exports = merge.smart(common, {
     plugins: [
         new MiniCssExtractPlugin({
             filename: '[name].[contenthash].css'
-        })
+        }),
+        new webpack.HashedModuleIdsPlugin()
     ],
     optimization: {
         minimize: true,
@@ -53,6 +55,16 @@ module.exports = merge.smart(common, {
                 sourceMap: true
             }),
             new OptimizeCSSAssetsPlugin({})
-        ]
+        ],
+        runtimeChunk: 'single',
+        splitChunks: {
+            cacheGroups: {
+                vendor: {
+                    test: /[\\/](node_modules|public)[\\/]/,
+                    name: 'vendors',
+                    chunks: 'all'
+                }
+            }
+        }
     }
 });
