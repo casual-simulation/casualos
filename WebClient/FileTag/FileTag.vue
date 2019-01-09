@@ -1,8 +1,7 @@
 <template>
   <span class="tag">
     <span v-if="!isFilter">
-      <span class="hashtag">#</span>
-      <span class="tag-name">{{tag}}</span>
+      <span class="hashtag">#</span><span class="tag-name">{{tag}}</span>
     </span>
     <span v-if="isFilter" class="filter">
       <span class="event-name">{{filterData.eventName}}</span>
