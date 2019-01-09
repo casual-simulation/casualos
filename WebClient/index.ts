@@ -1,4 +1,4 @@
-
+import * as Sentry from '@sentry/browser';
 import Vue from 'vue';
 import VueRouter, { RouteConfig } from 'vue-router';
 import { 
@@ -25,6 +25,20 @@ import App from './App/App';
 import Welcome from './Welcome/Welcome';
 import { polyfill } from 'es6-promise';
 import { appManager } from './AppManager';
+
+const sentryEnv = PRODUCTION ? 'prod' : 'dev';
+
+if (SENTRY_DSN) {
+    Sentry.init({
+        dsn: SENTRY_DSN,
+        integrations: [new Sentry.Integrations.Vue({ Vue: Vue })],
+        release: GIT_HASH,
+        environment: sentryEnv,
+        enabled: ENABLE_SENTRY
+    });
+} else {
+    console.log('Skipping Sentry Initialization');
+}
 
 const Home = () => import('./Home/Home');
 const Editor = () => import('./Editor/Editor');

@@ -1,8 +1,11 @@
+const childProcess = require('child_process');
 const path = require('path');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const webpack = require('webpack');
+
+const commitHash = childProcess.execSync('git rev-parse HEAD').toString().trim();
 
 module.exports = {
   entry: path.resolve(__dirname, 'index.ts'),
@@ -74,6 +77,10 @@ module.exports = {
     }),
     new webpack.ProvidePlugin({
       THREE: 'three',
+    }),
+    new webpack.DefinePlugin({
+      GIT_HASH: JSON.stringify(commitHash),
+      SENTRY_DSN: JSON.stringify('***REMOVED***'), // TODO: Replace with real DSN
     })
   ]
 };
