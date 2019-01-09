@@ -18,7 +18,7 @@ module.exports = {
       },
       {
         test: /\.vue$/,
-        loader: 'vue-loader',
+        use: 'vue-loader',
         exclude: /node_modules/
       },
       {
@@ -28,15 +28,15 @@ module.exports = {
       },
       {
         test: /\.css$/,
-        loaders: ['style-loader', 'css-loader'],
+        use: ['vue-style-loader', 'css-loader'],
       },
       {
         test: /\.svg$/,
-        loader: 'vue-svg-loader'
+        use: 'vue-svg-loader'
       },
       {
         test: /von-grid.min.js$/,
-        loader: 'exports-loader?vg=vg'
+        use: 'exports-loader?vg=vg'
       },
       {
         test: /\.(png|jpg|gif|gltf)$/,
