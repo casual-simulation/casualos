@@ -21,15 +21,19 @@
         </th>
 
         <th v-if="isMakingNewTag">
-          <span class="hashtag">#</span><input v-model="newTag">
+          <tag-editor v-model="newTag" :tagExists="newTagExists" @valid="newTagValidityUpdated"></tag-editor>
         </th>
 
         <th>
           <md-button
             class="new-tag-button"
+            :disabled="isMakingNewTag && !newTagValid"
             @click="addTag()"
           >{{isMakingNewTag ? "Done": "+ New Tag"}}</md-button>
-          <md-button class="new-tag-button" @click="cancelNewTag()" v-if="isMakingNewTag">Cancel</md-button>
+          <md-button 
+            class="new-tag-button" 
+            @click="cancelNewTag()" 
+            v-if="isMakingNewTag">Cancel</md-button>
         </th>
       </tr>
     </thead>

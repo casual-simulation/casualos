@@ -149,6 +149,45 @@ export function isFilterTag(tag: string) {
 }
 
 /**
+ * Defines an interface that represents the result of validating a tag.
+ */
+export interface TagValidation {
+    valid: boolean;
+    'tag.required'?: TagRequired;
+    'tag.invalidChar'?: TagInvalidChar;
+}
+
+export interface TagRequired {
+
+}
+
+export interface TagInvalidChar {
+    char: string;
+}
+
+/**
+ * Validates the given tag and returns any errors for it.
+ * @param tag The tag.
+ */
+export function validateTag(tag: string) {
+    let errors: TagValidation = {
+        valid: true
+    };
+    if (!tag || !tag.trim()) {
+        errors.valid = false;
+        errors['tag.required'] = {};
+    } else {
+        const filter = parseFilterTag(tag);
+        if(!(filter.partialSuccess || filter.success) && tag.indexOf('#') >= 0) {
+            errors.valid = false;
+            errors['tag.invalidChar'] = { char: '#' };
+        }
+    }
+
+    return errors;
+}
+
+/**
  * Gets the ID of the selection that the user is using.
  * If the user doesn't have a selection, returns null.
  * @param user The user's file.
@@ -308,22 +347,47 @@ export function tagMatchesFilter(tag: string, file: Object, eventName: string): 
  * @param tag 
  */
 export function parseFilterTag(tag: string) {
+    const firstParenIndex = tag.indexOf('(');
     const tagIndex = tag.indexOf('#');
-    const colonIndex = tag.indexOf(':');
-    const tagName = tag.slice(tagIndex + 1, colonIndex);
-    if (tagName && tagIndex > 1) {
-        const firstQuote = tag.indexOf('"');
-        const lastQuote = tag.lastIndexOf('"');
-        const value = tag.slice(firstQuote + 1, lastQuote);
-        const eventName = tag.slice(0, tagIndex - 1);
-        return {
-            success: true,
-            eventName: eventName,
-            filter: {
-                tag: tagName,
-                value: value
+    if (firstParenIndex > 0 && (tagIndex > firstParenIndex || tagIndex < 0)) {
+        const eventName = tag.slice(0, firstParenIndex).trim();
+        
+        if (eventName) {
+            const colonIndex = tag.indexOf(':');
+            if (colonIndex > tagIndex){
+                const tagName = tag.slice(tagIndex + 1, colonIndex).trim();
+                if (tagName && tagIndex > 0) {
+                    let firstQuote = tag.indexOf('"');
+                    if (firstQuote < 0) {
+                        firstQuote = colonIndex;
+                    }
+                    let lastQuote = tag.lastIndexOf('"');
+                    if (lastQuote < 0) {
+                        lastQuote = tag.lastIndexOf(')');
+                        if (lastQuote < 0) {
+                            lastQuote = tag.length;
+                        }
+                    } else if(lastQuote === firstQuote) {
+                        lastQuote = tag.length;
+                    }
+                    const value = tag.slice(firstQuote + 1, lastQuote);
+                    return {
+                        success: true,
+                        eventName: eventName,
+                        filter: {
+                            tag: tagName,
+                            value: value
+                        }
+                    };
+                }
             }
-        };
+                
+            return {
+                success: false,
+                partialSuccess: true,
+                eventName: eventName,
+            };
+        }
     }
     return {
         success: false

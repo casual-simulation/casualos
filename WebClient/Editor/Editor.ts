@@ -4,14 +4,11 @@ import {Provide, Inject} from 'vue-property-decorator';
 import {filter} from 'rxjs/operators';
 import {Object} from 'common/Files';
 import { FileManager } from '../FileManager';
-
 import FileTable from '../FileTable/FileTable';
-import TagEditor from '../TagEditor/TagEditor';
 
 @Component({
     components: {
-        'file-table': FileTable,
-        'tag-editor': TagEditor
+        'file-table': FileTable
     },
     inject: {
         fileManager: 'fileManager'

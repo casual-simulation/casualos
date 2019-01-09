@@ -35,6 +35,7 @@ export default class FileTable extends Vue {
     lastEditedTag: string = null;
     isMakingNewTag: boolean = false;
     newTag: string = 'myNewTag';
+    newTagValid: boolean = true;
 
     get user() {
         return appManager.user;
@@ -42,6 +43,10 @@ export default class FileTable extends Vue {
 
     get hasFiles() {
         return this.files.length > 0;
+    }
+
+    get newTagExists() {
+        return this.tagExists(this.newTag);
     }
 
     addTag() {
@@ -94,6 +99,10 @@ export default class FileTable extends Vue {
 
     tagExists(tag: string): boolean {
         return this.tags.indexOf(tag, 0) !== -1;
+    }
+
+    newTagValidityUpdated(valid: boolean) {
+        this.newTagValid = valid;
     }
 
     constructor() {

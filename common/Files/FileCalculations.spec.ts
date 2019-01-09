@@ -7,7 +7,8 @@ import {
     createFile,
     tagsMatchingFilter,
     calculateFileValue,
-    parseFilterTag
+    parseFilterTag,
+    validateTag
 } from './FileCalculations';
 import {
     cloneDeep
@@ -252,6 +253,191 @@ describe('FileCalculations', () => {
                     tag: 'lalalal',
                     value: 'abc'
                 }
+            });
+
+            result = parseFilterTag('+ ( #lalalal : "abc" )');
+            expect(result).toEqual({
+                success: true,
+                eventName: '+',
+                filter: {
+                    tag: 'lalalal',
+                    value: 'abc'
+                }
+            });
+            
+            result = parseFilterTag('+ ( #lalalal : "abc"');
+            expect(result).toEqual({
+                success: true,
+                eventName: '+',
+                filter: {
+                    tag: 'lalalal',
+                    value: 'abc'
+                }
+            });
+
+            result = parseFilterTag('+ ( #lalalal : "abc');
+            expect(result).toEqual({
+                success: true,
+                eventName: '+',
+                filter: {
+                    tag: 'lalalal',
+                    value: 'abc'
+                }
+            });
+
+            result = parseFilterTag('+ ( #lalalal : "abc  ');
+            expect(result).toEqual({
+                success: true,
+                eventName: '+',
+                filter: {
+                    tag: 'lalalal',
+                    value: 'abc  '
+                }
+            });
+
+            result = parseFilterTag('+ ( # lalalal : "abc  ');
+            expect(result).toEqual({
+                success: true,
+                eventName: '+',
+                filter: {
+                    tag: 'lalalal',
+                    value: 'abc  '
+                }
+            });
+
+            result = parseFilterTag('+ ( # lal alal : "abc  ');
+            expect(result).toEqual({
+                success: true,
+                eventName: '+',
+                filter: {
+                    tag: 'lal alal',
+                    value: 'abc  '
+                }
+            });
+
+            result = parseFilterTag('+(#lalalal:abc)');
+            expect(result).toEqual({
+                success: true,
+                eventName: '+',
+                filter: {
+                    tag: 'lalalal',
+                    value: 'abc'
+                }
+            });
+
+            result = parseFilterTag('+(#lalalal:abc');
+            expect(result).toEqual({
+                success: true,
+                eventName: '+',
+                filter: {
+                    tag: 'lalalal',
+                    value: 'abc'
+                }
+            });
+
+            result = parseFilterTag('+(#lalalal: abc\t');
+            expect(result).toEqual({
+                success: true,
+                eventName: '+',
+                filter: {
+                    tag: 'lalalal',
+                    value: ' abc\t'
+                }
+            });
+        });
+
+        it('should return partial success if it was able to parse the event name', () => {
+            const result = parseFilterTag('+ (');
+            expect(result).toEqual({
+                success: false,
+                partialSuccess: true,
+                eventName: '+'
+            });
+        });
+    });
+
+    describe('validateTag()', () => {
+        it('should return invalid when tag is empty or null', () => {
+            let errors = validateTag('');
+            expect(errors).toEqual({
+                valid: false,
+                'tag.required': {}
+            });
+
+            errors = validateTag(null);
+            expect(errors).toEqual({
+                valid: false,
+                'tag.required': {}
+            });
+
+            errors = validateTag('  \t\n');
+            expect(errors).toEqual({
+                valid: false,
+                'tag.required': {}
+            });
+        });
+
+        it('should return invalid when tag contains #', () => {
+            let errors = validateTag('#');
+            expect(errors).toEqual({
+                valid: false,
+                'tag.invalidChar': { char: '#' }
+            });
+
+            errors = validateTag('abc#');
+            expect(errors).toEqual({
+                valid: false,
+                'tag.invalidChar': { char: '#' }
+            });
+
+            errors = validateTag(' #def');
+            expect(errors).toEqual({
+                valid: false,
+                'tag.invalidChar': { char: '#' }
+            });
+        });
+
+        it('should allow # when it is a filter', () => {
+            let errors = validateTag('+');
+            expect(errors).toEqual({
+                valid: true
+            });
+
+            errors = validateTag('+(');
+            expect(errors).toEqual({
+                valid: true
+            });
+
+            errors = validateTag('+(#');
+            expect(errors).toEqual({
+                valid: true
+            });
+
+            errors = validateTag('+(#tag:"###test');
+            expect(errors).toEqual({
+                valid: true
+            });
+
+            errors = validateTag('+(#tag:"###test")');
+            expect(errors).toEqual({
+                valid: true
+            });
+        });
+
+        it('should be valid when tag is fine', () => {
+            let errors = validateTag('abcdef');
+            expect(errors).toEqual({
+                valid: true
+            });
+
+            errors = validateTag('  abcdef');
+            expect(errors).toEqual({
+                valid: true
+            });
+
+            errors = validateTag('abcdef  ');
+            expect(errors).toEqual({
+                valid: true
             });
         });
     });

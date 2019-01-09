@@ -3,66 +3,67 @@ import Component from 'vue-class-component';
 import { Inject, Prop, Watch } from 'vue-property-decorator';
 import { FileManager } from 'WebClient/FileManager';
 import { Object } from 'common/Files';
+import { validateTag } from 'common/Files/FileCalculations';
 
-// TODO: Fix to work again
+/**
+ * A component that manages the logic for editing a tag name.
+ * Used for new tags and potentially for allowing users to change tag names.
+ */
 @Component({
     inject: {
         fileManager: 'fileManager'
     }
 })
-export default class Editor extends Vue {
-
+export default class TagEditor extends Vue {
     @Inject() fileManager: FileManager;
 
-    private _fileId: string;
-    private _prevTag: string;
+    @Prop() value: string;
+    @Prop() tagExists: boolean;
 
-    @Prop() file: Object;
-    @Prop() tag: string;
+    changed: boolean = false;
+    focused: boolean = false;
 
-    get visible(): boolean {
-        return this.file !== null;
+    get showMenu() {
+        return this.focused && this.changed && this.errorMessage;
+        ;
     }
 
-    get code(): string {
-        if (this.file) {
-            return this.file.tags[this.tag] || '';
-        } else {
-            return '';
+    get errorMessage() {
+        const errors = validateTag(this.value);
+        if (!errors.valid) {
+            if(errors['tag.required']) {
+                return 'You must provide a value.';
+            } else if(errors['tag.invalidChar']) {
+                return `Tags cannot contain ${errors['tag.invalidChar'].char}.`;
+            }
         }
-    }
-
-    @Watch('file')
-    onFileChanged() {
-        this._updateCode();
-    }
-
-    @Watch('tag')
-    onTagChanged() {
-        this._updateCode();
-    }
-
-    private _updateCode() {
-        
-    }
-
-    private _didFileOrTagChange() {
-        if (this.file) {
-            return this._fileId !== this.file.id || this._prevTag !== this.tag;
-        } else {
-            return !this._fileId;
+        if (this.tagExists) {
+            return 'This tag already exists.';
         }
+
+        return null;
     }
 
-    private _updateFile() {
+    onInput(value: string) {
+        this.$emit('input', value);
+        this.$nextTick(() => {
+            this.changed = true;
+            const error = this.errorMessage;
+            this.$emit('valid', !error);
+        });
     }
 
-    created() {
+    onFocus() {
+        this.focused = true;
     }
 
-    mounted() {
+    onBlur() {
+        this.focused = false;
     }
 
-    destroyed() {
+    constructor() {
+        super();
+        this.changed = false;
+        this.focused = false;
     }
 };
