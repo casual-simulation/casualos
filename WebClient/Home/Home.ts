@@ -12,7 +12,6 @@ import {uniq} from 'lodash';
 import CubeIcon from './Cube.svg';
 
 import FileTable from '../FileTable/FileTable';
-import { editor } from 'monaco-editor';
 import { ContextMenuEvent } from '../Input';
 
 const numLoadingSteps: number = 4;
