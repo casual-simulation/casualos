@@ -6,7 +6,8 @@ import {
     createCalculationContext,
     createFile,
     tagsMatchingFilter,
-    calculateFileValue
+    calculateFileValue,
+    parseFilterTag
 } from './FileCalculations';
 import {
     cloneDeep
@@ -191,6 +192,67 @@ describe('FileCalculations', () => {
             const tags = tagsMatchingFilter(file, other, '+');
 
             expect(tags).toEqual([]);
+        });
+    });
+
+    describe('parseFilterTag()', () => {
+        it('should return unsucessful if not in the formula syntax', () => {
+            let result = parseFilterTag('myTag');
+            expect(result.success).toBe(false);
+
+            result = parseFilterTag('+myTag');
+            expect(result.success).toBe(false);
+            
+            result = parseFilterTag('+(myTag)');
+            expect(result.success).toBe(false);
+
+            result = parseFilterTag('+(myTag:"")');
+            expect(result.success).toBe(false);
+
+            result = parseFilterTag('#myTag');
+            expect(result.success).toBe(false);
+        });
+
+        it('should return sucessful if in the formula syntax', () => {
+            let result = parseFilterTag('+(#name:"")');
+            expect(result).toEqual({
+                success: true,
+                eventName: '+',
+                filter: {
+                    tag: 'name',
+                    value: ''
+                }
+            });
+
+            result = parseFilterTag('+(#name:"abc")');
+            expect(result).toEqual({
+                success: true,
+                eventName: '+',
+                filter: {
+                    tag: 'name',
+                    value: 'abc'
+                }
+            });
+
+            result = parseFilterTag('-(#name:"abc")');
+            expect(result).toEqual({
+                success: true,
+                eventName: '-',
+                filter: {
+                    tag: 'name',
+                    value: 'abc'
+                }
+            });
+
+            result = parseFilterTag('craziness(#lalalal:"abc")');
+            expect(result).toEqual({
+                success: true,
+                eventName: 'craziness',
+                filter: {
+                    tag: 'lalalal',
+                    value: 'abc'
+                }
+            });
         });
     });
 });
