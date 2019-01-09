@@ -3,10 +3,12 @@
     <thead>
       <tr>
         <th></th>
-        <th>#id</th>
+        <th><file-tag tag="id"></file-tag></th>
 
         <th v-for="(tag, index) in tags" :key="index">
-          #{{tag}}
+
+          <file-tag :tag="tag"></file-tag>
+
           <!-- Show X button for tags that don't have values -->
           <md-button
             class="remove-tag md-icon-button md-dense"

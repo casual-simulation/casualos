@@ -12,13 +12,15 @@ import { SocketManager } from '../SocketManager';
 import FileRow from '../FileRow/FileRow';
 import TagEditor from '../TagEditor/TagEditor';
 import AlertDialogOptions from '../App/DialogOptions/AlertDialogOptions';
+import FileTag from '../FileTag/FileTag';
 
 const numLoadingSteps: number = 4;
 
 @Component({
     components: {
         'file-row': FileRow,
-        'tag-editor': TagEditor
+        'file-tag': FileTag,
+        'tag-editor': TagEditor,
     },
     inject: {
       fileManager: 'fileManager'

@@ -141,6 +141,14 @@ export function isFormulaObject(object: any) {
 }
 
 /**
+ * Determines if the given tag matches the filter syntax.
+ */
+export function isFilterTag(tag: string) {
+    const parsed = parseFilterTag(tag);
+    return parsed.success;
+}
+
+/**
  * Gets the ID of the selection that the user is using.
  * If the user doesn't have a selection, returns null.
  * @param user The user's file.
@@ -291,17 +299,35 @@ export function tagsMatchingFilter(file: Object, other: Object, eventName: strin
  * @param eventName 
  */
 export function tagMatchesFilter(tag: string, file: Object, eventName: string): boolean {
-    const eventIndex = tag.indexOf(eventName);
+    const parsed = parseFilterTag(tag);
+    return parsed.success && parsed.eventName === eventName && file.tags[parsed.filter.tag] === parsed.filter.value;
+}
+
+/**
+ * Parses the given tag filter into its components.
+ * @param tag 
+ */
+export function parseFilterTag(tag: string) {
     const tagIndex = tag.indexOf('#');
     const colonIndex = tag.indexOf(':');
     const tagName = tag.slice(tagIndex + 1, colonIndex);
-    if (tagName) {
+    if (tagName && tagIndex > 1) {
         const firstQuote = tag.indexOf('"');
         const lastQuote = tag.lastIndexOf('"');
         const value = tag.slice(firstQuote + 1, lastQuote);
-        return eventIndex === 0 && file.tags[tagName] === value;
+        const eventName = tag.slice(0, tagIndex - 1);
+        return {
+            success: true,
+            eventName: eventName,
+            filter: {
+                tag: tagName,
+                value: value
+            }
+        };
     }
-    return false;
+    return {
+        success: false
+    };
 }
 
 function _convertToAssignment(object: any): Assignment {
