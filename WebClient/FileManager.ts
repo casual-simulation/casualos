@@ -13,6 +13,7 @@ import {
   Workspace,
   action,
   calculateStateDiff,
+  fileChangeObservables,
 } from 'common/Files';
 import { 
   filterFilesBySelection, 
@@ -51,7 +52,14 @@ import {
   Subject, 
   SubscriptionLike,
 } from 'rxjs';
-import {filter, map, shareReplay, scan, pairwise,} from 'rxjs/operators';
+import {
+  filter, 
+  map, 
+  shareReplay, 
+  scan, 
+  pairwise,
+  flatMap as rxFlatMap
+} from 'rxjs/operators';
 import uuid from 'uuid/v4';
 
 import {AppManager, appManager} from './AppManager';
@@ -270,32 +278,9 @@ export class FileManager {
     const orderedFiles = sortBy(existingFiles, f => f.type === 'object');
     const existingFilesObservable = from(orderedFiles);
 
-    const states = this._files.events.pipe(map(e => this._files.store.state()));
-
-    // pair new states with their previous values
-    const statePairs = states.pipe(pairwise());
-
-    // calculate the difference between the current state and new state.
-    const stateDiffs = statePairs.pipe(map(pair => {
-      const prev = pair[0];
-      const curr = pair[1];
-
-      return calculateStateDiff(prev, curr);
-    }));
-
-    const fileAdded = this._files.events.pipe(
-        filter(event => event.type === 'file_added'),
-        map((event: FileAddedEvent) => event.file));
+    const { fileAdded, fileRemoved, fileUpdated } = fileChangeObservables(this._files);
 
     const allFilesAdded = mergeObservables(fileAdded, existingFilesObservable);
-
-    const fileRemoved = this._files.events.pipe(
-        filter(event => event.type === 'file_removed'),
-        map((event: FileRemovedEvent) => event.id));
-
-    const fileUpdated = this._files.events.pipe(
-        filter(event => event.type === 'file_updated'),
-        map((event: FileUpdatedEvent) => this._filesState[event.id]));
 
     allFilesAdded.subscribe(this._fileDiscoveredObservable);
     fileRemoved.subscribe(this._fileRemovedObservable);

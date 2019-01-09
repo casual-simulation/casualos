@@ -1,6 +1,11 @@
-import { ReducingStateStore, Event } from "../channels-core";
-import {File, Object, Workspace, PartialFile} from './File';
 import {merge, filter, values, union, keys} from 'lodash';
+import {
+    map as rxMap,
+    flatMap as rxFlatMap,
+    pairwise as rxPairwise
+} from 'rxjs/operators';
+import { ReducingStateStore, Event, ChannelConnection } from "../channels-core";
+import {File, Object, Workspace, PartialFile} from './File';
 import { tagsMatchingFilter, createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject } from './FileCalculations';
 
 export interface FilesState {
@@ -106,6 +111,40 @@ export function calculateStateDiff(prev: FilesState, current: FilesState, event?
     });
 
     return diff;
+}
+
+/**
+ * Builds the fileAdded, fileRemoved, and fileUpdated observables from the given channel connection.
+ * @param connection The channel connection.
+ */
+export function fileChangeObservables(connection: ChannelConnection<FilesState>) {
+    const states = connection.events.pipe(rxMap(e => ({state: connection.store.state(), event: e})));
+
+    // pair new states with their previous values
+    const statePairs = states.pipe(rxPairwise());
+
+    // calculate the difference between the current state and new state.
+    const stateDiffs = statePairs.pipe(rxMap(pair => {
+      const prev = pair[0];
+      const curr = pair[1];
+
+      return calculateStateDiff(prev.state, curr.state, <FileEvent>curr.event);
+    }));
+
+    const fileAdded = stateDiffs.pipe(rxFlatMap(diff => diff.addedFiles));
+
+    const fileRemoved = stateDiffs.pipe(
+      rxFlatMap(diff => diff.removedFiles),
+      rxMap(f => f.id)
+    );
+
+    const fileUpdated = stateDiffs.pipe(rxFlatMap(diff => diff.updatedFiles));
+
+    return {
+        fileAdded,
+        fileRemoved,
+        fileUpdated
+    };
 }
 
 /**

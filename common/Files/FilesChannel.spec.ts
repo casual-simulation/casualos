@@ -293,5 +293,174 @@ describe('FilesChannel', () => {
             expect(result.updatedFiles.length).toBe(1);
             expect(result.updatedFiles[0]).toBe(currState['updated']);
         });
+
+        it('should short-circut when a file_added event is given', () => {
+            const prevState: FilesState = {
+                'test': {
+                    type: 'workspace',
+                    id: 'test',
+                    position: {x:0, y:0, z:0},
+                    size: 1
+                },
+            };
+            const currState: FilesState = {
+                'test': prevState['test'],
+                'new': {
+                    type: 'object',
+                    id: 'new',
+                    tags: {
+                        _position: {x:1, y:0, z:3},
+                        _workspace: null
+                    }
+                }
+            };
+
+            const result = calculateStateDiff(prevState, currState, {
+                type: 'file_added',
+                creation_time: new Date(),
+                file: currState['new'],
+                id: 'new'
+            });
+
+            expect(result.removedFiles.length).toBe(0);
+            expect(result.updatedFiles.length).toBe(0);
+            expect(result.addedFiles.length).toBe(1);
+            expect(result.addedFiles[0]).toBe(currState['new']);
+        });
+
+        it('should short-circut when a file_removed event is given', () => {
+            const prevState: FilesState = {
+                'test': {
+                    type: 'workspace',
+                    id: 'test',
+                    position: {x:0, y:0, z:0},
+                    size: 1
+                },
+                'old': {
+                    type: 'object',
+                    id: 'old',
+                    tags: {
+                        _position: {x:1, y:0, z:3},
+                        _workspace: null
+                    }
+                }
+            };
+            const currState: FilesState = {
+                'test': prevState['test'],
+                
+            };
+
+            const result = calculateStateDiff(prevState, currState, {
+                type: 'file_removed',
+                creation_time: new Date(),
+                id: 'old'
+            });
+
+            expect(result.addedFiles.length).toBe(0);
+            expect(result.updatedFiles.length).toBe(0);
+            expect(result.removedFiles.length).toBe(1);
+            expect(result.removedFiles[0]).toBe(prevState['old']);
+        });
+
+        it('should short-circut when a file_updated event is given', () => {
+            const prevState: FilesState = {
+                'updated': {
+                    type: 'workspace',
+                    id: 'updated',
+                    position: {x:0, y:0, z:0},
+                    size: 1
+                },
+            };
+            const currState: FilesState = {
+                'updated': {
+                    type: 'workspace',
+                    id: 'updated',
+                    position: {x:2, y:1, z:3},
+                    size: 1
+                },
+            };
+
+            const result = calculateStateDiff(prevState, currState, {
+                type: 'file_updated',
+                creation_time: new Date(),
+                id: 'updated',
+                update: { 
+                    position: {x:2, y:1, z:3},
+                }
+            });
+
+            expect(result.addedFiles.length).toBe(0);
+            expect(result.removedFiles.length).toBe(0);
+            expect(result.updatedFiles.length).toBe(1);
+            expect(result.updatedFiles[0]).toBe(currState['updated']);
+        });
+
+        it('should not short-circut when a action event is given', () => {
+            const prevState: FilesState = {
+                'test': {
+                    type: 'workspace',
+                    id: 'test',
+                    position: {x:0, y:0, z:0},
+                    size: 1
+                },
+                'removed': {
+                    type: 'workspace',
+                    id: 'removed',
+                    position: {x:0, y:0, z:0},
+                    size: 2
+                },
+                'updated': {
+                    type: 'object',
+                    id: 'updated',
+                    tags: {
+                        _position: {x:0, y:0, z:0},
+                        _workspace: 'test'
+                    }
+                }
+            };
+            const currState: FilesState = {
+                'test': prevState['test'],
+                'updated': {
+                    type: 'object',
+                    id: 'updated',
+                    tags: {
+                        _position: {x:0, y:0, z:0},
+                        _workspace: null
+                    }
+                },
+                'new': {
+                    type: 'object',
+                    id: 'new',
+                    tags: {
+                        _position: {x:1, y:0, z:3},
+                        _workspace: null
+                    }
+                },
+                'new2': {
+                    type: 'object',
+                    id: 'new',
+                    tags: {
+                        _position: {x:1, y:15, z:3},
+                        _workspace: 'test'
+                    }
+                }
+            };
+
+            const result = calculateStateDiff(prevState, currState, {
+                type: 'action',
+                creation_time: new Date(),
+                senderFileId: 'sender',
+                receiverFileId: 'receiver',
+                eventName: 'eventName'
+            });
+
+            expect(result.addedFiles.length).toBe(2);
+            expect(result.addedFiles[0]).toBe(currState['new']);
+            expect(result.addedFiles[1]).toBe(currState['new2']);
+            expect(result.removedFiles.length).toBe(1);
+            expect(result.removedFiles[0]).toBe(prevState['removed']);
+            expect(result.updatedFiles.length).toBe(1);
+            expect(result.updatedFiles[0]).toBe(currState['updated']);
+        });
     });
 });
