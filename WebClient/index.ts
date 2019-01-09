@@ -14,6 +14,7 @@ import {
     MdMenu, 
     MdDialog, 
     MdDialogConfirm,
+    MdDialogAlert,
     MdTabs,
     MdCheckbox,
     MdTooltip,
@@ -60,6 +61,7 @@ Vue.use(MdList);
 Vue.use(MdMenu);
 Vue.use(MdDialog);
 Vue.use(MdDialogConfirm);
+Vue.use(MdDialogAlert)
 Vue.use(MdTabs);
 Vue.use(MdTooltip);
 

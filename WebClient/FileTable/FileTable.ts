@@ -11,7 +11,7 @@ import { SocketManager } from '../SocketManager';
 
 import FileRow from '../FileRow/FileRow';
 import TagEditor from '../TagEditor/TagEditor';
-import ConfirmDialogOptions from '../ConfirmDialog/ConfirmDialogOptions';
+import AlertDialogOptions from '../App/DialogOptions/AlertDialogOptions';
 
 const numLoadingSteps: number = 4;
 
@@ -46,21 +46,13 @@ export default class FileTable extends Vue {
         if (this.isMakingNewTag) {
             // Check to make sure that the tag is unique.
             if (this.tagExists(this.newTag)) {
-                var options = new ConfirmDialogOptions();
+                var options = new AlertDialogOptions();
                 options.title = 'Tag already exists';
                 options.body = 'Tag \'' + this.newTag + '\' already exists on this file.';
-                options.okEvent = 'ok-clicked';
-                options.cancelEvent = 'cancel-clicked';
-
-                var handleConfirm = () => {
-                    EventBus.$off('ok-clicked', handleConfirm);
-                    EventBus.$off('cancel-clicked', handleConfirm);
-                };
-                EventBus.$on('ok-clicked', handleConfirm);
-                EventBus.$on('cancel-clicked', handleConfirm);
+                options.confirmText = "Close";
 
                 // Emit dialog event.
-                EventBus.$emit('showConfirmDialog', options);
+                EventBus.$emit('showAlertDialog', options);
                 return;
             }
             

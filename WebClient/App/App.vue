@@ -24,6 +24,9 @@
                     <md-list-item @click="testConfirmDialog">
                         <span class="md-list-item-text">Test Confirm Dialog</span>
                     </md-list-item>
+                    <md-list-item @click="testAlertDialog">
+                        <span class="md-list-item-text">Test Alert Dialog</span>
+                    </md-list-item>
                     <md-list-item @click="openInfoCard" v-if="getUser() != null">
                         <md-icon>info</md-icon>
                         <span class="md-list-item-text">Info Card</span>
@@ -35,13 +38,19 @@
                 </md-list>
             </md-drawer>
 
-            <confirm-dialog
-            v-bind:active="showConfirmDialog" 
-            v-bind:app="this"
-            v-bind:title="confirmDialogOptions.title"
-            v-bind:body="confirmDialogOptions.body"
-            v-bind:okEvent="confirmDialogOptions.okEvent"
-            v-bind:cancelEvent="confirmDialogOptions.cancelEvent" />
+            <md-dialog-confirm
+            :md-active.sync="showConfirmDialog"
+            v-bind:md-title="confirmDialogOptions.title"
+            v-bind:md-content="confirmDialogOptions.body"
+            v-bind:md-confirm-text="confirmDialogOptions.okText"
+            v-bind:md-cancel-text="confirmDialogOptions.cancelText"
+            @md-cancel="onConfirmDialogCancel"
+            @md-confirm="onConfirmDialogOk" />
+
+            <md-dialog-alert
+            :md-active.sync="showAlertDialog"
+            v-bind:md-content="alertDialogOptions.body"
+            v-bind:md-confirm-text="alertDialogOptions.confirmText" />
 
             <md-content class="app-content">
                 <router-view></router-view>
