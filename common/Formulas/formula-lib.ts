@@ -148,7 +148,11 @@ function create(data: any) {
         type: 'file_added',
         id: id,
         file: {
-            tags: data,
+            tags: {
+                _position: {x: 0, y: 0, z:0},
+                _workspace: null,
+                ...data,
+            },
             type: 'object',
             id: id
         }
