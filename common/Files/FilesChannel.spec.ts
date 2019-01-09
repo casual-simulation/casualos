@@ -22,8 +22,6 @@ describe('FilesChannel', () => {
                 expect(newState).toEqual({
                     test: file
                 });
-
-                expect(false).toBe(true);
             });
         });
 
