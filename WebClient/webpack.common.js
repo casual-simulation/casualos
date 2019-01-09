@@ -79,7 +79,8 @@ module.exports = {
       THREE: 'three',
     }),
     new webpack.DefinePlugin({
-      GIT_HASH: JSON.stringify(commitHash)
+      GIT_HASH: JSON.stringify(commitHash),
+      SENTRY_DSN: JSON.stringify('***REMOVED***'), // TODO: Replace with real DSN
     })
   ]
 };

@@ -26,11 +26,15 @@ import Welcome from './Welcome/Welcome';
 import { polyfill } from 'es6-promise';
 import { appManager } from './AppManager';
 
-if (PRODUCTION && SENTRY_DSN) {
+const sentryEnv = PRODUCTION ? 'prod' : 'dev';
+
+if (SENTRY_DSN) {
     Sentry.init({
         dsn: SENTRY_DSN,
         integrations: [new Sentry.Integrations.Vue({ Vue: Vue })],
-        release: GIT_HASH
+        release: GIT_HASH,
+        environment: sentryEnv,
+        enabled: ENABLE_SENTRY
     });
 } else {
     console.log('Skipping Sentry Initialization');
