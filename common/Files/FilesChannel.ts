@@ -2,7 +2,8 @@ import {merge, filter, values, union, keys} from 'lodash';
 import {
     map as rxMap,
     flatMap as rxFlatMap,
-    pairwise as rxPairwise
+    pairwise as rxPairwise,
+    startWith
 } from 'rxjs/operators';
 import { ReducingStateStore, Event, ChannelConnection } from "../channels-core";
 import {File, Object, Workspace, PartialFile} from './File';
@@ -25,7 +26,7 @@ export type FileEvent =
     FileAddedEvent | 
     FileRemovedEvent | 
     FileUpdatedEvent |
-    ActionEvent;
+    FileTransactionEvent;
 
 /**
  * Defines the base reducer for the files channel. For more info google "Redux reducer".
@@ -41,8 +42,8 @@ export function filesReducer(state: FilesState, event: FileEvent) {
         return fileRemovedReducer(state, event);
     } else if(event.type === 'file_updated') {
         return fileUpdatedReducer(state, event);
-    } else if(event.type === 'action') {
-        return actionReducer(state, event);
+    } else if(event.type === 'transaction') {
+        return applyEvents(state, event.events);
     }
 
     return state;
@@ -118,7 +119,10 @@ export function calculateStateDiff(prev: FilesState, current: FilesState, event?
  * @param connection The channel connection.
  */
 export function fileChangeObservables(connection: ChannelConnection<FilesState>) {
-    const states = connection.events.pipe(rxMap(e => ({state: connection.store.state(), event: e})));
+    const states = connection.events.pipe(
+        rxMap(e => ({state: connection.store.state(), event: e})), 
+        startWith({state: connection.store.state(), event: null})
+    );
 
     // pair new states with their previous values
     const statePairs = states.pipe(rxPairwise());
@@ -145,6 +149,34 @@ export function fileChangeObservables(connection: ChannelConnection<FilesState>)
         fileRemoved,
         fileUpdated
     };
+}
+
+/**
+ * Calculates the set of events that should be run for the given action.
+ * @param state The current file state.
+ * @param action The action to process.
+ */
+export function calculateActionEvents(state: FilesState, action: Action): FileEvent[] {
+    const objects = <Object[]>values(state).filter(f => f.type === 'object');
+    const sender = <Object>state[action.senderFileId];
+    const receiver = <Object>state[action.receiverFileId];
+    const context = createCalculationContext(objects);
+    const events = [
+        ...eventActions(objects, context, sender, receiver, action.eventName),
+        ...eventActions(objects, context, receiver, sender, action.eventName),
+        fileUpdated(sender.id, {
+            tags: {
+                _destroyed: true
+            }
+        }),
+        fileUpdated(receiver.id, {
+            tags: {
+                _destroyed: true
+            }
+        })
+    ];
+
+    return events;
 }
 
 /**
@@ -188,34 +220,6 @@ function fileUpdatedReducer(state: FilesState, event: FileUpdatedEvent) {
     return newData;
 }
 
-/**
- * The reducer for the "action" event type.
- * @param state 
- * @param event 
- */
-function actionReducer(state: FilesState, event: ActionEvent) {
-    const objects = <Object[]>values(state).filter(f => f.type === 'object');
-    const sender = <Object>state[event.senderFileId];
-    const receiver = <Object>state[event.receiverFileId];
-    const context = createCalculationContext(objects);
-    const events = [
-        ...eventActions(objects, context, sender, receiver, event.eventName),
-        ...eventActions(objects, context, receiver, sender, event.eventName),
-        fileUpdated(sender.id, {
-            tags: {
-                _destroyed: true
-            }
-        }),
-        fileUpdated(receiver.id, {
-            tags: {
-                _destroyed: true
-            }
-        })
-    ];
-
-    return applyEvents(state, events);
-}
-
 function eventActions(objects: Object[], context: FileCalculationContext, file: Object, other: Object, eventName: string): FileEvent[] {
     const filters = tagsMatchingFilter(file, other, eventName);
     const scripts = filters.map(f => calculateFileValue(context, other, f));
@@ -229,9 +233,9 @@ function eventActions(objects: Object[], context: FileCalculationContext, file: 
     return actions;
 }
 
-function applyEvents(state: FilesState, actions: FileEvent[]) {
-    for (let i = 0; i < actions.length; i++) {
-        state = filesReducer(state, actions[i]);
+function applyEvents(state: FilesState, events: FileEvent[]) {
+    for (let i = 0; i < events.length; i++) {
+        state = filesReducer(state, events[i]);
     }
 
     return state;
@@ -261,10 +265,18 @@ export interface FileUpdatedEvent extends Event {
 }
 
 /**
+ * A set of file events in one.
+ */
+export interface FileTransactionEvent extends Event {
+    type: 'transaction';
+    events: FileEvent[];
+}
+
+/**
  * Defines an event for actions.
  * Actions are basically user-defined events.
  */
-export interface ActionEvent extends Event {
+export interface Action {
     type: 'action';
 
     /**
@@ -310,12 +322,19 @@ export function fileUpdated(id: string, update: PartialFile): FileUpdatedEvent {
     };
 }
 
-export function action(senderFileId: string, receiverFileId: string, eventName: string): ActionEvent {
+export function transaction(events: FileEvent[]): FileTransactionEvent {
+    return {
+        type: 'transaction',
+        creation_time: new Date(),
+        events: events
+    };
+}
+
+export function action(senderFileId: string, receiverFileId: string, eventName: string): Action {
     return {
         type: 'action',
         senderFileId,
         receiverFileId,
         eventName,
-        creation_time: new Date()
     };
 }

@@ -1,4 +1,4 @@
-import { filesReducer, fileAdded, FilesState, fileRemoved, action, calculateStateDiff } from './FilesChannel';
+import { filesReducer, fileAdded, FilesState, fileRemoved, action, calculateStateDiff, calculateActionEvents, transaction } from './FilesChannel';
 import { Workspace, Object } from './File';
 import { values } from 'lodash';
 import uuid from 'uuid/v4';
@@ -41,77 +41,79 @@ describe('FilesChannel', () => {
             });
         });
 
-        describe('action', () => {
+    });
 
-            it('should run scripts on the this file and then execute the resulting actions', () => {
-                
-                const state: FilesState = {
-                    thisFile: {
-                        id: 'thisFile',
-                        type: 'object',
-                        tags: {
-                            _position: { x:0, y: 0, z: 0 },
-                            _workspace: 'abc',
-                            '+(#name:"Joe")': 'copy(this)',
-                            '+(#name:"Friend")': 'copy(this, { bad: true })',
-                        }
-                    },
-                    thatFile: {
-                        id: 'thatFile',
-                        type: 'object',
-                        tags: {
-                            _position: { x:0, y: 0, z: 0 },
-                            _workspace: 'def',
-                            name: 'Joe'
-                        }
+    describe('calculateActionEvents()', () => {
+        it('should run scripts on the this file and return the resulting actions', () => {
+            
+            const state: FilesState = {
+                thisFile: {
+                    id: 'thisFile',
+                    type: 'object',
+                    tags: {
+                        _position: { x:0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        '+(#name:"Joe")': 'copy(this)',
+                        '+(#name:"Friend")': 'copy(this, { bad: true })',
                     }
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const newState = filesReducer(state, action('thisFile', 'thatFile', '+'));
-
-                expect(newState).toEqual({
-                    // should create a new value from "thisFile"
-                    'uuid-0': {
-                        id: 'uuid-0',
-                        type: 'object',
-                        tags: {
-                            _position: { x:0, y: 0, z: 0 },
-                            _workspace: 'abc',
-                            '+(#name:"Joe")': 'copy(this)',
-                            '+(#name:"Friend")': 'copy(this, { bad: true })',
-
-                            // the new file is not destroyed
-                        }
-                    },
-                    thisFile: {
-                        id: 'thisFile',
-                        type: 'object',
-                        tags: {
-                            _position: { x:0, y: 0, z: 0 },
-                            _workspace: 'abc',
-                            '+(#name:"Joe")': 'copy(this)',
-                            '+(#name:"Friend")': 'copy(this, { bad: true })',
-
-                            // The original files should be destroyed by default.
-                            _destroyed: true,
-                        }
-                    },
-                    thatFile: {
-                        id: 'thatFile',
-                        type: 'object',
-                        tags: {
-                            _position: { x:0, y: 0, z: 0 },
-                            _workspace: 'def',
-                            _destroyed: true,
-                            name: 'Joe'
-                        }
+                },
+                thatFile: {
+                    id: 'thatFile',
+                    type: 'object',
+                    tags: {
+                        _position: { x:0, y: 0, z: 0 },
+                        _workspace: 'def',
+                        name: 'Joe'
                     }
-                });
+                }
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const fileAction = action('thisFile', 'thatFile', '+');
+            const events = calculateActionEvents(state, fileAction);
+
+            const newState = filesReducer(state, transaction(events));
+
+            expect(newState).toEqual({
+                // should create a new value from "thisFile"
+                'uuid-0': {
+                    id: 'uuid-0',
+                    type: 'object',
+                    tags: {
+                        _position: { x:0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        '+(#name:"Joe")': 'copy(this)',
+                        '+(#name:"Friend")': 'copy(this, { bad: true })',
+
+                        // the new file is not destroyed
+                    }
+                },
+                thisFile: {
+                    id: 'thisFile',
+                    type: 'object',
+                    tags: {
+                        _position: { x:0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        '+(#name:"Joe")': 'copy(this)',
+                        '+(#name:"Friend")': 'copy(this, { bad: true })',
+
+                        // The original files should be destroyed by default.
+                        _destroyed: true,
+                    }
+                },
+                thatFile: {
+                    id: 'thatFile',
+                    type: 'object',
+                    tags: {
+                        _position: { x:0, y: 0, z: 0 },
+                        _workspace: 'def',
+                        _destroyed: true,
+                        name: 'Joe'
+                    }
+                }
             });
         });
-
     });
 
     describe('calculateStateDiff()', () => {
@@ -447,11 +449,9 @@ describe('FilesChannel', () => {
             };
 
             const result = calculateStateDiff(prevState, currState, {
-                type: 'action',
+                type: 'transaction',
                 creation_time: new Date(),
-                senderFileId: 'sender',
-                receiverFileId: 'receiver',
-                eventName: 'eventName'
+                events: []
             });
 
             expect(result.addedFiles.length).toBe(2);
