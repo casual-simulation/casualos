@@ -479,6 +479,7 @@ export default class GameView extends Vue {
   }
 
   private _updateFile(obj: File3D, data: Object) {
+    obj.mesh.visible = !data.tags._destroyed;
     const workspace = this._files[data.tags._workspace];
     obj.file = data;
     if (workspace) {

@@ -14,6 +14,8 @@ import {
   action,
   calculateStateDiff,
   fileChangeObservables,
+  calculateActionEvents,
+  transaction,
 } from 'common/Files';
 import { 
   filterFilesBySelection, 
@@ -94,7 +96,7 @@ export class FileManager {
    * Gets all the files that represent an object.
    */
   get objects(): Object[] {
-    return <any[]>this.files.filter(f => f.type === 'object');
+    return <any[]>this.files.filter(f => f.type === 'object' && !f.tags._destroyed);
   }
 
   /**

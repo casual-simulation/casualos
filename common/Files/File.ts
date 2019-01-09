@@ -14,6 +14,7 @@ export interface Object {
         } | null;
         _hidden?: boolean;
         _selection?: string;
+        _destroyed?: boolean;
         [key: string]: any;
     };
 }
