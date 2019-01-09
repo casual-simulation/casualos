@@ -1,4 +1,5 @@
 import Axios from 'axios';
+import * as Sentry from '@sentry/browser';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 export interface User {
@@ -19,6 +20,16 @@ export class AppManager {
         } else {
             this._user = new BehaviorSubject<User>(null);
         }
+
+        this._user.subscribe(user => {
+            Sentry.configureScope(scope => {
+                if (user) {
+                    scope.setUser(this._user);
+                } else {
+                    scope.clear();
+                }
+            });
+        });
     }
 
     get userObservable(): Observable<User> {
