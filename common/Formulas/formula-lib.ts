@@ -148,7 +148,11 @@ function create(data: any) {
         type: 'file_added',
         id: id,
         file: {
-            tags: data,
+            tags: {
+                _position: {x: 0, y: 0, z:0},
+                _workspace: null,
+                ...data,
+            },
             type: 'object',
             id: id
         }
@@ -157,18 +161,21 @@ function create(data: any) {
 
 function copy(file: any, newData?: any) {
     var id = uuid();
+    let newFile = {
+        tags: {
+            ...file,
+            ...newData,
+        },
+        type: 'object',
+        id: id
+    };
+
+    delete newFile.tags._converted;
+    delete newFile.tags.id;
+
     __actions.push({
         type: 'file_added',
         id: id,
-        file: {
-            tags: {
-                ...file,
-                ...newData,
-                id: undefined,
-                _converted: undefined
-            },
-            type: 'object',
-            id: id
-        }
+        file: newFile
     });
 }
