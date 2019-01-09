@@ -1,0 +1,21 @@
+.hashtag {
+    color: rgb(47, 182, 255);
+}
+
+/* .tag-name {
+
+} */
+
+.tag-value {
+    font-weight: normal;
+}
+
+.event-name {
+    color: #FE772F;
+}
+
+.filter-condition {
+    padding: 4px;
+    border: solid 1px #000;
+    border-radius: 3px;
+}

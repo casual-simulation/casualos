@@ -141,6 +141,14 @@ export function isFormulaObject(object: any) {
 }
 
 /**
+ * Determines if the given tag matches the filter syntax.
+ */
+export function isFilterTag(tag: string) {
+    const parsed = parseFilterTag(tag);
+    return parsed.success;
+}
+
+/**
  * Gets the ID of the selection that the user is using.
  * If the user doesn't have a selection, returns null.
  * @param user The user's file.
