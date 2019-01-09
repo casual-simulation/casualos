@@ -20,8 +20,8 @@
           </md-button>
         </th>
 
-        <th v-if="isMakingNewTag">#
-          <input v-model="newTag">
+        <th v-if="isMakingNewTag">
+          <span class="hashtag">#</span><input v-model="newTag">
         </th>
 
         <th>
