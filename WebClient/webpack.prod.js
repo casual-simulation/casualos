@@ -42,6 +42,10 @@ module.exports = merge.smart(common, {
         ]
     },
     plugins: [
+        new webpack.DefinePlugin({
+            PRODUCTION: JSON.stringify(true),
+            SENTRY_DSN: JSON.stringify('***REMOVED***'), // TODO: Replace with real DSN
+        }),
         new MiniCssExtractPlugin({
             filename: '[name].[contenthash].css'
         }),

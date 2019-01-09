@@ -27,3 +27,7 @@ declare module 'formula-lib' {
   const lib: string;
   export default lib; 
 }
+
+declare var PRODUCTION: boolean;
+declare var SENTRY_DSN: string;
+declare var GIT_HASH: string;
