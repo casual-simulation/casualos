@@ -3,10 +3,12 @@
     <thead>
       <tr>
         <th></th>
-        <th>#id</th>
+        <th><file-tag tag="id"></file-tag></th>
 
         <th v-for="(tag, index) in tags" :key="index">
-          #{{tag}}
+
+          <file-tag :tag="tag"></file-tag>
+
           <!-- Show X button for tags that don't have values -->
           <md-button
             class="remove-tag md-icon-button md-dense"
@@ -18,16 +20,20 @@
           </md-button>
         </th>
 
-        <th v-if="isMakingNewTag">#
-          <input v-model="newTag">
+        <th v-if="isMakingNewTag">
+          <tag-editor v-model="newTag" :tagExists="newTagExists" @valid="newTagValidityUpdated"></tag-editor>
         </th>
 
         <th>
           <md-button
             class="new-tag-button"
+            :disabled="isMakingNewTag && !newTagValid"
             @click="addTag()"
           >{{isMakingNewTag ? "Done": "+ New Tag"}}</md-button>
-          <md-button class="new-tag-button" @click="cancelNewTag()" v-if="isMakingNewTag">Cancel</md-button>
+          <md-button 
+            class="new-tag-button" 
+            @click="cancelNewTag()" 
+            v-if="isMakingNewTag">Cancel</md-button>
         </th>
       </tr>
     </thead>

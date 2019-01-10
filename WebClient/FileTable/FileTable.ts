@@ -11,14 +11,16 @@ import { SocketManager } from '../SocketManager';
 
 import FileRow from '../FileRow/FileRow';
 import TagEditor from '../TagEditor/TagEditor';
-import ConfirmDialogOptions from '../ConfirmDialog/ConfirmDialogOptions';
+import AlertDialogOptions from '../App/DialogOptions/AlertDialogOptions';
+import FileTag from '../FileTag/FileTag';
 
 const numLoadingSteps: number = 4;
 
 @Component({
     components: {
         'file-row': FileRow,
-        'tag-editor': TagEditor
+        'file-tag': FileTag,
+        'tag-editor': TagEditor,
     },
     inject: {
       fileManager: 'fileManager'
@@ -33,6 +35,7 @@ export default class FileTable extends Vue {
     lastEditedTag: string = null;
     isMakingNewTag: boolean = false;
     newTag: string = 'myNewTag';
+    newTagValid: boolean = true;
 
     get user() {
         return appManager.user;
@@ -42,25 +45,21 @@ export default class FileTable extends Vue {
         return this.files.length > 0;
     }
 
+    get newTagExists() {
+        return this.tagExists(this.newTag);
+    }
+
     addTag() {
         if (this.isMakingNewTag) {
             // Check to make sure that the tag is unique.
             if (this.tagExists(this.newTag)) {
-                var options = new ConfirmDialogOptions();
+                var options = new AlertDialogOptions();
                 options.title = 'Tag already exists';
                 options.body = 'Tag \'' + this.newTag + '\' already exists on this file.';
-                options.okEvent = 'ok-clicked';
-                options.cancelEvent = 'cancel-clicked';
-
-                var handleConfirm = () => {
-                    EventBus.$off('ok-clicked', handleConfirm);
-                    EventBus.$off('cancel-clicked', handleConfirm);
-                };
-                EventBus.$on('ok-clicked', handleConfirm);
-                EventBus.$on('cancel-clicked', handleConfirm);
+                options.confirmText = "Close";
 
                 // Emit dialog event.
-                EventBus.$emit('showConfirmDialog', options);
+                EventBus.$emit('showAlertDialog', options);
                 return;
             }
             
@@ -100,6 +99,10 @@ export default class FileTable extends Vue {
 
     tagExists(tag: string): boolean {
         return this.tags.indexOf(tag, 0) !== -1;
+    }
+
+    newTagValidityUpdated(valid: boolean) {
+        this.newTagValid = valid;
     }
 
     constructor() {

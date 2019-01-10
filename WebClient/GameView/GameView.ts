@@ -51,6 +51,7 @@ import {
 
 import { FileManager } from '../FileManager';
 import { File, Object, Workspace } from 'common/Files';
+import { gameTime } from '../GameTime';
 
 import { vg } from "von-grid";
 
@@ -98,7 +99,6 @@ export default class GameView extends Vue {
   private _cameraControlsEnabled: boolean = true;
   private _renderer: Renderer;
   private _raycaster: Raycaster;
-  private _clock: Clock;
 
   private _sun: DirectionalLight;
   private _ambient: AmbientLight;
@@ -123,9 +123,6 @@ export default class GameView extends Vue {
   private _meshses: {
     [mesh: number]: string
   } = {};
-
-  private _frames: number;
-
   private _subs: SubscriptionLike[];
 
   get gameView() {
@@ -139,9 +136,6 @@ export default class GameView extends Vue {
     this._draggableObjects = [];
     this._subs = [];
     this._setupScene();
-
-    this._clock.start();
-    this._frames = 0;
     this._renderGame();
 
     this._subs.push(this.fileManager.fileDiscovered.subscribe(file => {
@@ -180,6 +174,7 @@ export default class GameView extends Vue {
     } = this._draggedObjects(leftDrag, leftClickObjects);
 
     this._subs.push(leftDragOperations.subscribe(drag => {
+      // console.log("[GameView] left drag operation frameCount: " + gameTime.frameCount + ", deltaTime: " + gameTime.deltaTime);
       this._handleDrag(drag.ray, drag.workspace, drag.hit);
 
       if (drag.justEndedClicking) {
@@ -600,7 +595,6 @@ export default class GameView extends Vue {
     this._scene.background = new Color(0xCCE6FF);
 
     this._raycaster = new Raycaster();
-    this._clock = new Clock();
 
     this._setupRenderer();
 
@@ -761,10 +755,8 @@ export default class GameView extends Vue {
   }
 
   private _renderGame() {
-    this._frames += 1;
     requestAnimationFrame(() => this._renderGame());
 
-    const deltaTime = this._clock.getDelta();
 
     this._updateGame();
 
