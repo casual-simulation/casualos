@@ -25,6 +25,10 @@ export default class App extends Vue {
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
 
+    get version() {
+        return GIT_HASH.slice(0, 7);
+    }
+
     beforeCreate() {
         this._socketManager = new SocketManager();
         this._fileManager = new FileManager(appManager, this._socketManager);

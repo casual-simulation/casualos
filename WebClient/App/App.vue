@@ -35,6 +35,9 @@
                         <md-icon>exit_to_app</md-icon>
                         <span class="md-list-item-text">Logout</span>
                     </md-list-item>
+                    <md-list-item>
+                        <span class="md-list-item-text">Version: {{version}}</span>
+                    </md-list-item>
                 </md-list>
             </md-drawer>
 
