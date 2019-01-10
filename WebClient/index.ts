@@ -21,6 +21,7 @@ import {
 } from 'vue-material/dist/components';
 import 'vue-material/dist/vue-material.min.css'
 import 'vue-material/dist/theme/default.css'
+import 'pepjs'; // Polyfill for pointer events
 
 import App from './App/App';
 import Welcome from './Welcome/Welcome';
