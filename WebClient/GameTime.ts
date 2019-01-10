@@ -5,14 +5,20 @@ export class GameTime {
     private _timeSinceStart: number;
     private _deltaTime: number;
     private _clock: Clock;
+    private _initialized: boolean;
 
-    constructor() {
-        this._frameCount = 0;
-        this._timeSinceStart = 0;
-        this._deltaTime = 0;
-        this._clock = new Clock(true);
-        
-        requestAnimationFrame(() => this.update());
+    public init() {
+      if (this._initialized)
+        return;
+
+      console.log("[GameTime] Initialize");
+      this._initialized = true;
+      this._frameCount = 0;
+      this._timeSinceStart = 0;
+      this._deltaTime = 0;
+      this._clock = new Clock(true);
+      
+      requestAnimationFrame(() => this.update());
     }
 
     /**

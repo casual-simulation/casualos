@@ -52,6 +52,7 @@ import {
 import { FileManager } from '../FileManager';
 import { File, Object, Workspace } from 'common/Files';
 import { gameTime } from '../GameTime';
+import { gameInput } from '../GameInput';
 
 import { vg } from "von-grid";
 
