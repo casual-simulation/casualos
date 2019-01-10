@@ -251,19 +251,19 @@ export interface ContextMenuAction {
 export const contextMenu = fromEvent<MouseEvent>(document, 'contextmenu');
 
 /**
- * An observable that resolves whenever the document 'mouseup' event triggers.
+ * An observable that resolves whenever the document 'pointerup' event triggers.
  */
-export const mouseUp = fromEvent<MouseEvent>(document, 'mouseup');
+export const pointerUp = fromEvent<MouseEvent>(document, 'pointerup');
 
 /**
- * An observable that resolves whenever the document 'mousedown' event triggers.
+ * An observable that resolves whenever the document 'pointerdown' event triggers.
  */
-export const mouseDown = fromEvent<MouseEvent>(document, 'mousedown');
+export const pointerDown = fromEvent<MouseEvent>(document, 'pointerdown');
 
 /**
- * An observable that resolves whenever the document 'mousemove' event triggers.
+ * An observable that resolves whenever the document 'pointermove' event triggers.
  */
-export const mouseMove = fromEvent<MouseEvent>(document, 'mousemove');
+export const pointerMove = fromEvent<MouseEvent>(document, 'pointermove');
 
 /**
  * An observable that resolves whenever the left mouse button changes its active state.
@@ -288,7 +288,7 @@ export const rightDrag = buttonDrag(rightClickActive);
 /**
  * An observable that maps the context menu events and left/right click events to show/hide events.
  */
-export const showHideContextMenu = contextMenuEvents(contextMenu, mouseDown);
+export const showHideContextMenu = contextMenuEvents(contextMenu, pointerDown);
 
 /**
  * Filters the given mouse event observable based on whether it matches the given button number.
@@ -306,8 +306,8 @@ export function isButton(observable: Observable<MouseEvent>, button: number): Ob
  * @param The number of the button to watch. (0 = left mouse button, 1 = middle mouse button, etc.)
  */
 export function buttonActive(button: number): Observable<boolean> {
-  const clickUp = isButton(mouseUp, button);
-  const clickDown = isButton(mouseDown, button);
+  const clickUp = isButton(pointerUp, button);
+  const clickDown = isButton(pointerDown, button);
 
   const active = combineLatest(
     clickUp,
@@ -380,13 +380,13 @@ export function mouseDistance(first: MouseEvent, second: MouseEvent) {
 export function buttonDrag(active: Observable<boolean>): Observable<MouseDrag> {
   active = combineLatest(
     active,
-    mouseMove,
+    pointerMove,
     (active) => active
   );
   const dragging = detectEdges(active);
   return combineLatest(
     dragging,
-    mouseMove,
+    pointerMove,
     (active, mouse) => ({
       isActive: active.active,
       justStartedClicking: active.started,

@@ -59,7 +59,7 @@ import skyTextureUrl from '../public/images/CGSkies_0132_free.jpg';
 import groundModelUrl from '../public/models/ground.gltf';
 import { 
   isButton, 
-  mouseDown, 
+  pointerDown, 
   leftDrag, 
   rightDrag, 
   showHideContextMenu,
@@ -148,19 +148,19 @@ export default class GameView extends Vue {
       this._fileUpdated(file);
     }));
 
-    const leftClickObjects = this._clickedObjects(isButton(mouseDown, 0));
+    const leftClickObjects = this._clickedObjects(isButton(pointerDown, 0));
 
     this._subs.push(leftClickObjects.subscribe(intersection => {
       this.enableCameraControls(intersection === null);
     }));
 
-    const rightClickObjects = this._clickedObjects(isButton(mouseDown, 2));
+    const rightClickObjects = this._clickedObjects(isButton(pointerDown, 2));
       
     this._subs.push(rightClickObjects.subscribe(intersection => {
       this.enableCameraControls(intersection === null);
     }));
 
-    const middleClickObjects = this._clickedObjects(isButton(mouseDown, 1));
+    const middleClickObjects = this._clickedObjects(isButton(pointerDown, 1));
 
     this._subs.push(middleClickObjects.subscribe(() => {
       // Always allow camera control with middle clicks.
