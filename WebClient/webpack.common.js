@@ -80,7 +80,7 @@ module.exports = {
     }),
     new webpack.DefinePlugin({
       GIT_HASH: JSON.stringify(commitHash),
-      SENTRY_DSN: JSON.stringify('***REMOVED***'), // TODO: Replace with real DSN
+      SENTRY_DSN: JSON.stringify('***REMOVED***'),
     })
   ]
 };
