@@ -19,8 +19,9 @@ import {
     MdCheckbox,
     MdTooltip,
 } from 'vue-material/dist/components';
-import 'vue-material/dist/vue-material.min.css'
-import 'vue-material/dist/theme/default.css'
+import * as OfflinePluginRuntime from 'offline-plugin/runtime';
+import 'vue-material/dist/vue-material.min.css';
+import 'vue-material/dist/theme/default.css';
 import 'pepjs'; // Polyfill for pointer events
 
 import App from './App/App';
@@ -41,6 +42,8 @@ if (SENTRY_DSN) {
 } else {
     console.log('Skipping Sentry Initialization');
 }
+
+OfflinePluginRuntime.install();
 
 const Home = () => import('./Home/Home');
 const Editor = () => import('./Editor/Editor');

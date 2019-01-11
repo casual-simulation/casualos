@@ -3,6 +3,7 @@ const path = require('path');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
+const OfflinePlugin = require('offline-plugin');
 const webpack = require('webpack');
 
 const commitHash = childProcess.execSync('git rev-parse HEAD').toString().trim();
@@ -81,6 +82,13 @@ module.exports = {
     new webpack.DefinePlugin({
       GIT_HASH: JSON.stringify(commitHash),
       SENTRY_DSN: JSON.stringify('***REMOVED***'),
+    }),
+    new OfflinePlugin({
+      appShell: '/',
+      AppCache: false,
+      externals: [
+        'https://fonts.googleapis.com/css?family=Roboto:400,500,700,400italic|Material+Icons'
+      ]
     })
   ]
 };
