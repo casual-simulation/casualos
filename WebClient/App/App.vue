@@ -55,6 +55,11 @@
             v-bind:md-content="alertDialogOptions.body"
             v-bind:md-confirm-text="alertDialogOptions.confirmText" />
 
+            <md-snackbar md-position="center" :md-duration="10000" :md-active.sync="updateAvailable">
+                <span>A new version is available!</span>
+                <md-button class="md-accent" @click="refreshPage()">Refresh</md-button>
+            </md-snackbar>
+
             <md-content class="app-content">
                 <router-view></router-view>
             </md-content>

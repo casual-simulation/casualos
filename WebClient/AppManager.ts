@@ -1,5 +1,7 @@
-import Axios from 'axios';
 import * as Sentry from '@sentry/browser';
+import * as OfflinePluginRuntime from 'offline-plugin/runtime';
+import Axios from 'axios';
+import Vue from 'vue';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 export interface User {
@@ -11,8 +13,86 @@ export interface User {
 export class AppManager {
 
     private _user: BehaviorSubject<User>;
+    private _updateAvailable: BehaviorSubject<boolean>;
 
     constructor() {
+        this._initSentry();
+        this._initOffline();
+        this._initUser();
+    }
+
+    get userObservable(): Observable<User> {
+        return this._user;
+    }
+
+    get user(): User {
+        return this._user.value;
+    }
+
+    /**
+     * Gets an observable that resolves with true once an application update is available.
+     */
+    get updateAvailableObservable(): Observable<boolean> {
+        return this._updateAvailable;
+    }
+
+    private _initSentry() {
+        const sentryEnv = PRODUCTION ? 'prod' : 'dev';
+
+        if (SENTRY_DSN) {
+            Sentry.init({
+                dsn: SENTRY_DSN,
+                integrations: [new Sentry.Integrations.Vue({ Vue: Vue })],
+                release: GIT_HASH,
+                environment: sentryEnv,
+                enabled: ENABLE_SENTRY
+            });
+        } else {
+            console.log('Skipping Sentry Initialization');
+        }
+    }
+
+    private _initOffline() {
+        this._updateAvailable = new BehaviorSubject<boolean>(false);
+
+        OfflinePluginRuntime.install({
+            onUpdating: () => {
+                console.log('[ServiceWorker]: Updating...');
+                Sentry.addBreadcrumb({
+                    message: 'Updating service worker.',
+                    type: 'info',
+                    category: 'app'
+                });
+            },
+            onUpdateReady: () => {
+                console.log('[ServiceWorker]: Update Ready.');
+                OfflinePluginRuntime.applyUpdate();
+            },
+            onUpdated: () => {
+                console.log('[ServiceWorker]: Updated.');
+                Sentry.addBreadcrumb({
+                    message: 'Updated service worker.',
+                    type: 'info',
+                    category: 'app'
+                });
+                this._updateAvailable.next(true);
+            },
+            onUpdateFailed: () => {
+                console.log('[ServiceWorker]: Update failed.');
+                Sentry.captureMessage('Service Worker update failed', Sentry.Severity.Error);
+            },
+            onInstalled: () => {
+                console.log('[ServiceWorker]: Installed.');
+                Sentry.addBreadcrumb({
+                    message: 'Installed service worker.',
+                    type: 'info',
+                    category: 'app'
+                });
+            }
+        });
+    }
+
+    private _initUser() {
         const localStorage = window.localStorage;
         const u = localStorage.getItem("user");
         if (u) {
@@ -30,14 +110,6 @@ export class AppManager {
                 }
             });
         });
-    }
-
-    get userObservable(): Observable<User> {
-        return this._user;
-    }
-
-    get user(): User {
-        return this._user.value;
     }
 
     private _saveUser() {

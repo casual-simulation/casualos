@@ -22,6 +22,7 @@ export default class App extends Vue {
     showNavigation:boolean = false;
     showConfirmDialog: boolean = false;
     showAlertDialog: boolean = false;
+    updateAvailable: boolean = false;
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
 
@@ -35,6 +36,12 @@ export default class App extends Vue {
     }
 
     created() {
+        appManager.updateAvailableObservable.subscribe(updateAvailable => {
+            if (updateAvailable) {
+                this.updateAvailable = true;
+            }
+        })
+
         EventBus.$on('showNavigation', this.onShowNavigation);
         EventBus.$on('showConfirmDialog', this.onShowConfirmDialog);
         EventBus.$on('showAlertDialog', this.onShowAlertDialog);
@@ -94,6 +101,10 @@ export default class App extends Vue {
 
         // Emit dialog event.
         EventBus.$emit('showAlertDialog', options);
+    }
+
+    refreshPage() {
+        window.location.reload();
     }
     
     private onShowNavigation(show: boolean) {

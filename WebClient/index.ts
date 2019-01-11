@@ -18,8 +18,8 @@ import {
     MdTabs,
     MdCheckbox,
     MdTooltip,
+    MdSnackbar,
 } from 'vue-material/dist/components';
-import * as OfflinePluginRuntime from 'offline-plugin/runtime';
 import 'vue-material/dist/vue-material.min.css';
 import 'vue-material/dist/theme/default.css';
 import 'pepjs'; // Polyfill for pointer events
@@ -28,22 +28,6 @@ import App from './App/App';
 import Welcome from './Welcome/Welcome';
 import { polyfill } from 'es6-promise';
 import { appManager } from './AppManager';
-
-const sentryEnv = PRODUCTION ? 'prod' : 'dev';
-
-if (SENTRY_DSN) {
-    Sentry.init({
-        dsn: SENTRY_DSN,
-        integrations: [new Sentry.Integrations.Vue({ Vue: Vue })],
-        release: GIT_HASH,
-        environment: sentryEnv,
-        enabled: ENABLE_SENTRY
-    });
-} else {
-    console.log('Skipping Sentry Initialization');
-}
-
-OfflinePluginRuntime.install();
 
 const Home = () => import('./Home/Home');
 const Editor = () => import('./Editor/Editor');
@@ -68,6 +52,7 @@ Vue.use(MdDialogConfirm);
 Vue.use(MdDialogAlert)
 Vue.use(MdTabs);
 Vue.use(MdTooltip);
+Vue.use(MdSnackbar);
 
 const routes: RouteConfig[] = [
     {
