@@ -52,11 +52,6 @@ import { vg } from "von-grid";
 
 import skyTextureUrl from '../public/images/CGSkies_0132_free.jpg';
 import groundModelUrl from '../public/models/ground.gltf';
-import { 
-  isButton, 
-  mouseDown, 
-  leftDrag, 
-} from '../game-engine/InputOLD';
 
 import { Physics } from '../game-engine/Physics';
 
@@ -126,8 +121,8 @@ export default class GameView extends Vue {
     this._subs = [];
     this._setupScene();
     input.init(this.gameView);
-    this._renderGame();
 
+    // Subscriptions to file events.
     this._subs.push(this.fileManager.fileDiscovered.subscribe(file => {
       this._fileAdded(file);
     }));
@@ -138,67 +133,52 @@ export default class GameView extends Vue {
       this._fileUpdated(file);
     }));
 
-    const leftClickObjects = this._clickedObjects(isButton(mouseDown, 0));
+    this._updateGameView();
 
-    this._subs.push(leftClickObjects.subscribe(intersection => {
-      this.enableCameraControls(intersection === null);
-    }));
 
-    const rightClickObjects = this._clickedObjects(isButton(mouseDown, 2));
+    // const leftClickObjects = this._clickedObjects(isButton(mouseDown, 0));
+
+    // this._subs.push(leftClickObjects.subscribe(intersection => {
+    //   this._enableCameraControls(intersection === null);
+    // }));
+
+    // const rightClickObjects = this._clickedObjects(isButton(mouseDown, 2));
       
-    this._subs.push(rightClickObjects.subscribe(intersection => {
-      this.enableCameraControls(intersection === null);
-    }));
+    // this._subs.push(rightClickObjects.subscribe(intersection => {
+    //   this._enableCameraControls(intersection === null);
+    // }));
 
-    const middleClickObjects = this._clickedObjects(isButton(mouseDown, 1));
+    // const middleClickObjects = this._clickedObjects(isButton(mouseDown, 1));
 
-    this._subs.push(middleClickObjects.subscribe(() => {
-      // Always allow camera control with middle clicks.
-      this.enableCameraControls(true);
-    }));
+    // this._subs.push(middleClickObjects.subscribe(() => {
+    //   // Always allow camera control with middle clicks.
+    //   this._enableCameraControls(true);
+    // }));
 
-    const {
-      dragOperations: leftDragOperations,
-      clickOperations: leftClickOperations,
-      gridsVisible
-    } = this._draggedObjects(leftDrag, leftClickObjects);
+    // const {
+    //   dragOperations: leftDragOperations,
+    //   clickOperations: leftClickOperations,
+    //   gridsVisible
+    // } = this._draggedObjects(leftDrag, leftClickObjects);
 
-    this._subs.push(leftDragOperations.subscribe(drag => {
-      // console.log("[GameView] left drag operation frameCount: " + gameTime.frameCount + ", deltaTime: " + gameTime.deltaTime);
-      this._handleDrag(drag.ray, drag.workspace, drag.hit);
+    // this._subs.push(leftDragOperations.subscribe(drag => {
+    //   // console.log("[GameView] left drag operation frameCount: " + gameTime.frameCount + ", deltaTime: " + gameTime.deltaTime);
+    //   this._handleDrag(drag.ray, drag.workspace, drag.hit);
 
-      if (drag.justEndedClicking) {
-        this._tryCombineFiles(drag);
-      }
-    }));
+    //   if (drag.justEndedClicking) {
+    //     this._tryCombineFiles(drag);
+    //   }
+    // }));
 
-    this._subs.push(leftClickOperations.subscribe(click => {
-      if(click.file !== null && click.file.file.type === 'object') {
-        this._selectFile(click.file);
-      }
-    }));
+    // this._subs.push(leftClickOperations.subscribe(click => {
+    //   if(click.file !== null && click.file.file.type === 'object') {
+    //     this._selectFile(click.file);
+    //   }
+    // }));
 
-    this._subs.push(gridsVisible.subscribe(visible => {
-      this._grids.visible = visible;
-    }));
-
-    // Lets test the context menu.
-    // DO NOT LEAVE THE EVENT HANDLER LIKE THIS.
-    input.contextMenuEvent.addListener((event) => {
-      const screenPos = Input.screenPosition(event, this.gameView);
-      const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this._draggableObjects, this._camera);
-      const hit = Physics.firstRaycastHit(raycastResult);
-
-      if (hit) {
-        const file = this._fileForIntersection(hit);
-        if (file && file.file && file.file.type === 'workspace') {
-          // Now send the actual context menu event.
-          let menuEvent: ContextMenuEvent = { event: event, actions: [] };
-          menuEvent.actions = this._contextMenuActions(file);
-          this.$emit('onContextMenu', menuEvent);
-        }
-      }
-    });
+    // this._subs.push(gridsVisible.subscribe(visible => {
+    //   this._grids.visible = visible;
+    // }));
   }
 
   private _tryCombineFiles(drag: DragOperation) {
@@ -256,58 +236,85 @@ export default class GameView extends Vue {
     }
   }
 
-  private _draggedObjects(observable: Observable<MouseDrag>, clicks: Observable<Intersection>) {
-    const dragPositions: Observable<MouseDragPosition> = observable.pipe(
-      map(drag => ({ ...drag, screenPos: Input.screenPosition(drag.event, this.gameView) })),
-      map(drag => ({ ...drag, ray: Physics.screenPosToRay(drag.screenPos, this._camera) }))
-    );
+  // private _draggedObjects(observable: Observable<MouseDrag>, clicks: Observable<Intersection>) {
+  //   const dragPositions: Observable<MouseDragPosition> = observable.pipe(
+  //     map(drag => ({ ...drag, screenPos: Input.screenPosition(drag.event, this.gameView) })),
+  //     map(drag => ({ ...drag, ray: Physics.screenPosToRay(drag.screenPos, this._camera) }))
+  //   );
 
-    const draggedObjects: Observable<DraggedObject> = combineLatest(
-      clicks,
-      dragPositions,
-      (hit, drag) => ({
-        ...drag,
-        hit,
-      })
-    );
+  //   const draggedObjects: Observable<DraggedObject> = combineLatest(
+  //     clicks,
+  //     dragPositions,
+  //     (hit, drag) => ({
+  //       ...drag,
+  //       hit,
+  //     })
+  //   );
 
-    const dragOperations: Observable<DragOperation> = draggedObjects.pipe(
-      filter(drag => drag.isDragging && Input.eventIsDirectlyOverElement(drag.event, this._canvas)),
-      map(drag => ({
-        ...drag,
-        workspace: this._findWorkspaceForIntersection(drag.hit),
-      })),
-      filter(drag => drag.hit !== null)
-    );
+  //   const dragOperations: Observable<DragOperation> = draggedObjects.pipe(
+  //     filter(drag => drag.isDragging && Input.eventIsDirectlyOverElement(drag.event, this._canvas)),
+  //     map(drag => ({
+  //       ...drag,
+  //       workspace: this._findWorkspaceForIntersection(drag.hit),
+  //     })),
+  //     filter(drag => drag.hit !== null)
+  //   );
 
-    const clickOperations: Observable<ClickOperation> = dragPositions.pipe(
-      filter(e => e.isClicking && Input.eventIsDirectlyOverElement(e.event, this._canvas)),
-      map(e => ({...e, raycast: Physics.raycastAtScreenPos(e.screenPos, this._raycaster, this._draggableObjects, this._camera)})),
-      map(e => ({...e, hit: Physics.firstRaycastHit(e.raycast)})),
-      filter(e => e.hit !== null),
-      map(e => ({...e, file: this._fileForIntersection(e.hit)})),
-    );
+  //   const clickOperations: Observable<ClickOperation> = dragPositions.pipe(
+  //     filter(e => e.isClicking && Input.eventIsDirectlyOverElement(e.event, this._canvas)),
+  //     map(e => ({...e, raycast: Physics.raycastAtScreenPos(e.screenPos, this._raycaster, this._draggableObjects, this._camera)})),
+  //     map(e => ({...e, hit: Physics.firstRaycastHit(e.raycast)})),
+  //     filter(e => e.hit !== null),
+  //     map(e => ({...e, file: this._fileForIntersection(e.hit)})),
+  //   );
 
-    const gridsVisible = draggedObjects.pipe(
-      map(drag => drag.isDragging && drag.hit !== null && this._isFile(drag.hit))
-    );
+  //   const gridsVisible = draggedObjects.pipe(
+  //     map(drag => drag.isDragging && drag.hit !== null && this._isFile(drag.hit))
+  //   );
 
-    return {
-      dragPositions,
-      draggedObjects,
-      dragOperations,
-      clickOperations,
-      gridsVisible
-    };
+  //   return {
+  //     dragPositions,
+  //     draggedObjects,
+  //     dragOperations,
+  //     clickOperations,
+  //     gridsVisible
+  //   };
+  // }
+
+  // private _clickedObjects(observable: Observable<MouseEvent>) {
+  //   return observable.pipe(
+  //     filter(e => Input.eventIsDirectlyOverElement(e, this._canvas)),
+  //     map(e => Input.screenPosition(e, this.gameView)),
+  //     map(pos => Physics.raycastAtScreenPos(pos, this._raycaster, this._draggableObjects, this._camera)),
+  //     map(r => Physics.firstRaycastHit(r)),
+  //   );
+  // }
+
+  private _updateGameView() {
+    // console.log("game view update frame: " + time.frameCount);
+    this._updateInput();
+    this._renderer.render(this._scene, this._camera);
+
+    requestAnimationFrame(() => this._updateGameView());
   }
 
-  private _clickedObjects(observable: Observable<MouseEvent>) {
-    return observable.pipe(
-      filter(e => Input.eventIsDirectlyOverElement(e, this._canvas)),
-      map(e => Input.screenPosition(e, this.gameView)),
-      map(pos => Physics.raycastAtScreenPos(pos, this._raycaster, this._draggableObjects, this._camera)),
-      map(r => Physics.firstRaycastHit(r)),
-    );
+  private _updateInput() {
+    if (input.getContextMenu()) {
+      const event = input.getContextMenuEvent();
+      const screenPos = Input.screenPosition(event, this.gameView);
+      const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this._draggableObjects, this._camera);
+      const hit = Physics.firstRaycastHit(raycastResult);
+
+      if (hit) {
+        const file = this._fileForIntersection(hit);
+        if (file && file.file && file.file.type === 'workspace') {
+          // Now send the actual context menu event.
+          let menuEvent: ContextMenuEvent = { event: event, actions: [] };
+          menuEvent.actions = this._contextMenuActions(file);
+          this.$emit('onContextMenu', menuEvent);
+        }
+      }
+    }
   }
 
   private _isFile(hit: Intersection): boolean {
@@ -322,7 +329,7 @@ export default class GameView extends Vue {
     }
   }
 
-  private enableCameraControls(enabled: boolean) {
+  private _enableCameraControls(enabled: boolean) {
     if (this._cameraControls !== null) {
       if (this._cameraControlsEnabled !== enabled) {
         this._cameraControlsEnabled = enabled;
@@ -741,17 +748,4 @@ export default class GameView extends Vue {
     board.group.position.y = data.position.y + 0.4;
     board.group.position.z = data.position.z;
   }
-
-  private _renderGame() {
-    requestAnimationFrame(() => this._renderGame());
-
-
-    this._updateGame();
-
-    this._renderer.render(this._scene, this._camera);
-  }
-
-  private _updateGame() {
-  }
-
 };
