@@ -26,8 +26,6 @@ import App from './App/App';
 import Welcome from './Welcome/Welcome';
 import { polyfill } from 'es6-promise';
 import { appManager } from './AppManager';
-import { gameTime } from './GameTime';
-import { gameInput } from './GameInput';
 
 const sentryEnv = PRODUCTION ? 'prod' : 'dev';
 
@@ -48,12 +46,6 @@ const Editor = () => import('./Editor/Editor');
 
 // Setup the Promise shim for browsers that don't support promises.
 polyfill();
-
-// Setup game time.
-gameTime.init();
-
-// Setup game input.
-gameInput.init();
 
 Vue.use(VueRouter);
 Vue.use(MdButton);

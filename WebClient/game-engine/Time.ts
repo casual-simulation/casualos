@@ -1,11 +1,11 @@
 import { Clock } from 'three';
 
-export class GameTime {
-    private _frameCount: number;
-    private _timeSinceStart: number;
-    private _deltaTime: number;
+export class Time {
+    private _initialized: boolean = false;
+    private _frameCount: number = 0;
+    private _timeSinceStart: number = 0;
+    private _deltaTime: number = 0;
     private _clock: Clock;
-    private _initialized: boolean;
 
     public init() {
       if (this._initialized)
@@ -52,4 +52,7 @@ export class GameTime {
     }
 }
 
-export const gameTime = new GameTime();
+/**
+ * Instance of Time class.
+ */
+export const time = new Time();

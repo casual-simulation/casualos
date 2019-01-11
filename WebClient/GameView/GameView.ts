@@ -14,6 +14,7 @@ import {
   Vector2,
   Math as ThreeMath,
   Group,
+  Ray,
   Raycaster,
   Intersection,
   MeshBasicMaterial,
@@ -51,8 +52,8 @@ import {
 
 import { FileManager } from '../FileManager';
 import { File, Object, Workspace } from 'common/Files';
-import { gameTime } from '../GameTime';
-import { gameInput } from '../GameInput';
+import { time } from '../game-engine/Time';
+import { input, Input } from '../game-engine/input';
 
 import { vg } from "von-grid";
 
@@ -64,26 +65,21 @@ import {
   leftDrag, 
   rightDrag, 
   showHideContextMenu,
-  screenPosToRay, 
-  eventIsDirectlyOverElement, 
-  firstRaycastHit,
-  screenPosition,
-  raycastAtScreenPos,
-  pointOnPlane,
-  pointOnRay,
-  Ray,
+} from '../game-engine/InputOLD';
+
+import { Physics } from '../game-engine/Physics';
+
+import { 
   File3D,
   MouseDrag, 
   ClickOperation,
   DragOperation,
   MouseDragPosition,
   DraggedObject,
-  disableContextMenuWithin,
   EventWrapper,
   ContextMenuEvent,
   ContextMenuAction,
-  eventIsOverElement,
-} from '../Input';
+} from '../game-engine/Interfaces';
 
 @Component({
   inject: {
@@ -132,11 +128,14 @@ export default class GameView extends Vue {
   }
 
   async mounted() {
+    time.init();
+
     this._files = {};
     this._meshses = {};
     this._draggableObjects = [];
     this._subs = [];
     this._setupScene();
+    input.init(this.gameView);
     this._renderGame();
 
     this._subs.push(this.fileManager.fileDiscovered.subscribe(file => {
@@ -194,11 +193,11 @@ export default class GameView extends Vue {
     }));
 
     const contextMenuEvents = showHideContextMenu.pipe(
-      map(e => ({ ...e, screenPos: screenPosition(e.event, this.gameView) })),
-      map(e => ({ ...e, ray: screenPosToRay(e.screenPos, this._camera) })),
-      filter(e => eventIsOverElement(e.event, this._canvas)),
-      map(e => ({...e, raycast: raycastAtScreenPos(e.screenPos, this._raycaster, this._draggableObjects, this._camera)})),
-      map(e => ({...e, hit: firstRaycastHit(e.raycast)})),
+      map(e => ({ ...e, screenPos: Input.screenPosition(e.event, this.gameView) })),
+      map(e => ({ ...e, ray: Physics.screenPosToRay(e.screenPos, this._camera) })),
+      filter(e => Input.eventIsOverElement(e.event, this._canvas)),
+      map(e => ({...e, raycast: Physics.raycastAtScreenPos(e.screenPos, this._raycaster, this._draggableObjects, this._camera)})),
+      map(e => ({...e, hit: Physics.firstRaycastHit(e.raycast)})),
       map(e => ({...e, file: e.hit ? this._fileForIntersection(e.hit) : null})),
       map(e => ({...e, actions: this._contextMenuActions(e.file) }))
     );
@@ -208,12 +207,10 @@ export default class GameView extends Vue {
         this._showContextMenu(click);
       }
     }));
-
-    this._subs.push(disableContextMenuWithin(this.gameView));
   }
 
   private _tryCombineFiles(drag: DragOperation) {
-    const raycast = raycastAtScreenPos(drag.screenPos, this._raycaster, this._draggableObjects, this._camera);
+    const raycast = Physics.raycastAtScreenPos(drag.screenPos, this._raycaster, this._draggableObjects, this._camera);
     const other = find(raycast.intersects, (val, index, col) => val.object !== drag.hit.object);
     if (other) {
       const file = this._fileForIntersection(drag.hit);
@@ -257,6 +254,8 @@ export default class GameView extends Vue {
   }
 
   beforeDestroy() {
+    input.terminate();
+
     if (this._subs) {
       this._subs.forEach(sub => {
         sub.unsubscribe();
@@ -267,8 +266,8 @@ export default class GameView extends Vue {
 
   private _draggedObjects(observable: Observable<MouseDrag>, clicks: Observable<Intersection>) {
     const dragPositions: Observable<MouseDragPosition> = observable.pipe(
-      map(drag => ({ ...drag, screenPos: screenPosition(drag.event, this.gameView) })),
-      map(drag => ({ ...drag, ray: screenPosToRay(drag.screenPos, this._camera) }))
+      map(drag => ({ ...drag, screenPos: Input.screenPosition(drag.event, this.gameView) })),
+      map(drag => ({ ...drag, ray: Physics.screenPosToRay(drag.screenPos, this._camera) }))
     );
 
     const draggedObjects: Observable<DraggedObject> = combineLatest(
@@ -281,7 +280,7 @@ export default class GameView extends Vue {
     );
 
     const dragOperations: Observable<DragOperation> = draggedObjects.pipe(
-      filter(drag => drag.isDragging && eventIsDirectlyOverElement(drag.event, this._canvas)),
+      filter(drag => drag.isDragging && Input.eventIsDirectlyOverElement(drag.event, this._canvas)),
       map(drag => ({
         ...drag,
         workspace: this._findWorkspaceForIntersection(drag.hit),
@@ -290,9 +289,9 @@ export default class GameView extends Vue {
     );
 
     const clickOperations: Observable<ClickOperation> = dragPositions.pipe(
-      filter(e => e.isClicking && eventIsDirectlyOverElement(e.event, this._canvas)),
-      map(e => ({...e, raycast: raycastAtScreenPos(e.screenPos, this._raycaster, this._draggableObjects, this._camera)})),
-      map(e => ({...e, hit: firstRaycastHit(e.raycast)})),
+      filter(e => e.isClicking && Input.eventIsDirectlyOverElement(e.event, this._canvas)),
+      map(e => ({...e, raycast: Physics.raycastAtScreenPos(e.screenPos, this._raycaster, this._draggableObjects, this._camera)})),
+      map(e => ({...e, hit: Physics.firstRaycastHit(e.raycast)})),
       filter(e => e.hit !== null),
       map(e => ({...e, file: this._fileForIntersection(e.hit)})),
     );
@@ -312,10 +311,10 @@ export default class GameView extends Vue {
 
   private _clickedObjects(observable: Observable<MouseEvent>) {
     return observable.pipe(
-      filter(e => eventIsDirectlyOverElement(e, this._canvas)),
-      map(e => screenPosition(e, this.gameView)),
-      map(pos => raycastAtScreenPos(pos, this._raycaster, this._draggableObjects, this._camera)),
-      map(r => firstRaycastHit(r)),
+      filter(e => Input.eventIsDirectlyOverElement(e, this._canvas)),
+      map(e => Input.screenPosition(e, this.gameView)),
+      map(pos => Physics.raycastAtScreenPos(pos, this._raycaster, this._draggableObjects, this._camera)),
+      map(r => Physics.firstRaycastHit(r)),
     );
   }
 
@@ -363,7 +362,7 @@ export default class GameView extends Vue {
   }
 
   private _dragWorkspace(mouseDir: Ray, workspace: File3D) {
-    const point = pointOnPlane(mouseDir, this._workspacePlane);
+    const point = Physics.pointOnPlane(mouseDir, this._workspacePlane);
     if (point) {
       this.fileManager.updateFile(workspace.file, {
         position: {
@@ -399,7 +398,7 @@ export default class GameView extends Vue {
           }
         });
       } else {
-        const p = pointOnRay(mouseDir, 2);
+        const p = Physics.pointOnRay(mouseDir, 2);
         this.fileManager.updateFile(file.file, {
           tags: {
             _workspace: null,

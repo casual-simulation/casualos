@@ -12,7 +12,7 @@ import {uniq} from 'lodash';
 import CubeIcon from './Cube.svg';
 
 import FileTable from '../FileTable/FileTable';
-import { ContextMenuEvent } from '../Input';
+import { ContextMenuEvent } from '../game-engine/Interfaces';
 
 const numLoadingSteps: number = 4;
 
