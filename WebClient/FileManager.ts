@@ -162,12 +162,6 @@ export class FileManager {
   constructor(app: AppManager, socket: SocketManager) {
     this._appManager = app;
     this._socketManager = socket;
-
-    this._fileDiscoveredObservable = new ReplaySubject<File>();
-    this._fileRemovedObservable = new ReplaySubject<string>();
-    this._fileUpdatedObservable = new Subject<File>();
-    this._selectedFilesUpdated =
-        new BehaviorSubject<SelectedFilesUpdatedEvent>({files: []});
   }
 
   init(): Promise<void> {
@@ -273,6 +267,11 @@ export class FileManager {
     this._setStatus('Starting...');
 
     this._subscriptions = [];
+    this._fileDiscoveredObservable = new ReplaySubject<File>();
+    this._fileRemovedObservable = new ReplaySubject<string>();
+    this._fileUpdatedObservable = new Subject<File>();
+    this._selectedFilesUpdated =
+        new BehaviorSubject<SelectedFilesUpdatedEvent>({files: []});
     this._files = await this._socketManager.getFilesChannel();
 
     this._subscriptions.push(this._appManager.userObservable.subscribe(async u => {
@@ -337,6 +336,7 @@ export class FileManager {
   }
 
   private _dispose() {
+    this._setStatus('Dispose');
     this._initPromise = null;
     this._subscriptions.forEach(s => s.unsubscribe());
   }
