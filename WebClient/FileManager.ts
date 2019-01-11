@@ -60,7 +60,8 @@ import {
   shareReplay, 
   scan, 
   pairwise,
-  flatMap as rxFlatMap
+  flatMap as rxFlatMap,
+  skip
 } from 'rxjs/operators';
 import uuid from 'uuid/v4';
 
@@ -77,6 +78,7 @@ export class FileManager {
   private _appManager: AppManager;
   private _socketManager: SocketManager;
 
+  private _subscriptions: SubscriptionLike[];
   private _status: string;
   private _initPromise: Promise<void>;
   private _fileDiscoveredObservable: ReplaySubject<File>;
@@ -84,9 +86,6 @@ export class FileManager {
   private _fileUpdatedObservable: Subject<File>;
   private _selectedFilesUpdated: BehaviorSubject<SelectedFilesUpdatedEvent>;
   private _files: ChannelConnection<FilesState>;
-
-  // TODO: Dispose of the subscription
-  private _sub: SubscriptionLike;
 
   get files(): File[] {
     return values(this._filesState);
@@ -146,6 +145,9 @@ export class FileManager {
   }
 
   get userFile(): Object {
+    if (!this._appManager.user) {
+      return;
+    }
     var objs = this.objects.filter(o => o.id === this._appManager.user.username);
     if (objs.length > 0) {
       return objs[0];
@@ -270,13 +272,17 @@ export class FileManager {
   private async _init() {
     this._setStatus('Starting...');
 
+    this._subscriptions = [];
     this._files = await this._socketManager.getFilesChannel();
 
-    this._appManager.userObservable.subscribe(async u => {
+    this._subscriptions.push(this._appManager.userObservable.subscribe(async u => {
       if (u) {
+        await this.init();
         await this._initUserFile();
+      } else {
+        this._dispose();
       }
-    });
+    }));
 
     // Replay the existing files for the components that need it this way
     const filesState = this._files.store.state();
@@ -288,9 +294,9 @@ export class FileManager {
 
     const allFilesAdded = mergeObservables(fileAdded, existingFilesObservable);
 
-    allFilesAdded.subscribe(this._fileDiscoveredObservable);
-    fileRemoved.subscribe(this._fileRemovedObservable);
-    fileUpdated.subscribe(this._fileUpdatedObservable);
+    this._subscriptions.push(allFilesAdded.subscribe(this._fileDiscoveredObservable));
+    this._subscriptions.push(fileRemoved.subscribe(this._fileRemovedObservable));
+    this._subscriptions.push(fileUpdated.subscribe(this._fileUpdatedObservable));
     const alreadySelected = this.selectedObjects;
     const alreadySelectedObservable = from(alreadySelected);
 
@@ -308,7 +314,7 @@ export class FileManager {
           return {files: selectedFiles};
         }));
 
-    allSelectedFilesUpdated.subscribe(this._selectedFilesUpdated);
+    this._subscriptions.push(allSelectedFilesUpdated.subscribe(this._selectedFilesUpdated));
 
     this._setStatus('Initialized.');
   }
@@ -328,5 +334,10 @@ export class FileManager {
   private _setStatus(status: string) {
     this._status = status;
     console.log('[FileManager] Status:', status);
+  }
+
+  private _dispose() {
+    this._initPromise = null;
+    this._subscriptions.forEach(s => s.unsubscribe());
   }
 }
