@@ -378,6 +378,10 @@ export class FileManager {
       const newState = state;
       const localState = this._filesState;
 
+      const mergeReport = mergeFiles(offline, localState, newState, {
+        
+      });
+
       this._files.reconnect();
     }));
   }
