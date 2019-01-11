@@ -17,13 +17,6 @@ import {
 import { some } from 'lodash';
 import { Input } from "./input";
 
-
-
-/**
- * An observable that resolves whenever the document 'contextmenu' event triggers.
- */
-export const contextMenu = fromEvent<MouseEvent>(document, 'contextmenu');
-
 /**
  * An observable that resolves whenever the document 'mouseup' event triggers.
  */
@@ -58,11 +51,6 @@ export const leftDrag = buttonDrag(leftClickActive);
  * An observable that maps the right mouse button into mouse drag events.
  */
 export const rightDrag = buttonDrag(rightClickActive);
-
-/**
- * An observable that maps the context menu events and left/right click events to show/hide events.
- */
-export const showHideContextMenu = contextMenuEvents(contextMenu, mouseDown);
 
 /**
  * Filters the given mouse event observable based on whether it matches the given button number.
