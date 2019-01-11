@@ -1,20 +1,15 @@
-import Vue, { ComponentOptions } from 'vue';
+import Vue from 'vue';
 import Component from 'vue-class-component';
-import {Provide, Inject} from 'vue-property-decorator';
-import { some } from 'lodash';
-import {File, Object} from 'common/Files';
+import { Inject } from 'vue-property-decorator';
+import { Object} from 'common/Files';
 import GameView from '../GameView/GameView';
 import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';
 import { FileManager } from '../FileManager';
-import { SocketManager } from '../SocketManager';
-import {uniq} from 'lodash';
 import CubeIcon from './Cube.svg';
 
 import FileTable from '../FileTable/FileTable';
 import { ContextMenuEvent } from '../game-engine/Interfaces';
-
-const numLoadingSteps: number = 4;
 
 @Component({
     components: {
@@ -30,10 +25,13 @@ export default class Home extends Vue {
 
     @Inject() private fileManager: FileManager;
 
+    contextMenuStyle: any = {
+        left: '0px',
+        top: '0px'
+    };
+
     isOpen: boolean = false;
     contextMenuVisible: boolean = false;
-    contextMenuPosX: string = '0';
-    contextMenuPosY: string = '0';
     context: ContextMenuEvent = null;
     status: string = '';
     files: Object[] = [];
@@ -71,12 +69,17 @@ export default class Home extends Vue {
     }
 
     handleContextMenu(event: ContextMenuEvent) {
-        if (event.shouldBeVisible) {
+        // Force the component to disable current context menu.
+        this.context = null;
+        this.contextMenuVisible = false;
+
+        // Wait for the DOM to update with the above values and then show context menu again.
+        this.$nextTick(() => {
             this.context = event;
-        }
-        this.contextMenuVisible = event.shouldBeVisible;
-        this.contextMenuPosX = event.event.pageX + 'px';
-        this.contextMenuPosY = event.event.pageY + 'px';
+            this.contextMenuStyle.left = event.event.pageX + 'px';
+            this.contextMenuStyle.top = event.event.pageY + 'px';
+            this.contextMenuVisible = true;
+        });
     }
 
     constructor() {

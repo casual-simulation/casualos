@@ -13,8 +13,6 @@ import FileRow from '../FileRow/FileRow';
 import TagEditor from '../TagEditor/TagEditor';
 import AlertDialogOptions from '../App/DialogOptions/AlertDialogOptions';
 
-const numLoadingSteps: number = 4;
-
 @Component({
     components: {
         'file-row': FileRow,

@@ -8,8 +8,6 @@ import {Object, File} from 'common/Files';
 import {invertColor, colorConvert} from '../utils';
 import {assign} from 'lodash';
 
-const numLoadingSteps: number = 4;
-
 @Component({
     inject: {
         fileManager: 'fileManager'

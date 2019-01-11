@@ -1,8 +1,6 @@
 import {
   Scene,
-  Camera,
   Renderer,
-  Clock,
   Mesh,
   Color,
   PerspectiveCamera,
@@ -10,8 +8,6 @@ import {
   AmbientLight,
   DirectionalLight,
   MeshStandardMaterial,
-  Vector3,
-  Vector2,
   Math as ThreeMath,
   Group,
   Ray,
@@ -37,14 +33,11 @@ import { Inject } from 'vue-property-decorator';
 import {
   SubscriptionLike,
   Observable,
-  fromEvent,
   combineLatest,
 } from 'rxjs';
 import {
   filter,
   map,
-  tap,
-  scan,
 } from 'rxjs/operators';
 import {
   find
@@ -63,8 +56,6 @@ import {
   isButton, 
   mouseDown, 
   leftDrag, 
-  rightDrag, 
-  showHideContextMenu,
 } from '../game-engine/InputOLD';
 
 import { Physics } from '../game-engine/Physics';
@@ -76,7 +67,6 @@ import {
   DragOperation,
   MouseDragPosition,
   DraggedObject,
-  EventWrapper,
   ContextMenuEvent,
   ContextMenuAction,
 } from '../game-engine/Interfaces';
@@ -192,21 +182,23 @@ export default class GameView extends Vue {
       this._grids.visible = visible;
     }));
 
-    const contextMenuEvents = showHideContextMenu.pipe(
-      map(e => ({ ...e, screenPos: Input.screenPosition(e.event, this.gameView) })),
-      map(e => ({ ...e, ray: Physics.screenPosToRay(e.screenPos, this._camera) })),
-      filter(e => Input.eventIsOverElement(e.event, this._canvas)),
-      map(e => ({...e, raycast: Physics.raycastAtScreenPos(e.screenPos, this._raycaster, this._draggableObjects, this._camera)})),
-      map(e => ({...e, hit: Physics.firstRaycastHit(e.raycast)})),
-      map(e => ({...e, file: e.hit ? this._fileForIntersection(e.hit) : null})),
-      map(e => ({...e, actions: this._contextMenuActions(e.file) }))
-    );
+    // Lets test the context menu.
+    // DO NOT LEAVE THE EVENT HANDLER LIKE THIS.
+    input.contextMenuEvent.addListener((event) => {
+      const screenPos = Input.screenPosition(event, this.gameView);
+      const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this._draggableObjects, this._camera);
+      const hit = Physics.firstRaycastHit(raycastResult);
 
-    this._subs.push(contextMenuEvents.subscribe(click => {
-      if (click.file && click.file.file.type === 'workspace') {
-        this._showContextMenu(click);
+      if (hit) {
+        const file = this._fileForIntersection(hit);
+        if (file && file.file && file.file.type === 'workspace') {
+          // Now send the actual context menu event.
+          let menuEvent: ContextMenuEvent = { event: event, actions: [] };
+          menuEvent.actions = this._contextMenuActions(file);
+          this.$emit('onContextMenu', menuEvent);
+        }
       }
-    }));
+    });
   }
 
   private _tryCombineFiles(drag: DragOperation) {
@@ -372,10 +364,6 @@ export default class GameView extends Vue {
         }
       });
     }
-  }
-
-  private _showContextMenu(event: ContextMenuEvent) {
-    this.$emit('onContextMenu', event);
   }
 
   private _selectFile(file: File3D) {

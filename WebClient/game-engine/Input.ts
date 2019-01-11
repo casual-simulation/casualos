@@ -1,16 +1,15 @@
-import { Event } from '../../common/Events';
-import { Vector2, AnyLoader } from 'three';
+import { ArgEvent } from '../../common/Events';
+import { Vector2 } from 'three';
 import { time } from './Time';
-import { Physics } from './Physics';
 import { some } from 'lodash';
 
 export class Input {
     public contextMenuEnabled: boolean = true;
 
     // Events
-    public pointerDownEvent = new Event();
-    public pointerUpEvent = new Event();
-    public contextMenuEvent = new Event();
+    public pointerDownEvent = new ArgEvent<PointerEvent>();
+    public pointerUpEvent = new ArgEvent<PointerEvent>();
+    public contextMenuEvent = new ArgEvent<MouseEvent>();
 
     private _element: HTMLElement;
     private _initialized: boolean = false;
@@ -28,27 +27,27 @@ export class Input {
     /**
      * Returns true the frame that the pointer was pressed down.
      */
-    get pointerDown(): boolean { return this._pointerDownFrame === time.frameCount; }
+    public getPointerDown(): boolean { return this._pointerDownFrame === time.frameCount; }
 
     /**
      * Returns true the frame that the pointer was released.
      */
-    get pointerUp(): boolean { return this._pointerUpFrame === time.frameCount; }
+    public getPointerUp(): boolean { return this._pointerUpFrame === time.frameCount; }
 
     /**
      * Retruns true every frame the pointer is held down.
      */
-    get pointerHeld(): boolean { return this._pointerHeld; } 
+    public getPointerHeld(): boolean { return this._pointerHeld; } 
 
     /**
      * Return the last known screen position of the pointer.
      */
-    get pointerScreenPos(): Vector2 { return this._pointerScreenPos; }
+    public getPointerScreenPos(): Vector2 { return this._pointerScreenPos; }
 
     /**
      * Returns true the frame that the context menu is invoked.
      */
-    get contextMenu() { return this._contextMenu; }
+    public getContextMenu() { return this._contextMenu; }
     
     /**
      * Calculates the Three.js screen position of the mouse from the given mouse event.
@@ -152,7 +151,7 @@ export class Input {
 
         this._pointerDownFrame = time.frameCount;
         this._pointerHeld = true;
-        this.pointerDownEvent.invoke();
+        this.pointerDownEvent.invoke(event);
     }
 
     private onPointerUp(event:PointerEvent) {
@@ -160,7 +159,7 @@ export class Input {
 
         this._pointerUpFrame = time.frameCount;
         this._pointerHeld = false;
-        this.pointerUpEvent.invoke();
+        this.pointerUpEvent.invoke(event);
     }
 
     private onPointerMove(event:PointerEvent) {
@@ -177,8 +176,8 @@ export class Input {
     private onContextMenu(event: MouseEvent) {
         if (!this.contextMenuEnabled) return;
 
-        console.log("[Input] on context menu");
-        this.contextMenuEvent.invoke();
+        // console.log("[Input] on context menu");
+        this.contextMenuEvent.invoke(event);
     }
 }
 

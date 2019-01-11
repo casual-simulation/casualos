@@ -81,7 +81,7 @@ export namespace Physics {
     /**
      * Returns the first intersection from the raycast test. If none exist, then null is returned.
      */
-    export function firstRaycastHit(test: RaycastResult) {
-    return test.intersects.length > 0 ? test.intersects[0] : null;
+    export function firstRaycastHit(result: RaycastResult) {
+    return result.intersects.length > 0 ? result.intersects[0] : null;
     }
 }

@@ -176,12 +176,6 @@ import { Physics } from './Physics';
    * Defines an interface that represents the action of showing/hiding a context menu.
    */
   export interface ContextMenuEvent extends EventWrapper {
-  
-    /**
-     * Whether the context menu should be visible.
-     */
-    shouldBeVisible: boolean;
-  
     /**
      * The actions that the context menu should show.
      */

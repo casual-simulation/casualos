@@ -6,8 +6,6 @@ import { SubscriptionLike } from 'rxjs';
 import {Object, File} from 'common/Files';
 import FileValue from '../FileValue/FileValue';
 
-const numLoadingSteps: number = 4;
-
 @Component({
     inject: {
         fileManager: 'fileManager'
