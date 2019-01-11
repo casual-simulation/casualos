@@ -52,6 +52,11 @@ export class AppManager {
 
     logout() {
         if (this.user) {
+            Sentry.addBreadcrumb({
+                message: 'Logout',
+                category: 'auth',
+                type: 'info'
+            });
             console.log("[AppManager] Logout");
             this._user.next(null);
             this._saveUser();
@@ -68,15 +73,26 @@ export class AppManager {
             });
 
             if (result.status === 200) {
+                Sentry.addBreadcrumb({
+                    message: 'Login Success!',
+                    category: 'auth',
+                    type: 'default'
+                });
+                console.log('[AppManager] Login Success!', result);
                 this._user.next(result.data);
                 this._saveUser();
-                console.log('[AppManager] Login Success!', result);
                 return true;
             } else {
+                Sentry.addBreadcrumb({
+                    message: 'Login failure',
+                    category: 'auth',
+                    type: 'error'
+                });
                 console.error(result);
                 return false;
             }
         } catch (ex) {
+            Sentry.captureException(ex);
             console.error(ex);
             return false;
         }
