@@ -1,9 +1,9 @@
-import { Subject, Observable, SubscriptionLike } from 'rxjs'
-import { filter, map, first, tap } from 'rxjs/operators';
+import { Subject, Observable, SubscriptionLike, never, ConnectableObservable } from 'rxjs'
+import { filter, map, first, tap, distinctUntilChanged, publish, refCount } from 'rxjs/operators';
 import { ChannelInfo } from '../Channel';
 import { Event } from '../Event';
 import { StateStore } from '../StateStore';
-import { ChannelConnector, ChannelConnectionRequest, ChannelConnection } from '../ChannelConnector';
+import { ChannelConnector, ChannelConnectionRequest, ChannelConnection, ChannelConnectionState } from '../ChannelConnector';
 
 interface EventWrapper {
     event: Event;
@@ -35,6 +35,11 @@ export interface ConnectionHelper<T> {
      * Sets the function that is used to emit events to the local store.
      */
     setEmitToStoreFunction: (emit: (event: Event) => void) => void;
+
+    /**
+     * Sets an observable that resolves with whether the server is currently reachable.
+     */
+    setConnectionStateObservable: (disconnected: Observable<boolean>) => void;
     
     /**
      * The observable that is resolved a single time when 
@@ -64,9 +69,15 @@ export class BaseConnector implements ChannelConnector {
         let info = connection_request.info;
         let store = connection_request.store;
         let serverEvents: Observable<Event>;
+        let connectionStates: Observable<boolean>;
         let onUnsubscribe: Subject<{}> = new Subject<{}>();
         let emitToServer: ((event: Event) => void);
         let emitToStore: ((event: Event) => void);
+        let disconnected: Observable<T>;
+        let reconnected: Observable<void>;
+        let disconnectedSub: SubscriptionLike;
+        let reconnectedSub: SubscriptionLike;
+        let currentState: ChannelConnectionState = 'online';
 
         let build: () => ChannelConnection<T> = () => {
             let subs: SubscriptionLike[] = [];
@@ -80,7 +91,7 @@ export class BaseConnector implements ChannelConnector {
 
             if (emitToServer != null) {
                 subs.push(subject.pipe(
-                     filter(e => e.isLocal),
+                     filter(e => e.isLocal && currentState === 'online'),
                      map(e => e.event),
                      tap(e => emitToServer(e))
                 ).subscribe());
@@ -90,6 +101,27 @@ export class BaseConnector implements ChannelConnector {
                 emitToStore = e => {
                     store.process(e);
                 };
+            }
+
+            if (connectionStates) {
+                let distinct = connectionStates.pipe(distinctUntilChanged());
+                disconnected = distinct.pipe(
+                    filter(connected => !connected && currentState === 'online'),
+                    tap(_ => currentState = 'offline'),
+                    map(_ => store.state()),
+                    publish(),
+                    refCount()
+                );
+                disconnectedSub = disconnected.subscribe();
+
+                reconnected = distinct.pipe(
+                    filter(connected => connected && currentState === 'offline'),
+                    tap(_ => currentState = 'online-disconnected'),
+                    map(_ => {}),
+                    publish(),
+                    refCount()
+                );
+                reconnectedSub = reconnected.subscribe();
             }
             
             subs.push(subject.pipe(
@@ -107,18 +139,38 @@ export class BaseConnector implements ChannelConnector {
                 events: subject.pipe(map(e => e.event)),
                 store: connection_request.store,
                 info: connection_request.info,
+                disconnected: disconnected || never(),
+                reconnected: reconnected || never(),
+                reconnect: () => {
+                    if (currentState === 'online-disconnected') {
+                        currentState = 'online';
+                    }
+                },
                 unsubscribe: () => {
+                    if (reconnectedSub) {
+                        reconnectedSub.unsubscribe();
+                    }
+                    if (disconnectedSub) {
+                        disconnectedSub.unsubscribe();
+                    }
                     subs.forEach(s => s.unsubscribe());
                     subject.complete();
                     subject.unsubscribe();
                     onUnsubscribe.next({});
                     onUnsubscribe.complete();
+                },
+
+                get state() {
+                    return currentState;
                 }
             }
         };
 
         let helper: ConnectionHelper<T> = {
             build: build,
+            setConnectionStateObservable: (states) => {
+                connectionStates = states;
+            },
             setServerEvents: (events) => {
                 serverEvents = events;
             },
@@ -128,7 +180,7 @@ export class BaseConnector implements ChannelConnector {
             setEmitToStoreFunction: (fn) => {
                 emitToStore = fn;
             },
-            onUnsubscribe: onUnsubscribe.pipe(first())
+            onUnsubscribe: onUnsubscribe.pipe(first()),
         };
 
         return helper;

@@ -6,13 +6,17 @@ import { BaseConnector } from '../builtin/BaseConnector';
 export class TestConnector extends BaseConnector {
 
     private _events: Subject<any>;
+    private _eventsToServer: Subject<any>;
+    private _connection: Subject<boolean>;
     private _emitted: Subject<Event>;
     private _initial_state: any;
 
-    constructor(initialState: any, events: Subject<any>) {
+    constructor(initialState: any, events: Subject<any>, connection?: Subject<boolean>, eventsToServer?: Subject<any>) {
         super();
         this._events = events;
         this._initial_state = initialState;
+        this._connection = connection;
+        this._eventsToServer = eventsToServer;
         this._emitted = new Subject<Event>();
     }
 
@@ -25,6 +29,12 @@ export class TestConnector extends BaseConnector {
             connection_request.store.init(this._initial_state);
             let helper = this.newConnection(connection_request);
             helper.setServerEvents(this._events);
+            helper.setConnectionStateObservable(this._connection);
+            if (this._eventsToServer) {
+                helper.setEmitToServerFunction(e => {
+                    this._eventsToServer.next(e);
+                });
+            }
             resolve(helper.build());
         });
     }

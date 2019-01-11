@@ -52,8 +52,46 @@ describe('Socket.IO', () => {
                 socketIOMock.verify();
             });
 
+            it('should emit events with the "new_event" event name', () => {
+                init();
+
+                let event: Event = {
+                    type: 'test',
+                    creation_time: new Date()
+                };
+                let emit = socketIOMock.expects('emit').once()
+                    .withArgs('join_server', info, match.func);
+
+                socketIOMock.expects('emit').once()
+                    .withArgs(eventName, event);
+
+                let promise = connector.connectToChannel({
+                    info: info,
+                    store: store
+                });
+
+                emit.callArgWith(2, null, info, {})
+
+                return promise.then(response => {
+                    response.emit(event);
+                    socketIOMock.verify();
+                });
+            });
+
             it('should start listening to the "new_event" event', () => {
                 init();
+
+                socketIOMock.expects('on').atLeast(1)
+                    .withArgs('connected', match.func);
+
+                socketIOMock.expects('on').atLeast(1)
+                    .withArgs('disconnected', match.func);
+
+                socketIOMock.expects('off').atLeast(1)
+                    .withArgs('connected', match.func);
+
+                socketIOMock.expects('off').atLeast(1)
+                    .withArgs('disconnected', match.func);
 
                 let joinServer = socketIOMock.expects('emit').once()
                     .withArgs('join_server', info, match.func);
@@ -88,31 +126,7 @@ describe('Socket.IO', () => {
                 });
             });
 
-            it('should emit events with the "new_event" event name', () => {
-                init();
-
-                let event: Event = {
-                    type: 'test',
-                    creation_time: new Date()
-                };
-                let emit = socketIOMock.expects('emit').once()
-                    .withArgs('join_server', info, match.func);
-
-                socketIOMock.expects('emit').once()
-                    .withArgs(eventName, event);
-
-                let promise = connector.connectToChannel({
-                    info: info,
-                    store: store
-                });
-
-                emit.callArgWith(2, null, info, {})
-
-                return promise.then(response => {
-                    response.emit(event);
-                    socketIOMock.verify();
-                });
-            });
+            
         });
     });
 });
