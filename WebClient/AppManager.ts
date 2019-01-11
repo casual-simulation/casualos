@@ -60,8 +60,9 @@ export class AppManager {
                 console.log('[ServiceWorker]: Updating...');
                 Sentry.addBreadcrumb({
                     message: 'Updating service worker.',
-                    type: 'info',
-                    category: 'app'
+                    level: Sentry.Severity.Info,
+                    category: 'app',
+                    type: 'default'
                 });
             },
             onUpdateReady: () => {
@@ -72,8 +73,9 @@ export class AppManager {
                 console.log('[ServiceWorker]: Updated.');
                 Sentry.addBreadcrumb({
                     message: 'Updated service worker.',
-                    type: 'info',
-                    category: 'app'
+                    level: Sentry.Severity.Info,
+                    category: 'app',
+                    type: 'default'
                 });
                 this._updateAvailable.next(true);
             },
@@ -85,8 +87,9 @@ export class AppManager {
                 console.log('[ServiceWorker]: Installed.');
                 Sentry.addBreadcrumb({
                     message: 'Installed service worker.',
-                    type: 'info',
-                    category: 'app'
+                    level: Sentry.Severity.Info,
+                    category: 'app',
+                    type: 'default'
                 });
             }
         });
@@ -127,7 +130,8 @@ export class AppManager {
             Sentry.addBreadcrumb({
                 message: 'Logout',
                 category: 'auth',
-                type: 'info'
+                type: 'default',
+                level: Sentry.Severity.Info,
             });
             console.log("[AppManager] Logout");
             this._user.next(null);
@@ -148,6 +152,7 @@ export class AppManager {
                 Sentry.addBreadcrumb({
                     message: 'Login Success!',
                     category: 'auth',
+                    level: Sentry.Severity.Info,
                     type: 'default'
                 });
                 console.log('[AppManager] Login Success!', result);
@@ -158,6 +163,7 @@ export class AppManager {
                 Sentry.addBreadcrumb({
                     message: 'Login failure',
                     category: 'auth',
+                    level: Sentry.Severity.Error,
                     type: 'error'
                 });
                 console.error(result);

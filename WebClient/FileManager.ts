@@ -63,10 +63,12 @@ import {
   flatMap as rxFlatMap,
   skip
 } from 'rxjs/operators';
+import * as Sentry from '@sentry/browser';
 import uuid from 'uuid/v4';
 
 import {AppManager, appManager} from './AppManager';
 import {SocketManager} from './SocketManager';
+import { SentryError } from '@sentry/core';
 
 export interface SelectedFilesUpdatedEvent { files: Object[]; }
 
@@ -350,20 +352,33 @@ export class FileManager {
 
   private _setupOffline() {
     this._subscriptions.push(this._files.disconnected.subscribe(state => {
+      Sentry.addBreadcrumb({
+        message: 'Disconnected from server',
+        category: 'net',
+        level: Sentry.Severity.Warning,
+        type: 'default'
+      });
+      this._setStatus('Disconnected :(');
       // save the current state to persistent storage
       this._offlineServerState = state;
-
-      this._setStatus('Disconnected :(');
+      
     }));
 
     this._subscriptions.push(this._files.reconnected.subscribe(state => {
+      Sentry.addBreadcrumb({
+        message: 'Reconnected to server',
+        category: 'net',
+        level: Sentry.Severity.Warning,
+        type: 'default'
+      });
+      this._setStatus('Reconnected!');
+
       // get the old server state
       const offline = this._offlineServerState;
       const newState = state;
       const localState = this._filesState;
 
       this._files.reconnect();
-      this._setStatus('Reconnected!');
     }));
   }
 
