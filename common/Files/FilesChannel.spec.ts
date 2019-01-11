@@ -531,6 +531,44 @@ describe('FilesChannel', () => {
                 }
             });
         });
+        it('should return file1 if file2 is null', () => {
+            const file1: any = {
+                test: 'abcdef',
+                num: 15
+            };
+            const file2: any = null;
+
+            const file1Id = 'file1';
+            const file2Id = 'file2';
+            const diff = objDiff(file1Id, file1, file2Id, file2);
+
+            expect(diff).toEqual({
+                test: {
+                    [file1Id]: 'abcdef',
+                    [file2Id]: undefined
+                },
+                num: {
+                    [file1Id]: 15,
+                    [file2Id]: undefined
+                }
+            });
+        });
+
+        it('should return null if file2 is null and doing partial diff', () => {
+            const file1: any = {
+                test: 'abcdef',
+                num: 15
+            };
+            const file2: any = null;
+
+            const file1Id = 'file1';
+            const file2Id = 'file2';
+            const diff = objDiff(file1Id, file1, file2Id, file2, {
+                fullDiff: false
+            });
+
+            expect(diff).toBe(null);
+        });
     });
 
     describe('mergeFile', () => {
@@ -934,6 +972,105 @@ describe('FilesChannel', () => {
                     }
                 },
                 final: {}
+            });
+        });
+
+        it('should work on file state', () => {
+            const base: FilesState = {
+                'test': {
+                    type: 'object',
+                    id: 'test',
+                    tags: {
+                        _position: {x: 0, y: 0, z: 0},
+                        _workspace: 'abc',
+                        updatedTag: 'test'
+                    }
+                },
+                'removedFile': {
+                    type: 'object',
+                    id: 'test',
+                    tags: {
+                        _position: {x: 0, y: 0, z: 0},
+                        _workspace: 'abc',
+                    }
+                },
+                'conflictFile': {
+                    type: 'object',
+                    id: 'test',
+                    tags: {
+                        _position: {x: 0, y: 0, z: 0},
+                        _workspace: 'abc',
+                    }
+                },
+            };
+            const parent1: FilesState = merge({}, base, {
+                'test': {
+                    tags: {
+                        newTag: 'new',
+                    }
+                },
+                'newFile': {
+                    type: 'object',
+                    id: 'newFile',
+                    tags: {
+                        _position: {x: 10, y: 0, z: -3},
+                        _workspace: 'def'
+                    }
+                },
+                'conflictFile': {
+                    tags: {
+                        _workspace: 'qrstuv',
+                    }
+                },
+            });
+            const parent2: FilesState = merge({}, base, {
+                'test': {
+                    tags: {
+                        updatedTag: 'abcdef',
+                    }
+                },
+                'removedFile': null,
+                'conflictFile': {
+                    tags: {
+                        _workspace: 'poiuy',
+                    }
+                },
+            });
+
+            const merged = mergeFile(base, parent1, parent2);
+
+            expect(merged).toEqual({
+                success: false,
+                base: base,
+                first: parent1,
+                second: parent2,
+                conflicts: {
+                    'conflictFile': {
+                        tags: {
+                            _workspace: {
+                                first: 'qrstuv',
+                                second: 'poiuy'
+                            }
+                        }
+                    },
+                },
+                final: {
+                    'test': {
+                        tags: {
+                            updatedTag: 'abcdef',
+                            newTag: 'new'
+                        }
+                    },
+                    'newFile': {
+                        type: 'object',
+                        id: 'newFile',
+                        tags: {
+                            _position: {x: 10, y: 0, z: -3},
+                            _workspace: 'def'
+                        }
+                    },
+                    'removedFile': null
+                }
             });
         });
     });

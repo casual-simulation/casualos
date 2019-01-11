@@ -27,17 +27,17 @@ export interface FilesStateDiff {
 /**
  * Defines an interface for file data that contains merge conflicts.
  */
-export interface FileConflicts {
+export interface Conflicts {
     [id: string]: {
         __first: any,
         __second: any
-    } | FileConflicts;
+    } | Conflicts;
 }
 
 /**
- * Defines an interface for a file that is being merged with another file.
+ * Defines an interface for a object that is being merged with another object.
  */
-export interface MergedFile {
+export interface MergedObject<T> {
     /**
      * Whether the merge operation was successful.
      */
@@ -46,34 +46,34 @@ export interface MergedFile {
     /**
      * The base version of the file.
      */
-    base: File;
+    base: T;
 
     /**
-     * The changes that the first parent made to this file.
+     * The first parent for the merge.
      */
-    first: PartialFile;
+    first: T;
 
     /**
-     * The changes that the second parent made to this file.
+     * The second parent for the merge.
      */
-    second: PartialFile;
+    second: T;
 
     /**
      * The conflicts that exist between the first and second parents.
      */
-    conflicts: FileConflicts;
+    conflicts: Conflicts;
 
     /**
-     * The final version of the file.
+     * The changes that need to be made to base in order to merge both first and second together.
      */
-    final: PartialFile;
+    final: any;
 }
 
-export interface FileMergeDiff {
-    addedFiles: MergedFile[];
-    removedFiles: MergedFile[];
-    updatedFiles: MergedFile[];
-}
+// export interface FileMergeDiff {
+//     addedFiles: MergedFile[];
+//     removedFiles: MergedFile[];
+//     updatedFiles: MergedFile[];
+// }
 
 export interface FileMergeResult {
     success: boolean;
@@ -189,12 +189,17 @@ export function objDiff(firstId: symbol | string, first: any, secondId: symbol |
     const opts = merge({
         fullDiff: true
     }, options || {});
-    let diff: FileConflicts = {};
+
+    if (first !== second && second === null && !opts.fullDiff) {
+        return null;
+    }
+
+    let diff: Conflicts = {};
     let allKeys = union(keys(first), keys(second));
 
     allKeys.forEach(key => {
-        const firstVal = first[key];
-        const secondVal = second[key];
+        const firstVal = first ? first[key] : undefined;
+        const secondVal = second ? second[key] : undefined;
 
         if (!isEqual(firstVal, secondVal)) {
             if (!Array.isArray(firstVal) && !Array.isArray(secondVal) &&  typeof firstVal === 'object' && typeof secondVal === 'object') {
@@ -220,7 +225,10 @@ export function objDiff(firstId: symbol | string, first: any, secondId: symbol |
  * @param parent2 The second parent.
  * @param options The merge options.
  */
-export function mergeFile(base: File, parent1: File, parent2: File, options?: any): MergedFile {
+export function mergeFile<T>(base: T, parent1: T, parent2: T, options?: any): MergedObject<T> {
+
+    // use symbols because they are unique and won't conflict with user-defined
+    // property names.
     const baseId = Symbol('base');
     const parent1Id = Symbol('parent1');
     const parent2Id = Symbol('parent2');
@@ -232,7 +240,7 @@ export function mergeFile(base: File, parent1: File, parent2: File, options?: an
     let conflicts = diffConflicts(diffDiff, diff1Id, diff2Id);
     let final = diffNonConflicts(diffDiff, diff1Id, diff2Id) || {};
 
-    let merged: MergedFile = {
+    let merged: MergedObject<T> = {
         base: base,
         first: parent1,
         second: parent2,
@@ -248,11 +256,11 @@ export function mergeFile(base: File, parent1: File, parent2: File, options?: an
  * Reduces the the given nested file conflicts to a single deep file conflicts file.
  * @param diff 
  */
-function diffConflicts(diff: FileConflicts, parent1Id: symbol | string, parent2Id: symbol | string): FileConflicts {
+function diffConflicts(diff: Conflicts, parent1Id: symbol | string, parent2Id: symbol | string): Conflicts {
     const results: any = transform(diff, (result: any, value: any, key) => {
         const isDiff = value && typeof value === 'object' && value.hasOwnProperty(parent1Id);
-        let parent1: FileConflicts = value[parent1Id];
-        let parent2: FileConflicts = value[parent2Id];
+        let parent1: Conflicts = value[parent1Id];
+        let parent2: Conflicts = value[parent2Id];
 
         // Value was modified by first but not by second.
         // No Conflict.
@@ -291,11 +299,11 @@ function diffConflicts(diff: FileConflicts, parent1Id: symbol | string, parent2I
     }
 }
 
-function diffNonConflicts(diff: FileConflicts, parent1Id: symbol | string, parent2Id: symbol | string): PartialFile {
+function diffNonConflicts(diff: Conflicts, parent1Id: symbol | string, parent2Id: symbol | string): PartialFile {
     const results = transform(diff, (result, value: any, key) => {
         const isDiff = value && typeof value === 'object' && value.hasOwnProperty(parent1Id);
-        let parent1: FileConflicts = value[parent1Id];
-        let parent2: FileConflicts = value[parent2Id];
+        let parent1: Conflicts = value[parent1Id];
+        let parent2: Conflicts = value[parent2Id];
         
         // Value was modified by first but not by second.
         // No Conflict.
