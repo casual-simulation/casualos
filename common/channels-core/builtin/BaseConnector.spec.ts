@@ -14,6 +14,12 @@ describe('builtin', () => {
         let eventsToServer: Subject<Event>;
         let connectionEvents: Subject<boolean>;
         let connector: TestConnector;
+        let serverState: number = 0;
+        let getServerState = () => {
+            // return an array instead of promise to prevent the test from breaking due to 
+            // the browser choosing different times to resolve the promise at.
+            return <any>[serverState];
+        };
         let reducer = (state: number, event: Event) => {
             state = state || 0;
             if (event.type === 'add') {
@@ -29,7 +35,7 @@ describe('builtin', () => {
             serverEvents = new Subject<Event>();
             connectionEvents = new Subject<boolean>();
             eventsToServer = new Subject<Event>();
-            connector = new TestConnector(state, serverEvents, connectionEvents, eventsToServer);
+            connector = new TestConnector(state, serverEvents, connectionEvents, eventsToServer, getServerState);
             channel = new Channel<number>({
                 id: 'abc',
                 name: 'test',
@@ -205,7 +211,7 @@ describe('builtin', () => {
                 expect(eventsSentToServer.length).to.equal(1);
 
                 let calls = 0;
-                let reconnectedSub = connection.reconnected.subscribe(() => {
+                let reconnectedSub = connection.reconnected.subscribe(state => {
                     calls += 1;
                 });
 

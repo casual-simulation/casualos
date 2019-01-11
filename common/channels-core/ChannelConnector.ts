@@ -52,9 +52,9 @@ export interface ChannelConnection<T> {
     disconnected: Observable<T>;
 
     /**
-     * The observable that resolves when the connection state goes from 'offline' to 'online-disconnected'.
+     * The observable that resolves with the latest server state when the connection state goes from 'offline' to 'online-disconnected'.
      */
-    reconnected: Observable<void>;
+    reconnected: Observable<T>;
 
     /**
      * Instructs the channel to change its state to 'online'

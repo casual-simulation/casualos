@@ -9,14 +9,16 @@ export class TestConnector extends BaseConnector {
     private _eventsToServer: Subject<any>;
     private _connection: Subject<boolean>;
     private _emitted: Subject<Event>;
+    private _getSeverState: () => Promise<any>;
     private _initial_state: any;
 
-    constructor(initialState: any, events: Subject<any>, connection?: Subject<boolean>, eventsToServer?: Subject<any>) {
+    constructor(initialState: any, events: Subject<any>, connection?: Subject<boolean>, eventsToServer?: Subject<any>, getServerState?: () => Promise<any>) {
         super();
         this._events = events;
         this._initial_state = initialState;
         this._connection = connection;
         this._eventsToServer = eventsToServer;
+        this._getSeverState = getServerState;
         this._emitted = new Subject<Event>();
     }
 
@@ -34,6 +36,9 @@ export class TestConnector extends BaseConnector {
                 helper.setEmitToServerFunction(e => {
                     this._eventsToServer.next(e);
                 });
+            }
+            if (this._getSeverState) {
+                helper.setGetServerStateFunction(this._getSeverState);
             }
             resolve(helper.build());
         });

@@ -18,10 +18,21 @@ export class SocketIOConnector extends BaseConnector {
         return new Promise<ChannelConnection<T>>((resolve, reject) => {
             let helper = this.newConnection(connection_request);
 
-            let connected = socketEvent<void>(this._socket, 'connected').pipe(map(() => true));
-            let disconnected = socketEvent<void>(this._socket, 'disconnected').pipe(map(() => false));
+            let connected = socketEvent<void>(this._socket, 'connect').pipe(map(() => true));
+            let disconnected = socketEvent<void>(this._socket, 'disconnect').pipe(map(() => false));
             let connectionStates = merge(connected, disconnected);
             helper.setConnectionStateObservable(connectionStates);
+            helper.setGetServerStateFunction(() => {
+                return new Promise<T>((resolve, reject) => {
+                    this._socket.emit('join_server', connection_request.info, (err: any, info: ChannelInfo, state: T) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(state);
+                        }
+                    });
+                });
+            });
 
             this._socket.emit('join_server', connection_request.info, (err: any, info: ChannelInfo, state: T) => {
                 if (err) {

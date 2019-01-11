@@ -1,5 +1,5 @@
 import { Subject, Observable, SubscriptionLike, never, ConnectableObservable } from 'rxjs'
-import { filter, map, first, tap, distinctUntilChanged, publish, refCount } from 'rxjs/operators';
+import { filter, map, first, tap, distinctUntilChanged, publish, refCount, flatMap } from 'rxjs/operators';
 import { ChannelInfo } from '../Channel';
 import { Event } from '../Event';
 import { StateStore } from '../StateStore';
@@ -40,6 +40,11 @@ export interface ConnectionHelper<T> {
      * Sets an observable that resolves with whether the server is currently reachable.
      */
     setConnectionStateObservable: (disconnected: Observable<boolean>) => void;
+
+    /**
+     * Sets the function that is used to get the current state from the server.
+     */
+    setGetServerStateFunction: (getServerState: () => Promise<T>) => void;
     
     /**
      * The observable that is resolved a single time when 
@@ -73,8 +78,9 @@ export class BaseConnector implements ChannelConnector {
         let onUnsubscribe: Subject<{}> = new Subject<{}>();
         let emitToServer: ((event: Event) => void);
         let emitToStore: ((event: Event) => void);
+        let getServerState: (() => Promise<T>);
         let disconnected: Observable<T>;
-        let reconnected: Observable<void>;
+        let reconnected: Observable<T>;
         let disconnectedSub: SubscriptionLike;
         let reconnectedSub: SubscriptionLike;
         let currentState: ChannelConnectionState = 'online';
@@ -104,10 +110,15 @@ export class BaseConnector implements ChannelConnector {
             }
 
             if (connectionStates) {
+                if(!getServerState) {
+                    throw new Error('If the connection state observable is provided then getServerState must be as well.');
+                }
                 let distinct = connectionStates.pipe(distinctUntilChanged());
                 disconnected = distinct.pipe(
-                    filter(connected => !connected && currentState === 'online'),
+                    filter(connected => !connected && (currentState === 'online' || currentState === 'online-disconnected')),
+                    map(_ => currentState),
                     tap(_ => currentState = 'offline'),
+                    filter(state => state !== 'online-disconnected'),
                     map(_ => store.state()),
                     publish(),
                     refCount()
@@ -117,7 +128,7 @@ export class BaseConnector implements ChannelConnector {
                 reconnected = distinct.pipe(
                     filter(connected => connected && currentState === 'offline'),
                     tap(_ => currentState = 'online-disconnected'),
-                    map(_ => {}),
+                    flatMap(_ => getServerState()),
                     publish(),
                     refCount()
                 );
@@ -179,6 +190,9 @@ export class BaseConnector implements ChannelConnector {
             },
             setEmitToStoreFunction: (fn) => {
                 emitToStore = fn;
+            },
+            setGetServerStateFunction: (fn) => {
+                getServerState = fn;
             },
             onUnsubscribe: onUnsubscribe.pipe(first()),
         };

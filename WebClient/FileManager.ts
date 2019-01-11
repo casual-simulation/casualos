@@ -274,6 +274,8 @@ export class FileManager {
         new BehaviorSubject<SelectedFilesUpdatedEvent>({files: []});
     this._files = await this._socketManager.getFilesChannel();
 
+    this._setupOffline();
+
     this._subscriptions.push(this._appManager.userObservable.subscribe(async u => {
       if (u) {
         await this.init();
@@ -333,6 +335,36 @@ export class FileManager {
   private _setStatus(status: string) {
     this._status = status;
     console.log('[FileManager] Status:', status);
+  }
+
+  private get _offlineServerState(): FilesState {
+    const json = localStorage.getItem('offline_server_state');
+    if(json) {
+      return JSON.parse(json);
+    }
+  }
+
+  private set _offlineServerState(state: FilesState) {
+    localStorage.setItem("offline_server_state", JSON.stringify(state));
+  }
+
+  private _setupOffline() {
+    this._subscriptions.push(this._files.disconnected.subscribe(state => {
+      // save the current state to persistent storage
+      this._offlineServerState = state;
+
+      this._setStatus('Disconnected :(');
+    }));
+
+    this._subscriptions.push(this._files.reconnected.subscribe(state => {
+      // get the old server state
+      const offline = this._offlineServerState;
+      const newState = state;
+      const localState = this._filesState;
+
+      this._files.reconnect();
+      this._setStatus('Reconnected!');
+    }));
   }
 
   private _dispose() {
