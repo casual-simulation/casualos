@@ -730,7 +730,7 @@ describe('FilesChannel', () => {
                 first: parent1,
                 second: parent2,
                 conflicts: null,
-                final: {}
+                final: null
             });
         });
 
@@ -801,7 +801,7 @@ describe('FilesChannel', () => {
                 first: parent1,
                 second: parent2,
                 conflicts: null,
-                final: {}
+                final: null
             });
         });
 

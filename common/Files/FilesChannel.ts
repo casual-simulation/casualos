@@ -84,7 +84,8 @@ export type FileEvent =
     FileAddedEvent | 
     FileRemovedEvent | 
     FileUpdatedEvent |
-    FileTransactionEvent;
+    FileTransactionEvent |
+    ApplyStateEvent;
 
 /**
  * Defines the base reducer for the files channel. For more info google "Redux reducer".
@@ -102,6 +103,8 @@ export function filesReducer(state: FilesState, event: FileEvent) {
         return fileUpdatedReducer(state, event);
     } else if(event.type === 'transaction') {
         return applyEvents(state, event.events);
+    } else if(event.type === 'apply_state') {
+        return applyState(state, event.state);
     }
 
     return state;
@@ -238,14 +241,14 @@ export function mergeFiles<T>(base: T, parent1: T, parent2: T, options?: any): M
     let parent2Diff = objDiff(baseId, base, parent2Id, parent2, { fullDiff: false });
     let diffDiff = objDiff(diff1Id, parent1Diff, diff2Id, parent2Diff);
     let conflicts = diffConflicts(diffDiff, diff1Id, diff2Id);
-    let final = diffNonConflicts(diffDiff, diff1Id, diff2Id) || {};
+    let final = diffNonConflicts(diffDiff, diff1Id, diff2Id);
 
     let merged: MergedObject<T> = {
         base: base,
         first: parent1,
         second: parent2,
         conflicts: conflicts,
-        final: final,
+        final: conflicts && !final ? {} : final,
         success: conflicts === null
     };
 
@@ -476,6 +479,10 @@ function applyEvents(state: FilesState, events: FileEvent[]) {
     return state;
 }
 
+function applyState(state: FilesState, additionalState: FilesState) {
+    return mergeWith({}, state, additionalState, copyArrays);
+}
+
 export class FilesStateStore extends ReducingStateStore<FilesState> {
     constructor(defaultState: FilesState) {
         super(defaultState, filesReducer);
@@ -505,6 +512,16 @@ export interface FileUpdatedEvent extends Event {
 export interface FileTransactionEvent extends Event {
     type: 'transaction';
     events: FileEvent[];
+}
+
+/**
+ * An event to apply some generic FilesState to the current state.
+ * This is useful when you have some generic file state and want to just apply it to the
+ * current state. An example of doing this is from the automatic merge system.
+ */
+export interface ApplyStateEvent extends Event {
+    type: 'apply_state';
+    state: FilesState;
 }
 
 /**
@@ -571,6 +588,14 @@ export function action(senderFileId: string, receiverFileId: string, eventName: 
         senderFileId,
         receiverFileId,
         eventName,
+    };
+}
+
+export function addState(state: FilesState): ApplyStateEvent {
+    return {
+        type: 'apply_state',
+        creation_time:  new Date(),
+        state: state
     };
 }
 

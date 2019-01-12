@@ -16,6 +16,12 @@ import {
   fileChangeObservables,
   calculateActionEvents,
   transaction,
+  mergeFiles,
+  applyMerge,
+  FileTransactionEvent,
+  fileRemoved,
+  objDiff,
+  addState,
 } from 'common/Files';
 import { 
   filterFilesBySelection, 
@@ -352,38 +358,64 @@ export class FileManager {
 
   private _setupOffline() {
     this._subscriptions.push(this._files.disconnected.subscribe(state => {
-      Sentry.addBreadcrumb({
-        message: 'Disconnected from server',
-        category: 'net',
-        level: Sentry.Severity.Warning,
-        type: 'default'
-      });
-      this._setStatus('Disconnected :(');
-      // save the current state to persistent storage
-      this._offlineServerState = state;
-      
+      try {
+        this._disconnected(state);
+      } catch(ex) {
+        Sentry.captureException(ex);
+        console.error(ex);
+      }
     }));
 
     this._subscriptions.push(this._files.reconnected.subscribe(state => {
-      Sentry.addBreadcrumb({
-        message: 'Reconnected to server',
-        category: 'net',
-        level: Sentry.Severity.Warning,
-        type: 'default'
-      });
-      this._setStatus('Reconnected!');
-
-      // get the old server state
-      const offline = this._offlineServerState;
-      const newState = state;
-      const localState = this._filesState;
-
-      const mergeReport = mergeFiles(offline, localState, newState, {
-        
-      });
-
-      this._files.reconnect();
+      try {
+        this._reconnected(state);
+      } catch(ex) {
+        Sentry.captureException(ex);
+        console.error(ex);
+      }
     }));
+  }
+
+  private _reconnected(state: FilesState) {
+    Sentry.addBreadcrumb({
+      message: 'Reconnected to server',
+      category: 'net',
+      level: Sentry.Severity.Warning,
+      type: 'default'
+    });
+    this._setStatus('Reconnected!');
+
+    // get the old server state
+    const offline = this._offlineServerState;
+    const newState = state;
+    const localState = this._filesState;
+
+    const mergeReport = mergeFiles(offline, localState, newState, {
+      
+    });
+
+    if (mergeReport.success && mergeReport.final) {
+      const event = addState(mergeReport.final);
+      this._files.reconnect();
+      this._files.emit(event);
+    } else if(!mergeReport.success) {
+      console.error('Merge Failed! Conflicts:', mergeReport.conflicts);
+    } else {
+      console.log('No state change. Merge not needed');
+    }
+  }
+
+  private _disconnected(state: FilesState) {
+    Sentry.addBreadcrumb({
+      message: 'Disconnected from server',
+      category: 'net',
+      level: Sentry.Severity.Warning,
+      type: 'default'
+    });
+    this._setStatus('Disconnected :(');
+    // save the current state to persistent storage
+    this._offlineServerState = state;
+    
   }
 
   private _dispose() {
