@@ -7,10 +7,10 @@
     padding: 16px;
 }
 
-.synced-checkmark {
+#checkmark-icon.synced-checkmark {
     color: #13bd13b4;
 }
 
-.not-synced-warning {
+#warning-icon.not-synced-warning {
     color: #ff8a1cb4;
 }

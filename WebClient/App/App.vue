@@ -39,8 +39,8 @@
                         <span class="md-list-item-text">Version: {{version}}</span>
                     </md-list-item>
                     <md-list-item>
-                        <md-icon class="synced-checkmark" v-if="synced">check</md-icon>
-                        <md-icon class="not-synced-warning" v-else>warning</md-icon>
+                        <md-icon id="checkmark-icon" class="synced-checkmark" v-if="synced">check</md-icon>
+                        <md-icon id="warning-icon" class="not-synced-warning" v-else>warning</md-icon>
                         <span class="md-list-item-text" v-if="synced">
                             Synced
                             <span v-if="online">Online</span>
