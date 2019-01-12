@@ -395,6 +395,7 @@ export class FileManager {
     });
 
     if (mergeReport.success && mergeReport.final) {
+      console.log('Merge success!');
       const event = addState(mergeReport.final);
       this._files.reconnect();
       this._files.emit(event);
