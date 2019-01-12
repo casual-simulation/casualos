@@ -1,4 +1,4 @@
-import {filter, values, union, keys, isEqual, transform, mergeWith} from 'lodash';
+import {filter, values, union, keys, isEqual, transform, mergeWith, set} from 'lodash';
 import {
     map as rxMap,
     flatMap as rxFlatMap,
@@ -11,6 +11,9 @@ import { tagsMatchingFilter, createCalculationContext, FileCalculationContext, c
 import { Transform } from 'stream';
 import { some } from 'bluebird';
 
+export const first = Symbol('ours');
+export const second = Symbol('second');
+
 export interface FilesState {
     [id: string]: File;
 }
@@ -18,20 +21,48 @@ export interface FilesState {
 export interface FilesStateDiff {
     prev: FilesState;
     current: FilesState;
-
+    
     addedFiles: File[];
     removedFiles: File[];
     updatedFiles: File[];
 }
 
 /**
+ * A function that, given a conflict, returns what value to use to resolve the conflict.
+ * If the returned value is a promise, it will be waited upon until it resolves with a value.
+ */
+export type ConflictHandler = (details: ConflictDetails) => any;
+
+/**
+ * Represents details about a conflict.
+ */
+export interface ConflictDetails {
+    conflict: Conflict;
+    path: string[];
+}
+
+/**
+ * Represents a conflict.
+ * That is, two changes to a property that were conflicting.
+ */
+export interface Conflict {
+    [first]: any;
+    [second]: any;
+}
+
+/**
+ * Determines if the given object is a conflict object.
+ * @param obj Whether the object represents a conflict.
+ */
+export function isConflict(obj: any) {
+    return obj && typeof obj === 'object' && obj.hasOwnProperty(first);
+}
+
+/**
  * Defines an interface for file data that contains merge conflicts.
  */
 export interface Conflicts {
-    [id: string]: {
-        __first: any,
-        __second: any
-    } | Conflicts;
+    [id: string]: Conflict | Conflicts;
 }
 
 /**
@@ -256,6 +287,55 @@ export function mergeFiles<T>(base: T, parent1: T, parent2: T, options?: any): M
 }
 
 /**
+ * Attempts to resolve conflicts in the given merge using the given conflict handler.
+ * The handler will be called once for each conflict.
+ * @param merge 
+ * @param handler 
+ */
+export async function resolveConflicts<T>(merge: MergedObject<T>, handler: ConflictHandler): Promise<MergedObject<T>> {
+    const conflicts = conflictDetails(merge.conflicts, []);
+    const handled = conflicts.map(async c => {
+        const result = handler(c);
+        let val;
+        if (result && typeof result.then === 'function') {
+            val = await result;
+        } else {
+            val = result;
+        }
+
+        return { details: c, value: val };
+    });
+
+    const results = await Promise.all(handled);
+    let obj = {};
+    results.forEach(r => {
+        set(obj, r.details.path, r.value);
+    });
+
+    return mergeWith({}, merge, {
+        success: true,
+        conflicts: null,
+        final: obj
+    });
+}
+
+function conflictDetails(conflicts: any, path: string[]): ConflictDetails[] {
+    if (isConflict(conflicts)) {
+        return [{
+            conflict: conflicts,
+            path: path.slice()
+        }];
+    }
+
+    let all: ConflictDetails[] = [];
+    for(const prop in conflicts) {
+        all.push(...conflictDetails(conflicts[prop], [...path, prop]));
+    }
+
+    return all;
+}
+
+/**
  * Reduces the the given nested file conflicts to a single deep file conflicts file.
  * @param diff 
  */
@@ -281,8 +361,8 @@ function diffConflicts(diff: Conflicts, parent1Id: symbol | string, parent2Id: s
             // Conflict.
         } else if(isDiff) {
             result[key] = {
-                first: parent1,
-                second: parent2
+                [first]: parent1,
+                [second]: parent2
             };
 
             // Value isn't a diff.

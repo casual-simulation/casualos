@@ -1,4 +1,21 @@
-import { filesReducer, fileAdded, FilesState, fileRemoved, action, calculateStateDiff, calculateActionEvents, transaction, mergeFiles, objDiff, applyMerge } from './FilesChannel';
+import { 
+    filesReducer, 
+    fileAdded, 
+    FilesState,
+    fileRemoved, 
+    action, 
+    calculateStateDiff, 
+    calculateActionEvents, 
+    transaction, 
+    mergeFiles, 
+    objDiff, 
+    applyMerge, 
+    MergedObject, 
+    resolveConflicts, 
+    ConflictDetails, 
+    first,
+    second
+} from './FilesChannel';
 import { Workspace, Object, File } from './File';
 import { values, assign, merge } from 'lodash';
 import uuid from 'uuid/v4';
@@ -887,8 +904,8 @@ describe('FilesChannel', () => {
                 conflicts: {
                     tags: {
                         conflict1: {
-                            first: 'changed',
-                            second: 'uh oh'
+                            [first]: 'changed',
+                            [second]: 'uh oh'
                         }
                     }
                 },
@@ -926,8 +943,8 @@ describe('FilesChannel', () => {
                 conflicts: {
                     tags: {
                         newTag: {
-                            first: 'new',
-                            second: 'wrong'
+                            [first]: 'new',
+                            [second]: 'wrong'
                         }
                     }
                 },
@@ -966,8 +983,8 @@ describe('FilesChannel', () => {
                 conflicts: {
                     tags: {
                         removedTag: {
-                            first: 'changed',
-                            second: null
+                            [first]: 'changed',
+                            [second]: null
                         }
                     }
                 },
@@ -1048,8 +1065,8 @@ describe('FilesChannel', () => {
                     'conflictFile': {
                         tags: {
                             _workspace: {
-                                first: 'qrstuv',
-                                second: 'poiuy'
+                                [first]: 'qrstuv',
+                                [second]: 'poiuy'
                             }
                         }
                     },
@@ -1071,6 +1088,59 @@ describe('FilesChannel', () => {
                     },
                     'removedFile': null
                 }
+            });
+        });
+
+        it('should fail if files have moved to different spots', () => {
+            const base: FilesState = {
+                'test': {
+                    type: 'object',
+                    id: 'test',
+                    tags: {
+                        _position: {x: 0, y: 0, z: 0},
+                        _workspace: 'abc',
+                    }
+                }
+            };
+            const parent1: FilesState = merge({}, base, {
+                'test': {
+                    tags: {
+                        _position: {x: 10, y: 10, z: 0},
+                    }
+                },
+            });
+            const parent2: FilesState = merge({}, base, {
+                'test': {
+                    tags: {
+                        _position: {x: 5, y: 5, z: 0},
+                    }
+                },
+            });
+
+            const merged = mergeFiles(base, parent1, parent2);
+
+            expect(merged).toEqual({
+                success: false,
+                base: base,
+                first: parent1,
+                second: parent2,
+                conflicts: {
+                    'test': {
+                        tags: {
+                            _position: {
+                                x: {
+                                    [first]: 10,
+                                    [second]: 5
+                                },
+                                y: {
+                                    [first]: 10,
+                                    [second]: 5
+                                }
+                            }
+                        }
+                    },
+                },
+                final: {}
             });
         });
     });
@@ -1108,6 +1178,99 @@ describe('FilesChannel', () => {
                     id: 'test',
                     position: {x:0, y:0, z:0},
                     size: 1
+                }
+            });
+        });
+    });
+
+    describe('resolveConflicts()', () => {
+        it('should call the given handler for each conflict in the given result', async () => {
+            const base: FilesState = {
+                'test': {
+                    type: 'object',
+                    id: 'test',
+                    tags: {
+                        _position: {x: 0, y: 0, z: 0},
+                        _workspace: 'abc',
+                    }
+                }
+            };
+            const parent1: FilesState = merge({}, base, {
+                'test': {
+                    tags: {
+                        _position: {x: 10, y: 10, z: 0},
+                    }
+                },
+            });
+            const parent2: FilesState = merge({}, base, {
+                'test': {
+                    tags: {
+                        _position: {x: 5, y: 5, z: 0},
+                    }
+                },
+            });
+
+            const result = {
+                success: false,
+                base: base,
+                first: parent1,
+                second: parent2,
+                conflicts: {
+                    'test': {
+                        tags: {
+                            _position: {
+                                x: {
+                                    [first]: 10,
+                                    [second]: 5
+                                },
+                                y: {
+                                    [first]: 10,
+                                    [second]: 5
+                                }
+                            }
+                        }
+                    },
+                },
+                final: {}
+            };
+
+            let conflicts: ConflictDetails[] = [];
+            const newResult = await resolveConflicts(result, c => {
+                conflicts.push(c);
+                return c.conflict[first];
+            });
+
+            expect(conflicts).toEqual([
+                {
+                    path: ['test', 'tags', '_position', 'x'],
+                    conflict: {
+                        [first]: 10,
+                        [second]: 5
+                    }
+                },
+                {
+                    path: ['test', 'tags', '_position', 'y'],
+                    conflict: {
+                        [first]: 10,
+                        [second]: 5
+                    }
+                }
+            ]);
+            expect(newResult).toEqual({
+                success: true,
+                base: base,
+                first: parent1,
+                second: parent2,
+                conflicts: null,
+                final: {
+                    'test': {
+                        tags: {
+                            _position: {
+                                x: 10,
+                                y: 10,
+                            },
+                        }
+                    }
                 }
             });
         });

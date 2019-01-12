@@ -23,6 +23,8 @@ The repository for the Process for Teams project.
 
 To watch for changes and re-run tests, run `npx jest --watchAll`.
 
+If you're using Visual Studio Code, I recommend getting the Jest extension. It makes it real easy to debug unit tests.
+
 
 [docker-for-mac]: https://docs.docker.com/v17.12/docker-for-mac/install/
 [docker-for-windows]: https://docs.docker.com/docker-for-windows/install/
