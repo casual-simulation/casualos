@@ -274,6 +274,8 @@ export class FileManager {
         new BehaviorSubject<SelectedFilesUpdatedEvent>({files: []});
     this._files = await this._socketManager.getFilesChannel();
 
+    await this._initUserFile();
+
     this._subscriptions.push(this._appManager.userObservable.subscribe(async u => {
       if (u) {
         await this.init();
