@@ -29,7 +29,7 @@ export interface ConnectionHelper<T> {
     /**
      * Sets the function that is used to emit events to the server.
      */
-    setEmitToServerFunction: (emit: (event: Event) => void) => void;
+    setEmitToServerFunction: (emit: (event: Event) => void | Promise<void>) => void;
 
     /**
      * Sets the function that is used to emit events to the local store.
@@ -76,7 +76,7 @@ export class BaseConnector implements ChannelConnector {
         let serverEvents: Observable<Event>;
         let connectionStates: Observable<boolean>;
         let onUnsubscribe: Subject<{}> = new Subject<{}>();
-        let emitToServer: ((event: Event) => void);
+        let emitToServer: ((event: Event) => void | Promise<void>);
         let emitToStore: ((event: Event) => void);
         let getServerState: (() => Promise<T>);
         let disconnected: Observable<T>;
@@ -84,6 +84,9 @@ export class BaseConnector implements ChannelConnector {
         let disconnectedSub: SubscriptionLike;
         let reconnectedSub: SubscriptionLike;
         let currentState: ChannelConnectionState = 'online';
+        
+        // The most recent server state.
+        let serverState: T = null;
 
         let build: () => ChannelConnection<T> = () => {
             let subs: SubscriptionLike[] = [];
@@ -93,14 +96,6 @@ export class BaseConnector implements ChannelConnector {
                     event: e,
                     isLocal: false
                 }))).subscribe(subject));
-            }
-
-            if (emitToServer != null) {
-                subs.push(subject.pipe(
-                     filter(e => e.isLocal && currentState === 'online'),
-                     map(e => e.event),
-                     tap(e => emitToServer(e))
-                ).subscribe());
             }
 
             if (!emitToStore) {
@@ -119,7 +114,7 @@ export class BaseConnector implements ChannelConnector {
                     map(_ => currentState),
                     tap(_ => currentState = 'offline'),
                     filter(state => state !== 'online-disconnected'),
-                    map(_ => store.state()),
+                    map(_ => serverState),
                     publish(),
                     refCount()
                 );
@@ -136,8 +131,24 @@ export class BaseConnector implements ChannelConnector {
             }
             
             subs.push(subject.pipe(
-                    map(e => e.event),
-                    tap(emitToStore)
+                    tap(e => {
+                        emitToStore(e.event);
+                        const mostRecentState = store.state();
+                        if (emitToServer) {
+                            if (e.isLocal && currentState === 'online') {
+                                const p = emitToServer(e.event);
+                                if (p && typeof p.then === 'function') {
+                                    p.then(() => {
+                                        serverState = mostRecentState;
+                                    }, ex => console.error(ex));
+                                } else {
+                                    serverState = mostRecentState;
+                                }
+                            } else if (!e.isLocal) {
+                                serverState = mostRecentState;
+                            }
+                        }
+                    }), 
                 ).subscribe());
 
             return {

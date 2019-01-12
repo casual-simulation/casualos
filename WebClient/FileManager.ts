@@ -297,6 +297,8 @@ export class FileManager {
       const event = addState(results.final);
       this._files.reconnect();
       this._files.emit(event);
+    } else {
+      this._files.reconnect();
     }
     this._resyncedObservable.next();
   }

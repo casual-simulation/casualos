@@ -45,7 +45,15 @@ export class SocketIOConnector extends BaseConnector {
 
                     helper.setServerEvents(<any>socketEvents);
                     helper.setEmitToServerFunction(event => {
-                        this._socket.emit(this._eventName(info), event);
+                        return new Promise((resolve, reject) => {
+                            try {
+                                this._socket.emit(this._eventName(info), event, () => {
+                                    resolve();
+                                });
+                            } catch(ex) {
+                                reject(ex);
+                            }
+                        });
                     });
                     helper.onUnsubscribe.subscribe(() => {
                         this._socket.emit('leave_server', info.id, (err: any) => {

@@ -12,6 +12,8 @@ export class TestConnector extends BaseConnector {
     private _getSeverState: () => Promise<any>;
     private _initial_state: any;
 
+    emitToServerPromise: Promise<void>;
+
     constructor(initialState: any, events: Subject<any>, connection?: Subject<boolean>, eventsToServer?: Subject<any>, getServerState?: () => Promise<any>) {
         super();
         this._events = events;
@@ -35,6 +37,7 @@ export class TestConnector extends BaseConnector {
             if (this._eventsToServer) {
                 helper.setEmitToServerFunction(e => {
                     this._eventsToServer.next(e);
+                    return this.emitToServerPromise;
                 });
             }
             if (this._getSeverState) {

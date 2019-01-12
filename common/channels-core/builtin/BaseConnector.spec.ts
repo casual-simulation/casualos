@@ -251,5 +251,62 @@ describe('builtin', () => {
                 sub.unsubscribe();
             });
         });
+
+        it('should resolve most recent server state on disconnect()', () => {
+            init(0);
+
+            return channel.subscribe().then(connection => {
+                let store = connection.store;
+
+                expect(store.state()).to.equal(0);
+                expect(connection.state).to.equal('online');
+
+                let events: Event[] = [];
+                let eventsSentToServer: Event[] = [];
+                let sub = connection.events.subscribe(e => events.push(e));
+                let eventsToServerSub = eventsToServer.subscribe(e => eventsSentToServer.push(e));
+
+                connection.emit({
+                    type: 'add',
+                    creation_time: new Date()
+                });
+
+                expect(store.state()).to.equal(1);
+                expect(eventsSentToServer.length).to.equal(1);
+
+                let disconnectedState = 0;
+                let disconnectedSub = connection.disconnected.subscribe(state => {
+                    disconnectedState = state;
+                });
+
+                let resolve: any;
+                connector.emitToServerPromise = new Promise((r, reject) => {
+                    resolve = r;
+                });
+
+                connection.emit({
+                    type: 'add',
+                    creation_time: new Date()
+                });
+
+                expect(store.state()).to.equal(2);
+                expect(eventsSentToServer.length).to.equal(2);
+
+                connectionEvents.next(false);
+                expect(disconnectedState).to.equal(1);
+                expect(connection.state).to.equal('offline');
+
+                connection.emit({
+                    type: 'add',
+                    creation_time: new Date()
+                });
+
+                expect(eventsSentToServer.length).to.equal(2, 'should not send an event to the server when offline.');
+
+                disconnectedSub.unsubscribe();
+                eventsToServerSub.unsubscribe();
+                sub.unsubscribe();
+            });
+        });
     });
 });

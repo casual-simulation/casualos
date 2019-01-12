@@ -61,9 +61,12 @@ export class SocketIOChannelServer {
         }
         const eventName = `new_event_${info.id}`;
 
-        const listener = (event: Event) => {
+        const listener = (event: Event, cb: Function) => {
             connection.emit(event);
             socket.to(info.id).emit(eventName, event);
+            if (cb && typeof cb === 'function') {
+                cb();
+            }
         };
         socket.on(eventName, listener);
         socket.on('leave_server', (id: string, callback: Function) => {
