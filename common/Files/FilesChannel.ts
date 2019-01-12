@@ -31,7 +31,7 @@ export interface FilesStateDiff {
  * A function that, given a conflict, returns what value to use to resolve the conflict.
  * If the returned value is a promise, it will be waited upon until it resolves with a value.
  */
-export type ConflictHandler = (details: ConflictDetails) => any;
+export type ConflictHandler<T> = (details: ConflictDetails, merge: MergedObject<T>) => any;
 
 /**
  * Represents details about a conflict.
@@ -292,10 +292,10 @@ export function mergeFiles<T>(base: T, parent1: T, parent2: T, options?: any): M
  * @param merge 
  * @param handler 
  */
-export async function resolveConflicts<T>(merge: MergedObject<T>, handler: ConflictHandler): Promise<MergedObject<T>> {
+export async function resolveConflicts<T>(merge: MergedObject<T>, handler: ConflictHandler<T>): Promise<MergedObject<T>> {
     const conflicts = conflictDetails(merge.conflicts, []);
     const handled = conflicts.map(async c => {
-        const result = handler(c);
+        const result = handler(c, merge);
         let val;
         if (result && typeof result.then === 'function') {
             val = await result;

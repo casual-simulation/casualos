@@ -22,6 +22,8 @@ import {
   fileRemoved,
   objDiff,
   addState,
+  resolveConflicts,
+  first,
 } from 'common/Files';
 import { 
   filterFilesBySelection, 
@@ -367,9 +369,9 @@ export class FileManager {
       }
     }));
 
-    this._subscriptions.push(this._files.reconnected.subscribe(state => {
+    this._subscriptions.push(this._files.reconnected.subscribe(async state => {
       try {
-        this._reconnected(state);
+        await this._reconnected(state);
       } catch(ex) {
         Sentry.captureException(ex);
         console.error(ex);
@@ -377,7 +379,7 @@ export class FileManager {
     }));
   }
 
-  private _reconnected(state: FilesState) {
+  private async _reconnected(state: FilesState) {
     Sentry.addBreadcrumb({
       message: 'Reconnected to server',
       category: 'net',
@@ -402,6 +404,13 @@ export class FileManager {
       this._files.emit(event);
     } else if(!mergeReport.success) {
       console.error('Merge Failed! Conflicts:', mergeReport.conflicts);
+      const fixed = await resolveConflicts(mergeReport, details => {
+        return details.conflict[first];
+      });
+      const event = addState(fixed.final);
+      this._files.reconnect();
+      this._files.emit(event);
+      console.log('Fixed by overwriting the other changes!');
     } else {
       console.log('No state change. Merge not needed');
     }
