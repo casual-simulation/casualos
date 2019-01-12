@@ -1,4 +1,4 @@
-import { filesReducer, fileAdded, FilesState, fileRemoved, action, calculateStateDiff, calculateActionEvents, transaction, beginMergeFiles, mergeFile, objDiff } from './FilesChannel';
+import { filesReducer, fileAdded, FilesState, fileRemoved, action, calculateStateDiff, calculateActionEvents, transaction, mergeFiles, objDiff, applyMerge } from './FilesChannel';
 import { Workspace, Object, File } from './File';
 import { values, assign, merge } from 'lodash';
 import uuid from 'uuid/v4';
@@ -588,7 +588,7 @@ describe('FilesChannel', () => {
                 }
             });
 
-            const merged = mergeFile(base, parent1, parent2);
+            const merged = mergeFiles(base, parent1, parent2);
 
             expect(merged).toEqual({
                 success: true,
@@ -621,7 +621,7 @@ describe('FilesChannel', () => {
                 }
             });
 
-            const merged = mergeFile(base, parent1, parent2);
+            const merged = mergeFiles(base, parent1, parent2);
 
             expect(merged).toEqual({
                 success: true,
@@ -654,7 +654,7 @@ describe('FilesChannel', () => {
                 }
             });
 
-            const merged = mergeFile(base, parent1, parent2);
+            const merged = mergeFiles(base, parent1, parent2);
 
             expect(merged).toEqual({
                 success: true,
@@ -686,7 +686,7 @@ describe('FilesChannel', () => {
                 }
             });
 
-            const merged = mergeFile(base, parent1, parent2);
+            const merged = mergeFiles(base, parent1, parent2);
 
             expect(merged).toEqual({
                 success: true,
@@ -722,7 +722,7 @@ describe('FilesChannel', () => {
                 }
             });
 
-            const merged = mergeFile(base, parent1, parent2);
+            const merged = mergeFiles(base, parent1, parent2);
 
             expect(merged).toEqual({
                 success: true,
@@ -755,7 +755,7 @@ describe('FilesChannel', () => {
                 }
             });
 
-            const merged = mergeFile(base, parent1, parent2);
+            const merged = mergeFiles(base, parent1, parent2);
 
             expect(merged).toEqual({
                 success: true,
@@ -793,7 +793,7 @@ describe('FilesChannel', () => {
                 }
             });
 
-            const merged = mergeFile(base, parent1, parent2);
+            const merged = mergeFiles(base, parent1, parent2);
 
             expect(merged).toEqual({
                 success: true,
@@ -835,7 +835,7 @@ describe('FilesChannel', () => {
                 }
             });
 
-            const merged = mergeFile(base, parent1, parent2);
+            const merged = mergeFiles(base, parent1, parent2);
 
             expect(merged).toEqual({
                 success: true,
@@ -877,7 +877,7 @@ describe('FilesChannel', () => {
                 }
             });
 
-            const merged = mergeFile(base, parent1, parent2);
+            const merged = mergeFiles(base, parent1, parent2);
 
             expect(merged).toEqual({
                 success: false,
@@ -916,7 +916,7 @@ describe('FilesChannel', () => {
                 }
             });
 
-            const merged = mergeFile(base, parent1, parent2);
+            const merged = mergeFiles(base, parent1, parent2);
 
             expect(merged).toEqual({
                 success: false,
@@ -956,7 +956,7 @@ describe('FilesChannel', () => {
                 }
             });
 
-            const merged = mergeFile(base, parent1, parent2);
+            const merged = mergeFiles(base, parent1, parent2);
 
             expect(merged).toEqual({
                 success: false,
@@ -1037,7 +1037,7 @@ describe('FilesChannel', () => {
                 },
             });
 
-            const merged = mergeFile(base, parent1, parent2);
+            const merged = mergeFiles(base, parent1, parent2);
 
             expect(merged).toEqual({
                 success: false,
@@ -1088,13 +1088,27 @@ describe('FilesChannel', () => {
             };
             const parent2: FilesState = {};
 
-            let result = beginMergeFiles(base, parent1, parent2);
+            let result = mergeFiles(base, parent1, parent2);
 
             expect(result.success).toBe(true);
-            expect(result.changes).toEqual({
-                addedFiles: [parent1['test']],
-                removedFiles: [],
-                updatedFiles: []
+            expect(result.final).toEqual({
+                'test': {
+                    type: 'workspace',
+                    id: 'test',
+                    position: {x:0, y:0, z:0},
+                    size: 1
+                }
+            });
+
+            let finalState = applyMerge(result);
+
+            expect(finalState).toEqual({
+                'test': {
+                    type: 'workspace',
+                    id: 'test',
+                    position: {x:0, y:0, z:0},
+                    size: 1
+                }
             });
         });
     });

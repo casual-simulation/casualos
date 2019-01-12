@@ -1,4 +1,4 @@
-import {merge, filter, values, union, keys, isEqual, transform} from 'lodash';
+import {filter, values, union, keys, isEqual, transform, mergeWith} from 'lodash';
 import {
     map as rxMap,
     flatMap as rxFlatMap,
@@ -186,9 +186,9 @@ export interface DiffOptions {
  * @param second The second object.
  */
 export function objDiff(firstId: symbol | string, first: any, secondId: symbol | string, second: any, options?: DiffOptions) {
-    const opts = merge({
+    const opts = mergeWith({
         fullDiff: true
-    }, options || {});
+    }, options || {}, copyArrays);
 
     if (first !== second && second === null && !opts.fullDiff) {
         return null;
@@ -225,7 +225,7 @@ export function objDiff(firstId: symbol | string, first: any, secondId: symbol |
  * @param parent2 The second parent.
  * @param options The merge options.
  */
-export function mergeFile<T>(base: T, parent1: T, parent2: T, options?: any): MergedObject<T> {
+export function mergeFiles<T>(base: T, parent1: T, parent2: T, options?: any): MergedObject<T> {
 
     // use symbols because they are unique and won't conflict with user-defined
     // property names.
@@ -342,15 +342,11 @@ function diffNonConflicts(diff: Conflicts, parent1Id: symbol | string, parent2Id
 }
 
 /**
- * Attempts to merge the two given file states together.
- * If successful, the returned result will be successful and the resulting transaction events can be retreived from endMergeFiles().
- * @param base The last shared file state between parent1 and parent2.
- * @param parent1 The first parent of the merge.
- * @param parent2 The last parent of the merge.
- * @param options The merge options.
+ * Applies the changes contained in the merge result to the base and returns the result.
+ * @param mergeResult 
  */
-export function beginMergeFiles(base: FilesState, parent1: FilesState, parent2: FilesState, options?: any) {
-    return {success: true, changes: {}};
+export function applyMerge<T>(mergeResult: MergedObject<T>): T {
+    return mergeWith({}, mergeResult.base, mergeResult.final, copyArrays);
 }
 
 /**
@@ -424,9 +420,9 @@ export function calculateActionEvents(state: FilesState, action: Action): FileEv
  * @param event 
  */
 function fileAddedReducer(state: FilesState, event: FileAddedEvent) {
-    return merge({}, state, {
+    return mergeWith({}, state, {
         [event.id]: event.file
-    });
+    }, copyArrays);
 }
 
 /**
@@ -445,9 +441,9 @@ function fileRemovedReducer(state: FilesState, event: FileRemovedEvent) {
  * @param event 
  */
 function fileUpdatedReducer(state: FilesState, event: FileUpdatedEvent) {
-    const newData = merge({}, state, {
+    const newData = mergeWith({}, state, {
         [event.id]: event.update
-    });
+    }, copyArrays);
 
     for(let property in newData[event.id].tags) {
         let value = newData[event.id].tags[property];
@@ -576,4 +572,10 @@ export function action(senderFileId: string, receiverFileId: string, eventName: 
         receiverFileId,
         eventName,
     };
+}
+
+function copyArrays(objValue: any, srcValue: any) {
+    if (Array.isArray(objValue)) {
+        return srcValue;
+    }
 }
