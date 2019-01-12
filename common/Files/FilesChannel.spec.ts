@@ -14,7 +14,8 @@ import {
     resolveConflicts, 
     ConflictDetails, 
     first,
-    second
+    second,
+    listMergeConflicts
 } from './FilesChannel';
 import { Workspace, Object, File } from './File';
 import { values, assign, merge } from 'lodash';
@@ -1234,11 +1235,10 @@ describe('FilesChannel', () => {
                 final: {}
             };
 
-            let conflicts: ConflictDetails[] = [];
+            let conflicts: ConflictDetails[] = listMergeConflicts(result);
             const newResult = await resolveConflicts(result, c => {
-                conflicts.push(c);
                 return c.conflict[first];
-            });
+            }, conflicts);
 
             expect(conflicts).toEqual([
                 {

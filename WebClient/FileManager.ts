@@ -22,7 +22,6 @@ import {
   fileRemoved,
   objDiff,
   addState,
-  resolveConflicts,
   first,
   MergedObject,
 } from 'common/Files';

@@ -6,7 +6,8 @@ import { EventBus } from '../EventBus/EventBus';
 import ConfirmDialogOptions from './DialogOptions/ConfirmDialogOptions';
 import AlertDialogOptions from './DialogOptions/AlertDialogOptions';
 import { SubscriptionLike } from 'rxjs';
-import { resolveConflicts, first } from 'common/Files';
+import { resolveConflicts, first, listMergeConflicts, second, MergedObject, FilesState, ConflictDetails } from 'common/Files';
+import { some, difference } from 'lodash';
 
 @Component({
     components: {
@@ -71,13 +72,7 @@ export default class App extends Vue {
                     console.log('[App] Merge success!');
                     fileManager.publishMergeResults(merge);
                 } else {
-                    console.error('[App] Merge Failed! Conflicts:', merge.conflicts);
-                    const fixed = await resolveConflicts(merge, details => {
-                        return details.conflict[first];
-                    });
-
-                    fileManager.publishMergeResults(fixed);
-                    console.log('[App] Fixed by overwriting the other changes!');
+                    this._resolveConflicts(merge);
                 }
             }));
 
@@ -196,5 +191,50 @@ export default class App extends Vue {
     {
         if (this.confirmDialogOptions.cancelEvent != null)
             EventBus.$emit(this.confirmDialogOptions.cancelEvent);
+    }
+
+    private async _resolveConflicts(merge: MergedObject<FilesState>) {
+        console.error('[App] Merge Failed! Conflicts:', merge.conflicts);
+        const conflicts = listMergeConflicts(merge);
+
+        const { notFixable, automaticallyFixed } = await this._fixAutomaticConflicts(conflicts, merge);
+
+        if (notFixable.length > 0) {
+            console.log('[App] Merge has conflicts that are not automatically fixable!');
+
+            const final = await resolveConflicts(merge, details => {
+                // TODO: Show some UI to the user and let them resolve.
+                return details.conflict[first];
+            }, notFixable);
+
+            appManager.fileManager.publishMergeResults(final);
+        }
+        else {
+            appManager.fileManager.publishMergeResults(automaticallyFixed);
+        }
+
+        console.log('[App] Fixed and merged!');
+    }
+
+    private async _fixAutomaticConflicts(conflicts: ConflictDetails[], merge: MergedObject<FilesState>) {
+        // TODO: This is probably a stupid idea, but might actually be worth it
+        // to cut down on how many conflicts a user sees.
+        const automaticallyFixable = conflicts.filter(c => {
+            return some(c.path, p => p === '_position');
+        });
+        const notFixable = difference(conflicts, automaticallyFixable);
+
+        const automaticallyFixed = await resolveConflicts(merge, details => {
+            if (some(details.path, p => p === '_position')) {
+                return details.conflict[second]; // Take the server path for new _position data
+            } else {
+                return details.conflict[first];
+            }
+        }, automaticallyFixable);
+
+        return {
+            notFixable,
+            automaticallyFixed
+        };
     }
 }

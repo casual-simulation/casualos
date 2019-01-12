@@ -292,8 +292,7 @@ export function mergeFiles<T>(base: T, parent1: T, parent2: T, options?: any): M
  * @param merge 
  * @param handler 
  */
-export async function resolveConflicts<T>(merge: MergedObject<T>, handler: ConflictHandler<T>): Promise<MergedObject<T>> {
-    const conflicts = conflictDetails(merge.conflicts, []);
+export async function resolveConflicts<T>(merge: MergedObject<T>, handler: ConflictHandler<T>, conflicts: ConflictDetails[] = listMergeConflicts(merge)): Promise<MergedObject<T>> {
     const handled = conflicts.map(async c => {
         const result = handler(c, merge);
         let val;
@@ -317,6 +316,10 @@ export async function resolveConflicts<T>(merge: MergedObject<T>, handler: Confl
         conflicts: null,
         final: obj
     });
+}
+
+export function listMergeConflicts<T>(merge: MergedObject<T>): ConflictDetails[] {
+    return conflictDetails(merge.conflicts, []);
 }
 
 function conflictDetails(conflicts: any, path: string[]): ConflictDetails[] {
