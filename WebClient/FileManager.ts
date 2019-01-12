@@ -283,6 +283,7 @@ export class FileManager {
     this._files = await this._socketManager.getFilesChannel();
 
     this._setupOffline();
+    await this._initUserFile();
 
     this._subscriptions.push(this._appManager.userObservable.subscribe(async u => {
       if (u) {
