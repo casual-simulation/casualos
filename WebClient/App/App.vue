@@ -38,6 +38,20 @@
                     <md-list-item>
                         <span class="md-list-item-text">Version: {{version}}</span>
                     </md-list-item>
+                    <md-list-item>
+                        <md-icon class="synced-checkmark" v-if="synced">check</md-icon>
+                        <md-icon class="not-synced-warning" v-else>warning</md-icon>
+                        <span class="md-list-item-text" v-if="synced">
+                            Synced
+                            <span v-if="online">Online</span>
+                            <span v-else>Offline</span>
+                        </span>
+                        <span class="md-list-item-text" v-else>
+                            Not Synced
+                            <span v-if="online">Online</span>
+                            <span v-else>Offline</span>
+                        </span>
+                    </md-list-item>
                 </md-list>
             </md-drawer>
 
@@ -55,9 +69,21 @@
             v-bind:md-content="alertDialogOptions.body"
             v-bind:md-confirm-text="alertDialogOptions.confirmText" />
 
-            <md-snackbar md-position="center" :md-duration="10000" :md-active.sync="updateAvailable">
+            <md-snackbar md-position="center" :md-duration="10000" :md-active.sync="showUpdateAvailable">
                 <span>A new version is available!</span>
                 <md-button class="md-accent" @click="refreshPage()">Refresh</md-button>
+            </md-snackbar>
+
+            <md-snackbar md-position="center" :md-duration="5000" :md-active.sync="showConnectionLost">
+                <span>Connection lost. You are now working offline.</span>
+            </md-snackbar>
+
+            <md-snackbar md-position="center" :md-duration="5000" :md-active.sync="showConnectionRegained">
+                <span>Connection regained. Attempting to sync with the server...</span>
+            </md-snackbar>
+
+            <md-snackbar md-position="center" :md-duration="5000" :md-active.sync="showSynced">
+                <span>Synced!</span>
             </md-snackbar>
 
             <md-content class="app-content">

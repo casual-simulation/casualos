@@ -6,13 +6,12 @@ import {File, Object} from 'common/Files';
 import GameView from '../GameView/GameView';
 import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';
-import { FileManager } from '../FileManager';
-import { SocketManager } from '../SocketManager';
 import {uniq} from 'lodash';
 import CubeIcon from './Cube.svg';
 
 import FileTable from '../FileTable/FileTable';
 import { ContextMenuEvent } from '../Input';
+import { SubscriptionLike } from 'rxjs';
 
 const numLoadingSteps: number = 4;
 
@@ -21,14 +20,9 @@ const numLoadingSteps: number = 4;
         'game-view': GameView,
         'cube-icon': CubeIcon,
         'file-table': FileTable
-    },
-    inject: {
-        fileManager: 'fileManager'
     }
 })
 export default class Home extends Vue {
-
-    @Inject() private fileManager: FileManager;
 
     isOpen: boolean = false;
     contextMenuVisible: boolean = false;
@@ -42,12 +36,18 @@ export default class Home extends Vue {
     progress: number = 0;
     progressMode: "indeterminate" | "determinate" = "determinate";
 
+    private _subs: SubscriptionLike[] = [];
+
     get user() {
         return appManager.user;
     }
 
     get hasFiles() {
         return this.files.length > 0;
+    }
+
+    get fileManager() {
+        return appManager.fileManager;
     }
 
     open() {
@@ -91,9 +91,10 @@ export default class Home extends Vue {
         EventBus.$on('openInfoCard', this.open);
         this.open();
 
+        this._subs = [];
         this.files = [];
 
-        this.fileManager.selectedFilesUpdated.subscribe(event => {
+        this._subs.push(this.fileManager.selectedFilesUpdated.subscribe(event => {
             this.files = event.files;
             const editorOpenTime = this.fileManager.userFile.tags._editorOpenTime;
             const now = Date.now();
@@ -105,7 +106,7 @@ export default class Home extends Vue {
                     this.isOpen = true;
                 }
             }
-        });
+        }));
 
         this.isLoading = false;
         

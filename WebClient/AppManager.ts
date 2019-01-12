@@ -2,7 +2,10 @@ import * as Sentry from '@sentry/browser';
 import * as OfflinePluginRuntime from 'offline-plugin/runtime';
 import Axios from 'axios';
 import Vue from 'vue';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, using, SubscriptionLike } from 'rxjs';
+import { FileManager } from './FileManager';
+import { SocketManager } from './SocketManager';
+import { flatMap, map, scan } from 'rxjs/operators';
 
 export interface User {
     email: string;
@@ -12,21 +15,39 @@ export interface User {
 
 export class AppManager {
 
-    private _user: BehaviorSubject<User>;
+    private _userSubject: BehaviorSubject<User>;
     private _updateAvailable: BehaviorSubject<boolean>;
+    private _fileManager: FileManager;
+    private _socketManager: SocketManager;
+    private _initPromise: Promise<void>;
+    private _user: User;
 
     constructor() {
-        this._initSentry();
-        this._initOffline();
-        this._initUser();
+        this._socketManager = new SocketManager();
+        this._fileManager = new FileManager(this, this._socketManager);
+        this._initPromise = this._init();
+    }
+
+    get initPromise() {
+        return this._initPromise;
+    }
+
+    get socketManager() {
+        return this._socketManager;
+    }
+
+    get fileManager() {
+        if (this.user) {
+            return this._fileManager;
+        }
     }
 
     get userObservable(): Observable<User> {
-        return this._user;
+        return this._userSubject;
     }
 
     get user(): User {
-        return this._user.value;
+        return this._user;
     }
 
     /**
@@ -34,6 +55,33 @@ export class AppManager {
      */
     get updateAvailableObservable(): Observable<boolean> {
         return this._updateAvailable;
+    }
+
+    /**
+     * Helper function that ensures services are only running while the user is logged in.
+     * The provided setup function will be run once the user logs in or if they are already logged in
+     * and the returned subscriptions will be unsubscribed once the user logs out.
+     * @param setup 
+     */
+    whileLoggedIn(setup: (user: User, fileManager: FileManager) => SubscriptionLike[]): SubscriptionLike {
+        return this.userObservable.pipe(
+            scan((subs: SubscriptionLike[], user: User, index) => {
+                if (subs) {
+                    subs.forEach(s => s.unsubscribe());
+                }
+                if (user) {   
+                    return setup(user, this.fileManager);
+                } else {
+                    return null;
+                }
+            }, null)
+        ).subscribe();
+    }
+
+    private async _init() {
+        this._initSentry();
+        this._initOffline();
+        await this._initUser();
     }
 
     private _initSentry() {
@@ -95,24 +143,25 @@ export class AppManager {
         });
     }
 
-    private _initUser() {
+    private async _initUser() {
         const localStorage = window.localStorage;
-        const u = localStorage.getItem("user");
-        if (u) {
-            this._user = new BehaviorSubject<User>(JSON.parse(u));
-        } else {
-            this._user = new BehaviorSubject<User>(null);
-        }
+        const u: User = JSON.parse(localStorage.getItem("user"));
 
-        this._user.subscribe(user => {
+        this._user = null;
+        this._userSubject = new BehaviorSubject<User>(null);
+        this._userSubject.subscribe(user => {
             Sentry.configureScope(scope => {
                 if (user) {
-                    scope.setUser(this._user);
+                    scope.setUser(this._userSubject);
                 } else {
                     scope.clear();
                 }
             });
         });
+
+        if (u) {
+            await this.loginOrCreateUser(u.email);
+        }
     }
 
     private _saveUser() {
@@ -134,13 +183,16 @@ export class AppManager {
                 level: Sentry.Severity.Info,
             });
             console.log("[AppManager] Logout");
-            this._user.next(null);
+
+            this._fileManager.dispose();
+            this._user = null;
+            this._userSubject.next(null);
             this._saveUser();
         }
     }
 
     async loginOrCreateUser(email: string): Promise<boolean> {
-        if (this.user !== null)
+        if (this.user)
             return true;
 
         try {
@@ -156,7 +208,10 @@ export class AppManager {
                     type: 'default'
                 });
                 console.log('[AppManager] Login Success!', result);
-                this._user.next(result.data);
+
+                this._user = result.data;
+                await this._fileManager.init();
+                this._userSubject.next(this._user);
                 this._saveUser();
                 return true;
             } else {

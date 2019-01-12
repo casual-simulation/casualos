@@ -59,12 +59,15 @@ const routes: RouteConfig[] = [
         path: '/',
         component: Welcome,
         beforeEnter: (to, from, next) => {
-            if (appManager.user !== null) {
-                next({ path: '/home' });
-            }
-            else {
-                next();
-            }
+            appManager.initPromise.then(() => {
+                if (appManager.user) {
+                    next({ path: '/home' });
+                } else {
+                    next();
+                }
+            }, ex => {
+                next({ path: '/' });
+            });
         }
     },
     {
@@ -83,7 +86,7 @@ const router = new VueRouter({
 
 router.beforeEach((to, from, next) => {
     if (to.path !== '/') {
-        if (appManager.user === null) {
+        if (!appManager.user) {
             next({ path: '/' });
             return;
         }

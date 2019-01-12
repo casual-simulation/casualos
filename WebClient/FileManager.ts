@@ -24,6 +24,7 @@ import {
   addState,
   resolveConflicts,
   first,
+  MergedObject,
 } from 'common/Files';
 import { 
   filterFilesBySelection, 
@@ -96,6 +97,9 @@ export class FileManager {
   private _fileUpdatedObservable: Subject<File>;
   private _selectedFilesUpdated: BehaviorSubject<SelectedFilesUpdatedEvent>;
   private _files: ChannelConnection<FilesState>;
+  private _reconnectedObservable: Subject<MergedObject<FilesState>>;
+  private _resyncedObservable: Subject<void>;
+  private _disconnectedObservable: Subject<FilesState>;
 
   get files(): File[] {
     return values(this._filesState);
@@ -163,6 +167,42 @@ export class FileManager {
       return objs[0];
     }
     return null;
+  }
+
+  /**
+   * Gets the observable that resolves when the browser's connection state to the server changes.
+   */
+  get connectionState(): Observable<boolean> {
+    return mergeObservables(
+      this.disconnected.pipe(map(_ => false)),
+      this.reconnected.pipe(map(_ => true))
+    );
+  }
+
+  /**
+   * Gets the observable that resolves when the browser becomes disconnected from
+   * the server.
+   */
+  get disconnected(): Observable<FilesState> {
+    return this._disconnectedObservable;
+  }
+
+  /**
+   * Gets the observable that resolves when the browser becomes reconnected to the server.
+   * Contains the merge report that attempts to sync the remote state with the local state.
+   * Note that being reconnected to the server does not mean that we are synced with the server.
+   * It only means that we have the capability to communicate with the server.
+   */
+  get reconnected(): Observable<MergedObject<FilesState>> {
+    return this._reconnectedObservable;
+  }
+
+  /**
+   * Gets the observable that resolves when the app becomes synced with the server after
+   * being disconnected. This means that our state is up to date with the server.
+   */
+  get resynced(): Observable<void> {
+    return this._resyncedObservable;
   }
 
   private get _filesState() {
@@ -246,6 +286,20 @@ export class FileManager {
   }
 
   /**
+   * Reports the merge results to the server.
+   * This will update the server state to match the state that was determined from the merge result.
+   * Upon becomming reconnected to the server, this function MUST be called in order for the user's local changes
+   * to be synced to the server and for their future changes to be pushed to the server.
+   * @param results The merge results.
+   */
+  publishMergeResults(results: MergedObject<FilesState>) {
+    const event = addState(results.final);
+    this._files.reconnect();
+    this._files.emit(event);
+    this._resyncedObservable.next();
+  }
+
+  /**
    * Clears the selection that the given user has.
    * @param user The file for the user to clear the selection of.
    */
@@ -282,19 +336,13 @@ export class FileManager {
     this._fileUpdatedObservable = new Subject<File>();
     this._selectedFilesUpdated =
         new BehaviorSubject<SelectedFilesUpdatedEvent>({files: []});
+    this._disconnectedObservable = new Subject<FilesState>();
+    this._reconnectedObservable = new Subject<MergedObject<FilesState>>();
+    this._resyncedObservable = new Subject<void>();
     this._files = await this._socketManager.getFilesChannel();
 
     this._setupOffline();
     await this._initUserFile();
-
-    this._subscriptions.push(this._appManager.userObservable.subscribe(async u => {
-      if (u) {
-        await this.init();
-        await this._initUserFile();
-      } else {
-        this._dispose();
-      }
-    }));
 
     // Replay the existing files for the components that need it this way
     const filesState = this._files.store.state();
@@ -397,23 +445,7 @@ export class FileManager {
       
     });
 
-    if (mergeReport.success && mergeReport.final) {
-      console.log('Merge success!');
-      const event = addState(mergeReport.final);
-      this._files.reconnect();
-      this._files.emit(event);
-    } else if(!mergeReport.success) {
-      console.error('Merge Failed! Conflicts:', mergeReport.conflicts);
-      const fixed = await resolveConflicts(mergeReport, details => {
-        return details.conflict[first];
-      });
-      const event = addState(fixed.final);
-      this._files.reconnect();
-      this._files.emit(event);
-      console.log('Fixed by overwriting the other changes!');
-    } else {
-      console.log('No state change. Merge not needed');
-    }
+    this._reconnectedObservable.next(mergeReport);
   }
 
   private _disconnected(state: FilesState) {
@@ -426,10 +458,10 @@ export class FileManager {
     this._setStatus('Disconnected :(');
     // save the current state to persistent storage
     this._offlineServerState = state;
-    
+    this._disconnectedObservable.next(state);
   }
 
-  private _dispose() {
+  public dispose() {
     this._setStatus('Dispose');
     this._initPromise = null;
     this._subscriptions.forEach(s => s.unsubscribe());

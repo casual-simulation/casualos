@@ -1,5 +1,5 @@
 <template>
-  <md-menu md-size="medium" md-align-trigger :md-active.sync="showMenu">
+  <md-menu md-size="medium" md-align-trigger :md-active="showMenu">
     <span>
         <span class="hashtag">#</span><input :value="value" 
             @input="onInput($event.target.value)"

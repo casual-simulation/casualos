@@ -6,8 +6,6 @@ import {File, Object} from 'common/Files';
 import { EventBus } from '../EventBus/EventBus';
 import { fileTags } from 'common/Files/FileCalculations';
 import { appManager } from '../AppManager';
-import { FileManager } from '../FileManager';
-import { SocketManager } from '../SocketManager';
 
 import FileRow from '../FileRow/FileRow';
 import TagEditor from '../TagEditor/TagEditor';
@@ -21,21 +19,20 @@ const numLoadingSteps: number = 4;
         'file-row': FileRow,
         'file-tag': FileTag,
         'tag-editor': TagEditor,
-    },
-    inject: {
-      fileManager: 'fileManager'
     }
 })
 export default class FileTable extends Vue {
-
-    @Inject() private fileManager: FileManager;
-
+    
     files: Object[] = [];
     tags: string[] = [];
     lastEditedTag: string = null;
     isMakingNewTag: boolean = false;
     newTag: string = 'myNewTag';
     newTagValid: boolean = true;
+    
+    get fileManager() {
+        return appManager.fileManager;
+    }
 
     get user() {
         return appManager.user;

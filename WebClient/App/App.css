@@ -6,3 +6,11 @@
 .app-content {
     padding: 16px;
 }
+
+.synced-checkmark {
+    color: #13bd13b4;
+}
+
+.not-synced-warning {
+    color: #ff8a1cb4;
+}

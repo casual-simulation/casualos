@@ -4,9 +4,9 @@ import {Provide} from 'vue-property-decorator';
 import { appManager, User } from '../AppManager';
 import { EventBus } from '../EventBus/EventBus';
 import ConfirmDialogOptions from './DialogOptions/ConfirmDialogOptions';
-import { FileManager } from '../FileManager';
-import { SocketManager } from '../SocketManager';
 import AlertDialogOptions from './DialogOptions/AlertDialogOptions';
+import { SubscriptionLike } from 'rxjs';
+import { resolveConflicts, first } from 'common/Files';
 
 @Component({
     components: {
@@ -15,42 +15,90 @@ import AlertDialogOptions from './DialogOptions/AlertDialogOptions';
 })
 
 export default class App extends Vue {
-    private _socketManager: SocketManager;
-    
-    @Provide('fileManager') private _fileManager: FileManager = new FileManager(appManager, this._socketManager);
-
     showNavigation:boolean = false;
     showConfirmDialog: boolean = false;
     showAlertDialog: boolean = false;
     updateAvailable: boolean = false;
+    showUpdateAvailable: boolean = false;
+    showConnectionLost: boolean = false;
+    showConnectionRegained: boolean = false;
+    showSynced: boolean = false;
+
+    /**
+     * Whether the user is online and able to connect to the server.
+     */
+    online: boolean = true;
+
+    /**
+     * Whether the user is currently synced with the server.
+     */
+    synced: boolean = true;
+
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
+
+    private _subs: SubscriptionLike[] = [];
 
     get version() {
         return GIT_HASH.slice(0, 7);
     }
 
-    beforeCreate() {
-        this._socketManager = new SocketManager();
-        this._fileManager = new FileManager(appManager, this._socketManager);
-    }
-
     created() {
-        appManager.updateAvailableObservable.subscribe(updateAvailable => {
+        this._subs = [];
+        this._subs.push(appManager.updateAvailableObservable.subscribe(updateAvailable => {
             if (updateAvailable) {
                 this.updateAvailable = true;
+                this.showUpdateAvailable = true;
             }
-        })
+        }));
+
+        this._subs.push(appManager.whileLoggedIn((user, fileManager) => {
+            let subs: SubscriptionLike[] = [];
+
+            subs.push(fileManager.disconnected.subscribe(_ => {
+                this.showConnectionLost = true;
+                this.showConnectionRegained = false;
+                this.showSynced = false;
+                this.online = false;
+                this.synced = false;
+            }));
+
+            subs.push(fileManager.reconnected.subscribe(async merge => {
+                this.online = true;
+                this.showConnectionRegained = true;
+
+                if (merge.success) {
+                    console.log('[App] Merge success!');
+                    if (merge.final) {
+                        fileManager.publishMergeResults(merge);
+                    }
+                } else {
+                    console.error('[App] Merge Failed! Conflicts:', merge.conflicts);
+                    const fixed = await resolveConflicts(merge, details => {
+                        return details.conflict[first];
+                    });
+
+                    fileManager.publishMergeResults(fixed);
+                    console.log('Fixed by overwriting the other changes!');
+                }
+            }));
+
+            subs.push(fileManager.resynced.subscribe(_ => {
+                this.showConnectionRegained = false;
+                this.showSynced = true;
+                this.synced = true;
+            }));
+
+            return subs;
+        }));
 
         EventBus.$on('showNavigation', this.onShowNavigation);
         EventBus.$on('showConfirmDialog', this.onShowConfirmDialog);
         EventBus.$on('showAlertDialog', this.onShowAlertDialog);
     }
 
-    provide() {
-        return {
-            fileManager: this._fileManager
-        };
+    beforeDestroy() {
+        this._subs.forEach(s => s.unsubscribe());
     }
     
     logout() {

@@ -16,6 +16,11 @@ export class SocketManager {
     private _socket: SocketIOClient.Socket;
     private _connector: SocketIOConnector;
     private _client: ChannelClient;
+    private _filesChannel: BehaviorSubject<ChannelConnection<FilesState>> = new BehaviorSubject<ChannelConnection<FilesState>>(null);
+
+    public get filesChannelObservable() {
+        return this._filesChannel;
+    }
 
     constructor() {
         console.log('[SocketManager] Starting...');
@@ -43,6 +48,7 @@ export class SocketManager {
         }).subscribe();
         console.log('[SocketManager] Connected to files channel.');
 
+        this._filesChannel.next(files);
         return files;
     }
 }
