@@ -293,9 +293,11 @@ export class FileManager {
    * @param results The merge results.
    */
   publishMergeResults(results: MergedObject<FilesState>) {
-    const event = addState(results.final);
-    this._files.reconnect();
-    this._files.emit(event);
+    if (results.final) {
+      const event = addState(results.final);
+      this._files.reconnect();
+      this._files.emit(event);
+    }
     this._resyncedObservable.next();
   }
 

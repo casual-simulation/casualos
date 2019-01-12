@@ -69,9 +69,7 @@ export default class App extends Vue {
 
                 if (merge.success) {
                     console.log('[App] Merge success!');
-                    if (merge.final) {
-                        fileManager.publishMergeResults(merge);
-                    }
+                    fileManager.publishMergeResults(merge);
                 } else {
                     console.error('[App] Merge Failed! Conflicts:', merge.conflicts);
                     const fixed = await resolveConflicts(merge, details => {
@@ -79,11 +77,12 @@ export default class App extends Vue {
                     });
 
                     fileManager.publishMergeResults(fixed);
-                    console.log('Fixed by overwriting the other changes!');
+                    console.log('[App] Fixed by overwriting the other changes!');
                 }
             }));
 
             subs.push(fileManager.resynced.subscribe(_ => {
+                console.log('[App] Resynced!');
                 this.showConnectionRegained = false;
                 this.showSynced = true;
                 this.synced = true;
