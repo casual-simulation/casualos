@@ -8,6 +8,7 @@ import AlertDialogOptions from './DialogOptions/AlertDialogOptions';
 import { SubscriptionLike } from 'rxjs';
 import { resolveConflicts, first, listMergeConflicts, second, MergedObject, FilesState, ConflictDetails } from 'common/Files';
 import { some, difference } from 'lodash';
+import { MergeStatus } from 'WebClient/FileManager';
 
 @Component({
     components: {
@@ -24,6 +25,7 @@ export default class App extends Vue {
     showConnectionLost: boolean = false;
     showConnectionRegained: boolean = false;
     showSynced: boolean = false;
+    showMergeConflicts: boolean = false;
 
     /**
      * Whether the user is online and able to connect to the server.
@@ -37,6 +39,9 @@ export default class App extends Vue {
 
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
+
+    remainingConflicts: ConflictDetails[] = [];
+    currentMergeState: MergeStatus<FilesState> = null;
 
     private _subs: SubscriptionLike[] = [];
 
@@ -64,16 +69,15 @@ export default class App extends Vue {
                 this.synced = false;
             }));
 
-            subs.push(fileManager.reconnected.subscribe(async merge => {
+            subs.push(fileManager.resynced.subscribe(async merge => {
                 this.online = true;
                 this.showConnectionRegained = true;
+            }));
 
-                if (merge.success) {
-                    console.log('[App] Merge success!');
-                    fileManager.publishMergeResults(merge);
-                } else {
-                    this._resolveConflicts(merge);
-                }
+            subs.push(fileManager.syncFailed.subscribe(state => {
+                this.showMergeConflicts = true;
+                this.remainingConflicts = state.remainingConflicts;
+                this.currentMergeState = state;
             }));
 
             subs.push(fileManager.resynced.subscribe(_ => {
@@ -148,6 +152,10 @@ export default class App extends Vue {
     refreshPage() {
         window.location.reload();
     }
+
+    fixConflicts() {
+        console.log('[App] User wants to fix conflicts!');
+    }
     
     private onShowNavigation(show: boolean) {
         if (show == undefined) {
@@ -191,50 +199,5 @@ export default class App extends Vue {
     {
         if (this.confirmDialogOptions.cancelEvent != null)
             EventBus.$emit(this.confirmDialogOptions.cancelEvent);
-    }
-
-    private async _resolveConflicts(merge: MergedObject<FilesState>) {
-        console.error('[App] Merge Failed! Conflicts:', merge.conflicts);
-        const conflicts = listMergeConflicts(merge);
-
-        const { notFixable, automaticallyFixed } = await this._fixAutomaticConflicts(conflicts, merge);
-
-        if (notFixable.length > 0) {
-            console.log('[App] Merge has conflicts that are not automatically fixable!');
-
-            const final = await resolveConflicts(merge, details => {
-                // TODO: Show some UI to the user and let them resolve.
-                return details.conflict[first];
-            }, notFixable);
-
-            appManager.fileManager.publishMergeResults(final);
-        }
-        else {
-            appManager.fileManager.publishMergeResults(automaticallyFixed);
-        }
-
-        console.log('[App] Fixed and merged!');
-    }
-
-    private async _fixAutomaticConflicts(conflicts: ConflictDetails[], merge: MergedObject<FilesState>) {
-        // TODO: This is probably a stupid idea, but might actually be worth it
-        // to cut down on how many conflicts a user sees.
-        const automaticallyFixable = conflicts.filter(c => {
-            return some(c.path, p => p === '_position');
-        });
-        const notFixable = difference(conflicts, automaticallyFixable);
-
-        const automaticallyFixed = await resolveConflicts(merge, details => {
-            if (some(details.path, p => p === '_position')) {
-                return details.conflict[second]; // Take the server path for new _position data
-            } else {
-                return details.conflict[first];
-            }
-        }, automaticallyFixable);
-
-        return {
-            notFixable,
-            automaticallyFixed
-        };
     }
 }

@@ -1,4 +1,4 @@
-import {filter, values, union, keys, isEqual, transform, mergeWith, set} from 'lodash';
+import {filter, values, union, keys, isEqual, transform, mergeWith, set, unset, get} from 'lodash';
 import {
     map as rxMap,
     flatMap as rxFlatMap,
@@ -28,17 +28,23 @@ export interface FilesStateDiff {
 }
 
 /**
- * A function that, given a conflict, returns what value to use to resolve the conflict.
- * If the returned value is a promise, it will be waited upon until it resolves with a value.
- */
-export type ConflictHandler<T> = (details: ConflictDetails, merge: MergedObject<T>) => any;
-
-/**
  * Represents details about a conflict.
  */
 export interface ConflictDetails {
     conflict: Conflict;
     path: string[];
+}
+
+/**
+ * Represents a conflict that has been resolved with a specific value.
+ */
+export interface ResolvedConflict {
+    details: ConflictDetails;
+
+    /**
+     * The value that the conflict was resolved with.
+     */
+    value: any;
 }
 
 /**
@@ -287,35 +293,37 @@ export function mergeFiles<T>(base: T, parent1: T, parent2: T, options?: any): M
 }
 
 /**
- * Attempts to resolve conflicts in the given merge using the given conflict handler.
- * The handler will be called once for each conflict.
- * @param merge 
- * @param handler 
+ * Resolves the specified conflicts in the given merge using the given conflict handler.
+ * Returns a new merged object that has been updated with the given changes.
+ * @param merge The merge.
+ * @param resolved The conflicts that should be resolved.
  */
-export async function resolveConflicts<T>(merge: MergedObject<T>, handler: ConflictHandler<T>, conflicts: ConflictDetails[] = listMergeConflicts(merge)): Promise<MergedObject<T>> {
-    const handled = conflicts.map(async c => {
-        const result = handler(c, merge);
-        let val;
-        if (result && typeof result.then === 'function') {
-            val = await result;
-        } else {
-            val = result;
-        }
-
-        return { details: c, value: val };
-    });
-
-    const results = await Promise.all(handled);
+export function resolveConflicts<T>(merge: MergedObject<T>, resolved: ResolvedConflict[]): MergedObject<T> {
     let obj = {};
-    results.forEach(r => {
+    let conflicts = mergeWith({}, merge.conflicts, copyArrays);
+    resolved.forEach(r => {
         set(obj, r.details.path, r.value);
+        unset(conflicts, r.details.path);
+
+        // Remove empty objects
+        let p = r.details.path;
+        while(p.length > 1) {
+            p = p.slice(0, p.length - 1);
+            const k = keys(get(conflicts, p));
+            if (k.length === 0) {
+                unset(conflicts, p);
+            } else {
+                break;
+            }
+        }
     });
 
+    const conflictsLeft = keys(conflicts);
     return mergeWith({}, merge, {
-        success: true,
-        conflicts: null,
+        success: conflictsLeft.length <= 0,
+        conflicts: conflictsLeft.length <= 0 ? null : conflicts,
         final: obj
-    });
+    }, copyArrays);
 }
 
 export function listMergeConflicts<T>(merge: MergedObject<T>): ConflictDetails[] {

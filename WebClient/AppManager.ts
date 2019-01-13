@@ -145,7 +145,7 @@ export class AppManager {
 
     private async _initUser() {
         const localStorage = window.localStorage;
-        const u: User = JSON.parse(localStorage.getItem("user"));
+        const user: User = JSON.parse(localStorage.getItem("user"));
 
         this._user = null;
         this._userSubject = new BehaviorSubject<User>(null);
@@ -159,8 +159,10 @@ export class AppManager {
             });
         });
 
-        if (u) {
-            await this.loginOrCreateUser(u.email);
+        if (user) {
+            this._user = user;
+            await this._fileManager.init();
+            this._userSubject.next(this._user);
         }
     }
 

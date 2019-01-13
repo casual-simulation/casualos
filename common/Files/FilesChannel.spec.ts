@@ -15,7 +15,8 @@ import {
     ConflictDetails, 
     first,
     second,
-    listMergeConflicts
+    listMergeConflicts,
+    ResolvedConflict
 } from './FilesChannel';
 import { Workspace, Object, File } from './File';
 import { values, assign, merge } from 'lodash';
@@ -1184,8 +1185,8 @@ describe('FilesChannel', () => {
         });
     });
 
-    describe('resolveConflicts()', () => {
-        it('should call the given handler for each conflict in the given result', async () => {
+    describe('listMergeConflicts()', () => {
+        it('should return a list of conflicts with their path and values', async () => {
             const base: FilesState = {
                 'test': {
                     type: 'object',
@@ -1236,9 +1237,6 @@ describe('FilesChannel', () => {
             };
 
             let conflicts: ConflictDetails[] = listMergeConflicts(result);
-            const newResult = await resolveConflicts(result, c => {
-                return c.conflict[first];
-            }, conflicts);
 
             expect(conflicts).toEqual([
                 {
@@ -1256,6 +1254,85 @@ describe('FilesChannel', () => {
                     }
                 }
             ]);
+        });
+    });
+
+    describe('resolveConflicts()', () => {
+        it('should apply the given conflict resolutions to the merge state and return a new merge state', async () => {
+            const base: FilesState = {
+                'test': {
+                    type: 'object',
+                    id: 'test',
+                    tags: {
+                        _position: {x: 0, y: 0, z: 0},
+                        _workspace: 'abc',
+                    }
+                }
+            };
+            const parent1: FilesState = merge({}, base, {
+                'test': {
+                    tags: {
+                        _position: {x: 10, y: 10, z: 0},
+                    }
+                },
+            });
+            const parent2: FilesState = merge({}, base, {
+                'test': {
+                    tags: {
+                        _position: {x: 5, y: 5, z: 0},
+                    }
+                },
+            });
+
+            const result = {
+                success: false,
+                base: base,
+                first: parent1,
+                second: parent2,
+                conflicts: {
+                    'test': {
+                        tags: {
+                            _position: {
+                                x: {
+                                    [first]: 10,
+                                    [second]: 5
+                                },
+                                y: {
+                                    [first]: 10,
+                                    [second]: 5
+                                }
+                            }
+                        }
+                    },
+                },
+                final: {}
+            };
+
+            let conflicts: ResolvedConflict[] = [
+                {
+                    details: {
+                        path: ['test', 'tags', '_position', 'x'],
+                        conflict: {
+                            [first]: 10,
+                            [second]: 5
+                        }
+                    },
+                    value: 10
+                },
+                {
+                    details: {
+                        path: ['test', 'tags', '_position', 'y'],
+                        conflict: {
+                            [first]: 10,
+                            [second]: 5
+                        }
+                    },
+                    value: 5
+                }
+            ];
+
+            const newResult = resolveConflicts(result, conflicts);
+
             expect(newResult).toEqual({
                 success: true,
                 base: base,
@@ -1267,12 +1344,12 @@ describe('FilesChannel', () => {
                         tags: {
                             _position: {
                                 x: 10,
-                                y: 10,
-                            },
+                                y: 5
+                            }
                         }
-                    }
+                    },
                 }
-            });
+            })
         });
     });
 });

@@ -24,6 +24,11 @@ import {
   addState,
   first,
   MergedObject,
+  listMergeConflicts,
+  ConflictDetails,
+  resolveConflicts,
+  second,
+  ResolvedConflict,
 } from 'common/Files';
 import { 
   filterFilesBySelection, 
@@ -81,6 +86,16 @@ import { SentryError } from '@sentry/core';
 export interface SelectedFilesUpdatedEvent { files: Object[]; }
 
 /**
+ * Defines an interface for an object that tracks the status of a merge.
+ * Contains the current state, what conflcits have been resolved, and what conflicts are remaining.
+ */
+export interface MergeStatus<T> {
+  merge: MergedObject<T>;
+  resolvedConflicts: ResolvedConflict[];
+  remainingConflicts: ConflictDetails[];
+}
+
+/**
  * Defines a class that interfaces with the AppManager and SocketManager
  * to reactively edit files.
  */
@@ -98,7 +113,9 @@ export class FileManager {
   private _files: ChannelConnection<FilesState>;
   private _reconnectedObservable: Subject<MergedObject<FilesState>>;
   private _resyncedObservable: Subject<void>;
+  private _syncFailedObservable: Subject<MergeStatus<FilesState>>;
   private _disconnectedObservable: Subject<FilesState>;
+  private _mergeStatus: MergeStatus<FilesState> = null;
 
   get files(): File[] {
     return values(this._filesState);
@@ -197,11 +214,27 @@ export class FileManager {
   }
 
   /**
+   * Gets the observable that resolves when the app has reconnected to the server but is unable to
+   * resolve all the merge conflicts automatically. Contains the current merge state along with what conflicts are remaining and what needs to be done.
+   */
+  get syncFailed(): Observable<MergeStatus<FilesState>> {
+    return this._syncFailedObservable;
+  }
+
+  /**
    * Gets the observable that resolves when the app becomes synced with the server after
    * being disconnected. This means that our state is up to date with the server.
    */
   get resynced(): Observable<void> {
     return this._resyncedObservable;
+  }
+
+  /**
+   * Gets the current merge status.
+   * Null if no merge conflicts exist.
+   */
+  get mergeStatus(): MergeStatus<FilesState> {
+    return this._mergeStatus;
   }
 
   private get _filesState() {
@@ -285,13 +318,34 @@ export class FileManager {
   }
 
   /**
+   * Resolves the given conflicts into the current merge status.
+   * @param resolved 
+   */
+  resolveConflicts(resolved: ResolvedConflict[]) {
+    if (this._mergeStatus &&  this._mergeStatus.remainingConflicts.length > 0) {
+      const result = resolveConflicts(this._mergeStatus.merge, resolved);
+      if (result.success) {
+        this._publishMergeResults(result);
+      } else {
+        this._mergeStatus = {
+          merge: result,
+          remainingConflicts: difference(this._mergeStatus.remainingConflicts, resolved.map(r => r.details)),
+          resolvedConflicts: [...this._mergeStatus.resolvedConflicts, ...resolved]
+        };
+      }
+    }
+  }
+
+  /**
    * Reports the merge results to the server.
    * This will update the server state to match the state that was determined from the merge result.
    * Upon becomming reconnected to the server, this function MUST be called in order for the user's local changes
    * to be synced to the server and for their future changes to be pushed to the server.
    * @param results The merge results.
    */
-  publishMergeResults(results: MergedObject<FilesState>) {
+  private _publishMergeResults(results: MergedObject<FilesState>) {
+    this._setStatus('Merged and reconnected!');
+    this._mergeStatus = null;
     if (results.final) {
       const event = addState(results.final);
       this._files.reconnect();
@@ -449,6 +503,26 @@ export class FileManager {
     });
 
     this._reconnectedObservable.next(mergeReport);
+
+    if (mergeReport.success) {
+      console.log('[FileManager] Merge success!');
+      this._publishMergeResults(mergeReport);
+    } else {
+      const { fixed, notFixable, automaticallyFixed } = await this._resolveConflicts(mergeReport);
+
+      if (notFixable.length > 0) {
+          console.log('[App] Merge has conflicts that are not automatically fixable!');
+          this._mergeStatus = {
+            merge: automaticallyFixed,
+            remainingConflicts: notFixable,
+            resolvedConflicts: fixed
+          };
+
+          this._syncFailedObservable.next(this._mergeStatus);
+      } else {
+          this._publishMergeResults(automaticallyFixed);
+      }
+    }
   }
 
   private _disconnected(state: FilesState) {
@@ -462,6 +536,41 @@ export class FileManager {
     // save the current state to persistent storage
     this._offlineServerState = state;
     this._disconnectedObservable.next(state);
+  }
+
+  private async _resolveConflicts(merge: MergedObject<FilesState>) {
+      console.error('[App] Merge Failed! Conflicts:', merge.conflicts);
+      const conflicts = listMergeConflicts(merge);
+
+      return await this._fixAutomaticConflicts(conflicts, merge);
+  }
+
+  private async _fixAutomaticConflicts(conflicts: ConflictDetails[], merge: MergedObject<FilesState>) {
+      // TODO: This is probably a stupid idea, but might actually be worth it
+      // to cut down on how many conflicts a user sees.
+      const automaticallyFixable = conflicts.map(details => {
+        let value;
+        let fixable = false;
+        if (some(details.path, p => p === '_position')) {
+          fixable = true;
+          value = details.conflict[second]; // Take the server path for new _position data
+        }
+
+        return {
+          fixable: fixable,
+          details: details,
+          value: value
+        };
+      }).filter(r => r.fixable);
+
+      const notFixable = difference(conflicts, automaticallyFixable.map(f => f.details));
+      const automaticallyFixed = await resolveConflicts(merge, automaticallyFixable);
+
+      return {
+          fixed: automaticallyFixable,
+          notFixable,
+          automaticallyFixed
+      };
   }
 
   public dispose() {
