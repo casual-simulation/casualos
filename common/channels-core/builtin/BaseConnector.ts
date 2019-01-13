@@ -44,8 +44,22 @@ export interface ConnectionHelper<T> {
     /**
      * Sets the function that is used to get the current state from the server.
      */
-    setGetServerStateFunction: (getServerState: () => Promise<T>) => void;
+    setGetRemoteServerStateFunction: (getServerState: () => Promise<T>) => void;
     
+    /**
+     * Sets the function that is used to save some state to locally
+     * persistent storage. The saved state should be able to be retrieved via the
+     * related getStateFunction.
+     */
+    setSaveStateFunction: (saveState: (key: string, state: T) => void) => void;
+
+    /**
+     * Sets the function that is used to retrieve some state from locally
+     * persistent storage. If the given key exists, the function should return the value for
+     * that key. Otherwise it should return undefined.
+     */
+    setGetStateFunction: (getState: (key: string) => T) => void;
+
     /**
      * The observable that is resolved a single time when 
      * the connection should be shut down.
@@ -78,6 +92,8 @@ export class BaseConnector implements ChannelConnector {
         let onUnsubscribe: Subject<{}> = new Subject<{}>();
         let emitToServer: ((event: Event) => void | Promise<void>);
         let emitToStore: ((event: Event) => void);
+        let saveState: ((key: string, state: T) => void);
+        let getState: ((key: string) => T);
         let getServerState: (() => Promise<T>);
         let disconnected: Observable<T>;
         let reconnected: Observable<T>;
@@ -90,6 +106,17 @@ export class BaseConnector implements ChannelConnector {
 
         let build: () => ChannelConnection<T> = () => {
             let subs: SubscriptionLike[] = [];
+
+            const canSave = saveState && getState;
+            const localSaveKey = `${info.id}_local_state`;
+            const serverSaveKey = `${info.id}_server_state`;
+
+            if (canSave) {
+                serverState = getState(serverSaveKey);
+                const localState = getState(localSaveKey);
+                store.init(localState);
+            }
+
             if (serverEvents) {   
                 // Pipe the server events into the subject.
                 subs.push(serverEvents.pipe(map(e => ({
@@ -129,23 +156,33 @@ export class BaseConnector implements ChannelConnector {
                 );
                 reconnectedSub = reconnected.subscribe();
             }
-            
+
+            const setServerState = (state: T) => {
+                serverState = state;
+                if (canSave) {
+                    saveState(serverSaveKey, serverState);
+                }
+            };
+
             subs.push(subject.pipe(
                     tap(e => {
                         emitToStore(e.event);
                         const mostRecentState = store.state();
+                        if (canSave) {
+                            saveState(localSaveKey, mostRecentState);
+                        }
                         if (emitToServer) {
                             if (e.isLocal && currentState === 'online') {
                                 const p = emitToServer(e.event);
                                 if (p && typeof p.then === 'function') {
                                     p.then(() => {
-                                        serverState = mostRecentState;
+                                        setServerState(mostRecentState);
                                     }, ex => console.error(ex));
                                 } else {
-                                    serverState = mostRecentState;
+                                    setServerState(mostRecentState);
                                 }
                             } else if (!e.isLocal) {
-                                serverState = mostRecentState;
+                                setServerState(mostRecentState);
                             }
                         }
                     }), 
@@ -202,8 +239,14 @@ export class BaseConnector implements ChannelConnector {
             setEmitToStoreFunction: (fn) => {
                 emitToStore = fn;
             },
-            setGetServerStateFunction: (fn) => {
+            setGetRemoteServerStateFunction: (fn) => {
                 getServerState = fn;
+            },
+            setSaveStateFunction: (fn) => {
+                saveState = fn;
+            },
+            setGetStateFunction: (fn) => {
+                getState = fn;
             },
             onUnsubscribe: onUnsubscribe.pipe(first()),
         };

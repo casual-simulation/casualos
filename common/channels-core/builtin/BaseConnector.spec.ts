@@ -308,5 +308,15 @@ describe('builtin', () => {
                 sub.unsubscribe();
             });
         });
+
+        it('should set the store state if the local state is stored persistently', () => {
+            init(0);
+            connector.states['abc_local_state'] = 1;
+            return channel.subscribe().then(connection => {
+                let store = connection.store;
+
+                expect(store.state()).to.equal(1);
+            });
+        });
     });
 });
