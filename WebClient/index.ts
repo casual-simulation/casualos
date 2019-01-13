@@ -23,14 +23,14 @@ import {
 import 'vue-material/dist/vue-material.min.css';
 import 'vue-material/dist/theme/default.css';
 import 'pepjs'; // Polyfill for pointer events
+import { polyfill } from 'es6-promise';
 
+import { appManager } from './AppManager';
 import App from './App/App';
 import Welcome from './Welcome/Welcome';
-import { polyfill } from 'es6-promise';
-import { appManager } from './AppManager';
-
-const Home = () => import('./Home/Home');
-const Editor = () => import('./Editor/Editor');
+import Home from './Home/Home';
+import Editor from './Editor/Editor';
+import MergeConflicts from './MergeConflicts/MergeConflicts';
 
 // Setup the Promise shim for browsers that don't support promises.
 polyfill();
@@ -77,6 +77,17 @@ const routes: RouteConfig[] = [
     {
         path: '/editor',
         component: Editor
+    },
+    {
+        path: '/merge-conflicts',
+        component: MergeConflicts,
+        beforeEnter: (to, from, next) => {
+            if (appManager.fileManager && appManager.fileManager.mergeStatus) {
+                next();
+            } else {
+                next({ path: '/' });
+            }
+        }
     }
 ]
 

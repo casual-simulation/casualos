@@ -51,7 +51,7 @@
                             <span v-if="online">Online</span>
                             <span v-else>Offline</span>
                         </span>
-                        <md-button class="md-list-action md-primary" v-if="remainingConflicts.length > 0" @click="fixConflicts()">Fix Merge Conflicts</md-button>
+                        <md-button to="/merge-conflicts" class="md-list-action md-primary" v-if="remainingConflicts.length > 0">Fix Merge Conflicts</md-button>
                     </md-list-item>
                 </md-list>
             </md-drawer>
@@ -89,7 +89,7 @@
 
             <md-snackbar md-position="center" :md-duration="5000" :md-active.sync="showMergeConflicts">
                 <span>Conflicts occurred while syncing.</span>
-                <md-button class="md-accent" @click="fixConflicts()">Fix now</md-button>
+                <md-button to="/merge-conflicts" class="md-accent">Fix now</md-button>
             </md-snackbar>
 
             <md-content class="app-content">

@@ -396,6 +396,7 @@ export class FileManager {
     this._disconnectedObservable = new Subject<FilesState>();
     this._reconnectedObservable = new Subject<MergedObject<FilesState>>();
     this._resyncedObservable = new Subject<void>();
+    this._syncFailedObservable = new Subject<MergeStatus<FilesState>>();
     this._files = await this._socketManager.getFilesChannel();
 
     this._setupOffline();

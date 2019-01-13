@@ -152,10 +152,6 @@ export default class App extends Vue {
     refreshPage() {
         window.location.reload();
     }
-
-    fixConflicts() {
-        console.log('[App] User wants to fix conflicts!');
-    }
     
     private onShowNavigation(show: boolean) {
         if (show == undefined) {
