@@ -49,7 +49,6 @@ import {
   find
 } from 'lodash';
 
-import { FileManager } from '../FileManager';
 import { File, Object, Workspace } from 'common/Files';
 import { gameTime } from '../GameTime';
 
@@ -83,15 +82,11 @@ import {
   ContextMenuAction,
   eventIsOverElement,
 } from '../Input';
+import { appManager } from '../AppManager';
 
 @Component({
-  inject: {
-    fileManager: 'fileManager'
-  }
 })
 export default class GameView extends Vue {
-
-  @Inject() fileManager!: FileManager;
 
   private _scene: Scene;
   private _camera: PerspectiveCamera;
@@ -128,6 +123,10 @@ export default class GameView extends Vue {
   get gameView() {
     const gameView: HTMLElement = <HTMLElement>this.$refs.gameView;
     return gameView;
+  }
+
+  get fileManager() {
+    return appManager.fileManager;
   }
 
   async mounted() {

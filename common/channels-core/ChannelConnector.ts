@@ -3,6 +3,20 @@ import { Event } from "./Event";
 import { ChannelInfo } from "./Channel";
 import { StateStore } from "./StateStore";
 
+export type ChannelConnectionMode = 'online' | 'offline' | 'online-disconnected';
+
+export interface ChannelConnectionState<T> {
+    /**
+     * The current connection mode.
+     */
+    mode: ChannelConnectionMode;
+
+    /**
+     * The last known server state.
+     */
+    lastKnownServerState: T;
+}
+
 /**
  * An interface for parameters that can be included in a connection request.
  */
@@ -38,6 +52,23 @@ export interface ChannelConnection<T> {
      * The observable sequence of events from the channel.
      */
     events: Observable<Event>;
+
+    /**
+     * The current connection state.
+     */
+    state: ChannelConnectionMode;
+
+    /**
+     * The observable that resolves when the connection state changes.
+     * When subscribed to it will resolve once with the current state.
+     */
+    connectionStates: Observable<ChannelConnectionState<T>>;
+
+    /**
+     * Instructs the channel to change its state to 'online'
+     * and start sending emitted events back to the server.
+     */
+    reconnect: () => void;
 
     /**
      * Emits the given event on the channel.

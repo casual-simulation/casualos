@@ -4,9 +4,11 @@ import {Provide} from 'vue-property-decorator';
 import { appManager, User } from '../AppManager';
 import { EventBus } from '../EventBus/EventBus';
 import ConfirmDialogOptions from './DialogOptions/ConfirmDialogOptions';
-import { FileManager } from '../FileManager';
-import { SocketManager } from '../SocketManager';
 import AlertDialogOptions from './DialogOptions/AlertDialogOptions';
+import { SubscriptionLike } from 'rxjs';
+import { resolveConflicts, first, listMergeConflicts, second, MergedObject, FilesState, ConflictDetails } from 'common/Files';
+import { some, difference } from 'lodash';
+import { MergeStatus } from 'WebClient/FileManager';
 
 @Component({
     components: {
@@ -15,35 +17,86 @@ import AlertDialogOptions from './DialogOptions/AlertDialogOptions';
 })
 
 export default class App extends Vue {
-    private _socketManager: SocketManager;
-    
-    @Provide('fileManager') private _fileManager: FileManager = new FileManager(appManager, this._socketManager);
-
     showNavigation:boolean = false;
     showConfirmDialog: boolean = false;
     showAlertDialog: boolean = false;
+    updateAvailable: boolean = false;
+    showUpdateAvailable: boolean = false;
+    showConnectionLost: boolean = false;
+    showConnectionRegained: boolean = false;
+    showSynced: boolean = false;
+    showMergeConflicts: boolean = false;
+
+    /**
+     * Whether the user is online and able to connect to the server.
+     */
+    online: boolean = true;
+
+    /**
+     * Whether the user is currently synced with the server.
+     */
+    synced: boolean = true;
+
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
+
+    remainingConflicts: ConflictDetails[] = [];
+    currentMergeState: MergeStatus<FilesState> = null;
+
+    private _subs: SubscriptionLike[] = [];
 
     get version() {
         return GIT_HASH.slice(0, 7);
     }
 
-    beforeCreate() {
-        this._socketManager = new SocketManager();
-        this._fileManager = new FileManager(appManager, this._socketManager);
-    }
-
     created() {
+        this._subs = [];
+        this._subs.push(appManager.updateAvailableObservable.subscribe(updateAvailable => {
+            if (updateAvailable) {
+                this.updateAvailable = true;
+                this.showUpdateAvailable = true;
+            }
+        }));
+
+        this._subs.push(appManager.whileLoggedIn((user, fileManager) => {
+            let subs: SubscriptionLike[] = [];
+
+            subs.push(fileManager.disconnected.subscribe(_ => {
+                this.showConnectionLost = true;
+                this.showConnectionRegained = false;
+                this.showSynced = false;
+                this.online = false;
+                this.synced = false;
+            }));
+
+            subs.push(fileManager.resynced.subscribe(async merge => {
+                this.online = true;
+                this.showConnectionRegained = true;
+            }));
+
+            subs.push(fileManager.syncFailed.subscribe(state => {
+                this.showMergeConflicts = true;
+                this.remainingConflicts = state.remainingConflicts;
+                this.currentMergeState = state;
+            }));
+
+            subs.push(fileManager.resynced.subscribe(_ => {
+                console.log('[App] Resynced!');
+                this.showConnectionRegained = false;
+                this.showSynced = true;
+                this.synced = true;
+            }));
+
+            return subs;
+        }));
+
         EventBus.$on('showNavigation', this.onShowNavigation);
         EventBus.$on('showConfirmDialog', this.onShowConfirmDialog);
         EventBus.$on('showAlertDialog', this.onShowAlertDialog);
     }
 
-    provide() {
-        return {
-            fileManager: this._fileManager
-        };
+    beforeDestroy() {
+        this._subs.forEach(s => s.unsubscribe());
     }
     
     logout() {
@@ -94,6 +147,10 @@ export default class App extends Vue {
 
         // Emit dialog event.
         EventBus.$emit('showAlertDialog', options);
+    }
+
+    refreshPage() {
+        window.location.reload();
     }
     
     private onShowNavigation(show: boolean) {

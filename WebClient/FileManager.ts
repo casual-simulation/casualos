@@ -16,6 +16,19 @@ import {
   fileChangeObservables,
   calculateActionEvents,
   transaction,
+  mergeFiles,
+  applyMerge,
+  FileTransactionEvent,
+  fileRemoved,
+  objDiff,
+  addState,
+  first,
+  MergedObject,
+  listMergeConflicts,
+  ConflictDetails,
+  resolveConflicts,
+  second,
+  ResolvedConflict,
 } from 'common/Files';
 import { 
   filterFilesBySelection, 
@@ -63,12 +76,24 @@ import {
   flatMap as rxFlatMap,
   skip
 } from 'rxjs/operators';
+import * as Sentry from '@sentry/browser';
 import uuid from 'uuid/v4';
 
 import {AppManager, appManager} from './AppManager';
 import {SocketManager} from './SocketManager';
+import { SentryError } from '@sentry/core';
 
 export interface SelectedFilesUpdatedEvent { files: Object[]; }
+
+/**
+ * Defines an interface for an object that tracks the status of a merge.
+ * Contains the current state, what conflcits have been resolved, and what conflicts are remaining.
+ */
+export interface MergeStatus<T> {
+  merge: MergedObject<T>;
+  resolvedConflicts: ResolvedConflict[];
+  remainingConflicts: ConflictDetails[];
+}
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -86,6 +111,11 @@ export class FileManager {
   private _fileUpdatedObservable: Subject<File>;
   private _selectedFilesUpdated: BehaviorSubject<SelectedFilesUpdatedEvent>;
   private _files: ChannelConnection<FilesState>;
+  private _reconnectedObservable: Subject<MergedObject<FilesState>>;
+  private _resyncedObservable: Subject<void>;
+  private _syncFailedObservable: Subject<MergeStatus<FilesState>>;
+  private _disconnectedObservable: Subject<FilesState>;
+  private _mergeStatus: MergeStatus<FilesState> = null;
 
   get files(): File[] {
     return values(this._filesState);
@@ -153,6 +183,58 @@ export class FileManager {
       return objs[0];
     }
     return null;
+  }
+
+  /**
+   * Gets the observable that resolves when the browser's connection state to the server changes.
+   */
+  get connectionState(): Observable<boolean> {
+    return mergeObservables(
+      this.disconnected.pipe(map(_ => false)),
+      this.reconnected.pipe(map(_ => true))
+    );
+  }
+
+  /**
+   * Gets the observable that resolves when the browser becomes disconnected from
+   * the server.
+   */
+  get disconnected(): Observable<FilesState> {
+    return this._disconnectedObservable;
+  }
+
+  /**
+   * Gets the observable that resolves when the browser becomes reconnected to the server.
+   * Contains the merge report that attempts to sync the remote state with the local state.
+   * Note that being reconnected to the server does not mean that we are synced with the server.
+   * It only means that we have the capability to communicate with the server.
+   */
+  get reconnected(): Observable<MergedObject<FilesState>> {
+    return this._reconnectedObservable;
+  }
+
+  /**
+   * Gets the observable that resolves when the app has reconnected to the server but is unable to
+   * resolve all the merge conflicts automatically. Contains the current merge state along with what conflicts are remaining and what needs to be done.
+   */
+  get syncFailed(): Observable<MergeStatus<FilesState>> {
+    return this._syncFailedObservable;
+  }
+
+  /**
+   * Gets the observable that resolves when the app becomes synced with the server after
+   * being disconnected. This means that our state is up to date with the server.
+   */
+  get resynced(): Observable<void> {
+    return this._resyncedObservable;
+  }
+
+  /**
+   * Gets the current merge status.
+   * Null if no merge conflicts exist.
+   */
+  get mergeStatus(): MergeStatus<FilesState> {
+    return this._mergeStatus;
   }
 
   private get _filesState() {
@@ -236,6 +318,46 @@ export class FileManager {
   }
 
   /**
+   * Resolves the given conflicts into the current merge status.
+   * @param resolved 
+   */
+  resolveConflicts(resolved: ResolvedConflict[]) {
+    if (this._mergeStatus &&  this._mergeStatus.remainingConflicts.length > 0) {
+      const result = resolveConflicts(this._mergeStatus.merge, resolved);
+      if (result.success) {
+        this._publishMergeResults(result);
+      } else {
+        this._mergeStatus = {
+          merge: result,
+          remainingConflicts: difference(this._mergeStatus.remainingConflicts, resolved.map(r => r.details)),
+          resolvedConflicts: [...this._mergeStatus.resolvedConflicts, ...resolved]
+        };
+      }
+    }
+  }
+
+  /**
+   * Reports the merge results to the server.
+   * This will update the server state to match the state that was determined from the merge result.
+   * Upon becomming reconnected to the server, this function MUST be called in order for the user's local changes
+   * to be synced to the server and for their future changes to be pushed to the server.
+   * @param results The merge results.
+   */
+  private _publishMergeResults(results: MergedObject<FilesState>) {
+    this._setStatus('Merged and reconnected!');
+    this._mergeStatus = null;
+    this._offlineServerState = null;
+    if (results.final) {
+      const event = addState(results.final);
+      this._files.reconnect();
+      this._files.emit(event);
+    } else {
+      this._files.reconnect();
+    }
+    this._resyncedObservable.next();
+  }
+
+  /**
    * Clears the selection that the given user has.
    * @param user The file for the user to clear the selection of.
    */
@@ -272,16 +394,14 @@ export class FileManager {
     this._fileUpdatedObservable = new Subject<File>();
     this._selectedFilesUpdated =
         new BehaviorSubject<SelectedFilesUpdatedEvent>({files: []});
+    this._disconnectedObservable = new Subject<FilesState>();
+    this._reconnectedObservable = new Subject<MergedObject<FilesState>>();
+    this._resyncedObservable = new Subject<void>();
+    this._syncFailedObservable = new Subject<MergeStatus<FilesState>>();
     this._files = await this._socketManager.getFilesChannel();
 
-    this._subscriptions.push(this._appManager.userObservable.subscribe(async u => {
-      if (u) {
-        await this.init();
-        await this._initUserFile();
-      } else {
-        this._dispose();
-      }
-    }));
+    this._setupOffline();
+    await this._initUserFile();
 
     // Replay the existing files for the components that need it this way
     const filesState = this._files.store.state();
@@ -335,7 +455,126 @@ export class FileManager {
     console.log('[FileManager] Status:', status);
   }
 
-  private _dispose() {
+  private get _offlineServerState(): FilesState {
+    const json = localStorage.getItem('offline_server_state');
+    if(json) {
+      return JSON.parse(json);
+    }
+  }
+
+  private set _offlineServerState(state: FilesState) {
+    localStorage.setItem("offline_server_state", JSON.stringify(state));
+  }
+
+  private _setupOffline() {
+    this._subscriptions.push(this._files.connectionStates.subscribe(async state => {
+      try {
+        if (state.mode === 'offline') {
+          this._disconnected(state.lastKnownServerState);
+        } else if(state.mode === 'online-disconnected') {
+          await this._reconnected(state.lastKnownServerState);
+        }
+      } catch(ex) {
+        Sentry.captureException(ex);
+        console.error(ex);
+      }
+    }));
+  }
+
+  private async _reconnected(state: FilesState) {
+    Sentry.addBreadcrumb({
+      message: 'Reconnected to server',
+      category: 'net',
+      level: Sentry.Severity.Warning,
+      type: 'default'
+    });
+    this._setStatus('Reconnected!');
+
+    // get the old server state
+    const offline = this._offlineServerState;
+    const newState = state;
+    const localState = this._filesState;
+
+    const mergeReport = mergeFiles(offline, localState, newState, {
+      
+    });
+
+    this._reconnectedObservable.next(mergeReport);
+
+    if (mergeReport.success) {
+      console.log('[FileManager] Merge success!');
+      this._publishMergeResults(mergeReport);
+    } else {
+      const { fixed, notFixable, automaticallyFixed } = await this._resolveConflicts(mergeReport);
+
+      if (notFixable.length > 0) {
+          console.log('[App] Merge has conflicts that are not automatically fixable!');
+          this._mergeStatus = {
+            merge: automaticallyFixed,
+            remainingConflicts: notFixable,
+            resolvedConflicts: fixed
+          };
+
+          this._syncFailedObservable.next(this._mergeStatus);
+      } else {
+          this._publishMergeResults(automaticallyFixed);
+      }
+    }
+  }
+
+  private _disconnected(state: FilesState) {
+    Sentry.addBreadcrumb({
+      message: 'Disconnected from server',
+      category: 'net',
+      level: Sentry.Severity.Warning,
+      type: 'default'
+    });
+    this._setStatus('Disconnected :(');
+    
+    // only save if we have resolved any previous merge conflicts
+    if (!this._offlineServerState) {
+      // save the current state to persistent storage
+      this._offlineServerState = state;
+    }
+    this._disconnectedObservable.next(state);
+  }
+
+  private async _resolveConflicts(merge: MergedObject<FilesState>) {
+      console.error('[App] Merge Failed! Conflicts:', merge.conflicts);
+      const conflicts = listMergeConflicts(merge);
+
+      return await this._fixAutomaticConflicts(conflicts, merge);
+  }
+
+  private async _fixAutomaticConflicts(conflicts: ConflictDetails[], merge: MergedObject<FilesState>) {
+      // TODO: This is probably a stupid idea, but might actually be worth it
+      // to cut down on how many conflicts a user sees.
+      const automaticallyFixable = conflicts.map(details => {
+        let value;
+        let fixable = false;
+        if (some(details.path, p => p === '_position')) {
+          fixable = true;
+          value = details.conflict[second]; // Take the server path for new _position data
+        }
+
+        return {
+          fixable: fixable,
+          details: details,
+          value: value
+        };
+      }).filter(r => r.fixable);
+
+      const notFixable = difference(conflicts, automaticallyFixable.map(f => f.details));
+      const automaticallyFixed = await resolveConflicts(merge, automaticallyFixable);
+
+      return {
+          fixed: automaticallyFixable,
+          notFixable,
+          automaticallyFixed
+      };
+  }
+
+  public dispose() {
     this._setStatus('Dispose');
     this._initPromise = null;
     this._subscriptions.forEach(s => s.unsubscribe());
