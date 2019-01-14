@@ -8,8 +8,6 @@ import {
 import { ReducingStateStore, Event, ChannelConnection } from "../channels-core";
 import {File, Object, Workspace, PartialFile} from './File';
 import { tagsMatchingFilter, createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject } from './FileCalculations';
-import { Transform } from 'stream';
-import { some } from 'bluebird';
 
 export const first = Symbol('ours');
 export const second = Symbol('second');

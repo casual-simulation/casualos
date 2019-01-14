@@ -1,6 +1,5 @@
 import * as io from 'socket.io-client';
 import { Observable, fromEventPattern, merge } from 'rxjs';
-import { Promise } from 'bluebird';
 import { ChannelConnector, ChannelConnectionRequest, ChannelConnection, Event, ChannelInfo, BaseConnector } from '../../../common/channels-core';
 import { StateStore } from '../../../common/channels-core/StateStore';
 import { SocketManager } from 'WebClient/SocketManager';
