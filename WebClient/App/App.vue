@@ -53,6 +53,10 @@
                         </span>
                         <md-button to="/merge-conflicts" class="md-list-action md-primary" v-if="remainingConflicts.length > 0">Fix Merge Conflicts</md-button>
                     </md-list-item>
+                    <md-list-item v-if="updateAvailable">
+                        <span class="md-list-item-text">An new version is available!</span>
+                        <md-button @click="refreshPage()" class="md-list-action md-primary">Refresh</md-button>
+                    </md-list-item>
                 </md-list>
             </md-drawer>
 
