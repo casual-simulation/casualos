@@ -1,9 +1,10 @@
-import { Subject, Observable, SubscriptionLike, never, ConnectableObservable } from 'rxjs'
-import { filter, map, first, tap, distinctUntilChanged, publish, refCount, flatMap } from 'rxjs/operators';
+import { Subject, Observable, SubscriptionLike, never, ConnectableObservable, BehaviorSubject } from 'rxjs'
+import { filter, map, first, tap, distinctUntilChanged, publish, refCount, flatMap, scan, pairwise, startWith, combineLatest } from 'rxjs/operators';
 import { ChannelInfo } from '../Channel';
 import { Event } from '../Event';
 import { StateStore } from '../StateStore';
-import { ChannelConnector, ChannelConnectionRequest, ChannelConnection, ChannelConnectionState } from '../ChannelConnector';
+import { ChannelConnector, ChannelConnectionRequest, ChannelConnection, ChannelConnectionState, ChannelConnectionMode } from '../ChannelConnector';
+import { createReadStream } from 'fs';
 
 interface EventWrapper {
     event: Event;
@@ -67,6 +68,11 @@ export interface ConnectionHelper<T> {
     onUnsubscribe: Observable<{}>;
 }
 
+interface PartialChannelConnectionState<T> {
+    mode: string;
+    promise: Promise<T>;
+}
+
 /**
  * Defines a base class for connectors.
  * This class helps create channel connections which behave correctly.
@@ -95,11 +101,10 @@ export class BaseConnector implements ChannelConnector {
         let saveState: ((key: string, state: T) => void);
         let getState: ((key: string) => T);
         let getServerState: (() => Promise<T>);
-        let disconnected: Observable<T>;
-        let reconnected: Observable<T>;
+        let channelConnectionStates: BehaviorSubject<ChannelConnectionState<T>>;
+        let reconnect: Subject<boolean> = new Subject<boolean>();
         let disconnectedSub: SubscriptionLike;
         let reconnectedSub: SubscriptionLike;
-        let currentState: ChannelConnectionState = 'online';
         
         // The most recent server state.
         let serverState: T = null;
@@ -111,11 +116,23 @@ export class BaseConnector implements ChannelConnector {
             const localSaveKey = `${info.id}_local_state`;
             const serverSaveKey = `${info.id}_server_state`;
 
+            const setServerState = (state: T) => {
+                serverState = state;
+                if (canSave) {
+                    saveState(serverSaveKey, serverState);
+                }
+            };
+
             if (canSave) {
                 serverState = getState(serverSaveKey);
                 const localState = getState(localSaveKey);
                 store.init(localState);
             }
+
+            channelConnectionStates = new BehaviorSubject<ChannelConnectionState<T>>({
+                mode: 'offline',
+                lastKnownServerState: serverState
+            });
 
             if (serverEvents) {   
                 // Pipe the server events into the subject.
@@ -135,34 +152,51 @@ export class BaseConnector implements ChannelConnector {
                 if(!getServerState) {
                     throw new Error('If the connection state observable is provided then getServerState must be as well.');
                 }
-                let distinct = connectionStates.pipe(distinctUntilChanged());
-                disconnected = distinct.pipe(
-                    filter(connected => !connected && (currentState === 'online' || currentState === 'online-disconnected')),
-                    map(_ => currentState),
-                    tap(_ => currentState = 'offline'),
-                    filter(state => state !== 'online-disconnected'),
-                    map(_ => serverState),
-                    publish(),
-                    refCount()
-                );
-                disconnectedSub = disconnected.subscribe();
 
-                reconnected = distinct.pipe(
-                    filter(connected => connected && currentState === 'offline'),
-                    tap(_ => currentState = 'online-disconnected'),
-                    flatMap(_ => getServerState()),
-                    publish(),
-                    refCount()
+                // Channels go through three modes:
+                // - offline: means not connected to the server.
+                // - online-disconnected: means connected to server but not sending/receiving events.
+                // - online: means connected to server and sending/receiving events.
+
+                let distinct = connectionStates.pipe(
+                    startWith(false),
+                    distinctUntilChanged(),
                 );
-                reconnectedSub = reconnected.subscribe();
+
+                const partialConnectionState = (mode: ChannelConnectionMode, state: T): PartialChannelConnectionState<T> => {
+                    return {
+                        mode: mode,
+                        promise: <any>[state]
+                    };
+                };
+                
+                const onlineDisconnectedConnectionState = (): PartialChannelConnectionState<T> => {
+                    return {
+                        mode: 'online-disconnected',
+                        promise: getServerState()
+                    };
+                };
+
+                const connectionStatesObservable = distinct.pipe(
+                    combineLatest(reconnect, (connected, reconnect) => ({connected, reconnect})),
+                    scan((curr: PartialChannelConnectionState<T>, next: {connected: boolean, reconnect: boolean}, index: number) => {
+                        if (!next.connected && (curr.mode === 'online' || curr.mode === 'online-disconnected')) {
+                            return partialConnectionState('offline', serverState);
+                        } else if(next.connected && (curr.mode === 'offline')) {
+                            return onlineDisconnectedConnectionState();
+                        } else if(next.reconnect && (curr.mode === 'online-disconnected')) {
+                            return partialConnectionState('online', serverState);
+                        }
+                        return curr;
+                    }, partialConnectionState('offline', serverState)),
+                    flatMap(next => next.promise, (next, state) => ({ mode:next.mode, lastKnownServerState: state})),
+                    tap(state => setServerState(state.lastKnownServerState)),
+                    publish(),
+                    refCount(),
+                );
+                subs.push(connectionStatesObservable.subscribe(v => channelConnectionStates.next(v), ex => console.error(ex)));
+                reconnect.next(false);
             }
-
-            const setServerState = (state: T) => {
-                serverState = state;
-                if (canSave) {
-                    saveState(serverSaveKey, serverState);
-                }
-            };
 
             subs.push(subject.pipe(
                     tap(e => {
@@ -172,7 +206,7 @@ export class BaseConnector implements ChannelConnector {
                             saveState(localSaveKey, mostRecentState);
                         }
                         if (emitToServer) {
-                            if (e.isLocal && currentState === 'online') {
+                            if (e.isLocal && channelConnectionStates.value.mode === 'online') {
                                 const p = emitToServer(e.event);
                                 if (p && typeof p.then === 'function') {
                                     p.then(() => {
@@ -188,7 +222,7 @@ export class BaseConnector implements ChannelConnector {
                     }), 
                 ).subscribe());
 
-            return {
+            return <ChannelConnection<T>>{
                 emit: (event) => {
                     subject.next({
                         event,
@@ -198,11 +232,11 @@ export class BaseConnector implements ChannelConnector {
                 events: subject.pipe(map(e => e.event)),
                 store: connection_request.store,
                 info: connection_request.info,
-                disconnected: disconnected || never(),
-                reconnected: reconnected || never(),
+                connectionStates: channelConnectionStates,
                 reconnect: () => {
-                    if (currentState === 'online-disconnected') {
-                        currentState = 'online';
+                    if (channelConnectionStates.value.mode === 'online-disconnected') {
+                        reconnect.next(true);
+                        reconnect.next(false);
                     }
                 },
                 unsubscribe: () => {
@@ -220,7 +254,7 @@ export class BaseConnector implements ChannelConnector {
                 },
 
                 get state() {
-                    return currentState;
+                    return channelConnectionStates.value.mode;
                 }
             }
         };

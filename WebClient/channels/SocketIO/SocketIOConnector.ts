@@ -4,7 +4,7 @@ import { Promise } from 'bluebird';
 import { ChannelConnector, ChannelConnectionRequest, ChannelConnection, Event, ChannelInfo, BaseConnector } from '../../../common/channels-core';
 import { StateStore } from '../../../common/channels-core/StateStore';
 import { SocketManager } from 'WebClient/SocketManager';
-import { map } from 'rxjs/operators';
+import { map, startWith } from 'rxjs/operators';
 
 export class SocketIOConnector extends BaseConnector {
     private _socket: typeof io.Socket;
@@ -19,7 +19,7 @@ export class SocketIOConnector extends BaseConnector {
 
         let connected = socketEvent<void>(this._socket, 'connect').pipe(map(() => true));
         let disconnected = socketEvent<void>(this._socket, 'disconnect').pipe(map(() => false));
-        let connectionStates = merge(connected, disconnected);
+        let connectionStates = merge(connected, disconnected).pipe(startWith(this._socket.connected));
         helper.setConnectionStateObservable(connectionStates);
         helper.setGetRemoteServerStateFunction(() => {
             return new Promise<T>((resolve, reject) => {
@@ -62,15 +62,6 @@ export class SocketIOConnector extends BaseConnector {
         });
         helper.onUnsubscribe.subscribe(() => {
             this._socket.emit('leave_server', connection_request.info.id, (err: any) => {});
-        });
-
-        // get the initial state.
-        this._socket.emit('join_server', connection_request.info, (err: any, info: ChannelInfo, state: T) => {
-            if (err) {
-                console.error(err);
-            } else {
-                connection_request.store.init(state);
-            }
         });
 
         return Promise.resolve(helper.build());

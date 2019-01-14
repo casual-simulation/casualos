@@ -10,6 +10,7 @@ describe('Socket.IO', () => {
         describe('unit', () => {
 
             let socketIOApi = {
+                connected: true,
                 emit: function () { },
                 on: function () { },
                 off: function () { }
@@ -73,6 +74,7 @@ describe('Socket.IO', () => {
                 emit.callArgWith(2, null, info, {})
 
                 return promise.then(response => {
+                    response.reconnect();
                     response.emit(event);
                     socketIOMock.verify();
                 });

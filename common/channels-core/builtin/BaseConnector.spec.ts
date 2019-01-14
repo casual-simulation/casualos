@@ -152,6 +152,16 @@ describe('builtin', () => {
                 let store = connection.store;
 
                 expect(store.state()).to.equal(0);
+                expect(connection.state).to.equal('offline');
+
+                connectionEvents.next(true);
+
+                expect(store.state()).to.equal(0);
+                expect(connection.state).to.equal('online-disconnected');
+
+                connection.reconnect();
+
+                expect(store.state()).to.equal(0);
                 expect(connection.state).to.equal('online');
 
                 let events: Event[] = [];
@@ -168,8 +178,8 @@ describe('builtin', () => {
                 expect(eventsSentToServer.length).to.equal(1);
 
                 let disconnectedState = 0;
-                let disconnectedSub = connection.disconnected.subscribe(state => {
-                    disconnectedState = state;
+                let disconnectedSub = connection.connectionStates.subscribe(state => {
+                    disconnectedState = state.lastKnownServerState;
                 });
 
                 connectionEvents.next(false);
@@ -196,6 +206,17 @@ describe('builtin', () => {
                 let store = connection.store;
 
                 expect(store.state()).to.equal(0);
+                expect(connection.state).to.equal('offline');
+
+                connectionEvents.next(true);
+
+                expect(store.state()).to.equal(0);
+                expect(connection.state).to.equal('online-disconnected');
+
+                connection.reconnect();
+
+                expect(store.state()).to.equal(0);
+                expect(connection.state).to.equal('online');
 
                 let events: Event[] = [];
                 let eventsSentToServer: Event[] = [];
@@ -211,8 +232,10 @@ describe('builtin', () => {
                 expect(eventsSentToServer.length).to.equal(1);
 
                 let calls = 0;
-                let reconnectedSub = connection.reconnected.subscribe(state => {
-                    calls += 1;
+                let reconnectedSub = connection.connectionStates.subscribe(state => {
+                    if (state.mode === 'online-disconnected') {
+                        calls += 1;
+                    }
                 });
 
                 connectionEvents.next(false);
@@ -259,6 +282,16 @@ describe('builtin', () => {
                 let store = connection.store;
 
                 expect(store.state()).to.equal(0);
+                expect(connection.state).to.equal('offline');
+
+                connectionEvents.next(true);
+
+                expect(store.state()).to.equal(0);
+                expect(connection.state).to.equal('online-disconnected');
+
+                connection.reconnect();
+
+                expect(store.state()).to.equal(0);
                 expect(connection.state).to.equal('online');
 
                 let events: Event[] = [];
@@ -275,8 +308,8 @@ describe('builtin', () => {
                 expect(eventsSentToServer.length).to.equal(1);
 
                 let disconnectedState = 0;
-                let disconnectedSub = connection.disconnected.subscribe(state => {
-                    disconnectedState = state;
+                let disconnectedSub = connection.connectionStates.subscribe(state => {
+                    disconnectedState = state.lastKnownServerState;
                 });
 
                 let resolve: any;
@@ -316,6 +349,35 @@ describe('builtin', () => {
                 let store = connection.store;
 
                 expect(store.state()).to.equal(1);
+            });
+        });
+
+        it('should start in offline mode', () => {
+            init(0);
+
+            return channel.subscribe().then(connection => {
+                expect(connection.state).to.equal('offline');
+            });
+        });
+
+        it('should go to online-disconnected mode when the connection observable resolves with true', () => {
+            init(0);
+
+            return channel.subscribe().then(connection => {
+                expect(connection.state).to.equal('offline');
+                connectionEvents.next(true);
+                expect(connection.state).to.equal('online-disconnected');
+            });
+        });
+
+        it('should go to online mode when in online-disconnected and reconnect() is called.', () => {
+            init(0);
+
+            return channel.subscribe().then(connection => {
+                expect(connection.state).to.equal('offline');
+                connectionEvents.next(true);
+                connection.reconnect();
+                expect(connection.state).to.equal('online');
             });
         });
     });
