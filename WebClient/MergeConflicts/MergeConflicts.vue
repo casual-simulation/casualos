@@ -5,11 +5,17 @@
             <h2>{{file.id}}</h2>
             <file-table :files="[file.first, file.second]" :extraTags="file.tags" :readOnly="true"/>
             <div v-for="(conflict, index) in file.conflicts" :key="index">
-                <h3>{{conflictName(conflict)}}</h3>
-                <ul>
-                    <li><md-button @click="takeValue(file, conflict, conflict.conflict[first])">{{conflict.conflict[first]}}</md-button></li>
-                    <li><md-button @click="takeValue(file, conflict, conflict.conflict[second])">{{conflict.conflict[second]}}</md-button></li>
-                </ul>
+                <file-tag :tag="conflictName(conflict)" />
+                <md-list>
+                    <md-list-item>
+                        <span class="md-list-item-text">Take Ours</span>
+                        <md-button class="md-list-action" @click="takeValue(file, conflict, conflict.conflict[first])">{{conflict.conflict[first]}}</md-button>
+                    </md-list-item>
+                    <md-list-item>
+                        <span class="md-list-item-text">Take Theirs</span>
+                        <md-button class="md-list-action" @click="takeValue(file, conflict, conflict.conflict[second])">{{conflict.conflict[second]}}</md-button>
+                    </md-list-item>
+                </md-list>
             </div>
         </div>
         <div v-if="files.length <= 0">

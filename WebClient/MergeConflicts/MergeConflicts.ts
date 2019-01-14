@@ -5,6 +5,7 @@ import { appManager } from '../AppManager';
 import { ConflictDetails, ResolvedConflict, first, second, File } from 'common/Files';
 import { groupBy, keys, uniq, assign } from 'lodash';
 import FileTable from '../FileTable/FileTable';
+import FileTag from '../FileTag/FileTag';
 import { fileTags } from 'common/Files/FileCalculations';
 
 interface FileConflicts {
@@ -17,7 +18,8 @@ interface FileConflicts {
 
 @Component({
     components: {
-        'file-table': FileTable
+        'file-table': FileTable,
+        'file-tag': FileTag
     }
 })
 export default class MergeConflicts extends Vue {

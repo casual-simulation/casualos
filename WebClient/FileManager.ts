@@ -346,6 +346,7 @@ export class FileManager {
   private _publishMergeResults(results: MergedObject<FilesState>) {
     this._setStatus('Merged and reconnected!');
     this._mergeStatus = null;
+    this._offlineServerState = null;
     if (results.final) {
       const event = addState(results.final);
       this._files.reconnect();
@@ -529,8 +530,12 @@ export class FileManager {
       type: 'default'
     });
     this._setStatus('Disconnected :(');
-    // save the current state to persistent storage
-    this._offlineServerState = state;
+    
+    // only save if we have resolved any previous merge conflicts
+    if (!this._offlineServerState) {
+      // save the current state to persistent storage
+      this._offlineServerState = state;
+    }
     this._disconnectedObservable.next(state);
   }
 
