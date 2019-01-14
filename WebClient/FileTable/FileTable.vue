@@ -24,7 +24,7 @@
           <tag-editor v-model="newTag" :tagExists="newTagExists" @valid="newTagValidityUpdated"></tag-editor>
         </th>
 
-        <th v-if="!readOnly">
+        <th v-show="!readOnly">
           <md-button
             class="new-tag-button"
             :disabled="isMakingNewTag && !newTagValid"

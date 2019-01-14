@@ -3,7 +3,7 @@ import Component from 'vue-class-component';
 import {Prop, Inject} from 'vue-property-decorator';
 import { appManager } from '../AppManager';
 import { ConflictDetails, ResolvedConflict, first, second, File } from 'common/Files';
-import { groupBy, keys, uniq } from 'lodash';
+import { groupBy, keys, uniq, assign } from 'lodash';
 import FileTable from '../FileTable/FileTable';
 import { fileTags } from 'common/Files/FileCalculations';
 
@@ -53,8 +53,10 @@ export default class MergeConflicts extends Vue {
         const ids = keys(grouped);
 
         this.files = ids.map(id => {
-            const first = appManager.fileManager.mergeStatus.merge.first[id];
-            const second = appManager.fileManager.mergeStatus.merge.second[id];
+            let first = assign({}, appManager.fileManager.mergeStatus.merge.first[id]);
+            first.id += '-first';
+            let second = assign({}, appManager.fileManager.mergeStatus.merge.second[id]);
+            second.id += '-second';
             return {
                 id: id,
                 first: first,
