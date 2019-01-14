@@ -145,7 +145,7 @@ describe('builtin', () => {
             });
         });
 
-        it('should resolve disconnected() when given observable resolves with false', () => {
+        it('should resolve connectionStates as offline when given observable resolves with false', () => {
             init(0);
 
             return channel.subscribe().then(connection => {
@@ -199,7 +199,7 @@ describe('builtin', () => {
             });
         });
 
-        it('should resolve reconnected() when given observable resolves with true after being disconnected', () => {
+        it('should resolve connectionStates as online-disconnected when given observable resolves with true after being disconnected', () => {
             init(0);
 
             return channel.subscribe().then(connection => {
@@ -275,7 +275,7 @@ describe('builtin', () => {
             });
         });
 
-        it('should resolve most recent server state on disconnect()', () => {
+        it('should resolve most recent server state on disconnect', () => {
             init(0);
 
             return channel.subscribe().then(connection => {

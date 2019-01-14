@@ -53,7 +53,7 @@ export class SocketIOConnector extends BaseConnector {
             return new Promise((resolve, reject) => {
                 try {
                     this._socket.emit(this._eventName(connection_request.info), event, () => {
-                        resolve();
+                        resolve(null);
                     });
                 } catch(ex) {
                     reject(ex);

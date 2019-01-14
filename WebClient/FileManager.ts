@@ -466,18 +466,13 @@ export class FileManager {
   }
 
   private _setupOffline() {
-    this._subscriptions.push(this._files.disconnected.subscribe(state => {
+    this._subscriptions.push(this._files.connectionStates.subscribe(async state => {
       try {
-        this._disconnected(state);
-      } catch(ex) {
-        Sentry.captureException(ex);
-        console.error(ex);
-      }
-    }));
-
-    this._subscriptions.push(this._files.reconnected.subscribe(async state => {
-      try {
-        await this._reconnected(state);
+        if (state.mode === 'offline') {
+          this._disconnected(state.lastKnownServerState);
+        } else if(state.mode === 'online-disconnected') {
+          await this._reconnected(state.lastKnownServerState);
+        }
       } catch(ex) {
         Sentry.captureException(ex);
         console.error(ex);
