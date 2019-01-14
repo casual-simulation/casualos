@@ -16,6 +16,7 @@ const numLoadingSteps: number = 4;
 export default class FileRow extends Vue {
     @Prop() file: Object;
     @Prop() tags: string[];
+    @Prop({ default: false }) readOnly: boolean;
 
     get fileManager() {
         return appManager.fileManager;

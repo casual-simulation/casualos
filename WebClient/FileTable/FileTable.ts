@@ -1,6 +1,6 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
-import {Provide, Prop, Inject} from 'vue-property-decorator';
+import {Provide, Prop, Inject, Watch} from 'vue-property-decorator';
 import { some } from 'lodash';
 import {File, Object} from 'common/Files';
 import { EventBus } from '../EventBus/EventBus';
@@ -11,6 +11,7 @@ import FileRow from '../FileRow/FileRow';
 import TagEditor from '../TagEditor/TagEditor';
 import AlertDialogOptions from '../App/DialogOptions/AlertDialogOptions';
 import FileTag from '../FileTag/FileTag';
+import { lastEventId } from '@sentry/browser';
 
 const numLoadingSteps: number = 4;
 
@@ -19,11 +20,14 @@ const numLoadingSteps: number = 4;
         'file-row': FileRow,
         'file-tag': FileTag,
         'tag-editor': TagEditor,
-    }
+    },
+    
 })
 export default class FileTable extends Vue {
     
-    files: Object[] = [];
+    @Prop() files: Object[];
+    @Prop({ default: (() => <any>[]) }) extraTags: string[];
+    @Prop({ default: false }) readOnly: boolean;
     tags: string[] = [];
     lastEditedTag: string = null;
     isMakingNewTag: boolean = false;
@@ -44,6 +48,11 @@ export default class FileTable extends Vue {
 
     get newTagExists() {
         return this.tagExists(this.newTag);
+    }
+
+    @Watch('files')
+    filesChanged() {
+        this.tags = fileTags(this.files, this.tags, this.lastEditedTag ? [this.lastEditedTag, ...this.extraTags] : this.extraTags);
     }
 
     addTag() {
@@ -86,7 +95,7 @@ export default class FileTable extends Vue {
     removeTag(tag: string) {
         if (tag === this.lastEditedTag || tag === this.newTag) {
             this.lastEditedTag = null;
-            this.tags = fileTags(this.files, this.tags, []);
+            this.tags = fileTags(this.files, this.tags, this.extraTags);
         }
     }
 
@@ -107,14 +116,6 @@ export default class FileTable extends Vue {
     }
 
     async created() {
-        await this.fileManager.init();
-
-        this.files = [];
-        this.tags = [];
-
-        this.fileManager.selectedFilesUpdated.subscribe(event => {
-            this.files = event.files;
-            this.tags = fileTags(this.files, this.tags, this.lastEditedTag ? [this.lastEditedTag] : []);
-        });
+        this.tags = fileTags(this.files, this.tags, this.lastEditedTag ? [this.lastEditedTag, ...this.extraTags] : this.extraTags);
     }
 };

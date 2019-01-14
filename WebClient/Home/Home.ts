@@ -12,6 +12,7 @@ import CubeIcon from './Cube.svg';
 import FileTable from '../FileTable/FileTable';
 import { ContextMenuEvent } from '../Input';
 import { SubscriptionLike } from 'rxjs';
+import { fileTags } from 'common/Files/FileCalculations';
 
 const numLoadingSteps: number = 4;
 
@@ -31,6 +32,7 @@ export default class Home extends Vue {
     context: ContextMenuEvent = null;
     status: string = '';
     files: Object[] = [];
+    tags: string[] = [];
 
     isLoading: boolean = false;
     progress: number = 0;
@@ -93,6 +95,7 @@ export default class Home extends Vue {
 
         this._subs = [];
         this.files = [];
+        this.tags = [];
 
         this._subs.push(this.fileManager.selectedFilesUpdated.subscribe(event => {
             this.files = event.files;

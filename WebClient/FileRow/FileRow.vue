@@ -9,6 +9,7 @@
     <td class="file-id">{{file.id.substring(0, 5)}}</td>
     <td v-if="file.type === 'object'" v-for="tag in tags" :key="tag">
       <file-value 
+        :readOnly="readOnly"
         :file="file" 
         :tag="tag" 
         @tagChanged="onTagChanged"

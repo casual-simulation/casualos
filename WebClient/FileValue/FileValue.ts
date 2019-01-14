@@ -23,6 +23,7 @@ import { appManager } from '../AppManager';
 export default class FileRow extends Vue {
     @Prop() file: Object;
     @Prop() tag: string;
+    @Prop() readOnly: boolean;
     value: string = '';
     isFocused: boolean = false;
     isFormula: boolean = false;
