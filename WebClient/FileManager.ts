@@ -186,13 +186,18 @@ export class FileManager {
   }
 
   /**
-   * Gets the observable that resolves when the browser's connection state to the server changes.
+   * Gets whether the app is connected to the server but may
+   * or may not be synced to the serer.
    */
-  get connectionState(): Observable<boolean> {
-    return mergeObservables(
-      this.disconnected.pipe(map(_ => false)),
-      this.reconnected.pipe(map(_ => true))
-    );
+  get isOnline(): boolean {
+    return ['online', 'online-disconnected'].indexOf(this._files.state) >= 0;
+  }
+
+  /**
+   * Gets whether the app is synced to the server.
+   */
+  get isSynced(): boolean {
+    return this._files.state === 'online';
   }
 
   /**

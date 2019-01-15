@@ -9,6 +9,7 @@ import { SubscriptionLike } from 'rxjs';
 import { resolveConflicts, first, listMergeConflicts, second, MergedObject, FilesState, ConflictDetails } from 'common/Files';
 import { some, difference } from 'lodash';
 import { MergeStatus } from 'WebClient/FileManager';
+import SnackbarOptions from './Snackbar/SnackbarOptions';
 
 @Component({
     components: {
@@ -21,11 +22,10 @@ export default class App extends Vue {
     showConfirmDialog: boolean = false;
     showAlertDialog: boolean = false;
     updateAvailable: boolean = false;
-    showUpdateAvailable: boolean = false;
-    showConnectionLost: boolean = false;
-    showConnectionRegained: boolean = false;
-    showSynced: boolean = false;
-    showMergeConflicts: boolean = false;
+    snackbar: SnackbarOptions = {
+        visible: false,
+        message: ''
+    };
 
     /**
      * Whether the user is online and able to connect to the server.
@@ -58,37 +58,43 @@ export default class App extends Vue {
         this._subs.push(appManager.updateAvailableObservable.subscribe(updateAvailable => {
             if (updateAvailable) {
                 this.updateAvailable = true;
-                this.showUpdateAvailable = true;
+                this._showUpdateAvailable();
             }
         }));
 
         this._subs.push(appManager.whileLoggedIn((user, fileManager) => {
             let subs: SubscriptionLike[] = [];
 
+            this.online = fileManager.isOnline;
+            this.synced = fileManager.isSynced;
+
+            if (!this.online) {
+                this._showConnectionLost();
+            }
+
             subs.push(fileManager.disconnected.subscribe(_ => {
-                this.showConnectionLost = true;
-                this.showConnectionRegained = false;
-                this.showSynced = false;
+                this._showConnectionLost();
                 this.online = false;
                 this.synced = false;
             }));
 
             subs.push(fileManager.reconnected.subscribe(async state => {
                 this.online = true;
-                this.showConnectionRegained = true;
+                this._showConnectionRegained();
                 appManager.checkForUpdates();
             }));
 
             subs.push(fileManager.syncFailed.subscribe(state => {
-                this.showMergeConflicts = true;
+                this._showSyncFailed();
                 this.remainingConflicts = state.remainingConflicts;
                 this.currentMergeState = state;
             }));
 
             subs.push(fileManager.resynced.subscribe(resynced => {
                 console.log('[App] Resynced!');
-                this.showConnectionRegained = false;
-                this.showSynced = resynced;
+                if (resynced) {    
+                    this._showSynced();
+                }
                 this.synced = true;
             }));
 
@@ -108,6 +114,19 @@ export default class App extends Vue {
         appManager.logout();
         this.showNavigation = false;
         this.$router.push('/');
+    }
+
+    snackbarClick(action: SnackbarOptions['action']) {
+        if (action) {
+            switch(action.type) {
+                case 'refresh':
+                    this.refreshPage();
+                    break;
+                case 'fix-conflicts':
+                    this.fixConflicts();
+                    break;
+            }
+        }
     }
 
     openInfoCard() {
@@ -174,6 +193,10 @@ export default class App extends Vue {
     refreshPage() {
         window.location.reload();
     }
+    
+    fixConflicts() {
+        this.$router.push('/merge-conflicts');
+    }
 
     toggleOnlineOffline() {
         let options = new ConfirmDialogOptions();
@@ -197,6 +220,49 @@ export default class App extends Vue {
             EventBus.$off(options.okEvent);
         });
         EventBus.$emit('showConfirmDialog', options);
+    }
+
+    private _showConnectionLost() {
+        this.snackbar = {
+            visible: true,
+            message: 'Connection lost. You are now working offline.'
+        };
+    }
+
+    private _showUpdateAvailable() {
+        this.snackbar = {
+            visible: true,
+            message: 'A new version is available!',
+            action: {
+                type: 'refresh',
+                label: 'Refresh'
+            }
+        };
+    }
+
+    private _showConnectionRegained() {
+        this.snackbar = {
+            visible: true,
+            message: 'Connection regained. You are back online.',
+        };
+    }
+
+    private _showSynced() {
+        this.snackbar = {
+            visible: true,
+            message: 'Synced!'
+        };
+    }
+
+    private _showSyncFailed() {
+        this.snackbar = {
+            visible:  true,
+            message: 'Conflicts occurred while syncing.',
+            action: {
+                label: 'Fix now',
+                type: 'fix-conflicts'
+            }
+        };
     }
     
     private onShowNavigation(show: boolean) {

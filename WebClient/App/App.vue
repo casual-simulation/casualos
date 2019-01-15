@@ -74,26 +74,9 @@
             v-bind:md-content="alertDialogOptions.body"
             v-bind:md-confirm-text="alertDialogOptions.confirmText" />
 
-            <md-snackbar md-position="center" :md-duration="10000" :md-active.sync="showUpdateAvailable">
-                <span>A new version is available!</span>
-                <md-button class="md-primary" @click="refreshPage()">Refresh</md-button>
-            </md-snackbar>
-
-            <md-snackbar md-position="center" :md-duration="5000" :md-active.sync="showConnectionLost">
-                <span>Connection lost. You are now working offline.</span>
-            </md-snackbar>
-
-            <md-snackbar md-position="center" :md-duration="5000" :md-active.sync="showConnectionRegained">
-                <span>Connection regained. Attempting to sync with the server...</span>
-            </md-snackbar>
-
-            <md-snackbar md-position="center" :md-duration="5000" :md-active.sync="showSynced">
-                <span>Synced!</span>
-            </md-snackbar>
-
-            <md-snackbar md-position="center" :md-duration="5000" :md-active.sync="showMergeConflicts">
-                <span>Conflicts occurred while syncing.</span>
-                <md-button to="/merge-conflicts" class="md-primary">Fix now</md-button>
+            <md-snackbar md-position="center" :md-duration="6000" :md-active.sync="snackbar.visible">
+                <span>{{snackbar.message}}</span>
+                <md-button v-if="snackbar.action" class="md-primary" @click="snackbarClick(snackbar.action)">{{snackbar.action.label}}</md-button>
             </md-snackbar>
 
             <md-content class="app-content">
