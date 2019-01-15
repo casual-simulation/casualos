@@ -1,5 +1,5 @@
 import { ArgEvent } from '../../common/Events';
-import { Vector2, Vector } from 'three';
+import { Vector2 } from 'three';
 import { time } from './Time';
 import { find, findIndex, keys, some } from 'lodash';
 
@@ -8,7 +8,7 @@ export class Input {
      * Debug level for Input class.
      * 0: Disabled, 1: Down/Up events, 2: Move events
      */
-    public debugLevel: number = 0;
+    public debugLevel: number = 2;
 
     // Internal pointer data.
     private _mouseData: MouseData;
@@ -16,12 +16,16 @@ export class Input {
 
     private _initialized: boolean = false;
     private _element: HTMLElement;
-    private _curInputType: InputType = InputType.Touch;
+    private _inputType: InputType = InputType.Undefined;
 
     // Event handler functions.
     private _mouseDownHandler: any;
     private _mouseMoveHandler: any;
     private _mouseUpHandler: any;
+    private _touchStartHandler: any;
+    private _touchMoveHandler: any;
+    private _touchEndHandler: any;
+    private _contextMenuHandler: any;
     
     /**
      * Calculates the Three.js screen position of the mouse from the given mouse event.
@@ -85,10 +89,18 @@ export class Input {
         this._mouseDownHandler = this._handleMouseDown.bind(this);
         this._mouseMoveHandler = this._handleMouseMove.bind(this);
         this._mouseUpHandler = this._handleMouseUp.bind(this);
+        this._touchStartHandler = this._handleTouchStart.bind(this);
+        this._touchMoveHandler = this._handleTouchMove.bind(this);
+        this._touchEndHandler = this._handleTouchEnd.bind(this);
+        this._contextMenuHandler = this._handleContextMenu.bind(this);
         
         this._element.addEventListener('mousedown', this._mouseDownHandler);
         this._element.addEventListener('mousemove', this._mouseMoveHandler);
         this._element.addEventListener('mouseup', this._mouseUpHandler);
+        this._element.addEventListener('touchstart', this._touchStartHandler);
+        this._element.addEventListener('touchmove', this._touchMoveHandler);
+        this._element.addEventListener('touchend', this._touchEndHandler);
+        this._element.addEventListener('contextmenu', this._contextMenuHandler);
 
         requestAnimationFrame(() => this._update());
     }
@@ -102,10 +114,17 @@ export class Input {
         this._element.removeEventListener('mousedown', this._mouseDownHandler);
         this._element.removeEventListener('mousemove', this._mouseMoveHandler);
         this._element.removeEventListener('mouseup', this._mouseUpHandler);
+        this._element.removeEventListener('touchstart', this._touchStartHandler);
+        this._element.removeEventListener('touchmove', this._touchMoveHandler);
+        this._element.removeEventListener('touchend', this._touchEndHandler);
+        this._element.removeEventListener('contextmenu', this._contextMenuHandler);
 
         this._mouseDownHandler = null;
         this._mouseMoveHandler = null;
         this._mouseUpHandler = null;
+        this._touchStartHandler = null;
+        this._touchMoveHandler = null;
+        this._touchEndHandler = null;
 
         this._element = null;
     }
@@ -114,19 +133,19 @@ export class Input {
      * @returns 'mouse' or 'touch'
      */
     public getCurrentInputType(): InputType {
-        return this._curInputType;
+        return this._inputType;
     }
 
     /**
      * Returns true the frame that the button was pressed down.
      */
     public getMouseButtonDown(buttonId: MouseButtonId): boolean { 
-        if (this._curInputType == InputType.Mouse) {
+        if (this._inputType == InputType.Mouse) {
             const buttonData = this._getMouseButtonData(buttonId);
             if (buttonData && buttonData.state === InputState.Down) {
                 return this._frameMatches(buttonData.lastStateChangeFrame);
             }
-        } else if (this._curInputType == InputType.Touch) {
+        } else if (this._inputType == InputType.Touch) {
             // var dataIndex = findIndex(this._touchData, (d) => { return d.event.button === button && d.state === InputState.Down } );
             // return dataIndex !== -1 ? this._frameMatches(this._touchData[dataIndex].lastStateChangeFrame) : false;
         }
@@ -136,12 +155,12 @@ export class Input {
      * Returns true the frame that the button was released.
      */
     public getMouseButtonUp(buttonId: MouseButtonId): boolean {
-        if (this._curInputType == InputType.Mouse) {
+        if (this._inputType == InputType.Mouse) {
             const buttonData = this._getMouseButtonData(buttonId);
             if (buttonData && buttonData.state === InputState.Up) {
                 return this._frameMatches(buttonData.lastStateChangeFrame);
             }
-        } else if (this._curInputType == InputType.Touch) {
+        } else if (this._inputType == InputType.Touch) {
             // var dataIndex = findIndex(this._touchData, (d) => { return d.event.button === button && d.state === InputState.Up } );
             // return dataIndex !== -1 ? this._frameMatches(this._touchData[dataIndex].lastStateChangeFrame) : false;
         }
@@ -151,42 +170,16 @@ export class Input {
      * Retruns true every frame the button is held down.
      */
     public getMouseButtonHeld(buttonId: MouseButtonId): boolean { 
-        if (this._curInputType == InputType.Mouse) {
+        if (this._inputType == InputType.Mouse) {
             const buttonData = this._getMouseButtonData(buttonId);
             if (buttonData && buttonData.state === InputState.Down) {
                 return true;
             }
-        } else if (this._curInputType == InputType.Touch) {
+        } else if (this._inputType == InputType.Touch) {
             // var dataIndex = findIndex(this._touchData, (d) => { return d.event.button === button && d.state === InputState.Down } );
             // return dataIndex !== -1;
         }
-    } 
-
-    /**
-     * Return the last pointer event for specified button.
-     */
-    // public getPointerEventFromButton(button: number): PointerEvent { 
-    //     if (this._curInputType == InputType.Mouse) {
-    //         var dataIndex = findIndex(this._mouseData, (d) => { return d.event.button === button } );
-    //         return dataIndex !== -1 ? this._mouseData[dataIndex].event : null;
-    //     } else if (this._curInputType == InputType.Touch) {
-    //         // var dataIndex = findIndex(this._touchData, (d) => { return d.event.button === button } );
-    //         // return dataIndex !== -1 ? this._touchData[dataIndex].event : null;
-    //     }
-    // }
-
-    /**
-     * Return the last pointer event for specified button.
-     */
-    // public getPointerEventFromId(pointerId: number): PointerEvent { 
-    //     if (this._curInputType == InputType.Mouse) {
-    //         var dataIndex = findIndex(this._mouseData, (d) => { return d.id === pointerId } );
-    //         return dataIndex !== -1 ? this._mouseData[dataIndex].event : null;
-    //     } else if (this._curInputType == InputType.Touch) {
-    //         // var dataIndex = findIndex(this._touchData, (d) => { return d.id === pointerId } );
-    //         // return dataIndex !== -1 ? this._touchData[dataIndex].event : null;
-    //     }
-    // }
+    }
 
     /**
      * Return the last known screen position of the mouse.
@@ -257,13 +250,15 @@ export class Input {
         return new Vector2((viewPos.x / viewRect.width) * 2 - 1, -(viewPos.y / viewRect.height) * 2 + 1);
     }
 
-    private _handleMouseDown(event:PointerEvent) {
-        this._curInputType = InputType.Mouse;
+    private _handleMouseDown(event:MouseEvent) {
+        if (this._inputType == InputType.Undefined) this._inputType = InputType.Mouse;
+        if (this._inputType != InputType.Mouse) return;
+
+        event.cancelBubble = true;
+        this._inputType = InputType.Mouse;
         if (this.debugLevel >= 1) {
-            console.log("pointer down is: mouse");
-            console.log("  id: " + event.pointerId);
+            console.log("mouse down:");
             console.log("  button: " + event.button);
-            console.log("  buttons: " + event.buttons);
         }
         
         let buttonData: MouseButtonData = this._getMouseButtonData(event.button);
@@ -278,8 +273,15 @@ export class Input {
         }
     }
 
-    private _handleMouseUp(event:PointerEvent) {
-        this._curInputType = InputType.Mouse;
+    private _handleMouseUp(event:MouseEvent) {
+        if (this._inputType == InputType.Undefined) this._inputType = InputType.Mouse;
+        if (this._inputType != InputType.Mouse) return;
+
+        if (this.debugLevel >= 1) {
+            console.log("mouse up:");
+            console.log("  button: " + event.button);
+        }
+        
         let buttonData: MouseButtonData = this._getMouseButtonData(event.button);
         if (buttonData) {
             buttonData.lastStateChangeFrame = time.frameCount;
@@ -292,15 +294,62 @@ export class Input {
         }
     }
 
-    private _handleMouseMove(event:PointerEvent) {
-        this._curInputType = InputType.Mouse;
+    private _handleMouseMove(event:MouseEvent) {
+        if (this._inputType == InputType.Undefined) this._inputType = InputType.Mouse;
+        if (this._inputType != InputType.Mouse) return;
+
+        this._mouseData.clientPos = new Vector2(event.clientX, event.clientY);
         this._mouseData.pagePos = new Vector2(event.pageX, event.pageY);
         this._mouseData.screenPos = this._calculateScreenPos(event.pageX, event.pageY);
-        if (this.debugLevel >= 2) console.log('mouse screen pos: ' + JSON.stringify(this._mouseData.screenPos));
+        if (this.debugLevel >= 2) {
+            console.log("mouse move:");
+            console.log("  screenPos: " + JSON.stringify(this._mouseData.screenPos));
+            console.log("  pagePos: " + JSON.stringify(this._mouseData.pagePos));
+            console.log("  clientPos: " + JSON.stringify(this._mouseData.clientPos));
+        }
+    }
+
+    private _handleTouchStart(event: TouchEvent) {
+        if (this._inputType == InputType.Undefined) this._inputType = InputType.Touch;
+        if (this._inputType != InputType.Touch) return;
+
+        if (this.debugLevel >= 1) {
+            console.log("touch start:");
+            console.log("  count: " + event.touches.length);
+        }
+    }
+
+    private _handleTouchMove(event: TouchEvent) {
+        if (this._inputType == InputType.Undefined) this._inputType = InputType.Touch;
+        if (this._inputType != InputType.Touch) return;
+
+        if (this.debugLevel >= 2) {
+            console.log("touch move:");
+            console.log("  count: " + event.touches.length);
+        }
+
+    }
+
+    private _handleTouchEnd(event: TouchEvent) {
+        if (this._inputType == InputType.Undefined) this._inputType = InputType.Touch;
+        if (this._inputType != InputType.Touch) return;
+        
+        if (this.debugLevel >= 1) {
+            console.log("touch end:");
+            console.log("  count: " + event.touches.length);
+        }
+
+    }
+
+    private _handleContextMenu(event: MouseEvent) {
+        // Prevent context menu from triggering.
+        event.preventDefault();
+        event.stopPropagation();
     }
 }
 
 export enum InputType {
+    Undefined = 'undefined',
     Mouse = "mouse",
     Touch = "touch",
 }
