@@ -38,10 +38,14 @@
                     <md-list-item>
                         <span class="md-list-item-text">Version: {{version}}</span>
                     </md-list-item>
-                    <md-list-item>
-                        <md-icon id="checkmark-icon" class="synced-checkmark" v-if="synced">check</md-icon>
-                        <md-icon id="warning-icon" class="not-synced-warning" v-else>warning</md-icon>
-                        <span class="md-list-item-text" v-if="synced">
+                    <md-list-item @click="toggleOnlineOffline()">
+                        <md-icon id="forced-offline-error" v-if="forcedOffline()">error</md-icon>
+                        <md-icon id="synced-checkmark" v-else-if="synced">check</md-icon>
+                        <md-icon id="not-synced-warning" v-else>warning</md-icon>
+                        <span class="md-list-item-text" v-if="forcedOffline()">
+                            Forced Offline
+                        </span>
+                        <span class="md-list-item-text" v-else-if="synced">
                             Synced
                             <span v-if="online">Online</span>
                             <span v-else>Offline</span>

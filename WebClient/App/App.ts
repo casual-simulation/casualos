@@ -49,6 +49,10 @@ export default class App extends Vue {
         return GIT_HASH.slice(0, 7);
     }
 
+    forcedOffline() {
+        return appManager.socketManager.forcedOffline;
+    }
+
     created() {
         this._subs = [];
         this._subs.push(appManager.updateAvailableObservable.subscribe(updateAvailable => {
@@ -151,6 +155,26 @@ export default class App extends Vue {
 
     refreshPage() {
         window.location.reload();
+    }
+
+    toggleOnlineOffline() {
+        let options = new ConfirmDialogOptions();
+        if (appManager.socketManager.forcedOffline) {
+            options.title = 'Enable online?';
+            options.body = 'Allow the app to reconnect to the server?';
+            options.okText = 'Go Online';
+            options.cancelText = 'Stay Offline';
+        } else {
+            options.title = 'Force offline mode?';
+            options.body = 'Prevent the app from connecting to the server?';
+            options.okText = 'Go Offline';
+            options.cancelText = 'Stay Online';
+        }
+        
+        EventBus.$once(options.okEvent, () => {
+            appManager.socketManager.toggleForceOffline();
+        });
+        EventBus.$emit('showConfirmDialog', options);
     }
     
     private onShowNavigation(show: boolean) {

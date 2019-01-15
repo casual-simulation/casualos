@@ -17,6 +17,16 @@ export class SocketManager {
     private _connector: SocketIOConnector;
     private _client: ChannelClient;
     private _filesChannel: BehaviorSubject<ChannelConnection<FilesState>> = new BehaviorSubject<ChannelConnection<FilesState>>(null);
+    
+    // Whether this manager has forced the user to be offline or not.
+    private _forcedOffline: boolean = false;
+
+    /**
+     * Gets whether the socket manager is forcing the user to be offline or not.
+     */
+    public get forcedOffline() {
+        return this._forcedOffline;
+    }
 
     public get filesChannelObservable() {
         return this._filesChannel;
@@ -50,5 +60,18 @@ export class SocketManager {
 
         this._filesChannel.next(files);
         return files;
+    }
+
+    /**
+     * Toggles whether the socket manager should be forcing the user's
+     * connection to the server to be offline.
+     */
+    toggleForceOffline() {
+        if (!this._forcedOffline) {
+            this._socket.disconnect();
+        } else {
+            this._socket.connect();
+        }
+        this._forcedOffline = !this._forcedOffline;
     }
 }
