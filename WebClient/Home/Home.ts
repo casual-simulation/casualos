@@ -76,8 +76,8 @@ export default class Home extends Vue {
         // Wait for the DOM to update with the above values and then show context menu again.
         this.$nextTick(() => {
             this.context = event;
-            this.contextMenuStyle.left = event.event.pageX + 'px';
-            this.contextMenuStyle.top = event.event.pageY + 'px';
+            this.contextMenuStyle.left = event.pagePos.x + 'px';
+            this.contextMenuStyle.top = event.pagePos.y + 'px';
             this.contextMenuVisible = true;
         });
     }

@@ -65,21 +65,11 @@ import { Physics } from './Physics';
   }
   
   /**
-   * Defines an interface for a mouse event wrapper.
-   */
-  export interface EventWrapper {
-    /**
-     * The mouse event that this event was built from.
-     */
-    event: MouseEvent;
-  }
-  
-  /**
    * Defines an interface for a mouse drag event.
    * Can indicate whether the mouse is being dragged or clicked
    * in addition to whether the mouse is currently being pressed.
    */
-  export interface MouseDrag extends EventWrapper {
+  export interface MouseDrag {
     /**
      * Whether the mouse is currently being pressed.
      */
@@ -175,7 +165,12 @@ import { Physics } from './Physics';
   /**
    * Defines an interface that represents the action of showing/hiding a context menu.
    */
-  export interface ContextMenuEvent extends EventWrapper {
+  export interface ContextMenuEvent {
+    /**
+     * Position on the page that the context menu should be placed.
+     */
+    pagePos: Vector2;
+    
     /**
      * The actions that the context menu should show.
      */

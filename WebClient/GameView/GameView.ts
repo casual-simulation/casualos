@@ -24,6 +24,7 @@ import {
   BoxBufferGeometry,
   GLTFLoader,
   HemisphereLight,
+  Vector2,
 } from 'three';
 import 'three-examples/controls/OrbitControls';
 import 'three-examples/loaders/GLTFLoader';
@@ -46,7 +47,7 @@ import {
 import { FileManager } from '../FileManager';
 import { File, Object, Workspace } from 'common/Files';
 import { time } from '../game-engine/Time';
-import { input, Input } from '../game-engine/input';
+import { input, Input, InputType, MouseButtonId } from '../game-engine/input';
 
 import { vg } from "von-grid";
 
@@ -133,7 +134,7 @@ export default class GameView extends Vue {
       this._fileUpdated(file);
     }));
 
-    this._updateGameView();
+    this._frameUpdate();
 
 
     // const leftClickObjects = this._clickedObjects(isButton(mouseDown, 0));
@@ -281,27 +282,38 @@ export default class GameView extends Vue {
   //   };
   // }
 
-  // private _clickedObjects(observable: Observable<MouseEvent>) {
-  //   return observable.pipe(
-  //     filter(e => Input.eventIsDirectlyOverElement(e, this._canvas)),
-  //     map(e => Input.screenPosition(e, this.gameView)),
-  //     map(pos => Physics.raycastAtScreenPos(pos, this._raycaster, this._draggableObjects, this._camera)),
-  //     map(r => Physics.firstRaycastHit(r)),
-  //   );
-  // }
+  private _clickedObjects(screenPos: Vector2) : Intersection {
+    const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this._draggableObjects, this._camera);
+    return Physics.firstRaycastHit(raycastResult);
+  }
 
-  private _updateGameView() {
+  private _frameUpdate() {
     // console.log("game view update frame: " + time.frameCount);
     this._updateInput();
     this._renderer.render(this._scene, this._camera);
 
-    requestAnimationFrame(() => this._updateGameView());
+    requestAnimationFrame(() => this._frameUpdate());
   }
 
   private _updateInput() {
-    if (input.getContextMenu()) {
-      const event = input.getContextMenuEvent();
-      const screenPos = Input.screenPosition(event, this.gameView);
+
+    for (let i = 0; i < 3; i++) {
+      if (input.getMouseButtonDown(i)) {
+        console.log("[GameView] button " + i + " down.");
+      }
+
+      if (input.getMouseButtonHeld(i)) {
+        console.log("[GameView] button " + i + " held.");
+      }
+  
+      if (input.getMouseButtonUp(i)) {
+        console.log("[GameView] button " + i + " up.");
+      }
+    }
+
+    if (input.getMouseButtonDown(MouseButtonId.Right)) {
+      const pagePos = input.getMousePagePos();
+      const screenPos = Input.screenPosition(pagePos, this.gameView);
       const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this._draggableObjects, this._camera);
       const hit = Physics.firstRaycastHit(raycastResult);
 
@@ -309,8 +321,7 @@ export default class GameView extends Vue {
         const file = this._fileForIntersection(hit);
         if (file && file.file && file.file.type === 'workspace') {
           // Now send the actual context menu event.
-          let menuEvent: ContextMenuEvent = { event: event, actions: [] };
-          menuEvent.actions = this._contextMenuActions(file);
+          let menuEvent: ContextMenuEvent = { pagePos: pagePos, actions: this._contextMenuActions(file) };
           this.$emit('onContextMenu', menuEvent);
         }
       }
