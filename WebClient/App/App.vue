@@ -31,13 +31,10 @@
                         <md-icon class="nuke-everything-icon">delete_forever</md-icon>
                         <span class="md-list-item-text">Nuke the Site</span>
                     </md-list-item>
-                    <md-list-item>
-                        <span class="md-list-item-text">Version: {{version}}</span>
-                    </md-list-item>
                     <md-list-item @click="toggleOnlineOffline()">
                         <md-icon id="forced-offline-error" v-if="forcedOffline()">error</md-icon>
-                        <md-icon id="synced-checkmark" v-else-if="synced">check</md-icon>
-                        <md-icon id="not-synced-warning" v-else>warning</md-icon>
+                        <md-icon id="synced-checkmark" v-else-if="synced">cloud_done</md-icon>
+                        <md-icon id="not-synced-warning" v-else>cloud_off</md-icon>
                         <span class="md-list-item-text" v-if="forcedOffline()">
                             Forced Offline
                         </span>
@@ -53,9 +50,12 @@
                         </span>
                         <md-button to="/merge-conflicts" class="md-list-action md-primary" v-if="remainingConflicts.length > 0">Fix Merge Conflicts</md-button>
                     </md-list-item>
-                    <md-list-item v-if="updateAvailable">
+                    <md-list-item v-if="updateAvailable" @click="refreshPage()">
+                        <md-icon>update</md-icon>
                         <span class="md-list-item-text">An new version is available!</span>
-                        <md-button @click="refreshPage()" class="md-list-action md-primary">Refresh</md-button>
+                    </md-list-item>
+                    <md-list-item>
+                        <span class="md-list-item-text">Version: {{version}}</span>
                     </md-list-item>
                 </md-list>
             </md-drawer>
@@ -76,7 +76,7 @@
 
             <md-snackbar md-position="center" :md-duration="10000" :md-active.sync="showUpdateAvailable">
                 <span>A new version is available!</span>
-                <md-button class="md-accent" @click="refreshPage()">Refresh</md-button>
+                <md-button class="md-primary" @click="refreshPage()">Refresh</md-button>
             </md-snackbar>
 
             <md-snackbar md-position="center" :md-duration="5000" :md-active.sync="showConnectionLost">
@@ -93,7 +93,7 @@
 
             <md-snackbar md-position="center" :md-duration="5000" :md-active.sync="showMergeConflicts">
                 <span>Conflicts occurred while syncing.</span>
-                <md-button to="/merge-conflicts" class="md-accent">Fix now</md-button>
+                <md-button to="/merge-conflicts" class="md-primary">Fix now</md-button>
             </md-snackbar>
 
             <md-content class="app-content">
