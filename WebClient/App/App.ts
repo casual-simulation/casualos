@@ -84,10 +84,10 @@ export default class App extends Vue {
                 this.currentMergeState = state;
             }));
 
-            subs.push(fileManager.resynced.subscribe(_ => {
+            subs.push(fileManager.resynced.subscribe(resynced => {
                 console.log('[App] Resynced!');
                 this.showConnectionRegained = false;
-                this.showSynced = true;
+                this.showSynced = resynced;
                 this.synced = true;
             }));
 
@@ -162,6 +162,10 @@ export default class App extends Vue {
         
         EventBus.$once(options.okEvent, () => {
             appManager.fileManager.deleteEverything();
+            EventBus.$off(options.cancelEvent);
+        });
+        EventBus.$once(options.cancelEvent, () => {
+            EventBus.$off(options.okEvent);
         });
         EventBus.$emit('showConfirmDialog', options);
     }
@@ -186,6 +190,10 @@ export default class App extends Vue {
         
         EventBus.$once(options.okEvent, () => {
             appManager.socketManager.toggleForceOffline();
+            EventBus.$off(options.cancelEvent);
+        });
+        EventBus.$once(options.cancelEvent, () => {
+            EventBus.$off(options.okEvent);
         });
         EventBus.$emit('showConfirmDialog', options);
     }

@@ -112,7 +112,7 @@ export class FileManager {
   private _selectedFilesUpdated: BehaviorSubject<SelectedFilesUpdatedEvent>;
   private _files: ChannelConnection<FilesState>;
   private _reconnectedObservable: Subject<MergedObject<FilesState>>;
-  private _resyncedObservable: Subject<void>;
+  private _resyncedObservable: Subject<boolean>;
   private _syncFailedObservable: Subject<MergeStatus<FilesState>>;
   private _disconnectedObservable: Subject<FilesState>;
   private _mergeStatus: MergeStatus<FilesState> = null;
@@ -224,8 +224,10 @@ export class FileManager {
   /**
    * Gets the observable that resolves when the app becomes synced with the server after
    * being disconnected. This means that our state is up to date with the server.
+   * 
+   * Resolves with whether the sync required a merge or if the local data was already up-to-date.
    */
-  get resynced(): Observable<void> {
+  get resynced(): Observable<boolean> {
     return this._resyncedObservable;
   }
 
@@ -358,6 +360,7 @@ export class FileManager {
   private _publishMergeResults(results: MergedObject<FilesState>) {
     this._setStatus('Merged and reconnected!');
     this._mergeStatus = null;
+    const didReSync = results.final;
     this._offlineServerState = null;
     if (results.final) {
       const event = addState(results.final);
@@ -366,7 +369,7 @@ export class FileManager {
     } else {
       this._files.reconnect();
     }
-    this._resyncedObservable.next();
+    this._resyncedObservable.next(didReSync);
   }
 
   /**
@@ -408,7 +411,7 @@ export class FileManager {
         new BehaviorSubject<SelectedFilesUpdatedEvent>({files: []});
     this._disconnectedObservable = new Subject<FilesState>();
     this._reconnectedObservable = new Subject<MergedObject<FilesState>>();
-    this._resyncedObservable = new Subject<void>();
+    this._resyncedObservable = new Subject<boolean>();
     this._syncFailedObservable = new Subject<MergeStatus<FilesState>>();
     this._files = await this._socketManager.getFilesChannel();
 
