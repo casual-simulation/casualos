@@ -13,6 +13,22 @@ export interface User {
     name: string;
 }
 
+/**
+ * Defines an interface that contains version information about the app.
+ */
+export interface VersionInfo {
+    /**
+     * The git commit hash that this app version was built from.
+     */
+    gitCommit: string;
+
+    /**
+     * The most recent annotated git tag that this app version was built from.
+     * These version numbers are a lot more human readable but might be upated less frequently.
+     */
+    latestTaggedVersion: string;
+}
+
 export class AppManager {
     private _userSubject: BehaviorSubject<User>;
     private _updateAvailable: BehaviorSubject<boolean>;
@@ -49,6 +65,13 @@ export class AppManager {
         return this._user;
     }
 
+    get version(): VersionInfo {
+        return {
+            gitCommit: GIT_HASH,
+            latestTaggedVersion: GIT_TAG
+        };
+    }
+
     /**
      * Gets an observable that resolves with true once an application update is available.
      */
@@ -60,7 +83,9 @@ export class AppManager {
      * Instructs the app manager to check for new updates online.
      */
     checkForUpdates() {
-        OfflinePluginRuntime.update();
+        setTimeout(() => {
+            OfflinePluginRuntime.update();
+        }, 1000);
     }
 
     /**

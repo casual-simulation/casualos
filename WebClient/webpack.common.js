@@ -7,6 +7,7 @@ const OfflinePlugin = require('offline-plugin');
 const webpack = require('webpack');
 
 const commitHash = childProcess.execSync('git rev-parse HEAD').toString().trim();
+const latestTag = childProcess.execSync('git describe --abbrev=0 --tags').toString().trim();
 
 module.exports = {
   entry: path.resolve(__dirname, 'index.ts'),
@@ -81,6 +82,7 @@ module.exports = {
     }),
     new webpack.DefinePlugin({
       GIT_HASH: JSON.stringify(commitHash),
+      GIT_TAG: JSON.stringify(latestTag),
       SENTRY_DSN: JSON.stringify('***REMOVED***'),
     }),
     new OfflinePlugin({

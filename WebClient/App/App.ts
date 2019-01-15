@@ -6,10 +6,10 @@ import { EventBus } from '../EventBus/EventBus';
 import ConfirmDialogOptions from './DialogOptions/ConfirmDialogOptions';
 import AlertDialogOptions from './DialogOptions/AlertDialogOptions';
 import { SubscriptionLike } from 'rxjs';
-import { resolveConflicts, first, listMergeConflicts, second, MergedObject, FilesState, ConflictDetails } from 'common/Files';
-import { some, difference } from 'lodash';
+import { FilesState, ConflictDetails } from 'common/Files';
 import { MergeStatus } from 'WebClient/FileManager';
 import SnackbarOptions from './Snackbar/SnackbarOptions';
+import { copyToClipboard } from '../utils';
 
 @Component({
     components: {
@@ -37,6 +37,16 @@ export default class App extends Vue {
      */
     synced: boolean = true;
 
+    /**
+     * Whether we had previously lost our connection to the server.
+     */
+    lostConnection: boolean = false;
+
+    /**
+     * Whether the app started without a connection to the server.
+     */
+    startedOffline: boolean = false;
+
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
 
@@ -46,7 +56,11 @@ export default class App extends Vue {
     private _subs: SubscriptionLike[] = [];
 
     get version() {
-        return GIT_HASH.slice(0, 7);
+        return appManager.version.latestTaggedVersion;
+    }
+
+    get versionTooltip() {
+        return appManager.version.gitCommit;
     }
 
     forcedOffline() {
@@ -68,19 +82,25 @@ export default class App extends Vue {
             this.online = fileManager.isOnline;
             this.synced = fileManager.isSynced;
 
-            if (!this.online) {
-                this._showConnectionLost();
-            }
+            setTimeout(() => {
+                if (!this.online && !this.lostConnection) {
+                    this.startedOffline = true;
+                    this._showOffline();
+                }
+            }, 1000);
 
             subs.push(fileManager.disconnected.subscribe(_ => {
                 this._showConnectionLost();
                 this.online = false;
                 this.synced = false;
+                this.lostConnection = true;
             }));
 
             subs.push(fileManager.reconnected.subscribe(async state => {
                 this.online = true;
-                this._showConnectionRegained();
+                if (this.lostConnection) {
+                    this._showConnectionRegained();
+                }
                 appManager.checkForUpdates();
             }));
 
@@ -92,9 +112,11 @@ export default class App extends Vue {
 
             subs.push(fileManager.resynced.subscribe(resynced => {
                 console.log('[App] Resynced!');
-                if (resynced) {    
+                if (this.lostConnection || this.startedOffline || resynced) {
                     this._showSynced();
                 }
+                this.lostConnection = false;
+                this.startedOffline = false;
                 this.synced = true;
             }));
 
@@ -104,6 +126,14 @@ export default class App extends Vue {
         EventBus.$on('showNavigation', this.onShowNavigation);
         EventBus.$on('showConfirmDialog', this.onShowConfirmDialog);
         EventBus.$on('showAlertDialog', this.onShowAlertDialog);
+    }
+
+    copy(text: string) {
+        copyToClipboard(text);
+        this.snackbar = {
+            visible: true,
+            message: `Copied '${text}' to the clipboard!`
+        };
     }
 
     beforeDestroy() {
@@ -226,6 +256,13 @@ export default class App extends Vue {
         this.snackbar = {
             visible: true,
             message: 'Connection lost. You are now working offline.'
+        };
+    }
+
+    private _showOffline() {
+        this.snackbar = {
+            visible: true,
+            message: 'You are offline. Changes will be synced to the server upon reconnection.'
         };
     }
 

@@ -55,7 +55,10 @@
                         <span class="md-list-item-text">An new version is available!</span>
                     </md-list-item>
                     <md-list-item>
-                        <span class="md-list-item-text">Version: {{version}}</span>
+                        <span class="md-list-item-text" @click.left="copy(version)" @click.right="copy(versionTooltip)">
+                            Version: {{version}}
+                            <md-tooltip md-direction="bottom">{{versionTooltip}}</md-tooltip>
+                        </span>
                     </md-list-item>
                 </md-list>
             </md-drawer>
