@@ -457,13 +457,19 @@ export class FileManager {
 
   private get _offlineServerState(): FilesState {
     const json = localStorage.getItem('offline_server_state');
-    if(json) {
+    if (json) {
       return JSON.parse(json);
+    } else {
+      return null;
     }
   }
 
   private set _offlineServerState(state: FilesState) {
-    localStorage.setItem("offline_server_state", JSON.stringify(state));
+    if (state !== null && typeof state !== 'undefined') {
+      localStorage.setItem('offline_server_state', JSON.stringify(state));
+    } else {
+      localStorage.setItem('offline_server_state', null);
+    }
   }
 
   private _setupOffline() {
