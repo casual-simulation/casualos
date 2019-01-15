@@ -4,7 +4,6 @@ import {Prop, Inject} from 'vue-property-decorator';
 import { appManager } from '../AppManager';
 import { ConflictDetails, ResolvedConflict, first, second, File } from 'common/Files';
 import { groupBy, keys, uniq, assign } from 'lodash';
-import FileTable from '../FileTable/FileTable';
 import FileTag from '../FileTag/FileTag';
 import { fileTags } from 'common/Files/FileCalculations';
 
@@ -18,7 +17,6 @@ interface FileConflicts {
 
 @Component({
     components: {
-        'file-table': FileTable,
         'file-tag': FileTag
     }
 })
@@ -40,7 +38,7 @@ export default class MergeConflicts extends Vue {
     }
 
     conflictName(conflict: ConflictDetails) {
-        const index = conflict.path.indexOf('tags');
+        const index = conflict.path.indexOf('tags') + 1;
         if (index >= 0) {
             const tagName = conflict.path.slice(index);
             return tagName.join('.');
@@ -69,9 +67,12 @@ export default class MergeConflicts extends Vue {
         });
     }
 
-    takeValue(file: FileConflicts, conflict: ConflictDetails, value: any) {
+    takeValue(file: FileConflicts, conflict: ConflictDetails, value: boolean) {
+        if (typeof value !== 'boolean') {
+            return;
+        }
         this.resolved.push({
-            value: value,
+            value: conflict.conflict[value ? first : second],
             details: conflict
         });
 
