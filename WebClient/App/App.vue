@@ -16,17 +16,9 @@
                 </div>
                 <md-list>
                     <router-link tag="md-list-item" to="/Home">
-                        Home
+                        <md-icon>home</md-icon>
+                        <span class="md-list-item-text">Home</span>
                     </router-link>
-                    <router-link tag="md-list-item" to="/editor">
-                        Editor
-                    </router-link>
-                    <md-list-item @click="testConfirmDialog">
-                        <span class="md-list-item-text">Test Confirm Dialog</span>
-                    </md-list-item>
-                    <md-list-item @click="testAlertDialog">
-                        <span class="md-list-item-text">Test Alert Dialog</span>
-                    </md-list-item>
                     <md-list-item @click="openInfoCard" v-if="getUser() != null">
                         <md-icon>info</md-icon>
                         <span class="md-list-item-text">Info Card</span>
@@ -34,6 +26,10 @@
                     <md-list-item @click="logout" v-if="getUser() != null">
                         <md-icon>exit_to_app</md-icon>
                         <span class="md-list-item-text">Logout</span>
+                    </md-list-item>
+                    <md-list-item class="nuke-site-item" @click="nukeSite()" v-if="online && synced">
+                        <md-icon class="nuke-everything-icon">delete_forever</md-icon>
+                        <span class="md-list-item-text">Nuke the Site</span>
                     </md-list-item>
                     <md-list-item>
                         <span class="md-list-item-text">Version: {{version}}</span>

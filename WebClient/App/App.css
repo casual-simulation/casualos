@@ -18,3 +18,16 @@
 #forced-offline-error {
     color: #ff1c1cb4;
 }
+
+.md-icon.md-theme-default.md-icon-font.nuke-everything-icon {
+    color: #ff1c1cb4;
+}
+
+.md-list.md-theme-default .nuke-site-item .md-list-item-container:not(.md-list-item-default):not([disabled]):hover {
+    background-color: #fc0e0eda;
+    color: #eee;
+}
+
+.md-list-item-container:hover .md-icon.md-theme-default.md-icon-font.nuke-everything-icon {
+    color: inherit;
+}

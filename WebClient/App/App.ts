@@ -153,6 +153,19 @@ export default class App extends Vue {
         EventBus.$emit('showAlertDialog', options);
     }
 
+    nukeSite() {
+        let options = new ConfirmDialogOptions();
+        options.title = 'Delete Everything?';
+        options.body = 'Are you sure you want to delete everything? This is permanent and cannot be undone.';
+        options.okText = 'Delete';
+        options.cancelText = 'Keep';
+        
+        EventBus.$once(options.okEvent, () => {
+            appManager.fileManager.deleteEverything();
+        });
+        EventBus.$emit('showConfirmDialog', options);
+    }
+
     refreshPage() {
         window.location.reload();
     }

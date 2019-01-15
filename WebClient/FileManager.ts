@@ -317,6 +317,18 @@ export class FileManager {
     this._files.emit(transaction(events));
   }
 
+  // TODO: This seems like a pretty dangerous function to keep around,
+  // but we'll add a config option to prevent this from happening on real sites.
+  deleteEverything() {
+    console.warn('[FileManager] Delete Everything!');
+    const deleteOps = this.files.map(f => fileRemoved(f.id));
+    this._files.emit(transaction(deleteOps));
+    setTimeout(() => {
+      appManager.logout();
+      location.reload();
+    }, 200);
+  }
+
   /**
    * Resolves the given conflicts into the current merge status.
    * @param resolved 
@@ -444,6 +456,7 @@ export class FileManager {
     if (!userFile) {
       await this.createFile(this._appManager.user.username, {
         _hidden: true,
+        _user: this._appManager.user.username,
         _position: { x: 0, y: 0, z: 0},
         _workspace: null
       });
