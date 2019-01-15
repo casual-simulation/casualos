@@ -73,9 +73,10 @@ export default class App extends Vue {
                 this.synced = false;
             }));
 
-            subs.push(fileManager.resynced.subscribe(async merge => {
+            subs.push(fileManager.reconnected.subscribe(async state => {
                 this.online = true;
                 this.showConnectionRegained = true;
+                appManager.checkForUpdates();
             }));
 
             subs.push(fileManager.syncFailed.subscribe(state => {

@@ -14,7 +14,6 @@ export interface User {
 }
 
 export class AppManager {
-
     private _userSubject: BehaviorSubject<User>;
     private _updateAvailable: BehaviorSubject<boolean>;
     private _fileManager: FileManager;
@@ -55,6 +54,13 @@ export class AppManager {
      */
     get updateAvailableObservable(): Observable<boolean> {
         return this._updateAvailable;
+    }
+
+    /**
+     * Instructs the app manager to check for new updates online.
+     */
+    checkForUpdates() {
+        OfflinePluginRuntime.update();
     }
 
     /**
