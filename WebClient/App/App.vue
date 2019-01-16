@@ -31,7 +31,7 @@
                         <md-icon class="nuke-everything-icon">delete_forever</md-icon>
                         <span class="md-list-item-text">Nuke the Site</span>
                     </md-list-item>
-                    <md-list-item @click="toggleOnlineOffline()">
+                    <md-list-item @click.right="toggleOnlineOffline()">
                         <md-icon id="forced-offline-error" v-if="forcedOffline()">error</md-icon>
                         <md-icon id="synced-checkmark" v-else-if="synced">cloud_done</md-icon>
                         <md-icon id="not-synced-warning" v-else>cloud_off</md-icon>
