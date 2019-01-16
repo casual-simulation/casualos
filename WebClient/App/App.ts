@@ -112,6 +112,7 @@ export default class App extends Vue {
 
             subs.push(fileManager.resynced.subscribe(resynced => {
                 console.log('[App] Resynced!');
+                this.remainingConflicts = [];
                 if (this.lostConnection || this.startedOffline || resynced) {
                     this._showSynced();
                 }
