@@ -205,20 +205,22 @@ export default class App extends Vue {
     }
 
     nukeSite() {
-        let options = new ConfirmDialogOptions();
-        options.title = 'Delete Everything?';
-        options.body = 'Are you sure you want to delete everything? This is permanent and cannot be undone.';
-        options.okText = 'Delete';
-        options.cancelText = 'Keep';
-        
-        EventBus.$once(options.okEvent, () => {
-            appManager.fileManager.deleteEverything();
-            EventBus.$off(options.cancelEvent);
-        });
-        EventBus.$once(options.cancelEvent, () => {
-            EventBus.$off(options.okEvent);
-        });
-        EventBus.$emit('showConfirmDialog', options);
+        if (this.online && this.synced) {
+            let options = new ConfirmDialogOptions();
+            options.title = 'Delete Everything?';
+            options.body = 'Are you sure you want to delete everything? This is permanent and cannot be undone.';
+            options.okText = 'Delete';
+            options.cancelText = 'Keep';
+            
+            EventBus.$once(options.okEvent, () => {
+                appManager.fileManager.deleteEverything();
+                EventBus.$off(options.cancelEvent);
+            });
+            EventBus.$once(options.cancelEvent, () => {
+                EventBus.$off(options.okEvent);
+            });
+            EventBus.$emit('showConfirmDialog', options);
+        }
     }
 
     refreshPage() {

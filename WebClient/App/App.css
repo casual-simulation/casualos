@@ -23,7 +23,7 @@
     color: #ff1c1cb4;
 }
 
-.md-icon.md-theme-default.md-icon-font.nuke-everything-icon {
+.md-list-item-container:not([disabled]) .md-icon.md-theme-default.md-icon-font.nuke-everything-icon {
     color: #ff1c1cb4;
 }
 
@@ -32,6 +32,6 @@
     color: #eee;
 }
 
-.md-list-item-container:hover .md-icon.md-theme-default.md-icon-font.nuke-everything-icon {
+.md-list-item-container:hover:not([disabled]) .md-icon.md-theme-default.md-icon-font.nuke-everything-icon {
     color: inherit;
 }

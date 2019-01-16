@@ -27,9 +27,11 @@
                         <md-icon>exit_to_app</md-icon>
                         <span class="md-list-item-text">Logout</span>
                     </md-list-item>
-                    <md-list-item class="nuke-site-item" @click="nukeSite()" v-if="online && synced">
+                    <md-list-item class="nuke-site-item" @click="nukeSite()" :disabled="!(online && synced)">
                         <md-icon class="nuke-everything-icon">delete_forever</md-icon>
                         <span class="md-list-item-text">Nuke the Site</span>
+
+                        <md-tooltip v-if="!(online && synced)">Must be online &amp; synced to nuke.</md-tooltip>
                     </md-list-item>
                     <md-list-item @click.right="toggleOnlineOffline()">
                         <md-icon id="forced-offline-error" v-if="forcedOffline()">error</md-icon>
