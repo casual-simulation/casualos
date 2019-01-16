@@ -6,13 +6,25 @@ import { BaseConnector } from '../builtin/BaseConnector';
 export class TestConnector extends BaseConnector {
 
     private _events: Subject<any>;
+    private _eventsToServer: Subject<any>;
+    private _connection: Subject<boolean>;
     private _emitted: Subject<Event>;
+    private _getSeverState: () => Promise<any>;
     private _initial_state: any;
+    
 
-    constructor(initialState: any, events: Subject<any>) {
+    emitToServerPromise: Promise<void>;
+    states: {
+        [key: string]: any
+    } = {};
+
+    constructor(initialState: any, events: Subject<any>, connection?: Subject<boolean>, eventsToServer?: Subject<any>, getServerState?: () => Promise<any>) {
         super();
         this._events = events;
         this._initial_state = initialState;
+        this._connection = connection;
+        this._eventsToServer = eventsToServer;
+        this._getSeverState = getServerState;
         this._emitted = new Subject<Event>();
     }
 
@@ -25,6 +37,22 @@ export class TestConnector extends BaseConnector {
             connection_request.store.init(this._initial_state);
             let helper = this.newConnection(connection_request);
             helper.setServerEvents(this._events);
+            helper.setSaveStateFunction((key, state) => {
+                this.states[key] = state;
+            });
+            helper.setGetStateFunction((key) => {
+                return this.states[key];
+            });
+            helper.setConnectionStateObservable(this._connection);
+            if (this._eventsToServer) {
+                helper.setEmitToServerFunction(e => {
+                    this._eventsToServer.next(e);
+                    return this.emitToServerPromise;
+                });
+            }
+            if (this._getSeverState) {
+                helper.setGetRemoteServerStateFunction(this._getSeverState);
+            }
             resolve(helper.build());
         });
     }

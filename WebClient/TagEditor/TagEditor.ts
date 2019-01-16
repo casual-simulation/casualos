@@ -1,21 +1,16 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Inject, Prop, Watch } from 'vue-property-decorator';
-import { FileManager } from 'WebClient/FileManager';
-import { Object } from 'common/Files';
 import { validateTag } from 'common/Files/FileCalculations';
+import { appManager } from '../AppManager';
 
 /**
  * A component that manages the logic for editing a tag name.
  * Used for new tags and potentially for allowing users to change tag names.
  */
 @Component({
-    inject: {
-        fileManager: 'fileManager'
-    }
 })
 export default class TagEditor extends Vue {
-    @Inject() fileManager: FileManager;
 
     @Prop() value: string;
     @Prop() tagExists: boolean;
@@ -23,9 +18,12 @@ export default class TagEditor extends Vue {
     changed: boolean = false;
     focused: boolean = false;
 
+    get fileManager() {
+        return appManager.fileManager;
+    }
+
     get showMenu() {
         return this.focused && this.changed && this.errorMessage;
-        ;
     }
 
     get errorMessage() {

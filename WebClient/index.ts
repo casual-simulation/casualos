@@ -18,32 +18,19 @@ import {
     MdTabs,
     MdCheckbox,
     MdTooltip,
+    MdSnackbar,
 } from 'vue-material/dist/components';
-import 'vue-material/dist/vue-material.min.css'
-import 'vue-material/dist/theme/default.css'
+import 'vue-material/dist/vue-material.min.css';
+import 'vue-material/dist/theme/default.css';
 import 'pepjs'; // Polyfill for pointer events
+import { polyfill } from 'es6-promise';
 
+import { appManager } from './AppManager';
 import App from './App/App';
 import Welcome from './Welcome/Welcome';
-import { polyfill } from 'es6-promise';
-import { appManager } from './AppManager';
-
-const sentryEnv = PRODUCTION ? 'prod' : 'dev';
-
-if (SENTRY_DSN) {
-    Sentry.init({
-        dsn: SENTRY_DSN,
-        integrations: [new Sentry.Integrations.Vue({ Vue: Vue })],
-        release: GIT_HASH,
-        environment: sentryEnv,
-        enabled: ENABLE_SENTRY
-    });
-} else {
-    console.log('Skipping Sentry Initialization');
-}
-
-const Home = () => import('./Home/Home');
-const Editor = () => import('./Editor/Editor');
+import Home from './Home/Home';
+import Editor from './Editor/Editor';
+import MergeConflicts from './MergeConflicts/MergeConflicts';
 
 // Setup the Promise shim for browsers that don't support promises.
 polyfill();
@@ -65,18 +52,22 @@ Vue.use(MdDialogConfirm);
 Vue.use(MdDialogAlert)
 Vue.use(MdTabs);
 Vue.use(MdTooltip);
+Vue.use(MdSnackbar);
 
 const routes: RouteConfig[] = [
     {
         path: '/',
         component: Welcome,
         beforeEnter: (to, from, next) => {
-            if (appManager.user !== null) {
-                next({ path: '/home' });
-            }
-            else {
-                next();
-            }
+            appManager.initPromise.then(() => {
+                if (appManager.user) {
+                    next({ path: '/home' });
+                } else {
+                    next();
+                }
+            }, ex => {
+                next({ path: '/' });
+            });
         }
     },
     {
@@ -86,6 +77,17 @@ const routes: RouteConfig[] = [
     {
         path: '/editor',
         component: Editor
+    },
+    {
+        path: '/merge-conflicts',
+        component: MergeConflicts,
+        beforeEnter: (to, from, next) => {
+            if (appManager.fileManager && appManager.fileManager.mergeStatus) {
+                next();
+            } else {
+                next({ path: '/' });
+            }
+        }
     }
 ]
 
@@ -95,7 +97,7 @@ const router = new VueRouter({
 
 router.beforeEach((to, from, next) => {
     if (to.path !== '/') {
-        if (appManager.user === null) {
+        if (!appManager.user) {
             next({ path: '/' });
             return;
         }

@@ -1,6 +1,25 @@
-import { filesReducer, fileAdded, FilesState, fileRemoved, action, calculateStateDiff, calculateActionEvents, transaction } from './FilesChannel';
-import { Workspace, Object } from './File';
-import { values } from 'lodash';
+import { 
+    filesReducer, 
+    fileAdded, 
+    FilesState,
+    fileRemoved, 
+    action, 
+    calculateStateDiff, 
+    calculateActionEvents, 
+    transaction, 
+    mergeFiles, 
+    objDiff, 
+    applyMerge, 
+    MergedObject, 
+    resolveConflicts, 
+    ConflictDetails, 
+    first,
+    second,
+    listMergeConflicts,
+    ResolvedConflict
+} from './FilesChannel';
+import { Workspace, Object, File } from './File';
+import { values, assign, merge } from 'lodash';
 import uuid from 'uuid/v4';
 
 const uuidMock: jest.Mock = <any>uuid;
@@ -461,6 +480,876 @@ describe('FilesChannel', () => {
             expect(result.removedFiles[0]).toBe(prevState['removed']);
             expect(result.updatedFiles.length).toBe(1);
             expect(result.updatedFiles[0]).toBe(currState['updated']);
+        });
+    });
+
+    describe('fileDiff', () => {
+        it('should return a partial file containing the difference between file1 and file2', () => {
+            const file1: File = {
+                type: 'object',
+                id: 'test',
+                tags: {
+                    _position: {x: 0, y: 0, z: 0},
+                    _workspace: 'abc',
+                    removedTag: 50,
+                    updatedTag: -1000,
+                    obj: { cool: 'fun' },
+                    objNotChanged: { test: 'test' },
+                    array: ['abc', 'def']
+                }
+            };
+            const file2: File = assign({}, file1, {
+                tags: {
+                    _position: {x: 100, y: 0, z: -50},
+                    _workspace: 'abc',
+                    newTag: 100,
+                    removedTag: null,
+                    updatedTag: 'this is cool!',
+                    obj: 'not an object',
+                    objNotChanged: { test: 'test' },
+                    array: ['abc']
+                }
+            });
+
+            const file1Id = 'file1';
+            const file2Id = 'file2';
+            const diff = objDiff(file1Id, file1, file2Id, file2);
+
+            expect(diff).toEqual({
+                tags: {
+                    _position: {
+                        x: {
+                            [file1Id]: 0,
+                            [file2Id]: 100
+                        },
+                        z: {
+                            [file1Id]: 0,
+                            [file2Id]: -50
+                        }
+                    },
+                    newTag: {
+                        [file1Id]: undefined,
+                        [file2Id]: 100
+                    },
+                    removedTag: {
+                        [file1Id]: 50,
+                        [file2Id]: null
+                    },
+                    updatedTag: {
+                        [file1Id]: -1000,
+                        [file2Id]: 'this is cool!'
+                    },
+                    obj: {
+                        [file1Id]: { cool: 'fun' },
+                        [file2Id]: 'not an object'
+                    },
+                    array: {
+                        [file1Id]: ['abc', 'def'],
+                        [file2Id]: ['abc']
+                    }
+                }
+            });
+        });
+        it('should return file1 if file2 is null', () => {
+            const file1: any = {
+                test: 'abcdef',
+                num: 15
+            };
+            const file2: any = null;
+
+            const file1Id = 'file1';
+            const file2Id = 'file2';
+            const diff = objDiff(file1Id, file1, file2Id, file2);
+
+            expect(diff).toEqual({
+                test: {
+                    [file1Id]: 'abcdef',
+                    [file2Id]: undefined
+                },
+                num: {
+                    [file1Id]: 15,
+                    [file2Id]: undefined
+                }
+            });
+        });
+
+        it('should return null if file2 is null and doing partial diff', () => {
+            const file1: any = {
+                test: 'abcdef',
+                num: 15
+            };
+            const file2: any = null;
+
+            const file1Id = 'file1';
+            const file2Id = 'file2';
+            const diff = objDiff(file1Id, file1, file2Id, file2, {
+                fullDiff: false
+            });
+
+            expect(diff).toBe(null);
+        });
+    });
+
+    describe('mergeFile', () => {
+        it('should successfully merge files with a single addition', () => {
+            const base: File = {
+                type: 'object',
+                id: 'test',
+                tags: {
+                    _position: {x: 0, y: 0, z: 0},
+                    _workspace: 'abc'
+                }
+            };
+            const parent1: File = JSON.parse(JSON.stringify(base));
+            const parent2: File = merge({}, base, {
+                tags: {
+                    newTag: 100
+                }
+            });
+
+            const merged = mergeFiles(base, parent1, parent2);
+
+            expect(merged).toEqual({
+                success: true,
+                base: base,
+                first: parent1,
+                second: parent2,
+                conflicts: null,
+                final: {
+                    tags: {
+                        newTag: 100
+                    }
+                }
+            });
+        });
+
+        it('should successfully merge files with a single removal', () => {
+            const base: File = {
+                type: 'object',
+                id: 'test',
+                tags: {
+                    _position: {x: 0, y: 0, z: 0},
+                    _workspace: 'abc',
+                    removedTag: 100
+                }
+            };
+            const parent1: File = JSON.parse(JSON.stringify(base));
+            const parent2: File = merge({}, base, {
+                tags: {
+                    removedTag: null
+                }
+            });
+
+            const merged = mergeFiles(base, parent1, parent2);
+
+            expect(merged).toEqual({
+                success: true,
+                base: base,
+                first: parent1,
+                second: parent2,
+                conflicts: null,
+                final: {
+                    tags: {
+                        removedTag: null
+                    }
+                }
+            });
+        });
+
+        it('should successfully merge files with a single update', () => {
+            const base: File = {
+                type: 'object',
+                id: 'test',
+                tags: {
+                    _position: {x: 0, y: 0, z: 0},
+                    _workspace: 'abc',
+                    updatedTag: 100
+                }
+            };
+            const parent1: File = JSON.parse(JSON.stringify(base));
+            const parent2: File = merge({}, base, {
+                tags: {
+                    updatedTag: 250
+                }
+            });
+
+            const merged = mergeFiles(base, parent1, parent2);
+
+            expect(merged).toEqual({
+                success: true,
+                base: base,
+                first: parent1,
+                second: parent2,
+                conflicts: null,
+                final: {
+                    tags: {
+                        updatedTag: 250
+                    }
+                }
+            });
+        });
+
+        it('should successfully merge files with a update to an object', () => {
+            const base: File = {
+                type: 'object',
+                id: 'test',
+                tags: {
+                    _position: {x: 0, y: 0, z: 0},
+                    _workspace: 'abc',
+                }
+            };
+            const parent1: File = JSON.parse(JSON.stringify(base));
+            const parent2: File = merge({}, base, {
+                tags: {
+                    _position: { x: 100, y: 0, z: -12 }
+                }
+            });
+
+            const merged = mergeFiles(base, parent1, parent2);
+
+            expect(merged).toEqual({
+                success: true,
+                base: base,
+                first: parent1,
+                second: parent2,
+                conflicts: null,
+                final: {
+                    tags: {
+                        _position: { x: 100, z: -12 }
+                    }
+                }
+            });
+        });
+
+        it('should successfully merge files that add tags with the same values', () => {
+            const base: File = {
+                type: 'object',
+                id: 'test',
+                tags: {
+                    _position: {x: 0, y: 0, z: 0},
+                    _workspace: 'abc',
+                }
+            };
+            const parent1: File = merge({}, base, {
+                tags: {
+                    newTag: 'abcdefgh'
+                }
+            });
+            const parent2: File = merge({}, base, {
+                tags: {
+                    newTag: 'abcdefgh'
+                }
+            });
+
+            const merged = mergeFiles(base, parent1, parent2);
+
+            expect(merged).toEqual({
+                success: true,
+                base: base,
+                first: parent1,
+                second: parent2,
+                conflicts: null,
+                final: null
+            });
+        });
+
+        it('should successfully merge files that both remove tags', () => {
+            const base: File = {
+                type: 'object',
+                id: 'test',
+                tags: {
+                    _position: {x: 0, y: 0, z: 0},
+                    _workspace: 'abc',
+                    removedTag: 1234,
+                }
+            };
+            const parent1: File = merge({}, base, {
+                tags: {
+                    removedTag: undefined,
+                }
+            });
+            const parent2: File = merge({}, base, {
+                tags: {
+                    removedTag: null,
+                }
+            });
+
+            const merged = mergeFiles(base, parent1, parent2);
+
+            expect(merged).toEqual({
+                success: true,
+                base: base,
+                first: parent1,
+                second: parent2,
+                conflicts: null,
+                final: {
+                    tags: {
+                        // TODO: This should probably not be here
+                        removedTag: null
+                    }
+                }
+            });
+        });
+
+        it('should successfully merge files that both update a tag with the same value', () => {
+            const base: File = {
+                type: 'object',
+                id: 'test',
+                tags: {
+                    _position: {x: 0, y: 0, z: 0},
+                    _workspace: 'abc',
+                    updatedTag: 1234,
+                }
+            };
+            const parent1: File = merge({}, base, {
+                tags: {
+                    updatedTag: 987654,
+                }
+            });
+            const parent2: File = merge({}, base, {
+                tags: {
+                    updatedTag: 987654,
+                }
+            });
+
+            const merged = mergeFiles(base, parent1, parent2);
+
+            expect(merged).toEqual({
+                success: true,
+                base: base,
+                first: parent1,
+                second: parent2,
+                conflicts: null,
+                final: null
+            });
+        });
+
+        it('should successfully merge files with multiple updates', () => {
+            const base: File = {
+                type: 'object',
+                id: 'test',
+                tags: {
+                    _position: {x: 0, y: 0, z: 0},
+                    _workspace: 'abc',
+                    updatedTag: 1234,
+                    otherTag: 321,
+                    removedTag: 'removed',
+                    removedTag2: 'qwerty'
+                }
+            };
+            const parent1: File = merge({}, base, {
+                tags: {
+                    updatedTag: 987654,
+                    newTag: 15,
+                    newTag2: 30,
+                    removedTag2: null
+                }
+            });
+            const parent2: File = merge({}, base, {
+                tags: {
+                    otherTag: 'test',
+                    newTag: 15,
+                    newTag3: 'fun',
+                    removedTag: null
+                }
+            });
+
+            const merged = mergeFiles(base, parent1, parent2);
+
+            expect(merged).toEqual({
+                success: true,
+                base: base,
+                first: parent1,
+                second: parent2,
+                conflicts: null,
+                final: {
+                    tags: {
+                        updatedTag: 987654,
+                        otherTag: 'test',
+                        newTag2: 30,
+                        newTag3: 'fun',
+                        removedTag: null,
+                        removedTag2: null
+                    }
+                }
+            });
+        });
+
+        it('should fail merge files when changing the same values', () => {
+            const base: File = {
+                type: 'object',
+                id: 'test',
+                tags: {
+                    _position: {x: 0, y: 0, z: 0},
+                    _workspace: 'abc',
+                    conflict1: 1234,
+                }
+            };
+            const parent1: File = merge({}, base, {
+                tags: {
+                    conflict1: 'changed',
+                }
+            });
+            const parent2: File = merge({}, base, {
+                tags: {
+                    conflict1: 'uh oh',
+                }
+            });
+
+            const merged = mergeFiles(base, parent1, parent2);
+
+            expect(merged).toEqual({
+                success: false,
+                base: base,
+                first: parent1,
+                second: parent2,
+                conflicts: {
+                    tags: {
+                        conflict1: {
+                            [first]: 'changed',
+                            [second]: 'uh oh'
+                        }
+                    }
+                },
+                final: {}
+            });
+        });
+
+        it('should fail merging files adding tags with different values', () => {
+            const base: File = {
+                type: 'object',
+                id: 'test',
+                tags: {
+                    _position: {x: 0, y: 0, z: 0},
+                    _workspace: 'abc',
+                }
+            };
+            const parent1: File = merge({}, base, {
+                tags: {
+                    newTag: 'new',
+                }
+            });
+            const parent2: File = merge({}, base, {
+                tags: {
+                    newTag: 'wrong',
+                }
+            });
+
+            const merged = mergeFiles(base, parent1, parent2);
+
+            expect(merged).toEqual({
+                success: false,
+                base: base,
+                first: parent1,
+                second: parent2,
+                conflicts: {
+                    tags: {
+                        newTag: {
+                            [first]: 'new',
+                            [second]: 'wrong'
+                        }
+                    }
+                },
+                final: {}
+            });
+        });
+
+        it('should fail merging files when one deletes the tag and the other modifies it', () => {
+            const base: File = {
+                type: 'object',
+                id: 'test',
+                tags: {
+                    _position: {x: 0, y: 0, z: 0},
+                    _workspace: 'abc',
+                    removedTag: 'tag'
+                }
+            };
+            const parent1: File = merge({}, base, {
+                tags: {
+                    removedTag: 'changed',
+                }
+            });
+            const parent2: File = merge({}, base, {
+                tags: {
+                    removedTag: null,
+                }
+            });
+
+            const merged = mergeFiles(base, parent1, parent2);
+
+            expect(merged).toEqual({
+                success: false,
+                base: base,
+                first: parent1,
+                second: parent2,
+                conflicts: {
+                    tags: {
+                        removedTag: {
+                            [first]: 'changed',
+                            [second]: null
+                        }
+                    }
+                },
+                final: {}
+            });
+        });
+
+        it('should work on file state', () => {
+            const base: FilesState = {
+                'test': {
+                    type: 'object',
+                    id: 'test',
+                    tags: {
+                        _position: {x: 0, y: 0, z: 0},
+                        _workspace: 'abc',
+                        updatedTag: 'test'
+                    }
+                },
+                'removedFile': {
+                    type: 'object',
+                    id: 'test',
+                    tags: {
+                        _position: {x: 0, y: 0, z: 0},
+                        _workspace: 'abc',
+                    }
+                },
+                'conflictFile': {
+                    type: 'object',
+                    id: 'test',
+                    tags: {
+                        _position: {x: 0, y: 0, z: 0},
+                        _workspace: 'abc',
+                    }
+                },
+            };
+            const parent1: FilesState = merge({}, base, {
+                'test': {
+                    tags: {
+                        newTag: 'new',
+                    }
+                },
+                'newFile': {
+                    type: 'object',
+                    id: 'newFile',
+                    tags: {
+                        _position: {x: 10, y: 0, z: -3},
+                        _workspace: 'def'
+                    }
+                },
+                'conflictFile': {
+                    tags: {
+                        _workspace: 'qrstuv',
+                    }
+                },
+            });
+            const parent2: FilesState = merge({}, base, {
+                'test': {
+                    tags: {
+                        updatedTag: 'abcdef',
+                    }
+                },
+                'removedFile': null,
+                'conflictFile': {
+                    tags: {
+                        _workspace: 'poiuy',
+                    }
+                },
+            });
+
+            const merged = mergeFiles(base, parent1, parent2);
+
+            expect(merged).toEqual({
+                success: false,
+                base: base,
+                first: parent1,
+                second: parent2,
+                conflicts: {
+                    'conflictFile': {
+                        tags: {
+                            _workspace: {
+                                [first]: 'qrstuv',
+                                [second]: 'poiuy'
+                            }
+                        }
+                    },
+                },
+                final: {
+                    'test': {
+                        tags: {
+                            updatedTag: 'abcdef',
+                            newTag: 'new'
+                        }
+                    },
+                    'newFile': {
+                        type: 'object',
+                        id: 'newFile',
+                        tags: {
+                            _position: {x: 10, y: 0, z: -3},
+                            _workspace: 'def'
+                        }
+                    },
+                    'removedFile': null
+                }
+            });
+        });
+
+        it('should fail if files have moved to different spots', () => {
+            const base: FilesState = {
+                'test': {
+                    type: 'object',
+                    id: 'test',
+                    tags: {
+                        _position: {x: 0, y: 0, z: 0},
+                        _workspace: 'abc',
+                    }
+                }
+            };
+            const parent1: FilesState = merge({}, base, {
+                'test': {
+                    tags: {
+                        _position: {x: 10, y: 10, z: 0},
+                    }
+                },
+            });
+            const parent2: FilesState = merge({}, base, {
+                'test': {
+                    tags: {
+                        _position: {x: 5, y: 5, z: 0},
+                    }
+                },
+            });
+
+            const merged = mergeFiles(base, parent1, parent2);
+
+            expect(merged).toEqual({
+                success: false,
+                base: base,
+                first: parent1,
+                second: parent2,
+                conflicts: {
+                    'test': {
+                        tags: {
+                            _position: {
+                                x: {
+                                    [first]: 10,
+                                    [second]: 5
+                                },
+                                y: {
+                                    [first]: 10,
+                                    [second]: 5
+                                }
+                            }
+                        }
+                    },
+                },
+                final: {}
+            });
+        });
+    });
+
+    describe('merge', () => {
+        it('should produce file added events for new files', () => {
+            const base: FilesState = {};
+            const parent1: FilesState = {
+                'test': {
+                    type: 'workspace',
+                    id: 'test',
+                    position: {x:0, y:0, z:0},
+                    size: 1
+                }
+            };
+            const parent2: FilesState = {};
+
+            let result = mergeFiles(base, parent1, parent2);
+
+            expect(result.success).toBe(true);
+            expect(result.final).toEqual({
+                'test': {
+                    type: 'workspace',
+                    id: 'test',
+                    position: {x:0, y:0, z:0},
+                    size: 1
+                }
+            });
+
+            let finalState = applyMerge(result);
+
+            expect(finalState).toEqual({
+                'test': {
+                    type: 'workspace',
+                    id: 'test',
+                    position: {x:0, y:0, z:0},
+                    size: 1
+                }
+            });
+        });
+    });
+
+    describe('listMergeConflicts()', () => {
+        it('should return a list of conflicts with their path and values', async () => {
+            const base: FilesState = {
+                'test': {
+                    type: 'object',
+                    id: 'test',
+                    tags: {
+                        _position: {x: 0, y: 0, z: 0},
+                        _workspace: 'abc',
+                    }
+                }
+            };
+            const parent1: FilesState = merge({}, base, {
+                'test': {
+                    tags: {
+                        _position: {x: 10, y: 10, z: 0},
+                    }
+                },
+            });
+            const parent2: FilesState = merge({}, base, {
+                'test': {
+                    tags: {
+                        _position: {x: 5, y: 5, z: 0},
+                    }
+                },
+            });
+
+            const result = {
+                success: false,
+                base: base,
+                first: parent1,
+                second: parent2,
+                conflicts: {
+                    'test': {
+                        tags: {
+                            _position: {
+                                x: {
+                                    [first]: 10,
+                                    [second]: 5
+                                },
+                                y: {
+                                    [first]: 10,
+                                    [second]: 5
+                                }
+                            }
+                        }
+                    },
+                },
+                final: {}
+            };
+
+            let conflicts: ConflictDetails[] = listMergeConflicts(result);
+
+            expect(conflicts).toEqual([
+                {
+                    path: ['test', 'tags', '_position', 'x'],
+                    conflict: {
+                        [first]: 10,
+                        [second]: 5
+                    }
+                },
+                {
+                    path: ['test', 'tags', '_position', 'y'],
+                    conflict: {
+                        [first]: 10,
+                        [second]: 5
+                    }
+                }
+            ]);
+        });
+    });
+
+    describe('resolveConflicts()', () => {
+        it('should apply the given conflict resolutions to the merge state and return a new merge state', async () => {
+            const base: FilesState = {
+                'test': {
+                    type: 'object',
+                    id: 'test',
+                    tags: {
+                        _position: {x: 0, y: 0, z: 0},
+                        _workspace: 'abc',
+                    }
+                }
+            };
+            const parent1: FilesState = merge({}, base, {
+                'test': {
+                    tags: {
+                        _position: {x: 10, y: 10, z: 0},
+                    }
+                },
+            });
+            const parent2: FilesState = merge({}, base, {
+                'test': {
+                    tags: {
+                        _position: {x: 5, y: 5, z: 0},
+                    }
+                },
+            });
+
+            const result = {
+                success: false,
+                base: base,
+                first: parent1,
+                second: parent2,
+                conflicts: {
+                    'test': {
+                        tags: {
+                            _position: {
+                                x: {
+                                    [first]: 10,
+                                    [second]: 5
+                                },
+                                y: {
+                                    [first]: 10,
+                                    [second]: 5
+                                }
+                            }
+                        }
+                    },
+                },
+                final: {}
+            };
+
+            let conflicts: ResolvedConflict[] = [
+                {
+                    details: {
+                        path: ['test', 'tags', '_position', 'x'],
+                        conflict: {
+                            [first]: 10,
+                            [second]: 5
+                        }
+                    },
+                    value: 10
+                },
+                {
+                    details: {
+                        path: ['test', 'tags', '_position', 'y'],
+                        conflict: {
+                            [first]: 10,
+                            [second]: 5
+                        }
+                    },
+                    value: 5
+                }
+            ];
+
+            const newResult = resolveConflicts(result, conflicts);
+
+            expect(newResult).toEqual({
+                success: true,
+                base: base,
+                first: parent1,
+                second: parent2,
+                conflicts: null,
+                final: {
+                    'test': {
+                        tags: {
+                            _position: {
+                                x: 10,
+                                y: 5
+                            }
+                        }
+                    },
+                }
+            })
         });
     });
 });

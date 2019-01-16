@@ -16,17 +16,9 @@
                 </div>
                 <md-list>
                     <router-link tag="md-list-item" to="/Home">
-                        Home
+                        <md-icon>home</md-icon>
+                        <span class="md-list-item-text">Home</span>
                     </router-link>
-                    <router-link tag="md-list-item" to="/editor">
-                        Editor
-                    </router-link>
-                    <md-list-item @click="testConfirmDialog">
-                        <span class="md-list-item-text">Test Confirm Dialog</span>
-                    </md-list-item>
-                    <md-list-item @click="testAlertDialog">
-                        <span class="md-list-item-text">Test Alert Dialog</span>
-                    </md-list-item>
                     <md-list-item @click="openInfoCard" v-if="getUser() != null">
                         <md-icon>info</md-icon>
                         <span class="md-list-item-text">Info Card</span>
@@ -35,8 +27,43 @@
                         <md-icon>exit_to_app</md-icon>
                         <span class="md-list-item-text">Logout</span>
                     </md-list-item>
+                    <md-list-item class="nuke-site-item" @click="nukeSite()" :disabled="!(online && synced)">
+                        <md-icon class="nuke-everything-icon">delete_forever</md-icon>
+                        <span class="md-list-item-text">Nuke the Site</span>
+
+                        <md-tooltip v-if="!(online && synced)">Must be online &amp; synced to nuke.</md-tooltip>
+                    </md-list-item>
+                    <md-list-item @click.right="toggleOnlineOffline()">
+                        <md-icon id="forced-offline-error" v-if="forcedOffline()">error</md-icon>
+                        <md-icon id="synced-checkmark" v-else-if="synced">cloud_done</md-icon>
+                        <md-icon id="not-synced-warning" v-else>cloud_off</md-icon>
+                        <span class="md-list-item-text" v-if="forcedOffline()">
+                            Forced Offline
+                        </span>
+                        <span class="md-list-item-text" v-else-if="synced">
+                            Synced
+                            <span v-if="online">Online</span>
+                            <span v-else>Offline</span>
+                        </span>
+                        <span class="md-list-item-text" v-else>
+                            Not Synced
+                            <span v-if="online">Online</span>
+                            <span v-else>Offline</span>
+                        </span>
+                    </md-list-item>
+                    <md-list-item to="/merge-conflicts" v-if="remainingConflicts.length > 0">
+                        <md-icon id="fix-merge-conflicts-icon">build</md-icon>
+                        <span class="md-list-item-text">Fix Merge Conflicts</span>
+                    </md-list-item>
+                    <md-list-item v-if="updateAvailable" @click="refreshPage()">
+                        <md-icon>update</md-icon>
+                        <span class="md-list-item-text">An new version is available!</span>
+                    </md-list-item>
                     <md-list-item>
-                        <span class="md-list-item-text">Version: {{version}}</span>
+                        <span class="md-list-item-text" @click.left="copy(version)" @click.right="copy(versionTooltip)">
+                            Version: {{version}}
+                            <md-tooltip md-direction="bottom">{{versionTooltip}}</md-tooltip>
+                        </span>
                     </md-list-item>
                 </md-list>
             </md-drawer>
@@ -54,6 +81,11 @@
             :md-active.sync="showAlertDialog"
             v-bind:md-content="alertDialogOptions.body"
             v-bind:md-confirm-text="alertDialogOptions.confirmText" />
+
+            <md-snackbar md-position="center" :md-duration="6000" :md-active.sync="snackbar.visible">
+                <span>{{snackbar.message}}</span>
+                <md-button v-if="snackbar.action" class="md-primary" @click="snackbarClick(snackbar.action)">{{snackbar.action.label}}</md-button>
+            </md-snackbar>
 
             <md-content class="app-content">
                 <router-view></router-view>

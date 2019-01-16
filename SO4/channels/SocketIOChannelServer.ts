@@ -29,37 +29,18 @@ export class SocketIOChannelServer {
 
             socket.on('join_server', (info: ChannelInfo, callback: Function) => {
                 console.log('[SocketIOChannelServer] Joining user to server', info.id);
-                socket.join(info.id, (err) => {
+                socket.join(info.id, async (err) => {
                     if (err) {
                         callback(err);
                         return;
                     }
-
-                    this._client.getChannel(info).subscribe().then(connection => {
-                        if (!this._serverList[info.id]) {
-                            this._serverList[info.id] = connection;
-                        }
-                        const eventName = `new_event_${info.id}`;
-    
-                        const listener = (event: Event) => {
-                            connection.emit(event);
-                            socket.to(info.id).emit(eventName, event);
-                        };
-                        socket.on(eventName, listener);
-                        socket.on('leave_server', (id: string, callback: Function) => {
-                            if (id === info.id) {
-                                connection.unsubscribe();
-                                socket.off(eventName, listener);
-                            }
-                            callback(null);
-                        });
-    
+                    
+                    try {
+                        const connection = await this._getConnection(info, socket);
                         callback(null, connection.info, connection.store.state());
-                    }, err => {
+                    } catch(err) {
                         callback(err);
-                    });
-                    
-                    
+                    }
                 });
             });
 
@@ -68,6 +49,34 @@ export class SocketIOChannelServer {
                 console.log('[SocketIOChannelServer] A user disconnected! There are now', this._userCount, 'users connected.');
             })
         });
+    }
+
+    private async _getConnection(info: ChannelInfo, socket: SocketIO.Socket) {
+        let connection = this._serverList[info.id];
+        if (!connection) {
+            connection = await this._client.getChannel(info).subscribe();
+        }
+        if (!this._serverList[info.id]) {
+            this._serverList[info.id] = connection;
+        }
+        const eventName = `new_event_${info.id}`;
+
+        const listener = (event: Event, cb: Function) => {
+            connection.emit(event);
+            socket.to(info.id).emit(eventName, event);
+            if (cb && typeof cb === 'function') {
+                cb();
+            }
+        };
+        socket.on(eventName, listener);
+        socket.on('leave_server', (id: string, callback: Function) => {
+            if (id === info.id) {
+                connection.unsubscribe();
+                socket.off(eventName, listener);
+            }
+            callback(null);
+        });
+        return connection;
     }
 
 }

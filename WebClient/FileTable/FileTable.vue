@@ -24,7 +24,7 @@
           <tag-editor v-model="newTag" :tagExists="newTagExists" @valid="newTagValidityUpdated"></tag-editor>
         </th>
 
-        <th>
+        <th v-show="!readOnly">
           <md-button
             class="new-tag-button"
             :disabled="isMakingNewTag && !newTagValid"
@@ -43,6 +43,7 @@
         :key="file.id"
         :file="file"
         :tags="tags"
+        :readOnly="readOnly"
         @tagChanged="onTagChanged"
         @tagFocusChanged="onTagFocusChanged"
       ></file-row>

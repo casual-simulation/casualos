@@ -1,17 +1,14 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Prop, Inject} from 'vue-property-decorator';
-import { FileManager } from 'WebClient/FileManager';
 import { SubscriptionLike } from 'rxjs';
 import {Object, File} from 'common/Files';
 import FileValue from '../FileValue/FileValue';
+import { appManager } from '../AppManager';
 
 const numLoadingSteps: number = 4;
 
 @Component({
-    inject: {
-        fileManager: 'fileManager'
-    },
     components: {
         'file-value': FileValue
     }
@@ -19,8 +16,11 @@ const numLoadingSteps: number = 4;
 export default class FileRow extends Vue {
     @Prop() file: Object;
     @Prop() tags: string[];
+    @Prop({ default: false }) readOnly: boolean;
 
-    @Inject() fileManager!: FileManager;
+    get fileManager() {
+        return appManager.fileManager;
+    }
 
     private _sub: SubscriptionLike;
 

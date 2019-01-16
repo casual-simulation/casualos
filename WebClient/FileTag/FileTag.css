@@ -2,9 +2,9 @@
     color: #2F8DFE;
 }
 
-/* .tag-name {
-
-} */
+.tag-name {
+    font-weight: 700;
+}
 
 .tag-value {
     font-weight: normal;
