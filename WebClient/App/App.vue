@@ -48,7 +48,10 @@
                             <span v-if="online">Online</span>
                             <span v-else>Offline</span>
                         </span>
-                        <md-button to="/merge-conflicts" class="md-list-action md-primary" v-if="remainingConflicts.length > 0">Fix Merge Conflicts</md-button>
+                    </md-list-item>
+                    <md-list-item to="/merge-conflicts" v-if="remainingConflicts.length > 0">
+                        <md-icon id="fix-merge-conflicts-icon">build</md-icon>
+                        <span class="md-list-item-text">Fix Merge Conflicts</span>
                     </md-list-item>
                     <md-list-item v-if="updateAvailable" @click="refreshPage()">
                         <md-icon>update</md-icon>
