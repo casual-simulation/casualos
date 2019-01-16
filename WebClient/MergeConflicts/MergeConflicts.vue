@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="merge-conflicts">
         <h1>Fixing conflicts one at time!</h1>
         <div v-for="file in files" :key="file.id">
             <h2>{{file.id}}</h2>
