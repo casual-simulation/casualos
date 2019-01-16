@@ -735,8 +735,8 @@ export default class GameView extends Vue {
       extrudeSettings: {
         bevelEnabled: true,
         steps: 1,
-        bevelSize: 0.05,
-        bevelThickness: 0.05
+        bevelSize: 0.015,
+        bevelThickness: 0.00
       },
       material: new MeshStandardMaterial({
         color: 0x999999,
