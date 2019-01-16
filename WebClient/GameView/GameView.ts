@@ -19,12 +19,14 @@ import {
   PCFSoftShadowMap,
   BackSide,
   TextureLoader,
+  OrbitControls,
   SphereBufferGeometry,
   BoxBufferGeometry,
   GLTFLoader,
   HemisphereLight,
   Vector2,
 } from 'three';
+import 'three-examples/controls/OrbitControls';
 import 'three-examples/loaders/GLTFLoader';
 import Vue from 'vue';
 import Component from 'vue-class-component';
@@ -76,7 +78,7 @@ export default class GameView extends Vue {
 
   private _scene: Scene;
   private _camera: PerspectiveCamera;
-  // private _cameraControls: OrbitControls;
+  private _cameraControls: OrbitControls;
   private _cameraControlsEnabled: boolean = true;
   private _renderer: Renderer;
   private _raycaster: Raycaster;
@@ -339,34 +341,34 @@ export default class GameView extends Vue {
   }
 
   private _enableCameraControls(enabled: boolean) {
-    // if (this._cameraControls !== null) {
-    //   if (this._cameraControlsEnabled !== enabled) {
-    //     this._cameraControlsEnabled = enabled;
-    //     if (enabled) {
-    //       // Camera controls are being enabled.
-    //       var controls = <any>this._cameraControls;
-    //       controls.panSpeed = 1.0;
-    //       controls.rotateSpeed = 1.0;
+    if (this._cameraControls !== null) {
+      if (this._cameraControlsEnabled !== enabled) {
+        this._cameraControlsEnabled = enabled;
+        if (enabled) {
+          // Camera controls are being enabled.
+          var controls = <any>this._cameraControls;
+          controls.panSpeed = 1.0;
+          controls.rotateSpeed = 1.0;
 
-    //       // Use the saved internal transform state to set the camera's initial transform state when re-enabling the controls.
-    //       controls.target.copy(controls.target0);
-    //       controls.object.position.copy(controls.position0);
-    //       controls.object.zoom = controls.zoom0
+          // Use the saved internal transform state to set the camera's initial transform state when re-enabling the controls.
+          controls.target.copy(controls.target0);
+          controls.object.position.copy(controls.position0);
+          controls.object.zoom = controls.zoom0
 
-    //       // controls.object.updateProjectionMatrix();
-    //       // controls.update();
-    //     }
-    //     else {
-    //       // Camera controls are being disabled.
-    //       var controls = <any>this._cameraControls;
-    //       controls.panSpeed = 0.0;
-    //       controls.rotateSpeed = 0.0;
+          // controls.object.updateProjectionMatrix();
+          // controls.update();
+        }
+        else {
+          // Camera controls are being disabled.
+          var controls = <any>this._cameraControls;
+          controls.panSpeed = 0.0;
+          controls.rotateSpeed = 0.0;
 
-    //       // Tell orbit controls to save the internal transform state of the camera.
-    //       controls.saveState();
-    //     }
-    //   }
-    // }
+          // Tell orbit controls to save the internal transform state of the camera.
+          controls.saveState();
+        }
+      }
+    }
   }
 
   private _dragWorkspace(mouseDir: Ray, workspace: File3D) {

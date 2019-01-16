@@ -206,18 +206,18 @@ export class Input {
 
     /**
      * Loop through all current pointer data and remove any that are no longer needed.
+     * Unlike the mouse, touch pointers are unique everytime they are pressed down on the screen.
+     * Remove any touch pointers that are passed their 'Up' input state. No need to keep them around.
      */
     private _cullTouchData(): void {
-        // Unlike the mouse, touch pointers are unique everytime they are pressed down on the screen.
-        // Remove any touch pointers that are passed their 'Up' input state. No need to keep them around.
-        // for (var i = this._touchData.length - 1; i >= 0; i--) {
-        //     if (this._touchData[i].state == InputState.Up) {
-        //         if (this._touchData[i].lastStateChangeFrame > time.frameCount) {
-        //             console.log('removing touch pointer data id:' + this._touchData[i].id);
-        //             this._touchData.splice(i, 1);
-        //         }
-        //     }
-        // }
+        for (var i = this._touchData.length - 1; i >= 0; i--) {
+            if (this._touchData[i].state == InputState.Up) {
+                if (this._touchData[i].lastStateChangeFrame < time.frameCount) {
+                    console.log('removing touch: ' + this._touchData[i].identifier);
+                    this._touchData.splice(i, 1);
+                }
+            }
+        }
     }
 
     private _frameMatches(lastUpdateFrame: number): boolean {
@@ -253,12 +253,9 @@ export class Input {
     private _handleMouseDown(event:MouseEvent) {
         if (this._inputType == InputType.Undefined) this._inputType = InputType.Mouse;
         if (this._inputType != InputType.Mouse) return;
-
-        event.cancelBubble = true;
-        this._inputType = InputType.Mouse;
+        
         if (this.debugLevel >= 1) {
-            console.log("mouse down:");
-            console.log("  button: " + event.button);
+            console.log("mouse button " + event.button + " down.");
         }
         
         let buttonData: MouseButtonData = this._getMouseButtonData(event.button);
@@ -266,6 +263,7 @@ export class Input {
             buttonData.lastStateChangeFrame = time.frameCount;
             buttonData.state = InputState.Down;
 
+            this._mouseData.clientPos = new Vector2(event.clientX, event.clientY);
             this._mouseData.pagePos = new Vector2(event.pageX, event.pageY);
             this._mouseData.screenPos = this._calculateScreenPos(event.pageX, event.pageY);
 
@@ -276,10 +274,9 @@ export class Input {
     private _handleMouseUp(event:MouseEvent) {
         if (this._inputType == InputType.Undefined) this._inputType = InputType.Mouse;
         if (this._inputType != InputType.Mouse) return;
-
+        
         if (this.debugLevel >= 1) {
-            console.log("mouse up:");
-            console.log("  button: " + event.button);
+            console.log("mouse button " + event.button + " up.");
         }
         
         let buttonData: MouseButtonData = this._getMouseButtonData(event.button);
@@ -287,6 +284,7 @@ export class Input {
             buttonData.lastStateChangeFrame = time.frameCount;
             buttonData.state = InputState.Up;
 
+            this._mouseData.clientPos = new Vector2(event.clientX, event.pageY);
             this._mouseData.pagePos = new Vector2(event.pageX, event.pageY);
             this._mouseData.screenPos = this._calculateScreenPos(event.pageX, event.pageY);
 
@@ -301,6 +299,7 @@ export class Input {
         this._mouseData.clientPos = new Vector2(event.clientX, event.clientY);
         this._mouseData.pagePos = new Vector2(event.pageX, event.pageY);
         this._mouseData.screenPos = this._calculateScreenPos(event.pageX, event.pageY);
+
         if (this.debugLevel >= 2) {
             console.log("mouse move:");
             console.log("  screenPos: " + JSON.stringify(this._mouseData.screenPos));
@@ -313,9 +312,28 @@ export class Input {
         if (this._inputType == InputType.Undefined) this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch) return;
 
-        if (this.debugLevel >= 1) {
-            console.log("touch start:");
-            console.log("  count: " + event.touches.length);
+        // For the touchstart event, it is a list of the touch points that became active with the current event.
+        const changed = event.changedTouches;
+
+        for (var i = 0; i < changed.length; i++) {
+            const touch = changed.item(i);
+
+            if (this.debugLevel >= 1) {
+                console.log("touch " + touch.identifier + " start.");
+            }
+
+            let data: TouchData = {
+                identifier: touch.identifier,
+                state: InputState.Down,
+                lastStateChangeFrame: time.frameCount,
+                clientPos: new Vector2(touch.clientX, touch.clientY),
+                pagePos: new Vector2(touch.pageX, touch.pageY),
+                screenPos: this._calculateScreenPos(touch.pageX, touch.pageY)
+            }
+
+            var existingTouchIndex = findIndex(this._touchData, (d) => { return d.identifier === touch.identifier; });
+            if (existingTouchIndex === -1) this._touchData.push(data);
+            else this._touchData[existingTouchIndex] = data;
         }
     }
 
@@ -323,22 +341,58 @@ export class Input {
         if (this._inputType == InputType.Undefined) this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch) return;
 
-        if (this.debugLevel >= 2) {
-            console.log("touch move:");
-            console.log("  count: " + event.touches.length);
-        }
+        // This prevents the browser from doing things like allow the pull down refresh on Chrome.
+        event.preventDefault();
 
+        // For the touchmove event, it is a list of the touch points that have changed since the last event.
+        const changed = event.changedTouches;
+
+        for (var i = 0; i < changed.length; i++) {
+            const touch = changed.item(i);
+
+            var existingTouch = find(this._touchData, (d) => { return d.identifier === touch.identifier; });
+            existingTouch.clientPos = new Vector2(touch.clientX, touch.clientY);
+            existingTouch.pagePos = new Vector2(touch.pageX, touch.pageY);
+            existingTouch.screenPos = this._calculateScreenPos(touch.pageX, touch.pageY);
+        
+            if (this.debugLevel >= 2) {
+                console.log("touch move:");
+                console.log("  identifier: " + existingTouch.identifier);
+                console.log("  screenPos: " + JSON.stringify(existingTouch.screenPos));
+                console.log("  pagePos: " + JSON.stringify(existingTouch.pagePos));
+                console.log("  clientPos: " + JSON.stringify(existingTouch.clientPos));
+            }
+        }
     }
 
     private _handleTouchEnd(event: TouchEvent) {
         if (this._inputType == InputType.Undefined) this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch) return;
-        
+
+        // For the touchend event, it is a list of the touch points that have been removed from the surface.
+        const changed = event.changedTouches;
+
         if (this.debugLevel >= 1) {
             console.log("touch end:");
-            console.log("  count: " + event.touches.length);
+            for (var i = 0; i < changed.length; i++) {
+                console.log("  identifier: " + changed.item(i).identifier);
+            }
         }
 
+        for (var i = 0; i < changed.length; i++) {
+            const touch = changed.item(i);
+
+            if (this.debugLevel >= 1) {
+                console.log("touch " + touch.identifier + " end.");
+            }
+
+            var existingTouch = find(this._touchData, (d) => { return d.identifier === touch.identifier; });
+            existingTouch.state = InputState.Down;
+            existingTouch.lastStateChangeFrame = time.frameCount;
+            existingTouch.clientPos = new Vector2(touch.clientX, touch.clientY);
+            existingTouch.pagePos = new Vector2(touch.pageX, touch.pageY);
+            existingTouch.screenPos = this._calculateScreenPos(touch.pageX, touch.pageY);
+        }
     }
 
     private _handleContextMenu(event: MouseEvent) {
@@ -367,6 +421,10 @@ enum InputState {
 }
 
 interface TouchData {
+    /**
+     * The identifier for the touch.
+     */
+    identifier: number;
 
     /**
      * Current input state of the touch.
