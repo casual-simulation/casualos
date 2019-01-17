@@ -47,7 +47,7 @@ import {
 import { FileManager } from '../FileManager';
 import { File, Object, Workspace } from 'common/Files';
 import { time } from '../game-engine/Time';
-import { input, Input, InputType, MouseButtonId } from '../game-engine/input';
+import { Input, InputType, MouseButtonId } from '../game-engine/input';
 
 import { vg } from "von-grid";
 
@@ -92,6 +92,7 @@ export default class GameView extends Vue {
   private _draggableObjects: Object3D[];
   private _grids: Group;
   private _canvas: HTMLElement;
+  private _input: Input;
 
   /**
    * A map of file IDs to files and meshes.
@@ -120,8 +121,9 @@ export default class GameView extends Vue {
     this._meshses = {};
     this._draggableObjects = [];
     this._subs = [];
+    this._input = new Input();
+    this._input.init(this.gameView);
     this._setupScene();
-    input.init(this.gameView);
 
     // Subscriptions to file events.
     this._subs.push(this.fileManager.fileDiscovered.subscribe(file => {
@@ -227,7 +229,7 @@ export default class GameView extends Vue {
   }
 
   beforeDestroy() {
-    input.terminate();
+    this._input.terminate();
 
     if (this._subs) {
       this._subs.forEach(sub => {
@@ -296,23 +298,27 @@ export default class GameView extends Vue {
   }
 
   private _updateInput() {
-
+    // console.log("game view update input frame: " + time.frameCount);
     for (let i = 0; i < 3; i++) {
-      if (input.getMouseButtonDown(i)) {
-        console.log("[GameView] button " + i + " down.");
+      if (this._input.getMouseButtonDown(i)) {
+        console.log("[GameView] mouse button " + i + " down. frame: " + time.frameCount);
       }
 
-      if (input.getMouseButtonHeld(i)) {
-        console.log("[GameView] button " + i + " held.");
+      if (this._input.getMouseButtonHeld(i)) {
+        console.log("[GameView] mouse button " + i + " held. frame: " + time.frameCount);
       }
   
-      if (input.getMouseButtonUp(i)) {
-        console.log("[GameView] button " + i + " up.");
+      if (this._input.getMouseButtonUp(i)) {
+        console.log("[GameView] mouse button " + i + " up. frame: " + time.frameCount);
+      }
+
+      if (this._input.getCurrentInputType() === InputType.Touch) {
+        // TODO: test touch events
       }
     }
 
-    if (input.getMouseButtonDown(MouseButtonId.Right)) {
-      const pagePos = input.getMousePagePos();
+    if (this._input.getMouseButtonDown(MouseButtonId.Right)) {
+      const pagePos = this._input.getMousePagePos();
       const screenPos = Input.screenPosition(pagePos, this.gameView);
       const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this._draggableObjects, this._camera);
       const hit = Physics.firstRaycastHit(raycastResult);
