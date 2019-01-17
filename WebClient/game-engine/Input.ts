@@ -153,13 +153,19 @@ export class Input {
             }
         } else if (this._inputType == InputType.Touch) {
             if (buttonId == MouseButtonId.Left) {
-                const touchData = this._getTouchData(0);
-                if (touchData) {
-                    return touchData.state.isDownOnFrame(time.frameCount);
-                }
+                return this.getTouchDown(0);
             } else {
                 // TODO: Support right button with touch?
             }
+        }
+
+        return false;
+    }
+
+    public getTouchDown(fingerIndex: number): boolean {
+        const touchData = this._getTouchData(fingerIndex);
+        if (touchData) {
+            return touchData.state.isDownOnFrame(time.frameCount);
         }
 
         return false;
@@ -177,13 +183,19 @@ export class Input {
             }
         } else if (this._inputType == InputType.Touch) {
             if (buttonId == MouseButtonId.Left) {
-                const touchData = this._getTouchData(0);
-                if (touchData) {
-                    return touchData.state.isUpOnFrame(time.frameCount);
-                }
+                this.getTouchUp(0);
             } else {
                 // TODO: Support right button with touch?
             }
+        }
+
+        return false;
+    }
+
+    public getTouchUp(fingerIndex: number): boolean {
+        const touchData = this._getTouchData(fingerIndex);
+        if (touchData) {
+            return touchData.state.isUpOnFrame(time.frameCount);
         }
 
         return false;
@@ -201,13 +213,19 @@ export class Input {
             }
         } else if (this._inputType == InputType.Touch) {
             if (buttonId == MouseButtonId.Left) {
-                const touchData = this._getTouchData(0);
-                if (touchData) {
-                    return touchData.state.isHeldOnFrame(time.frameCount);
-                }
+                return this.getTouchHeld(0);
             } else {
                 // TODO: Support right button with touch?
             }
+        }
+
+        return false;
+    }
+
+    public getTouchHeld(fingerIndex: number): boolean {
+        const touchData = this._getTouchData(fingerIndex);
+        if (touchData) {
+            return touchData.state.isHeldOnFrame(time.frameCount);
         }
 
         return false;
