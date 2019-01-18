@@ -61,6 +61,15 @@ export class FileClickOperation implements IOperation {
             }
 
         } else {
+
+            if (!this._dragOperation) {
+                // If we let go of the mouse button without starting a drag operation, this constitues a 'click'.
+                if (this._file.file.type === 'object') {
+                    // Select the file we are operating on.
+                    this._fileInteraction.selectFile(this._file);
+                }
+            }
+            
             // Button has been released. This click operation is finished.
             this._finished = true;
             console.log("[FileClickOperation] finished");
