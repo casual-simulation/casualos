@@ -30,6 +30,13 @@ export class HexGridMesh extends Object3D {
     }
 
     /**
+     * Gets the size of the individual hexes.
+     */
+    get hexSize() {
+        return this._size;
+    }
+
+    /**
      * Gets the hexes stored in this mesh.
      */
     get hexes(): HexMesh[] {

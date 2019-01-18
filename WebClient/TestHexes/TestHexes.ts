@@ -27,6 +27,8 @@ import {
   BoxBufferGeometry,
   GLTFLoader,
   HemisphereLight,
+  GridHelper,
+  OrthographicCamera,
 } from 'three';
 import 'three-examples/controls/OrbitControls';
 import 'three-examples/loaders/GLTFLoader';
@@ -84,13 +86,14 @@ import {
 } from '../Input';
 import { appManager } from '../AppManager';
 import { HexGridMesh, Axial } from '../game-engine/hex';
+import { GridChecker } from '../game-engine/grid/GridChecker';
 
 @Component({
 })
 export default class GameView extends Vue {
 
   private _scene: Scene;
-  private _camera: PerspectiveCamera;
+  private _camera: OrthographicCamera;
   private _cameraControls: OrbitControls;
   private _cameraControlsEnabled: boolean = true;
   private _renderer: Renderer;
@@ -106,7 +109,11 @@ export default class GameView extends Vue {
   private _grids: Group;
   private _canvas: HTMLElement;
 
+  private _checker: GridChecker;
+
   private _workspaces: HexGridMesh[];
+
+  imageURL: string;
 
   get gameView() {
     const gameView: HTMLElement = <HTMLElement>this.$refs.gameView;
@@ -117,9 +124,14 @@ export default class GameView extends Vue {
     return appManager.fileManager;
   }
 
+  constructor() {
+    super();
+    this.imageURL = null;
+  }
+
   async mounted() {
     this._workspaces = [];
-    this._draggableObjects = [];
+    this._draggableObjects = [];    
     this._setupScene();
     this._renderGame();
   }
@@ -138,12 +150,12 @@ export default class GameView extends Vue {
     this._grids.visible = false;
     this._scene.add(this._grids);
 
+
     // User's camera
-    this._camera = new PerspectiveCamera(
-      60, window.innerWidth / window.innerHeight, 0.1, 20000);
-    this._camera.position.z = 5;
+    this._camera = new OrthographicCamera(-10, 10, 10, -10, 1, 1000);
+    // this._camera.position.z = 5;
     this._camera.position.y = 3;
-    this._camera.rotation.x = ThreeMath.degToRad(-30);
+    this._camera.rotation.x = ThreeMath.degToRad(-90);
     this._camera.updateMatrixWorld(false);
 
     this._cameraControls = new OrbitControls(this._camera, this._canvas);
@@ -218,15 +230,27 @@ export default class GameView extends Vue {
     grid.removeAt(new Axial(0, 0));
     grid.addAt(new Axial(5, -6));
 
-    grid.hexes.forEach(h => {
-      h.height = Math.random() * 2;
-    });
+    // grid.hexes.forEach(h => {
+    //   h.height = Math.random() * 2;
+    // });
+
+    const helper = new GridHelper(10, 10);
+    helper.position.set(0, 1, 0);
+
+    this._scene.add(helper);
 
     this._workspaces.push(grid);
     
     this._workspaces.forEach(w => {
       this._scene.add(w);
     });
+
+    this._checker = new GridChecker();
+  }
+
+  async test() {
+    const grid = this._workspaces[0];
+    this.imageURL = await this._checker.check(grid);
   }
 
   private _setupRenderer() {
@@ -239,9 +263,9 @@ export default class GameView extends Vue {
     // TODO: Call each time the screen size changes
     const container: HTMLElement = <HTMLElement>this.$refs.container;
     const width = window.innerWidth;
-    const height = window.innerHeight - container.getBoundingClientRect().top;
-    this._renderer.setSize(width, height);
-    container.style.height = this._renderer.domElement.style.height;
+    // const height = window.innerHeight - container.getBoundingClientRect().top;
+    this._renderer.setSize(500, 500);
+    // container.style.height = this._renderer.domElement.style.height;
 
     this._canvas = this._renderer.domElement;
     this.gameView.appendChild(this._canvas);

@@ -1,8 +1,11 @@
 
 .game-canvas {
     position: absolute;
+    display: none;
 }
 
 .game-container {
     margin: -16px;
+    width: 500px;
+    height: 500px;
 }
