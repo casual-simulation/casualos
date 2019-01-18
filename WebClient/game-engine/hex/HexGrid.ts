@@ -97,6 +97,13 @@ export class HexGrid<T> {
     }
 
     /**
+     * Gets the items contained in this grid.
+     */
+    get items(): T[] {
+        return values(this._data).map(d => d.val);
+    }
+
+    /**
      * Creates a new grid.
      */
     constructor() {

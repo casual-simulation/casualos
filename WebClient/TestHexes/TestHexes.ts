@@ -217,6 +217,11 @@ export default class GameView extends Vue {
     const grid = new HexGridMesh(5);
     grid.removeAt(new Axial(0, 0));
     grid.addAt(new Axial(5, -6));
+
+    grid.hexes.forEach(h => {
+      h.height = Math.random() * 2;
+    });
+
     this._workspaces.push(grid);
     
     this._workspaces.forEach(w => {
