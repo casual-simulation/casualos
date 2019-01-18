@@ -96,6 +96,7 @@ export default class GameView extends Vue {
 
   get gameView(): HTMLElement { return <HTMLElement>this.$refs.gameView; }
   get input(): Input { return this._input; }
+  get interactionManager(): FileInteractionManager { return this._fileInteraction; }
   get camera(): PerspectiveCamera { return this._camera; }
   get grids(): Group { return this._grids; }
   get workspacePlane(): Mesh { return this._workspacePlane; }

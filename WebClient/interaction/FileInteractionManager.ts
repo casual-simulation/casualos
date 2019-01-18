@@ -50,16 +50,17 @@ export class FileInteractionManager {
         // Detect left click.
         if (input.getMouseButtonDown(MouseButtonId.Left)) {
             const screenPos = input.getMouseScreenPos();
-            const clickedObject = this._clickedObject(screenPos);
+            const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this._draggableObjects, this._gameView.camera);
+            const clickedObject = Physics.firstRaycastHit(raycastResult);
     
             if (clickedObject) {
                 this._gameView.enableCameraControls(false);
-                const file = this._fileForIntersection(clickedObject);
+                const file = this.fileForIntersection(clickedObject);
 
                 if (file) {
                     // Start file click operation on file.
                     console.log("Create file click operation.");
-                    this._fileClickOperation = new FileClickOperation(this._gameView, file);
+                    this._fileClickOperation = new FileClickOperation(this._gameView, this, file, clickedObject);
                 }
             
             }
@@ -84,7 +85,7 @@ export class FileInteractionManager {
             const hit = Physics.firstRaycastHit(raycastResult);
     
             if (hit) {
-            const file = this._fileForIntersection(hit);
+            const file = this.fileForIntersection(hit);
             if (file && file.file && file.file.type === 'workspace') {
                 // Now send the actual context menu event.
                 let menuEvent: ContextMenuEvent = { pagePos: pagePos, actions: this._contextMenuActions(file) };
@@ -95,21 +96,16 @@ export class FileInteractionManager {
       
     }
 
-    private _clickedObject(screenPos: Vector2) : Intersection {
-      const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this._draggableObjects, this._gameView.camera);
-      return Physics.firstRaycastHit(raycastResult);
-    }
-
-    private _fileForIntersection(hit: Intersection): File3D {
+    public fileForIntersection(hit: Intersection): File3D {
       const id = this._gameView.getFileId(hit.object.id);
       if (id) {
         return this._gameView.getFile(id);
       } else {
-        return this._findWorkspaceForIntersection(hit);
+        return this.findWorkspaceForIntersection(hit);
       }
     }
 
-    private _findWorkspaceForIntersection(obj: Intersection): File3D | null {
+    public findWorkspaceForIntersection(obj: Intersection): File3D | null {
       if (!obj) {
         return null;
       }
@@ -123,21 +119,11 @@ export class FileInteractionManager {
       }
     }
 
-    private _contextMenuActions(file: File3D): ContextMenuAction[] {
-      let actions = [
-        { label: 'Expand', onClick: () => this._expandWorkspace(file) },
-      ];
-      if (this._canShrinkWorkspace(file)) {
-        actions.push({ label: 'Shrink', onClick: () => this._shrinkWorkspace(file) });
-      }
-      return actions;
-    }
-
-    private _canShrinkWorkspace(file: File3D) {
+    public canShrinkWorkspace(file: File3D) {
       return file && file.file.type === 'workspace' && file.file.size >= 1;
     }
   
-    private _expandWorkspace(file: File3D) {
+    public expandWorkspace(file: File3D) {
         if (file && file.file.type === 'workspace') {
             const size = file.file.size;
             this._gameView.fileManager.updateFile(file.file, {
@@ -146,7 +132,7 @@ export class FileInteractionManager {
         }
     }
   
-    private _shrinkWorkspace(file: File3D) {
+    public shrinkWorkspace(file: File3D) {
         if (file && file.file.type === 'workspace') {
             const size = file.file.size;
             this._gameView.fileManager.updateFile(file.file, {
@@ -155,14 +141,14 @@ export class FileInteractionManager {
         }
     }
 
-    private _pointOnGrid(ray: Ray) {
+    public pointOnGrid(ray: Ray) {
       const raycaster = new Raycaster(ray.origin, ray.direction, 0, Number.POSITIVE_INFINITY);
       raycaster.linePrecision = .1;
       const hits = raycaster.intersectObject(this._gameView.grids, true);
       const hit = hits[0];
       if (hit) {
         const point = hit.point;
-        const workspace = this._findWorkspaceForIntersection(hit);
+        const workspace = this.findWorkspaceForIntersection(hit);
         if (workspace) {
           workspace.mesh.worldToLocal(point);
           const cell = workspace.grid.grid.pixelToCell(point);
@@ -180,76 +166,34 @@ export class FileInteractionManager {
       };
     }
 
-    private _dragFile(mouseDir: Ray, hit: Intersection) {
-      const { good, point, workspace } = this._pointOnGrid(mouseDir);
-      const file = this._fileForIntersection(hit);
-      if (file) {
-        if (good) {
-          this._gameView.fileManager.updateFile(file.file, {
-            tags: {
-              _workspace: workspace.file.id,
-              _position: {
-                x: point.x,
-                y: point.y,
-                z: point.z
-              }
-            }
-          });
-        } else {
-          const p = Physics.pointOnRay(mouseDir, 2);
-          this._gameView.fileManager.updateFile(file.file, {
-            tags: {
-              _workspace: null,
-              _position: {
-                x: p.x,
-                y: p.y,
-                z: p.z
-              }
-            }
-          });
-        }
-      }
-    }
-
-    private _dragWorkspace(mouseDir: Ray, workspace: File3D) {
-      const point = Physics.pointOnPlane(mouseDir, this._gameView.workspacePlane);
-      if (point) {
-        this._gameView.fileManager.updateFile(workspace.file, {
-          position: {
-            x: point.x,
-            y: point.y,
-            z: point.z
-          }
-        });
-      }
-    }
-
-    private _selectFile(file: File3D) {
+    public selectFile(file: File3D) {
       this._gameView.fileManager.selectFile(<Object>file.file);
     }
 
-    private _tryCombineFiles(drag: DragOperation) {
+    public tryCombineFiles(drag: DragOperation) {
       const raycast = Physics.raycastAtScreenPos(drag.screenPos, this._raycaster, this._draggableObjects, this._gameView.camera);
       const other = find(raycast.intersects, (val, index, col) => val.object !== drag.hit.object);
       if (other) {
-        const file = this._fileForIntersection(drag.hit);
-        const otherFile = this._fileForIntersection(other);
+        const file = this.fileForIntersection(drag.hit);
+        const otherFile = this.fileForIntersection(other);
         if (file && otherFile && file.file.type === 'object' && otherFile.file.type === 'object') {
           this._gameView.fileManager.action(file.file, otherFile.file, '+');
         }
       }
     }
 
-    private _isFile(hit: Intersection): boolean {
-      return this._findWorkspaceForIntersection(hit) === null;
+    public isFile(hit: Intersection): boolean {
+      return this.findWorkspaceForIntersection(hit) === null;
     }
-  
-    private _handleDrag(mouseDir: Ray, workspace: File3D, hit: Intersection) {
-      if (workspace) {
-        this._dragWorkspace(mouseDir, workspace);
-      } else {
-        this._dragFile(mouseDir, hit);
+
+    private _contextMenuActions(file: File3D): ContextMenuAction[] {
+      let actions = [
+        { label: 'Expand', onClick: () => this.expandWorkspace(file) },
+      ];
+      if (this.canShrinkWorkspace(file)) {
+        actions.push({ label: 'Shrink', onClick: () => this.shrinkWorkspace(file) });
       }
+      return actions;
     }
 
     private _handleFileAdded(file:File3D): void {
