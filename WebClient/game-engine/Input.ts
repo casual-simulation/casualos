@@ -8,7 +8,7 @@ export class Input {
      * Debug level for Input class.
      * 0: Disabled, 1: Down/Up events, 2: Move events
      */
-    public debugLevel: number = 1;
+    public debugLevel: number = 0;
 
     // Internal pointer data.
     private _mouseData: MouseData;
@@ -27,6 +27,11 @@ export class Input {
     private _touchEndHandler: any;
     private _touchCancelHandler: any;
     private _contextMenuHandler: any;
+
+    /**
+     * @returns 'mouse' or 'touch'
+     */
+    get currentInputType(): InputType { return this._inputType; }
     
     /**
      * Calculates the Three.js screen position of the mouse from the given mouse event.
@@ -135,13 +140,6 @@ export class Input {
     }
 
     /**
-     * @returns 'mouse' or 'touch'
-     */
-    public getCurrentInputType(): InputType {
-        return this._inputType;
-    }
-
-    /**
      * Returns true the frame that the button was pressed down.
      * If on mobile device and requresing Left Button, will return for the first finger touching the screen.
      */
@@ -163,7 +161,7 @@ export class Input {
     }
 
     public getTouchDown(fingerIndex: number): boolean {
-        const touchData = this._getTouchData(fingerIndex);
+        const touchData = this.getTouchData(fingerIndex);
         if (touchData) {
             return touchData.state.isDownOnFrame(time.frameCount);
         }
@@ -193,7 +191,7 @@ export class Input {
     }
 
     public getTouchUp(fingerIndex: number): boolean {
-        const touchData = this._getTouchData(fingerIndex);
+        const touchData = this.getTouchData(fingerIndex);
         if (touchData) {
             return touchData.state.isUpOnFrame(time.frameCount);
         }
@@ -223,7 +221,7 @@ export class Input {
     }
 
     public getTouchHeld(fingerIndex: number): boolean {
-        const touchData = this._getTouchData(fingerIndex);
+        const touchData = this.getTouchData(fingerIndex);
         if (touchData) {
             return touchData.state.isHeldOnFrame(time.frameCount);
         }
@@ -264,7 +262,7 @@ export class Input {
      * @param fingerIndex The index of the finger (first finger: 0, second finger: 1, ...)
      */
     public getTouchScreenPos(fingerIndex: number): Vector2 {
-        const touchData = this._getTouchData(fingerIndex);
+        const touchData = this.getTouchData(fingerIndex);
         if (touchData) {
             return touchData.screenPos;
         }
@@ -276,9 +274,26 @@ export class Input {
      * @param fingerIndex The index of the finger (first finger: 0, second finger: 1, ...)
      */
     public getTouchPagePos(fingerIndex: number): Vector2 {
-        const touchData = this._getTouchData(fingerIndex);
+        const touchData = this.getTouchData(fingerIndex);
         if (touchData) {
             return touchData.pagePos;
+        }
+        return null;
+    }
+
+    public getMouseData(): MouseData {
+        return this._mouseData;
+    }
+
+    /**
+     * Returns the matching TouchData object for the provided finger index.
+     */
+    public getTouchData(finderIndex: number): TouchData {
+        if (this._touchData.length > 0) {
+            const touchData = find(this._touchData, (d) => { return d.fingerIndex === finderIndex; });
+            if (touchData) {
+                return touchData;
+            }
         }
         return null;
     }
@@ -321,19 +336,6 @@ export class Input {
         if (button == MouseButtonId.Middle) return this._mouseData.middleButtonState;
         
         console.warn("unsupported mouse button number: " + button);
-        return null;
-    }
-
-    /**
-     * Returns the matching TouchData object for the provided finger index.
-     */
-    private _getTouchData(finderIndex: number): TouchData {
-        if (this._touchData.length > 0) {
-            const touchData = find(this._touchData, (d) => { return d.fingerIndex === finderIndex; });
-            if (touchData) {
-                return touchData;
-            }
-        }
         return null;
     }
 

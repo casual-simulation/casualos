@@ -10,9 +10,7 @@ import {
   MeshStandardMaterial,
   Math as ThreeMath,
   Group,
-  Ray,
   Raycaster,
-  Intersection,
   MeshBasicMaterial,
   Object3D,
   LineBasicMaterial,
@@ -24,7 +22,6 @@ import {
   BoxBufferGeometry,
   GLTFLoader,
   HemisphereLight,
-  Vector2,
 } from 'three';
 import 'three-examples/controls/OrbitControls';
 import 'three-examples/loaders/GLTFLoader';
@@ -33,39 +30,23 @@ import Component from 'vue-class-component';
 import { Inject } from 'vue-property-decorator';
 import {
   SubscriptionLike,
-  Observable,
-  combineLatest,
 } from 'rxjs';
-import {
-  filter,
-  map,
-} from 'rxjs/operators';
-import {
-  find
-} from 'lodash';
 
 import { FileManager } from '../FileManager';
 import { File, Object, Workspace } from 'common/Files';
 import { time } from '../game-engine/Time';
-import { Input, InputType, MouseButtonId } from '../game-engine/input';
+import { Input } from '../game-engine/input';
 
 import { vg } from "von-grid";
 
 import skyTextureUrl from '../public/images/CGSkies_0132_free.jpg';
 import groundModelUrl from '../public/models/ground.gltf';
 
-import { Physics } from '../game-engine/Physics';
-
 import { 
-  File3D,
-  MouseDrag, 
-  ClickOperation,
-  DragOperation,
-  MouseDragPosition,
-  DraggedObject,
-  ContextMenuEvent,
-  ContextMenuAction,
+  File3D
 } from '../game-engine/Interfaces';
+import { FileInteractionManager } from '../interaction/FileInteractionManager';
+import { ArgEvent } from '../../common/Events';
 
 @Component({
   inject: {
@@ -81,7 +62,6 @@ export default class GameView extends Vue {
   private _cameraControls: OrbitControls;
   private _cameraControlsEnabled: boolean = true;
   private _renderer: Renderer;
-  private _raycaster: Raycaster;
 
   private _sun: DirectionalLight;
   private _ambient: AmbientLight;
@@ -89,10 +69,14 @@ export default class GameView extends Vue {
 
   private _workspacePlane: Mesh;
   private _skydome: Mesh;
-  private _draggableObjects: Object3D[];
   private _grids: Group;
   private _canvas: HTMLElement;
   private _input: Input;
+  private _fileInteraction: FileInteractionManager;
+
+  public onFileAdded: ArgEvent<File3D> = new ArgEvent<File3D>();
+  public onFileUpdated: ArgEvent<File3D> = new ArgEvent<File3D>();
+  public onFileRemoved: ArgEvent<File3D> = new ArgEvent<File3D>();
 
   /**
    * A map of file IDs to files and meshes.
@@ -104,25 +88,27 @@ export default class GameView extends Vue {
   /**
    * A map of mesh IDs to file IDs.
    */
-  private _meshses: {
+  private _fileIds: {
     [mesh: number]: string
   } = {};
+
   private _subs: SubscriptionLike[];
 
-  get gameView() {
-    const gameView: HTMLElement = <HTMLElement>this.$refs.gameView;
-    return gameView;
-  }
+  get gameView(): HTMLElement { return <HTMLElement>this.$refs.gameView; }
+  get input(): Input { return this._input; }
+  get camera(): PerspectiveCamera { return this._camera; }
+  get grids(): Group { return this._grids; }
+  get workspacePlane(): Mesh { return this._workspacePlane; }
 
   async mounted() {
     time.init();
 
     this._files = {};
-    this._meshses = {};
-    this._draggableObjects = [];
+    this._fileIds = {};
     this._subs = [];
     this._input = new Input();
     this._input.init(this.gameView);
+    this._fileInteraction = new FileInteractionManager(this);
     this._setupScene();
 
     // Subscriptions to file events.
@@ -184,50 +170,6 @@ export default class GameView extends Vue {
     // }));
   }
 
-  private _tryCombineFiles(drag: DragOperation) {
-    const raycast = Physics.raycastAtScreenPos(drag.screenPos, this._raycaster, this._draggableObjects, this._camera);
-    const other = find(raycast.intersects, (val, index, col) => val.object !== drag.hit.object);
-    if (other) {
-      const file = this._fileForIntersection(drag.hit);
-      const otherFile = this._fileForIntersection(other);
-      if (file && otherFile && file.file.type === 'object' && otherFile.file.type === 'object') {
-        this.fileManager.action(file.file, otherFile.file, '+');
-      }
-    }
-  }
-
-  private _contextMenuActions(file: File3D): ContextMenuAction[] {
-    let actions = [
-      { label: 'Expand', onClick: () => this._expandWorkspace(file) },
-    ];
-    if (this._canShrinkWorkspace(file)) {
-      actions.push({ label: 'Shrink', onClick: () => this._shrinkWorkspace(file) });
-    }
-    return actions;
-  }
-
-  private _canShrinkWorkspace(file: File3D) {
-    return file && file.file.type === 'workspace' && file.file.size >= 1;
-  }
-
-  private _expandWorkspace(file: File3D) {
-      if (file && file.file.type === 'workspace') {
-          const size = file.file.size;
-          this.fileManager.updateFile(file.file, {
-              size: (size || 0) + 1
-          });
-      }
-  }
-
-  private _shrinkWorkspace(file: File3D) {
-      if (file && file.file.type === 'workspace') {
-          const size = file.file.size;
-          this.fileManager.updateFile(file.file, {
-              size: (size || 0) - 1
-          });
-      }
-  }
-
   beforeDestroy() {
     this._input.terminate();
 
@@ -284,70 +226,16 @@ export default class GameView extends Vue {
   //   };
   // }
 
-  private _clickedObjects(screenPos: Vector2) : Intersection {
-    const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this._draggableObjects, this._camera);
-    return Physics.firstRaycastHit(raycastResult);
-  }
-
   private _frameUpdate() {
     // console.log("game view update frame: " + time.frameCount);
-    this._updateInput();
+    this._fileInteraction.update();
     this._renderer.render(this._scene, this._camera);
 
     requestAnimationFrame(() => this._frameUpdate());
   }
 
-  private _updateInput() {
-    // console.log("game view update input frame: " + time.frameCount);
-    for (let i = 0; i < 3; i++) {
-      if (this._input.getMouseButtonDown(i)) {
-        console.log("[GameView] mouse button " + i + " down. frame: " + time.frameCount);
-      }
-
-      if (this._input.getMouseButtonHeld(i)) {
-        console.log("[GameView] mouse button " + i + " held. frame: " + time.frameCount);
-      }
-  
-      if (this._input.getMouseButtonUp(i)) {
-        console.log("[GameView] mouse button " + i + " up. frame: " + time.frameCount);
-      }
-
-      if (this._input.getCurrentInputType() === InputType.Touch) {
-        // TODO: test touch events
-      }
-    }
-
-    if (this._input.getMouseButtonDown(MouseButtonId.Right)) {
-      const pagePos = this._input.getMousePagePos();
-      const screenPos = Input.screenPosition(pagePos, this.gameView);
-      const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this._draggableObjects, this._camera);
-      const hit = Physics.firstRaycastHit(raycastResult);
-
-      if (hit) {
-        const file = this._fileForIntersection(hit);
-        if (file && file.file && file.file.type === 'workspace') {
-          // Now send the actual context menu event.
-          let menuEvent: ContextMenuEvent = { pagePos: pagePos, actions: this._contextMenuActions(file) };
-          this.$emit('onContextMenu', menuEvent);
-        }
-      }
-    }
-  }
-
-  private _isFile(hit: Intersection): boolean {
-    return this._findWorkspaceForIntersection(hit) === null;
-  }
-
-  private _handleDrag(mouseDir: Ray, workspace: File3D, hit: Intersection) {
-    if (workspace) {
-      this._dragWorkspace(mouseDir, workspace);
-    } else {
-      this._dragFile(mouseDir, hit);
-    }
-  }
-
-  private _enableCameraControls(enabled: boolean) {
-    if (this._cameraControls !== null) {
+  public enableCameraControls(enabled: boolean) {
+    if (this._cameraControls) {
       if (this._cameraControlsEnabled !== enabled) {
         this._cameraControlsEnabled = enabled;
         if (enabled) {
@@ -377,100 +265,20 @@ export default class GameView extends Vue {
     }
   }
 
-  private _dragWorkspace(mouseDir: Ray, workspace: File3D) {
-    const point = Physics.pointOnPlane(mouseDir, this._workspacePlane);
-    if (point) {
-      this.fileManager.updateFile(workspace.file, {
-        position: {
-          x: point.x,
-          y: point.y,
-          z: point.z
-        }
-      });
-    }
+  /**
+   * Returns the file id that is represented by the specified mesh id.
+   * @param meshId The id of the mesh.
+   */
+  public getFileId(meshId: number): string {
+    return this._fileIds[meshId];
   }
 
-  private _selectFile(file: File3D) {
-    this.fileManager.selectFile(<Object>file.file);
-  }
-
-  private _dragFile(mouseDir: Ray, hit: Intersection) {
-    const { good, point, workspace } = this._pointOnGrid(mouseDir);
-    const file = this._fileForIntersection(hit);
-    if (file) {
-      if (good) {
-        this.fileManager.updateFile(file.file, {
-          tags: {
-            _workspace: workspace.file.id,
-            _position: {
-              x: point.x,
-              y: point.y,
-              z: point.z
-            }
-          }
-        });
-      } else {
-        const p = Physics.pointOnRay(mouseDir, 2);
-        this.fileManager.updateFile(file.file, {
-          tags: {
-            _workspace: null,
-            _position: {
-              x: p.x,
-              y: p.y,
-              z: p.z
-            }
-          }
-        });
-      }
-    }
-  }
-
-  private _fileForIntersection(hit: Intersection): File3D {
-    const id = this._meshses[hit.object.id];
-    if (id) {
-      return this._files[id];
-    } else {
-      return this._findWorkspaceForIntersection(hit);
-    }
-  }
-
-  private _pointOnGrid(ray: Ray) {
-    const raycaster = new Raycaster(ray.origin, ray.direction, 0, Number.POSITIVE_INFINITY);
-    raycaster.linePrecision = .1;
-    const hits = raycaster.intersectObject(this._grids, true);
-    const hit = hits[0];
-    if (hit) {
-      const point = hit.point;
-      const workspace = this._findWorkspaceForIntersection(hit);
-      if (workspace) {
-        workspace.mesh.worldToLocal(point);
-        const cell = workspace.grid.grid.pixelToCell(point);
-        const pos = workspace.grid.grid.cellToPixel(cell).clone();
-        pos.y = point.y;
-        return {
-          good: true,
-          point: pos,
-          workspace
-        };
-      }
-    }
-    return {
-      good: false
-    };
-  }
-
-  private _findWorkspaceForIntersection(obj: Intersection): File3D | null {
-    if (!obj) {
-      return null;
-    }
-    const hasParent = !!obj.object.parent && !!obj.object.parent.parent;
-    const fileId = hasParent ? this._meshses[obj.object.parent.parent.id] : null;
-    const file = fileId ? this._files[fileId] : null;
-    if (file && file.file.type === 'workspace') {
-      return file;
-    } else {
-      return null;
-    }
+  /**
+   * Returns the file that matches the specified file id.
+   * @param fileId The id of the file.
+   */
+  public getFile(fileId: string): File3D {
+    return this._files[fileId];
   }
 
   private _fileUpdated(file: File) {
@@ -482,6 +290,8 @@ export default class GameView extends Vue {
       } else {
         this._updateWorkspace(obj, file);
       }
+
+      this.onFileUpdated.invoke(obj);
     }
   }
 
@@ -558,22 +368,23 @@ export default class GameView extends Vue {
       grid = surface.sqrBoard;
       board = surface.board;
     }
-    const obj = this._files[file.id] = {
+    const obj: File3D = this._files[file.id] = {
       file: file,
       grid: grid,
       surface: board,
       mesh: mesh
     };
 
-    this._meshses[obj.mesh.id] = obj.file.id;
-    this._draggableObjects.push(obj.mesh);
+    this._fileIds[obj.mesh.id] = obj.file.id;
     this._scene.add(obj.mesh);
     obj.mesh.name = `${file.type}_${file.id}`;
     if (grid) {
       grid.group.name = `grid_${file.type}_${file.id}`;
-      this._meshses[grid.group.id] = obj.file.id;
+      this._fileIds[grid.group.id] = obj.file.id;
       this._grids.add(grid.group);
     }
+
+    this.onFileAdded.invoke(obj);
 
     this._fileUpdated(file);
   }
@@ -581,9 +392,11 @@ export default class GameView extends Vue {
   private _fileRemoved(id: string) {
     const obj = this._files[id];
     if (obj) {
-      delete this._meshses[obj.mesh.id];
+      delete this._fileIds[obj.mesh.id];
       delete this._files[id];
       this._scene.remove(obj.mesh);
+
+      this.onFileRemoved.invoke(obj);
     }
   }
 
@@ -605,8 +418,6 @@ export default class GameView extends Vue {
 
     this._scene = new Scene();
     this._scene.background = new Color(0xCCE6FF);
-
-    this._raycaster = new Raycaster();
 
     this._setupRenderer();
 
