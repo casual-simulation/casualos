@@ -31,6 +31,12 @@ export class FileDragOperation implements IOperation {
         this._file = file;
         this._workspace = workspace;
 
+        if (!this._workspace) {
+            // we're gonna be dragging the file. turn on the grids.
+            this._gameView.grids.visible = true;
+        }
+        
+
         this._lastScreenPos = this._gameView.input.getMouseScreenPos();
     }
 
@@ -66,12 +72,13 @@ export class FileDragOperation implements IOperation {
 
     public dispose(): void {
         console.log("[FileDragOperation] dispose");
+        this._gameView.grids.visible = false;
     }
 
     private _dragFile() {
         const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.camera);
         const { good, point, workspace } = this._fileInteraction.pointOnGrid(mouseDir);
-        
+
         if (this._file) {
             if (good) {
                 this._gameView.fileManager.updateFile(this._file.file, {
