@@ -31,6 +31,7 @@ import Welcome from './Welcome/Welcome';
 import Home from './Home/Home';
 import Editor from './Editor/Editor';
 import MergeConflicts from './MergeConflicts/MergeConflicts';
+import TestHexes from './TestHexes/TestHexes';
 
 // Setup the Promise shim for browsers that don't support promises.
 polyfill();
@@ -88,6 +89,10 @@ const routes: RouteConfig[] = [
                 next({ path: '/' });
             }
         }
+    },
+    {
+        path: '/TestHexes',
+        component: TestHexes
     }
 ]
 

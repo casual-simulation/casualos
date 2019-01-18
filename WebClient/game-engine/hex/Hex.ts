@@ -27,7 +27,8 @@ export function hexCorner(index: number, center: Vector2 = new Vector2(), size: 
  * Calculates the vertex positions for a flat-topped hex.
  */
 export function hex(size: number = HEX_SIZE): Vector2[] {
-    return range(0, 6).map(i => hexCorner(i, null, size));
+    const idx = range(0, 6)
+    return idx.map(i => hexCorner(i, undefined, size));
 }
 
 /**

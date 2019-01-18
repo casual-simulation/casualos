@@ -34,6 +34,42 @@ export function realPosToGridPos(pos: Vector2, size: number = 1): Axial {
 }
 
 /**
+ * Calculates the manhattan distance between the two points.
+ * @param first The first grid point.
+ * @param second The second grid point.
+ */
+export function gridDistance(first: Axial, second: Axial): number {
+    var x1 = first.q;
+    var z1 = first.r;
+    var y1 = -x1-z1;
+    var x2 = second.q;
+    var z2 = second.r;
+    var y2 = -x2-z2;
+
+    return (Math.abs(x1 - x2) + Math.abs(y1 - y2) + Math.abs(z1 - z2)) / 2;
+}
+
+/**
+ * Calculates a list of hex grid positions that are contained in the given radius.
+ * @param radius The radius to check.
+ */
+export function hexesInRadius(radius: number): Axial[] {
+    radius -= 1;
+    let positions: Axial[] = [];
+    const zero = new Axial(0, 0);
+    for (let q = -radius; q <= radius; q++) {
+        for (let r = -q - radius; r <= radius - q; r++) {
+            const pos = new Axial(q, r);
+            if (gridDistance(zero, pos) <= radius) {
+                positions.push(pos);
+            }
+        }
+    }
+
+    return positions;
+}
+
+/**
  * Calculates the storage key for a hex at the given grid position.
  */
 export function posToKey(pos: Axial): string {
@@ -52,22 +88,19 @@ export class HexGrid<T> {
             pos: Axial
         }
     };
-    private _radius: number;
 
     /**
-     * Gets the radius of this grid.
+     * Gets the number of items contained in this grid.
      */
-    get radius() {
-        return this._radius;
+    get count() {
+        return values(this._data).length;
     }
 
     /**
      * Creates a new grid.
-     * @param radius The radius of the grid.
      */
-    constructor(radius: number) {
+    constructor() {
         this._data = {};
-        this._radius = radius;
     }
 
     /**

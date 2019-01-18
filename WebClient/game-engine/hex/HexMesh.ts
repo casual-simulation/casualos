@@ -1,5 +1,5 @@
 import { HEX_SIZE, hex } from "./Hex";
-import { Mesh, BufferGeometry, ExtrudeBufferGeometry, Shape, Material } from "three";
+import { Mesh, BufferGeometry, ExtrudeBufferGeometry, Shape, Material, MeshStandardMaterial, Matrix4, Vector3 } from "three";
 import { Axial } from "./Axial";
 import { gridPosToRealPos } from "./HexGrid";
 
@@ -51,15 +51,23 @@ export class HexMesh extends Mesh {
      * @param size The radius of the hex.
      * @param height The default height of the hex.
      */
-    constructor(size: number = HEX_SIZE, height: number = HEX_HEIGHT, material?: Material) {
-        super(createHexMeshGeometry(size, height), material);
+    constructor(pos: Axial = new Axial(), size: number = HEX_SIZE, height: number = HEX_HEIGHT, material?: Material) {
+        super(createHexMeshGeometry(size, height), createDefaultHexMaterial(material));
         this._size = size;
         this._height = height;
+        this.gridPosition = pos;
     }
 
     private _updateGeo() {
         this.geometry = createHexMeshGeometry(this._size, this._height);
     }
+}
+
+export function createDefaultHexMaterial(mat: Material): Material {
+    if (mat) {
+        return mat;
+    }
+    return new MeshStandardMaterial();
 }
 
 /**
@@ -71,8 +79,11 @@ export function createHexMeshGeometry(size: number, height: number): BufferGeome
     const verts = hex(size);
     const shape = new Shape(verts);
     const geometry = new ExtrudeBufferGeometry(shape, {
-        depth: height
+        depth: height,
+        steps: 1,
+        bevelEnabled: false,
     });
+    geometry.rotateX(-90 * (Math.PI / 180));
 
     return geometry;
 }

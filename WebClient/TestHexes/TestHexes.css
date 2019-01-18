@@ -1,0 +1,8 @@
+
+.game-canvas {
+    position: absolute;
+}
+
+.game-container {
+    margin: -16px;
+}

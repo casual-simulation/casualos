@@ -7,16 +7,30 @@ export class Axial {
     /**
      * The Q part of the coordinate.
      */
-    q: number;
+    private _q: number;
 
     /**
      * The R part of the coordinate.
      */
-    r: number;
+    private _r: number;
+
+    /**
+     * Gets the Q part of the coordinate.
+     */
+    get q() {
+        return this._q;
+    }
+
+    /**
+     * Gets the R part of the coordinate.
+     */
+    get r() {
+        return this._r;
+    }
 
     constructor(x: number = 0, y: number = 0) {
-        this.q = x;
-        this.r = y;
+        this._q = x;
+        this._r = y;
     }
 
     /**
@@ -28,8 +42,8 @@ export class Axial {
         // basically converts the axial coordinate to cube coordinates, rounds,
         // and then converts back.
 
-        var x = this.q;
-        var z = this.r;
+        var x = this._q;
+        var z = this._r;
         var y = -x-z;
         var rx = Math.round(x);
         var ry = Math.round(y);
