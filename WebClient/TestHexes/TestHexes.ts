@@ -83,7 +83,7 @@ import {
   eventIsOverElement,
 } from '../Input';
 import { appManager } from '../AppManager';
-import { HexGridMesh } from '../game-engine/hex/HexGridMesh';
+import { HexGridMesh, Axial } from '../game-engine/hex';
 
 @Component({
 })
@@ -214,7 +214,10 @@ export default class GameView extends Vue {
 
     this._scene.add(this._skydome);
 
-    this._workspaces.push(new HexGridMesh(5));
+    const grid = new HexGridMesh(5);
+    grid.removeAt(new Axial(0, 0));
+    grid.addAt(new Axial(5, -6));
+    this._workspaces.push(grid);
     
     this._workspaces.forEach(w => {
       this._scene.add(w);
