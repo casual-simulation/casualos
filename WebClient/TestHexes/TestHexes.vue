@@ -1,7 +1,9 @@
 <!-- App.vue -->
 <template>
   <div ref="container" class="game-container">
-      <img v-if="imageURL" :src="imageURL">
+    <div v-for="img in images" :key="img">
+      <img :src="img">
+    </div>
       <md-button @click="test()">Test</md-button>
       <div class="game-canvas" ref="gameView"></div>
   </div>

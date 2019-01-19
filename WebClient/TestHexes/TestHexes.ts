@@ -93,7 +93,7 @@ import { GridChecker } from '../game-engine/grid/GridChecker';
 export default class GameView extends Vue {
 
   private _scene: Scene;
-  private _camera: OrthographicCamera;
+  private _camera: PerspectiveCamera;
   private _cameraControls: OrbitControls;
   private _cameraControlsEnabled: boolean = true;
   private _renderer: Renderer;
@@ -113,7 +113,7 @@ export default class GameView extends Vue {
 
   private _workspaces: HexGridMesh[];
 
-  imageURL: string;
+  images: string[];
 
   get gameView() {
     const gameView: HTMLElement = <HTMLElement>this.$refs.gameView;
@@ -126,7 +126,7 @@ export default class GameView extends Vue {
 
   constructor() {
     super();
-    this.imageURL = null;
+    this.images = [];
   }
 
   async mounted() {
@@ -152,10 +152,10 @@ export default class GameView extends Vue {
 
 
     // User's camera
-    this._camera = new OrthographicCamera(-10, 10, 10, -10, 1, 1000);
-    // this._camera.position.z = 5;
+    this._camera = new PerspectiveCamera();
+    this._camera.position.z = 5;
     this._camera.position.y = 3;
-    this._camera.rotation.x = ThreeMath.degToRad(-90);
+    this._camera.rotation.x = ThreeMath.degToRad(-30);
     this._camera.updateMatrixWorld(false);
 
     this._cameraControls = new OrbitControls(this._camera, this._canvas);
@@ -230,6 +230,9 @@ export default class GameView extends Vue {
     grid.removeAt(new Axial(0, 0));
     grid.addAt(new Axial(5, -6));
 
+    const hex = grid.getAt(new Axial(5, -6));
+    hex.height = 2;
+
     // grid.hexes.forEach(h => {
     //   h.height = Math.random() * 2;
     // });
@@ -250,7 +253,9 @@ export default class GameView extends Vue {
 
   async test() {
     const grid = this._workspaces[0];
-    this.imageURL = await this._checker.check(grid);
+    const results = (await this._checker.check(grid));
+    console.log(results);
+    this.images = results.map(l => l._image);
   }
 
   private _setupRenderer() {

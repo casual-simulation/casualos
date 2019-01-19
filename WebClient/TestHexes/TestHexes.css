@@ -1,11 +1,13 @@
 
 .game-canvas {
-    position: absolute;
-    display: none;
+    position: relative;
+    /* display: none; */
 }
 
 .game-container {
     margin: -16px;
     width: 500px;
     height: 500px;
+
+    background-color: red;
 }
