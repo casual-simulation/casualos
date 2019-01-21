@@ -32,7 +32,7 @@ export class Input {
      * @returns 'mouse' or 'touch'
      */
     get currentInputType(): InputType { return this._inputType; }
-    
+
     /**
      * Calculates the Three.js screen position of the mouse from the given mouse event.
      * Unlike viewport positions, Three.js screen positions go from -1 to +1.
@@ -60,9 +60,9 @@ export class Input {
      * @param clientPos The client position to test.
      * @param element The HTML element to test against.
      */
-    public static eventIsDirectlyOverElement(clientPos: Vector2, element:HTMLElement): boolean {
-      const mouseOver = document.elementFromPoint(clientPos.x, clientPos.y);
-      return mouseOver === element;
+    public static eventIsDirectlyOverElement(clientPos: Vector2, element: HTMLElement): boolean {
+        const mouseOver = document.elementFromPoint(clientPos.x, clientPos.y);
+        return mouseOver === element;
     }
 
     /**
@@ -70,12 +70,12 @@ export class Input {
      * @param clientPos The client position to test.
      * @param element The HTML element to test against.
      */
-    public static eventIsOverElement(clientPos: Vector2, element:HTMLElement): boolean {
-      const elements = document.elementsFromPoint(clientPos.x, clientPos.y);
-      return some(elements, e => e === element);
+    public static eventIsOverElement(clientPos: Vector2, element: HTMLElement): boolean {
+        const elements = document.elementsFromPoint(clientPos.x, clientPos.y);
+        return some(elements, e => e === element);
     }
 
-    public init(element:HTMLElement) {
+    public init(element: HTMLElement) {
         if (this._initialized) return;
 
         console.log("[Input] initialize");
@@ -100,7 +100,7 @@ export class Input {
         this._touchEndHandler = this._handleTouchEnd.bind(this);
         this._touchCancelHandler = this._handleTouchCancel.bind(this);
         this._contextMenuHandler = this._handleContextMenu.bind(this);
-        
+
         this._element.addEventListener('mousedown', this._mouseDownHandler);
         this._element.addEventListener('mousemove', this._mouseMoveHandler);
         this._element.addEventListener('mouseup', this._mouseUpHandler);
@@ -203,7 +203,7 @@ export class Input {
      * Retruns true every frame the button is held down.
      * If on mobile device, will return the held state of the first finger touching the screen.
      */
-    public getMouseButtonHeld(buttonId: MouseButtonId): boolean { 
+    public getMouseButtonHeld(buttonId: MouseButtonId): boolean {
         if (this._inputType == InputType.Mouse) {
             const buttonState = this._getMouseButtonState(buttonId);
             if (buttonState) {
@@ -258,6 +258,20 @@ export class Input {
     }
 
     /**
+     * Return the last known client position of the mouse.
+     * If on mobile device, will return the client position of the first finger touching the screen.
+     */
+    public getMouseClientPos(): Vector2 {
+        if (this._inputType == InputType.Mouse) {
+            return this._mouseData.clientPos;
+        } else if (this._inputType == InputType.Touch) {
+            return this.getTouchClientPos(0);
+        }
+
+        return null;
+    }
+
+    /**
      * Return the screen position of the touch. Will return null if touch not detected.
      * @param fingerIndex The index of the finger (first finger: 0, second finger: 1, ...)
      */
@@ -277,6 +291,18 @@ export class Input {
         const touchData = this.getTouchData(fingerIndex);
         if (touchData) {
             return touchData.pagePos;
+        }
+        return null;
+    }
+
+    /**
+     * Return the client position of the touch. Will return null if touch not detected.
+     * @param fingerIndex The index of the finger (first finger: 0, second finger: 1, ...)
+     */
+    public getTouchClientPos(fingerIndex: number): Vector2 {
+        const touchData = this.getTouchData(fingerIndex);
+        if (touchData) {
+            return touchData.clientPos;
         }
         return null;
     }
@@ -315,11 +341,11 @@ export class Input {
     private _cullTouchData(): void {
         for (var i = this._touchData.length - 1; i >= 0; i--) {
             const upFrame: number = this._touchData[i].state.getUpFrame();
-            
+
             // Up frame must have been set.
             if (upFrame !== -1) {
                 // Current frame must be higher than the touch's up frame.
-                if (time.frameCount > upFrame) {            
+                if (time.frameCount > upFrame) {
                     console.log('removing touch: ' + this._touchData[i].fingerIndex + '. frame: ' + time.frameCount);
                     this._touchData.splice(i, 1);
                 }
@@ -334,7 +360,7 @@ export class Input {
         if (button == MouseButtonId.Left) return this._mouseData.leftButtonState;
         if (button == MouseButtonId.Right) return this._mouseData.rightButtonState;
         if (button == MouseButtonId.Middle) return this._mouseData.middleButtonState;
-        
+
         console.warn("unsupported mouse button number: " + button);
         return null;
     }
@@ -352,15 +378,15 @@ export class Input {
         return new Vector2((viewPos.x / viewRect.width) * 2 - 1, -(viewPos.y / viewRect.height) * 2 + 1);
     }
 
-    private _handleMouseDown(event:MouseEvent) {
+    private _handleMouseDown(event: MouseEvent) {
         if (this._inputType == InputType.Undefined) this._inputType = InputType.Mouse;
         if (this._inputType != InputType.Mouse) return;
-        
+
         let buttonState: InputState = this._getMouseButtonState(event.button);
         if (buttonState) {
             let fireOnFrame = time.frameCount + 1;
             buttonState.setDownFrame(fireOnFrame);
-        
+
             if (this.debugLevel >= 1) {
                 console.log("mouse button " + event.button + " down. fireInputOnFrame: " + fireOnFrame);
             }
@@ -371,15 +397,15 @@ export class Input {
         }
     }
 
-    private _handleMouseUp(event:MouseEvent) {
+    private _handleMouseUp(event: MouseEvent) {
         if (this._inputType == InputType.Undefined) this._inputType = InputType.Mouse;
         if (this._inputType != InputType.Mouse) return;
-        
+
         let buttonState: InputState = this._getMouseButtonState(event.button);
         if (buttonState) {
             let fireOnFrame = time.frameCount + 1;
             buttonState.setUpFrame(fireOnFrame);
-        
+
             if (this.debugLevel >= 1) {
                 console.log("mouse button " + event.button + " up. fireInputOnFrame: " + fireOnFrame);
             }
@@ -390,7 +416,7 @@ export class Input {
         }
     }
 
-    private _handleMouseMove(event:MouseEvent) {
+    private _handleMouseMove(event: MouseEvent) {
         if (this._inputType == InputType.Undefined) this._inputType = InputType.Mouse;
         if (this._inputType != InputType.Mouse) return;
 
@@ -456,7 +482,7 @@ export class Input {
             existingTouch.clientPos = new Vector2(touch.clientX, touch.clientY);
             existingTouch.pagePos = new Vector2(touch.pageX, touch.pageY);
             existingTouch.screenPos = this._calculateScreenPos(touch.pageX, touch.pageY);
-        
+
             if (this.debugLevel >= 2) {
                 console.log("touch move:");
                 console.log("  identifier: " + existingTouch.fingerIndex);
@@ -495,7 +521,7 @@ export class Input {
         if (this._inputType != InputType.Touch) return;
 
         const changed = event.changedTouches;
-        
+
         for (var i = 0; i < changed.length; i++) {
             // Handle a canceled touche the same as a touch end.
             const touch = changed.item(i);
@@ -583,7 +609,7 @@ class InputState {
                 }
             }
         }
-        
+
         return false;
     }
 
@@ -629,7 +655,7 @@ interface MouseData {
      * State of the left mouse button.
      */
     leftButtonState: InputState;
-    
+
     /**
      * State of the right mouse button.
      */

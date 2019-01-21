@@ -15,13 +15,11 @@ import {
   PCFSoftShadowMap,
   BackSide,
   TextureLoader,
-  OrbitControls,
   SphereBufferGeometry,
   BoxBufferGeometry,
   GLTFLoader,
   HemisphereLight,
 } from 'three';
-import 'three-examples/controls/OrbitControls';
 import 'three-examples/loaders/GLTFLoader';
 import Vue from 'vue';
 import Component from 'vue-class-component';
@@ -55,8 +53,6 @@ export default class GameView extends Vue {
 
   private _scene: Scene;
   private _camera: PerspectiveCamera;
-  private _cameraControls: OrbitControls;
-  private _cameraControlsEnabled: boolean = true;
   private _renderer: Renderer;
 
   private _sun: DirectionalLight;
@@ -103,10 +99,10 @@ export default class GameView extends Vue {
     this._files = {};
     this._fileIds = {};
     this._subs = [];
+    this._setupScene();
     this._input = new Input();
     this._input.init(this.gameView);
     this._interaction = new InteractionManager(this);
-    this._setupScene();
 
     // Subscriptions to file events.
     this._subs.push(this.fileManager.fileDiscovered.subscribe(file => {
@@ -139,37 +135,6 @@ export default class GameView extends Vue {
     this._renderer.render(this._scene, this._camera);
 
     requestAnimationFrame(() => this._frameUpdate());
-  }
-
-  public enableCameraControls(enabled: boolean) {
-    if (this._cameraControls) {
-      if (this._cameraControlsEnabled !== enabled) {
-        this._cameraControlsEnabled = enabled;
-        if (enabled) {
-          // Camera controls are being enabled.
-          var controls = <any>this._cameraControls;
-          controls.panSpeed = 1.0;
-          controls.rotateSpeed = 1.0;
-
-          // Use the saved internal transform state to set the camera's initial transform state when re-enabling the controls.
-          controls.target.copy(controls.target0);
-          controls.object.position.copy(controls.position0);
-          controls.object.zoom = controls.zoom0
-
-          // controls.object.updateProjectionMatrix();
-          // controls.update();
-        }
-        else {
-          // Camera controls are being disabled.
-          var controls = <any>this._cameraControls;
-          controls.panSpeed = 0.0;
-          controls.rotateSpeed = 0.0;
-
-          // Tell orbit controls to save the internal transform state of the camera.
-          controls.saveState();
-        }
-      }
-    }
   }
 
   /**
@@ -340,8 +305,6 @@ export default class GameView extends Vue {
     this._camera.position.y = 3;
     this._camera.rotation.x = ThreeMath.degToRad(-30);
     this._camera.updateMatrixWorld(false);
-
-    // this._cameraControls = new OrbitControls(this._camera, this._canvas);
 
     // Ambient light.
     this._ambient = new AmbientLight(0xffffff, 0.8);
