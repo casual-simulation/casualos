@@ -4,7 +4,7 @@ import { FileDragOperation } from './FileDragOperation';
 import { Vector2, Vector3, Intersection } from 'three';
 import { IOperation } from './IOperation';
 import GameView from '../GameView/GameView';
-import { FileInteractionManager } from './FileInteractionManager';
+import { InteractionManager } from './InteractionManager';
 
 /**
  * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
@@ -14,7 +14,7 @@ export class FileClickOperation implements IOperation {
     public static readonly DragThreshold: number = 0.03;
 
     private _gameView: GameView;
-    private _fileInteraction: FileInteractionManager;
+    private _interaction: InteractionManager;
     private _file: File3D;
     private _hit: Intersection;
     private _finished: boolean;
@@ -22,9 +22,9 @@ export class FileClickOperation implements IOperation {
     private _startScreenPos: Vector2;
     private _dragOperation: FileDragOperation;
 
-    constructor(gameView: GameView, fileInteraction: FileInteractionManager, file: File3D, hit: Intersection) {
+    constructor(gameView: GameView, interaction: InteractionManager, file: File3D, hit: Intersection) {
         this._gameView = gameView;
-        this._fileInteraction = fileInteraction;
+        this._interaction = interaction;
         this._file = file;
         this._hit = hit;
         
@@ -46,8 +46,8 @@ export class FileClickOperation implements IOperation {
                 if (distance >= FileClickOperation.DragThreshold) {
                     // Start dragging now that we've crossed the threshold.
                     console.log("[FileClickOperation] start file drag operation");
-                    const workspace = this._fileInteraction.findWorkspaceForIntersection(this._hit);
-                    this._dragOperation = new FileDragOperation(this._gameView, this._fileInteraction, this._file, workspace);
+                    const workspace = this._interaction.findWorkspaceForIntersection(this._hit);
+                    this._dragOperation = new FileDragOperation(this._gameView, this._interaction, this._file, workspace);
                 }
 
             } else {
@@ -66,10 +66,10 @@ export class FileClickOperation implements IOperation {
                 // If we let go of the mouse button without starting a drag operation, this constitues a 'click'.
                 if (this._file.file.type === 'object') {
                     // Select the file we are operating on.
-                    this._fileInteraction.selectFile(this._file);
+                    this._interaction.selectFile(this._file);
                 }
             }
-            
+
             // Button has been released. This click operation is finished.
             this._finished = true;
             console.log("[FileClickOperation] finished");

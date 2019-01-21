@@ -10,9 +10,7 @@ import {
   MeshStandardMaterial,
   Math as ThreeMath,
   Group,
-  Raycaster,
   MeshBasicMaterial,
-  Object3D,
   LineBasicMaterial,
   PCFSoftShadowMap,
   BackSide,
@@ -42,10 +40,8 @@ import { vg } from "von-grid";
 import skyTextureUrl from '../public/images/CGSkies_0132_free.jpg';
 import groundModelUrl from '../public/models/ground.gltf';
 
-import { 
-  File3D
-} from '../game-engine/Interfaces';
-import { FileInteractionManager } from '../interaction/FileInteractionManager';
+import { File3D } from '../game-engine/Interfaces';
+import { InteractionManager } from '../interaction/InteractionManager';
 import { ArgEvent } from '../../common/Events';
 
 @Component({
@@ -72,7 +68,7 @@ export default class GameView extends Vue {
   private _grids: Group;
   private _canvas: HTMLElement;
   private _input: Input;
-  private _fileInteraction: FileInteractionManager;
+  private _interaction: InteractionManager;
 
   public onFileAdded: ArgEvent<File3D> = new ArgEvent<File3D>();
   public onFileUpdated: ArgEvent<File3D> = new ArgEvent<File3D>();
@@ -96,7 +92,7 @@ export default class GameView extends Vue {
 
   get gameView(): HTMLElement { return <HTMLElement>this.$refs.gameView; }
   get input(): Input { return this._input; }
-  get interactionManager(): FileInteractionManager { return this._fileInteraction; }
+  get interactionManager(): InteractionManager { return this._interaction; }
   get camera(): PerspectiveCamera { return this._camera; }
   get grids(): Group { return this._grids; }
   get workspacePlane(): Mesh { return this._workspacePlane; }
@@ -109,7 +105,7 @@ export default class GameView extends Vue {
     this._subs = [];
     this._input = new Input();
     this._input.init(this.gameView);
-    this._fileInteraction = new FileInteractionManager(this);
+    this._interaction = new InteractionManager(this);
     this._setupScene();
 
     // Subscriptions to file events.
@@ -124,51 +120,6 @@ export default class GameView extends Vue {
     }));
 
     this._frameUpdate();
-
-
-    // const leftClickObjects = this._clickedObjects(isButton(mouseDown, 0));
-
-    // this._subs.push(leftClickObjects.subscribe(intersection => {
-    //   this._enableCameraControls(intersection === null);
-    // }));
-
-    // const rightClickObjects = this._clickedObjects(isButton(mouseDown, 2));
-      
-    // this._subs.push(rightClickObjects.subscribe(intersection => {
-    //   this._enableCameraControls(intersection === null);
-    // }));
-
-    // const middleClickObjects = this._clickedObjects(isButton(mouseDown, 1));
-
-    // this._subs.push(middleClickObjects.subscribe(() => {
-    //   // Always allow camera control with middle clicks.
-    //   this._enableCameraControls(true);
-    // }));
-
-    // const {
-    //   dragOperations: leftDragOperations,
-    //   clickOperations: leftClickOperations,
-    //   gridsVisible
-    // } = this._draggedObjects(leftDrag, leftClickObjects);
-
-    // this._subs.push(leftDragOperations.subscribe(drag => {
-    //   // console.log("[GameView] left drag operation frameCount: " + gameTime.frameCount + ", deltaTime: " + gameTime.deltaTime);
-    //   this._handleDrag(drag.ray, drag.workspace, drag.hit);
-
-    //   if (drag.justEndedClicking) {
-    //     this._tryCombineFiles(drag);
-    //   }
-    // }));
-
-    // this._subs.push(leftClickOperations.subscribe(click => {
-    //   if(click.file !== null && click.file.file.type === 'object') {
-    //     this._selectFile(click.file);
-    //   }
-    // }));
-
-    // this._subs.push(gridsVisible.subscribe(visible => {
-    //   this._grids.visible = visible;
-    // }));
   }
 
   beforeDestroy() {
@@ -182,54 +133,9 @@ export default class GameView extends Vue {
     }
   }
 
-  // private _draggedObjects(observable: Observable<MouseDrag>, clicks: Observable<Intersection>) {
-  //   const dragPositions: Observable<MouseDragPosition> = observable.pipe(
-  //     map(drag => ({ ...drag, screenPos: Input.screenPosition(drag.event, this.gameView) })),
-  //     map(drag => ({ ...drag, ray: Physics.screenPosToRay(drag.screenPos, this._camera) }))
-  //   );
-
-  //   const draggedObjects: Observable<DraggedObject> = combineLatest(
-  //     clicks,
-  //     dragPositions,
-  //     (hit, drag) => ({
-  //       ...drag,
-  //       hit,
-  //     })
-  //   );
-
-  //   const dragOperations: Observable<DragOperation> = draggedObjects.pipe(
-  //     filter(drag => drag.isDragging && Input.eventIsDirectlyOverElement(drag.event, this._canvas)),
-  //     map(drag => ({
-  //       ...drag,
-  //       workspace: this._findWorkspaceForIntersection(drag.hit),
-  //     })),
-  //     filter(drag => drag.hit !== null)
-  //   );
-
-  //   const clickOperations: Observable<ClickOperation> = dragPositions.pipe(
-  //     filter(e => e.isClicking && Input.eventIsDirectlyOverElement(e.event, this._canvas)),
-  //     map(e => ({...e, raycast: Physics.raycastAtScreenPos(e.screenPos, this._raycaster, this._draggableObjects, this._camera)})),
-  //     map(e => ({...e, hit: Physics.firstRaycastHit(e.raycast)})),
-  //     filter(e => e.hit !== null),
-  //     map(e => ({...e, file: this._fileForIntersection(e.hit)})),
-  //   );
-
-  //   const gridsVisible = draggedObjects.pipe(
-  //     map(drag => drag.isDragging && drag.hit !== null && this._isFile(drag.hit))
-  //   );
-
-  //   return {
-  //     dragPositions,
-  //     draggedObjects,
-  //     dragOperations,
-  //     clickOperations,
-  //     gridsVisible
-  //   };
-  // }
-
   private _frameUpdate() {
     // console.log("game view update frame: " + time.frameCount);
-    this._fileInteraction.update();
+    this._interaction.update();
     this._renderer.render(this._scene, this._camera);
 
     requestAnimationFrame(() => this._frameUpdate());

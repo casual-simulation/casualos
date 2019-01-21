@@ -2,7 +2,7 @@ import { Input } from '../game-engine/Input';
 import { File3D } from '../game-engine/Interfaces';
 import { IOperation } from './IOperation';
 import GameView from '../GameView/GameView';
-import { FileInteractionManager } from './FileInteractionManager';
+import { InteractionManager } from './InteractionManager';
 import { Ray, Intersection, Vector2 } from 'three';
 import { Physics } from '../game-engine/Physics';
 
@@ -12,7 +12,7 @@ import { Physics } from '../game-engine/Physics';
 export class FileDragOperation implements IOperation {
 
     private _gameView: GameView;
-    private _fileInteraction: FileInteractionManager;
+    private _interaction: InteractionManager;
     private _file: File3D;
     private _workspace: File3D;
     private _finished: boolean;
@@ -25,9 +25,9 @@ export class FileDragOperation implements IOperation {
      * @param input the input module to interface with.
      * @param buttonId the button id of the input that this drag operation is being performed with. If desktop this is the mouse button
      */
-    constructor(gameView: GameView, fileInteraction: FileInteractionManager, file: File3D, workspace: File3D) {
+    constructor(gameView: GameView, interaction: InteractionManager, file: File3D, workspace: File3D) {
         this._gameView = gameView;
-        this._fileInteraction = fileInteraction;
+        this._interaction = interaction;
         this._file = file;
         this._workspace = workspace;
 
@@ -77,7 +77,7 @@ export class FileDragOperation implements IOperation {
 
     private _dragFile() {
         const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.camera);
-        const { good, point, workspace } = this._fileInteraction.pointOnGrid(mouseDir);
+        const { good, point, workspace } = this._interaction.pointOnGrid(mouseDir);
 
         if (this._file) {
             if (good) {

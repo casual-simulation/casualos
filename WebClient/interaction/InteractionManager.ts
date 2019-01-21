@@ -2,13 +2,12 @@ import { Vector2, Vector3, Intersection, Raycaster, Object3D, Ray } from 'three'
 import { Input, InputType, MouseButtonId } from '../game-engine/Input';
 import { File3D, ContextMenuEvent, ContextMenuAction, DragOperation } from '../game-engine/Interfaces';
 import { Object } from '../../common/Files';
-import { FileDragOperation } from './FileDragOperation';
 import { FileClickOperation } from './FileClickOperation';
 import GameView from '../GameView/GameView';
 import { Physics } from '../game-engine/Physics';
 import { find } from 'lodash';
 
-export class FileInteractionManager {
+export class InteractionManager {
     
     private _gameView: GameView;
     private _raycaster: Raycaster;
@@ -41,7 +40,7 @@ export class FileInteractionManager {
             if (this._fileClickOperation.isFinished()) {
                 console.log("Dispose of file click operation.");
                 this._fileClickOperation.dispose();
-                this._fileClickOperation =null;
+                this._fileClickOperation = null;
             }
         }
 
