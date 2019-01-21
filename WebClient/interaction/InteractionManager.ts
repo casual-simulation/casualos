@@ -38,13 +38,16 @@ export class InteractionManager {
         this._cameraControls.update();
 
         if (this._fileClickOperation) {
+
             this._fileClickOperation.update();
 
             // Dispose of operations that have finished.
             if (this._fileClickOperation.isFinished()) {
+
                 console.log("Dispose of file click operation.");
                 this._fileClickOperation.dispose();
                 this._fileClickOperation = null;
+
             }
         }
 
@@ -52,48 +55,65 @@ export class InteractionManager {
 
         // Detect left click.
         if (input.getMouseButtonDown(MouseButtonId.Left)) {
+
             const screenPos = input.getMouseScreenPos();
             const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this._draggableObjects, this._gameView.camera);
             const clickedObject = Physics.firstRaycastHit(raycastResult);
 
             if (clickedObject) {
+
                 this._cameraControls.enabled = false;
                 const file = this.fileForIntersection(clickedObject);
 
                 if (file) {
+
                     // Start file click operation on file.
                     console.log("Create file click operation.");
                     this._fileClickOperation = new FileClickOperation(this._gameView, this, file, clickedObject);
+
                 }
 
             }
 
             // If file click operation wasnt started, make sure camera controls are enabled.
             if (!this._fileClickOperation) {
+
                 this._cameraControls.enabled = true;
+
             }
         }
 
         // Middle click.
         if (input.getMouseButtonDown(MouseButtonId.Middle)) {
+
             // Always allow camera control with middle clicks.
             this._cameraControls.enabled = true;
+
         }
 
         // Show the context menu.
         if (input.getMouseButtonDown(MouseButtonId.Right)) {
+            
             const pagePos = input.getMousePagePos();
             const screenPos = input.getMouseScreenPos();
             const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this._draggableObjects, this._gameView.camera);
             const hit = Physics.firstRaycastHit(raycastResult);
 
             if (hit) {
+
+                this._cameraControls.enabled = false;
                 const file = this.fileForIntersection(hit);
                 if (file && file.file && file.file.type === 'workspace') {
                     // Now send the actual context menu event.
                     let menuEvent: ContextMenuEvent = { pagePos: pagePos, actions: this._contextMenuActions(file) };
                     this._gameView.$emit('onContextMenu', menuEvent);
                 }
+
+            }
+            else {
+
+                this._cameraControls.enabled = true;
+
             }
         }
 

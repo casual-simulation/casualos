@@ -7,9 +7,6 @@ import { InputType, MouseButtonId } from "../game-engine/input";
 
 export class CameraControls {
 
-    // Set to false to disable this control
-    public enabled = true;
-
     // "target" sets the location of focus, where the object orbits around
     public target: Vector3 = new Vector3();
 
@@ -56,7 +53,6 @@ export class CameraControls {
     public autoRotate: boolean = false;
     public autoRotateSpeed: number = 2.0; // 30 seconds per round when fps is 60
 
-
     // Set to false to disable use of the keys
     public enableKeys: boolean = true;
 
@@ -67,6 +63,7 @@ export class CameraControls {
 
     private _camera: PerspectiveCamera;
     private _gameView: GameView;
+    private _enabled = true;
 
     private state: STATE;
 
@@ -91,6 +88,29 @@ export class CameraControls {
     private dollyStart = new Vector2();
     private dollyEnd = new Vector2();
     private dollyDelta = new Vector2();
+
+    get enabled() {
+        return this._enabled 
+    }
+
+    set enabled(value: boolean) {
+
+        if (this._enabled !== value) {
+
+            this._enabled = value;
+
+            if (this._enabled) {
+                
+                this.reset();
+
+            } else {
+
+                this.saveState();
+
+            }
+
+        }
+    }
 
 
     constructor(camera: PerspectiveCamera, gameView: GameView) {
@@ -198,17 +218,13 @@ export class CameraControls {
         this._camera.zoom = this.zoom0;
 
         this._camera.updateProjectionMatrix();
-        // this.dispatchEvent( this.changeEvent );
 
         this.state = STATE.NONE;
 
         this.update();
-
     }
 
     public update() {
-
-        if (!this.enabled) return;
 
         this.updateInput();
         this.updateCamera();
@@ -228,19 +244,19 @@ export class CameraControls {
             //
             // Pan/Dolly/Rotate [Start]
             //
-            if (input.getMouseButtonDown(MouseButtonId.Left) && this.enablePan) {
+            if (input.getMouseButtonDown(MouseButtonId.Left) && this.enablePan && this.enabled) {
 
                 // Pan start.
                 this.panStart.copy(input.getMouseClientPos());
                 this.state = STATE.PAN;
 
-            } else if (input.getMouseButtonDown(MouseButtonId.Middle) && this.enableZoom) {
+            } else if (input.getMouseButtonDown(MouseButtonId.Middle) && this.enableZoom && this.enabled) {
 
                 // Dolly start.
                 this.dollyStart.copy(input.getMouseClientPos());
                 this.state = STATE.DOLLY;
 
-            } else if (input.getMouseButtonDown(MouseButtonId.Right) && this.enableRotate) {
+            } else if (input.getMouseButtonDown(MouseButtonId.Right) && this.enableRotate && this.enabled) {
 
                 // Rotate start.
                 this.rotateStart.copy(input.getMouseClientPos());
@@ -251,7 +267,7 @@ export class CameraControls {
             //
             // Pan/Dolly/Rotate [Move]
             //
-            if (input.getMouseButtonHeld(MouseButtonId.Left) && this.enablePan) {
+            if (input.getMouseButtonHeld(MouseButtonId.Left) && this.enablePan && this.enabled) {
 
                 // Pan move.
                 this.panEnd.copy(input.getMouseClientPos());
@@ -259,7 +275,7 @@ export class CameraControls {
                 this.pan(this.panDelta.x, this.panDelta.y);
                 this.panStart.copy(this.panEnd);
 
-            } else if (input.getMouseButtonHeld(MouseButtonId.Middle) && this.enableZoom) {
+            } else if (input.getMouseButtonHeld(MouseButtonId.Middle) && this.enableZoom && this.enabled) {
 
                 // Dolly move.
                 this.dollyEnd.copy(input.getMouseClientPos());
@@ -270,7 +286,7 @@ export class CameraControls {
 
                 this.dollyStart.copy(this.dollyEnd);
 
-            } else if (input.getMouseButtonHeld(MouseButtonId.Right) && this.enableRotate) {
+            } else if (input.getMouseButtonHeld(MouseButtonId.Right) && this.enableRotate && this.enabled) {
 
                 // Rotate move.
                 this.rotateEnd.copy(input.getMouseClientPos());
