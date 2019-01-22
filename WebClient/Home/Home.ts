@@ -88,8 +88,6 @@ export default class Home extends Vue {
     async created() {
         this.isLoading = true;
 
-        await this.fileManager.init();
-
         EventBus.$on('openInfoCard', this.open);
         this.open();
 
