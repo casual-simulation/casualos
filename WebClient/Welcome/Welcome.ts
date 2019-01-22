@@ -12,7 +12,7 @@ export default class Welcome extends Vue {
         console.log('[Welcome] Email submitted: ' + this.email);
 
         if(await appManager.loginOrCreateUser(this.email, this.channelId)) {
-            this.$router.push({ name: 'home', params: { id: this.channelId } });
+            this.$router.push({ name: 'home', params: { id: this.channelId || null } });
         } else {
             // TODO: Show an error message
         }

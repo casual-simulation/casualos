@@ -90,7 +90,7 @@ export default class MergeConflicts extends Vue {
 
     finish() {
         appManager.fileManager.resolveConflicts(this.resolved);
-        this.$router.push('/home');
+        this.$router.push({ name: 'home', params: { id: appManager.user.channelId } });
     }
 
     private _conflictingTags(conflicts: ConflictDetails[]) {

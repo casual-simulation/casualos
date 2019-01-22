@@ -66,10 +66,12 @@ const routes: RouteConfig[] = [
     },
     {
         path: '/editor/:id?',
+        name: 'editor',
         component: Editor
     },
     {
         path: '/merge-conflicts/:id?',
+        name: 'merge-conflicts',
         component: MergeConflicts,
         beforeEnter: (to, from, next) => {
             if (appManager.fileManager && appManager.fileManager.mergeStatus) {
