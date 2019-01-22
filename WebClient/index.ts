@@ -94,12 +94,13 @@ router.beforeEach((to, from, next) => {
                 next({ path: '/' });
                 return;
             } else {
-                const channelId = to.params.id;
-                if (appManager.user.channelId !== channelId) {
+                const channelId = to.params.id || null;
+                if (appManager.user.channelId != channelId) {
                     return appManager.loginOrCreateUser(appManager.user.email, channelId).then(() => {
                         location.reload();
                         next();
                     }, ex => {
+                        console.error(ex);
                         next({ path: '/' });
                     });
                 }
@@ -112,6 +113,7 @@ router.beforeEach((to, from, next) => {
         }
         next();
     }, ex => {
+        console.error(ex);
         next('/');
     });
 });

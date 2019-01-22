@@ -230,7 +230,7 @@ export class AppManager {
         if (this.user && this.user.channelId === channelId)
             return true;
 
-        channelId = channelId.trim() || null;
+        channelId = channelId ? channelId.trim() : null;
 
         try {
             const result = await Axios.post('/api/users', {
