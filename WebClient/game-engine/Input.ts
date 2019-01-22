@@ -307,6 +307,13 @@ export class Input {
         return null;
     }
 
+    /**
+     * Return how many touches are currenty detected.
+     */
+    public getTouchCount(): number {
+        return this._touchData.length;
+    }
+
     public getMouseData(): MouseData {
         return this._mouseData;
     }

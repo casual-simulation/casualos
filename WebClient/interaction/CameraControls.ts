@@ -311,6 +311,70 @@ export class CameraControls {
 
         } else if (input.currentInputType === InputType.Touch) {
 
+            //
+            // Pan/Dolly/Rotate [Start]
+            //
+            if (input.getTouchCount() === 1) {
+
+                if (input.getTouchDown(0) && this.enablePan && this.enabled ) {
+
+                    // Pan start.
+                    console.log("touch pan start");
+                    this.panStart.copy(input.getTouchClientPos(0));
+                    this.state = STATE.PAN;
+                }
+
+            } else if (input.getTouchCount() === 2) {
+
+                if (input.getTouchDown(1) && this.enableZoom && this.enabled) {
+
+                    // Dolly start.
+                    console.log("touch dolly start");
+                    const pagePosA = input.getTouchPagePos(0);
+                    const pagePosB = input.getTouchPagePos(1);
+                    const distance = pagePosA.distanceTo(pagePosB);
+                    this.dollyStart.set(0, distance);
+                }
+            }
+
+            //
+            // Pan/Dolly/Rotate [Move]
+            //
+            if (input.getTouchCount() === 1) {
+
+                if (input.getTouchHeld(0) && this.enablePan && this.enabled) {
+
+                    // Pan move.
+                    this.panEnd.copy(input.getTouchClientPos(0));
+                    this.panDelta.subVectors(this.panEnd, this.panStart).multiplyScalar(this.panSpeed);
+                    this.pan(this.panDelta.x, this.panDelta.y);
+                    this.panStart.copy(this.panEnd);
+                }
+            } else if (input.getTouchCount() === 2) {
+
+                if (this.enableZoom && this.enabled) {
+
+                    // Dolly move.
+                    const pagePosA = input.getTouchPagePos(0);
+                    const pagePosB = input.getTouchPagePos(1);
+                    const distance = pagePosA.distanceTo(pagePosB);
+                    
+                    this.dollyEnd.set(0, distance);
+                    this.dollyDelta.set(0, Math.pow(this.dollyEnd.y / this.dollyStart.y, this.zoomSpeed));
+                    this.dollyIn(this.dollyDelta.y);
+                    this.dollyStart.copy(this.dollyEnd);
+                }
+            }
+            
+
+            //
+            // Pan/Dolly/Rotate [End]
+            //
+            if (input.getTouchCount() === 0) {
+
+                this.state = STATE.NONE;
+
+            }
 
         }
     }
@@ -408,7 +472,5 @@ enum STATE {
     NONE = -1,
     ROTATE = 0,
     DOLLY = 1,
-    PAN = 2,
-    TOUCH_ROTATE = 3,
-    TOUCH_DOLLY_PAN = 4
+    PAN = 2
 }
