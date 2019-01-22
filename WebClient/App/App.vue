@@ -15,7 +15,7 @@
                     <span class="md-body-1" v-if="getUser() != null">Logged In: {{getUser().name}}</span>
                 </div>
                 <md-list>
-                    <router-link tag="md-list-item" to="/Home">
+                    <router-link v-if="getUser() != null" tag="md-list-item" :to="{ name: 'home', params: { id: session } }">
                         <md-icon>home</md-icon>
                         <span class="md-list-item-text">Home</span>
                     </router-link>
@@ -27,7 +27,7 @@
                         <md-icon>exit_to_app</md-icon>
                         <span class="md-list-item-text">Logout</span>
                     </md-list-item>
-                    <md-list-item class="nuke-site-item" @click="nukeSite()" :disabled="!(online && synced)">
+                    <md-list-item v-if="getUser() != null" class="nuke-site-item" @click="nukeSite()" :disabled="!(online && synced)">
                         <md-icon class="nuke-everything-icon">delete_forever</md-icon>
                         <span class="md-list-item-text">Nuke the Site</span>
 
@@ -51,7 +51,7 @@
                             <span v-else>Offline</span>
                         </span>
                     </md-list-item>
-                    <md-list-item to="/merge-conflicts" v-if="remainingConflicts.length > 0">
+                    <md-list-item :to="{ name: 'merge-conflicts', params: { id: session } }" v-if="remainingConflicts.length > 0">
                         <md-icon id="fix-merge-conflicts-icon">build</md-icon>
                         <span class="md-list-item-text">Fix Merge Conflicts</span>
                     </md-list-item>

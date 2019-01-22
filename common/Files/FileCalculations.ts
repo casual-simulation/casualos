@@ -473,6 +473,14 @@ function _parseArray(value: string): string[] {
     return value.slice(1, value.length - 1).split(',');
 }
 
+function _singleOrArray<T>(values: T[]) {
+    if(values.length === 1) {
+        return values[0];
+    } else {
+        return values;
+    }
+}
+
 
 class SandboxInterfaceImpl implements SandboxInterface {
   
@@ -487,14 +495,14 @@ class SandboxInterfaceImpl implements SandboxInterface {
     listTagValues(tag: string, filter?: FilterFunction, extras?: any) {
       const tags = flatMap(this.objects.map(o => this._calculateValue(o, tag)).filter(t => t));
       const filtered = this._filterValues(tags, filter);
-      return filtered;
+      return _singleOrArray(filtered);
     }
   
     listObjectsWithTag(tag: string, filter?: FilterFunction, extras?: any) {
       const objs = this.objects.filter(o => this._calculateValue(o, tag))
         .map(o => convertToFormulaObject(this.context, o));
       const filtered = this._filterObjects(objs, filter, tag);
-      return filtered;
+      return _singleOrArray(filtered);
     }
 
     uuid(): string {
