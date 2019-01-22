@@ -100,7 +100,7 @@ export class CameraControls {
             this._enabled = value;
 
             if (this._enabled) {
-                
+
                 this.reset();
 
             } else {
@@ -292,7 +292,7 @@ export class CameraControls {
                 this.rotateEnd.copy(input.getMouseClientPos());
                 this.rotateDelta.subVectors(this.rotateEnd, this.rotateStart).multiplyScalar(this.rotateSpeed);
                 this.rotateLeft(2 * Math.PI * this.rotateDelta.x / this._gameView.gameView.clientHeight); // yes, height.
-                this.rotateUp(2 * Math.PI * this.rotateDelta.y / this._gameView.gameView.clientHeight);
+                // this.rotateUp(2 * Math.PI * this.rotateDelta.y / this._gameView.gameView.clientHeight);
                 this.rotateStart.copy(this.rotateEnd);
 
             }
