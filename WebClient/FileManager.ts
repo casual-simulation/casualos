@@ -486,7 +486,7 @@ export class FileManager {
   }
 
   private get _offlineServerState(): FilesState {
-    const json = localStorage.getItem('offline_server_state');
+    const json = localStorage.getItem(`offline_server_state_${this._id}`);
     if (json) {
       return JSON.parse(json);
     } else {
@@ -496,9 +496,9 @@ export class FileManager {
 
   private set _offlineServerState(state: FilesState) {
     if (state !== null && typeof state !== 'undefined') {
-      localStorage.setItem('offline_server_state', JSON.stringify(state));
+      localStorage.setItem(`offline_server_state_${this._id}`, JSON.stringify(state));
     } else {
-      localStorage.setItem('offline_server_state', null);
+      localStorage.setItem(`offline_server_state_${this._id}`, null);
     }
   }
 
