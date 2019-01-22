@@ -1,5 +1,5 @@
 import { IOperation } from "./IOperation";
-import { PerspectiveCamera, Vector3, Spherical, Vector2, Quaternion, Matrix4 } from "three";
+import { PerspectiveCamera, Vector3, Spherical, Vector2, Quaternion, Matrix4, Math as ThreeMath } from "three";
 import GameView from "../GameView/GameView";
 import { InteractionManager } from "./InteractionManager";
 import { InputType, MouseButtonId } from "../game-engine/input";
@@ -291,8 +291,9 @@ export class CameraControls {
                 // Rotate move.
                 this.rotateEnd.copy(input.getMouseClientPos());
                 this.rotateDelta.subVectors(this.rotateEnd, this.rotateStart).multiplyScalar(this.rotateSpeed);
-                this.rotateLeft(2 * Math.PI * this.rotateDelta.x / this._gameView.gameView.clientHeight); // yes, height.
-                // this.rotateUp(2 * Math.PI * this.rotateDelta.y / this._gameView.gameView.clientHeight);
+                const angle = 2 * Math.PI * this.rotateDelta.x / this._gameView.gameView.clientHeight;
+                // console.log("mouse rotate angle: " + angle);
+                this.rotateLeft(angle);
                 this.rotateStart.copy(this.rotateEnd);
 
             }
@@ -326,14 +327,27 @@ export class CameraControls {
 
             } else if (input.getTouchCount() === 2) {
 
-                if (input.getTouchDown(1) && this.enableZoom && this.enabled) {
+                if (input.getTouchDown(1)) {
 
-                    // Dolly start.
-                    console.log("touch dolly start");
-                    const pagePosA = input.getTouchPagePos(0);
-                    const pagePosB = input.getTouchPagePos(1);
-                    const distance = pagePosA.distanceTo(pagePosB);
-                    this.dollyStart.set(0, distance);
+                    if (this.enableZoom && this.enabled) {
+                        
+                        // Dolly start.
+                        console.log("touch dolly start");
+                        const pagePosA = input.getTouchPagePos(0);
+                        const pagePosB = input.getTouchPagePos(1);
+                        const distance = pagePosA.distanceTo(pagePosB);
+                        this.dollyStart.set(0, distance);
+
+                    }
+
+                    if (this.enableRotate && this.enabled) {
+
+                        // Rotate start.
+                        console.log(" touch rotate start");
+                        const pagePosA = input.getTouchPagePos(0);
+                        const pagePosB = input.getTouchPagePos(1);
+                        this.rotateStart = new Vector2().subVectors(pagePosA, pagePosB).normalize();
+                    }
                 }
             }
 
@@ -363,6 +377,26 @@ export class CameraControls {
                     this.dollyDelta.set(0, Math.pow(this.dollyEnd.y / this.dollyStart.y, this.zoomSpeed));
                     this.dollyIn(this.dollyDelta.y);
                     this.dollyStart.copy(this.dollyEnd);
+                }
+
+                if (this.enableRotate && this.enabled) {
+
+                    // Rotate move.
+                    const pagePosA = input.getTouchPagePos(0);
+                    const pagePosB = input.getTouchPagePos(1);
+                    this.rotateEnd = new Vector2().subVectors(pagePosA, pagePosB).normalize();
+                    
+                    var angle = this.rotateStart.dot(this.rotateEnd) / (Math.sqrt(this.rotateStart.lengthSq() * this.rotateEnd.lengthSq()));
+                    angle *= this.rotateSpeed;
+                    angle = Math.acos(ThreeMath.clamp(angle, -1, 1));
+
+                    var cross = this.rotateStart.x * this.rotateEnd.y - this.rotateStart.y * this.rotateEnd.x;
+                    if (cross < 0) angle = -angle;
+
+                    // console.log("touch rotate angle: " + angle);
+                    this.rotateLeft(angle);
+                    this.rotateStart.copy(this.rotateEnd);
+
                 }
             }
             
