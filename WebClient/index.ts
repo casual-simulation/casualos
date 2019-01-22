@@ -95,6 +95,7 @@ router.beforeEach((to, from, next) => {
                 const channelId = to.params.id;
                 if (appManager.user.channelId !== channelId) {
                     return appManager.loginOrCreateUser(appManager.user.email, channelId).then(() => {
+                        location.reload();
                         next();
                     }, ex => {
                         next({ path: '/' });
