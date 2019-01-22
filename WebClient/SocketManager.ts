@@ -49,10 +49,11 @@ export class SocketManager {
         this._client = new ChannelClient(this._connector, storeFactory);
     }
 
-    async getFilesChannel(): Promise<ChannelConnection<FilesState>> {
-        console.log('[SocketManager] Getting files channel...');
+    async getFilesChannel(id?: string): Promise<ChannelConnection<FilesState>> {
+        const channelId = id ? `files-${id}` : 'files';
+        console.log(`[SocketManager] Getting ${channelId} channel...`);
         const files = await this._client.getChannel<FilesState>({
-            id: 'files',
+            id: channelId,
             type: channelTypes.files,
             name: 'Files!'
         }).subscribe();

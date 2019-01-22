@@ -105,7 +105,7 @@ export class FileManager {
 
   private _subscriptions: SubscriptionLike[];
   private _status: string;
-  private _initPromise: Promise<void>;
+  private _initPromise: Promise<string>;
   private _fileDiscoveredObservable: ReplaySubject<File>;
   private _fileRemovedObservable: ReplaySubject<string>;
   private _fileUpdatedObservable: Subject<File>;
@@ -116,6 +116,7 @@ export class FileManager {
   private _syncFailedObservable: Subject<MergeStatus<FilesState>>;
   private _disconnectedObservable: Subject<FilesState>;
   private _mergeStatus: MergeStatus<FilesState> = null;
+  private _id: string;
 
   get files(): File[] {
     return values(this._filesState);
@@ -253,11 +254,15 @@ export class FileManager {
     this._socketManager = socket;
   }
 
-  init(): Promise<void> {
+  /**
+   * Initializes the file manager to connect to the session with the given ID.
+   * @param id The ID of the session to connect to.
+   */
+  init(id: string): Promise<string> {
     if (this._initPromise) {
       return this._initPromise;
     } else {
-      return this._initPromise = this._init();
+      return this._initPromise = this._init(id);
     }
   }
 
@@ -405,8 +410,10 @@ export class FileManager {
     return createCalculationContext(this.objects);
   }
 
-  private async _init() {
+  private async _init(id: string) {
     this._setStatus('Starting...');
+
+    this._id = id;
 
     this._subscriptions = [];
     this._fileDiscoveredObservable = new ReplaySubject<File>();
@@ -418,7 +425,7 @@ export class FileManager {
     this._reconnectedObservable = new Subject<MergedObject<FilesState>>();
     this._resyncedObservable = new Subject<boolean>();
     this._syncFailedObservable = new Subject<MergeStatus<FilesState>>();
-    this._files = await this._socketManager.getFilesChannel();
+    this._files = await this._socketManager.getFilesChannel(this._id);
 
     this._setupOffline();
     await this._initUserFile();
@@ -456,6 +463,8 @@ export class FileManager {
     this._subscriptions.push(allSelectedFilesUpdated.subscribe(this._selectedFilesUpdated));
 
     this._setStatus('Initialized.');
+
+    return this._id;
   }
 
   private async _initUserFile() {

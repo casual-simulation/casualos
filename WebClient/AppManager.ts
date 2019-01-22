@@ -11,6 +11,8 @@ export interface User {
     email: string;
     username: string;
     name: string;
+
+    channelId: string;
 }
 
 /**
@@ -192,7 +194,7 @@ export class AppManager {
 
         if (user) {
             this._user = user;
-            await this._fileManager.init();
+            await this._fileManager.init(this._user.channelId);
             this._userSubject.next(this._user);
         }
     }
@@ -224,8 +226,8 @@ export class AppManager {
         }
     }
 
-    async loginOrCreateUser(email: string): Promise<boolean> {
-        if (this.user)
+    async loginOrCreateUser(email: string, channelId?: string): Promise<boolean> {
+        if (this.user && this.user.channelId === channelId)
             return true;
 
         try {
@@ -243,7 +245,8 @@ export class AppManager {
                 console.log('[AppManager] Login Success!', result);
 
                 this._user = result.data;
-                await this._fileManager.init();
+                this._user.channelId = channelId;
+                await this._fileManager.init(channelId);
                 this._userSubject.next(this._user);
                 this._saveUser();
                 return true;

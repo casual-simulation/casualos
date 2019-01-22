@@ -30,8 +30,6 @@ export default class Editor extends Vue {
     }
 
     async created() {
-        await this.fileManager.init();
-
         this.fileManager.fileUpdated
             .pipe(filter(f => f.type === 'object'))
             .subscribe((file: Object) => {
