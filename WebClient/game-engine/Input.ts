@@ -1,7 +1,7 @@
 import { ArgEvent } from '../../common/Events';
 import { Vector2 } from 'three';
 import { time } from './Time';
-import { find, findIndex, keys, some } from 'lodash';
+import { find, findIndex, some } from 'lodash';
 
 export class Input {
     /**
@@ -334,7 +334,6 @@ export class Input {
     private _update() {
         if (!this._initialized) return;
 
-        // console.log("input update frame: " + time.frameCount);
         this._cullTouchData();
 
         requestAnimationFrame(() => this._update());
@@ -353,8 +352,13 @@ export class Input {
             if (upFrame !== -1) {
                 // Current frame must be higher than the touch's up frame.
                 if (time.frameCount > upFrame) {
-                    console.log('removing touch: ' + this._touchData[i].fingerIndex + '. frame: ' + time.frameCount);
+                    
+                    if (this.debugLevel >= 1) {
+                        console.log('removing touch finger: ' + this._touchData[i].fingerIndex + '. frame: ' + time.frameCount);
+                    }
+
                     this._touchData.splice(i, 1);
+
                 }
             }
         }
@@ -452,7 +456,8 @@ export class Input {
 
             // Create new touch data.
             let data: TouchData = {
-                fingerIndex: touch.identifier,
+                identifier: touch.identifier,
+                fingerIndex: this.getTouchCount(),
                 state: new InputState(),
                 clientPos: new Vector2(touch.clientX, touch.clientY),
                 pagePos: new Vector2(touch.pageX, touch.pageY),
@@ -463,10 +468,10 @@ export class Input {
             data.state.setDownFrame(fireOnFrame);
 
             if (this.debugLevel >= 1) {
-                console.log("touch " + touch.identifier + " start. fireInputOnFrame: " + fireOnFrame);
+                console.log("touch finger " + data.fingerIndex + " start. fireInputOnFrame: " + fireOnFrame);
             }
 
-            var existingTouchIndex = findIndex(this._touchData, (d) => { return d.fingerIndex === touch.identifier; });
+            var existingTouchIndex = findIndex(this._touchData, (d) => { return d.identifier === touch.identifier; });
             if (existingTouchIndex === -1) this._touchData.push(data);
             else this._touchData[existingTouchIndex] = data;
         }
@@ -485,14 +490,15 @@ export class Input {
         for (var i = 0; i < changed.length; i++) {
             const touch = changed.item(i);
 
-            var existingTouch = find(this._touchData, (d) => { return d.fingerIndex === touch.identifier; });
+            var existingTouch = find(this._touchData, (d) => { return d.identifier === touch.identifier; });
             existingTouch.clientPos = new Vector2(touch.clientX, touch.clientY);
             existingTouch.pagePos = new Vector2(touch.pageX, touch.pageY);
             existingTouch.screenPos = this._calculateScreenPos(touch.pageX, touch.pageY);
 
             if (this.debugLevel >= 2) {
                 console.log("touch move:");
-                console.log("  identifier: " + existingTouch.fingerIndex);
+                console.log("  identifier: " + existingTouch.identifier);
+                console.log("  fingerIndex: " + existingTouch.fingerIndex);
                 console.log("  screenPos: " + JSON.stringify(existingTouch.screenPos));
                 console.log("  pagePos: " + JSON.stringify(existingTouch.pagePos));
                 console.log("  clientPos: " + JSON.stringify(existingTouch.clientPos));
@@ -511,14 +517,14 @@ export class Input {
             const touch = changed.item(i);
             let fireOnFrame = time.frameCount + 1;
 
-            var existingTouch = find(this._touchData, (d) => { return d.fingerIndex === touch.identifier; });
+            var existingTouch = find(this._touchData, (d) => { return d.identifier === touch.identifier; });
             existingTouch.state.setUpFrame(fireOnFrame);
             existingTouch.clientPos = new Vector2(touch.clientX, touch.clientY);
             existingTouch.pagePos = new Vector2(touch.pageX, touch.pageY);
             existingTouch.screenPos = this._calculateScreenPos(touch.pageX, touch.pageY);
 
             if (this.debugLevel >= 1) {
-                console.log("touch " + touch.identifier + " end. fireInputOnFrame: " + fireOnFrame);
+                console.log("touch finger" + existingTouch.fingerIndex + " end. fireInputOnFrame: " + fireOnFrame);
             }
         }
     }
@@ -534,14 +540,14 @@ export class Input {
             const touch = changed.item(i);
             let fireOnFrame = time.frameCount + 1;
 
-            var existingTouch = find(this._touchData, (d) => { return d.fingerIndex === touch.identifier; });
+            var existingTouch = find(this._touchData, (d) => { return d.identifier === touch.identifier; });
             existingTouch.state.setUpFrame(fireOnFrame);
             existingTouch.clientPos = new Vector2(touch.clientX, touch.clientY);
             existingTouch.pagePos = new Vector2(touch.pageX, touch.pageY);
             existingTouch.screenPos = this._calculateScreenPos(touch.pageX, touch.pageY);
 
             if (this.debugLevel >= 1) {
-                console.log("touch " + touch.identifier + " canceled. fireInputOnFrame: " + fireOnFrame);
+                console.log("touch finger" + existingTouch.fingerIndex + " canceled. fireInputOnFrame: " + fireOnFrame);
             }
         }
     }
@@ -630,6 +636,12 @@ class InputState {
 }
 
 interface TouchData {
+
+    /**
+     * The unique identifier for the touch.
+     */
+    identifier: number;
+    
     /**
      * The index of the finger for the touch.
      */

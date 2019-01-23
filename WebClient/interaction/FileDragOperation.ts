@@ -61,7 +61,6 @@ export class FileDragOperation implements IOperation {
 
             // Button has been released. This drag operation is finished.
             this._finished = true;
-            console.log("[FileDragOperation] finished");
 
         }
     }
@@ -71,7 +70,6 @@ export class FileDragOperation implements IOperation {
     }
 
     public dispose(): void {
-        console.log("[FileDragOperation] dispose");
         this._gameView.grids.visible = false;
     }
 

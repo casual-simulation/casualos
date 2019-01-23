@@ -41,11 +41,9 @@ export class FileClickOperation implements IOperation {
                 
                 const curScreenPos = this._gameView.input.getMouseScreenPos();
                 const distance = curScreenPos.distanceTo(this._startScreenPos);
-                console.log("[FileClickOperation] drag threshold distance: " + distance);
 
                 if (distance >= FileClickOperation.DragThreshold) {
                     // Start dragging now that we've crossed the threshold.
-                    console.log("[FileClickOperation] start file drag operation");
                     const workspace = this._interaction.findWorkspaceForIntersection(this._hit);
                     this._dragOperation = new FileDragOperation(this._gameView, this._interaction, this._file, workspace);
                 }
@@ -72,7 +70,6 @@ export class FileClickOperation implements IOperation {
 
             // Button has been released. This click operation is finished.
             this._finished = true;
-            console.log("[FileClickOperation] finished");
         }
     }
 
@@ -81,8 +78,6 @@ export class FileClickOperation implements IOperation {
     }
 
     public dispose(): void {
-
-        console.log("[FileClickOperation] dispose");
 
         // Make sure to dispose of drag rules if they exist.
         if (this._dragOperation) {

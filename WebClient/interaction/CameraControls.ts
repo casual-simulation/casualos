@@ -292,7 +292,6 @@ export class CameraControls {
                 this.rotateEnd.copy(input.getMouseClientPos());
                 this.rotateDelta.subVectors(this.rotateEnd, this.rotateStart).multiplyScalar(this.rotateSpeed);
                 const angle = 2 * Math.PI * this.rotateDelta.x / this._gameView.gameView.clientHeight;
-                // console.log("mouse rotate angle: " + angle);
                 this.rotateLeft(angle);
                 this.rotateStart.copy(this.rotateEnd);
 
@@ -320,7 +319,6 @@ export class CameraControls {
                 if (input.getTouchDown(0) && this.enablePan && this.enabled ) {
 
                     // Pan start.
-                    console.log("touch pan start");
                     this.panStart.copy(input.getTouchClientPos(0));
                     this.state = STATE.PAN;
                 }
@@ -332,7 +330,6 @@ export class CameraControls {
                     if (this.enableZoom && this.enabled) {
                         
                         // Dolly start.
-                        console.log("touch dolly start");
                         const pagePosA = input.getTouchPagePos(0);
                         const pagePosB = input.getTouchPagePos(1);
                         const distance = pagePosA.distanceTo(pagePosB);
@@ -343,7 +340,6 @@ export class CameraControls {
                     if (this.enableRotate && this.enabled) {
 
                         // Rotate start.
-                        console.log(" touch rotate start");
                         const pagePosA = input.getTouchPagePos(0);
                         const pagePosB = input.getTouchPagePos(1);
                         this.rotateStart = new Vector2().subVectors(pagePosA, pagePosB).normalize();
@@ -393,7 +389,6 @@ export class CameraControls {
                     var cross = this.rotateStart.x * this.rotateEnd.y - this.rotateStart.y * this.rotateEnd.x;
                     if (cross < 0) angle = -angle;
 
-                    // console.log("touch rotate angle: " + angle);
                     this.rotateLeft(angle);
                     this.rotateStart.copy(this.rotateEnd);
 
