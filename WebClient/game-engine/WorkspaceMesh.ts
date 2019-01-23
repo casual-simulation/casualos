@@ -25,9 +25,8 @@ export class WorkspaceMesh extends Object3D {
      */
     workspace: Workspace;
 
-    constructor(workspace: Workspace) {
+    constructor() {
         super();
-        this.update(workspace);
     }
 
     /**
@@ -37,12 +36,21 @@ export class WorkspaceMesh extends Object3D {
      * @param checker The grid checker.
      */
     async update(workspace: Workspace, checker?: GridChecker) {
+        const prev = this.workspace;
         this.workspace = workspace;
-        this.updateHexGrid();
 
-        if (checker) {
-            await this.updateSquareGrids(checker);
+        this.position.x = this.workspace.position.x;
+        this.position.y = this.workspace.position.y;
+        this.position.z = this.workspace.position.z;
+
+        if (this._gridChanged(workspace, prev)) {
+            this.updateHexGrid();
+            if (checker) {
+                await this.updateSquareGrids(checker);
+            }
         }
+
+        this.updateMatrixWorld(false);
     }
 
     /**
@@ -80,5 +88,9 @@ export class WorkspaceMesh extends Object3D {
         this.squareGrids = levels.map(l => new GridMesh(l));
         this.add(...this.squareGrids);
         return levels;
+    }
+
+    private _gridChanged(current: Workspace, previous: Workspace) {
+        return !previous || current.size !== previous.size;
     }
 }

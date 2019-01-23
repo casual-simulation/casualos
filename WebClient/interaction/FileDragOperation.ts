@@ -1,4 +1,4 @@
-import { Input } from '../game-engine/Input';
+import { Input } from '../game-engine/input';
 import { File3D } from '../game-engine/Interfaces';
 import { IOperation } from './IOperation';
 import GameView from '../GameView/GameView';

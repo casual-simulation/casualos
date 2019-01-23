@@ -40,6 +40,9 @@ import { appManager } from '../AppManager';
 import { File3D } from '../game-engine/Interfaces';
 import { InteractionManager } from '../interaction/InteractionManager';
 import { ArgEvent } from '../../common/Events';
+import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
+import { GridChecker } from '../game-engine/grid/GridChecker';
+import { FileMesh } from '../game-engine/FileMesh';
 
 @Component({
 })
@@ -59,6 +62,7 @@ export default class GameView extends Vue {
   private _canvas: HTMLElement;
   private _input: Input;
   private _interaction: InteractionManager;
+  private _gridChecker: GridChecker;
 
   public onFileAdded: ArgEvent<File3D> = new ArgEvent<File3D>();
   public onFileUpdated: ArgEvent<File3D> = new ArgEvent<File3D>();
@@ -101,6 +105,7 @@ export default class GameView extends Vue {
     this._input = new Input();
     this._input.init(this.gameView);
     this._interaction = new InteractionManager(this);
+    this._gridChecker = new GridChecker();
 
     // Subscriptions to file events.
     this._subs.push(this.fileManager.fileDiscovered.subscribe(file => {
@@ -109,8 +114,8 @@ export default class GameView extends Vue {
     this._subs.push(this.fileManager.fileRemoved.subscribe(file => {
       this._fileRemoved(file);
     }));
-    this._subs.push(this.fileManager.fileUpdated.subscribe(file => {
-      this._fileUpdated(file);
+    this._subs.push(this.fileManager.fileUpdated.subscribe(async file => {
+      await this._fileUpdated(file);
     }));
     
     this._frameUpdate();
@@ -151,14 +156,14 @@ export default class GameView extends Vue {
     return this._files[fileId];
   }
 
-  private _fileUpdated(file: File) {
+  private async _fileUpdated(file: File) {
     const obj = this._files[file.id];
     if (obj) {
       obj.file = file;
       if (file.type === 'object') {
         this._updateFile(obj, file);
       } else {
-        this._updateWorkspace(obj, file);
+        await this._updateWorkspace(obj, file);
       }
 
       this.onFileUpdated.invoke(obj);
@@ -166,98 +171,68 @@ export default class GameView extends Vue {
   }
 
   private _updateFile(obj: File3D, data: Object) {
-    // visible if not destroyed, has a position, and not hidden
-    obj.mesh.visible = (!data.tags._destroyed && !!data.tags._position && !data.tags._hidden);
-    const workspace = this._files[data.tags._workspace];
-    obj.file = data;
-    if (workspace) {
-      obj.mesh.parent = workspace.mesh;
-    } else {
-      obj.mesh.parent = null;
-    }
 
-    if (data.tags.color) {
-      const mesh = <Mesh>obj.mesh;
-      const material = <MeshStandardMaterial>mesh.material;
-      material.color = this._getColor(data.tags.color);
-    } else {
-      const mesh = <Mesh>obj.mesh;
-      const material = <MeshStandardMaterial>mesh.material;
-      material.color = new Color(0x00FF00);
-    }
-
-    if (data.tags._position) {
-      obj.mesh.position.set(
-        data.tags._position.x + 0,
-        data.tags._position.y + 0.095,
-        data.tags._position.z + 0);
-    } else {
-      // Default position
-      obj.mesh.position.set(0, 1, 0);
-    }
+    const file = <FileMesh>obj.mesh;
+    file.update(data);
   }
 
-  private _getColor(color: string): Color {
-    return new Color(color);
+  private async _updateWorkspace(obj: File3D, data: Workspace) {
+    const workspaceMesh = <WorkspaceMesh> obj.mesh;
+    await workspaceMesh.update(data, this._gridChecker);
+
+    // if (typeof data.size !== 'undefined' && obj.surface.grid.size !== data.size) {
+    //   obj.surface.grid.cells = {};
+    //   obj.surface.grid.numCells = 0;
+    //   obj.surface.grid.generate({
+    //     size: data.size || 0
+    //   });
+    //   this._generateTilemap(obj.surface, data);
+    //   obj.surface.group.position.y -= .4;
+    // }
+
+    // obj.grid.group.position.y -= .45;
+    // obj.grid.group.updateMatrixWorld(false);
   }
 
-  private _updateWorkspace(obj: File3D, data: Workspace) {
-    obj.mesh.position.x = obj.grid.group.position.x = data.position.x || 0;
-    obj.mesh.position.y = obj.grid.group.position.y = data.position.y || 0;
-    obj.mesh.position.z = obj.grid.group.position.z = data.position.z || 0;
-
-    if (typeof data.size !== 'undefined' && obj.surface.grid.size !== data.size) {
-      obj.surface.grid.cells = {};
-      obj.surface.grid.numCells = 0;
-      obj.surface.grid.generate({
-        size: data.size || 0
-      });
-      this._generateTilemap(obj.surface, data);
-      obj.surface.group.position.y -= .4;
-    }
-
-    obj.grid.group.position.y -= .45;
-    obj.grid.group.updateMatrixWorld(false);
-  }
-
-  private _fileAdded(file: File) {
+  private async _fileAdded(file: File) {
     console.log("File Added!");
 
     if (file.type === 'object' && file.tags._hidden) {
       return;
     }
 
-    let mesh;
-    let grid;
-    let board;
+    let obj: File3D;
     if (file.type === 'object') {
-      const cube = this._createCube(0.2);
-      mesh = cube;
+      obj = this._createFile(file);
+      // const cube = this._createCube(0.2);
+      // mesh = cube;
     } else {
-      const surface = this._createWorkSurface(file);
-      mesh = surface.board.group;
-      grid = surface.sqrBoard;
-      board = surface.board;
+      obj = this._createWorkSurface(file);
+      // const surface = this._createWorkSurface(file);
+      // mesh = surface.board.group;
+      // grid = surface.sqrBoard;
+      // board = surface.board;
     }
-    const obj: File3D = this._files[file.id] = {
-      file: file,
-      grid: grid,
-      surface: board,
-      mesh: mesh
-    };
+    // const obj: File3D = this._files[file.id] = {
+    //   file: file,
+    //   grid: grid,
+    //   surface: board,
+    //   mesh: mesh
+    // };
 
+    this._files[file.id] = obj;
     this._fileIds[obj.mesh.id] = obj.file.id;
     this._scene.add(obj.mesh);
     obj.mesh.name = `${file.type}_${file.id}`;
-    if (grid) {
-      grid.group.name = `grid_${file.type}_${file.id}`;
-      this._fileIds[grid.group.id] = obj.file.id;
-      this._grids.add(grid.group);
-    }
+    // if (grid) {
+    //   grid.group.name = `grid_${file.type}_${file.id}`;
+    //   this._fileIds[grid.group.id] = obj.file.id;
+    //   this._grids.add(grid.group);
+    // }
 
     this.onFileAdded.invoke(obj);
 
-    this._fileUpdated(file);
+    await this._fileUpdated(file);
   }
 
   private _fileRemoved(id: string) {
@@ -271,18 +246,12 @@ export default class GameView extends Vue {
     }
   }
 
-  private _createCube(size: number): Mesh {
-
-    var geometry = new BoxBufferGeometry(size, size, size);
-    var material = new MeshStandardMaterial({
-      color: 0x00ff00,
-      metalness: .1,
-      roughness: 0.6
-    });
-    const cube = new Mesh(geometry, material);
-    cube.castShadow = true;
-    cube.receiveShadow = false;
-    return cube;
+  private _createFile(file: File): File3D {
+    return {
+      file: file,
+      // TODO: 
+      mesh: new FileMesh(this)
+    };
   }
 
   private _setupScene() {
@@ -391,35 +360,40 @@ export default class GameView extends Vue {
 
   }
 
-  private _createWorkSurface(data: Workspace) {
-    const grid = new vg.HexGrid({
-      cellSize: .3,
-      cellHeight: 0.5
-    });
-    grid.generate({
-      size: data.size || 0
-    });
+  private _createWorkSurface(data: Workspace): File3D {
+    return {
+      file: data,
+      mesh: new WorkspaceMesh()
+    };
 
-    const board = new vg.Board(grid);
-    this._generateTilemap(board, data);
+    // const grid = new vg.HexGrid({
+    //   cellSize: .3,
+    //   cellHeight: 0.5
+    // });
+    // grid.generate({
+    //   size: data.size || 0
+    // });
 
-    const sqrGrid = new vg.SqrGrid({
-      size: 14,
-      cellSize: .12
-    });
+    // const board = new vg.Board(grid);
+    // this._generateTilemap(board, data);
 
-    const sqrBoard = new vg.Board(sqrGrid);
-    const mat = new LineBasicMaterial({
-      color: 0xFFFFFF,
-      opacity: 1
-    });
-    sqrBoard.generateOverlay(18, mat);
+    // const sqrGrid = new vg.SqrGrid({
+    //   size: 14,
+    //   cellSize: .12
+    // });
 
-    sqrBoard.group.position.x = data.position.x;
-    sqrBoard.group.position.y = data.position.y;
-    sqrBoard.group.position.z = data.position.z;
+    // const sqrBoard = new vg.Board(sqrGrid);
+    // const mat = new LineBasicMaterial({
+    //   color: 0xFFFFFF,
+    //   opacity: 1
+    // });
+    // sqrBoard.generateOverlay(18, mat);
 
-    return { board, sqrBoard };
+    // sqrBoard.group.position.x = data.position.x;
+    // sqrBoard.group.position.y = data.position.y;
+    // sqrBoard.group.position.z = data.position.z;
+
+    // return { board, sqrBoard };
   }
 
   private _generateTilemap(board: vg.Board, data: Workspace) {

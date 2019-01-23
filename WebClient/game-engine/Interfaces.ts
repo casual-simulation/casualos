@@ -2,6 +2,8 @@ import { Ray, Vector3, Vector2, Intersection, Mesh, Group } from "three";
 import { vg } from "von-grid";
 import { File, Workspace } from 'common/Files';
 import { Physics } from './Physics';
+import { WorkspaceMesh } from "./WorkspaceMesh";
+import { FileMesh } from "./FileMesh";
   
   
   
@@ -13,20 +15,7 @@ import { Physics } from './Physics';
     /**
      * The 3D mesh that represents the file.
      */
-    mesh: Mesh | Group;
-  
-    /**
-     * The optional surface used for workspaces.
-     * Surfaces are simply the special decoration that a workspace displays so that 
-     * objects appear to be placed on them. Their only use is for visuals.
-     */
-    surface: vg.Board | null;
-  
-    /**
-     * The grid that is used to position objects on top of workspaces.
-     * Grids are only visible while the user is dragging an object.
-     */
-    grid: vg.Board | null;
+    mesh: FileMesh | WorkspaceMesh;
   
     /**
      * The file (workspace or object) that this object represents.

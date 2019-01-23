@@ -28,5 +28,5 @@ export interface GridTile {
     /**
      * The world relative corner points of the tile.
      */
-    worldPoints: Vector3[];
+    localPoints: Vector3[];
 }

@@ -54,7 +54,7 @@ export class GridChecker {
         });
         this._renderer.setClearColor(new Color(), 0);
 
-        document.body.appendChild(this._renderer.domElement);
+        // document.body.appendChild(this._renderer.domElement);
 
         this._scene.add(this._camera);
     }
@@ -132,14 +132,15 @@ export class GridChecker {
                 // const b = data[pixel + 2];
                 const gridX = Math.ceil(x - (actualWidth / 2));
                 const gridY = Math.ceil(y - (actualHeight / 2));
-                const worldPos = this._worldPosition(xPercent, yPercent, height);
+                const localPos = this._localPosition(xPercent, yPercent, height);
+                const worldPos = new Vector3().copy(localPos).add(new Vector3(this._center.x, 0, this._center.z));
                 tiles.push({
                     valid,
                     gridPosition: new Vector2(gridX, gridY),
                     worldPosition: worldPos,
                     points: points,
-                    worldPoints: points.map(p => {
-                        return new Vector3().copy(p).add(worldPos);
+                    localPoints: points.map(p => {
+                        return new Vector3().copy(p).add(localPos);
                     })
                 });
             }
@@ -160,9 +161,9 @@ export class GridChecker {
         return pixel;
     }
     
-    private _worldPosition(xPercent: number, yPercent: number, z: number) {
-        const left = this._center.x - this._size.x / 2;
-        const top = this._center.z + this._size.z / 2;
+    private _localPosition(xPercent: number, yPercent: number, z: number) {
+        const left = -this._size.x / 2;
+        const top = this._size.z / 2;
         const width = this._size.x;
         const height = this._size.z;
         const x = left + (xPercent * width);
@@ -180,7 +181,8 @@ export class GridChecker {
         this._scene.add(this._group);
 
         const hexBounds = new Box3().setFromObject(this._group);
-        this._camera.position.set(this._center.x, hexBounds.max.y, this._center.z);
+        this._camera.position.set(0, hexBounds.max.y, 0);
+        this._camera.updateMatrixWorld(true);
     }
     
     private _updateHexes() {

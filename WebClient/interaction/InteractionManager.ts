@@ -1,5 +1,5 @@
 import { Vector2, Vector3, Intersection, Raycaster, Object3D, Ray } from 'three';
-import { Input, InputType, MouseButtonId } from '../game-engine/Input';
+import { Input, InputType, MouseButtonId } from '../game-engine/input';
 import { File3D, ContextMenuEvent, ContextMenuAction, DragOperation } from '../game-engine/Interfaces';
 import { Object } from '../../common/Files';
 import { FileClickOperation } from './FileClickOperation';
@@ -174,12 +174,12 @@ export class InteractionManager {
             const workspace = this.findWorkspaceForIntersection(hit);
             if (workspace) {
                 workspace.mesh.worldToLocal(point);
-                const cell = workspace.grid.grid.pixelToCell(point);
-                const pos = workspace.grid.grid.cellToPixel(cell).clone();
-                pos.y = point.y;
+                // const cell = workspace.grid.grid.pixelToCell(point);
+                // const pos = workspace.grid.grid.cellToPixel(cell).clone();
+                // pos.y = point.y;
                 return {
                     good: true,
-                    point: pos,
+                    point: {x:0,y:0,z:0},//pos,
                     workspace
                 };
             }

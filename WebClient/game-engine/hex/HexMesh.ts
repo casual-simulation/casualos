@@ -67,9 +67,10 @@ export function createDefaultHexMaterial(mat: Material): Material {
     if (mat) {
         return mat;
     }
-    return new MeshBasicMaterial({
-        color: 0x999999
-    });
+    return new MeshStandardMaterial({
+        color: 0x999999,
+        roughness: .7,
+    })
 }
 
 /**

@@ -1,4 +1,4 @@
-import { Input, InputType, MouseButtonId } from '../game-engine/Input';
+import { Input, InputType, MouseButtonId } from '../game-engine/input';
 import { File3D } from '../game-engine/Interfaces';
 import { FileDragOperation } from './FileDragOperation';
 import { Vector2, Vector3, Intersection } from 'three';

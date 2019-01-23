@@ -52,38 +52,11 @@ import {
 } from 'lodash';
 
 import { File, Object, Workspace } from 'common/Files';
-import { gameTime } from '../GameTime';
 
 import { vg } from "von-grid";
 
 import skyTextureUrl from '../public/images/CGSkies_0132_free.jpg';
 import groundModelUrl from '../public/models/ground.gltf';
-import { 
-  isButton, 
-  pointerDown, 
-  leftDrag, 
-  rightDrag, 
-  showHideContextMenu,
-  screenPosToRay, 
-  eventIsDirectlyOverElement, 
-  firstRaycastHit,
-  screenPosition,
-  raycastAtScreenPos,
-  pointOnPlane,
-  pointOnRay,
-  Ray,
-  File3D,
-  MouseDrag, 
-  ClickOperation,
-  DragOperation,
-  MouseDragPosition,
-  DraggedObject,
-  disableContextMenuWithin,
-  EventWrapper,
-  ContextMenuEvent,
-  ContextMenuAction,
-  eventIsOverElement,
-} from '../Input';
 import { appManager } from '../AppManager';
 import { HexGridMesh, Axial, posToKey } from '../game-engine/hex';
 import { GridChecker } from '../game-engine/grid/GridChecker';
@@ -150,7 +123,7 @@ export default class GameView extends Vue {
     this._renderGame();
   }
 
-  private _setupScene() {
+  private async _setupScene() {
 
     this._scene = new Scene();
     this._scene.background = new Color(0xCCE6FF);
@@ -250,7 +223,7 @@ export default class GameView extends Vue {
     const workspace: Workspace = {
       id: 'test',
       type: 'workspace',
-      position: { x: 0, y: 0, z: 0},
+      position: { x: 3, y: 0, z: 0},
       size: 4,
       grid: {
         [posToKey(new Axial(1, 0))]: {
@@ -258,7 +231,8 @@ export default class GameView extends Vue {
         }
       }
     };
-    const workspaceMesh = new WorkspaceMesh(workspace);
+    const workspaceMesh = new WorkspaceMesh();
+    await workspaceMesh.update(workspace);
 
     this._workspaces.push(workspaceMesh);
     
@@ -280,7 +254,7 @@ export default class GameView extends Vue {
       level.tiles.forEach(tile => {
         this._debugDots.add(this._createSphere(tile.worldPosition, tile.valid ? 0x0000ff : 0xff0000));
         if (tile.valid) {
-          tile.worldPoints.forEach(p => {
+          tile.localPoints.forEach(p => {
             this._debugDots.add(this._createSphere(p, 0x00ff00));
           });
         }
