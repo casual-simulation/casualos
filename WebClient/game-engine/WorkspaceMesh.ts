@@ -1,7 +1,7 @@
 import { Object3D } from "three";
 import { HexGridMesh, HexGrid, HexMesh, keyToPos } from "./hex";
 import { GridMesh } from "./grid/GridMesh";
-import { Workspace } from "common/Files";
+import { Workspace, objDiff } from "common/Files";
 import { keys } from "lodash";
 import { GridChecker } from "./grid/GridChecker";
 
@@ -91,6 +91,6 @@ export class WorkspaceMesh extends Object3D {
     }
 
     private _gridChanged(current: Workspace, previous: Workspace) {
-        return !previous || current.size !== previous.size;
+        return !previous || current.size !== previous.size || current.grid !== previous.grid;
     }
 }
