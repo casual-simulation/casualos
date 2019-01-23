@@ -6,8 +6,6 @@ import {Object, File} from 'common/Files';
 import FileValue from '../FileValue/FileValue';
 import { appManager } from '../AppManager';
 
-const numLoadingSteps: number = 4;
-
 @Component({
     components: {
         'file-value': FileValue

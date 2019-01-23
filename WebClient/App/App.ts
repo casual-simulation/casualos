@@ -55,6 +55,14 @@ export default class App extends Vue {
 
     private _subs: SubscriptionLike[] = [];
 
+    get session() {
+        if (appManager.user) {
+            return appManager.user.channelId;
+        } else {
+            return '';
+        }
+    }
+
     get version() {
         return appManager.version.latestTaggedVersion;
     }
@@ -228,7 +236,7 @@ export default class App extends Vue {
     }
     
     fixConflicts() {
-        this.$router.push('/merge-conflicts');
+        this.$router.push({ name: 'merge-conflicts', params: { id: this.session }});
     }
 
     toggleOnlineOffline() {

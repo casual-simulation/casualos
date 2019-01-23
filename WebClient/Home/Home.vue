@@ -37,12 +37,17 @@
         </div>
       </game-view>
 
-      <div class="context-menu" :style="{ left: contextMenuPosX, top: contextMenuPosY }">
-        <md-menu v-if="context" :md-active.sync="contextMenuVisible">
+      <div class="context-menu" :style="contextMenuStyle">
+        <md-menu v-show="context" :md-active.sync="contextMenuVisible">
           <md-menu-content>
-            <md-menu-item v-for="item of context.actions" v-bind:key="item.label" @click="item.onClick">
-              {{item.label}}
-            </md-menu-item>
+            <div v-if="context">
+              <md-menu-item v-for="item of context.actions" v-bind:key="item.label" @click="item.onClick">
+                {{item.label}}
+              </md-menu-item>
+            </div>
+            <div v-else>
+              <!-- render nothing you fools -->
+            </div>
           </md-menu-content>
         </md-menu>
       </div>

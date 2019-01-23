@@ -59,28 +59,20 @@ const routes: RouteConfig[] = [
     {
         path: '/',
         component: Welcome,
-        beforeEnter: (to, from, next) => {
-            appManager.initPromise.then(() => {
-                if (appManager.user) {
-                    next({ path: '/home' });
-                } else {
-                    next();
-                }
-            }, ex => {
-                next({ path: '/' });
-            });
-        }
     },
     {
-        path: '/home',
-        component: Home
+        path: '/home/:id?',
+        name: 'home',
+        component: Home,
     },
     {
-        path: '/editor',
+        path: '/editor/:id?',
+        name: 'editor',
         component: Editor
     },
     {
-        path: '/merge-conflicts',
+        path: '/merge-conflicts/:id?',
+        name: 'merge-conflicts',
         component: MergeConflicts,
         beforeEnter: (to, from, next) => {
             if (appManager.fileManager && appManager.fileManager.mergeStatus) {
@@ -101,13 +93,34 @@ const router = new VueRouter({
 });
 
 router.beforeEach((to, from, next) => {
-    if (to.path !== '/') {
-        if (!appManager.user) {
-            next({ path: '/' });
-            return;
+    appManager.initPromise.then(() => {
+        if (to.path !== '/') {
+            if (!appManager.user) {
+                next({ path: '/' });
+                return;
+            } else {
+                const channelId = to.params.id || null;
+                if (appManager.user.channelId != channelId) {
+                    return appManager.loginOrCreateUser(appManager.user.email, channelId).then(() => {
+                        location.reload();
+                        next();
+                    }, ex => {
+                        console.error(ex);
+                        next({ path: '/' });
+                    });
+                }
+            }
+        } else {
+            if (appManager.user) {
+                next({ name: 'home', params: { id: appManager.user.channelId }});
+                return;
+            }
         }
-    }
-    next();
+        next();
+    }, ex => {
+        console.error(ex);
+        next('/');
+    });
 });
 
 const app = new Vue({

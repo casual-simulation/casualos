@@ -13,8 +13,6 @@ import AlertDialogOptions from '../App/DialogOptions/AlertDialogOptions';
 import FileTag from '../FileTag/FileTag';
 import { lastEventId } from '@sentry/browser';
 
-const numLoadingSteps: number = 4;
-
 @Component({
     components: {
         'file-row': FileRow,
