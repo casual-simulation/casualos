@@ -3,28 +3,24 @@ import Component from 'vue-class-component';
 import {Provide, Inject} from 'vue-property-decorator';
 import {filter} from 'rxjs/operators';
 import {Object} from 'common/Files';
-import { FileManager } from '../FileManager';
-
 import FileTable from '../FileTable/FileTable';
-import TagEditor from '../TagEditor/TagEditor';
+import { appManager } from '../AppManager';
 
 @Component({
     components: {
-        'file-table': FileTable,
-        'tag-editor': TagEditor
-    },
-    inject: {
-        fileManager: 'fileManager'
+        'file-table': FileTable
     }
 })
 export default class Editor extends Vue {
     
     private _intervalId: any;
 
-    @Inject() private fileManager: FileManager;
-
     focusedFile: Object = null;
     focusedTag: string = null;
+
+    get fileManager() {
+        return appManager.fileManager;
+    }
 
     onTagFocusChanged(event: { file: Object, tag: string, focused: boolean }) {
         if (event.focused) {
@@ -34,8 +30,6 @@ export default class Editor extends Vue {
     }
 
     async created() {
-        await this.fileManager.init();
-
         this.fileManager.fileUpdated
             .pipe(filter(f => f.type === 'object'))
             .subscribe((file: Object) => {

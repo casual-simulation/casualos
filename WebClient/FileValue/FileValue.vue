@@ -5,6 +5,7 @@
         @blur="blur()" 
         :value="value" 
         class="value-input" 
+        :disabled="readOnly"
         :class="[{ focused: isFocused, formula: isFormula }, tag]"
         :style="{ 'background-color': backgroundColor, 'color': color }">
 </template>

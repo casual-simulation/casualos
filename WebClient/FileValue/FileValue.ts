@@ -1,17 +1,14 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Prop, Inject} from 'vue-property-decorator';
-import { FileManager } from '../FileManager';
 import { Assignment, isFormula, isAssignment } from 'common/Files/FileCalculations';
 import { SubscriptionLike } from 'rxjs';
 import {Object, File} from 'common/Files';
 import {invertColor, colorConvert} from '../utils';
 import {assign} from 'lodash';
+import { appManager } from '../AppManager';
 
 @Component({
-    inject: {
-        fileManager: 'fileManager'
-    },
     watch: {
         file: function(newFile: Object, oldFile: Object) {
             const _this: FileRow = this;
@@ -26,11 +23,14 @@ import {assign} from 'lodash';
 export default class FileRow extends Vue {
     @Prop() file: Object;
     @Prop() tag: string;
+    @Prop() readOnly: boolean;
     value: string = '';
     isFocused: boolean = false;
     isFormula: boolean = false;
 
-    @Inject() fileManager!: FileManager;
+    get fileManager() {
+        return appManager.fileManager;
+    }
 
     get backgroundColor(): string {
         if (this.tag === 'color') {
@@ -46,12 +46,10 @@ export default class FileRow extends Vue {
             return 'inherit';
         } else if(background[0] === '#' && background.length !== 7 && background.length !== 4) {
             return '#000000';
-        }else {
+        } else {
             return invertColor(colorConvert.toHex(this.backgroundColor), true);
         }
     }
-
-    private _sub: SubscriptionLike;
 
     constructor() {
         super();

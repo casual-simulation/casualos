@@ -1,36 +1,40 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
-import {Provide, Prop, Inject} from 'vue-property-decorator';
+import {Provide, Prop, Inject, Watch} from 'vue-property-decorator';
 import { some } from 'lodash';
 import {File, Object} from 'common/Files';
 import { EventBus } from '../EventBus/EventBus';
 import { fileTags } from 'common/Files/FileCalculations';
 import { appManager } from '../AppManager';
-import { FileManager } from '../FileManager';
-import { SocketManager } from '../SocketManager';
 
 import FileRow from '../FileRow/FileRow';
 import TagEditor from '../TagEditor/TagEditor';
 import AlertDialogOptions from '../App/DialogOptions/AlertDialogOptions';
+import FileTag from '../FileTag/FileTag';
+import { lastEventId } from '@sentry/browser';
 
 @Component({
     components: {
         'file-row': FileRow,
-        'tag-editor': TagEditor
+        'file-tag': FileTag,
+        'tag-editor': TagEditor,
     },
-    inject: {
-      fileManager: 'fileManager'
-    }
+    
 })
 export default class FileTable extends Vue {
-
-    @Inject() private fileManager: FileManager;
-
-    files: Object[] = [];
+    
+    @Prop() files: Object[];
+    @Prop({ default: (() => <any>[]) }) extraTags: string[];
+    @Prop({ default: false }) readOnly: boolean;
     tags: string[] = [];
     lastEditedTag: string = null;
     isMakingNewTag: boolean = false;
     newTag: string = 'myNewTag';
+    newTagValid: boolean = true;
+    
+    get fileManager() {
+        return appManager.fileManager;
+    }
 
     get user() {
         return appManager.user;
@@ -38,6 +42,15 @@ export default class FileTable extends Vue {
 
     get hasFiles() {
         return this.files.length > 0;
+    }
+
+    get newTagExists() {
+        return this.tagExists(this.newTag);
+    }
+
+    @Watch('files')
+    filesChanged() {
+        this.tags = fileTags(this.files, this.tags, this.lastEditedTag ? [this.lastEditedTag, ...this.extraTags] : this.extraTags);
     }
 
     addTag() {
@@ -80,7 +93,7 @@ export default class FileTable extends Vue {
     removeTag(tag: string) {
         if (tag === this.lastEditedTag || tag === this.newTag) {
             this.lastEditedTag = null;
-            this.tags = fileTags(this.files, this.tags, []);
+            this.tags = fileTags(this.files, this.tags, this.extraTags);
         }
     }
 
@@ -92,19 +105,15 @@ export default class FileTable extends Vue {
         return this.tags.indexOf(tag, 0) !== -1;
     }
 
+    newTagValidityUpdated(valid: boolean) {
+        this.newTagValid = valid;
+    }
+
     constructor() {
         super();
     }
 
     async created() {
-        await this.fileManager.init();
-
-        this.files = [];
-        this.tags = [];
-
-        this.fileManager.selectedFilesUpdated.subscribe(event => {
-            this.files = event.files;
-            this.tags = fileTags(this.files, this.tags, this.lastEditedTag ? [this.lastEditedTag] : []);
-        });
+        this.tags = fileTags(this.files, this.tags, this.lastEditedTag ? [this.lastEditedTag, ...this.extraTags] : this.extraTags);
     }
 };

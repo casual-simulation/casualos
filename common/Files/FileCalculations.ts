@@ -141,6 +141,53 @@ export function isFormulaObject(object: any) {
 }
 
 /**
+ * Determines if the given tag matches the filter syntax.
+ */
+export function isFilterTag(tag: string) {
+    const parsed = parseFilterTag(tag);
+    return parsed.success;
+}
+
+/**
+ * Defines an interface that represents the result of validating a tag.
+ */
+export interface TagValidation {
+    valid: boolean;
+    'tag.required'?: TagRequired;
+    'tag.invalidChar'?: TagInvalidChar;
+}
+
+export interface TagRequired {
+
+}
+
+export interface TagInvalidChar {
+    char: string;
+}
+
+/**
+ * Validates the given tag and returns any errors for it.
+ * @param tag The tag.
+ */
+export function validateTag(tag: string) {
+    let errors: TagValidation = {
+        valid: true
+    };
+    if (!tag || !tag.trim()) {
+        errors.valid = false;
+        errors['tag.required'] = {};
+    } else {
+        const filter = parseFilterTag(tag);
+        if(!(filter.partialSuccess || filter.success) && tag.indexOf('#') >= 0) {
+            errors.valid = false;
+            errors['tag.invalidChar'] = { char: '#' };
+        }
+    }
+
+    return errors;
+}
+
+/**
  * Gets the ID of the selection that the user is using.
  * If the user doesn't have a selection, returns null.
  * @param user The user's file.
@@ -291,17 +338,60 @@ export function tagsMatchingFilter(file: Object, other: Object, eventName: strin
  * @param eventName 
  */
 export function tagMatchesFilter(tag: string, file: Object, eventName: string): boolean {
-    const eventIndex = tag.indexOf(eventName);
+    const parsed = parseFilterTag(tag);
+    return parsed.success && parsed.eventName === eventName && file.tags[parsed.filter.tag] === parsed.filter.value;
+}
+
+/**
+ * Parses the given tag filter into its components.
+ * @param tag 
+ */
+export function parseFilterTag(tag: string) {
+    const firstParenIndex = tag.indexOf('(');
     const tagIndex = tag.indexOf('#');
-    const colonIndex = tag.indexOf(':');
-    const tagName = tag.slice(tagIndex + 1, colonIndex);
-    if (tagName) {
-        const firstQuote = tag.indexOf('"');
-        const lastQuote = tag.lastIndexOf('"');
-        const value = tag.slice(firstQuote + 1, lastQuote);
-        return eventIndex === 0 && file.tags[tagName] === value;
+    if (firstParenIndex > 0 && (tagIndex > firstParenIndex || tagIndex < 0)) {
+        const eventName = tag.slice(0, firstParenIndex).trim();
+        
+        if (eventName) {
+            const colonIndex = tag.indexOf(':');
+            if (colonIndex > tagIndex){
+                const tagName = tag.slice(tagIndex + 1, colonIndex).trim();
+                if (tagName && tagIndex > 0) {
+                    let firstQuote = tag.indexOf('"');
+                    if (firstQuote < 0) {
+                        firstQuote = colonIndex;
+                    }
+                    let lastQuote = tag.lastIndexOf('"');
+                    if (lastQuote < 0) {
+                        lastQuote = tag.lastIndexOf(')');
+                        if (lastQuote < 0) {
+                            lastQuote = tag.length;
+                        }
+                    } else if(lastQuote === firstQuote) {
+                        lastQuote = tag.length;
+                    }
+                    const value = tag.slice(firstQuote + 1, lastQuote);
+                    return {
+                        success: true,
+                        eventName: eventName,
+                        filter: {
+                            tag: tagName,
+                            value: value
+                        }
+                    };
+                }
+            }
+                
+            return {
+                success: false,
+                partialSuccess: true,
+                eventName: eventName,
+            };
+        }
     }
-    return false;
+    return {
+        success: false
+    };
 }
 
 function _convertToAssignment(object: any): Assignment {
@@ -383,6 +473,14 @@ function _parseArray(value: string): string[] {
     return value.slice(1, value.length - 1).split(',');
 }
 
+function _singleOrArray<T>(values: T[]) {
+    if(values.length === 1) {
+        return values[0];
+    } else {
+        return values;
+    }
+}
+
 
 class SandboxInterfaceImpl implements SandboxInterface {
   
@@ -397,14 +495,14 @@ class SandboxInterfaceImpl implements SandboxInterface {
     listTagValues(tag: string, filter?: FilterFunction, extras?: any) {
       const tags = flatMap(this.objects.map(o => this._calculateValue(o, tag)).filter(t => t));
       const filtered = this._filterValues(tags, filter);
-      return filtered;
+      return _singleOrArray(filtered);
     }
   
     listObjectsWithTag(tag: string, filter?: FilterFunction, extras?: any) {
       const objs = this.objects.filter(o => this._calculateValue(o, tag))
         .map(o => convertToFormulaObject(this.context, o));
       const filtered = this._filterObjects(objs, filter, tag);
-      return filtered;
+      return _singleOrArray(filtered);
     }
 
     uuid(): string {

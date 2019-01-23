@@ -3,9 +3,11 @@ const path = require('path');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
+const OfflinePlugin = require('offline-plugin');
 const webpack = require('webpack');
 
 const commitHash = childProcess.execSync('git rev-parse HEAD').toString().trim();
+const latestTag = childProcess.execSync('git describe --abbrev=0 --tags').toString().trim();
 
 module.exports = {
   entry: path.resolve(__dirname, 'index.ts'),
@@ -80,7 +82,18 @@ module.exports = {
     }),
     new webpack.DefinePlugin({
       GIT_HASH: JSON.stringify(commitHash),
-      SENTRY_DSN: JSON.stringify('***REMOVED***'), // TODO: Replace with real DSN
+      GIT_TAG: JSON.stringify(latestTag),
+      SENTRY_DSN: JSON.stringify('***REMOVED***'),
+    }),
+    new OfflinePlugin({
+      appShell: '/',
+      AppCache: false,
+      ServiceWorker: {
+        events: true
+      },
+      externals: [
+        'https://fonts.googleapis.com/css?family=Roboto:400,500,700,400italic|Material+Icons'
+      ]
     })
   ]
 };

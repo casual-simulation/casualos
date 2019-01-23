@@ -32,3 +32,11 @@ declare var PRODUCTION: boolean;
 declare var SENTRY_DSN: string;
 declare var ENABLE_SENTRY: boolean;
 declare var GIT_HASH: string;
+declare var GIT_TAG: string;
+
+
+interface SymbolConstructor {
+  (): symbol;
+  (name: string): symbol;
+  (id: number): symbol;
+}

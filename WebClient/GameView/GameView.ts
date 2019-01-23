@@ -28,7 +28,6 @@ import {
   SubscriptionLike,
 } from 'rxjs';
 
-import { FileManager } from '../FileManager';
 import { File, Object, Workspace } from 'common/Files';
 import { time } from '../game-engine/Time';
 import { Input } from '../game-engine/input';
@@ -37,19 +36,14 @@ import { vg } from "von-grid";
 
 import skyTextureUrl from '../public/images/CGSkies_0132_free.jpg';
 import groundModelUrl from '../public/models/ground.gltf';
-
+import { appManager } from '../AppManager';
 import { File3D } from '../game-engine/Interfaces';
 import { InteractionManager } from '../interaction/InteractionManager';
 import { ArgEvent } from '../../common/Events';
 
 @Component({
-  inject: {
-    fileManager: 'fileManager'
-  }
 })
 export default class GameView extends Vue {
-
-  @Inject() fileManager!: FileManager;
 
   private _scene: Scene;
   private _camera: PerspectiveCamera;
@@ -92,6 +86,10 @@ export default class GameView extends Vue {
   get camera(): PerspectiveCamera { return this._camera; }
   get grids(): Group { return this._grids; }
   get workspacePlane(): Mesh { return this._workspacePlane; }
+
+  get fileManager() {
+    return appManager.fileManager;
+  }
 
   async mounted() {
     time.init();
@@ -168,7 +166,8 @@ export default class GameView extends Vue {
   }
 
   private _updateFile(obj: File3D, data: Object) {
-    obj.mesh.visible = !data.tags._destroyed;
+    // visible if not destroyed, has a position, and not hidden
+    obj.mesh.visible = (!data.tags._destroyed && !!data.tags._position && !data.tags._hidden);
     const workspace = this._files[data.tags._workspace];
     obj.file = data;
     if (workspace) {
@@ -428,8 +427,8 @@ export default class GameView extends Vue {
       extrudeSettings: {
         bevelEnabled: true,
         steps: 1,
-        bevelSize: 0.05,
-        bevelThickness: 0.05
+        bevelSize: 0.015,
+        bevelThickness: 0.00
       },
       material: new MeshStandardMaterial({
         color: 0x999999,
