@@ -12,7 +12,7 @@ import {
     Object3D,
 } from "three";
 import {
-    groupBy, keys
+    groupBy, keys, every
 } from 'lodash';
 import { HexGridMesh, HexMesh } from "../hex";
 import TagEditor from "WebClient/TagEditor/TagEditor";
@@ -27,8 +27,8 @@ import TagEditor from "WebClient/TagEditor/TagEditor";
  */
 export class GridChecker {
 
-    private _tileRatio = 1;
-    private _supersampling = 1;
+    tileRatio = 1;
+    private _supersampling = 4;
     private _renderer: WebGLRenderer;
     private _camera: OrthographicCamera;
     private _scene: Scene;
@@ -40,6 +40,7 @@ export class GridChecker {
     private _hexes: HexMesh[];
     private _height: number;
     private _group: Object3D;
+    private _parent: Object3D;
 
     constructor() {
         this._scene = new Scene();
@@ -58,7 +59,7 @@ export class GridChecker {
 
     async check(grid: HexGridMesh) {
         this._grid = grid;
-        this._tileSize = this._grid.hexSize * this._tileRatio;
+        this._tileSize = this._grid.hexSize * this.tileRatio;
 
         this._updateBounds();
         this._updateCamera();
@@ -77,8 +78,6 @@ export class GridChecker {
     checkLevel(hexes: HexMesh[], height: number): GridLevel {
         this._hexes = hexes;
         this._height = height;
-        this._group = new Object3D();
-        this._group.add(...this._hexes);
 
         this._updateScene();
         
@@ -97,23 +96,50 @@ export class GridChecker {
         this._teardownScene();
 
         let tiles: GridTile[] = [];
+        const bottomLeft = new Vector3(-0.5 * this._tileSize, 0, -0.5 * this._tileSize);
+        const bottomRight = new Vector3(0.5 * this._tileSize, 0, -0.5 * this._tileSize);
+        const topLeft = new Vector3(-0.5 * this._tileSize, 0, 0.5 * this._tileSize);
+        const topRight = new Vector3(0.5 * this._tileSize, 0, 0.5 * this._tileSize);
+        let points = [bottomLeft, bottomRight, topLeft, topRight];
 
-        for (let x = 0; x < size.width; x++) {
-            for (let y = 0; y < size.height; y++) {
-                const idx = x + (y * size.width);
-                const pixel = idx * 4;
+        const actualWidth = size.width / this._supersampling;
+        const actualHeight = size.height / this._supersampling;
+        for (let x = 0; x < actualWidth; x++) {
+            const xPercent = x / actualWidth;
+            for (let y = 0; y < actualHeight; y++) {
+                const yPercent = y / actualHeight;
+                const centerPixel = this._pixelPos(x, y, size.width);
+                const topLeftPixel = this._pixelPos(x - 0.5, y + 0.5, size.width);
+                const topRightPixel = this._pixelPos(x + 0.5, y + 0.5, size.width);
+                const bottomLeftPixel = this._pixelPos(x - 0.5, y - 0.5, size.width);
+                const bottomRightPixel = this._pixelPos(x + 0.5, y - 0.5, size.width);
+
+                const pixels = [
+                    centerPixel,
+                    topLeftPixel,
+                    topRightPixel,
+                    bottomLeftPixel,
+                    bottomRightPixel
+                ];
+                const alphas = pixels.map(p => data[p + 3]);
+                const matching = alphas.filter(a => a);
+                const valid = alphas.length - matching.length <= 1; // valid if at least 4 of the 5 hit
+
                 // const r = data[pixel];
                 // const g = data[pixel + 1];
                 // const b = data[pixel + 2];
-                const a = data[pixel + 3];
-                if (a) {
-                    const gridX = Math.ceil(x - (size.width / 2));
-                    const gridY = Math.ceil(y - (size.height / 2));
-                    tiles.push({
-                        gridPosition: new Vector2(gridX, gridY),
-                        // position: 
-                    });
-                }
+                const gridX = Math.ceil(x - (actualWidth / 2));
+                const gridY = Math.ceil(y - (actualHeight / 2));
+                const worldPos = this._worldPosition(xPercent, yPercent, height);
+                tiles.push({
+                    valid,
+                    gridPosition: new Vector2(gridX, gridY),
+                    worldPosition: worldPos,
+                    points: points,
+                    worldPoints: points.map(p => {
+                        return new Vector3().copy(p).add(worldPos);
+                    })
+                });
             }
         }
 
@@ -123,12 +149,32 @@ export class GridChecker {
             tiles: tiles
         };
     }
+
+    private _pixelPos(x: number, y: number, width: number) {
+        const pixelX = x * this._supersampling;
+        const pixelY = y * this._supersampling
+        const idx = pixelX + (pixelY * width);
+        const pixel = idx * 4;
+        return pixel;
+    }
     
+    private _worldPosition(xPercent: number, yPercent: number, z: number) {
+        const left = this._center.x - this._size.x / 2;
+        const top = this._center.z + this._size.z / 2;
+        const width = this._size.x;
+        const height = this._size.z;
+        const x = left + (xPercent * width);
+        const y = top - (yPercent * height);
+        return new Vector3(x, z, y);
+    }
+
     private _teardownScene() {
         this._scene.remove(this._group);
     }
 
     private _updateScene() {
+        this._group = new Object3D();
+        this._group.add(...this._hexes);
         this._scene.add(this._group);
 
         const hexBounds = new Box3().setFromObject(this._group);
@@ -148,6 +194,9 @@ export class GridChecker {
     }
 
     private _revertHexes() {
+        // Re-add the hexes to the grid because Three.js Removed them from the other scene
+        this._grid.add(...this._grid.hexes);
+
         // reset the meshes materials.
         this._grid.hexes.forEach(h => {
             let a: any = h;
@@ -245,12 +294,27 @@ export interface GridLevel {
 export interface GridTile {
 
     /**
-     * The HexGrid-relative position of the tile.
+     * Whether or not the tile is in a valid position.
      */
-    // position: Vector2;
+    valid: boolean;
+
+    /**
+     * The center of the tile in world-relative coordinates.
+     */
+    worldPosition: Vector3;
 
     /**
      * The square grid position of the tile.
      */
     gridPosition: Vector2;
+
+    /**
+     * The tile-relative corner points of the tile.
+     */
+    points: Vector3[]
+
+    /**
+     * The world relative corner points of the tile.
+     */
+    worldPoints: Vector3[];
 }

@@ -1,5 +1,5 @@
 import { HEX_SIZE, hex } from "./Hex";
-import { Mesh, BufferGeometry, ExtrudeBufferGeometry, Shape, Material, MeshStandardMaterial, Matrix4, Vector3 } from "three";
+import { Mesh, BufferGeometry, ExtrudeBufferGeometry, Shape, Material, MeshStandardMaterial, Matrix4, Vector3, MeshBasicMaterial } from "three";
 import { Axial } from "./Axial";
 import { gridPosToRealPos } from "./HexGrid";
 
@@ -67,7 +67,9 @@ export function createDefaultHexMaterial(mat: Material): Material {
     if (mat) {
         return mat;
     }
-    return new MeshStandardMaterial();
+    return new MeshBasicMaterial({
+        color: 0x000000
+    });
 }
 
 /**

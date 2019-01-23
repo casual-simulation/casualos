@@ -92,8 +92,12 @@ import { GridChecker } from '../game-engine/grid/GridChecker';
 })
 export default class GameView extends Vue {
 
+  tileRatio: number = 1;
+  showInvalid: boolean = false;
+
+  private _debug: Object3D;
   private _scene: Scene;
-  private _camera: PerspectiveCamera;
+  private _camera: Camera;
   private _cameraControls: OrbitControls;
   private _cameraControlsEnabled: boolean = true;
   private _renderer: Renderer;
@@ -152,10 +156,13 @@ export default class GameView extends Vue {
 
 
     // User's camera
-    this._camera = new PerspectiveCamera();
-    this._camera.position.z = 5;
+    // this._camera = new PerspectiveCamera();
+    // this._camera.position.z = 5;
+    // this._camera.position.y = 3;
+    // this._camera.rotation.x = ThreeMath.degToRad(-30);
+    this._camera = new OrthographicCamera(-10, 10, 10, -10);
     this._camera.position.y = 3;
-    this._camera.rotation.x = ThreeMath.degToRad(-30);
+    this._camera.rotation.x = ThreeMath.degToRad(-90);
     this._camera.updateMatrixWorld(false);
 
     this._cameraControls = new OrbitControls(this._camera, this._canvas);
@@ -228,19 +235,14 @@ export default class GameView extends Vue {
 
     const grid = new HexGridMesh(5);
     grid.removeAt(new Axial(0, 0));
-    grid.addAt(new Axial(5, -6));
+    grid.addAt(new Axial(5, -5));
 
-    const hex = grid.getAt(new Axial(5, -6));
-    hex.height = 2;
+    const hex = grid.getAt(new Axial(5, -5));
+    // hex.height = 2;
 
     // grid.hexes.forEach(h => {
     //   h.height = Math.random() * 2;
-    // });
-
-    const helper = new GridHelper(10, 10);
-    helper.position.set(0, 1, 0);
-
-    this._scene.add(helper);
+    // })
 
     this._workspaces.push(grid);
     
@@ -253,9 +255,39 @@ export default class GameView extends Vue {
 
   async test() {
     const grid = this._workspaces[0];
+    this._checker.tileRatio = this.tileRatio;
     const results = (await this._checker.check(grid));
     console.log(results);
     this.images = results.map(l => l._image);
+
+    if (this._debug) {
+      this._scene.remove(this._debug);
+    }
+    this._debug = new Object3D();
+    
+    results.forEach(level => {
+      level.tiles.forEach(tile => {
+        // if (tile.valid) {
+          this._debug.add(this._createSphere(tile.worldPosition, tile.valid ? 0x0000ff : 0xff0000));
+
+          tile.worldPoints.forEach(p => {
+            this._debug.add(this._createSphere(p, 0x00ff00));
+          });
+        // }
+      });
+    });
+
+    this._scene.add(this._debug);
+  }
+
+  private _createSphere(position: Vector3, color: number) {
+    const sphereMaterial = new MeshBasicMaterial({
+      color
+    });
+    const sphereGeometry = new SphereBufferGeometry(.1);
+    const sphere = new Mesh(sphereGeometry, sphereMaterial);
+    sphere.position.copy(position);
+    return sphere;
   }
 
   private _setupRenderer() {
