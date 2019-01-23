@@ -120,11 +120,25 @@ export class InteractionManager {
     }
 
     public fileForIntersection(hit: Intersection): File3D {
-        const id = this._gameView.getFileId(hit.object.id);
-        if (id) {
-            return this._gameView.getFile(id);
+        const obj = this.findObjectForIntersection(hit);
+        if (obj) {
+            return obj;
         } else {
             return this.findWorkspaceForIntersection(hit);
+        }
+    }
+
+    public findObjectForIntersection(obj: Intersection): File3D | null {
+        if (!obj) {
+            return null;
+        }
+        const hasParent = !!obj.object.parent;
+        const fileId = hasParent ? this._gameView.getFileId(obj.object.parent.id) : null;
+        const file = fileId ? this._gameView.getFile(fileId) : null;
+        if (file && file.file.type === 'object') {
+            return file;
+        } else {
+            return null;
         }
     }
 

@@ -35,12 +35,12 @@ export class FileMesh extends Object3D {
         this.file = file;
 
         // visible if not destroyed, has a position, and not hidden
-        this.cube.visible = (!file.tags._destroyed && !!file.tags._position && !file.tags._hidden);
+        this.visible = (!file.tags._destroyed && !!file.tags._position && !file.tags._hidden);
         const workspace = this._gameView.getFile(file.tags._workspace);
         if (workspace) {
-            this.cube.parent = workspace.mesh;
+            this.parent = workspace.mesh;
         } else {
-            this.cube.parent = null;
+            this.parent = null;
         }
 
         if (file.tags.color) {
@@ -54,13 +54,13 @@ export class FileMesh extends Object3D {
         }
 
         if (file.tags._position) {
-            this.cube.position.set(
+            this.position.set(
                 file.tags._position.x + 0,
                 file.tags._position.y + 0.095,
                 file.tags._position.z + 0);
         } else {
             // Default position
-            this.cube.position.set(0, 1, 0);
+            this.position.set(0, 1, 0);
         }
     }
 

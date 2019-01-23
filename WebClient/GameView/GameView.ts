@@ -396,27 +396,27 @@ export default class GameView extends Vue {
     // return { board, sqrBoard };
   }
 
-  private _generateTilemap(board: vg.Board, data: Workspace) {
-    board.generateTilemap({
-      extrudeSettings: {
-        bevelEnabled: true,
-        steps: 1,
-        bevelSize: 0.015,
-        bevelThickness: 0.00
-      },
-      material: new MeshStandardMaterial({
-        color: 0x999999,
-        roughness: .7,
-      })
-    });
+  // private _generateTilemap(board: vg.Board, data: Workspace) {
+  //   board.generateTilemap({
+  //     extrudeSettings: {
+  //       bevelEnabled: true,
+  //       steps: 1,
+  //       bevelSize: 0.015,
+  //       bevelThickness: 0.00
+  //     },
+  //     material: new MeshStandardMaterial({
+  //       color: 0x999999,
+  //       roughness: .7,
+  //     })
+  //   });
 
-    board.group.children[0].children.forEach(c => {
-      c.castShadow = true;
-      c.receiveShadow = true;
-    });
+  //   board.group.children[0].children.forEach(c => {
+  //     c.castShadow = true;
+  //     c.receiveShadow = true;
+  //   });
 
-    board.group.position.x = data.position.x;
-    board.group.position.y = data.position.y + 0.4;
-    board.group.position.z = data.position.z;
-  }
+  //   board.group.position.x = data.position.x;
+  //   board.group.position.y = data.position.y + 0.4;
+  //   board.group.position.z = data.position.z;
+  // }
 };
