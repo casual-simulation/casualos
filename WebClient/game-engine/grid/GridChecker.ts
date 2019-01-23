@@ -16,6 +16,8 @@ import {
 } from 'lodash';
 import { HexGridMesh, HexMesh } from "../hex";
 import TagEditor from "WebClient/TagEditor/TagEditor";
+import { GridLevel } from "./GridLevel";
+import { GridTile } from "./GridTile";
 
 /**
  * Defines a class that can check a HexGridMesh to see which square grid tiles
@@ -100,7 +102,7 @@ export class GridChecker {
         const bottomRight = new Vector3(0.5 * this._tileSize, 0, -0.5 * this._tileSize);
         const topLeft = new Vector3(-0.5 * this._tileSize, 0, 0.5 * this._tileSize);
         const topRight = new Vector3(0.5 * this._tileSize, 0, 0.5 * this._tileSize);
-        let points = [bottomLeft, bottomRight, topLeft, topRight];
+        let points = [topLeft, topRight, bottomRight, bottomLeft];
 
         const actualWidth = size.width / this._supersampling;
         const actualHeight = size.height / this._supersampling;
@@ -234,23 +236,8 @@ export class GridChecker {
 
     private _render() {
         this._renderer.render(this._scene, this._camera);
-        // return new Promise((resolve, reject) => {
-        //     try {
-        //         requestAnimationFrame(() => {
-        //             try {
-                        
-        //                 resolve();
-        //             } catch(ex) {
-        //                 reject(ex);
-        //             }
-        //         });
-        //     } catch(ex) {
-        //         reject(ex);
-        //     }
-        // });
     }
 }
-
 
 /**
  * Defines an interface that contains results from the GridChecker.
@@ -265,56 +252,4 @@ export interface GridCheckResults {
      * The hex grid that was checked.
      */
     grid: HexGridMesh;
-}
-
-/**
- * Defines an interface that represents a single level of a square grid.
- */
-export interface GridLevel {
-
-    /**
-     * The tiles.
-     */
-    tiles: GridTile[];
-
-    /**
-     * The height for this level.
-     */
-    height: number;
-
-    /**
-     * The data url for the image.
-     */
-    _image: string;
-}
-
-/**
- * Defines an interface that represents a single grid tile.
- */
-export interface GridTile {
-
-    /**
-     * Whether or not the tile is in a valid position.
-     */
-    valid: boolean;
-
-    /**
-     * The center of the tile in world-relative coordinates.
-     */
-    worldPosition: Vector3;
-
-    /**
-     * The square grid position of the tile.
-     */
-    gridPosition: Vector2;
-
-    /**
-     * The tile-relative corner points of the tile.
-     */
-    points: Vector3[]
-
-    /**
-     * The world relative corner points of the tile.
-     */
-    worldPoints: Vector3[];
 }

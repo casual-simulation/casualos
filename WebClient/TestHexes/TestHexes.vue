@@ -5,6 +5,7 @@
       <img :src="img">
     </div>
     <md-button @click="test()">Test</md-button>
+    <md-button @click="toggleDots()">Toggle Dots</md-button>
     <input v-model="tileRatio" />
     <div class="game-canvas" ref="gameView"></div>
   </div>
