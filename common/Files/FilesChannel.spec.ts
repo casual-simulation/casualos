@@ -16,7 +16,8 @@ import {
     first,
     second,
     listMergeConflicts,
-    ResolvedConflict
+    ResolvedConflict,
+    fileUpdated
 } from './FilesChannel';
 import { Workspace, Object, File } from './File';
 import { values, assign, merge } from 'lodash';
@@ -59,6 +60,29 @@ describe('FilesChannel', () => {
                 const newState = filesReducer(state, fileRemoved('test'));
 
                 expect(newState).toEqual({});
+            });
+        });
+
+        describe('file_updated', () => {
+            it('should not change values that dont change', () => {
+                const test: Workspace = {
+                    id: 'test',
+                    type: 'workspace',
+                    position: { x: 1, y: 2, z: 3 },
+                    size: 10,
+                    grid: {}
+                };
+                const state: FilesState = {
+                    test: test
+                };
+
+                const newState = filesReducer(state, fileUpdated('test', {
+                    size: 2
+                }));
+
+                const newTest = <Workspace>newState['test'];
+
+                expect(newTest.grid).toBe(test.grid);
             });
         });
 
@@ -1183,7 +1207,8 @@ describe('FilesChannel', () => {
                     type: 'workspace',
                     id: 'test',
                     position: {x:0, y:0, z:0},
-                    size: 1
+                    size: 1,
+                    grid: {}
                 }
             });
 
@@ -1194,7 +1219,8 @@ describe('FilesChannel', () => {
                     type: 'workspace',
                     id: 'test',
                     position: {x:0, y:0, z:0},
-                    size: 1
+                    size: 1,
+                    grid: {}
                 }
             });
         });
