@@ -85,9 +85,10 @@ import {
   eventIsOverElement,
 } from '../Input';
 import { appManager } from '../AppManager';
-import { HexGridMesh, Axial } from '../game-engine/hex';
+import { HexGridMesh, Axial, posToKey } from '../game-engine/hex';
 import { GridChecker } from '../game-engine/grid/GridChecker';
 import { GridMesh } from '../game-engine/grid/GridMesh';
+import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
 
 @Component({
 })
@@ -105,7 +106,6 @@ export default class GameView extends Vue {
   }
 
   private _debugDots: Object3D;
-  private _lines: Object3D;
   private _scene: Scene;
   private _camera: Camera;
   private _cameraControls: OrbitControls;
@@ -125,7 +125,7 @@ export default class GameView extends Vue {
 
   private _checker: GridChecker;
 
-  private _workspaces: HexGridMesh[];
+  private _workspaces: WorkspaceMesh[];
 
   images: string[];
 
@@ -158,9 +158,6 @@ export default class GameView extends Vue {
     this._debugDots = new Object3D();
     this._scene.add(this._debugDots);
 
-    this._lines = new Object3D();
-    this._scene.add(this._lines);
-
     this._raycaster = new Raycaster();
 
     this._setupRenderer();
@@ -177,7 +174,7 @@ export default class GameView extends Vue {
     // this._camera.position.y = 3;
     // this._camera.rotation.x = ThreeMath.degToRad(-30);
     this._camera = new OrthographicCamera(-10, 10, 10, -10, 0.1);
-    this._camera.position.y = 3;
+    this._camera.position.y = 10;
     this._camera.rotation.x = ThreeMath.degToRad(-90);
     this._camera.updateMatrixWorld(false);
 
@@ -249,40 +246,37 @@ export default class GameView extends Vue {
 
     this._scene.add(this._skydome);
 
-    const grid = new HexGridMesh(5);
-    grid.removeAt(new Axial(0, 0));
-    grid.addAt(new Axial(5, -5));
+    this._checker = new GridChecker();
+    const workspace: Workspace = {
+      id: 'test',
+      type: 'workspace',
+      position: { x: 0, y: 0, z: 0},
+      size: 4,
+      grid: {
+        [posToKey(new Axial(1, 0))]: {
+          height: 3
+        }
+      }
+    };
+    const workspaceMesh = new WorkspaceMesh(workspace);
 
-    const hex = grid.getAt(new Axial(5, -5));
-    // hex.height = 2;
-
-    // grid.hexes.forEach(h => {
-    //   h.height = Math.random() * 2;
-    // })
-
-    this._workspaces.push(grid);
+    this._workspaces.push(workspaceMesh);
     
     this._workspaces.forEach(w => {
       this._scene.add(w);
     });
 
-    this._checker = new GridChecker();
   }
 
   async test() {
-    const grid = this._workspaces[0];
+    const workspace = this._workspaces[0];
     this._checker.tileRatio = this.tileRatio;
-    const results = (await this._checker.check(grid));
-    console.log(results);
+
+    const results = await workspace.updateSquareGrids(this._checker);
     this.images = results.map(l => l._image);
 
     this._debugDots.remove(...this._debugDots.children);
-    this._lines.remove(...this._lines.children);
-    
     results.forEach(level => {
-
-      const gridMesh = new GridMesh(level);
-      this._lines.add(gridMesh);
       level.tiles.forEach(tile => {
         this._debugDots.add(this._createSphere(tile.worldPosition, tile.valid ? 0x0000ff : 0xff0000));
         if (tile.valid) {

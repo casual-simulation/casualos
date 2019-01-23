@@ -250,7 +250,8 @@ export function createWorkspace(): Workspace {
         id: uuid(),
         type: 'workspace',
         position: {x: 0, y: 0, z: 0},
-        size: 0
+        size: 0,
+        grid: {}
     };
 }
 

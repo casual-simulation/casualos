@@ -1,4 +1,3 @@
-
 export type File = Object | Workspace;
 
 export interface Object {
@@ -19,6 +18,9 @@ export interface Object {
     };
 }
 
+/**
+ * Defines an interface for a workspace.
+ */
 export interface Workspace {
     type: 'workspace';
     id: string;
@@ -27,7 +29,17 @@ export interface Workspace {
         y: number;
         z: number;
     };
+    grid: {
+        [key: string]: WorkspaceHex;
+    },
     size: number;
+}
+
+/**
+ * Defines an interface for a hex in a workspace.
+ */
+export interface WorkspaceHex {
+    height: number;
 }
 
 export interface PartialFile {
@@ -47,5 +59,8 @@ export interface PartialFile {
             z?: number;
         };
         [key: string]: any;
+    },
+    grid?: {
+        [key: string]: WorkspaceHex
     }
 }

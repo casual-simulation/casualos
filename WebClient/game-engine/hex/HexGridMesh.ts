@@ -19,14 +19,12 @@ export class HexGridMesh extends Object3D {
      * @param radius The radius to fill.
      * @param defaultHeight The default hex height.
      */
-    constructor(radius: number, defaultHeight: number = HEX_HEIGHT, size: number = HEX_SIZE) {
+    constructor(radius: number, defaultHeight: number = HEX_HEIGHT, size: number = HEX_SIZE, grid: HexGrid<HexMesh> = new HexGrid()) {
         super();
-        this._grid = new HexGrid();
+        this._grid = grid;
         this._radius = radius;
         this._size = size;
         this._defaultHeight = defaultHeight;
-
-        this._fillHexesInRadius();
     }
 
     /**
@@ -62,7 +60,9 @@ export class HexGridMesh extends Object3D {
             const hex = new HexMesh(pos, this._size, this._defaultHeight);
             this._grid.setDataAt(pos, hex);
             this.add(hex);
+            return hex;
         }
+        return existing;
     }
 
     /**
@@ -82,5 +82,11 @@ export class HexGridMesh extends Object3D {
         hexPositions.forEach(p => {
             this.addAt(p);
         });
+    }
+
+    static createFilledInHexGrid(radius: number, defaultHeight: number = HEX_HEIGHT, size: number = HEX_SIZE) {
+        const grid = new HexGridMesh(radius, defaultHeight, size);
+        grid._fillHexesInRadius();
+        return grid;
     }
 }

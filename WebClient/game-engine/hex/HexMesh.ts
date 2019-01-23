@@ -68,7 +68,7 @@ export function createDefaultHexMaterial(mat: Material): Material {
         return mat;
     }
     return new MeshBasicMaterial({
-        color: 0x000000
+        color: 0x999999
     });
 }
 

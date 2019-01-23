@@ -78,6 +78,15 @@ export function posToKey(pos: Axial): string {
 }
 
 /**
+ * Calculates the grid position for the given storage key.
+ * @param key 
+ */
+export function keyToPos(key: string): Axial {
+    const split = key.split(':');
+    return new Axial(parseFloat(split[0]), parseFloat(split[1]));
+}
+
+/**
  * Defines a class that represents a 2D grid of objects 
  * organized in a hexagonal pattern.
  */

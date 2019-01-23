@@ -1,10 +1,10 @@
 
-.game-canvas {
+.test.game-canvas {
     position: relative;
     /* display: none; */
 }
 
-.game-container {
+.test.game-container {
     margin: -16px;
     width: 500px;
     height: 500px;
