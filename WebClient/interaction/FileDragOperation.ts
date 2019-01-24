@@ -8,7 +8,7 @@ import { Physics } from '../game-engine/Physics';
 import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
 import { Workspace, DEFAULT_WORKSPACE_SCALE } from 'common/Files';
 import { keys, minBy, flatMap } from 'lodash';
-import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance } from '../game-engine/hex';
+import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance, posToKey } from '../game-engine/hex';
 import { isFormula } from 'common/Files/FileCalculations';
 
 /**
@@ -81,7 +81,16 @@ export class FileDragOperation implements IOperation {
         this._gameView.setGridsVisible(false);
 
         if (this._attachWorkspace) {
-            
+            const mesh = <WorkspaceMesh>this._workspace.mesh;
+            const height = mesh.hexGrid.hexes[0].height;
+            this._gameView.fileManager.removeFile(this._workspace.file);
+            this._gameView.fileManager.updateFile(this._attachWorkspace.file, {
+                grid: {
+                    [posToKey(this._attachPoint)]: {
+                        height: height
+                    }
+                }
+            });
         }
     }
 

@@ -78,7 +78,9 @@ export class WorkspaceMesh extends GameObject {
             this.remove(this.hexGrid);
         }
         
-        this.hexGrid = HexGridMesh.createFilledInHexGrid(this.workspace.size, this.workspace.defaultHeight || DEFAULT_WORKSPACE_HEIGHT, this.workspace.scale || DEFAULT_WORKSPACE_SCALE);
+        this.hexGrid = HexGridMesh.createFilledInHexGrid(this.workspace.size, 
+            this.workspace.defaultHeight || DEFAULT_WORKSPACE_HEIGHT, 
+            this.workspace.scale || DEFAULT_WORKSPACE_SCALE);
         
         const positionsKeys = keys(this.workspace.grid);
         positionsKeys.forEach(key => {
