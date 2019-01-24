@@ -3,9 +3,13 @@ import { File3D } from '../game-engine/Interfaces';
 import { IOperation } from './IOperation';
 import GameView from '../GameView/GameView';
 import { InteractionManager } from './InteractionManager';
-import { Ray, Intersection, Vector2 } from 'three';
+import { Ray, Intersection, Vector2, Vector3 } from 'three';
 import { Physics } from '../game-engine/Physics';
 import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
+import { Workspace, DEFAULT_WORKSPACE_SCALE } from 'common/Files';
+import { keys, minBy, flatMap } from 'lodash';
+import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance } from '../game-engine/hex';
+import { isFormula } from 'common/Files/FileCalculations';
 
 /**
  * File Drag Operation handles dragging of files for mouse and touch input.
@@ -18,9 +22,9 @@ export class FileDragOperation implements IOperation {
     private _workspace: File3D;
     private _finished: boolean;
     private _gridWorkspace: WorkspaceMesh;
-
+    private _attachWorkspace: File3D;
+    private _attachPoint: Axial;
     private _lastScreenPos: Vector2;
-
 
     /**
      * Create a new drag rules.
@@ -75,6 +79,10 @@ export class FileDragOperation implements IOperation {
 
     public dispose(): void {
         this._gameView.setGridsVisible(false);
+
+        if (this._attachWorkspace) {
+            
+        }
     }
 
     private _dragFile() {
@@ -123,6 +131,47 @@ export class FileDragOperation implements IOperation {
         const point = Physics.pointOnPlane(mouseDir, this._gameView.workspacePlane);
 
         if (point) {
+
+            // if the workspace is only 1 tile large
+            const workspace = <Workspace>this._workspace.file;
+            if (workspace.size === 1 && keys(workspace.grid).length === 0) {
+                // check if it is close to another workspace.
+                const workspaceMeshes = this._gameView.getWorkspaces().filter(mesh => mesh !== this._workspace);
+                const center = new Axial();
+                const gridPositions = workspaceMeshes.map(mesh => {
+                    const w = <Workspace>mesh.file;
+                    const scale = w.scale || DEFAULT_WORKSPACE_SCALE;
+                    const localPos = new Vector3(point.x, 0, point.z).sub(mesh.mesh.position);
+                    const gridPos = realPosToGridPos(new Vector2(localPos.x, localPos.z), scale);
+                    const distance = gridDistance(center, gridPos);
+                    const scaledDistance = distance - w.size;
+                    return {
+                        mesh, 
+                        gridPos, 
+                        distance: scaledDistance
+                    };
+                });
+
+                const closest = minBy(gridPositions, g => g.distance);
+
+                console.log(closest.distance, closest.mesh.mesh.id);
+
+                if (closest.distance < 1) {
+                    this._attachWorkspace = closest.mesh;
+                    this._attachPoint = closest.gridPos;
+                } else {
+                    this._attachWorkspace = null;
+                    this._attachPoint = null;
+                }
+            }
+
+            if (this._attachWorkspace) {
+                const w = <Workspace>this._attachWorkspace.file;
+                const scale = w.scale || DEFAULT_WORKSPACE_SCALE;
+                const realPos = gridPosToRealPos(this._attachPoint, scale);
+                point.copy(new Vector3(realPos.x, 0, realPos.y)).add(this._attachWorkspace.mesh.position);
+            }
+
             this._gameView.fileManager.updateFile(this._workspace.file, {
                 position: {
                     x: point.x,
