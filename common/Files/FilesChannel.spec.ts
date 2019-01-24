@@ -35,7 +35,9 @@ describe('FilesChannel', () => {
                     type: 'workspace',
                     position: { x: 1, y: 2, z: 3 },
                     size: 10,
-                    grid: {}
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 };
                 const state = {};
                 const newState = filesReducer(state, fileAdded(file));
@@ -54,7 +56,9 @@ describe('FilesChannel', () => {
                         type: 'workspace',
                         position: { x: 1, y: 2, z: 3 },
                         size: 10,
-                        grid: {}
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1
                     }
                 };
                 const newState = filesReducer(state, fileRemoved('test'));
@@ -70,7 +74,9 @@ describe('FilesChannel', () => {
                     type: 'workspace',
                     position: { x: 1, y: 2, z: 3 },
                     size: 10,
-                    grid: {}
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 };
                 const state: FilesState = {
                     test: test
@@ -181,7 +187,9 @@ describe('FilesChannel', () => {
                     id: 'test',
                     position: {x:0, y:0, z:0},
                     size: 1,
-                    grid: {}
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 }
             };
             const currState: FilesState = {
@@ -202,7 +210,9 @@ describe('FilesChannel', () => {
                     id: 'test',
                     position: {x:0, y:0, z:0},
                     size: 1,
-                    grid: {}
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 }
             };
             const currState: FilesState = {
@@ -232,7 +242,9 @@ describe('FilesChannel', () => {
                     id: 'test',
                     position: {x:0, y:0, z:0},
                     size: 1,
-                    grid: {}
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 }
             };
             const currState: FilesState = {};
@@ -252,7 +264,9 @@ describe('FilesChannel', () => {
                     id: 'test',
                     position: {x:0, y:0, z:0},
                     size: 1,
-                    grid: {}
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 },
                 'updated': {
                     type: 'object',
@@ -290,14 +304,18 @@ describe('FilesChannel', () => {
                     id: 'test',
                     position: {x:0, y:0, z:0},
                     size: 1,
-                    grid: {}
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 },
                 'removed': {
                     type: 'workspace',
                     id: 'removed',
                     position: {x:0, y:0, z:0},
                     size: 2,
-                    grid: {}
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 },
                 'updated': {
                     type: 'object',
@@ -354,7 +372,9 @@ describe('FilesChannel', () => {
                     id: 'test',
                     position: {x:0, y:0, z:0},
                     size: 1,
-                    grid: {}
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 },
             };
             const currState: FilesState = {
@@ -389,7 +409,9 @@ describe('FilesChannel', () => {
                     id: 'test',
                     position: {x:0, y:0, z:0},
                     size: 1,
-                    grid: {}
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 },
                 'old': {
                     type: 'object',
@@ -424,7 +446,9 @@ describe('FilesChannel', () => {
                     id: 'updated',
                     position: {x:0, y:0, z:0},
                     size: 1,
-                    grid: {}
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 },
             };
             const currState: FilesState = {
@@ -433,7 +457,9 @@ describe('FilesChannel', () => {
                     id: 'updated',
                     position: {x:2, y:1, z:3},
                     size: 1,
-                    grid: {}
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 },
             };
 
@@ -459,14 +485,18 @@ describe('FilesChannel', () => {
                     id: 'test',
                     position: {x:0, y:0, z:0},
                     size: 1,
-                    grid: {}
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 },
                 'removed': {
                     type: 'workspace',
                     id: 'removed',
                     position: {x:0, y:0, z:0},
                     size: 2,
-                    grid: {}
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 },
                 'updated': {
                     type: 'object',
@@ -1194,7 +1224,9 @@ describe('FilesChannel', () => {
                     id: 'test',
                     position: {x:0, y:0, z:0},
                     size: 1,
-                    grid: {}
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 }
             };
             const parent2: FilesState = {};
@@ -1208,7 +1240,9 @@ describe('FilesChannel', () => {
                     id: 'test',
                     position: {x:0, y:0, z:0},
                     size: 1,
-                    grid: {}
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 }
             });
 
@@ -1220,7 +1254,9 @@ describe('FilesChannel', () => {
                     id: 'test',
                     position: {x:0, y:0, z:0},
                     size: 1,
-                    grid: {}
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 }
             });
         });

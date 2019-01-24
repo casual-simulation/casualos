@@ -3,13 +3,12 @@ import { Axial } from "./Axial";
 import { hexWidth } from "./Hex";
 import { keys, values } from "lodash";
 
-
 /**
  * Calcualates the real position of this grid position.
  * Returns the grid-relative local position.
  * @param size The size of the hexes.
  */
-export function gridPosToRealPos(pos: Axial, size: number = 1): Vector2 {
+export function gridPosToRealPos(pos: Axial, size: number): Vector2 {
     const halfWidth = hexWidth(size) / 2;
     return new Vector2(
         halfWidth * 3 / 2 * pos.q,
@@ -23,7 +22,7 @@ export function gridPosToRealPos(pos: Axial, size: number = 1): Vector2 {
  * @param pos The grid-relative local position.
  * @param size The size of the hexes.
  */
-export function realPosToGridPos(pos: Vector2, size: number = 1): Axial {
+export function realPosToGridPos(pos: Vector2, size: number): Axial {
     const halfWidth = hexWidth(size) / 2;
     const point = new Axial(
         pos.x * 2 / 3 / halfWidth,

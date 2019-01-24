@@ -33,6 +33,8 @@ export interface Workspace {
         [key: string]: WorkspaceHex;
     },
     size: number;
+    scale: number | null;
+    defaultHeight: number | null;
 }
 
 /**
@@ -62,5 +64,9 @@ export interface PartialFile {
     },
     grid?: {
         [key: string]: WorkspaceHex
-    }
+    },
+    scale?: number;
 }
+
+export const DEFAULT_WORKSPACE_HEIGHT = .1;
+export const DEFAULT_WORKSPACE_SCALE = .5;

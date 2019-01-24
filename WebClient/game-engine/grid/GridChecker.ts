@@ -18,6 +18,7 @@ import { HexGridMesh, HexMesh } from "../hex";
 import TagEditor from "WebClient/TagEditor/TagEditor";
 import { GridLevel } from "./GridLevel";
 import { GridTile } from "./GridTile";
+import { calculateTilePoints, calculateGridTileLocalPositions } from "./Grid";
 
 /**
  * Defines a class that can check a HexGridMesh to see which square grid tiles
@@ -70,7 +71,7 @@ export class GridChecker {
 
         const groups = groupBy(this._grid.hexes, h => Math.floor(h.height));
         const heights = keys(groups);
-        const results = heights.map(h => this.checkLevel(groups[h], parseFloat(h)));
+        const results = heights.map(h => this.checkLevel(groups[h], groups[h][0].height));
         
         this._revertHexes();
 
@@ -98,18 +99,12 @@ export class GridChecker {
         this._teardownScene();
 
         let tiles: GridTile[] = [];
-        const bottomLeft = new Vector3(-0.5 * this._tileSize, 0, -0.5 * this._tileSize);
-        const bottomRight = new Vector3(0.5 * this._tileSize, 0, -0.5 * this._tileSize);
-        const topLeft = new Vector3(-0.5 * this._tileSize, 0, 0.5 * this._tileSize);
-        const topRight = new Vector3(0.5 * this._tileSize, 0, 0.5 * this._tileSize);
-        let points = [topLeft, topRight, bottomRight, bottomLeft];
+        const points = calculateTilePoints(this._tileSize);
 
         const actualWidth = size.width / this._supersampling;
         const actualHeight = size.height / this._supersampling;
         for (let x = 0; x < actualWidth; x++) {
-            const xPercent = x / actualWidth;
             for (let y = 0; y < actualHeight; y++) {
-                const yPercent = y / actualHeight;
                 const centerPixel = this._pixelPos(x, y, size.width);
                 const topLeftPixel = this._pixelPos(x - 0.5, y + 0.5, size.width);
                 const topRightPixel = this._pixelPos(x + 0.5, y + 0.5, size.width);
@@ -130,25 +125,29 @@ export class GridChecker {
                 // const r = data[pixel];
                 // const g = data[pixel + 1];
                 // const b = data[pixel + 2];
-                const gridX = Math.ceil(x - (actualWidth / 2));
-                const gridY = Math.ceil(y - (actualHeight / 2));
-                const localPos = this._localPosition(xPercent, yPercent, height);
+                const offsetX = x - (actualWidth / 2);
+                const offsetY = y - (actualHeight / 2);
+                const gridX = Math.ceil(offsetX);
+                const gridY = Math.ceil(offsetY);
+                const tilePoints = calculateGridTileLocalPositions(gridX, gridY, height, this._tileSize, points);
                 tiles.push({
                     valid,
                     gridPosition: new Vector2(gridX, gridY),
-                    localPosition: localPos,
+                    localPosition: tilePoints.center,
                     points: points,
-                    localPoints: points.map(p => {
-                        return new Vector3().copy(p).add(localPos);
-                    })
+                    localPoints: tilePoints.points
                 });
             }
         }
 
         return {
-            height: height,
+            tileHeight: height,
             _image: image,
-            tiles: tiles
+            tiles: tiles,
+            width: actualWidth,
+            height: actualHeight,
+            size: this._size,
+            center: this._center
         };
     }
 
@@ -158,16 +157,6 @@ export class GridChecker {
         const idx = pixelX + (pixelY * width);
         const pixel = idx * 4;
         return pixel;
-    }
-    
-    private _localPosition(xPercent: number, yPercent: number, z: number) {
-        const left = -this._size.x / 2;
-        const top = this._size.z / 2;
-        const width = this._size.x;
-        const height = this._size.z;
-        const x = left + (xPercent * width);
-        const y = top - (yPercent * height);
-        return new Vector3(x, z, y);
     }
 
     private _teardownScene() {
@@ -212,6 +201,8 @@ export class GridChecker {
     }
 
     private _updateCamera() {
+        this._center = new Vector3();
+        this._size = new Vector3();
         this._bounds.getCenter(this._center);
         this._bounds.getSize(this._size);
 
@@ -248,9 +239,4 @@ export interface GridCheckResults {
      * The levels that were found.
      */
     levels: GridLevel[];
-    
-    /**
-     * The hex grid that was checked.
-     */
-    grid: HexGridMesh;
 }

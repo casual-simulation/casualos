@@ -186,6 +186,10 @@ export class InteractionManager {
         }
     }
 
+    /**
+     * Calculates the grid location and workspace that the given ray intersects with.
+     * @param ray The ray to test.
+     */
     public pointOnGrid(ray: Ray) {
         const raycaster = new Raycaster(ray.origin, ray.direction, 0, Number.POSITIVE_INFINITY);
         const workspaces = this._getSurfaceObjects();
@@ -201,7 +205,8 @@ export class InteractionManager {
                 if (closest) {
                     return {
                         good: true,
-                        point: closest.tile.localPosition,
+                        gridPosition: closest.tile.gridPosition,
+                        height: closest.tile.localPosition.y,
                         workspace
                     };
                 }

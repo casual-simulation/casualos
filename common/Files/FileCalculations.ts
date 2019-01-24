@@ -1,4 +1,4 @@
-import { Object, File, Workspace } from './File';
+import { Object, File, Workspace, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_HEIGHT } from './File';
 import uuid from 'uuid/v4';
 import {
     flatMap,
@@ -251,7 +251,9 @@ export function createWorkspace(): Workspace {
         type: 'workspace',
         position: {x: 0, y: 0, z: 0},
         size: 1,
-        grid: {}
+        grid: {},
+        scale: DEFAULT_WORKSPACE_SCALE,
+        defaultHeight: DEFAULT_WORKSPACE_HEIGHT
     };
 }
 

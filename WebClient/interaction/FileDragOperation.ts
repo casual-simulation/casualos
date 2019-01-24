@@ -79,7 +79,7 @@ export class FileDragOperation implements IOperation {
 
     private _dragFile() {
         const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.camera);
-        const { good, point, workspace } = this._interaction.pointOnGrid(mouseDir);
+        const { good, gridPosition, height, workspace } = this._interaction.pointOnGrid(mouseDir);
 
         if (this._file) {
             if (good) {
@@ -88,28 +88,32 @@ export class FileDragOperation implements IOperation {
                 }
                 this._gridWorkspace = <WorkspaceMesh>workspace.mesh;
                 this._gridWorkspace.gridsVisible = true;
+                console.log(gridPosition);
                 this._gameView.fileManager.updateFile(this._file.file, {
                     tags: {
                         _workspace: workspace.file.id,
                         _position: {
-                            x: point.x,
-                            y: point.y,
-                            z: point.z
+                            x: gridPosition.x,
+                            y: gridPosition.y,
+                            z: height
+                            // TODO: Make index
+                            // z: gridPosition.z
                         }
                     }
                 });
             } else {
-                const p = Physics.pointOnRay(mouseDir, 2);
-                this._gameView.fileManager.updateFile(this._file.file, {
-                    tags: {
-                        _workspace: null,
-                        _position: {
-                            x: p.x,
-                            y: p.y,
-                            z: p.z
-                        }
-                    }
-                });
+                // Don't move the file if it's not on a workspace
+                // const p = Physics.pointOnRay(mouseDir, 2);
+                // this._gameView.fileManager.updateFile(this._file.file, {
+                //     tags: {
+                //         _workspace: null,
+                //         _position: {
+                //             x: p.x,
+                //             y: p.y,
+                //             z: p.z
+                //         }
+                //     }
+                // });
             }
         }
     }

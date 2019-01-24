@@ -1,7 +1,9 @@
-import { Object3D, Mesh, BoxBufferGeometry, MeshStandardMaterial, Color } from "three";
-import { Object } from 'common/Files';
+import { Object3D, Mesh, BoxBufferGeometry, MeshStandardMaterial, Color, Vector3 } from "three";
+import { Object, DEFAULT_WORKSPACE_SCALE } from 'common/Files';
 import { GameObject } from "./GameObject";
 import GameView from '../GameView/GameView';
+import { calculateGridTileLocalCenter } from "./grid/Grid";
+import { WorkspaceMesh } from "./WorkspaceMesh";
 
 export class FileMesh extends GameObject {
 
@@ -23,7 +25,6 @@ export class FileMesh extends GameObject {
             roughness: 0.6
         });
         const cube = new Mesh(geometry, material);
-        cube.position.set(0, size / 2, 0);
         cube.castShadow = true;
         cube.receiveShadow = false;
         return cube;
@@ -40,10 +41,15 @@ export class FileMesh extends GameObject {
         // visible if not destroyed, has a position, and not hidden
         this.visible = (!file.tags._destroyed && !!file.tags._position && !file.tags._hidden);
         const workspace = this._gameView.getFile(file.tags._workspace);
-        if (workspace) {
+        if (workspace && workspace.file.type === 'workspace') {
             this.parent = workspace.mesh;
+            const scale = workspace.file.scale || DEFAULT_WORKSPACE_SCALE;
+            this.cube.scale.set(scale, scale, scale);
+            this.cube.position.set(0, scale / 2, 0);
         } else {
             this.parent = null;
+            this.cube.scale.set(1, 1, 1);
+            this.cube.position.set(0, 0, 0);
         }
 
         if (file.tags.color) {
@@ -56,11 +62,18 @@ export class FileMesh extends GameObject {
             material.color = new Color(0x00FF00);
         }
 
-        if (file.tags._position) {
+        if (file.tags._position && workspace && workspace.file.type === 'workspace') {
+            const scale = workspace.file.scale || DEFAULT_WORKSPACE_SCALE;
+            console.log(file.tags._position);
+            const localPosition = calculateGridTileLocalCenter(
+                file.tags._position.x, 
+                file.tags._position.y, 
+                file.tags._position.z,
+                scale);
             this.position.set(
-                file.tags._position.x,
-                file.tags._position.y,
-                file.tags._position.z);
+                localPosition.x,
+                localPosition.y,
+                localPosition.z);
         } else {
             // Default position
             this.position.set(0, 1, 0);

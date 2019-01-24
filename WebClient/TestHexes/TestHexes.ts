@@ -226,10 +226,15 @@ export default class GameView extends Vue {
       position: { x: 3, y: 0, z: 0},
       size: 4,
       grid: {
-        [posToKey(new Axial(1, 0))]: {
+        [posToKey(new Axial(-3, 0))]: {
+          height: 3
+        },
+        [posToKey(new Axial(-2, 0))]: {
           height: 3
         }
-      }
+      },
+      scale: 0.5,
+      defaultHeight: 0.1
     };
     const workspaceMesh = new WorkspaceMesh();
     await workspaceMesh.update(workspace);
@@ -247,6 +252,7 @@ export default class GameView extends Vue {
     this._checker.tileRatio = this.tileRatio;
 
     const results = await workspace.updateSquareGrids(this._checker);
+    workspace.gridsVisible = true;
     this.images = results.map(l => l._image);
 
     this._debugDots.remove(...this._debugDots.children);

@@ -1,8 +1,7 @@
 import { Mesh, Object3D } from 'three';
 import { HexGrid, hexesInRadius } from './HexGrid';
-import { HexMesh, HEX_HEIGHT } from './HexMesh';
+import { HexMesh } from './HexMesh';
 import { Axial } from './Axial';
-import { HEX_SIZE } from './Hex';
 
 /**
  * Defines a mesh that represents a HexGrid containing a bunch of HexMesh meshes.
@@ -19,7 +18,7 @@ export class HexGridMesh extends Object3D {
      * @param radius The radius to fill.
      * @param defaultHeight The default hex height.
      */
-    constructor(radius: number, defaultHeight: number = HEX_HEIGHT, size: number = HEX_SIZE, grid: HexGrid<HexMesh> = new HexGrid()) {
+    constructor(radius: number, defaultHeight: number, size: number, grid: HexGrid<HexMesh> = new HexGrid()) {
         super();
         this._grid = grid;
         this._radius = radius;
@@ -84,7 +83,7 @@ export class HexGridMesh extends Object3D {
         });
     }
 
-    static createFilledInHexGrid(radius: number, defaultHeight: number = HEX_HEIGHT, size: number = HEX_SIZE) {
+    static createFilledInHexGrid(radius: number, defaultHeight: number, size: number) {
         const grid = new HexGridMesh(radius, defaultHeight, size);
         grid._fillHexesInRadius();
         return grid;

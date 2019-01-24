@@ -1,9 +1,7 @@
-import { HEX_SIZE, hex } from "./Hex";
+import { hex } from "./Hex";
 import { Mesh, BufferGeometry, ExtrudeBufferGeometry, Shape, Material, MeshStandardMaterial, Matrix4, Vector3, MeshBasicMaterial } from "three";
 import { Axial } from "./Axial";
 import { gridPosToRealPos } from "./HexGrid";
-
-export const HEX_HEIGHT = 1;
 
 /**
  * Defines a class that represents a 3D Hex.
@@ -51,7 +49,7 @@ export class HexMesh extends Mesh {
      * @param size The radius of the hex.
      * @param height The default height of the hex.
      */
-    constructor(pos: Axial = new Axial(), size: number = HEX_SIZE, height: number = HEX_HEIGHT, material?: Material) {
+    constructor(pos: Axial = new Axial(), size: number, height: number, material?: Material) {
         super(createHexMeshGeometry(size, height), createDefaultHexMaterial(material));
         this.receiveShadow = true;
         this._size = size;
