@@ -23,6 +23,7 @@ export class FileMesh extends GameObject {
             roughness: 0.6
         });
         const cube = new Mesh(geometry, material);
+        cube.position.set(0, size / 2, 0);
         cube.castShadow = true;
         cube.receiveShadow = false;
         return cube;
@@ -30,7 +31,7 @@ export class FileMesh extends GameObject {
 
     update(file: Object) {
         if (!this.file) {
-            this.cube = this._createCube(0.2);
+            this.cube = this._createCube(1);
             this.colliders.push(this.cube);
             this.add(this.cube);
         }
@@ -57,9 +58,9 @@ export class FileMesh extends GameObject {
 
         if (file.tags._position) {
             this.position.set(
-                file.tags._position.x + 0,
-                file.tags._position.y + 0.095,
-                file.tags._position.z + 0);
+                file.tags._position.x,
+                file.tags._position.y,
+                file.tags._position.z);
         } else {
             // Default position
             this.position.set(0, 1, 0);
