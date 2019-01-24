@@ -5,6 +5,7 @@ import GameView from '../GameView/GameView';
 import { InteractionManager } from './InteractionManager';
 import { Ray, Intersection, Vector2 } from 'three';
 import { Physics } from '../game-engine/Physics';
+import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
 
 /**
  * File Drag Operation handles dragging of files for mouse and touch input.
@@ -16,6 +17,7 @@ export class FileDragOperation implements IOperation {
     private _file: File3D;
     private _workspace: File3D;
     private _finished: boolean;
+    private _gridWorkspace: WorkspaceMesh;
 
     private _lastScreenPos: Vector2;
 
@@ -31,10 +33,12 @@ export class FileDragOperation implements IOperation {
         this._file = file;
         this._workspace = workspace;
 
-        if (!this._workspace) {
-            // we're gonna be dragging the file. turn on the grids.
-            // this._gameView.grids.visible = true;
-        }
+        // if (!this._workspace) {
+        //     // we're gonna be dragging the file. turn on the grids.
+        //     const mesh = <WorkspaceMesh>this._workspace.mesh;
+        //     mesh.gridsVisible = true;
+        //     this._gameView.gridsVisible = true;
+        // }
         
 
         this._lastScreenPos = this._gameView.input.getMouseScreenPos();
@@ -70,7 +74,7 @@ export class FileDragOperation implements IOperation {
     }
 
     public dispose(): void {
-        // this._gameView.grids.visible = false;
+        this._gameView.setGridsVisible(false);
     }
 
     private _dragFile() {
@@ -79,6 +83,11 @@ export class FileDragOperation implements IOperation {
 
         if (this._file) {
             if (good) {
+                if (this._gridWorkspace) {
+                    this._gridWorkspace.gridsVisible = false;
+                }
+                this._gridWorkspace = <WorkspaceMesh>workspace.mesh;
+                this._gridWorkspace.gridsVisible = true;
                 this._gameView.fileManager.updateFile(this._file.file, {
                     tags: {
                         _workspace: workspace.file.id,

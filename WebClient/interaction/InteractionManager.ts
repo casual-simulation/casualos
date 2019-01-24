@@ -261,7 +261,7 @@ export class InteractionManager {
 
     private _getDraggableObjects() {
         if (this._draggableObjectsDirty) {
-            this._draggableColliders = flatMap(this._gameView.files, f => f.mesh.colliders);
+            this._draggableColliders = flatMap(this._gameView.getFiles(), f => f.mesh.colliders);
             this._draggableObjectsDirty = false;
         }
         return this._draggableColliders;
@@ -269,7 +269,7 @@ export class InteractionManager {
 
     private _getSurfaceObjects() {
         if (this._surfaceObjectsDirty) {
-            this._surfaceColliders = flatMap(this._gameView.files.filter(f => f.file.type === 'workspace'), f => f.mesh.colliders);
+            this._surfaceColliders = flatMap(this._gameView.getFiles().filter(f => f.file.type === 'workspace'), f => f.mesh.colliders);
             this._surfaceObjectsDirty = false;
         }
         return this._surfaceColliders;

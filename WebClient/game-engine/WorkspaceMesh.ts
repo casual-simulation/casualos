@@ -26,6 +26,12 @@ export class WorkspaceMesh extends GameObject {
      */
     workspace: Workspace;
 
+    set gridsVisible(visible: boolean) {
+        this.squareGrids.forEach(grid => {
+            grid.visible = visible;
+        });
+    }
+
     constructor() {
         super();
     }
@@ -35,7 +41,7 @@ export class WorkspaceMesh extends GameObject {
      * @param point The world point to test.
      */
     closestTileToPoint(point: Vector3) {
-        const tiles = this.squareGrids.map(g => g.closestTileToPoint(point));
+        const tiles = this.squareGrids.map(g => g.closestTileToPoint(point)).filter(t => !!t);
         const closest = minBy(tiles, t => t.distance);
         return closest;
     }
@@ -98,6 +104,7 @@ export class WorkspaceMesh extends GameObject {
 
         const levels = await checker.check(this.hexGrid);
         this.squareGrids = levels.map(l => new GridMesh(l));
+        this.squareGrids.forEach(grid => grid.visible = false);
         this.add(...this.squareGrids);
         return levels;
     }

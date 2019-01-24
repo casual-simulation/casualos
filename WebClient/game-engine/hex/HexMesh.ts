@@ -53,6 +53,7 @@ export class HexMesh extends Mesh {
      */
     constructor(pos: Axial = new Axial(), size: number = HEX_SIZE, height: number = HEX_HEIGHT, material?: Material) {
         super(createHexMeshGeometry(size, height), createDefaultHexMaterial(material));
+        this.receiveShadow = true;
         this._size = size;
         this._height = height;
         this.gridPosition = pos;
@@ -70,7 +71,7 @@ export function createDefaultHexMaterial(mat: Material): Material {
     return new MeshStandardMaterial({
         color: 0x999999,
         roughness: .7,
-    })
+    });
 }
 
 /**

@@ -89,10 +89,16 @@ export default class GameView extends Vue {
   get interactionManager(): InteractionManager { return this._interaction; }
   get camera(): PerspectiveCamera { return this._camera; }
   get workspacePlane(): Mesh { return this._workspacePlane; }
-  get files() { return values(this._files); }
 
   get fileManager() {
     return appManager.fileManager;
+  }
+
+  setGridsVisible(visible: boolean) {
+    this.getWorkspaces().forEach(workspace => {
+      const mesh = <WorkspaceMesh>workspace.mesh;
+      mesh.gridsVisible = visible;
+    });
   }
 
   async mounted() {
@@ -154,6 +160,20 @@ export default class GameView extends Vue {
    */
   public getFile(fileId: string): File3D {
     return this._files[fileId];
+  }
+
+  /**
+   * Gets all of the files.
+   */
+  getFiles() {
+    return values(this._files);
+  }
+
+  /**
+   * Gets all of the workspaces.
+   */
+  getWorkspaces() {
+    return this.getFiles().filter(f => f.file.type === 'workspace');
   }
 
   private async _fileUpdated(file: File) {
