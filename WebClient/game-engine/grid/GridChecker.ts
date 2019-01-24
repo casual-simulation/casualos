@@ -133,11 +133,10 @@ export class GridChecker {
                 const gridX = Math.ceil(x - (actualWidth / 2));
                 const gridY = Math.ceil(y - (actualHeight / 2));
                 const localPos = this._localPosition(xPercent, yPercent, height);
-                const worldPos = new Vector3().copy(localPos).add(new Vector3(this._center.x, 0, this._center.z));
                 tiles.push({
                     valid,
                     gridPosition: new Vector2(gridX, gridY),
-                    worldPosition: worldPos,
+                    localPosition: localPos,
                     points: points,
                     localPoints: points.map(p => {
                         return new Vector3().copy(p).add(localPos);

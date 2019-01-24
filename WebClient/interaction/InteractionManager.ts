@@ -5,22 +5,29 @@ import { Object } from '../../common/Files';
 import { FileClickOperation } from './FileClickOperation';
 import GameView from '../GameView/GameView';
 import { Physics } from '../game-engine/Physics';
-import { find } from 'lodash';
+import { find, flatMap } from 'lodash';
 import { CameraControls } from './CameraControls';
+import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
+import { FileMesh } from '../game-engine/FileMesh';
 
 export class InteractionManager {
 
     private _gameView: GameView;
     private _raycaster: Raycaster;
-    private _draggableObjects: Object3D[];
+    private _draggableColliders: Object3D[];
+    private _surfaceColliders: Object3D[];
+    private _draggableObjectsDirty: boolean;
+    private _surfaceObjectsDirty: boolean;
 
     private _cameraControls: CameraControls;
     private _fileClickOperation: FileClickOperation;
 
     constructor(gameView: GameView) {
+        this._draggableObjectsDirty = true;
+        this._surfaceObjectsDirty = true;
         this._gameView = gameView;
         this._raycaster = new Raycaster();
-        this._draggableObjects = [];
+        // this._raycaster.linePrecision = .001;
         this._cameraControls = new CameraControls(this._gameView.camera, this._gameView);
 
         // Bind event handlers to this instance of the class.
@@ -57,7 +64,7 @@ export class InteractionManager {
         if (input.getMouseButtonDown(MouseButtonId.Left)) {
 
             const screenPos = input.getMouseScreenPos();
-            const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this._draggableObjects, this._gameView.camera);
+            const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this._getDraggableObjects(), this._gameView.camera);
             const clickedObject = Physics.firstRaycastHit(raycastResult);
 
             if (clickedObject) {
@@ -96,7 +103,7 @@ export class InteractionManager {
             
             const pagePos = input.getMousePagePos();
             const screenPos = input.getMouseScreenPos();
-            const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this._draggableObjects, this._gameView.camera);
+            const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this._getDraggableObjects(), this._gameView.camera);
             const hit = Physics.firstRaycastHit(raycastResult);
 
             if (hit) {
@@ -147,7 +154,8 @@ export class InteractionManager {
             return null;
         }
         const hasParent = !!obj.object.parent && !!obj.object.parent.parent;
-        const fileId = hasParent ? this._gameView.getFileId(obj.object.parent.parent.id) : null;
+        const isObject = hasParent && obj.object.parent instanceof FileMesh;
+        const fileId = (hasParent && !isObject) ? this._gameView.getFileId(obj.object.parent.parent.id) : null;
         const file = fileId ? this._gameView.getFile(fileId) : null;
         if (file && file.file.type === 'workspace') {
             return file;
@@ -180,22 +188,23 @@ export class InteractionManager {
 
     public pointOnGrid(ray: Ray) {
         const raycaster = new Raycaster(ray.origin, ray.direction, 0, Number.POSITIVE_INFINITY);
-        raycaster.linePrecision = .1;
-        const hits = raycaster.intersectObject(this._gameView.grids, true);
+        const workspaces = this._getSurfaceObjects();
+        const hits = raycaster.intersectObjects(workspaces, true);
         const hit = hits[0];
         if (hit) {
             const point = hit.point;
             const workspace = this.findWorkspaceForIntersection(hit);
             if (workspace) {
-                workspace.mesh.worldToLocal(point);
-                // const cell = workspace.grid.grid.pixelToCell(point);
-                // const pos = workspace.grid.grid.cellToPixel(cell).clone();
-                // pos.y = point.y;
-                return {
-                    good: true,
-                    point: {x:0,y:0,z:0},//pos,
-                    workspace
-                };
+                const workspaceMesh = <WorkspaceMesh>workspace.mesh;
+                const closest = workspaceMesh.closestTileToPoint(point);
+
+                if (closest) {
+                    return {
+                        good: true,
+                        point: closest.tile.localPosition,
+                        workspace
+                    };
+                }
             }
         }
         return {
@@ -208,7 +217,7 @@ export class InteractionManager {
     }
 
     public tryCombineFiles(drag: DragOperation) {
-        const raycast = Physics.raycastAtScreenPos(drag.screenPos, this._raycaster, this._draggableObjects, this._gameView.camera);
+        const raycast = Physics.raycastAtScreenPos(drag.screenPos, this._raycaster, this._getDraggableObjects(), this._gameView.camera);
         const other = find(raycast.intersects, (val, index, col) => val.object !== drag.hit.object);
         if (other) {
             const file = this.fileForIntersection(drag.hit);
@@ -234,19 +243,35 @@ export class InteractionManager {
     }
 
     private _handleFileAdded(file: File3D): void {
-        // Add file's mesh to draggable objects list.
-        this._draggableObjects.push(file.mesh);
+        this._markDirty();
     }
 
     private _handleFileUpdated(file: File3D): void {
-
+        this._markDirty();
     }
 
     private _handleFileRemoved(file: File3D): void {
-        // Remove file's mesh from draggable objects list.
-        const index = this._draggableObjects.indexOf(file.mesh);
-        if (index >= 0) {
-            this._draggableObjects.slice(index, 1);
+        this._markDirty();
+    }
+
+    private _markDirty() {
+        this._draggableObjectsDirty = true;
+        this._surfaceObjectsDirty = true;
+    }
+
+    private _getDraggableObjects() {
+        if (this._draggableObjectsDirty) {
+            this._draggableColliders = flatMap(this._gameView.files, f => f.mesh.colliders);
+            this._draggableObjectsDirty = false;
         }
+        return this._draggableColliders;
+    }
+
+    private _getSurfaceObjects() {
+        if (this._surfaceObjectsDirty) {
+            this._surfaceColliders = flatMap(this._gameView.files.filter(f => f.file.type === 'workspace'), f => f.mesh.colliders);
+            this._surfaceObjectsDirty = false;
+        }
+        return this._surfaceColliders;
     }
 }

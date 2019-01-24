@@ -1,8 +1,9 @@
 import { Object3D, Mesh, BoxBufferGeometry, MeshStandardMaterial, Color } from "three";
 import { Object } from 'common/Files';
-import GameView from "WebClient/GameView/GameView";
+import { GameObject } from "./GameObject";
+import GameView from '../GameView/GameView';
 
-export class FileMesh extends Object3D {
+export class FileMesh extends GameObject {
 
     private _gameView: GameView;
 
@@ -30,6 +31,7 @@ export class FileMesh extends Object3D {
     update(file: Object) {
         if (!this.file) {
             this.cube = this._createCube(0.2);
+            this.colliders.push(this.cube);
             this.add(this.cube);
         }
         this.file = file;

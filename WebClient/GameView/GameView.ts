@@ -43,6 +43,7 @@ import { ArgEvent } from '../../common/Events';
 import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
 import { GridChecker } from '../game-engine/grid/GridChecker';
 import { FileMesh } from '../game-engine/FileMesh';
+import { values } from 'lodash';
 
 @Component({
 })
@@ -58,7 +59,6 @@ export default class GameView extends Vue {
 
   private _workspacePlane: Mesh;
   private _skydome: Mesh;
-  private _grids: Group;
   private _canvas: HTMLElement;
   private _input: Input;
   private _interaction: InteractionManager;
@@ -88,8 +88,8 @@ export default class GameView extends Vue {
   get input(): Input { return this._input; }
   get interactionManager(): InteractionManager { return this._interaction; }
   get camera(): PerspectiveCamera { return this._camera; }
-  get grids(): Group { return this._grids; }
   get workspacePlane(): Mesh { return this._workspacePlane; }
+  get files() { return values(this._files); }
 
   get fileManager() {
     return appManager.fileManager;
@@ -224,15 +224,9 @@ export default class GameView extends Vue {
     this._fileIds[obj.mesh.id] = obj.file.id;
     this._scene.add(obj.mesh);
     obj.mesh.name = `${file.type}_${file.id}`;
-    // if (grid) {
-    //   grid.group.name = `grid_${file.type}_${file.id}`;
-    //   this._fileIds[grid.group.id] = obj.file.id;
-    //   this._grids.add(grid.group);
-    // }
-
-    this.onFileAdded.invoke(obj);
 
     await this._fileUpdated(file);
+    this.onFileAdded.invoke(obj);
   }
 
   private _fileRemoved(id: string) {
@@ -260,11 +254,6 @@ export default class GameView extends Vue {
     this._scene.background = new Color(0xCCE6FF);
 
     this._setupRenderer();
-
-    // Grid group.
-    this._grids = new Group();
-    this._grids.visible = false;
-    this._scene.add(this._grids);
 
     // User's camera
     this._camera = new PerspectiveCamera(

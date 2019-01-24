@@ -33,7 +33,7 @@ export class FileDragOperation implements IOperation {
 
         if (!this._workspace) {
             // we're gonna be dragging the file. turn on the grids.
-            this._gameView.grids.visible = true;
+            // this._gameView.grids.visible = true;
         }
         
 
@@ -70,7 +70,7 @@ export class FileDragOperation implements IOperation {
     }
 
     public dispose(): void {
-        this._gameView.grids.visible = false;
+        // this._gameView.grids.visible = false;
     }
 
     private _dragFile() {

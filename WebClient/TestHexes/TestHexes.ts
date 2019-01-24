@@ -252,10 +252,12 @@ export default class GameView extends Vue {
     this._debugDots.remove(...this._debugDots.children);
     results.forEach(level => {
       level.tiles.forEach(tile => {
-        this._debugDots.add(this._createSphere(tile.worldPosition, tile.valid ? 0x0000ff : 0xff0000));
+        const tileWorldPosition = new Vector3().copy(tile.localPosition).add(workspace.position);
+        this._debugDots.add(this._createSphere(tileWorldPosition, tile.valid ? 0x0000ff : 0xff0000));
         if (tile.valid) {
           tile.localPoints.forEach(p => {
-            this._debugDots.add(this._createSphere(p, 0x00ff00));
+            const pointWorldPosition = new Vector3().copy(p).add(workspace.position);
+            this._debugDots.add(this._createSphere(pointWorldPosition, 0x00ff00));
           });
         }
       });

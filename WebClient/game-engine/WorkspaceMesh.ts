@@ -1,14 +1,15 @@
-import { Object3D } from "three";
+import { Object3D, Vector3 } from "three";
 import { HexGridMesh, HexGrid, HexMesh, keyToPos } from "./hex";
 import { GridMesh } from "./grid/GridMesh";
 import { Workspace, objDiff } from "common/Files";
-import { keys } from "lodash";
+import { keys, minBy } from "lodash";
 import { GridChecker } from "./grid/GridChecker";
+import { GameObject } from "./GameObject";
 
 /**
  * Defines a mesh that represents a workspace.
  */
-export class WorkspaceMesh extends Object3D {
+export class WorkspaceMesh extends GameObject {
 
     /**
      * The hex grid for this workspace.
@@ -27,6 +28,16 @@ export class WorkspaceMesh extends Object3D {
 
     constructor() {
         super();
+    }
+
+    /**
+     * Calculates the GridTile that is the closest to the given world point.
+     * @param point The world point to test.
+     */
+    closestTileToPoint(point: Vector3) {
+        const tiles = this.squareGrids.map(g => g.closestTileToPoint(point));
+        const closest = minBy(tiles, t => t.distance);
+        return closest;
     }
 
     /**
@@ -60,9 +71,9 @@ export class WorkspaceMesh extends Object3D {
         if (this.hexGrid) {
             this.remove(this.hexGrid);
         }
-
+        
         this.hexGrid = HexGridMesh.createFilledInHexGrid(this.workspace.size);
-
+        
         const positionsKeys = keys(this.workspace.grid);
         positionsKeys.forEach(key => {
             const position = keyToPos(key);
@@ -71,7 +82,8 @@ export class WorkspaceMesh extends Object3D {
             const hex = this.hexGrid.addAt(position);
             hex.height = workspaceHex.height;
         });
-
+        
+        this.colliders = [...this.hexGrid.hexes];
         this.add(this.hexGrid);
     }
 

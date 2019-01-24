@@ -11,9 +11,9 @@ export interface GridTile {
     valid: boolean;
 
     /**
-     * The center of the tile in world-relative coordinates.
+     * The center of the tile in workspace-relative coordinates.
      */
-    worldPosition: Vector3;
+    localPosition: Vector3;
 
     /**
      * The square grid position of the tile.
@@ -26,7 +26,7 @@ export interface GridTile {
     points: Vector3[]
 
     /**
-     * The world relative corner points of the tile.
+     * The workspace relative corner points of the tile.
      */
     localPoints: Vector3[];
 }
