@@ -168,8 +168,10 @@ export class GridChecker {
         this._group.add(...this._hexes);
         this._scene.add(this._group);
 
+        this._grid.getWorldPosition(this._group.position);
+
         const hexBounds = new Box3().setFromObject(this._group);
-        this._camera.position.set(0, hexBounds.max.y, 0);
+        this._camera.position.set(this._center.x, hexBounds.max.y, this._center.z);
         this._camera.updateMatrixWorld(true);
     }
     

@@ -224,14 +224,23 @@ export default class GameView extends Vue {
       id: 'test',
       type: 'workspace',
       position: { x: 3, y: 0, z: 0},
-      size: 4,
+      size: 3,
       grid: {
-        [posToKey(new Axial(-3, 0))]: {
-          height: 3
+        [posToKey(new Axial(-2, 2))]: {
+          height: 1
+        },
+        [posToKey(new Axial(-2, 1))]: {
+          height: 1
         },
         [posToKey(new Axial(-2, 0))]: {
-          height: 3
-        }
+          height: 1
+        },
+        [posToKey(new Axial(-1, 2))]: {
+          height: 1
+        },
+        [posToKey(new Axial(-1, -1))]: {
+          height: 1
+        },
       },
       scale: 0.5,
       defaultHeight: 0.1
