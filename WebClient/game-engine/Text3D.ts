@@ -9,13 +9,16 @@ import {
     TextureLoader,
     Texture,
     SceneUtils,
-    Vector3} from "three";
+    Vector3,
+    Box3} from "three";
 
 import createBMFont, { TextGeometry, TextGeometryOptions } from "three-bmfont-text";
 import GameView from "WebClient/GameView/GameView";
 
 export class Text3D {
 
+    public static readonly defaultWidth: number = 200;
+    public static readonly extraSpacing: number = 0.1;
     public static readonly defaultScale: number = 0.004;
 
     // The text geometry created with 'three-bmfont-text'
@@ -49,8 +52,7 @@ export class Text3D {
         this._gameView = gameView;
 
         var texture = new TextureLoader().load(fontTexturePath);
-        const width = 200;
-        this._geometry = createBMFont({ font: fontData, text: "", flipY: true, align: "center", width: width });
+        this._geometry = createBMFont({ font: fontData, text: "", flipY: true, align: "center", width: Text3D.defaultWidth });
         var material = new MeshBasicMaterial({
             map: texture,
             lights: false,
@@ -71,10 +73,24 @@ export class Text3D {
 
         // Move label so that its bottom edge is centered on the anchor.
         // this._mesh.translateX(this._geometry.layout.width / 2);
-        this._mesh.position.set(-width / 2, 50, 0);
+        // this._mesh.position.set(-width / 2, 50, 0);
 
         // Add the label anchor as aa child of the file mesh.
         parent.add(this._anchor);
+    }
+
+    /**
+     * Sets the position of the text based on the size of the given bounding box.
+     * @param box The bounding box.
+     */
+    public setPositionForObject(obj: Object3D) {
+        let bounds = new Box3().setFromObject(obj);
+        let size = new Vector3();
+        bounds.getSize(size);
+
+        size.add(new Vector3(0, Text3D.extraSpacing, 0));
+        size.divide(this._anchor.scale);
+        this._mesh.position.set(-Text3D.defaultWidth / 2, size.y, 0);
     }
 
     /**

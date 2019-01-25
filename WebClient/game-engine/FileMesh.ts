@@ -53,7 +53,7 @@ export class FileMesh extends GameObject {
         }
         if (!this.file) {
             this.cube = this._createCube(1);
-            this.label = new Text3D(this._gameView, this, robotoFont, robotoTexturePath);
+            this.label = this._createLabel();
             this.colliders.push(this.cube);
             this.add(this.cube);
         }
@@ -87,6 +87,7 @@ export class FileMesh extends GameObject {
         // Tag: label
         if (this.file.tags.label) {
             this.label.setText(this.file.tags.label);
+            this.label.setPositionForObject(this.cube);
         } else {
             this.label.setText("");
         }
@@ -125,5 +126,10 @@ export class FileMesh extends GameObject {
         cube.castShadow = true;
         cube.receiveShadow = false;
         return cube;
+    }
+
+    private _createLabel() {
+        const label = new Text3D(this._gameView, this, robotoFont, robotoTexturePath);
+        return label;
     }
 }
