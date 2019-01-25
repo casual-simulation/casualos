@@ -7,6 +7,7 @@
     <md-button @click="test()">Test</md-button>
     <md-button @click="toggleDots()">Toggle Dots</md-button>
     <input v-model="tileRatio" />
+    <input v-model="size" />
     <div class="test game-canvas" ref="gameView"></div>
   </div>
 </template>

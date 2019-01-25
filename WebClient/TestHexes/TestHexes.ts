@@ -70,6 +70,8 @@ export default class GameView extends Vue {
   tileRatio: number = 1;
   showInvalid: boolean = false;
 
+  size: number = 3;
+
   get showDots() {
     return this._debugDots.visible;
   }
@@ -258,8 +260,10 @@ export default class GameView extends Vue {
 
   async test() {
     const workspace = this._workspaces[0];
+    workspace.workspace.size = this.size;
     this._checker.tileRatio = this.tileRatio;
 
+    workspace.updateHexGrid();
     const results = await workspace.updateSquareGrids(this._checker);
     workspace.gridsVisible = true;
     this.images = results.map(l => l._image);
@@ -267,14 +271,15 @@ export default class GameView extends Vue {
     this._debugDots.remove(...this._debugDots.children);
     results.forEach(level => {
       level.tiles.forEach(tile => {
-        const tileWorldPosition = new Vector3().copy(tile.localPosition).add(workspace.position);
-        this._debugDots.add(this._createSphere(tileWorldPosition, tile.valid ? 0x0000ff : 0xff0000));
+        
         if (tile.valid) {
-          tile.localPoints.forEach(p => {
-            const pointWorldPosition = new Vector3().copy(p).add(workspace.position);
-            this._debugDots.add(this._createSphere(pointWorldPosition, 0x00ff00));
-          });
-        }
+          const tileWorldPosition = new Vector3().copy(tile.localPosition).add(workspace.position);
+          this._debugDots.add(this._createSphere(tileWorldPosition, tile.valid ? 0x0000ff : 0xff0000));
+            tile.localPoints.forEach(p => {
+              const pointWorldPosition = new Vector3().copy(p).add(workspace.position);
+              this._debugDots.add(this._createSphere(pointWorldPosition, 0x00ff00));
+            });
+          }
       });
     });
   }

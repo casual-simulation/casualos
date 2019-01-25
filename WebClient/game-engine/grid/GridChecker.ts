@@ -31,7 +31,7 @@ import { calculateTilePoints, calculateGridTileLocalPositions } from "./Grid";
 export class GridChecker {
 
     tileRatio = 1;
-    private _supersampling = 4;
+    private _supersampling = 8;
     private _renderer: WebGLRenderer;
     private _camera: OrthographicCamera;
     private _scene: Scene;
@@ -41,9 +41,13 @@ export class GridChecker {
     private _size: Vector3 = new Vector3();
     private _tileSize: number;
     private _hexes: HexMesh[];
+    private _hexBounds: Box3;
     private _height: number;
     private _group: Object3D;
     private _parent: Object3D;
+    private _worldPosition: Vector3;
+    private _xImbalance: number;
+    private _yImbalance: number;
 
     constructor() {
         this._scene = new Scene();
@@ -54,8 +58,6 @@ export class GridChecker {
             antialias: false
         });
         this._renderer.setClearColor(new Color(), 0);
-
-        // document.body.appendChild(this._renderer.domElement);
 
         this._scene.add(this._camera);
     }
@@ -168,10 +170,10 @@ export class GridChecker {
         this._group.add(...this._hexes);
         this._scene.add(this._group);
 
-        this._grid.getWorldPosition(this._group.position);
+        this._group.position.copy(this._worldPosition);
 
-        const hexBounds = new Box3().setFromObject(this._group);
-        this._camera.position.set(this._center.x, hexBounds.max.y, this._center.z);
+        this._hexBounds = new Box3().setFromObject(this._group);
+        this._camera.position.set(this._worldPosition.x, this._hexBounds.max.y, this._worldPosition.z);
         this._camera.updateMatrixWorld(true);
     }
     
@@ -199,7 +201,9 @@ export class GridChecker {
     }
 
     private _updateBounds() {
+        this._worldPosition = new Vector3();
         this._bounds = new Box3().setFromObject(this._grid);
+        this._grid.getWorldPosition(this._worldPosition);
     }
 
     private _updateCamera() {
@@ -208,11 +212,26 @@ export class GridChecker {
         this._bounds.getCenter(this._center);
         this._bounds.getSize(this._size);
 
+        const minX = this._bounds.min.x;
+        const maxX = this._bounds.max.x;
+        const minZ = this._bounds.min.z;
+        const maxZ = this._bounds.max.z;
+
+        const left = minX - this._worldPosition.x;
+        const right = maxX - this._worldPosition.x;
+        const top = maxZ - this._worldPosition.z;
+        const bottom = minZ - this._worldPosition.z;
+        this._xImbalance = Math.abs(left) - Math.abs(right);
+        this._yImbalance = Math.abs(bottom) - Math.abs(top);
+
+        this._size.add(new Vector3(this._xImbalance, 0, this._yImbalance));
+
         this._camera.rotation.set(ThreeMath.degToRad(-90), 0, 0);
         this._camera.left = -this._size.x / 2;
         this._camera.right = this._size.x / 2;
-        this._camera.top = this._size.z / 2;
+        this._camera.top = this._size.z / 2
         this._camera.bottom = -this._size.z / 2;
+
         this._camera.near = 0;
         this._camera.far = 0.5;
 
@@ -223,8 +242,8 @@ export class GridChecker {
     private _updateRenderer() {
         const worldWidth = this._size.x;
         const worldHeight = this._size.z;
-        const tileWidth = worldWidth / this._tileSize;
-        const tileHeight = worldHeight / this._tileSize;
+        const tileWidth = Math.ceil(worldWidth / this._tileSize);
+        const tileHeight = Math.ceil(worldHeight / this._tileSize);
         this._renderer.setSize(tileWidth * this._supersampling, tileHeight * this._supersampling);
     }
 
