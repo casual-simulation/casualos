@@ -1,5 +1,5 @@
 import { Input } from '../game-engine/input';
-import { File3D } from '../game-engine/Interfaces';
+import { File3D } from '../game-engine/File3D';
 import { IOperation } from './IOperation';
 import GameView from '../GameView/GameView';
 import { InteractionManager } from './InteractionManager';

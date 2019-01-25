@@ -11,12 +11,10 @@ import {
   Math as ThreeMath,
   Group,
   MeshBasicMaterial,
-  LineBasicMaterial,
   PCFSoftShadowMap,
   BackSide,
   TextureLoader,
   SphereBufferGeometry,
-  BoxBufferGeometry,
   GLTFLoader,
   HemisphereLight,
 } from 'three';
@@ -31,13 +29,11 @@ import {
 import { File, Object, Workspace } from 'common/Files';
 import { time } from '../game-engine/Time';
 import { Input } from '../game-engine/input';
+import { File3D } from '../game-engine/File3D';
 
-import { vg } from "von-grid";
-
-import skyTextureUrl from '../public/images/CGSkies_0132_free.jpg';
-import groundModelUrl from '../public/models/ground.gltf';
+import skyTexturePath from '../public/images/CGSkies_0132_free.jpg';
+import groundModelPath from '../public/models/ground.gltf';
 import { appManager } from '../AppManager';
-import { File3D } from '../game-engine/Interfaces';
 import { InteractionManager } from '../interaction/InteractionManager';
 import { ArgEvent } from '../../common/Events';
 import { WorkspaceMesh, WorkspaceMeshDebugInfo } from '../game-engine/WorkspaceMesh';
@@ -105,6 +101,9 @@ export default class GameView extends Vue {
   get interactionManager(): InteractionManager { return this._interaction; }
   get camera(): PerspectiveCamera { return this._camera; }
   get workspacePlane(): Mesh { return this._workspacePlane; }
+  get scene(): Scene { return this._scene; }
+
+  get gridChecker() { return this._gridChecker; }
 
   get fileManager() {
     return appManager.fileManager;
@@ -122,6 +121,7 @@ export default class GameView extends Vue {
   }
 
   async mounted() {
+
     time.init();
 
     this.debugInfo = null;
@@ -144,7 +144,7 @@ export default class GameView extends Vue {
     this._subs.push(this.fileManager.fileUpdated.subscribe(async file => {
       await this._fileUpdated(file);
     }));
-    
+
     this._frameUpdate();
   }
 
@@ -216,26 +216,34 @@ export default class GameView extends Vue {
   private async _fileUpdated(file: File) {
     const obj = this._files[file.id];
     if (obj) {
-      obj.file = file;
-      if (file.type === 'object') {
-        this._updateFile(obj, file);
-      } else {
-        await this._updateWorkspace(obj, file);
-      }
+  //     obj.file = file;
+  //     if (file.type === 'object') {
+  //       this._updateFile(obj, file);
+  //     } else {
+  //       await this._updateWorkspace(obj, file);
+  //     }
 
+  //     this.onFileUpdated.invoke(obj);
+  //   }
+  // }
+
+  // private _updateFile(obj: File3D, data: Object) {
+
+  //   const file = <FileMesh>obj.mesh;
+  //   file.update(data);
+  // }
+
+  // private async _updateWorkspace(obj: File3D, data: Workspace) {
+  //   const workspaceMesh = <WorkspaceMesh> obj.mesh;
+  //   await workspaceMesh.update(data);
+  // }
+
+  // private async _fileAdded(file: File) {
+      obj.updateFile(file);
       this.onFileUpdated.invoke(obj);
+    } else {
+      console.log('cant find file to update it');
     }
-  }
-
-  private _updateFile(obj: File3D, data: Object) {
-
-    const file = <FileMesh>obj.mesh;
-    file.update(data);
-  }
-
-  private async _updateWorkspace(obj: File3D, data: Workspace) {
-    const workspaceMesh = <WorkspaceMesh> obj.mesh;
-    await workspaceMesh.update(data);
   }
 
   private async _fileAdded(file: File) {
@@ -244,18 +252,27 @@ export default class GameView extends Vue {
     if (file.type === 'object' && file.tags._hidden) {
       return;
     }
+    
+    var obj = new File3D(this, file);
 
-    let obj: File3D;
-    if (file.type === 'object') {
-      obj = this._createFile(file);
-    } else {
-      obj = this._createWorkSurface(file);
-    }
+    // let obj: File3D;
+    // if (file.type === 'object') {
+    //   obj = this._createFile(file);
+    // } else {
+    //   obj = this._createWorkSurface(file);
+    // }
 
+    // this._files[file.id] = obj;
+    // this._fileIds[obj.mesh.id] = obj.file.id;
+    // this._scene.add(obj.mesh);
+    // obj.mesh.name = `${file.type}_${file.id}`;
     this._files[file.id] = obj;
     this._fileIds[obj.mesh.id] = obj.file.id;
-    this._scene.add(obj.mesh);
-    obj.mesh.name = `${file.type}_${file.id}`;
+
+    // if (obj.grid) {
+    //   this._fileIds[obj.grid.group.id] = obj.file.id;
+    //   this._grids.add(obj.grid.group);
+    // }
 
     await this._fileUpdated(file);
     this.onFileAdded.invoke(obj);
@@ -266,17 +283,10 @@ export default class GameView extends Vue {
     if (obj) {
       delete this._fileIds[obj.mesh.id];
       delete this._files[id];
-      this._scene.remove(obj.mesh);
+      obj.dispose();
 
       this.onFileRemoved.invoke(obj);
     }
-  }
-
-  private _createFile(file: File): File3D {
-    return {
-      file: file,
-      mesh: new FileMesh(this)
-    };
   }
 
   private _setupScene() {
@@ -320,10 +330,9 @@ export default class GameView extends Vue {
 
     this._scene.add(this._sun);
 
-
     // Workspace plane.
     var gltfLoader = new GLTFLoader();
-    gltfLoader.load(groundModelUrl, gltf => {
+    gltfLoader.load(groundModelPath, gltf => {
       gltf.scene.traverse((child) => {
         if ((<any>child).isMesh) {
           console.log('[GameView] Assigned workspace plane mesh from gltf file.');
@@ -338,7 +347,7 @@ export default class GameView extends Vue {
 
           // Scale up the workspace plane.
           this._workspacePlane.scale.multiplyScalar(18000);
-      
+
           this._scene.add(this._workspacePlane);
           return;
         }
@@ -347,7 +356,7 @@ export default class GameView extends Vue {
 
     // Skydome
     const skydomeGeometry = new SphereBufferGeometry(9000, 64, 8, 0, Math.PI * 2, 0, Math.PI * 0.5);
-    const skydomeTexture = new TextureLoader().load(skyTextureUrl);
+    const skydomeTexture = new TextureLoader().load(skyTexturePath);
     const skydomeMaterial = new MeshBasicMaterial({
       side: BackSide,
       map: skydomeTexture,
@@ -377,17 +386,6 @@ export default class GameView extends Vue {
 
     this._canvas = this._renderer.domElement;
     this.gameView.appendChild(this._canvas);
-
-  }
-
-  private _createWorkSurface(data: Workspace): File3D {
-    let mesh = new WorkspaceMesh();
-    mesh.gridGhecker = this._gridChecker;
-    return {
-      file: data,
-      mesh: mesh
-    };
-
   }
 };
 

@@ -1,7 +1,7 @@
 import { Vector2, Vector3, Intersection, Raycaster, Object3D, Ray } from 'three';
-import { Input, InputType, MouseButtonId } from '../game-engine/input';
-import { File3D, ContextMenuEvent, ContextMenuAction, DragOperation } from '../game-engine/Interfaces';
-import { Object, DEFAULT_WORKSPACE_SCALE, Workspace } from 'common/Files';
+import { ContextMenuEvent, ContextMenuAction, DragOperation } from '../game-engine/Interfaces';
+import { File3D } from '../game-engine/File3D';
+import { Object, DEFAULT_WORKSPACE_SCALE, Workspace } from '../../common/Files';
 import { FileClickOperation } from './FileClickOperation';
 import GameView from '../GameView/GameView';
 import { Physics } from '../game-engine/Physics';
@@ -10,6 +10,7 @@ import { CameraControls } from './CameraControls';
 import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
 import { FileMesh } from '../game-engine/FileMesh';
 import { Axial, realPosToGridPos, gridDistance, keyToPos } from '../game-engine/hex';
+import { MouseButtonId } from '../game-engine/input';
 
 export class InteractionManager {
 

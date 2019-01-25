@@ -1,5 +1,5 @@
-import { Input, InputType, MouseButtonId } from '../game-engine/input';
-import { File3D } from '../game-engine/Interfaces';
+import { Input, InputType, MouseButtonId } from '../game-engine/Input';
+import { File3D } from '../game-engine/File3D';
 import { FileDragOperation } from './FileDragOperation';
 import { Vector2, Vector3, Intersection } from 'three';
 import { IOperation } from './IOperation';

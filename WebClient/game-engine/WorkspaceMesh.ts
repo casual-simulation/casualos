@@ -32,16 +32,26 @@ export class WorkspaceMesh extends GameObject {
      */
     workspace: Workspace;
 
+    /**
+     * Sets the visibility of the grids on this workspace.
+     */
     set gridsVisible(visible: boolean) {
         this.squareGrids.forEach(grid => {
             grid.visible = visible;
         });
     }
 
+    /**
+     * Sets the GridChecker that this workspace should use to update its valid
+     * grid positions.
+     */
     set gridGhecker(val: GridChecker) {
         this._checker = val;
     }
 
+    /**
+     * Creates a new WorkspaceMesh.
+     */
     constructor() {
         super();
         this._debugInfo = {
@@ -79,8 +89,8 @@ export class WorkspaceMesh extends GameObject {
     /**
      * Updates the mesh with the new workspace data and optionally updates the square grid using the given
      * grid checker.
-     * @param workspace The new workspace data.
-     * @param checker The grid checker.
+     * @param workspace The new workspace data. If not provided the mesh will re-update using the existing data.
+     * @param force Whether to force the workspace to update everything, even aspects that have not changed.
      */
     async update(workspace?: File, force?: boolean) {
         if (workspace && workspace.type !== 'workspace') {

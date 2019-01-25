@@ -7,7 +7,7 @@ declare module '*.svg' {
 }
 
 declare module '*.jpg' {
-  const url: string;
+  const surl: string;
   export default url;
 }
 
@@ -19,6 +19,11 @@ declare module '*.png' {
 declare module '*.gltf' {
   const url: string;
   export default url;
+}
+
+declare module '*.json' {
+  const json: string;
+  export default json;
 }
 
 declare module 'monaco-editor/esm/vs/editor/standalone/browser/simpleServices';
