@@ -3,7 +3,7 @@ import { File3D } from '../game-engine/Interfaces';
 import { IOperation } from './IOperation';
 import GameView from '../GameView/GameView';
 import { InteractionManager } from './InteractionManager';
-import { Ray, Intersection, Vector2, Vector3 } from 'three';
+import { Ray, Intersection, Vector2, Vector3, Box3 } from 'three';
 import { Physics } from '../game-engine/Physics';
 import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
 import { Workspace, DEFAULT_WORKSPACE_SCALE } from 'common/Files';
@@ -26,6 +26,8 @@ export class FileDragOperation implements IOperation {
     private _attachPoint: Axial;
     private _lastScreenPos: Vector2;
 
+    private _workspaceDelta: Vector3;
+
     /**
      * Create a new drag rules.
      * @param input the input module to interface with.
@@ -37,12 +39,15 @@ export class FileDragOperation implements IOperation {
         this._file = file;
         this._workspace = workspace;
 
-        // if (!this._workspace) {
-        //     // we're gonna be dragging the file. turn on the grids.
-        //     const mesh = <WorkspaceMesh>this._workspace.mesh;
-        //     mesh.gridsVisible = true;
-        //     this._gameView.gridsVisible = true;
-        // }
+        if (this._workspace) {
+            // calculate the delta needed to be applied to the pointer
+            // positions to have the pointer drag around the center of the workspace
+            // instead of where the anchor is.
+            const bounds = new Box3().setFromObject(this._workspace.mesh);
+            const center = new Vector3();
+            bounds.getCenter(center);
+            this._workspaceDelta = new Vector3().copy(this._workspace.mesh.position).sub(center);
+        }
         
 
         this._lastScreenPos = this._gameView.input.getMouseScreenPos();
@@ -105,7 +110,6 @@ export class FileDragOperation implements IOperation {
                 }
                 this._gridWorkspace = <WorkspaceMesh>workspace.mesh;
                 this._gridWorkspace.gridsVisible = true;
-                console.log(gridPosition);
                 this._gameView.fileManager.updateFile(this._file.file, {
                     tags: {
                         _workspace: workspace.file.id,
@@ -167,11 +171,14 @@ export class FileDragOperation implements IOperation {
                 point.copy(new Vector3(realPos.x, 0, realPos.y)).add(this._attachWorkspace.mesh.position);
             }
 
+            // move the center of the workspace to the point
+            const final = new Vector3().copy(point).add(this._workspaceDelta);
+
             this._gameView.fileManager.updateFile(this._workspace.file, {
                 position: {
-                    x: point.x,
-                    y: point.y,
-                    z: point.z
+                    x: final.x,
+                    y: final.y,
+                    z: final.z
                 }
             });
         }
