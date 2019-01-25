@@ -11,12 +11,10 @@ import {
   Math as ThreeMath,
   Group,
   MeshBasicMaterial,
-  LineBasicMaterial,
   PCFSoftShadowMap,
   BackSide,
   TextureLoader,
   SphereBufferGeometry,
-  BoxBufferGeometry,
   GLTFLoader,
   HemisphereLight,
 } from 'three';
@@ -31,13 +29,11 @@ import {
 import { File, Object, Workspace } from 'common/Files';
 import { time } from '../game-engine/Time';
 import { Input } from '../game-engine/input';
+import { File3D } from '../game-engine/File3D';
 
-import { vg } from "von-grid";
-
-import skyTextureUrl from '../public/images/CGSkies_0132_free.jpg';
-import groundModelUrl from '../public/models/ground.gltf';
+import skyTexturePath from '../public/images/CGSkies_0132_free.jpg';
+import groundModelPath from '../public/models/ground.gltf';
 import { appManager } from '../AppManager';
-import { File3D } from '../game-engine/Interfaces';
 import { InteractionManager } from '../interaction/InteractionManager';
 import { ArgEvent } from '../../common/Events';
 
@@ -86,12 +82,14 @@ export default class GameView extends Vue {
   get camera(): PerspectiveCamera { return this._camera; }
   get grids(): Group { return this._grids; }
   get workspacePlane(): Mesh { return this._workspacePlane; }
+  get scene(): Scene { return this._scene; }
 
   get fileManager() {
     return appManager.fileManager;
   }
 
   async mounted() {
+
     time.init();
 
     this._files = {};
@@ -112,7 +110,7 @@ export default class GameView extends Vue {
     this._subs.push(this.fileManager.fileUpdated.subscribe(file => {
       this._fileUpdated(file);
     }));
-    
+
     this._frameUpdate();
   }
 
@@ -154,70 +152,11 @@ export default class GameView extends Vue {
   private _fileUpdated(file: File) {
     const obj = this._files[file.id];
     if (obj) {
-      obj.file = file;
-      if (file.type === 'object') {
-        this._updateFile(obj, file);
-      } else {
-        this._updateWorkspace(obj, file);
-      }
-
+      obj.updateFile(file);
       this.onFileUpdated.invoke(obj);
-    }
-  }
-
-  private _updateFile(obj: File3D, data: Object) {
-    // visible if not destroyed, has a position, and not hidden
-    obj.mesh.visible = (!data.tags._destroyed && !!data.tags._position && !data.tags._hidden);
-    const workspace = this._files[data.tags._workspace];
-    obj.file = data;
-    if (workspace) {
-      obj.mesh.parent = workspace.mesh;
     } else {
-      obj.mesh.parent = null;
+      console.log('cant find file to update it');
     }
-
-    if (data.tags.color) {
-      const mesh = <Mesh>obj.mesh;
-      const material = <MeshStandardMaterial>mesh.material;
-      material.color = this._getColor(data.tags.color);
-    } else {
-      const mesh = <Mesh>obj.mesh;
-      const material = <MeshStandardMaterial>mesh.material;
-      material.color = new Color(0x00FF00);
-    }
-
-    if (data.tags._position) {
-      obj.mesh.position.set(
-        data.tags._position.x + 0,
-        data.tags._position.y + 0.095,
-        data.tags._position.z + 0);
-    } else {
-      // Default position
-      obj.mesh.position.set(0, 1, 0);
-    }
-  }
-
-  private _getColor(color: string): Color {
-    return new Color(color);
-  }
-
-  private _updateWorkspace(obj: File3D, data: Workspace) {
-    obj.mesh.position.x = obj.grid.group.position.x = data.position.x || 0;
-    obj.mesh.position.y = obj.grid.group.position.y = data.position.y || 0;
-    obj.mesh.position.z = obj.grid.group.position.z = data.position.z || 0;
-
-    if (typeof data.size !== 'undefined' && obj.surface.grid.size !== data.size) {
-      obj.surface.grid.cells = {};
-      obj.surface.grid.numCells = 0;
-      obj.surface.grid.generate({
-        size: data.size || 0
-      });
-      this._generateTilemap(obj.surface, data);
-      obj.surface.group.position.y -= .4;
-    }
-
-    obj.grid.group.position.y -= .45;
-    obj.grid.group.updateMatrixWorld(false);
   }
 
   private _fileAdded(file: File) {
@@ -226,33 +165,15 @@ export default class GameView extends Vue {
     if (file.type === 'object' && file.tags._hidden) {
       return;
     }
+    
+    var obj = new File3D(this, file);
 
-    let mesh;
-    let grid;
-    let board;
-    if (file.type === 'object') {
-      const cube = this._createCube(0.2);
-      mesh = cube;
-    } else {
-      const surface = this._createWorkSurface(file);
-      mesh = surface.board.group;
-      grid = surface.sqrBoard;
-      board = surface.board;
-    }
-    const obj: File3D = this._files[file.id] = {
-      file: file,
-      grid: grid,
-      surface: board,
-      mesh: mesh
-    };
-
+    this._files[file.id] = obj;
     this._fileIds[obj.mesh.id] = obj.file.id;
-    this._scene.add(obj.mesh);
-    obj.mesh.name = `${file.type}_${file.id}`;
-    if (grid) {
-      grid.group.name = `grid_${file.type}_${file.id}`;
-      this._fileIds[grid.group.id] = obj.file.id;
-      this._grids.add(grid.group);
+
+    if (obj.grid) {
+      this._fileIds[obj.grid.group.id] = obj.file.id;
+      this._grids.add(obj.grid.group);
     }
 
     this.onFileAdded.invoke(obj);
@@ -265,24 +186,10 @@ export default class GameView extends Vue {
     if (obj) {
       delete this._fileIds[obj.mesh.id];
       delete this._files[id];
-      this._scene.remove(obj.mesh);
+      obj.dispose();
 
       this.onFileRemoved.invoke(obj);
     }
-  }
-
-  private _createCube(size: number): Mesh {
-
-    var geometry = new BoxBufferGeometry(size, size, size);
-    var material = new MeshStandardMaterial({
-      color: 0x00ff00,
-      metalness: .1,
-      roughness: 0.6
-    });
-    const cube = new Mesh(geometry, material);
-    cube.castShadow = true;
-    cube.receiveShadow = false;
-    return cube;
   }
 
   private _setupScene() {
@@ -331,10 +238,9 @@ export default class GameView extends Vue {
 
     this._scene.add(this._sun);
 
-
     // Workspace plane.
     var gltfLoader = new GLTFLoader();
-    gltfLoader.load(groundModelUrl, gltf => {
+    gltfLoader.load(groundModelPath, gltf => {
       gltf.scene.traverse((child) => {
         if ((<any>child).isMesh) {
           console.log('[GameView] Assigned workspace plane mesh from gltf file.');
@@ -349,7 +255,7 @@ export default class GameView extends Vue {
 
           // Scale up the workspace plane.
           this._workspacePlane.scale.multiplyScalar(18000);
-      
+
           this._scene.add(this._workspacePlane);
           return;
         }
@@ -358,7 +264,7 @@ export default class GameView extends Vue {
 
     // Skydome
     const skydomeGeometry = new SphereBufferGeometry(9000, 64, 8, 0, Math.PI * 2, 0, Math.PI * 0.5);
-    const skydomeTexture = new TextureLoader().load(skyTextureUrl);
+    const skydomeTexture = new TextureLoader().load(skyTexturePath);
     const skydomeMaterial = new MeshBasicMaterial({
       side: BackSide,
       map: skydomeTexture,
@@ -388,61 +294,5 @@ export default class GameView extends Vue {
 
     this._canvas = this._renderer.domElement;
     this.gameView.appendChild(this._canvas);
-
-  }
-
-  private _createWorkSurface(data: Workspace) {
-    const grid = new vg.HexGrid({
-      cellSize: .3,
-      cellHeight: 0.5
-    });
-    grid.generate({
-      size: data.size || 0
-    });
-
-    const board = new vg.Board(grid);
-    this._generateTilemap(board, data);
-
-    const sqrGrid = new vg.SqrGrid({
-      size: 14,
-      cellSize: .12
-    });
-
-    const sqrBoard = new vg.Board(sqrGrid);
-    const mat = new LineBasicMaterial({
-      color: 0xFFFFFF,
-      opacity: 1
-    });
-    sqrBoard.generateOverlay(18, mat);
-
-    sqrBoard.group.position.x = data.position.x;
-    sqrBoard.group.position.y = data.position.y;
-    sqrBoard.group.position.z = data.position.z;
-
-    return { board, sqrBoard };
-  }
-
-  private _generateTilemap(board: vg.Board, data: Workspace) {
-    board.generateTilemap({
-      extrudeSettings: {
-        bevelEnabled: true,
-        steps: 1,
-        bevelSize: 0.015,
-        bevelThickness: 0.00
-      },
-      material: new MeshStandardMaterial({
-        color: 0x999999,
-        roughness: .7,
-      })
-    });
-
-    board.group.children[0].children.forEach(c => {
-      c.castShadow = true;
-      c.receiveShadow = true;
-    });
-
-    board.group.position.x = data.position.x;
-    board.group.position.y = data.position.y + 0.4;
-    board.group.position.z = data.position.z;
   }
 };
