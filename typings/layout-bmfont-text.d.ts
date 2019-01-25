@@ -28,7 +28,7 @@ declare module 'layout-bmfont-text' {
         font: any;
 
         /** the text to layout. Newline characters (\n) will cause line breaks */
-        text: string;
+        text?: string;
 
         /** the desired width of the text box, causes word-wrapping and clipping in "pre" mode. 
          * Leave as undefined to remove word-wrapping (default behaviour) */

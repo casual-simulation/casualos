@@ -3,7 +3,7 @@ declare module 'three-bmfont-text' {
     import { BufferGeometry } from "three";
     import { TextLayout, LayoutOptions } from "layout-bmfont-text";
 
-    export default function createTextGeometry(opt: TextGeometryOptions | string): TextGeometry;
+    export default function createTextGeometry(opt: TextGeometryOptions): TextGeometry;
 
     class TextGeometry extends BufferGeometry {
 

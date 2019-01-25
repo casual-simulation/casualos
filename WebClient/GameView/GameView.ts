@@ -11,17 +11,12 @@ import {
   Math as ThreeMath,
   Group,
   MeshBasicMaterial,
-  LineBasicMaterial,
   PCFSoftShadowMap,
   BackSide,
   TextureLoader,
   SphereBufferGeometry,
-  BoxBufferGeometry,
   GLTFLoader,
   HemisphereLight,
-  Side,
-  DoubleSide,
-  Object3D,
 } from 'three';
 import 'three-examples/loaders/GLTFLoader';
 import Vue from 'vue';
@@ -36,16 +31,11 @@ import { time } from '../game-engine/Time';
 import { Input } from '../game-engine/input';
 import { File3D } from '../game-engine/File3D';
 
-import { vg } from "von-grid";
-
 import skyTexturePath from '../public/images/CGSkies_0132_free.jpg';
-import robotoFont from '../public/bmfonts/Roboto.json';
-import robotoTexturePath from '../public/bmfonts/Roboto.png';
 import groundModelPath from '../public/models/ground.gltf';
 import { appManager } from '../AppManager';
 import { InteractionManager } from '../interaction/InteractionManager';
 import { ArgEvent } from '../../common/Events';
-import createBMFont from 'three-bmfont-text';
 
 @Component({
 })
@@ -92,12 +82,14 @@ export default class GameView extends Vue {
   get camera(): PerspectiveCamera { return this._camera; }
   get grids(): Group { return this._grids; }
   get workspacePlane(): Mesh { return this._workspacePlane; }
+  get scene(): Scene { return this._scene; }
 
   get fileManager() {
     return appManager.fileManager;
   }
 
   async mounted() {
+
     time.init();
 
     this._files = {};
@@ -160,72 +152,11 @@ export default class GameView extends Vue {
   private _fileUpdated(file: File) {
     const obj = this._files[file.id];
     if (obj) {
-      obj.file = file;
-      if (file.type === 'object') {
-        this._updateFile(obj, file);
-      } else {
-        this._updateWorkspace(obj, file);
-      }
-
+      obj.updateFile(file);
       this.onFileUpdated.invoke(obj);
     } else {
       console.log('cant find file to update it');
     }
-  }
-
-  private _updateFile(obj: File3D, data: Object) {
-    // visible if not destroyed, has a position, and not hidden
-    obj.mesh.visible = (!data.tags._destroyed && !!data.tags._position && !data.tags._hidden);
-    const workspace = this._files[data.tags._workspace];
-    obj.file = data;
-    if (workspace) {
-      obj.mesh.parent = workspace.mesh;
-    } else {
-      obj.mesh.parent = null;
-    }
-
-    if (data.tags.color) {
-      const mesh = <Mesh>obj.mesh;
-      const material = <MeshStandardMaterial>mesh.material;
-      material.color = this._getColor(data.tags.color);
-    } else {
-      const mesh = <Mesh>obj.mesh;
-      const material = <MeshStandardMaterial>mesh.material;
-      material.color = new Color(0x00FF00);
-    }
-
-    if (data.tags._position) {
-      obj.mesh.position.set(
-        data.tags._position.x + 0,
-        data.tags._position.y + 0.095,
-        data.tags._position.z + 0);
-    } else {
-      // Default position
-      obj.mesh.position.set(0, 1, 0);
-    }
-  }
-
-  private _getColor(color: string): Color {
-    return new Color(color);
-  }
-
-  private _updateWorkspace(obj: File3D, data: Workspace) {
-    obj.mesh.position.x = obj.grid.group.position.x = data.position.x || 0;
-    obj.mesh.position.y = obj.grid.group.position.y = data.position.y || 0;
-    obj.mesh.position.z = obj.grid.group.position.z = data.position.z || 0;
-
-    if (typeof data.size !== 'undefined' && obj.surface.grid.size !== data.size) {
-      obj.surface.grid.cells = {};
-      obj.surface.grid.numCells = 0;
-      obj.surface.grid.generate({
-        size: data.size || 0
-      });
-      obj.generateTilemap(obj.surface, data);
-      obj.surface.group.position.y -= .4;
-    }
-
-    obj.grid.group.position.y -= .45;
-    obj.grid.group.updateMatrixWorld(false);
   }
 
   private _fileAdded(file: File) {
@@ -235,12 +166,10 @@ export default class GameView extends Vue {
       return;
     }
     
-    var obj = new File3D(file);
+    var obj = new File3D(this, file);
 
     this._files[file.id] = obj;
     this._fileIds[obj.mesh.id] = obj.file.id;
-    
-    this._scene.add(obj.mesh);
 
     if (obj.grid) {
       this._fileIds[obj.grid.group.id] = obj.file.id;
@@ -257,7 +186,7 @@ export default class GameView extends Vue {
     if (obj) {
       delete this._fileIds[obj.mesh.id];
       delete this._files[id];
-      this._scene.remove(obj.mesh);
+      obj.dispose();
 
       this.onFileRemoved.invoke(obj);
     }
@@ -309,7 +238,6 @@ export default class GameView extends Vue {
 
     this._scene.add(this._sun);
 
-
     // Workspace plane.
     var gltfLoader = new GLTFLoader();
     gltfLoader.load(groundModelPath, gltf => {
@@ -346,29 +274,6 @@ export default class GameView extends Vue {
     this._skydome.castShadow = false;
     this._skydome.receiveShadow = false;
     this._skydome.position.set(0, 0, 0);
-
-    // Test bitmap text.
-    var textTexture = new TextureLoader().load(robotoTexturePath);
-    var textGeometry = createBMFont({ font: robotoFont, text: "hello there! how are you doing friend?", flipY: true, align: "center", width: 200 });
-    var textMaterial = new MeshBasicMaterial({
-      map: textTexture,
-      lights: false,
-      side: DoubleSide,
-      depthTest: false,
-      depthWrite: false,
-      transparent: true,
-      color: new Color(0, 0, 0),
-    });
-
-    var textMesh = new Mesh(textGeometry, textMaterial);
-    var textAnchor = new Object3D();
-    textAnchor.add(textMesh);
-    textAnchor.scale.multiplyScalar(0.004);
-    // rotate the text mesh so that it is upright when rendered.
-    textMesh.rotateX(ThreeMath.degToRad(180));
-    this._scene.add(textAnchor);
-    console.log("added text to scene:")
-    console.log(textGeometry);
 
     this._scene.add(this._skydome);
   }

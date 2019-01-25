@@ -1,6 +1,7 @@
 import { Vector2, Vector3, Intersection, Raycaster, Object3D, Ray } from 'three';
 import { Input, InputType, MouseButtonId } from '../game-engine/Input';
-import { File3D, ContextMenuEvent, ContextMenuAction, DragOperation } from '../game-engine/Interfaces';
+import { ContextMenuEvent, ContextMenuAction, DragOperation } from '../game-engine/Interfaces';
+import { File3D } from '../game-engine/File3D';
 import { Object } from '../../common/Files';
 import { FileClickOperation } from './FileClickOperation';
 import GameView from '../GameView/GameView';
