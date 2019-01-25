@@ -231,8 +231,8 @@ export class GridChecker {
         const right = maxX - this._worldPosition.x;
         const top = maxZ - this._worldPosition.z;
         const bottom = minZ - this._worldPosition.z;
-        this._xImbalance = Math.abs(left) - Math.abs(right);
-        this._yImbalance = Math.abs(bottom) - Math.abs(top);
+        this._xImbalance = Math.abs(Math.abs(left) - Math.abs(right));
+        this._yImbalance = Math.abs(Math.abs(bottom) - Math.abs(top));
 
         this._size.add(new Vector3(this._xImbalance, 0, this._yImbalance));
 
