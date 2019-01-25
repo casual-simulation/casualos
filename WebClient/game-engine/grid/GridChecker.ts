@@ -263,6 +263,10 @@ export class GridChecker {
 
     public static createVisualization(results: GridCheckResults, options: GridCheckerVisualizationOptions = {}) {
         let debugDots = new Object3D();
+        const size = options.sphereSize || 0.05;
+        const tileColor = options.tileCenterColor || 0x0000ff;
+        const tilePointColor = options.tilePointColor || 0x00ff00;
+        const invalidColor = options.invalidTileColor || 0xff0000;
         results.levels.forEach(level => {
             level.tiles.forEach(tile => {
                 if (tile.valid || options.showInvalidPoints) {
@@ -270,13 +274,13 @@ export class GridChecker {
                     if (options.workspace) {
                         tileWorldPosition.add(options.workspace.position);
                     }
-                    debugDots.add(createSphere(tileWorldPosition, tile.valid ? 0x0000ff : 0xff0000, 0.05));
+                    debugDots.add(createSphere(tileWorldPosition, tile.valid ? tileColor : invalidColor, size));
                     tile.localPoints.forEach(p => {
                         const pointWorldPosition = new Vector3().copy(p);
                         if (options.workspace) {
                             pointWorldPosition.add(options.workspace.position);
                         }
-                        debugDots.add(createSphere(pointWorldPosition, 0x00ff00, 0.05));
+                        debugDots.add(createSphere(pointWorldPosition, tilePointColor, size));
                     });
                 }
             });
@@ -291,8 +295,14 @@ export class GridChecker {
                 bounds.min.add(workspaceGlobal);
                 bounds.max.add(workspaceGlobal);
             }
-            const helper = new Box3Helper(results.bounds, new Color(0xff00ff));
+
+            const boundsColor = options.boundsColor || 0xff00ff;
+            const center = new Vector3();
+            bounds.getCenter(center);
+            const helper = new Box3Helper(results.bounds, new Color(boundsColor));
             debugDots.add(helper);
+
+            debugDots.add(createSphere(center, boundsColor, 0.1));
         }
 
         return debugDots;
@@ -303,6 +313,12 @@ export interface GridCheckerVisualizationOptions {
     workspace?: WorkspaceMesh;
     showInvalidPoints?: boolean;
     showBoundingBoxes?: boolean;
+    sphereSize?: number;
+
+    tileCenterColor?: number;
+    tilePointColor?: number;
+    invalidTileColor?: number;
+    boundsColor?: number;
 }
 
 /**
