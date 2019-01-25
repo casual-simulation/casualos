@@ -163,14 +163,16 @@ export class FileDragOperation implements IOperation {
 
                 const closest = minBy(gridPositions, g => g.distance);
 
-                console.log(closest.distance, closest.mesh.mesh.id);
-
-                if (closest.distance < 1) {
-                    this._attachWorkspace = closest.mesh;
-                    this._attachPoint = closest.gridPos;
-                } else {
-                    this._attachWorkspace = null;
-                    this._attachPoint = null;
+                if (closest) {
+                    console.log(closest.distance, closest.mesh.mesh.id);
+                    
+                    if (closest.distance < 1) {
+                        this._attachWorkspace = closest.mesh;
+                        this._attachPoint = closest.gridPos;
+                    } else {
+                        this._attachWorkspace = null;
+                        this._attachPoint = null;
+                    }
                 }
             }
 
