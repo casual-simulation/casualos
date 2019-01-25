@@ -1,5 +1,5 @@
 import { Object3D, Mesh, BoxBufferGeometry, MeshStandardMaterial, Color, Vector3 } from "three";
-import { Object, DEFAULT_WORKSPACE_SCALE } from 'common/Files';
+import { Object, File, DEFAULT_WORKSPACE_SCALE } from 'common/Files';
 import { GameObject } from "./GameObject";
 import GameView from '../GameView/GameView';
 import { calculateGridTileLocalCenter } from "./grid/Grid";
@@ -30,17 +30,24 @@ export class FileMesh extends GameObject {
         return cube;
     }
 
-    update(file: Object) {
+    showDebugInfo(debug: boolean) {
+
+    }
+
+    update(file?: File, force?: boolean) {
+        if (file && file.type !== 'object') {
+            return;
+        }
         if (!this.file) {
             this.cube = this._createCube(1);
             this.colliders.push(this.cube);
             this.add(this.cube);
         }
-        this.file = file;
+        this.file = (<Object>file) || this.file;
 
         // visible if not destroyed, has a position, and not hidden
-        this.visible = (!file.tags._destroyed && !!file.tags._position && !file.tags._hidden);
-        const workspace = this._gameView.getFile(file.tags._workspace);
+        this.visible = (!this.file.tags._destroyed && !!this.file.tags._position && !this.file.tags._hidden);
+        const workspace = this._gameView.getFile(this.file.tags._workspace);
         if (workspace && workspace.file.type === 'workspace') {
             this.parent = workspace.mesh;
             const scale = workspace.file.scale || DEFAULT_WORKSPACE_SCALE;
@@ -52,23 +59,23 @@ export class FileMesh extends GameObject {
             this.cube.position.set(0, 0, 0);
         }
 
-        if (file.tags.color) {
+        if (this.file.tags.color) {
             const mesh = <Mesh>this.cube;
             const material = <MeshStandardMaterial>mesh.material;
-            material.color = this._getColor(file.tags.color);
+            material.color = this._getColor(this.file.tags.color);
         } else {
             const mesh = <Mesh>this.cube;
             const material = <MeshStandardMaterial>mesh.material;
             material.color = new Color(0x00FF00);
         }
 
-        if (file.tags._position && workspace && workspace.file.type === 'workspace') {
+        if (this.file.tags._position && workspace && workspace.file.type === 'workspace') {
             const scale = workspace.file.scale || DEFAULT_WORKSPACE_SCALE;
-            console.log(file.tags._position);
+            console.log(this.file.tags._position);
             const localPosition = calculateGridTileLocalCenter(
-                file.tags._position.x, 
-                file.tags._position.y, 
-                file.tags._position.z,
+                this.file.tags._position.x, 
+                this.file.tags._position.y, 
+                this.file.tags._position.z,
                 scale);
             this.position.set(
                 localPosition.x,

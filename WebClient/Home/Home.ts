@@ -22,6 +22,8 @@ import { fileTags } from 'common/Files/FileCalculations';
 })
 export default class Home extends Vue {
 
+    debug: boolean = false;
+
     contextMenuStyle: any = {
         left: '0px',
         top: '0px'
@@ -52,6 +54,10 @@ export default class Home extends Vue {
         return appManager.fileManager;
     }
 
+    get dev() {
+        return !PRODUCTION;
+    }
+
     open() {
         this.isOpen = true;
     }
@@ -66,6 +72,10 @@ export default class Home extends Vue {
 
     addNewWorkspace() {
         this.fileManager.createWorkspace();
+    }
+
+    toggleDebug() {
+        this.debug = !this.debug;
     }
 
     clearSelection() {

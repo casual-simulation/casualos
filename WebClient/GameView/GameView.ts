@@ -23,7 +23,7 @@ import {
 import 'three-examples/loaders/GLTFLoader';
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Inject } from 'vue-property-decorator';
+import { Inject, Prop, Watch } from 'vue-property-decorator';
 import {
   SubscriptionLike,
 } from 'rxjs';
@@ -40,15 +40,14 @@ import { appManager } from '../AppManager';
 import { File3D } from '../game-engine/Interfaces';
 import { InteractionManager } from '../interaction/InteractionManager';
 import { ArgEvent } from '../../common/Events';
-import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
+import { WorkspaceMesh, WorkspaceMeshDebugInfo } from '../game-engine/WorkspaceMesh';
 import { GridChecker } from '../game-engine/grid/GridChecker';
 import { FileMesh } from '../game-engine/FileMesh';
 import { values } from 'lodash';
 
-@Component({
-})
+@Component({})
 export default class GameView extends Vue {
-
+  private _debug: boolean;
   private _scene: Scene;
   private _camera: PerspectiveCamera;
   private _renderer: Renderer;
@@ -84,6 +83,23 @@ export default class GameView extends Vue {
 
   private _subs: SubscriptionLike[];
 
+  @Prop() debug: boolean;
+
+  debugInfo: GameViewDebugInfo = null;
+
+  @Watch('debug')
+  debugChanged(val: boolean, previous: boolean) {
+    this.showDebugInfo(val);
+    this.updateDebugInfo();
+  }
+
+  updateDebugInfo() {
+    this.getFiles().forEach(f => f.mesh.update());
+    this.debugInfo = {
+      workspaces: this.getWorkspaces().map(w => (<WorkspaceMesh>w.mesh).getDebugInfo())
+    };
+  }
+
   get gameView(): HTMLElement { return <HTMLElement>this.$refs.gameView; }
   get input(): Input { return this._input; }
   get interactionManager(): InteractionManager { return this._interaction; }
@@ -92,6 +108,10 @@ export default class GameView extends Vue {
 
   get fileManager() {
     return appManager.fileManager;
+  }
+
+  constructor() {
+    super();
   }
 
   setGridsVisible(visible: boolean) {
@@ -104,6 +124,7 @@ export default class GameView extends Vue {
   async mounted() {
     time.init();
 
+    this.debugInfo = null;
     this._files = {};
     this._fileIds = {};
     this._subs = [];
@@ -176,6 +197,22 @@ export default class GameView extends Vue {
     return this.getFiles().filter(f => f.file.type === 'workspace');
   }
 
+  /**
+   * Toggles whether debug information is shown.
+   */
+  toggleDebugInfo() {
+    this.showDebugInfo(!this._debug);
+  }
+
+  /**
+   * Sets whether to show debug information.
+   * @param debug Whether to show debug info.
+   */
+  showDebugInfo(debug: boolean) {
+    this._debug = debug;
+    this.getFiles().forEach(w => w.mesh.showDebugInfo(debug));
+  }
+
   private async _fileUpdated(file: File) {
     const obj = this._files[file.id];
     if (obj) {
@@ -198,20 +235,7 @@ export default class GameView extends Vue {
 
   private async _updateWorkspace(obj: File3D, data: Workspace) {
     const workspaceMesh = <WorkspaceMesh> obj.mesh;
-    await workspaceMesh.update(data, this._gridChecker);
-
-    // if (typeof data.size !== 'undefined' && obj.surface.grid.size !== data.size) {
-    //   obj.surface.grid.cells = {};
-    //   obj.surface.grid.numCells = 0;
-    //   obj.surface.grid.generate({
-    //     size: data.size || 0
-    //   });
-    //   this._generateTilemap(obj.surface, data);
-    //   obj.surface.group.position.y -= .4;
-    // }
-
-    // obj.grid.group.position.y -= .45;
-    // obj.grid.group.updateMatrixWorld(false);
+    await workspaceMesh.update(data);
   }
 
   private async _fileAdded(file: File) {
@@ -224,21 +248,9 @@ export default class GameView extends Vue {
     let obj: File3D;
     if (file.type === 'object') {
       obj = this._createFile(file);
-      // const cube = this._createCube(0.2);
-      // mesh = cube;
     } else {
       obj = this._createWorkSurface(file);
-      // const surface = this._createWorkSurface(file);
-      // mesh = surface.board.group;
-      // grid = surface.sqrBoard;
-      // board = surface.board;
     }
-    // const obj: File3D = this._files[file.id] = {
-    //   file: file,
-    //   grid: grid,
-    //   surface: board,
-    //   mesh: mesh
-    // };
 
     this._files[file.id] = obj;
     this._fileIds[obj.mesh.id] = obj.file.id;
@@ -263,7 +275,6 @@ export default class GameView extends Vue {
   private _createFile(file: File): File3D {
     return {
       file: file,
-      // TODO: 
       mesh: new FileMesh(this)
     };
   }
@@ -370,62 +381,19 @@ export default class GameView extends Vue {
   }
 
   private _createWorkSurface(data: Workspace): File3D {
+    let mesh = new WorkspaceMesh();
+    mesh.gridGhecker = this._gridChecker;
     return {
       file: data,
-      mesh: new WorkspaceMesh()
+      mesh: mesh
     };
 
-    // const grid = new vg.HexGrid({
-    //   cellSize: .3,
-    //   cellHeight: 0.5
-    // });
-    // grid.generate({
-    //   size: data.size || 0
-    // });
-
-    // const board = new vg.Board(grid);
-    // this._generateTilemap(board, data);
-
-    // const sqrGrid = new vg.SqrGrid({
-    //   size: 14,
-    //   cellSize: .12
-    // });
-
-    // const sqrBoard = new vg.Board(sqrGrid);
-    // const mat = new LineBasicMaterial({
-    //   color: 0xFFFFFF,
-    //   opacity: 1
-    // });
-    // sqrBoard.generateOverlay(18, mat);
-
-    // sqrBoard.group.position.x = data.position.x;
-    // sqrBoard.group.position.y = data.position.y;
-    // sqrBoard.group.position.z = data.position.z;
-
-    // return { board, sqrBoard };
   }
-
-  // private _generateTilemap(board: vg.Board, data: Workspace) {
-  //   board.generateTilemap({
-  //     extrudeSettings: {
-  //       bevelEnabled: true,
-  //       steps: 1,
-  //       bevelSize: 0.015,
-  //       bevelThickness: 0.00
-  //     },
-  //     material: new MeshStandardMaterial({
-  //       color: 0x999999,
-  //       roughness: .7,
-  //     })
-  //   });
-
-  //   board.group.children[0].children.forEach(c => {
-  //     c.castShadow = true;
-  //     c.receiveShadow = true;
-  //   });
-
-  //   board.group.position.x = data.position.x;
-  //   board.group.position.y = data.position.y + 0.4;
-  //   board.group.position.z = data.position.z;
-  // }
 };
+
+/**
+ * Defines an interface for debug info that the game view has.
+ */
+export interface GameViewDebugInfo {
+  workspaces: WorkspaceMeshDebugInfo[];
+}

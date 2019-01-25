@@ -1,14 +1,15 @@
 import { Vector2, Vector3, Intersection, Raycaster, Object3D, Ray } from 'three';
 import { Input, InputType, MouseButtonId } from '../game-engine/input';
 import { File3D, ContextMenuEvent, ContextMenuAction, DragOperation } from '../game-engine/Interfaces';
-import { Object } from '../../common/Files';
+import { Object, DEFAULT_WORKSPACE_SCALE, Workspace } from 'common/Files';
 import { FileClickOperation } from './FileClickOperation';
 import GameView from '../GameView/GameView';
 import { Physics } from '../game-engine/Physics';
-import { find, flatMap } from 'lodash';
+import { find, flatMap, minBy, keys } from 'lodash';
 import { CameraControls } from './CameraControls';
 import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
 import { FileMesh } from '../game-engine/FileMesh';
+import { Axial, realPosToGridPos, gridDistance, keyToPos } from '../game-engine/hex';
 
 export class InteractionManager {
 
@@ -215,6 +216,47 @@ export class InteractionManager {
         return {
             good: false
         };
+    }
+
+    /**
+     * Finds the closest workspace to the given point.
+     * Returns undefined if there is no workspace.
+     * @param point The point.
+     * @param exclude The optional workspace to exclude from the search.
+     */
+    public closestWorkspace(point: Vector3, exclude?: File3D) {
+        const workspaceMeshes = this._gameView.getWorkspaces().filter(mesh => mesh !== exclude);
+        const center = new Axial();
+        const gridPositions = workspaceMeshes.map(mesh => {
+            const w = <Workspace>mesh.file;
+            const scale = w.scale || DEFAULT_WORKSPACE_SCALE;
+            const localPos = new Vector3(point.x, 0, point.z).sub(mesh.mesh.position);
+            const gridPos = realPosToGridPos(new Vector2(localPos.x, localPos.z), scale);
+            const tilePositions = keys(w.grid).map(keyToPos);
+            const distToCenter = gridDistance(center, gridPos);
+            const scaledDistance = distToCenter - (w.size - 1);
+            const distances = [
+                { position: center, distance: scaledDistance },
+                ...tilePositions.map(pos => ({
+                    position: pos,
+                    distance: gridDistance(pos, gridPos) 
+                }))
+            ];
+
+            console.log(distances);
+
+            // never null because distances always has at least one element.
+            const closest = minBy(distances, d => d.distance);
+
+            return {
+                mesh, 
+                gridPosition: gridPos, 
+                distance: closest.distance
+            };
+        });
+
+        const closest = minBy(gridPositions, g => g.distance);
+        return closest;
     }
 
     public selectFile(file: File3D) {

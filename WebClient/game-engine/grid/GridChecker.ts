@@ -10,6 +10,7 @@ import {
     MeshBasicMaterial,
     Vector2,
     Object3D,
+    Box3Helper
 } from "three";
 import {
     groupBy, keys, every
@@ -19,6 +20,8 @@ import TagEditor from "WebClient/TagEditor/TagEditor";
 import { GridLevel } from "./GridLevel";
 import { GridTile } from "./GridTile";
 import { calculateTilePoints, calculateGridTileLocalPositions } from "./Grid";
+import { WorkspaceMesh } from "../WorkspaceMesh";
+import { createSphere } from "../utils";
 
 /**
  * Defines a class that can check a HexGridMesh to see which square grid tiles
@@ -62,7 +65,7 @@ export class GridChecker {
         this._scene.add(this._camera);
     }
 
-    async check(grid: HexGridMesh) {
+    async check(grid: HexGridMesh): Promise<GridCheckResults> {
         this._grid = grid;
         this._tileSize = this._grid.hexSize * this.tileRatio;
 
@@ -77,7 +80,14 @@ export class GridChecker {
         
         this._revertHexes();
 
-        return results;
+        // Convert bounds to local space
+        this._bounds.min.sub(this._worldPosition);
+        this._bounds.max.sub(this._worldPosition);
+
+        return { 
+            levels: results,
+            bounds: this._bounds,
+        };
     }
 
     checkLevel(hexes: HexMesh[], height: number): GridLevel {
@@ -250,6 +260,49 @@ export class GridChecker {
     private _render() {
         this._renderer.render(this._scene, this._camera);
     }
+
+    public static createVisualization(results: GridCheckResults, options: GridCheckerVisualizationOptions = {}) {
+        let debugDots = new Object3D();
+        results.levels.forEach(level => {
+            level.tiles.forEach(tile => {
+                if (tile.valid || options.showInvalidPoints) {
+                    const tileWorldPosition = new Vector3().copy(tile.localPosition);
+                    if (options.workspace) {
+                        tileWorldPosition.add(options.workspace.position);
+                    }
+                    debugDots.add(createSphere(tileWorldPosition, tile.valid ? 0x0000ff : 0xff0000, 0.05));
+                    tile.localPoints.forEach(p => {
+                        const pointWorldPosition = new Vector3().copy(p);
+                        if (options.workspace) {
+                            pointWorldPosition.add(options.workspace.position);
+                        }
+                        debugDots.add(createSphere(pointWorldPosition, 0x00ff00, 0.05));
+                    });
+                }
+            });
+
+        });
+        if (options.showBoundingBoxes || (typeof options.showBoundingBoxes === 'undefined')) {
+            const bounds = new Box3().copy(results.bounds);
+            if (options.workspace) {
+                // convert to global space
+                const workspaceGlobal = new Vector3();
+                options.workspace.getWorldPosition(workspaceGlobal);
+                bounds.min.add(workspaceGlobal);
+                bounds.max.add(workspaceGlobal);
+            }
+            const helper = new Box3Helper(results.bounds, new Color(0xff00ff));
+            debugDots.add(helper);
+        }
+
+        return debugDots;
+    }
+}
+
+export interface GridCheckerVisualizationOptions {
+    workspace?: WorkspaceMesh;
+    showInvalidPoints?: boolean;
+    showBoundingBoxes?: boolean;
 }
 
 /**
@@ -260,4 +313,9 @@ export interface GridCheckResults {
      * The levels that were found.
      */
     levels: GridLevel[];
+
+    /**
+     * The bounds of the workspace.
+     */
+    bounds: Box3;
 }

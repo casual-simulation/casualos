@@ -1,7 +1,7 @@
 <!-- App.vue -->
 <template>
   <div>
-      <game-view class="game-view" @onContextMenu="handleContextMenu">
+      <game-view class="game-view" @onContextMenu="handleContextMenu" :debug="debug">
         <div class="ui-container">
           <md-card class="info-card" v-if="isOpen">
             <md-card-content>
@@ -31,6 +31,10 @@
               <div class="divider"></div>
               <md-button class="toolbar-button" @click="addNewWorkspace()">
                 <span>New Workspace</span>
+              </md-button>
+              <div class="divider" v-if="dev"></div>
+              <md-button class="toolbar-button" @click="toggleDebug()" v-if="dev">
+                <span>Debug</span>
               </md-button>
             </div>
           </div>

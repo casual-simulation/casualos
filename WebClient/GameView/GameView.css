@@ -6,3 +6,9 @@
 .game-container {
     margin: -16px;
 }
+
+.debug-card {
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+}

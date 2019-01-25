@@ -1,15 +1,21 @@
 import { Object3D, Vector3 } from "three";
 import { HexGridMesh, HexGrid, HexMesh, keyToPos } from "./hex";
 import { GridMesh } from "./grid/GridMesh";
-import { Workspace, objDiff, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_SCALE } from "common/Files";
+import { Workspace, File, objDiff, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_SCALE } from "common/Files";
 import { keys, minBy } from "lodash";
-import { GridChecker } from "./grid/GridChecker";
+import { GridChecker, GridCheckResults } from "./grid/GridChecker";
 import { GameObject } from "./GameObject";
+import { GridLevel } from "./grid/GridLevel";
 
 /**
  * Defines a mesh that represents a workspace.
  */
 export class WorkspaceMesh extends GameObject {
+
+    private _debugMesh: Object3D;
+    private _debug: boolean;
+    private _debugInfo: WorkspaceMeshDebugInfo;
+    private _checker: GridChecker;
 
     /**
      * The hex grid for this workspace.
@@ -32,8 +38,32 @@ export class WorkspaceMesh extends GameObject {
         });
     }
 
+    set gridGhecker(val: GridChecker) {
+        this._checker = val;
+    }
+
     constructor() {
         super();
+        this._debugInfo = {
+            id: this.id,
+            gridChecker: null
+        };
+    }
+
+    /**
+     * Sets whether this mesh should display debug information.
+     * @param debug Whether the info should be shown.
+     */
+    showDebugInfo(debug: boolean) {
+        this._debug = debug;
+        this.update(undefined, true);
+    }
+
+    /**
+     * Gets the most recent debug info from the workspace.
+     */
+    getDebugInfo() {
+        return this._debugInfo;
     }
 
     /**
@@ -52,22 +82,45 @@ export class WorkspaceMesh extends GameObject {
      * @param workspace The new workspace data.
      * @param checker The grid checker.
      */
-    async update(workspace: Workspace, checker?: GridChecker) {
+    async update(workspace?: File, force?: boolean) {
+        if (workspace && workspace.type !== 'workspace') {
+            return;
+        }
         const prev = this.workspace;
-        this.workspace = workspace;
+        this.workspace = (<Workspace>workspace) || prev;
 
+        this.visible = !!this.workspace.position;
+        if (!this.workspace.position) {
+            return;
+        }
         this.position.x = this.workspace.position.x;
         this.position.y = this.workspace.position.y;
         this.position.z = this.workspace.position.z;
 
-        if (this._gridChanged(workspace, prev)) {
+        let gridUpdate: GridCheckResults = this._debugInfo.gridChecker;
+
+        if (this._gridChanged(this.workspace, prev) || force) {
             this.updateHexGrid();
-            if (checker) {
-                await this.updateSquareGrids(checker);
+            if (this._checker) {
+                gridUpdate = await this.updateSquareGrids(this._checker);
+
+                if (this._debugMesh) {
+                    this.remove(this._debugMesh);
+                }
+                if (this._debug) {
+                    this._debugMesh = new Object3D();
+                    this._debugMesh.add(GridChecker.createVisualization(gridUpdate));
+                    this.add(this._debugMesh);
+                }
             }
         }
 
         this.updateMatrixWorld(false);
+
+        this._debugInfo = {
+            gridChecker: gridUpdate,
+            id: this.id
+        };
     }
 
     /**
@@ -105,14 +158,20 @@ export class WorkspaceMesh extends GameObject {
             this.remove(...this.squareGrids);
         }
 
-        const levels = await checker.check(this.hexGrid);
+        const results = await checker.check(this.hexGrid);
+        const levels = results.levels;
         this.squareGrids = levels.map(l => new GridMesh(l));
         this.squareGrids.forEach(grid => grid.visible = false);
         this.add(...this.squareGrids);
-        return levels;
+        return results;
     }
 
     private _gridChanged(current: Workspace, previous: Workspace) {
         return !previous || current.size !== previous.size || current.grid !== previous.grid;
     }
+}
+
+export interface WorkspaceMeshDebugInfo {
+    id: number;
+    gridChecker: GridCheckResults;
 }

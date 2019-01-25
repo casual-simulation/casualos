@@ -145,30 +145,14 @@ export class FileDragOperation implements IOperation {
             const workspace = <Workspace>this._workspace.file;
             if (workspace.size === 1 && keys(workspace.grid).length === 0) {
                 // check if it is close to another workspace.
-                const workspaceMeshes = this._gameView.getWorkspaces().filter(mesh => mesh !== this._workspace);
-                const center = new Axial();
-                const gridPositions = workspaceMeshes.map(mesh => {
-                    const w = <Workspace>mesh.file;
-                    const scale = w.scale || DEFAULT_WORKSPACE_SCALE;
-                    const localPos = new Vector3(point.x, 0, point.z).sub(mesh.mesh.position);
-                    const gridPos = realPosToGridPos(new Vector2(localPos.x, localPos.z), scale);
-                    const distance = gridDistance(center, gridPos);
-                    const scaledDistance = distance - w.size;
-                    return {
-                        mesh, 
-                        gridPos, 
-                        distance: scaledDistance
-                    };
-                });
-
-                const closest = minBy(gridPositions, g => g.distance);
+                const closest = this._interaction.closestWorkspace(point, this._workspace);
 
                 if (closest) {
                     console.log(closest.distance, closest.mesh.mesh.id);
                     
-                    if (closest.distance < 1) {
+                    if (closest.distance <= 1) {
                         this._attachWorkspace = closest.mesh;
-                        this._attachPoint = closest.gridPos;
+                        this._attachPoint = closest.gridPosition;
                     } else {
                         this._attachWorkspace = null;
                         this._attachPoint = null;

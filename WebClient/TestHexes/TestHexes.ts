@@ -266,36 +266,15 @@ export default class GameView extends Vue {
     workspace.updateHexGrid();
     const results = await workspace.updateSquareGrids(this._checker);
     workspace.gridsVisible = true;
-    this.images = results.map(l => l._image);
+    this.images = results.levels.map(l => l._image);
 
-    this._debugDots.remove(...this._debugDots.children);
-    results.forEach(level => {
-      level.tiles.forEach(tile => {
-        
-        if (tile.valid) {
-          const tileWorldPosition = new Vector3().copy(tile.localPosition).add(workspace.position);
-          this._debugDots.add(this._createSphere(tileWorldPosition, tile.valid ? 0x0000ff : 0xff0000));
-            tile.localPoints.forEach(p => {
-              const pointWorldPosition = new Vector3().copy(p).add(workspace.position);
-              this._debugDots.add(this._createSphere(pointWorldPosition, 0x00ff00));
-            });
-          }
-      });
-    });
+    this._scene.remove(this._debugDots);
+    this._debugDots = GridChecker.createVisualization(results, { workspace: workspace });
+    this._scene.add(this._debugDots);
   }
 
   toggleDots() {
     this._debugDots.visible = !this._debugDots.visible;
-  }
-
-  private _createSphere(position: Vector3, color: number) {
-    const sphereMaterial = new MeshBasicMaterial({
-      color
-    });
-    const sphereGeometry = new SphereBufferGeometry(.1);
-    const sphere = new Mesh(sphereGeometry, sphereMaterial);
-    sphere.position.copy(position);
-    return sphere;
   }
 
   private _setupRenderer() {
