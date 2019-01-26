@@ -17,6 +17,7 @@ import {
   SphereBufferGeometry,
   GLTFLoader,
   HemisphereLight,
+  Vector2,
 } from 'three';
 import 'three-examples/loaders/GLTFLoader';
 import Vue from 'vue';
@@ -39,7 +40,7 @@ import { ArgEvent } from '../../common/Events';
 import { WorkspaceMesh, WorkspaceMeshDebugInfo } from '../game-engine/WorkspaceMesh';
 import { GridChecker } from '../game-engine/grid/GridChecker';
 import { FileMesh } from '../game-engine/FileMesh';
-import { values } from 'lodash';
+import { values, flatMap } from 'lodash';
 
 @Component({})
 export default class GameView extends Vue {
@@ -79,8 +80,7 @@ export default class GameView extends Vue {
 
   private _subs: SubscriptionLike[];
 
-  @Prop() debug: boolean;
-
+  debug: boolean = false;
   debugInfo: GameViewDebugInfo = null;
 
   @Watch('debug')
@@ -102,6 +102,7 @@ export default class GameView extends Vue {
   get camera(): PerspectiveCamera { return this._camera; }
   get workspacePlane(): Mesh { return this._workspacePlane; }
   get scene(): Scene { return this._scene; }
+  get dev() { return !PRODUCTION; }
 
   get gridChecker() { return this._gridChecker; }
 
@@ -111,6 +112,41 @@ export default class GameView extends Vue {
 
   constructor() {
     super();
+  }
+
+  addNewFile() {
+    const workspace = this.getWorkspaces()[0];
+    let tags: Object['tags'] = undefined;
+    if(workspace) {
+      // Find a valid point to place a cube on.
+      const mesh =<WorkspaceMesh>workspace.mesh;
+      const validPoints = flatMap(mesh.squareGrids, g => ({ tiles: g.level.tiles.filter(t => t.valid), level: g.level }))
+        .filter(g => g.tiles.length > 0)
+        .map(g => ({
+          pos: g.tiles[0].gridPosition,
+          height: g.level.tileHeight
+        }));
+      const firstValidPoint = validPoints[0];
+      if (firstValidPoint) {
+        tags = {
+          _position: { x: firstValidPoint.pos.x, y: firstValidPoint.pos.y, z: firstValidPoint.height },
+          _workspace: workspace.file.id
+        };
+      } else {
+        // the first workspace doesn't have a valid point, just place the cube in space.
+      }
+    }
+    this.fileManager.createFile(undefined, tags);
+  }
+
+  addNewWorkspace() {
+    // TODO: Make the user have to drag a workspace onto the world
+    // instead of just clicking a button and a workspace being placed somewhere.
+    this.fileManager.createWorkspace();
+  }
+
+  toggleDebug() {
+    this.debug = !this.debug;
   }
 
   setGridsVisible(visible: boolean) {
@@ -248,7 +284,6 @@ export default class GameView extends Vue {
 
   private async _fileAdded(file: File) {
     console.log("File Added!");
-
     if (file.type === 'object' && file.tags._hidden) {
       return;
     }

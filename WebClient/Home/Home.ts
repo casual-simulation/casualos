@@ -54,30 +54,12 @@ export default class Home extends Vue {
         return appManager.fileManager;
     }
 
-    get dev() {
-        return !PRODUCTION;
-    }
-
     open() {
         this.isOpen = true;
     }
 
     close() {
         this.isOpen = false;
-    }
-
-    addNewFile() {
-        this.fileManager.createFile();
-    }
-
-    addNewWorkspace() {
-        // TODO: Make the user have to drag a workspace onto the world
-        // instead of just clicking a button and a workspace being placed somewhere.
-        this.fileManager.createWorkspace();
-    }
-
-    toggleDebug() {
-        this.debug = !this.debug;
     }
 
     clearSelection() {
