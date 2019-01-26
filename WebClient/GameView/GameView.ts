@@ -26,7 +26,7 @@ import {
   SubscriptionLike,
 } from 'rxjs';
 
-import { File, Object, Workspace } from 'common/Files';
+import { File, Object, Workspace, DEFAULT_WORKSPACE_HEIGHT_INCREMENT } from 'common/Files';
 import { time } from '../game-engine/Time';
 import { Input } from '../game-engine/input';
 import { File3D } from '../game-engine/File3D';
@@ -132,7 +132,7 @@ export default class GameView extends Vue {
     this._input = new Input();
     this._input.init(this.gameView);
     this._interaction = new InteractionManager(this);
-    this._gridChecker = new GridChecker();
+    this._gridChecker = new GridChecker(DEFAULT_WORKSPACE_HEIGHT_INCREMENT);
 
     // Subscriptions to file events.
     this._subs.push(this.fileManager.fileDiscovered.subscribe(file => {

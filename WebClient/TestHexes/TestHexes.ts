@@ -221,7 +221,7 @@ export default class GameView extends Vue {
 
     this._scene.add(this._skydome);
 
-    this._checker = new GridChecker();
+    this._checker = new GridChecker(0.1);
     const workspace: Workspace = {
       id: 'test',
       type: 'workspace',

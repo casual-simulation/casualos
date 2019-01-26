@@ -31,7 +31,7 @@ export interface Workspace {
     };
     grid: {
         [key: string]: WorkspaceHex;
-    },
+    } | null,
     size: number;
     scale: number | null;
     defaultHeight: number | null;
@@ -68,5 +68,22 @@ export interface PartialFile {
     scale?: number;
 }
 
+/**
+ * The default height for workspaces.
+ */
 export const DEFAULT_WORKSPACE_HEIGHT = .1;
+
+/**
+ * The default scale for workspaces.
+ */
 export const DEFAULT_WORKSPACE_SCALE = .5;
+
+/**
+ * The amount that a hex's height is allowed to change by in a single increment.
+ */
+export const DEFAULT_WORKSPACE_HEIGHT_INCREMENT = 0.1;
+
+/**
+ * The minimum height that hexes in a workspace can be.
+ */
+export const DEFAULT_WORKSPACE_MIN_HEIGHT = 0.1;

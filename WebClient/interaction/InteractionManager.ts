@@ -1,7 +1,7 @@
 import { Vector2, Vector3, Intersection, Raycaster, Object3D, Ray } from 'three';
 import { ContextMenuEvent, ContextMenuAction } from './ContextMenu';
 import { File3D } from '../game-engine/File3D';
-import { Object, DEFAULT_WORKSPACE_SCALE, Workspace } from '../../common/Files';
+import { Object, DEFAULT_WORKSPACE_SCALE, Workspace, DEFAULT_WORKSPACE_HEIGHT_INCREMENT, DEFAULT_WORKSPACE_MIN_HEIGHT } from '../../common/Files';
 import { FileClickOperation } from './FileClickOperation';
 import GameView from '../GameView/GameView';
 import { Physics } from '../game-engine/Physics';
@@ -9,8 +9,9 @@ import { find, flatMap, minBy, keys } from 'lodash';
 import { CameraControls } from './CameraControls';
 import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
 import { FileMesh } from '../game-engine/FileMesh';
-import { Axial, realPosToGridPos, gridDistance, keyToPos } from '../game-engine/hex';
+import { Axial, realPosToGridPos, gridDistance, keyToPos, posToKey } from '../game-engine/hex';
 import { MouseButtonId } from '../game-engine/input';
+import { isBuffer } from 'util';
 
 export class InteractionManager {
 
@@ -114,7 +115,7 @@ export class InteractionManager {
                 const file = this.fileForIntersection(hit);
                 if (file && file.file && file.file.type === 'workspace') {
                     // Now send the actual context menu event.
-                    let menuEvent: ContextMenuEvent = { pagePos: pagePos, actions: this._contextMenuActions(file) };
+                    let menuEvent: ContextMenuEvent = { pagePos: pagePos, actions: this._contextMenuActions(file, hit.point) };
                     this._gameView.$emit('onContextMenu', menuEvent);
                 }
 
@@ -178,6 +179,23 @@ export class InteractionManager {
             });
         }
     }
+    
+    /**
+     * Raises the tile at the given point by the given amount.
+     * @param file The file.
+     * @param position The tile position.
+     * @param height The new height.
+     */
+    public updateTileHeightAtGridPosition(file: File3D, position: Axial, height: number) {
+        const key = posToKey(position);
+        this._gameView.fileManager.updateFile(file.file, {
+            grid: {
+                [key]: {
+                    height: height
+                }
+            }
+        });
+    }
 
     public shrinkWorkspace(file: File3D) {
         if (file && file.file.type === 'workspace') {
@@ -228,12 +246,11 @@ export class InteractionManager {
     public closestWorkspace(point: Vector3, exclude?: File3D) {
         const workspaceMeshes = this._gameView.getWorkspaces().filter(mesh => mesh !== exclude);
         const center = new Axial();
+
         const gridPositions = workspaceMeshes.map(mesh => {
             const w = <Workspace>mesh.file;
-            const scale = w.scale || DEFAULT_WORKSPACE_SCALE;
-            const localPos = new Vector3(point.x, 0, point.z).sub(mesh.mesh.position);
-            const gridPos = realPosToGridPos(new Vector2(localPos.x, localPos.z), scale);
-            const tilePositions = keys(w.grid).map(keyToPos);
+            const gridPos = this._worldPosToGridPos(mesh, point);
+            const tilePositions = w.grid ? keys(w.grid).map(keyToPos) : [];
             const distToCenter = gridDistance(center, gridPos);
             const scaledDistance = distToCenter - (w.size - 1);
             const distances = [
@@ -243,8 +260,6 @@ export class InteractionManager {
                     distance: gridDistance(pos, gridPos) 
                 }))
             ];
-
-            console.log(distances);
 
             // never null because distances always has at least one element.
             const closest = minBy(distances, d => d.distance);
@@ -281,14 +296,31 @@ export class InteractionManager {
         return this.findWorkspaceForIntersection(hit) === null;
     }
 
-    private _contextMenuActions(file: File3D): ContextMenuAction[] {
-        let actions = [
-            { label: 'Expand', onClick: () => this.expandWorkspace(file) },
-        ];
+    private _contextMenuActions(file: File3D, point: Vector3): ContextMenuAction[] {
+        let actions: ContextMenuAction[] = [];
+        if (file.mesh instanceof WorkspaceMesh && file.file.type === 'workspace') {
+            const tile = this._worldPosToGridPos(file, point);
+            const currentTile = file.file.grid ? file.file.grid[posToKey(tile)] : null;
+            const currentHeight = (!!currentTile ? currentTile.height : file.file.defaultHeight);
+            const increment = DEFAULT_WORKSPACE_HEIGHT_INCREMENT; // TODO: Replace with a configurable value.
+            const minHeight = DEFAULT_WORKSPACE_MIN_HEIGHT; // TODO: This too
+            actions.push({ label: 'Raise', onClick: () => this.updateTileHeightAtGridPosition(file, tile, currentHeight + increment) });
+            if (currentTile && currentHeight - increment >= minHeight) {
+                actions.push({ label: 'Lower', onClick: () => this.updateTileHeightAtGridPosition(file, tile, currentHeight - increment) });
+            }
+        }
+        actions.push({ label: 'Expand', onClick: () => this.expandWorkspace(file) });
         if (this.canShrinkWorkspace(file)) {
             actions.push({ label: 'Shrink', onClick: () => this.shrinkWorkspace(file) });
         }
         return actions;
+    }
+
+    private _worldPosToGridPos(file: File3D, pos: Vector3) {
+        const w = <Workspace>file.file;
+        const scale = w.scale || DEFAULT_WORKSPACE_SCALE;
+        const localPos = new Vector3().copy(pos).sub(file.mesh.position);
+        return realPosToGridPos(new Vector2(localPos.x, localPos.z), scale);
     }
 
     private _handleFileAdded(file: File3D): void {

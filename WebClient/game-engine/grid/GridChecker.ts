@@ -51,8 +51,10 @@ export class GridChecker {
     private _worldPosition: Vector3;
     private _xImbalance: number;
     private _yImbalance: number;
+    private _heightSpacing: number;
 
-    constructor() {
+    constructor(heightSpacing: number) {
+        this._heightSpacing = 1 / heightSpacing;
         this._scene = new Scene();
         this._camera = new OrthographicCamera(-1, 1, 1, -1, 1, 1);
         this._renderer = new WebGLRenderer({
@@ -74,7 +76,7 @@ export class GridChecker {
         this._updateRenderer();
         this._updateHexes();
 
-        const groups = groupBy(this._grid.hexes, h => Math.floor(h.height));
+        const groups = groupBy(this._grid.hexes, h => Math.floor(h.height * this._heightSpacing));
         const heights = keys(groups);
         const results = heights.map(h => this.checkLevel(groups[h], groups[h][0].height));
         
