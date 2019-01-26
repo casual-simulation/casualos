@@ -71,6 +71,8 @@ export default class Home extends Vue {
     }
 
     addNewWorkspace() {
+        // TODO: Make the user have to drag a workspace onto the world
+        // instead of just clicking a button and a workspace being placed somewhere.
         this.fileManager.createWorkspace();
     }
 

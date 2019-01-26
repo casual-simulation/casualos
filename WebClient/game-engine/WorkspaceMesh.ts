@@ -5,7 +5,6 @@ import { Workspace, File, objDiff, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_S
 import { keys, minBy } from "lodash";
 import { GridChecker, GridCheckResults } from "./grid/GridChecker";
 import { GameObject } from "./GameObject";
-import { GridLevel } from "./grid/GridLevel";
 
 /**
  * Defines a mesh that represents a workspace.
@@ -146,7 +145,7 @@ export class WorkspaceMesh extends GameObject {
             this.workspace.defaultHeight || DEFAULT_WORKSPACE_HEIGHT, 
             this.workspace.scale || DEFAULT_WORKSPACE_SCALE);
         
-        const positionsKeys = keys(this.workspace.grid);
+        const positionsKeys = this.workspace.grid ? keys(this.workspace.grid) : [];
         positionsKeys.forEach(key => {
             const position = keyToPos(key);
             const workspaceHex = this.workspace.grid[key];

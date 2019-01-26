@@ -47,6 +47,7 @@ export class FileDragOperation implements IOperation {
             const center = new Vector3();
             bounds.getCenter(center);
             this._workspaceDelta = new Vector3().copy(this._workspace.mesh.position).sub(center);
+            this._workspaceDelta.setY(0);
         }
         
 
@@ -147,13 +148,11 @@ export class FileDragOperation implements IOperation {
 
             // if the workspace is only 1 tile large
             const workspace = <Workspace>this._workspace.file;
-            if (workspace.size === 1 && keys(workspace.grid).length === 0) {
+            if (workspace.size === 1 && (!workspace.grid || keys(workspace.grid).length === 0)) {
                 // check if it is close to another workspace.
                 const closest = this._interaction.closestWorkspace(point, this._workspace);
 
-                if (closest) {
-                    console.log(closest.distance, closest.mesh.mesh.id);
-                    
+                if (closest) {                    
                     if (closest.distance <= 1) {
                         this._attachWorkspace = closest.mesh;
                         this._attachPoint = closest.gridPosition;
@@ -169,10 +168,14 @@ export class FileDragOperation implements IOperation {
                 const scale = w.scale || DEFAULT_WORKSPACE_SCALE;
                 const realPos = gridPosToRealPos(this._attachPoint, scale);
                 point.copy(new Vector3(realPos.x, 0, realPos.y)).add(this._attachWorkspace.mesh.position);
+                point.setY(0);
             }
 
             // move the center of the workspace to the point
-            const final = new Vector3().copy(point).add(this._workspaceDelta);
+            let final = new Vector3().copy(point);
+            if (!this._attachWorkspace) {
+                final.add(this._workspaceDelta);
+            }
 
             this._gameView.fileManager.updateFile(this._workspace.file, {
                 position: {
