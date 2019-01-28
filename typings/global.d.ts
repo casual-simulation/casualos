@@ -33,6 +33,7 @@ declare module 'formula-lib' {
   export default lib; 
 }
 
+
 declare var PRODUCTION: boolean;
 declare var SENTRY_DSN: string;
 declare var ENABLE_SENTRY: boolean;

@@ -9,7 +9,7 @@ import { FileManager } from '../FileManager';
 import {uniq} from 'lodash';
 import CubeIcon from './Cube.svg';
 import FileTable from '../FileTable/FileTable';
-import { ContextMenuEvent } from '../game-engine/Interfaces';
+import { ContextMenuEvent } from '../interaction/ContextMenu';
 import { SubscriptionLike } from 'rxjs';
 import { fileTags } from 'common/Files/FileCalculations';
 
@@ -21,6 +21,8 @@ import { fileTags } from 'common/Files/FileCalculations';
     }
 })
 export default class Home extends Vue {
+
+    debug: boolean = false;
 
     contextMenuStyle: any = {
         left: '0px',
@@ -58,14 +60,6 @@ export default class Home extends Vue {
 
     close() {
         this.isOpen = false;
-    }
-
-    addNewFile() {
-        this.fileManager.createFile();
-    }
-
-    addNewWorkspace() {
-        this.fileManager.createWorkspace();
     }
 
     clearSelection() {

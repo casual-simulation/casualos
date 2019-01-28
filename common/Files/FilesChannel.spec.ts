@@ -16,11 +16,13 @@ import {
     first,
     second,
     listMergeConflicts,
-    ResolvedConflict
+    ResolvedConflict,
+    fileUpdated
 } from './FilesChannel';
 import { Workspace, Object, File } from './File';
 import { values, assign, merge } from 'lodash';
 import uuid from 'uuid/v4';
+import { objectsAtGridPosition } from './FileCalculations';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -33,7 +35,10 @@ describe('FilesChannel', () => {
                     id: 'test',
                     type: 'workspace',
                     position: { x: 1, y: 2, z: 3 },
-                    size: 10
+                    size: 10,
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 };
                 const state = {};
                 const newState = filesReducer(state, fileAdded(file));
@@ -51,12 +56,40 @@ describe('FilesChannel', () => {
                         id: 'test',
                         type: 'workspace',
                         position: { x: 1, y: 2, z: 3 },
-                        size: 10
+                        size: 10,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1
                     }
                 };
                 const newState = filesReducer(state, fileRemoved('test'));
 
                 expect(newState).toEqual({});
+            });
+        });
+
+        describe('file_updated', () => {
+            it('should not change values that dont change', () => {
+                const test: Workspace = {
+                    id: 'test',
+                    type: 'workspace',
+                    position: { x: 1, y: 2, z: 3 },
+                    size: 10,
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
+                };
+                const state: FilesState = {
+                    test: test
+                };
+
+                const newState = filesReducer(state, fileUpdated('test', {
+                    size: 2
+                }));
+
+                const newTest = <Workspace>newState['test'];
+
+                expect(newTest.grid).toBe(test.grid);
             });
         });
 
@@ -154,7 +187,10 @@ describe('FilesChannel', () => {
                     type: 'workspace',
                     id: 'test',
                     position: {x:0, y:0, z:0},
-                    size: 1
+                    size: 1,
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 }
             };
             const currState: FilesState = {
@@ -174,7 +210,10 @@ describe('FilesChannel', () => {
                     type: 'workspace',
                     id: 'test',
                     position: {x:0, y:0, z:0},
-                    size: 1
+                    size: 1,
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 }
             };
             const currState: FilesState = {
@@ -203,7 +242,10 @@ describe('FilesChannel', () => {
                     type: 'workspace',
                     id: 'test',
                     position: {x:0, y:0, z:0},
-                    size: 1
+                    size: 1,
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 }
             };
             const currState: FilesState = {};
@@ -222,7 +264,10 @@ describe('FilesChannel', () => {
                     type: 'workspace',
                     id: 'test',
                     position: {x:0, y:0, z:0},
-                    size: 1
+                    size: 1,
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 },
                 'updated': {
                     type: 'object',
@@ -259,13 +304,19 @@ describe('FilesChannel', () => {
                     type: 'workspace',
                     id: 'test',
                     position: {x:0, y:0, z:0},
-                    size: 1
+                    size: 1,
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 },
                 'removed': {
                     type: 'workspace',
                     id: 'removed',
                     position: {x:0, y:0, z:0},
-                    size: 2
+                    size: 2,
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 },
                 'updated': {
                     type: 'object',
@@ -321,7 +372,10 @@ describe('FilesChannel', () => {
                     type: 'workspace',
                     id: 'test',
                     position: {x:0, y:0, z:0},
-                    size: 1
+                    size: 1,
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 },
             };
             const currState: FilesState = {
@@ -355,7 +409,10 @@ describe('FilesChannel', () => {
                     type: 'workspace',
                     id: 'test',
                     position: {x:0, y:0, z:0},
-                    size: 1
+                    size: 1,
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 },
                 'old': {
                     type: 'object',
@@ -389,7 +446,10 @@ describe('FilesChannel', () => {
                     type: 'workspace',
                     id: 'updated',
                     position: {x:0, y:0, z:0},
-                    size: 1
+                    size: 1,
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 },
             };
             const currState: FilesState = {
@@ -397,7 +457,10 @@ describe('FilesChannel', () => {
                     type: 'workspace',
                     id: 'updated',
                     position: {x:2, y:1, z:3},
-                    size: 1
+                    size: 1,
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 },
             };
 
@@ -422,13 +485,19 @@ describe('FilesChannel', () => {
                     type: 'workspace',
                     id: 'test',
                     position: {x:0, y:0, z:0},
-                    size: 1
+                    size: 1,
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 },
                 'removed': {
                     type: 'workspace',
                     id: 'removed',
                     position: {x:0, y:0, z:0},
-                    size: 2
+                    size: 2,
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 },
                 'updated': {
                     type: 'object',
@@ -1155,7 +1224,10 @@ describe('FilesChannel', () => {
                     type: 'workspace',
                     id: 'test',
                     position: {x:0, y:0, z:0},
-                    size: 1
+                    size: 1,
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 }
             };
             const parent2: FilesState = {};
@@ -1168,7 +1240,10 @@ describe('FilesChannel', () => {
                     type: 'workspace',
                     id: 'test',
                     position: {x:0, y:0, z:0},
-                    size: 1
+                    size: 1,
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 }
             });
 
@@ -1179,7 +1254,10 @@ describe('FilesChannel', () => {
                     type: 'workspace',
                     id: 'test',
                     position: {x:0, y:0, z:0},
-                    size: 1
+                    size: 1,
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1
                 }
             });
         });
@@ -1350,6 +1428,84 @@ describe('FilesChannel', () => {
                     },
                 }
             })
+        });
+
+        describe('objectsAtGridPosition', () => {
+            it('should return objects that are at the same grid position and workspace', () => {
+                const objs: Object[] = [
+                    {
+                        id: 'test',
+                        type: 'object',
+                        tags: {
+                            _position: {
+                                x: 0,
+                                y: 0,
+                                z: 1
+                            },
+                            _workspace: 'abc',
+                        },
+                    },
+                    {
+                        id: 'test2',
+                        type: 'object',
+                        tags: {
+                            _position: {
+                                x: 0,
+                                y: 0,
+                                z: 0
+                            },
+                            _workspace: 'abc',
+                        },
+                    },
+                    {
+                        id: 'test3',
+                        type: 'object',
+                        tags: {
+                            _position: {
+                                x: 1,
+                                y: 0,
+                                z: 0
+                            },
+                            _workspace: 'abc',
+                        },
+                    },
+                    {
+                        id: 'test4',
+                        type: 'object',
+                        tags: {
+                            _position: {
+                                x: 0,
+                                y: 1,
+                                z: 0
+                            },
+                            _workspace: 'abc',
+                        },
+                    },
+                    {
+                        id: 'test5',
+                        type: 'object',
+                        tags: {
+                            _position: {
+                                x: 0,
+                                y: 0,
+                                z: 0
+                            },
+                            _workspace: 'def',
+                        },
+                    }
+                ];
+
+                const matching = objectsAtGridPosition(objs, 'abc', {
+                    x: 0,
+                    y: 0,
+                    z: 10
+                });
+
+                expect(matching).toEqual([
+                    objs[0],
+                    objs[1]
+                ]);
+            });
         });
     });
 });

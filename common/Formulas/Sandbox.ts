@@ -85,6 +85,10 @@ export class Sandbox {
             return __this.interface.uuid();
         }
 
+        function list(obj: any): any {
+            return __this.interface.list(obj);
+        }
+
         function __evalWrapper(js: string): any {
             const final = __this._lib + '\n' + keys(__variables).map(v => `var ${v} = __variables["${v}"];`).join('\n') + '\n' + js;
             return eval(final);

@@ -1,4 +1,4 @@
-import { Object, File, Workspace } from './File';
+import { Object, File, Workspace, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_HEIGHT } from './File';
 import uuid from 'uuid/v4';
 import {
     flatMap,
@@ -250,7 +250,10 @@ export function createWorkspace(): Workspace {
         id: uuid(),
         type: 'workspace',
         position: {x: 0, y: 0, z: 0},
-        size: 0
+        size: 1,
+        grid: {},
+        scale: DEFAULT_WORKSPACE_SCALE,
+        defaultHeight: DEFAULT_WORKSPACE_HEIGHT
     };
 }
 
@@ -297,7 +300,7 @@ export function convertToFormulaObject(context: FileCalculationContext, object: 
             const val = object.tags[key];
             if(containsFormula(val)) {
                 Object.defineProperty(converted, key, {
-                get: () => _calculateValue(context, object, key, val)
+                    get: () => _calculateValue(context, object, key, val)
                 });
             } else {
                 converted[key] = _calculateValue(context, object, key, val);
@@ -340,6 +343,21 @@ export function tagsMatchingFilter(file: Object, other: Object, eventName: strin
 export function tagMatchesFilter(tag: string, file: Object, eventName: string): boolean {
     const parsed = parseFilterTag(tag);
     return parsed.success && parsed.eventName === eventName && file.tags[parsed.filter.tag] === parsed.filter.value;
+}
+
+/**
+ * Filters the given list of objects to those matching the given workspace ID and grid position.
+ * @param objects The objects to filter.
+ * @param workspaceId The ID of the workspace that the objects need to be on.
+ * @param position The position that the objects need to be at.
+ */
+export function objectsAtGridPosition(objects: Object[], workspaceId: string, position: Object['tags']['_position']) {
+    return objects.filter(o => {
+        return o.type === 'object' && 
+            o.tags._workspace === workspaceId &&
+            o.tags._position.x === position.x &&
+            o.tags._position.y === position.y
+    });
 }
 
 /**
@@ -503,6 +521,13 @@ class SandboxInterfaceImpl implements SandboxInterface {
         .map(o => convertToFormulaObject(this.context, o));
       const filtered = this._filterObjects(objs, filter, tag);
       return _singleOrArray(filtered);
+    }
+
+    list(obj: any) {
+        const position = obj._position;
+        const workspace = obj._workspace;
+        const objs = objectsAtGridPosition(this.objects, workspace, position);
+        return objs;
     }
 
     uuid(): string {

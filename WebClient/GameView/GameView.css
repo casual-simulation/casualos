@@ -6,3 +6,45 @@
 .game-container {
     margin: -16px;
 }
+
+.debug-card {
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+}
+
+.toolbar {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    padding: 10px;
+    line-height: 24px;
+    background-color: #fff;
+    color: rgba(0,0,0,0.87);
+    border-radius: 20px;
+    box-shadow: 0 3px 1px -2px rgba(0,0,0,.2), 0 2px 2px 0 rgba(0,0,0,.14), 0 1px 5px 0 rgba(0,0,0,.12);
+}
+
+.toolbar-layout {
+    display: flex;
+}
+
+.toolbar-layout > *:not(:first-child) {
+    margin-left: 5px;
+}
+
+.toolbar-label {
+    align-self: center;
+}
+
+.divider {
+    border-left: #333 1px solid;
+}
+
+.toolbar-button-icon {
+    vertical-align: middle;
+}
+
+.toolbar-button {
+    margin: 0;
+}
