@@ -20,15 +20,24 @@ import {
     AddEquation,
     SrcAlphaFactor,
     RawShaderMaterial,
-    Material} from "three";
+    Material,
+    LinearMipMapLinearFilter,
+    LinearFilter,
+    WebGLRenderer,
+    NearestFilter} from "three";
 
 import createBMFont, { TextGeometry, TextGeometryOptions } from "three-bmfont-text";
 import GameView from "WebClient/GameView/GameView";
-import { colorConvert } from "WebClient/utils";
+import { colorConvert } from "../utils";
 
 var sdfShader = require('three-bmfont-text/shaders/sdf');
 
 export class Text3D {
+
+    // Map of loaded font textures.
+    public static FontTextures: {
+        [texturePath: string]: Texture
+    } = {};
 
     public static readonly defaultWidth: number = 200;
     public static readonly extraSpacing: number = 0.1;
@@ -64,18 +73,22 @@ export class Text3D {
 
         this._gameView = gameView;
 
-        var texture = new TextureLoader().load(fontTexturePath);
+        if (!Text3D.FontTextures[fontTexturePath]) {
+            // Load font texture and store it for other 3d texts to use.
+            Text3D.FontTextures[fontTexturePath] = new TextureLoader().load(fontTexturePath);
+        }
+
+        var texture = Text3D.FontTextures[fontTexturePath];
+        
+        // Modify filtering of texture for optimal SDF rendering.
+        // This effectively disables the use of any mip maps, allowing the SDF shader to continue
+        // to draw the text when view from a long distance. Otherwise, the SDF shader tends to 'fizzle' 
+        // out when the text is viewed from long distances.
+        texture.minFilter = LinearFilter;
+        texture.magFilter = LinearFilter;
+
         this._geometry = createBMFont({ font: fontData, text: "", flipY: true, align: "center", width: Text3D.defaultWidth });
         
-        // var material = new MeshBasicMaterial({
-        //     map: texture,
-        //     lights: false,
-        //     side: DoubleSide,
-        //     depthTest: false,
-        //     depthWrite: false,
-        //     transparent: true,
-        //     color: new Color(0, 0, 0),
-        // });
         var material = new RawShaderMaterial(sdfShader({
             map: texture,
             side: DoubleSide,

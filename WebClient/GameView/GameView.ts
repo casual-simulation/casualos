@@ -19,6 +19,7 @@ import {
   HemisphereLight,
   Vector2,
 } from 'three';
+
 import 'three-examples/loaders/GLTFLoader';
 import Vue from 'vue';
 import Component from 'vue-class-component';
@@ -107,6 +108,7 @@ export default class GameView extends Vue {
   get camera(): PerspectiveCamera { return this._camera; }
   get workspacePlane(): Mesh { return this._workspacePlane; }
   get scene(): Scene { return this._scene; }
+  get renderer() { return this._renderer; } 
   get dev() { return !PRODUCTION; }
 
   get gridChecker() { return this._gridChecker; }
@@ -379,6 +381,7 @@ export default class GameView extends Vue {
   }
 
   private _setupRenderer() {
+
     const webGlRenderer = this._renderer = new WebGLRenderer({
       antialias: true,
     });
