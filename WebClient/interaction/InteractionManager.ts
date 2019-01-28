@@ -1,5 +1,5 @@
 import { Vector2, Vector3, Intersection, Raycaster, Object3D, Ray } from 'three';
-import { ContextMenuEvent, ContextMenuAction, DragOperation } from '../game-engine/Interfaces';
+import { ContextMenuEvent, ContextMenuAction } from './ContextMenu';
 import { File3D } from '../game-engine/File3D';
 import { Object, DEFAULT_WORKSPACE_SCALE, Workspace } from '../../common/Files';
 import { FileClickOperation } from './FileClickOperation';
@@ -264,17 +264,18 @@ export class InteractionManager {
         this._gameView.fileManager.selectFile(<Object>file.file);
     }
 
-    public tryCombineFiles(drag: DragOperation) {
-        const raycast = Physics.raycastAtScreenPos(drag.screenPos, this._raycaster, this._getDraggableObjects(), this._gameView.camera);
-        const other = find(raycast.intersects, (val, index, col) => val.object !== drag.hit.object);
-        if (other) {
-            const file = this.fileForIntersection(drag.hit);
-            const otherFile = this.fileForIntersection(other);
-            if (file && otherFile && file.file.type === 'object' && otherFile.file.type === 'object') {
-                this._gameView.fileManager.action(file.file, otherFile.file, '+');
-            }
-        }
-    }
+    // TODO: Need to reimplement combine action with new input system.
+    // public tryCombineFiles(drag: DragOperation) {
+    //     const raycast = Physics.raycastAtScreenPos(drag.screenPos, this._raycaster, this._getDraggableObjects(), this._gameView.camera);
+    //     const other = find(raycast.intersects, (val, index, col) => val.object !== drag.hit.object);
+    //     if (other) {
+    //         const file = this.fileForIntersection(drag.hit);
+    //         const otherFile = this.fileForIntersection(other);
+    //         if (file && otherFile && file.file.type === 'object' && otherFile.file.type === 'object') {
+    //             this._gameView.fileManager.action(file.file, otherFile.file, '+');
+    //         }
+    //     }
+    // }
 
     public isFile(hit: Intersection): boolean {
         return this.findWorkspaceForIntersection(hit) === null;
