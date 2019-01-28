@@ -1,5 +1,16 @@
 # File Simulator Changelog
 
+## V0.2.6
+### Date: 1/28/2019
+
+#### Changes:
+- Improved the game window to resize the renderer and camera automatically
+- Improved how the files window scales for small devices
+- Move the toolbar into a floating action button
+- Closing the info box now shows an icon in its place that can be used to reopen it
+- Selecting/changing files no longer re-opens the info box
+- Tags that the user adds to the info box are no longer automatically hidden
+
 ## V0.2.5
 ### Date: 1/28/2019
 
