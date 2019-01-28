@@ -10,10 +10,23 @@ import {
     Texture,
     SceneUtils,
     Vector3,
-    Box3} from "three";
+    Box3,
+    SpriteMaterial,
+    Blending,
+    CustomBlending,
+    MultiplyBlending,
+    OneFactor,
+    OneMinusSrcAlphaFactor,
+    AddEquation,
+    SrcAlphaFactor,
+    RawShaderMaterial,
+    Material} from "three";
 
 import createBMFont, { TextGeometry, TextGeometryOptions } from "three-bmfont-text";
 import GameView from "WebClient/GameView/GameView";
+import { colorConvert } from "WebClient/utils";
+
+var sdfShader = require('three-bmfont-text/shaders/sdf');
 
 export class Text3D {
 
@@ -53,15 +66,22 @@ export class Text3D {
 
         var texture = new TextureLoader().load(fontTexturePath);
         this._geometry = createBMFont({ font: fontData, text: "", flipY: true, align: "center", width: Text3D.defaultWidth });
-        var material = new MeshBasicMaterial({
+        
+        // var material = new MeshBasicMaterial({
+        //     map: texture,
+        //     lights: false,
+        //     side: DoubleSide,
+        //     depthTest: false,
+        //     depthWrite: false,
+        //     transparent: true,
+        //     color: new Color(0, 0, 0),
+        // });
+        var material = new RawShaderMaterial(sdfShader({
             map: texture,
-            lights: false,
             side: DoubleSide,
-            depthTest: false,
-            depthWrite: false,
             transparent: true,
-            color: new Color(0, 0, 0),
-        });
+            color: new Color(0, 0, 0)
+        }));
 
         this._mesh = new Mesh(this._geometry, material);
         this._anchor = new Object3D();
@@ -116,6 +136,15 @@ export class Text3D {
             this._anchor.visible = false;
 
         }
+    }
+
+    /**
+     * Set the text's color.
+     * @param color The color value either in string or THREE.Color.
+     */
+    public setColor(color: Color) {
+        var material = <RawShaderMaterial>this._mesh.material;
+        material.uniforms.color.value = color;
     }
 
     /**

@@ -75,12 +75,10 @@ export class FileMesh extends GameObject {
 
         // Tag: color
         if (this.file.tags.color) {
-            const mesh = <Mesh>this.cube;
-            const material = <MeshStandardMaterial>mesh.material;
+            const material = <MeshStandardMaterial>this.cube.material;
             material.color = this._getColor(this.file.tags.color);
         } else {
-            const mesh = <Mesh>this.cube;
-            const material = <MeshStandardMaterial>mesh.material;
+            const material = <MeshStandardMaterial>this.cube.material;
             material.color = new Color(0x00FF00);
         }
 
@@ -88,6 +86,10 @@ export class FileMesh extends GameObject {
         if (this.file.tags.label) {
             this.label.setText(this.file.tags.label);
             this.label.setPositionForObject(this.cube);
+
+            if (this.file.tags['label.color']) {
+                this.label.setColor(this._getColor(this.file.tags['label.color']));
+            }
         } else {
             this.label.setText("");
         }
