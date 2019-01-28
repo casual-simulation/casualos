@@ -26,7 +26,7 @@
             <md-card-content>
               <h4>Debug Info</h4>
               <h6>Workspaces</h6>
-              <md-list v-if="debugInfo !== null">
+              <md-list class="debug-card-list" v-if="debugInfo !== null">
                 <md-list-item v-for="workspace in debugInfo.workspaces" :key="workspace.id">
                   <div class="md-list-item-text" v-if="workspace.gridChecker">
                     <span>{{workspace.id}}</span>

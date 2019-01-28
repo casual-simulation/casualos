@@ -5,18 +5,13 @@ import { Object} from 'common/Files';
 import GameView from '../GameView/GameView';
 import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';
-import { FileManager } from '../FileManager';
-import {uniq} from 'lodash';
-import CubeIcon from './Cube.svg';
 import FileTable from '../FileTable/FileTable';
 import { ContextMenuEvent } from '../interaction/ContextMenu';
 import { SubscriptionLike } from 'rxjs';
-import { fileTags } from 'common/Files/FileCalculations';
 
 @Component({
     components: {
         'game-view': GameView,
-        'cube-icon': CubeIcon,
         'file-table': FileTable
     }
 })
