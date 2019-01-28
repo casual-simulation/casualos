@@ -42,10 +42,12 @@ import { GridChecker } from '../game-engine/grid/GridChecker';
 import { FileMesh } from '../game-engine/FileMesh';
 import { values, flatMap } from 'lodash';
 import CubeIcon from './Cube.svg';
+import HexIcon from './Hexagon.svg';
 
 @Component({
   components: {
     'cube-icon': CubeIcon,
+    'hex-icon': HexIcon,
   }
 })
 export default class GameView extends Vue {

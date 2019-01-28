@@ -35,3 +35,15 @@
 .md-list-item-container:hover:not([disabled]) .md-icon.md-theme-default.md-icon-font.nuke-everything-icon {
     color: inherit;
 }
+
+/* Only visible to screen readers */
+.sr-only {
+    border: 0; 
+    clip: rect(0 0 0 0); 
+    height: 1px; 
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
+  }
