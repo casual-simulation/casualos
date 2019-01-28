@@ -35,6 +35,7 @@ export interface Workspace {
     } | null,
     size: number;
     scale: number | null;
+    gridScale: number | null;
     defaultHeight: number | null;
 }
 
@@ -71,6 +72,7 @@ export interface PartialFile {
         [key: string]: WorkspaceHex
     },
     scale?: number;
+    gridScale?: number;
 }
 
 /**
@@ -81,7 +83,12 @@ export const DEFAULT_WORKSPACE_HEIGHT = .1;
 /**
  * The default scale for workspaces.
  */
-export const DEFAULT_WORKSPACE_SCALE = .5;
+export const DEFAULT_WORKSPACE_SCALE = 2;
+
+/**
+ * The default grid scale for workspaces.
+ */
+export const DEFAULT_WORKSPACE_GRID_SCALE = 0.2;
 
 /**
  * The amount that a hex's height is allowed to change by in a single increment.

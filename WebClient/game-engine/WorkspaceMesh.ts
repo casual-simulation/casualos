@@ -1,7 +1,7 @@
 import { Object3D, Vector3 } from "three";
 import { HexGridMesh, HexGrid, HexMesh, keyToPos } from "./hex";
 import { GridMesh } from "./grid/GridMesh";
-import { Workspace, File, objDiff, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_SCALE } from "common/Files";
+import { Workspace, File, objDiff, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_GRID_SCALE } from "common/Files";
 import { keys, minBy } from "lodash";
 import { GridChecker, GridCheckResults } from "./grid/GridChecker";
 import { GameObject } from "./GameObject";
@@ -167,6 +167,7 @@ export class WorkspaceMesh extends GameObject {
             this.remove(...this.squareGrids);
         }
 
+        checker.tileRatio = this.workspace.gridScale || DEFAULT_WORKSPACE_GRID_SCALE;
         const results = await checker.check(this.hexGrid);
         const levels = results.levels;
         this.squareGrids = levels.map(l => new GridMesh(l));

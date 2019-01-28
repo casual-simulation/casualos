@@ -33,8 +33,8 @@ import { createSphere } from "../utils";
  */
 export class GridChecker {
 
-    tileRatio = 1;
-    private _supersampling = 8;
+    tileRatio = 0.2;
+    private _supersampling = 2;
     private _renderer: WebGLRenderer;
     private _camera: OrthographicCamera;
     private _scene: Scene;
