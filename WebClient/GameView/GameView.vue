@@ -12,14 +12,17 @@
             <md-button class="md-icon-button" @click="addNewFile">
               <cube-icon class="toolbar-button-icon" />
               <span class="sr-only">New File</span>
+              <md-tooltip md-direction="right">New File</md-tooltip>
             </md-button>
             <md-button class="md-icon-button" @click="addNewWorkspace()">
               <hex-icon class="toolbar-button-icon" />
               <span class="sr-only">New Workspace</span>
+              <md-tooltip md-direction="right">New Workspace</md-tooltip>
             </md-button>
             <md-button class="md-icon-button" @click="toggleDebug()" v-if="dev">
               <md-icon>bug_report</md-icon>
               <span class="sr-only">Debug</span>
+              <md-tooltip md-direction="right">Debug</md-tooltip>
             </md-button>
           </md-speed-dial-content>
         </md-speed-dial>
