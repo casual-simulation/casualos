@@ -5,7 +5,7 @@ import { Object, DEFAULT_WORKSPACE_SCALE, Workspace, DEFAULT_WORKSPACE_HEIGHT_IN
 import { FileClickOperation } from './FileClickOperation';
 import GameView from '../GameView/GameView';
 import { Physics } from '../game-engine/Physics';
-import { find, flatMap, minBy, keys } from 'lodash';
+import { find, flatMap, minBy, keys, maxBy } from 'lodash';
 import { CameraControls } from './CameraControls';
 import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
 import { FileMesh } from '../game-engine/FileMesh';
@@ -277,6 +277,50 @@ export class InteractionManager {
 
     public selectFile(file: File3D) {
         this._gameView.fileManager.selectFile(<Object>file.file);
+    }
+
+    /**
+     * Calculates the next available index that an object can be placed at on the given workspace at the
+     * given grid position.
+     * @param workspace The workspace.
+     * @param gridPosition The grid position that the next available index should be found for.
+     * @param file The file that we're trying to find the next index for.
+     */
+    public nextAvailableObjectIndex(workspace: File3D, gridPosition: Vector2, file: Object): number {
+        const objs = this.objectsAtGridPosition(workspace, gridPosition);
+        const indexes = objs.map(o => ({
+            object: o,
+            index: o.tags._index || 0
+        }));
+
+        // TODO: Improve to handle other scenarios like:
+        // - Reordering objects
+        // - Filling in gaps that can be made by moving files from the center of the list
+        const maxIndex = maxBy(indexes, i => i.index);
+        let nextIndex = 0;
+        if (maxIndex) {
+            if (maxIndex.object.id === file.id) {
+                nextIndex = maxIndex.index;
+            } else {
+                nextIndex = maxIndex.index + 1;
+            }
+        }
+
+        return nextIndex;
+    }
+
+    /**
+     * Finds the files on the given workspace and at the given grid position.
+     * @param workspace The workspace.
+     * @param gridPosition The grid position that the files should be retrieved for.
+     */
+    public objectsAtGridPosition(workspace: File3D, gridPosition: Vector2) {
+        return this._gameView.getObjects().filter(o => {
+            return o.file.type === 'object' && 
+                o.file.tags._workspace === workspace.file.id &&
+                o.file.tags._position.x === gridPosition.x &&
+                o.file.tags._position.y === gridPosition.y
+        }).map(o => <Object>o.file);
     }
 
     // TODO: Need to reimplement combine action with new input system.

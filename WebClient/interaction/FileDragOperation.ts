@@ -6,7 +6,7 @@ import { InteractionManager } from './InteractionManager';
 import { Ray, Intersection, Vector2, Vector3, Box3 } from 'three';
 import { Physics } from '../game-engine/Physics';
 import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
-import { Workspace, DEFAULT_WORKSPACE_SCALE } from 'common/Files';
+import { Workspace, Object, DEFAULT_WORKSPACE_SCALE } from 'common/Files';
 import { keys, minBy, flatMap } from 'lodash';
 import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance, posToKey } from '../game-engine/hex';
 import { isFormula } from 'common/Files/FileCalculations';
@@ -111,6 +111,10 @@ export class FileDragOperation implements IOperation {
                 }
                 this._gridWorkspace = <WorkspaceMesh>workspace.mesh;
                 this._gridWorkspace.gridsVisible = true;
+
+                // calculate index for file
+                const index = this._interaction.nextAvailableObjectIndex(workspace, gridPosition, <Object>this._file.file);
+                
                 this._gameView.fileManager.updateFile(this._file.file, {
                     tags: {
                         _workspace: workspace.file.id,
@@ -120,22 +124,12 @@ export class FileDragOperation implements IOperation {
                             z: height
                             // TODO: Make index
                             // z: gridPosition.z
-                        }
+                        },
+                        _index: index
                     }
                 });
             } else {
                 // Don't move the file if it's not on a workspace
-                // const p = Physics.pointOnRay(mouseDir, 2);
-                // this._gameView.fileManager.updateFile(this._file.file, {
-                //     tags: {
-                //         _workspace: null,
-                //         _position: {
-                //             x: p.x,
-                //             y: p.y,
-                //             z: p.z
-                //         }
-                //     }
-                // });
             }
         }
     }

@@ -96,11 +96,11 @@ export class FileMesh extends GameObject {
         if (this.file.tags._position && workspace && workspace.file.type === 'workspace') {
             const scale = workspace.file.scale || DEFAULT_WORKSPACE_SCALE;
             console.log(this.file.tags._position);
-            const localPosition = calculateGridTileLocalCenter(
-                this.file.tags._position.x, 
-                this.file.tags._position.y, 
-                this.file.tags._position.z,
-                scale);
+            const localPosition = calculateObjectPosition(
+                this.file,
+                scale
+            );
+            
             this.position.set(
                 localPosition.x,
                 localPosition.y,
@@ -132,4 +132,21 @@ export class FileMesh extends GameObject {
         const label = new Text3D(this._gameView, this, robotoFont, robotoTexturePath);
         return label;
     }
+}
+
+/**
+ * Calculates the position of the file and returns it.
+ * @param file The file.
+ * @param scale The fiel scale. Usually calculated from the workspace scale.
+ */
+export function calculateObjectPosition(file: Object, scale: number) {
+    const localPosition = calculateGridTileLocalCenter(
+        file.tags._position.x, 
+        file.tags._position.y, 
+        file.tags._position.z,
+        scale);
+    const index = file.tags._index || 0;
+    const indexOffset = new Vector3(0, index * scale, 0);
+    localPosition.add(indexOffset);
+    return localPosition;
 }

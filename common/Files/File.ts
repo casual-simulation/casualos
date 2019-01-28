@@ -14,6 +14,7 @@ export interface Object {
         _hidden?: boolean;
         _selection?: string;
         _destroyed?: boolean;
+        _index?: number;
         [key: string]: any;
     };
 }
@@ -60,6 +61,10 @@ export interface PartialFile {
             y?: number;
             z?: number;
         };
+        _hidden?: boolean;
+        _selection?: string;
+        _destroyed?: boolean;
+        _index?: number;
         [key: string]: any;
     },
     grid?: {

@@ -227,6 +227,13 @@ export default class GameView extends Vue {
   }
 
   /**
+   * Gets all of the objects.
+   */
+  getObjects() {
+    return this.getFiles().filter(f => f.file.type === 'object');
+  }
+
+  /**
    * Gets all of the workspaces.
    */
   getWorkspaces() {
@@ -252,29 +259,6 @@ export default class GameView extends Vue {
   private async _fileUpdated(file: File) {
     const obj = this._files[file.id];
     if (obj) {
-  //     obj.file = file;
-  //     if (file.type === 'object') {
-  //       this._updateFile(obj, file);
-  //     } else {
-  //       await this._updateWorkspace(obj, file);
-  //     }
-
-  //     this.onFileUpdated.invoke(obj);
-  //   }
-  // }
-
-  // private _updateFile(obj: File3D, data: Object) {
-
-  //   const file = <FileMesh>obj.mesh;
-  //   file.update(data);
-  // }
-
-  // private async _updateWorkspace(obj: File3D, data: Workspace) {
-  //   const workspaceMesh = <WorkspaceMesh> obj.mesh;
-  //   await workspaceMesh.update(data);
-  // }
-
-  // private async _fileAdded(file: File) {
       obj.updateFile(file);
       this.onFileUpdated.invoke(obj);
     } else {
@@ -290,24 +274,8 @@ export default class GameView extends Vue {
     
     var obj = new File3D(this, file);
 
-    // let obj: File3D;
-    // if (file.type === 'object') {
-    //   obj = this._createFile(file);
-    // } else {
-    //   obj = this._createWorkSurface(file);
-    // }
-
-    // this._files[file.id] = obj;
-    // this._fileIds[obj.mesh.id] = obj.file.id;
-    // this._scene.add(obj.mesh);
-    // obj.mesh.name = `${file.type}_${file.id}`;
     this._files[file.id] = obj;
     this._fileIds[obj.mesh.id] = obj.file.id;
-
-    // if (obj.grid) {
-    //   this._fileIds[obj.grid.group.id] = obj.file.id;
-    //   this._grids.add(obj.grid.group);
-    // }
 
     await this._fileUpdated(file);
     this.onFileAdded.invoke(obj);
