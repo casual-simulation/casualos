@@ -9,10 +9,10 @@
 
           <file-tag :tag="tag"></file-tag>
 
-          <!-- Show X button for tags that don't have values -->
+          <!-- Show X button for tags that don't have values or tags that are hidden -->
           <md-button
             class="remove-tag md-icon-button md-dense"
-            v-if="!tagHasValue(tag)"
+            v-if="!tagHasValue(tag) || isHiddenTag(tag)"
             @click="removeTag(tag)"
           >
             <md-icon>close</md-icon>

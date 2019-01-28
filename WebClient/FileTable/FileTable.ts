@@ -1,10 +1,10 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Provide, Prop, Inject, Watch} from 'vue-property-decorator';
-import { some } from 'lodash';
+import { some, union } from 'lodash';
 import {File, Object} from 'common/Files';
 import { EventBus } from '../EventBus/EventBus';
-import { fileTags } from 'common/Files/FileCalculations';
+import { fileTags, isHiddenTag } from 'common/Files/FileCalculations';
 import { appManager } from '../AppManager';
 
 import FileRow from '../FileRow/FileRow';
@@ -32,6 +32,7 @@ export default class FileTable extends Vue {
      */
     @Prop({}) updateTime: number;
     tags: string[] = [];
+    addedTags: string[] = [];
     lastEditedTag: string = null;
     isMakingNewTag: boolean = false;
     newTag: string = 'myNewTag';
@@ -55,7 +56,12 @@ export default class FileTable extends Vue {
 
     @Watch('files')
     filesChanged() {
-        this.tags = fileTags(this.files, this.tags, this.lastEditedTag ? [this.lastEditedTag, ...this.extraTags] : this.extraTags);
+        const editingTags = this.lastEditedTag ? [this.lastEditedTag] : [];
+        const allExtraTags = union(this.extraTags, this.addedTags, editingTags);
+        this.tags = fileTags(
+            this.files, 
+            this.tags, 
+            allExtraTags);
     }
 
     addTag() {
@@ -72,6 +78,7 @@ export default class FileTable extends Vue {
                 return;
             }
             
+            this.addedTags.push(this.newTag);
             this.tags.push(this.newTag);
         } else {
             this.newTag = 'newTag';
@@ -100,10 +107,18 @@ export default class FileTable extends Vue {
             this.lastEditedTag = null;
             this.tags = fileTags(this.files, this.tags, this.extraTags);
         }
+        const index = this.addedTags.indexOf(tag);
+        if (index >= 0) {
+            this.addedTags.splice(index, 1);
+        }
     }
 
     tagHasValue(tag: string): boolean {
         return some(this.files, f => f.tags[tag]);
+    }
+
+    isHiddenTag(tag: string): boolean {
+        return isHiddenTag(tag);
     }
 
     tagExists(tag: string): boolean {

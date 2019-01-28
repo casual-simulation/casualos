@@ -11,8 +11,20 @@
     padding: 16px;
 }
 
-.info-card {
-    max-width: 66%;
+@media(min-width: 1024px) {
+    .info-card {
+        max-width: 66%;
+    }
+}
+
+@media(max-width: 425px) {
+    .info-card {
+        margin: -16px;
+    }
+
+    .info-card .md-card-content .file-table {
+        margin: 0 -16px;
+    }
 }
 
 .info-card .md-card-content {

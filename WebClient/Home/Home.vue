@@ -7,7 +7,7 @@
             <md-card-content>
               <div v-if="!isLoading">
                 <h4 class="files-header">Files</h4>
-                <file-table :files="files" :updateTime="updateTime"></file-table>
+                <file-table class="files-table" :files="files" :updateTime="updateTime"></file-table>
 
                 <p v-if="!hasFiles">
                   Select a file
@@ -19,6 +19,10 @@
               <md-button @click="close()">Close</md-button>
             </md-card-actions>
           </md-card>
+          <md-button class="md-icon-button" v-if="!isOpen" @click="open">
+            <md-icon>info</md-icon>
+            <span class="sr-only">Open Info Card</span>
+          </md-button>
         </div>
       </game-view>
 

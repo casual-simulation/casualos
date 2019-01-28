@@ -4,7 +4,30 @@
       <div class="game-canvas" ref="gameView"></div>
       <slot></slot>
       <div class="ui-container">
-        <div class="toolbar">
+        <md-speed-dial class="toolbar">
+          <md-speed-dial-target>
+            <md-icon>add</md-icon>
+          </md-speed-dial-target>
+          <md-speed-dial-content>
+            <md-button class="md-icon-button" @click="addNewFile">
+              <cube-icon class="toolbar-button-icon" />
+              <span class="sr-only">New File</span>
+              <md-tooltip md-direction="right">New File</md-tooltip>
+            </md-button>
+            <md-button class="md-icon-button" @click="addNewWorkspace()">
+              <hex-icon class="toolbar-button-icon" />
+              <span class="sr-only">New Workspace</span>
+              <md-tooltip md-direction="right">New Workspace</md-tooltip>
+            </md-button>
+            <md-button class="md-icon-button" @click="toggleDebug()" v-if="dev">
+              <md-icon>bug_report</md-icon>
+              <span class="sr-only">Debug</span>
+              <md-tooltip md-direction="right">Debug</md-tooltip>
+            </md-button>
+          </md-speed-dial-content>
+        </md-speed-dial>
+
+        <!-- <div class="toolbar">
           <div class="toolbar-layout">
             <strong class="toolbar-label">Tools</strong>
             <div class="divider"></div>
@@ -17,11 +40,9 @@
               <span>New Workspace</span>
             </md-button>
             <div class="divider" v-if="dev"></div>
-            <md-button class="toolbar-button" @click="toggleDebug()" v-if="dev">
-              <span>Debug</span>
-            </md-button>
+            
           </div>
-        </div>
+        </div> -->
         <md-card class="debug-card" v-if="debug">
             <md-card-content>
               <h4>Debug Info</h4>

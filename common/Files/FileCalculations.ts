@@ -74,13 +74,21 @@ export function fileTags(files: File[], currentTags: string[], extraTags: string
         return [];
     });
     // Only keep tags that don't start with an underscore (_)
-    const nonHiddenTags = fileTags.filter(t => !(/^_/.test(t)))
+    const nonHiddenTags = fileTags.filter(t => !isHiddenTag(t));
     const tagsToKeep = union(nonHiddenTags, extraTags);
     const allTags = union(currentTags, tagsToKeep);
 
     const onlyTagsToKeep = intersection(allTags, tagsToKeep);
 
     return onlyTagsToKeep;
+}
+
+/**
+ * Determines if the given tag is a hidden tag.
+ * @param tag The tag to test.
+ */
+export function isHiddenTag(tag: string): boolean {
+    return (/^_/.test(tag));
 }
 
 export function calculateFileValue(context: FileCalculationContext, object: Object, tag: string) {

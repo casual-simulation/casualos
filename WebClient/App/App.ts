@@ -168,11 +168,6 @@ export default class App extends Vue {
         }
     }
 
-    openInfoCard() {
-        EventBus.$emit('openInfoCard');
-        this.showNavigation = false;
-    }
-
     getUser(): User {
         return appManager.user;
     }
