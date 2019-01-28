@@ -22,6 +22,7 @@ import {
 import { Workspace, Object, File } from './File';
 import { values, assign, merge } from 'lodash';
 import uuid from 'uuid/v4';
+import { objectsAtGridPosition } from './FileCalculations';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -1427,6 +1428,84 @@ describe('FilesChannel', () => {
                     },
                 }
             })
+        });
+
+        describe('objectsAtGridPosition', () => {
+            it('should return objects that are at the same grid position and workspace', () => {
+                const objs: Object[] = [
+                    {
+                        id: 'test',
+                        type: 'object',
+                        tags: {
+                            _position: {
+                                x: 0,
+                                y: 0,
+                                z: 1
+                            },
+                            _workspace: 'abc',
+                        },
+                    },
+                    {
+                        id: 'test2',
+                        type: 'object',
+                        tags: {
+                            _position: {
+                                x: 0,
+                                y: 0,
+                                z: 0
+                            },
+                            _workspace: 'abc',
+                        },
+                    },
+                    {
+                        id: 'test3',
+                        type: 'object',
+                        tags: {
+                            _position: {
+                                x: 1,
+                                y: 0,
+                                z: 0
+                            },
+                            _workspace: 'abc',
+                        },
+                    },
+                    {
+                        id: 'test4',
+                        type: 'object',
+                        tags: {
+                            _position: {
+                                x: 0,
+                                y: 1,
+                                z: 0
+                            },
+                            _workspace: 'abc',
+                        },
+                    },
+                    {
+                        id: 'test5',
+                        type: 'object',
+                        tags: {
+                            _position: {
+                                x: 0,
+                                y: 0,
+                                z: 0
+                            },
+                            _workspace: 'def',
+                        },
+                    }
+                ];
+
+                const matching = objectsAtGridPosition(objs, 'abc', {
+                    x: 0,
+                    y: 0,
+                    z: 10
+                });
+
+                expect(matching).toEqual([
+                    objs[0],
+                    objs[1]
+                ]);
+            });
         });
     });
 });
