@@ -1,13 +1,13 @@
 <!-- App.vue -->
 <template>
   <div>
-      <game-view class="game-view" @onContextMenu="handleContextMenu">
+      <game-view class="game-view" @onContextMenu="handleContextMenu" :debug="debug">
         <div class="ui-container">
           <md-card class="info-card" v-if="isOpen">
             <md-card-content>
               <div v-if="!isLoading">
                 <h4 class="files-header">Files</h4>
-                <file-table :files="files"></file-table>
+                <file-table :files="files" :updateTime="updateTime"></file-table>
 
                 <p v-if="!hasFiles">
                   Select a file
@@ -19,21 +19,6 @@
               <md-button @click="close()">Close</md-button>
             </md-card-actions>
           </md-card>
-
-          <div class="toolbar">
-            <div class="toolbar-layout">
-              <strong class="toolbar-label">Tools</strong>
-              <div class="divider"></div>
-              <md-button class="toolbar-button" @click="addNewFile()">
-                <cube-icon class="toolbar-button-icon" />
-                <span>New File</span>
-              </md-button>
-              <div class="divider"></div>
-              <md-button class="toolbar-button" @click="addNewWorkspace()">
-                <span>New Workspace</span>
-              </md-button>
-            </div>
-          </div>
         </div>
       </game-view>
 

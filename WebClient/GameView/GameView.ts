@@ -17,16 +17,17 @@ import {
   SphereBufferGeometry,
   GLTFLoader,
   HemisphereLight,
+  Vector2,
 } from 'three';
 import 'three-examples/loaders/GLTFLoader';
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Inject } from 'vue-property-decorator';
+import { Inject, Prop, Watch } from 'vue-property-decorator';
 import {
   SubscriptionLike,
 } from 'rxjs';
 
-import { File, Object, Workspace } from 'common/Files';
+import { File, Object, Workspace, DEFAULT_WORKSPACE_HEIGHT_INCREMENT } from 'common/Files';
 import { time } from '../game-engine/Time';
 import { Input } from '../game-engine/input';
 import { File3D } from '../game-engine/File3D';
@@ -36,11 +37,19 @@ import groundModelPath from '../public/models/ground.gltf';
 import { appManager } from '../AppManager';
 import { InteractionManager } from '../interaction/InteractionManager';
 import { ArgEvent } from '../../common/Events';
+import { WorkspaceMesh, WorkspaceMeshDebugInfo } from '../game-engine/WorkspaceMesh';
+import { GridChecker } from '../game-engine/grid/GridChecker';
+import { FileMesh } from '../game-engine/FileMesh';
+import { values, flatMap } from 'lodash';
+import CubeIcon from './Cube.svg';
 
 @Component({
+  components: {
+    'cube-icon': CubeIcon,
+  }
 })
 export default class GameView extends Vue {
-
+  private _debug: boolean;
   private _scene: Scene;
   private _camera: PerspectiveCamera;
   private _renderer: Renderer;
@@ -51,10 +60,10 @@ export default class GameView extends Vue {
 
   private _workspacePlane: Mesh;
   private _skydome: Mesh;
-  private _grids: Group;
   private _canvas: HTMLElement;
   private _input: Input;
   private _interaction: InteractionManager;
+  private _gridChecker: GridChecker;
 
   public onFileAdded: ArgEvent<File3D> = new ArgEvent<File3D>();
   public onFileUpdated: ArgEvent<File3D> = new ArgEvent<File3D>();
@@ -76,22 +85,87 @@ export default class GameView extends Vue {
 
   private _subs: SubscriptionLike[];
 
+  debug: boolean = false;
+  debugInfo: GameViewDebugInfo = null;
+
+  @Watch('debug')
+  debugChanged(val: boolean, previous: boolean) {
+    this.showDebugInfo(val);
+    this.updateDebugInfo();
+  }
+
+  updateDebugInfo() {
+    this.getFiles().forEach(f => f.mesh.update());
+    this.debugInfo = {
+      workspaces: this.getWorkspaces().map(w => (<WorkspaceMesh>w.mesh).getDebugInfo())
+    };
+  }
+
   get gameView(): HTMLElement { return <HTMLElement>this.$refs.gameView; }
   get input(): Input { return this._input; }
   get interactionManager(): InteractionManager { return this._interaction; }
   get camera(): PerspectiveCamera { return this._camera; }
-  get grids(): Group { return this._grids; }
   get workspacePlane(): Mesh { return this._workspacePlane; }
   get scene(): Scene { return this._scene; }
+  get dev() { return !PRODUCTION; }
+
+  get gridChecker() { return this._gridChecker; }
 
   get fileManager() {
     return appManager.fileManager;
+  }
+
+  constructor() {
+    super();
+  }
+
+  addNewFile() {
+    const workspace = this.getWorkspaces()[0];
+    let tags: Object['tags'] = undefined;
+    if(workspace) {
+      // Find a valid point to place a cube on.
+      const mesh =<WorkspaceMesh>workspace.mesh;
+      const validPoints = flatMap(mesh.squareGrids, g => ({ tiles: g.level.tiles.filter(t => t.valid), level: g.level }))
+        .filter(g => g.tiles.length > 0)
+        .map(g => ({
+          pos: g.tiles[0].gridPosition,
+          height: g.level.tileHeight
+        }));
+      const firstValidPoint = validPoints[0];
+      if (firstValidPoint) {
+        tags = {
+          _position: { x: firstValidPoint.pos.x, y: firstValidPoint.pos.y, z: firstValidPoint.height },
+          _workspace: workspace.file.id
+        };
+      } else {
+        // the first workspace doesn't have a valid point, just place the cube in space.
+      }
+    }
+    this.fileManager.createFile(undefined, tags);
+  }
+
+  addNewWorkspace() {
+    // TODO: Make the user have to drag a workspace onto the world
+    // instead of just clicking a button and a workspace being placed somewhere.
+    this.fileManager.createWorkspace();
+  }
+
+  toggleDebug() {
+    this.debug = !this.debug;
+  }
+
+  setGridsVisible(visible: boolean) {
+    this.getWorkspaces().forEach(workspace => {
+      const mesh = <WorkspaceMesh>workspace.mesh;
+      mesh.gridsVisible = visible;
+    });
   }
 
   async mounted() {
 
     time.init();
 
+    this.debugInfo = null;
     this._files = {};
     this._fileIds = {};
     this._subs = [];
@@ -99,6 +173,7 @@ export default class GameView extends Vue {
     this._input = new Input();
     this._input.init(this.gameView);
     this._interaction = new InteractionManager(this);
+    this._gridChecker = new GridChecker(DEFAULT_WORKSPACE_HEIGHT_INCREMENT);
 
     // Subscriptions to file events.
     this._subs.push(this.fileManager.fileDiscovered.subscribe(file => {
@@ -107,8 +182,8 @@ export default class GameView extends Vue {
     this._subs.push(this.fileManager.fileRemoved.subscribe(file => {
       this._fileRemoved(file);
     }));
-    this._subs.push(this.fileManager.fileUpdated.subscribe(file => {
-      this._fileUpdated(file);
+    this._subs.push(this.fileManager.fileUpdated.subscribe(async file => {
+      await this._fileUpdated(file);
     }));
 
     this._frameUpdate();
@@ -149,7 +224,44 @@ export default class GameView extends Vue {
     return this._files[fileId];
   }
 
-  private _fileUpdated(file: File) {
+  /**
+   * Gets all of the files.
+   */
+  getFiles() {
+    return values(this._files);
+  }
+
+  /**
+   * Gets all of the objects.
+   */
+  getObjects() {
+    return this.getFiles().filter(f => f.file.type === 'object');
+  }
+
+  /**
+   * Gets all of the workspaces.
+   */
+  getWorkspaces() {
+    return this.getFiles().filter(f => f.file.type === 'workspace');
+  }
+
+  /**
+   * Toggles whether debug information is shown.
+   */
+  toggleDebugInfo() {
+    this.showDebugInfo(!this._debug);
+  }
+
+  /**
+   * Sets whether to show debug information.
+   * @param debug Whether to show debug info.
+   */
+  showDebugInfo(debug: boolean) {
+    this._debug = debug;
+    this.getFiles().forEach(w => w.mesh.showDebugInfo(debug));
+  }
+
+  private async _fileUpdated(file: File) {
     const obj = this._files[file.id];
     if (obj) {
       obj.updateFile(file);
@@ -159,9 +271,8 @@ export default class GameView extends Vue {
     }
   }
 
-  private _fileAdded(file: File) {
+  private async _fileAdded(file: File) {
     console.log("File Added!");
-
     if (file.type === 'object' && file.tags._hidden) {
       return;
     }
@@ -171,14 +282,8 @@ export default class GameView extends Vue {
     this._files[file.id] = obj;
     this._fileIds[obj.mesh.id] = obj.file.id;
 
-    if (obj.grid) {
-      this._fileIds[obj.grid.group.id] = obj.file.id;
-      this._grids.add(obj.grid.group);
-    }
-
+    await this._fileUpdated(file);
     this.onFileAdded.invoke(obj);
-
-    this._fileUpdated(file);
   }
 
   private _fileRemoved(id: string) {
@@ -198,11 +303,6 @@ export default class GameView extends Vue {
     this._scene.background = new Color(0xCCE6FF);
 
     this._setupRenderer();
-
-    // Grid group.
-    this._grids = new Group();
-    this._grids.visible = false;
-    this._scene.add(this._grids);
 
     // User's camera
     this._camera = new PerspectiveCamera(
@@ -296,3 +396,10 @@ export default class GameView extends Vue {
     this.gameView.appendChild(this._canvas);
   }
 };
+
+/**
+ * Defines an interface for debug info that the game view has.
+ */
+export interface GameViewDebugInfo {
+  workspaces: WorkspaceMeshDebugInfo[];
+}

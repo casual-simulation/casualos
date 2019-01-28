@@ -299,6 +299,15 @@ export class FileManager {
   }
 
   /**
+   * Removes the given file.
+   * @param file The file to remove.
+   */
+  async removeFile(file: File) {
+    console.log('[FileManager] Remove File', file.id);
+    this._files.emit(fileRemoved(file.id));
+  }
+
+  /**
    * Updates the given file with the given data.
    */
   async updateFile(file: File, newData: PartialFile) {

@@ -26,6 +26,11 @@ export default class FileTable extends Vue {
     @Prop() files: Object[];
     @Prop({ default: (() => <any>[]) }) extraTags: string[];
     @Prop({ default: false }) readOnly: boolean;
+
+    /**
+     * A property that can be set to indicate to the table that its values should be updated.
+     */
+    @Prop({}) updateTime: number;
     tags: string[] = [];
     lastEditedTag: string = null;
     isMakingNewTag: boolean = false;

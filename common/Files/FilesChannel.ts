@@ -1,4 +1,4 @@
-import {filter, values, union, keys, isEqual, transform, mergeWith, set, unset, get} from 'lodash';
+import {filter, values, union, keys, isEqual, transform, set, mergeWith, unset, get} from 'lodash';
 import {
     map as rxMap,
     flatMap as rxFlatMap,
@@ -8,6 +8,7 @@ import {
 import { ReducingStateStore, Event, ChannelConnection } from "../channels-core";
 import {File, Object, Workspace, PartialFile} from './File';
 import { tagsMatchingFilter, createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject } from './FileCalculations';
+import { merge as mergeObj } from '../utils';
 
 export const first = Symbol('ours');
 export const second = Symbol('second');
@@ -224,9 +225,9 @@ export interface DiffOptions {
  * @param second The second object.
  */
 export function objDiff(firstId: symbol | string, first: any, secondId: symbol | string, second: any, options?: DiffOptions) {
-    const opts = mergeWith({
+    const opts = mergeObj({
         fullDiff: true
-    }, options || {}, copyArrays);
+    }, options || {});
 
     if (first !== second && second === null && !opts.fullDiff) {
         return null;
@@ -298,7 +299,7 @@ export function mergeFiles<T>(base: T, parent1: T, parent2: T, options?: any): M
  */
 export function resolveConflicts<T>(merge: MergedObject<T>, resolved: ResolvedConflict[]): MergedObject<T> {
     let obj = {};
-    let conflicts = mergeWith({}, merge.conflicts, copyArrays);
+    let conflicts = mergeObj({}, merge.conflicts);
     resolved.forEach(r => {
         set(obj, r.details.path, r.value);
         unset(conflicts, r.details.path);
@@ -317,11 +318,11 @@ export function resolveConflicts<T>(merge: MergedObject<T>, resolved: ResolvedCo
     });
 
     const conflictsLeft = keys(conflicts);
-    return mergeWith({}, merge, {
+    return mergeObj({}, merge, {
         success: conflictsLeft.length <= 0,
         conflicts: conflictsLeft.length <= 0 ? null : conflicts,
         final: obj
-    }, copyArrays);
+    });
 }
 
 export function listMergeConflicts<T>(merge: MergedObject<T>): ConflictDetails[] {
@@ -512,9 +513,9 @@ export function calculateActionEvents(state: FilesState, action: Action): FileEv
  * @param event 
  */
 function fileAddedReducer(state: FilesState, event: FileAddedEvent) {
-    return mergeWith({}, state, {
+    return mergeObj({}, state, {
         [event.id]: event.file
-    }, copyArrays);
+    });
 }
 
 /**
@@ -533,9 +534,9 @@ function fileRemovedReducer(state: FilesState, event: FileRemovedEvent) {
  * @param event 
  */
 function fileUpdatedReducer(state: FilesState, event: FileUpdatedEvent) {
-    const newData = mergeWith({}, state, {
+    const newData = mergeObj({}, state, {
         [event.id]: event.update
-    }, copyArrays);
+    });
 
     for(let property in newData[event.id].tags) {
         let value = newData[event.id].tags[property];
