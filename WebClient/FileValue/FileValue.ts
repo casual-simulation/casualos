@@ -18,12 +18,18 @@ import { appManager } from '../AppManager';
             const _this: FileRow = this;
             _this._updateValue();
         },
+        updateTime: function() {
+            const _this: FileRow = this;
+            _this._updateValue();
+        }
     }
 })
 export default class FileRow extends Vue {
     @Prop() file: Object;
     @Prop() tag: string;
     @Prop() readOnly: boolean;
+    @Prop() updateTime: number;
+
     value: string = '';
     isFocused: boolean = false;
     isFormula: boolean = false;

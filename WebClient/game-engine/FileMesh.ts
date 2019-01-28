@@ -1,5 +1,5 @@
 import { Object3D, Mesh, BoxBufferGeometry, MeshStandardMaterial, Color, Vector3 } from "three";
-import { Object, File, DEFAULT_WORKSPACE_SCALE } from 'common/Files';
+import { Object, File, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_GRID_SCALE } from 'common/Files';
 import { GameObject } from "./GameObject";
 import GameView from '../GameView/GameView';
 import { calculateGridTileLocalCenter } from "./grid/Grid";
@@ -7,6 +7,7 @@ import { WorkspaceMesh } from "./WorkspaceMesh";
 import { Text3D } from "./Text3D";
 import robotoFont from '../public/bmfonts/Roboto.json';
 import robotoTexturePath from '../public/bmfonts/Roboto.png';
+import { File3D } from "./File3D";
 
 /**
  * Defines a class that represents a mesh for an "object" file.
@@ -62,9 +63,9 @@ export class FileMesh extends GameObject {
         // visible if not destroyed, has a position, and not hidden
         this.visible = (!this.file.tags._destroyed && !!this.file.tags._position && !this.file.tags._hidden);
         const workspace = this._gameView.getFile(this.file.tags._workspace);
+        const scale = this._calculateScale(workspace);
         if (workspace && workspace.file.type === 'workspace') {
             this.parent = workspace.mesh;
-            const scale = workspace.file.scale || DEFAULT_WORKSPACE_SCALE;
             this.cube.scale.set(scale, scale, scale);
             this.cube.position.set(0, scale / 2, 0);
         } else {
@@ -96,8 +97,6 @@ export class FileMesh extends GameObject {
 
         // Tag: _position
         if (this.file.tags._position && workspace && workspace.file.type === 'workspace') {
-            const scale = workspace.file.scale || DEFAULT_WORKSPACE_SCALE;
-            console.log(this.file.tags._position);
             const localPosition = calculateObjectPosition(
                 this.file,
                 scale
@@ -110,6 +109,16 @@ export class FileMesh extends GameObject {
         } else {
             // Default position
             this.position.set(0, 1, 0);
+        }
+    }
+
+    private _calculateScale(workspace: File3D) {
+        if(workspace && workspace.file.type === 'workspace') {
+            const scale = workspace.file.scale || DEFAULT_WORKSPACE_SCALE;
+            const gridScale = workspace.file.gridScale || DEFAULT_WORKSPACE_GRID_SCALE;
+            return scale * gridScale;
+        } else {
+            return DEFAULT_WORKSPACE_SCALE * DEFAULT_WORKSPACE_GRID_SCALE;
         }
     }
 

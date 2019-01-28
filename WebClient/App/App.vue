@@ -19,10 +19,6 @@
                         <md-icon>home</md-icon>
                         <span class="md-list-item-text">Home</span>
                     </router-link>
-                    <router-link tag="md-list-item" to="/TestHexes">
-                        <md-icon>home</md-icon>
-                        <span class="md-list-item-text">Test</span>
-                    </router-link>
                     <md-list-item @click="openInfoCard" v-if="getUser() != null">
                         <md-icon>info</md-icon>
                         <span class="md-list-item-text">Info Card</span>

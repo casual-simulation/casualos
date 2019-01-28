@@ -12,6 +12,7 @@ import { FileMesh } from '../game-engine/FileMesh';
 import { Axial, realPosToGridPos, gridDistance, keyToPos, posToKey } from '../game-engine/hex';
 import { MouseButtonId } from '../game-engine/input';
 import { isBuffer } from 'util';
+import { objectsAtGridPosition } from 'common/Files/FileCalculations';
 
 export class InteractionManager {
 
@@ -315,12 +316,11 @@ export class InteractionManager {
      * @param gridPosition The grid position that the files should be retrieved for.
      */
     public objectsAtGridPosition(workspace: File3D, gridPosition: Vector2) {
-        return this._gameView.getObjects().filter(o => {
-            return o.file.type === 'object' && 
-                o.file.tags._workspace === workspace.file.id &&
-                o.file.tags._position.x === gridPosition.x &&
-                o.file.tags._position.y === gridPosition.y
-        }).map(o => <Object>o.file);
+        return objectsAtGridPosition(this._gameView.getObjects().map(o => <Object>o.file), workspace.file.id, {
+            x: gridPosition.x,
+            y: gridPosition.y,
+            z: 0
+        });
     }
 
     // TODO: Need to reimplement combine action with new input system.

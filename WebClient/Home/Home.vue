@@ -7,7 +7,7 @@
             <md-card-content>
               <div v-if="!isLoading">
                 <h4 class="files-header">Files</h4>
-                <file-table :files="files"></file-table>
+                <file-table :files="files" :updateTime="updateTime"></file-table>
 
                 <p v-if="!hasFiles">
                   Select a file

@@ -41,8 +41,13 @@ import { WorkspaceMesh, WorkspaceMeshDebugInfo } from '../game-engine/WorkspaceM
 import { GridChecker } from '../game-engine/grid/GridChecker';
 import { FileMesh } from '../game-engine/FileMesh';
 import { values, flatMap } from 'lodash';
+import CubeIcon from './Cube.svg';
 
-@Component({})
+@Component({
+  components: {
+    'cube-icon': CubeIcon,
+  }
+})
 export default class GameView extends Vue {
   private _debug: boolean;
   private _scene: Scene;

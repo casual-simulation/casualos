@@ -5,18 +5,14 @@ import { Object} from 'common/Files';
 import GameView from '../GameView/GameView';
 import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';
-import { FileManager } from '../FileManager';
-import {uniq} from 'lodash';
-import CubeIcon from './Cube.svg';
 import FileTable from '../FileTable/FileTable';
 import { ContextMenuEvent } from '../interaction/ContextMenu';
 import { SubscriptionLike } from 'rxjs';
-import { fileTags } from 'common/Files/FileCalculations';
+import { cloneDeep } from 'lodash';
 
 @Component({
     components: {
         'game-view': GameView,
-        'cube-icon': CubeIcon,
         'file-table': FileTable
     }
 })
@@ -35,6 +31,7 @@ export default class Home extends Vue {
     status: string = '';
     files: Object[] = [];
     tags: string[] = [];
+    updateTime: number = -1;
 
     isLoading: boolean = false;
     progress: number = 0;
@@ -93,11 +90,13 @@ export default class Home extends Vue {
         this._subs = [];
         this.files = [];
         this.tags = [];
+        this.updateTime = -1;
 
         this._subs.push(this.fileManager.selectedFilesUpdated.subscribe(event => {
             this.files = event.files;
             const editorOpenTime = this.fileManager.userFile.tags._editorOpenTime;
             const now = Date.now();
+            this.updateTime = now;
 
             // TODO: Fix to support different time zones
             // (like if the user is using two PCs but with different time zones set)

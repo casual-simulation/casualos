@@ -15,6 +15,7 @@ export default class FileRow extends Vue {
     @Prop() file: Object;
     @Prop() tags: string[];
     @Prop({ default: false }) readOnly: boolean;
+    @Prop({}) updateTime: number;
 
     get fileManager() {
         return appManager.fileManager;

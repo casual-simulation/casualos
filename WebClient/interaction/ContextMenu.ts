@@ -1,8 +1,4 @@
-import { Ray, Vector3, Vector2, Intersection, Mesh, Group } from "three";
-import { vg } from "von-grid";
-import { File, Workspace } from 'common/Files';
-import { Physics } from '../game-engine/Physics';
-import { File3D } from "../game-engine/File3D";
+import { Vector2 } from "three";
 
 /**
  * Defines an interface that represents the action of showing/hiding a context menu.

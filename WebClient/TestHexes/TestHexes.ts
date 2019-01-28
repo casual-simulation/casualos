@@ -53,8 +53,6 @@ import {
 
 import { File, Object, Workspace } from 'common/Files';
 
-import { vg } from "von-grid";
-
 import skyTextureUrl from '../public/images/CGSkies_0132_free.jpg';
 import groundModelUrl from '../public/models/ground.gltf';
 import { appManager } from '../AppManager';
@@ -245,6 +243,7 @@ export default class GameView extends Vue {
         },
       },
       scale: 0.5,
+      gridScale: .2,
       defaultHeight: 0.1
     };
     const workspaceMesh = new WorkspaceMesh();
