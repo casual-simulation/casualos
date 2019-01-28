@@ -8,7 +8,9 @@ import {
     tagsMatchingFilter,
     calculateFileValue,
     parseFilterTag,
-    validateTag
+    validateTag,
+    fileTags,
+    isHiddenTag
 } from './FileCalculations';
 import {
     cloneDeep
@@ -439,6 +441,224 @@ describe('FileCalculations', () => {
             expect(errors).toEqual({
                 valid: true
             });
+        });
+    });
+
+    describe('isHiddenTag()', () => {
+        it('should be true for tags that start with underscores', () => {
+            expect(isHiddenTag('_')).toBe(true);
+            expect(isHiddenTag('__')).toBe(true);
+            expect(isHiddenTag('_abc')).toBe(true);
+            expect(isHiddenTag('_position')).toBe(true);
+            expect(isHiddenTag('_workspace')).toBe(true);
+            expect(isHiddenTag('_ test')).toBe(true);
+            expect(isHiddenTag('_+abc')).toBe(true);
+
+            expect(isHiddenTag('lalala_')).toBe(false);
+            expect(isHiddenTag('a_')).toBe(false);
+            expect(isHiddenTag('in_middle')).toBe(false);
+            expect(isHiddenTag(' _underscored')).toBe(false);
+            expect(isHiddenTag('+tag')).toBe(false);
+        });
+    });
+
+    describe('fileTags()', () => {
+        it('should return the list of tags that the files have minus ones that start with underscores', () => {
+            const files: File[] = [
+                {
+                    type: 'object',
+                    id: 'test',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc'
+                    }
+                },
+                {
+                    type: 'object',
+                    id: 'test2',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        tag: 'hello'
+                    }
+                },
+                {
+                    type: 'object',
+                    id: 'test3',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        tag: 'again'
+                    }
+                },
+                {
+                    type: 'object',
+                    id: 'test4',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        other: 'tag'
+                    }
+                }
+            ];
+
+            const tags = fileTags(files, [], []);
+
+            expect(tags).toEqual([
+                'tag',
+                'other'
+            ]);
+        });
+
+        it('should preserve the order of the current tags', () => {
+            const files: File[] = [
+                {
+                    type: 'object',
+                    id: 'test',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc'
+                    }
+                },
+                {
+                    type: 'object',
+                    id: 'test2',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        tag: 'hello'
+                    }
+                },
+                {
+                    type: 'object',
+                    id: 'test3',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        tag: 'again'
+                    }
+                },
+                {
+                    type: 'object',
+                    id: 'test4',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        other: 'tag'
+                    }
+                }
+            ];
+
+            const tags = fileTags(files, [
+                'other',
+                'tag'
+            ], []);
+
+            expect(tags).toEqual([
+                'other',
+                'tag'
+            ]);
+        });
+
+        it('should include the given extra tags', () => {
+            const files: File[] = [
+                {
+                    type: 'object',
+                    id: 'test',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc'
+                    }
+                },
+                {
+                    type: 'object',
+                    id: 'test2',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        tag: 'hello'
+                    }
+                },
+                {
+                    type: 'object',
+                    id: 'test3',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        tag: 'again'
+                    }
+                },
+                {
+                    type: 'object',
+                    id: 'test4',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        other: 'tag'
+                    }
+                }
+            ];
+
+            const tags = fileTags(files, [], [
+                'abc',
+                '_position'
+            ]);
+
+            expect(tags).toEqual([
+                'tag',
+                'other',
+                'abc',
+                '_position'
+            ]);
+        });
+
+        it('should not include extra tags that are given in the currrentTags array', () => {
+            const files: File[] = [
+                {
+                    type: 'object',
+                    id: 'test',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc'
+                    }
+                },
+                {
+                    type: 'object',
+                    id: 'test2',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        tag: 'hello'
+                    }
+                },
+                {
+                    type: 'object',
+                    id: 'test3',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        tag: 'again'
+                    }
+                },
+                {
+                    type: 'object',
+                    id: 'test4',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        other: 'tag'
+                    }
+                }
+            ];
+
+            const tags = fileTags(files, [
+                'notIncluded'
+            ], []);
+
+            expect(tags).toEqual([
+                'tag',
+                'other'
+            ]);
         });
     });
 });
