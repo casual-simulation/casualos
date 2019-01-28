@@ -19,6 +19,10 @@
               <md-button @click="close()">Close</md-button>
             </md-card-actions>
           </md-card>
+          <md-button class="md-icon-button" v-if="!isOpen" @click="open">
+            <md-icon>info</md-icon>
+            <span class="sr-only">Open Info Card</span>
+          </md-button>
         </div>
       </game-view>
 

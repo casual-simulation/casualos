@@ -84,7 +84,6 @@ export default class Home extends Vue {
     async created() {
         this.isLoading = true;
 
-        EventBus.$on('openInfoCard', this.open);
         this.open();
 
         this._subs = [];
