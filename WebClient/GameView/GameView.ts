@@ -55,6 +55,7 @@ export default class GameView extends Vue {
   private _scene: Scene;
   private _camera: PerspectiveCamera;
   private _renderer: Renderer;
+  private __resizeListener: any;
 
   private _sun: DirectionalLight;
   private _ambient: AmbientLight;
@@ -164,7 +165,11 @@ export default class GameView extends Vue {
   }
 
   async mounted() {
-
+    this.__resizeListener = () => {
+      this._resizeRenderer();
+      this._resizeCamera();
+    };
+    window.addEventListener('resize', this.__resizeListener);
     time.init();
 
     this.debugInfo = null;
@@ -192,6 +197,7 @@ export default class GameView extends Vue {
   }
 
   beforeDestroy() {
+    window.removeEventListener('resize', this.__resizeListener);
     this._input.terminate();
 
     if (this._subs) {
@@ -314,6 +320,8 @@ export default class GameView extends Vue {
     this._camera.rotation.x = ThreeMath.degToRad(-30);
     this._camera.updateMatrixWorld(false);
 
+    this._resizeCamera();
+
     // Ambient light.
     this._ambient = new AmbientLight(0xffffff, 0.8);
     this._scene.add(this._ambient);
@@ -387,15 +395,32 @@ export default class GameView extends Vue {
     webGlRenderer.shadowMap.enabled = true;
     webGlRenderer.shadowMap.type = PCFSoftShadowMap;
 
-    // TODO: Call each time the screen size changes
-    const container: HTMLElement = <HTMLElement>this.$refs.container;
-    const width = window.innerWidth;
-    const height = window.innerHeight - container.getBoundingClientRect().top;
-    this._renderer.setSize(width, height);
-    container.style.height = this._renderer.domElement.style.height;
-
+    this._resizeRenderer();
     this._canvas = this._renderer.domElement;
     this.gameView.appendChild(this._canvas);
+  }
+
+  private _resizeRenderer() {
+    // TODO: Call each time the screen size changes
+    const { width, height } = this._calculateSize();
+    this._renderer.setSize(width, height);
+    this._container.style.height = this._renderer.domElement.style.height;
+  }
+
+  private _resizeCamera() {
+    const { width, height } = this._calculateSize();
+    this._camera.aspect = width / height;
+    this._camera.updateProjectionMatrix();
+  }
+
+  private _calculateSize() {
+    const width = window.innerWidth;
+    const height = window.innerHeight - this._container.getBoundingClientRect().top;
+    return { width, height };
+  }
+
+  private get _container() {
+    return <HTMLElement>this.$refs.container;
   }
 };
 
