@@ -14,7 +14,6 @@ import {
 
 import { File, Object, Workspace } from '../../common/Files'
 import { Text3D } from './Text3D';
-import { vg } from "von-grid";
 
 // Assets
 import robotoFont from '../public/bmfonts/Roboto.json';
