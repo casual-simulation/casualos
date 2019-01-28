@@ -387,7 +387,7 @@ export class CameraControls {
                     angle = Math.acos(ThreeMath.clamp(angle, -1, 1));
 
                     var cross = this.rotateStart.x * this.rotateEnd.y - this.rotateStart.y * this.rotateEnd.x;
-                    if (cross < 0) angle = -angle;
+                    if (cross >= 0) angle = -angle;
 
                     this.rotateLeft(angle);
                     this.rotateStart.copy(this.rotateEnd);
