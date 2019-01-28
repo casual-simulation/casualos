@@ -95,7 +95,6 @@ export class FileMesh extends GameObject {
         // Tag: _position
         if (this.file.tags._position && workspace && workspace.file.type === 'workspace') {
             const scale = workspace.file.scale || DEFAULT_WORKSPACE_SCALE;
-            console.log(this.file.tags._position);
             const localPosition = calculateObjectPosition(
                 this.file,
                 scale
