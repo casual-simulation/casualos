@@ -48,7 +48,7 @@ export function filterFilesBySelection(files: Object[], selectionId: string) {
             for(let prop in f.tags) {
                 const val = f.tags[prop];
                 if (prop === selectionId && val) {
-                return true;
+                    return true;
                 }
             }
             return false;

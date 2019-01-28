@@ -12,6 +12,7 @@
         :readOnly="readOnly"
         :file="file" 
         :tag="tag" 
+        :updateTime="updateTime"
         @tagChanged="onTagChanged"
         @focusChanged="tagFocusChanged(file, tag, $event)"></file-value>
     </td>

@@ -44,6 +44,7 @@
         :file="file"
         :tags="tags"
         :readOnly="readOnly"
+        :updateTime="updateTime"
         @tagChanged="onTagChanged"
         @tagFocusChanged="onTagFocusChanged"
       ></file-row>
