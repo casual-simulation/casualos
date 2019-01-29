@@ -6,7 +6,9 @@
                 <md-button class="md-icon-button" @click="menuClicked()">
                     <md-icon>menu</md-icon>
                 </md-button>
-                <router-link to="/" class="md-title">File Simulator</router-link>
+                <router-link to="/" class="md-title">
+                    File Simulator <span class="session-id">{{session}}</span>
+                </router-link>
             </md-toolbar>
 
              <md-drawer :md-active.sync="showNavigation">
