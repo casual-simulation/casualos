@@ -93,6 +93,8 @@ export class Text3D {
             map: texture,
             side: DoubleSide,
             transparent: true,
+            depthTest: false,
+            depthWrite: false,
             color: new Color(0, 0, 0)
         }));
 
