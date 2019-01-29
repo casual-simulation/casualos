@@ -7,7 +7,7 @@
                     <md-icon>menu</md-icon>
                 </md-button>
                 <router-link to="/" class="md-title">
-                    File Simulator <span class="session-id">{{session}}</span>
+                    File Simulator <span v-show="session" class="session-id">{{session}}</span>
                 </router-link>
             </md-toolbar>
 
