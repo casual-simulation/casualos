@@ -6,7 +6,10 @@ import {appManager} from '../AppManager';
 @Component
 export default class Welcome extends Vue {
     email: string = '';
-    channelId: string = '';
+    
+    get channelId() {
+        return this.$route.query.id || '';
+    }
 
     async createUser() {
         console.log('[Welcome] Email submitted: ' + this.email);
