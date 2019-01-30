@@ -1,4 +1,4 @@
-import { Object3D, Mesh, BoxBufferGeometry, MeshStandardMaterial, Color, Vector3 } from "three";
+import { Object3D, Mesh, BoxBufferGeometry, MeshStandardMaterial, Color, Vector3, Box3, Sphere, BoxHelper, SphereGeometry, MeshBasicMaterial, MeshLambertMaterial } from "three";
 import { Object, File, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_GRID_SCALE } from 'common/Files';
 import { GameObject } from "./GameObject";
 import GameView from '../GameView/GameView';
@@ -48,6 +48,17 @@ export class FileMesh extends GameObject {
     constructor(gameView: GameView) {
         super();
         this._gameView = gameView;
+    }
+
+    get boundingBox(): Box3 {
+        return new Box3().setFromObject(this.cube);
+    }
+
+    get boundingSphere(): Sphere {
+        var box = new Box3().setFromObject(this.cube);
+        var sphere = new Sphere();
+        sphere = box.getBoundingSphere(sphere);
+        return sphere;
     }
 
     /**
@@ -152,6 +163,11 @@ export class FileMesh extends GameObject {
             // Default position
             this.position.set(0, 1, 0);
         }
+
+        // We must call this function so that child objects get their positions updated too.
+        // Three render function does this automatically but there are functions in here that depend
+        // on accurate positioning of child objects.
+        this.updateMatrixWorld(false);
     }
 
     private _tagUpdateColor(): void {
@@ -226,56 +242,36 @@ export class FileMesh extends GameObject {
                     var sourceFile = this._gameView.getFile(this.file.id);
                     targetArrow = new Arrow3D(this._gameView, this, sourceFile, targetFile);
                     this.arrows.push(targetArrow);
-                    console.log("create arrow");
                 }
 
                 if (targetArrow) {
                     targetArrow.setColor(color);
                     targetArrow.update();
-                    console.log("add target file id " + getShortId(targetFile.file) + " to valid line ids list.");
                     // Add the target file id to the valid ids list.
                     validLineIds.push(targetFile.file.id);
                 }
             }
 
-            console.log(lineTo);
             var lineColor = this._getColor(this.file.tags['line.color']);
 
             // Parse the line.to tag.
             // It can either be a formula or a handtyped string.
             if (isFormula(lineTo)) {
-                console.log("is formula");
                 var calculatedValue = appManager.fileManager.calculateFileValue(this.file, 'line.to');
-                console.log("calculated values:");
-                console.log(calculatedValue);
                 
                 if (Array.isArray(calculatedValue)) { 
                     // Array of objects.
-                    console.log("is array of objects");
-                    calculatedValue.forEach((o) => {
-                        if (o) {
-                            trySetupLine(o.id, lineColor);
-                        }
-                    });
+                    calculatedValue.forEach((o) => { if (o) { trySetupLine(o.id, lineColor); } });
                 } else {
                     // Single object.
-                    console.log("is single object");
-                    if (calculatedValue) {
-                        trySetupLine(calculatedValue.id, lineColor);
-                    }
+                    if (calculatedValue) { trySetupLine(calculatedValue.id, lineColor); }
                 }
             } else {
                 if (isArray(lineTo)) {
                     // Array of strings.
-                    console.log("line.to is string array");
-                    var array = parseArray(lineTo);
-                    array.forEach((s) => {
-                        console.log("try setup " + s);
-                        trySetupLine(s, lineColor);
-                    });
+                    parseArray(lineTo).forEach((s) => { trySetupLine(s, lineColor); });
                 } else {
                     // Single string.
-                    console.log("line.to is string single");
                     trySetupLine(lineTo, lineColor);
                 }
             }

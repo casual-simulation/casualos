@@ -11,14 +11,19 @@ import {
     Box3,
     RawShaderMaterial,
     LinearFilter,
-    ArrowHelper} from "three";
+    ArrowHelper,
+    Sphere,
+    Ray} from "three";
 
 import GameView from "../GameView/GameView";
 import { File3D } from "./File3D";
+import { FileMesh } from "./FileMesh";
 
 export class Arrow3D {
 
     public static DefaultColor: Color = new Color(255,255,255);
+    public static DefaultHeadWidth = 0.15;
+    public static DefaultHeadLength = 0.3;
 
     /**
      * Three JS helper that draws arrows.
@@ -52,8 +57,10 @@ export class Arrow3D {
         this._targetFile.onUpdated.addListener(this._handleTargetUpdated);
 
         // Create the arrow mesh.
+        var sourceSphere = (<FileMesh>this._sourceFile.mesh).boundingSphere;
+        var origin = this.sourceFile.mesh.worldToLocal(sourceSphere.center);
         var dir = this._calcDirectionToTarget();
-        this._arrowHelper = new ArrowHelper(dir.normalize(), new Vector3(0,0,0), dir.length(), Arrow3D.DefaultColor.getHex());
+        this._arrowHelper = new ArrowHelper(dir.normalize(), origin, dir.length(), Arrow3D.DefaultColor.getHex());
         this._parent.add(this._arrowHelper);
     }
 
@@ -69,20 +76,19 @@ export class Arrow3D {
 
     public setLength(length: number) {
         if (!this._arrowHelper) return;
-        this._arrowHelper.setLength(length);
+        this._arrowHelper.setLength(length, Arrow3D.DefaultHeadLength, Arrow3D.DefaultHeadWidth);
     }
 
     public update() {
         if (!this._arrowHelper) return;
         
-        // Update arrow direction.
+        // Update arrow direction and length.
         var dir = this._calcDirectionToTarget();
-        this._arrowHelper.setDirection(dir.normalize());
-        this._arrowHelper.setLength(dir.length());
+        this._arrowHelper.setDirection(dir);
+        this._arrowHelper.setLength(dir.length(), Arrow3D.DefaultHeadLength, Arrow3D.DefaultHeadWidth);
     }
 
     public dispose() {
-        console.log("arrow 3d dispose");
         this._parent.remove(this._arrowHelper);
         this._arrowHelper = null;
         this._parent = null;
@@ -94,13 +100,15 @@ export class Arrow3D {
     }
 
     private _calcDirectionToTarget(): Vector3 {
-        var sourceWorldPos: Vector3 = new Vector3();
-        this._sourceFile.mesh.getWorldPosition(sourceWorldPos);
 
-        var targetWorldPos: Vector3 = new Vector3();
-        this._targetFile.mesh.getWorldPosition(targetWorldPos);
+        var sourceSphere = (<FileMesh>this._sourceFile.mesh).boundingSphere;
+        var targetSphere = (<FileMesh>this._targetFile.mesh).boundingSphere;
+        var dir = new Vector3().copy(targetSphere.center).sub(sourceSphere.center);
 
-        var dir = targetWorldPos.sub(sourceWorldPos);
+        // Decrease length of direction vector so that it only goes 
+        // as far as the hull of the target bounding sphere.
+        dir.setLength(dir.length() - targetSphere.radius);
+        
         return dir;
     }
 
