@@ -1,5 +1,19 @@
 # File Simulator Changelog
 
+## V0.2.7
+### Date: 1/30/2019
+
+#### Changes:
+- Added `line.to` and `line.color` tags. `line.to` creates an arrow that points from the source file to the target file. An array of files is also supported.
+- Added formula support for `label`, `label.color`.
+- Added some functions to `FileCalculations` to help with handling of short file ids:
+  - `getShortId` - Return the short id for the file.
+  - `fileFromShortId` - Find file that matches the short id.
+  - `filesFromShortIds` - Find files that match the short ids.
+- Disabled depth buffer writing for the new SDF rendered font.
+- Running `updateMatrixWorld` function for `FileMesh` when its position is updated.
+  - This allows child objects to have accurate world positioning the moment its parent is moved instead of waiting for ThreeJS to run the next render update frame.
+
 ## V0.2.6
 ### Date: 1/28/2019
 
