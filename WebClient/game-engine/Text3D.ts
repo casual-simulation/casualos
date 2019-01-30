@@ -2,33 +2,18 @@ import {
     Math as ThreeMath,
     Mesh, 
     Object3D, 
-    Scene,
     DoubleSide,
     Color,
-    MeshBasicMaterial,
     TextureLoader,
     Texture,
     SceneUtils,
     Vector3,
     Box3,
-    SpriteMaterial,
-    Blending,
-    CustomBlending,
-    MultiplyBlending,
-    OneFactor,
-    OneMinusSrcAlphaFactor,
-    AddEquation,
-    SrcAlphaFactor,
     RawShaderMaterial,
-    Material,
-    LinearMipMapLinearFilter,
-    LinearFilter,
-    WebGLRenderer,
-    NearestFilter} from "three";
+    LinearFilter} from "three";
 
 import createBMFont, { TextGeometry, TextGeometryOptions } from "three-bmfont-text";
-import GameView from "WebClient/GameView/GameView";
-import { colorConvert } from "../utils";
+import GameView from "../GameView/GameView";
 
 var sdfShader = require('three-bmfont-text/shaders/sdf');
 

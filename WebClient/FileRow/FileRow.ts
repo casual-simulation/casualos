@@ -5,6 +5,7 @@ import { SubscriptionLike } from 'rxjs';
 import {Object, File} from 'common/Files';
 import FileValue from '../FileValue/FileValue';
 import { appManager } from '../AppManager';
+import { getShortId } from 'common/Files/FileCalculations';
 
 @Component({
     components: {
@@ -33,6 +34,10 @@ export default class FileRow extends Vue {
 
     onTagChanged(tag: string) {
         this.$emit('tagChanged', tag);
+    }
+
+    getShortId(file: Object) {
+        return getShortId(file);
     }
 
     tagFocusChanged(file: Object, tag: string, focused: boolean) {

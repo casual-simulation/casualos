@@ -21,6 +21,7 @@ import robotoTexturePath from '../public/bmfonts/Roboto.png';
 import GameView from "WebClient/GameView/GameView";
 import { WorkspaceMesh } from "./WorkspaceMesh";
 import { FileMesh } from "./FileMesh";
+import { ArgEvent } from '../../common/Events';
 
 /**
  * Defines an object that groups Three.js related information
@@ -42,6 +43,11 @@ export class File3D {
      * The GameView that manages this file3d.
      */
     private _gameView: GameView;
+
+    /**
+     * Event that is fired when this file is updated.
+     */
+    public onUpdated: ArgEvent<File3D> = new ArgEvent<File3D>();
 
     /**
      * Defines an object that groups Three.js related information
@@ -73,6 +79,7 @@ export class File3D {
     public async updateFile(file: File) {
         this.file = file;
         await this.mesh.update(this.file);
+        this.onUpdated.invoke(this);
     }
 
     /**

@@ -55,7 +55,6 @@ export class InteractionManager {
             // Dispose of operations that have finished.
             if (this._fileClickOperation.isFinished()) {
 
-                console.log("Dispose of file click operation.");
                 this._fileClickOperation.dispose();
                 this._fileClickOperation = null;
 
@@ -79,7 +78,6 @@ export class InteractionManager {
                 if (file) {
 
                     // Start file click operation on file.
-                    console.log("Create file click operation.");
                     this._fileClickOperation = new FileClickOperation(this._gameView, this, file, clickedObject);
 
                 }

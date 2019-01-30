@@ -40,6 +40,7 @@ import {
   updateUserSelection,
   toggleFileSelection,
   calculateFormattedFileValue,
+  calculateFileValue,
   createFile
 } from 'common/Files/FileCalculations';
 import {ChannelConnection} from 'common/channels-core';
@@ -296,6 +297,10 @@ export class FileManager {
    */
   calculateFormattedFileValue(file: Object, tag: string): string {
     return calculateFormattedFileValue(this._createContext(), file, tag);
+  }
+
+  calculateFileValue(file: Object, tag: string) {
+    return calculateFileValue(this._createContext(), file, tag);
   }
 
   /**

@@ -7,11 +7,15 @@ import {
     intersection,
     some,
     assign,
+    find,
 } from 'lodash';
 import { Sandbox } from '../Formulas/Sandbox';
 import formulaLib from 'formula-lib';
 import { FilterFunction, SandboxInterface } from '../Formulas/SandboxInterface';
 import { PartialFile } from 'common/Files';
+
+
+export var ShortId_Length: number = 5;
 
 /**
  * Defines an interface for objects that represent assignment formula expressions.
@@ -84,6 +88,41 @@ export function fileTags(files: File[], currentTags: string[], extraTags: string
 }
 
 /**
+ * Find files that match the short ids.
+ * @param files The files to search through.
+ * @param shortIds The short ids to search for.
+ * @returns file array or null if no matches found.
+ */
+export function filesFromShortIds(files: File[] | Object[], shortIds: string[]): File[] {
+    var matches: File[] = [];
+    shortIds.forEach((shortId) => {
+        var file = this.fileFromShortId(files, shortId);
+        if (file) matches.push(file);
+    });
+
+    if (matches.length > 0) return matches;
+    else return null;
+}
+
+/**
+ * Find file that matches the short id.
+ * @param files The files to search through.
+ * @param shortId The short id to search for.
+ * @returns file or undefined if no match found.
+ */
+export function fileFromShortId(files: File[] | Object[], shortId: string): File {
+    return find(files, (f: File | Object) => { return getShortId(f) === shortId; });
+}
+
+/**
+ * Return the short id for the file.
+ * @param file The file to get short id for.
+ */
+export function getShortId(file: File | Object): string {
+    return file.id.substr(0, ShortId_Length);
+}
+
+/**
  * Determines if the given tag is a hidden tag.
  * @param tag The tag to test.
  */
@@ -127,7 +166,7 @@ export function isAssignment(object: any): any {
  * @param value The value to check.
  */
 export function containsFormula(value: string): boolean {
-    return isFormula(value) || (isArray(value) && some(_parseArray(value), v => isFormula(v)));
+    return isFormula(value) || (isArray(value) && some(parseArray(value), v => isFormula(v)));
 }
 
 /**
@@ -135,6 +174,19 @@ export function containsFormula(value: string): boolean {
  */
 export function isArray(value: string): boolean {
     return typeof value === 'string' && value.indexOf('[') === 0 && value.lastIndexOf(']') === value.length - 1;
+}
+
+/**
+ * Parses the given string value that represents an array into an actual array.
+ * @see isArray
+ */
+export function parseArray(value: string): string[] {
+    var array: string[] = value.slice(1, value.length - 1).split(',');
+    if (array) { 
+        // trim all entries.
+        array = array.map((s) => { return s.trim(); });
+    }
+    return array;
 }
 
 /**
@@ -450,7 +502,7 @@ function _formatValue(value: any): string {
             return `[${value.map(v => _formatValue(v)).join(',')}]`;
         } else {
             if (value.id) {
-                return value.id.substr(0, 5);
+                return getShortId(value);
             } else {
                 return JSON.stringify(value);
             }
@@ -475,7 +527,7 @@ function _calculateValue(context: FileCalculationContext, object: any, tag: stri
         const obj: Assignment = <any>formula;
         return obj.value;
     } else if(isArray(formula)) {
-        const split = _parseArray(formula);
+        const split = parseArray(formula);
         return split.map(s => _calculateValue(context, object, tag, s.trim()));
     } else if(isNumber(formula)) {
         return parseFloat(formula);
@@ -494,10 +546,6 @@ function _calculateFormulaValue(context: FileCalculationContext, object: any, ta
         tag,
         context
     }, convertToFormulaObject(context, object));
-}
-
-function _parseArray(value: string): string[] {
-    return value.slice(1, value.length - 1).split(',');
 }
 
 function _singleOrArray<T>(values: T[]) {
