@@ -1,4 +1,4 @@
-import { Object3D, Mesh, BoxBufferGeometry, MeshStandardMaterial, Color, Vector3, Box3, Sphere, BoxHelper, SphereGeometry, MeshBasicMaterial, MeshLambertMaterial } from "three";
+import { Object3D, Mesh, BoxBufferGeometry, MeshStandardMaterial, Color, Vector3, Box3, Sphere } from "three";
 import { Object, File, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_GRID_SCALE } from 'common/Files';
 import { GameObject } from "./GameObject";
 import GameView from '../GameView/GameView';
@@ -55,8 +55,8 @@ export class FileMesh extends GameObject {
     }
 
     get boundingSphere(): Sphere {
-        var box = new Box3().setFromObject(this.cube);
-        var sphere = new Sphere();
+        let box = new Box3().setFromObject(this.cube);
+        let sphere = new Sphere();
         sphere = box.getBoundingSphere(sphere);
         return sphere;
     }
@@ -118,8 +118,8 @@ export class FileMesh extends GameObject {
     }
 
     private _createCube(size: number): Mesh {
-        var geometry = new BoxBufferGeometry(size, size, size);
-        var material = new MeshStandardMaterial({
+        let geometry = new BoxBufferGeometry(size, size, size);
+        let material = new MeshStandardMaterial({
             color: 0x00ff00,
             metalness: .1,
             roughness: 0.6
@@ -181,12 +181,29 @@ export class FileMesh extends GameObject {
     }
 
     private _tagUpdateLabel(): void {
-        if (this.file.tags.label) {
-            this.label.setText(this.file.tags.label);
+
+        let label = this.file.tags.label;
+
+        if (label) {
+
+            if (isFormula(label)) {
+                let calculatedValue = appManager.fileManager.calculateFormattedFileValue(this.file, 'label');
+                this.label.setText(calculatedValue);
+            } else {
+                this.label.setText(label);
+            }
+
             this.label.setPositionForObject(this.cube);
 
-            if (this.file.tags['label.color']) {
-                this.label.setColor(this._getColor(this.file.tags['label.color']));
+            let labelColor = this.file.tags['label.color'];
+            if (labelColor) {
+
+                if (isFormula(labelColor)) {
+                    let calculatedValue = appManager.fileManager.calculateFormattedFileValue(this.file, 'label.color');
+                    this.label.setColor(this._getColor(calculatedValue));
+                } else {
+                    this.label.setColor(this._getColor(labelColor));
+                }
             }
         } else {
             this.label.setText("");
@@ -195,23 +212,23 @@ export class FileMesh extends GameObject {
 
     private _tagUpdateLine(): void {
 
-        var lineTo = this.file.tags['line.to'];
-        var validLineIds: string[];
+        let lineTo = this.file.tags['line.to'];
+        let validLineIds: string[];
 
         if (lineTo) {
 
-            var files: Object[];
+            let files: Object[];
             validLineIds = [];
 
             // Local function for setting up a line. Will add the targetFileId to the validLineIds array if successful.
-            var trySetupLine = (targetFileId: string, color?: Color): void => {
+            let trySetupLine = (targetFileId: string, color?: Color): void => {
                 
                 // Undefined target filed id.
                 if (!targetFileId) return;
                 // Can't create line to self.
                 if (this.file.id === targetFileId) return;
                 
-                var targetFile = this._gameView.getFile(targetFileId);
+                let targetFile = this._gameView.getFile(targetFileId);
                 if (!targetFile) {
 
                     // If not matching file is found on first try then it may be a short id.
@@ -222,7 +239,7 @@ export class FileMesh extends GameObject {
                         files = appManager.fileManager.objects;
                     }
 
-                    var file = fileFromShortId(files, targetFileId);
+                    let file = fileFromShortId(files, targetFileId);
                     if (file) {
                         // Found file with short id.
                         targetFile = this._gameView.getFile(file.id);
@@ -236,10 +253,10 @@ export class FileMesh extends GameObject {
                 // Initialize arrows array if needed.
                 if (!this.arrows) this.arrows = [];
 
-                var targetArrow: Arrow3D = find(this.arrows, (a: Arrow3D) => { return a.targetFile === targetFile });
+                let targetArrow: Arrow3D = find(this.arrows, (a: Arrow3D) => { return a.targetFile === targetFile });
                 if (!targetArrow) {
                     // Create arrow for target.
-                    var sourceFile = this._gameView.getFile(this.file.id);
+                    let sourceFile = this._gameView.getFile(this.file.id);
                     targetArrow = new Arrow3D(this._gameView, this, sourceFile, targetFile);
                     this.arrows.push(targetArrow);
                 }
@@ -252,12 +269,22 @@ export class FileMesh extends GameObject {
                 }
             }
 
-            var lineColor = this._getColor(this.file.tags['line.color']);
+            let lineColorTagValue = this.file.tags['line.color'];
+            let lineColor: Color;
+
+            if (lineColorTagValue) {
+                if (isFormula(lineColorTagValue)) {
+                    let calculatedValue = appManager.fileManager.calculateFormattedFileValue(this.file, 'line.color');
+                    lineColor = this._getColor(calculatedValue);
+                } else {
+                    lineColor = this._getColor(lineColorTagValue);
+                }
+            }
 
             // Parse the line.to tag.
             // It can either be a formula or a handtyped string.
             if (isFormula(lineTo)) {
-                var calculatedValue = appManager.fileManager.calculateFileValue(this.file, 'line.to');
+                let calculatedValue = appManager.fileManager.calculateFileValue(this.file, 'line.to');
                 
                 if (Array.isArray(calculatedValue)) { 
                     // Array of objects.
