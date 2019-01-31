@@ -5,7 +5,7 @@ import { Vector2, Vector3, Intersection } from 'three';
 import { IOperation } from './IOperation';
 import GameView from '../GameView/GameView';
 import { InteractionManager } from './InteractionManager';
-import { UserMode } from 'common/Files';
+import { UserMode, File } from 'common/Files';
 import { Physics } from '../game-engine/Physics';
 
 /**
@@ -21,6 +21,7 @@ export class FileClickOperation implements IOperation {
     private _file: File3D;
     private _hit: Intersection;
     private _finished: boolean;
+    private _triedDragging: boolean;
 
     private _startScreenPos: Vector2;
     private _dragOperation: FileDragOperation;
@@ -50,7 +51,11 @@ export class FileClickOperation implements IOperation {
                     // Start dragging now that we've crossed the threshold.
                     const workspace = this._interaction.findWorkspaceForIntersection(this._hit);
 
-                    this._dragOperation = new FileDragOperation(this._gameView, this._interaction, this._file, workspace);
+                    this._triedDragging = true;
+
+                    if (this.canDragFile(this._file.file)) {
+                        this._dragOperation = new FileDragOperation(this._gameView, this._interaction, this._file, workspace);
+                    }
                 }
 
             } else {
@@ -65,7 +70,7 @@ export class FileClickOperation implements IOperation {
 
         } else {
 
-            if (!this._dragOperation) {
+            if (!this._dragOperation && !this._triedDragging) {
                 // If we let go of the mouse button without starting a drag operation, this constitues a 'click'.
                 if (this._file.file.type === 'object') {
                     // Select the file we are operating on.
@@ -94,5 +99,22 @@ export class FileClickOperation implements IOperation {
             this._dragOperation = null;
         }
 
+    }
+
+    canDragFile(file: File) {
+        if (file.type === 'workspace') {
+            // Workspaces are always movable.
+            return true;
+        } else {
+            const hasTag = typeof file.tags._movable !== 'undefined';
+            if (hasTag) {
+                // Movability is determined by the result of the calculation
+                const movable = this._gameView.fileManager.calculateFileValue(file, '_movable');
+                return !!movable;
+            } else {
+                // File is movable because that is the default
+                return true;
+            }
+        }
     }
 }

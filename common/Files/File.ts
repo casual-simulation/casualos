@@ -17,6 +17,7 @@ export interface Object {
         _index?: number;
         _user?: string;
         _mode?: UserMode;
+        _movable?: boolean;
         [key: string]: any;
     };
 }
@@ -70,6 +71,7 @@ export interface PartialFile {
         _index?: number;
         _user?: string;
         _mode?: UserMode;
+        _movable?: boolean;
         [key: string]: any;
     },
     grid?: {
