@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Inject } from 'vue-property-decorator';
-import { Object} from 'common/Files';
+import { Object, UserMode, DEFAULT_USER_MODE} from 'common/Files';
 import GameView from '../GameView/GameView';
 import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';
@@ -10,6 +10,7 @@ import { ContextMenuEvent } from '../interaction/ContextMenu';
 import { SubscriptionLike } from 'rxjs';
 import { cloneDeep } from 'lodash';
 import { getUserMode } from 'common/Files/FileCalculations';
+import { tap } from 'rxjs/operators';
 
 @Component({
     components: {
@@ -33,6 +34,7 @@ export default class Home extends Vue {
     files: Object[] = [];
     tags: string[] = [];
     updateTime: number = -1;
+    mode: UserMode = DEFAULT_USER_MODE;
 
     isLoading: boolean = false;
     progress: number = 0;
@@ -52,7 +54,6 @@ export default class Home extends Vue {
         return appManager.fileManager;
     }
 
-    get mode() { return getUserMode(this.fileManager.userFile); }
     get filesMode() { return this.mode === 'files'; }
     get workspacesMode() { return this.mode === 'worksurfaces'; }
 
@@ -101,6 +102,12 @@ export default class Home extends Vue {
             const now = Date.now();
             this.updateTime = now;
         }));
+
+        this._subs.push(this.fileManager.fileChanged(this.fileManager.userFile)
+            .pipe(tap(file => {
+                this.mode = getUserMode(<Object>file);
+            }))
+            .subscribe());
 
         this.isLoading = false;
         
