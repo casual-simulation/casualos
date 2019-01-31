@@ -18,6 +18,11 @@ export interface Object {
         _user?: string;
         _mode?: UserMode;
         _movable?: boolean;
+        ['stroke.color']?: string;
+        ['line.to']?: string;
+        ['line.color']?: string;
+        ['label']?: string;
+        ['label.color']?: string;
         [key: string]: any;
     };
 }
@@ -72,6 +77,11 @@ export interface PartialFile {
         _user?: string;
         _mode?: UserMode;
         _movable?: boolean;
+        ['stroke.color']?: string;
+        ['line.to']?: string;
+        ['line.color']?: string;
+        ['label']?: string;
+        ['label.color']?: string;
         [key: string]: any;
     },
     grid?: {

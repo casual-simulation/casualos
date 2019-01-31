@@ -136,14 +136,8 @@ export class InteractionManager {
         if (!obj) {
             return null;
         }
-        const hasParent = !!obj.object.parent;
-        const fileId = hasParent ? this._gameView.getFileId(obj.object.parent.id) : null;
-        const file = fileId ? this._gameView.getFile(fileId) : null;
-        if (file && file.file.type === 'object') {
-            return file;
-        } else {
-            return null;
-        }
+        
+        return this.findObjectForMesh(obj.object);
     }
 
     public findWorkspaceForIntersection(obj: Intersection): File3D | null {
@@ -158,6 +152,20 @@ export class InteractionManager {
             return file;
         } else {
             return null;
+        }
+    }
+
+    public findObjectForMesh(mesh: Object3D): File3D | null {
+        if (!mesh) {
+            return null;
+        }
+
+        const fileId = this._gameView.getFileId(mesh.id);
+        const file = fileId ? this._gameView.getFile(fileId) : null;
+        if (file && file.file.type === 'object') {
+            return file;
+        } else {
+            return this.findObjectForMesh(mesh.parent);
         }
     }
 
