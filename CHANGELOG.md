@@ -1,5 +1,14 @@
 # File Simulator Changelog
 
+## V0.2.9
+### Date: 1/31/2019
+
+#### Changes:
+- Camera zooming with trackpad pinching is now supported.
+- Input now handles `WheelEvent` from the browser.
+  - `getWheelMoved()` - Returns true when wheel movemented detected.
+  - `getWheelData()` - Return wheel event data for the current frame.
+
 ## V0.2.8
 ### Date: 1/31/2019
 

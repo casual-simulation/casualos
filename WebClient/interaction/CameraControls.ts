@@ -1,5 +1,5 @@
 import { IOperation } from "./IOperation";
-import { PerspectiveCamera, Vector3, Spherical, Vector2, Quaternion, Matrix4, Math as ThreeMath } from "three";
+import { PerspectiveCamera, Vector3, Spherical, Vector2, Quaternion, Matrix4, Math as ThreeMath, InterpolationEndingModes } from "three";
 import GameView from "../GameView/GameView";
 import { InteractionManager } from "./InteractionManager";
 import { InputType, MouseButtonId } from "../game-engine/input";
@@ -252,7 +252,7 @@ export class CameraControls {
 
             } else if (input.getMouseButtonDown(MouseButtonId.Middle) && this.enableZoom && this.enabled) {
 
-                // Dolly start.
+                // Alternative dolly start.
                 this.dollyStart.copy(input.getMouseClientPos());
                 this.state = STATE.DOLLY;
 
@@ -262,6 +262,18 @@ export class CameraControls {
                 this.rotateStart.copy(input.getMouseClientPos());
                 this.state = STATE.ROTATE;
 
+            }
+            
+            if (input.getWheelMoved()) {
+                
+                let wheelData = input.getWheelData();
+                
+                if (wheelData.ctrl) {
+                    // This is pinch zooming dolly.
+                    let dollyScale = Math.pow(0.98, Math.abs(wheelData.delta.y)) * this.zoomSpeed;
+                    if (wheelData.delta.y > 0) this.dollyIn(dollyScale);
+                    else if (wheelData.delta.y < 0) this.dollyOut(dollyScale);
+                }
             }
 
             //

@@ -1,5 +1,5 @@
 import { ArgEvent } from '../../common/Events';
-import { Vector2 } from 'three';
+import { Vector2, Vector3 } from 'three';
 import { time } from './Time';
 import { find, findIndex, some } from 'lodash';
 
@@ -13,20 +13,11 @@ export class Input {
     // Internal pointer data.
     private _mouseData: MouseData;
     private _touchData: TouchData[];
+    private _wheelData: WheelData;
 
     private _initialized: boolean = false;
     private _element: HTMLElement;
     private _inputType: InputType = InputType.Undefined;
-
-    // Event handler functions.
-    private _mouseDownHandler: any;
-    private _mouseMoveHandler: any;
-    private _mouseUpHandler: any;
-    private _touchStartHandler: any;
-    private _touchMoveHandler: any;
-    private _touchEndHandler: any;
-    private _touchCancelHandler: any;
-    private _contextMenuHandler: any;
 
     /**
      * @returns 'mouse' or 'touch'
@@ -91,25 +82,28 @@ export class Input {
             clientPos: new Vector2(0, 0)
         };
         this._touchData = [];
+        this._wheelData = new WheelData();
 
-        this._mouseDownHandler = this._handleMouseDown.bind(this);
-        this._mouseMoveHandler = this._handleMouseMove.bind(this);
-        this._mouseUpHandler = this._handleMouseUp.bind(this);
-        this._touchStartHandler = this._handleTouchStart.bind(this);
-        this._touchMoveHandler = this._handleTouchMove.bind(this);
-        this._touchEndHandler = this._handleTouchEnd.bind(this);
-        this._touchCancelHandler = this._handleTouchCancel.bind(this);
-        this._contextMenuHandler = this._handleContextMenu.bind(this);
+        this._handleMouseDown = this._handleMouseDown.bind(this);
+        this._handleMouseMove = this._handleMouseMove.bind(this);
+        this._handleMouseUp = this._handleMouseUp.bind(this);
+        this._handleWheel = this._handleWheel.bind(this);
+        this._handleTouchStart = this._handleTouchStart.bind(this);
+        this._handleTouchMove = this._handleTouchMove.bind(this);
+        this._handleTouchEnd = this._handleTouchEnd.bind(this);
+        this._handleTouchCancel = this._handleTouchCancel.bind(this);
+        this._handleContextMenu = this._handleContextMenu.bind(this);
 
-        this._element.addEventListener('mousedown', this._mouseDownHandler);
-        this._element.addEventListener('mousemove', this._mouseMoveHandler);
-        this._element.addEventListener('mouseup', this._mouseUpHandler);
-        this._element.addEventListener('touchstart', this._touchStartHandler);
-        this._element.addEventListener('touchmove', this._touchMoveHandler);
-        this._element.addEventListener('touchend', this._touchEndHandler);
-        this._element.addEventListener('touchcancel', this._touchCancelHandler);
-        this._element.addEventListener('contextmenu', this._contextMenuHandler);
-
+        this._element.addEventListener('mousedown', this._handleMouseDown);
+        this._element.addEventListener('mousemove', this._handleMouseMove);
+        this._element.addEventListener('mouseup', this._handleMouseUp);
+        this._element.addEventListener('wheel', this._handleWheel);
+        this._element.addEventListener('touchstart', this._handleTouchStart);
+        this._element.addEventListener('touchmove', this._handleTouchMove);
+        this._element.addEventListener('touchend', this._handleTouchEnd);
+        this._element.addEventListener('touchcancel', this._handleTouchCancel);
+        this._element.addEventListener('contextmenu', this._handleContextMenu);
+        
         requestAnimationFrame(() => this._update());
     }
 
@@ -119,22 +113,15 @@ export class Input {
         console.log("[Input] terminate");
         this._initialized = false;
 
-        this._element.removeEventListener('mousedown', this._mouseDownHandler);
-        this._element.removeEventListener('mousemove', this._mouseMoveHandler);
-        this._element.removeEventListener('mouseup', this._mouseUpHandler);
-        this._element.removeEventListener('touchstart', this._touchStartHandler);
-        this._element.removeEventListener('touchmove', this._touchMoveHandler);
-        this._element.removeEventListener('touchend', this._touchEndHandler);
-        this._element.removeEventListener('touchcancel', this._touchCancelHandler);
-        this._element.removeEventListener('contextmenu', this._contextMenuHandler);
-
-        this._mouseDownHandler = null;
-        this._mouseMoveHandler = null;
-        this._mouseUpHandler = null;
-        this._touchStartHandler = null;
-        this._touchMoveHandler = null;
-        this._touchEndHandler = null;
-        this._touchCancelHandler = null;
+        this._element.removeEventListener('mousedown', this._handleMouseDown);
+        this._element.removeEventListener('mousemove', this._handleMouseMove);
+        this._element.removeEventListener('mouseup', this._handleMouseUp);
+        this._element.removeEventListener('wheel', this._handleWheel);
+        this._element.removeEventListener('touchstart', this._handleTouchStart);
+        this._element.removeEventListener('touchmove', this._handleTouchMove);
+        this._element.removeEventListener('touchend', this._handleTouchEnd);
+        this._element.removeEventListener('touchcancel', this._handleTouchCancel);
+        this._element.removeEventListener('contextmenu', this._handleContextMenu);
 
         this._element = null;
     }
@@ -227,6 +214,23 @@ export class Input {
         }
 
         return false;
+    }
+
+    /**
+     * Return true the frame that wheel movement was detected.
+     */
+    public getWheelMoved(): boolean {
+        return this._wheelData.getFrame(time.frameCount) != null;
+    }
+
+    /**
+     * The wheel data for the current frame.
+     */
+    public getWheelData(): WheelFrame {
+        // Deep clone the internal wheel data.
+        let wheelFrame = this._wheelData.getFrame(time.frameCount);
+        if (wheelFrame) return JSON.parse(JSON.stringify(wheelFrame));
+        else return null;
     }
 
     /**
@@ -335,6 +339,7 @@ export class Input {
         if (!this._initialized) return;
 
         this._cullTouchData();
+        this._wheelData.removeOldFrames(time.frameCount);
 
         requestAnimationFrame(() => this._update());
     }
@@ -440,6 +445,28 @@ export class Input {
             console.log("  screenPos: " + JSON.stringify(this._mouseData.screenPos));
             console.log("  pagePos: " + JSON.stringify(this._mouseData.pagePos));
             console.log("  clientPos: " + JSON.stringify(this._mouseData.clientPos));
+        }
+    }
+
+    private _handleWheel(event: WheelEvent) {
+        event.preventDefault();
+
+        let fireOnFrame = time.frameCount + 1;
+
+        let wheelFrame: WheelFrame = {
+            moveFrame: fireOnFrame,
+            delta: new Vector3(event.deltaX, event.deltaY, event.deltaZ),
+            ctrl: event.ctrlKey
+        }
+
+        this._wheelData.addFrame(wheelFrame);
+
+        if (this.debugLevel >= 2) {
+            if (wheelFrame.ctrl) {
+                console.log(`wheel w/ ctrl fireOnFrame: ${wheelFrame.moveFrame}, delta: (${wheelFrame.delta.x}, ${wheelFrame.delta.y}, ${wheelFrame.delta.z})`);
+            } else {
+                console.log(`wheel fireOnFrame: ${wheelFrame.moveFrame}, delta: (${wheelFrame.delta.x}, ${wheelFrame.delta.y}, ${wheelFrame.delta.z})`);
+            }
         }
     }
 
@@ -635,6 +662,27 @@ class InputState {
     }
 }
 
+interface WheelFrame {
+
+    /**
+     * The frame that the wheel moved on.
+     */
+    moveFrame: number;
+
+    /**
+     * Wheel delta in a Vector3 format. (x, y, z)
+     */
+    delta: Vector3;
+
+    /**
+     * Is the wheel being invoked with ctrl?
+     * @see https://developer.mozilla.org/en-US/docs/Web/Events/wheel
+     * WheelEvent has a standardized hack that allows trackpad two finger pinching to be detected as WheelEvent + ctrl key.
+     * This boolean indicates whether the ctrl key was detected with the WheelEvent.
+     */
+    ctrl: boolean;
+}
+
 interface TouchData {
 
     /**
@@ -699,4 +747,38 @@ interface MouseData {
      * Client position of mouse.
      */
     clientPos: Vector2;
+}
+
+class WheelData {
+
+    private _wheelFrames: WheelFrame[] = [];
+
+    /**
+     * Add the WheelFrame to the WheelData frame array.
+     * @param wheelFrame 
+     */
+    addFrame(wheelFrame: WheelFrame): void {
+        this._wheelFrames.push(wheelFrame);
+    }
+
+    /**
+     * Returns the WheelFrame for the specified frame number.
+     * @param frame The frame number to retrieve.
+     */
+    getFrame(frame: number): WheelFrame {
+        let wheelFrame = find(this._wheelFrames, (f: WheelFrame) => { return f.moveFrame === frame });
+        if (wheelFrame) return wheelFrame;
+        else return null;
+    }
+
+    /**
+     * Remove all WheelFrame objects that are older than the specified current frame.
+     * @param curFrame The current frame number.
+     */
+    removeOldFrames(curFrame: number): void {
+        if (this._wheelFrames.length === 0) return;
+        // console.log('removeOldFrames wheelFrameCount: ' + this._wheelFrames.length + ', curFrame: ' + curFrame);
+        this._wheelFrames = this._wheelFrames.filter((f: WheelFrame) => { return f.moveFrame >= curFrame; });
+        // console.log('removeOldFrames after filter wheelFrameCount: ' + this._wheelFrames.length);
+    }
 }
