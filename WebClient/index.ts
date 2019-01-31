@@ -19,7 +19,7 @@ import {
     MdCheckbox,
     MdTooltip,
     MdSnackbar,
-    MdSpeedDial
+    MdSwitch
 } from 'vue-material/dist/components';
 import 'vue-material/dist/vue-material.min.css';
 import 'vue-material/dist/theme/default.css';
@@ -54,7 +54,7 @@ Vue.use(MdDialogAlert)
 Vue.use(MdTabs);
 Vue.use(MdTooltip);
 Vue.use(MdSnackbar);
-Vue.use(MdSpeedDial);
+Vue.use(MdSwitch);
 
 const routes: RouteConfig[] = [
     {

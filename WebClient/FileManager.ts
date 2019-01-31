@@ -29,6 +29,7 @@ import {
   resolveConflicts,
   second,
   ResolvedConflict,
+  DEFAULT_USER_MODE,
 } from 'common/Files';
 import { 
   filterFilesBySelection, 
@@ -75,7 +76,8 @@ import {
   scan, 
   pairwise,
   flatMap as rxFlatMap,
-  skip
+  skip,
+  startWith
 } from 'rxjs/operators';
 import * as Sentry from '@sentry/browser';
 import uuid from 'uuid/v4';
@@ -372,6 +374,17 @@ export class FileManager {
         };
       }
     }
+  }
+
+  /**
+   * Creates an observable that resolves whenever the given file changes.
+   * @param file The file to watch.
+   */
+  fileChanged(file: File): Observable<File> {
+    return this.fileUpdated.pipe(
+      filter(f => f.id === file.id),
+      startWith(file)
+    );
   }
 
   /**

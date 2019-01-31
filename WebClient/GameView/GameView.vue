@@ -4,28 +4,23 @@
       <div class="game-canvas" ref="gameView"></div>
       <slot></slot>
       <div class="ui-container">
-        <md-speed-dial class="toolbar">
-          <md-speed-dial-target>
-            <md-icon>add</md-icon>
-          </md-speed-dial-target>
-          <md-speed-dial-content>
-            <md-button class="md-icon-button" @click="addNewFile">
-              <cube-icon class="toolbar-button-icon" />
-              <span class="sr-only">New File</span>
-              <md-tooltip md-direction="right">New File</md-tooltip>
-            </md-button>
-            <md-button class="md-icon-button" @click="addNewWorkspace()">
-              <hex-icon class="toolbar-button-icon" />
-              <span class="sr-only">New Worksurface</span>
-              <md-tooltip md-direction="right">New Worksurface</md-tooltip>
-            </md-button>
-            <md-button class="md-icon-button" @click="toggleDebug()" v-if="dev">
-              <md-icon>bug_report</md-icon>
-              <span class="sr-only">Debug</span>
-              <md-tooltip md-direction="right">Debug</md-tooltip>
-            </md-button>
-          </md-speed-dial-content>
-        </md-speed-dial>
+        <div class="toolbar">
+          <md-button v-if="filesMode" class="md-fab" @click="addNewFile">
+            <cube-icon class="toolbar-button-icon" />
+            <span class="sr-only">New File</span>
+            <md-tooltip md-direction="bottom">New File</md-tooltip>
+          </md-button>
+          <md-button v-if="workspacesMode" class="md-fab" @click="addNewWorkspace()">
+            <hex-icon class="toolbar-button-icon" />
+            <span class="sr-only">New Worksurface</span>
+            <md-tooltip md-direction="bottom">New Worksurface</md-tooltip>
+          </md-button>
+          <md-button class="md-fab" @click="toggleDebug()" v-if="dev">
+            <md-icon>bug_report</md-icon>
+            <span class="sr-only">Debug</span>
+            <md-tooltip md-direction="bottom">Debug</md-tooltip>
+          </md-button>
+        </div>
 
         <!-- <div class="toolbar">
           <div class="toolbar-layout">

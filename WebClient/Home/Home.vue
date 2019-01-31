@@ -3,7 +3,7 @@
   <div>
       <game-view class="game-view" @onContextMenu="handleContextMenu" :debug="debug">
         <div class="ui-container">
-          <md-card class="info-card" v-if="isOpen">
+          <md-card class="info-card" v-if="isOpen && filesMode">
             <md-card-content>
               <div v-if="!isLoading">
                 <h4 class="files-header">Files</h4>
@@ -19,7 +19,7 @@
               <md-button @click="close()">Close</md-button>
             </md-card-actions>
           </md-card>
-          <md-button class="md-icon-button" v-if="!isOpen" @click="open">
+          <md-button class="md-icon-button" v-else-if="filesMode" @click="open">
             <md-icon>info</md-icon>
             <span class="sr-only">Open Info Card</span>
           </md-button>

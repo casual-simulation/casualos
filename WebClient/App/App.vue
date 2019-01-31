@@ -3,12 +3,17 @@
     <div id="app">
 
             <md-toolbar class="md-primary">
-                <md-button class="md-icon-button" @click="menuClicked()">
-                    <md-icon>menu</md-icon>
-                </md-button>
-                <router-link to="/" class="md-title">
-                    File Simulator <span v-show="session" class="session-id">{{session}}</span>
-                </router-link>
+                <div class="md-toolbar-section-start">
+                    <md-button class="md-icon-button" @click="menuClicked()">
+                        <md-icon>menu</md-icon>
+                    </md-button>
+                    <router-link to="/" class="md-title">
+                        File Simulator <span v-show="session" class="session-id">{{session}}</span>
+                    </router-link>
+                </div>
+                <div class="md-toolbar-section-end">
+                    <md-switch v-if="loggedIn" v-model="userMode" @change="onUserModeChanged">{{currentUserMode()}}</md-switch>
+                </div>
             </md-toolbar>
 
              <md-drawer :md-active.sync="showNavigation">

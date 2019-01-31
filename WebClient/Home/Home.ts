@@ -9,6 +9,7 @@ import FileTable from '../FileTable/FileTable';
 import { ContextMenuEvent } from '../interaction/ContextMenu';
 import { SubscriptionLike } from 'rxjs';
 import { cloneDeep } from 'lodash';
+import { getUserMode } from 'common/Files/FileCalculations';
 
 @Component({
     components: {
@@ -50,6 +51,10 @@ export default class Home extends Vue {
     get fileManager() {
         return appManager.fileManager;
     }
+
+    get mode() { return getUserMode(this.fileManager.userFile); }
+    get filesMode() { return this.mode === 'files'; }
+    get workspacesMode() { return this.mode === 'worksurfaces'; }
 
     open() {
         this.isOpen = true;

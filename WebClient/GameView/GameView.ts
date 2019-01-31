@@ -31,7 +31,7 @@ import {
   concatMap, tap,
 } from 'rxjs/operators';
 
-import { File, Object, Workspace, DEFAULT_WORKSPACE_HEIGHT_INCREMENT } from 'common/Files';
+import { File, Object, Workspace, DEFAULT_WORKSPACE_HEIGHT_INCREMENT, DEFAULT_USER_MODE, UserMode } from 'common/Files';
 import { time } from '../game-engine/Time';
 import { Input } from '../game-engine/input';
 import { File3D } from '../game-engine/File3D';
@@ -47,6 +47,7 @@ import { FileMesh } from '../game-engine/FileMesh';
 import { values, flatMap } from 'lodash';
 import CubeIcon from './Cube.svg';
 import HexIcon from './Hexagon.svg';
+import { getUserMode } from 'common/Files/FileCalculations';
 
 @Component({
   components: {
@@ -94,6 +95,7 @@ export default class GameView extends Vue {
 
   debug: boolean = false;
   debugInfo: GameViewDebugInfo = null;
+  mode: UserMode = DEFAULT_USER_MODE;
 
   @Watch('debug')
   debugChanged(val: boolean, previous: boolean) {
@@ -116,6 +118,8 @@ export default class GameView extends Vue {
   get scene(): Scene { return this._scene; }
   get renderer() { return this._renderer; } 
   get dev() { return !PRODUCTION; }
+  get filesMode() { return this.mode === 'files'; }
+  get workspacesMode() { return this.mode === 'worksurfaces'; }
 
   get gridChecker() { return this._gridChecker; }
 
@@ -196,6 +200,12 @@ export default class GameView extends Vue {
       .subscribe());
     this._subs.push(this.fileManager.fileUpdated
       .pipe(concatMap(file => this._fileUpdated(file)))
+      .subscribe());
+
+    this._subs.push(this.fileManager.fileChanged(this.fileManager.userFile)
+      .pipe(tap(file => {
+        this.mode = getUserMode(<Object>file);
+      }))
       .subscribe());
 
     this._frameUpdate();
@@ -285,7 +295,6 @@ export default class GameView extends Vue {
   }
 
   private async _fileAdded(file: File) {
-    console.log("File Added!", file);
     if (file.type === 'object' && file.tags._hidden) {
       return;
     }

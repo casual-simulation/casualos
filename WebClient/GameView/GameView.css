@@ -41,6 +41,8 @@
 
 .toolbar-button-icon {
     vertical-align: middle;
+    stroke: var(--md-theme-default-text-primary-on-accent, #fff);
+    fill: var(--md-theme-default-text-primary-on-accent, #fff);
 }
 
 .toolbar-button {

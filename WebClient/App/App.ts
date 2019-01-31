@@ -1,15 +1,17 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
-import {Provide} from 'vue-property-decorator';
+import {Provide, Watch} from 'vue-property-decorator';
 import { appManager, User } from '../AppManager';
 import { EventBus } from '../EventBus/EventBus';
 import ConfirmDialogOptions from './DialogOptions/ConfirmDialogOptions';
 import AlertDialogOptions from './DialogOptions/AlertDialogOptions';
-import { SubscriptionLike } from 'rxjs';
-import { FilesState, ConflictDetails } from 'common/Files';
+import { SubscriptionLike, Subscription } from 'rxjs';
+import { FilesState, ConflictDetails, UserMode, Object } from 'common/Files';
 import { MergeStatus } from 'WebClient/FileManager';
 import SnackbarOptions from './Snackbar/SnackbarOptions';
 import { copyToClipboard } from '../utils';
+import { getUserMode } from 'common/Files/FileCalculations';
+import { tap } from 'rxjs/operators';
 
 @Component({
     components: {
@@ -47,6 +49,29 @@ export default class App extends Vue {
      */
     startedOffline: boolean = false;
 
+    /**
+     * Whether the user is logged in.
+     */
+    loggedIn: boolean = false;
+
+    /**
+     * The current user mode.
+     */
+    userMode: boolean = true;
+
+    onUserModeChanged() {
+        const mode: UserMode = this.userMode ? 'files' : 'worksurfaces';
+        appManager.fileManager.updateFile(appManager.fileManager.userFile, {
+            tags: {
+                _mode: mode
+            }
+        });
+    }
+
+    private _calculateUserMode(file: Object): boolean {
+        return getUserMode(file) === 'files'
+    }
+
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
 
@@ -71,6 +96,10 @@ export default class App extends Vue {
         return appManager.version.gitCommit;
     }
 
+    currentUserMode() {
+        return this.userMode ? 'Files' : 'Worksurfaces';
+    }
+
     forcedOffline() {
         return appManager.socketManager.forcedOffline;
     }
@@ -87,6 +116,7 @@ export default class App extends Vue {
         this._subs.push(appManager.whileLoggedIn((user, fileManager) => {
             let subs: SubscriptionLike[] = [];
 
+            this.loggedIn = true;
             this.online = fileManager.isOnline;
             this.synced = fileManager.isSynced;
 
@@ -127,6 +157,16 @@ export default class App extends Vue {
                 this.lostConnection = false;
                 this.startedOffline = false;
                 this.synced = true;
+            }));
+
+            subs.push(fileManager.fileChanged(fileManager.userFile).pipe(
+                tap(file => {
+                    this.userMode = this._calculateUserMode(<Object>file);
+                })
+            ).subscribe());
+
+            subs.push(new Subscription(() => {
+                this.loggedIn = false;
             }));
 
             return subs;
