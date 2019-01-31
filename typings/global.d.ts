@@ -1,5 +1,6 @@
 declare module 'vue-material';
 declare module 'vue-material/dist/components';
+declare module '@chenfengyuan/vue-qrcode';
 
 declare module '*.svg' {
   const icon: Vue;

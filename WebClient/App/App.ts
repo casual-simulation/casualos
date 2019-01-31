@@ -12,10 +12,12 @@ import SnackbarOptions from './Snackbar/SnackbarOptions';
 import { copyToClipboard } from '../utils';
 import { getUserMode } from 'common/Files/FileCalculations';
 import { tap } from 'rxjs/operators';
+import QRCode from '@chenfengyuan/vue-qrcode';
 
 @Component({
     components: {
         'app': App,
+        'qr-code': QRCode
     }
 })
 
@@ -59,6 +61,11 @@ export default class App extends Vue {
      */
     userMode: boolean = true;
 
+    /**
+     * Whether to show the QR Code.
+     */
+    showQRCode: boolean = false;
+
     onUserModeChanged() {
         const mode: UserMode = this.userMode ? 'files' : 'worksurfaces';
         appManager.fileManager.updateFile(appManager.fileManager.userFile, {
@@ -94,6 +101,10 @@ export default class App extends Vue {
 
     get versionTooltip() {
         return appManager.version.gitCommit;
+    }
+
+    url() {
+        return location.href;
     }
 
     currentUserMode() {

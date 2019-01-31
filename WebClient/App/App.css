@@ -52,3 +52,15 @@
     background-color: rgba(0,0,0,.3);
     padding: 4px;
 }
+
+.md-title.clickable {
+    cursor: pointer;
+}
+
+.qr-code-dialog .qr-code-container {
+    display: flex;
+    flex-flow: column;
+    flex: 1;
+    align-items: center;
+    padding: 5px;
+}

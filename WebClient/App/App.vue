@@ -7,9 +7,9 @@
                     <md-button class="md-icon-button" @click="menuClicked()">
                         <md-icon>menu</md-icon>
                     </md-button>
-                    <router-link to="/" class="md-title">
+                    <a class="md-title clickable" @click="showQRCode = true">
                         File Simulator <span v-show="session" class="session-id">{{session}}</span>
-                    </router-link>
+                    </a>
                 </div>
                 <div class="md-toolbar-section-end">
                     <md-switch v-if="loggedIn" v-model="userMode" @change="onUserModeChanged">{{currentUserMode()}}</md-switch>
@@ -70,6 +70,16 @@
                     </md-list-item>
                 </md-list>
             </md-drawer>
+
+            <md-dialog :md-active.sync="showQRCode" class="qr-code-dialog">
+                <div class="qr-code-container">
+                    <span>{{url()}}</span>
+                    <qr-code :value="url()" />
+                </div>
+                <md-dialog-actions>
+                    <md-button class="md-primary" @click="showQRCode = false">Close</md-button>
+                </md-dialog-actions>
+            </md-dialog>
 
             <md-dialog-confirm
             :md-active.sync="showConfirmDialog"
