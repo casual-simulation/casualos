@@ -1,4 +1,4 @@
-import {filter, values, union, keys, isEqual, transform, set, mergeWith, unset, get} from 'lodash';
+import {filter, values, union, keys, isEqual, transform, set, mergeWith, unset, get, sortBy} from 'lodash';
 import {
     map as rxMap,
     flatMap as rxFlatMap,
@@ -463,7 +463,9 @@ export function fileChangeObservables(connection: ChannelConnection<FilesState>)
       return calculateStateDiff(prev.state, curr.state, <FileEvent>curr.event);
     }));
 
-    const fileAdded = stateDiffs.pipe(rxFlatMap(diff => diff.addedFiles));
+    const fileAdded = stateDiffs.pipe(rxFlatMap(diff => {
+        return sortBy(diff.addedFiles, f => f.type === 'object');
+    }));
 
     const fileRemoved = stateDiffs.pipe(
       rxFlatMap(diff => diff.removedFiles),
