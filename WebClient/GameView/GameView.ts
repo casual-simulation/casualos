@@ -287,6 +287,12 @@ export default class GameView extends Vue {
   private async _fileUpdated(file: File) {
     const obj = this._files[file.id];
     if (obj) {
+      if (file.type === 'object') {
+        if (file.tags._destroyed) {
+          this._fileRemoved(file.id);
+          return;
+        }
+      }
       await obj.updateFile(file);
       this.onFileUpdated.invoke(obj);
     } else {
