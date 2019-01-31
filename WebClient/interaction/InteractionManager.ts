@@ -1,7 +1,7 @@
 import { Vector2, Vector3, Intersection, Raycaster, Object3D, Ray } from 'three';
 import { ContextMenuEvent, ContextMenuAction } from './ContextMenu';
 import { File3D } from '../game-engine/File3D';
-import { Object, DEFAULT_WORKSPACE_SCALE, Workspace, DEFAULT_WORKSPACE_HEIGHT_INCREMENT, DEFAULT_WORKSPACE_MIN_HEIGHT, DEFAULT_USER_MODE, UserMode } from '../../common/Files';
+import { File, Object, DEFAULT_WORKSPACE_SCALE, Workspace, DEFAULT_WORKSPACE_HEIGHT_INCREMENT, DEFAULT_WORKSPACE_MIN_HEIGHT, DEFAULT_USER_MODE, UserMode } from '../../common/Files';
 import { FileClickOperation } from './FileClickOperation';
 import GameView from '../GameView/GameView';
 import { Physics } from '../game-engine/Physics';
@@ -80,7 +80,7 @@ export class InteractionManager {
                 if (file) {
 
                     // Can only click things if in the correct mode
-                    if ((file.file.type === 'workspace' && this.mode === 'worksurfaces') || (file.file.type === 'object' && this.mode === 'files')) {
+                    if (this.isInCorrectMode(file.file)) {
 
                         // Start file click operation on file.
                         this._fileClickOperation = new FileClickOperation(this.mode, this._gameView, this, file, clickedObject);
@@ -97,40 +97,30 @@ export class InteractionManager {
             }
         }
 
-        // Middle click.
-        if (input.getMouseButtonDown(MouseButtonId.Middle)) {
+        // Middle click or Right click.
+        if (input.getMouseButtonDown(MouseButtonId.Middle) || input.getMouseButtonDown(MouseButtonId.Right)) {
 
             // Always allow camera control with middle clicks.
             this._cameraControls.enabled = true;
 
         }
 
-        // Show the context menu.
-        if (input.getMouseButtonDown(MouseButtonId.Right)) {
-            
-            const pagePos = input.getMousePagePos();
-            const screenPos = input.getMouseScreenPos();
-            const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this._getDraggableObjects(), this._gameView.camera);
-            const hit = Physics.firstRaycastHit(raycastResult);
+    }
 
-            if (hit) {
+    public showContextMenu() {
+        const input = this._gameView.input;
+        const pagePos = input.getMousePagePos();
+        const screenPos = input.getMouseScreenPos();
+        const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this._getDraggableObjects(), this._gameView.camera);
+        const hit = Physics.firstRaycastHit(raycastResult);
 
-                this._cameraControls.enabled = false;
-                const file = this.fileForIntersection(hit);
-                if (file && file.file && file.file.type === 'workspace') {
-                    // Now send the actual context menu event.
-                    let menuEvent: ContextMenuEvent = { pagePos: pagePos, actions: this._contextMenuActions(file, hit.point) };
-                    this._gameView.$emit('onContextMenu', menuEvent);
-                }
-
-            }
-            else {
-
-                this._cameraControls.enabled = true;
-
-            }
+        this._cameraControls.enabled = false;
+        const file = this.fileForIntersection(hit);
+        if (file && file.file && file.file.type === 'workspace') {
+            // Now send the actual context menu event.
+            let menuEvent: ContextMenuEvent = { pagePos: pagePos, actions: this._contextMenuActions(file, hit.point) };
+            this._gameView.$emit('onContextMenu', menuEvent);
         }
-
     }
 
     public fileForIntersection(hit: Intersection): File3D {
@@ -341,6 +331,14 @@ export class InteractionManager {
 
     public isFile(hit: Intersection): boolean {
         return this.findWorkspaceForIntersection(hit) === null;
+    }
+
+    /**
+     * Determines if we're in the correct mode to manipulate the given file.
+     * @param file The file.
+     */
+    public isInCorrectMode(file: File) {
+        return (file.type === 'workspace' && this.mode === 'worksurfaces') || (file.type === 'object' && this.mode === 'files');
     }
 
     private _contextMenuActions(file: File3D, point: Vector3): ContextMenuAction[] {

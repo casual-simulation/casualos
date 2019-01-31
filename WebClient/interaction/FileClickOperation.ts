@@ -6,6 +6,7 @@ import { IOperation } from './IOperation';
 import GameView from '../GameView/GameView';
 import { InteractionManager } from './InteractionManager';
 import { UserMode } from 'common/Files';
+import { Physics } from '../game-engine/Physics';
 
 /**
  * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
@@ -69,6 +70,10 @@ export class FileClickOperation implements IOperation {
                 if (this._file.file.type === 'object') {
                     // Select the file we are operating on.
                     this._interaction.selectFile(this._file);
+
+                    // If we're clicking on a workspace show the context menu for it.
+                } else if(this._file.file.type === 'workspace') {
+                    this._interaction.showContextMenu();
                 }
             }
 
