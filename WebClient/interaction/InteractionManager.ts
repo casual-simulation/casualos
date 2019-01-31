@@ -1,7 +1,7 @@
 import { Vector2, Vector3, Intersection, Raycaster, Object3D, Ray } from 'three';
 import { ContextMenuEvent, ContextMenuAction } from './ContextMenu';
 import { File3D } from '../game-engine/File3D';
-import { Object, DEFAULT_WORKSPACE_SCALE, Workspace, DEFAULT_WORKSPACE_HEIGHT_INCREMENT, DEFAULT_WORKSPACE_MIN_HEIGHT } from '../../common/Files';
+import { Object, DEFAULT_WORKSPACE_SCALE, Workspace, DEFAULT_WORKSPACE_HEIGHT_INCREMENT, DEFAULT_WORKSPACE_MIN_HEIGHT, DEFAULT_USER_MODE, UserMode } from '../../common/Files';
 import { FileClickOperation } from './FileClickOperation';
 import GameView from '../GameView/GameView';
 import { Physics } from '../game-engine/Physics';
@@ -25,6 +25,8 @@ export class InteractionManager {
 
     private _cameraControls: CameraControls;
     private _fileClickOperation: FileClickOperation;
+
+    mode: UserMode = DEFAULT_USER_MODE;
 
     constructor(gameView: GameView) {
         this._draggableObjectsDirty = true;
@@ -77,9 +79,12 @@ export class InteractionManager {
 
                 if (file) {
 
-                    // Start file click operation on file.
-                    this._fileClickOperation = new FileClickOperation(this._gameView, this, file, clickedObject);
+                    // Can only click things if in the correct mode
+                    if ((file.file.type === 'workspace' && this.mode === 'worksurfaces') || (file.file.type === 'object' && this.mode === 'files')) {
 
+                        // Start file click operation on file.
+                        this._fileClickOperation = new FileClickOperation(this.mode, this._gameView, this, file, clickedObject);
+                    }
                 }
 
             }

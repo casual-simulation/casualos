@@ -204,7 +204,7 @@ export default class GameView extends Vue {
 
     this._subs.push(this.fileManager.fileChanged(this.fileManager.userFile)
       .pipe(tap(file => {
-        this.mode = getUserMode(<Object>file);
+        this.mode = this._interaction.mode = getUserMode(<Object>file);
       }))
       .subscribe());
 

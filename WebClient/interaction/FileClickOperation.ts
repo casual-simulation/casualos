@@ -5,6 +5,7 @@ import { Vector2, Vector3, Intersection } from 'three';
 import { IOperation } from './IOperation';
 import GameView from '../GameView/GameView';
 import { InteractionManager } from './InteractionManager';
+import { UserMode } from 'common/Files';
 
 /**
  * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
@@ -15,6 +16,7 @@ export class FileClickOperation implements IOperation {
 
     private _gameView: GameView;
     private _interaction: InteractionManager;
+    private _mode: UserMode;
     private _file: File3D;
     private _hit: Intersection;
     private _finished: boolean;
@@ -22,11 +24,12 @@ export class FileClickOperation implements IOperation {
     private _startScreenPos: Vector2;
     private _dragOperation: FileDragOperation;
 
-    constructor(gameView: GameView, interaction: InteractionManager, file: File3D, hit: Intersection) {
+    constructor(mode: UserMode, gameView: GameView, interaction: InteractionManager, file: File3D, hit: Intersection) {
         this._gameView = gameView;
         this._interaction = interaction;
         this._file = file;
         this._hit = hit;
+        this._mode = mode;
         
         // Store the screen position of the input when the click occured.
         this._startScreenPos = this._gameView.input.getMouseScreenPos();
@@ -45,6 +48,7 @@ export class FileClickOperation implements IOperation {
                 if (distance >= FileClickOperation.DragThreshold) {
                     // Start dragging now that we've crossed the threshold.
                     const workspace = this._interaction.findWorkspaceForIntersection(this._hit);
+
                     this._dragOperation = new FileDragOperation(this._gameView, this._interaction, this._file, workspace);
                 }
 
