@@ -349,7 +349,7 @@ export class InteractionManager {
      * @param other The second file.
      */
     public canCombineFiles(file: Object, other: Object): boolean {
-        if (file && other && file.type === 'object' && other.type === 'object') {
+        if (file && other && file.type === 'object' && other.type === 'object' && file !== other) {
             const tags = union(tagsMatchingFilter(file, other, '+'), tagsMatchingFilter(other, file, '+'));
             return tags.length > 0;
         }
