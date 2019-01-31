@@ -1,5 +1,12 @@
 # File Simulator Changelog
 
+## V0.2.11
+### Date: 1/31/2019
+
+#### Changes:
+- Changed the "X" used to deselect files into a "-" sign.
+- Added the ability to show a QR code linking to the session the current user is in.
+
 ## V0.2.10
 ### Date: 1/31/2019
 
