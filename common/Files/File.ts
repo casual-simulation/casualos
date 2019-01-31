@@ -15,6 +15,8 @@ export interface Object {
         _selection?: string;
         _destroyed?: boolean;
         _index?: number;
+        _user?: string;
+        _mode?: UserMode;
         [key: string]: any;
     };
 }
@@ -66,6 +68,8 @@ export interface PartialFile {
         _selection?: string;
         _destroyed?: boolean;
         _index?: number;
+        _user?: string;
+        _mode?: UserMode;
         [key: string]: any;
     },
     grid?: {
@@ -74,6 +78,16 @@ export interface PartialFile {
     scale?: number;
     gridScale?: number;
 }
+
+/**
+ * Defines the possible modes a user can be in.
+ */
+export type UserMode = 'files' | 'worksurfaces';
+
+/**
+ * The default user mode.
+ */
+export const DEFAULT_USER_MODE: UserMode = 'files';
 
 /**
  * The default height for workspaces.

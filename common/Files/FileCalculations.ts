@@ -1,4 +1,4 @@
-import { Object, File, Workspace, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_GRID_SCALE } from './File';
+import { Object, File, Workspace, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_GRID_SCALE, DEFAULT_USER_MODE, UserMode } from './File';
 import uuid from 'uuid/v4';
 import {
     flatMap,
@@ -471,6 +471,14 @@ export function parseFilterTag(tag: string) {
     return {
         success: false
     };
+}
+
+/**
+ * Gets the user mode value from the given file.
+ * @param object The file.
+ */
+export function getUserMode(object: Object): UserMode {
+    return object.tags._mode || DEFAULT_USER_MODE;
 }
 
 function _convertToAssignment(object: any): Assignment {
