@@ -27,6 +27,9 @@ import { Inject, Prop, Watch } from 'vue-property-decorator';
 import {
   SubscriptionLike,
 } from 'rxjs';
+import {
+  concatMap, tap,
+} from 'rxjs/operators';
 
 import { File, Object, Workspace, DEFAULT_WORKSPACE_HEIGHT_INCREMENT } from 'common/Files';
 import { time } from '../game-engine/Time';
@@ -185,15 +188,15 @@ export default class GameView extends Vue {
     this._gridChecker = new GridChecker(DEFAULT_WORKSPACE_HEIGHT_INCREMENT);
 
     // Subscriptions to file events.
-    this._subs.push(this.fileManager.fileDiscovered.subscribe(file => {
-      this._fileAdded(file);
-    }));
-    this._subs.push(this.fileManager.fileRemoved.subscribe(file => {
-      this._fileRemoved(file);
-    }));
-    this._subs.push(this.fileManager.fileUpdated.subscribe(async file => {
-      await this._fileUpdated(file);
-    }));
+    this._subs.push(this.fileManager.fileDiscovered
+      .pipe(concatMap(file => this._fileAdded(file)))
+      .subscribe());
+    this._subs.push(this.fileManager.fileRemoved
+      .pipe(tap(file => this._fileRemoved(file)))
+      .subscribe());
+    this._subs.push(this.fileManager.fileUpdated
+      .pipe(concatMap(file => this._fileUpdated(file)))
+      .subscribe());
 
     this._frameUpdate();
   }
@@ -274,7 +277,7 @@ export default class GameView extends Vue {
   private async _fileUpdated(file: File) {
     const obj = this._files[file.id];
     if (obj) {
-      obj.updateFile(file);
+      await obj.updateFile(file);
       this.onFileUpdated.invoke(obj);
     } else {
       console.log('cant find file to update it');
@@ -282,7 +285,7 @@ export default class GameView extends Vue {
   }
 
   private async _fileAdded(file: File) {
-    console.log("File Added!");
+    console.log("File Added!", file);
     if (file.type === 'object' && file.tags._hidden) {
       return;
     }

@@ -16,8 +16,8 @@
             </md-button>
             <md-button class="md-icon-button" @click="addNewWorkspace()">
               <hex-icon class="toolbar-button-icon" />
-              <span class="sr-only">New Workspace</span>
-              <md-tooltip md-direction="right">New Workspace</md-tooltip>
+              <span class="sr-only">New Worksurface</span>
+              <md-tooltip md-direction="right">New Worksurface</md-tooltip>
             </md-button>
             <md-button class="md-icon-button" @click="toggleDebug()" v-if="dev">
               <md-icon>bug_report</md-icon>

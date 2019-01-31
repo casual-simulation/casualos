@@ -91,19 +91,19 @@ const router = new VueRouter({
 
 router.beforeEach((to, from, next) => {
     appManager.initPromise.then(() => {
+        const channelId = to.params.id || null;
         if (to.path !== '/') {
             if (!appManager.user) {
-                next({ path: '/' });
+                next({ path: '/', query: { id: channelId } });
                 return;
             } else {
-                const channelId = to.params.id || null;
                 if (appManager.user.channelId != channelId) {
                     return appManager.loginOrCreateUser(appManager.user.email, channelId).then(() => {
                         location.reload();
                         next();
                     }, ex => {
                         console.error(ex);
-                        next({ path: '/' });
+                        next({ path: '/', query: { id: channelId } });
                     });
                 }
             }
