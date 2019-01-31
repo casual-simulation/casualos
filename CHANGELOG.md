@@ -1,5 +1,15 @@
 # File Simulator Changelog
 
+## V0.2.8
+### Date: 1/31/2019
+
+#### Changes:
+- Disabled double-tap to zoom functionality that is added by iOS and Android by default.
+- Fixed an issue where files would all appear in the same spot upon first load of a session.
+- Added the Session ID to the top header.
+- After logging in, the user will now be redirected back to the session they first tried accessing.
+- Fixed some typos.
+
 ## V0.2.7
 ### Date: 1/30/2019
 
