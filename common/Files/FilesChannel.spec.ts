@@ -17,12 +17,18 @@ import {
     second,
     listMergeConflicts,
     ResolvedConflict,
-    fileUpdated
+    fileUpdated,
+    FileEvent,
+    FilesStateStore,
+    fileChangeObservables
 } from './FilesChannel';
 import { Workspace, Object, File } from './File';
 import { values, assign, merge } from 'lodash';
 import uuid from 'uuid/v4';
 import { objectsAtGridPosition } from './FileCalculations';
+import { TestConnector } from 'common/channels-core/test/TestConnector';
+import { Subject } from 'rxjs';
+import { ChannelClient, StoreFactory, ReducingStateStore } from 'common/channels-core';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -96,6 +102,64 @@ describe('FilesChannel', () => {
             });
         });
 
+    });
+
+    describe('fileChangeObservables()', () => {
+        it('should sort added files so workspaces are first', async () => {
+            const defaultState: FilesState = {};
+            const serverEvents = new Subject<FileEvent>();
+            const connector = new TestConnector(defaultState, serverEvents);
+            const factory = new StoreFactory({
+                'files': () => new FilesStateStore({})
+            });
+            const client = new ChannelClient(connector, factory);
+            const channel = client.getChannel<FilesState>({
+                id: 'test',
+                type: 'files',
+                name: 'Test'
+            });
+            const connection = await channel.subscribe();
+
+            const { fileAdded } = fileChangeObservables(connection);
+
+            const fileIds: string[] = [];
+
+            fileAdded.subscribe(file => {
+                fileIds.push(file.id);
+            });
+
+            const newState: FilesState = {
+                'test': {
+                    id: 'test',
+                    type: 'object',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'zdf'
+                    }
+                },
+                'zdf': {
+                    id: 'zdf',
+                    type: 'workspace',
+                    defaultHeight: 1,
+                    grid: {},
+                    gridScale: 1,
+                    scale: 1,
+                    size: 1,
+                    position: { x: 0, y: 0, z: 0 },
+                }
+            };
+
+            serverEvents.next({
+                type: 'apply_state',
+                state: newState,
+                creation_time: new Date()
+            });
+
+            expect(fileIds).toEqual([
+                'zdf',
+                'test'
+            ]);
+        });
     });
 
     describe('calculateActionEvents()', () => {

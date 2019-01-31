@@ -16,12 +16,6 @@
                 <!-- <span class="md-error" v-if="!$v.form.firstName.required">The first name is required</span>
                 <span class="md-error" v-else-if="!$v.form.firstName.minlength">Invalid first name</span> -->
               </md-field>
-              <md-field>
-                <label for="name">Session ID</label>
-                <md-input name="session" id="session" v-model="channelId"/>
-                <!-- <span class="md-error" v-if="!$v.form.firstName.required">The first name is required</span>
-                <span class="md-error" v-else-if="!$v.form.firstName.minlength">Invalid first name</span> -->
-              </md-field>
             </div>
           </div>
         </md-card-content>
