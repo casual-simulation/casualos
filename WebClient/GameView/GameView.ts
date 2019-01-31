@@ -295,7 +295,7 @@ export default class GameView extends Vue {
   }
 
   private async _fileAdded(file: File) {
-    if (file.type === 'object' && file.tags._hidden) {
+    if (file.type === 'object' && (file.tags._hidden || file.tags._destroyed)) {
       return;
     }
     

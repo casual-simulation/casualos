@@ -341,8 +341,8 @@ export class FileManager {
 
     // Calculate the events on a single client and then run them in a transaction to make sure the order is right.
     const actionData = action(sender.id, receiver.id, eventName);
-    const events = calculateActionEvents(this._files.store.state(), actionData);
-    this._files.emit(transaction(events));
+    const result = calculateActionEvents(this._files.store.state(), actionData);
+    this._files.emit(transaction(result.events));
   }
 
   // TODO: This seems like a pretty dangerous function to keep around,

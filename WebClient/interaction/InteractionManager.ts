@@ -1,18 +1,18 @@
 import { Vector2, Vector3, Intersection, Raycaster, Object3D, Ray } from 'three';
 import { ContextMenuEvent, ContextMenuAction } from './ContextMenu';
 import { File3D } from '../game-engine/File3D';
-import { File, Object, DEFAULT_WORKSPACE_SCALE, Workspace, DEFAULT_WORKSPACE_HEIGHT_INCREMENT, DEFAULT_WORKSPACE_MIN_HEIGHT, DEFAULT_USER_MODE, UserMode } from '../../common/Files';
+import { File, Object, DEFAULT_WORKSPACE_SCALE, Workspace, DEFAULT_WORKSPACE_HEIGHT_INCREMENT, DEFAULT_WORKSPACE_MIN_HEIGHT, DEFAULT_USER_MODE, UserMode, FileEvent } from '../../common/Files';
 import { FileClickOperation } from './FileClickOperation';
 import GameView from '../GameView/GameView';
 import { Physics } from '../game-engine/Physics';
-import { find, flatMap, minBy, keys, maxBy } from 'lodash';
+import { find, flatMap, minBy, keys, maxBy, union } from 'lodash';
 import { CameraControls } from './CameraControls';
 import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
 import { FileMesh } from '../game-engine/FileMesh';
 import { Axial, realPosToGridPos, gridDistance, keyToPos, posToKey } from '../game-engine/hex';
 import { MouseButtonId } from '../game-engine/input';
 import { isBuffer } from 'util';
-import { objectsAtGridPosition } from 'common/Files/FileCalculations';
+import { objectsAtGridPosition, tagsMatchingFilter } from 'common/Files/FileCalculations';
 
 export class InteractionManager {
 
@@ -274,14 +274,41 @@ export class InteractionManager {
     }
 
     /**
+     * Calculates whether the given file should be stacked onto another file or if
+     * it should be combined with another file.
+     * @param workspace The workspace.
+     * @param gridPosition The grid position that the file is being dragged to.
+     * @param file The file that is being dragged.
+     */
+    public calculateFileDragPosition(workspace: File3D, gridPosition: Vector2, file: Object) {
+        const objs = this.objectsAtGridPosition(workspace, gridPosition);
+
+        if (objs.length === 1) {
+            // check if the files can be combined
+            const canCombine = this.canCombineFiles(file, objs[0]);
+
+            if (canCombine) {
+                return {
+                    combine: true,
+                    other: objs[0]
+                };
+            }
+        }
+
+        return {
+            combine: false,
+            index: this._nextAvailableObjectIndex(workspace, gridPosition, file, objs)
+        };
+    }
+
+    /**
      * Calculates the next available index that an object can be placed at on the given workspace at the
      * given grid position.
      * @param workspace The workspace.
      * @param gridPosition The grid position that the next available index should be found for.
      * @param file The file that we're trying to find the next index for.
      */
-    public nextAvailableObjectIndex(workspace: File3D, gridPosition: Vector2, file: Object): number {
-        const objs = this.objectsAtGridPosition(workspace, gridPosition);
+    private _nextAvailableObjectIndex(workspace: File3D, gridPosition: Vector2, file: Object, objs: Object[]): number {
         const indexes = objs.map(o => ({
             object: o,
             index: o.tags._index || 0
@@ -316,18 +343,18 @@ export class InteractionManager {
         });
     }
 
-    // TODO: Need to reimplement combine action with new input system.
-    // public tryCombineFiles(drag: DragOperation) {
-    //     const raycast = Physics.raycastAtScreenPos(drag.screenPos, this._raycaster, this._getDraggableObjects(), this._gameView.camera);
-    //     const other = find(raycast.intersects, (val, index, col) => val.object !== drag.hit.object);
-    //     if (other) {
-    //         const file = this.fileForIntersection(drag.hit);
-    //         const otherFile = this.fileForIntersection(other);
-    //         if (file && otherFile && file.file.type === 'object' && otherFile.file.type === 'object') {
-    //             this._gameView.fileManager.action(file.file, otherFile.file, '+');
-    //         }
-    //     }
-    // }
+    /**
+     * Determines if the two files can be combined and includes the resolved events if so.
+     * @param file The first file.
+     * @param other The second file.
+     */
+    public canCombineFiles(file: Object, other: Object): boolean {
+        if (file && other && file.type === 'object' && other.type === 'object') {
+            const tags = union(tagsMatchingFilter(file, other, '+'), tagsMatchingFilter(other, file, '+'));
+            return tags.length > 0;
+        }
+        return false;
+    }
 
     public isFile(hit: Intersection): boolean {
         return this.findWorkspaceForIntersection(hit) === null;

@@ -25,6 +25,8 @@ export class FileDragOperation implements IOperation {
     private _attachWorkspace: File3D;
     private _attachPoint: Axial;
     private _lastScreenPos: Vector2;
+    private _combine: boolean;
+    private _other: Object;
 
     private _workspaceDelta: Vector3;
 
@@ -97,6 +99,8 @@ export class FileDragOperation implements IOperation {
                     }
                 }
             });
+        } else if(this._combine) {
+            this._gameView.fileManager.action(this._file.file, this._other, '+');
         }
     }
 
@@ -113,21 +117,35 @@ export class FileDragOperation implements IOperation {
                 this._gridWorkspace.gridsVisible = true;
 
                 // calculate index for file
-                const index = this._interaction.nextAvailableObjectIndex(workspace, gridPosition, <Object>this._file.file);
+                const result = this._interaction.calculateFileDragPosition(workspace, gridPosition, <Object>this._file.file);
                 
-                this._gameView.fileManager.updateFile(this._file.file, {
-                    tags: {
-                        _workspace: workspace.file.id,
-                        _position: {
-                            x: gridPosition.x,
-                            y: gridPosition.y,
-                            z: height
-                            // TODO: Make index
-                            // z: gridPosition.z
-                        },
-                        _index: index
-                    }
-                });
+                this._combine = result.combine;
+                this._other = result.other;
+                if (!result.combine) {
+                    this._gameView.fileManager.updateFile(this._file.file, {
+                        tags: {
+                            _workspace: workspace.file.id,
+                            _position: {
+                                x: gridPosition.x,
+                                y: gridPosition.y,
+                                z: height
+                            },
+                            _index: result.index
+                        }
+                    });
+                } else {
+                    // this._gameView.fileManager.updateFile(this._file.file, {
+                    //     tags: {
+                    //         _workspace: workspace.file.id,
+                    //         _position: {
+                    //             x: result.other.tags._position.x,
+                    //             y: result.other.tags._position.y,
+                    //             z: result.other.tags._position.z
+                    //         },
+                    //         _index: result.other.tags._index
+                    //     }
+                    // });
+                }
             } else {
                 // Don't move the file if it's not on a workspace
             }

@@ -190,9 +190,11 @@ describe('FilesChannel', () => {
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
             const fileAction = action('thisFile', 'thatFile', '+');
-            const events = calculateActionEvents(state, fileAction);
+            const result = calculateActionEvents(state, fileAction);
 
-            const newState = filesReducer(state, transaction(events));
+            expect(result.hasUserDefinedEvents).toBe(true);
+            
+            const newState = filesReducer(state, transaction(result.events));
 
             expect(newState).toEqual({
                 // should create a new value from "thisFile"

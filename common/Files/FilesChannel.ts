@@ -486,14 +486,16 @@ export function fileChangeObservables(connection: ChannelConnection<FilesState>)
  * @param state The current file state.
  * @param action The action to process.
  */
-export function calculateActionEvents(state: FilesState, action: Action): FileEvent[] {
+export function calculateActionEvents(state: FilesState, action: Action) {
     const objects = <Object[]>values(state).filter(f => f.type === 'object');
     const sender = <Object>state[action.senderFileId];
     const receiver = <Object>state[action.receiverFileId];
     const context = createCalculationContext(objects);
+    const firstEvents = eventActions(objects, context, sender, receiver, action.eventName);
+    const secondEvents = eventActions(objects, context, receiver, sender, action.eventName);
     const events = [
-        ...eventActions(objects, context, sender, receiver, action.eventName),
-        ...eventActions(objects, context, receiver, sender, action.eventName),
+        ...firstEvents,
+        ...secondEvents,
         fileUpdated(sender.id, {
             tags: {
                 _destroyed: true
@@ -506,7 +508,10 @@ export function calculateActionEvents(state: FilesState, action: Action): FileEv
         })
     ];
 
-    return events;
+    return {
+        events,
+        hasUserDefinedEvents: firstEvents.length > 0 || secondEvents.length > 0
+    };
 }
 
 /**
