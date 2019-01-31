@@ -1,4 +1,4 @@
-import { Object3D, Mesh, BoxBufferGeometry, MeshStandardMaterial, Color, Vector3, Box3, Sphere } from "three";
+import { Object3D, Mesh, BoxBufferGeometry, MeshStandardMaterial, Color, Vector3, Box3, Sphere, BufferGeometry, BufferAttribute, LineBasicMaterial, LineSegments } from "three";
 import { Object, File, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_GRID_SCALE } from 'common/Files';
 import { GameObject } from "./GameObject";
 import GameView from '../GameView/GameView';
@@ -9,7 +9,7 @@ import robotoTexturePath from '../public/bmfonts/Roboto.png';
 import { File3D } from "./File3D";
 import { ArgEvent } from '../../common/Events';
 import { Arrow3D } from "./Arrow3D";
-import { find } from "lodash";
+import { find, flatMap } from "lodash";
 import { isArray, parseArray, isFormula, getShortId, fileFromShortId } from '../../common/Files/FileCalculations'
 import { appManager } from '../AppManager';
 
@@ -39,6 +39,11 @@ export class FileMesh extends GameObject {
      * The optional arrows for the file.
      */
     arrows: Arrow3D[];
+
+    /**
+     * The optional stroke outline for the file.
+     */
+    stroke: LineSegments;
 
     /**
      * Event that is fired when this file mesh is updated.
@@ -99,6 +104,9 @@ export class FileMesh extends GameObject {
 
         // Tag: line
         this._tagUpdateLine();
+
+        // Tag: stroke
+        this._tagUpdateStroke();
 
         this.onUpdated.invoke(this);
     }
@@ -318,6 +326,76 @@ export class FileMesh extends GameObject {
                 return false;
             });
         }
+    }
+
+    private _tagUpdateStroke() {
+        let stroke = this.file.tags['stroke.color'];
+        if (typeof stroke !== 'undefined') {
+            if (!this.stroke) {
+                // Create the stroke mesh
+                const geo = this._createStrokeGeometry();
+                const material = new LineBasicMaterial({
+                    color: 0x000000
+                });
+                
+                this.stroke = new LineSegments(geo, material);
+                this.cube.add(this.stroke);
+            }
+
+            this.stroke.visible = true;
+            const colorValue = appManager.fileManager.calculateFileValue(this.file, 'stroke.color');
+            const material = <LineBasicMaterial>this.stroke.material;
+            if (typeof colorValue !== 'undefined') {
+                material.color = this._getColor(colorValue);
+            } else {
+                material.color = new Color(0x000000);
+            }
+        } else {
+            if (this.stroke) {
+                this.stroke.visible = false;
+            }
+        }
+    }
+
+    private _createStrokeGeometry(): BufferGeometry {
+        const geo = new BufferGeometry();
+
+        let verticies: number[][] = [
+            [-0.5, -0.5, -0.5], // left  bottom back  - 0
+            [ 0.5, -0.5, -0.5], // right bottom back  - 1
+            [-0.5,  0.5, -0.5], // left  top    back  - 2
+            [ 0.5,  0.5, -0.5], // right top    back  - 3
+            [-0.5, -0.5,  0.5], // left  bottom front - 4
+            [ 0.5, -0.5,  0.5], // right bottom front - 5
+            [-0.5,  0.5,  0.5], // left  top    front - 6
+            [ 0.5,  0.5,  0.5], // right top    front - 7
+        ];
+
+        const indicies = [
+            0,1,
+            0,2,
+            0,4,
+
+            4,5,
+            4,6,
+
+            5,7,
+            5,1,
+
+            1,3,
+
+            2,3,
+            2,6,
+
+            3,7,
+
+            6,7,
+        ];
+        const lines: number[] = flatMap(indicies, i => verticies[i]);
+        const array = new Float32Array(lines);
+        geo.addAttribute('position', new BufferAttribute(array, 3));
+
+        return geo;
     }
 }
 
