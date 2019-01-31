@@ -416,6 +416,7 @@ export function objectsAtGridPosition(objects: Object[], workspaceId: string, po
     return objects.filter(o => {
         return o.type === 'object' && 
             o.tags._workspace === workspaceId &&
+            o.tags._position &&
             o.tags._position.x === position.x &&
             o.tags._position.y === position.y
     });
