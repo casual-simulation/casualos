@@ -1,5 +1,16 @@
 # File Simulator Changelog
 
+## V0.2.10
+### Date: 1/31/2019
+
+#### Changes:
+- Added two different modes to help control what the user is interacting with
+  - The "Files" mode allows dragging files and making new files.
+  - The "Worksurfaces" mode allows dragging worksurfaces, making new worksurfaces, and interacting via clicking on them.
+- Re-added the ability to combine files
+  - Dragging a file onto another file will combine them if possible.
+  - If no filters match then the files will stack.
+
 ## V0.2.9
 ### Date: 1/31/2019
 
