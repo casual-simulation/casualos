@@ -76,3 +76,12 @@
 .md-switch.md-theme-default.user-mode-toggle .md-ripple {
     color: var(--md-theme-default-text-primary-on-primary, #fff);
 }
+
+.user-mode-toggle .md-switch-label {
+    top: -2px;
+}
+
+.user-mode-toggle svg {
+    stroke: #fff;
+    fill: #fff;
+}

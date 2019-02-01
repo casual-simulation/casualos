@@ -13,6 +13,8 @@ import { copyToClipboard } from '../utils';
 import { getUserMode } from 'common/Files/FileCalculations';
 import { tap } from 'rxjs/operators';
 import QRCode from '@chenfengyuan/vue-qrcode';
+import CubeIcon from '../public/icons/Cube.svg';
+import HexIcon from '../public/icons/Hexagon.svg';
 
 import vueFilePond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
@@ -24,7 +26,9 @@ const FilePond = vueFilePond();
     components: {
         'app': App,
         'qr-code': QRCode,
-        'file-pond': FilePond
+        'file-pond': FilePond,
+        'cube-icon': CubeIcon,
+        'hex-icon': HexIcon,
     }
 })
 
