@@ -1,5 +1,33 @@
 # File Simulator Changelog
 
+## V0.2.12
+### Date: 2/1/2019
+
+#### Changes:
+- Added `#stroke.color` which sets an outline on the cube.
+- Added the ability to download `.aux` files.
+- Added the ability to upload `.aux` files into the current session.
+- Changed the URLs to not use `#`. (breaking change!)
+- Changed the home screen to be the root path (`/`) so sessions are now just `filesimulator.com/mysession`. (breaking change!)
+- Changed the login screen to be at `/login`. (So `login` is not a valid session ID anymore) (breaking change!)
+- Fixed an issue where destroyed objects were being returned in action script queries.
+- Fixed an issue that allowed files to be combined with themselves. (Sorry Jeremy!)
+- Fixed an issue where offline users would always overwrite file `_index` values if the index was at `0.`
+- Minor changes:
+  - Add a "continue as guest" button.
+  - Replace "File Simulator" with the session code unless they are in the default session.
+  - Disable auto-capitalization and autocorrect on the input fields.
+  - Change the "Add worksurface" and "Add file" buttons to just be a "+" icon.
+  - Change the mode switch to use icons instead of text for the label.
+  - Make the mode switch always appear white.
+  - Remove color integration from FileValue.
+  - Change "Nuke the site" to something a little more friendly.
+  - Change "+ New Tag" to "+tag".
+  - Change the deselect file button to a grey color.
+  - Change the info box header to "Selected Files".
+  - Change the info icon to a pencil icon.
+
+
 ## V0.2.11
 ### Date: 1/31/2019
 
