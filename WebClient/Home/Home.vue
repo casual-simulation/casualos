@@ -20,8 +20,8 @@
             </md-card-actions>
           </md-card>
           <md-button class="md-icon-button" v-else-if="filesMode" @click="open">
-            <md-icon>info</md-icon>
-            <span class="sr-only">Open Info Card</span>
+            <md-icon>edit</md-icon>
+            <span class="sr-only">Open File Editor</span>
           </md-button>
         </div>
       </game-view>
