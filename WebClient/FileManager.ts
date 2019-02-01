@@ -350,6 +350,10 @@ export class FileManager {
     this._files.emit(transaction(result.events));
   }
 
+  transaction(...events: FileEvent[]) {
+    this._files.emit(transaction(events));
+  }
+
   /**
    * Adds the given state to the session.
    * @param state The state to add.

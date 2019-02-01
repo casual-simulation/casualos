@@ -6,7 +6,7 @@ import { InteractionManager } from './InteractionManager';
 import { Ray, Intersection, Vector2, Vector3, Box3 } from 'three';
 import { Physics } from '../game-engine/Physics';
 import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
-import { Workspace, Object, DEFAULT_WORKSPACE_SCALE } from 'common/Files';
+import { Workspace, Object, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated } from 'common/Files';
 import { keys, minBy, flatMap } from 'lodash';
 import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance, posToKey } from '../game-engine/hex';
 import { isFormula } from 'common/Files/FileCalculations';
@@ -91,14 +91,17 @@ export class FileDragOperation implements IOperation {
         if (this._attachWorkspace) {
             const mesh = <WorkspaceMesh>this._workspace.mesh;
             const height = mesh.hexGrid.hexes[0].height;
-            this._gameView.fileManager.removeFile(this._workspace.file);
-            this._gameView.fileManager.updateFile(this._attachWorkspace.file, {
-                grid: {
-                    [posToKey(this._attachPoint)]: {
-                        height: height
+
+            this._gameView.fileManager.transaction(
+                fileRemoved(this._workspace.file.id),
+                fileUpdated(this._attachWorkspace.file.id, {
+                    grid: {
+                        [posToKey(this._attachPoint)]: {
+                            height: height
+                        }
                     }
-                }
-            });
+                })
+            );
         } else if(this._combine) {
             this._gameView.fileManager.action(this._file.file, this._other, '+');
         }
