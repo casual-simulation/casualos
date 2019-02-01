@@ -347,9 +347,7 @@ export function updateFile(file: File, newData: PartialFile, createContext: () =
         // Cleanup/preprocessing
         for (let property in newData.tags) {
             let value = newData.tags[property];
-            if (!value) {
-                newData.tags[property] = null;
-            } else {
+            if (value) {
                 if (_isAssignmentFormula(value)) {
                     const assignment = _convertToAssignment(value);
                     const result = _calculateFormulaValue(createContext(), file, property, assignment.formula);

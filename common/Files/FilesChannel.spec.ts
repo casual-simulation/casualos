@@ -100,6 +100,56 @@ describe('FilesChannel', () => {
 
                 expect(newTest.grid).toBe(test.grid);
             });
+
+            it('should remove null, undefined, and empty string properties', () => {
+                const test: Object = {
+                    id: 'test',
+                    type: 'object',
+                    tags: {
+                        _position: { x: 1, y: 2, z: 3 },
+                        _workspace: 'abc',
+                        isNull: null,
+                        isUndefined: undefined,
+                        isEmpty: '',
+                        isZero: 0,
+                        isEmptyArray: <any>[],
+                        isNaN: NaN
+                    }
+                };
+                const state: FilesState = {
+                    test: test
+                };
+
+                const newState = filesReducer(state, fileUpdated('test', {
+                    tags: {
+                        fun: 'cool',
+                        test: undefined,
+                        other: null,
+                        empty: '',
+                        zero: 0,
+                        emptyArray: <any>[],
+                        nan: NaN
+                    }
+                }));
+
+                const newTest = <Object>newState['test'];
+
+                expect(newTest).toEqual({
+                    id: 'test',
+                    type: 'object',
+                    tags: {
+                        _position: { x: 1, y: 2, z: 3 },
+                        _workspace: 'abc',
+                        fun: 'cool',
+                        isZero: 0,
+                        zero: 0,
+                        isEmptyArray: [],
+                        emptyArray: [],
+                        isNaN: NaN,
+                        nan: NaN
+                    }
+                });
+            });
         });
 
     });

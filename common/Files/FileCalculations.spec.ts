@@ -189,13 +189,14 @@ describe('FileCalculations', () => {
             expect(newData).toEqual({});
         });
 
-        it('should set falsy fields to null in newData', () => {
+        it('should set leave falsy fields alone in newData', () => {
             let file: Object = createFile();
             let newData = {
                 tags: {
                     a: false,
                     b: '',
-                    c: 0
+                    c: 0,
+                    d: <undefined>[]
                 }
             };
 
@@ -203,9 +204,10 @@ describe('FileCalculations', () => {
 
             expect(newData).toEqual({
                 tags: {
-                    a: null,
-                    b: null,
-                    c: null
+                    a: false,
+                    b: '',
+                    c: 0,
+                    d: []
                 }
             });
         });

@@ -1,4 +1,4 @@
-import { union, keys, every } from "lodash";
+import { union, keys, every, some } from "lodash";
 
 /**
  * Merges the two objects and returns a new object that contains the combination of the two.
@@ -25,7 +25,7 @@ function decide(...vals: any[]) {
     if (undefed.length === 1) {
         return undefed[0];
     } else {
-        if (every(undefed, v => typeof v === 'object' && !Array.isArray(v) && v !== null)) {
+        if (every(undefed, v => typeof v === 'object' && !Array.isArray(v) && v !== null) && some(undefed, v => v !== undefed[0])) {
             return (<any>merge)(...undefed);
         } else {
             return undefed[undefed.length - 1];

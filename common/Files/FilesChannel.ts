@@ -515,6 +515,23 @@ export function calculateActionEvents(state: FilesState, action: Action) {
 }
 
 /**
+ * Cleans the file by removing any null or undefined properties.
+ * @param file The file to clean.
+ */
+export function cleanFile(file: File): File {
+    let cleaned = mergeObj({}, file);
+    if (cleaned.type === 'object') {
+        for(let property in cleaned.tags) {
+            let value = cleaned.tags[property];
+            if (value === null || typeof value === 'undefined' || value === '') {
+                delete cleaned.tags[property];
+            }
+        }
+    }
+    return cleaned;
+}
+
+/**
  * The reducer for the "file_added" event type.
  * @param state 
  * @param event 
@@ -541,16 +558,17 @@ function fileRemovedReducer(state: FilesState, event: FileRemovedEvent) {
  * @param event 
  */
 function fileUpdatedReducer(state: FilesState, event: FileUpdatedEvent) {
-    const newData = mergeObj({}, state, {
+    let newData = mergeObj({}, state, {
         [event.id]: event.update
     });
+    newData[event.id] = cleanFile(newData[event.id]);
 
-    for(let property in newData[event.id].tags) {
-        let value = newData[event.id].tags[property];
-        if (value === null) {
-            delete newData[event.id].tags[property];
-        }
-    }
+    // for(let property in newData[event.id].tags) {
+    //     let value = newData[event.id].tags[property];
+    //     if (value === null) {
+    //         delete newData[event.id].tags[property];
+    //     }
+    // }
 
     return newData;
 }
