@@ -42,7 +42,8 @@ import {
   toggleFileSelection,
   calculateFormattedFileValue,
   calculateFileValue,
-  createFile
+  createFile,
+  isDestroyed
 } from 'common/Files/FileCalculations';
 import {ChannelConnection} from 'common/channels-core';
 import {
@@ -129,7 +130,7 @@ export class FileManager {
    * Gets all the files that represent an object.
    */
   get objects(): Object[] {
-    return <any[]>this.files.filter(f => f.type === 'object' && !f.tags._destroyed);
+    return <any[]>this.files.filter(f => f.type === 'object' && !isDestroyed(f));
   }
 
   /**

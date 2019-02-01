@@ -201,6 +201,14 @@ export function isFormulaObject(object: any) {
 }
 
 /**
+ * Determines if the given object has been destroyed.
+ * @param object Whether the object is destroyed.
+ */
+export function isDestroyed(object: Object) {
+    return !!object.tags._destroyed;
+}
+
+/**
  * Determines if the given tag matches the filter syntax.
  */
 export function isFilterTag(tag: string) {

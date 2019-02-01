@@ -13,7 +13,7 @@ export interface Object {
         } | null;
         _hidden?: boolean;
         _selection?: string;
-        _destroyed?: boolean;
+        _destroyed?: any;
         _index?: number;
         _user?: string;
         _mode?: UserMode;
