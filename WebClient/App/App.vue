@@ -8,7 +8,7 @@
                         <md-icon>menu</md-icon>
                     </md-button>
                     <a class="md-title clickable" @click="showQRCode = true">
-                        File Simulator <span v-show="session" class="session-id">{{session}}</span>
+                        {{session || "File Simulator"}}
                     </a>
                 </div>
                 <div class="md-toolbar-section-end">
