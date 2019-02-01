@@ -6,8 +6,7 @@
         :value="value" 
         class="value-input" 
         :disabled="readOnly"
-        :class="[{ focused: isFocused, formula: isFormula }, tag]"
-        :style="{ 'background-color': backgroundColor, 'color': color }">
+        :class="[{ focused: isFocused, formula: isFormula }, tag]">
 </template>
 <script src="./FileValue.ts"></script>
 <style src="./FileValue.css"></style>
