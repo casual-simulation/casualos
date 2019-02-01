@@ -7,7 +7,7 @@ import {
 } from 'rxjs/operators';
 import { ReducingStateStore, Event, ChannelConnection } from "../channels-core";
 import {File, Object, Workspace, PartialFile} from './File';
-import { tagsMatchingFilter, createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, isDestroyed } from './FileCalculations';
+import { tagsMatchingFilter, createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, isDestroyed, getActiveObjects } from './FileCalculations';
 import { merge as mergeObj } from '../utils';
 
 export const first = Symbol('ours');
@@ -487,7 +487,7 @@ export function fileChangeObservables(connection: ChannelConnection<FilesState>)
  * @param action The action to process.
  */
 export function calculateActionEvents(state: FilesState, action: Action) {
-    const objects = <Object[]>values(state).filter(f => f.type === 'object' && !isDestroyed(f));
+    const objects = getActiveObjects(state);
     const sender = <Object>state[action.senderFileId];
     const receiver = <Object>state[action.receiverFileId];
     const context = createCalculationContext(objects);

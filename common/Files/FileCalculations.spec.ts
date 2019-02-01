@@ -10,12 +10,14 @@ import {
     parseFilterTag,
     validateTag,
     fileTags,
-    isHiddenTag
+    isHiddenTag,
+    getActiveObjects
 } from './FileCalculations';
 import {
     cloneDeep
 } from 'lodash';
 import { File, Object } from './File';
+import { FilesState } from './FilesChannel';
 
 describe('FileCalculations', () => {
     describe('isFormula()', () => {
@@ -65,6 +67,74 @@ describe('FileCalculations', () => {
             expect(isArray('clone(this, { something: true })')).toBeFalsy();
         });
 
+    });
+
+    describe('getActiveObjects()', () => {
+        it('should return only objects', () => {
+            const state: FilesState = {
+                first: {
+                    id: 'first',
+                    type: 'object',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'test'
+                    }
+                },
+                second: {
+                    id: 'second',
+                    type: 'object',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'test'
+                    }
+                },
+                workspace: {
+                    id: 'workspace',
+                    type: 'workspace',
+                    defaultHeight: 1,
+                    grid: {},
+                    gridScale: 1,
+                    position: { x:0, y: 0, z: 0},
+                    size: 1,
+                    scale: 1
+                }
+            };
+
+            const objects = getActiveObjects(state);
+
+            expect(objects).toEqual([
+                state['first'],
+                state['second']
+            ]);
+        });
+
+        it('should exclude destroyed objects', () => {
+            const state: FilesState = {
+                first: {
+                    id: 'first',
+                    type: 'object',
+                    tags: {
+                        _destroyed: true,
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'test'
+                    }
+                },
+                second: {
+                    id: 'second',
+                    type: 'object',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'test'
+                    }
+                },
+            };
+
+            const objects = getActiveObjects(state);
+
+            expect(objects).toEqual([
+                state['second']
+            ]);
+        });
     });
 
     describe('calculateFileValue()', () => {

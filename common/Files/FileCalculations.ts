@@ -8,11 +8,13 @@ import {
     some,
     assign,
     find,
+    values,
 } from 'lodash';
 import { Sandbox } from '../Formulas/Sandbox';
 import formulaLib from 'formula-lib';
 import { FilterFunction, SandboxInterface } from '../Formulas/SandboxInterface';
 import { PartialFile } from 'common/Files';
+import { FilesState } from './FilesChannel';
 
 
 export var ShortId_Length: number = 5;
@@ -206,6 +208,14 @@ export function isFormulaObject(object: any) {
  */
 export function isDestroyed(object: Object) {
     return !!object.tags._destroyed;
+}
+
+/**
+ * Gets the array of objects in the given state that are currently active.
+ * @param state The state to get the active objects of.
+ */
+export function getActiveObjects(state: FilesState) {
+    return <Object[]>values(state).filter(f => f.type === 'object' && !isDestroyed(f));
 }
 
 /**

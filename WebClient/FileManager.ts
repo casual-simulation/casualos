@@ -43,7 +43,8 @@ import {
   calculateFormattedFileValue,
   calculateFileValue,
   createFile,
-  isDestroyed
+  isDestroyed,
+  getActiveObjects
 } from 'common/Files/FileCalculations';
 import {ChannelConnection} from 'common/channels-core';
 import {
@@ -122,7 +123,7 @@ export class FileManager {
   private _mergeStatus: MergeStatus<FilesState> = null;
   private _id: string;
 
-  get files(): File[] {
+  private get _allFiles(): File[] {
     return values(this.filesState);
   }
 
@@ -130,7 +131,7 @@ export class FileManager {
    * Gets all the files that represent an object.
    */
   get objects(): Object[] {
-    return <any[]>this.files.filter(f => f.type === 'object' && !isDestroyed(f));
+    return getActiveObjects(this.filesState);
   }
 
   /**
@@ -361,7 +362,7 @@ export class FileManager {
   // but we'll add a config option to prevent this from happening on real sites.
   deleteEverything() {
     console.warn('[FileManager] Delete Everything!');
-    const deleteOps = this.files.map(f => fileRemoved(f.id));
+    const deleteOps = this._allFiles.map(f => fileRemoved(f.id));
     this._files.emit(transaction(deleteOps));
     setTimeout(() => {
       appManager.logout();
