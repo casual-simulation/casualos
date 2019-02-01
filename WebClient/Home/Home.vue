@@ -6,7 +6,7 @@
           <md-card class="info-card" v-if="isOpen && filesMode">
             <md-card-content>
               <div v-if="!isLoading">
-                <h4 class="files-header">Files</h4>
+                <h4 class="files-header">Selected Files</h4>
                 <file-table class="files-table" :files="files" :updateTime="updateTime"></file-table>
 
                 <p v-if="!hasFiles">
