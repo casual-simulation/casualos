@@ -64,3 +64,15 @@
     align-items: center;
     padding: 5px;
 }
+
+.md-switch.md-theme-default.md-checked.user-mode-toggle .md-switch-container {
+    background-color: rgba(0,0,0,0.38);
+}
+
+.md-switch.md-theme-default.md-checked.user-mode-toggle .md-switch-thumb {
+    background-color: #fff;
+}
+
+.md-switch.md-theme-default.user-mode-toggle .md-ripple {
+    color: var(--md-theme-default-text-primary-on-primary, #fff);
+}

@@ -12,7 +12,7 @@
                     </a>
                 </div>
                 <div class="md-toolbar-section-end">
-                    <md-switch v-if="loggedIn" v-model="userMode" @change="onUserModeChanged">{{currentUserMode()}}</md-switch>
+                    <md-switch class="user-mode-toggle" v-if="loggedIn" v-model="userMode" @change="onUserModeChanged">{{currentUserMode()}}</md-switch>
                 </div>
             </md-toolbar>
 
