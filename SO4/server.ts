@@ -45,8 +45,6 @@ export class Server {
         this._app.use(bodyParser.json());
         await this._channelServer.configure(this._app, this._socket);
 
-        // this._app.use('/', express.static(this._config.client.dist));
-
         this._app.post('/api/users', asyncMiddleware(async (req, res) => {
             const json = req.body;
             const username = json.email.split('@')[0];
