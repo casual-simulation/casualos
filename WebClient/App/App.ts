@@ -83,6 +83,11 @@ export default class App extends Vue {
     showFileUpload: boolean = false;
 
     /**
+     * The session/
+     */
+    session: string = '';
+
+    /**
      * The files that have been uploaded by the user.
      */
     uploadedFiles: File[] = [];
@@ -107,14 +112,6 @@ export default class App extends Vue {
     currentMergeState: MergeStatus<FilesState> = null;
 
     private _subs: SubscriptionLike[] = [];
-
-    get session() {
-        if (appManager.user) {
-            return appManager.user.channelId;
-        } else {
-            return '';
-        }
-    }
 
     get version() {
         return appManager.version.latestTaggedVersion;
@@ -149,6 +146,7 @@ export default class App extends Vue {
             let subs: SubscriptionLike[] = [];
 
             this.loggedIn = true;
+            this.session = user.channelId;
             this.online = fileManager.isOnline;
             this.synced = fileManager.isSynced;
 
