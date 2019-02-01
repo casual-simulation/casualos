@@ -34,6 +34,10 @@ declare module 'formula-lib' {
   export default lib; 
 }
 
+declare module 'downloadjs' {
+  function download(data: any, fileName: string, mimeType: string): void;
+  export default download;
+}
 
 declare var PRODUCTION: boolean;
 declare var SENTRY_DSN: string;

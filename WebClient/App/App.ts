@@ -206,6 +206,10 @@ export default class App extends Vue {
         this.$router.push('/');
     }
 
+    download() {
+        appManager.downloadState();
+    }
+
     snackbarClick(action: SnackbarOptions['action']) {
         if (action) {
             switch(action.type) {

@@ -26,6 +26,10 @@
                         <md-icon>home</md-icon>
                         <span class="md-list-item-text">Home</span>
                     </router-link>
+                    <md-list-item @click="download" v-if="getUser() != null">
+                        <md-icon>cloud_download</md-icon>
+                        <span class="md-list-item-text">Download</span>
+                    </md-list-item>
                     <md-list-item @click="logout" v-if="getUser() != null">
                         <md-icon>exit_to_app</md-icon>
                         <span class="md-list-item-text">Logout</span>
