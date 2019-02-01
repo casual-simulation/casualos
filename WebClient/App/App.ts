@@ -222,7 +222,7 @@ export default class App extends Vue {
     logout() {
         appManager.logout();
         this.showNavigation = false;
-        this.$router.push('/');
+        this.$router.push({ name: 'login', query: { id: this.session } });
     }
 
     download() {
