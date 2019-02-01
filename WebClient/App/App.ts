@@ -14,10 +14,17 @@ import { getUserMode } from 'common/Files/FileCalculations';
 import { tap } from 'rxjs/operators';
 import QRCode from '@chenfengyuan/vue-qrcode';
 
+import vueFilePond from 'vue-filepond';
+import 'filepond/dist/filepond.min.css';
+// import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type';
+
+const FilePond = vueFilePond();
+
 @Component({
     components: {
         'app': App,
-        'qr-code': QRCode
+        'qr-code': QRCode,
+        'file-pond': FilePond
     }
 })
 
@@ -65,6 +72,11 @@ export default class App extends Vue {
      * Whether to show the QR Code.
      */
     showQRCode: boolean = false;
+
+    /**
+     * Whether to show the file upload dialog.
+     */
+    showFileUpload: boolean = false;
 
     onUserModeChanged() {
         const mode: UserMode = this.userMode ? 'files' : 'worksurfaces';
@@ -208,6 +220,14 @@ export default class App extends Vue {
 
     download() {
         appManager.downloadState();
+    }
+
+    upload() {
+        this.showFileUpload = true;
+    }
+
+    fileUploaded(err: any, data: FilePondFile) {
+        appManager.uploadState(data.file);
     }
 
     snackbarClick(action: SnackbarOptions['action']) {

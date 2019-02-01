@@ -348,6 +348,14 @@ export class FileManager {
     this._files.emit(transaction(result.events));
   }
 
+  /**
+   * Adds the given state to the session.
+   * @param state The state to add.
+   */
+  addState(state: FilesState) {
+    this._files.emit(addState(state));
+  }
+
   // TODO: This seems like a pretty dangerous function to keep around,
   // but we'll add a config option to prevent this from happening on real sites.
   deleteEverything() {

@@ -1,6 +1,8 @@
 declare module 'vue-material';
 declare module 'vue-material/dist/components';
 declare module '@chenfengyuan/vue-qrcode';
+declare module 'vue-filepond';
+declare module 'filepond-plugin-file-validate-type';
 
 declare module '*.svg' {
   const icon: Vue;

@@ -1,0 +1,3 @@
+interface FilePondFile {
+    file: File;
+}
