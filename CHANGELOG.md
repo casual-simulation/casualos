@@ -1,5 +1,15 @@
 # File Simulator Changelog
 
+## V0.2.13
+### Date: 2/1/2019
+
+#### Changes:
+- Camera now handles going from two touch -> one touch without jumping around.
+- Removed time instance in Time.ts.
+- Input and Time are both updated manually through GameView, we need less requestAnimationFrame calls when possible.
+- Fixed bug in Input that would cause touches to overwrite old ones on browsers that reuse TouchEvent identifiers.
+- Remaining TouchData finger indexes get normalized when touches are removed. Ie if there are two touches and touch 0 gets removed, then touch 1 becomes touch 0.
+
 ## V0.2.12
 ### Date: 2/1/2019
 
