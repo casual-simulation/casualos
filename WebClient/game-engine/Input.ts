@@ -1,7 +1,7 @@
 import { ArgEvent } from '../../common/Events';
 import { Vector2, Vector3 } from 'three';
-import { time } from './Time';
 import { find, findIndex, some } from 'lodash';
+import GameView from '../GameView/GameView';
 
 export class Input {
     /**
@@ -15,8 +15,7 @@ export class Input {
     private _touchData: TouchData[];
     private _wheelData: WheelData;
 
-    private _initialized: boolean = false;
-    private _element: HTMLElement;
+    private _gameView: GameView;
     private _inputType: InputType = InputType.Undefined;
 
     /**
@@ -31,9 +30,9 @@ export class Input {
      * @param view The HTML element that we want the position to be relative to.
      */
     public static screenPosition(pagePos: Vector2, view: HTMLElement) {
-        const globalPos = new Vector2(pagePos.x, pagePos.y);
-        const viewRect = view.getBoundingClientRect();
-        const viewPos = globalPos.sub(new Vector2(viewRect.left, viewRect.top));
+        let globalPos = new Vector2(pagePos.x, pagePos.y);
+        let viewRect = view.getBoundingClientRect();
+        let viewPos = globalPos.sub(new Vector2(viewRect.left, viewRect.top));
         return new Vector2((viewPos.x / viewRect.width) * 2 - 1, -(viewPos.y / viewRect.height) * 2 + 1);
     }
 
@@ -52,7 +51,7 @@ export class Input {
      * @param element The HTML element to test against.
      */
     public static eventIsDirectlyOverElement(clientPos: Vector2, element: HTMLElement): boolean {
-        const mouseOver = document.elementFromPoint(clientPos.x, clientPos.y);
+        let mouseOver = document.elementFromPoint(clientPos.x, clientPos.y);
         return mouseOver === element;
     }
 
@@ -62,16 +61,13 @@ export class Input {
      * @param element The HTML element to test against.
      */
     public static eventIsOverElement(clientPos: Vector2, element: HTMLElement): boolean {
-        const elements = document.elementsFromPoint(clientPos.x, clientPos.y);
+        let elements = document.elementsFromPoint(clientPos.x, clientPos.y);
         return some(elements, e => e === element);
     }
 
-    public init(element: HTMLElement) {
-        if (this._initialized) return;
+    constructor(gameView: GameView) { 
 
-        console.log("[Input] initialize");
-        this._initialized = true;
-        this._element = element;
+        this._gameView = gameView;
 
         this._mouseData = {
             leftButtonState: new InputState(),
@@ -94,36 +90,34 @@ export class Input {
         this._handleTouchCancel = this._handleTouchCancel.bind(this);
         this._handleContextMenu = this._handleContextMenu.bind(this);
 
-        this._element.addEventListener('mousedown', this._handleMouseDown);
-        this._element.addEventListener('mousemove', this._handleMouseMove);
-        this._element.addEventListener('mouseup', this._handleMouseUp);
-        this._element.addEventListener('wheel', this._handleWheel);
-        this._element.addEventListener('touchstart', this._handleTouchStart);
-        this._element.addEventListener('touchmove', this._handleTouchMove);
-        this._element.addEventListener('touchend', this._handleTouchEnd);
-        this._element.addEventListener('touchcancel', this._handleTouchCancel);
-        this._element.addEventListener('contextmenu', this._handleContextMenu);
-        
-        requestAnimationFrame(() => this._update());
+        let element = this._gameView.gameView;
+        element.addEventListener('mousedown', this._handleMouseDown);
+        element.addEventListener('mousemove', this._handleMouseMove);
+        element.addEventListener('mouseup', this._handleMouseUp);
+        element.addEventListener('wheel', this._handleWheel);
+        element.addEventListener('touchstart', this._handleTouchStart);
+        element.addEventListener('touchmove', this._handleTouchMove);
+        element.addEventListener('touchend', this._handleTouchEnd);
+        element.addEventListener('touchcancel', this._handleTouchCancel);
+        element.addEventListener('contextmenu', this._handleContextMenu);
+
     }
 
-    public terminate() {
-        if (!this._initialized) return;
+    public dispose() {
+        console.log("[Input] dispose");
 
-        console.log("[Input] terminate");
-        this._initialized = false;
+        let element = this._gameView.gameView;
+        element.removeEventListener('mousedown', this._handleMouseDown);
+        element.removeEventListener('mousemove', this._handleMouseMove);
+        element.removeEventListener('mouseup', this._handleMouseUp);
+        element.removeEventListener('wheel', this._handleWheel);
+        element.removeEventListener('touchstart', this._handleTouchStart);
+        element.removeEventListener('touchmove', this._handleTouchMove);
+        element.removeEventListener('touchend', this._handleTouchEnd);
+        element.removeEventListener('touchcancel', this._handleTouchCancel);
+        element.removeEventListener('contextmenu', this._handleContextMenu);
 
-        this._element.removeEventListener('mousedown', this._handleMouseDown);
-        this._element.removeEventListener('mousemove', this._handleMouseMove);
-        this._element.removeEventListener('mouseup', this._handleMouseUp);
-        this._element.removeEventListener('wheel', this._handleWheel);
-        this._element.removeEventListener('touchstart', this._handleTouchStart);
-        this._element.removeEventListener('touchmove', this._handleTouchMove);
-        this._element.removeEventListener('touchend', this._handleTouchEnd);
-        this._element.removeEventListener('touchcancel', this._handleTouchCancel);
-        this._element.removeEventListener('contextmenu', this._handleContextMenu);
-
-        this._element = null;
+        this._gameView = null;
     }
 
     /**
@@ -132,9 +126,9 @@ export class Input {
      */
     public getMouseButtonDown(buttonId: MouseButtonId): boolean {
         if (this._inputType == InputType.Mouse) {
-            const buttonState = this._getMouseButtonState(buttonId);
+            let buttonState = this._getMouseButtonState(buttonId);
             if (buttonState) {
-                return buttonState.isDownOnFrame(time.frameCount);
+                return buttonState.isDownOnFrame(this._gameView.time.frameCount);
             }
         } else if (this._inputType == InputType.Touch) {
             if (buttonId == MouseButtonId.Left) {
@@ -148,9 +142,9 @@ export class Input {
     }
 
     public getTouchDown(fingerIndex: number): boolean {
-        const touchData = this.getTouchData(fingerIndex);
+        let touchData = this.getTouchData(fingerIndex);
         if (touchData) {
-            return touchData.state.isDownOnFrame(time.frameCount);
+            return touchData.state.isDownOnFrame(this._gameView.time.frameCount);
         }
 
         return false;
@@ -162,9 +156,9 @@ export class Input {
      */
     public getMouseButtonUp(buttonId: MouseButtonId): boolean {
         if (this._inputType == InputType.Mouse) {
-            const buttonState = this._getMouseButtonState(buttonId);
+            let buttonState = this._getMouseButtonState(buttonId);
             if (buttonState) {
-                return buttonState.isUpOnFrame(time.frameCount);
+                return buttonState.isUpOnFrame(this._gameView.time.frameCount);
             }
         } else if (this._inputType == InputType.Touch) {
             if (buttonId == MouseButtonId.Left) {
@@ -178,9 +172,9 @@ export class Input {
     }
 
     public getTouchUp(fingerIndex: number): boolean {
-        const touchData = this.getTouchData(fingerIndex);
+        let touchData = this.getTouchData(fingerIndex);
         if (touchData) {
-            return touchData.state.isUpOnFrame(time.frameCount);
+            return touchData.state.isUpOnFrame(this._gameView.time.frameCount);
         }
 
         return false;
@@ -192,9 +186,9 @@ export class Input {
      */
     public getMouseButtonHeld(buttonId: MouseButtonId): boolean {
         if (this._inputType == InputType.Mouse) {
-            const buttonState = this._getMouseButtonState(buttonId);
+            let buttonState = this._getMouseButtonState(buttonId);
             if (buttonState) {
-                return buttonState.isHeldOnFrame(time.frameCount);
+                return buttonState.isHeldOnFrame(this._gameView.time.frameCount);
             }
         } else if (this._inputType == InputType.Touch) {
             if (buttonId == MouseButtonId.Left) {
@@ -208,9 +202,9 @@ export class Input {
     }
 
     public getTouchHeld(fingerIndex: number): boolean {
-        const touchData = this.getTouchData(fingerIndex);
+        let touchData = this.getTouchData(fingerIndex);
         if (touchData) {
-            return touchData.state.isHeldOnFrame(time.frameCount);
+            return touchData.state.isHeldOnFrame(this._gameView.time.frameCount);
         }
 
         return false;
@@ -220,7 +214,7 @@ export class Input {
      * Return true the frame that wheel movement was detected.
      */
     public getWheelMoved(): boolean {
-        return this._wheelData.getFrame(time.frameCount) != null;
+        return this._wheelData.getFrame(this._gameView.time.frameCount) != null;
     }
 
     /**
@@ -228,7 +222,7 @@ export class Input {
      */
     public getWheelData(): WheelFrame {
         // Deep clone the internal wheel data.
-        let wheelFrame = this._wheelData.getFrame(time.frameCount);
+        let wheelFrame = this._wheelData.getFrame(this._gameView.time.frameCount);
         if (wheelFrame) return JSON.parse(JSON.stringify(wheelFrame));
         else return null;
     }
@@ -280,7 +274,7 @@ export class Input {
      * @param fingerIndex The index of the finger (first finger: 0, second finger: 1, ...)
      */
     public getTouchScreenPos(fingerIndex: number): Vector2 {
-        const touchData = this.getTouchData(fingerIndex);
+        let touchData = this.getTouchData(fingerIndex);
         if (touchData) {
             return touchData.screenPos;
         }
@@ -292,7 +286,7 @@ export class Input {
      * @param fingerIndex The index of the finger (first finger: 0, second finger: 1, ...)
      */
     public getTouchPagePos(fingerIndex: number): Vector2 {
-        const touchData = this.getTouchData(fingerIndex);
+        let touchData = this.getTouchData(fingerIndex);
         if (touchData) {
             return touchData.pagePos;
         }
@@ -304,7 +298,7 @@ export class Input {
      * @param fingerIndex The index of the finger (first finger: 0, second finger: 1, ...)
      */
     public getTouchClientPos(fingerIndex: number): Vector2 {
-        const touchData = this.getTouchData(fingerIndex);
+        let touchData = this.getTouchData(fingerIndex);
         if (touchData) {
             return touchData.clientPos;
         }
@@ -312,7 +306,7 @@ export class Input {
     }
 
     /**
-     * Return how many touches are currenty detected.
+     * Return how many touches are currenty active.
      */
     public getTouchCount(): number {
         return this._touchData.length;
@@ -327,7 +321,9 @@ export class Input {
      */
     public getTouchData(finderIndex: number): TouchData {
         if (this._touchData.length > 0) {
-            const touchData = find(this._touchData, (d) => { return d.fingerIndex === finderIndex; });
+            let touchData = find(this._touchData, (d: TouchData) => { 
+                return d.fingerIndex === finderIndex;
+            });
             if (touchData) {
                 return touchData;
             }
@@ -335,13 +331,11 @@ export class Input {
         return null;
     }
 
-    private _update() {
-        if (!this._initialized) return;
+    public update() {
 
         this._cullTouchData();
-        this._wheelData.removeOldFrames(time.frameCount);
+        this._wheelData.removeOldFrames(this._gameView.time.frameCount);
 
-        requestAnimationFrame(() => this._update());
     }
 
     /**
@@ -350,21 +344,36 @@ export class Input {
      * Remove any touch pointers that are passed their 'up' input state. No need to keep them around.
      */
     private _cullTouchData(): void {
-        for (var i = this._touchData.length - 1; i >= 0; i--) {
-            const upFrame: number = this._touchData[i].state.getUpFrame();
+        let touchRemoved: boolean = false;
+
+        this._touchData = this._touchData.filter((t: TouchData) => {
+            let upFrame = t.state.getUpFrame();
 
             // Up frame must have been set.
             if (upFrame !== -1) {
                 // Current frame must be higher than the touch's up frame.
-                if (time.frameCount > upFrame) {
-                    
+                if (this._gameView.time.frameCount > upFrame) {
                     if (this.debugLevel >= 1) {
-                        console.log('removing touch finger: ' + this._touchData[i].fingerIndex + '. frame: ' + time.frameCount);
+                        console.log('removing touch finger: ' + t.fingerIndex + '. frame: ' + this._gameView.time.frameCount);
                     }
 
-                    this._touchData.splice(i, 1);
-
+                    touchRemoved = true;
+                    return false;
                 }
+            }
+
+            return true;
+        });
+
+        if (touchRemoved && this._touchData.length > 0) {
+            
+            // Normalize the finger index range of the remaining touch data.
+            this._touchData = this._touchData.sort((a: TouchData, b:TouchData) => { 
+                return a.fingerIndex - b.fingerIndex;
+            });
+
+            for (let i = 0; i < this._touchData.length; i++) {
+                this._touchData[i].fingerIndex = i;
             }
         }
     }
@@ -388,9 +397,9 @@ export class Input {
      * @param pageY
      */
     private _calculateScreenPos(pageX: number, pageY: number): Vector2 {
-        const globalPos = new Vector2(pageX, pageY);
-        const viewRect = this._element.getBoundingClientRect();
-        const viewPos = globalPos.sub(new Vector2(viewRect.left, viewRect.top));
+        let globalPos = new Vector2(pageX, pageY);
+        let viewRect = this._gameView.gameView.getBoundingClientRect();
+        let viewPos = globalPos.sub(new Vector2(viewRect.left, viewRect.top));
         return new Vector2((viewPos.x / viewRect.width) * 2 - 1, -(viewPos.y / viewRect.height) * 2 + 1);
     }
 
@@ -400,11 +409,10 @@ export class Input {
 
         let buttonState: InputState = this._getMouseButtonState(event.button);
         if (buttonState) {
-            let fireOnFrame = time.frameCount + 1;
-            buttonState.setDownFrame(fireOnFrame);
+            buttonState.setDownFrame(this._gameView.time.frameCount);
 
             if (this.debugLevel >= 1) {
-                console.log("mouse button " + event.button + " down. fireInputOnFrame: " + fireOnFrame);
+                console.log("mouse button " + event.button + " down. fireInputOnFrame: " + this._gameView.time.frameCount);
             }
 
             this._mouseData.clientPos = new Vector2(event.clientX, event.clientY);
@@ -419,11 +427,10 @@ export class Input {
 
         let buttonState: InputState = this._getMouseButtonState(event.button);
         if (buttonState) {
-            let fireOnFrame = time.frameCount + 1;
-            buttonState.setUpFrame(fireOnFrame);
+            buttonState.setUpFrame(this._gameView.time.frameCount);
 
             if (this.debugLevel >= 1) {
-                console.log("mouse button " + event.button + " up. fireInputOnFrame: " + fireOnFrame);
+                console.log("mouse button " + event.button + " up. fireInputOnFrame: " + this._gameView.time.frameCount);
             }
 
             this._mouseData.clientPos = new Vector2(event.clientX, event.pageY);
@@ -451,10 +458,8 @@ export class Input {
     private _handleWheel(event: WheelEvent) {
         event.preventDefault();
 
-        let fireOnFrame = time.frameCount + 1;
-
         let wheelFrame: WheelFrame = {
-            moveFrame: fireOnFrame,
+            moveFrame: this._gameView.time.frameCount,
             delta: new Vector3(event.deltaX, event.deltaY, event.deltaZ),
             ctrl: event.ctrlKey
         }
@@ -475,11 +480,10 @@ export class Input {
         if (this._inputType != InputType.Touch) return;
 
         // For the touchstart event, it is a list of the touch points that became active with the current event.
-        const changed = event.changedTouches;
+        let changed = event.changedTouches;
 
-        for (var i = 0; i < changed.length; i++) {
-            const touch = changed.item(i);
-            let fireOnFrame = time.frameCount + 1;
+        for (let i = 0; i < changed.length; i++) {
+            let touch = changed.item(i);
 
             // Create new touch data.
             let data: TouchData = {
@@ -492,15 +496,13 @@ export class Input {
             }
 
             // Set the down frame on the new touch data.
-            data.state.setDownFrame(fireOnFrame);
+            data.state.setDownFrame(this._gameView.time.frameCount);
 
             if (this.debugLevel >= 1) {
-                console.log("touch finger " + data.fingerIndex + " start. fireInputOnFrame: " + fireOnFrame);
+                console.log("touch finger " + data.fingerIndex + " start. fireInputOnFrame: " + this._gameView.time.frameCount);
             }
 
-            var existingTouchIndex = findIndex(this._touchData, (d) => { return d.identifier === touch.identifier; });
-            if (existingTouchIndex === -1) this._touchData.push(data);
-            else this._touchData[existingTouchIndex] = data;
+            this._touchData.push(data);
         }
     }
 
@@ -512,12 +514,12 @@ export class Input {
         event.preventDefault();
 
         // For the touchmove event, it is a list of the touch points that have changed since the last event.
-        const changed = event.changedTouches;
+        let changed = event.changedTouches;
 
-        for (var i = 0; i < changed.length; i++) {
-            const touch = changed.item(i);
+        for (let i = 0; i < changed.length; i++) {
+            let touch = changed.item(i);
 
-            var existingTouch = find(this._touchData, (d) => { return d.identifier === touch.identifier; });
+            let existingTouch = find(this._touchData, (d) => { return d.identifier === touch.identifier; });
             existingTouch.clientPos = new Vector2(touch.clientX, touch.clientY);
             existingTouch.pagePos = new Vector2(touch.pageX, touch.pageY);
             existingTouch.screenPos = this._calculateScreenPos(touch.pageX, touch.pageY);
@@ -538,20 +540,19 @@ export class Input {
         if (this._inputType != InputType.Touch) return;
 
         // For the touchend event, it is a list of the touch points that have been removed from the surface.
-        const changed = event.changedTouches;
+        let changed = event.changedTouches;
 
-        for (var i = 0; i < changed.length; i++) {
-            const touch = changed.item(i);
-            let fireOnFrame = time.frameCount + 1;
+        for (let i = 0; i < changed.length; i++) {
+            let touch = changed.item(i);
 
-            var existingTouch = find(this._touchData, (d) => { return d.identifier === touch.identifier; });
-            existingTouch.state.setUpFrame(fireOnFrame);
+            let existingTouch = find(this._touchData, (d) => { return d.identifier === touch.identifier; });
+            existingTouch.state.setUpFrame(this._gameView.time.frameCount);
             existingTouch.clientPos = new Vector2(touch.clientX, touch.clientY);
             existingTouch.pagePos = new Vector2(touch.pageX, touch.pageY);
             existingTouch.screenPos = this._calculateScreenPos(touch.pageX, touch.pageY);
 
             if (this.debugLevel >= 1) {
-                console.log("touch finger" + existingTouch.fingerIndex + " end. fireInputOnFrame: " + fireOnFrame);
+                console.log("touch finger " + existingTouch.fingerIndex + " end. fireInputOnFrame: " + this._gameView.time.frameCount);
             }
         }
     }
@@ -560,21 +561,20 @@ export class Input {
         if (this._inputType == InputType.Undefined) this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch) return;
 
-        const changed = event.changedTouches;
+        let changed = event.changedTouches;
 
-        for (var i = 0; i < changed.length; i++) {
+        for (let i = 0; i < changed.length; i++) {
             // Handle a canceled touche the same as a touch end.
-            const touch = changed.item(i);
-            let fireOnFrame = time.frameCount + 1;
+            let touch = changed.item(i);
 
-            var existingTouch = find(this._touchData, (d) => { return d.identifier === touch.identifier; });
-            existingTouch.state.setUpFrame(fireOnFrame);
+            let existingTouch = find(this._touchData, (d) => { return d.identifier === touch.identifier; });
+            existingTouch.state.setUpFrame(this._gameView.time.frameCount);
             existingTouch.clientPos = new Vector2(touch.clientX, touch.clientY);
             existingTouch.pagePos = new Vector2(touch.pageX, touch.pageY);
             existingTouch.screenPos = this._calculateScreenPos(touch.pageX, touch.pageY);
 
             if (this.debugLevel >= 1) {
-                console.log("touch finger" + existingTouch.fingerIndex + " canceled. fireInputOnFrame: " + fireOnFrame);
+                console.log("touch finger " + existingTouch.fingerIndex + " canceled. fireInputOnFrame: " + this._gameView.time.frameCount);
             }
         }
     }

@@ -245,7 +245,7 @@ export class CameraControls {
             // Pan/Dolly/Rotate [Start]
             //
             if (input.getMouseButtonDown(MouseButtonId.Left) && this.enablePan && this.enabled) {
-
+                
                 // Pan start.
                 this.panStart.copy(input.getMouseClientPos());
                 this.state = STATE.PAN;
@@ -270,9 +270,9 @@ export class CameraControls {
                 
                 if (wheelData.ctrl) {
                     // This is pinch zooming dolly.
-                    let dollyScale = Math.pow(0.98, Math.abs(wheelData.delta.y)) * this.zoomSpeed;
-                    if (wheelData.delta.y > 0) this.dollyIn(dollyScale);
-                    else if (wheelData.delta.y < 0) this.dollyOut(dollyScale);
+                    let zoomScale = Math.pow(0.98, Math.abs(wheelData.delta.y)) * this.zoomSpeed;
+                    if (wheelData.delta.y > 0) this.dollyIn(zoomScale);
+                    else if (wheelData.delta.y < 0) this.dollyOut(zoomScale);
                 }
             }
 
@@ -356,6 +356,14 @@ export class CameraControls {
                         const pagePosB = input.getTouchPagePos(1);
                         this.rotateStart = new Vector2().subVectors(pagePosA, pagePosB).normalize();
                     }
+                } else if (input.getTouchUp(0) || input.getTouchUp(1)) {
+
+                    // Releasing one of the two fingers.
+                    // Get ready to starting panning with the currently pressed finger.
+                    let panFingerIndex = input.getTouchUp(0) ? 1 : 0;
+                    this.panStart.copy(input.getTouchClientPos(panFingerIndex));
+                    this.state = STATE.PAN;
+
                 }
             }
 
