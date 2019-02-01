@@ -32,7 +32,7 @@ import {
 } from 'rxjs/operators';
 
 import { File, Object, Workspace, DEFAULT_WORKSPACE_HEIGHT_INCREMENT, DEFAULT_USER_MODE, UserMode } from 'common/Files';
-import { time } from '../game-engine/Time';
+import { Time } from '../game-engine/Time';
 import { Input } from '../game-engine/input';
 import { File3D } from '../game-engine/File3D';
 
@@ -69,6 +69,7 @@ export default class GameView extends Vue {
   private _workspacePlane: Mesh;
   private _skydome: Mesh;
   private _canvas: HTMLElement;
+  private _time: Time;
   private _input: Input;
   private _interaction: InteractionManager;
   private _gridChecker: GridChecker;
@@ -111,6 +112,7 @@ export default class GameView extends Vue {
   }
 
   get gameView(): HTMLElement { return <HTMLElement>this.$refs.gameView; }
+  get time(): Time { return this._time; }
   get input(): Input { return this._input; }
   get interactionManager(): InteractionManager { return this._interaction; }
   get camera(): PerspectiveCamera { return this._camera; }
@@ -179,15 +181,14 @@ export default class GameView extends Vue {
       this._resizeCamera();
     };
     window.addEventListener('resize', this.__resizeListener);
-    time.init();
-
+    
+    this._time = new Time();
     this.debugInfo = null;
     this._files = {};
     this._fileIds = {};
     this._subs = [];
     this._setupScene();
-    this._input = new Input();
-    this._input.init(this.gameView);
+    this._input = new Input(this);
     this._interaction = new InteractionManager(this);
     this._gridChecker = new GridChecker(DEFAULT_WORKSPACE_HEIGHT_INCREMENT);
 
@@ -213,7 +214,7 @@ export default class GameView extends Vue {
 
   beforeDestroy() {
     window.removeEventListener('resize', this.__resizeListener);
-    this._input.terminate();
+    this._input.dispose();
 
     if (this._subs) {
       this._subs.forEach(sub => {
@@ -224,9 +225,10 @@ export default class GameView extends Vue {
   }
 
   private _frameUpdate() {
-    // console.log("game view update frame: " + time.frameCount);
+    this._input.update();
     this._interaction.update();
     this._renderer.render(this._scene, this._camera);
+    this._time.update();
 
     requestAnimationFrame(() => this._frameUpdate());
   }

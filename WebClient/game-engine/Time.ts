@@ -1,24 +1,18 @@
 import { Clock } from 'three';
 
 export class Time {
-    private _initialized: boolean = false;
     private _frameCount: number = 0;
     private _timeSinceStart: number = 0;
     private _deltaTime: number = 0;
     private _clock: Clock;
 
-    public init() {
-      if (this._initialized)
-        return;
+    constructor() {
 
-      console.log("[GameTime] Initialize");
-      this._initialized = true;
       this._frameCount = 0;
       this._timeSinceStart = 0;
       this._deltaTime = 0;
       this._clock = new Clock(true);
       
-      requestAnimationFrame(() => this.update());
     }
 
     /**
@@ -47,12 +41,5 @@ export class Time {
         this._frameCount += 1;
         this._deltaTime = this._clock.getDelta();
         this._timeSinceStart += this._deltaTime;
-
-        requestAnimationFrame(() => this.update());
     }
 }
-
-/**
- * Instance of Time class.
- */
-export const time = new Time();
