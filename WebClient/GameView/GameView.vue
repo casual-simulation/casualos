@@ -6,12 +6,12 @@
       <div class="ui-container">
         <div class="toolbar">
           <md-button v-if="filesMode" class="md-fab" @click="addNewFile">
-            <cube-icon class="toolbar-button-icon" />
+            <md-icon>add</md-icon>
             <span class="sr-only">New File</span>
             <md-tooltip md-direction="bottom">New File</md-tooltip>
           </md-button>
           <md-button v-if="workspacesMode" class="md-fab" @click="addNewWorkspace()">
-            <hex-icon class="toolbar-button-icon" />
+            <md-icon>add</md-icon>
             <span class="sr-only">New Worksurface</span>
             <md-tooltip md-direction="bottom">New Worksurface</md-tooltip>
           </md-button>
