@@ -6,6 +6,7 @@ import { BehaviorSubject, Observable, using, SubscriptionLike } from 'rxjs';
 import { FileManager } from './FileManager';
 import { SocketManager } from './SocketManager';
 import { flatMap, map, scan } from 'rxjs/operators';
+import { downloadAuxState, readFileJson } from './download';
 
 export interface User {
     email: string;
@@ -88,6 +89,23 @@ export class AppManager {
         setTimeout(() => {
             OfflinePluginRuntime.update();
         }, 1000);
+    }
+
+    /**
+     * Downloads the current local application state to a file.
+     */
+    downloadState(): void {
+        downloadAuxState(this.fileManager.filesState, `${this.user.name}-${this.user.channelId || 'default'}`);
+    }
+
+    /**
+     * Uploads the given file to the local state.
+     * @param file The file to upload.
+     */
+    async uploadState(file: File): Promise<void> {
+        const json = await readFileJson(file);
+        const state = JSON.parse(json);
+        this.fileManager.addState(state);
     }
 
     /**

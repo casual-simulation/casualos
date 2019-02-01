@@ -1,6 +1,8 @@
 declare module 'vue-material';
 declare module 'vue-material/dist/components';
 declare module '@chenfengyuan/vue-qrcode';
+declare module 'vue-filepond';
+declare module 'filepond-plugin-file-validate-type';
 
 declare module '*.svg' {
   const icon: Vue;
@@ -34,6 +36,10 @@ declare module 'formula-lib' {
   export default lib; 
 }
 
+declare module 'downloadjs' {
+  function download(data: any, fileName: string, mimeType: string): void;
+  export default download;
+}
 
 declare var PRODUCTION: boolean;
 declare var SENTRY_DSN: string;

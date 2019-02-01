@@ -26,6 +26,14 @@
                         <md-icon>home</md-icon>
                         <span class="md-list-item-text">Home</span>
                     </router-link>
+                    <md-list-item @click="upload" v-if="getUser() != null">
+                        <md-icon>cloud_upload</md-icon>
+                        <span class="md-list-item-text">Upload</span>
+                    </md-list-item>
+                    <md-list-item @click="download" v-if="getUser() != null">
+                        <md-icon>cloud_download</md-icon>
+                        <span class="md-list-item-text">Download</span>
+                    </md-list-item>
                     <md-list-item @click="logout" v-if="getUser() != null">
                         <md-icon>exit_to_app</md-icon>
                         <span class="md-list-item-text">Logout</span>
@@ -78,6 +86,17 @@
                 </div>
                 <md-dialog-actions>
                     <md-button class="md-primary" @click="showQRCode = false">Close</md-button>
+                </md-dialog-actions>
+            </md-dialog>
+
+            <md-dialog :md-active.sync="showFileUpload" class="file-upload-dialog">
+                <md-dialog-title>Upload Files</md-dialog-title>
+                <div class="file-upload-container">
+                    <file-pond allow-multiple="false" @addfile="fileAdded" @removefile="fileRemoved"/>
+                </div>
+                <md-dialog-actions>
+                    <md-button class="md-primary" @click="cancelFileUpload">Close</md-button>
+                    <md-button class="md-primary" @click="uploadFiles" :disabled="uploadedFiles.length <= 0">Upload</md-button>
                 </md-dialog-actions>
             </md-dialog>
 

@@ -14,10 +14,17 @@ import { getUserMode } from 'common/Files/FileCalculations';
 import { tap } from 'rxjs/operators';
 import QRCode from '@chenfengyuan/vue-qrcode';
 
+import vueFilePond from 'vue-filepond';
+import 'filepond/dist/filepond.min.css';
+// import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type';
+
+const FilePond = vueFilePond();
+
 @Component({
     components: {
         'app': App,
-        'qr-code': QRCode
+        'qr-code': QRCode,
+        'file-pond': FilePond
     }
 })
 
@@ -65,6 +72,16 @@ export default class App extends Vue {
      * Whether to show the QR Code.
      */
     showQRCode: boolean = false;
+
+    /**
+     * Whether to show the file upload dialog.
+     */
+    showFileUpload: boolean = false;
+
+    /**
+     * The files that have been uploaded by the user.
+     */
+    uploadedFiles: File[] = [];
 
     onUserModeChanged() {
         const mode: UserMode = this.userMode ? 'files' : 'worksurfaces';
@@ -205,6 +222,36 @@ export default class App extends Vue {
         this.showNavigation = false;
         this.$router.push('/');
     }
+
+    download() {
+        appManager.downloadState();
+    }
+
+    upload() {
+        this.showFileUpload = true;
+    }
+
+    cancelFileUpload() {
+        this.showFileUpload = false;
+        this.uploadedFiles = [];
+    }
+
+    async uploadFiles() {
+        await Promise.all(this.uploadedFiles.map(f => appManager.uploadState(f)));
+        this.showFileUpload = false;
+    }
+
+    fileAdded(err: any, data: FilePondFile) {
+        this.uploadedFiles.push(data.file);
+    }
+
+    fileRemoved(data: FilePondFile) {
+        const index = this.uploadedFiles.indexOf(data.file);
+        if (index >= 0) {
+            this.uploadedFiles.splice(index, 1);
+        }
+    }
+
 
     snackbarClick(action: SnackbarOptions['action']) {
         if (action) {

@@ -122,7 +122,7 @@ export class FileManager {
   private _id: string;
 
   get files(): File[] {
-    return values(this._filesState);
+    return values(this.filesState);
   }
 
   /**
@@ -248,7 +248,10 @@ export class FileManager {
     return this._mergeStatus;
   }
 
-  private get _filesState() {
+  /**
+   * Gets the current local file state.
+   */
+  get filesState() {
     return this._files.store.state();
   }
 
@@ -343,6 +346,14 @@ export class FileManager {
     const actionData = action(sender.id, receiver.id, eventName);
     const result = calculateActionEvents(this._files.store.state(), actionData);
     this._files.emit(transaction(result.events));
+  }
+
+  /**
+   * Adds the given state to the session.
+   * @param state The state to add.
+   */
+  addState(state: FilesState) {
+    this._files.emit(addState(state));
   }
 
   // TODO: This seems like a pretty dangerous function to keep around,
@@ -557,7 +568,7 @@ export class FileManager {
     // get the old server state
     const offline = this._offlineServerState;
     const newState = state;
-    const localState = this._filesState;
+    const localState = this.filesState;
 
     const mergeReport = mergeFiles(offline, localState, newState, {
       
