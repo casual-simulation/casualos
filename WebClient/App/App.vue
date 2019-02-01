@@ -90,11 +90,13 @@
             </md-dialog>
 
             <md-dialog :md-active.sync="showFileUpload" class="file-upload-dialog">
+                <md-dialog-title>Upload Files</md-dialog-title>
                 <div class="file-upload-container">
-                    <file-pond allow-multiple="false" @addfile="fileUploaded"/>
+                    <file-pond allow-multiple="false" @addfile="fileAdded" @removefile="fileRemoved"/>
                 </div>
                 <md-dialog-actions>
-                    <md-button class="md-primary" @click="showFileUpload = false">Close</md-button>
+                    <md-button class="md-primary" @click="cancelFileUpload">Close</md-button>
+                    <md-button class="md-primary" @click="uploadFiles" :disabled="uploadedFiles.length <= 0">Upload</md-button>
                 </md-dialog-actions>
             </md-dialog>
 

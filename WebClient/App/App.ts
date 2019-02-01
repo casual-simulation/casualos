@@ -78,6 +78,11 @@ export default class App extends Vue {
      */
     showFileUpload: boolean = false;
 
+    /**
+     * The files that have been uploaded by the user.
+     */
+    uploadedFiles: File[] = [];
+
     onUserModeChanged() {
         const mode: UserMode = this.userMode ? 'files' : 'worksurfaces';
         appManager.fileManager.updateFile(appManager.fileManager.userFile, {
@@ -226,9 +231,27 @@ export default class App extends Vue {
         this.showFileUpload = true;
     }
 
-    fileUploaded(err: any, data: FilePondFile) {
-        appManager.uploadState(data.file);
+    cancelFileUpload() {
+        this.showFileUpload = false;
+        this.uploadedFiles = [];
     }
+
+    async uploadFiles() {
+        await Promise.all(this.uploadedFiles.map(f => appManager.uploadState(f)));
+        this.showFileUpload = false;
+    }
+
+    fileAdded(err: any, data: FilePondFile) {
+        this.uploadedFiles.push(data.file);
+    }
+
+    fileRemoved(data: FilePondFile) {
+        const index = this.uploadedFiles.indexOf(data.file);
+        if (index >= 0) {
+            this.uploadedFiles.splice(index, 1);
+        }
+    }
+
 
     snackbarClick(action: SnackbarOptions['action']) {
         if (action) {
