@@ -58,11 +58,12 @@ Vue.use(MdSwitch);
 
 const routes: RouteConfig[] = [
     {
-        path: '/',
+        path: '/login',
+        name: 'login',
         component: Welcome,
     },
     {
-        path: '/home/:id?',
+        path: '/:id?',
         name: 'home',
         component: Home,
     },
@@ -79,22 +80,23 @@ const routes: RouteConfig[] = [
             if (appManager.fileManager && appManager.fileManager.mergeStatus) {
                 next();
             } else {
-                next({ path: '/' });
+                next({ name: 'home', params: { id: appManager.user.channelId } });
             }
         }
     }
 ]
 
 const router = new VueRouter({
+    mode: 'history',
     routes
 });
 
 router.beforeEach((to, from, next) => {
     appManager.initPromise.then(() => {
         const channelId = to.params.id || null;
-        if (to.path !== '/') {
+        if (to.path !== '/login') {
             if (!appManager.user) {
-                next({ path: '/', query: { id: channelId } });
+                next({ name: 'login', query: { id: channelId } });
                 return;
             } else {
                 if (appManager.user.channelId != channelId) {
@@ -103,7 +105,7 @@ router.beforeEach((to, from, next) => {
                         next();
                     }, ex => {
                         console.error(ex);
-                        next({ path: '/', query: { id: channelId } });
+                        next({ name: 'login', query: { id: channelId } });
                     });
                 }
             }
@@ -116,7 +118,7 @@ router.beforeEach((to, from, next) => {
         next();
     }, ex => {
         console.error(ex);
-        next('/');
+        next({ name: 'login' });
     });
 });
 

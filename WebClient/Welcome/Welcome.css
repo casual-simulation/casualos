@@ -1,0 +1,13 @@
+.login-form .md-card {
+    margin: auto;
+    min-width: 280px;;
+}
+
+.guest-button {
+    display: block;
+    cursor: pointer;
+}
+
+.continue-as-guest-section {
+    font-size: 12px;
+}

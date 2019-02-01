@@ -1,27 +1,27 @@
 <!-- App.vue -->
 <template>
   <div>
-    <form novalidate class="md-layout" @submit.prevent="createUser">
+    <form novalidate class="md-layout login-form" @submit.prevent="createUser">
       <md-card>
         <md-card-header>
-          <div class="md-title">Users</div>
+          <div class="md-title">Create Account</div>
         </md-card-header>
 
         <md-card-content>
-          <div class="md-layout md-gutter">
-            <div class="md-layout-item md-small-size-100">
-              <md-field>
-                <label for="name">Email</label>
-                <md-input name="email" id="email" autocomplete="email" v-model="email"/>
-                <!-- <span class="md-error" v-if="!$v.form.firstName.required">The first name is required</span>
-                <span class="md-error" v-else-if="!$v.form.firstName.minlength">Invalid first name</span> -->
-              </md-field>
-            </div>
+          <div>
+            <md-field>
+              <label for="name">Email</label>
+              <md-input name="email" id="email" autocomplete="email" v-model="email"/>
+            </md-field>
+          </div>
+          <div class="continue-as-guest-section">
+            <span>Don't want an account?</span>
+            <a class="md-primary guest-button" @click="continueAsGuest">Continue as a Guest</a>
           </div>
         </md-card-content>
 
         <md-card-actions>
-          <md-button type="submit" class="md-primary">Create user</md-button>
+          <md-button type="submit" class="md-primary md-raised">Next</md-button>
         </md-card-actions>
       </md-card>
     </form>

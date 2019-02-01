@@ -8,11 +8,14 @@
                         <md-icon>menu</md-icon>
                     </md-button>
                     <a class="md-title clickable" @click="showQRCode = true">
-                        File Simulator <span v-show="session" class="session-id">{{session}}</span>
+                        {{session || "File Simulator"}}
                     </a>
                 </div>
                 <div class="md-toolbar-section-end">
-                    <md-switch v-if="loggedIn" v-model="userMode" @change="onUserModeChanged">{{currentUserMode()}}</md-switch>
+                    <md-switch class="user-mode-toggle" v-if="loggedIn" v-model="userMode" @change="onUserModeChanged">
+                        <cube-icon v-if="userMode" />
+                        <hex-icon v-else />
+                    </md-switch>
                 </div>
             </md-toolbar>
 
@@ -40,9 +43,9 @@
                     </md-list-item>
                     <md-list-item v-if="getUser() != null" class="nuke-site-item" @click="nukeSite()" :disabled="!(online && synced)">
                         <md-icon class="nuke-everything-icon">delete_forever</md-icon>
-                        <span class="md-list-item-text">Nuke the Site</span>
+                        <span class="md-list-item-text">Clear Simulation</span>
 
-                        <md-tooltip v-if="!(online && synced)">Must be online &amp; synced to nuke.</md-tooltip>
+                        <md-tooltip v-if="!(online && synced)">Must be online &amp; synced to clear the simulation.</md-tooltip>
                     </md-list-item>
                     <md-list-item @click.right="toggleOnlineOffline()">
                         <md-icon id="forced-offline-error" v-if="forcedOffline()">error</md-icon>

@@ -13,6 +13,8 @@ import { copyToClipboard } from '../utils';
 import { getUserMode } from 'common/Files/FileCalculations';
 import { tap } from 'rxjs/operators';
 import QRCode from '@chenfengyuan/vue-qrcode';
+import CubeIcon from '../public/icons/Cube.svg';
+import HexIcon from '../public/icons/Hexagon.svg';
 
 import vueFilePond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
@@ -24,7 +26,9 @@ const FilePond = vueFilePond();
     components: {
         'app': App,
         'qr-code': QRCode,
-        'file-pond': FilePond
+        'file-pond': FilePond,
+        'cube-icon': CubeIcon,
+        'hex-icon': HexIcon,
     }
 })
 
@@ -79,6 +83,11 @@ export default class App extends Vue {
     showFileUpload: boolean = false;
 
     /**
+     * The session/
+     */
+    session: string = '';
+
+    /**
      * The files that have been uploaded by the user.
      */
     uploadedFiles: File[] = [];
@@ -103,14 +112,6 @@ export default class App extends Vue {
     currentMergeState: MergeStatus<FilesState> = null;
 
     private _subs: SubscriptionLike[] = [];
-
-    get session() {
-        if (appManager.user) {
-            return appManager.user.channelId;
-        } else {
-            return '';
-        }
-    }
 
     get version() {
         return appManager.version.latestTaggedVersion;
@@ -145,6 +146,7 @@ export default class App extends Vue {
             let subs: SubscriptionLike[] = [];
 
             this.loggedIn = true;
+            this.session = user.channelId;
             this.online = fileManager.isOnline;
             this.synced = fileManager.isSynced;
 
@@ -220,7 +222,7 @@ export default class App extends Vue {
     logout() {
         appManager.logout();
         this.showNavigation = false;
-        this.$router.push('/');
+        this.$router.push({ name: 'login', query: { id: this.session } });
     }
 
     download() {

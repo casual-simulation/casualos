@@ -4,7 +4,9 @@
         <span class="hashtag">#</span><input :value="value" 
             @input="onInput($event.target.value)"
             @focus.stop="onFocus"
-            @blur.stop="onBlur">
+            @blur.stop="onBlur"
+            autocapitalize="none"
+            autocorrect="off">
     </span>
 
     <md-menu-content>

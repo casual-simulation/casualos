@@ -12,6 +12,7 @@ const latestTag = childProcess.execSync('git describe --abbrev=0 --tags').toStri
 module.exports = {
   entry: path.resolve(__dirname, 'index.ts'),
   output: {
+    publicPath: '/',
     filename: '[name].js',
     path: path.resolve(__dirname, 'dist')
   },

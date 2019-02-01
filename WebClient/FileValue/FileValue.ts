@@ -4,7 +4,6 @@ import {Prop, Inject} from 'vue-property-decorator';
 import { Assignment, isFormula, isAssignment } from 'common/Files/FileCalculations';
 import { SubscriptionLike } from 'rxjs';
 import {Object, File} from 'common/Files';
-import {invertColor, colorConvert} from '../utils';
 import {assign} from 'lodash';
 import { appManager } from '../AppManager';
 
@@ -36,25 +35,6 @@ export default class FileRow extends Vue {
 
     get fileManager() {
         return appManager.fileManager;
-    }
-
-    get backgroundColor(): string {
-        if (this.tag === 'color') {
-            return this.value || '#00ff00';
-        } else {
-            return 'inherit';
-        }
-    }
-
-    get color(): string {
-        const background = this.backgroundColor;
-        if (background === 'inherit') {
-            return 'inherit';
-        } else if(background[0] === '#' && background.length !== 7 && background.length !== 4) {
-            return '#000000';
-        } else {
-            return invertColor(colorConvert.toHex(this.backgroundColor), true);
-        }
     }
 
     constructor() {

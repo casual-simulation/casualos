@@ -29,7 +29,7 @@
             class="new-tag-button"
             :disabled="isMakingNewTag && !newTagValid"
             @click="addTag()"
-          >{{isMakingNewTag ? "Done": "+ New Tag"}}</md-button>
+          >{{isMakingNewTag ? "Done": "+tag"}}</md-button>
           <md-button 
             class="new-tag-button" 
             @click="cancelNewTag()" 

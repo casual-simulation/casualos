@@ -6,6 +6,7 @@
 
 .file-table .new-tag-button {
     margin: 0;
+    text-transform: none;
 }
 
 .file-table th {

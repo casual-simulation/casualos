@@ -1,6 +1,7 @@
 import * as Http from 'http';
 import express from 'express';
 import * as bodyParser from 'body-parser';
+import * as path from 'path';
 import SocketIO from 'socket.io';
 import { SocketIOChannelServer } from './channels';
 import { ChannelClient } from 'common/channels-core';
@@ -44,8 +45,6 @@ export class Server {
         this._app.use(bodyParser.json());
         await this._channelServer.configure(this._app, this._socket);
 
-        this._app.use('/', express.static(this._config.client.dist));
-
         this._app.post('/api/users', asyncMiddleware(async (req, res) => {
             const json = req.body;
             const username = json.email.split('@')[0];
@@ -57,6 +56,12 @@ export class Server {
                 name: username
             });
         }));
+
+        this._app.use(express.static(this._config.client.dist));
+
+        this._app.use('*', (req, res) => {
+            res.sendFile(path.join(this._config.client.dist, 'index.html'));
+        });
     }
 
     start() {
