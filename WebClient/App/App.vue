@@ -40,9 +40,9 @@
                     </md-list-item>
                     <md-list-item v-if="getUser() != null" class="nuke-site-item" @click="nukeSite()" :disabled="!(online && synced)">
                         <md-icon class="nuke-everything-icon">delete_forever</md-icon>
-                        <span class="md-list-item-text">Nuke the Site</span>
+                        <span class="md-list-item-text">Clear Simulation</span>
 
-                        <md-tooltip v-if="!(online && synced)">Must be online &amp; synced to nuke.</md-tooltip>
+                        <md-tooltip v-if="!(online && synced)">Must be online &amp; synced to clear the simulation.</md-tooltip>
                     </md-list-item>
                     <md-list-item @click.right="toggleOnlineOffline()">
                         <md-icon id="forced-offline-error" v-if="forcedOffline()">error</md-icon>
