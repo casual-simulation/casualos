@@ -159,18 +159,27 @@ function create(data: any) {
     });
 }
 
-function copy(file: any, newData?: any) {
-    var id = uuid();
+function copy(...files: any[]) {
+    let id = uuid();
+
+    let originals = files.map(f => {
+        return (f && f._converted && f._original) ? f._original.tags : f;
+    });
+
     let newFile = {
-        tags: {
-            ...file,
-            ...newData,
-        },
+        tags: <any>{},
         type: 'object',
         id: id
     };
 
+    originals.forEach(o => {
+        for (let key in o) {
+            newFile.tags[key] = o[key];
+        }
+    });
+
     delete newFile.tags._converted;
+    delete newFile.tags._original;
     delete newFile.tags.id;
 
     __actions.push({

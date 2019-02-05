@@ -286,6 +286,84 @@ describe('FilesChannel', () => {
                 }
             });
         });
+
+        it('should preserve formulas when copying', () => {
+            
+            const state: FilesState = {
+                thisFile: {
+                    id: 'thisFile',
+                    type: 'object',
+                    tags: {
+                        _position: { x:0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        num: 15,
+                        formula: '=this.num',
+                        '+(#name:"Friend")': 'copy(this, that, { testFormula: "=this.name" })',
+                    }
+                },
+                thatFile: {
+                    id: 'thatFile',
+                    type: 'object',
+                    tags: {
+                        _position: { x:0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        name: 'Friend'
+                    }
+                }
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const fileAction = action('thisFile', 'thatFile', '+');
+            const result = calculateActionEvents(state, fileAction);
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+            
+            const newState = filesReducer(state, transaction(result.events));
+
+            expect(newState).toEqual({
+                // should create a new value from "thisFile"
+                'uuid-0': {
+                    id: 'uuid-0',
+                    type: 'object',
+                    tags: {
+                        _position: { x:0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        num: 15,
+                        formula: '=this.num',
+                        '+(#name:"Friend")': 'copy(this, that, { testFormula: "=this.name" })',
+                        name: 'Friend',
+                        testFormula: '=this.name'
+
+                        // the new file is not destroyed
+                    }
+                },
+                thisFile: {
+                    id: 'thisFile',
+                    type: 'object',
+                    tags: {
+                        _position: { x:0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        num: 15,
+                        formula: '=this.num',
+                        '+(#name:"Friend")': 'copy(this, that, { testFormula: "=this.name" })',
+
+                        // The original files should be destroyed by default.
+                        _destroyed: true,
+                    }
+                },
+                thatFile: {
+                    id: 'thatFile',
+                    type: 'object',
+                    tags: {
+                        _position: { x:0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        _destroyed: true,
+                        name: 'Friend'
+                    }
+                }
+            });
+        });
     });
 
     describe('calculateStateDiff()', () => {

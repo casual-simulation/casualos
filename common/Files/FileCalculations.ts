@@ -372,6 +372,7 @@ export function convertToFormulaObject(context: FileCalculationContext, object: 
         [tag: string]: any
     } = {
         _converted: true,
+        _original: object,
         id: object.id
     };
     for(let key in object.tags) {
