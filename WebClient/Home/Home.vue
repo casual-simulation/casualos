@@ -19,10 +19,12 @@
               <md-button @click="close()">Close</md-button>
             </md-card-actions>
           </md-card>
-          <md-button class="md-icon-button" v-else-if="filesMode" @click="open">
-            <md-icon>edit</md-icon>
-            <span class="sr-only">Open File Editor</span>
-          </md-button>
+          <md-badge v-else-if="filesMode" :md-content="numFilesSelected" md-position="bottom">
+            <md-button class="md-icon-button" @click="open">
+              <md-icon>edit</md-icon>
+              <span class="sr-only">Open File Editor</span>
+            </md-button>
+          </md-badge>
         </div>
       </game-view>
 
