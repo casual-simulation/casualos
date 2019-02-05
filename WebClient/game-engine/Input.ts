@@ -749,22 +749,6 @@ interface MouseData {
     clientPos: Vector2;
 }
 
-// interface VRControllerData {
-//     /**
-//      * State of the primary button (often the trigger).
-//      */
-//     primaryButtonState: InputState;
-
-//     /**
-//      * State of the secondary button (often the touchpad click).
-//      */
-//     secondaryButtonState: InputState;
-
-
-
-
-// }
-
 class WheelData {
 
     private _wheelFrames: WheelFrame[] = [];

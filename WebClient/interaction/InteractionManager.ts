@@ -48,60 +48,85 @@ export class InteractionManager {
     }
 
     public update(): void {
-        this._cameraControls.update();
 
-        if (this._fileClickOperation) {
+        if (this._gameView.vrDisplay && this._gameView.vrDisplay.isPresenting) {
+            
+            const inputVR = this._gameView.inputVR;
 
-            this._fileClickOperation.update();
-
-            // Dispose of operations that have finished.
-            if (this._fileClickOperation.isFinished()) {
-
-                this._fileClickOperation.dispose();
-                this._fileClickOperation = null;
-
-            }
-        }
-
-        const input = this._gameView.input;
-
-        // Detect left click.
-        if (input.getMouseButtonDown(MouseButtonId.Left)) {
-
-            const screenPos = input.getMouseScreenPos();
-            const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this._getDraggableObjects(), this._gameView.camera);
-            const clickedObject = Physics.firstRaycastHit(raycastResult);
-
-            if (clickedObject) {
-
-                this._cameraControls.enabled = false;
-                const file = this.fileForIntersection(clickedObject);
-
-                if (file) {
-
-                    // Can only click things if in the correct mode
-                    if (this.isInCorrectMode(file.file)) {
-
-                        // Start file click operation on file.
-                        this._fileClickOperation = new FileClickOperation(this.mode, this._gameView, this, file, clickedObject);
-                    }
+            // VR Mode interaction.
+            for (let i = 0; i < 5; i++) {
+                if (inputVR.getButtonDown(0, i)) {
+                    console.log('[InteractionManager] VR button ' + i + ' down. frame: ' + this._gameView.time.frameCount);
                 }
 
+                if (inputVR.getButtonHeld(0, i)) {
+                    console.log('[InteractionManager] VR button ' + i + ' held. frame: ' + this._gameView.time.frameCount);
+                }
+
+                if (inputVR.getButtonUp(0, i)) {
+                    console.log('[InteractionManager] VR button ' + i + ' up. frame: ' + this._gameView.time.frameCount);
+                }
             }
 
-            // If file click operation wasnt started, make sure camera controls are enabled.
-            if (!this._fileClickOperation) {
+        } else {
+            
+            // Normal browser interaction.
+            this._cameraControls.update();
 
+            if (this._fileClickOperation) {
+
+                this._fileClickOperation.update();
+
+                // Dispose of operations that have finished.
+                if (this._fileClickOperation.isFinished()) {
+
+                    this._fileClickOperation.dispose();
+                    this._fileClickOperation = null;
+
+                }
+            }
+
+            const input = this._gameView.input;
+
+            // Detect left click.
+            if (input.getMouseButtonDown(MouseButtonId.Left)) {
+
+                const screenPos = input.getMouseScreenPos();
+                const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this._getDraggableObjects(), this._gameView.camera);
+                const clickedObject = Physics.firstRaycastHit(raycastResult);
+
+                if (clickedObject) {
+
+                    this._cameraControls.enabled = false;
+                    const file = this.fileForIntersection(clickedObject);
+
+                    if (file) {
+
+                        // Can only click things if in the correct mode
+                        if (this.isInCorrectMode(file.file)) {
+
+                            // Start file click operation on file.
+                            this._fileClickOperation = new FileClickOperation(this.mode, this._gameView, this, file, clickedObject);
+                        }
+                    }
+
+                }
+
+                // If file click operation wasnt started, make sure camera controls are enabled.
+                if (!this._fileClickOperation) {
+
+                    this._cameraControls.enabled = true;
+
+                }
+            }
+
+            // Middle click or Right click.
+            if (input.getMouseButtonDown(MouseButtonId.Middle) || input.getMouseButtonDown(MouseButtonId.Right)) {
+
+                // Always allow camera control with middle clicks.
                 this._cameraControls.enabled = true;
 
             }
-        }
-
-        // Middle click or Right click.
-        if (input.getMouseButtonDown(MouseButtonId.Middle) || input.getMouseButtonDown(MouseButtonId.Right)) {
-
-            // Always allow camera control with middle clicks.
-            this._cameraControls.enabled = true;
 
         }
 
