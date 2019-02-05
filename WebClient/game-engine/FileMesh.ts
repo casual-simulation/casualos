@@ -208,7 +208,7 @@ export class FileMesh extends GameObject {
             material.color = this._getColor(this.file.tags.color);
         } else {
             const material = <MeshStandardMaterial>this.cube.material;
-            material.color = new Color(0x00FF00);
+            material.color = new Color(0xFFFFFF);
         }
     }
 
