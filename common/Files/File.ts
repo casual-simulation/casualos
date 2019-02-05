@@ -23,6 +23,9 @@ export interface Object {
         ['line.color']?: string;
         ['label']?: string;
         ['label.color']?: string;
+        ['scale.x']?: number;
+        ['scale.y']?: number;
+        ['scale.z']?: number;
         [key: string]: any;
     };
 }
@@ -82,6 +85,9 @@ export interface PartialFile {
         ['line.color']?: string;
         ['label']?: string;
         ['label.color']?: string;
+        ['scale.x']?: number;
+        ['scale.y']?: number;
+        ['scale.z']?: number;
         [key: string]: any;
     },
     grid?: {
