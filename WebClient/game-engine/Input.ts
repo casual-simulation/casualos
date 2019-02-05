@@ -22,6 +22,11 @@ export class Input {
      * @returns 'mouse' or 'touch'
      */
     get currentInputType(): InputType { return this._inputType; }
+    
+    /**
+     * Sets the current input type to 'mouse' or 'touch'.
+     */
+    set currentInputType(inputType: InputType) { this._inputType = inputType; }
 
     /**
      * Calculates the Three.js screen position of the mouse from the given mouse event.
@@ -748,22 +753,6 @@ interface MouseData {
      */
     clientPos: Vector2;
 }
-
-// interface VRControllerData {
-//     /**
-//      * State of the primary button (often the trigger).
-//      */
-//     primaryButtonState: InputState;
-
-//     /**
-//      * State of the secondary button (often the touchpad click).
-//      */
-//     secondaryButtonState: InputState;
-
-
-
-
-// }
 
 class WheelData {
 

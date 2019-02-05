@@ -1,4 +1,4 @@
-import { Vector2, Camera, Vector3, Ray, Raycaster, Object3D, Intersection, Mesh } from "three";
+import { Vector2, Camera, Vector3, Ray, Raycaster, Object3D, Intersection, Mesh, Plane } from "three";
 
 /**
  * Container for all custom physics functions for game engine.
@@ -55,10 +55,11 @@ export namespace Physics {
      * @param ray The ray.
      * @param plane The plane that the ray should test against.
      */
-    export function pointOnPlane(ray: Ray, plane: Mesh): Vector3 | null {
-    const raycaster = new Raycaster(ray.origin, ray.direction, 0, Number.POSITIVE_INFINITY);
-    const hits = raycaster.intersectObject(plane, true);
-    return hits.length > 0 ? hits[0].point : null;
+    export function pointOnPlane(ray: Ray, plane: Plane): Vector3 | null {
+      let point = new Vector3();
+      point = ray.intersectPlane(plane, point);
+
+      return point;
     }
 
     /**

@@ -155,7 +155,7 @@ export class FileDragOperation implements IOperation {
 
     private _dragWorkspace() {
         const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.camera);
-        const point = Physics.pointOnPlane(mouseDir, this._gameView.workspacePlane);
+        const point = Physics.pointOnPlane(mouseDir, this._gameView.groundPlane);
 
         if (point) {
 

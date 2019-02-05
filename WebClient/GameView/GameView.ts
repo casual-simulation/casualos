@@ -23,7 +23,9 @@ import {
   Fog,
   FogExp2,
   PCFShadowMap,
-  BasicShadowMap
+  BasicShadowMap,
+  Plane,
+  Vector3
 } from 'three';
 
 import VRControlsModule from 'three-vrcontrols-module';
@@ -43,7 +45,7 @@ import {
 
 import { File, Object, Workspace, DEFAULT_WORKSPACE_HEIGHT_INCREMENT, DEFAULT_USER_MODE, UserMode } from 'common/Files';
 import { Time } from '../game-engine/Time';
-import { Input } from '../game-engine/input';
+import { Input, InputType } from '../game-engine/input';
 import { InputVR } from '../game-engine/InputVR';
 import { File3D } from '../game-engine/File3D';
 
@@ -76,8 +78,9 @@ export default class GameView extends Vue {
   private _ambient: AmbientLight;
   private _skylight: HemisphereLight;
 
-  private _workspacePlane: Mesh;
-  private _skydome: Mesh;
+  private _groundPlane: Plane;
+  private _groundPlaneMesh: Mesh;
+  private _skydomeMesh: Mesh;
   private _canvas: HTMLElement;
   private _time: Time;
   private _input: Input;
@@ -109,6 +112,7 @@ export default class GameView extends Vue {
   debugInfo: GameViewDebugInfo = null;
   mode: UserMode = DEFAULT_USER_MODE;
   vrDisplay: VRDisplay = null;
+  vrCapable: boolean = false;
 
   @Watch('debug')
   debugChanged(val: boolean, previous: boolean) {
@@ -129,12 +133,12 @@ export default class GameView extends Vue {
   get inputVR(): InputVR { return this._inputVR; }
   get interactionManager(): InteractionManager { return this._interaction; }
   get camera(): PerspectiveCamera { return this._camera; }
-  get workspacePlane(): Mesh { return this._workspacePlane; }
   get scene(): Scene { return this._scene; }
   get renderer() { return this._renderer; } 
   get dev() { return !PRODUCTION; }
   get filesMode() { return this.mode === 'files'; }
   get workspacesMode() { return this.mode === 'worksurfaces'; }
+  get groundPlane() { return this._groundPlane; }
 
   get gridChecker() { return this._gridChecker; }
 
@@ -413,26 +417,27 @@ export default class GameView extends Vue {
 
     this._scene.add(this._sun);
 
-    // Workspace plane.
+    // Ground plane.
+    this._groundPlane = new Plane(new Vector3(0, 1, 0));
+    
     var gltfLoader = new GLTFLoader();
     gltfLoader.load(groundModelPath, gltf => {
       gltf.scene.traverse((child) => {
         if ((<any>child).isMesh) {
-          console.log('[GameView] Assigned workspace plane mesh from gltf file.');
-          this._workspacePlane = <Mesh>child;
-          this._workspacePlane.castShadow = false;
-          this._workspacePlane.receiveShadow = true;
-          this._workspacePlane.position.x = 0;
-          this._workspacePlane.position.y = 0;
-          this._workspacePlane.position.x = 0;
-          this._workspacePlane.rotation.x = ThreeMath.DEG2RAD * -90;
-          this._workspacePlane.visible = false;
-          this._workspacePlane.updateMatrixWorld(false);
+          this._groundPlaneMesh = <Mesh>child;
+          this._groundPlaneMesh.castShadow = false;
+          this._groundPlaneMesh.receiveShadow = true;
+          this._groundPlaneMesh.position.x = 0;
+          this._groundPlaneMesh.position.y = 0;
+          this._groundPlaneMesh.position.x = 0;
+          this._groundPlaneMesh.rotation.x = ThreeMath.DEG2RAD * -90;
+          this._groundPlaneMesh.visible = false;
+          this._groundPlaneMesh.updateMatrixWorld(false);
 
           // Scale up the workspace plane.
-          this._workspacePlane.scale.multiplyScalar(18000);
+          this._groundPlaneMesh.scale.multiplyScalar(18000);
 
-          this._scene.add(this._workspacePlane);
+          this._scene.add(this._groundPlaneMesh);
           return;
         }
       });
@@ -446,12 +451,12 @@ export default class GameView extends Vue {
       map: skydomeTexture,
     });
 
-    this._skydome = new Mesh(skydomeGeometry, skydomeMaterial);
-    this._skydome.castShadow = false;
-    this._skydome.receiveShadow = false;
-    this._skydome.position.set(0, 0, 0);
+    this._skydomeMesh = new Mesh(skydomeGeometry, skydomeMaterial);
+    this._skydomeMesh.castShadow = false;
+    this._skydomeMesh.receiveShadow = false;
+    this._skydomeMesh.position.set(0, 0, 0);
 
-    this._scene.add(this._skydome);
+    this._scene.add(this._skydomeMesh);
   }
 
   private _setupRenderer() {
@@ -519,6 +524,10 @@ export default class GameView extends Vue {
     console.log("[GameView] vr display is ready.");
     console.log(display);
     this.vrDisplay = display;
+
+    // When being used on a vr headset, force the normal input module to use touch instead of mouse.
+    // Touch seems to work better for 2d browsers on vr headsets (like the Oculus Go).
+    this.input.currentInputType = InputType.Touch;
   }
 
   private _handleEnterVR(display: any) {
