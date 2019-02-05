@@ -9,9 +9,10 @@ import robotoTexturePath from '../public/bmfonts/Roboto.png';
 import { File3D } from "./File3D";
 import { ArgEvent } from '../../common/Events';
 import { Arrow3D } from "./Arrow3D";
-import { find, flatMap } from "lodash";
-import { isArray, parseArray, isFormula, getShortId, fileFromShortId } from '../../common/Files/FileCalculations'
+import { find, flatMap, sumBy, sortBy } from "lodash";
+import { isArray, parseArray, isFormula, getShortId, fileFromShortId, objectsAtGridPosition } from '../../common/Files/FileCalculations'
 import { appManager } from '../AppManager';
+import { FileManager } from "WebClient/FileManager";
 
 /**
  * Defines a class that represents a mesh for an "object" file.
@@ -93,7 +94,7 @@ export class FileMesh extends GameObject {
         // visible if not destroyed, has a position, and not hidden
         this.visible = (!this.file.tags._destroyed && !!this.file.tags._position && !this.file.tags._hidden);
 
-        // Tag: _position
+        // Tag: _position && scale
         this._tagUpdatePosition();
 
         // Tag: color
@@ -147,18 +148,20 @@ export class FileMesh extends GameObject {
         
         const workspace = this._gameView.getFile(this.file.tags._workspace);
         const scale = this._calculateScale(workspace);
+        const cubeScale = this._calculateCubeScale(scale);
         if (workspace && workspace.file.type === 'workspace') {
             this.parent = workspace.mesh;
-            this.cube.scale.set(scale, scale, scale);
-            this.cube.position.set(0, scale / 2, 0);
+            this.cube.scale.set(cubeScale.x, cubeScale.y, cubeScale.z);
+            this.cube.position.set(0, cubeScale.y / 2, 0);
         } else {
             this.parent = null;
-            this.cube.scale.set(1, 1, 1);
+            this.cube.scale.set(cubeScale.x, cubeScale.y, cubeScale.z);
             this.cube.position.set(0, 0, 0);
         }
 
         if (this.file.tags._position && workspace && workspace.file.type === 'workspace') {
             const localPosition = calculateObjectPosition(
+                appManager.fileManager,
                 this.file,
                 scale
             );
@@ -357,6 +360,14 @@ export class FileMesh extends GameObject {
         }
     }
 
+    private _calculateCubeScale(workspaceScale: number) {
+        const scaleX = calculateNumericalTagValue(appManager.fileManager, this.file, 'scale.x', 1);
+        const scaleY = calculateNumericalTagValue(appManager.fileManager, this.file, 'scale.y', 1);
+        const scaleZ = calculateNumericalTagValue(appManager.fileManager, this.file, 'scale.z', 1);
+
+        return new Vector3(scaleX * workspaceScale, scaleZ * workspaceScale, scaleY * workspaceScale);
+    }
+
     private _createStrokeGeometry(): BufferGeometry {
         const geo = new BufferGeometry();
 
@@ -402,16 +413,41 @@ export class FileMesh extends GameObject {
 /**
  * Calculates the position of the file and returns it.
  * @param file The file.
- * @param scale The fiel scale. Usually calculated from the workspace scale.
+ * @param scale The workspace scale. Usually calculated from the workspace scale.
  */
-export function calculateObjectPosition(file: Object, scale: number) {
+export function calculateObjectPosition(fileManager: FileManager, file: Object, scale: number) {
     const localPosition = calculateGridTileLocalCenter(
         file.tags._position.x, 
         file.tags._position.y, 
         file.tags._position.z,
         scale);
+    
+    const files = fileManager.objects;
+    const objectsAtPosition = objectsAtGridPosition(files, file.tags._workspace, file.tags._position);
+    const sortedByIndex = sortBy(objectsAtPosition, o => o.tags._index || 0);
     const index = file.tags._index || 0;
-    const indexOffset = new Vector3(0, index * scale, 0);
+    const objectsBelowThis = sortedByIndex.slice(0, index);
+    const totalScales = sumBy(objectsBelowThis, obj => calculateNumericalTagValue(fileManager, obj, 'scale.z', 1));
+
+    const indexOffset = new Vector3(0, totalScales * scale, 0);
     localPosition.add(indexOffset);
     return localPosition;
+}
+
+/**
+ * Calculates the value of the given tag on the given file. If the result is not a number, then the given default value
+ * is returned.
+ * @param fileManager The file manager.
+ * @param file The file.
+ * @param tag The tag.
+ * @param defaultValue The default value to use if the tag doesn't exist or the result is not a number.
+ */
+export function calculateNumericalTagValue(fileManager: FileManager, file: Object, tag: string, defaultValue: number): number {
+    if (file.tags[tag]) {
+        const result = fileManager.calculateFileValue(file, tag);
+        if (typeof result === 'number' && result !== null) {
+            return result;
+        }
+    }
+    return defaultValue
 }
