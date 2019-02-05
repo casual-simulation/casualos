@@ -1,6 +1,6 @@
 import VRController from 'three-vrcontroller-module';
 import GameView from '../GameView/GameView';
-import { MeshStandardMaterial, Mesh, CylinderGeometry, BoxGeometry, Object3D } from 'three';
+import { MeshStandardMaterial, Mesh, CylinderGeometry, BoxGeometry, Object3D, Ray, Vector3 } from 'three';
 import { InputState } from './input';
 import { find, remove } from 'lodash';
 
@@ -86,12 +86,34 @@ export class InputVR {
         return false;
     }
 
+    /**
+     * Returns the pointer ray for the specified controller.
+     */
+    getPointerRay(controllerIndex: number): Ray {
+        // let controllerMesh = this._getControllerMesh(controllerIndex);
+
+        // if (controllerMesh) {
+        //     let origin = new Vector3();
+        //     let direction = new Vector3();
+        //     let ray = new Ray(origin, direction);
+    
+        //     return ray;
+        // }
+
+        return null;
+    }
+
+    private _getControllerMesh(controllerIndex: number): ControllerMesh {
+        // Find matching controller mesh.
+        return find(this._controllerMeshes, (mesh: ControllerMesh) => { 
+            return mesh.controller.gamepad.index === controllerIndex; 
+        });
+    }
+
     private _getButtonState(controllerIndex: number, buttonIndex: number): InputState {
 
         // Find matching controller mesh.
-        let controllerMesh = find(this._controllerMeshes, (mesh: ControllerMesh) => { 
-            return mesh.controller.gamepad.index === controllerIndex; 
-        });
+        let controllerMesh = this._getControllerMesh(controllerIndex);
         
         if (controllerMesh) {
             // Find matching button state.

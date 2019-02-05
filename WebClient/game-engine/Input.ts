@@ -22,6 +22,11 @@ export class Input {
      * @returns 'mouse' or 'touch'
      */
     get currentInputType(): InputType { return this._inputType; }
+    
+    /**
+     * Sets the current input type to 'mouse' or 'touch'.
+     */
+    set currentInputType(inputType: InputType) { this._inputType = inputType; }
 
     /**
      * Calculates the Three.js screen position of the mouse from the given mouse event.
