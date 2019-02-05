@@ -20,7 +20,7 @@
             <span class="sr-only">Debug</span>
             <md-tooltip md-direction="bottom">Debug</md-tooltip>
           </md-button>
-          <span id="vr-button-container" class="vr-button-container"></span>
+          <span v-show="vrDisplay" id="vr-button-container" class="vr-button-container"></span>
         </div>
 
         <!-- <div class="toolbar">

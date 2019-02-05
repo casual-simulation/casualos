@@ -17,11 +17,18 @@ import {
   SphereBufferGeometry,
   GLTFLoader,
   HemisphereLight,
-  Vector2
+  Vector2,
+  CylinderGeometry,
+  BoxGeometry,
+  Fog,
+  FogExp2,
+  PCFShadowMap,
+  BasicShadowMap
 } from 'three';
 
 import VRControlsModule from 'three-vrcontrols-module';
 import VREffectModule from 'three-vreffect-module';
+import VRController from 'three-vrcontroller-module';
 import * as webvrui from 'webvr-ui';
 
 import 'three-examples/loaders/GLTFLoader';
@@ -61,10 +68,10 @@ export default class GameView extends Vue {
   private _camera: PerspectiveCamera;
   private _renderer: WebGLRenderer;
 
-  private _vrDisplay: VRDisplay;
   private _enterVr: any;
   private _vrControls: any;
   private _vrEffect: any;
+  private _vrControllers: any[];
 
   private _sun: DirectionalLight;
   private _ambient: AmbientLight;
@@ -101,6 +108,7 @@ export default class GameView extends Vue {
   debug: boolean = false;
   debugInfo: GameViewDebugInfo = null;
   mode: UserMode = DEFAULT_USER_MODE;
+  vrDisplay: VRDisplay = null;
 
   @Watch('debug')
   debugChanged(val: boolean, previous: boolean) {
@@ -232,6 +240,7 @@ export default class GameView extends Vue {
 
     this._input.update();
     this._interaction.update();
+    VRController.update();
 
     for (let id in this._files) {
       const file = this._files[id];
@@ -240,7 +249,7 @@ export default class GameView extends Vue {
       }
     }
 
-    if (this._vrDisplay && this._vrDisplay.isPresenting) {
+    if (this.vrDisplay && this.vrDisplay.isPresenting) {
 
       this._vrControls.update();
       this._renderer.render(this._scene, this._camera);
@@ -254,9 +263,9 @@ export default class GameView extends Vue {
 
     this._time.update();
 
-    if (this._vrDisplay && this._vrDisplay.isPresenting) {
+    if (this.vrDisplay && this.vrDisplay.isPresenting) {
 
-      this._vrDisplay.requestAnimationFrame(() => this._frameUpdate());
+      this.vrDisplay.requestAnimationFrame(() => this._frameUpdate());
 
     } else {
 
@@ -376,7 +385,7 @@ export default class GameView extends Vue {
     this._setupRenderer();
 
     // Ambient light.
-    this._ambient = new AmbientLight(0xffffff, 0.8);
+    this._ambient = new AmbientLight(0xffffff, 0.7);
     this._scene.add(this._ambient);
 
     // Sky light.
@@ -408,7 +417,7 @@ export default class GameView extends Vue {
         if ((<any>child).isMesh) {
           console.log('[GameView] Assigned workspace plane mesh from gltf file.');
           this._workspacePlane = <Mesh>child;
-          this._workspacePlane.castShadow = true;
+          this._workspacePlane.castShadow = false;
           this._workspacePlane.receiveShadow = true;
           this._workspacePlane.position.x = 0;
           this._workspacePlane.position.y = 0;
@@ -456,11 +465,11 @@ export default class GameView extends Vue {
   
   private _setupWebVR() {
 
-
     let onBeforeEnter = () => {
       console.log("[GameView] vr on before enter");
 
       this._renderer.vr.enabled = true;
+      this._renderer.shadowMap.enabled = false;
 
       // VR controls
       this._vrControls = new VRControlsModule(this._camera);
@@ -469,12 +478,14 @@ export default class GameView extends Vue {
       // Create VR Effect rendering in stereoscopic mode
       this._vrEffect = new VREffectModule(this._renderer);
       this._resizeVR();
-      this._renderer.setPixelRatio(Math.floor(window.devicePixelRatio));
+      this._renderer.setPixelRatio(window.devicePixelRatio);
 
       return new Promise((resolve, reject) => {
         resolve(null);
       });
     };
+
+    this.vrDisplay = null;
 
     // WebVR enable button.
     let vrButtonOptions = {
@@ -484,16 +495,23 @@ export default class GameView extends Vue {
 
     this._enterVr = new webvrui.EnterVRButton(this._canvas, vrButtonOptions);
 
+    // Event handlers for the vr button.
     this._handleReadyVR = this._handleReadyVR.bind(this);
     this._handleEnterVR = this._handleEnterVR.bind(this);
     this._handleExitVR = this._handleExitVR.bind(this);
     this._handleErrorVR = this._handleErrorVR.bind(this);
 
-    // Event handlers for the vr button.
     this._enterVr.on('ready', this._handleReadyVR);
     this._enterVr.on('enter', this._handleEnterVR);
     this._enterVr.on('exit', this._handleExitVR);
     this._enterVr.on('error', this._handleErrorVR);
+
+    
+    // Lisen for vr controllers connecting.
+    VRController.verbosity = 1.0;
+    this._vrControllers = [];
+    this._handleVRControllerConnected = this._handleVRControllerConnected.bind(this);
+    window.addEventListener('vr controller connected', this._handleVRControllerConnected);
 
     let vrButtonContainer = document.getElementById('vr-button-container');
     vrButtonContainer.appendChild(this._enterVr.domElement);
@@ -503,14 +521,14 @@ export default class GameView extends Vue {
     
     console.log("[GameView] vr display is ready.");
     console.log(display);
-    this._vrDisplay = display;
+    this.vrDisplay = display;
   }
 
   private _handleEnterVR(display: any) {
 
     console.log('[GameView] enter vr.');
     console.log(display);
-    this._vrDisplay = display;
+    this.vrDisplay = display;
   }
 
   private _handleExitVR(display: any) {
@@ -519,6 +537,7 @@ export default class GameView extends Vue {
     console.log(display);
 
     this._renderer.vr.enabled = false;
+    this._renderer.shadowMap.enabled = true;
 
     this._vrControls.dispose();
     this._vrControls = null;
@@ -536,6 +555,61 @@ export default class GameView extends Vue {
   private _handleErrorVR(error: any) {
     // console.error('error vr');
     // console.error(error);
+  }
+
+  private _handleVRControllerConnected(event: any) {
+    console.log("[GameView] VR Controller connected:");
+    console.log(event);
+    
+    let controller = event.detail;
+    
+    if(this._vrControllers) this._vrControllers = [];
+    this._vrControllers.push(controller);
+
+    // Controller is an Object3D. Lets add it to the scene.
+    this._scene.add(controller);
+    
+    controller.standingMatrix = (<any>this._renderer.vr).getStandingMatrix();
+    console.log('standing matrix:');
+    console.log(controller.standingMatrix);
+    controller.head = this._camera;
+    console.log('head:');
+    console.log(controller.head);
+
+    //  Right now your controller has no visual.
+    //  It’s just an empty THREE.Object3D.
+    //  Let’s fix that!
+    let meshColorOff = 0xDB3236; //  Red.
+    let meshColorOn  = 0xF4C20D; //  Yellow.
+    let controllerMaterial = new MeshStandardMaterial({
+      color: meshColorOff
+    });
+    let controllerMesh = new Mesh(
+      new CylinderGeometry( 0.005, 0.05, 0.1, 6 ),
+      controllerMaterial
+    );
+    let handleMesh = new Mesh(
+      new BoxGeometry( 0.03, 0.1, 0.03 ),
+      controllerMaterial
+    );
+    controllerMaterial.flatShading = true;
+    controllerMesh.rotation.x = -Math.PI / 2;
+    handleMesh.position.y = -0.05;
+    controllerMesh.add(handleMesh);
+    controller.userData.mesh = controllerMesh;//  So we can change the color later.
+    controller.add(controllerMesh);
+
+    controller.addEventListener('disconnected', (event: any) => {
+      console.log("[GameView] VR controller disconnected:");
+      console.log(event);
+
+      let index = this._vrControllers.indexOf(controller);
+      if (index >= 0) {
+        this._vrControllers.slice(index, 1);
+      }
+
+      this._scene.remove(controller);
+    });
   }
 
   private _handleResize() {
@@ -561,7 +635,8 @@ export default class GameView extends Vue {
   private _resizeVR() {
     if (!this._vrEffect) return;
 
-    const { width, height } = this._calculateSize();
+    const width = window.innerWidth;
+    const height = window.innerHeight;
     this._vrEffect.setSize(width, height);
   }
 
