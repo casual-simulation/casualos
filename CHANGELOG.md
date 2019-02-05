@@ -14,6 +14,9 @@
   - This will likely increase the accuracy of rendering results but may also cause performance to drop due to rendering a lot more pixels.
   - Was previously using the browser-default pixel ratio.
 - Added beta support for Web VR devices.
+- Fixed an issue where worksurfaces that did not have default heights and were merged into other worksurfaces would cause those tiles to incorrectly appear with a height of `0`.
+  - The worksurfaces that did not have default heights were from old versions that did not allow changing heights.
+- Added the number of selected cubes to the info box toggle
 
 ## V0.2.13
 ### Date: 2/1/2019
