@@ -151,7 +151,11 @@ export class WorkspaceMesh extends GameObject {
             const workspaceHex = this.workspace.grid[key];
             
             const hex = this.hexGrid.addAt(position);
-            hex.height = workspaceHex.height;
+            let nextHeight = workspaceHex.height || this.workspace.defaultHeight
+            if (nextHeight < 0) {
+                nextHeight = this.workspace.defaultHeight;
+            }
+            hex.height = nextHeight;
         });
         
         this.colliders = [...this.hexGrid.hexes];
