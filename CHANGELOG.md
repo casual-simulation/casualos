@@ -1,5 +1,12 @@
 # File Simulator Changelog
 
+## V0.2.16
+### Date: 2/5/2019
+
+### Changes:
+- Controller is represented as a red pointer arrow. It doesnt not currently allow you to interact yet.
+- Disabling shadows when in VR. Shadows are a significant performance cost in its current state, disabling them gives us 20-30+ fps boost in VR.
+
 ## V0.2.15
 ### Date: 2/5/2019
 
