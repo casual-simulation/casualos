@@ -19,7 +19,11 @@ import {
   HemisphereLight,
   Vector2,
   CylinderGeometry,
-  BoxGeometry
+  BoxGeometry,
+  Fog,
+  FogExp2,
+  PCFShadowMap,
+  BasicShadowMap
 } from 'three';
 
 import VRControlsModule from 'three-vrcontrols-module';
@@ -64,10 +68,6 @@ export default class GameView extends Vue {
   private _camera: PerspectiveCamera;
   private _renderer: WebGLRenderer;
 
-  //
-  // VR specific
-  //
-  private _vrDisplay: VRDisplay;
   private _enterVr: any;
   private _vrControls: any;
   private _vrEffect: any;
@@ -108,6 +108,7 @@ export default class GameView extends Vue {
   debug: boolean = false;
   debugInfo: GameViewDebugInfo = null;
   mode: UserMode = DEFAULT_USER_MODE;
+  vrDisplay: VRDisplay = null;
 
   @Watch('debug')
   debugChanged(val: boolean, previous: boolean) {
@@ -241,7 +242,7 @@ export default class GameView extends Vue {
     this._interaction.update();
     VRController.update();
 
-    if (this._vrDisplay && this._vrDisplay.isPresenting) {
+    if (this.vrDisplay && this.vrDisplay.isPresenting) {
 
       this._vrControls.update();
       this._renderer.render(this._scene, this._camera);
@@ -255,9 +256,9 @@ export default class GameView extends Vue {
 
     this._time.update();
 
-    if (this._vrDisplay && this._vrDisplay.isPresenting) {
+    if (this.vrDisplay && this.vrDisplay.isPresenting) {
 
-      this._vrDisplay.requestAnimationFrame(() => this._frameUpdate());
+      this.vrDisplay.requestAnimationFrame(() => this._frameUpdate());
 
     } else {
 
@@ -377,7 +378,7 @@ export default class GameView extends Vue {
     this._setupRenderer();
 
     // Ambient light.
-    this._ambient = new AmbientLight(0xffffff, 0.8);
+    this._ambient = new AmbientLight(0xffffff, 0.7);
     this._scene.add(this._ambient);
 
     // Sky light.
@@ -409,7 +410,7 @@ export default class GameView extends Vue {
         if ((<any>child).isMesh) {
           console.log('[GameView] Assigned workspace plane mesh from gltf file.');
           this._workspacePlane = <Mesh>child;
-          this._workspacePlane.castShadow = true;
+          this._workspacePlane.castShadow = false;
           this._workspacePlane.receiveShadow = true;
           this._workspacePlane.position.x = 0;
           this._workspacePlane.position.y = 0;
@@ -461,6 +462,7 @@ export default class GameView extends Vue {
       console.log("[GameView] vr on before enter");
 
       this._renderer.vr.enabled = true;
+      this._renderer.shadowMap.enabled = false;
 
       // VR controls
       this._vrControls = new VRControlsModule(this._camera);
@@ -469,12 +471,14 @@ export default class GameView extends Vue {
       // Create VR Effect rendering in stereoscopic mode
       this._vrEffect = new VREffectModule(this._renderer);
       this._resizeVR();
-      this._renderer.setPixelRatio(Math.floor(window.devicePixelRatio));
+      this._renderer.setPixelRatio(window.devicePixelRatio);
 
       return new Promise((resolve, reject) => {
         resolve(null);
       });
     };
+
+    this.vrDisplay = null;
 
     // WebVR enable button.
     let vrButtonOptions = {
@@ -510,14 +514,14 @@ export default class GameView extends Vue {
     
     console.log("[GameView] vr display is ready.");
     console.log(display);
-    this._vrDisplay = display;
+    this.vrDisplay = display;
   }
 
   private _handleEnterVR(display: any) {
 
     console.log('[GameView] enter vr.');
     console.log(display);
-    this._vrDisplay = display;
+    this.vrDisplay = display;
   }
 
   private _handleExitVR(display: any) {
@@ -526,6 +530,7 @@ export default class GameView extends Vue {
     console.log(display);
 
     this._renderer.vr.enabled = false;
+    this._renderer.shadowMap.enabled = true;
 
     this._vrControls.dispose();
     this._vrControls = null;
@@ -609,6 +614,7 @@ export default class GameView extends Vue {
   private _resizeRenderer() {
     // TODO: Call each time the screen size changes
     const { width, height } = this._calculateSize();
+    this._renderer.setPixelRatio(window.devicePixelRatio || 1);
     this._renderer.setSize(width, height);
     this._container.style.height = this._renderer.domElement.style.height;
   }
@@ -622,7 +628,8 @@ export default class GameView extends Vue {
   private _resizeVR() {
     if (!this._vrEffect) return;
 
-    const { width, height } = this._calculateSize();
+    const width = window.innerWidth;
+    const height = window.innerHeight;
     this._vrEffect.setSize(width, height);
   }
 
