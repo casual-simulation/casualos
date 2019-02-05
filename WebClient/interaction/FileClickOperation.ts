@@ -54,7 +54,7 @@ export class FileClickOperation implements IOperation {
                     this._triedDragging = true;
 
                     if (this.canDragFile(this._file.file)) {
-                        this._dragOperation = new FileDragOperation(this._gameView, this._interaction, this._file, workspace);
+                        this._dragOperation = new FileDragOperation(this._gameView, this._interaction, this._hit, this._file, workspace);
                     }
                 }
 
