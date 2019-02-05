@@ -55,7 +55,7 @@ export default class GameView extends Vue {
   private _debug: boolean;
   private _scene: Scene;
   private _camera: PerspectiveCamera;
-  private _renderer: Renderer;
+  private _renderer: WebGLRenderer;
   private __resizeListener: any;
 
   private _sun: DirectionalLight;
@@ -422,6 +422,7 @@ export default class GameView extends Vue {
   private _resizeRenderer() {
     // TODO: Call each time the screen size changes
     const { width, height } = this._calculateSize();
+    this._renderer.setPixelRatio(window.devicePixelRatio || 1);
     this._renderer.setSize(width, height);
     this._container.style.height = this._renderer.domElement.style.height;
   }
