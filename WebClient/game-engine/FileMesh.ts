@@ -371,31 +371,24 @@ export class FileMesh extends GameObject {
     }
 
     private _tagUpdateStroke() {
-        let stroke = this.file.tags['stroke.color'];
-        if (typeof stroke !== 'undefined') {
-            if (!this.stroke) {
-                // Create the stroke mesh
-                const geo = this._createStrokeGeometry();
-                const material = new LineBasicMaterial({
-                    color: 0x000000
-                });
-                
-                this.stroke = new LineSegments(geo, material);
-                this.cubeContainer.add(this.stroke);
-            }
+        if (!this.stroke) {
+            // Create the stroke mesh
+            const geo = this._createStrokeGeometry();
+            const material = new LineBasicMaterial({
+                color: 0x000000
+            });
+            
+            this.stroke = new LineSegments(geo, material);
+            this.cubeContainer.add(this.stroke);
+        }
 
-            this.stroke.visible = true;
-            const colorValue = appManager.fileManager.calculateFileValue(this.file, 'stroke.color');
-            const material = <LineBasicMaterial>this.stroke.material;
-            if (typeof colorValue !== 'undefined') {
-                material.color = this._getColor(colorValue);
-            } else {
-                material.color = new Color(0x000000);
-            }
+        this.stroke.visible = true;
+        const colorValue = appManager.fileManager.calculateFileValue(this.file, 'stroke.color');
+        const material = <LineBasicMaterial>this.stroke.material;
+        if (typeof colorValue !== 'undefined') {
+            material.color = this._getColor(colorValue);
         } else {
-            if (this.stroke) {
-                this.stroke.visible = false;
-            }
+            material.color = new Color(0x999999);
         }
     }
 
