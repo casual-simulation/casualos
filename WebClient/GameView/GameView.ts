@@ -223,6 +223,14 @@ export default class GameView extends Vue {
   private _frameUpdate() {
     this._input.update();
     this._interaction.update();
+
+    for (let id in this._files) {
+      const file = this._files[id];
+      if (file) {
+        file.frameUpdate();
+      }
+    }
+
     this._renderer.render(this._scene, this._camera);
     this._time.update();
 

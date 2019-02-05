@@ -83,6 +83,13 @@ export class File3D {
     }
 
     /**
+     * Updates the file and does anything that needs to be run on a per-frame basis.
+     */
+    public frameUpdate() {
+        this.mesh.frameUpdate();
+    }
+
+    /**
      * Call dispose allow this object to clean itself up when being removed.
      */
     public dispose(): void {

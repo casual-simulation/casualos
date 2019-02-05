@@ -14,4 +14,10 @@ export class GameObject extends Object3D {
         super();
         this.colliders = [];
     }
+
+    /**
+     * Runs any logic that the object needs to do each frame.
+     */
+    frameUpdate() {
+    }
 }

@@ -119,6 +119,20 @@ export class FileMesh extends GameObject {
         this.onUpdated.invoke(this);
     }
 
+    public frameUpdate() {
+        super.frameUpdate();
+
+        if (this.label) {
+            // update label scale
+
+            let labelMode = this.file.tags['label.size.mode'];
+            if (labelMode) {
+                this._updateLabelSize();
+                this.label.setPositionForObject(this.cube);
+            }
+        }
+    }
+
     private _calculateScale(workspace: File3D): number {
         if(workspace && workspace.file.type === 'workspace') {
             const scale = workspace.file.scale || DEFAULT_WORKSPACE_SCALE;
@@ -210,6 +224,8 @@ export class FileMesh extends GameObject {
             } else {
                 this.label.setText(label);
             }
+            
+            this._updateLabelSize();
 
             this.label.setPositionForObject(this.cube);
 
@@ -223,9 +239,25 @@ export class FileMesh extends GameObject {
                     this.label.setColor(this._getColor(labelColor));
                 }
             }
+
         } else {
             this.label.setText("");
         }
+    }
+
+    private _updateLabelSize() {
+        let labelSize = calculateNumericalTagValue(appManager.fileManager, this.file, 'label.size', 1) * Text3D.defaultScale;
+        if (this.file.tags['label.size.mode']) {
+            let mode = appManager.fileManager.calculateFileValue(this.file, 'label.size.mode');
+            if (mode === 'auto') {
+                const distanceToCamera = this._gameView.camera.position.distanceTo(this.label.getWorldPosition());
+                const extraScale = distanceToCamera / Text3D.virtualDistance;
+                const finalScale = labelSize * extraScale;
+                this.label.setScale(finalScale);
+                return;
+            }
+        }
+        this.label.setScale(labelSize);
     }
 
     private _tagUpdateLine(): void {
