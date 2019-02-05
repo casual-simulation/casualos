@@ -1,5 +1,14 @@
 # File Simulator Changelog
 
+## V0.2.17
+### Date: 2/5/2019
+
+### Changes:
+- Moved VR controller code to `InputVR` class. 
+- Forcefully disconnecting the controller when exiting VR, this fixes bug with GamePad API when returning to VR mode.
+- Disabled visibility of scene’s ground plane. 
+- `ControllerMesh` is now a special `Object3D` that is added to the root controller `Object3D` node.
+
 ## V0.2.16 
 ### Date: 2/5/2019
 
