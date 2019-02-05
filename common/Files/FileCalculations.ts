@@ -9,6 +9,7 @@ import {
     assign,
     find,
     values,
+    isEqual
 } from 'lodash';
 import { Sandbox } from '../Formulas/Sandbox';
 import formulaLib from 'formula-lib';
@@ -184,11 +185,12 @@ export function isArray(value: string): boolean {
  */
 export function parseArray(value: string): string[] {
     var array: string[] = value.slice(1, value.length - 1).split(',');
-    if (array) { 
+    if (array && array.length > 0 && array[0].length > 0) { 
         // trim all entries.
-        array = array.map((s) => { return s.trim(); });
+        return array.map((s) => { return s.trim(); });
+    } else {
+        return [];
     }
-    return array;
 }
 
 /**
@@ -413,13 +415,16 @@ export function tagsMatchingFilter(file: Object, other: Object, eventName: strin
 
 /**
  * Determines if the given tag matches the given object and event.
- * @param tag 
- * @param file 
- * @param eventName 
+ * @param tag The tag.
+ * @param file The file to test.
+ * @param eventName The event to test for.
  */
 export function tagMatchesFilter(tag: string, file: Object, eventName: string): boolean {
     const parsed = parseFilterTag(tag);
-    return parsed.success && parsed.eventName === eventName && file.tags[parsed.filter.tag] === parsed.filter.value;
+    return parsed.success && 
+        parsed.eventName === eventName && 
+        (file.tags[parsed.filter.tag] === parsed.filter.value ||
+            (Array.isArray(parsed.filter.value) && isEqual(file.tags[parsed.filter.tag], parsed.filter.value)));
 }
 
 /**
@@ -467,12 +472,13 @@ export function parseFilterTag(tag: string) {
                         lastQuote = tag.length;
                     }
                     const value = tag.slice(firstQuote + 1, lastQuote);
+                    const finalValue = _parseFilterValue(value);
                     return {
                         success: true,
                         eventName: eventName,
                         filter: {
                             tag: tagName,
-                            value: value
+                            value: finalValue
                         }
                     };
                 }
@@ -496,6 +502,21 @@ export function parseFilterTag(tag: string) {
  */
 export function getUserMode(object: Object): UserMode {
     return object.tags._mode || DEFAULT_USER_MODE;
+}
+
+function _parseFilterValue(value: string): any {
+    if (isArray(value)) {
+        const split = parseArray(value);
+        return split.map(v => _parseFilterValue(v));
+    } else if(isNumber(value)) {
+        return parseFloat(value);
+    } else if(value === 'true') {
+        return true;
+    } else if(value === 'false') {
+        return false;
+    } else {
+        return value;
+    }
 }
 
 function _convertToAssignment(object: any): Assignment {

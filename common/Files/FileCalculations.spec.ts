@@ -11,7 +11,9 @@ import {
     validateTag,
     fileTags,
     isHiddenTag,
-    getActiveObjects
+    getActiveObjects,
+    tagMatchesFilter,
+    parseArray
 } from './FileCalculations';
 import {
     cloneDeep
@@ -67,6 +69,12 @@ describe('FileCalculations', () => {
             expect(isArray('clone(this, { something: true })')).toBeFalsy();
         });
 
+    });
+
+    describe('parseArray()', () => {
+        it('should handle empty arrays properly', () => {
+            expect(parseArray('[]')).toEqual([]);
+        });
     });
 
     describe('getActiveObjects()', () => {
@@ -196,7 +204,10 @@ describe('FileCalculations', () => {
                     a: false,
                     b: '',
                     c: 0,
-                    d: <undefined>[]
+                    d: <any>[],
+                    e: <any>null,
+                    f: <any>undefined,
+                    g: NaN
                 }
             };
 
@@ -207,7 +218,10 @@ describe('FileCalculations', () => {
                     a: false,
                     b: '',
                     c: 0,
-                    d: []
+                    d: [],
+                    e: null,
+                    f: undefined,
+                    g: NaN
                 }
             });
         });
@@ -267,6 +281,54 @@ describe('FileCalculations', () => {
             const tags = tagsMatchingFilter(file, other, '+');
 
             expect(tags).toEqual([]);
+        });
+    });
+
+    describe('tagMatchesFilter()', () => {
+        it('should match string values', () => {
+            let other = createFile();
+            other.tags.name = 'test';
+
+            expect(tagMatchesFilter('+(#name:"test")', other, '+')).toBe(true);
+        });
+
+        it('should match number values', () => {
+            let other = createFile();
+            other.tags.num = 123456;
+
+            expect(tagMatchesFilter('+(#num:"123456")', other, '+')).toBe(true);
+
+            other.tags.num = 3.14159;
+
+            expect(tagMatchesFilter('+(#num:"3.14159")', other, '+')).toBe(true);
+        });
+
+        it('should match boolean values', () => {
+            let other = createFile();
+            other.tags.bool = true;
+
+            expect(tagMatchesFilter('+(#bool:"true")', other, '+')).toBe(true);
+
+            other.tags.bool = false;
+
+            expect(tagMatchesFilter('+(#bool:"false")', other, '+')).toBe(true);
+        });
+
+        it('should match array values', () => {
+            let other = createFile();
+            other.tags.array = [];
+
+            expect(tagMatchesFilter('+(#array:"[]")', other, '+')).toBe(true);
+            expect(tagMatchesFilter('+(#array:"[\"anything\"]")', other, '+')).toBe(false);
+
+            other.tags.array = [1];
+            expect(tagMatchesFilter('+(#array:"[1]")', other, '+')).toBe(true);
+
+            other.tags.array = ['hello', 'world'];
+            expect(tagMatchesFilter('+(#array:"[hello, world]")', other, '+')).toBe(true);
+
+            other.tags.array = ['hello', 'world', 12.34];
+            expect(tagMatchesFilter('+(#array:"[hello, world, 12.34]")', other, '+')).toBe(true);
         });
     });
 
@@ -426,6 +488,52 @@ describe('FileCalculations', () => {
                 success: false,
                 partialSuccess: true,
                 eventName: '+'
+            });
+        });
+
+        it('should parse numbers', () => {
+            let result = parseFilterTag('+(#abc:"123.45")');
+            expect(result).toEqual({
+                success: true,
+                eventName: '+',
+                filter: {
+                    tag: 'abc',
+                    value: 123.45
+                }
+            });
+        });
+
+        it('should parse booleans', () => {
+            let result = parseFilterTag('+(#abc:"true")');
+            expect(result).toEqual({
+                success: true,
+                eventName: '+',
+                filter: {
+                    tag: 'abc',
+                    value: true
+                }
+            });
+        });
+
+        it('should parse arrays', () => {
+            let result = parseFilterTag('+(#abc:"[hello, world, 12.34]")');
+            expect(result).toEqual({
+                success: true,
+                eventName: '+',
+                filter: {
+                    tag: 'abc',
+                    value: ['hello', 'world', 12.34]
+                }
+            });
+
+            result = parseFilterTag('+(#abc:"[]")');
+            expect(result).toEqual({
+                success: true,
+                eventName: '+',
+                filter: {
+                    tag: 'abc',
+                    value: []
+                }
             });
         });
     });
