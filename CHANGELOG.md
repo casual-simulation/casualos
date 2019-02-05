@@ -1,5 +1,20 @@
 # File Simulator Changelog
 
+## V0.2.14
+### Date: 2/4/2019
+
+#### Changes: 
+- Added `scale.x`, `scale.y`, and `scale.z` tags to allow changing the scale of the cubes.
+  - `x` and `y` are width and thickness. `z` is height.
+- Dragging worksurfaces now no longer snaps to the center but stays relative to the cursor position.
+- Added `label.size` and `label.size.mode` tags.
+  - `label.size` sets the size of the label. Setting it to 1 means the default size and setting it to 2 means twice the default size.
+  - Setting `label.size.mode` to `"auto"` causes the label to appear a constant size no matter where the user's camera is in the scene.
+- Changed the renderer settings to render the 3D scene at the full device resolution.
+  - This will likely increase the accuracy of rendering results but may also cause performance to drop due to rendering a lot more pixels.
+  - Was previously using the browser-default pixel ratio.
+- Added beta support for Web VR devices.
+
 ## V0.2.13
 ### Date: 2/1/2019
 
