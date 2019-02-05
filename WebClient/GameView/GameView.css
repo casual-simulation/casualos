@@ -35,6 +35,10 @@
     align-self: center;
 }
 
+.vr-button-container {
+    margin-left: 16px;
+}
+
 .divider {
     border-left: #333 1px solid;
 }

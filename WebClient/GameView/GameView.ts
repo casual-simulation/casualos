@@ -17,8 +17,12 @@ import {
   SphereBufferGeometry,
   GLTFLoader,
   HemisphereLight,
-  Vector2,
+  Vector2
 } from 'three';
+
+import VRControlsModule from 'three-vrcontrols-module';
+import VREffectModule from 'three-vreffect-module';
+import * as webvrui from 'webvr-ui';
 
 import 'three-examples/loaders/GLTFLoader';
 import Vue from 'vue';
@@ -55,8 +59,12 @@ export default class GameView extends Vue {
   private _debug: boolean;
   private _scene: Scene;
   private _camera: PerspectiveCamera;
-  private _renderer: Renderer;
-  private __resizeListener: any;
+  private _renderer: WebGLRenderer;
+
+  private _vrDisplay: VRDisplay;
+  private _enterVr: any;
+  private _vrControls: any;
+  private _vrEffect: any;
 
   private _sun: DirectionalLight;
   private _ambient: AmbientLight;
@@ -172,11 +180,9 @@ export default class GameView extends Vue {
   }
 
   async mounted() {
-    this.__resizeListener = () => {
-      this._resizeRenderer();
-      this._resizeCamera();
-    };
-    window.addEventListener('resize', this.__resizeListener);
+    this._handleResize = this._handleResize.bind(this);
+    window.addEventListener('resize', this._handleResize);
+    window.addEventListener('vrdisplaypresentchange', this._handleResize);
     
     this._time = new Time();
     this.debugInfo = null;
@@ -205,11 +211,13 @@ export default class GameView extends Vue {
       }))
       .subscribe());
 
+    this._setupWebVR();
     this._frameUpdate();
   }
 
   beforeDestroy() {
-    window.removeEventListener('resize', this.__resizeListener);
+    window.removeEventListener('resize', this._handleResize);
+    window.removeEventListener('vrdisplaypresentchange', this._handleResize);
     this._input.dispose();
 
     if (this._subs) {
@@ -221,12 +229,33 @@ export default class GameView extends Vue {
   }
 
   private _frameUpdate() {
+
     this._input.update();
     this._interaction.update();
-    this._renderer.render(this._scene, this._camera);
+
+    if (this._vrDisplay && this._vrDisplay.isPresenting) {
+
+      this._vrControls.update();
+      this._renderer.render(this._scene, this._camera);
+      this._vrEffect.render(this._scene, this._camera);
+
+    } else {
+
+      this._renderer.render(this._scene, this._camera);
+
+    }
+
     this._time.update();
 
-    requestAnimationFrame(() => this._frameUpdate());
+    if (this._vrDisplay && this._vrDisplay.isPresenting) {
+
+      this._vrDisplay.requestAnimationFrame(() => this._frameUpdate());
+
+    } else {
+
+      requestAnimationFrame(() => this._frameUpdate());
+
+    }
   }
 
   /**
@@ -328,17 +357,16 @@ export default class GameView extends Vue {
     this._scene = new Scene();
     this._scene.background = new Color(0xCCE6FF);
 
-    this._setupRenderer();
-
+    
     // User's camera
-    this._camera = new PerspectiveCamera(
-      60, window.innerWidth / window.innerHeight, 0.1, 20000);
+    this._camera = new PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 20000);
     this._camera.position.z = 5;
     this._camera.position.y = 3;
     this._camera.rotation.x = ThreeMath.degToRad(-30);
     this._camera.updateMatrixWorld(false);
-
+    
     this._resizeCamera();
+    this._setupRenderer();
 
     // Ambient light.
     this._ambient = new AmbientLight(0xffffff, 0.8);
@@ -418,6 +446,96 @@ export default class GameView extends Vue {
     this._canvas = this._renderer.domElement;
     this.gameView.appendChild(this._canvas);
   }
+  
+  private _setupWebVR() {
+
+
+    let onBeforeEnter = () => {
+      console.log("[GameView] vr on before enter");
+
+      this._renderer.vr.enabled = true;
+
+      // VR controls
+      this._vrControls = new VRControlsModule(this._camera);
+      this._vrControls.standing = true;
+  
+      // Create VR Effect rendering in stereoscopic mode
+      this._vrEffect = new VREffectModule(this._renderer);
+      this._resizeVR();
+      this._renderer.setPixelRatio(Math.floor(window.devicePixelRatio));
+
+      return new Promise((resolve, reject) => {
+        resolve(null);
+      });
+    };
+
+    // WebVR enable button.
+    let vrButtonOptions = {
+      color: 'black',
+      beforeEnter: onBeforeEnter
+    };
+
+    this._enterVr = new webvrui.EnterVRButton(this._canvas, vrButtonOptions);
+
+    this._handleReadyVR = this._handleReadyVR.bind(this);
+    this._handleEnterVR = this._handleEnterVR.bind(this);
+    this._handleExitVR = this._handleExitVR.bind(this);
+    this._handleErrorVR = this._handleErrorVR.bind(this);
+
+    // Event handlers for the vr button.
+    this._enterVr.on('ready', this._handleReadyVR);
+    this._enterVr.on('enter', this._handleEnterVR);
+    this._enterVr.on('exit', this._handleExitVR);
+    this._enterVr.on('error', this._handleErrorVR);
+
+    let vrButtonContainer = document.getElementById('vr-button-container');
+    vrButtonContainer.appendChild(this._enterVr.domElement);
+  }
+
+  private _handleReadyVR(display: VRDisplay) {
+    
+    console.log("[GameView] vr display is ready.");
+    console.log(display);
+    this._vrDisplay = display;
+  }
+
+  private _handleEnterVR(display: any) {
+
+    console.log('[GameView] enter vr.');
+    console.log(display);
+    this._vrDisplay = display;
+  }
+
+  private _handleExitVR(display: any) {
+    
+    console.log('[GameView] exit vr.');
+    console.log(display);
+
+    this._renderer.vr.enabled = false;
+
+    this._vrControls.dispose();
+    this._vrControls = null;
+
+    this._vrEffect.dispose();
+    this._vrControls = null; 
+    
+    // reset camera back to default position.
+    this._camera.position.z = 5;
+    this._camera.position.y = 3;
+    this._camera.rotation.x = ThreeMath.degToRad(-30);
+    this._camera.updateMatrixWorld(false);
+  }
+
+  private _handleErrorVR(error: any) {
+    // console.error('error vr');
+    // console.error(error);
+  }
+
+  private _handleResize() {
+    this._resizeCamera();
+    this._resizeRenderer();
+    this._resizeVR();
+  }
 
   private _resizeRenderer() {
     // TODO: Call each time the screen size changes
@@ -430,6 +548,13 @@ export default class GameView extends Vue {
     const { width, height } = this._calculateSize();
     this._camera.aspect = width / height;
     this._camera.updateProjectionMatrix();
+  }
+
+  private _resizeVR() {
+    if (!this._vrEffect) return;
+
+    const { width, height } = this._calculateSize();
+    this._vrEffect.setSize(width, height);
   }
 
   private _calculateSize() {

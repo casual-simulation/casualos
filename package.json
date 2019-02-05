@@ -103,12 +103,16 @@
     "socket.io-client": "^2.2.0",
     "three": "^0.98.0",
     "three-bmfont-text": "^2.3.0",
+    "three-vrcontrols-module": "^2.2.1",
+    "three-vreffect-module": "^2.2.0",
     "uuid": "^3.3.2",
     "vue": "^2.5.17",
     "vue-class-component": "^6.3.2",
     "vue-filepond": "^4.0.3",
     "vue-material": "^1.0.0-beta-10.2",
     "vue-property-decorator": "^7.2.0",
-    "vue-router": "^3.0.1"
+    "vue-router": "^3.0.1",
+    "webvr-polyfill": "^0.10.10",
+    "webvr-ui": "^0.10.0"
   }
 }
