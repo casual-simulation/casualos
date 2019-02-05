@@ -598,7 +598,7 @@ export enum MouseButtonId {
     Right = 2,
 }
 
-class InputState {
+export class InputState {
     /**
      * The frame this input was down.
      */

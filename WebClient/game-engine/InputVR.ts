@@ -1,14 +1,18 @@
 import VRController from 'three-vrcontroller-module';
 import GameView from '../GameView/GameView';
 import { MeshStandardMaterial, Mesh, CylinderGeometry, BoxGeometry, Object3D } from 'three';
+import { InputState } from './input';
+import { find, remove } from 'lodash';
 
 export class InputVR {
-
+    
+    private _controllerMeshes: ControllerMesh[];
     private _gameView: GameView;
 
     constructor(gameView: GameView) {
 
         this._gameView = gameView;
+        this._controllerMeshes = [];
 
         VRController.verbosity = 1.0;
 
@@ -27,11 +31,13 @@ export class InputVR {
     }
 
     disconnectControllers() {
+
         console.log("[InputVR] disconnect controllers");
         let controllers = <any[]>VRController.controllers;
         controllers.forEach((controller) => {
             VRController.onGamepadDisconnect(controller.gamepad);
         });
+
     }
 
     private _handleVRControllerConnected(event: any) {
@@ -41,39 +47,17 @@ export class InputVR {
         console.log(event);
 
         let controller = event.detail;
-
-        // Controller is an Object3D. Lets add it to the scene.
-        this._gameView.scene.add(controller);
-
         controller.standingMatrix = (<any>this._gameView.renderer.vr).getStandingMatrix();
-        console.log('standing matrix:');
-        console.log(controller.standingMatrix);
         controller.head = this._gameView.camera;
-        console.log('head:');
-        console.log(controller.head);
+        
+        let controllerMesh = new ControllerMesh(controller);
+        this._controllerMeshes.push(controllerMesh);
 
-        //  Right now your controller has no visual.
-        //  It’s just an empty THREE.Object3D.
-        //  Let’s fix that!
-        let meshColorOff = 0xDB3236; //  Red.
-        let meshColorOn = 0xF4C20D; //  Yellow.
-        let controllerMaterial = new MeshStandardMaterial({
-            color: meshColorOff
-        });
-        let controllerMesh = new Mesh(
-            new CylinderGeometry(0.005, 0.05, 0.1, 6),
-            controllerMaterial
-        );
-        let handleMesh = new Mesh(
-            new BoxGeometry(0.03, 0.1, 0.03),
-            controllerMaterial
-        );
-        controllerMaterial.flatShading = true;
-        controllerMesh.rotation.x = -Math.PI / 2;
-        handleMesh.position.y = -0.05;
-        controllerMesh.add(handleMesh);
-        controller.userData.mesh = controllerMesh;//  So we can change the color later.
+        // Controller mesh is parented to controller.
         controller.add(controllerMesh);
+
+        // Add controller to the scene.
+        this._gameView.scene.add(controller);
 
         controller.addEventListener('disconnected', this._handleVRControllerDisconnected);
 
@@ -83,12 +67,63 @@ export class InputVR {
 
         console.log("[InputVR] VR controller disconnected:");
         console.log(event);
-        
+
         let controller = event.controller;
+
+        // Remove controller mesh.
+        let meshesRemoved = remove(this._controllerMeshes, (m: ControllerMesh) => { return m.controller === controller });
+        if (meshesRemoved) {
+            meshesRemoved.forEach((m: ControllerMesh) => {
+                m.dispose();
+
+            });
+        }
+        
 
         this._gameView.scene.remove(controller);
 
     }
+}
 
+class ControllerMesh extends Object3D
+{
+    /**
+     * This is the VRController from VRController.js
+     */
+    private _controller: any;
 
+    get controller() { return this._controller; }
+
+    constructor(controller: any) {
+        super();
+
+        this._controller = controller;
+        this.add(this._createMesh());
+    }
+
+    private _createMesh(): Mesh {
+
+        let meshColor = 0xDB3236; //  Red.
+        let controllerMaterial = new MeshStandardMaterial({
+            color: meshColor
+        });
+        let mesh = new Mesh(
+            new CylinderGeometry(0.005, 0.05, 0.1, 6),
+            controllerMaterial
+        );
+        let handleMesh = new Mesh(
+            new BoxGeometry(0.03, 0.1, 0.03),
+            controllerMaterial
+        );
+        controllerMaterial.flatShading = true;
+        mesh.rotation.x = -Math.PI / 2;
+        handleMesh.position.y = -0.05;
+        mesh.add(handleMesh);
+
+        return mesh;
+    }
+
+    dispose() {
+        
+    }
 }

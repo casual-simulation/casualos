@@ -374,6 +374,7 @@ export default class GameView extends Vue {
 
     this._scene = new Scene();
     this._scene.background = new Color(0xCCE6FF);
+    // this._scene.fog = new Fog(0x62848D, 0.000000000025, 10);
 
     
     // User's camera
@@ -425,6 +426,7 @@ export default class GameView extends Vue {
           this._workspacePlane.position.y = 0;
           this._workspacePlane.position.x = 0;
           this._workspacePlane.rotation.x = ThreeMath.DEG2RAD * -90;
+          this._workspacePlane.visible = false;
           this._workspacePlane.updateMatrixWorld(false);
 
           // Scale up the workspace plane.
