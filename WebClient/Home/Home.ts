@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Inject } from 'vue-property-decorator';
+import { Inject, Watch } from 'vue-property-decorator';
 import { Object, UserMode, DEFAULT_USER_MODE} from 'common/Files';
 import GameView from '../GameView/GameView';
 import { EventBus } from '../EventBus/EventBus';
@@ -34,6 +34,7 @@ export default class Home extends Vue {
     files: Object[] = [];
     tags: string[] = [];
     updateTime: number = -1;
+    numFilesSelected: number = 0;
     mode: UserMode = DEFAULT_USER_MODE;
 
     isLoading: boolean = false;
@@ -69,6 +70,11 @@ export default class Home extends Vue {
         this.fileManager.clearSelection();
     }
 
+    @Watch('files')
+    onFilesChanged(newValue: Object[]) {
+        this.numFilesSelected = newValue.length;
+    }
+
     handleContextMenu(event: ContextMenuEvent) {
         // Force the component to disable current context menu.
         this.context = null;
@@ -96,6 +102,7 @@ export default class Home extends Vue {
         this.files = [];
         this.tags = [];
         this.updateTime = -1;
+        this.numFilesSelected = 0;
 
         this._subs.push(this.fileManager.selectedFilesUpdated.subscribe(event => {
             this.files = event.files;

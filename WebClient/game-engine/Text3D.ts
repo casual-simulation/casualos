@@ -28,6 +28,11 @@ export class Text3D {
     public static readonly extraSpacing: number = 0.1;
     public static readonly defaultScale: number = 0.004;
 
+    /**
+     * The distance that should be used when the text sizing mode === 'auto'.
+     */
+    public static readonly virtualDistance: number = 3;
+
     // The text geometry created with 'three-bmfont-text'
     // To change text, run textGeometry.update and include the proper options.
     private _geometry: TextGeometry;
@@ -40,6 +45,11 @@ export class Text3D {
 
     // the text that was last set on this text3d.
     private _unprocessedText: string;
+
+    /**
+     * Whether the text should appear the same size no matter how far away the camera is.
+     */
+    private _constantSize: boolean;
 
     private _gameView: GameView;
 
@@ -111,6 +121,15 @@ export class Text3D {
         size.add(new Vector3(0, Text3D.extraSpacing, 0));
         size.divide(this._anchor.scale);
         this._mesh.position.set(-Text3D.defaultWidth / 2, size.y, 0);
+    }
+
+    /**
+     * Gets the position of the text in world space.
+     */
+    public getWorldPosition() {
+        let pos = new Vector3();
+        this._anchor.getWorldPosition(pos);
+        return pos;
     }
 
     /**

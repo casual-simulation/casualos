@@ -29,13 +29,14 @@ export class FileDragOperation implements IOperation {
     private _other: Object;
 
     private _workspaceDelta: Vector3;
+    private _dragDelta: Vector3;
 
     /**
      * Create a new drag rules.
      * @param input the input module to interface with.
      * @param buttonId the button id of the input that this drag operation is being performed with. If desktop this is the mouse button
      */
-    constructor(gameView: GameView, interaction: InteractionManager, file: File3D, workspace: File3D) {
+    constructor(gameView: GameView, interaction: InteractionManager, hit: Intersection, file: File3D, workspace: File3D) {
         this._gameView = gameView;
         this._interaction = interaction;
         this._file = file;
@@ -43,12 +44,9 @@ export class FileDragOperation implements IOperation {
 
         if (this._workspace) {
             // calculate the delta needed to be applied to the pointer
-            // positions to have the pointer drag around the center of the workspace
+            // positions to have the pointer drag around the originally tapped point
             // instead of where the anchor is.
-            const bounds = new Box3().setFromObject(this._workspace.mesh);
-            const center = new Vector3();
-            bounds.getCenter(center);
-            this._workspaceDelta = new Vector3().copy(this._workspace.mesh.position).sub(center);
+            this._workspaceDelta = new Vector3().copy(this._workspace.mesh.position).sub(hit.point);
             this._workspaceDelta.setY(0);
         }
         

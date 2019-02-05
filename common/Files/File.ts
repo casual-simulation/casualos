@@ -23,6 +23,8 @@ export interface Object {
         ['line.color']?: string;
         ['label']?: string;
         ['label.color']?: string;
+        ['label.size']?: number;
+        ['label.size.mode']?: 'auto' | null;
         ['scale.x']?: number;
         ['scale.y']?: number;
         ['scale.z']?: number;
@@ -85,6 +87,8 @@ export interface PartialFile {
         ['line.color']?: string;
         ['label']?: string;
         ['label.color']?: string;
+        ['label.size']?: number;
+        ['label.size.mode']?: 'auto' | null;
         ['scale.x']?: number;
         ['scale.y']?: number;
         ['scale.z']?: number;
