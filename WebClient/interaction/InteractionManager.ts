@@ -1,7 +1,7 @@
 import { Vector2, Vector3, Intersection, Raycaster, Object3D, Ray } from 'three';
 import { ContextMenuEvent, ContextMenuAction } from './ContextMenu';
 import { File3D } from '../game-engine/File3D';
-import { File, Object, DEFAULT_WORKSPACE_SCALE, Workspace, DEFAULT_WORKSPACE_HEIGHT_INCREMENT, DEFAULT_WORKSPACE_MIN_HEIGHT, DEFAULT_USER_MODE, UserMode, FileEvent } from '../../common/Files';
+import { File, Object, DEFAULT_WORKSPACE_SCALE, Workspace, DEFAULT_WORKSPACE_HEIGHT_INCREMENT, DEFAULT_WORKSPACE_MIN_HEIGHT, DEFAULT_USER_MODE, UserMode, FileEvent, DEFAULT_WORKSPACE_HEIGHT } from '../../common/Files';
 import { FileClickOperation } from './FileClickOperation';
 import GameView from '../GameView/GameView';
 import { Physics } from '../game-engine/Physics';
@@ -381,7 +381,7 @@ export class InteractionManager {
         if (file.mesh instanceof WorkspaceMesh && file.file.type === 'workspace') {
             const tile = this._worldPosToGridPos(file, point);
             const currentTile = file.file.grid ? file.file.grid[posToKey(tile)] : null;
-            const currentHeight = (!!currentTile ? currentTile.height : file.file.defaultHeight);
+            const currentHeight = (!!currentTile ? currentTile.height : (file.file.defaultHeight || DEFAULT_WORKSPACE_HEIGHT)) || DEFAULT_WORKSPACE_HEIGHT;
             const increment = DEFAULT_WORKSPACE_HEIGHT_INCREMENT; // TODO: Replace with a configurable value.
             const minHeight = DEFAULT_WORKSPACE_MIN_HEIGHT; // TODO: This too
             actions.push({ label: 'Raise', onClick: () => this.updateTileHeightAtGridPosition(file, tile, currentHeight + increment) });

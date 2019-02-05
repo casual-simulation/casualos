@@ -151,9 +151,9 @@ export class WorkspaceMesh extends GameObject {
             const workspaceHex = this.workspace.grid[key];
             
             const hex = this.hexGrid.addAt(position);
-            let nextHeight = workspaceHex.height || this.workspace.defaultHeight
+            let nextHeight = workspaceHex.height || this.workspace.defaultHeight || DEFAULT_WORKSPACE_HEIGHT;
             if (nextHeight < 0) {
-                nextHeight = this.workspace.defaultHeight;
+                nextHeight = this.workspace.defaultHeight || DEFAULT_WORKSPACE_HEIGHT;
             }
             hex.height = nextHeight;
         });
