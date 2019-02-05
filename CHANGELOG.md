@@ -1,5 +1,14 @@
 # File Simulator Changelog
 
+## V0.2.18
+### Date: 2/5/2019
+
+### Changes:
+- Button polling is now implemented in `InputVR` for vr controllers: `getButtonDown`, `getButtonHeld`, `getButtonUp`.
+- Replaced `GameView.workspacePlane` with mathematical plane for workspace dragging.
+  - This fixes not being able to drag workspaces after we disabled the ground plane mesh.
+- Forcing touch input when being used on a VR capable device in non-VR mode. This fixes traditional browser input on devices like the Oculus Go.
+
 ## V0.2.17
 ### Date: 2/5/2019
 
