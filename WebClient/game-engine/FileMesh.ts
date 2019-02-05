@@ -32,6 +32,11 @@ export class FileMesh extends GameObject {
     cube: Mesh;
 
     /**
+     * The container for the cube.
+     */
+    cubeContainer: Object3D;
+
+    /**
      * The optional label for the file.
      */
     label: Text3D;
@@ -84,10 +89,12 @@ export class FileMesh extends GameObject {
             return;
         }
         if (!this.file) {
+            this.cubeContainer = new Object3D();
             this.cube = this._createCube(1);
             this.label = this._createLabel();
             this.colliders.push(this.cube);
-            this.add(this.cube);
+            this.cubeContainer.add(this.cube);
+            this.add(this.cubeContainer);
         }
         this.file = (<Object>file) || this.file;
 
@@ -151,12 +158,12 @@ export class FileMesh extends GameObject {
         const cubeScale = this._calculateCubeScale(scale);
         if (workspace && workspace.file.type === 'workspace') {
             this.parent = workspace.mesh;
-            this.cube.scale.set(cubeScale.x, cubeScale.y, cubeScale.z);
-            this.cube.position.set(0, cubeScale.y / 2, 0);
+            this.cubeContainer.scale.set(cubeScale.x, cubeScale.y, cubeScale.z);
+            this.cubeContainer.position.set(0, cubeScale.y / 2, 0);
         } else {
             this.parent = null;
-            this.cube.scale.set(cubeScale.x, cubeScale.y, cubeScale.z);
-            this.cube.position.set(0, 0, 0);
+            this.cubeContainer.scale.set(cubeScale.x, cubeScale.y, cubeScale.z);
+            this.cubeContainer.position.set(0, 0, 0);
         }
 
         if (this.file.tags._position && workspace && workspace.file.type === 'workspace') {
@@ -342,7 +349,7 @@ export class FileMesh extends GameObject {
                 });
                 
                 this.stroke = new LineSegments(geo, material);
-                this.cube.add(this.stroke);
+                this.cubeContainer.add(this.stroke);
             }
 
             this.stroke.visible = true;
