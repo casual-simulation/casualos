@@ -1,5 +1,19 @@
 # File Simulator Changelog
 
+## V0.2.15
+### Date: 2/5/2019
+
+#### Changes: 
+- Changed the default cube color to be white.
+- Changed the default cube outline color to gray instead of invisible.
+- Fixed an issue with action filters where some values weren't able to be matched to a filter.
+  - This happened for some tag values that would be parsed from strings into their semantic equivalents.
+  - For example, `"true"` would get converted to `true` and `"123.456"` would get converted to `123.456`.
+  - This conversion was being ignored for filter values, so they would never match in these scenarios.
+- Fixed an issue with action scripts where copying a file would not copy its formulas.
+- Improved the `copy()` function used in action scripts to be able accept any number of arguments.
+  - This allows cascading scenarios like `copy(this, that, @name("joe"), @name("bob"))`.
+
 ## V0.2.14
 ### Date: 2/4/2019
 
