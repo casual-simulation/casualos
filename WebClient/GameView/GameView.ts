@@ -49,8 +49,8 @@ import { Input, InputType } from '../game-engine/input';
 import { InputVR } from '../game-engine/InputVR';
 import { File3D } from '../game-engine/File3D';
 
-import skyTexturePath from '../public/images/CGSkies_0132_free.jpg';
-import groundModelPath from '../public/models/ground.gltf';
+// import skyTexturePath from '../public/images/CGSkies_0132_free.jpg';
+// import groundModelPath from '../public/models/ground.gltf';
 import { appManager } from '../AppManager';
 import { InteractionManager } from '../interaction/InteractionManager';
 import { ArgEvent } from '../../common/Events';
@@ -420,43 +420,43 @@ export default class GameView extends Vue {
     // Ground plane.
     this._groundPlane = new Plane(new Vector3(0, 1, 0));
     
-    var gltfLoader = new GLTFLoader();
-    gltfLoader.load(groundModelPath, gltf => {
-      gltf.scene.traverse((child) => {
-        if ((<any>child).isMesh) {
-          this._groundPlaneMesh = <Mesh>child;
-          this._groundPlaneMesh.castShadow = false;
-          this._groundPlaneMesh.receiveShadow = true;
-          this._groundPlaneMesh.position.x = 0;
-          this._groundPlaneMesh.position.y = 0;
-          this._groundPlaneMesh.position.x = 0;
-          this._groundPlaneMesh.rotation.x = ThreeMath.DEG2RAD * -90;
-          this._groundPlaneMesh.visible = false;
-          this._groundPlaneMesh.updateMatrixWorld(false);
+    // var gltfLoader = new GLTFLoader();
+    // gltfLoader.load(groundModelPath, gltf => {
+    //   gltf.scene.traverse((child) => {
+    //     if ((<any>child).isMesh) {
+    //       this._groundPlaneMesh = <Mesh>child;
+    //       this._groundPlaneMesh.castShadow = false;
+    //       this._groundPlaneMesh.receiveShadow = true;
+    //       this._groundPlaneMesh.position.x = 0;
+    //       this._groundPlaneMesh.position.y = 0;
+    //       this._groundPlaneMesh.position.x = 0;
+    //       this._groundPlaneMesh.rotation.x = ThreeMath.DEG2RAD * -90;
+    //       this._groundPlaneMesh.visible = false;
+    //       this._groundPlaneMesh.updateMatrixWorld(false);
 
-          // Scale up the workspace plane.
-          this._groundPlaneMesh.scale.multiplyScalar(18000);
+    //       // Scale up the workspace plane.
+    //       this._groundPlaneMesh.scale.multiplyScalar(18000);
 
-          this._scene.add(this._groundPlaneMesh);
-          return;
-        }
-      });
-    });
+    //       this._scene.add(this._groundPlaneMesh);
+    //       return;
+    //     }
+    //   });
+    // });
 
-    // Skydome
-    const skydomeGeometry = new SphereBufferGeometry(9000, 64, 8, 0, Math.PI * 2, 0, Math.PI * 0.5);
-    const skydomeTexture = new TextureLoader().load(skyTexturePath);
-    const skydomeMaterial = new MeshBasicMaterial({
-      side: BackSide,
-      map: skydomeTexture,
-    });
+    // // Skydome
+    // const skydomeGeometry = new SphereBufferGeometry(9000, 64, 8, 0, Math.PI * 2, 0, Math.PI * 0.5);
+    // const skydomeTexture = new TextureLoader().load(skyTexturePath);
+    // const skydomeMaterial = new MeshBasicMaterial({
+    //   side: BackSide,
+    //   map: skydomeTexture,
+    // });
 
-    this._skydomeMesh = new Mesh(skydomeGeometry, skydomeMaterial);
-    this._skydomeMesh.castShadow = false;
-    this._skydomeMesh.receiveShadow = false;
-    this._skydomeMesh.position.set(0, 0, 0);
+    // this._skydomeMesh = new Mesh(skydomeGeometry, skydomeMaterial);
+    // this._skydomeMesh.castShadow = false;
+    // this._skydomeMesh.receiveShadow = false;
+    // this._skydomeMesh.position.set(0, 0, 0);
 
-    this._scene.add(this._skydomeMesh);
+    // this._scene.add(this._skydomeMesh);
   }
 
   private _setupRenderer() {
