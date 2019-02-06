@@ -16,7 +16,7 @@ import { tap } from 'rxjs/operators';
     components: {
         'game-view': GameView,
         'file-table': FileTable
-    }
+    },
 })
 export default class Home extends Vue {
 
@@ -58,16 +58,29 @@ export default class Home extends Vue {
     get filesMode() { return this.mode === 'files'; }
     get workspacesMode() { return this.mode === 'worksurfaces'; }
 
-    open() {
-        this.isOpen = true;
+    private table() {
+        return this.$refs.table as FileTable;
     }
 
-    close() {
-        this.isOpen = false;
+    isMakingNewTag() {
+        const table=  this.table();
+        if (table) {
+            return table.isMakingNewTag;
+        } else {
+            return false;
+        }
     }
 
-    clearSelection() {
-        this.fileManager.clearSelection();
+    toggleOpen() {
+        this.isOpen = !this.isOpen;
+    }
+
+    addTag() {
+        this.table().addTag();
+    }
+
+    cancelTag() {
+        this.table().cancelNewTag();
     }
 
     @Watch('files')
@@ -96,7 +109,7 @@ export default class Home extends Vue {
     async created() {
         this.isLoading = true;
 
-        this.open();
+        this.isOpen = true;
 
         this._subs = [];
         this.files = [];

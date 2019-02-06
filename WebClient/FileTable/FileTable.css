@@ -13,7 +13,7 @@
     border-left: 1px solid rgba(0,0,0,.2);
 }
 
-.file-table th:not(:last-child) {
+.file-table th {
     border-top: 1px solid rgba(0,0,0,.2);
     background-color: rgba(0,0,0,.05);
 }
@@ -31,4 +31,22 @@
 
 .remove-tag .md-icon:hover {
     cursor: pointer;
+}
+
+.add-button-cell {
+    display: none;
+}
+
+.has-add-button .add-button-cell {
+    display: table-cell;
+}
+
+th:last-child {
+    border-right: 1px solid rgba(0,0,0,.2);
+}
+
+.has-add-button th:last-child {
+    border-right: none;
+    border-top: none;
+    background-color: #fff;
 }

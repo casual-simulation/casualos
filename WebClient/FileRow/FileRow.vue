@@ -1,5 +1,5 @@
 <template>
-  <tr class="file-row">
+  <tr class="file-row" v-if="file.type === 'object'">
     <td class="file-close">
       <md-button class="md-icon-button md-dense" @click="toggleFile(file)">
         <md-icon>remove</md-icon>
@@ -8,7 +8,7 @@
     </td>
     <!-- <td class="file-id">{{getShortId(file)}}</td> -->
     <td class="file-id">{{file.id.substring(0, 5)}}</td>
-    <td v-if="file.type === 'object'" v-for="tag in tags" :key="tag">
+    <td v-for="tag in tags" :key="tag">
       <file-value 
         :readOnly="readOnly"
         :file="file" 

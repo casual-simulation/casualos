@@ -1,8 +1,13 @@
 <template>
-  <table v-if="hasFiles" class="file-table">
+  <table v-if="hasFiles" class="file-table" :class="{ 'has-add-button': showAddTagButton }">
     <thead>
       <tr>
-        <th></th>
+        <th class="file-close">
+          <md-button class="md-icon-button md-dense" @click="clearSelection()">
+            <md-icon>remove</md-icon>
+            <md-tooltip md-delay="1000" md-direction="top">Unselect All</md-tooltip>
+          </md-button>
+        </th>
         <th><file-tag tag="id"></file-tag></th>
 
         <th v-for="(tag, index) in tags" :key="index">
@@ -24,7 +29,7 @@
           <tag-editor v-model="newTag" :tagExists="newTagExists" @valid="newTagValidityUpdated"></tag-editor>
         </th>
 
-        <th v-show="!readOnly">
+        <th class="add-button-cell" v-if="!readOnly && showAddTagButton">
           <md-button
             class="new-tag-button"
             :disabled="isMakingNewTag && !newTagValid"
@@ -39,7 +44,7 @@
     </thead>
     <tbody>
       <file-row
-        v-for="(file, index) in files"
+        v-for="file in files"
         :key="file.id"
         :file="file"
         :tags="tags"
