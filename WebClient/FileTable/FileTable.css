@@ -89,3 +89,8 @@ th:last-child {
     flex-direction: row-reverse;
     align-items: center;
 }
+
+.file-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}

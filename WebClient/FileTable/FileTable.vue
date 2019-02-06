@@ -36,46 +36,48 @@
         </div>
       </div>
     </div>
-    <table v-if="hasFiles" class="file-table" >
-      <thead>
-        <tr>
-          <th class="file-close">
-            <md-button class="md-icon-button md-dense" @click="clearSelection()">
-              <md-icon>remove</md-icon>
-              <md-tooltip md-delay="1000" md-direction="top">Unselect All</md-tooltip>
-            </md-button>
-          </th>
-          <th><file-tag tag="id"></file-tag></th>
+    <div v-if="hasFiles" class="file-table-wrapper">
+      <table class="file-table" >
+        <thead>
+          <tr>
+            <th class="file-close">
+              <md-button class="md-icon-button md-dense" @click="clearSelection()">
+                <md-icon>remove</md-icon>
+                <md-tooltip md-delay="1000" md-direction="top">Unselect All</md-tooltip>
+              </md-button>
+            </th>
+            <th><file-tag tag="id"></file-tag></th>
 
-          <th v-for="(tag, index) in tags" :key="index">
+            <th v-for="(tag, index) in tags" :key="index">
 
-            <file-tag :tag="tag"></file-tag>
+              <file-tag :tag="tag"></file-tag>
 
-            <!-- Show X button for tags that don't have values or tags that are hidden -->
-            <md-button
-              class="remove-tag md-icon-button md-dense"
-              v-if="!tagHasValue(tag) || isHiddenTag(tag)"
-              @click="removeTag(tag)"
-            >
-              <md-icon>close</md-icon>
-              <md-tooltip md-delay="1000" md-direction="top">Remove #{{tag}}</md-tooltip>
-            </md-button>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <file-row
-          v-for="file in files"
-          :key="file.id"
-          :file="file"
-          :tags="tags"
-          :readOnly="readOnly"
-          :updateTime="updateTime"
-          @tagChanged="onTagChanged"
-          @tagFocusChanged="onTagFocusChanged"
-        ></file-row>
-      </tbody>
-    </table>
+              <!-- Show X button for tags that don't have values or tags that are hidden -->
+              <md-button
+                class="remove-tag md-icon-button md-dense"
+                v-if="!tagHasValue(tag) || isHiddenTag(tag)"
+                @click="removeTag(tag)"
+              >
+                <md-icon>close</md-icon>
+                <md-tooltip md-delay="1000" md-direction="top">Remove #{{tag}}</md-tooltip>
+              </md-button>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <file-row
+            v-for="file in files"
+            :key="file.id"
+            :file="file"
+            :tags="tags"
+            :readOnly="readOnly"
+            :updateTime="updateTime"
+            @tagChanged="onTagChanged"
+            @tagFocusChanged="onTagFocusChanged"
+          ></file-row>
+        </tbody>
+      </table>
+    </div>
   </div>
 </template>
 <script src="./FileTable.ts"></script>
