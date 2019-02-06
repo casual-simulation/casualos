@@ -1,0 +1,32 @@
+import Vue, { ComponentOptions } from 'vue';
+import Component from 'vue-class-component';
+import {Provide, Prop, Inject, Watch} from 'vue-property-decorator';
+import {File, Object} from 'common/Files';
+
+@Component({
+    components: {
+    },
+    
+})
+export default class FileTableToggle extends Vue {
+    
+    @Prop() files: Object[];
+    numFilesSelected: number = 0;
+
+    @Watch('files')
+    filesChanged() {
+        this.numFilesSelected = this.files.length;
+    }
+
+    click() {
+        this.$emit('click');
+    }
+
+    constructor() {
+        super();
+    }
+
+    async created() {
+        this.numFilesSelected = this.files.length;
+    }
+};
