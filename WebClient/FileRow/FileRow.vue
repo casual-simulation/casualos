@@ -6,8 +6,7 @@
         <md-tooltip md-delay="1000" md-direction="top">Unselect Item</md-tooltip>
       </md-button>
     </td>
-    <!-- <td class="file-id">{{getShortId(file)}}</td> -->
-    <td class="file-id">{{file.id.substring(0, 5)}}</td>
+    <td class="file-id">{{file.id.substring(0, 3)}}</td>
     <td v-for="tag in tags" :key="tag">
       <file-value 
         :readOnly="readOnly"
