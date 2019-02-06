@@ -37,7 +37,7 @@
       </div>
     </div>
     <div v-if="hasFiles" class="file-table-wrapper">
-      <table class="file-table" >
+      <table class="file-table" ref="table">
         <thead>
           <tr>
             <th class="file-close">

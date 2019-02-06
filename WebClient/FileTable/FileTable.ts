@@ -86,6 +86,14 @@ export default class FileTable extends Vue {
             
             this.addedTags.unshift(this.newTag);
             this.tags.unshift(this.newTag);
+
+            const table = this.$refs.table as HTMLElement;
+            if (table) {
+                table.scrollIntoView({
+                    block: 'start',
+                    inline: 'start'
+                });
+            }
         } else if(!isAction) {
             this.newTag = 'newTag';
         } else {
