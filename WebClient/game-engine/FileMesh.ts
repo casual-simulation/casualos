@@ -397,7 +397,6 @@ export class FileMesh extends GameObject {
             material.color = new Color(0x999999);
         }
 
-        console.log("setting linewidth", linewidth);
         if(typeof linewidth !== 'undefined'){
             material.linewidth = linewidth;
         } else {
