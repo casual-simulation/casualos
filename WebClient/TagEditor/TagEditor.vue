@@ -1,7 +1,8 @@
 <template>
   <md-menu md-size="medium" md-align-trigger :md-active="showMenu">
     <span>
-        <span class="hashtag">#</span><input :value="value" 
+        <span v-if="!isAction" class="hashtag">#</span><span v-else class="event-name">+</span><input 
+            :value="editorValue" 
             @input="onInput($event.target.value)"
             @focus.stop="onFocus"
             @blur.stop="onBlur"

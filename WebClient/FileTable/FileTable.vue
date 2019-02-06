@@ -26,7 +26,11 @@
         </th>
 
         <th v-if="isMakingNewTag">
-          <tag-editor v-model="newTag" :tagExists="newTagExists" @valid="newTagValidityUpdated"></tag-editor>
+          <tag-editor 
+            v-model="newTag" 
+            :tagExists="newTagExists" 
+            :isAction="isMakingNewAction"
+            @valid="newTagValidityUpdated"></tag-editor>
         </th>
 
         <th class="add-button-cell" v-if="!readOnly && showAddTagButton">

@@ -36,6 +36,7 @@ export default class FileTable extends Vue {
     addedTags: string[] = [];
     lastEditedTag: string = null;
     isMakingNewTag: boolean = false;
+    isMakingNewAction: boolean = false;
     newTag: string = 'myNewTag';
     newTagValid: boolean = true;
     
@@ -65,8 +66,9 @@ export default class FileTable extends Vue {
             allExtraTags);
     }
 
-    addTag() {
+    addTag(isAction: boolean = false) {
         if (this.isMakingNewTag) {
+
             // Check to make sure that the tag is unique.
             if (this.tagExists(this.newTag)) {
                 var options = new AlertDialogOptions();
@@ -81,14 +83,18 @@ export default class FileTable extends Vue {
             
             this.addedTags.push(this.newTag);
             this.tags.push(this.newTag);
-        } else {
+        } else if(!isAction) {
             this.newTag = 'newTag';
+        } else {
+            this.newTag = '+(#tag:"value"';
         }
         this.isMakingNewTag = !this.isMakingNewTag;
+        this.isMakingNewAction = isAction && this.isMakingNewTag;
     }
 
     cancelNewTag() {
         this.isMakingNewTag = false;
+        this.isMakingNewAction = false;
     }
 
     clearSelection() {

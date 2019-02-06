@@ -79,6 +79,10 @@ export default class Home extends Vue {
         this.table().addTag();
     }
 
+    addAction() {
+        this.table().addTag(true);
+    }
+
     cancelTag() {
         this.table().cancelNewTag();
     }

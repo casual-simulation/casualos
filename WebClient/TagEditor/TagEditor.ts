@@ -14,6 +14,7 @@ export default class TagEditor extends Vue {
 
     @Prop() value: string;
     @Prop() tagExists: boolean;
+    @Prop({ default: false }) isAction: boolean;
 
     changed: boolean = false;
     focused: boolean = false;
@@ -32,7 +33,11 @@ export default class TagEditor extends Vue {
             if(errors['tag.required']) {
                 return 'You must provide a value.';
             } else if(errors['tag.invalidChar']) {
-                return `Tags cannot contain ${errors['tag.invalidChar'].char}.`;
+                if (this.isAction && errors['tag.invalidChar'].char === '#') {
+                    return 'Actions must start with (';
+                } else {
+                    return `Tags cannot contain ${errors['tag.invalidChar'].char}.`;
+                }
             }
         }
         if (this.tagExists) {
@@ -42,8 +47,16 @@ export default class TagEditor extends Vue {
         return null;
     }
 
+    get editorValue() {
+        if(this.isAction) {
+            return this.value.slice(1);
+        } else {
+            return this.value;
+        }
+    }
+
     onInput(value: string) {
-        this.$emit('input', value);
+        this.$emit('input', this._convertToFinalValue(value));
         this.$nextTick(() => {
             this.changed = true;
             const error = this.errorMessage;
@@ -63,5 +76,9 @@ export default class TagEditor extends Vue {
         super();
         this.changed = false;
         this.focused = false;
+    }
+
+    private _convertToFinalValue(value: string) {
+        return this.isAction ? `+${value}` : value;
     }
 };
