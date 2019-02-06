@@ -77,9 +77,24 @@ export class CameraControls {
     private panOffset = new Vector3();
     private zoomChanged = false;
 
-    private rotateStart = new Vector2();
-    private rotateEnd = new Vector2();
-    private rotateDelta = new Vector2();
+    private mouseRotateStart = new Vector2();
+    private mouseRotateEnd = new Vector2();
+    private mouseRotateDelta = new Vector2();
+
+    private touchRotateStart: TouchRotate = {
+        finger0: new Vector2(),
+        finger1: new Vector2()
+    }
+
+    private touchRotateEnd: TouchRotate = {
+        finger0: new Vector2(),
+        finger1: new Vector2()
+    }
+
+    private touchRotateDelta: TouchRotate = {
+        finger0: new Vector2(),
+        finger1: new Vector2()
+    }
 
     private panStart = new Vector2();
     private panEnd = new Vector2();
@@ -148,7 +163,7 @@ export class CameraControls {
 
     public panLeft(distance: number, objectMatrix: Matrix4) {
 
-        var v = new Vector3();
+        let v = new Vector3();
         v.setFromMatrixColumn(objectMatrix, 0); // get X column of objectMatrix
         v.multiplyScalar(- distance);
 
@@ -158,7 +173,7 @@ export class CameraControls {
 
     public panUp(distance: number, objectMatrix: Matrix4) {
 
-        var v = new Vector3();
+        let v = new Vector3();
         if (this.screenSpacePanning === true) {
 
             v.setFromMatrixColumn(objectMatrix, 1);
@@ -178,13 +193,13 @@ export class CameraControls {
 
     public pan(deltaX: number, deltaY: number) {
 
-        var offset = new Vector3();
-        var element = this._gameView.gameView;
+        let offset = new Vector3();
+        let element = this._gameView.gameView;
 
         // perspective
-        var position = this._camera.position;
+        let position = this._camera.position;
         offset.copy(position).sub(this.target);
-        var targetDistance = offset.length();
+        let targetDistance = offset.length();
 
         // half of the fov is center to top of screen
         targetDistance *= Math.tan((this._camera.fov / 2) * Math.PI / 180.0);
@@ -259,7 +274,7 @@ export class CameraControls {
             } else if (input.getMouseButtonDown(MouseButtonId.Right) && this.enableRotate && this.enabled) {
 
                 // Rotate start.
-                this.rotateStart.copy(input.getMouseClientPos());
+                this.mouseRotateStart.copy(input.getMouseClientPos());
                 this.state = STATE.ROTATE;
 
             }
@@ -301,12 +316,13 @@ export class CameraControls {
             } else if (input.getMouseButtonHeld(MouseButtonId.Right) && this.enableRotate && this.enabled) {
 
                 // Rotate move.
-                this.rotateEnd.copy(input.getMouseClientPos());
-                this.rotateDelta.subVectors(this.rotateEnd, this.rotateStart).multiplyScalar(this.rotateSpeed);
-                const angle = 2 * Math.PI * this.rotateDelta.x / this._gameView.gameView.clientHeight;
-                this.rotateLeft(angle);
-                this.rotateStart.copy(this.rotateEnd);
-
+                this.mouseRotateEnd.copy(input.getMouseClientPos());
+                this.mouseRotateDelta.subVectors(this.mouseRotateEnd, this.mouseRotateStart).multiplyScalar(this.rotateSpeed);
+                const xAngle = 2 * Math.PI * this.mouseRotateDelta.x / this._gameView.gameView.clientHeight;
+                const yAngle = 2 * Math.PI * this.mouseRotateDelta.y / this._gameView.gameView.clientHeight;
+                this.rotateLeft(xAngle);
+                this.rotateUp(yAngle);
+                this.mouseRotateStart.copy(this.mouseRotateEnd);
             }
 
             //
@@ -352,9 +368,8 @@ export class CameraControls {
                     if (this.enableRotate && this.enabled) {
 
                         // Rotate start.
-                        const pagePosA = input.getTouchPagePos(0);
-                        const pagePosB = input.getTouchPagePos(1);
-                        this.rotateStart = new Vector2().subVectors(pagePosA, pagePosB).normalize();
+                        this.touchRotateStart.finger0 = input.getTouchPagePos(0);
+                        this.touchRotateStart.finger1 = input.getTouchPagePos(1);
                     }
                 } else if (input.getTouchUp(0) || input.getTouchUp(1)) {
 
@@ -398,20 +413,41 @@ export class CameraControls {
                 if (this.enableRotate && this.enabled) {
 
                     // Rotate move.
-                    const pagePosA = input.getTouchPagePos(0);
-                    const pagePosB = input.getTouchPagePos(1);
-                    this.rotateEnd = new Vector2().subVectors(pagePosA, pagePosB).normalize();
+                    this.touchRotateEnd.finger0 = input.getTouchPagePos(0);
+                    this.touchRotateEnd.finger1 = input.getTouchPagePos(1);
                     
-                    var angle = this.rotateStart.dot(this.rotateEnd) / (Math.sqrt(this.rotateStart.lengthSq() * this.rotateEnd.lengthSq()));
-                    angle *= this.rotateSpeed;
-                    angle = Math.acos(ThreeMath.clamp(angle, -1, 1));
+                    // Rotate X (two finger lazy susan turning).
+                    let startDir = new Vector2().subVectors(this.touchRotateStart.finger0, this.touchRotateStart.finger1).normalize();
+                    let endDir = new Vector2().subVectors(this.touchRotateEnd.finger0, this.touchRotateEnd.finger1).normalize();
+                    
+                    let xAngle = startDir.dot(endDir) / (Math.sqrt(startDir.lengthSq() * endDir.lengthSq()));
+                    xAngle *= this.rotateSpeed;
+                    xAngle = Math.acos(ThreeMath.clamp(xAngle, -1, 1));
 
-                    var cross = this.rotateStart.x * this.rotateEnd.y - this.rotateStart.y * this.rotateEnd.x;
-                    if (cross >= 0) angle = -angle;
+                    let cross = startDir.x * endDir.y - startDir.y * endDir.x;
+                    if (cross >= 0) xAngle = -xAngle;
 
-                    this.rotateLeft(angle);
-                    this.rotateStart.copy(this.rotateEnd);
+                    this.rotateLeft(xAngle);
+                    
+                    // Rotate Y (vertical delta of midpoint between fingers).
+                    let startMidpoint = new Vector2(
+                        (this.touchRotateStart.finger0.x + this.touchRotateStart.finger1.x) / 2, 
+                        (this.touchRotateStart.finger0.y + this.touchRotateStart.finger1.y) / 2
+                    );
 
+                    let endMidpoint = new Vector2(
+                        (this.touchRotateEnd.finger0.x + this.touchRotateEnd.finger1.x) / 2, 
+                        (this.touchRotateEnd.finger0.y + this.touchRotateEnd.finger1.y) / 2
+                    );
+
+                    let midpointDelta = new Vector2().subVectors(startMidpoint, endMidpoint).multiplyScalar(this.rotateSpeed);
+                    let yAngle = 2 * Math.PI * midpointDelta.y / this._gameView.gameView.clientHeight;
+
+                    this.rotateUp(yAngle);
+                                                    
+                    // Set rotate start positions to the current end positions for the next frame.
+                    this.touchRotateStart.finger0.copy(this.touchRotateEnd.finger0);
+                    this.touchRotateStart.finger1.copy(this.touchRotateEnd.finger1);
                 }
             }
             
@@ -430,15 +466,15 @@ export class CameraControls {
 
     private updateCamera() {
 
-        var offset = new Vector3();
+        let offset = new Vector3();
 
         // so camera.up is the orbit axis
-        var quat = new Quaternion().setFromUnitVectors(this._camera.up, new Vector3(0, 1, 0));
-        var quatInverse = quat.clone().inverse();
+        let quat = new Quaternion().setFromUnitVectors(this._camera.up, new Vector3(0, 1, 0));
+        let quatInverse = quat.clone().inverse();
 
-        var lastPosition = new Vector3();
-        var lastQuaternion = new Quaternion();
-        var position = this._camera.position;
+        let lastPosition = new Vector3();
+        let lastQuaternion = new Quaternion();
+        let position = this._camera.position;
 
         offset.copy(position).sub(this.target);
 
@@ -522,4 +558,9 @@ enum STATE {
     ROTATE = 0,
     DOLLY = 1,
     PAN = 2
+}
+
+interface TouchRotate {
+    finger0: Vector2,
+    finger1: Vector2,
 }
