@@ -19,6 +19,7 @@ export interface Object {
         _mode?: UserMode;
         _movable?: boolean;
         ['stroke.color']?: string;
+        ['stroke.linewidth']?: number;
         ['line.to']?: string;
         ['line.color']?: string;
         ['label']?: string;
