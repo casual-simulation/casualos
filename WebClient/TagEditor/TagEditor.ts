@@ -15,6 +15,7 @@ export default class TagEditor extends Vue {
     @Prop() value: string;
     @Prop() tagExists: boolean;
     @Prop({ default: false }) isAction: boolean;
+    @Prop({ default: false }) useMaterialInput: boolean;
 
     changed: boolean = false;
     focused: boolean = false;
@@ -48,7 +49,7 @@ export default class TagEditor extends Vue {
     }
 
     get editorValue() {
-        if(this.isAction) {
+        if (this.isAction) {
             return this.value.slice(1);
         } else {
             return this.value;
@@ -62,6 +63,11 @@ export default class TagEditor extends Vue {
             const error = this.errorMessage;
             this.$emit('valid', !error);
         });
+    }
+
+    focus() {
+        const element = this.$refs.inputBox as HTMLElement;
+        element.focus();
     }
 
     onFocus() {

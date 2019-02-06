@@ -6,16 +6,20 @@ import GameView from '../GameView/GameView';
 import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';
 import FileTable from '../FileTable/FileTable';
+import TagEditor from '../TagEditor/TagEditor';
 import { ContextMenuEvent } from '../interaction/ContextMenu';
 import { SubscriptionLike } from 'rxjs';
 import { cloneDeep } from 'lodash';
 import { getUserMode } from 'common/Files/FileCalculations';
 import { tap } from 'rxjs/operators';
+import FileTableToggle from '../FileTableToggle/FileTableToggle';
 
 @Component({
     components: {
         'game-view': GameView,
-        'file-table': FileTable
+        'file-table': FileTable,
+        'tag-editor': TagEditor,
+        'file-table-toggle': FileTableToggle
     },
 })
 export default class Home extends Vue {
@@ -34,7 +38,6 @@ export default class Home extends Vue {
     files: Object[] = [];
     tags: string[] = [];
     updateTime: number = -1;
-    numFilesSelected: number = 0;
     mode: UserMode = DEFAULT_USER_MODE;
 
     isLoading: boolean = false;
@@ -87,9 +90,24 @@ export default class Home extends Vue {
         this.table().cancelNewTag();
     }
 
-    @Watch('files')
-    onFilesChanged(newValue: Object[]) {
-        this.numFilesSelected = newValue.length;
+    setNewTag(value: string) {
+        this.table().newTag = value;
+    }
+
+    getNewTag() {
+        return this.table().newTag;
+    }
+
+    newTagExists() {
+        return this.table().newTagExists;
+    }
+
+    isMakingNewAction() {
+        return this.table().isMakingNewAction;
+    }
+
+    newTagValidityUpdated(valid: boolean) {
+        return this.table().newTagValidityUpdated(valid);
     }
 
     handleContextMenu(event: ContextMenuEvent) {
@@ -119,7 +137,6 @@ export default class Home extends Vue {
         this.files = [];
         this.tags = [];
         this.updateTime = -1;
-        this.numFilesSelected = 0;
 
         this._subs.push(this.fileManager.selectedFilesUpdated.subscribe(event => {
             this.files = event.files;

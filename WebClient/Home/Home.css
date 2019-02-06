@@ -28,10 +28,6 @@
     padding: 8px 0;
 }
 
-.info-card .top-part {
-    margin-bottom: 16px;
-}
-
 .status-container {
     margin-top: 24px;
     text-align: center;
@@ -46,14 +42,10 @@
     background-color: #fff;
 }
 
-.outside-toggle-button {
-    margin-top: 8px;
+.ui-container .outside-toggle {
+    padding-top: 8px;
 }
 
-.info-card-actions {
-    text-align: right;
-}
-
-.info-card-actions .new-tag-button {
-    text-transform: none;
+.no-files-message {
+    text-align: center;
 }

@@ -50,3 +50,42 @@ th:last-child {
     border-top: none;
     background-color: #fff;
 }
+
+.file-table .top-part {
+    margin-bottom: 16px;
+}
+
+.file-table-actions {
+    text-align: right;
+}
+
+.file-table-actions .new-tag-button {
+    text-transform: none;
+}
+
+.file-table-actions .finish-tag-button {
+    text-transform: none;
+    margin: 0;
+}
+
+.finish-tag-button-wrapper {
+    display: inline-block;
+}
+
+.file-table-actions .tag-editor .md-field {
+    margin: 0;
+    padding-top: 0;
+    min-height: 32px;
+}
+
+.file-table-actions .md-button .md-icon.done {
+    color: #13bd13b4;
+}
+
+.file-table-actions>div {
+    height: 100%;
+    display: flex;
+    flex: 1;
+    flex-direction: row-reverse;
+    align-items: center;
+}

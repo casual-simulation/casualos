@@ -12,12 +12,14 @@ import TagEditor from '../TagEditor/TagEditor';
 import AlertDialogOptions from '../App/DialogOptions/AlertDialogOptions';
 import FileTag from '../FileTag/FileTag';
 import { lastEventId } from '@sentry/browser';
+import FileTableToggle from '../FileTableToggle/FileTableToggle';
 
 @Component({
     components: {
         'file-row': FileRow,
         'file-tag': FileTag,
         'tag-editor': TagEditor,
+        'file-table-toggle': FileTableToggle
     },
     
 })
@@ -26,7 +28,6 @@ export default class FileTable extends Vue {
     @Prop() files: Object[];
     @Prop({ default: (() => <any>[]) }) extraTags: string[];
     @Prop({ default: false }) readOnly: boolean;
-    @Prop({ default: true }) showAddTagButton: boolean;
 
     /**
      * A property that can be set to indicate to the table that its values should be updated.
@@ -39,6 +40,7 @@ export default class FileTable extends Vue {
     isMakingNewAction: boolean = false;
     newTag: string = 'myNewTag';
     newTagValid: boolean = true;
+    numFilesSelected: number = 0;
     
     get fileManager() {
         return appManager.fileManager;
@@ -64,6 +66,7 @@ export default class FileTable extends Vue {
             this.files, 
             this.tags, 
             allExtraTags);
+        this.numFilesSelected = this.files.length;
     }
 
     addTag(isAction: boolean = false) {
@@ -81,15 +84,19 @@ export default class FileTable extends Vue {
                 return;
             }
             
-            this.addedTags.push(this.newTag);
-            this.tags.push(this.newTag);
+            this.addedTags.unshift(this.newTag);
+            this.tags.unshift(this.newTag);
         } else if(!isAction) {
             this.newTag = 'newTag';
         } else {
-            this.newTag = '+(#tag:"value"';
+            this.newTag = '+(#tag:"value")';
         }
         this.isMakingNewTag = !this.isMakingNewTag;
         this.isMakingNewAction = isAction && this.isMakingNewTag;
+    }
+
+    closeWindow() {
+        this.$emit('closeWindow');
     }
 
     cancelNewTag() {
@@ -142,5 +149,6 @@ export default class FileTable extends Vue {
 
     async created() {
         this.tags = fileTags(this.files, this.tags, this.lastEditedTag ? [this.lastEditedTag, ...this.extraTags] : this.extraTags);
+        this.numFilesSelected = this.files.length;
     }
 };
