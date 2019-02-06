@@ -87,6 +87,7 @@ import uuid from 'uuid/v4';
 import {AppManager, appManager} from './AppManager';
 import {SocketManager} from './SocketManager';
 import { SentryError } from '@sentry/core';
+import { calculateObjectPosition } from './game-engine/FileMesh';
 
 export interface SelectedFilesUpdatedEvent { files: Object[]; }
 
@@ -298,16 +299,24 @@ export class FileManager {
   }
 
   /**
+   * Sets the file that is currently being edited by the current user.
+   * @param file The file.
+   */
+  setEditedFile(file: Object) {
+    this._setEditedFileForUser(file, this.userFile);
+  }
+
+  /**
    * Calculates the nicely formatted value for the given file and tag.
    * @param file The file to calculate the value for.
    * @param tag The tag to calculate the value for.
    */
   calculateFormattedFileValue(file: Object, tag: string): string {
-    return calculateFormattedFileValue(this._createContext(), file, tag);
+    return calculateFormattedFileValue(this.createContext(), file, tag);
   }
 
   calculateFileValue(file: Object, tag: string) {
-    return calculateFileValue(this._createContext(), file, tag);
+    return calculateFileValue(this.createContext(), file, tag);
   }
 
   /**
@@ -323,7 +332,7 @@ export class FileManager {
    * Updates the given file with the given data.
    */
   async updateFile(file: File, newData: PartialFile) {
-    updateFile(file, newData, () => this._createContext());
+    updateFile(file, newData, () => this.createContext());
     this._files.emit(fileUpdated(file.id, newData));
   }
 
@@ -450,7 +459,22 @@ export class FileManager {
     }
   }
 
-  private _createContext(): FileCalculationContext {
+  private _setEditedFileForUser(file: Object, user: Object) {
+    if (file.id !== user.tags._editingFile) {
+      console.log('[FileManager] Edit File:', file.id);
+      
+      this.updateFile(user, {
+        tags: {
+          _editingFile: file.id
+        }
+      });
+    }
+  }
+
+  /**
+   * Creates a new FileCalculationContext from the current state.
+   */
+  createContext(): FileCalculationContext {
     return createCalculationContext(this.objects);
   }
 

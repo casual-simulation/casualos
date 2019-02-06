@@ -9,6 +9,7 @@
                 <file-table ref="table" 
                   class="files-table" 
                   @closeWindow="toggleOpen()"
+                  @tagFocusChanged="tagFocusChanged($event)"
                   :files="files" 
                   :updateTime="updateTime"
                   :showAddTagButton="false"></file-table>

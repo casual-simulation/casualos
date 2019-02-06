@@ -18,6 +18,7 @@ export interface Object {
         _user?: string;
         _mode?: UserMode;
         _movable?: boolean;
+        _editingFile?: string;
         ['stroke.color']?: string;
         ['stroke.linewidth']?: number;
         ['line.to']?: string;
@@ -83,7 +84,9 @@ export interface PartialFile {
         _user?: string;
         _mode?: UserMode;
         _movable?: boolean;
+        _editingFile?: string;
         ['stroke.color']?: string;
+        ['stroke.linewidth']?: number;
         ['line.to']?: string;
         ['line.color']?: string;
         ['label']?: string;

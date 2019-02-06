@@ -9,7 +9,9 @@ import {
     assign,
     find,
     values,
-    isEqual
+    isEqual,
+    sortBy,
+    sumBy
 } from 'lodash';
 import { Sandbox } from '../Formulas/Sandbox';
 import formulaLib from 'formula-lib';
@@ -38,6 +40,12 @@ export interface Assignment {
  * formula values and actions.
  */
 export interface FileCalculationContext {
+
+    /**
+     * The objects in the context.
+     */
+    objects: Object[]
+
     /**
      * The sandbox that should be used to run JS.
      */
@@ -397,9 +405,10 @@ export function convertToFormulaObject(context: FileCalculationContext, object: 
  */
 export function createCalculationContext(objects: Object[], lib: string = formulaLib): FileCalculationContext {
     const context = {
-        sandbox: new Sandbox(lib)
+        sandbox: new Sandbox(lib),
+        objects: objects
     };
-    context.sandbox.interface = new SandboxInterfaceImpl(objects, context);
+    context.sandbox.interface = new SandboxInterfaceImpl(context);
     return context;
 }
 
@@ -503,6 +512,25 @@ export function parseFilterTag(tag: string) {
  */
 export function getUserMode(object: Object): UserMode {
     return object.tags._mode || DEFAULT_USER_MODE;
+}
+
+
+/**
+ * Calculates the value of the given tag on the given file. If the result is not a number, then the given default value
+ * is returned.
+ * @param fileManager The file manager.
+ * @param file The file.
+ * @param tag The tag.
+ * @param defaultValue The default value to use if the tag doesn't exist or the result is not a number.
+ */
+export function calculateNumericalTagValue(context: FileCalculationContext, file: Object, tag: string, defaultValue: number): number {
+    if (file.tags[tag]) {
+        const result = calculateFileValue(context, file, tag);
+        if (typeof result === 'number' && result !== null) {
+            return result;
+        }
+    }
+    return defaultValue
 }
 
 function _parseFilterValue(value: string): any {
@@ -609,8 +637,8 @@ class SandboxInterfaceImpl implements SandboxInterface {
     objects: Object[];
     context: FileCalculationContext;
 
-    constructor(objects: Object[], context: FileCalculationContext) {
-      this.objects = objects;
+    constructor(context: FileCalculationContext) {
+      this.objects = context.objects;
       this.context = context;
     }
   
