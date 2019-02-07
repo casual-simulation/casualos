@@ -14,9 +14,20 @@
     color: #FE772F;
 }
 
-.event-name-img {
-    width: 24px;
-    height: 24px;
+.event-name-svg {
+    position: absolute;
+    top: 50%;
+    bottom: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+}
+
+.event-name-svg-container {
+    position: relative;
+    margin-right: 16px;
+    width: 20px;
+    height: 20px;
 }
 
 .filter-condition {
