@@ -30,6 +30,7 @@ import {
   second,
   ResolvedConflict,
   DEFAULT_USER_MODE,
+  DEFAULT_SCENE_BACKGROUND_COLOR,
 } from 'common/Files';
 import { 
   filterFilesBySelection, 
@@ -542,6 +543,7 @@ export class FileManager {
         _hidden: true,
         _workspace: null,
         _position: { x:0, y: 0, z: 0},
+        _sceneBackgroundColor: DEFAULT_SCENE_BACKGROUND_COLOR
       });
     }
   }

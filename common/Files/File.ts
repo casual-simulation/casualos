@@ -143,3 +143,8 @@ export const DEFAULT_WORKSPACE_MIN_HEIGHT = 0.1;
  * The default color for workspaces.
  */
 export const DEFAULT_WORKSPACE_COLOR = "#999999";
+
+/**
+ * The default color for scene background.
+ */
+export const DEFAULT_SCENE_BACKGROUND_COLOR = "#CCE6FF";
