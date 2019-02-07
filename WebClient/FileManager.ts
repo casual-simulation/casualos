@@ -191,6 +191,14 @@ export class FileManager {
     return null;
   }
 
+  get globalsFile(): Object {
+    let objs = this.objects.filter((o => o.id === 'globals'));
+    if (objs.length > 0) {
+      return objs[0];
+    }
+    return null;
+  }
+
   /**
    * Gets whether the app is connected to the server but may
    * or may not be synced to the serer.
@@ -473,6 +481,7 @@ export class FileManager {
 
     this._setupOffline();
     await this._initUserFile();
+    await this._initGlobalsFile();
 
     // Replay the existing files for the components that need it this way
     const filesState = this._files.store.state();
@@ -521,6 +530,18 @@ export class FileManager {
         _position: { x: 0, y: 0, z: 0},
         _mode: DEFAULT_USER_MODE,
         _workspace: null
+      });
+    }
+  }
+
+  private async _initGlobalsFile() {
+    this._setStatus('Updating globals file...');
+    let globalsFile = this.globalsFile;
+    if (!globalsFile) {
+      await this.createFile('globals', {
+        _hidden: true,
+        _workspace: null,
+        _position: { x:0, y: 0, z: 0},
       });
     }
   }
