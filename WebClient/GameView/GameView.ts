@@ -626,6 +626,10 @@ export default class GameView extends Vue {
         this.xrSession.addEventListener('end', (ev: any) => this._handleXRSessionEnded(ev));
 
         this._startXR();
+
+        setTimeout(() => {
+          this._handleResize();
+        }, 1000);
       }
     }
   }
