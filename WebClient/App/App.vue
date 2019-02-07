@@ -2,7 +2,7 @@
 <template>
     <div id="app">
 
-            <md-toolbar class="md-primary">
+            <md-toolbar>
                 <div class="md-toolbar-section-start">
                     <md-button class="md-icon-button" @click="menuClicked()">
                         <md-icon>menu</md-icon>
