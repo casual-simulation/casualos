@@ -25,7 +25,8 @@ import {
   PCFShadowMap,
   BasicShadowMap,
   Plane,
-  Vector3
+  Vector3,
+  GridHelper
 } from 'three';
 
 import VRControlsModule from 'three-vrcontrols-module';
@@ -81,6 +82,7 @@ export default class GameView extends Vue {
   private _groundPlane: Plane;
   private _groundPlaneMesh: Mesh;
   private _skydomeMesh: Mesh;
+  private _gridMesh: GridHelper;
   private _canvas: HTMLElement;
   private _time: Time;
   private _input: Input;
@@ -222,6 +224,7 @@ export default class GameView extends Vue {
     this._subs.push(this.fileManager.fileChanged(this.fileManager.userFile)
       .pipe(tap(file => {
         this.mode = this._interaction.mode = getUserMode(<Object>file);
+        this._gridMesh.visible = this.workspacesMode;
       }))
       .subscribe());
 
@@ -419,6 +422,11 @@ export default class GameView extends Vue {
 
     // Ground plane.
     this._groundPlane = new Plane(new Vector3(0, 1, 0));
+
+    // Grid plane
+    this._gridMesh = new GridHelper(1000, 300, 0xBBBBBB, 0xBBBBBB);
+    this._gridMesh.visible = false;
+    this._scene.add(this._gridMesh);
     
     // var gltfLoader = new GLTFLoader();
     // gltfLoader.load(groundModelPath, gltf => {
