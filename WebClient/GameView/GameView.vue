@@ -5,17 +5,17 @@
       <slot></slot>
       <div class="ui-container">
         <div class="toolbar">
-          <md-button v-if="filesMode" class="md-fab" @click="addNewFile">
+          <md-button v-if="filesMode" class="md-fab add-button" @click="addNewFile">
             <md-icon>add</md-icon>
             <span class="sr-only">New File</span>
             <md-tooltip md-direction="bottom">New File</md-tooltip>
           </md-button>
-          <md-button v-if="workspacesMode" class="md-fab" @click="addNewWorkspace()">
+          <md-button v-if="workspacesMode" class="md-fab add-button" @click="addNewWorkspace()">
             <md-icon>add</md-icon>
             <span class="sr-only">New Worksurface</span>
             <md-tooltip md-direction="bottom">New Worksurface</md-tooltip>
           </md-button>
-          <md-button class="md-fab" @click="toggleDebug()" v-if="dev">
+          <md-button class="md-fab add-button" @click="toggleDebug()" v-if="dev">
             <md-icon>bug_report</md-icon>
             <span class="sr-only">Debug</span>
             <md-tooltip md-direction="bottom">Debug</md-tooltip>

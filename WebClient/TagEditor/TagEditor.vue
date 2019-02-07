@@ -17,7 +17,7 @@
     <span v-else>
         <md-field>
             <span v-if="!isAction" class="hashtag md-prefix">#</span>
-            <span v-else class="event-name md-prefix">+</span>
+            <span v-else class="event-name-svg-container md-prefix"><combine-icon class="event-name-svg" /></span>
             <md-input 
                 :value="editorValue" 
                 @input="onInput($event)"
