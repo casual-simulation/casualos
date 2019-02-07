@@ -5,26 +5,23 @@
         <div class="ui-container">
           <md-card class="info-card" v-if="isOpen && filesMode">
             <md-card-content>
-              <div v-if="!isLoading">
-                <h4 class="files-header">Selected Files</h4>
-                <file-table class="files-table" :files="files" :updateTime="updateTime"></file-table>
+              <div>
+                <file-table ref="table" 
+                  class="files-table" 
+                  @closeWindow="toggleOpen()"
+                  :files="files" 
+                  :updateTime="updateTime"
+                  :showAddTagButton="false"></file-table>
 
-                <p v-if="!hasFiles">
+                <p class="no-files-message" v-if="!hasFiles">
                   Select a file
                 </p>
               </div>
             </md-card-content>
-            <md-card-actions>
-              <md-button v-if="hasFiles" @click="clearSelection()">Clear Selection</md-button>
-              <md-button @click="close()">Close</md-button>
-            </md-card-actions>
           </md-card>
-          <md-badge v-else-if="filesMode" :md-content="numFilesSelected" md-position="bottom">
-            <md-button class="md-icon-button" @click="open">
-              <md-icon>edit</md-icon>
-              <span class="sr-only">Open File Editor</span>
-            </md-button>
-          </md-badge>
+          <div  v-else-if="filesMode" class="outside-toggle">
+            <file-table-toggle :files="files" @click="toggleOpen()"></file-table-toggle>
+          </div>
         </div>
       </game-view>
 

@@ -1,12 +1,31 @@
 <template>
-  <md-menu md-size="medium" md-align-trigger :md-active="showMenu">
-    <span>
-        <span class="hashtag">#</span><input :value="value" 
+  <md-menu class="tag-editor" md-size="medium" md-align-trigger :md-active="showMenu">
+    <span v-if="!useMaterialInput">
+        <!-- If you're wondering why this syntax is not -->
+        <!-- formatted very well, it's because spacing in HTML is significant -->
+        <!-- and we need the space to be ignored -->
+        <!-- See also: https://stackoverflow.com/a/2629446 -->
+        <span v-if="!isAction" class="hashtag">#</span><span v-else class="event-name">+</span><input 
+            ref="inputBox"
+            :value="editorValue" 
             @input="onInput($event.target.value)"
             @focus.stop="onFocus"
             @blur.stop="onBlur"
             autocapitalize="none"
             autocorrect="off">
+    </span>
+    <span v-else>
+        <md-field>
+            <span v-if="!isAction" class="hashtag md-prefix">#</span>
+            <span v-else class="event-name md-prefix">+</span>
+            <md-input 
+                :value="editorValue" 
+                @input="onInput($event)"
+                @focus.stop="onFocus"
+                @blur.stop="onBlur"
+                autocapitalize="none"
+                autocorrect="off"></md-input>
+        </md-field>
     </span>
 
     <md-menu-content>

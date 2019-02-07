@@ -10,7 +10,8 @@ The repository for the Process for Teams project.
 2. Make sure you have Docker ([Mac][docker-for-mac], [Windows][docker-for-windows]) installed.
 3. Run `npm install` in the project directory
     - This command might take a while as NPM downloads and installs dependencies.
-4. Go to Docker Menu (On top bar) -> Preferences... -> File Sharing and add the `/data` directory.
+4. Go to Docker Menu (On top bar) -> Preferences... -> File Sharing and add the `/data` directory.  
+    - You may need to create this directory. Make sure `/data` is owned by you. You may need to: `sudo chown -R $USER /data`
 5. Run `docker-compose up -d`
     - This command might take a while as docker downloads and runs the mongo image and then boots up.
 6. Run `npm run watch`
