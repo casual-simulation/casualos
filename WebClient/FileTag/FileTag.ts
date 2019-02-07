@@ -17,6 +17,15 @@ export default class FileTag extends Vue {
         return isFilterTag(this.tag);
     }
 
+    get isCombine() {
+        if (this.isFilter) {
+            const data = this.filterData;
+            return data.eventName === '+';
+        } else {
+            return false;
+        }
+    }
+
     constructor() {
         super();
     }
