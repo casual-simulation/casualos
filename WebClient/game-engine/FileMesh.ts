@@ -1,4 +1,4 @@
-import { Object3D, Mesh, BoxBufferGeometry, MeshStandardMaterial, Color, Vector3, Box3, Sphere, BufferGeometry, BufferAttribute, LineBasicMaterial, LineSegments } from "three";
+import { Object3D, Mesh, BoxBufferGeometry, MeshStandardMaterial, Color, Vector3, Box3, Sphere, BufferGeometry, BufferAttribute, LineBasicMaterial, LineSegments, SphereGeometry, MeshBasicMaterial, DoubleSide } from "three";
 import { Object, File, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_GRID_SCALE } from 'common/Files';
 import { GameObject } from "./GameObject";
 import GameView from '../GameView/GameView';
@@ -69,6 +69,7 @@ export class FileMesh extends GameObject {
         let box = new Box3().setFromObject(this.cube);
         let sphere = new Sphere();
         sphere = box.getBoundingSphere(sphere);
+
         return sphere;
     }
 
@@ -307,7 +308,7 @@ export class FileMesh extends GameObject {
                 if (!targetArrow) {
                     // Create arrow for target.
                     let sourceFile = this._gameView.getFile(this.file.id);
-                    targetArrow = new Arrow3D(this._gameView, this, sourceFile, targetFile);
+                    targetArrow = new Arrow3D(this._gameView, sourceFile, targetFile);
                     this.arrows.push(targetArrow);
                 }
 
@@ -384,11 +385,20 @@ export class FileMesh extends GameObject {
 
         this.stroke.visible = true;
         const colorValue = appManager.fileManager.calculateFileValue(this.file, 'stroke.color');
+        const linewidth:number = appManager.fileManager.calculateFileValue(this.file, 'stroke.linewidth');
+
         const material = <LineBasicMaterial>this.stroke.material;
         if (typeof colorValue !== 'undefined') {
             material.color = this._getColor(colorValue);
         } else {
             material.color = new Color(0x999999);
+        }
+
+        console.log("setting linewidth", linewidth);
+        if(typeof linewidth !== 'undefined'){
+            material.linewidth = linewidth;
+        } else {
+            material.linewidth = 1;
         }
     }
 

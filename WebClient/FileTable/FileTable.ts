@@ -12,12 +12,14 @@ import TagEditor from '../TagEditor/TagEditor';
 import AlertDialogOptions from '../App/DialogOptions/AlertDialogOptions';
 import FileTag from '../FileTag/FileTag';
 import { lastEventId } from '@sentry/browser';
+import FileTableToggle from '../FileTableToggle/FileTableToggle';
 
 @Component({
     components: {
         'file-row': FileRow,
         'file-tag': FileTag,
         'tag-editor': TagEditor,
+        'file-table-toggle': FileTableToggle
     },
     
 })
@@ -35,8 +37,10 @@ export default class FileTable extends Vue {
     addedTags: string[] = [];
     lastEditedTag: string = null;
     isMakingNewTag: boolean = false;
+    isMakingNewAction: boolean = false;
     newTag: string = 'myNewTag';
     newTagValid: boolean = true;
+    numFilesSelected: number = 0;
     
     get fileManager() {
         return appManager.fileManager;
@@ -62,10 +66,12 @@ export default class FileTable extends Vue {
             this.files, 
             this.tags, 
             allExtraTags);
+        this.numFilesSelected = this.files.length;
     }
 
-    addTag() {
+    addTag(isAction: boolean = false) {
         if (this.isMakingNewTag) {
+
             // Check to make sure that the tag is unique.
             if (this.tagExists(this.newTag)) {
                 var options = new AlertDialogOptions();
@@ -78,16 +84,32 @@ export default class FileTable extends Vue {
                 return;
             }
             
-            this.addedTags.push(this.newTag);
-            this.tags.push(this.newTag);
-        } else {
+            this.addedTags.unshift(this.newTag);
+            this.tags.unshift(this.newTag);
+
+            const table = this.$refs.table as HTMLElement;
+            if (table) {
+                table.scrollIntoView({
+                    block: 'start',
+                    inline: 'start'
+                });
+            }
+        } else if(!isAction) {
             this.newTag = 'newTag';
+        } else {
+            this.newTag = '+(#tag:"value")';
         }
         this.isMakingNewTag = !this.isMakingNewTag;
+        this.isMakingNewAction = isAction && this.isMakingNewTag;
+    }
+
+    closeWindow() {
+        this.$emit('closeWindow');
     }
 
     cancelNewTag() {
         this.isMakingNewTag = false;
+        this.isMakingNewAction = false;
     }
 
     clearSelection() {
@@ -135,5 +157,6 @@ export default class FileTable extends Vue {
 
     async created() {
         this.tags = fileTags(this.files, this.tags, this.lastEditedTag ? [this.lastEditedTag, ...this.extraTags] : this.extraTags);
+        this.numFilesSelected = this.files.length;
     }
 };
