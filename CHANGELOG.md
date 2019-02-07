@@ -1,5 +1,20 @@
 # File Simulator Changelog
 
+## V0.2.19
+### Date: 2/6/2019
+
+### Changes:
+- Added `stroke.linewidth` to control how thick the stroke lines are.
+- Removed the Skybox.
+- Added the ability to change the vertical tilt of the camera by using two fingers and panning up and down. 
+- Reworked the files panel to be easier to use.
+  - Added "+action" button for creating actions.
+  - Moved the "+tag" and "+action" buttons above the file table.
+  - Moved the "Clear selection" button to the header row on the file table.
+  - It still needs some of the scrolling features like not scrolling the header while scrolling the body of the table but for the most part it's done.
+  - Also needs the auto-zoom feature for users. After looking at possible implementations I've discovered that it should be easier to do this when the "seeing other people" update arrives.
+
+
 ## V0.2.18
 ### Date: 2/5/2019
 
