@@ -15,6 +15,7 @@ import { isBuffer } from 'util';
 import { objectsAtGridPosition, tagsMatchingFilter } from 'common/Files/FileCalculations';
 import { ColorPickerEvent } from './ColorPickerEvent';
 import { EventBus } from '../EventBus/EventBus';
+import { appManager } from '../AppManager';
 
 export class InteractionManager {
 
@@ -423,8 +424,16 @@ export class InteractionManager {
                 actions.push({ label: 'Shrink', onClick: () => this.shrinkWorkspace(file) });
             }
 
-            actions.push({ label: 'Change Color', onClick: () => {          
-                let colorPickerEvent: ColorPickerEvent = { pagePos: pagePos, file: file.file };
+            actions.push({ label: 'Change Color', onClick: () => {    
+                
+                // This function is invoked as the color picker changes the color value.
+                let colorUpdated = (hexColor: string) => {
+                    appManager.fileManager.updateFile(file.file, { color: hexColor });
+                };
+
+                let workspace = <Workspace>file.file;
+                let colorPickerEvent: ColorPickerEvent = { pagePos: pagePos, initialColor: workspace.color, colorUpdated: colorUpdated };
+
                 EventBus.$emit('onColorPicker', colorPickerEvent);
             }});
 

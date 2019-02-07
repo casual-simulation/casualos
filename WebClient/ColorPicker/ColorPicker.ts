@@ -2,8 +2,6 @@ import Vue from 'vue';
 import { Chrome } from 'vue-color';
 import Component from "vue-class-component";
 import { ColorPickerEvent } from '../interaction/ColorPickerEvent';
-import { appManager } from '../AppManager';
-import { Workspace } from 'common/Files';
 import { EventBus } from '../EventBus/EventBus';
 
 @Component({
@@ -21,10 +19,6 @@ export default class ColorPicker extends Vue {
     colorPickerEvent: ColorPickerEvent = null;
     colorPickerVisible: boolean = false;
     colors: string = "#FF0000";
-    
-    get fileManager() {
-        return appManager.fileManager;
-    }
     
     constructor() {
         super();
@@ -52,12 +46,6 @@ export default class ColorPicker extends Vue {
 
         if (!event) return;
 
-        if (this.colorPickerEvent) {
-            if (this.colorPickerEvent.file === event.file && this.colorPickerEvent.pagePos.equals(event.pagePos)) {
-                return;
-            } 
-        }
-
         // Force the component to disable current color picker.
         this.close();
 
@@ -65,12 +53,8 @@ export default class ColorPicker extends Vue {
         this.$nextTick(() => {
             this.colorPickerEvent = event;
 
-            if (event.file.type === 'workspace') {
-                let workspace = <Workspace>event.file;
-                this.colors = workspace.color;
-            } else {
-                // Don't have color picker support for normal files yet...
-            }
+            // Starting value of the color picker is determined by the provided color in the event.
+            this.colors = this.colorPickerEvent.initialColor;
 
             this.colorPickerStyle.left = event.pagePos.x + 'px';
             this.colorPickerStyle.top = event.pagePos.y + 'px';
@@ -122,7 +106,7 @@ export default class ColorPicker extends Vue {
         if (!this.colorPickerEvent) return;
 
         let hexColor = (<any>this.colors).hex;
-        this.fileManager.updateFile(this.colorPickerEvent.file, { color: hexColor });
+        this.colorPickerEvent.colorUpdated(hexColor);
 
     }
 
