@@ -1,12 +1,12 @@
 import Vue from 'vue';
-import { Chrome } from 'vue-color';
+import { Compact } from 'vue-color';
 import Component from "vue-class-component";
 import { ColorPickerEvent } from '../interaction/ColorPickerEvent';
 import { EventBus } from '../EventBus/EventBus';
 
 @Component({
     components: {
-        'chrome-color-picker': Chrome
+        'compact-color-picker': Compact
     }
 })
 export default class ColorPicker extends Vue {

@@ -46,7 +46,7 @@ import {
   concatMap, tap,
 } from 'rxjs/operators';
 
-import { File, Object, Workspace, DEFAULT_WORKSPACE_HEIGHT_INCREMENT, DEFAULT_USER_MODE, UserMode } from 'common/Files';
+import { File, Object, Workspace, DEFAULT_WORKSPACE_HEIGHT_INCREMENT, DEFAULT_USER_MODE, UserMode, DEFAULT_SCENE_BACKGROUND_COLOR } from 'common/Files';
 import { Time } from '../game-engine/Time';
 import { Input, InputType } from '../game-engine/input';
 import { InputVR } from '../game-engine/InputVR';
@@ -230,8 +230,22 @@ export default class GameView extends Vue {
 
     this._subs.push(this.fileManager.fileChanged(this.fileManager.userFile)
       .pipe(tap(file => {
+
         this.mode = this._interaction.mode = getUserMode(<Object>file);
         this._gridMesh.visible = this.workspacesMode;
+
+      }))
+      .subscribe());
+
+    this._subs.push(this.fileManager.fileChanged(this.fileManager.globalsFile)
+      .pipe(tap(file => {
+        
+        // Update the scene background color.
+        let sceneBackgroundColor = (<Object>file).tags._sceneBackgroundColor;
+        if (sceneBackgroundColor) {
+          this._scene.background = new Color(sceneBackgroundColor);;
+        }
+
       }))
       .subscribe());
 
@@ -432,9 +446,14 @@ export default class GameView extends Vue {
   private _setupScene() {
 
     this._scene = new Scene();
-    this._scene.background = new Color(0xCCE6FF);
-    // this._scene.fog = new Fog(0x62848D, 0.000000000025, 10);
 
+    let globalsFile = this.fileManager.globalsFile;
+    
+    if (globalsFile && globalsFile.tags._sceneBackgroundColor) {
+      this.scene.background = new Color(globalsFile.tags._sceneBackgroundColor);
+    } else {
+      this.scene.background = new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
+    }
     
     // User's camera
     this._camera = new PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 20000);

@@ -1,7 +1,18 @@
 import { Vector2, Vector3, Intersection, Raycaster, Object3D, Ray } from 'three';
 import { ContextMenuEvent, ContextMenuAction } from './ContextMenuEvent';
 import { File3D } from '../game-engine/File3D';
-import { File, Object, DEFAULT_WORKSPACE_SCALE, Workspace, DEFAULT_WORKSPACE_HEIGHT_INCREMENT, DEFAULT_WORKSPACE_MIN_HEIGHT, DEFAULT_USER_MODE, UserMode, FileEvent, DEFAULT_WORKSPACE_HEIGHT } from '../../common/Files';
+import { 
+    File, 
+    Object, 
+    DEFAULT_WORKSPACE_SCALE, 
+    Workspace, 
+    DEFAULT_WORKSPACE_HEIGHT_INCREMENT, 
+    DEFAULT_WORKSPACE_MIN_HEIGHT, 
+    DEFAULT_USER_MODE, 
+    UserMode, 
+    FileEvent, 
+    DEFAULT_WORKSPACE_HEIGHT, 
+    DEFAULT_SCENE_BACKGROUND_COLOR} from '../../common/Files';
 import { FileClickOperation } from './FileClickOperation';
 import GameView from '../GameView/GameView';
 import { Physics } from '../game-engine/Physics';
@@ -16,6 +27,8 @@ import { objectsAtGridPosition, tagsMatchingFilter } from 'common/Files/FileCalc
 import { ColorPickerEvent } from './ColorPickerEvent';
 import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';
+import { IOperation } from './IOperation';
+import { EmptyClickOperation } from './EmptyClickOperation';
 
 export class InteractionManager {
 
@@ -27,7 +40,7 @@ export class InteractionManager {
     private _surfaceObjectsDirty: boolean;
 
     private _cameraControls: CameraControls;
-    private _fileClickOperation: FileClickOperation;
+    private _operations: IOperation[];
 
     mode: UserMode = DEFAULT_USER_MODE;
 
@@ -38,6 +51,7 @@ export class InteractionManager {
         this._raycaster = new Raycaster();
         // this._raycaster.linePrecision = .001;
         this._cameraControls = new CameraControls(this._gameView.camera, this._gameView);
+        this._operations = [];
 
         // Bind event handlers to this instance of the class.
         this._handleFileAdded = this._handleFileAdded.bind(this);
@@ -51,6 +65,18 @@ export class InteractionManager {
     }
 
     public update(): void {
+
+        // Update active operations and dispose of any that are finished.
+        this._operations = this._operations.filter((o) => {
+            o.update();
+
+            if (o.isFinished()) {
+                o.dispose();
+                return false;
+            }
+
+            return true;
+        });
 
         if (this._gameView.vrDisplay && this._gameView.vrDisplay.isPresenting) {
             
@@ -76,27 +102,15 @@ export class InteractionManager {
             // Normal browser interaction.
             this._cameraControls.update();
 
-            if (this._fileClickOperation) {
-
-                this._fileClickOperation.update();
-
-                // Dispose of operations that have finished.
-                if (this._fileClickOperation.isFinished()) {
-
-                    this._fileClickOperation.dispose();
-                    this._fileClickOperation = null;
-
-                }
-            }
-
             const input = this._gameView.input;
 
             // Detect left click.
             if (input.getMouseButtonDown(MouseButtonId.Left)) {
 
                 const screenPos = input.getMouseScreenPos();
-                const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this._getDraggableObjects(), this._gameView.camera);
+                const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this.getDraggableObjects(), this._gameView.camera);
                 const clickedObject = Physics.firstRaycastHit(raycastResult);
+                let fileClicked = false;
 
                 if (clickedObject) {
 
@@ -109,14 +123,22 @@ export class InteractionManager {
                         if (this.isInCorrectMode(file.file)) {
 
                             // Start file click operation on file.
-                            this._fileClickOperation = new FileClickOperation(this.mode, this._gameView, this, file, clickedObject);
+                            let fileClickOperation = new FileClickOperation(this.mode, this._gameView, this, file, clickedObject);
+                            this._operations.push(fileClickOperation);
+                            
+                            fileClicked = true;
                         }
                     }
+
+                } else {
+
+                    let emptyClickOperation = new EmptyClickOperation(this._gameView, this);
+                    this._operations.push(emptyClickOperation);
 
                 }
 
                 // If file click operation wasnt started, make sure camera controls are enabled.
-                if (!this._fileClickOperation) {
+                if (!fileClicked) {
 
                     this._cameraControls.enabled = true;
 
@@ -139,7 +161,7 @@ export class InteractionManager {
         const input = this._gameView.input;
         const pagePos = input.getMousePagePos();
         const screenPos = input.getMouseScreenPos();
-        const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this._getDraggableObjects(), this._gameView.camera);
+        const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this.getDraggableObjects(), this._gameView.camera);
         const hit = Physics.firstRaycastHit(raycastResult);
 
         this._cameraControls.enabled = false;
@@ -149,6 +171,33 @@ export class InteractionManager {
             let menuEvent: ContextMenuEvent = { pagePos: pagePos, actions: this._contextMenuActions(file, hit.point, pagePos) };
             this._gameView.$emit('onContextMenu', menuEvent);
         }
+    }
+
+    /**
+     * Opens up the color picker and allows you to change the scene's background color.
+     */
+    public sceneBackgroundColorPicker(pagePos: Vector2) {
+        
+        let globalsFile = appManager.fileManager.globalsFile;
+
+        // This function is invoked as the color picker changes the color value.
+        let colorUpdated = (hexColor: string) => {
+            appManager.fileManager.updateFile(globalsFile, { 
+                tags: { 
+                    _sceneBackgroundColor: hexColor
+                } 
+            })
+        };
+
+        let initialColor = globalsFile.tags._sceneBackgroundColor;
+        if (!initialColor) {
+            initialColor = DEFAULT_SCENE_BACKGROUND_COLOR;
+        }
+
+        let colorPickerEvent: ColorPickerEvent = { pagePos: pagePos, initialColor: initialColor, colorUpdated: colorUpdated };
+
+        EventBus.$emit('onColorPicker', colorPickerEvent);
+
     }
 
     public fileForIntersection(hit: Intersection): File3D {
@@ -242,7 +291,7 @@ export class InteractionManager {
      */
     public pointOnGrid(ray: Ray) {
         const raycaster = new Raycaster(ray.origin, ray.direction, 0, Number.POSITIVE_INFINITY);
-        const workspaces = this._getSurfaceObjects();
+        const workspaces = this.getSurfaceObjects();
         const hits = raycaster.intersectObjects(workspaces, true);
         const hit = hits[0];
         if (hit) {
@@ -404,6 +453,22 @@ export class InteractionManager {
         return (file.type === 'workspace' && this.mode === 'worksurfaces') || (file.type === 'object' && this.mode === 'files');
     }
 
+    public getDraggableObjects() {
+        if (this._draggableObjectsDirty) {
+            this._draggableColliders = flatMap(this._gameView.getFiles(), f => f.mesh.colliders);
+            this._draggableObjectsDirty = false;
+        }
+        return this._draggableColliders;
+    }
+
+    public getSurfaceObjects() {
+        if (this._surfaceObjectsDirty) {
+            this._surfaceColliders = flatMap(this._gameView.getFiles().filter(f => f.file.type === 'workspace'), f => f.mesh.colliders);
+            this._surfaceObjectsDirty = false;
+        }
+        return this._surfaceColliders;
+    }
+
     private _contextMenuActions(file: File3D, point: Vector3, pagePos: Vector2): ContextMenuAction[] {
         let actions: ContextMenuAction[] = [];
         if (file.mesh instanceof WorkspaceMesh && file.file.type === 'workspace') {
@@ -464,21 +529,5 @@ export class InteractionManager {
     private _markDirty() {
         this._draggableObjectsDirty = true;
         this._surfaceObjectsDirty = true;
-    }
-
-    private _getDraggableObjects() {
-        if (this._draggableObjectsDirty) {
-            this._draggableColliders = flatMap(this._gameView.getFiles(), f => f.mesh.colliders);
-            this._draggableObjectsDirty = false;
-        }
-        return this._draggableColliders;
-    }
-
-    private _getSurfaceObjects() {
-        if (this._surfaceObjectsDirty) {
-            this._surfaceColliders = flatMap(this._gameView.getFiles().filter(f => f.file.type === 'workspace'), f => f.mesh.colliders);
-            this._surfaceObjectsDirty = false;
-        }
-        return this._surfaceColliders;
     }
 }
