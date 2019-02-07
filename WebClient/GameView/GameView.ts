@@ -290,7 +290,9 @@ export default class GameView extends Vue {
 
       // Update XR stuff
       this._renderer.autoClear = false;
+      this._scene.background = null;
       this._renderer.setSize(this.xrSession.baseLayer.framebufferWidth, this.xrSession.baseLayer.framebufferHeight, false)
+      this._renderer.setClearColor('#000', 0);
       this._renderer.clear();
 
       this._camera.matrixAutoUpdate = false;
@@ -316,6 +318,7 @@ export default class GameView extends Vue {
         this._camera.projectionMatrix.fromArray(view.projectionMatrix);
   
         // Set up the _renderer to the XRView's viewport and then render
+        
         this._renderer.clearDepth();
         const viewport = view.getViewport(this.xrSession.baseLayer);
         this._renderer.setViewport(viewport.x, viewport.y, viewport.width, viewport.height);
@@ -542,6 +545,7 @@ export default class GameView extends Vue {
 
     const webGlRenderer = this._renderer = new WebGLRenderer({
       antialias: true,
+      alpha: true
     });
     webGlRenderer.shadowMap.enabled = true;
     webGlRenderer.shadowMap.type = PCFSoftShadowMap;
@@ -635,7 +639,9 @@ export default class GameView extends Vue {
       if(this.xrSession) {
         await this.xrSession.end();
         this.xrSession = null;
+        document.documentElement.classList.remove('ar-app');
       } else {
+        document.documentElement.classList.add('ar-app');
         this.xrSession = await this.xrDisplay.requestSession(this.xrSessionInitParameters);
         this.xrSession.near = 0.1;
         this.xrSession.far = 1000;

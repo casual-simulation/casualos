@@ -4,6 +4,10 @@
     touch-action: none;
 }
 
+html.ar-app, html.ar-app body, html.ar-app .md-content {
+    background-color: transparent !important;
+}
+
 .game-container {
     margin: -16px;
 }
