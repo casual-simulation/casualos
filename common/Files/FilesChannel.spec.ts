@@ -1472,7 +1472,8 @@ describe('FilesChannel', () => {
                     grid: {},
                     scale: 0.5,
                     defaultHeight: 0.1,
-                    gridScale: 0.2
+                    gridScale: 0.2,
+                    color: "#999999"
                 }
             });
 
@@ -1487,7 +1488,8 @@ describe('FilesChannel', () => {
                     grid: {},
                     scale: 0.5,
                     defaultHeight: 0.1,
-                    gridScale: 0.2
+                    gridScale: 0.2,
+                    color: "#999999"
                 }
             });
         });
