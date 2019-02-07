@@ -55,9 +55,9 @@
 
 .md-button.md-theme-default.md-fab:not([disabled]).add-button {
     background-color: #fff;
-    color: #000;
+    color: #777;
 }
 
 .md-button.md-theme-default.md-fab:not([disabled]).add-button .md-icon-font {
-    color: var(--md-theme-default-text-primary-on-background-variant, rgba(0,0,0,0.87));
+    color: var(--md-theme-default-text-primary-on-background-variant, #777);
 }
