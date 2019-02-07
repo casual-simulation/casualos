@@ -26,7 +26,9 @@ import {
   BasicShadowMap,
   Plane,
   Vector3,
-  GridHelper
+  GridHelper,
+  Quaternion,
+  Matrix4
 } from 'three';
 
 import VRControlsModule from 'three-vrcontrols-module';
@@ -272,32 +274,48 @@ export default class GameView extends Vue {
     } else if(this.xrSession && xrFrame) {
 
       // Update XR stuff
-      this.renderer.autoClear = false;
-      this.renderer.setSize(this.xrSession.baseLayer.framebufferWidth, this.xrSession.baseLayer.framebufferHeight, false)
-      this.renderer.clear();
+      this._renderer.autoClear = false;
+      this._renderer.setSize(this.xrSession.baseLayer.framebufferWidth, this.xrSession.baseLayer.framebufferHeight, false)
+      this._renderer.clear();
 
-      this.camera.matrixAutoUpdate = false;
+      this._camera.matrixAutoUpdate = false;
 
       for (const view of xrFrame.views) {
-        // Each XRView has its own projection matrix, so set the camera to use that
-        this.camera.matrix.fromArray(view.viewMatrix);
-        this.camera.updateMatrixWorld(false);
-        this.camera.projectionMatrix.fromArray(view.projectionMatrix)
+        // Each XRView has its own projection matrix, so set the _camera to use that
+        let matrix = new Matrix4();
+        matrix.fromArray(view.viewMatrix);
+
+        let position = new Vector3();
+        position.setFromMatrixPosition(matrix);
+        position.add(new Vector3(0, 1.5, 0));
+        position.multiplyScalar(2);
+        this._camera.position.copy(position);
+
+        let rotation = new Quaternion();
+        rotation.setFromRotationMatrix(matrix);
+        this._camera.setRotationFromQuaternion(rotation);
+
+        this._camera.updateMatrix();
+        this._camera.updateMatrixWorld(false);
+
+        this._camera.projectionMatrix.fromArray(view.projectionMatrix);
   
-        // Set up the renderer to the XRView's viewport and then render
-        this.renderer.clearDepth()
-        const viewport = view.getViewport(this.xrSession.baseLayer)
-        this.renderer.setViewport(viewport.x, viewport.y, viewport.width, viewport.height)
+        // Set up the _renderer to the XRView's viewport and then render
+        this._renderer.clearDepth();
+        const viewport = view.getViewport(this.xrSession.baseLayer);
+        this._renderer.setViewport(viewport.x, viewport.y, viewport.width, viewport.height);
         this._renderer.render(this._scene, this._camera);
       }
 
     } else {
 
-      this.renderer.autoClear = true;
-      this.camera.matrixAutoUpdate = true;
+      this._renderer.autoClear = true;
+      this._camera.matrixAutoUpdate = true;
       this._renderer.render(this._scene, this._camera);
 
     }
+
+    // console.log(this._camera.position);
 
     this._time.update();
 
