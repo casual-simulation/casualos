@@ -1,5 +1,14 @@
 # File Simulator Changelog
 
+## V0.2.21
+### Date: 2/7/2019
+
+### Changes:
+- Changed the top bar and other buttons to have a white background.
+- Changed the red badge on the pencil to be a neutral gray.
+- Changed the actions icon.
+- Added a grid that is visible in hex edit mode.
+
 ## V0.2.20
 ### Date: 2/7/2019
 
