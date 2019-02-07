@@ -58,7 +58,7 @@ import { ArgEvent } from '../../common/Events';
 import { WorkspaceMesh, WorkspaceMeshDebugInfo } from '../game-engine/WorkspaceMesh';
 import { GridChecker } from '../game-engine/grid/GridChecker';
 import { FileMesh } from '../game-engine/FileMesh';
-import { values, flatMap } from 'lodash';
+import { values, flatMap, find } from 'lodash';
 import { getUserMode } from 'common/Files/FileCalculations';
 
 @Component({
@@ -113,6 +113,10 @@ export default class GameView extends Vue {
   debug: boolean = false;
   debugInfo: GameViewDebugInfo = null;
   mode: UserMode = DEFAULT_USER_MODE;
+  xrCapable: boolean = false;
+  xrDisplay: any = null;
+  xrSession: any = null;
+  xrSessionInitParameters: any = null;
   vrDisplay: VRDisplay = null;
   vrCapable: boolean = false;
 
@@ -229,6 +233,7 @@ export default class GameView extends Vue {
       .subscribe());
 
     this._setupWebVR();
+    await this._setupWebXR();
     this._frameUpdate();
   }
 
@@ -245,7 +250,7 @@ export default class GameView extends Vue {
     }
   }
 
-  private _frameUpdate() {
+  private _frameUpdate(xrFrame?: any) {
 
     this._input.update();
     this._inputVR.update();
@@ -264,8 +269,32 @@ export default class GameView extends Vue {
       this._renderer.render(this._scene, this._camera);
       this._vrEffect.render(this._scene, this._camera);
 
+    } else if(this.xrSession && xrFrame) {
+
+      // Update XR stuff
+      this.renderer.autoClear = false;
+      this.renderer.setSize(this.xrSession.baseLayer.framebufferWidth, this.xrSession.baseLayer.framebufferHeight, false)
+      this.renderer.clear();
+
+      this.camera.matrixAutoUpdate = false;
+
+      for (const view of xrFrame.views) {
+        // Each XRView has its own projection matrix, so set the camera to use that
+        this.camera.matrix.fromArray(view.viewMatrix);
+        this.camera.updateMatrixWorld(false);
+        this.camera.projectionMatrix.fromArray(view.projectionMatrix)
+  
+        // Set up the renderer to the XRView's viewport and then render
+        this.renderer.clearDepth()
+        const viewport = view.getViewport(this.xrSession.baseLayer)
+        this.renderer.setViewport(viewport.x, viewport.y, viewport.width, viewport.height)
+        this._renderer.render(this._scene, this._camera);
+      }
+
     } else {
 
+      this.renderer.autoClear = true;
+      this.camera.matrixAutoUpdate = true;
       this._renderer.render(this._scene, this._camera);
 
     }
@@ -275,6 +304,10 @@ export default class GameView extends Vue {
     if (this.vrDisplay && this.vrDisplay.isPresenting) {
 
       this.vrDisplay.requestAnimationFrame(() => this._frameUpdate());
+
+    } else if(this.xrSession) {
+
+      this.xrSession.requestFrame((nextXRFrame: any) => this._frameUpdate(nextXRFrame));
 
     } else {
 
@@ -525,6 +558,97 @@ export default class GameView extends Vue {
 
     let vrButtonContainer = document.getElementById('vr-button-container');
     vrButtonContainer.appendChild(this._enterVr.domElement);
+  }
+
+
+  // TODO: All this needs to be reworked to use the right WebXR polyfill
+  // - Use this one: https://github.com/immersive-web/webxr-polyfill
+  // - instead of this one: https://github.com/mozilla/webxr-polyfill
+  
+  private async _setupWebXR() {
+    const win = <any>window;
+    const navigator = <any>win.navigator;
+    const xr = navigator.XR;
+
+    if (typeof xr === 'undefined') {
+      console.log('[GameView] WebXR Not Supported.');
+      return;
+    }
+
+    const displays = await xr.getDisplays();
+    this.xrSessionInitParameters = {
+			exclusive: false,
+			type: win.XRSession.AUGMENTATION,
+			videoFrames: false,    //computer_vision_data
+			alignEUS: true,
+			worldSensing: false
+    };
+    const matchingDisplay = find(displays, d => d.supportsSession(this.xrSessionInitParameters));
+    if (matchingDisplay && this._isRealAR(matchingDisplay)) {
+      this.xrCapable = true;
+      this.xrDisplay = matchingDisplay;
+      console.log('[GameView] WebXR Supported!');
+    }
+  }
+
+  async toggleXR() {
+    console.log('toggle XR');
+    if (this.xrDisplay) {
+      if(this.xrSession) {
+        await this.xrSession.end();
+        this.xrSession = null;
+      } else {
+        this.xrSession = await this.xrDisplay.requestSession(this.xrSessionInitParameters);
+        this.xrSession.near = 0.1;
+        this.xrSession.far = 1000;
+
+        this.xrSession.addEventListener('focus', (ev: any) => this._handleXRSessionFocus(ev));
+        this.xrSession.addEventListener('blur', (ev: any) => this._handleXRSessionBlur(ev));
+        this.xrSession.addEventListener('end', (ev: any) => this._handleXRSessionEnded(ev));
+
+        this._startXR();
+      }
+    }
+  }
+
+  private _startXR() {
+    const win = <any>window;
+    const navigator = win.navigator;
+    if (this.xrSession === null){
+      throw new Error('Can not start presenting without a xrSession');
+    }
+
+    // Set the xrSession's base layer into which the app will render
+    this.xrSession.baseLayer = new win.XRWebGLLayer(this.xrSession, this._renderer.context);
+
+    // Handle layer focus events
+    this.xrSession.baseLayer.addEventListener('focus', (ev: any) => { this._handleXRLayerFocus(ev) })
+    this.xrSession.baseLayer.addEventListener('blur', (ev: any) => { this._handleXRLayerBlur(ev) })
+
+    // this.xrSession.requestFrame(this._boundHandleFrame)
+  }
+
+  private _handleXRSessionFocus(event: any) {
+  }
+
+  private _handleXRSessionBlur(event: any) {
+  }
+
+  private _handleXRSessionEnded(event: any) {
+  }
+
+  private _handleXRLayerFocus(event: any) {
+  }
+
+  private _handleXRLayerBlur(event: any) {
+  }
+
+  private _isRealAR(xrDisplay: any): boolean {
+    // The worst hack of all time.
+    // Basically does the check that the webxr polyfill does
+    // to see it the device really supports Web XR.
+    return typeof (<any>window).webkit !== 'undefined' ||
+      xrDisplay._reality._vrDisplay;
   }
 
   private _handleReadyVR(display: VRDisplay) {
