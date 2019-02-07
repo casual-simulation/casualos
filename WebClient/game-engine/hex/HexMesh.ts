@@ -1,5 +1,5 @@
 import { hex } from "./Hex";
-import { Mesh, BufferGeometry, ExtrudeBufferGeometry, Shape, Material, MeshStandardMaterial, Matrix4, Vector3, MeshBasicMaterial } from "three";
+import { Mesh, BufferGeometry, ExtrudeBufferGeometry, Shape, Material, MeshStandardMaterial, Matrix4, Vector3, MeshBasicMaterial, Color } from "three";
 import { Axial } from "./Axial";
 import { gridPosToRealPos } from "./HexGrid";
 
@@ -41,6 +41,17 @@ export class HexMesh extends Mesh {
     set height(val: number) {
         this._height = val;
         this._updateGeo();
+    }
+
+    get color(): Color {
+        let material = <MeshStandardMaterial>this.material;
+        return material.color;
+    }
+
+    set color(val: Color) {
+        if (!val) return;
+        let material = <MeshStandardMaterial>this.material;
+        material.color = val;
     }
 
     /**

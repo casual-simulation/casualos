@@ -1,5 +1,14 @@
 # File Simulator Changelog
 
+## V0.2.20
+### Date: 2/7/2019
+
+### Changes:
+- Added color picker component.
+- Can change workspace color using color picker from the context menu.
+- Inverted touch input vertical rotation. 
+- Clamping vertical rotation so that you can’t rotate underneath the ground plane.
+  
 ## V0.2.19
 ### Date: 2/6/2019
 

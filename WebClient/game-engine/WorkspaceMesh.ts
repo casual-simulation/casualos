@@ -1,4 +1,4 @@
-import { Object3D, Vector3 } from "three";
+import { Object3D, Vector3, Color } from "three";
 import { HexGridMesh, HexGrid, HexMesh, keyToPos } from "./hex";
 import { GridMesh } from "./grid/GridMesh";
 import { Workspace, File, objDiff, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_GRID_SCALE } from "common/Files";
@@ -124,6 +124,12 @@ export class WorkspaceMesh extends GameObject {
             }
         }
 
+        if (this.workspace.color) {
+            let color = new Color(this.workspace.color);
+            let hexes = this.hexGrid.hexes;
+            hexes.forEach((h) => { h.color = color; });
+        }
+
         this.updateMatrixWorld(false);
 
         this._debugInfo = {
@@ -181,7 +187,7 @@ export class WorkspaceMesh extends GameObject {
     }
 
     private _gridChanged(current: Workspace, previous: Workspace) {
-        return !previous || current.size !== previous.size || current.grid !== previous.grid;
+        return !previous || current.size !== previous.size || current.grid !== previous.grid
     }
 }
 
