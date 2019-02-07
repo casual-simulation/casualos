@@ -50,6 +50,7 @@ export interface Workspace {
     scale: number | null;
     gridScale: number | null;
     defaultHeight: number | null;
+    color: string;
 }
 
 /**
@@ -99,6 +100,7 @@ export interface PartialFile {
     },
     scale?: number;
     gridScale?: number;
+    color?: string;
 }
 
 /**
@@ -135,3 +137,8 @@ export const DEFAULT_WORKSPACE_HEIGHT_INCREMENT = 0.1;
  * The minimum height that hexes in a workspace can be.
  */
 export const DEFAULT_WORKSPACE_MIN_HEIGHT = 0.1;
+
+/**
+ * The default color for workspaces.
+ */
+export const DEFAULT_WORKSPACE_COLOR = "#999999";

@@ -1,5 +1,5 @@
 import { Vector2, Vector3, Intersection, Raycaster, Object3D, Ray } from 'three';
-import { ContextMenuEvent, ContextMenuAction } from './ContextMenu';
+import { ContextMenuEvent, ContextMenuAction } from './ContextMenuEvent';
 import { File3D } from '../game-engine/File3D';
 import { File, Object, DEFAULT_WORKSPACE_SCALE, Workspace, DEFAULT_WORKSPACE_HEIGHT_INCREMENT, DEFAULT_WORKSPACE_MIN_HEIGHT, DEFAULT_USER_MODE, UserMode, FileEvent, DEFAULT_WORKSPACE_HEIGHT } from '../../common/Files';
 import { FileClickOperation } from './FileClickOperation';
@@ -13,6 +13,8 @@ import { Axial, realPosToGridPos, gridDistance, keyToPos, posToKey } from '../ga
 import { MouseButtonId } from '../game-engine/input';
 import { isBuffer } from 'util';
 import { objectsAtGridPosition, tagsMatchingFilter } from 'common/Files/FileCalculations';
+import { ColorPickerEvent } from './ColorPickerEvent';
+import { EventBus } from '../EventBus/EventBus';
 
 export class InteractionManager {
 
@@ -143,7 +145,7 @@ export class InteractionManager {
         const file = this.fileForIntersection(hit);
         if (file && file.file && file.file.type === 'workspace') {
             // Now send the actual context menu event.
-            let menuEvent: ContextMenuEvent = { pagePos: pagePos, actions: this._contextMenuActions(file, hit.point) };
+            let menuEvent: ContextMenuEvent = { pagePos: pagePos, actions: this._contextMenuActions(file, hit.point, pagePos) };
             this._gameView.$emit('onContextMenu', menuEvent);
         }
     }
@@ -401,23 +403,33 @@ export class InteractionManager {
         return (file.type === 'workspace' && this.mode === 'worksurfaces') || (file.type === 'object' && this.mode === 'files');
     }
 
-    private _contextMenuActions(file: File3D, point: Vector3): ContextMenuAction[] {
+    private _contextMenuActions(file: File3D, point: Vector3, pagePos: Vector2): ContextMenuAction[] {
         let actions: ContextMenuAction[] = [];
         if (file.mesh instanceof WorkspaceMesh && file.file.type === 'workspace') {
+
             const tile = this._worldPosToGridPos(file, point);
             const currentTile = file.file.grid ? file.file.grid[posToKey(tile)] : null;
             const currentHeight = (!!currentTile ? currentTile.height : (file.file.defaultHeight || DEFAULT_WORKSPACE_HEIGHT)) || DEFAULT_WORKSPACE_HEIGHT;
             const increment = DEFAULT_WORKSPACE_HEIGHT_INCREMENT; // TODO: Replace with a configurable value.
             const minHeight = DEFAULT_WORKSPACE_MIN_HEIGHT; // TODO: This too
+
             actions.push({ label: 'Raise', onClick: () => this.updateTileHeightAtGridPosition(file, tile, currentHeight + increment) });
             if (currentTile && currentHeight - increment >= minHeight) {
                 actions.push({ label: 'Lower', onClick: () => this.updateTileHeightAtGridPosition(file, tile, currentHeight - increment) });
             }
+
+            actions.push({ label: 'Expand', onClick: () => this.expandWorkspace(file) });
+            if (this.canShrinkWorkspace(file)) {
+                actions.push({ label: 'Shrink', onClick: () => this.shrinkWorkspace(file) });
+            }
+
+            actions.push({ label: 'Change Color', onClick: () => {          
+                let colorPickerEvent: ColorPickerEvent = { pagePos: pagePos, file: file.file };
+                EventBus.$emit('onColorPicker', colorPickerEvent);
+            }});
+
         }
-        actions.push({ label: 'Expand', onClick: () => this.expandWorkspace(file) });
-        if (this.canShrinkWorkspace(file)) {
-            actions.push({ label: 'Shrink', onClick: () => this.shrinkWorkspace(file) });
-        }
+
         return actions;
     }
 

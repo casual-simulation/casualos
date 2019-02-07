@@ -1,12 +1,15 @@
 import Vue from 'vue';
+import { Chrome } from 'vue-color';
 import Component from 'vue-class-component';
 import { Inject, Watch } from 'vue-property-decorator';
-import { Object, UserMode, DEFAULT_USER_MODE} from 'common/Files';
+import { Object, File, UserMode, DEFAULT_USER_MODE, Workspace} from 'common/Files';
 import GameView from '../GameView/GameView';
 import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';
 import FileTable from '../FileTable/FileTable';
-import { ContextMenuEvent } from '../interaction/ContextMenu';
+import ColorPicker from '../ColorPicker/ColorPicker';
+import { ContextMenuEvent } from '../interaction/ContextMenuEvent';
+import { ColorPickerEvent } from '../interaction/ColorPickerEvent';
 import { SubscriptionLike } from 'rxjs';
 import { cloneDeep } from 'lodash';
 import { getUserMode } from 'common/Files/FileCalculations';
@@ -15,7 +18,8 @@ import { tap } from 'rxjs/operators';
 @Component({
     components: {
         'game-view': GameView,
-        'file-table': FileTable
+        'file-table': FileTable,
+        'color-picker': ColorPicker
     }
 })
 export default class Home extends Vue {
@@ -29,7 +33,7 @@ export default class Home extends Vue {
     
     isOpen: boolean = false;
     contextMenuVisible: boolean = false;
-    context: ContextMenuEvent = null;
+    contextMenuEvent: ContextMenuEvent = null;
     status: string = '';
     files: Object[] = [];
     tags: string[] = [];
@@ -77,12 +81,12 @@ export default class Home extends Vue {
 
     handleContextMenu(event: ContextMenuEvent) {
         // Force the component to disable current context menu.
-        this.context = null;
+        this.contextMenuEvent = null;
         this.contextMenuVisible = false;
 
         // Wait for the DOM to update with the above values and then show context menu again.
         this.$nextTick(() => {
-            this.context = event;
+            this.contextMenuEvent = event;
             this.contextMenuStyle.left = event.pagePos.x + 'px';
             this.contextMenuStyle.top = event.pagePos.y + 'px';
             this.contextMenuVisible = true;
