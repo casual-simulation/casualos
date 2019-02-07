@@ -1,5 +1,15 @@
 # File Simulator Changelog
 
+## V0.2.22
+### Date: 2/7/2019
+
+### Changes:
+- Color Picker component is now more generic. It invokes a callback function every time the color value changes that you can use to get the color value.
+- Made the QR code larger.
+- Change the scene’s background color by clicking on it and using the color picker.
+- Make basically all the text gray (title bar text, mode switch, add buttons, and the hamburger).
+- Changed color picker type to Compact style.
+
 ## V0.2.21
 ### Date: 2/7/2019
 
