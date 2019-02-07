@@ -31,11 +31,11 @@
                     </router-link>
                     <md-list-item @click="upload" v-if="getUser() != null">
                         <md-icon>cloud_upload</md-icon>
-                        <span class="md-list-item-text">Upload</span>
+                        <span class="md-list-item-text">Upload AUX</span>
                     </md-list-item>
                     <md-list-item @click="download" v-if="getUser() != null">
                         <md-icon>cloud_download</md-icon>
-                        <span class="md-list-item-text">Download</span>
+                        <span class="md-list-item-text">Download AUX</span>
                     </md-list-item>
                     <md-list-item @click="logout" v-if="getUser() != null">
                         <md-icon>exit_to_app</md-icon>
