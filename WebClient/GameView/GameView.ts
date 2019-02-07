@@ -85,7 +85,7 @@ export default class GameView extends Vue {
   private _groundPlaneMesh: Mesh;
   private _skydomeMesh: Mesh;
   private _gridMesh: GridHelper;
-  private _canvas: HTMLElement;
+  private _canvas: HTMLCanvasElement;
   private _time: Time;
   private _input: Input;
   private _inputVR: InputVR;
@@ -136,6 +136,7 @@ export default class GameView extends Vue {
   }
 
   get gameView(): HTMLElement { return <HTMLElement>this.$refs.gameView; }
+  get canvas() { return this._canvas; }
   get time(): Time { return this._time; }
   get input(): Input { return this._input; }
   get inputVR(): InputVR { return this._inputVR; }
@@ -726,7 +727,8 @@ export default class GameView extends Vue {
     const { width, height } = this._calculateSize();
     this._renderer.setPixelRatio(window.devicePixelRatio || 1);
     this._renderer.setSize(width, height);
-    this._container.style.height = this._renderer.domElement.style.height;
+    this._container.style.height = this.gameView.style.height = this._renderer.domElement.style.height;
+    this._container.style.width = this.gameView.style.width = this._renderer.domElement.style.width;
   }
 
   private _resizeCamera() {
