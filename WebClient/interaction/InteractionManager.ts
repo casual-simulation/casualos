@@ -497,20 +497,19 @@ export class InteractionManager {
             const minimizedLabel = minimized ? 'Maximize' : 'Minimize';
             actions.push({ label: minimizedLabel, onClick: () => this.minimizeWorkspace(file) });
 
-            if (!minimized) {
-                actions.push({ label: 'Change Color', onClick: () => {    
-                    
-                    // This function is invoked as the color picker changes the color value.
-                    let colorUpdated = (hexColor: string) => {
-                        appManager.fileManager.updateFile(file.file, { color: hexColor });
-                    };
-                    
-                    let workspace = <Workspace>file.file;
-                    let colorPickerEvent: ColorPickerEvent = { pagePos: pagePos, initialColor: workspace.color, colorUpdated: colorUpdated };
-                    
-                    EventBus.$emit('onColorPicker', colorPickerEvent);
-                }});
-            }
+        
+            actions.push({ label: 'Change Color', onClick: () => {    
+                
+                // This function is invoked as the color picker changes the color value.
+                let colorUpdated = (hexColor: string) => {
+                    appManager.fileManager.updateFile(file.file, { color: hexColor });
+                };
+                
+                let workspace = <Workspace>file.file;
+                let colorPickerEvent: ColorPickerEvent = { pagePos: pagePos, initialColor: workspace.color, colorUpdated: colorUpdated };
+                
+                EventBus.$emit('onColorPicker', colorPickerEvent);
+            }});
 
         }
 

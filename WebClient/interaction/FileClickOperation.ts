@@ -51,7 +51,7 @@ export class FileClickOperation implements IOperation {
 
                 if (distance >= FileClickOperation.DragThreshold) {
                     // Start dragging now that we've crossed the threshold.
-                    const workspace = this._file.file.type === 'workspace' ? this._file : null; // this._interaction.findWorkspaceForIntersection(this._hit);
+                    const workspace = this._file.file.type === 'workspace' ? this._file : null;
 
                     this._triedDragging = true;
 
