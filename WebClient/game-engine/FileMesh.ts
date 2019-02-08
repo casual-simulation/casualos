@@ -13,6 +13,7 @@ import { find, flatMap, sumBy, sortBy } from "lodash";
 import { isArray, parseArray, isFormula, getShortId, fileFromShortId, objectsAtGridPosition, FileCalculationContext, calculateFileValue, calculateNumericalTagValue } from 'common/Files/FileCalculations'
 import { appManager } from '../AppManager';
 import { FileManager } from "WebClient/FileManager";
+import { createLabel } from "./utils";
 
 /**
  * Defines a class that represents a mesh for an "object" file.
@@ -93,7 +94,7 @@ export class FileMesh extends GameObject {
         if (!this.file) {
             this.cubeContainer = new Object3D();
             this.cube = this._createCube(1);
-            this.label = this._createLabel();
+            this.label = createLabel(this._gameView, this);
             this.colliders.push(this.cube);
             this.cubeContainer.add(this.cube);
             this.add(this.cubeContainer);
@@ -162,11 +163,6 @@ export class FileMesh extends GameObject {
         cube.castShadow = true;
         cube.receiveShadow = false;
         return cube;
-    }
-
-    private _createLabel(): Text3D {
-        const label = new Text3D(this._gameView, this, robotoFont, robotoTexturePath);
-        return label;
     }
 
     private _tagUpdatePosition(): void {

@@ -16,8 +16,6 @@ import { File, Object, Workspace } from '../../common/Files'
 import { Text3D } from './Text3D';
 
 // Assets
-import robotoFont from '../public/bmfonts/Roboto.json';
-import robotoTexturePath from '../public/bmfonts/Roboto.png';
 import GameView from "WebClient/GameView/GameView";
 import { WorkspaceMesh } from "./WorkspaceMesh";
 import { FileMesh } from "./FileMesh";

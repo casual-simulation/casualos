@@ -1,4 +1,4 @@
-import { Object3D, Mesh, BoxBufferGeometry, MeshStandardMaterial, Color, Vector3, Box3, Sphere, BufferGeometry, BufferAttribute, LineBasicMaterial, LineSegments, SphereGeometry, MeshBasicMaterial, DoubleSide, Vector2, Camera, PerspectiveCamera, CameraHelper } from "three";
+import { Object3D, Mesh, BoxBufferGeometry, MeshStandardMaterial, Color, Vector3, Box3, Sphere, BufferGeometry, BufferAttribute, LineBasicMaterial, LineSegments, SphereGeometry, MeshBasicMaterial, DoubleSide, Vector2, Camera, PerspectiveCamera, CameraHelper, Euler } from "three";
 import { Object, File, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_GRID_SCALE } from 'common/Files';
 import { GameObject } from "./GameObject";
 import GameView from '../GameView/GameView';
@@ -13,6 +13,7 @@ import { find, flatMap, sumBy, sortBy } from "lodash";
 import { isArray, parseArray, isFormula, getShortId, fileFromShortId, objectsAtGridPosition, FileCalculationContext, calculateFileValue, calculateNumericalTagValue } from 'common/Files/FileCalculations'
 import { appManager } from '../AppManager';
 import { FileManager } from "WebClient/FileManager";
+import { createLabel } from "./utils";
 
 
 /**
@@ -24,12 +25,17 @@ export const DEFAULT_USER_INACTIVE_TIME = 1000 * 60;
 /**
  * The amount of time between checking a user's mouse for activity.
  */
-export const DEFAULT_USER_MOUSE_CHECK_TIME = 1000 * 10;
+export const DEFAULT_USER_ACTIVE_CHECK_INTERVAL = 1000 * 10;
 
 /**
  * The distance that the user needs to move before updating their position.
  */
 export const DEFAULT_USER_MOVEMENT_INCREMENT = 0.1;
+
+/**
+ * The angle that the user needs to rotate before updating their position.
+ */
+export const DEFAULT_USER_ROTATION_INCREMENT = 1 * (Math.PI/180);
 
 /**
  * Defines a class that represents a mesh for an "user" file.
@@ -38,9 +44,7 @@ export class UserMesh extends GameObject {
 
     private _gameView: GameView;
     private _context: FileCalculationContext;
-    private _lastMouseCheckTime: number;
-    private _lastMousePosition: Vector2;
-    
+    private _lastActiveCheckTime: number;
 
     /**
      * The data for the mesh.
@@ -61,6 +65,11 @@ export class UserMesh extends GameObject {
      * The container for the meshes.
      */
     container: Object3D;
+
+    /**
+     * The label for the file.
+     */
+    label: Text3D;
 
     /**
      * Event that is fired when this file mesh is updated.
@@ -104,6 +113,9 @@ export class UserMesh extends GameObject {
             this.container = new Object3D();
             this.camera = new PerspectiveCamera(60, 1, 0.1, 0.5);
             this.cameraHelper = new CameraHelper(this.camera);
+            this.label = createLabel(this._gameView, this.cameraHelper);
+            this.label.setScale(Text3D.defaultScale * 2);
+            this.label.setRotation(0, 180, 0);
             this.container.add(this.cameraHelper);
             this.add(this.camera);
             this.add(this.container);
@@ -114,6 +126,8 @@ export class UserMesh extends GameObject {
 
         // Tag: _position && scale
         this._tagUpdatePosition();
+
+        this._tagUpdateLabel();
 
         this.cameraHelper.update();
 
@@ -133,11 +147,19 @@ export class UserMesh extends GameObject {
         if(isOwnFile) {
             const camPosition = this._gameView.camera.position;
             const camRotation = this._gameView.camera.rotation;
+            const camRotationVector = new Vector3(0, 0, 1).applyEuler(camRotation);
             const currentPosition = this.file.tags._position;
-            // TODO: Check distance
+            const currentRotation = new Euler(
+                this.file.tags._rotation.x,
+                this.file.tags._rotation.y,
+                this.file.tags._rotation.z,
+            );
+
+            const currentRotationVector = new Vector3(0, 0, 1).applyEuler(currentRotation);
             const distance = camPosition.distanceTo(new Vector3(currentPosition.x, currentPosition.y, currentPosition.z));
-            if (distance > DEFAULT_USER_MOVEMENT_INCREMENT) {
-                appManager.fileManager.updateUserFile(this.file, {
+            const angle = camRotationVector.angleTo(currentRotationVector);
+            if (distance > DEFAULT_USER_MOVEMENT_INCREMENT || angle > DEFAULT_USER_ROTATION_INCREMENT) {
+                appManager.fileManager.updateFile(this.file, {
                     tags: {
                         _position: {
                             x: camPosition.x,
@@ -158,23 +180,15 @@ export class UserMesh extends GameObject {
     }
 
     private _checkIsActive() {
-        const timeBetweenChecks = Date.now() - this._lastMouseCheckTime;
-        if (!this._lastMouseCheckTime || timeBetweenChecks > DEFAULT_USER_MOUSE_CHECK_TIME) {
-            this._lastMouseCheckTime = Date.now();
-            if (this._checkMousePosition()) {
-                appManager.fileManager.updateUserFile(this.file, {});
-            }
+        const timeBetweenChecks = Date.now() - this._lastActiveCheckTime;
+        if (!this._lastActiveCheckTime || timeBetweenChecks > DEFAULT_USER_ACTIVE_CHECK_INTERVAL) {
+            this._lastActiveCheckTime = Date.now();
+            appManager.fileManager.updateFile(this.file, {
+                tags: {
+                    _lastActiveTime: Date.now()
+                }
+            });
         }
-    }
-
-    private _checkMousePosition() {
-        const mousePos = this._gameView.input.getMouseScreenPos();
-        if (this._lastMousePosition) {
-            const dist = mousePos.distanceTo(this._lastMousePosition);
-            return dist > 0.01;
-        }
-        this._lastMousePosition = mousePos;
-        return false;
     }
 
     private _isActive(): boolean {
@@ -207,6 +221,37 @@ export class UserMesh extends GameObject {
         // Three render function does this automatically but there are functions in here that depend
         // on accurate positioning of child objects.
         this.camera.updateMatrixWorld(false);
+    }
+
+    private _tagUpdateLabel(): void {
+
+        let label = this.file.tags.label || this.file.id;
+
+        if (label) {
+
+            if (isFormula(label)) {
+                let calculatedValue = appManager.fileManager.calculateFormattedFileValue(this.file, 'label');
+                this.label.setText(calculatedValue);
+            } else {
+                this.label.setText(label);
+            }
+
+            this.label.setPositionForObject(this.camera);
+
+            // let labelColor = this.file.tags['label.color'];
+            // if (labelColor) {
+
+            //     if (isFormula(labelColor)) {
+            //         let calculatedValue = appManager.fileManager.calculateFormattedFileValue(this.file, 'label.color');
+            //         this.label.setColor(this._getColor(calculatedValue));
+            //     } else {
+            //         this.label.setColor(this._getColor(labelColor));
+            //     }
+            // }
+
+        } else {
+            this.label.setText("");
+        }
     }
 
 }
