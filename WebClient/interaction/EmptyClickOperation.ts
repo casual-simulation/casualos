@@ -37,15 +37,21 @@ export class EmptyClickOperation implements IOperation {
             const distance = curScreenPos.distanceTo(this._startScreenPos);
 
             if (distance < EmptyClickOperation.DragThreshold) {
-                // When we release the empty click, make sure we are still over nothing.
-                const screenPos = this._gameView.input.getMouseScreenPos();
-                const raycastResult = Physics.raycastAtScreenPos(screenPos, new Raycaster(), this._interaction.getDraggableObjects(), this._gameView.camera);
-                const clickedObject = Physics.firstRaycastHit(raycastResult);
 
-                if (!clickedObject) {
-                    // Still not clicking on anything.
-                    this._interaction.sceneBackgroundColorPicker(this._gameView.input.getMousePagePos());
+                if (this._interaction.mode === 'worksurfaces') {
+
+                    // When we release the empty click, make sure we are still over nothing.
+                    const screenPos = this._gameView.input.getMouseScreenPos();
+                    const raycastResult = Physics.raycastAtScreenPos(screenPos, new Raycaster(), this._interaction.getDraggableObjects(), this._gameView.camera);
+                    const clickedObject = Physics.firstRaycastHit(raycastResult);
+    
+                    if (!clickedObject) {
+                        // Still not clicking on anything.
+                        this._interaction.sceneBackgroundColorPicker(this._gameView.input.getMousePagePos());
+                    }
+                    
                 }
+
             }
 
             // Button has been released. This click operation is finished.
