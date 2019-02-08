@@ -16,12 +16,11 @@ import { File, Object, Workspace } from '../../common/Files'
 import { Text3D } from './Text3D';
 
 // Assets
-import robotoFont from '../public/bmfonts/Roboto.json';
-import robotoTexturePath from '../public/bmfonts/Roboto.png';
 import GameView from "WebClient/GameView/GameView";
 import { WorkspaceMesh } from "./WorkspaceMesh";
 import { FileMesh } from "./FileMesh";
 import { ArgEvent } from '../../common/Events';
+import { UserMesh } from "./UserMesh";
 
 /**
  * Defines an object that groups Three.js related information
@@ -37,7 +36,7 @@ export class File3D {
     /**
      * The 3D mesh that represents the file.
      */
-    public mesh: WorkspaceMesh | FileMesh;
+    public mesh: WorkspaceMesh | FileMesh | UserMesh;
 
     /**
      * The GameView that manages this file3d.
@@ -96,8 +95,12 @@ export class File3D {
         this._gameView.scene.remove(this.mesh);
     }
 
-    private _createFile(file: File): FileMesh {
-        return new FileMesh(this._gameView);
+    private _createFile(file: Object): FileMesh | UserMesh {
+        if (file.tags._user) {
+            return new UserMesh(this._gameView);
+        } else {
+            return new FileMesh(this._gameView);
+        }
     }
 
     private _createWorkSurface(data: Workspace) {

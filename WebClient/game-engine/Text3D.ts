@@ -10,7 +10,8 @@ import {
     Vector3,
     Box3,
     RawShaderMaterial,
-    LinearFilter} from "three";
+    LinearFilter,
+    Euler} from "three";
 
 import createBMFont, { TextGeometry, TextGeometryOptions } from "three-bmfont-text";
 import GameView from "../GameView/GameView";
@@ -203,5 +204,20 @@ export class Text3D {
     public setParent(parent: Object3D) {
         SceneUtils.detach(this._anchor, this._anchor.parent, this._gameView.scene);
         SceneUtils.attach(this._anchor, this._gameView.scene, parent);
+    }
+
+    public setRotation(x?: number, y?: number, z?: number) {
+        let nextRotation = new Euler().copy(this._anchor.rotation);
+        if (!(x === null || typeof x === 'undefined')) {
+            nextRotation.x = x * (Math.PI / 180);
+        }
+        if (!(y === null || typeof y === 'undefined')) {
+            nextRotation.y = y * (Math.PI / 180);
+        }
+        if (!(z === null || typeof z === 'undefined')) {
+            nextRotation.z = z * (Math.PI / 180);
+        }
+
+        this._anchor.rotation.copy(nextRotation);
     }
 }
