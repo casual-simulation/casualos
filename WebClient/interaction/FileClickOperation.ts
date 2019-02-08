@@ -7,6 +7,8 @@ import GameView from '../GameView/GameView';
 import { InteractionManager } from './InteractionManager';
 import { UserMode, File } from 'common/Files';
 import { Physics } from '../game-engine/Physics';
+import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
+import { appManager } from '../AppManager';
 
 /**
  * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
@@ -53,7 +55,7 @@ export class FileClickOperation implements IOperation {
 
                     this._triedDragging = true;
 
-                    if (this.canDragFile(this._file.file)) {
+                    if (this._interaction.isInCorrectMode(this._file.file) && this.canDragFile(this._file.file)) {
                         this._dragOperation = new FileDragOperation(this._gameView, this._interaction, this._hit, this._file, workspace);
                     }
                 }
@@ -73,12 +75,31 @@ export class FileClickOperation implements IOperation {
             if (!this._dragOperation && !this._triedDragging) {
                 // If we let go of the mouse button without starting a drag operation, this constitues a 'click'.
                 if (this._file.file.type === 'object') {
-                    // Select the file we are operating on.
-                    this._interaction.selectFile(this._file);
+
+                    if (this._interaction.isInCorrectMode(this._file.file)) {
+                        // Select the file we are operating on.
+                        this._interaction.selectFile(this._file);
+                    }
 
                     // If we're clicking on a workspace show the context menu for it.
                 } else if(this._file.file.type === 'workspace') {
-                    this._interaction.showContextMenu();
+
+                    if (this._interaction.isInCorrectMode(this._file.file)) {
+                        this._interaction.showContextMenu();
+                    } else {
+                        // Create file at clicked workspace position.
+                        let workspaceMesh = <WorkspaceMesh>this._file.mesh;
+                        let closest = workspaceMesh.closestTileToPoint(this._hit.point);
+
+                        if (closest) {
+                            let tags = {
+                              _position: { x: closest.tile.gridPosition.x, y: closest.tile.gridPosition.y, z: closest.tile.localPosition.y },
+                              _workspace: this._file.file.id
+                            };
+
+                            appManager.fileManager.createFile(undefined, tags);
+                        }
+                    }
                 }
             }
 
