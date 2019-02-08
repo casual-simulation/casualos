@@ -134,7 +134,7 @@ export default class Home extends Vue {
     async created() {
         this.isLoading = true;
 
-        this.isOpen = true;
+        this.isOpen = false;
 
         this._subs = [];
         this.files = [];
