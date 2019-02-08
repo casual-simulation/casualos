@@ -14,6 +14,7 @@ import { isArray, parseArray, isFormula, getShortId, fileFromShortId, objectsAtG
 import { appManager } from '../AppManager';
 import { FileManager } from "WebClient/FileManager";
 import { createLabel } from "./utils";
+import { WorkspaceMesh } from "./WorkspaceMesh";
 
 /**
  * Defines a class that represents a mesh for an "object" file.
@@ -171,7 +172,7 @@ export class FileMesh extends GameObject {
         const scale = this._calculateScale(workspace);
         const cubeScale = calculateScale(this._context, this.file, scale);
         if (workspace && workspace.file.type === 'workspace') {
-            this.parent = workspace.mesh;
+            this.parent = (<WorkspaceMesh>workspace.mesh).container;
             this.cubeContainer.scale.set(cubeScale.x, cubeScale.y, cubeScale.z);
             this.cubeContainer.position.set(0, cubeScale.y / 2, 0);
         } else {

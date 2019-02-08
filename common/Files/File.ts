@@ -59,6 +59,7 @@ export interface Workspace {
     gridScale: number | null;
     defaultHeight: number | null;
     color: string;
+    minimized?: boolean | null;
 }
 
 /**
@@ -117,6 +118,7 @@ export interface PartialFile {
     scale?: number;
     gridScale?: number;
     color?: string;
+    minimized?: boolean | null;
 }
 
 /**
@@ -138,6 +140,11 @@ export const DEFAULT_WORKSPACE_HEIGHT = .1;
  * The default scale for workspaces.
  */
 export const DEFAULT_WORKSPACE_SCALE = 2;
+
+/**
+ * The default scale for mini workspaces.
+ */
+export const DEFAULT_MINI_WORKSPACE_SCALE = .2;
 
 /**
  * The default grid scale for workspaces.

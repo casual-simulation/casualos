@@ -1,7 +1,7 @@
 import { Object3D, Vector3, Color } from "three";
-import { HexGridMesh, HexGrid, HexMesh, keyToPos } from "./hex";
+import { HexGridMesh, HexGrid, HexMesh, keyToPos, Axial } from "./hex";
 import { GridMesh } from "./grid/GridMesh";
-import { Workspace, File, objDiff, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_GRID_SCALE } from "common/Files";
+import { Workspace, File, objDiff, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_GRID_SCALE, DEFAULT_MINI_WORKSPACE_SCALE } from "common/Files";
 import { keys, minBy } from "lodash";
 import { GridChecker, GridCheckResults } from "./grid/GridChecker";
 import { GameObject } from "./GameObject";
@@ -32,6 +32,16 @@ export class WorkspaceMesh extends GameObject {
     workspace: Workspace;
 
     /**
+     * The container for everything on the workspace.
+     */
+    container: Object3D;
+
+    /**
+     * The mini hex that is shown when the mesh is in mini mode.
+     */
+    miniHex: HexMesh;
+
+    /**
      * Sets the visibility of the grids on this workspace.
      */
     set gridsVisible(visible: boolean) {
@@ -53,6 +63,14 @@ export class WorkspaceMesh extends GameObject {
      */
     constructor() {
         super();
+        this.container = new Object3D();
+        this.miniHex = new HexMesh(
+            new Axial(0, 0), 
+            DEFAULT_MINI_WORKSPACE_SCALE, 
+            DEFAULT_WORKSPACE_HEIGHT);
+        this.miniHex.visible = false;
+        this.add(this.container);
+        this.add(this.miniHex);
         this._debugInfo = {
             id: this.id,
             gridChecker: null
@@ -99,6 +117,8 @@ export class WorkspaceMesh extends GameObject {
         this.workspace = (<Workspace>workspace) || prev;
 
         this.visible = !!this.workspace.position;
+        this.container.visible = !this.workspace.minimized;
+        this.miniHex.visible = !this.container.visible;
         if (!this.workspace.position) {
             return;
         }
@@ -128,6 +148,7 @@ export class WorkspaceMesh extends GameObject {
             let color = new Color(this.workspace.color);
             let hexes = this.hexGrid.hexes;
             hexes.forEach((h) => { h.color = color; });
+            this.miniHex.color = color;
         }
 
         this.updateMatrixWorld(false);
@@ -164,8 +185,8 @@ export class WorkspaceMesh extends GameObject {
             hex.height = nextHeight;
         });
         
-        this.colliders = [...this.hexGrid.hexes];
-        this.add(this.hexGrid);
+        this.colliders = [...this.hexGrid.hexes, this.miniHex];
+        this.container.add(this.hexGrid);
     }
 
     /**
@@ -174,7 +195,7 @@ export class WorkspaceMesh extends GameObject {
      */
     async updateSquareGrids(checker: GridChecker) {
         if (this.squareGrids) {
-            this.remove(...this.squareGrids);
+            this.container.remove(...this.squareGrids);
         }
 
         checker.tileRatio = this.workspace.gridScale || DEFAULT_WORKSPACE_GRID_SCALE;
@@ -182,7 +203,7 @@ export class WorkspaceMesh extends GameObject {
         const levels = results.levels;
         this.squareGrids = levels.map(l => new GridMesh(l));
         this.squareGrids.forEach(grid => grid.visible = false);
-        this.add(...this.squareGrids);
+        this.container.add(...this.squareGrids);
         return results;
     }
 

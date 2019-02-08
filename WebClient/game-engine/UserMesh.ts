@@ -10,7 +10,7 @@ import { File3D } from "./File3D";
 import { ArgEvent } from '../../common/Events';
 import { Arrow3D } from "./Arrow3D";
 import { find, flatMap, sumBy, sortBy } from "lodash";
-import { isArray, parseArray, isFormula, getShortId, fileFromShortId, objectsAtGridPosition, FileCalculationContext, calculateFileValue, calculateNumericalTagValue } from 'common/Files/FileCalculations'
+import { isArray, parseArray, isFormula, getShortId, fileFromShortId, objectsAtGridPosition, FileCalculationContext } from 'common/Files/FileCalculations'
 import { appManager } from '../AppManager';
 import { FileManager } from "WebClient/FileManager";
 import { createLabel } from "./utils";

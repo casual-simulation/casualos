@@ -23,7 +23,7 @@ import { FileMesh } from '../game-engine/FileMesh';
 import { Axial, realPosToGridPos, gridDistance, keyToPos, posToKey } from '../game-engine/hex';
 import { MouseButtonId } from '../game-engine/input';
 import { isBuffer } from 'util';
-import { objectsAtGridPosition, tagsMatchingFilter } from 'common/Files/FileCalculations';
+import { objectsAtGridPosition, tagsMatchingFilter, isMinimized } from 'common/Files/FileCalculations';
 import { ColorPickerEvent } from './ColorPickerEvent';
 import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';
@@ -259,6 +259,19 @@ export class InteractionManager {
     }
 
     /**
+     * Minimizes or maximizes the given workspace.
+     * @param file 
+     */
+    public minimizeWorkspace(file: File3D) {
+        if (file && file.file.type === 'workspace') {
+            const minimized = !isMinimized(file.file);
+            this._gameView.fileManager.updateFile(file.file, {
+                minimized: minimized
+            });
+        }
+    }
+
+    /**
      * Calculates the grid location and workspace that the given ray intersects with.
      * @param ray The ray to test.
      */
@@ -428,7 +441,7 @@ export class InteractionManager {
 
     public getDraggableObjects() {
         if (this._draggableObjectsDirty) {
-            this._draggableColliders = flatMap(this._gameView.getFiles(), f => f.mesh.colliders);
+            this._draggableColliders = flatMap(this._gameView.getFiles(), f => f.mesh.colliders);//.filter(c => this._isVisible(c));
             this._draggableObjectsDirty = false;
         }
         return this._draggableColliders;
@@ -449,6 +462,16 @@ export class InteractionManager {
         return clickedObject === undefined || clickedObject === null;
     }
 
+    private _isVisible(obj: Object3D) {
+        while(obj) {
+            if (!obj.visible) {
+                return false;
+            }
+            obj = obj.parent;
+        }
+        return true;
+    }
+
     private _contextMenuActions(file: File3D, point: Vector3, pagePos: Vector2): ContextMenuAction[] {
         let actions: ContextMenuAction[] = [];
         if (file.mesh instanceof WorkspaceMesh && file.file.type === 'workspace') {
@@ -458,29 +481,37 @@ export class InteractionManager {
             const currentHeight = (!!currentTile ? currentTile.height : (file.file.defaultHeight || DEFAULT_WORKSPACE_HEIGHT)) || DEFAULT_WORKSPACE_HEIGHT;
             const increment = DEFAULT_WORKSPACE_HEIGHT_INCREMENT; // TODO: Replace with a configurable value.
             const minHeight = DEFAULT_WORKSPACE_MIN_HEIGHT; // TODO: This too
+            const minimized = isMinimized(file.file);
 
-            actions.push({ label: 'Raise', onClick: () => this.updateTileHeightAtGridPosition(file, tile, currentHeight + increment) });
-            if (currentTile && currentHeight - increment >= minHeight) {
-                actions.push({ label: 'Lower', onClick: () => this.updateTileHeightAtGridPosition(file, tile, currentHeight - increment) });
-            }
-
-            actions.push({ label: 'Expand', onClick: () => this.expandWorkspace(file) });
-            if (this.canShrinkWorkspace(file)) {
-                actions.push({ label: 'Shrink', onClick: () => this.shrinkWorkspace(file) });
-            }
-
-            actions.push({ label: 'Change Color', onClick: () => {    
+            if (!minimized) {
+                actions.push({ label: 'Raise', onClick: () => this.updateTileHeightAtGridPosition(file, tile, currentHeight + increment) });
+                if (currentTile && currentHeight - increment >= minHeight) {
+                    actions.push({ label: 'Lower', onClick: () => this.updateTileHeightAtGridPosition(file, tile, currentHeight - increment) });
+                }
                 
-                // This function is invoked as the color picker changes the color value.
-                let colorUpdated = (hexColor: string) => {
-                    appManager.fileManager.updateFile(file.file, { color: hexColor });
-                };
+                actions.push({ label: 'Expand', onClick: () => this.expandWorkspace(file) });
+                if (this.canShrinkWorkspace(file)) {
+                    actions.push({ label: 'Shrink', onClick: () => this.shrinkWorkspace(file) });
+                }
+            }
 
-                let workspace = <Workspace>file.file;
-                let colorPickerEvent: ColorPickerEvent = { pagePos: pagePos, initialColor: workspace.color, colorUpdated: colorUpdated };
+            const minimizedLabel = minimized ? 'Maximize' : 'Minimize';
+            actions.push({ label: minimizedLabel, onClick: () => this.minimizeWorkspace(file) });
 
-                EventBus.$emit('onColorPicker', colorPickerEvent);
-            }});
+            if (!minimized) {
+                actions.push({ label: 'Change Color', onClick: () => {    
+                    
+                    // This function is invoked as the color picker changes the color value.
+                    let colorUpdated = (hexColor: string) => {
+                        appManager.fileManager.updateFile(file.file, { color: hexColor });
+                    };
+                    
+                    let workspace = <Workspace>file.file;
+                    let colorPickerEvent: ColorPickerEvent = { pagePos: pagePos, initialColor: workspace.color, colorUpdated: colorUpdated };
+                    
+                    EventBus.$emit('onColorPicker', colorPickerEvent);
+                }});
+            }
 
         }
 

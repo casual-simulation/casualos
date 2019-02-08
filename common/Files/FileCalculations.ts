@@ -44,12 +44,20 @@ export interface FileCalculationContext {
     /**
      * The objects in the context.
      */
-    objects: Object[]
+    objects: Object[];
 
     /**
      * The sandbox that should be used to run JS.
      */
     sandbox: Sandbox;
+}
+
+/**
+ * Determines if the given workspace is currently minimized.
+ * @param workspace The workspace.
+ */
+export function isMinimized(workspace: Workspace) {
+    return !!workspace.minimized;
 }
 
 /**
