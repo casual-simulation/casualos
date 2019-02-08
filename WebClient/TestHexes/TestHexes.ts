@@ -244,7 +244,8 @@ export default class GameView extends Vue {
       },
       scale: 0.5,
       gridScale: .2,
-      defaultHeight: 0.1
+      defaultHeight: 0.1,
+      color: "#999999"
     };
     const workspaceMesh = new WorkspaceMesh();
     await workspaceMesh.update(workspace);

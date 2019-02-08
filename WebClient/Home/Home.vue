@@ -21,16 +21,16 @@
             </md-card-content>
           </md-card>
           <div  v-else-if="filesMode" class="outside-toggle">
-            <file-table-toggle :files="files" @click="toggleOpen()"></file-table-toggle>
+            <file-table-toggle :files="files" :raised="true" @click="toggleOpen()"></file-table-toggle>
           </div>
         </div>
       </game-view>
 
       <div class="context-menu" :style="contextMenuStyle">
-        <md-menu v-show="context" :md-active.sync="contextMenuVisible">
+        <md-menu v-show="contextMenuEvent" :md-active.sync="contextMenuVisible">
           <md-menu-content>
-            <div v-if="context">
-              <md-menu-item v-for="item of context.actions" v-bind:key="item.label" @click="item.onClick">
+            <div v-if="contextMenuEvent">
+              <md-menu-item v-for="item of contextMenuEvent.actions" v-bind:key="item.label" @click="item.onClick">
                 {{item.label}}
               </md-menu-item>
             </div>
@@ -40,6 +40,10 @@
           </md-menu-content>
         </md-menu>
       </div>
+
+      <color-picker></color-picker>
+
+      
   </div>
   
 </template>

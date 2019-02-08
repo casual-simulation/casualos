@@ -45,7 +45,8 @@ describe('FilesChannel', () => {
                     grid: {},
                     scale: 0.5,
                     defaultHeight: 0.1,
-                    gridScale: 0.2
+                    gridScale: 0.2,
+                    color: "#999999"
                 };
                 const state = {};
                 const newState = filesReducer(state, fileAdded(file));
@@ -67,7 +68,8 @@ describe('FilesChannel', () => {
                         grid: {},
                         scale: 0.5,
                         defaultHeight: 0.1,
-                        gridScale: 0.2
+                        gridScale: 0.2,
+                        color: "#999999"
                     }
                 };
                 const newState = filesReducer(state, fileRemoved('test'));
@@ -86,7 +88,8 @@ describe('FilesChannel', () => {
                     grid: {},
                     scale: 0.5,
                     defaultHeight: 0.1,
-                    gridScale: 0.2
+                    gridScale: 0.2,
+                    color: "#999999"
                 };
                 const state: FilesState = {
                     test: test
@@ -196,6 +199,7 @@ describe('FilesChannel', () => {
                     scale: 1,
                     size: 1,
                     position: { x: 0, y: 0, z: 0 },
+                    color: "#999999"
                 }
             };
 
@@ -389,7 +393,8 @@ describe('FilesChannel', () => {
                     grid: {},
                     scale: 0.5,
                     defaultHeight: 0.1,
-                    gridScale: 0.2
+                    gridScale: 0.2,
+                    color: "#999999"
                 }
             };
             const currState: FilesState = {
@@ -413,7 +418,8 @@ describe('FilesChannel', () => {
                     grid: {},
                     scale: 0.5,
                     defaultHeight: 0.1,
-                    gridScale: 0.2
+                    gridScale: 0.2,
+                    color: "#999999"
                 }
             };
             const currState: FilesState = {
@@ -446,7 +452,8 @@ describe('FilesChannel', () => {
                     grid: {},
                     scale: 0.5,
                     defaultHeight: 0.1,
-                    gridScale: 0.2
+                    gridScale: 0.2,
+                    color: "#999999"
                 }
             };
             const currState: FilesState = {};
@@ -469,7 +476,8 @@ describe('FilesChannel', () => {
                     grid: {},
                     scale: 0.5,
                     defaultHeight: 0.1,
-                    gridScale: 0.2
+                    gridScale: 0.2,
+                    color: "#999999"
                 },
                 'updated': {
                     type: 'object',
@@ -510,7 +518,8 @@ describe('FilesChannel', () => {
                     grid: {},
                     scale: 0.5,
                     defaultHeight: 0.1,
-                    gridScale: 0.2
+                    gridScale: 0.2,
+                    color: "#999999"
                 },
                 'removed': {
                     type: 'workspace',
@@ -520,7 +529,8 @@ describe('FilesChannel', () => {
                     grid: {},
                     scale: 0.5,
                     defaultHeight: 0.1,
-                    gridScale: 0.2
+                    gridScale: 0.2,
+                    color: "#999999"
                 },
                 'updated': {
                     type: 'object',
@@ -580,7 +590,8 @@ describe('FilesChannel', () => {
                     grid: {},
                     scale: 0.5,
                     defaultHeight: 0.1,
-                    gridScale: 0.2
+                    gridScale: 0.2,
+                    color: "#999999"
                 },
             };
             const currState: FilesState = {
@@ -618,7 +629,8 @@ describe('FilesChannel', () => {
                     grid: {},
                     scale: 0.5,
                     defaultHeight: 0.1,
-                    gridScale: 0.2
+                    gridScale: 0.2,
+                    color: "#999999"
                 },
                 'old': {
                     type: 'object',
@@ -656,7 +668,8 @@ describe('FilesChannel', () => {
                     grid: {},
                     scale: 0.5,
                     defaultHeight: 0.1,
-                    gridScale: 0.2
+                    gridScale: 0.2,
+                    color: "#999999"
                 },
             };
             const currState: FilesState = {
@@ -668,7 +681,8 @@ describe('FilesChannel', () => {
                     grid: {},
                     scale: 0.5,
                     defaultHeight: 0.1,
-                    gridScale: 0.2
+                    gridScale: 0.2,
+                    color: "#999999"
                 },
             };
 
@@ -697,7 +711,8 @@ describe('FilesChannel', () => {
                     grid: {},
                     scale: 0.5,
                     defaultHeight: 0.1,
-                    gridScale: 0.2
+                    gridScale: 0.2,
+                    color: "#999999"
                 },
                 'removed': {
                     type: 'workspace',
@@ -707,7 +722,8 @@ describe('FilesChannel', () => {
                     grid: {},
                     scale: 0.5,
                     defaultHeight: 0.1,
-                    gridScale: 0.2
+                    gridScale: 0.2,
+                    color: "#999999"
                 },
                 'updated': {
                     type: 'object',
@@ -1438,7 +1454,8 @@ describe('FilesChannel', () => {
                     grid: {},
                     scale: 0.5,
                     defaultHeight: 0.1,
-                    gridScale: 0.2
+                    gridScale: 0.2,
+                    color: "#999999"
                 }
             };
             const parent2: FilesState = {};
@@ -1455,7 +1472,8 @@ describe('FilesChannel', () => {
                     grid: {},
                     scale: 0.5,
                     defaultHeight: 0.1,
-                    gridScale: 0.2
+                    gridScale: 0.2,
+                    color: "#999999"
                 }
             });
 
@@ -1470,7 +1488,8 @@ describe('FilesChannel', () => {
                     grid: {},
                     scale: 0.5,
                     defaultHeight: 0.1,
-                    gridScale: 0.2
+                    gridScale: 0.2,
+                    color: "#999999"
                 }
             });
         });

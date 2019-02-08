@@ -20,8 +20,8 @@ export class CameraControls {
 
     // How far you can orbit vertically, upper and lower limits.
     // Range is 0 to Math.PI radians.
-    public minPolarAngle: number = 0; // radians
-    public maxPolarAngle: number = Math.PI; // radians
+    public minPolarAngle: number = ThreeMath.degToRad(0); // radians
+    public maxPolarAngle: number = ThreeMath.degToRad(80); // radians
 
     // How far you can orbit horizontally, upper and lower limits.
     // If set, must be a sub-interval of the interval [ - Math.PI, Math.PI ].
@@ -440,7 +440,7 @@ export class CameraControls {
                         (this.touchRotateEnd.finger0.y + this.touchRotateEnd.finger1.y) / 2
                     );
 
-                    let midpointDelta = new Vector2().subVectors(startMidpoint, endMidpoint).multiplyScalar(this.rotateSpeed);
+                    let midpointDelta = new Vector2().subVectors(endMidpoint, startMidpoint).multiplyScalar(this.rotateSpeed);
                     let yAngle = 2 * Math.PI * midpointDelta.y / this._gameView.gameView.clientHeight;
 
                     this.rotateUp(yAngle);

@@ -2,7 +2,7 @@
 <template>
     <div id="app">
 
-            <md-toolbar class="md-primary">
+            <md-toolbar>
                 <div class="md-toolbar-section-start">
                     <md-button class="md-icon-button" @click="menuClicked()">
                         <md-icon>menu</md-icon>
@@ -31,11 +31,11 @@
                     </router-link>
                     <md-list-item @click="upload" v-if="getUser() != null">
                         <md-icon>cloud_upload</md-icon>
-                        <span class="md-list-item-text">Upload</span>
+                        <span class="md-list-item-text">Upload AUX</span>
                     </md-list-item>
                     <md-list-item @click="download" v-if="getUser() != null">
                         <md-icon>cloud_download</md-icon>
-                        <span class="md-list-item-text">Download</span>
+                        <span class="md-list-item-text">Download AUX</span>
                     </md-list-item>
                     <md-list-item @click="logout" v-if="getUser() != null">
                         <md-icon>exit_to_app</md-icon>
@@ -85,7 +85,7 @@
             <md-dialog :md-active.sync="showQRCode" class="qr-code-dialog">
                 <div class="qr-code-container">
                     <span>{{url()}}</span>
-                    <qr-code :value="url()" />
+                    <qr-code :value="url()"  :options="{ width: 310 }"/>
                 </div>
                 <md-dialog-actions>
                     <md-button class="md-primary" @click="showQRCode = false">Close</md-button>

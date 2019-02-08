@@ -104,7 +104,8 @@ describe('FileCalculations', () => {
                     gridScale: 1,
                     position: { x:0, y: 0, z: 0},
                     size: 1,
-                    scale: 1
+                    scale: 1,
+                    color: "#999999"
                 }
             };
 

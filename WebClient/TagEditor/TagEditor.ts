@@ -3,12 +3,16 @@ import Component from 'vue-class-component';
 import { Inject, Prop, Watch } from 'vue-property-decorator';
 import { validateTag } from 'common/Files/FileCalculations';
 import { appManager } from '../AppManager';
+import CombineIcon from '../public/icons/combine_icon.svg';
 
 /**
  * A component that manages the logic for editing a tag name.
  * Used for new tags and potentially for allowing users to change tag names.
  */
 @Component({
+    components: {
+        'combine-icon': CombineIcon
+    }
 })
 export default class TagEditor extends Vue {
 

@@ -4,6 +4,15 @@
     touch-action: none;
 }
 
+html.ar-app, html.ar-app body, html.ar-app .md-content {
+    background-color: transparent !important;
+}
+
+html.ar-app .webxr-sessions canvas {
+    position: relative;
+    top: 56px;
+}
+
 .game-container {
     margin: -16px;
 }
@@ -51,4 +60,13 @@
 
 .toolbar-button {
     margin: 0;
+}
+
+.md-button.md-theme-default.md-fab:not([disabled]).add-button {
+    background-color: #fff;
+    color: #777;
+}
+
+.md-button.md-theme-default.md-fab:not([disabled]).add-button .md-icon-font {
+    color: var(--md-theme-default-text-primary-on-background-variant, #777);
 }

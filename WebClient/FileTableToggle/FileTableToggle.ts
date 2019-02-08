@@ -11,6 +11,7 @@ import {File, Object} from 'common/Files';
 export default class FileTableToggle extends Vue {
     
     @Prop() files: Object[];
+    @Prop({ default: false }) raised: boolean;
     numFilesSelected: number = 0;
 
     @Watch('files')

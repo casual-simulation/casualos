@@ -1,5 +1,61 @@
 # File Simulator Changelog
 
+## V0.2.23
+### Date: 2/7/2019
+
+### Changes:
+- Made the info box default to closed.
+- Added initial version of WebXR support.
+  - Note that this is Mozilla's old crotchety WebXR and not the official standardized version.
+  - As such, it only works in Mozilla's WebXR Viewer app thing.
+  - Hopefully it doesn't break WebVR support.
+- Changed color picker to swatches style.
+- Can only change scene background color while in workspaces mode.
+- Changed `stroke.linewidth` to be `stroke.width`.
+
+## V0.2.22
+### Date: 2/7/2019
+
+### Changes:
+- Color Picker component is now more generic. It invokes a callback function every time the color value changes that you can use to get the color value.
+- Made the QR code larger.
+- Change the scene’s background color by clicking on it and using the color picker.
+- Make basically all the text gray (title bar text, mode switch, add buttons, and the hamburger).
+- Changed color picker type to Compact style.
+
+## V0.2.21
+### Date: 2/7/2019
+
+### Changes:
+- Changed the top bar and other buttons to have a white background.
+- Changed the red badge on the pencil to be a neutral gray.
+- Changed the actions icon.
+- Added a grid that is visible in hex edit mode.
+
+## V0.2.20
+### Date: 2/7/2019
+
+### Changes:
+- Added color picker component.
+- Can change workspace color using color picker from the context menu.
+- Inverted touch input vertical rotation. 
+- Clamping vertical rotation so that you can’t rotate underneath the ground plane.
+  
+## V0.2.19
+### Date: 2/6/2019
+
+### Changes:
+- Added `stroke.linewidth` to control how thick the stroke lines are.
+- Removed the Skybox.
+- Added the ability to change the vertical tilt of the camera by using two fingers and panning up and down. 
+- Reworked the files panel to be easier to use.
+  - Added "+action" button for creating actions.
+  - Moved the "+tag" and "+action" buttons above the file table.
+  - Moved the "Clear selection" button to the header row on the file table.
+  - It still needs some of the scrolling features like not scrolling the header while scrolling the body of the table but for the most part it's done.
+  - Also needs the auto-zoom feature for users. After looking at possible implementations I've discovered that it should be easier to do this when the "seeing other people" update arrives.
+
+
 ## V0.2.18
 ### Date: 2/5/2019
 

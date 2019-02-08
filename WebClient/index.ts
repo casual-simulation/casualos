@@ -34,8 +34,13 @@ import Home from './Home/Home';
 import Editor from './Editor/Editor';
 import MergeConflicts from './MergeConflicts/MergeConflicts';
 
+// Import the WebXR Polyfill
+import 'webxr-polyfill';
+
 // Setup the Promise shim for browsers that don't support promises.
 polyfill();
+
+
 
 Vue.use(VueRouter);
 Vue.use(MdButton);

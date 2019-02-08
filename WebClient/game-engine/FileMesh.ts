@@ -388,7 +388,7 @@ export class FileMesh extends GameObject {
 
         this.stroke.visible = true;
         const colorValue = appManager.fileManager.calculateFileValue(this.file, 'stroke.color');
-        const linewidth:number = appManager.fileManager.calculateFileValue(this.file, 'stroke.linewidth');
+        const width:number = appManager.fileManager.calculateFileValue(this.file, 'stroke.width');
 
         const material = <LineBasicMaterial>this.stroke.material;
         if (typeof colorValue !== 'undefined') {
@@ -397,8 +397,8 @@ export class FileMesh extends GameObject {
             material.color = new Color(0x999999);
         }
 
-        if(typeof linewidth !== 'undefined'){
-            material.linewidth = linewidth;
+        if(typeof width !== 'undefined'){
+            material.linewidth = width;
         } else {
             material.linewidth = 1;
         }
