@@ -64,53 +64,9 @@ export default class Home extends Vue {
     get filesMode() { return this.mode === 'files'; }
     get workspacesMode() { return this.mode === 'worksurfaces'; }
 
-    private table() {
-        return this.$refs.table as FileTable;
-    }
-
-    isMakingNewTag() {
-        const table=  this.table();
-        if (table) {
-            return table.isMakingNewTag;
-        } else {
-            return false;
-        }
-    }
 
     toggleOpen() {
         this.isOpen = !this.isOpen;
-    }
-
-    addTag() {
-        this.table().addTag();
-    }
-
-    addAction() {
-        this.table().addTag(true);
-    }
-
-    cancelTag() {
-        this.table().cancelNewTag();
-    }
-
-    setNewTag(value: string) {
-        this.table().newTag = value;
-    }
-
-    getNewTag() {
-        return this.table().newTag;
-    }
-
-    newTagExists() {
-        return this.table().newTagExists;
-    }
-
-    isMakingNewAction() {
-        return this.table().isMakingNewAction;
-    }
-
-    newTagValidityUpdated(valid: boolean) {
-        return this.table().newTagValidityUpdated(valid);
     }
 
     handleContextMenu(event: ContextMenuEvent) {
@@ -125,6 +81,10 @@ export default class Home extends Vue {
             this.contextMenuStyle.top = event.pagePos.y + 'px';
             this.contextMenuVisible = true;
         });
+    }
+
+    tagFocusChanged({ file, tag, focused }: { file: Object, tag: string, focused: boolean }) {
+        this.fileManager.setEditedFile(file);
     }
 
     constructor() {

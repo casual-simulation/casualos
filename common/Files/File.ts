@@ -11,6 +11,11 @@ export interface Object {
             y: number;
             z: number;
         } | null;
+        _rotation?: {
+            x?: number;
+            y?: number;
+            z?: number;
+        };
         _hidden?: boolean;
         _selection?: string;
         _destroyed?: any;
@@ -18,6 +23,8 @@ export interface Object {
         _user?: string;
         _mode?: UserMode;
         _movable?: boolean;
+        _editingFile?: string;
+        _lastActiveTime?: number;
         ['stroke.color']?: string;
         ['stroke.width']?: number;
         ['line.to']?: string;
@@ -77,6 +84,11 @@ export interface PartialFile {
             y?: number;
             z?: number;
         };
+        _rotation?: {
+            x?: number;
+            y?: number;
+            z?: number;
+        };
         _hidden?: boolean;
         _selection?: string;
         _destroyed?: boolean;
@@ -84,6 +96,8 @@ export interface PartialFile {
         _user?: string;
         _mode?: UserMode;
         _movable?: boolean;
+        _editingFile?: string;
+        _lastActiveTime?: number;
         ['stroke.color']?: string;
         ['stroke.width']?: number;
         ['line.to']?: string;
