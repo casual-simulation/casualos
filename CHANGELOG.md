@@ -1,6 +1,20 @@
 # File Simulator Changelog
 
 ## V0.2.23
+### Date: 2/8/2019
+
+### Changes:
+- Scaled down color picker, removed scrolling, and made it slightly wider to accommodate mobile screens.
+- It is now possible to close the Color Picker by tapping on empty space (it will no longer open immediately when tapping of of it).
+- Allow camera dragging when performing click operation on file that is incompatible with the current user mode.
+- Prevent the user from changing the background color when in AR mode.
+- Added the ability to see other people and what they are looking at.
+- Added the ability to minimize worksurfaces. 
+  - While minimized they can still be dragged around but changing the size and height is not allowed.
+  - The color can still be changed though.
+- Fixed an issue where everyone would try to initialize the globals file with the default color and get a merge conflict if it was different.
+
+## V0.2.23
 ### Date: 2/7/2019
 
 ### Changes:
