@@ -10,7 +10,7 @@ import { File3D } from "./File3D";
 import { ArgEvent } from '../../common/Events';
 import { Arrow3D } from "./Arrow3D";
 import { find, flatMap, sumBy, sortBy } from "lodash";
-import { isArray, parseArray, isFormula, getShortId, fileFromShortId, objectsAtGridPosition, FileCalculationContext, calculateFileValue, calculateNumericalTagValue } from 'common/Files/FileCalculations'
+import { isArray, parseArray, isFormula, getShortId, fileFromShortId, objectsAtGridPosition, FileCalculationContext } from 'common/Files/FileCalculations'
 import { appManager } from '../AppManager';
 import { FileManager } from "WebClient/FileManager";
 import { createLabel } from "./utils";
@@ -149,11 +149,12 @@ export class UserMesh extends GameObject {
             const camRotation = this._gameView.camera.rotation;
             const camRotationVector = new Vector3(0, 0, 1).applyEuler(camRotation);
             const currentPosition = this.file.tags._position;
-            const currentRotation = new Euler(
+            
+            const currentRotation = this.file.tags._rotation ? new Euler(
                 this.file.tags._rotation.x,
                 this.file.tags._rotation.y,
                 this.file.tags._rotation.z,
-            );
+            ) : new Euler();
 
             const currentRotationVector = new Vector3(0, 0, 1).applyEuler(currentRotation);
             const distance = camPosition.distanceTo(new Vector3(currentPosition.x, currentPosition.y, currentPosition.z));
