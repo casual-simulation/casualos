@@ -106,7 +106,7 @@ export class InteractionManager {
 
             // Detect left click.
             if (input.getMouseButtonDown(MouseButtonId.Left)) {
-
+                
                 const screenPos = input.getMouseScreenPos();
                 const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this.getDraggableObjects(), this._gameView.camera);
                 const clickedObject = Physics.firstRaycastHit(raycastResult);
@@ -171,33 +171,6 @@ export class InteractionManager {
             let menuEvent: ContextMenuEvent = { pagePos: pagePos, actions: this._contextMenuActions(file, hit.point, pagePos) };
             this._gameView.$emit('onContextMenu', menuEvent);
         }
-    }
-
-    /**
-     * Opens up the color picker and allows you to change the scene's background color.
-     */
-    public sceneBackgroundColorPicker(pagePos: Vector2) {
-        
-        let globalsFile = appManager.fileManager.globalsFile;
-
-        // This function is invoked as the color picker changes the color value.
-        let colorUpdated = (hexColor: string) => {
-            appManager.fileManager.updateFile(globalsFile, { 
-                tags: { 
-                    _sceneBackgroundColor: hexColor
-                } 
-            })
-        };
-
-        let initialColor = globalsFile.tags._sceneBackgroundColor;
-        if (!initialColor) {
-            initialColor = DEFAULT_SCENE_BACKGROUND_COLOR;
-        }
-
-        let colorPickerEvent: ColorPickerEvent = { pagePos: pagePos, initialColor: initialColor, colorUpdated: colorUpdated };
-
-        EventBus.$emit('onColorPicker', colorPickerEvent);
-
     }
 
     public fileForIntersection(hit: Intersection): File3D {
@@ -467,6 +440,13 @@ export class InteractionManager {
             this._surfaceObjectsDirty = false;
         }
         return this._surfaceColliders;
+    }
+
+    public isEmptySpace(screenPos: Vector2): boolean {
+        const raycastResult = Physics.raycastAtScreenPos(screenPos, new Raycaster(), this.getDraggableObjects(), this._gameView.camera);
+        const clickedObject = Physics.firstRaycastHit(raycastResult);
+
+        return clickedObject === undefined || clickedObject === null;
     }
 
     private _contextMenuActions(file: File3D, point: Vector3, pagePos: Vector2): ContextMenuAction[] {

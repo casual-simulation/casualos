@@ -3,11 +3,13 @@ import { Swatches } from 'vue-color';
 import Component from "vue-class-component";
 import { ColorPickerEvent } from '../interaction/ColorPickerEvent';
 import { EventBus } from '../EventBus/EventBus';
+import { Prop } from 'vue-property-decorator';
+import { Vector2 } from 'three';
 
 @Component({
     components: {
         'swatch-color-picker': Swatches
-    }
+    },
 })
 export default class ColorPicker extends Vue {
 
@@ -47,7 +49,7 @@ export default class ColorPicker extends Vue {
         if (!event) return;
 
         // Force the component to disable current color picker.
-        this.close();
+        this.close(false, null);
 
         // Wait for the DOM to update with the above values and then show color picker again.
         this.$nextTick(() => {
@@ -90,15 +92,19 @@ export default class ColorPicker extends Vue {
     /**
      * Close the color picker.
      */
-    close() {
+    close(invokeCallback: boolean, inputPagePos: Vector2) {
 
         this.colorPickerVisible = false;
-        this.colorPickerEvent = null;
 
         // Stop listening for clicks on the DOM.
         document.removeEventListener('mousedown', this._handleMouseDown);
         document.removeEventListener('touchstart', this._handleTouchStart);
 
+        if (invokeCallback && this.colorPickerEvent.pickerClosed) {
+            this.colorPickerEvent.pickerClosed(inputPagePos);
+        }
+
+        this.colorPickerEvent = null;
     }
 
     onColorPickerInput() {
@@ -114,7 +120,8 @@ export default class ColorPicker extends Vue {
 
         if (event.target instanceof Element) {
             if (!this.$el.contains(event.target)){
-                this.close();
+                let inputPagePos = new Vector2(event.pageX, event.pageY);
+                this.close(true, inputPagePos);
             }
         }
 
@@ -124,7 +131,8 @@ export default class ColorPicker extends Vue {
         
         if (event.target instanceof Element) {
             if (!this.$el.contains(event.target)) {
-                this.close();
+                let inputPagePos = new Vector2(event.touches[0].pageX, event.touches[0].pageY);
+                this.close(true, inputPagePos);
             }
         }
     }

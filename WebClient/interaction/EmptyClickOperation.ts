@@ -5,8 +5,11 @@ import { Vector2, Vector3, Intersection, Raycaster } from 'three';
 import { IOperation } from './IOperation';
 import GameView from '../GameView/GameView';
 import { InteractionManager } from './InteractionManager';
-import { UserMode, File } from 'common/Files';
+import { UserMode, File, DEFAULT_SCENE_BACKGROUND_COLOR } from 'common/Files';
 import { Physics } from '../game-engine/Physics';
+import { appManager } from '../AppManager';
+import { ColorPickerEvent } from './ColorPickerEvent';
+import { EventBus } from '../EventBus/EventBus';
 
 /**
  * Empty Click Operation handles clicking of empty space for mouse and touch input with the primary (left/first finger) interaction button.
@@ -14,6 +17,7 @@ import { Physics } from '../game-engine/Physics';
 export class EmptyClickOperation implements IOperation {
 
     public static readonly DragThreshold: number = 0.02;
+    public static CanOpenColorPicker = true;
 
     private _gameView: GameView;
     private _interaction: InteractionManager;
@@ -42,16 +46,21 @@ export class EmptyClickOperation implements IOperation {
 
                     // When we release the empty click, make sure we are still over nothing.
                     const screenPos = this._gameView.input.getMouseScreenPos();
-                    const raycastResult = Physics.raycastAtScreenPos(screenPos, new Raycaster(), this._interaction.getDraggableObjects(), this._gameView.camera);
-                    const clickedObject = Physics.firstRaycastHit(raycastResult);
-    
-                    if (!clickedObject) {
+                    if (this._interaction.isEmptySpace(screenPos)) {
+
                         // Still not clicking on anything.
-                        this._interaction.sceneBackgroundColorPicker(this._gameView.input.getMousePagePos());
+                        if (EmptyClickOperation.CanOpenColorPicker) {
+                            this.sceneBackgroundColorPicker(this._gameView.input.getMousePagePos());
+                        }
+
                     }
-                    
                 }
 
+            }
+
+            if (!EmptyClickOperation.CanOpenColorPicker) {
+                // Turn color picker opening back on for the next empty click.
+                EmptyClickOperation.CanOpenColorPicker = true;
             }
 
             // Button has been released. This click operation is finished.
@@ -64,6 +73,48 @@ export class EmptyClickOperation implements IOperation {
     }
 
     public dispose(): void {
+
+    }
+
+    /**
+     * Opens up the color picker and allows you to change the scene's background color.
+     */
+    public sceneBackgroundColorPicker(pagePos: Vector2) {
+        
+        let globalsFile = appManager.fileManager.globalsFile;
+
+        // This function is invoked as the color picker changes the color value.
+        let colorUpdated = (hexColor: string) => {
+            appManager.fileManager.updateFile(globalsFile, { 
+                tags: { 
+                    _sceneBackgroundColor: hexColor
+                } 
+            })
+        };
+
+        // This function is invoked when the color picker is closed.
+        let pickerClosed = (inputPagePos: Vector2) => {
+            let screenPos = Input.screenPosition(inputPagePos, this._gameView.gameView);
+            if (this._interaction.isEmptySpace(screenPos)) {
+                // temporarily disable color picker opening, until the next empty click.
+                EmptyClickOperation.CanOpenColorPicker = false;
+            }
+        };
+
+        let initialColor = globalsFile.tags._sceneBackgroundColor;
+        if (!initialColor) {
+            initialColor = DEFAULT_SCENE_BACKGROUND_COLOR;
+        }
+
+        let colorPickerEvent: ColorPickerEvent = { 
+            pagePos: pagePos, 
+            initialColor: 
+            initialColor, 
+            colorUpdated: colorUpdated,
+            pickerClosed: pickerClosed
+         };
+
+        EventBus.$emit('onColorPicker', colorPickerEvent);
 
     }
 }

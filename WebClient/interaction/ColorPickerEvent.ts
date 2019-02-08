@@ -13,7 +13,13 @@ export interface ColorPickerEvent {
     initialColor: string;
 
     /**
-     * Function that will be invoked every time the color value is changed on the color picker.
+     * Callback function that will be invoked every time the color value is changed on the color picker.
      */
     colorUpdated: (hexColor: string) => void;
+
+    /** 
+     * Callback function that will be invoked when the color picker is closed. 
+     * @argument inputScreenPos The page position of the input when the picker was closed.
+     */
+    pickerClosed?: (inputPagePos: Vector2) => void;
   }

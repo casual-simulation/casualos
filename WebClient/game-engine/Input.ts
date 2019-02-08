@@ -402,10 +402,7 @@ export class Input {
      * @param pageY
      */
     private _calculateScreenPos(pageX: number, pageY: number): Vector2 {
-        let globalPos = new Vector2(pageX, pageY);
-        let viewRect = this._gameView.gameView.getBoundingClientRect();
-        let viewPos = globalPos.sub(new Vector2(viewRect.left, viewRect.top));
-        return new Vector2((viewPos.x / viewRect.width) * 2 - 1, -(viewPos.y / viewRect.height) * 2 + 1);
+        return Input.screenPosition(new Vector2(pageX, pageY), this._gameView.gameView);
     }
 
     private _handleMouseDown(event: MouseEvent) {
