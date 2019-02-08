@@ -4,6 +4,15 @@
     touch-action: none;
 }
 
+html.ar-app, html.ar-app body, html.ar-app .md-content {
+    background-color: transparent !important;
+}
+
+html.ar-app .webxr-sessions canvas {
+    position: relative;
+    top: 56px;
+}
+
 .game-container {
     margin: -16px;
 }

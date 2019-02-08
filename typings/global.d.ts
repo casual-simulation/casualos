@@ -3,6 +3,7 @@ declare module 'vue-material/dist/components';
 declare module '@chenfengyuan/vue-qrcode';
 declare module 'vue-filepond';
 declare module 'filepond-plugin-file-validate-type';
+declare module 'webxr-polyfill';
 
 declare module '*.svg' {
   const icon: Vue;
