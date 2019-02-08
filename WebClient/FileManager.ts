@@ -567,8 +567,7 @@ export class FileManager {
       await this.createFile('globals', {
         _hidden: true,
         _workspace: null,
-        _position: { x:0, y: 0, z: 0},
-        _sceneBackgroundColor: DEFAULT_SCENE_BACKGROUND_COLOR
+        _position: { x:0, y: 0, z: 0}
       });
     }
   }
@@ -684,6 +683,12 @@ export class FileManager {
         if (some(details.path, p => p === '_position')) {
           fixable = true;
           value = details.conflict[second]; // Take the server path for new _position data
+        } else if (some(details.path, p => p === '_rotation')) {
+            fixable = true;
+            value = details.conflict[second]; // Take the server path for new _rotation data
+        } else if(some(details.path, p => p === '_lastActiveTime')) {
+          fixable = true;
+          value = details.conflict[second]; // Take the server path for new _lastActiveTime data
         }
 
         return {
