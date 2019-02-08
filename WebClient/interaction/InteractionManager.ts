@@ -110,23 +110,21 @@ export class InteractionManager {
                 const screenPos = input.getMouseScreenPos();
                 const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this.getDraggableObjects(), this._gameView.camera);
                 const clickedObject = Physics.firstRaycastHit(raycastResult);
-                let fileClicked = false;
 
                 if (clickedObject) {
 
-                    this._cameraControls.enabled = false;
                     const file = this.fileForIntersection(clickedObject);
 
                     if (file) {
 
-                        // Can only click things if in the correct mode
-                        if (this.isInCorrectMode(file.file)) {
+                        // Start file click operation on file.
+                        let fileClickOperation = new FileClickOperation(this.mode, this._gameView, this, file, clickedObject);
+                        this._operations.push(fileClickOperation);
 
-                            // Start file click operation on file.
-                            let fileClickOperation = new FileClickOperation(this.mode, this._gameView, this, file, clickedObject);
-                            this._operations.push(fileClickOperation);
-                            
-                            fileClicked = true;
+                        if (this.isInCorrectMode(file.file)) {
+                            this._cameraControls.enabled = false;
+                        } else {
+                            this._cameraControls.enabled = true;
                         }
                     }
 
@@ -134,12 +132,6 @@ export class InteractionManager {
 
                     let emptyClickOperation = new EmptyClickOperation(this._gameView, this);
                     this._operations.push(emptyClickOperation);
-
-                }
-
-                // If file click operation wasnt started, make sure camera controls are enabled.
-                if (!fileClicked) {
-
                     this._cameraControls.enabled = true;
 
                 }
@@ -230,6 +222,14 @@ export class InteractionManager {
                 size: (size || 0) + 1
             });
         }
+    }
+
+    /**
+     * Determines if we're in the correct mode to manipulate the given file.
+     * @param file The file.
+     */
+    public isInCorrectMode(file: File) {
+        return (file.type === 'workspace' && this.mode === 'worksurfaces') || (file.type === 'object' && this.mode === 'files');
     }
     
     /**
@@ -429,14 +429,6 @@ export class InteractionManager {
 
     public isFile(hit: Intersection): boolean {
         return this.findWorkspaceForIntersection(hit) === null;
-    }
-
-    /**
-     * Determines if we're in the correct mode to manipulate the given file.
-     * @param file The file.
-     */
-    public isInCorrectMode(file: File) {
-        return (file.type === 'workspace' && this.mode === 'worksurfaces') || (file.type === 'object' && this.mode === 'files');
     }
 
     public getDraggableObjects() {
