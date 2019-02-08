@@ -11,6 +11,7 @@
   - Hopefully it doesn't break WebVR support.
 - Changed color picker to swatches style.
 - Can only change scene background color while in workspaces mode.
+- Changed `stroke.linewidth` to be `stroke.width`.
 
 ## V0.2.22
 ### Date: 2/7/2019
