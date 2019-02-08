@@ -186,15 +186,8 @@ export class InteractionManager {
         if (!obj) {
             return null;
         }
-        const hasParent = !!obj.object.parent && !!obj.object.parent.parent;
-        const isObject = hasParent && obj.object.parent instanceof FileMesh;
-        const fileId = (hasParent && !isObject) ? this._gameView.getFileId(obj.object.parent.parent.id) : null;
-        const file = fileId ? this._gameView.getFile(fileId) : null;
-        if (file && file.file.type === 'workspace') {
-            return file;
-        } else {
-            return null;
-        }
+        
+        return this.findWorkspaceForMesh(obj.object);
     }
 
     public findObjectForMesh(mesh: Object3D): File3D | null {
@@ -211,6 +204,20 @@ export class InteractionManager {
         }
     }
 
+    public findWorkspaceForMesh(mesh: Object3D): File3D | null {
+        if (!mesh) {
+            return null;
+        }
+
+        const fileId = this._gameView.getFileId(mesh.id);
+        const file = fileId ? this._gameView.getFile(fileId) : null;
+        if (file && file.file.type === 'workspace') {
+            return file;
+        } else {
+            return this.findWorkspaceForMesh(mesh.parent);
+        }
+    }
+ 
     public canShrinkWorkspace(file: File3D) {
         return file && file.file.type === 'workspace' && file.file.size >= 1;
     }
@@ -433,7 +440,7 @@ export class InteractionManager {
 
     public getDraggableObjects() {
         if (this._draggableObjectsDirty) {
-            this._draggableColliders = flatMap(this._gameView.getFiles(), f => f.mesh.colliders);//.filter(c => this._isVisible(c));
+            this._draggableColliders = flatMap(this._gameView.getFiles(), f => f.mesh.colliders).filter(c => this._isVisible(c));
             this._draggableObjectsDirty = false;
         }
         return this._draggableColliders;

@@ -172,7 +172,7 @@ export class FileMesh extends GameObject {
         const scale = this._calculateScale(workspace);
         const cubeScale = calculateScale(this._context, this.file, scale);
         if (workspace && workspace.file.type === 'workspace') {
-            this.parent = (<WorkspaceMesh>workspace.mesh).container;
+            (<WorkspaceMesh>workspace.mesh).container.add(this);
             this.cubeContainer.scale.set(cubeScale.x, cubeScale.y, cubeScale.z);
             this.cubeContainer.position.set(0, cubeScale.y / 2, 0);
         } else {
