@@ -47,6 +47,7 @@ import {
   isDestroyed,
   getActiveObjects
 } from 'common/Files/FileCalculations';
+import { merge as mergeObj } from 'common/utils';
 import {ChannelConnection} from 'common/channels-core';
 import {
   findIndex, 
@@ -345,6 +346,19 @@ export class FileManager {
     this._files.emit(fileUpdated(file.id, newData));
   }
 
+  /**
+   * Updates the given user file with the given updates.
+   * @param file The user file to update.
+   * @param newData The new data to update it with.
+   */
+  async updateUserFile(file: File, newData: PartialFile) {
+    await this.updateFile(file, mergeObj({}, newData, {
+      tags: {
+        _lastActiveTime: Date.now()
+      }
+    }));
+  }
+
   async createFile(id?: string, tags?: Object['tags']) {
     console.log('[FileManager] Create File');
 
@@ -451,7 +465,7 @@ export class FileManager {
   private _clearSelectionForUser(user: Object) {
     console.log('[FileManager] Clear selection for', user.id);
     const update = updateUserSelection(null);
-    this.updateFile(user, update);
+    this.updateUserFile(user, update);
   }
 
   private _selectFileForUser(file: Object, user: Object) {
@@ -460,11 +474,11 @@ export class FileManager {
     const {id, newId} = selectionIdForUser(user);
     if (newId) {
       const update = updateUserSelection(newId);
-      this.updateFile(user, update);
+      this.updateUserFile(user, update);
     }
     if (id) {
       const update = toggleFileSelection(file, id);
-      this.updateFile(file, update);
+      this.updateUserFile(file, update);
     }
   }
 
@@ -472,7 +486,7 @@ export class FileManager {
     if (file.id !== user.tags._editingFile) {
       console.log('[FileManager] Edit File:', file.id);
       
-      this.updateFile(user, {
+      this.updateUserFile(user, {
         tags: {
           _editingFile: file.id
         }

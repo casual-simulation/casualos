@@ -1,4 +1,4 @@
-import { Object3D, Mesh, BoxBufferGeometry, MeshStandardMaterial, Color, Vector3, Box3, Sphere, BufferGeometry, BufferAttribute, LineBasicMaterial, LineSegments, SphereGeometry, MeshBasicMaterial, DoubleSide } from "three";
+import { Object3D, Mesh, BoxBufferGeometry, MeshStandardMaterial, Color, Vector3, Box3, Sphere, BufferGeometry, BufferAttribute, LineBasicMaterial, LineSegments, SphereGeometry, MeshBasicMaterial, DoubleSide, Vector2, Camera, PerspectiveCamera, CameraHelper } from "three";
 import { Object, File, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_GRID_SCALE } from 'common/Files';
 import { GameObject } from "./GameObject";
 import GameView from '../GameView/GameView';
@@ -14,6 +14,23 @@ import { isArray, parseArray, isFormula, getShortId, fileFromShortId, objectsAtG
 import { appManager } from '../AppManager';
 import { FileManager } from "WebClient/FileManager";
 
+
+/**
+ * The amount of time that a user needs to be inactive for
+ * in order to hide their file.
+ */
+export const DEFAULT_USER_INACTIVE_TIME = 1000 * 60;
+
+/**
+ * The amount of time between checking a user's mouse for activity.
+ */
+export const DEFAULT_USER_MOUSE_CHECK_TIME = 1000 * 10;
+
+/**
+ * The distance that the user needs to move before updating their position.
+ */
+export const DEFAULT_USER_MOVEMENT_INCREMENT = 0.1;
+
 /**
  * Defines a class that represents a mesh for an "user" file.
  */
@@ -21,6 +38,9 @@ export class UserMesh extends GameObject {
 
     private _gameView: GameView;
     private _context: FileCalculationContext;
+    private _lastMouseCheckTime: number;
+    private _lastMousePosition: Vector2;
+    
 
     /**
      * The data for the mesh.
@@ -30,17 +50,17 @@ export class UserMesh extends GameObject {
     /**
      * The cube that acts as the visual representation of the file.
      */
-    cube: Mesh;
+    cameraHelper: CameraHelper;
 
     /**
-     * The container for the cube.
+     * The camera that this mesh is displaying.
      */
-    cubeContainer: Object3D;
+    camera: Camera;
 
     /**
-     * The optional arrows for the file.
+     * The container for the meshes.
      */
-    arrows: Arrow3D[];
+    container: Object3D;
 
     /**
      * Event that is fired when this file mesh is updated.
@@ -53,11 +73,11 @@ export class UserMesh extends GameObject {
     }
 
     get boundingBox(): Box3 {
-        return new Box3().setFromObject(this.cube);
+        return new Box3().setFromObject(this.container);
     }
 
     get boundingSphere(): Sphere {
-        let box = new Box3().setFromObject(this.cube);
+        let box = new Box3().setFromObject(this.container);
         let sphere = new Sphere();
         sphere = box.getBoundingSphere(sphere);
 
@@ -81,20 +101,21 @@ export class UserMesh extends GameObject {
             return;
         }
         if (!this.file) {
-            this.cubeContainer = new Object3D();
-            this.cube = this._createCube(1);
-            this.cubeContainer.add(this.cube);
-            this.add(this.cubeContainer);
+            this.container = new Object3D();
+            this.camera = new PerspectiveCamera(60, 1, 0.1, 0.5);
+            this.cameraHelper = new CameraHelper(this.camera);
+            this.container.add(this.cameraHelper);
+            this.add(this.camera);
+            this.add(this.container);
         }
         this.file = (<Object>file) || this.file;
 
         this._context = appManager.fileManager.createContext();
 
-        // visible if not destroyed, has a position
-        this.visible = (!this.file.tags._destroyed && !!this.file.tags._position);
-
         // Tag: _position && scale
         this._tagUpdatePosition();
+
+        this.cameraHelper.update();
 
         this.onUpdated.invoke(this);
     }
@@ -102,54 +123,90 @@ export class UserMesh extends GameObject {
     public frameUpdate() {
         super.frameUpdate();
 
-        if(this.file.id === appManager.fileManager.userFile.id) {
+        const isOwnFile = this.file.id === appManager.fileManager.userFile.id;
+        // visible if not destroyed, has a position, and was active in the last minute
+        this.visible = (!this.file.tags._destroyed && 
+            !!this.file.tags._position &&
+            !isOwnFile &&
+            this._isActive());
+
+        if(isOwnFile) {
             const camPosition = this._gameView.camera.position;
+            const camRotation = this._gameView.camera.rotation;
             const currentPosition = this.file.tags._position;
             // TODO: Check distance
             const distance = camPosition.distanceTo(new Vector3(currentPosition.x, currentPosition.y, currentPosition.z));
-            if (distance > 1) {
-                appManager.fileManager.updateFile(this.file, {
+            if (distance > DEFAULT_USER_MOVEMENT_INCREMENT) {
+                appManager.fileManager.updateUserFile(this.file, {
                     tags: {
                         _position: {
                             x: camPosition.x,
                             y: camPosition.y,
                             z: camPosition.z,
+                        },
+                        _rotation: {
+                            x: camRotation.x,
+                            y: camRotation.y,
+                            z: camRotation.z,
                         }
                     }
                 });
             }
+
+            this._checkIsActive();
         }
     }
 
-    private _createCube(size: number): Mesh {
-        let geometry = new BoxBufferGeometry(size, size, size);
-        let material = new MeshStandardMaterial({
-            color: 0x00ff00,
-            metalness: .1,
-            roughness: 0.6
-        });
-        const cube = new Mesh(geometry, material);
-        cube.castShadow = true;
-        cube.receiveShadow = false;
-        return cube;
+    private _checkIsActive() {
+        const timeBetweenChecks = Date.now() - this._lastMouseCheckTime;
+        if (!this._lastMouseCheckTime || timeBetweenChecks > DEFAULT_USER_MOUSE_CHECK_TIME) {
+            this._lastMouseCheckTime = Date.now();
+            if (this._checkMousePosition()) {
+                appManager.fileManager.updateUserFile(this.file, {});
+            }
+        }
     }
+
+    private _checkMousePosition() {
+        const mousePos = this._gameView.input.getMouseScreenPos();
+        if (this._lastMousePosition) {
+            const dist = mousePos.distanceTo(this._lastMousePosition);
+            return dist > 0.01;
+        }
+        this._lastMousePosition = mousePos;
+        return false;
+    }
+
+    private _isActive(): boolean {
+        if (this.file.tags._lastActiveTime) {
+            const milisecondsFromNow = Date.now() - this.file.tags._lastActiveTime;
+            return milisecondsFromNow < DEFAULT_USER_INACTIVE_TIME;
+        } else {
+            return false;
+        }
+    }
+
 
     private _tagUpdatePosition(): void {
 
         if (this.file.tags._position) {
-            this.position.set(
+            this.camera.position.set(
                 this.file.tags._position.x,
                 this.file.tags._position.y,
                 this.file.tags._position.z);
-        } else {
-            // Default position
-            this.position.set(0, 1, 0);
+        }
+
+        if (this.file.tags._rotation) {
+            this.camera.rotation.set(
+                this.file.tags._rotation.x,
+                this.file.tags._rotation.y,
+                this.file.tags._rotation.z);
         }
 
         // We must call this function so that child objects get their positions updated too.
         // Three render function does this automatically but there are functions in here that depend
         // on accurate positioning of child objects.
-        this.updateMatrixWorld(false);
+        this.camera.updateMatrixWorld(false);
     }
 
 }
