@@ -9,6 +9,8 @@
   - Note that this is Mozilla's old crotchety WebXR and not the official standardized version.
   - As such, it only works in Mozilla's WebXR Viewer app thing.
   - Hopefully it doesn't break WebVR support.
+- Changed color picker to swatches style.
+- Can only change scene background color while in workspaces mode.
 
 ## V0.2.22
 ### Date: 2/7/2019
