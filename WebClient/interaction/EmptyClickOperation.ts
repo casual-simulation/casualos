@@ -49,7 +49,7 @@ export class EmptyClickOperation implements IOperation {
                     if (this._interaction.isEmptySpace(screenPos)) {
 
                         // Still not clicking on anything.
-                        if (EmptyClickOperation.CanOpenColorPicker) {
+                        if (EmptyClickOperation.CanOpenColorPicker && !this._gameView.xrSession) {
                             this.sceneBackgroundColorPicker(this._gameView.input.getMousePagePos());
                         }
 
