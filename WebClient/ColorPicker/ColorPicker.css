@@ -1,4 +1,12 @@
 .color-picker {
     position: absolute;
-    box-sizing: unset;
+    transform-origin: 0% 0%; /* Put the origin in the upper right corner */ 
+    transform: scale(0.75); /* This is how we scale the color picker down */
+}
+
+.color-picker .vc-swatches {
+    width: 323px;
+    height: auto;
+    overflow-y: auto;
+    margin-bottom: 32px; /* Give a little bit of margin on the bottom to keep it from going underneath the bottom buttons during repositioning calculations. */
 }
