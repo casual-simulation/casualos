@@ -304,8 +304,10 @@ export default class GameView extends Vue {
 
         let position = new Vector3();
         position.setFromMatrixPosition(matrix);
-        position.add(new Vector3(0, 1.5, 0));
-        position.multiplyScalar(2);
+        position.multiplyScalar(10);
+
+        // Move the player up about a foot above the world.
+        position.add(new Vector3(0, 2, 3));
         this._camera.position.copy(position);
 
         let rotation = new Quaternion();
