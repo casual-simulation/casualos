@@ -26,7 +26,9 @@ import {
   BasicShadowMap,
   Plane,
   Vector3,
-  GridHelper
+  GridHelper,
+  Quaternion,
+  Matrix4
 } from 'three';
 
 import VRControlsModule from 'three-vrcontrols-module';
@@ -58,7 +60,7 @@ import { ArgEvent } from '../../common/Events';
 import { WorkspaceMesh, WorkspaceMeshDebugInfo } from '../game-engine/WorkspaceMesh';
 import { GridChecker } from '../game-engine/grid/GridChecker';
 import { FileMesh } from '../game-engine/FileMesh';
-import { values, flatMap } from 'lodash';
+import { values, flatMap, find } from 'lodash';
 import { getUserMode } from 'common/Files/FileCalculations';
 
 @Component({
@@ -83,7 +85,7 @@ export default class GameView extends Vue {
   private _groundPlaneMesh: Mesh;
   private _skydomeMesh: Mesh;
   private _gridMesh: GridHelper;
-  private _canvas: HTMLElement;
+  private _canvas: HTMLCanvasElement;
   private _time: Time;
   private _input: Input;
   private _inputVR: InputVR;
@@ -113,6 +115,10 @@ export default class GameView extends Vue {
   debug: boolean = false;
   debugInfo: GameViewDebugInfo = null;
   mode: UserMode = DEFAULT_USER_MODE;
+  xrCapable: boolean = false;
+  xrDisplay: any = null;
+  xrSession: any = null;
+  xrSessionInitParameters: any = null;
   vrDisplay: VRDisplay = null;
   vrCapable: boolean = false;
 
@@ -130,6 +136,7 @@ export default class GameView extends Vue {
   }
 
   get gameView(): HTMLElement { return <HTMLElement>this.$refs.gameView; }
+  get canvas() { return this._canvas; }
   get time(): Time { return this._time; }
   get input(): Input { return this._input; }
   get inputVR(): InputVR { return this._inputVR; }
@@ -243,6 +250,7 @@ export default class GameView extends Vue {
       .subscribe());
 
     this._setupWebVR();
+    await this._setupWebXR();
     this._frameUpdate();
   }
 
@@ -259,7 +267,7 @@ export default class GameView extends Vue {
     }
   }
 
-  private _frameUpdate() {
+  private _frameUpdate(xrFrame?: any) {
 
     this._input.update();
     this._inputVR.update();
@@ -278,17 +286,66 @@ export default class GameView extends Vue {
       this._renderer.render(this._scene, this._camera);
       this._vrEffect.render(this._scene, this._camera);
 
+    } else if(this.xrSession && xrFrame) {
+
+      // Update XR stuff
+      this._renderer.autoClear = false;
+      this._scene.background = null;
+      this._renderer.setSize(this.xrSession.baseLayer.framebufferWidth, this.xrSession.baseLayer.framebufferHeight, false)
+      this._renderer.setClearColor('#000', 0);
+      this._renderer.clear();
+
+      this._camera.matrixAutoUpdate = false;
+
+      for (const view of xrFrame.views) {
+        // Each XRView has its own projection matrix, so set the _camera to use that
+        let matrix = new Matrix4();
+        matrix.fromArray(view.viewMatrix);
+
+        let position = new Vector3();
+        position.setFromMatrixPosition(matrix);
+        position.multiplyScalar(10);
+
+        // Move the player up about a foot above the world.
+        position.add(new Vector3(0, 2, 3));
+        this._camera.position.copy(position);
+
+        let rotation = new Quaternion();
+        rotation.setFromRotationMatrix(matrix);
+        this._camera.setRotationFromQuaternion(rotation);
+
+        this._camera.updateMatrix();
+        this._camera.updateMatrixWorld(false);
+
+        this._camera.projectionMatrix.fromArray(view.projectionMatrix);
+  
+        // Set up the _renderer to the XRView's viewport and then render
+        
+        this._renderer.clearDepth();
+        const viewport = view.getViewport(this.xrSession.baseLayer);
+        this._renderer.setViewport(viewport.x, viewport.y, viewport.width, viewport.height);
+        this._renderer.render(this._scene, this._camera);
+      }
+
     } else {
 
+      this._renderer.autoClear = true;
+      this._camera.matrixAutoUpdate = true;
       this._renderer.render(this._scene, this._camera);
 
     }
+
+    // console.log(this._camera.position);
 
     this._time.update();
 
     if (this.vrDisplay && this.vrDisplay.isPresenting) {
 
       this.vrDisplay.requestAnimationFrame(() => this._frameUpdate());
+
+    } else if(this.xrSession) {
+
+      this.xrSession.requestFrame((nextXRFrame: any) => this._frameUpdate(nextXRFrame));
 
     } else {
 
@@ -490,6 +547,7 @@ export default class GameView extends Vue {
 
     const webGlRenderer = this._renderer = new WebGLRenderer({
       antialias: true,
+      alpha: true
     });
     webGlRenderer.shadowMap.enabled = true;
     webGlRenderer.shadowMap.type = PCFSoftShadowMap;
@@ -544,6 +602,103 @@ export default class GameView extends Vue {
 
     let vrButtonContainer = document.getElementById('vr-button-container');
     vrButtonContainer.appendChild(this._enterVr.domElement);
+  }
+
+
+  // TODO: All this needs to be reworked to use the right WebXR polyfill
+  // - Use this one: https://github.com/immersive-web/webxr-polyfill
+  // - instead of this one: https://github.com/mozilla/webxr-polyfill
+  
+  private async _setupWebXR() {
+    const win = <any>window;
+    const navigator = <any>win.navigator;
+    const xr = navigator.XR;
+
+    if (typeof xr === 'undefined') {
+      console.log('[GameView] WebXR Not Supported.');
+      return;
+    }
+
+    const displays = await xr.getDisplays();
+    this.xrSessionInitParameters = {
+			exclusive: false,
+			type: win.XRSession.AUGMENTATION,
+			videoFrames: false,    //computer_vision_data
+			alignEUS: true,
+			worldSensing: false
+    };
+    const matchingDisplay = find(displays, d => d.supportsSession(this.xrSessionInitParameters));
+    if (matchingDisplay && this._isRealAR(matchingDisplay)) {
+      this.xrCapable = true;
+      this.xrDisplay = matchingDisplay;
+      console.log('[GameView] WebXR Supported!');
+    }
+  }
+
+  async toggleXR() {
+    console.log('toggle XR');
+    if (this.xrDisplay) {
+      if(this.xrSession) {
+        await this.xrSession.end();
+        this.xrSession = null;
+        document.documentElement.classList.remove('ar-app');
+      } else {
+        document.documentElement.classList.add('ar-app');
+        this.xrSession = await this.xrDisplay.requestSession(this.xrSessionInitParameters);
+        this.xrSession.near = 0.1;
+        this.xrSession.far = 1000;
+
+        this.xrSession.addEventListener('focus', (ev: any) => this._handleXRSessionFocus(ev));
+        this.xrSession.addEventListener('blur', (ev: any) => this._handleXRSessionBlur(ev));
+        this.xrSession.addEventListener('end', (ev: any) => this._handleXRSessionEnded(ev));
+
+        this._startXR();
+
+        setTimeout(() => {
+          this._handleResize();
+        }, 1000);
+      }
+    }
+  }
+
+  private _startXR() {
+    const win = <any>window;
+    const navigator = win.navigator;
+    if (this.xrSession === null){
+      throw new Error('Can not start presenting without a xrSession');
+    }
+
+    // Set the xrSession's base layer into which the app will render
+    this.xrSession.baseLayer = new win.XRWebGLLayer(this.xrSession, this._renderer.context);
+
+    // Handle layer focus events
+    this.xrSession.baseLayer.addEventListener('focus', (ev: any) => { this._handleXRLayerFocus(ev) })
+    this.xrSession.baseLayer.addEventListener('blur', (ev: any) => { this._handleXRLayerBlur(ev) })
+
+    // this.xrSession.requestFrame(this._boundHandleFrame)
+  }
+
+  private _handleXRSessionFocus(event: any) {
+  }
+
+  private _handleXRSessionBlur(event: any) {
+  }
+
+  private _handleXRSessionEnded(event: any) {
+  }
+
+  private _handleXRLayerFocus(event: any) {
+  }
+
+  private _handleXRLayerBlur(event: any) {
+  }
+
+  private _isRealAR(xrDisplay: any): boolean {
+    // The worst hack of all time.
+    // Basically does the check that the webxr polyfill does
+    // to see it the device really supports Web XR.
+    return typeof (<any>window).webkit !== 'undefined' ||
+      xrDisplay._reality._vrDisplay;
   }
 
   private _handleReadyVR(display: VRDisplay) {
@@ -603,7 +758,8 @@ export default class GameView extends Vue {
     const { width, height } = this._calculateSize();
     this._renderer.setPixelRatio(window.devicePixelRatio || 1);
     this._renderer.setSize(width, height);
-    this._container.style.height = this._renderer.domElement.style.height;
+    this._container.style.height = this.gameView.style.height = this._renderer.domElement.style.height;
+    this._container.style.width = this.gameView.style.width = this._renderer.domElement.style.width;
   }
 
   private _resizeCamera() {

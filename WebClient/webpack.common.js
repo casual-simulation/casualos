@@ -62,11 +62,11 @@ module.exports = {
   resolve: {
     extensions: ['.vue', '.ts', '.js', '.css'],
     alias: {
-      'von-grid': path.resolve(__dirname, 'public/von-grid.min.js'),
       'common': path.resolve(__dirname, '../common'),
       'three-examples': path.join(__dirname, '../node_modules/three/examples/js'),
       'fs': 'browserfs',
-      'formula-lib': path.join(__dirname, '../common/Formulas/formula-lib.ts')
+      'formula-lib': path.join(__dirname, '../common/Formulas/formula-lib.ts'),
+      'webxr-polyfill': path.resolve(__dirname, 'public/scripts/webxr-polyfill.js')
     }
   },
   plugins: [

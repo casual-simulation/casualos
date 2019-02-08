@@ -15,6 +15,10 @@
             <span class="sr-only">New Worksurface</span>
             <md-tooltip md-direction="bottom">New Worksurface</md-tooltip>
           </md-button>
+          <md-button class="md-fab add-button" @click="toggleXR()" v-if="xrCapable">
+            <span>AR</span>
+            <md-tooltip md-direction="bottom">Enable AR</md-tooltip>
+          </md-button>
           <md-button class="md-fab add-button" @click="toggleDebug()" v-if="dev">
             <md-icon>bug_report</md-icon>
             <span class="sr-only">Debug</span>
