@@ -1,6 +1,6 @@
 # File Simulator Changelog
 
-## V0.2.23
+## V0.2.24
 ### Date: 2/8/2019
 
 ### Changes:
