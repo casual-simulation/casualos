@@ -62,6 +62,7 @@ import { GridChecker } from '../game-engine/grid/GridChecker';
 import { FileMesh } from '../game-engine/FileMesh';
 import { values, flatMap, find } from 'lodash';
 import { getUserMode } from 'common/Files/FileCalculations';
+import App from '../App/App';
 
 @Component({
   components: {
@@ -121,6 +122,9 @@ export default class GameView extends Vue {
   xrSessionInitParameters: any = null;
   vrDisplay: VRDisplay = null;
   vrCapable: boolean = false;
+
+  @Inject() addSidebarItem: App['addSidebarItem'];
+  @Inject() removeSidebarItem: App['removeSidebarItem'];
 
   @Watch('debug')
   debugChanged(val: boolean, previous: boolean) {
@@ -257,6 +261,8 @@ export default class GameView extends Vue {
   beforeDestroy() {
     window.removeEventListener('resize', this._handleResize);
     window.removeEventListener('vrdisplaypresentchange', this._handleResize);
+    this.removeSidebarItem('enable_xr');
+    this.removeSidebarItem('disable_xr');
     this._input.dispose();
 
     if (this._subs) {
@@ -631,6 +637,9 @@ export default class GameView extends Vue {
     if (matchingDisplay && this._isRealAR(matchingDisplay)) {
       this.xrCapable = true;
       this.xrDisplay = matchingDisplay;
+      this.addSidebarItem('enable_xr', 'Enable AR', () => {
+        this.toggleXR();
+      });
       console.log('[GameView] WebXR Supported!');
     }
   }
@@ -638,11 +647,22 @@ export default class GameView extends Vue {
   async toggleXR() {
     console.log('toggle XR');
     if (this.xrDisplay) {
+
       if(this.xrSession) {
+        this.removeSidebarItem('disable_xr');
+        this.addSidebarItem('enable_xr', 'Enable AR', () => {
+          this.toggleXR();
+        });
+
         await this.xrSession.end();
         this.xrSession = null;
         document.documentElement.classList.remove('ar-app');
       } else {
+        this.removeSidebarItem('enable_xr');
+        this.addSidebarItem('disable_xr', 'Disable AR', () => {
+          this.toggleXR();
+        });
+
         document.documentElement.classList.add('ar-app');
         this.xrSession = await this.xrDisplay.requestSession(this.xrSessionInitParameters);
         this.xrSession.near = 0.1;
