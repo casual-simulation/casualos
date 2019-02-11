@@ -508,6 +508,47 @@ describe('FilesChannel', () => {
             expect(result.updatedFiles[0]).toBe(currState['updated']);
         });
 
+        it('should use deep equality for updates', () => {
+            const prevState: FilesState = {
+                'test': {
+                    type: 'workspace',
+                    id: 'test',
+                    position: {x:0, y:0, z:0},
+                    size: 1,
+                    grid: {},
+                    scale: 0.5,
+                    defaultHeight: 0.1,
+                    gridScale: 0.2,
+                    color: "#999999"
+                },
+                'updated': {
+                    type: 'object',
+                    id: 'updated',
+                    tags: {
+                        _position: {x:0, y:0, z:0},
+                        _workspace: 'test'
+                    }
+                }
+            };
+            const currState: FilesState = {
+                'test': prevState['test'],
+                'updated': {
+                    type: 'object',
+                    id: 'updated',
+                    tags: {
+                        _position: {x:0, y:0, z:0},
+                        _workspace: 'test'
+                    }
+                }
+            };
+
+            const result = calculateStateDiff(prevState, currState);
+
+            expect(result.addedFiles.length).toBe(0);
+            expect(result.removedFiles.length).toBe(0);
+            expect(result.updatedFiles.length).toBe(0);
+        });
+
         it('should handle multiple changes at once', () => {
             const prevState: FilesState = {
                 'test': {

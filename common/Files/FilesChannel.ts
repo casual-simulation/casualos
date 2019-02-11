@@ -203,7 +203,7 @@ export function calculateStateDiff(prev: FilesState, current: FilesState, event?
             diff.removedFiles.push(prevVal);
         } else if(!prevVal && currVal) {
             diff.addedFiles.push(currVal);
-        } else if(prevVal !== currVal) {
+        } else if(!isEqual(prevVal, currVal)) {
             diff.updatedFiles.push(currVal);
         }
     });
