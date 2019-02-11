@@ -42,6 +42,15 @@ export class SharedFileClickOperation implements IOperation {
     public update(): void {
         if (this._finished) return;
 
+        // If using touch, need to make sure we are only ever using one finger at a time. 
+        // If a second finger is detected then we cancel this click operation.
+        if (this._gameView.input.currentInputType === InputType.Touch) {
+            if (this._gameView.input.getTouchCount() >= 2) {
+                this._finished = true;
+                return;
+            }
+        }
+
         if (this._gameView.input.getMouseButtonHeld(0)) {
             
             if (!this._dragOperation) {

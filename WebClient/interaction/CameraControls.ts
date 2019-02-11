@@ -260,19 +260,19 @@ export class CameraControls {
                 //
                 // Pan/Dolly/Rotate [Start]
                 //
-                if (input.getMouseButtonDown(MouseButtonId.Left) && this.enablePan && this.enabled) {
+                if (input.getMouseButtonDown(MouseButtonId.Left) && this.enablePan) {
                     
                     // Pan start.
                     this.panStart.copy(input.getMouseClientPos());
                     this.state = STATE.PAN;
 
-                } else if (input.getMouseButtonDown(MouseButtonId.Middle) && this.enableZoom && this.enabled) {
+                } else if (input.getMouseButtonDown(MouseButtonId.Middle) && this.enableZoom) {
 
                     // Alternative dolly start.
                     this.dollyStart.copy(input.getMouseClientPos());
                     this.state = STATE.DOLLY;
 
-                } else if (input.getMouseButtonDown(MouseButtonId.Right) && this.enableRotate && this.enabled) {
+                } else if (input.getMouseButtonDown(MouseButtonId.Right) && this.enableRotate) {
 
                     // Rotate start.
                     this.mouseRotateStart.copy(input.getMouseClientPos());
@@ -282,7 +282,7 @@ export class CameraControls {
                 //
                 // Pan/Dolly/Rotate [Move]
                 //
-                if (input.getMouseButtonHeld(MouseButtonId.Left) && this.enablePan && this.enabled) {
+                if (input.getMouseButtonHeld(MouseButtonId.Left) && this.enablePan) {
 
                     // Pan move.
                     this.panEnd.copy(input.getMouseClientPos());
@@ -290,7 +290,7 @@ export class CameraControls {
                     this.pan(this.panDelta.x, this.panDelta.y);
                     this.panStart.copy(this.panEnd);
 
-                } else if (input.getMouseButtonHeld(MouseButtonId.Middle) && this.enableZoom && this.enabled) {
+                } else if (input.getMouseButtonHeld(MouseButtonId.Middle) && this.enableZoom) {
 
                     // Dolly move.
                     this.dollyEnd.copy(input.getMouseClientPos());
@@ -301,7 +301,7 @@ export class CameraControls {
 
                     this.dollyStart.copy(this.dollyEnd);
 
-                } else if (input.getMouseButtonHeld(MouseButtonId.Right) && this.enableRotate && this.enabled) {
+                } else if (input.getMouseButtonHeld(MouseButtonId.Right) && this.enableRotate) {
 
                     // Rotate move.
                     this.mouseRotateEnd.copy(input.getMouseClientPos());
@@ -346,7 +346,7 @@ export class CameraControls {
                 //
                 if (input.getTouchCount() === 1) {
 
-                    if (input.getTouchDown(0) && this.enablePan && this.enabled ) {
+                    if (input.getTouchDown(0) && this.enablePan) {
 
                         // Pan start.
                         this.panStart.copy(input.getTouchClientPos(0));
@@ -357,7 +357,7 @@ export class CameraControls {
 
                     if (input.getTouchDown(1)) {
 
-                        if (this.enableZoom && this.enabled) {
+                        if (this.enableZoom) {
                             
                             // Dolly start.
                             const pagePosA = input.getTouchPagePos(0);
@@ -367,7 +367,7 @@ export class CameraControls {
 
                         }
 
-                        if (this.enableRotate && this.enabled) {
+                        if (this.enableRotate) {
 
                             // Rotate start.
                             this.touchRotateStart.finger0 = input.getTouchPagePos(0);
@@ -389,7 +389,7 @@ export class CameraControls {
                 //
                 if (input.getTouchCount() === 1) {
 
-                    if (input.getTouchHeld(0) && this.enablePan && this.enabled) {
+                    if (input.getTouchHeld(0) && this.enablePan) {
 
                         // Pan move.
                         this.panEnd.copy(input.getTouchClientPos(0));
@@ -399,7 +399,7 @@ export class CameraControls {
                     }
                 } else if (input.getTouchCount() === 2) {
 
-                    if (this.enableZoom && this.enabled) {
+                    if (this.enableZoom) {
 
                         // Dolly move.
                         const pagePosA = input.getTouchPagePos(0);
@@ -412,7 +412,7 @@ export class CameraControls {
                         this.dollyStart.copy(this.dollyEnd);
                     }
 
-                    if (this.enableRotate && this.enabled) {
+                    if (this.enableRotate) {
 
                         // Rotate move.
                         this.touchRotateEnd.finger0 = input.getTouchPagePos(0);
