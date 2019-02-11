@@ -9,7 +9,7 @@ import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
 import { File, Workspace, Object, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated, PartialFile } from 'common/Files';
 import { keys, minBy, flatMap } from 'lodash';
 import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance, posToKey } from '../game-engine/hex';
-import { isFormula } from 'common/Files/FileCalculations';
+import { isFormula, duplicateFile } from 'common/Files/FileCalculations';
 import { SharedFileDragOperation } from './SharedFileDragOperation';
 import { appManager } from 'WebClient/AppManager';
 import { merge } from 'common/utils';
@@ -32,9 +32,8 @@ export class NewFileDragOperation extends SharedFileDragOperation {
 
     protected async _updateFile(data: PartialFile) {
         if (!this._newFile) {
-            let newFile = merge(this._file, data);
-            delete newFile.tags._destroyed;
-            this._newFile = await this._gameView.fileManager.createFile(undefined, <Object['tags']>newFile.tags);
+            const newFile = duplicateFile(<Object>this._file, data);
+            this._newFile = await this._gameView.fileManager.createFile(newFile.id, newFile.tags);
         } else {
             this._gameView.fileManager.updateFile(this._newFile, data);
         }

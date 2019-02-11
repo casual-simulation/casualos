@@ -12,6 +12,7 @@ import { appManager } from '../AppManager';
 import { merge } from 'common/utils';
 import { SharedFileClickOperation } from './SharedFileClickOperation';
 import { SharedFileDragOperation } from './SharedFileDragOperation';
+import { duplicateFile } from 'common/Files/FileCalculations';
 
 /**
  * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
@@ -19,10 +20,12 @@ import { SharedFileDragOperation } from './SharedFileDragOperation';
 export class FileClickOperation extends SharedFileClickOperation {
 
     private _file3D: File3D;
+    private _hit: Intersection;
 
-    constructor(mode: UserMode, gameView: GameView, interaction: InteractionManager, file: File3D) {
+    constructor(mode: UserMode, gameView: GameView, interaction: InteractionManager, file: File3D, hit: Intersection) {
         super(mode, gameView, interaction, file.file);
         this._file3D = file;
+        this._hit = hit;
     }
 
     protected _createDragOperation(): SharedFileDragOperation {
@@ -48,15 +51,15 @@ export class FileClickOperation extends SharedFileClickOperation {
                 let closest = workspaceMesh.closestTileToPoint(this._hit.point);
 
                 if (closest) {
-                    let tags = {
-                      _position: { x: closest.tile.gridPosition.x, y: closest.tile.gridPosition.y, z: closest.tile.localPosition.y },
-                      _workspace: this._file.id,
-                      _index: 0
-                    };
+                    let newFile = duplicateFile(this._gameView.selectedRecentFile, {
+                        tags: {
+                            _position: { x: closest.tile.gridPosition.x, y: closest.tile.gridPosition.y, z: closest.tile.localPosition.y },
+                            _workspace: this._file.id,
+                            _index: 0
+                        }
+                    });
 
-                    let merged = merge(this._gameView.selectedRecentFile.tags, tags);
-
-                    appManager.fileManager.createFile(undefined, merged);
+                    appManager.fileManager.createFile(newFile.id, newFile.tags);
                 }
             } else {
                 this._interaction.showContextMenu();

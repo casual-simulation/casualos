@@ -13,7 +13,8 @@ import {
     isHiddenTag,
     getActiveObjects,
     tagMatchesFilter,
-    parseArray
+    parseArray,
+    duplicateFile
 } from './FileCalculations';
 import {
     cloneDeep
@@ -331,6 +332,42 @@ describe('FileCalculations', () => {
 
             other.tags.array = ['hello', 'world', 12.34];
             expect(tagMatchesFilter('+(#array:"[hello, world, 12.34]")', other, '+')).toBe(true);
+        });
+    });
+
+    describe('duplicateFile', () => {
+        it('should return a copy with a different ID', () => {
+            const first: Object = createFile();
+            const second = duplicateFile(first);
+
+            expect(second.id).not.toEqual(first.id);
+            expect(second.tags).toEqual(first.tags);
+        });
+
+        it('should not be destroyed', () => {
+            let first: Object = createFile();
+            first.tags._destroyed = true;
+
+            const second = duplicateFile(first);
+
+            expect(second.id).not.toEqual(first.id);
+            expect(second.tags._destroyed).toBe(undefined);
+        });
+
+        it('should merge in the additional changes', () => {
+            let first: Object = createFile();
+            const second = duplicateFile(first, {
+                tags: {
+                    name: 'abcdef'
+                }
+            });
+
+            expect(second.id).not.toEqual(first.id);
+            expect(second.tags).toEqual({
+                _position: { x: 0, y: 0, z: 0},
+                _workspace: null,
+                name: 'abcdef'
+            });
         });
     });
 

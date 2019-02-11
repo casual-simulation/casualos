@@ -23,8 +23,6 @@ export class SharedFileClickOperation implements IOperation {
     protected _interaction: InteractionManager;
     protected _mode: UserMode;
     protected _file: File;
-    // protected _input: Input;
-    protected _hit: Intersection;
     protected _finished: boolean;
     protected _triedDragging: boolean;
 

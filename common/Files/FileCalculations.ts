@@ -18,6 +18,7 @@ import formulaLib from 'formula-lib';
 import { FilterFunction, SandboxInterface } from '../Formulas/SandboxInterface';
 import { PartialFile } from 'common/Files';
 import { FilesState } from './FilesChannel';
+import { merge } from 'common/utils';
 
 
 export var ShortId_Length: number = 5;
@@ -470,6 +471,21 @@ export function objectsAtGridPosition(objects: Object[], workspaceId: string, po
             o.tags._position.x === position.x &&
             o.tags._position.y === position.y
     });
+}
+
+/**
+ * Duplicates the given file and returns a new file with a new ID but the same tags.
+ * The file will be exactly the same as the previous except for 2 things.
+ * First, it will have a different ID.
+ * Second, it will never be marked as destroyed.
+ * @param file The file to duplicate.
+ * @param data The optional data that should override the existing file data.
+ */
+export function duplicateFile(file: Object, data?: PartialFile): Object {
+    let newFile = merge(file, data || {});
+    newFile.id = uuid();
+    delete newFile.tags._destroyed;
+    return newFile;
 }
 
 /**

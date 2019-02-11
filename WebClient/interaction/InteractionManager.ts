@@ -121,7 +121,7 @@ export class InteractionManager {
                         if (file) {
 
                             // Start file click operation on file.
-                            let fileClickOperation = new FileClickOperation(this.mode, this._gameView, this, file);
+                            let fileClickOperation = new FileClickOperation(this.mode, this._gameView, this, file, clickedObject);
                             this._operations.push(fileClickOperation);
 
                             if (this.isInCorrectMode(file.file)) {
