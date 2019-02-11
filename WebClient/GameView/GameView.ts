@@ -452,8 +452,8 @@ export default class GameView extends Vue {
               this.recentFiles.splice(index, 1);
             }
             this.recentFiles.unshift(file);
-            if (this.recentFiles.length > 5) {
-              this.recentFiles.length = 5;
+            if (this.recentFiles.length > 3) {
+              this.recentFiles.length = 3;
             }
           }
         }
