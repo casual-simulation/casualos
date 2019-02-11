@@ -61,7 +61,7 @@ import { WorkspaceMesh, WorkspaceMeshDebugInfo } from '../game-engine/WorkspaceM
 import { GridChecker } from '../game-engine/grid/GridChecker';
 import { FileMesh } from '../game-engine/FileMesh';
 import { values, flatMap, find, findIndex } from 'lodash';
-import { getUserMode } from 'common/Files/FileCalculations';
+import { getUserMode, createFile } from 'common/Files/FileCalculations';
 import App from '../App/App';
 import MiniFile from '../MiniFile/MiniFile';
 
@@ -218,7 +218,9 @@ export default class GameView extends Vue {
     this.debugInfo = null;
     this._files = {};
     this._fileIds = {};
-    this.recentFiles = [];
+    this.recentFiles = [
+      createFile()
+    ];
     this._subs = [];
     this._setupScene();
     this._input = new Input(this);
