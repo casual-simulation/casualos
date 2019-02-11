@@ -98,8 +98,14 @@ export class InteractionManager {
             }
 
         } else {
-            
+
             // Normal browser interaction.
+
+            // Enable camera controls when there are no more operations.
+            if (this._operations.length === 0) {
+                this._cameraControls.enabled = true;
+            }
+            
             this._cameraControls.update();
 
             const input = this._gameView.input;
