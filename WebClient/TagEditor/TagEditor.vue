@@ -19,7 +19,9 @@
             <span v-if="!isAction" class="hashtag md-prefix">#</span>
             <span v-else class="event-name-svg-container md-prefix"><combine-icon class="event-name-svg" /></span>
             <md-input 
+                ref="inputBox"
                 :value="editorValue" 
+                :placeholder="placeholder"
                 @input="onInput($event)"
                 @focus.stop="onFocus"
                 @blur.stop="onBlur"

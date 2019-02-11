@@ -46,7 +46,7 @@ export default class FileRow extends Vue {
             this.$emit('tagChanged', tag);
             this.fileManager.updateFile(file, {
                 tags: {
-                    [tag]: value
+                    [tag]: value,
                 }
             });
         }

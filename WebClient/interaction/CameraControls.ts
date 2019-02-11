@@ -259,30 +259,76 @@ export class CameraControls {
 
         if (input.currentInputType === InputType.Mouse) {
 
-            //
-            // Pan/Dolly/Rotate [Start]
-            //
-            if (input.getMouseButtonDown(MouseButtonId.Left) && this.enablePan) {
-                
-                // Pan start.
-                this.panStart.copy(input.getMouseClientPos());
-                this.state = STATE.PAN;
+            if (input.isMouseButtonDownOn(this._gameView.gameView)) {
+                //
+                // Pan/Dolly/Rotate [Start]
+                //
+                if (input.getMouseButtonDown(MouseButtonId.Left) && this.enablePan) {
+                    
+                    // Pan start.
+                    this.panStart.copy(input.getMouseClientPos());
+                    this.state = STATE.PAN;
 
-            } else if (input.getMouseButtonDown(MouseButtonId.Middle) && this.enableZoom) {
+                } else if (input.getMouseButtonDown(MouseButtonId.Middle) && this.enableZoom) {
 
-                // Alternative dolly start.
-                this.dollyStart.copy(input.getMouseClientPos());
-                this.state = STATE.DOLLY;
+                    // Alternative dolly start.
+                    this.dollyStart.copy(input.getMouseClientPos());
+                    this.state = STATE.DOLLY;
 
-            } else if (input.getMouseButtonDown(MouseButtonId.Right) && this.enableRotate) {
+                } else if (input.getMouseButtonDown(MouseButtonId.Right) && this.enableRotate) {
 
-                // Rotate start.
-                this.mouseRotateStart.copy(input.getMouseClientPos());
-                this.state = STATE.ROTATE;
+                    // Rotate start.
+                    this.mouseRotateStart.copy(input.getMouseClientPos());
+                    this.state = STATE.ROTATE;
+                }
 
+                //
+                // Pan/Dolly/Rotate [Move]
+                //
+                if (input.getMouseButtonHeld(MouseButtonId.Left) && this.enablePan) {
+
+                    // Pan move.
+                    this.panEnd.copy(input.getMouseClientPos());
+                    this.panDelta.subVectors(this.panEnd, this.panStart).multiplyScalar(this.panSpeed);
+                    this.pan(this.panDelta.x, this.panDelta.y);
+                    this.panStart.copy(this.panEnd);
+
+                } else if (input.getMouseButtonHeld(MouseButtonId.Middle) && this.enableZoom) {
+
+                    // Dolly move.
+                    this.dollyEnd.copy(input.getMouseClientPos());
+                    this.dollyDelta.subVectors(this.dollyEnd, this.dollyStart);
+
+                    if (this.dollyDelta.y > 0) this.dollyIn(this.getZoomScale());
+                    else if (this.dollyDelta.y < 0) this.dollyOut(this.getZoomScale());
+
+                    this.dollyStart.copy(this.dollyEnd);
+
+                } else if (input.getMouseButtonHeld(MouseButtonId.Right) && this.enableRotate) {
+
+                    // Rotate move.
+                    this.mouseRotateEnd.copy(input.getMouseClientPos());
+                    this.mouseRotateDelta.subVectors(this.mouseRotateEnd, this.mouseRotateStart).multiplyScalar(this.rotateSpeed);
+                    const xAngle = 2 * Math.PI * this.mouseRotateDelta.x / this._gameView.gameView.clientHeight;
+                    const yAngle = 2 * Math.PI * this.mouseRotateDelta.y / this._gameView.gameView.clientHeight;
+                    this.rotateLeft(xAngle);
+                    this.rotateUp(yAngle);
+                    this.mouseRotateStart.copy(this.mouseRotateEnd);
+                }
+
+                //
+                // Pan/Dolly/Rotate [End]
+                //
+                if (input.getMouseButtonUp(MouseButtonId.Left) ||
+                    input.getMouseButtonUp(MouseButtonId.Middle) ||
+                    input.getMouseButtonUp(MouseButtonId.Right)) {
+
+                    this.state = STATE.NONE;
+
+                }
             }
-            
-            if (input.getWheelMoved()) {
+                
+            if (input.getWheelMoved() && input.isMouseFocusing(this._gameView.gameView)) {
                 
                 let wheelData = input.getWheelData();
                 
@@ -294,176 +340,132 @@ export class CameraControls {
                 }
             }
 
-            //
-            // Pan/Dolly/Rotate [Move]
-            //
-            if (input.getMouseButtonHeld(MouseButtonId.Left) && this.enablePan) {
-
-                // Pan move.
-                this.panEnd.copy(input.getMouseClientPos());
-                this.panDelta.subVectors(this.panEnd, this.panStart).multiplyScalar(this.panSpeed);
-                this.pan(this.panDelta.x, this.panDelta.y);
-                this.panStart.copy(this.panEnd);
-
-            } else if (input.getMouseButtonHeld(MouseButtonId.Middle) && this.enableZoom) {
-
-                // Dolly move.
-                this.dollyEnd.copy(input.getMouseClientPos());
-                this.dollyDelta.subVectors(this.dollyEnd, this.dollyStart);
-
-                if (this.dollyDelta.y > 0) this.dollyIn(this.getZoomScale());
-                else if (this.dollyDelta.y < 0) this.dollyOut(this.getZoomScale());
-
-                this.dollyStart.copy(this.dollyEnd);
-
-            } else if (input.getMouseButtonHeld(MouseButtonId.Right) && this.enableRotate) {
-
-                // Rotate move.
-                this.mouseRotateEnd.copy(input.getMouseClientPos());
-                this.mouseRotateDelta.subVectors(this.mouseRotateEnd, this.mouseRotateStart).multiplyScalar(this.rotateSpeed);
-                const xAngle = 2 * Math.PI * this.mouseRotateDelta.x / this._gameView.gameView.clientHeight;
-                const yAngle = 2 * Math.PI * this.mouseRotateDelta.y / this._gameView.gameView.clientHeight;
-                this.rotateLeft(xAngle);
-                this.rotateUp(yAngle);
-                this.mouseRotateStart.copy(this.mouseRotateEnd);
-            }
-
-            //
-            // Pan/Dolly/Rotate [End]
-            //
-            if (input.getMouseButtonUp(MouseButtonId.Left) ||
-                input.getMouseButtonUp(MouseButtonId.Middle) ||
-                input.getMouseButtonUp(MouseButtonId.Right)) {
-
-                this.state = STATE.NONE;
-
-            }
-
-
         } else if (input.currentInputType === InputType.Touch) {
 
-            //
-            // Pan/Dolly/Rotate [Start]
-            //
-            if (input.getTouchCount() === 1) {
+            if (input.isMouseButtonDownOn(this._gameView.gameView)) {
 
-                if (input.getTouchDown(0) && this.enablePan ) {
+                //
+                // Pan/Dolly/Rotate [Start]
+                //
+                if (input.getTouchCount() === 1) {
 
-                    // Pan start.
-                    this.panStart.copy(input.getTouchClientPos(0));
-                    this.state = STATE.PAN;
+                    if (input.getTouchDown(0) && this.enablePan) {
+
+                        // Pan start.
+                        this.panStart.copy(input.getTouchClientPos(0));
+                        this.state = STATE.PAN;
+                    }
+
+                } else if (input.getTouchCount() === 2) {
+
+                    if (input.getTouchDown(1)) {
+
+                        if (this.enableZoom) {
+                            
+                            // Dolly start.
+                            const pagePosA = input.getTouchPagePos(0);
+                            const pagePosB = input.getTouchPagePos(1);
+                            const distance = pagePosA.distanceTo(pagePosB);
+                            this.dollyStart.set(0, distance);
+
+                        }
+
+                        if (this.enableRotate) {
+
+                            // Rotate start.
+                            this.touchRotateStart.finger0 = input.getTouchPagePos(0);
+                            this.touchRotateStart.finger1 = input.getTouchPagePos(1);
+                        }
+                    } else if (input.getTouchUp(0) || input.getTouchUp(1)) {
+
+                        // Releasing one of the two fingers.
+                        // Get ready to starting panning with the currently pressed finger.
+                        let panFingerIndex = input.getTouchUp(0) ? 1 : 0;
+                        this.panStart.copy(input.getTouchClientPos(panFingerIndex));
+                        this.state = STATE.PAN;
+
+                    }
                 }
 
-            } else if (input.getTouchCount() === 2) {
+                //
+                // Pan/Dolly/Rotate [Move]
+                //
+                if (input.getTouchCount() === 1) {
 
-                if (input.getTouchDown(1)) {
+                    if (input.getTouchHeld(0) && this.enablePan) {
+
+                        // Pan move.
+                        this.panEnd.copy(input.getTouchClientPos(0));
+                        this.panDelta.subVectors(this.panEnd, this.panStart).multiplyScalar(this.panSpeed);
+                        this.pan(this.panDelta.x, this.panDelta.y);
+                        this.panStart.copy(this.panEnd);
+                    }
+                } else if (input.getTouchCount() === 2) {
 
                     if (this.enableZoom) {
-                        
-                        // Dolly start.
+
+                        // Dolly move.
                         const pagePosA = input.getTouchPagePos(0);
                         const pagePosB = input.getTouchPagePos(1);
                         const distance = pagePosA.distanceTo(pagePosB);
-                        this.dollyStart.set(0, distance);
-
+                        
+                        this.dollyEnd.set(0, distance);
+                        this.dollyDelta.set(0, Math.pow(this.dollyEnd.y / this.dollyStart.y, this.zoomSpeed));
+                        this.dollyIn(this.dollyDelta.y);
+                        this.dollyStart.copy(this.dollyEnd);
                     }
 
                     if (this.enableRotate) {
 
-                        // Rotate start.
-                        this.touchRotateStart.finger0 = input.getTouchPagePos(0);
-                        this.touchRotateStart.finger1 = input.getTouchPagePos(1);
+                        // Rotate move.
+                        this.touchRotateEnd.finger0 = input.getTouchPagePos(0);
+                        this.touchRotateEnd.finger1 = input.getTouchPagePos(1);
+                        
+                        // Rotate X (two finger lazy susan turning).
+                        let startDir = new Vector2().subVectors(this.touchRotateStart.finger0, this.touchRotateStart.finger1).normalize();
+                        let endDir = new Vector2().subVectors(this.touchRotateEnd.finger0, this.touchRotateEnd.finger1).normalize();
+                        
+                        let xAngle = startDir.dot(endDir) / (Math.sqrt(startDir.lengthSq() * endDir.lengthSq()));
+                        xAngle *= this.rotateSpeed;
+                        xAngle = Math.acos(ThreeMath.clamp(xAngle, -1, 1));
+
+                        let cross = startDir.x * endDir.y - startDir.y * endDir.x;
+                        if (cross >= 0) xAngle = -xAngle;
+
+                        this.rotateLeft(xAngle);
+                        
+                        // Rotate Y (vertical delta of midpoint between fingers).
+                        let startMidpoint = new Vector2(
+                            (this.touchRotateStart.finger0.x + this.touchRotateStart.finger1.x) / 2, 
+                            (this.touchRotateStart.finger0.y + this.touchRotateStart.finger1.y) / 2
+                        );
+
+                        let endMidpoint = new Vector2(
+                            (this.touchRotateEnd.finger0.x + this.touchRotateEnd.finger1.x) / 2, 
+                            (this.touchRotateEnd.finger0.y + this.touchRotateEnd.finger1.y) / 2
+                        );
+
+                        let midpointDelta = new Vector2().subVectors(endMidpoint, startMidpoint).multiplyScalar(this.rotateSpeed);
+                        let yAngle = 2 * Math.PI * midpointDelta.y / this._gameView.gameView.clientHeight;
+
+                        this.rotateUp(yAngle);
+                                                        
+                        // Set rotate start positions to the current end positions for the next frame.
+                        this.touchRotateStart.finger0.copy(this.touchRotateEnd.finger0);
+                        this.touchRotateStart.finger1.copy(this.touchRotateEnd.finger1);
                     }
-                } else if (input.getTouchUp(0) || input.getTouchUp(1)) {
+                }
+                
 
-                    // Releasing one of the two fingers.
-                    // Get ready to starting panning with the currently pressed finger.
-                    let panFingerIndex = input.getTouchUp(0) ? 1 : 0;
-                    this.panStart.copy(input.getTouchClientPos(panFingerIndex));
-                    this.state = STATE.PAN;
+                //
+                // Pan/Dolly/Rotate [End]
+                //
+                if (input.getTouchCount() === 0) {
+
+                    this.state = STATE.NONE;
 
                 }
             }
-
-            //
-            // Pan/Dolly/Rotate [Move]
-            //
-            if (input.getTouchCount() === 1) {
-
-                if (input.getTouchHeld(0) && this.enablePan) {
-
-                    // Pan move.
-                    this.panEnd.copy(input.getTouchClientPos(0));
-                    this.panDelta.subVectors(this.panEnd, this.panStart).multiplyScalar(this.panSpeed);
-                    this.pan(this.panDelta.x, this.panDelta.y);
-                    this.panStart.copy(this.panEnd);
-                }
-            } else if (input.getTouchCount() === 2) {
-
-                if (this.enableZoom) {
-
-                    // Dolly move.
-                    const pagePosA = input.getTouchPagePos(0);
-                    const pagePosB = input.getTouchPagePos(1);
-                    const distance = pagePosA.distanceTo(pagePosB);
-                    
-                    this.dollyEnd.set(0, distance);
-                    this.dollyDelta.set(0, Math.pow(this.dollyEnd.y / this.dollyStart.y, this.zoomSpeed));
-                    this.dollyIn(this.dollyDelta.y);
-                    this.dollyStart.copy(this.dollyEnd);
-                }
-
-                if (this.enableRotate) {
-
-                    // Rotate move.
-                    this.touchRotateEnd.finger0 = input.getTouchPagePos(0);
-                    this.touchRotateEnd.finger1 = input.getTouchPagePos(1);
-                    
-                    // Rotate X (two finger lazy susan turning).
-                    let startDir = new Vector2().subVectors(this.touchRotateStart.finger0, this.touchRotateStart.finger1).normalize();
-                    let endDir = new Vector2().subVectors(this.touchRotateEnd.finger0, this.touchRotateEnd.finger1).normalize();
-                    
-                    let xAngle = startDir.dot(endDir) / (Math.sqrt(startDir.lengthSq() * endDir.lengthSq()));
-                    xAngle *= this.rotateSpeed;
-                    xAngle = Math.acos(ThreeMath.clamp(xAngle, -1, 1));
-
-                    let cross = startDir.x * endDir.y - startDir.y * endDir.x;
-                    if (cross >= 0) xAngle = -xAngle;
-
-                    this.rotateLeft(xAngle);
-                    
-                    // Rotate Y (vertical delta of midpoint between fingers).
-                    let startMidpoint = new Vector2(
-                        (this.touchRotateStart.finger0.x + this.touchRotateStart.finger1.x) / 2, 
-                        (this.touchRotateStart.finger0.y + this.touchRotateStart.finger1.y) / 2
-                    );
-
-                    let endMidpoint = new Vector2(
-                        (this.touchRotateEnd.finger0.x + this.touchRotateEnd.finger1.x) / 2, 
-                        (this.touchRotateEnd.finger0.y + this.touchRotateEnd.finger1.y) / 2
-                    );
-
-                    let midpointDelta = new Vector2().subVectors(endMidpoint, startMidpoint).multiplyScalar(this.rotateSpeed);
-                    let yAngle = 2 * Math.PI * midpointDelta.y / this._gameView.gameView.clientHeight;
-
-                    this.rotateUp(yAngle);
-                                                    
-                    // Set rotate start positions to the current end positions for the next frame.
-                    this.touchRotateStart.finger0.copy(this.touchRotateEnd.finger0);
-                    this.touchRotateStart.finger1.copy(this.touchRotateEnd.finger1);
-                }
-            }
-            
-
-            //
-            // Pan/Dolly/Rotate [End]
-            //
-            if (input.getTouchCount() === 0) {
-
-                this.state = STATE.NONE;
-
-            }
-
         }
     }
 

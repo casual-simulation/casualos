@@ -1,3 +1,4 @@
+import Vue from 'vue';
 import { ArgEvent } from '../../common/Events';
 import { Vector2, Vector3 } from 'three';
 import { find, findIndex, some } from 'lodash';
@@ -14,6 +15,7 @@ export class Input {
     private _mouseData: MouseData;
     private _touchData: TouchData[];
     private _wheelData: WheelData;
+    private _targetData: TargetData;
 
     private _gameView: GameView;
     private _inputType: InputType = InputType.Undefined;
@@ -86,6 +88,11 @@ export class Input {
             pagePos: new Vector2(0, 0),
             clientPos: new Vector2(0, 0)
         };
+        this._targetData = {
+            inputDown: null,
+            inputUp: null,
+            inputOver: null
+        };
         this._touchData = [];
         this._wheelData = new WheelData();
         this._lastPrimaryTouchData = { 
@@ -107,7 +114,7 @@ export class Input {
         this._handleTouchCancel = this._handleTouchCancel.bind(this);
         this._handleContextMenu = this._handleContextMenu.bind(this);
 
-        let element = this._gameView.gameView;
+        let element = document.body;
         element.addEventListener('mousedown', this._handleMouseDown);
         element.addEventListener('mousemove', this._handleMouseMove);
         element.addEventListener('mouseup', this._handleMouseUp);
@@ -116,14 +123,16 @@ export class Input {
         element.addEventListener('touchmove', this._handleTouchMove);
         element.addEventListener('touchend', this._handleTouchEnd);
         element.addEventListener('touchcancel', this._handleTouchCancel);
-        element.addEventListener('contextmenu', this._handleContextMenu);
+        
+        // Context menu is only important on the game view
+        this._gameView.gameView.addEventListener('contextmenu', this._handleContextMenu);
 
     }
 
     public dispose() {
         console.log("[Input] dispose");
 
-        let element = this._gameView.gameView;
+        let element = document.body;
         element.removeEventListener('mousedown', this._handleMouseDown);
         element.removeEventListener('mousemove', this._handleMouseMove);
         element.removeEventListener('mouseup', this._handleMouseUp);
@@ -132,9 +141,61 @@ export class Input {
         element.removeEventListener('touchmove', this._handleTouchMove);
         element.removeEventListener('touchend', this._handleTouchEnd);
         element.removeEventListener('touchcancel', this._handleTouchCancel);
-        element.removeEventListener('contextmenu', this._handleContextMenu);
+        
+        // Context menu is only important on the game view
+        this._gameView.gameView.removeEventListener('contextmenu', this._handleContextMenu);
 
         this._gameView = null;
+    }
+
+    /**
+     * Determines if the mouse down event happened directly over the given element.
+     * @param element The element to test.
+     */
+    public isMouseButtonDownOn(element: HTMLElement): boolean {
+        const downElement = this._targetData.inputDown;
+        return Input.isElementContainedByOrEqual(downElement, element);
+    }
+
+    /**
+     * Determines if the mouse is currently focusing the given html element.
+     * @param element 
+     */
+    public isMouseFocusing(element: HTMLElement): boolean {
+        const overElement = this._targetData.inputOver;
+        return Input.isElementContainedByOrEqual(overElement, element);
+    }
+
+    /**
+     * Gets the closest vue component accociated with this HTML element.
+     * @param element The html element.
+     */
+    public static getVueParent(element: HTMLElement): Vue {
+        const e = <any>element;
+        if (!e) {
+            return null;
+        }
+        if (e.__vue__) {
+            return <Vue>e.__vue__;
+        }
+        return Input.getVueParent(element.parentElement);
+    }
+
+    /**
+     * Determines if the given HTML element is contained by the given container element.
+     * @param element The HTML element.
+     * @param container The container.
+     */
+    public static isElementContainedByOrEqual(element: HTMLElement, container: HTMLElement): boolean {
+        if (element === container) {
+            return true;
+        } else {
+            if (!element) {
+                return false;
+            } else {
+                return this.isElementContainedByOrEqual(element.parentElement, container);
+            }
+        }
     }
 
     /**
@@ -348,6 +409,16 @@ export class Input {
         return null;
     }
 
+    /**
+     * Gets the information about what HTML elements are currently being targeted.
+     * Note that this only stores information about the last targeted elements.
+     * As such, it should only be used to tell whether touch/mouse events
+     * should be used or not.
+     */
+    public getTargetData(): TargetData {
+        return this._targetData;
+    }
+
     public update() {
 
         this._cullTouchData();
@@ -438,6 +509,7 @@ export class Input {
                 console.log("mouse button " + event.button + " down. fireInputOnFrame: " + this._gameView.time.frameCount);
             }
 
+            this._targetData.inputDown = <HTMLElement>event.target;
             this._mouseData.clientPos = new Vector2(event.clientX, event.clientY);
             this._mouseData.pagePos = new Vector2(event.pageX, event.pageY);
             this._mouseData.screenPos = this._calculateScreenPos(event.pageX, event.pageY);
@@ -456,6 +528,7 @@ export class Input {
                 console.log("mouse button " + event.button + " up. fireInputOnFrame: " + this._gameView.time.frameCount);
             }
 
+            this._targetData.inputUp = <HTMLElement>event.target;
             this._mouseData.clientPos = new Vector2(event.clientX, event.pageY);
             this._mouseData.pagePos = new Vector2(event.pageX, event.pageY);
             this._mouseData.screenPos = this._calculateScreenPos(event.pageX, event.pageY);
@@ -469,6 +542,7 @@ export class Input {
         this._mouseData.clientPos = new Vector2(event.clientX, event.clientY);
         this._mouseData.pagePos = new Vector2(event.pageX, event.pageY);
         this._mouseData.screenPos = this._calculateScreenPos(event.pageX, event.pageY);
+        this._targetData.inputOver = <HTMLElement>event.target;
 
         if (this.debugLevel >= 2) {
             console.log("mouse move:");
@@ -479,7 +553,9 @@ export class Input {
     }
 
     private _handleWheel(event: WheelEvent) {
-        event.preventDefault();
+        if (this.isMouseFocusing(this._gameView.gameView)) {
+            event.preventDefault();
+        }
 
         let wheelFrame: WheelFrame = {
             moveFrame: this._gameView.time.frameCount,
@@ -529,6 +605,7 @@ export class Input {
                 console.log("touch finger " + data.fingerIndex + " start. fireInputOnFrame: " + this._gameView.time.frameCount);
             }
 
+            this._targetData.inputDown = <HTMLElement>touch.target;
             this._touchData.push(data);
         }
     }
@@ -575,6 +652,8 @@ export class Input {
 
         for (let i = 0; i < changed.length; i++) {
             let touch = changed.item(i);
+
+            this._targetData.inputUp = <HTMLElement>touch.target;
 
             let existingTouch = find(this._touchData, (d) => { return d.identifier === touch.identifier; });
             existingTouch.state.setUpFrame(this._gameView.time.frameCount);
@@ -731,6 +810,15 @@ interface WheelFrame {
      * This boolean indicates whether the ctrl key was detected with the WheelEvent.
      */
     ctrl: boolean;
+}
+
+/**
+ * Data about the HTML element that was targeted by a click.
+ */
+interface TargetData {
+    inputDown: HTMLElement;
+    inputUp: HTMLElement;
+    inputOver: HTMLElement;
 }
 
 interface TouchData {

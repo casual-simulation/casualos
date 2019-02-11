@@ -5,44 +5,20 @@
       <slot></slot>
       <div class="ui-container">
         <div class="toolbar">
-          <md-button v-if="filesMode" class="md-fab add-button" @click="addNewFile">
-            <md-icon>add</md-icon>
-            <span class="sr-only">New File</span>
-            <md-tooltip md-direction="bottom">New File</md-tooltip>
-          </md-button>
           <md-button v-if="workspacesMode" class="md-fab add-button" @click="addNewWorkspace()">
             <md-icon>add</md-icon>
             <span class="sr-only">New Worksurface</span>
             <md-tooltip md-direction="bottom">New Worksurface</md-tooltip>
           </md-button>
-          <md-button class="md-fab add-button" @click="toggleXR()" v-if="xrCapable">
-            <span>AR</span>
-            <md-tooltip md-direction="bottom">Enable AR</md-tooltip>
-          </md-button>
-          <md-button class="md-fab add-button" @click="toggleDebug()" v-if="dev">
-            <md-icon>bug_report</md-icon>
-            <span class="sr-only">Debug</span>
-            <md-tooltip md-direction="bottom">Debug</md-tooltip>
-          </md-button>
           <span v-show="vrDisplay" id="vr-button-container" class="vr-button-container"></span>
+
+          <div ref="fileQueue">
+            <div v-if="!vrDisplay && filesMode" class="toolbar-layout">
+              <mini-file v-for="file in recentFiles" :key="file.id" :selected="selectedRecentFile === file" :file="file" @click="selectRecentFile(file)"></mini-file>
+            </div>
+          </div>
         </div>
 
-        <!-- <div class="toolbar">
-          <div class="toolbar-layout">
-            <strong class="toolbar-label">Tools</strong>
-            <div class="divider"></div>
-            <md-button class="toolbar-button" @click="addNewFile()">
-              <cube-icon class="toolbar-button-icon" />
-              <span>New File</span>
-            </md-button>
-            <div class="divider"></div>
-            <md-button class="toolbar-button" @click="addNewWorkspace()">
-              <span>New Workspace</span>
-            </md-button>
-            <div class="divider" v-if="dev"></div>
-            
-          </div>
-        </div> -->
         <md-card class="debug-card" v-if="debug">
             <md-card-content>
               <h4>Debug Info</h4>

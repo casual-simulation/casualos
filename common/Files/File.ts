@@ -25,6 +25,7 @@ export interface Object {
         _movable?: boolean;
         _editingFile?: string;
         _lastActiveTime?: number;
+        _lastEditedBy?: string;
         _sceneBackgroundColor?: string;
         ['stroke.color']?: string;
         ['stroke.width']?: number;
@@ -100,6 +101,7 @@ export interface PartialFile {
         _movable?: boolean;
         _editingFile?: string;
         _lastActiveTime?: number;
+        _lastEditedBy?: string;
         _sceneBackgroundColor?: string;
         ['stroke.color']?: string;
         ['stroke.width']?: number;
