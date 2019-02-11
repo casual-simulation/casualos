@@ -4,6 +4,10 @@
     border-bottom: 1px solid transparent;
 }
 
+.mini-file:hover {
+    cursor: pointer;
+}
+
 .mini-file.active {
     border-bottom: 1px solid #000;
 }

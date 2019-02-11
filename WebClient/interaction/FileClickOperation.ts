@@ -22,6 +22,7 @@ export class FileClickOperation implements IOperation {
     private _interaction: InteractionManager;
     private _mode: UserMode;
     private _file: File3D;
+    // private _input: Input;
     private _hit: Intersection;
     private _finished: boolean;
     private _triedDragging: boolean;
@@ -108,7 +109,7 @@ export class FileClickOperation implements IOperation {
             }
 
             // Button has been released. This click operation is finished.
-            this._finished = true;
+            this.finish();
         }
     }
 
@@ -124,6 +125,10 @@ export class FileClickOperation implements IOperation {
             this._dragOperation = null;
         }
 
+    }
+
+    public finish() {
+        this._finished = true;
     }
 
     canDragFile(file: File) {

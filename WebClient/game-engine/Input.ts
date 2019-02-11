@@ -8,12 +8,13 @@ export class Input {
      * Debug level for Input class.
      * 0: Disabled, 1: Down/Up events, 2: Move events
      */
-    public debugLevel: number = 0;
+    public debugLevel: number = 1;
 
     // Internal pointer data.
     private _mouseData: MouseData;
     private _touchData: TouchData[];
     private _wheelData: WheelData;
+    private _targetData: TargetData;
 
     private _gameView: GameView;
     private _inputType: InputType = InputType.Undefined;
@@ -82,6 +83,10 @@ export class Input {
             pagePos: new Vector2(0, 0),
             clientPos: new Vector2(0, 0)
         };
+        this._targetData = {
+            inputDown: null,
+            inputUp: null
+        };
         this._touchData = [];
         this._wheelData = new WheelData();
 
@@ -95,7 +100,7 @@ export class Input {
         this._handleTouchCancel = this._handleTouchCancel.bind(this);
         this._handleContextMenu = this._handleContextMenu.bind(this);
 
-        let element = this._gameView.gameView;
+        let element = document.body;
         element.addEventListener('mousedown', this._handleMouseDown);
         element.addEventListener('mousemove', this._handleMouseMove);
         element.addEventListener('mouseup', this._handleMouseUp);
@@ -104,14 +109,16 @@ export class Input {
         element.addEventListener('touchmove', this._handleTouchMove);
         element.addEventListener('touchend', this._handleTouchEnd);
         element.addEventListener('touchcancel', this._handleTouchCancel);
-        element.addEventListener('contextmenu', this._handleContextMenu);
+        
+        // Context menu is only important on the game view
+        this._gameView.gameView.addEventListener('contextmenu', this._handleContextMenu);
 
     }
 
     public dispose() {
         console.log("[Input] dispose");
 
-        let element = this._gameView.gameView;
+        let element = document.body;
         element.removeEventListener('mousedown', this._handleMouseDown);
         element.removeEventListener('mousemove', this._handleMouseMove);
         element.removeEventListener('mouseup', this._handleMouseUp);
@@ -120,9 +127,37 @@ export class Input {
         element.removeEventListener('touchmove', this._handleTouchMove);
         element.removeEventListener('touchend', this._handleTouchEnd);
         element.removeEventListener('touchcancel', this._handleTouchCancel);
-        element.removeEventListener('contextmenu', this._handleContextMenu);
+        
+        // Context menu is only important on the game view
+        this._gameView.gameView.removeEventListener('contextmenu', this._handleContextMenu);
 
         this._gameView = null;
+    }
+
+    /**
+     * Determines if the mouse down event happened directly over the given element.
+     * @param element The element to test.
+     */
+    public isMouseButtonDownOn(element: HTMLElement): boolean {
+        const downElement = this._targetData.inputDown;
+        return Input.isElementContainedByOrEqual(element, downElement);
+    }
+
+    /**
+     * Determines if the given HTML element is contained by the given container element.
+     * @param element The HTML element.
+     * @param container The container.
+     */
+    public static isElementContainedByOrEqual(element: HTMLElement, container: HTMLElement): boolean {
+        if (container === element) {
+            return true;
+        } else {
+            if (!container) {
+                return false;
+            } else {
+                return this.isElementContainedByOrEqual(element, container.parentElement);
+            }
+        }
     }
 
     /**
@@ -336,6 +371,16 @@ export class Input {
         return null;
     }
 
+    /**
+     * Gets the information about what HTML elements are currently being targeted.
+     * Note that this only stores information about the last targeted elements.
+     * As such, it should only be used to tell whether touch/mouse events
+     * should be used or not.
+     */
+    public getTargetData(): TargetData {
+        return this._targetData;
+    }
+
     public update() {
 
         this._cullTouchData();
@@ -417,6 +462,7 @@ export class Input {
                 console.log("mouse button " + event.button + " down. fireInputOnFrame: " + this._gameView.time.frameCount);
             }
 
+            this._targetData.inputDown = <HTMLElement>event.target;
             this._mouseData.clientPos = new Vector2(event.clientX, event.clientY);
             this._mouseData.pagePos = new Vector2(event.pageX, event.pageY);
             this._mouseData.screenPos = this._calculateScreenPos(event.pageX, event.pageY);
@@ -435,6 +481,7 @@ export class Input {
                 console.log("mouse button " + event.button + " up. fireInputOnFrame: " + this._gameView.time.frameCount);
             }
 
+            this._targetData.inputUp = <HTMLElement>event.target;
             this._mouseData.clientPos = new Vector2(event.clientX, event.pageY);
             this._mouseData.pagePos = new Vector2(event.pageX, event.pageY);
             this._mouseData.screenPos = this._calculateScreenPos(event.pageX, event.pageY);
@@ -504,6 +551,7 @@ export class Input {
                 console.log("touch finger " + data.fingerIndex + " start. fireInputOnFrame: " + this._gameView.time.frameCount);
             }
 
+            this._targetData.inputDown = <HTMLElement>touch.target;
             this._touchData.push(data);
         }
     }
@@ -546,6 +594,8 @@ export class Input {
 
         for (let i = 0; i < changed.length; i++) {
             let touch = changed.item(i);
+
+            this._targetData.inputUp = <HTMLElement>touch.target;
 
             let existingTouch = find(this._touchData, (d) => { return d.identifier === touch.identifier; });
             existingTouch.state.setUpFrame(this._gameView.time.frameCount);
@@ -683,6 +733,14 @@ interface WheelFrame {
      * This boolean indicates whether the ctrl key was detected with the WheelEvent.
      */
     ctrl: boolean;
+}
+
+/**
+ * Data about the HTML element that was targeted by a click.
+ */
+interface TargetData {
+    inputDown: HTMLElement;
+    inputUp: HTMLElement;
 }
 
 interface TouchData {
