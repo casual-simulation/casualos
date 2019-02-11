@@ -253,6 +253,12 @@ export default class GameView extends Vue {
       }))
       .subscribe());
 
+    if (this.dev) {
+      this.addSidebarItem('debug_mode', 'Debug', () => {
+        this.toggleDebug();
+      }, 'bug_report');
+    }
+
     this._setupWebVR();
     await this._setupWebXR();
     this._frameUpdate();
@@ -263,6 +269,7 @@ export default class GameView extends Vue {
     window.removeEventListener('vrdisplaypresentchange', this._handleResize);
     this.removeSidebarItem('enable_xr');
     this.removeSidebarItem('disable_xr');
+    this.removeSidebarItem('debug_mode');
     this._input.dispose();
 
     if (this._subs) {

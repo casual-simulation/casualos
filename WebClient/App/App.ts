@@ -26,6 +26,7 @@ const FilePond = vueFilePond();
 export interface SidebarItem {
     id: string;
     text: string;
+    icon: string;
     click: () => void;
 }
 
@@ -141,10 +142,11 @@ export default class App extends Vue {
      * @param click 
      */
     @Provide()
-    addSidebarItem(id: string, text: string, click: () => void) {
+    addSidebarItem(id: string, text: string, click: () => void, icon: string = null) {
         this.extraItems.push({
             id: id,
             text: text,
+            icon: icon,
             click: click
         });
     }
