@@ -9,6 +9,7 @@ import { UserMode, File } from 'common/Files';
 import { Physics } from '../game-engine/Physics';
 import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
 import { appManager } from '../AppManager';
+import { merge } from 'common/utils';
 
 /**
  * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
@@ -92,10 +93,13 @@ export class FileClickOperation implements IOperation {
                         if (closest) {
                             let tags = {
                               _position: { x: closest.tile.gridPosition.x, y: closest.tile.gridPosition.y, z: closest.tile.localPosition.y },
-                              _workspace: this._file.file.id
+                              _workspace: this._file.file.id,
+                              _index: 0
                             };
 
-                            appManager.fileManager.createFile(undefined, tags);
+                            let merged = merge(this._gameView.selectedRecentFile.tags, tags);
+
+                            appManager.fileManager.createFile(undefined, merged);
                         }
                     } else {
                         this._interaction.showContextMenu();
