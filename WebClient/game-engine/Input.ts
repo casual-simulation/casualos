@@ -18,6 +18,10 @@ export class Input {
     private _gameView: GameView;
     private _inputType: InputType = InputType.Undefined;
 
+    // Keep track of the touch data for finger index 0 at all times.
+    // This gives better support to the getMouse* functions while using touch.
+    private _lastPrimaryTouchData: TouchData;
+
     /**
      * @returns 'mouse' or 'touch'
      */
@@ -84,6 +88,14 @@ export class Input {
         };
         this._touchData = [];
         this._wheelData = new WheelData();
+        this._lastPrimaryTouchData = { 
+            fingerIndex: 0,
+            identifier: 0,
+            clientPos: new Vector2(0,0),
+            pagePos: new Vector2(0,0),
+            screenPos: new Vector2(0,0),
+            state: new InputState()
+        };
 
         this._handleMouseDown = this._handleMouseDown.bind(this);
         this._handleMouseMove = this._handleMouseMove.bind(this);
@@ -137,7 +149,7 @@ export class Input {
             }
         } else if (this._inputType == InputType.Touch) {
             if (buttonId == MouseButtonId.Left) {
-                return this.getTouchDown(0);
+                return this._lastPrimaryTouchData.state.isDownOnFrame(this._gameView.time.frameCount);
             } else {
                 // TODO: Support right button with touch?
             }
@@ -167,7 +179,7 @@ export class Input {
             }
         } else if (this._inputType == InputType.Touch) {
             if (buttonId == MouseButtonId.Left) {
-                this.getTouchUp(0);
+                return this._lastPrimaryTouchData.state.isUpOnFrame(this._gameView.time.frameCount);
             } else {
                 // TODO: Support right button with touch?
             }
@@ -197,7 +209,7 @@ export class Input {
             }
         } else if (this._inputType == InputType.Touch) {
             if (buttonId == MouseButtonId.Left) {
-                return this.getTouchHeld(0);
+                return this._lastPrimaryTouchData.state.isHeldOnFrame(this._gameView.time.frameCount);
             } else {
                 // TODO: Support right button with touch?
             }
@@ -240,7 +252,7 @@ export class Input {
         if (this._inputType == InputType.Mouse) {
             return this._mouseData.screenPos;
         } else if (this._inputType == InputType.Touch) {
-            return this.getTouchScreenPos(0);
+            return this._lastPrimaryTouchData.screenPos;
         }
 
         return null;
@@ -254,7 +266,7 @@ export class Input {
         if (this._inputType == InputType.Mouse) {
             return this._mouseData.pagePos;
         } else if (this._inputType == InputType.Touch) {
-            return this.getTouchPagePos(0);
+            return this._lastPrimaryTouchData.pagePos;
         }
 
         return null;
@@ -268,7 +280,7 @@ export class Input {
         if (this._inputType == InputType.Mouse) {
             return this._mouseData.clientPos;
         } else if (this._inputType == InputType.Touch) {
-            return this.getTouchClientPos(0);
+            return this._lastPrimaryTouchData.clientPos;
         }
 
         return null;
@@ -381,6 +393,15 @@ export class Input {
                 this._touchData[i].fingerIndex = i;
             }
         }
+    }
+
+    private _copyToPrimaryTouchData(data: TouchData) {
+        this._lastPrimaryTouchData.fingerIndex = data.fingerIndex;
+        this._lastPrimaryTouchData.identifier = data.identifier;
+        this._lastPrimaryTouchData.clientPos = data.clientPos.clone();
+        this._lastPrimaryTouchData.pagePos = data.pagePos.clone();
+        this._lastPrimaryTouchData.screenPos = data.screenPos.clone();
+        this._lastPrimaryTouchData.state = data.state.clone();
     }
 
     /**
@@ -500,6 +521,10 @@ export class Input {
             // Set the down frame on the new touch data.
             data.state.setDownFrame(this._gameView.time.frameCount);
 
+            if (data.fingerIndex === 0) {
+                this._copyToPrimaryTouchData(data);
+            }
+
             if (this.debugLevel >= 1) {
                 console.log("touch finger " + data.fingerIndex + " start. fireInputOnFrame: " + this._gameView.time.frameCount);
             }
@@ -525,6 +550,10 @@ export class Input {
             existingTouch.clientPos = new Vector2(touch.clientX, touch.clientY);
             existingTouch.pagePos = new Vector2(touch.pageX, touch.pageY);
             existingTouch.screenPos = this._calculateScreenPos(touch.pageX, touch.pageY);
+
+            if (existingTouch.fingerIndex === 0) {
+                this._copyToPrimaryTouchData(existingTouch);
+            }
 
             if (this.debugLevel >= 2) {
                 console.log("touch move:");
@@ -552,6 +581,10 @@ export class Input {
             existingTouch.clientPos = new Vector2(touch.clientX, touch.clientY);
             existingTouch.pagePos = new Vector2(touch.pageX, touch.pageY);
             existingTouch.screenPos = this._calculateScreenPos(touch.pageX, touch.pageY);
+            
+            if (existingTouch.fingerIndex === 0) {
+                this._copyToPrimaryTouchData(existingTouch);
+            }
 
             if (this.debugLevel >= 1) {
                 console.log("touch finger " + existingTouch.fingerIndex + " end. fireInputOnFrame: " + this._gameView.time.frameCount);
@@ -574,6 +607,10 @@ export class Input {
             existingTouch.clientPos = new Vector2(touch.clientX, touch.clientY);
             existingTouch.pagePos = new Vector2(touch.pageX, touch.pageY);
             existingTouch.screenPos = this._calculateScreenPos(touch.pageX, touch.pageY);
+
+            if (existingTouch.fingerIndex === 0) {
+                this._copyToPrimaryTouchData(existingTouch);
+            }
 
             if (this.debugLevel >= 1) {
                 console.log("touch finger " + existingTouch.fingerIndex + " canceled. fireInputOnFrame: " + this._gameView.time.frameCount);
@@ -661,6 +698,17 @@ export class InputState {
      */
     isUpOnFrame(frame: number): boolean {
         return frame === this._upFrame;
+    }
+
+    /**
+     * Returns a new InputState with the same values as this one.
+     */
+    clone(): InputState {
+        let clone = new InputState();
+        clone._downFrame = this._downFrame;
+        clone._upFrame = this._upFrame;
+
+        return clone;
     }
 }
 
