@@ -83,10 +83,7 @@ export class FileClickOperation implements IOperation {
 
                     // If we're clicking on a workspace show the context menu for it.
                 } else if(this._file.file.type === 'workspace') {
-
-                    if (this._interaction.isInCorrectMode(this._file.file)) {
-                        this._interaction.showContextMenu();
-                    }
+                    this._interaction.showContextMenu();
                 }
             }
 
