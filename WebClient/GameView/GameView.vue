@@ -12,8 +12,10 @@
           </md-button>
           <span v-show="vrDisplay" id="vr-button-container" class="vr-button-container"></span>
 
-          <div v-if="!vrDisplay && filesMode" class="toolbar-layout">
-            <mini-file v-for="file in recentFiles" :key="file.id" :selected="selectedRecentFile === file" :file="file" @click="selectRecentFile(file)"></mini-file>
+          <div ref="fileQueue">
+            <div v-if="!vrDisplay && filesMode" class="toolbar-layout">
+              <mini-file v-for="file in recentFiles" :key="file.id" :selected="selectedRecentFile === file" :file="file" @click="selectRecentFile(file)"></mini-file>
+            </div>
           </div>
         </div>
 

@@ -332,6 +332,11 @@ export function newSelectionId() {
     return `_selection_${uuid()}`;
 }
 
+/**
+ * Creates a file with a new ID and the given tags.
+ * @param id 
+ * @param tags 
+ */
 export function createFile(id = uuid(), tags: Object['tags'] = {
     _position: { x: 0, y: 0, z: 0},
     _workspace: <string>null

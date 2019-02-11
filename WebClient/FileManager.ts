@@ -349,7 +349,10 @@ export class FileManager {
   async createFile(id?: string, tags?: Object['tags']) {
     console.log('[FileManager] Create File');
 
-    this._files.emit(fileAdded(createFile(id, tags)));
+    const file = createFile(id, tags);
+    this._files.emit(fileAdded(file));
+    
+    return file;
   }
 
   async createWorkspace() {

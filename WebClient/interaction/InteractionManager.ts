@@ -21,7 +21,7 @@ import { CameraControls } from './CameraControls';
 import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
 import { FileMesh } from '../game-engine/FileMesh';
 import { Axial, realPosToGridPos, gridDistance, keyToPos, posToKey } from '../game-engine/hex';
-import { MouseButtonId } from '../game-engine/input';
+import { MouseButtonId, Input } from '../game-engine/input';
 import { isBuffer } from 'util';
 import { objectsAtGridPosition, tagsMatchingFilter, isMinimized } from 'common/Files/FileCalculations';
 import { ColorPickerEvent } from './ColorPickerEvent';
@@ -29,6 +29,7 @@ import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';
 import { IOperation } from './IOperation';
 import { EmptyClickOperation } from './EmptyClickOperation';
+import { NewFileClickOperation } from './NewFileClickOperation';
 
 export class InteractionManager {
 
@@ -120,7 +121,7 @@ export class InteractionManager {
                         if (file) {
 
                             // Start file click operation on file.
-                            let fileClickOperation = new FileClickOperation(this.mode, this._gameView, this, file, clickedObject);
+                            let fileClickOperation = new FileClickOperation(this.mode, this._gameView, this, file);
                             this._operations.push(fileClickOperation);
 
                             if (this.isInCorrectMode(file.file)) {
@@ -136,6 +137,15 @@ export class InteractionManager {
                         this._operations.push(emptyClickOperation);
                         this._cameraControls.enabled = true;
 
+                    }
+                } else if(input.isMouseButtonDownOn(this._gameView.fileQueue)) {
+                    const element = input.getTargetData().inputDown;
+                    const vueElement: any = Input.getVueParent(element);
+                    if (vueElement.file) {
+                        const file = <File>vueElement.file;
+                        let newFileClickOperation = new NewFileClickOperation(this.mode, this._gameView, this, file);
+                        this._operations.push(newFileClickOperation);
+                        this._cameraControls.enabled = false;
                     }
                 }
             }

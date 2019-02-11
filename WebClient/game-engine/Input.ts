@@ -1,3 +1,4 @@
+import Vue from 'vue';
 import { ArgEvent } from '../../common/Events';
 import { Vector2, Vector3 } from 'three';
 import { find, findIndex, some } from 'lodash';
@@ -8,7 +9,7 @@ export class Input {
      * Debug level for Input class.
      * 0: Disabled, 1: Down/Up events, 2: Move events
      */
-    public debugLevel: number = 1;
+    public debugLevel: number = 0;
 
     // Internal pointer data.
     private _mouseData: MouseData;
@@ -163,6 +164,21 @@ export class Input {
     public isMouseFocusing(element: HTMLElement): boolean {
         const overElement = this._targetData.inputOver;
         return Input.isElementContainedByOrEqual(overElement, element);
+    }
+
+    /**
+     * Gets the closest vue component accociated with this HTML element.
+     * @param element The html element.
+     */
+    public static getVueParent(element: HTMLElement): Vue {
+        const e = <any>element;
+        if (!e) {
+            return null;
+        }
+        if (e.__vue__) {
+            return <Vue>e.__vue__;
+        }
+        return Input.getVueParent(element.parentElement);
     }
 
     /**

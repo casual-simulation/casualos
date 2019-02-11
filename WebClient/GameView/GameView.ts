@@ -152,6 +152,7 @@ export default class GameView extends Vue {
     }
   }
 
+  get fileQueue(): HTMLElement { return <HTMLElement>this.$refs.fileQueue; }
   get gameView(): HTMLElement { return <HTMLElement>this.$refs.gameView; }
   get canvas() { return this._canvas; }
   get time(): Time { return this._time; }
