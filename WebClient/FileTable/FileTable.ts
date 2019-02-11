@@ -94,10 +94,8 @@ export default class FileTable extends Vue {
                     inline: 'start'
                 });
             }
-        } else if(!isAction) {
-            this.newTag = 'newTag';
         } else {
-            this.newTag = '+(#tag:"value")';
+            this.newTag = '';   
         }
         this.isMakingNewTag = !this.isMakingNewTag;
         this.isMakingNewAction = isAction && this.isMakingNewTag;
