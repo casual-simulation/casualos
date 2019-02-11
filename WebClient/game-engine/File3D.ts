@@ -92,7 +92,8 @@ export class File3D {
      * Call dispose allow this object to clean itself up when being removed.
      */
     public dispose(): void {
-        this._gameView.scene.remove(this.mesh);
+        
+        this.mesh.parent.remove(this.mesh);
     }
 
     private _createFile(file: Object): FileMesh | UserMesh {
