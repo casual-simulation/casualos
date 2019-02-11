@@ -21,7 +21,7 @@ import { CameraControls } from './CameraControls';
 import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
 import { FileMesh } from '../game-engine/FileMesh';
 import { Axial, realPosToGridPos, gridDistance, keyToPos, posToKey } from '../game-engine/hex';
-import { MouseButtonId } from '../game-engine/input';
+import { MouseButtonId, Input } from '../game-engine/input';
 import { isBuffer } from 'util';
 import { objectsAtGridPosition, tagsMatchingFilter, isMinimized } from 'common/Files/FileCalculations';
 import { ColorPickerEvent } from './ColorPickerEvent';
@@ -29,6 +29,7 @@ import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';
 import { IOperation } from './IOperation';
 import { EmptyClickOperation } from './EmptyClickOperation';
+import { NewFileClickOperation } from './NewFileClickOperation';
 
 export class InteractionManager {
 
@@ -98,50 +99,70 @@ export class InteractionManager {
             }
 
         } else {
-            
+
             // Normal browser interaction.
+
+            // Enable camera controls when there are no more operations.
+            if (this._operations.length === 0) {
+                this._cameraControls.enabled = true;
+            }
+            
             this._cameraControls.update();
 
             const input = this._gameView.input;
 
             // Detect left click.
             if (input.getMouseButtonDown(MouseButtonId.Left)) {
-                
-                const screenPos = input.getMouseScreenPos();
-                const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this.getDraggableObjects(), this._gameView.camera);
-                const clickedObject = Physics.firstRaycastHit(raycastResult);
 
-                if (clickedObject) {
+                if (input.isMouseButtonDownOn(this._gameView.gameView)){
 
-                    const file = this.fileForIntersection(clickedObject);
+                    const screenPos = input.getMouseScreenPos();
+                    const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this.getDraggableObjects(), this._gameView.camera);
+                    const clickedObject = Physics.firstRaycastHit(raycastResult);
 
-                    if (file) {
+                    if (clickedObject) {
 
-                        // Start file click operation on file.
-                        let fileClickOperation = new FileClickOperation(this.mode, this._gameView, this, file, clickedObject);
-                        this._operations.push(fileClickOperation);
+                        const file = this.fileForIntersection(clickedObject);
 
-                        if (this.isInCorrectMode(file.file)) {
-                            this._cameraControls.enabled = false;
-                        } else {
-                            this._cameraControls.enabled = true;
+                        if (file) {
+
+                            // Start file click operation on file.
+                            let fileClickOperation = new FileClickOperation(this.mode, this._gameView, this, file, clickedObject);
+                            this._operations.push(fileClickOperation);
+
+                            if (this.isInCorrectMode(file.file)) {
+                                this._cameraControls.enabled = false;
+                            } else {
+                                this._cameraControls.enabled = true;
+                            }
                         }
+
+                    } else {
+
+                        let emptyClickOperation = new EmptyClickOperation(this._gameView, this);
+                        this._operations.push(emptyClickOperation);
+                        this._cameraControls.enabled = true;
+
                     }
-
-                } else {
-
-                    let emptyClickOperation = new EmptyClickOperation(this._gameView, this);
-                    this._operations.push(emptyClickOperation);
-                    this._cameraControls.enabled = true;
-
+                } else if(input.isMouseButtonDownOn(this._gameView.fileQueue)) {
+                    const element = input.getTargetData().inputDown;
+                    const vueElement: any = Input.getVueParent(element);
+                    if (vueElement.file) {
+                        const file = <File>vueElement.file;
+                        let newFileClickOperation = new NewFileClickOperation(this.mode, this._gameView, this, file);
+                        this._operations.push(newFileClickOperation);
+                        this._cameraControls.enabled = false;
+                    }
                 }
             }
 
             // Middle click or Right click.
             if (input.getMouseButtonDown(MouseButtonId.Middle) || input.getMouseButtonDown(MouseButtonId.Right)) {
 
-                // Always allow camera control with middle clicks.
-                this._cameraControls.enabled = true;
+                if (input.isMouseButtonDownOn(this._gameView.gameView)) {
+                    // Always allow camera control with middle clicks.
+                    this._cameraControls.enabled = true;
+                }
 
             }
 
@@ -158,9 +179,11 @@ export class InteractionManager {
 
         this._cameraControls.enabled = false;
         const file = this.fileForIntersection(hit);
-        if (file && file.file && file.file.type === 'workspace') {
+        const actions = this._contextMenuActions(file, hit.point, pagePos);
+
+        if (actions) {
             // Now send the actual context menu event.
-            let menuEvent: ContextMenuEvent = { pagePos: pagePos, actions: this._contextMenuActions(file, hit.point, pagePos) };
+            let menuEvent: ContextMenuEvent = { pagePos: pagePos, actions: actions };
             this._gameView.$emit('onContextMenu', menuEvent);
         }
     }
@@ -427,7 +450,7 @@ export class InteractionManager {
      * @param other The second file.
      */
     public canCombineFiles(file: Object, other: Object): boolean {
-        if (file && other && file.type === 'object' && other.type === 'object' && file !== other) {
+        if (file && other && file.type === 'object' && other.type === 'object' && file.id !== other.id) {
             const tags = union(tagsMatchingFilter(file, other, '+'), tagsMatchingFilter(other, file, '+'));
             return tags.length > 0;
         }
@@ -472,47 +495,53 @@ export class InteractionManager {
     }
 
     private _contextMenuActions(file: File3D, point: Vector3, pagePos: Vector2): ContextMenuAction[] {
+        
         let actions: ContextMenuAction[] = [];
-        if (file.mesh instanceof WorkspaceMesh && file.file.type === 'workspace') {
 
-            const tile = this._worldPosToGridPos(file, point);
-            const currentTile = file.file.grid ? file.file.grid[posToKey(tile)] : null;
-            const currentHeight = (!!currentTile ? currentTile.height : (file.file.defaultHeight || DEFAULT_WORKSPACE_HEIGHT)) || DEFAULT_WORKSPACE_HEIGHT;
-            const increment = DEFAULT_WORKSPACE_HEIGHT_INCREMENT; // TODO: Replace with a configurable value.
-            const minHeight = DEFAULT_WORKSPACE_MIN_HEIGHT; // TODO: This too
-            const minimized = isMinimized(file.file);
+        if (file) {
 
-            if (!minimized) {
-                actions.push({ label: 'Raise', onClick: () => this.updateTileHeightAtGridPosition(file, tile, currentHeight + increment) });
-                if (currentTile && currentHeight - increment >= minHeight) {
-                    actions.push({ label: 'Lower', onClick: () => this.updateTileHeightAtGridPosition(file, tile, currentHeight - increment) });
-                }
+            if (file.mesh instanceof WorkspaceMesh && file.file.type === 'workspace') {
                 
-                actions.push({ label: 'Expand', onClick: () => this.expandWorkspace(file) });
-                if (this.canShrinkWorkspace(file)) {
-                    actions.push({ label: 'Shrink', onClick: () => this.shrinkWorkspace(file) });
+                const tile = this._worldPosToGridPos(file, point);
+                const currentTile = file.file.grid ? file.file.grid[posToKey(tile)] : null;
+                const currentHeight = (!!currentTile ? currentTile.height : (file.file.defaultHeight || DEFAULT_WORKSPACE_HEIGHT)) || DEFAULT_WORKSPACE_HEIGHT;
+                const increment = DEFAULT_WORKSPACE_HEIGHT_INCREMENT; // TODO: Replace with a configurable value.
+                const minHeight = DEFAULT_WORKSPACE_MIN_HEIGHT; // TODO: This too
+                const minimized = isMinimized(file.file);
+                
+                if (this.isInCorrectMode(file.file)) {
+                    if (!minimized) {
+                        actions.push({ label: 'Raise', onClick: () => this.updateTileHeightAtGridPosition(file, tile, currentHeight + increment) });
+                        if (currentTile && currentHeight - increment >= minHeight) {
+                            actions.push({ label: 'Lower', onClick: () => this.updateTileHeightAtGridPosition(file, tile, currentHeight - increment) });
+                        }
+                        
+                        actions.push({ label: 'Expand', onClick: () => this.expandWorkspace(file) });
+                        if (this.canShrinkWorkspace(file)) {
+                            actions.push({ label: 'Shrink', onClick: () => this.shrinkWorkspace(file) });
+                        }
+                    }
+
+                    actions.push({ label: 'Change Color', onClick: () => {    
+                        
+                        // This function is invoked as the color picker changes the color value.
+                        let colorUpdated = (hexColor: string) => {
+                            appManager.fileManager.updateFile(file.file, { color: hexColor });
+                        };
+                        
+                        let workspace = <Workspace>file.file;
+                        let colorPickerEvent: ColorPickerEvent = { pagePos: pagePos, initialColor: workspace.color, colorUpdated: colorUpdated };
+                        
+                        EventBus.$emit('onColorPicker', colorPickerEvent);
+                    }});
                 }
+    
+                const minimizedLabel = minimized ? 'Maximize' : 'Minimize';
+                actions.push({ label: minimizedLabel, onClick: () => this.minimizeWorkspace(file) });
             }
 
-            const minimizedLabel = minimized ? 'Maximize' : 'Minimize';
-            actions.push({ label: minimizedLabel, onClick: () => this.minimizeWorkspace(file) });
-
-        
-            actions.push({ label: 'Change Color', onClick: () => {    
-                
-                // This function is invoked as the color picker changes the color value.
-                let colorUpdated = (hexColor: string) => {
-                    appManager.fileManager.updateFile(file.file, { color: hexColor });
-                };
-                
-                let workspace = <Workspace>file.file;
-                let colorPickerEvent: ColorPickerEvent = { pagePos: pagePos, initialColor: workspace.color, colorUpdated: colorUpdated };
-                
-                EventBus.$emit('onColorPicker', colorPickerEvent);
-            }});
-
         }
-
+    
         return actions;
     }
 

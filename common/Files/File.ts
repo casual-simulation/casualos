@@ -25,6 +25,7 @@ export interface Object {
         _movable?: boolean;
         _editingFile?: string;
         _lastActiveTime?: number;
+        _lastEditedBy?: string;
         _sceneBackgroundColor?: string;
         ['stroke.color']?: string;
         ['stroke.width']?: number;
@@ -100,6 +101,7 @@ export interface PartialFile {
         _movable?: boolean;
         _editingFile?: string;
         _lastActiveTime?: number;
+        _lastEditedBy?: string;
         _sceneBackgroundColor?: string;
         ['stroke.color']?: string;
         ['stroke.width']?: number;
@@ -146,7 +148,7 @@ export const DEFAULT_WORKSPACE_SCALE = 2;
 /**
  * The default scale for mini workspaces.
  */
-export const DEFAULT_MINI_WORKSPACE_SCALE = .2;
+export const DEFAULT_MINI_WORKSPACE_SCALE = DEFAULT_WORKSPACE_SCALE  / 3;
 
 /**
  * The default grid scale for workspaces.

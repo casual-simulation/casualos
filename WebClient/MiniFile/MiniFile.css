@@ -1,0 +1,20 @@
+
+.mini-file {
+    padding: 5px;
+    border-bottom: 1px solid transparent;
+}
+
+.mini-file:hover {
+    cursor: pointer;
+}
+
+.mini-file.active {
+    border-bottom: 1px solid #000;
+}
+
+.mini-file-cube {
+    background-color: #fff;
+    border: 1px solid #000;
+    width: 48px;
+    height: 48px;
+}

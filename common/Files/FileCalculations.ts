@@ -18,6 +18,7 @@ import formulaLib from 'formula-lib';
 import { FilterFunction, SandboxInterface } from '../Formulas/SandboxInterface';
 import { PartialFile } from 'common/Files';
 import { FilesState } from './FilesChannel';
+import { merge } from 'common/utils';
 
 
 export var ShortId_Length: number = 5;
@@ -300,11 +301,13 @@ export function selectionIdForUser(user: Object) {
 /**
  * Gets a partial file that updates a user's file to reference the given selection.
  * @param selectionId The ID of the selection.
+ * @param fileId The ID of the file that is being selected.
  */
-export function updateUserSelection(selectionId: string) {
+export function updateUserSelection(selectionId: string, fileId: string) {
     return {
         tags: {
-            _selection: selectionId
+            _selection: selectionId,
+            _editingFile: fileId
         }
     };
 }
@@ -313,11 +316,12 @@ export function updateUserSelection(selectionId: string) {
  * Gets a partial file that toggles whether the given file is apart of the given selection.
  * @param file The file.
  * @param selectionId The ID of the selection.
+ * @param userId The User that is adding the file to the selection.
  */
-export function toggleFileSelection(file: Object, selectionId: string) {
+export function toggleFileSelection(file: Object, selectionId: string, userId: string) {
     return {
         tags: {
-            [selectionId]: !(file.tags[selectionId])
+            [selectionId]: !(file.tags[selectionId]),
         }
     };
 }
@@ -329,6 +333,11 @@ export function newSelectionId() {
     return `_selection_${uuid()}`;
 }
 
+/**
+ * Creates a file with a new ID and the given tags.
+ * @param id 
+ * @param tags 
+ */
 export function createFile(id = uuid(), tags: Object['tags'] = {
     _position: { x: 0, y: 0, z: 0},
     _workspace: <string>null
@@ -358,11 +367,13 @@ export function createWorkspace(): Workspace {
 /**
  * Performs a pre-process step for updating the given file by nulling out falsy tags and also calculating assignments.
  * @param file The file to update.
+ * @param userId The ID of the file whose user edited this file.
  * @param newData The new data to assign to the file.
  * @param createContext A function that, when called, returns a new FileCalculationContext that can be used to calculate formulas for assignment expressions.
  */
-export function updateFile(file: File, newData: PartialFile, createContext: () => FileCalculationContext) {
+export function updateFile(file: File, userId: string, newData: PartialFile, createContext: () => FileCalculationContext) {
     if (newData.tags) {
+        newData.tags._lastEditedBy = userId;
         // Cleanup/preprocessing
         for (let property in newData.tags) {
             let value = newData.tags[property];
@@ -460,6 +471,21 @@ export function objectsAtGridPosition(objects: Object[], workspaceId: string, po
             o.tags._position.x === position.x &&
             o.tags._position.y === position.y
     });
+}
+
+/**
+ * Duplicates the given file and returns a new file with a new ID but the same tags.
+ * The file will be exactly the same as the previous except for 2 things.
+ * First, it will have a different ID.
+ * Second, it will never be marked as destroyed.
+ * @param file The file to duplicate.
+ * @param data The optional data that should override the existing file data.
+ */
+export function duplicateFile(file: Object, data?: PartialFile): Object {
+    let newFile = merge(file, data || {});
+    newFile.id = uuid();
+    delete newFile.tags._destroyed;
+    return newFile;
 }
 
 /**

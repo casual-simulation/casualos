@@ -32,6 +32,14 @@ export default class TagEditor extends Vue {
         return !!(this.focused && this.changed && this.errorMessage);
     }
 
+    get placeholder() {
+        if (this.isAction) {
+            return '+(#tag:"value")';
+        } else {
+            return 'newTag';
+        }
+    }
+
     get errorMessage() {
         const errors = validateTag(this.value);
         if (!errors.valid) {
@@ -70,8 +78,17 @@ export default class TagEditor extends Vue {
     }
 
     focus() {
-        const element = this.$refs.inputBox as HTMLElement;
-        element.focus();
+        let element: any = this.$refs.inputBox;
+        let html: HTMLInputElement;
+        if (element.focus) {
+            html = element;
+        } else {
+            html = <HTMLInputElement>(<Vue>element).$el;
+        }
+        html.focus();
+        setTimeout(() => {
+            html.setSelectionRange(0, 9999);
+        }, 0);
     }
 
     onFocus() {
@@ -86,6 +103,10 @@ export default class TagEditor extends Vue {
         super();
         this.changed = false;
         this.focused = false;
+    }
+
+    mounted() {
+        this.focus();
     }
 
     private _convertToFinalValue(value: string) {

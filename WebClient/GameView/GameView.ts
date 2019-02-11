@@ -60,11 +60,14 @@ import { ArgEvent } from '../../common/Events';
 import { WorkspaceMesh, WorkspaceMeshDebugInfo } from '../game-engine/WorkspaceMesh';
 import { GridChecker } from '../game-engine/grid/GridChecker';
 import { FileMesh } from '../game-engine/FileMesh';
-import { values, flatMap, find } from 'lodash';
-import { getUserMode } from 'common/Files/FileCalculations';
+import { values, flatMap, find, findIndex } from 'lodash';
+import { getUserMode, createFile } from 'common/Files/FileCalculations';
+import App from '../App/App';
+import MiniFile from '../MiniFile/MiniFile';
 
 @Component({
   components: {
+    'mini-file': MiniFile
   }
 })
 export default class GameView extends Vue {
@@ -122,6 +125,12 @@ export default class GameView extends Vue {
   vrDisplay: VRDisplay = null;
   vrCapable: boolean = false;
 
+  selectedRecentFile: Object = null;
+  recentFiles: Object[] = [];
+
+  @Inject() addSidebarItem: App['addSidebarItem'];
+  @Inject() removeSidebarItem: App['removeSidebarItem'];
+
   @Watch('debug')
   debugChanged(val: boolean, previous: boolean) {
     this.showDebugInfo(val);
@@ -135,6 +144,15 @@ export default class GameView extends Vue {
     };
   }
 
+  selectRecentFile(file: Object) {
+    if(!this.selectedRecentFile || this.selectedRecentFile.id !== file.id) {
+      this.selectedRecentFile = file;
+    } else {
+      this.selectedRecentFile = null;
+    }
+  }
+
+  get fileQueue(): HTMLElement { return <HTMLElement>this.$refs.fileQueue; }
   get gameView(): HTMLElement { return <HTMLElement>this.$refs.gameView; }
   get canvas() { return this._canvas; }
   get time(): Time { return this._time; }
@@ -210,6 +228,9 @@ export default class GameView extends Vue {
     this.debugInfo = null;
     this._files = {};
     this._fileIds = {};
+    this.recentFiles = [
+      createFile()
+    ];
     this._subs = [];
     this._setupScene();
     this._input = new Input(this);
@@ -249,6 +270,12 @@ export default class GameView extends Vue {
       }))
       .subscribe());
 
+    if (this.dev) {
+      this.addSidebarItem('debug_mode', 'Debug', () => {
+        this.toggleDebug();
+      }, 'bug_report');
+    }
+
     this._setupWebVR();
     await this._setupWebXR();
     this._frameUpdate();
@@ -257,6 +284,9 @@ export default class GameView extends Vue {
   beforeDestroy() {
     window.removeEventListener('resize', this._handleResize);
     window.removeEventListener('vrdisplaypresentchange', this._handleResize);
+    this.removeSidebarItem('enable_xr');
+    this.removeSidebarItem('disable_xr');
+    this.removeSidebarItem('debug_mode');
     this._input.dispose();
 
     if (this._subs) {
@@ -407,10 +437,27 @@ export default class GameView extends Vue {
     this.getFiles().forEach(w => w.mesh.showDebugInfo(debug));
   }
 
-  private async _fileUpdated(file: File) {
+  private async _fileUpdated(file: File, initialUpdate = false) {
     const obj = this._files[file.id];
     if (obj) {
       if (file.type === 'object') {
+        
+        if (!initialUpdate) { 
+          if (!file.tags._user && file.tags._lastEditedBy === this.fileManager.userFile.id) {
+            if (this.selectedRecentFile  && file.id === this.selectedRecentFile.id) {
+              this.selectedRecentFile = file;
+            }
+            const index = findIndex(this.recentFiles, f => f.id === file.id);
+            if (index >= 0) {
+              this.recentFiles.splice(index, 1);
+            }
+            this.recentFiles.unshift(file);
+            if (this.recentFiles.length > 5) {
+              this.recentFiles.length = 5;
+            }
+          }
+        }
+
         if (file.tags._destroyed) {
           this._fileRemoved(file.id);
           return;
@@ -433,7 +480,7 @@ export default class GameView extends Vue {
     this._files[file.id] = obj;
     this._fileIds[obj.mesh.id] = obj.file.id;
 
-    await this._fileUpdated(file);
+    await this._fileUpdated(file, true);
     this.onFileAdded.invoke(obj);
   }
 
@@ -631,6 +678,9 @@ export default class GameView extends Vue {
     if (matchingDisplay && this._isRealAR(matchingDisplay)) {
       this.xrCapable = true;
       this.xrDisplay = matchingDisplay;
+      this.addSidebarItem('enable_xr', 'Enable AR', () => {
+        this.toggleXR();
+      });
       console.log('[GameView] WebXR Supported!');
     }
   }
@@ -638,11 +688,22 @@ export default class GameView extends Vue {
   async toggleXR() {
     console.log('toggle XR');
     if (this.xrDisplay) {
+
       if(this.xrSession) {
+        this.removeSidebarItem('disable_xr');
+        this.addSidebarItem('enable_xr', 'Enable AR', () => {
+          this.toggleXR();
+        });
+
         await this.xrSession.end();
         this.xrSession = null;
         document.documentElement.classList.remove('ar-app');
       } else {
+        this.removeSidebarItem('enable_xr');
+        this.addSidebarItem('disable_xr', 'Disable AR', () => {
+          this.toggleXR();
+        });
+
         document.documentElement.classList.add('ar-app');
         this.xrSession = await this.xrDisplay.requestSession(this.xrSessionInitParameters);
         this.xrSession.near = 0.1;

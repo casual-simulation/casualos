@@ -12,6 +12,7 @@ import SnackbarOptions from './Snackbar/SnackbarOptions';
 import { copyToClipboard } from '../utils';
 import { getUserMode } from 'common/Files/FileCalculations';
 import { tap } from 'rxjs/operators';
+import { findIndex } from 'lodash';
 import QRCode from '@chenfengyuan/vue-qrcode';
 import CubeIcon from '../public/icons/Cube.svg';
 import HexIcon from '../public/icons/Hexagon.svg';
@@ -21,6 +22,13 @@ import 'filepond/dist/filepond.min.css';
 // import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type';
 
 const FilePond = vueFilePond();
+
+export interface SidebarItem {
+    id: string;
+    text: string;
+    icon: string;
+    click: () => void;
+}
 
 @Component({
     components: {
@@ -33,6 +41,7 @@ const FilePond = vueFilePond();
 })
 
 export default class App extends Vue {
+
     showNavigation:boolean = false;
     showConfirmDialog: boolean = false;
     showAlertDialog: boolean = false;
@@ -92,6 +101,11 @@ export default class App extends Vue {
      */
     uploadedFiles: File[] = [];
 
+    /**
+     * The extra sidebar items shown in the app.
+     */
+    extraItems: SidebarItem[] = [];
+
     onUserModeChanged() {
         const mode: UserMode = this.userMode ? 'files' : 'worksurfaces';
         appManager.fileManager.updateFile(appManager.fileManager.userFile, {
@@ -119,6 +133,34 @@ export default class App extends Vue {
 
     get versionTooltip() {
         return appManager.version.gitCommit;
+    }
+
+    /**
+     * Adds a new sidebar item to the sidebar.
+     * @param id 
+     * @param text 
+     * @param click 
+     */
+    @Provide()
+    addSidebarItem(id: string, text: string, click: () => void, icon: string = null) {
+        this.extraItems.push({
+            id: id,
+            text: text,
+            icon: icon,
+            click: click
+        });
+    }
+
+    /**
+     * Removes the sidebar item with the given ID.
+     * @param id 
+     */
+    @Provide()
+    removeSidebarItem(id: string) {
+        const index = findIndex(this.extraItems, i => i.id === id);
+        if (index >= 0) {
+            this.extraItems.splice(index, 1);
+        }
     }
 
     url() {

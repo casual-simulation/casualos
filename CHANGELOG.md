@@ -1,6 +1,22 @@
 # File Simulator Changelog
 
-## V0.2.23
+## V0.2.25
+### Date: 2/11/2019
+
+### Changes:
+- Added the first version of the file toolbar.
+  - This is a list of the user's recently edited files.
+  - Users can select a file from the toolbar to tap and place.
+  - They can also click and drag files out into the world.
+- Made minimized hexes 1/3 the scale of normal hexes.
+- Added the ability to minimize hexes while in file mode.
+- Moved extra buttons like the AR mode to the app sidebar.
+- Made the login email box into a name box.
+- Fixed destroyed blocks not dissapearing.
+- Made the tag input field use a placeholder instead of filling with actual text.
+- Fixed some input issues.
+
+## V0.2.24
 ### Date: 2/8/2019
 
 ### Changes:
