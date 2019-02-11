@@ -86,19 +86,6 @@ export class FileClickOperation implements IOperation {
 
                     if (this._interaction.isInCorrectMode(this._file.file)) {
                         this._interaction.showContextMenu();
-                    } else {
-                        // Create file at clicked workspace position.
-                        let workspaceMesh = <WorkspaceMesh>this._file.mesh;
-                        let closest = workspaceMesh.closestTileToPoint(this._hit.point);
-
-                        if (closest) {
-                            let tags = {
-                              _position: { x: closest.tile.gridPosition.x, y: closest.tile.gridPosition.y, z: closest.tile.localPosition.y },
-                              _workspace: this._file.file.id
-                            };
-
-                            appManager.fileManager.createFile(undefined, tags);
-                        }
                     }
                 }
             }
