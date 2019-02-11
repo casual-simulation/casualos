@@ -158,9 +158,11 @@ export class InteractionManager {
 
         this._cameraControls.enabled = false;
         const file = this.fileForIntersection(hit);
-        if (file && file.file && file.file.type === 'workspace') {
+        const actions = this._contextMenuActions(file, hit.point, pagePos);
+
+        if (actions) {
             // Now send the actual context menu event.
-            let menuEvent: ContextMenuEvent = { pagePos: pagePos, actions: this._contextMenuActions(file, hit.point, pagePos) };
+            let menuEvent: ContextMenuEvent = { pagePos: pagePos, actions: actions };
             this._gameView.$emit('onContextMenu', menuEvent);
         }
     }
@@ -472,47 +474,53 @@ export class InteractionManager {
     }
 
     private _contextMenuActions(file: File3D, point: Vector3, pagePos: Vector2): ContextMenuAction[] {
+        
         let actions: ContextMenuAction[] = [];
-        if (file.mesh instanceof WorkspaceMesh && file.file.type === 'workspace') {
 
-            const tile = this._worldPosToGridPos(file, point);
-            const currentTile = file.file.grid ? file.file.grid[posToKey(tile)] : null;
-            const currentHeight = (!!currentTile ? currentTile.height : (file.file.defaultHeight || DEFAULT_WORKSPACE_HEIGHT)) || DEFAULT_WORKSPACE_HEIGHT;
-            const increment = DEFAULT_WORKSPACE_HEIGHT_INCREMENT; // TODO: Replace with a configurable value.
-            const minHeight = DEFAULT_WORKSPACE_MIN_HEIGHT; // TODO: This too
-            const minimized = isMinimized(file.file);
+        if (file) {
 
-            if (!minimized) {
-                actions.push({ label: 'Raise', onClick: () => this.updateTileHeightAtGridPosition(file, tile, currentHeight + increment) });
-                if (currentTile && currentHeight - increment >= minHeight) {
-                    actions.push({ label: 'Lower', onClick: () => this.updateTileHeightAtGridPosition(file, tile, currentHeight - increment) });
-                }
+            if (file.mesh instanceof WorkspaceMesh && file.file.type === 'workspace') {
                 
-                actions.push({ label: 'Expand', onClick: () => this.expandWorkspace(file) });
-                if (this.canShrinkWorkspace(file)) {
-                    actions.push({ label: 'Shrink', onClick: () => this.shrinkWorkspace(file) });
+                const tile = this._worldPosToGridPos(file, point);
+                const currentTile = file.file.grid ? file.file.grid[posToKey(tile)] : null;
+                const currentHeight = (!!currentTile ? currentTile.height : (file.file.defaultHeight || DEFAULT_WORKSPACE_HEIGHT)) || DEFAULT_WORKSPACE_HEIGHT;
+                const increment = DEFAULT_WORKSPACE_HEIGHT_INCREMENT; // TODO: Replace with a configurable value.
+                const minHeight = DEFAULT_WORKSPACE_MIN_HEIGHT; // TODO: This too
+                const minimized = isMinimized(file.file);
+    
+                if (!minimized) {
+                    actions.push({ label: 'Raise', onClick: () => this.updateTileHeightAtGridPosition(file, tile, currentHeight + increment) });
+                    if (currentTile && currentHeight - increment >= minHeight) {
+                        actions.push({ label: 'Lower', onClick: () => this.updateTileHeightAtGridPosition(file, tile, currentHeight - increment) });
+                    }
+                    
+                    actions.push({ label: 'Expand', onClick: () => this.expandWorkspace(file) });
+                    if (this.canShrinkWorkspace(file)) {
+                        actions.push({ label: 'Shrink', onClick: () => this.shrinkWorkspace(file) });
+                    }
                 }
+    
+                const minimizedLabel = minimized ? 'Maximize' : 'Minimize';
+                actions.push({ label: minimizedLabel, onClick: () => this.minimizeWorkspace(file) });
+    
+            
+                actions.push({ label: 'Change Color', onClick: () => {    
+                    
+                    // This function is invoked as the color picker changes the color value.
+                    let colorUpdated = (hexColor: string) => {
+                        appManager.fileManager.updateFile(file.file, { color: hexColor });
+                    };
+                    
+                    let workspace = <Workspace>file.file;
+                    let colorPickerEvent: ColorPickerEvent = { pagePos: pagePos, initialColor: workspace.color, colorUpdated: colorUpdated };
+                    
+                    EventBus.$emit('onColorPicker', colorPickerEvent);
+                }});
+    
             }
 
-            const minimizedLabel = minimized ? 'Maximize' : 'Minimize';
-            actions.push({ label: minimizedLabel, onClick: () => this.minimizeWorkspace(file) });
-
-        
-            actions.push({ label: 'Change Color', onClick: () => {    
-                
-                // This function is invoked as the color picker changes the color value.
-                let colorUpdated = (hexColor: string) => {
-                    appManager.fileManager.updateFile(file.file, { color: hexColor });
-                };
-                
-                let workspace = <Workspace>file.file;
-                let colorPickerEvent: ColorPickerEvent = { pagePos: pagePos, initialColor: workspace.color, colorUpdated: colorUpdated };
-                
-                EventBus.$emit('onColorPicker', colorPickerEvent);
-            }});
-
         }
-
+    
         return actions;
     }
 
