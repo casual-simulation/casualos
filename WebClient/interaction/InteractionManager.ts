@@ -107,7 +107,7 @@ export class InteractionManager {
             // Detect left click.
             if (input.getMouseButtonDown(MouseButtonId.Left)) {
 
-                if(input.isMouseButtonDownOn(this._gameView.gameView)){
+                if (input.isMouseButtonDownOn(this._gameView.gameView)){
 
                     const screenPos = input.getMouseScreenPos();
                     const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this.getDraggableObjects(), this._gameView.camera);

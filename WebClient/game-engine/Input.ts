@@ -89,7 +89,8 @@ export class Input {
         };
         this._targetData = {
             inputDown: null,
-            inputUp: null
+            inputUp: null,
+            inputOver: null
         };
         this._touchData = [];
         this._wheelData = new WheelData();
@@ -152,7 +153,16 @@ export class Input {
      */
     public isMouseButtonDownOn(element: HTMLElement): boolean {
         const downElement = this._targetData.inputDown;
-        return Input.isElementContainedByOrEqual(element, downElement);
+        return Input.isElementContainedByOrEqual(downElement, element);
+    }
+
+    /**
+     * Determines if the mouse is currently focusing the given html element.
+     * @param element 
+     */
+    public isMouseFocusing(element: HTMLElement): boolean {
+        const overElement = this._targetData.inputOver;
+        return Input.isElementContainedByOrEqual(overElement, element);
     }
 
     /**
@@ -161,13 +171,13 @@ export class Input {
      * @param container The container.
      */
     public static isElementContainedByOrEqual(element: HTMLElement, container: HTMLElement): boolean {
-        if (container === element) {
+        if (element === container) {
             return true;
         } else {
-            if (!container) {
+            if (!element) {
                 return false;
             } else {
-                return this.isElementContainedByOrEqual(element, container.parentElement);
+                return this.isElementContainedByOrEqual(element.parentElement, container);
             }
         }
     }
@@ -516,6 +526,7 @@ export class Input {
         this._mouseData.clientPos = new Vector2(event.clientX, event.clientY);
         this._mouseData.pagePos = new Vector2(event.pageX, event.pageY);
         this._mouseData.screenPos = this._calculateScreenPos(event.pageX, event.pageY);
+        this._targetData.inputOver = <HTMLElement>event.target;
 
         if (this.debugLevel >= 2) {
             console.log("mouse move:");
@@ -526,7 +537,9 @@ export class Input {
     }
 
     private _handleWheel(event: WheelEvent) {
-        event.preventDefault();
+        if (this.isMouseFocusing(this._gameView.gameView)) {
+            event.preventDefault();
+        }
 
         let wheelFrame: WheelFrame = {
             moveFrame: this._gameView.time.frameCount,
@@ -789,6 +802,7 @@ interface WheelFrame {
 interface TargetData {
     inputDown: HTMLElement;
     inputUp: HTMLElement;
+    inputOver: HTMLElement;
 }
 
 interface TouchData {
