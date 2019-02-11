@@ -114,7 +114,7 @@ export class Input {
         this._handleTouchCancel = this._handleTouchCancel.bind(this);
         this._handleContextMenu = this._handleContextMenu.bind(this);
 
-        let element = document.body;
+        let element = document.getElementById('app');
         element.addEventListener('mousedown', this._handleMouseDown);
         element.addEventListener('mousemove', this._handleMouseMove);
         element.addEventListener('mouseup', this._handleMouseUp);
@@ -132,7 +132,7 @@ export class Input {
     public dispose() {
         console.log("[Input] dispose");
 
-        let element = document.body;
+        let element = document.getElementById('app');
         element.removeEventListener('mousedown', this._handleMouseDown);
         element.removeEventListener('mousemove', this._handleMouseMove);
         element.removeEventListener('mouseup', this._handleMouseUp);
