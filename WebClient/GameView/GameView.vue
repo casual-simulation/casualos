@@ -11,24 +11,12 @@
             <md-tooltip md-direction="bottom">New Worksurface</md-tooltip>
           </md-button>
           <span v-show="vrDisplay" id="vr-button-container" class="vr-button-container"></span>
+
+          <div v-if="!vrDisplay && filesMode" class="toolbar-layout">
+            <mini-file v-for="file in recentFiles" :key="file.id" :file="file"></mini-file>
+          </div>
         </div>
 
-        <!-- <div class="toolbar">
-          <div class="toolbar-layout">
-            <strong class="toolbar-label">Tools</strong>
-            <div class="divider"></div>
-            <md-button class="toolbar-button" @click="addNewFile()">
-              <cube-icon class="toolbar-button-icon" />
-              <span>New File</span>
-            </md-button>
-            <div class="divider"></div>
-            <md-button class="toolbar-button" @click="addNewWorkspace()">
-              <span>New Workspace</span>
-            </md-button>
-            <div class="divider" v-if="dev"></div>
-            
-          </div>
-        </div> -->
         <md-card class="debug-card" v-if="debug">
             <md-card-content>
               <h4>Debug Info</h4>

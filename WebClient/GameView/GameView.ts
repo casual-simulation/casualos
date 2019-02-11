@@ -60,12 +60,14 @@ import { ArgEvent } from '../../common/Events';
 import { WorkspaceMesh, WorkspaceMeshDebugInfo } from '../game-engine/WorkspaceMesh';
 import { GridChecker } from '../game-engine/grid/GridChecker';
 import { FileMesh } from '../game-engine/FileMesh';
-import { values, flatMap, find } from 'lodash';
+import { values, flatMap, find, findIndex } from 'lodash';
 import { getUserMode } from 'common/Files/FileCalculations';
 import App from '../App/App';
+import MiniFile from '../MiniFile/MiniFile';
 
 @Component({
   components: {
+    'mini-file': MiniFile
   }
 })
 export default class GameView extends Vue {
@@ -122,6 +124,8 @@ export default class GameView extends Vue {
   xrSessionInitParameters: any = null;
   vrDisplay: VRDisplay = null;
   vrCapable: boolean = false;
+
+  recentFiles: Object[] = [];
 
   @Inject() addSidebarItem: App['addSidebarItem'];
   @Inject() removeSidebarItem: App['removeSidebarItem'];
@@ -214,6 +218,7 @@ export default class GameView extends Vue {
     this.debugInfo = null;
     this._files = {};
     this._fileIds = {};
+    this.recentFiles = [];
     this._subs = [];
     this._setupScene();
     this._input = new Input(this);
@@ -420,10 +425,24 @@ export default class GameView extends Vue {
     this.getFiles().forEach(w => w.mesh.showDebugInfo(debug));
   }
 
-  private async _fileUpdated(file: File) {
+  private async _fileUpdated(file: File, initialUpdate = false) {
     const obj = this._files[file.id];
     if (obj) {
       if (file.type === 'object') {
+        
+        if (!initialUpdate) { 
+          if (!file.tags._user && file.tags._lastEditedBy === this.fileManager.userFile.id) {
+            const index = findIndex(this.recentFiles, f => f.id === file.id);
+            if (index >= 0) {
+              this.recentFiles.splice(index, 1);
+            }
+            this.recentFiles.unshift(file);
+            if (this.recentFiles.length > 5) {
+              this.recentFiles.length = 5;
+            }
+          }
+        }
+
         if (file.tags._destroyed) {
           this._fileRemoved(file.id);
           return;
@@ -446,7 +465,7 @@ export default class GameView extends Vue {
     this._files[file.id] = obj;
     this._fileIds[obj.mesh.id] = obj.file.id;
 
-    await this._fileUpdated(file);
+    await this._fileUpdated(file, true);
     this.onFileAdded.invoke(obj);
   }
 

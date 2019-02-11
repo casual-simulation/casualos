@@ -193,7 +193,7 @@ describe('FileCalculations', () => {
             let file: Object = createFile();
             let newData = {};
 
-            updateFile(file, newData, () => createCalculationContext([file]));
+            updateFile(file, 'testUser', newData, () => createCalculationContext([file]));
 
             expect(newData).toEqual({});
         });
@@ -212,7 +212,7 @@ describe('FileCalculations', () => {
                 }
             };
 
-            updateFile(file, newData, () => createCalculationContext([file]));
+            updateFile(file, 'testUser', newData, () => createCalculationContext([file]));
 
             expect(newData).toEqual({
                 tags: {
@@ -222,7 +222,8 @@ describe('FileCalculations', () => {
                     d: [],
                     e: null,
                     f: undefined,
-                    g: NaN
+                    g: NaN,
+                    _lastEditedBy: 'testUser'
                 }
             });
         });
@@ -237,7 +238,7 @@ describe('FileCalculations', () => {
                 }
             };
 
-            updateFile(file, newData, () => createCalculationContext([file]));
+            updateFile(file, 'testUser', newData, () => createCalculationContext([file]));
 
             expect(newData.tags.sum.value).toBe(10);
             expect(newData.tags.sum.formula).toBe(':=this.num + 5');

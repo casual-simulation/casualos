@@ -300,11 +300,13 @@ export function selectionIdForUser(user: Object) {
 /**
  * Gets a partial file that updates a user's file to reference the given selection.
  * @param selectionId The ID of the selection.
+ * @param fileId The ID of the file that is being selected.
  */
-export function updateUserSelection(selectionId: string) {
+export function updateUserSelection(selectionId: string, fileId: string) {
     return {
         tags: {
-            _selection: selectionId
+            _selection: selectionId,
+            _editingFile: fileId
         }
     };
 }
@@ -313,11 +315,12 @@ export function updateUserSelection(selectionId: string) {
  * Gets a partial file that toggles whether the given file is apart of the given selection.
  * @param file The file.
  * @param selectionId The ID of the selection.
+ * @param userId The User that is adding the file to the selection.
  */
-export function toggleFileSelection(file: Object, selectionId: string) {
+export function toggleFileSelection(file: Object, selectionId: string, userId: string) {
     return {
         tags: {
-            [selectionId]: !(file.tags[selectionId])
+            [selectionId]: !(file.tags[selectionId]),
         }
     };
 }
@@ -358,11 +361,13 @@ export function createWorkspace(): Workspace {
 /**
  * Performs a pre-process step for updating the given file by nulling out falsy tags and also calculating assignments.
  * @param file The file to update.
+ * @param userId The ID of the file whose user edited this file.
  * @param newData The new data to assign to the file.
  * @param createContext A function that, when called, returns a new FileCalculationContext that can be used to calculate formulas for assignment expressions.
  */
-export function updateFile(file: File, newData: PartialFile, createContext: () => FileCalculationContext) {
+export function updateFile(file: File, userId: string, newData: PartialFile, createContext: () => FileCalculationContext) {
     if (newData.tags) {
+        newData.tags._lastEditedBy = userId;
         // Cleanup/preprocessing
         for (let property in newData.tags) {
             let value = newData.tags[property];

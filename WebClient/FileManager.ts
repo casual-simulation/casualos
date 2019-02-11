@@ -342,7 +342,7 @@ export class FileManager {
    * Updates the given file with the given data.
    */
   async updateFile(file: File, newData: PartialFile) {
-    updateFile(file, newData, () => this.createContext());
+    updateFile(file, this.userFile.id, newData, () => this.createContext());
     this._files.emit(fileUpdated(file.id, newData));
   }
 
@@ -451,7 +451,7 @@ export class FileManager {
    */
   private _clearSelectionForUser(user: Object) {
     console.log('[FileManager] Clear selection for', user.id);
-    const update = updateUserSelection(null);
+    const update = updateUserSelection(null, null);
     this.updateFile(user, update);
   }
 
@@ -460,11 +460,11 @@ export class FileManager {
     
     const {id, newId} = selectionIdForUser(user);
     if (newId) {
-      const update = updateUserSelection(newId);
+      const update = updateUserSelection(newId, file.id);
       this.updateFile(user, update);
     }
     if (id) {
-      const update = toggleFileSelection(file, id);
+      const update = toggleFileSelection(file, id, user.id);
       this.updateFile(file, update);
     }
   }
