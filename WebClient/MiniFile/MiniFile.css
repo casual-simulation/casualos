@@ -1,7 +1,16 @@
 
 .mini-file {
+    padding: 5px;
+    border-bottom: 1px solid transparent;
+}
+
+.mini-file.active {
+    border-bottom: 1px solid #000;
+}
+
+.mini-file-cube {
     background-color: #fff;
     border: 1px solid #000;
-    width: 12px;
-    height: 12px;
+    width: 48px;
+    height: 48px;
 }

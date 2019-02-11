@@ -125,6 +125,7 @@ export default class GameView extends Vue {
   vrDisplay: VRDisplay = null;
   vrCapable: boolean = false;
 
+  selectedRecentFile: Object = null;
   recentFiles: Object[] = [];
 
   @Inject() addSidebarItem: App['addSidebarItem'];
@@ -141,6 +142,14 @@ export default class GameView extends Vue {
     this.debugInfo = {
       workspaces: this.getWorkspaces().map(w => (<WorkspaceMesh>w.mesh).getDebugInfo())
     };
+  }
+
+  selectRecentFile(file: Object) {
+    if(!this.selectedRecentFile || this.selectedRecentFile.id !== file.id) {
+      this.selectedRecentFile = file;
+    } else {
+      this.selectedRecentFile = null;
+    }
   }
 
   get gameView(): HTMLElement { return <HTMLElement>this.$refs.gameView; }
@@ -434,6 +443,9 @@ export default class GameView extends Vue {
         
         if (!initialUpdate) { 
           if (!file.tags._user && file.tags._lastEditedBy === this.fileManager.userFile.id) {
+            if (this.selectedRecentFile  && file.id === this.selectedRecentFile.id) {
+              this.selectedRecentFile = file;
+            }
             const index = findIndex(this.recentFiles, f => f.id === file.id);
             if (index >= 0) {
               this.recentFiles.splice(index, 1);
