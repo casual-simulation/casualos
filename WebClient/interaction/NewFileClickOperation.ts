@@ -26,4 +26,8 @@ export class NewFileClickOperation extends SharedFileClickOperation {
     protected _createDragOperation(): SharedFileDragOperation {
         return new NewFileDragOperation(this._gameView, this._interaction, this._file);
     }
+
+    protected _canDragFile(file: File) {
+        return true;
+    }
 }
