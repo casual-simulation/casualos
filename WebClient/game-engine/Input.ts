@@ -615,7 +615,7 @@ export class Input {
         if (this._inputType == InputType.Undefined) this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch) return;
 
-        if (this.isMouseFocusing(this._gameView.gameView)) {
+        if (this.isMouseFocusing(this._gameView.gameView) || this.isMouseFocusing(this._gameView.fileQueue)) {
             // This prevents the browser from doing things like allow the pull down refresh on Chrome.
             event.preventDefault();
         }
