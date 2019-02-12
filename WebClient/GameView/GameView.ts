@@ -624,7 +624,7 @@ export default class GameView extends Vue {
       antialias: true,
       alpha: true
     });
-    webGlRenderer.shadowMap.enabled = true;
+    webGlRenderer.shadowMap.enabled = false;
     webGlRenderer.shadowMap.type = PCFSoftShadowMap;
 
     this._resizeRenderer();
@@ -814,7 +814,7 @@ export default class GameView extends Vue {
     console.log(display);
 
     this._renderer.vr.enabled = false;
-    this._renderer.shadowMap.enabled = true;
+    this._renderer.shadowMap.enabled = false;
 
     this._inputVR.disconnectControllers();
 
