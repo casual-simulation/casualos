@@ -21,7 +21,7 @@ import { WorkspaceMesh } from "./WorkspaceMesh";
  */
 export class FileMesh extends GameObject {
 
-    private _gameView: GameView;
+    private _gameView: GameView | null;
     private _context: FileCalculationContext;
 
     /**
@@ -42,7 +42,7 @@ export class FileMesh extends GameObject {
     /**
      * The optional label for the file.
      */
-    label: Text3D;
+    label: Text3D | null;
 
     /**
      * The optional arrows for the file.
@@ -59,7 +59,7 @@ export class FileMesh extends GameObject {
      */
     public onUpdated: ArgEvent<FileMesh> = new ArgEvent<FileMesh>();
 
-    constructor(gameView: GameView) {
+    constructor(gameView?: GameView) {
         super();
         this._gameView = gameView;
     }
@@ -95,10 +95,13 @@ export class FileMesh extends GameObject {
         if (!this.file) {
             this.cubeContainer = new Object3D();
             this.cube = this._createCube(1);
-            this.label = createLabel(this._gameView, this);
             this.colliders.push(this.cube);
             this.cubeContainer.add(this.cube);
             this.add(this.cubeContainer);
+
+            if (this._gameView) {
+                this.label = createLabel(this._gameView, this);
+            }
         }
         this.file = (<Object>file) || this.file;
 
@@ -125,7 +128,7 @@ export class FileMesh extends GameObject {
     public frameUpdate() {
         super.frameUpdate();
 
-        if (this.label) {
+        if (this.label && this._gameView) {
             // update label scale
 
             let labelMode = this.file.tags['label.size.mode'];
@@ -168,7 +171,7 @@ export class FileMesh extends GameObject {
 
     private _tagUpdatePosition(): void {
         
-        const workspace = this._gameView.getFile(this.file.tags._workspace);
+        const workspace = this._gameView ? this._gameView.getFile(this.file.tags._workspace) : null;
         const scale = this._calculateScale(workspace);
         const cubeScale = calculateScale(this._context, this.file, scale);
         if (workspace && workspace.file.type === 'workspace') {
@@ -194,7 +197,7 @@ export class FileMesh extends GameObject {
                 localPosition.z);
         } else {
             // Default position
-            this.position.set(0, 1, 0);
+            this.position.set(0, 0, 0);
         }
 
         // We must call this function so that child objects get their positions updated too.
@@ -214,6 +217,9 @@ export class FileMesh extends GameObject {
     }
 
     private _tagUpdateLabel(): void {
+        if (!this.label) {
+            return;
+        }
 
         let label = this.file.tags.label;
 
@@ -262,6 +268,10 @@ export class FileMesh extends GameObject {
     }
 
     private _tagUpdateLine(): void {
+
+        if(!this._gameView) {
+            return;
+        }
 
         let lineTo = this.file.tags['line.to'];
         let validLineIds: string[];
