@@ -10,6 +10,7 @@ import { Object } from 'common/Files';
 export default class MiniFile extends Vue {
 
     @Prop() file: Object;
+    @Prop({ default: false }) large: boolean;
     @Prop({ default: false }) selected: boolean;
 
     constructor() {
