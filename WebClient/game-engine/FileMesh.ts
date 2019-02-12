@@ -116,9 +116,6 @@ export class FileMesh extends GameObject {
         // Tag: label
         this._tagUpdateLabel();
 
-        // Tag: line
-        this._tagUpdateLine();
-
         // Tag: stroke
         this._tagUpdateStroke();
 
@@ -137,6 +134,9 @@ export class FileMesh extends GameObject {
                 this.label.setPositionForObject(this.cube);
             }
         }
+
+        // Tag: line
+        this._tagUpdateLine();
     }
 
     private _calculateScale(workspace: File3D): number {
@@ -304,7 +304,7 @@ export class FileMesh extends GameObject {
                 // Initialize arrows array if needed.
                 if (!this.arrows) this.arrows = [];
 
-                let targetArrow: Arrow3D = find(this.arrows, (a: Arrow3D) => { return a.targetFile === targetFile });
+                let targetArrow: Arrow3D = find(this.arrows, (a: Arrow3D) => { return a.targetFile3d === targetFile });
                 if (!targetArrow) {
                     // Create arrow for target.
                     let sourceFile = this._gameView.getFile(this.file.id);
@@ -358,8 +358,8 @@ export class FileMesh extends GameObject {
         if (this.arrows) {
             // Filter out lines that are no longer being used.
             this.arrows = this.arrows.filter((a) => {
-                if (a && a.targetFile) {
-                    if (validLineIds && validLineIds.indexOf(a.targetFile.file.id) >= 0) {
+                if (a && a.targetFile3d) {
+                    if (validLineIds && validLineIds.indexOf(a.targetFile3d.file.id) >= 0) {
                         // This line is active, keep it in.
                         return true;
                     }

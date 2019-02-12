@@ -1,5 +1,5 @@
 import { hex } from "./Hex";
-import { Mesh, BufferGeometry, ExtrudeBufferGeometry, Shape, Material, MeshStandardMaterial, Matrix4, Vector3, MeshBasicMaterial, Color } from "three";
+import { Mesh, BufferGeometry, ExtrudeBufferGeometry, Shape, Material, MeshStandardMaterial, Matrix4, Vector3, MeshBasicMaterial, Color, Box3, Sphere } from "three";
 import { Axial } from "./Axial";
 import { gridPosToRealPos } from "./HexGrid";
 
@@ -52,6 +52,18 @@ export class HexMesh extends Mesh {
         if (!val) return;
         let material = <MeshStandardMaterial>this.material;
         material.color = val;
+    }
+    
+    get boundingBox(): Box3 {
+        return new Box3().setFromObject(this);
+    }
+
+    get boundingSphere(): Sphere {
+        let box = new Box3().setFromObject(this);
+        let sphere = new Sphere();
+        sphere = box.getBoundingSphere(sphere);
+
+        return sphere;
     }
 
     /**
