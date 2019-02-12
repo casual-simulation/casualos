@@ -21,7 +21,7 @@ import { CameraControls } from './CameraControls';
 import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
 import { FileMesh } from '../game-engine/FileMesh';
 import { Axial, realPosToGridPos, gridDistance, keyToPos, posToKey } from '../game-engine/hex';
-import { MouseButtonId, Input } from '../game-engine/input';
+import { MouseButtonId, Input } from '../game-engine/Input';
 import { isBuffer } from 'util';
 import { objectsAtGridPosition, tagsMatchingFilter, isMinimized } from 'common/Files/FileCalculations';
 import { ColorPickerEvent } from './ColorPickerEvent';
