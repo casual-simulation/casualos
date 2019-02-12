@@ -1,5 +1,13 @@
 # File Simulator Changelog
 
+## V0.2.27
+### Date: 2/11/2019
+
+### Changes:
+- Fix the weirdest bug that was caused by an internal error in Vue.js.
+  - It would do something to stop the touch events from being emitted.
+  - I'm not sure how it did that. Maybe changing focus or something.
+
 ## V0.2.26
 ### Date: 2/11/2019
 
