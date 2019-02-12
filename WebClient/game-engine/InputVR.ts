@@ -1,7 +1,7 @@
 import VRController from 'three-vrcontroller-module';
 import GameView from '../GameView/GameView';
 import { MeshStandardMaterial, Mesh, CylinderGeometry, BoxGeometry, Object3D, Ray, Vector3 } from 'three';
-import { InputState } from './input';
+import { InputState } from './Input';
 import { find, remove } from 'lodash';
 
 export class InputVR {

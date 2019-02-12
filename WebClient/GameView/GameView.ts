@@ -48,7 +48,7 @@ import {
 
 import { File, Object, Workspace, DEFAULT_WORKSPACE_HEIGHT_INCREMENT, DEFAULT_USER_MODE, UserMode, DEFAULT_SCENE_BACKGROUND_COLOR } from 'common/Files';
 import { Time } from '../game-engine/Time';
-import { Input, InputType } from '../game-engine/input';
+import { Input, InputType } from '../game-engine/Input';
 import { InputVR } from '../game-engine/InputVR';
 import { File3D } from '../game-engine/File3D';
 
