@@ -2,7 +2,8 @@
 <template>
   <div class="mini-file" :class="{ 'active': selected }" @click="click()">
       <div class="mini-file-cube" :class="{ 'large': large }">
-        <img :src="image" draggable="false" />
+        <div class="mini-file-text" v-show="label" :style="{ 'color': labelColor }">{{label}}</div>
+        <img class="mini-file-img" :src="image" draggable="false" />
       </div>
   </div>
   

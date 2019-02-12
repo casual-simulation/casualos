@@ -34,7 +34,7 @@ html.ar-app .webxr-sessions canvas {
 
 .toolbar-layout {
     display: flex;
-    align-items: baseline;
+    align-items: flex-end;
     padding: 10px;
     line-height: 24px;
     background-color: #fff;
