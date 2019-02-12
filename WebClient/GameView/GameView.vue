@@ -14,7 +14,7 @@
 
           <div ref="fileQueue">
             <div v-if="!vrDisplay && filesMode" class="toolbar-layout">
-              <mini-file v-for="(file, index) in recentFiles" :key="file.id" 
+              <mini-file v-for="(file, index) in recentFiles" :key="index" 
                 :file="file" 
                 :selected="selectedRecentFile === file" 
                 :large="index === 0"
