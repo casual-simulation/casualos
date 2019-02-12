@@ -454,7 +454,7 @@ export default class GameView extends Vue {
         const existing = this.recentFiles[index];
         
         // If the file is in the list and the selection hasn't changed
-        if (doFilesAppearEqual(existing, file, { ignoreSelectionTags: false })) {
+        if (doFilesAppearEqual(existing, file, { ignoreSelectionTags: false, ignoreId: true })) {
           // Then just update the current entry with the updated values
           this.recentFiles.splice(index, 1, file);
           return;

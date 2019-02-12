@@ -297,8 +297,13 @@ export function doFilesAppearEqual(first: Object, second: Object, options: FileA
     }
 
     options = merge({
-        ignoreSelectionTags: true
+        ignoreSelectionTags: true,
+        ignoreId: false
     }, options);
+
+    if (!options.ignoreId && first.id === second.id) {
+        return true;
+    }
 
     const tags = union(keys(first.tags), keys(second.tags));
     const usableTags = tags.filter(t => !isTagWellKnown(t, options.ignoreSelectionTags));
@@ -316,6 +321,7 @@ export function doFilesAppearEqual(first: Object, second: Object, options: FileA
 
 export interface FileAppearanceEqualityOptions {
     ignoreSelectionTags?: boolean;
+    ignoreId?: boolean;
 }
 
 /**

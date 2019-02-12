@@ -414,19 +414,17 @@ describe('FileCalculations', () => {
             expect(result).toBe(false);
         });
 
-        it('should return false even if IDs are the same', () => {
-            // Reasoning: It's a shortcut.
-            // While it's possible to have different versions of the same
-            // file floating around it's not expected.
+        it('should use the ignoreId option for checking file IDs', () => {
             let first = createFile('testID');
             let second = createFile('testID');
 
             first.tags.a = true;
             second.tags.a = false;
 
-            const result = doFilesAppearEqual(first, second);
-
-            expect(result).toBe(false);
+            // Defaults to using the ID as a shortcut
+            expect(doFilesAppearEqual(first, second)).toBe(true);
+            
+            expect(doFilesAppearEqual(first, second, { ignoreId: true })).toBe(false);
         });
 
         it('should should ignore default hidden tags', () => {
