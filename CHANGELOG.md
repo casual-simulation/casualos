@@ -1,5 +1,19 @@
 # File Simulator Changelog
 
+## V0.2.26
+### Date: 2/11/2019
+
+### Changes:
+- Fixed touch scrolling.
+- Fixed an issue that would prevent immovable files from being dragged off of the recent files list.
+- Fixed an issue that allowed players to place files on minimized worksurfaces.
+- Fixed an issue that allowed minimized worksurfaces to snap together.
+- Made the recents list have 3 files at most.
+- Made files in the recents list not duplicate as long as their normal values are the same.
+- Made selecting a file in the recents list move the selected file to the front.
+- Made the first file in the list larger than the others.
+- Made dragging a file from the recents list not move the dragged file to the front of the list.
+
 ## V0.2.25
 ### Date: 2/11/2019
 
