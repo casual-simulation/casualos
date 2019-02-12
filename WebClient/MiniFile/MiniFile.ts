@@ -46,6 +46,10 @@ export default class MiniFile extends Vue {
         this.image = '';
     }
 
+    mounted() {
+        this._fileChanged(this.file);
+    }
+
     click() {
         this.$emit('click');
     }
