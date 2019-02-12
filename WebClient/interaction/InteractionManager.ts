@@ -333,13 +333,13 @@ export class InteractionManager {
     }
 
     /**
-     * Finds the closest workspace to the given point.
+     * Finds the closest non-minimized workspace to the given point.
      * Returns undefined if there is no workspace.
      * @param point The point.
      * @param exclude The optional workspace to exclude from the search.
      */
     public closestWorkspace(point: Vector3, exclude?: File3D) {
-        const workspaceMeshes = this._gameView.getWorkspaces().filter(mesh => mesh !== exclude);
+        const workspaceMeshes = this._gameView.getWorkspaces().filter(mesh => mesh !== exclude && !(<Workspace>mesh.file).minimized);
         const center = new Axial();
 
         const gridPositions = workspaceMeshes.map(mesh => {

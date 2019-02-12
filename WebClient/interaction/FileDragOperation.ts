@@ -56,13 +56,13 @@ export class FileDragOperation extends SharedFileDragOperation {
 
         if (point) {
 
-            // if the workspace is only 1 tile large
+            // if the workspace is only 1 tile large and not minimized
             const workspace = <Workspace>this._workspace.file;
-            if (workspace.size === 1 && (!workspace.grid || keys(workspace.grid).length === 0)) {
+            if (workspace.size === 1 && !workspace.minimized && (!workspace.grid || keys(workspace.grid).length === 0)) {
                 // check if it is close to another workspace.
                 const closest = this._interaction.closestWorkspace(point, this._workspace);
 
-                if (closest) {                    
+                if (closest) {
                     if (closest.distance <= 1) {
                         this._attachWorkspace = closest.mesh;
                         this._attachPoint = closest.gridPosition;
