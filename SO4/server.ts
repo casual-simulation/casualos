@@ -47,7 +47,14 @@ export class Server {
 
         this._app.post('/api/users', asyncMiddleware(async (req, res) => {
             const json = req.body;
-            const username = json.email.split('@')[0];
+
+            let username;
+
+            if (json.email.indexOf('@') >= 0) {
+                username = json.email.split('@')[0];
+            } else {
+                username = json.email;
+            }
 
             // TODO: Do something like actual user login
             res.send({

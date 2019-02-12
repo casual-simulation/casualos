@@ -38,7 +38,7 @@ import * as webvrui from 'webvr-ui';
 import 'three-examples/loaders/GLTFLoader';
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Inject, Prop, Watch } from 'vue-property-decorator';
+import { Inject, Prop, Watch, Provide } from 'vue-property-decorator';
 import {
   SubscriptionLike,
 } from 'rxjs';
@@ -64,6 +64,7 @@ import { values, flatMap, find, findIndex } from 'lodash';
 import { getUserMode, createFile, doFilesAppearEqual } from 'common/Files/FileCalculations';
 import App from '../App/App';
 import MiniFile from '../MiniFile/MiniFile';
+import { FileRenderer } from '../game-engine/FileRenderer';
 
 @Component({
   components: {
@@ -131,6 +132,8 @@ export default class GameView extends Vue {
   @Inject() addSidebarItem: App['addSidebarItem'];
   @Inject() removeSidebarItem: App['removeSidebarItem'];
 
+  @Provide() fileRenderer: FileRenderer = new FileRenderer();
+
   @Watch('debug')
   debugChanged(val: boolean, previous: boolean) {
     this.showDebugInfo(val);
@@ -140,7 +143,7 @@ export default class GameView extends Vue {
   updateDebugInfo() {
     this.getFiles().forEach(f => f.mesh.update());
     this.debugInfo = {
-      workspaces: this.getWorkspaces().map(w => (<WorkspaceMesh>w.mesh).getDebugInfo())
+      workspaces: this.getWorkspaces().map(w => (<WorkspaceMesh>w.mesh).getDebugInfo()),
     };
   }
 
@@ -238,6 +241,7 @@ export default class GameView extends Vue {
     this._inputVR = new InputVR(this);
     this._interaction = new InteractionManager(this);
     this._gridChecker = new GridChecker(DEFAULT_WORKSPACE_HEIGHT_INCREMENT);
+    // this.fileRenderer = new FileRenderer();
 
     // Subscriptions to file events.
     this._subs.push(this.fileManager.fileDiscovered
@@ -553,7 +557,6 @@ export default class GameView extends Vue {
     this._skylight = new HemisphereLight(0xc1e0fd, 0xffffff, .6);
     this._scene.add(this._skylight);
 
-
     // Sun light.
     this._sun = new DirectionalLight(0xffffff, .6);
     this._sun.position.set(5, 5, 5);
@@ -624,7 +627,7 @@ export default class GameView extends Vue {
       antialias: true,
       alpha: true
     });
-    webGlRenderer.shadowMap.enabled = true;
+    webGlRenderer.shadowMap.enabled = false;
     webGlRenderer.shadowMap.type = PCFSoftShadowMap;
 
     this._resizeRenderer();
@@ -814,7 +817,7 @@ export default class GameView extends Vue {
     console.log(display);
 
     this._renderer.vr.enabled = false;
-    this._renderer.shadowMap.enabled = true;
+    this._renderer.shadowMap.enabled = false;
 
     this._inputVR.disconnectControllers();
 
