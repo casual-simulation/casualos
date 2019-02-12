@@ -313,7 +313,7 @@ export class InteractionManager {
         if (hit) {
             const point = hit.point;
             const workspace = this.findWorkspaceForIntersection(hit);
-            if (workspace) {
+            if (workspace && workspace.file.type === 'workspace' && !workspace.file.minimized) {
                 const workspaceMesh = <WorkspaceMesh>workspace.mesh;
                 const closest = workspaceMesh.closestTileToPoint(point);
 
