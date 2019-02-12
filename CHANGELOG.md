@@ -1,5 +1,13 @@
 # File Simulator Changelog
 
+## V0.2.28
+### Date: 2/12/2019
+
+### Changes:
+- Make the recent files list use 3D renders of the actual files.
+- Fixed issues with the lines not updating when worksurfaces minimize.
+- Disabled shadows.
+
 ## V0.2.27
 ### Date: 2/11/2019
 
