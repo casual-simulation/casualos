@@ -606,6 +606,7 @@ export class Input {
             }
 
             this._targetData.inputDown = <HTMLElement>touch.target;
+            this._targetData.inputOver = <HTMLElement>event.target;
             this._touchData.push(data);
         }
     }
@@ -614,7 +615,7 @@ export class Input {
         if (this._inputType == InputType.Undefined) this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch) return;
 
-        if (this.isMouseFocusing(this._gameView.gameView)) {
+        if (this.isMouseFocusing(this._gameView.gameView) || this.isMouseFocusing(this._gameView.fileQueue)) {
             // This prevents the browser from doing things like allow the pull down refresh on Chrome.
             event.preventDefault();
         }
@@ -629,6 +630,7 @@ export class Input {
             existingTouch.clientPos = new Vector2(touch.clientX, touch.clientY);
             existingTouch.pagePos = new Vector2(touch.pageX, touch.pageY);
             existingTouch.screenPos = this._calculateScreenPos(touch.pageX, touch.pageY);
+            this._targetData.inputOver = <HTMLElement>event.target;
 
             if (existingTouch.fingerIndex === 0) {
                 this._copyToPrimaryTouchData(existingTouch);
@@ -656,6 +658,7 @@ export class Input {
             let touch = changed.item(i);
 
             this._targetData.inputUp = <HTMLElement>touch.target;
+            this._targetData.inputOver = <HTMLElement>event.target;
 
             let existingTouch = find(this._touchData, (d) => { return d.identifier === touch.identifier; });
             existingTouch.state.setUpFrame(this._gameView.time.frameCount);
