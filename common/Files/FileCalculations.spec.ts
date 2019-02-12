@@ -361,6 +361,7 @@ describe('FileCalculations', () => {
         });
 
         it('should return false for normal tags', () => {
+            expect(isTagWellKnown('_movable')).toBe(false);
             expect(isTagWellKnown('color')).toBe(false);
             expect(isTagWellKnown('label.color')).toBe(false);
             expect(isTagWellKnown('line')).toBe(false);
