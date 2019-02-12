@@ -614,8 +614,10 @@ export class Input {
         if (this._inputType == InputType.Undefined) this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch) return;
 
-        // This prevents the browser from doing things like allow the pull down refresh on Chrome.
-        event.preventDefault();
+        if (this.isMouseFocusing(this._gameView.gameView)) {
+            // This prevents the browser from doing things like allow the pull down refresh on Chrome.
+            event.preventDefault();
+        }
 
         // For the touchmove event, it is a list of the touch points that have changed since the last event.
         let changed = event.changedTouches;

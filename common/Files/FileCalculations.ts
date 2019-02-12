@@ -245,6 +245,85 @@ export function isFilterTag(tag: string) {
     return parsed.success;
 }
 
+export const WELL_KNOWN_TAGS = [
+    '_position',
+    '_hidden',
+    '_destroyed',
+    '_index',
+    '_workspace',
+    '_lastEditedBy',
+    '_lastActiveTime'
+];
+
+/**
+ * Determines if the given tag is "well known".
+ * @param tag The tag.
+ * @param includeSelectionTags Whether to include selection tags.
+ */
+export function isTagWellKnown(tag: string, includeSelectionTags: boolean = true): boolean {
+    if (WELL_KNOWN_TAGS.indexOf(tag) >= 0) {
+        return true;
+    }
+
+    if (includeSelectionTags && tag.indexOf('_selection_') === 0) {
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * Determines if the files are equal disregarding well-known hidden tags
+ * and their IDs. File "appearance equality" means instead of asking "are these files exactly the same?"
+ * we ask "are these files functionally the same?". In this respect we care about things like color, label, etc.
+ * We also care about things like _movable but not _position, _index _selection, etc.
+ * 
+ * Well-known hidden tags include:
+ * - _position
+ * - _hidden
+ * - _destroyed
+ * - _selection
+ * - _index
+ * 
+ * You can determine if a tag is "well-known" by using isWellKnownTag().
+ * @param first The first file.
+ * @param second The second file.
+ */
+export function doFilesAppearEqual(first: Object, second: Object, options: FileAppearanceEqualityOptions = {}): boolean {
+    if (first === second) {
+        return true;
+    } else if(!first || !second) {
+        return false;
+    }
+
+    options = merge({
+        ignoreSelectionTags: true,
+        ignoreId: false
+    }, options);
+
+    if (!options.ignoreId && first.id === second.id) {
+        return true;
+    }
+
+    const tags = union(keys(first.tags), keys(second.tags));
+    const usableTags = tags.filter(t => !isTagWellKnown(t, options.ignoreSelectionTags));
+
+    let allEqual = true;
+    for (let t of usableTags) {
+        if(!isEqual(first.tags[t], second.tags[t])) {
+            allEqual = false;
+            break;
+        }
+    }
+
+    return allEqual;
+}
+
+export interface FileAppearanceEqualityOptions {
+    ignoreSelectionTags?: boolean;
+    ignoreId?: boolean;
+}
+
 /**
  * Defines an interface that represents the result of validating a tag.
  */

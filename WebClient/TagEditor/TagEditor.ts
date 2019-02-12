@@ -34,7 +34,7 @@ export default class TagEditor extends Vue {
 
     get placeholder() {
         if (this.isAction) {
-            return '+(#tag:"value")';
+            return '(#tag:"value")';
         } else {
             return 'newTag';
         }

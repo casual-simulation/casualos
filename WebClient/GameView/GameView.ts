@@ -61,7 +61,7 @@ import { WorkspaceMesh, WorkspaceMeshDebugInfo } from '../game-engine/WorkspaceM
 import { GridChecker } from '../game-engine/grid/GridChecker';
 import { FileMesh } from '../game-engine/FileMesh';
 import { values, flatMap, find, findIndex } from 'lodash';
-import { getUserMode, createFile } from 'common/Files/FileCalculations';
+import { getUserMode, createFile, doFilesAppearEqual } from 'common/Files/FileCalculations';
 import App from '../App/App';
 import MiniFile from '../MiniFile/MiniFile';
 
@@ -147,6 +147,7 @@ export default class GameView extends Vue {
   selectRecentFile(file: Object) {
     if(!this.selectedRecentFile || this.selectedRecentFile.id !== file.id) {
       this.selectedRecentFile = file;
+      this.addToRecentFilesList(file, true);
     } else {
       this.selectedRecentFile = null;
     }
@@ -437,6 +438,38 @@ export default class GameView extends Vue {
     this.getFiles().forEach(w => w.mesh.showDebugInfo(debug));
   }
 
+  /**
+   * Adds the given file to the recent files list.
+   * If it already exists in the list then it will be moved to the front.
+   * @param file The file to add to the list.
+   * @param updateList Whether the list should be reordered.
+   */
+  addToRecentFilesList(file: Object, reorderList: boolean = false) {
+    const index = findIndex(this.recentFiles, f => doFilesAppearEqual(file, f));
+    // if file is already in the list
+    if (index >= 0) {
+
+      // If we shouldn't reorder the list
+      if (!reorderList) {
+        const existing = this.recentFiles[index];
+        
+        // If the file is in the list and the selection hasn't changed
+        if (doFilesAppearEqual(existing, file, { ignoreSelectionTags: false, ignoreId: true })) {
+          // Then just update the current entry with the updated values
+          this.recentFiles.splice(index, 1, file);
+          return;
+        }
+        // Otherwise move the file to the beginning of the list.
+      }
+      this.recentFiles.splice(index, 1);
+    }
+    this.recentFiles.unshift(file);
+    if (this.recentFiles.length > 3) {
+      this.recentFiles.splice(3, this.recentFiles.length - 2);
+      // this.recentFiles.length = 3;
+    }
+  }
+
   private async _fileUpdated(file: File, initialUpdate = false) {
     const obj = this._files[file.id];
     if (obj) {
@@ -446,15 +479,10 @@ export default class GameView extends Vue {
           if (!file.tags._user && file.tags._lastEditedBy === this.fileManager.userFile.id) {
             if (this.selectedRecentFile  && file.id === this.selectedRecentFile.id) {
               this.selectedRecentFile = file;
+            } else {
+              this.selectedRecentFile = null;
             }
-            const index = findIndex(this.recentFiles, f => f.id === file.id);
-            if (index >= 0) {
-              this.recentFiles.splice(index, 1);
-            }
-            this.recentFiles.unshift(file);
-            if (this.recentFiles.length > 5) {
-              this.recentFiles.length = 5;
-            }
+            this.addToRecentFilesList(file);
           }
         }
 

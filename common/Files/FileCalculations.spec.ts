@@ -14,7 +14,9 @@ import {
     getActiveObjects,
     tagMatchesFilter,
     parseArray,
-    duplicateFile
+    duplicateFile,
+    doFilesAppearEqual,
+    isTagWellKnown
 } from './FileCalculations';
 import {
     cloneDeep
@@ -332,6 +334,109 @@ describe('FileCalculations', () => {
 
             other.tags.array = ['hello', 'world', 12.34];
             expect(tagMatchesFilter('+(#array:"[hello, world, 12.34]")', other, '+')).toBe(true);
+        });
+    });
+
+    describe('isTagWellKnown()', () => {
+        it('should return true for some builtin tags', () => {
+            expect(isTagWellKnown('_position')).toBe(true);
+            expect(isTagWellKnown('_index')).toBe(true);
+            expect(isTagWellKnown('_hidden')).toBe(true);
+            expect(isTagWellKnown('_destroyed')).toBe(true);
+            expect(isTagWellKnown('_lastEditedBy')).toBe(true);
+            expect(isTagWellKnown('_lastActiveTime')).toBe(true);
+            expect(isTagWellKnown('_workspace')).toBe(true);
+        });
+
+        it('should return true for selection tags', () => {
+            expect(isTagWellKnown('_selection_09a1ee66-bb0f-4f9e-81d2-d8d4da5683b8')).toBe(true);
+            expect(isTagWellKnown('_selection_6a7aa1c5-807c-4390-9982-ff8b2dd5b54e')).toBe(true);
+            expect(isTagWellKnown('_selection_83e80481-13a1-439e-94e6-f3b73942288f')).toBe(true);
+        });
+
+        it('should return false for selection tags when they should be ignored', () => {
+            expect(isTagWellKnown('_selection_09a1ee66-bb0f-4f9e-81d2-d8d4da5683b8', false)).toBe(false);
+            expect(isTagWellKnown('_selection_6a7aa1c5-807c-4390-9982-ff8b2dd5b54e', false)).toBe(false);
+            expect(isTagWellKnown('_selection_83e80481-13a1-439e-94e6-f3b73942288f', false)).toBe(false);
+        });
+
+        it('should return false for normal tags', () => {
+            expect(isTagWellKnown('_movable')).toBe(false);
+            expect(isTagWellKnown('color')).toBe(false);
+            expect(isTagWellKnown('label.color')).toBe(false);
+            expect(isTagWellKnown('line')).toBe(false);
+            expect(isTagWellKnown('+(#tag:"value")')).toBe(false);
+        });
+    });
+
+    describe('doFilesAppearEqual()', () => {
+        it('should return true if both null', () => {
+            const result = doFilesAppearEqual(null, null);
+
+            expect(result).toBe(true);
+        });
+
+        it('should return false if one null', () => {
+            expect(doFilesAppearEqual(createFile(), null)).toBe(false);
+            expect(doFilesAppearEqual(null, createFile())).toBe(false);
+        });
+
+        it('should ignore IDs if theyre not the same', () => {
+            let first = createFile();
+            let second = createFile();
+
+            const result = doFilesAppearEqual(first, second);
+
+            expect(result).toBe(true);
+        });
+
+        it('should ignore selection tags by default', () => {
+            let first = createFile();
+            let second = createFile();
+
+            first.tags['_selection_83e80481-13a1-439e-94e6-f3b73942288f'] = 'a';
+            second.tags['_selection_83e80481-13a1-439e-94e6-f3b73942288f'] = 'b';
+
+            const result = doFilesAppearEqual(first, second);
+
+            expect(result).toBe(true);
+        });
+
+        it('should use selection tags if specified', () => {
+            let first = createFile();
+            let second = createFile();
+
+            first.tags['_selection_83e80481-13a1-439e-94e6-f3b73942288f'] = 'a';
+            second.tags['_selection_83e80481-13a1-439e-94e6-f3b73942288f'] = 'b';
+
+            const result = doFilesAppearEqual(first, second, { ignoreSelectionTags: false });
+
+            expect(result).toBe(false);
+        });
+
+        it('should use the ignoreId option for checking file IDs', () => {
+            let first = createFile('testID');
+            let second = createFile('testID');
+
+            first.tags.a = true;
+            second.tags.a = false;
+
+            // Defaults to using the ID as a shortcut
+            expect(doFilesAppearEqual(first, second)).toBe(true);
+            
+            expect(doFilesAppearEqual(first, second, { ignoreId: true })).toBe(false);
+        });
+
+        it('should should ignore default hidden tags', () => {
+            let first = createFile();
+            let second = createFile();
+
+            first.tags._position = { x: 1, y: 2, z: 3 };
+            second.tags._position = { x: 0, y: 0, z: 0 };
+
+            const result = doFilesAppearEqual(first, second);
+
+            expect(result).toBe(true);
         });
     });
 

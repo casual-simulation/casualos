@@ -63,7 +63,7 @@ export class SharedFileClickOperation implements IOperation {
 
                     this._triedDragging = true;
 
-                    if (this._interaction.isInCorrectMode(this._file) && this.canDragFile(this._file)) {
+                    if (this._interaction.isInCorrectMode(this._file) && this._canDragFile(this._file)) {
                         this._dragOperation = this._createDragOperation();
                     }
                 }
@@ -114,7 +114,7 @@ export class SharedFileClickOperation implements IOperation {
         this._finished = true;
     }
 
-    canDragFile(file: File) {
+    protected _canDragFile(file: File) {
         if (file.type === 'workspace') {
             // Workspaces are always movable.
             return true;
