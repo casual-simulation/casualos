@@ -147,6 +147,7 @@ export default class GameView extends Vue {
   selectRecentFile(file: Object) {
     if(!this.selectedRecentFile || this.selectedRecentFile.id !== file.id) {
       this.selectedRecentFile = file;
+      this.addToRecentFilesList(file);
     } else {
       this.selectedRecentFile = null;
     }
@@ -437,6 +438,22 @@ export default class GameView extends Vue {
     this.getFiles().forEach(w => w.mesh.showDebugInfo(debug));
   }
 
+  /**
+   * Adds the given file to the recent files list.
+   * If it already exists in the list then it will be moved to the front.
+   * @param file The file to add to the list.
+   */
+  addToRecentFilesList(file: Object) {
+    const index = findIndex(this.recentFiles, f => f.id === file.id);
+    if (index >= 0) {
+      this.recentFiles.splice(index, 1);
+    }
+    this.recentFiles.unshift(file);
+    if (this.recentFiles.length > 3) {
+      this.recentFiles.length = 3;
+    }
+  }
+
   private async _fileUpdated(file: File, initialUpdate = false) {
     const obj = this._files[file.id];
     if (obj) {
@@ -446,15 +463,10 @@ export default class GameView extends Vue {
           if (!file.tags._user && file.tags._lastEditedBy === this.fileManager.userFile.id) {
             if (this.selectedRecentFile  && file.id === this.selectedRecentFile.id) {
               this.selectedRecentFile = file;
+            } else {
+              this.selectedRecentFile = null;
             }
-            const index = findIndex(this.recentFiles, f => f.id === file.id);
-            if (index >= 0) {
-              this.recentFiles.splice(index, 1);
-            }
-            this.recentFiles.unshift(file);
-            if (this.recentFiles.length > 3) {
-              this.recentFiles.length = 3;
-            }
+            this.addToRecentFilesList(file);
           }
         }
 
