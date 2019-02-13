@@ -60,7 +60,7 @@ import { ArgEvent } from '../../common/Events';
 import { WorkspaceMesh, WorkspaceMeshDebugInfo } from '../game-engine/WorkspaceMesh';
 import { GridChecker } from '../game-engine/grid/GridChecker';
 import { FileMesh } from '../game-engine/FileMesh';
-import { values, flatMap, find, findIndex } from 'lodash';
+import { values, flatMap, find, findIndex, debounce } from 'lodash';
 import { getUserMode, createFile, doFilesAppearEqual } from 'common/Files/FileCalculations';
 import App from '../App/App';
 import MiniFile from '../MiniFile/MiniFile';
@@ -179,6 +179,7 @@ export default class GameView extends Vue {
 
   constructor() {
     super();
+    this.addToRecentFilesList = debounce(this.addToRecentFilesList.bind(this), 100);
   }
 
   addNewFile() {

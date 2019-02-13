@@ -30,7 +30,17 @@ export class FileClickOperation extends SharedFileClickOperation {
 
     protected _createDragOperation(): SharedFileDragOperation {
         const workspace = this._file.type === 'workspace' ? this._file3D : null;
-        return new FileDragOperation(this._gameView, this._interaction, this._hit, this._file, workspace);
+        if (this._file.type === 'object') {
+            const fileWorkspace = this._file.tags._workspace ? this._gameView.getFile(this._file.tags._workspace) : null;
+            if (fileWorkspace && this._file.tags._position) {
+                const gridPosition = new Vector2(this._file.tags._position.x, this._file.tags._position.y);
+                const objects = this._interaction.objectsAtGridPosition(fileWorkspace, gridPosition);
+                const file = this._file;
+                const draggedObjects = objects.filter(o => o.tags._index >= file.tags._index);
+                return new FileDragOperation(this._gameView, this._interaction, this._hit, draggedObjects, workspace);
+            }
+        }
+        return new FileDragOperation(this._gameView, this._interaction, this._hit, [this._file], workspace);
     }
 
     protected _performClick(): void {

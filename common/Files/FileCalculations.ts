@@ -538,18 +538,19 @@ export function tagMatchesFilter(tag: string, file: Object, eventName: string): 
 
 /**
  * Filters the given list of objects to those matching the given workspace ID and grid position.
+ * The returned list is in the order of their indexes.
  * @param objects The objects to filter.
  * @param workspaceId The ID of the workspace that the objects need to be on.
  * @param position The position that the objects need to be at.
  */
 export function objectsAtGridPosition(objects: Object[], workspaceId: string, position: Object['tags']['_position']) {
-    return objects.filter(o => {
+    return sortBy(objects.filter(o => {
         return o.type === 'object' && 
             o.tags._workspace === workspaceId &&
             o.tags._position &&
             o.tags._position.x === position.x &&
             o.tags._position.y === position.y
-    });
+    }), o => o.tags._index || 0);
 }
 
 /**
