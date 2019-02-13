@@ -1,5 +1,14 @@
 # File Simulator Changelog
 
+## V0.2.29
+### Date: 2/13/2019
+
+### Changes:
+- Fixed workspace mesh not updating properly.
+- Remove workspace if size is 0.
+  - Only allow shrinking of a workspace to 0 if there are no files on the workspace.
+- Implemented cleanup of a file's arrows/lines when it is destroyed.
+
 ## V0.2.28
 ### Date: 2/12/2019
 
