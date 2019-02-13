@@ -517,9 +517,9 @@ export function createCalculationContext(objects: Object[], lib: string = formul
  * @param other The other file to test against.
  * @param eventName The event name to test.
  */
-export function tagsMatchingFilter(file: Object, other: Object, eventName: string): string[] {
+export function tagsMatchingFilter(file: Object, other: Object, eventName: string, context: FileCalculationContext): string[] {
     const tags = keys(other.tags);
-    return tags.filter(t => tagMatchesFilter(t, file, eventName));
+    return tags.filter(t => tagMatchesFilter(t, file, eventName, context));
 }
 
 /**
@@ -528,12 +528,14 @@ export function tagsMatchingFilter(file: Object, other: Object, eventName: strin
  * @param file The file to test.
  * @param eventName The event to test for.
  */
-export function tagMatchesFilter(tag: string, file: Object, eventName: string): boolean {
+export function tagMatchesFilter(tag: string, file: Object, eventName: string, context: FileCalculationContext): boolean {
     const parsed = parseFilterTag(tag);
-    return parsed.success && 
-        parsed.eventName === eventName && 
-        (file.tags[parsed.filter.tag] === parsed.filter.value ||
-            (Array.isArray(parsed.filter.value) && isEqual(file.tags[parsed.filter.tag], parsed.filter.value)));
+    if(parsed.success && parsed.eventName === eventName) {
+        const calculatedValue = calculateFileValue(context, file, parsed.filter.tag);
+        return calculatedValue === parsed.filter.value ||
+            (Array.isArray(parsed.filter.value) && isEqual(file.tags[parsed.filter.tag], parsed.filter.value))
+    }
+    return false;
 }
 
 /**

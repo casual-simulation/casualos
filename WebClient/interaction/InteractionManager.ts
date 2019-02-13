@@ -464,7 +464,8 @@ export class InteractionManager {
      */
     public canCombineFiles(file: Object, other: Object): boolean {
         if (file && other && file.type === 'object' && other.type === 'object' && file.id !== other.id) {
-            const tags = union(tagsMatchingFilter(file, other, '+'), tagsMatchingFilter(other, file, '+'));
+            const context = this._gameView.fileManager.createContext();
+            const tags = union(tagsMatchingFilter(file, other, '+', context), tagsMatchingFilter(other, file, '+', context));
             return tags.length > 0;
         }
         return false;

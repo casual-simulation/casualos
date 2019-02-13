@@ -574,7 +574,7 @@ function fileUpdatedReducer(state: FilesState, event: FileUpdatedEvent) {
 }
 
 function eventActions(objects: Object[], context: FileCalculationContext, file: Object, other: Object, eventName: string): FileEvent[] {
-    const filters = tagsMatchingFilter(file, other, eventName);
+    const filters = tagsMatchingFilter(file, other, eventName, context);
     const scripts = filters.map(f => calculateFileValue(context, other, f));
     let actions: FileEvent[] = [];
     
