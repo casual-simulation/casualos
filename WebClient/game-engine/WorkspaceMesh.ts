@@ -164,7 +164,7 @@ export class WorkspaceMesh extends GameObject {
      */
     updateHexGrid() {
         if (this.hexGrid) {
-            this.remove(this.hexGrid);
+            this.container.remove(this.hexGrid);
         }
         
         this.hexGrid = HexGridMesh.createFilledInHexGrid(
