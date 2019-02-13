@@ -1,0 +1,13 @@
+.json-content {
+    margin-top: 16px;
+    height: 100%;
+    width: 100%;
+    overflow: scroll;
+}
+
+.aux-debug .md-button {
+    margin-top: 8px;
+}
+.aux-debug .md-button .md-icon {
+    margin-right: 8px;
+}
