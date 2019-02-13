@@ -1,5 +1,12 @@
 # File Simulator Changelog
 
+## V0.2.30
+### Date: 2/14/2019
+
+### Changes:
+- Added Aux Debug page that can be reached by prepending `/aux-debug/` to your simulation id in the url. 
+  - This page presents the AUX data in its raw JSON form and is updated live when changes arrive from the server.
+  - If i wanted to see the raw data for a simulation called `RyanIsSoCool` i would go to `filesimulator.com/aux-deubg/RyanIsSoCool`.
 ## V0.2.29
 ### Date: 2/13/2019
 
