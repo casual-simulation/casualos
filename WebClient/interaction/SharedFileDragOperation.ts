@@ -79,7 +79,7 @@ export class SharedFileDragOperation implements IOperation {
 
     protected _disposeCore() {
         if (this._combine) {
-            this._combineFiles(this._file, this._other, '+');
+            this._combineFiles('+');
         }
     }
 
@@ -96,10 +96,7 @@ export class SharedFileDragOperation implements IOperation {
                 
                 this._combine = result.combine;
                 this._other = result.other;
-                if (!result.combine) {
-                    this._updateFiles(workspace, gridPosition, height, result.index);
-                } else {
-                }
+                this._updateFiles(workspace, gridPosition, height, result.index);
             } else {
                 // Don't move the file if it's not on a workspace
             }
@@ -108,8 +105,8 @@ export class SharedFileDragOperation implements IOperation {
 
     protected _dragWorkspace() {}
 
-    protected _combineFiles(first: File, second: File, eventName: string) {
-        this._gameView.fileManager.action(this._file, this._other, '+');
+    protected _combineFiles(eventName: string) {
+        this._gameView.fileManager.action(this._file, this._other, eventName);
     }
 
     protected _updateFiles(workspace: File3D, gridPosition: Vector2, height: number, index: number) {

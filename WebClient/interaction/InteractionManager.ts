@@ -392,23 +392,18 @@ export class InteractionManager {
      * @param file The file that is being dragged.
      */
     public calculateFileDragPosition(workspace: File3D, gridPosition: Vector2, ...files: Object[]) {
-        const objs = this.objectsAtGridPosition(workspace, gridPosition);
+        const objs = differenceBy(this.objectsAtGridPosition(workspace, gridPosition), files, f => f.id);
 
-        if (objs.length === 1 && files.length == 1) {
-            // check if the files can be combined
-            const canCombine = this.canCombineFiles(files[0], objs[0]);
+        const canCombine = objs.length === 1 && 
+            files.length === 1 &&
+            this.canCombineFiles(files[0], objs[0]);
 
-            if (canCombine) {
-                return {
-                    combine: true,
-                    other: objs[0]
-                };
-            }
-        }
+        const index = this._nextAvailableObjectIndex(workspace, gridPosition, files, objs);
 
         return {
-            combine: false,
-            index: this._nextAvailableObjectIndex(workspace, gridPosition, files, objs)
+            combine: canCombine,
+            other: canCombine ? objs[0] : null,
+            index: index
         };
     }
 

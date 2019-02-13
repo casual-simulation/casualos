@@ -44,5 +44,9 @@ export class NewFileDragOperation extends SharedFileDragOperation {
         return this._interaction.calculateFileDragPosition(workspace, gridPosition, <Object>(this._newFile || this._file));
     }
 
-    protected _combineFiles(first: File, second: File, eventName: string) {}
+    protected _combineFiles(eventName: string) {
+        if (this._newFile) {
+            this._gameView.fileManager.action(this._newFile, this._other, eventName);
+        }
+    }
 }
