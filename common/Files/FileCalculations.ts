@@ -553,6 +553,17 @@ export function objectsAtGridPosition(objects: Object[], workspaceId: string, po
 }
 
 /**
+ * Filters the given list of objets to those that are assigned to the given workspace ID.
+ * @param objects The objects to filter.
+ * @param workspaceId The ID of the workspace that the objects need to be on,
+ */
+export function objectsAtWorkspace(objects: Object[], workspaceId: string) {
+    return objects.filter(o => {
+        return o.type === 'object' && o.tags._workspace === workspaceId;
+    });
+}
+
+/**
  * Duplicates the given file and returns a new file with a new ID but the same tags.
  * The file will be exactly the same as the previous except for 2 things.
  * First, it will have a different ID.

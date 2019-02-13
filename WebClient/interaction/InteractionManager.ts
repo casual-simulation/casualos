@@ -23,7 +23,7 @@ import { FileMesh } from '../game-engine/FileMesh';
 import { Axial, realPosToGridPos, gridDistance, keyToPos, posToKey } from '../game-engine/hex';
 import { MouseButtonId, Input } from '../game-engine/Input';
 import { isBuffer } from 'util';
-import { objectsAtGridPosition, tagsMatchingFilter, isMinimized } from 'common/Files/FileCalculations';
+import { objectsAtGridPosition, objectsAtWorkspace, tagsMatchingFilter, isMinimized } from 'common/Files/FileCalculations';
 import { ColorPickerEvent } from './ColorPickerEvent';
 import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';
@@ -242,7 +242,17 @@ export class InteractionManager {
     }
  
     public canShrinkWorkspace(file: File3D) {
-        return file && file.file.type === 'workspace' && file.file.size >= 1;
+        if (file && file.file.type === 'workspace' && file.file.size >= 1) {
+            if (file.file.size === 1) {
+                // Can only shrink to zero size if there are no objects on the workspace.
+                const allObjects = this._gameView.getObjects().map((o) => { return <Object>o.file });
+                const workspaceObjects = objectsAtWorkspace(allObjects, file.file.id);
+                if (workspaceObjects && workspaceObjects.length > 0) {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 
     public expandWorkspace(file: File3D) {
