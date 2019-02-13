@@ -33,12 +33,10 @@ export class NewFileDragOperation extends SharedFileDragOperation {
     protected _updateFile(file: File, data: PartialFile): FileEvent {
         if (!this._newFile) {
             const newFile = duplicateFile(<Object>file, data);
-            const createdFile = createFile(newFile.id, newFile.tags);
-            return fileAdded(createdFile);
-            // this._newFile = await this._gameView.fileManager.createFile(newFile.id, newFile.tags);
+            this._newFile = createFile(newFile.id, newFile.tags);
+            return fileAdded(this._newFile);
         } else {
             return super._updateFile(this._newFile, data);
-            // return this._gameView.fileManager.updateFile(this._newFile, data);
         }
     }
 
