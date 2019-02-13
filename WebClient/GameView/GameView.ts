@@ -494,6 +494,12 @@ export default class GameView extends Vue {
           this._fileRemoved(file.id);
           return;
         }
+      } else if (file.type === 'workspace') {
+
+        if (file.size <= 0) {
+          this._fileRemoved(file.id);
+          return;
+        }
       }
       await obj.updateFile(file);
       this.onFileUpdated.invoke(obj);

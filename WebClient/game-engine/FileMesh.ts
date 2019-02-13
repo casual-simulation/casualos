@@ -142,6 +142,16 @@ export class FileMesh extends GameObject {
         this._tagUpdateLine();
     }
 
+    public dispose() {
+        super.dispose();
+
+        if (this.arrows) {
+            this.arrows.forEach((a) => {
+                a.dispose();
+            })
+        }
+    }
+
     private _calculateScale(workspace: File3D): number {
         if(workspace && workspace.file.type === 'workspace') {
             const scale = workspace.file.scale || DEFAULT_WORKSPACE_SCALE;

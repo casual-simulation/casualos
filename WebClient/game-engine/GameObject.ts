@@ -20,4 +20,11 @@ export class GameObject extends Object3D {
      */
     frameUpdate() {
     }
+
+    /**
+     * Allows object to clean itself up before being removed.
+     */
+    dispose() {
+
+    }
 }

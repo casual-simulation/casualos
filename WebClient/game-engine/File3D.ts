@@ -92,7 +92,7 @@ export class File3D {
      * Call dispose allow this object to clean itself up when being removed.
      */
     public dispose(): void {
-        
+        this.mesh.dispose();
         this.mesh.parent.remove(this.mesh);
     }
 

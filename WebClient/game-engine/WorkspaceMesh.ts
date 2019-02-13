@@ -159,12 +159,20 @@ export class WorkspaceMesh extends GameObject {
         };
     }
 
+    public frameUpdate() {
+        super.frameUpdate();
+    }
+
+    public dispose() {
+        super.dispose();
+    }
+
     /**
      * Updates the hex grid to match the workspace data.
      */
-    updateHexGrid() {
+    public updateHexGrid() {
         if (this.hexGrid) {
-            this.remove(this.hexGrid);
+            this.container.remove(this.hexGrid);
         }
         
         this.hexGrid = HexGridMesh.createFilledInHexGrid(

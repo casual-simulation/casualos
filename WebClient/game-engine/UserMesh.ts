@@ -180,6 +180,10 @@ export class UserMesh extends GameObject {
         }
     }
 
+    public dispose() {
+        super.dispose();
+    }
+
     private _checkIsActive() {
         const timeBetweenChecks = Date.now() - this._lastActiveCheckTime;
         if (!this._lastActiveCheckTime || timeBetweenChecks > DEFAULT_USER_ACTIVE_CHECK_INTERVAL) {
