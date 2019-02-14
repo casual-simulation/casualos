@@ -90,11 +90,25 @@ So that shows we will be consistent bue the result isn't always what's expected 
 
 So what does this look like in file simulator?
 
-Currently, File Simluator uses operations to build a state which is then shared with other users as needed.
-No revision history is kept because operations are discarded after they are applied to the state.
-When a user goes offline, they store the last known server state and when they regain a connection they download the latest server state and do a simple 3-way merge using the local, new server, and original serve states to try and detect merge conflicts. This can cause some issues. Most notably, when a simulation gets cleared. Because we don't store the full revision history, other users can't tell whether the user deleted a bunch of files or if they added a bunch of files. In the current state it favors preserving their data, which is probably for the best.
+_Note that we have to be careful with the File Simulator data structure because it is supposed to be shared with other SO4-style applications._
 
-A better solution would be to get full revision history stored in a Causal Tree. This would allow us to store full revision history and therefore ensure a consistent state between all users.
+As it currently stands, File Simulator uses a library we wrote called _Channels_ to do most of the heavy lifting for realtime sync.
+
+Channels is a simple wrapper around Socket.io that allows state to be synced between devices. The idea is that a channel is able to send and receive events and store the current state. Whenever an event is received, it is applied to the current state. Whenever we want to send an event we first apply it to the current state and then send it to the server which then relays it to the other users.
+
+This works for many cases, but it breaks down when offline scenarios are introduced. To solve this, we would record the last known server state along with the local state. If the user was offline we would let them issue events against the local state and when they went back online we would get the updated server state and do a simple 3-way merge using the last known server state as the base.
+
+```
+root -- + ------------------ + -------- + < State gets merged
+            \ < User goes offline      /
+             + --- + ---- + --------- +
+```
+
+Unfortunately, this would break down in scenarios where the last known server version was not preserved properly or was never recorded or required more version history than was kept. Additionally if merge conflicts happened the user's state would not be able to be shared with the server until they were resolved.
+
+This is where we have an opportunity to simplify how channels works and also provide a great foundation for deterministic syncing.
+
+## Garbage Collection
 
 So, if we're storing full revision history, what about storage space?
 This depends heavily on what merge strategy the Causal Tree uses. If it's using a last-write-wins strategy we can simply discard everything that is not the most recent write to a particular field. If we're using a more complicated sequence strategy like text editing that involves inserts and deletions then garbage collection becomes more difficult.
@@ -102,10 +116,11 @@ This depends heavily on what merge strategy the Causal Tree uses. If it's using 
 In addition, we may not even need to garbage collect data if we store events in an efficient manner.
 This generally means minimizing the amount of waste data like using strings for types and identifiers when numbers suffice.
 
-For example, the GUIDs are 36 characters long by default (32 digits and 4 hyphens) and most web browsers use UTF-16 which means each character takes 2 bytes per character.
+For example, the GUIDs are 36 characters long by default (32 digits and 4 hyphens) and most web browsers use UTF-16 which means each character takes 2 bytes.
 This means that each GUID takes 72 bytes. In that amount of space you could store 9 numbers. (In JS the `number` data type is 8 bytes) 
 Using more effecient data types could put that even lower. JS doesn't support lower precision data types but WebAssembly does. So, it may be possible to improve storage efficiency using WebAssembly.
 
 Other strategies can be used to improve memory usage. For example, doing some pre-processing on the operations to replace long GUID values with short numbers via a dictionary.
+
 
 [lamport]: https://en.m.wikipedia.org/wiki/Lamport_timestamps
