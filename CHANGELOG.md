@@ -1,6 +1,12 @@
 # File Simulator Changelog
 
-## [UPCOMING RELEASE] V0.2.30
+## V0.3.0
+### Date: 2/14/2019
+
+### Changes:
+- Added a recursion check to the formula evaluation code to prevent infinite loops from locking up the system.
+
+## V0.2.30
 ### Date: 2/13/2019
 
 ### Changes:
