@@ -1,4 +1,5 @@
-import { IChannel, Channel, ChannelInfo } from './Channel';
+import { IChannel, Channel } from './Channel';
+import { ChannelInfo } from '.';
 import { ChannelConnector } from './ChannelConnector';
 import { DiscoveryChannelInfo, createDiscoveryChannelStateStore } from './builtin/DiscoveryChannel';
 import { StateStoreFactory, StateStore } from './StateStore';
