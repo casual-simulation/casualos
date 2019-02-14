@@ -36,6 +36,8 @@ export class Sandbox {
     private _transpiler: Transpiler;
     private _lib: string;
 
+    private _recursionCounter = 0;
+
     /**
      * The list of macros that the sandbox uses on the input code before transpiling it.
      */
@@ -71,6 +73,18 @@ export class Sandbox {
     private _runJs<TExtra>(__js: string, __extras: TExtra, __context: any, __variables: { [key: string]: any }): SandboxResult<TExtra> {
         const __this = this;
 
+        // This works because even though we never decrement
+        // the counter we are recreating the sandbox a lot and that
+        // resets the counter. Overall, this should behave as a
+        // safeguard against infinite loops.
+        if (__this._recursionCounter > 100) {
+            return {
+                success: false,
+                extras: __extras,
+                error: new Error('Ran out of energy')
+            };
+        }
+
         // Using underscores to make these functions and parameters not collide
         // with other stuff the user might use.
         function _listTagValues(tag: string, filter?: (value: any) => boolean) {
@@ -95,6 +109,7 @@ export class Sandbox {
         }
 
         try {
+            this._recursionCounter += 1;
             const __transpiled = this._transpile(__js);
             const result = __context ? __evalWrapper.call(__context, __transpiled) : __evalWrapper(__js);
             return {
