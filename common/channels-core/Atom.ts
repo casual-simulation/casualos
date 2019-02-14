@@ -16,13 +16,22 @@ export class AtomId {
     timestamp: number;
 
     /**
+     * The priority of this atom.
+     * If specified, causes this atom to sort to the beginning
+     * on a chain of atoms that share the same cause.
+     */
+    priority: number;
+
+    /**
      * Creates a new Atom ID.
      * @param site The ID of the site for this ID.
      * @param timestamp The timestamp for this ID.
+     * @param priority The priority for this atom.
      */
-    constructor(site: number, timestamp: number) {
+    constructor(site: number, timestamp: number, priority: number = 0) {
         this.site = site;
         this.timestamp = timestamp;
+        this.priority = priority;
     }
 
     /**
@@ -32,7 +41,16 @@ export class AtomId {
     equals(other: AtomId): boolean {
         return other &&
             other.site === this.site &&
-            other.timestamp === this.timestamp;
+            other.timestamp === this.timestamp &&
+            other.priority === this.priority;
+    }
+
+    toString() {
+        if (this.priority) {
+            return `P${this.timestamp}@T${this.timestamp}@S${this.site}`;
+        } else {
+            return `T${this.timestamp}@S${this.site}`;
+        }
     }
 }
 
@@ -69,5 +87,13 @@ export class Atom<T> {
         this.id = id;
         this.cause = cause;
         this.value = value;
+    }
+
+    toString() {
+        if (this.cause) {
+            return `${this.id}->${this.cause}`;
+        } else {
+            return `${this.id}->${this.cause}`;
+        }
     }
 }

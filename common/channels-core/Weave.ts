@@ -16,19 +16,13 @@ export class WeaveReference {
     id: AtomId;
 
     /**
-     * The version of the weave that this reference is referring to.
-     */
-    version: number;
-
-    /**
      * Creates a new weave reference.
      * @param id 
      * @param index 
      */
-    constructor(id: AtomId, index: number, version: number) {
+    constructor(id: AtomId, index: number) {
         this.id = id;
         this.index = index;
-        this.version = version;
     }
 }
 
@@ -58,15 +52,40 @@ export class Weave<T> {
         if (!atom.cause) {
             // Add the atom at the root of the weave.
             this._atoms.splice(0, 0, atom);
-            return new WeaveReference(atom.id, 0, this._version);
+            return new WeaveReference(atom.id, 0);
         } else {
-            const index = this._indexOf(atom.cause);
+            const causeIndex = this._indexOf(atom.cause);
+            const weaveIndex = this._weaveIndex(causeIndex, atom.id);
 
-            
-
-            this._atoms.splice(index, 0, atom);
-            return new WeaveReference(atom.id, index, this._version);
+            this._atoms.splice(weaveIndex, 0, atom);
+            return new WeaveReference(atom.id, weaveIndex);
         }
+    }
+
+    /**
+     * Finds the index that an atom should appear at in the weave.
+     * @param causeIndex The index of the parent for the atom.
+     * @param atomId The ID of the atom to find the index for.
+     */
+    private _weaveIndex(causeIndex: number, atomId: AtomId) {
+        const cause = this._atoms[causeIndex];
+        let index = causeIndex + 1;
+        for (; index < this._atoms.length; index++) {
+            const atom = this._atoms[index];
+            if (atomId.priority > atom.id.priority) {
+                break;
+            } else if (atomId.timestamp > atom.id.timestamp) {
+                break;
+            } else if(atomId.timestamp === atom.id.timestamp) {
+                if (atomId.site < atom.id.site) {
+                    break;
+                }
+            } else if(!atom.cause.equals(cause.id)) {
+                break;
+            }
+        }
+
+        return index;
     }
 
     /**
