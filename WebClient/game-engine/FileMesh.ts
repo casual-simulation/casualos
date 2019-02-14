@@ -55,6 +55,11 @@ export class FileMesh extends GameObject {
     stroke: LineSegments;
 
     /**
+     * Whether the file should be visible if it doesn't have a workspace.
+     */
+    allowNoWorkspace: boolean = false;
+
+    /**
      * Event that is fired when this file mesh is updated.
      */
     public onUpdated: ArgEvent<FileMesh> = new ArgEvent<FileMesh>();
@@ -62,6 +67,7 @@ export class FileMesh extends GameObject {
     constructor(gameView?: GameView) {
         super();
         this._gameView = gameView;
+        this.allowNoWorkspace = false;
     }
 
     get boundingBox(): Box3 {
@@ -189,6 +195,10 @@ export class FileMesh extends GameObject {
             this.cubeContainer.scale.set(cubeScale.x, cubeScale.y, cubeScale.z);
             this.cubeContainer.position.set(0, cubeScale.y / 2, 0);
         } else {
+            if (!this.allowNoWorkspace) {
+                console.log('[FileMesh] File should be deleted', this.file.id, this.file.tags._workspace);
+            }
+            this.visible = this.allowNoWorkspace;
             this.parent = null;
             this.cubeContainer.scale.set(cubeScale.x, cubeScale.y, cubeScale.z);
             this.cubeContainer.position.set(0, 0, 0);

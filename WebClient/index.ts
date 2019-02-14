@@ -33,9 +33,11 @@ import Welcome from './Welcome/Welcome';
 import Home from './Home/Home';
 import Editor from './Editor/Editor';
 import MergeConflicts from './MergeConflicts/MergeConflicts';
+import AuxDebug from './AuxDebug/AuxDebug';
 
 // Import the WebXR Polyfill
 import 'webxr-polyfill';
+
 
 // Setup the Promise shim for browsers that don't support promises.
 polyfill();
@@ -90,6 +92,11 @@ const routes: RouteConfig[] = [
                 next({ name: 'home', params: { id: appManager.user.channelId } });
             }
         }
+    },
+    {
+        path: '/aux-debug/:id?',
+        name: 'aux-debug',
+        component: AuxDebug
     }
 ]
 

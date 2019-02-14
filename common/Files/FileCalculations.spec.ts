@@ -21,7 +21,7 @@ import {
 import {
     cloneDeep
 } from 'lodash';
-import { File, Object } from './File';
+import { File, Object, PartialFile } from './File';
 import { FilesState } from './FilesChannel';
 
 describe('FileCalculations', () => {
@@ -253,7 +253,8 @@ describe('FileCalculations', () => {
             let file = createFile();
             let other = createFile();
             
-            const tags = tagsMatchingFilter(file, other, '+');
+            const context = createCalculationContext([ file, other ]);
+            const tags = tagsMatchingFilter(file, other, '+', context);
 
             expect(tags).toEqual([]);
         });
@@ -268,7 +269,8 @@ describe('FileCalculations', () => {
             other.tags['+(#val:"")'] = 'abc';
             other.tags['+(#name:"test")'] = 'def';
             
-            const tags = tagsMatchingFilter(file, other, '+');
+            const context = createCalculationContext([ file, other ]);
+            const tags = tagsMatchingFilter(file, other, '+', context);
 
             expect(tags).toEqual([
                 '+(#name:"Test")',
@@ -283,7 +285,8 @@ describe('FileCalculations', () => {
             let other = createFile();
             other.tags.name = "Test";
             
-            const tags = tagsMatchingFilter(file, other, '+');
+            const context = createCalculationContext([ file, other ]);
+            const tags = tagsMatchingFilter(file, other, '+', context);
 
             expect(tags).toEqual([]);
         });
@@ -294,46 +297,79 @@ describe('FileCalculations', () => {
             let other = createFile();
             other.tags.name = 'test';
 
-            expect(tagMatchesFilter('+(#name:"test")', other, '+')).toBe(true);
+            const context = createCalculationContext([ other ]);
+            expect(tagMatchesFilter('+(#name:"test")', other, '+', context)).toBe(true);
         });
 
         it('should match number values', () => {
             let other = createFile();
             other.tags.num = 123456;
 
-            expect(tagMatchesFilter('+(#num:"123456")', other, '+')).toBe(true);
+            const context = createCalculationContext([ other ]);
+
+            expect(tagMatchesFilter('+(#num:"123456")', other, '+', context)).toBe(true);
 
             other.tags.num = 3.14159;
 
-            expect(tagMatchesFilter('+(#num:"3.14159")', other, '+')).toBe(true);
+            expect(tagMatchesFilter('+(#num:"3.14159")', other, '+', context)).toBe(true);
         });
 
         it('should match boolean values', () => {
             let other = createFile();
             other.tags.bool = true;
-
-            expect(tagMatchesFilter('+(#bool:"true")', other, '+')).toBe(true);
+            const context = createCalculationContext([ other ]);
+            expect(tagMatchesFilter('+(#bool:"true")', other, '+', context)).toBe(true);
 
             other.tags.bool = false;
 
-            expect(tagMatchesFilter('+(#bool:"false")', other, '+')).toBe(true);
+            expect(tagMatchesFilter('+(#bool:"false")', other, '+', context)).toBe(true);
         });
 
         it('should match array values', () => {
             let other = createFile();
             other.tags.array = [];
+            const context = createCalculationContext([ other ]);
 
-            expect(tagMatchesFilter('+(#array:"[]")', other, '+')).toBe(true);
-            expect(tagMatchesFilter('+(#array:"[\"anything\"]")', other, '+')).toBe(false);
+            expect(tagMatchesFilter('+(#array:"[]")', other, '+', context)).toBe(true);
+            expect(tagMatchesFilter('+(#array:"[\"anything\"]")', other, '+', context)).toBe(false);
 
             other.tags.array = [1];
-            expect(tagMatchesFilter('+(#array:"[1]")', other, '+')).toBe(true);
+            expect(tagMatchesFilter('+(#array:"[1]")', other, '+', context)).toBe(true);
 
             other.tags.array = ['hello', 'world'];
-            expect(tagMatchesFilter('+(#array:"[hello, world]")', other, '+')).toBe(true);
+            expect(tagMatchesFilter('+(#array:"[hello, world]")', other, '+', context)).toBe(true);
 
             other.tags.array = ['hello', 'world', 12.34];
-            expect(tagMatchesFilter('+(#array:"[hello, world, 12.34]")', other, '+')).toBe(true);
+            expect(tagMatchesFilter('+(#array:"[hello, world, 12.34]")', other, '+', context)).toBe(true);
+        });
+
+        it('should evaluate the value filters', () => {
+            let other = createFile();
+            other.tags.name = "=this.cool";
+            other.tags.cool = "Test";
+
+            const context = createCalculationContext([ other, other ]);
+            expect(tagMatchesFilter('+(#name:"Test")', other, '+', context)).toBe(true);
+            
+            other.tags.value = "10.15";
+            expect(tagMatchesFilter("+(#value:10.15)", other, '+', context)).toBe(true);
+
+            other.tags.value = "true";
+            expect(tagMatchesFilter("+(#value:true)", other, '+', context)).toBe(true);
+            expect(tagMatchesFilter("+(#value:false)", other, '+', context)).toBe(false);
+
+            other.tags.value = "false";
+            expect(tagMatchesFilter("+(#value:true)", other, '+', context)).toBe(false);
+            expect(tagMatchesFilter("+(#value:false)", other, '+', context)).toBe(true);
+
+            let newData: PartialFile = {
+                tags: {
+                    assign: ":=this.cool"
+                }
+            };
+            updateFile(other, 'testId', newData, () => context);
+            other.tags.assign = newData.tags.assign;
+            expect(tagMatchesFilter('+(#assign:"Test")', other, '+', context)).toBe(true);
         });
     });
 

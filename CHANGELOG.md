@@ -1,5 +1,23 @@
 # File Simulator Changelog
 
+## [UPCOMING RELEASE] V0.2.30
+### Date: 2/13/2019
+
+### Changes:
+- Added Aux Debug page that can be reached by prepending `/aux-debug/` to your simulation id in the url. 
+  - This page presents the AUX data in its raw JSON form and is updated live when changes arrive from the server.
+  - If you wanted to see the raw data for a simulation called `RyanIsSoCool` you would go to: `filesimulator.com/aux-debug/RyanIsSoCool`.
+- Add the ability to drag a stack of files
+  - For some reason the stack doesn't always move at the same time.
+  - It's some weird issue with not updating them fast enough or something.
+- Debounce updates to the recents list so that we're not forcing re-renders of the mini files all the time
+- Fix so that dragging new files doesn't cause a ton to get created
+- Cause formulas to be run when evaluating filters
+  - This also fixes the issue of numbers and true/false values not matching filters
+- Allow combining files that were just dragged from the file queue
+- Hide files without workspaces
+  - Also log out the file ID when this happens.
+  
 ## V0.2.29
 ### Date: 2/13/2019
 

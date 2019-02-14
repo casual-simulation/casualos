@@ -16,7 +16,7 @@ import {
 import { FileClickOperation } from './FileClickOperation';
 import GameView from '../GameView/GameView';
 import { Physics } from '../game-engine/Physics';
-import { find, flatMap, minBy, keys, maxBy, union } from 'lodash';
+import { find, flatMap, minBy, keys, maxBy, union, some, sortBy, differenceBy } from 'lodash';
 import { CameraControls } from './CameraControls';
 import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
 import { FileMesh } from '../game-engine/FileMesh';
@@ -391,24 +391,19 @@ export class InteractionManager {
      * @param gridPosition The grid position that the file is being dragged to.
      * @param file The file that is being dragged.
      */
-    public calculateFileDragPosition(workspace: File3D, gridPosition: Vector2, file: Object) {
-        const objs = this.objectsAtGridPosition(workspace, gridPosition);
+    public calculateFileDragPosition(workspace: File3D, gridPosition: Vector2, ...files: Object[]) {
+        const objs = differenceBy(this.objectsAtGridPosition(workspace, gridPosition), files, f => f.id);
 
-        if (objs.length === 1) {
-            // check if the files can be combined
-            const canCombine = this.canCombineFiles(file, objs[0]);
+        const canCombine = objs.length === 1 && 
+            files.length === 1 &&
+            this.canCombineFiles(files[0], objs[0]);
 
-            if (canCombine) {
-                return {
-                    combine: true,
-                    other: objs[0]
-                };
-            }
-        }
+        const index = this._nextAvailableObjectIndex(workspace, gridPosition, files, objs);
 
         return {
-            combine: false,
-            index: this._nextAvailableObjectIndex(workspace, gridPosition, file, objs)
+            combine: canCombine,
+            other: canCombine ? objs[0] : null,
+            index: index
         };
     }
 
@@ -417,10 +412,12 @@ export class InteractionManager {
      * given grid position.
      * @param workspace The workspace.
      * @param gridPosition The grid position that the next available index should be found for.
-     * @param file The file that we're trying to find the next index for.
+     * @param files The files that we're trying to find the next index for.
+     * @param objs The objects at the same grid position.
      */
-    private _nextAvailableObjectIndex(workspace: File3D, gridPosition: Vector2, file: Object, objs: Object[]): number {
-        const indexes = objs.map(o => ({
+    private _nextAvailableObjectIndex(workspace: File3D, gridPosition: Vector2, files: Object[], objs: Object[]): number {
+        const except = differenceBy(objs, files, f => f.id);
+        const indexes = except.map(o => ({
             object: o,
             index: o.tags._index || 0
         }));
@@ -431,11 +428,12 @@ export class InteractionManager {
         const maxIndex = maxBy(indexes, i => i.index);
         let nextIndex = 0;
         if (maxIndex) {
-            if (maxIndex.object.id === file.id) {
-                nextIndex = maxIndex.index;
-            } else {
-                nextIndex = maxIndex.index + 1;
-            }
+            // if (some(files, f => f.id === maxIndex.object.id)) {
+            //     nextIndex = maxIndex.index;
+            // } else {
+            //     nextIndex = maxIndex.index + 1;
+            // }
+            nextIndex = maxIndex.index + 1;
         }
 
         return nextIndex;
@@ -461,7 +459,8 @@ export class InteractionManager {
      */
     public canCombineFiles(file: Object, other: Object): boolean {
         if (file && other && file.type === 'object' && other.type === 'object' && file.id !== other.id) {
-            const tags = union(tagsMatchingFilter(file, other, '+'), tagsMatchingFilter(other, file, '+'));
+            const context = this._gameView.fileManager.createContext();
+            const tags = union(tagsMatchingFilter(file, other, '+', context), tagsMatchingFilter(other, file, '+', context));
             return tags.length > 0;
         }
         return false;

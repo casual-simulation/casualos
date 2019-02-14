@@ -6,10 +6,10 @@ import { InteractionManager } from './InteractionManager';
 import { Ray, Intersection, Vector2, Vector3, Box3 } from 'three';
 import { Physics } from '../game-engine/Physics';
 import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
-import { File, Workspace, Object, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated, PartialFile } from 'common/Files';
+import { File, Workspace, Object, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated, PartialFile, fileAdded, FileEvent } from 'common/Files';
 import { keys, minBy, flatMap } from 'lodash';
 import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance, posToKey } from '../game-engine/hex';
-import { isFormula, duplicateFile } from 'common/Files/FileCalculations';
+import { isFormula, duplicateFile, createFile } from 'common/Files/FileCalculations';
 import { SharedFileDragOperation } from './SharedFileDragOperation';
 import { appManager } from 'WebClient/AppManager';
 import { merge } from 'common/utils';
@@ -27,15 +27,16 @@ export class NewFileDragOperation extends SharedFileDragOperation {
      * @param buttonId the button id of the input that this drag operation is being performed with. If desktop this is the mouse button
      */
     constructor(gameView: GameView, interaction: InteractionManager, file: File) {
-        super(gameView, interaction, file);
+        super(gameView, interaction, [file]);
     }
 
-    protected async _updateFile(data: PartialFile) {
+    protected _updateFile(file: File, data: PartialFile): FileEvent {
         if (!this._newFile) {
-            const newFile = duplicateFile(<Object>this._file, data);
-            this._newFile = await this._gameView.fileManager.createFile(newFile.id, newFile.tags);
+            const newFile = duplicateFile(<Object>file, data);
+            this._newFile = createFile(newFile.id, newFile.tags);
+            return fileAdded(this._newFile);
         } else {
-            this._gameView.fileManager.updateFile(this._newFile, data);
+            return super._updateFile(this._newFile, data);
         }
     }
 
@@ -43,5 +44,9 @@ export class NewFileDragOperation extends SharedFileDragOperation {
         return this._interaction.calculateFileDragPosition(workspace, gridPosition, <Object>(this._newFile || this._file));
     }
 
-    protected _combineFiles(first: File, second: File, eventName: string) {}
+    protected _combineFiles(eventName: string) {
+        if (this._newFile) {
+            this._gameView.fileManager.action(this._newFile, this._other, eventName);
+        }
+    }
 }

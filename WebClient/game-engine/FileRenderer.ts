@@ -18,6 +18,7 @@ import {
 } from "three";
 import { Object, fileRemoved } from 'common/Files';
 import { FileMesh } from "./FileMesh";
+import { merge } from "common/utils";
 
 /**
  * Defines a class that can render a file to a transparent canvas.
@@ -74,15 +75,19 @@ export class FileRenderer {
 
         this._group = new Object3D();
         this._file = new FileMesh(null);
+        this._file.allowNoWorkspace = true;
 
         this._group.add(this._file);
         this._scene.add(this._group);
     }
 
     async render(file: Object): Promise<string> {
+        file = merge(file, {
+            tags: {
+                _destroyed: false
+            }
+        });
         this._file.update(file);
-        // this._file.cube.material = new MeshBasicMaterial();
-        // this._file.update(null);
 
         this._updateBounds();
         this._updateCamera();
