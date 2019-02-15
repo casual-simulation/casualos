@@ -1,4 +1,6 @@
+import { assign } from "lodash";
 import { RootOp, AuxOpBase, AuxOpType, FileOp, TagOp, ValueOp, AuxOp, InsertOp, DeleteOp } from "./AuxOpTypes";
+import { FileType } from "common/Files";
 
 /**
  * Creates a root atom op.
@@ -10,9 +12,10 @@ export function root(): RootOp {
 /**
  * Creates a file atom op.
  */
-export function file(id: string): FileOp {
+export function file(id: string, type: FileType): FileOp {
     return op<FileOp>(AuxOpType.file, {
-        id
+        id,
+        fileType: type
     });
 }
 
@@ -27,9 +30,12 @@ export function tag(name: string): TagOp {
 
 /**
  * Creates a value op.
+ * @param value The initial value for the tag.
  */
-export function value(): ValueOp {
-    return op<ValueOp>(AuxOpType.value, {});
+export function value(value: any): ValueOp {
+    return op<ValueOp>(AuxOpType.value, {
+        value
+    });
 }
 
 /**
@@ -56,9 +62,8 @@ export function del(start?: number, end?: number): DeleteOp {
 }
 
 export function op<T extends AuxOp>(type: T['type'], extra: Partial<T>): T {
-    return <T>{
+    return <T>assign({
         type: type,
-        unix: new Date().getTime(),
-        ...extra
-    };
+        unix: new Date().getTime()
+    }, extra);
 }

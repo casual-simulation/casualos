@@ -1,9 +1,10 @@
 import { AtomOp, Atom, AtomId } from "./Atom";
+import { WeaveReference } from "./Weave";
 
 /**
  * Defines a class that can create atoms based on a site ID and lamport timestamp.
  */
-export class AtomFactory<T extends AtomOp> {
+export class AtomFactory<TOp extends AtomOp> {
 
     private _site: number;
     private _time: number;
@@ -46,8 +47,8 @@ export class AtomFactory<T extends AtomOp> {
      * @param op The operation to include with the atom.
      * @param cause The parent cause of this atom.
      */
-    create(op: T, cause: Atom<T> | AtomId, priority?: number): Atom<T> {
-        const causeId = (cause instanceof Atom) ? cause.id : cause;
+    create<T extends TOp>(op: T, cause: WeaveReference<TOp, TOp> | Atom<TOp> | AtomId, priority?: number): Atom<T> {
+        const causeId = (cause instanceof WeaveReference || cause instanceof Atom) ? cause.id : cause;
         this._time += 1;
         return new Atom<T>(new AtomId(this._site, this._time, priority), causeId, op);
     }

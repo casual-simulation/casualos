@@ -21,11 +21,14 @@ describe('Weave', () => {
             const a3 = new Atom(new AtomId(2, 3), new AtomId(1, 1), new Op());
             const ref3 = weave.insert(a3);
             
-            expect(ref1).toEqual(new WeaveReference(1, 0));
-            expect(ref2).toEqual(new WeaveReference(1, 1));
-            expect(ref3).toEqual(new WeaveReference(2, 0));
+            expect(ref1.id.site).toBe(1);
+            expect(ref1.index).toBe(0);
+            expect(ref2.id.site).toBe(1);
+            expect(ref2.index).toBe(1);
+            expect(ref3.id.site).toBe(2);
+            expect(ref3.index).toBe(0);
 
-            const atoms = weave.atoms;
+            const atoms = weave.atoms.map(a => a.atom);
             expect(atoms).toEqual([
                 a1, a3, a2
             ]);
@@ -45,11 +48,14 @@ describe('Weave', () => {
             const a2 = new Atom(new AtomId(1, 2), new AtomId(1, 1), new Op());
             const ref2 = weave.insert(a2);
             
-            expect(ref1).toEqual(new WeaveReference(1, 0));
-            expect(ref2).toEqual(new WeaveReference(1, 1));
-            expect(ref3).toEqual(new WeaveReference(2, 0));
+            expect(ref1.id.site).toBe(1);
+            expect(ref1.index).toBe(0);
+            expect(ref2.id.site).toBe(1);
+            expect(ref2.index).toBe(1);
+            expect(ref3.id.site).toBe(2);
+            expect(ref3.index).toBe(0);
 
-            expect(weave.atoms).toEqual([
+            expect(weave.atoms.map(a => a.atom)).toEqual([
                 a1, a3, a2
             ]);
         });
@@ -68,11 +74,14 @@ describe('Weave', () => {
             const a2 = new Atom(new AtomId(1, 2), new AtomId(1, 1), new Op());
             const ref2 = weave.insert(a2);
             
-            expect(ref1).toEqual(new WeaveReference(1, 0));
-            expect(ref2).toEqual(new WeaveReference(1, 1));
-            expect(ref3).toEqual(new WeaveReference(2, 0));
+            expect(ref1.id.site).toBe(1);
+            expect(ref1.index).toBe(0);
+            expect(ref2.id.site).toBe(1);
+            expect(ref2.index).toBe(1);
+            expect(ref3.id.site).toBe(2);
+            expect(ref3.index).toBe(0);
 
-            expect(weave.atoms).toEqual([
+            expect(weave.atoms.map(a => a.atom)).toEqual([
                 a1, a2, a3
             ]);
         });
@@ -92,12 +101,16 @@ describe('Weave', () => {
             const a2 = new Atom(new AtomId(1, 3), new AtomId(1, 1), new Op());
             const ref2 = weave.insert(a2);
 
-            expect(ref1).toEqual(new WeaveReference(1, 0));
-            expect(ref2).toEqual(new WeaveReference(1, 1));
-            expect(ref3).toEqual(new WeaveReference(2, 0));
-            expect(ref4).toEqual(new WeaveReference(3, 0));
+            expect(ref1.id.site).toBe(1);
+            expect(ref1.index).toBe(0);
+            expect(ref2.id.site).toBe(1);
+            expect(ref2.index).toBe(1);
+            expect(ref3.id.site).toBe(2);
+            expect(ref3.index).toBe(0);
+            expect(ref4.id.site).toBe(3);
+            expect(ref4.index).toBe(0);
 
-            expect(weave.atoms).toEqual([
+            expect(weave.atoms.map(a => a.atom)).toEqual([
                 a1, a4, a3, a2
             ]);
         });
@@ -120,13 +133,18 @@ describe('Weave', () => {
             const a5 = new Atom(new AtomId(1, 5), new AtomId(1, 1), new Op());
             const ref5 = weave.insert(a5);
 
-            expect(ref1).toEqual(new WeaveReference(1, 0));
-            expect(ref2).toEqual(new WeaveReference(2, 0));
-            expect(ref3).toEqual(new WeaveReference(2, 1));
-            expect(ref4).toEqual(new WeaveReference(1, 1));
-            expect(ref5).toEqual(new WeaveReference(1, 2));
+            expect(ref1.id.site).toBe(1);
+            expect(ref1.index).toBe(0);
+            expect(ref2.id.site).toBe(2);
+            expect(ref2.index).toBe(0);
+            expect(ref3.id.site).toBe(2);
+            expect(ref3.index).toBe(1);
+            expect(ref4.id.site).toBe(1);
+            expect(ref4.index).toBe(1);
+            expect(ref5.id.site).toBe(1);
+            expect(ref5.index).toBe(2);
 
-            expect(weave.atoms).toEqual([
+            expect(weave.atoms.map(a => a.atom)).toEqual([
                 a1, 
                 a5, 
                 a2, a3, a4

@@ -5,12 +5,27 @@ import { VirtualArray } from "./VirtualArray";
  * Defines a reference to an atom inside a weave.
  * Once created, this reference will always be valid.
  */
-export class WeaveReference {
+export class WeaveReference<TOp extends AtomOp, T extends TOp> {
 
     /**
-     * The site that this atom refers to.
+     * The atom that this reference refers to.
      */
-    site: number;
+    atom: Atom<T>;
+
+    /**
+     * The ID of this atom.
+     */
+    id: AtomId;
+
+    /**
+     * The ID of this atom's parent.
+     */
+    cause: WeaveReference<TOp, TOp>;
+
+    /**
+     * The operation that the atom contains.
+     */
+    value: T;
 
     /**
      * The index in the site that this atom refers to.
@@ -22,9 +37,20 @@ export class WeaveReference {
      * @param site
      * @param index 
      */
-    constructor(site: number, index: number) {
-        this.site = site;
+    constructor(atom: Atom<T>, cause: WeaveReference<TOp, TOp>, index: number) {
+        this.atom = atom;
+        this.id = atom.id;
+        this.value = atom.value;
+        this.cause = cause;
         this.index = index;
+    }
+
+    toString() {
+        if (this.cause) {
+            return `${this.id}->${this.cause}`;
+        } else {
+            return `${this.id}->${this.cause}`;
+        }
     }
 }
 
@@ -32,9 +58,9 @@ export class WeaveReference {
  * Defines a weave. 
  * That is, the depth-first preorder traversal of a causal tree.
  */
-export class Weave<T extends AtomOp> {
+export class Weave<TOp extends AtomOp> {
 
-    private _atoms: Atom<T>[];
+    private _atoms: WeaveReference<TOp, TOp>[];
     private _sites: SiteMap;
     private _version: number;
 
@@ -47,7 +73,7 @@ export class Weave<T extends AtomOp> {
      * In the context of Causal Trees, yarn is useful because it gives us an easy way to prune the tree
      * without causing errors. Once pruned we can simply recreate the tree via re-inserting everything.
      */
-    private _yarn: Atom<T>[];
+    private _yarn: Atom<TOp>[];
 
     /**
      * Gets the list of atoms stored in this weave.
@@ -70,7 +96,7 @@ export class Weave<T extends AtomOp> {
      * Gets the list of atoms for a site.
      * @param site The site identifier.
      */
-    getSite(site: number): VirtualArray<Atom<T>> {
+    getSite(site: number): VirtualArray<Atom<TOp>> {
         const siteIndex = this._sites[site];
         if (typeof siteIndex === 'undefined') {
             return new VirtualArray(this._yarn, this._yarn.length);
@@ -83,29 +109,32 @@ export class Weave<T extends AtomOp> {
      * Inserts the given atom into the weave.
      * @param atom 
      */
-    insert(atom: Atom<T>): WeaveReference {
+    insert<T extends TOp>(atom: Atom<T>): WeaveReference<TOp, T> {
         const site = this.getSite(atom.id.site);
         if (!atom.cause) {
+            const ref = new WeaveReference<TOp, T>(atom, null, 0);
             // Add the atom at the root of the weave.
-            this._atoms.splice(0, 0, atom);
+            this._atoms.splice(0, 0, ref);
             site.insert(0, atom);
             this._sites[atom.id.site] = {
                 start: site.start,
                 end: site.end
             };
-            return new WeaveReference(atom.id.site, 0);
+            return ref;
         } else {
             const causeIndex = this._indexOf(atom.cause);
+            const cause = this.atoms[causeIndex];
             const weaveIndex = this._weaveIndex(causeIndex, atom.id);
             const siteIndex = this._siteIndex(atom.id, site);
-            this._atoms.splice(weaveIndex, 0, atom);
+            const ref = new WeaveReference<TOp, T>(atom, cause, siteIndex);
+            this._atoms.splice(weaveIndex, 0, ref);
             site.insert(siteIndex, atom);
             this._sites[atom.id.site] = {
                 start: site.start,
                 end: site.end
             };
 
-            return new WeaveReference(atom.id.site, siteIndex);
+            return ref;
         }
     }
 
@@ -113,15 +142,15 @@ export class Weave<T extends AtomOp> {
      * Gets the atom for the given reference.
      * @param reference The reference.
      */
-    getAtom(reference: WeaveReference): Atom<T> {
-        const site = this.getSite(reference.site);
+    getAtom(reference: WeaveReference<TOp, TOp>): Atom<TOp> {
+        const site = this.getSite(reference.id.site);
         return site.get(reference.index);
     }
 
     /**
      * Finds the index that an atom should appear at in a yarn.
      */
-    private _siteIndex(atomId: AtomId, site: VirtualArray<Atom<T>>): number {
+    private _siteIndex(atomId: AtomId, site: VirtualArray<Atom<TOp>>): number {
         for (let i = site.length - 1; i >= 0; i--) {
             const atom = site.get(i);
             if (atomId.timestamp < atom.id.timestamp) {
@@ -155,7 +184,7 @@ export class Weave<T extends AtomOp> {
                 }
             }
             
-            if (!atom.cause.equals(cause.id)) {
+            if (!atom.cause.id.equals(cause.id)) {
                 break;
             }
         }

@@ -1,4 +1,5 @@
 import { AtomOp } from "common/channels-core/Atom";
+import { FileType } from "common/Files";
 
 /**
  * The list of operation types.
@@ -49,6 +50,11 @@ export interface FileOp extends AuxOpBase {
      *  The ID of the file.
      */
     id: string;
+
+    /**
+     * The type of the file.
+     */
+    fileType: FileType;
 }
 
 /**
@@ -70,6 +76,11 @@ export interface TagOp extends AuxOpBase {
  */
 export interface ValueOp extends AuxOpBase {
     type: AuxOpType.value;
+
+    /**
+     * The initial value.
+     */
+    value: any;
 }
 
 /**

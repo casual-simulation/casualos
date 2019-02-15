@@ -429,9 +429,9 @@ export function createFile(id = uuid(), tags: Object['tags'] = {
 /**
  * Creates a new Workspace with default values.
  */
-export function createWorkspace(): Workspace {
+export function createWorkspace(id = uuid()): Workspace {
     return {
-        id: uuid(),
+        id: id,
         type: 'workspace',
         position: {x: 0, y: 0, z: 0},
         size: 1,
