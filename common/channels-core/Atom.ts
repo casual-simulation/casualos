@@ -54,6 +54,11 @@ export class AtomId {
     }
 }
 
+
+export interface AtomOp {
+    type: number;
+}
+
 /**
  * Defines an atom.
  * That is, an object that represents a unique operation paired with a unique cause.
@@ -61,7 +66,7 @@ export class AtomId {
  * 
  * 32 bytes + value size per atom.
  */
-export class Atom<T> {
+export class Atom<T extends AtomOp> {
     /**
      * The ID of this atom.
      */

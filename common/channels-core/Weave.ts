@@ -1,4 +1,4 @@
-import { Atom, AtomId } from "./Atom";
+import { Atom, AtomId, AtomOp } from "./Atom";
 import { VirtualArray } from "./VirtualArray";
 
 /**
@@ -32,7 +32,7 @@ export class WeaveReference {
  * Defines a weave. 
  * That is, the depth-first preorder traversal of a causal tree.
  */
-export class Weave<T> {
+export class Weave<T extends AtomOp> {
 
     private _atoms: Atom<T>[];
     private _sites: SiteMap;

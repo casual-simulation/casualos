@@ -1,18 +1,24 @@
 import { Weave, WeaveReference } from "./Weave";
-import { Atom, AtomId } from "./Atom";
+import { Atom, AtomId, AtomOp } from "./Atom";
+
 
 describe('Weave', () => {
+
+    class Op implements AtomOp {
+        type: number;
+    }
+
     describe('insert()', () => {
         it('should return references', () => {
             let weave = new Weave();
 
-            const a1 = new Atom(new AtomId(1, 1), null, {});
+            const a1 = new Atom(new AtomId(1, 1), null, new Op());
             const ref1 = weave.insert(a1);
 
-            const a2 = new Atom(new AtomId(1, 2), new AtomId(1, 1), {});
+            const a2 = new Atom(new AtomId(1, 2), new AtomId(1, 1), new Op());
             const ref2 = weave.insert(a2);
             
-            const a3 = new Atom(new AtomId(2, 3), new AtomId(1, 1), {});
+            const a3 = new Atom(new AtomId(2, 3), new AtomId(1, 1), new Op());
             const ref3 = weave.insert(a3);
             
             expect(ref1).toEqual(new WeaveReference(1, 0));
@@ -28,15 +34,15 @@ describe('Weave', () => {
         it('should order atoms based on their timestamp', () => {
             let weave = new Weave();
 
-            const a1 = new Atom(new AtomId(1, 1), null, {});
+            const a1 = new Atom(new AtomId(1, 1), null, new Op());
             const ref1 = weave.insert(a1);
 
-            const a3 = new Atom(new AtomId(2, 3), new AtomId(1, 1), {});
+            const a3 = new Atom(new AtomId(2, 3), new AtomId(1, 1), new Op());
             const ref3 = weave.insert(a3);
             
             // Later atoms should be sorted before earlier ones
             // Therefore when adding an atom with time 2 it should be sorted after atom at time 3.
-            const a2 = new Atom(new AtomId(1, 2), new AtomId(1, 1), {});
+            const a2 = new Atom(new AtomId(1, 2), new AtomId(1, 1), new Op());
             const ref2 = weave.insert(a2);
             
             expect(ref1).toEqual(new WeaveReference(1, 0));
@@ -51,15 +57,15 @@ describe('Weave', () => {
         it('should order atoms based on their site ID if timestamp is equal', () => {
             let weave = new Weave();
 
-            const a1 = new Atom(new AtomId(1, 1), null, {});
+            const a1 = new Atom(new AtomId(1, 1), null, new Op());
             const ref1 = weave.insert(a1);
 
             
-            const a3 = new Atom(new AtomId(2, 2), new AtomId(1, 1), {});
+            const a3 = new Atom(new AtomId(2, 2), new AtomId(1, 1), new Op());
             const ref3 = weave.insert(a3);
             
             // Lower Site IDs should be sorted before higher ones
-            const a2 = new Atom(new AtomId(1, 2), new AtomId(1, 1), {});
+            const a2 = new Atom(new AtomId(1, 2), new AtomId(1, 1), new Op());
             const ref2 = weave.insert(a2);
             
             expect(ref1).toEqual(new WeaveReference(1, 0));
@@ -74,16 +80,16 @@ describe('Weave', () => {
         it('should consider priority for sorting', () => {
             let weave = new Weave();
 
-            const a1 = new Atom(new AtomId(1, 1), null, {});
+            const a1 = new Atom(new AtomId(1, 1), null, new Op());
             const ref1 = weave.insert(a1);
 
-            const a3 = new Atom(new AtomId(2, 4), new AtomId(1, 1), {});
+            const a3 = new Atom(new AtomId(2, 4), new AtomId(1, 1), new Op());
             const ref3 = weave.insert(a3);
 
-            const a4 = new Atom(new AtomId(3, 2, 1), new AtomId(1, 1), {});
+            const a4 = new Atom(new AtomId(3, 2, 1), new AtomId(1, 1), new Op());
             const ref4 = weave.insert(a4);
 
-            const a2 = new Atom(new AtomId(1, 3), new AtomId(1, 1), {});
+            const a2 = new Atom(new AtomId(1, 3), new AtomId(1, 1), new Op());
             const ref2 = weave.insert(a2);
 
             expect(ref1).toEqual(new WeaveReference(1, 0));
@@ -99,19 +105,19 @@ describe('Weave', () => {
         it('should handle deeply nested atoms', () => {
             let weave = new Weave();
 
-            const a1 = new Atom(new AtomId(1, 1), null, {});
+            const a1 = new Atom(new AtomId(1, 1), null, new Op());
             const ref1 = weave.insert(a1);
 
-            const a2 = new Atom(new AtomId(2, 2), new AtomId(1, 1), {});
+            const a2 = new Atom(new AtomId(2, 2), new AtomId(1, 1), new Op());
             const ref2 = weave.insert(a2);
 
-            const a3 = new Atom(new AtomId(2, 3), new AtomId(2, 2), {});
+            const a3 = new Atom(new AtomId(2, 3), new AtomId(2, 2), new Op());
             const ref3 = weave.insert(a3);
 
-            const a4 = new Atom(new AtomId(1, 4), new AtomId(2, 3), {});
+            const a4 = new Atom(new AtomId(1, 4), new AtomId(2, 3), new Op());
             const ref4 = weave.insert(a4);
 
-            const a5 = new Atom(new AtomId(1, 5), new AtomId(1, 1), {});
+            const a5 = new Atom(new AtomId(1, 5), new AtomId(1, 1), new Op());
             const ref5 = weave.insert(a5);
 
             expect(ref1).toEqual(new WeaveReference(1, 0));
@@ -130,10 +136,10 @@ describe('Weave', () => {
 
     describe('getSite()', () => {
         it('should return atoms in order of their timestamps', () => {
-            const a1 = new Atom(new AtomId(1, 1), null, {});
-            const a2 = new Atom(new AtomId(1, 2), new AtomId(1, 1), {});
-            const a3 = new Atom(new AtomId(1, 3), new AtomId(1, 1), {});
-            const a4 = new Atom(new AtomId(1, 4), new AtomId(1, 2), {});
+            const a1 = new Atom(new AtomId(1, 1), null, new Op());
+            const a2 = new Atom(new AtomId(1, 2), new AtomId(1, 1), new Op());
+            const a3 = new Atom(new AtomId(1, 3), new AtomId(1, 1), new Op());
+            const a4 = new Atom(new AtomId(1, 4), new AtomId(1, 2), new Op());
 
             let weave = new Weave();
 
@@ -151,15 +157,4 @@ describe('Weave', () => {
         });
     });
 
-    describe('baseline()', () => {
-        it('should return a new weave ')
-    });
-
-    // describe('traverse()', () => {
-    //     it('should call the given function once for each atom in depth-first order', () => {
-
-
-
-    //     });
-    // });
 });
