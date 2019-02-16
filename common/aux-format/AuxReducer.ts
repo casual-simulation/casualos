@@ -4,7 +4,7 @@ import { Weave, WeaveReference } from 'common/channels-core/Weave';
 import { FilesState, File, Object } from "common/Files";
 import { createFile, createWorkspace } from "common/Files/FileCalculations";
 import { WeaveTraverser } from "common/channels-core/WeaveTraverser";
-import { merge } from "common/utils";
+import { merge, splice } from "common/utils";
 import { AtomFactory } from "common/channels-core/AtomFactory";
 
 export class AuxReducer implements AtomReducer<AuxOp, FilesState> {
@@ -56,7 +56,7 @@ export class AuxReducer implements AtomReducer<AuxOp, FilesState> {
     }
 
     private _evalTag(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<AuxOp, AuxOp>, tag: TagOp) {
-        let name = this._evalSequence(tree.fork(), parent, tag.name);
+        let name = this.evalSequence(tree.fork(), parent, tag.name);
         let value: any = null;
         let hasValue = false;
 
@@ -71,17 +71,27 @@ export class AuxReducer implements AtomReducer<AuxOp, FilesState> {
         return { name, value };
     }
 
-    private _evalSequence(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<AuxOp, AuxOp>, value: string): string {
+    public evalSequence(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<AuxOp, AuxOp>, value: string): string {
 
         // list of number pairs
         let offsets: number[] = [];
         while (tree.peek(parent.id)) {
             const atom = tree.next();
-            if (atom.value.type === AuxOpType.insert) {
-                const text = this._evalSequence(tree, atom, atom.value.text);
-                value = spliceIntoString(value, 0, atom.value.index, text, offsets);
-            } else if(atom.value.type === AuxOpType.delete) {
-                value = spliceIntoString(value, atom.value.end - atom.value.start, atom.value.start, '', offsets);
+            if (atom.value.type === AuxOpType.delete) {
+                const start = Math.max(atom.value.start || 0, 0);
+                const end = atom.value.end || value.length;
+                const length = end - start;
+                const offset = calculateOffsetForIndex(start, offsets, true);
+                const index = start + offset;
+                const deleteCount = length + offset;
+                offsets.push(index, -deleteCount);
+                value = splice(value, index, deleteCount, '');
+            } else if (atom.value.type === AuxOpType.insert) {
+                const text = this.evalSequence(tree, atom, atom.value.text);
+                const offset = calculateOffsetForIndex(atom.value.index, offsets, false);
+                const index = atom.value.index + offset;
+                offsets.push(index, text.length);
+                value = splice(value, index, 0, text);
             }
         }
 
@@ -89,19 +99,20 @@ export class AuxReducer implements AtomReducer<AuxOp, FilesState> {
     }
 }
 
-function spliceIntoString(str: string, deleteCount: number, index: number, text: string, offsets: number[]): string {
+function calculateOffsetForIndex(index: number, offsets: number[], isDelete: boolean) {
     const startIndex = index;
+    let offset = 0;
     for (let i = 0; i < offsets.length; i += 2) {
         const oIndex = offsets[i];
-        if (oIndex < startIndex) {
-            index = Math.max(index + offsets[i + 1], 0);
+        if(isDelete) {
+            if (oIndex <= startIndex) {
+               offset += offsets[i + 1];
+            }
+        } else {
+            if (oIndex < startIndex) {
+                offset += + offsets[i + 1];
+            }
         }
     }
-
-    offsets.push(index, text.length - deleteCount);
-    return splice(str, deleteCount, index, text);
-}
-
-function splice(str: string, deleteCount: number, index: number, text: string) {
-    return str.slice(0, index) + text + str.slice(index + deleteCount);
+    return offset;
 }
