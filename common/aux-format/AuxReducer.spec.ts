@@ -5,6 +5,7 @@ import { WeaveTraverser } from "common/channels-core/WeaveTraverser";
 import { AuxCausalTree } from "./AuxCausalTree";
 
 describe('AuxReducer', () => {
+
     describe('evalSequence', () => {
         let reducer: AuxReducer;
         let site1: AuxCausalTree;
@@ -204,7 +205,7 @@ describe('AuxReducer', () => {
             it('should combine deletes at the beginning', () => {
                 const root = site1.val('abc', null);
                 site1.delete(root.atom, 0, 1);
-                site1.delete(root.atom, 0, 1)
+                site1.delete(root.atom, 0, 1);
 
                 traverser.next();
 
@@ -215,7 +216,7 @@ describe('AuxReducer', () => {
             it('should combine deletes at the end', () => {
                 const root = site1.val('abc', null);
                 site1.delete(root.atom, 2, 3);
-                site1.delete(root.atom, 2, 3)
+                site1.delete(root.atom, 2, 3);
 
                 traverser.next();
 
@@ -226,12 +227,83 @@ describe('AuxReducer', () => {
             it('should combine deletes in the middle', () => {
                 const root = site1.val('abc', null);
                 site1.delete(root.atom, 1, 2);
-                site1.delete(root.atom, 1, 2)
+                site1.delete(root.atom, 1, 2);
 
                 traverser.next();
 
                 const result = reducer.evalSequence(traverser, root, root.value.value);
                 expect(result).toBe('ac');
+            });
+
+            it('should preserve overlapping deletes at the beginning', () => {
+                const root = site1.val('abc', null);
+                site1.delete(root.atom, 0, 1);
+                site1.delete(root.atom, 0, 2);
+
+                traverser.next();
+
+                const result = reducer.evalSequence(traverser, root, root.value.value);
+                expect(result).toBe('c');
+            });
+
+            it('should preserve overlapping deletes at the end', () => {
+                const root = site1.val('abc', null);
+                site1.delete(root.atom, 2, 3);
+                site1.delete(root.atom, 1, 3);
+
+                traverser.next();
+
+                const result = reducer.evalSequence(traverser, root, root.value.value);
+                expect(result).toBe('a');
+            });
+
+            it('should preserve overlapping deletes anywhere', () => {
+                const root = site1.val('abc', null);
+                site1.delete(root.atom, 0, 1);
+                site1.delete(root.atom, 0, 3);
+
+                traverser.next();
+
+                const result = reducer.evalSequence(traverser, root, root.value.value);
+                expect(result).toBe('');
+            });
+
+            it('should preserve sequential deletes', () => {
+                const root = site1.val('abc', null);
+                site1.delete(root.atom, 0, 1);
+                site1.delete(root.atom, 1, 2);
+
+                traverser.next();
+
+                const result = reducer.evalSequence(traverser, root, root.value.value);
+                expect(result).toBe('c');
+            });
+        });
+
+        describe('mixed', () => {
+            it('should process deletes before inserts', () => {
+                const root = site1.val('abc', null);
+                site1.insert(0, '123', root.atom);
+                site1.delete(root.atom, 0, 1);
+
+                traverser.next();
+
+                const result = reducer.evalSequence(traverser, root, root.value.value);
+                expect(result).toBe('123bc');
+            });
+
+            it('should handle chaining deletes onto inserts', () => {
+                const root = site1.val('abc', null);
+                const insert1 = site1.insert(3, '456', root.atom);
+                const insert2 = site1.insert(0, '123', root.atom);
+                site1.delete(root.atom, 1, 2);
+                site1.delete(insert1.atom, 2, 3);
+                site1.delete(insert2.atom, 0, 1);
+
+                traverser.next();
+
+                const result = reducer.evalSequence(traverser, root, root.value.value);
+                expect(result).toBe('23ac45');
             });
         });
     });

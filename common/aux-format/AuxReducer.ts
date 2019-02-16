@@ -37,8 +37,9 @@ export class AuxReducer implements AtomReducer<AuxOp, FilesState> {
                 tree.skip(parent.id);
                 return null;
             } else if(atom.value.type === AuxOpType.tag) {
-                let { name, value } = this._evalTag(tree, atom, atom.value);
-                if (typeof data[name] === 'undefined') {
+                let name = this.evalSequence(tree.fork(), atom, atom.value.name);
+                if (name && typeof data[name] === 'undefined') {
+                    let value = this._evalTag(tree, atom, atom.value);
                     data[name] = value;
                 }
             }
@@ -56,7 +57,6 @@ export class AuxReducer implements AtomReducer<AuxOp, FilesState> {
     }
 
     private _evalTag(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<AuxOp, AuxOp>, tag: TagOp) {
-        let name = this.evalSequence(tree.fork(), parent, tag.name);
         let value: any = null;
         let hasValue = false;
 
@@ -68,7 +68,7 @@ export class AuxReducer implements AtomReducer<AuxOp, FilesState> {
             }
         }
 
-        return { name, value };
+        return value;
     }
 
     public evalSequence(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<AuxOp, AuxOp>, value: string): string {

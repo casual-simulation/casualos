@@ -79,7 +79,6 @@ describe('AuxCausalTree', () => {
             });
         });
 
-        
         it('should use last write wins for tags', () => {
             let site1 = new AuxCausalTree(1);
             let site2 = new AuxCausalTree(2);
@@ -282,6 +281,29 @@ describe('AuxCausalTree', () => {
             expect(site1.value).toEqual(expected);
             expect(site2.value).toEqual(expected);
             expect(site3.value).toEqual(expected);
+        });
+
+        it('should ignore tags with empty names', () => {
+            let site1 = new AuxCausalTree(1);
+
+            const root = site1.root();
+
+            const first = site1.file('fileId', 'object');
+            const firstTag = site1.tag('first', first.atom);
+            site1.delete(firstTag.atom, 0, 5);
+            
+            const expected: FilesState = {
+                'fileId': {
+                    id: 'fileId',
+                    type: 'object',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: null,
+                    }
+                }
+            };
+
+            expect(site1.value).toEqual(expected);
         });
     });
 });
