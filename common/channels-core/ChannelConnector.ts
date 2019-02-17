@@ -1,6 +1,6 @@
 import { Observable } from "rxjs";
 import { Event } from "./Event";
-import { ChannelInfo } from "./Channel";
+import { ChannelInfo } from "./ChannelInfo";
 import { StateStore } from "./StateStore";
 
 export type ChannelConnectionMode = 'online' | 'offline' | 'online-disconnected';

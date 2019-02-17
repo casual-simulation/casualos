@@ -4,6 +4,7 @@ import { ChannelConnector, ChannelConnectionRequest, ChannelConnection, Event, C
 import { StateStore } from '../../../common/channels-core/StateStore';
 import { SocketManager } from 'WebClient/SocketManager';
 import { map, startWith } from 'rxjs/operators';
+import { socketEvent } from './Utils';
 
 export class SocketIOConnector extends BaseConnector {
     private _socket: typeof io.Socket;
@@ -69,12 +70,4 @@ export class SocketIOConnector extends BaseConnector {
     private _eventName(info: ChannelInfo) {
         return `new_event_${info.id}`;
     }
-}
-
-function socketEvent<T>(socket: typeof io.Socket, eventName: string): Observable<T> {
-    return fromEventPattern<T>(handler => {
-        socket.on(eventName, handler);
-    }, handler => {
-        socket.off(eventName, handler);
-    });
 }

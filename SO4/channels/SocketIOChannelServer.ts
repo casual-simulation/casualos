@@ -1,8 +1,15 @@
-import { Server } from 'socket.io';
+import { Socket, Server } from 'socket.io';
 import { ChannelInfo, Event, ChannelClient, ChannelConnection } from '../../common/channels-core';
+import { RealtimeChannel } from 'common/channels-core/RealtimeChannel';
+import { SocketIOChannelConnection } from './SocketIOChannelConnection';
+import { RealtimeChannelServer } from './RealtimeChannelServer';
 
 export interface ServerList {
     [key: string]: ChannelConnection<any>;
+}
+
+export interface ChannelList {
+    [key: string]: RealtimeChannelServer;
 }
 
 /**
@@ -15,18 +22,21 @@ export class SocketIOChannelServer {
     private _server: Server;
     private _client: ChannelClient;
     private _serverList: ServerList;
+    private _channelList: ChannelList;
     private _userCount: number;
 
     constructor(server: Server, client: ChannelClient) {
         this._serverList = {};
+        this._channelList = {};
         this._client = client;
         this._server = server;
         this._userCount = 0;
-
+        
         this._server.on('connection', socket => {
             this._userCount += 1;
             console.log('[SocketIOChannelServer] A user connected! There are now', this._userCount, 'users connected.');
 
+            // V1 channels
             socket.on('join_server', (info: ChannelInfo, callback: Function) => {
                 console.log('[SocketIOChannelServer] Joining user to server', info.id);
                 socket.join(info.id, async (err) => {
@@ -44,10 +54,23 @@ export class SocketIOChannelServer {
                 });
             });
 
+            // V2 channels
+            socket.on('join_channel', (info: ChannelInfo) => {
+                const channelServer = this._getServer(info);
+                if (!channelServer.exists(socket.id)) {
+                    const channel = new RealtimeChannel<any>(info, new SocketIOChannelConnection(socket));
+                    channelServer.add(socket.id, channel);
+
+                    socket.on('disconnect', () => {
+                        channelServer.remove(socket.id);
+                    });
+                }
+            });
+
             socket.on('disconnect', () => {
                 this._userCount -= 1;
                 console.log('[SocketIOChannelServer] A user disconnected! There are now', this._userCount, 'users connected.');
-            })
+            });
         });
     }
 
@@ -77,6 +100,16 @@ export class SocketIOChannelServer {
             callback(null);
         });
         return connection;
+    }
+
+    private _getServer(info: ChannelInfo) {
+        let server = this._channelList[info.id];
+        if (!server) {
+            server = new RealtimeChannelServer();
+            this._channelList[info.id] = server;
+        }
+
+        return server;
     }
 
 }
