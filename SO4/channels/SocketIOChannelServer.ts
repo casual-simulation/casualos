@@ -3,13 +3,15 @@ import { ChannelInfo, Event, ChannelClient, ChannelConnection } from '../../comm
 import { RealtimeChannel } from 'common/channels-core/RealtimeChannel';
 import { SocketIOChannelConnection } from './SocketIOChannelConnection';
 import { RealtimeChannelServer } from './RealtimeChannelServer';
+import { AuxCausalTree } from 'common/aux-format/AuxCausalTree';
+import { RealtimeChannelInfo } from 'common/channels-core/RealtimeChannelInfo';
 
 export interface ServerList {
     [key: string]: ChannelConnection<any>;
 }
 
 export interface ChannelList {
-    [key: string]: RealtimeChannelServer;
+    [key: string]: AuxCausalTree;
 }
 
 /**
@@ -55,16 +57,32 @@ export class SocketIOChannelServer {
             });
 
             // V2 channels
-            socket.on('join_channel', (info: ChannelInfo) => {
-                const channelServer = this._getServer(info);
-                if (!channelServer.exists(socket.id)) {
-                    const channel = new RealtimeChannel<any>(info, new SocketIOChannelConnection(socket));
-                    channelServer.add(socket.id, channel);
+            socket.on('join_channel', (info: ChannelInfo, callback: Function) => {
+                socket.join(info.id, err => {
+                    if (err) {
+                        console.log(err);
+                        callback(err);
+                        return;
+                    }
+
+                    const tree = this._getTree(info);
+
+                    const eventName = `event_${info.id}`;
+                    socket.on(eventName, (event) => {
+                        tree.add(event);
+                        socket.to(info.id).emit(eventName, event);
+                    });
+
+                    socket.on(`info_${info.id}`, (event, callback) => {
+
+                    });
 
                     socket.on('disconnect', () => {
-                        channelServer.remove(socket.id);
+                        // TODO: Implement events for 
                     });
-                }
+
+                    callback(null);
+                });
             });
 
             socket.on('disconnect', () => {
@@ -102,14 +120,14 @@ export class SocketIOChannelServer {
         return connection;
     }
 
-    private _getServer(info: ChannelInfo) {
-        let server = this._channelList[info.id];
-        if (!server) {
-            server = new RealtimeChannelServer();
-            this._channelList[info.id] = server;
+    private _getTree(info: RealtimeChannelInfo): AuxCausalTree {
+        let tree = this._channelList[info.id];
+        if (!tree) {
+            tree = new AuxCausalTree(1);
+            this._channelList[info.id] = tree;
         }
 
-        return server;
+        return tree;
     }
 
 }
