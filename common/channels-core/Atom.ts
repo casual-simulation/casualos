@@ -1,10 +1,18 @@
 /**
+ * Defines an interface for normal JS objects that represent Atom IDs.
+ */
+export interface StorableAtomId {
+    site: number;
+    timestamp: number;
+    priority: number;
+}
+
+/**
  * Defines an ID for an atom.
  * 
  * 16 bytes per ID. (each number is 8 bytes)
  */
-export class AtomId {
-
+export interface AtomId {
     /**
      * The ID of the originator of this atom.
      */
@@ -21,40 +29,38 @@ export class AtomId {
      * on a chain of atoms that share the same cause.
      */
     priority: number;
-
-    /**
-     * Creates a new Atom ID.
-     * @param site The ID of the site for this ID.
-     * @param timestamp The timestamp for this ID.
-     * @param priority The priority for this atom.
-     */
-    constructor(site: number, timestamp: number, priority: number = 0) {
-        this.site = site;
-        this.timestamp = timestamp;
-        this.priority = priority;
-    }
-
-    /**
-     * Determines if this atom ID matches the other one.
-     * @param other 
-     */
-    equals(other: AtomId): boolean {
-        return other &&
-            other.site === this.site &&
-            other.timestamp === this.timestamp &&
-            other.priority === this.priority;
-    }
-
-    toString() {
-        if (this.priority) {
-            return `P${this.timestamp}@T${this.timestamp}@S${this.site}`;
-        } else {
-            return `T${this.timestamp}@S${this.site}`;
-        }
-    }
 }
 
+/**
+ * Determines if the two given IDs equal each other.
+ * @param first 
+ * @param second 
+ */
+export function idEquals(first: AtomId, second: AtomId) {
+    return first === second || 
+        (first && second &&
+            second.site === first.site &&
+            second.timestamp === first.timestamp &&
+            second.priority === first.priority);
+}
 
+/**
+ * Creates a new Atom ID.
+ * @param site 
+ * @param timestamp 
+ * @param priority 
+ */
+export function atomId(site: number, timestamp: number, priority: number = 0): AtomId {
+    return {
+        site, 
+        timestamp,
+        priority
+    };
+}
+
+/**
+ * Defines an interface for an atom operation.
+ */
 export interface AtomOp {
     type: number;
 }
@@ -66,7 +72,7 @@ export interface AtomOp {
  * 
  * 32 bytes + value size per atom.
  */
-export class Atom<T extends AtomOp> {
+export interface Atom<T extends AtomOp> {
     /**
      * The ID of this atom.
      */
@@ -81,24 +87,18 @@ export class Atom<T extends AtomOp> {
      * The operation that the atom contains.
      */
     value: T;
+}
 
-    /**
-     * Creates a new atom.
-     * @param id The ID of the atom.
-     * @param cause The cause of the atom. Null if this atom is the root.
-     * @param value The value of the atom.
-     */
-    constructor(id: AtomId, cause: AtomId, value: T) {
-        this.id = id;
-        this.cause = cause;
-        this.value = value;
-    }
-
-    toString() {
-        if (this.cause) {
-            return `${this.id}->${this.cause}`;
-        } else {
-            return `${this.id}->${this.cause}`;
-        }
-    }
+/**
+ * Creates a new atom.
+ * @param id 
+ * @param cause 
+ * @param value 
+ */
+export function atom<T extends AtomOp>(id: AtomId, cause: AtomId, value: T): Atom<T> {
+    return {
+        id,
+        cause,
+        value
+    };
 }

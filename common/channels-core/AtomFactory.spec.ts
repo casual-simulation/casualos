@@ -1,5 +1,5 @@
 import { AtomFactory } from "./AtomFactory";
-import { AtomOp, AtomId } from "./Atom";
+import { AtomOp, AtomId, atomId } from "./Atom";
 
 class Op implements AtomOp {
     type: number;
@@ -60,12 +60,12 @@ describe('AtomFactory', () => {
         factory.updateTime(1);
 
         const op2 = new Op();
-        const atom = factory.create(op2, new AtomId(2, 1));
+        const atom = factory.create(op2, atomId(2, 1));
 
         expect(atom.id.site).toBe(1);
         expect(atom.id.timestamp).toBe(3);
         expect(atom.id.priority).toBe(0);
-        expect(atom.cause).toEqual(new AtomId(2, 1));
+        expect(atom.cause).toEqual(atomId(2, 1));
         expect(atom.value).toBe(op2);
         expect(factory.time).toBe(3);
     });

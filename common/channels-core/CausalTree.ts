@@ -70,7 +70,7 @@ export class CausalTree<TOp extends AtomOp, TValue> {
      * Adds the given atom to this Causal Tree's history.
      * @param atom The atom to add to the tree.
      */
-    add<T extends TOp>(atom: Atom<T>): WeaveReference<TOp, T> {
+    add<T extends TOp>(atom: Atom<T>): WeaveReference<T> {
         if (atom.id.site !== this._site) {
             this.factory.updateTime(atom.id.timestamp);
         }
@@ -85,7 +85,7 @@ export class CausalTree<TOp extends AtomOp, TValue> {
      * @param parent The parent atom.
      * @param priority The priority.
      */
-    create<T extends TOp>(op: T, parent: WeaveReference<TOp, TOp> | Atom<TOp> | AtomId, priority?: number): WeaveReference<TOp, T> {
+    create<T extends TOp>(op: T, parent: WeaveReference<TOp> | Atom<TOp> | AtomId, priority?: number): WeaveReference<T> {
         const atom = this.factory.create(op, parent, priority);
         return this.add(atom);
     }

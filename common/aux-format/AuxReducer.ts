@@ -14,12 +14,12 @@ export class AuxReducer implements AtomReducer<AuxOp, FilesState> {
         let tree = new WeaveTraverser<AuxOp>(weave);
 
         while (tree.peek()) {
-            const atom = tree.next();
+            const ref = tree.next();
 
-            if (atom.value.type === AuxOpType.file) {
-                const id = atom.value.id;
+            if (ref.atom.value.type === AuxOpType.file) {
+                const id = ref.atom.value.id;
                 if (typeof value[id] === 'undefined') {
-                    value[id] = this._evalFile(tree, atom, atom.value);
+                    value[id] = this._evalFile(tree, ref, ref.atom.value);
                 }
             }
         }
@@ -27,19 +27,19 @@ export class AuxReducer implements AtomReducer<AuxOp, FilesState> {
         return value;
     }
 
-    private _evalFile(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<AuxOp, AuxOp>, file: FileOp): File {
+    private _evalFile(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<AuxOp>, file: FileOp): File {
         const id = file.id;
         let data: any = {};
 
-        while (tree.peek(parent.id)) {
-            const atom = tree.next();
-            if (atom.value.type === AuxOpType.delete) {
-                tree.skip(parent.id);
+        while (tree.peek(parent.atom.id)) {
+            const ref = tree.next();
+            if (ref.atom.value.type === AuxOpType.delete) {
+                tree.skip(parent.atom.id);
                 return null;
-            } else if(atom.value.type === AuxOpType.tag) {
-                let name = this.evalSequence(tree.fork(), atom, atom.value.name);
+            } else if(ref.atom.value.type === AuxOpType.tag) {
+                let name = this.evalSequence(tree.fork(), ref, ref.atom.value.name);
                 if (name && typeof data[name] === 'undefined') {
-                    let value = this._evalTag(tree, atom, atom.value);
+                    let value = this._evalTag(tree, ref, ref.atom.value);
                     data[name] = value;
                 }
             }
@@ -56,40 +56,40 @@ export class AuxReducer implements AtomReducer<AuxOp, FilesState> {
         }
     }
 
-    private _evalTag(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<AuxOp, AuxOp>, tag: TagOp) {
+    private _evalTag(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<AuxOp>, tag: TagOp) {
         let value: any = null;
         let hasValue = false;
 
-        while (tree.peek(parent.id)) {
-            const atom = tree.next();
-            if (!hasValue && atom.value.type === AuxOpType.value) {
+        while (tree.peek(parent.atom.id)) {
+            const ref = tree.next();
+            if (!hasValue && ref.atom.value.type === AuxOpType.value) {
                 hasValue = true;
-                value = atom.value.value;
+                value = ref.atom.value.value;
             }
         }
 
         return value;
     }
 
-    public evalSequence(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<AuxOp, AuxOp>, value: string): string {
+    public evalSequence(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<AuxOp>, value: string): string {
 
         // list of number pairs
         let offsets: number[] = [];
-        while (tree.peek(parent.id)) {
-            const atom = tree.next();
-            if (atom.value.type === AuxOpType.delete) {
-                const start = Math.max(atom.value.start || 0, 0);
-                const end = atom.value.end || value.length;
+        while (tree.peek(parent.atom.id)) {
+            const ref = tree.next();
+            if (ref.atom.value.type === AuxOpType.delete) {
+                const start = Math.max(ref.atom.value.start || 0, 0);
+                const end = ref.atom.value.end || value.length;
                 const length = end - start;
                 const offset = calculateOffsetForIndex(start, offsets, true);
                 const index = start + offset;
                 const deleteCount = length + offset;
                 offsets.push(index, -deleteCount);
                 value = splice(value, index, deleteCount, '');
-            } else if (atom.value.type === AuxOpType.insert) {
-                const text = this.evalSequence(tree, atom, atom.value.text);
-                const offset = calculateOffsetForIndex(atom.value.index, offsets, false);
-                const index = atom.value.index + offset;
+            } else if (ref.atom.value.type === AuxOpType.insert) {
+                const text = this.evalSequence(tree, ref, ref.atom.value.text);
+                const offset = calculateOffsetForIndex(ref.atom.value.index, offsets, false);
+                const index = ref.atom.value.index + offset;
                 offsets.push(index, text.length);
                 value = splice(value, index, 0, text);
             }

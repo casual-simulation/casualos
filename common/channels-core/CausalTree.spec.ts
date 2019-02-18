@@ -1,5 +1,5 @@
 import { CausalTree } from "./CausalTree";
-import { Atom, AtomId, AtomOp } from "./Atom";
+import { Atom, AtomId, AtomOp, atomId, atom } from "./Atom";
 import { AtomReducer } from "./AtomReducer";
 import { Weave } from './Weave';
 
@@ -21,10 +21,10 @@ class Reducer implements AtomReducer<Op, number> {
     eval(weave: Weave<Op>): number {
         let val = 0;
         for (let i = 0; i < weave.atoms.length; i++) {
-            const atom = weave.atoms[i];
-            if(atom.value.type === OpType.add) {
+            const ref = weave.atoms[i];
+            if(ref.atom.value.type === OpType.add) {
                 val += 1;
-            } else if(atom.value.type === OpType.subtract) {
+            } else if(ref.atom.value.type === OpType.subtract) {
                 val -= 1;
             }
         }
@@ -37,7 +37,7 @@ describe('CausalTree', () => {
         it('should update the factory time when adding an atom from another site', () => {
             let tree = new CausalTree(1, new Reducer());
 
-            tree.add(new Atom(new AtomId(2, 3), new AtomId(2, 2), new Op()));
+            tree.add(atom(atomId(2, 3), atomId(2, 2), new Op()));
 
             expect(tree.factory.time).toBe(4);
         });
@@ -45,7 +45,7 @@ describe('CausalTree', () => {
         it('should not update the factory time when adding an atom from this site', () => {
             let tree = new CausalTree(1, new Reducer());
 
-            tree.add(new Atom(new AtomId(1, 3), new AtomId(1, 2), new Op()));
+            tree.add(atom(atomId(1, 3), atomId(1, 2), new Op()));
 
             expect(tree.factory.time).toBe(0);
         });

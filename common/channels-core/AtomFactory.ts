@@ -1,4 +1,4 @@
-import { AtomOp, Atom, AtomId } from "./Atom";
+import { AtomOp, Atom, AtomId, atom, atomId } from "./Atom";
 import { WeaveReference } from "./Weave";
 
 /**
@@ -47,9 +47,13 @@ export class AtomFactory<TOp extends AtomOp> {
      * @param op The operation to include with the atom.
      * @param cause The parent cause of this atom.
      */
-    create<T extends TOp>(op: T, cause: WeaveReference<TOp, TOp> | Atom<TOp> | AtomId, priority?: number): Atom<T> {
-        const causeId = (cause instanceof WeaveReference || cause instanceof Atom) ? cause.id : cause;
+    create<T extends TOp>(op: T, cause: WeaveReference<TOp> | Atom<TOp> | AtomId, priority?: number): Atom<T> {
+        let causeId: AtomId = null;
+        if (cause) {
+            causeId = <any>(!!(<WeaveReference<TOp>>cause).atom ? (<WeaveReference<TOp>>cause).atom.id : 
+                (<Atom<TOp>>cause).id ? (<Atom<TOp>>cause).id : cause);
+        }
         this._time += 1;
-        return new Atom<T>(new AtomId(this._site, this._time, priority), causeId, op);
+        return atom(atomId(this._site, this._time, priority), causeId, op);
     }
 }

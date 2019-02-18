@@ -19,7 +19,7 @@ describe('AuxReducer', () => {
 
         it('should return the initial value if there are no children', () => {
             const root = site1.val('abc', null);
-            const result = reducer.evalSequence(traverser, root, root.value.value);
+            const result = reducer.evalSequence(traverser, root, root.atom.value.value);
             expect(result).toBe('abc');
         });
 
@@ -31,7 +31,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(result).toBe('123abc');
             });
 
@@ -41,7 +41,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(result).toBe('ab123c');
             });
 
@@ -51,7 +51,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(result).toBe('abc123');
             });
         });
@@ -65,7 +65,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
 
                 // 456 appears after 123 because both insertions are on
                 // the root.
@@ -79,7 +79,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(result).toBe('abc123456');
             });
 
@@ -90,7 +90,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(result).toBe('a123456bc');
             });
 
@@ -101,7 +101,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(result).toBe('456123abc');
             });
 
@@ -112,7 +112,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(result).toBe('123456abc');
             });
 
@@ -123,7 +123,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(result).toBe('124563abc');
             });
         });
@@ -136,7 +136,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(result).toBe('');
             });
 
@@ -146,7 +146,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(result).toBe('');
             });
 
@@ -156,7 +156,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(result).toBe('bc');
             });
 
@@ -166,7 +166,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(result).toBe('ac');
             });
 
@@ -176,7 +176,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(result).toBe('ab');
             });
 
@@ -186,7 +186,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(result).toBe('');
             });
 
@@ -196,7 +196,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(result).toBe('');
             });
         });
@@ -209,7 +209,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(result).toBe('bc');
             });
 
@@ -220,7 +220,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(result).toBe('ab');
             });
 
@@ -231,7 +231,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(result).toBe('ac');
             });
 
@@ -242,7 +242,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(result).toBe('c');
             });
 
@@ -253,7 +253,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(result).toBe('a');
             });
 
@@ -264,7 +264,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(result).toBe('');
             });
 
@@ -275,7 +275,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(result).toBe('c');
             });
         });
@@ -288,7 +288,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(result).toBe('123bc');
             });
 
@@ -302,7 +302,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const result = reducer.evalSequence(traverser, root, root.value.value);
+                const result = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(result).toBe('23ac45');
             });
         });
