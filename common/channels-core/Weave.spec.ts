@@ -327,6 +327,56 @@ describe('Weave', () => {
             expect(atoms.length).toBe(10);
         });
 
+        it('should keep the yarn updated', () => {
+            let first = new Weave<Op>();
+
+            const root = atom<Op>(atomId(1, 0), null, new Op());
+            const child1 = atom<Op>(atomId(1, 1), root.id, new Op());
+            const child2 = atom<Op>(atomId(1, 2), root.id, new Op());
+            const child3 = atom<Op>(atomId(1, 3), child1.id, new Op());
+            const child6 = atom<Op>(atomId(1, 6), child2.id, new Op());
+            const child9 = atom<Op>(atomId(1, 7), child6.id, new Op());
+
+            first.insertMany(root, child1, child2, child3, child6, child9);
+
+            let second = new Weave<Op>();
+
+            const child4 = atom<Op>(atomId(2, 4), root.id, new Op());
+            const child5 = atom<Op>(atomId(2, 5), child1.id, new Op());
+            const child7 = atom<Op>(atomId(2, 6), child5.id, new Op());
+            const child8 = atom<Op>(atomId(2, 7), child7.id, new Op());
+
+            second.insertMany(root, child1, child4, child5, child7, child8);
+
+            const firstRefs = first.atoms;
+            const secondRefs = second.atoms;
+
+            let newWeave = new Weave<Op>();
+            newWeave.import(firstRefs);
+
+            // Note that the partial weave must contain a complete causal chain.
+            // That is, every parent node to the leafs
+            newWeave.import(secondRefs);
+
+            const atoms = newWeave.atoms.map(a => a.atom);
+
+            const site1 = newWeave.getSite(1);
+            expect(site1.get(0).atom).toEqual(root);
+            expect(site1.get(1).atom).toEqual(child1);
+            expect(site1.get(2).atom).toEqual(child2);
+            expect(site1.get(3).atom).toEqual(child3);
+            expect(site1.get(4).atom).toEqual(child6);
+            expect(site1.get(5).atom).toEqual(child9);
+            expect(site1.length).toBe(6);
+
+            const site2 = newWeave.getSite(2);
+            expect(site2.get(0).atom).toEqual(child4);
+            expect(site2.get(1).atom).toEqual(child5);
+            expect(site2.get(2).atom).toEqual(child7);
+            expect(site2.get(3).atom).toEqual(child8);
+            expect(site2.length).toBe(4);
+        });
+
     });
 
 });
