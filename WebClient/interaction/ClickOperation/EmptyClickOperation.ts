@@ -1,15 +1,15 @@
-import { Input, InputType, MouseButtonId } from '../game-engine/Input';
-import { File3D } from '../game-engine/File3D';
-import { FileDragOperation } from './FileDragOperation';
+import { Input, InputType, MouseButtonId } from '../../game-engine/Input';
+import { File3D } from '../../game-engine/File3D';
+import { FileDragOperation } from '../DragOperation/FileDragOperation';
 import { Vector2, Vector3, Intersection, Raycaster } from 'three';
-import { IOperation } from './IOperation';
-import GameView from '../GameView/GameView';
-import { InteractionManager } from './InteractionManager';
+import { IOperation } from '../IOperation';
+import GameView from '../../GameView/GameView';
+import { InteractionManager } from '../InteractionManager';
 import { UserMode, File, DEFAULT_SCENE_BACKGROUND_COLOR } from 'common/Files';
-import { Physics } from '../game-engine/Physics';
-import { appManager } from '../AppManager';
-import { ColorPickerEvent } from './ColorPickerEvent';
-import { EventBus } from '../EventBus/EventBus';
+import { Physics } from '../../game-engine/Physics';
+import { appManager } from '../../AppManager';
+import { ColorPickerEvent } from '../ColorPickerEvent';
+import { EventBus } from '../../EventBus/EventBus';
 
 /**
  * Empty Click Operation handles clicking of empty space for mouse and touch input with the primary (left/first finger) interaction button.

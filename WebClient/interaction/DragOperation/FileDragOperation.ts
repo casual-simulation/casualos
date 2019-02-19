@@ -1,21 +1,21 @@
-import { Input } from '../game-engine/Input';
-import { File3D } from '../game-engine/File3D';
-import { IOperation } from './IOperation';
-import GameView from '../GameView/GameView';
-import { InteractionManager } from './InteractionManager';
+import { Input } from '../../game-engine/Input';
+import { File3D } from '../../game-engine/File3D';
+import { IOperation } from '../IOperation';
+import GameView from '../../GameView/GameView';
+import { InteractionManager } from '../InteractionManager';
 import { Ray, Intersection, Vector2, Vector3, Box3 } from 'three';
-import { Physics } from '../game-engine/Physics';
-import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
+import { Physics } from '../../game-engine/Physics';
+import { WorkspaceMesh } from '../../game-engine/WorkspaceMesh';
 import { File, Workspace, Object, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated } from 'common/Files';
 import { keys, minBy, flatMap } from 'lodash';
-import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance, posToKey } from '../game-engine/hex';
+import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance, posToKey } from '../../game-engine/hex';
 import { isFormula } from 'common/Files/FileCalculations';
-import { SharedFileDragOperation } from './SharedFileDragOperation';
+import { BaseFileDragOperation } from './BaseFileDragOperation';
 
 /**
  * File Drag Operation handles dragging of files for mouse and touch input.
  */
-export class FileDragOperation extends SharedFileDragOperation {
+export class FileDragOperation extends BaseFileDragOperation {
 
     private _workspace: File3D;
     private _attachWorkspace: File3D;

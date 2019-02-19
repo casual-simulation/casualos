@@ -1,23 +1,23 @@
-import { Input, InputType, MouseButtonId } from '../game-engine/Input';
-import { File3D } from '../game-engine/File3D';
-import { FileDragOperation } from './FileDragOperation';
+import { Input, InputType, MouseButtonId } from '../../game-engine/Input';
+import { File3D } from '../../game-engine/File3D';
+import { FileDragOperation } from '../DragOperation/FileDragOperation';
 import { Vector2, Vector3, Intersection } from 'three';
-import { IOperation } from './IOperation';
-import GameView from '../GameView/GameView';
-import { InteractionManager } from './InteractionManager';
+import { IOperation } from '../IOperation';
+import GameView from '../../GameView/GameView';
+import { InteractionManager } from '../InteractionManager';
 import { UserMode, File } from 'common/Files';
-import { Physics } from '../game-engine/Physics';
-import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
-import { appManager } from '../AppManager';
+import { Physics } from '../../game-engine/Physics';
+import { WorkspaceMesh } from '../../game-engine/WorkspaceMesh';
+import { appManager } from '../../AppManager';
 import { merge } from 'common/utils';
-import { SharedFileClickOperation } from './SharedFileClickOperation';
-import { SharedFileDragOperation } from './SharedFileDragOperation';
+import { BaseFileClickOperation } from './BaseFileClickOperation';
+import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
 import { duplicateFile } from 'common/Files/FileCalculations';
 
 /**
  * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
  */
-export class FileClickOperation extends SharedFileClickOperation {
+export class FileClickOperation extends BaseFileClickOperation {
 
     private _file3D: File3D;
     private _hit: Intersection;
@@ -28,7 +28,7 @@ export class FileClickOperation extends SharedFileClickOperation {
         this._hit = hit;
     }
 
-    protected _createDragOperation(): SharedFileDragOperation {
+    protected _createDragOperation(): BaseFileDragOperation {
         const workspace = this._file.type === 'workspace' ? this._file3D : null;
         if (this._file.type === 'object') {
             const fileWorkspace = this._file.tags._workspace ? this._gameView.getFile(this._file.tags._workspace) : null;
