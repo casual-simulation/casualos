@@ -62,10 +62,10 @@ module.exports = {
   resolve: {
     extensions: ['.vue', '.ts', '.js', '.css'],
     alias: {
-      'common': path.resolve(__dirname, '../common'),
+      'common': 'aux-common',
       'three-examples': path.join(__dirname, '../node_modules/three/examples/js'),
       'fs': 'browserfs',
-      'formula-lib': path.join(__dirname, '../common/Formulas/formula-lib.ts'),
+      'formula-lib': 'aux-common/formula-lib',
       'webxr-polyfill': path.resolve(__dirname, 'public/scripts/webxr-polyfill.js')
     }
   },
