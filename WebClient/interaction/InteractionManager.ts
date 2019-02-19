@@ -13,7 +13,7 @@ import {
     FileEvent, 
     DEFAULT_WORKSPACE_HEIGHT, 
     DEFAULT_SCENE_BACKGROUND_COLOR} from '../../common/Files';
-import { FileClickOperation } from './FileClickOperation';
+import { FileClickOperation } from './ClickOperation/FileClickOperation';
 import GameView from '../GameView/GameView';
 import { Physics } from '../game-engine/Physics';
 import { find, flatMap, minBy, keys, maxBy, union, some, sortBy, differenceBy } from 'lodash';
@@ -28,8 +28,8 @@ import { ColorPickerEvent } from './ColorPickerEvent';
 import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';
 import { IOperation } from './IOperation';
-import { EmptyClickOperation } from './EmptyClickOperation';
-import { NewFileClickOperation } from './NewFileClickOperation';
+import { EmptyClickOperation } from './ClickOperation/EmptyClickOperation';
+import { NewFileClickOperation } from './ClickOperation/NewFileClickOperation';
 
 export class InteractionManager {
 

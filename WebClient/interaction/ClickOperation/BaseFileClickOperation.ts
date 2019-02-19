@@ -1,21 +1,21 @@
-import { Input, InputType, MouseButtonId } from '../game-engine/Input';
-import { File3D } from '../game-engine/File3D';
-import { FileDragOperation } from './FileDragOperation';
+import { Input, InputType, MouseButtonId } from '../../game-engine/Input';
+import { File3D } from '../../game-engine/File3D';
+import { FileDragOperation } from '../DragOperation/FileDragOperation';
 import { Vector2, Vector3, Intersection } from 'three';
-import { IOperation } from './IOperation';
-import GameView from '../GameView/GameView';
-import { InteractionManager } from './InteractionManager';
+import { IOperation } from '../IOperation';
+import GameView from '../../GameView/GameView';
+import { InteractionManager } from '../InteractionManager';
 import { UserMode, File } from 'common/Files';
-import { Physics } from '../game-engine/Physics';
-import { WorkspaceMesh } from '../game-engine/WorkspaceMesh';
-import { appManager } from '../AppManager';
+import { Physics } from '../../game-engine/Physics';
+import { WorkspaceMesh } from '../../game-engine/WorkspaceMesh';
+import { appManager } from '../../AppManager';
 import { merge } from 'common/utils';
-import { SharedFileDragOperation } from './SharedFileDragOperation';
+import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
 
 /**
  * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
  */
-export class SharedFileClickOperation implements IOperation {
+export abstract class BaseFileClickOperation implements IOperation {
 
     public static readonly DragThreshold: number = 0.03;
 
@@ -27,7 +27,7 @@ export class SharedFileClickOperation implements IOperation {
     protected _triedDragging: boolean;
 
     protected _startScreenPos: Vector2;
-    protected _dragOperation: SharedFileDragOperation;
+    protected _dragOperation: BaseFileDragOperation;
 
     constructor(mode: UserMode, gameView: GameView, interaction: InteractionManager, file: File) {
         this._gameView = gameView;
@@ -41,6 +41,16 @@ export class SharedFileClickOperation implements IOperation {
 
     public update(): void {
         if (this._finished) return;
+
+        // Update drag operation if one is active.
+        if (this._dragOperation) {
+            if (this._dragOperation.isFinished()) {
+                this._dragOperation.dispose();
+                this._dragOperation = null;
+            } else {
+                this._dragOperation.update();
+            }
+        }
 
         // If using touch, need to make sure we are only ever using one finger at a time. 
         // If a second finger is detected then we cancel this click operation.
@@ -58,9 +68,8 @@ export class SharedFileClickOperation implements IOperation {
                 const curScreenPos = this._gameView.input.getMouseScreenPos();
                 const distance = curScreenPos.distanceTo(this._startScreenPos);
 
-                if (distance >= SharedFileClickOperation.DragThreshold) {
-                    // Start dragging now that we've crossed the threshold.
-
+                if (distance >= BaseFileClickOperation.DragThreshold) {
+                    // Attempt to start dragging now that we've crossed the threshold.
                     this._triedDragging = true;
 
                     if (this._interaction.isInCorrectMode(this._file) && this._canDragFile(this._file)) {
@@ -68,32 +77,16 @@ export class SharedFileClickOperation implements IOperation {
                     }
                 }
 
-            } else {
-
-                if (this._dragOperation.isFinished()) {
-                    this._dragOperation.dispose();
-                    this._dragOperation = null;
-                } else {
-                    this._dragOperation.update();
-                }
             }
-
         } else {
 
             if (!this._dragOperation && !this._triedDragging) {
-
                 this._performClick();
             }
 
             // Button has been released. This click operation is finished.
             this.finish();
         }
-    }
-
-    protected _performClick(): void {}
-
-    protected _createDragOperation(): SharedFileDragOperation {
-        return null;
     }
 
     public isFinished(): boolean {
@@ -112,6 +105,12 @@ export class SharedFileClickOperation implements IOperation {
 
     public finish() {
         this._finished = true;
+    }
+
+    protected abstract _performClick(): void;
+
+    protected _createDragOperation(): BaseFileDragOperation {
+        return null;
     }
 
     protected _canDragFile(file: File) {
