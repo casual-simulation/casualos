@@ -1,3 +1,5 @@
+import { FileUpdatedEvent } from "common/Files";
+
 declare var __actions: any[];
 declare function uuid(): string;
 
@@ -133,11 +135,13 @@ function join(values: any, separator: string = ','): string {
 }
 
 function destroy(file: any) {
-    __actions.push({
+    __actions.push(<FileUpdatedEvent>{
         type: 'file_updated',
         id: (typeof file === 'object' ? file.id : file),
         update: {
-            _destroyed: true
+            tags: {
+                _destroyed: true
+            }
         }
     });
 }
