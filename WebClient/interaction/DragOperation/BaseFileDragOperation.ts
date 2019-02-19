@@ -13,6 +13,7 @@ import { isFormula, updateFile } from 'common/Files/FileCalculations';
 import { FileManager } from 'WebClient/FileManager';
 import { Result } from 'range-parser';
 import { setParent } from '../../game-engine/utils';
+import { FileMesh } from '../../game-engine/FileMesh';
 
 /**
  * Shared class for both FileDragOperation and NewFileDragOperation.
@@ -29,9 +30,9 @@ export abstract class BaseFileDragOperation implements IOperation {
     protected _combine: boolean;
     protected _other: Object;
 
-    protected _freeDragGroup: Group;
-    protected _freeDragDistance: number;
-    protected _freeDragPrevParent: Object3D;
+    private _freeDragGroup: Group;
+    private _freeDragDistance: number;
+    private _freeDragPrevParent: Object3D;
 
     /**
      * Create a new drag rules.
@@ -67,12 +68,7 @@ export abstract class BaseFileDragOperation implements IOperation {
 
         } else {
 
-            // Button has been released.
-            if (this._freeDragGroup && this._files[0].type === 'object') {
-                console.log('destroy files: ', this._files);
-                // Destroy files if free dragging them (trash can)!
-                this._destroyFiles(this._files);
-            }
+            this._onDragReleased();
 
             // This drag operation is finished.
             this._finished = true;
@@ -92,49 +88,71 @@ export abstract class BaseFileDragOperation implements IOperation {
         this._disposeCore();
     }
 
+    protected _onDragReleased(): void {
+        // Button has been released.
+        if (this._freeDragGroup && this._files[0].type === 'object') {
+            console.log('destroy files: ', this._files);
+            // Destroy files if free dragging them (trash can)!
+            this._destroyFiles(this._files);
+        }
+    }
+
     protected _disposeCore() {
         if (this._combine) {
             this._combineFiles('+');
         }
     }
 
-    protected _dragFiles() {
+    private _dragFiles() {
         const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.camera);
         const { good, gridPosition, height, workspace } = this._interaction.pointOnGrid(mouseDir);
 
         if (this._files.length > 0) {
             if (good) {
-                if (this._freeDragGroup) {
-                    this._releaseFreeDragGroup(this._freeDragGroup);
-                    this._freeDragGroup = null;
-                }
-
-                this._showGrid(workspace);
-
-                // calculate index for file
-                const result = this._calculateDragPosition(workspace, gridPosition);
-
-                this._combine = result.combine;
-                this._other = result.other;
-                this._updateFilesPositions(this._files, workspace, gridPosition, height, result.index);
+                this._dragFilesOnWorkspace(workspace, gridPosition, height);
             } else {
-                const firstFile3d = this._gameView.getFile(this._files[0].id);
-                if (firstFile3d) {
-                    // Move the file freely in space at the distance the file is currently from the camera.
-                    if (!this._freeDragGroup) {
-                        this._freeDragGroup = this._createFreeDragGroup(this._files);
-
-                        // Calculate the distance to perform free drag at.
-                        const fileWorldPos = firstFile3d.mesh.getWorldPosition(new Vector3());
-                        const cameraWorldPos = this._gameView.camera.getWorldPosition(new Vector3());
-                        this._freeDragDistance = cameraWorldPos.distanceTo(fileWorldPos);
-                    }
-    
-                    let worldPos = Physics.pointOnRay(mouseDir, this._freeDragDistance);
-                    this._freeDragGroup.position.copy(worldPos);
-                    this._freeDragGroup.updateMatrixWorld(true);
-                }
+                this._dragFilesFree();
             }
+        }
+    }
+
+    protected _dragFilesOnWorkspace(workspace: File3D, gridPosition: Vector2, height: number) {
+
+        if (this._freeDragGroup) {
+            this._releaseFreeDragGroup(this._freeDragGroup);
+            this._freeDragGroup = null;
+        }
+
+        this._showGrid(workspace);
+
+        // calculate index for file
+        const result = this._calculateDragPosition(workspace, gridPosition);
+
+        this._combine = result.combine;
+        this._other = result.other;
+        this._updateFilesPositions(this._files, workspace, gridPosition, height, result.index);
+    }
+
+
+    protected _dragFilesFree() {
+        const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.camera);
+        const firstFileExists = this._gameView.getFile(this._files[0].id) !== undefined;
+
+        if (firstFileExists) {
+            // Move the file freely in space at the distance the file is currently from the camera.
+            if (!this._freeDragGroup) {
+                const fileMeshes = this._files.map((f) => { return <FileMesh>this._gameView.getFile(f.id).mesh; });
+                this._freeDragGroup = this._createFreeDragGroup(fileMeshes);
+
+                // Calculate the distance to perform free drag at.
+                const fileWorldPos = fileMeshes[0].getWorldPosition(new Vector3());
+                const cameraWorldPos = this._gameView.camera.getWorldPosition(new Vector3());
+                this._freeDragDistance = cameraWorldPos.distanceTo(fileWorldPos);
+            }
+
+            let worldPos = Physics.pointOnRay(mouseDir, this._freeDragDistance);
+            this._freeDragGroup.position.copy(worldPos);
+            this._freeDragGroup.updateMatrixWorld(true);
         }
     }
 
@@ -142,47 +160,6 @@ export abstract class BaseFileDragOperation implements IOperation {
 
     protected _combineFiles(eventName: string) {
         this._gameView.fileManager.action(this._file, this._other, eventName);
-    }
-
-    /**
-     * Create a Group (Three Object3D) that the files can reside in during free dragging.
-     * @param files The file to include in the group.
-     */
-    protected _createFreeDragGroup(files: File[]): Group {
-
-        let firstFile3d = this._gameView.getFile(files[0].id);
-        this._freeDragPrevParent = firstFile3d.mesh.parent;
-        
-        // Set the group to the position of the first file. Doing this allows us to more easily
-        // inherit the height offsets of any other files in the stack.
-        let group = new Group();
-        group.position.copy(firstFile3d.mesh.getWorldPosition(new Vector3()));
-        group.updateMatrixWorld(true);
-
-        // Parent all the files to the group.
-        for (let i = 0; i < files.length; i++) {
-            let file3d = this._gameView.getFile(files[i].id);
-            setParent(file3d.mesh, group, this._gameView.scene);
-        }
-
-        // Add the group the scene.
-        this._gameView.scene.add(group);
-
-        return group;
-    }
-
-    /**
-     * Put the the files pack in the workspace and remove the group.
-     */
-    protected _releaseFreeDragGroup(group: Group): void {
-        // Reparent all children of the group to the previous parent.
-        let children = group.children;
-        for (let i = 0; i < children.length; i++) {
-            setParent(children[i], this._freeDragPrevParent, this._gameView.scene);
-        }
-
-        // Remove the group object from the scene.
-        this._gameView.scene.remove(group);
     }
 
 
@@ -234,5 +211,45 @@ export abstract class BaseFileDragOperation implements IOperation {
         }
         this._gridWorkspace = <WorkspaceMesh>workspace.mesh;
         this._gridWorkspace.gridsVisible = true;
+    }
+
+    /**
+     * Create a Group (Three Object3D) that the files can reside in during free dragging.
+     * @param files The file to include in the group.
+     */
+    private _createFreeDragGroup(fileMeshes: FileMesh[]): Group {
+
+        let firstFileMesh = fileMeshes[0];
+        this._freeDragPrevParent = firstFileMesh.parent;
+        
+        // Set the group to the position of the first file. Doing this allows us to more easily
+        // inherit the height offsets of any other files in the stack.
+        let group = new Group();
+        group.position.copy(firstFileMesh.getWorldPosition(new Vector3()));
+        group.updateMatrixWorld(true);
+
+        // Parent all the files to the group.
+        for (let i = 0; i < fileMeshes.length; i++) {
+            setParent(fileMeshes[i], group, this._gameView.scene);
+        }
+
+        // Add the group the scene.
+        this._gameView.scene.add(group);
+
+        return group;
+    }
+
+    /**
+     * Put the the files pack in the workspace and remove the group.
+     */
+    private _releaseFreeDragGroup(group: Group): void {
+        // Reparent all children of the group to the previous parent.
+        let children = group.children;
+        for (let i = 0; i < children.length; i++) {
+            setParent(children[i], this._freeDragPrevParent, this._gameView.scene);
+        }
+
+        // Remove the group object from the scene.
+        this._gameView.scene.remove(group);
     }
 }

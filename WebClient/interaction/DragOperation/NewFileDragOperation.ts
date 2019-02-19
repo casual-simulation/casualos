@@ -13,6 +13,7 @@ import { isFormula, duplicateFile, createFile } from 'common/Files/FileCalculati
 import { BaseFileDragOperation } from './BaseFileDragOperation';
 import { appManager } from 'WebClient/AppManager';
 import { merge } from 'common/utils';
+import { FileMesh } from '../../game-engine/FileMesh';
 
 /**
  * New File Drag Operation handles dragging of new files from the file queue.
@@ -20,6 +21,8 @@ import { merge } from 'common/utils';
 export class NewFileDragOperation extends BaseFileDragOperation {
 
     private _newFile: File;
+    private _initialDragMesh: FileMesh;
+    
 
     /**
      * Create a new drag rules.
@@ -39,6 +42,19 @@ export class NewFileDragOperation extends BaseFileDragOperation {
             return super._updateFile(this._newFile, data);
         }
     }
+
+    // protected _dragFilesFree(): void {
+    //     // File has not been added yet, do a custom drag implementation until we add it by placing it over a workspace.
+    //     if (!this._initialDragMesh) {
+    //         // Instance a file mesh to represent the file in its intial drag state before being added to the world.
+    //         this._initialDragMesh = new FileMesh(this._gameView);
+    //         this._gameView.scene.add(this._initialDragMesh);
+    //         this._initialDragMesh.update(this._file);
+    //     }
+
+    //     const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.camera);
+    //     let worldPos = Physics.pointOnRay(mouseDir, this._freeDragDistance);
+    // }
 
     protected _calculateDragPosition(workspace: File3D, gridPosition: Vector2) {
         return this._interaction.calculateFileDragPosition(workspace, gridPosition, <Object>(this._newFile || this._file));

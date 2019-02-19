@@ -145,14 +145,17 @@ export class InteractionManager {
 
                     }
                 } else if(input.isMouseButtonDownOn(this._gameView.fileQueue)) {
+
                     const element = input.getTargetData().inputDown;
                     const vueElement: any = Input.getVueParent(element);
+                    
                     if (vueElement.file) {
                         const file = <File>vueElement.file;
                         let newFileClickOperation = new NewFileClickOperation(this.mode, this._gameView, this, file);
                         this._operations.push(newFileClickOperation);
                         this._cameraControls.enabled = false;
                     }
+                    
                 }
             }
 

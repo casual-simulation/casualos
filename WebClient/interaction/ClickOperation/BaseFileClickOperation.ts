@@ -85,7 +85,7 @@ export abstract class BaseFileClickOperation implements IOperation {
             }
 
             // Button has been released. This click operation is finished.
-            this.finish();
+            this._finished = true;
         }
     }
 
@@ -94,23 +94,17 @@ export abstract class BaseFileClickOperation implements IOperation {
     }
 
     public dispose(): void {
-
         // Make sure to dispose of drag rules if they exist.
         if (this._dragOperation) {
             this._dragOperation.dispose();
             this._dragOperation = null;
         }
-
-    }
-
-    public finish() {
-        this._finished = true;
     }
 
     protected abstract _performClick(): void;
 
     protected _createDragOperation(): BaseFileDragOperation {
-        return null;
+        throw new Error('Not implemented.');
     }
 
     protected _canDragFile(file: File) {
