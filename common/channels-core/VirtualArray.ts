@@ -53,8 +53,14 @@ export class VirtualArray<T> {
      * @param value 
      */
     set(index: number, value: T) {
-        if (index < 0 || index >= this.length) {
+        if (index < 0) {
             throw VirtualArray._indexOutOfRange();
+        }
+
+        if (index >= this.length) {
+            const newElements = index - (this.length - 1);
+            this._array.splice(this.end, 0, ...(new Array<T>(newElements)));
+            this._end = this.end + newElements;
         }
         const final = this._start + index;
         this._array[final] = value;

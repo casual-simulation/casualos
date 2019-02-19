@@ -177,7 +177,7 @@ describe('Weave', () => {
 
     describe('import()', () => {
 
-        it.skip('should add the given list of atoms to the list verbatim', () => {
+        it('should add the given list of atoms to the list verbatim', () => {
             let weave = new Weave<Op>();
 
             const root = atom<Op>(atomId(1, 0), null, new Op());
@@ -198,9 +198,16 @@ describe('Weave', () => {
                 child1,
                 child3,
             ]);
+
+            const site = newWeave.getSite(1);
+
+            expect(site.get(0).atom).toBe(root);
+            expect(site.get(1).atom).toBe(child1);
+            expect(site.get(2).atom).toBe(child2);
+            expect(site.get(3).atom).toBe(child3);
         });
 
-        it.skip('should be able to merge another weave into itself', () => {
+        it('should be able to merge another weave into itself', () => {
             let first = new Weave<Op>();
 
             const root = atom<Op>(atomId(1, 0), null, new Op());
@@ -225,15 +232,99 @@ describe('Weave', () => {
             newWeave.import(firstRefs);
             newWeave.import(secondRefs);
 
-            expect(newWeave.atoms.map(a => a.atom)).toEqual([
-                root,
-                child4,
-                child2,
-                child6,
-                child1,
-                child4,
-                child3
-            ]);
+            const atoms = newWeave.atoms.map(a => a.atom);
+            expect(atoms[0]).toEqual(root);
+            expect(atoms[1]).toEqual(child4);
+            expect(atoms[2]).toEqual(child2);
+            expect(atoms[3]).toEqual(child6);
+            expect(atoms[4]).toEqual(child1);
+            expect(atoms[5]).toEqual(child5);
+            expect(atoms[6]).toEqual(child3);
+            expect(atoms.length).toBe(7);
+        });
+
+        it('should be able to merge a partial weave into itself', () => {
+            let first = new Weave<Op>();
+
+            const root = atom<Op>(atomId(1, 0), null, new Op());
+            const child1 = atom<Op>(atomId(1, 1), root.id, new Op());
+            const child2 = atom<Op>(atomId(1, 2), root.id, new Op());
+            const child3 = atom<Op>(atomId(1, 3), child1.id, new Op());
+            const child6 = atom<Op>(atomId(1, 6), child2.id, new Op());
+
+            first.insertMany(root, child1, child2, child3, child6);
+
+            let second = new Weave<Op>();
+
+            const child4 = atom<Op>(atomId(2, 4), root.id, new Op());
+            const child5 = atom<Op>(atomId(2, 5), child1.id, new Op());
+
+            second.insertMany(root, child1, child4, child5);
+
+            const firstRefs = first.atoms;
+            const secondRefs = second.atoms;
+
+            let newWeave = new Weave<Op>();
+            newWeave.import(firstRefs);
+
+            // Note that the partial weave must contain a complete causal chain.
+            // That is, every parent node to the leafs
+            newWeave.import(secondRefs);
+
+            const atoms = newWeave.atoms.map(a => a.atom);
+            expect(atoms[0]).toEqual(root);
+            expect(atoms[1]).toEqual(child4);
+            expect(atoms[2]).toEqual(child2);
+            expect(atoms[3]).toEqual(child6);
+            expect(atoms[4]).toEqual(child1);
+            expect(atoms[5]).toEqual(child5);
+            expect(atoms[6]).toEqual(child3);
+            expect(atoms.length).toBe(7);
+        });
+
+        it('should be able to merge a deep weave into itself', () => {
+            let first = new Weave<Op>();
+
+            const root = atom<Op>(atomId(1, 0), null, new Op());
+            const child1 = atom<Op>(atomId(1, 1), root.id, new Op());
+            const child2 = atom<Op>(atomId(1, 2), root.id, new Op());
+            const child3 = atom<Op>(atomId(1, 3), child1.id, new Op());
+            const child6 = atom<Op>(atomId(1, 6), child2.id, new Op());
+            const child9 = atom<Op>(atomId(1, 7), child6.id, new Op());
+
+            first.insertMany(root, child1, child2, child3, child6, child9);
+
+            let second = new Weave<Op>();
+
+            const child4 = atom<Op>(atomId(2, 4), root.id, new Op());
+            const child5 = atom<Op>(atomId(2, 5), child1.id, new Op());
+            const child7 = atom<Op>(atomId(2, 6), child5.id, new Op());
+            const child8 = atom<Op>(atomId(2, 7), child7.id, new Op());
+
+            second.insertMany(root, child1, child4, child5, child7, child8);
+
+            const firstRefs = first.atoms;
+            const secondRefs = second.atoms;
+
+            let newWeave = new Weave<Op>();
+            newWeave.import(firstRefs);
+
+            // Note that the partial weave must contain a complete causal chain.
+            // That is, every parent node to the leafs
+            newWeave.import(secondRefs);
+
+            const atoms = newWeave.atoms.map(a => a.atom);
+            expect(atoms[0]).toEqual(root);
+            expect(atoms[1]).toEqual(child4);
+            expect(atoms[2]).toEqual(child2);
+            expect(atoms[3]).toEqual(child6);
+            expect(atoms[4]).toEqual(child9);
+            expect(atoms[5]).toEqual(child1);
+            expect(atoms[6]).toEqual(child5);
+            expect(atoms[7]).toEqual(child7);
+            expect(atoms[8]).toEqual(child8);
+            expect(atoms[9]).toEqual(child3);
+            expect(atoms.length).toBe(10);
         });
 
     });

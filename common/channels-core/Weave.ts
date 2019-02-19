@@ -149,21 +149,67 @@ export class Weave<TOp extends AtomOp> {
      */
     import(atoms: WeaveReference<TOp>[]) {
         
-        // for(let i = 0; i < atoms.length; i++) {
-        //     const a = atoms[i];
-        //     const atom = new Atom<TOp>(AtomId.fromStorable(a.id), a.cause ? AtomId.fromStorable(a.cause) : null, a.value);
-        //     const local = this._atoms[i];
+        let localOffset = 0;
+        for (let i = 0; i < atoms.length; i++) {
+            const a = atoms[i];
+            let local = this._atoms[i + localOffset];
 
-        //     // Missing local atom but have remote atom
-        //     if (!local) {
-        //         // Insert
-        //     } else if(!atom.id.equals(local.id)) {
-        //         // New Atom
-        //         // Could either be a new sibling or a new child of the current subtree
+            // No more local atoms, so the remote atoms are merely append
+            // operations
+            if (!local) {
+                // Short circut by appending the rest.
+                const finalAtoms = atoms.slice(i);
+                this._atoms.splice(this._atoms.length, 0, ...finalAtoms);
 
-        //         if(atom.cause )
-        //     }
-        // }
+                this._yarn.length = this._yarn.length + finalAtoms.length;
+
+                for (let b = 0; b < finalAtoms.length; b++) {
+                    const ref = finalAtoms[b];
+                    const site = this.getSite(ref.atom.id.site);
+                    site.set(ref.index, ref);
+                    this._sites[ref.atom.id.site] = {
+                        start: site.start,
+                        end: site.end
+                    };
+                }
+                break;
+            } else {
+                // Could either be the same, a new sibling, or a new child of the current subtree
+
+                let order = this._compareAtoms(a.atom, local.atom);
+                if (order === 0) {
+                    // Atoms are equal, no action needed.
+                } else if(order < 0) {
+                    // New atom should be before local atom.
+                    // insert at this index.
+                    this._atoms.splice(i + localOffset, 0, a);
+                    const site = this.getSite(a.atom.id.site);
+                    site.set(a.index, a);
+                    this._sites[a.atom.id.site] = {
+                        start: site.start,
+                        end: site.end
+                    };
+                } else if(order > 0) {
+                    // New atom should be after local atom.
+                    // Skip local atoms until we find the right place to put the new atom.
+                    do {
+                        localOffset += 1;
+                        local = this._atoms[i + localOffset];
+                    } while(local && a.atom.id.timestamp <= local.atom.cause.timestamp);
+                    
+                    order = this._compareAtoms(a.atom, local.atom);
+                    if (order < 0) {
+                        this._atoms.splice(i + localOffset, 0, a);
+                        const site = this.getSite(a.atom.id.site);
+                        site.set(a.index, a);
+                        this._sites[a.atom.id.site] = {
+                            start: site.start,
+                            end: site.end
+                        };
+                    }
+                }
+            }
+        }
         
         // if (this.atoms.length === 0) {
         //     this._setYarn(atoms);
@@ -196,29 +242,28 @@ export class Weave<TOp extends AtomOp> {
         // const remaining 
     }
 
-    private _setYarn(refs: WeaveReference<TOp>[]) {
-        this._yarn = new Array<WeaveReference<TOp>>(refs.length);
-        let currentSite: number = null;
-        let start = 0;
+    private _sortYarn() {
+        this._yarn = sortBy(this._yarn, ['atom.id.site', 'atom.id.timestamp', 'atom.id.priority']);
+
+        let currentSite = null;
+        let siteStart = 0;
         for (let i = 0; i < this._yarn.length; i++) {
-            const ref = refs[i];
-            const site = ref.atom.id.site;
-            this._yarn[ref.index] = ref;
-            
-            if (currentSite !== site) {
-                if (currentSite !== null) {
+            const ref = this._yarn[i];
+            const newSite = ref.atom.id.site;
+            if (currentSite !== newSite) {
+                if (currentSite) {
                     this._sites[currentSite] = {
-                        start,
+                        start: siteStart,
                         end: i
                     };
                 }
-                currentSite = site;
-                start = i;
+                siteStart = i;
+                currentSite = ref.atom.id.site;
             }
         }
-        if (currentSite !== null) {
+        if (currentSite) {
             this._sites[currentSite] = {
-                start,
+                start: siteStart,
                 end: this._yarn.length
             };
         }
@@ -249,16 +294,9 @@ export class Weave<TOp extends AtomOp> {
         let index = causeIndex + 1;
         for (; index < this._atoms.length; index++) {
             const ref = this._atoms[index];
-            if (atomId.priority > ref.atom.id.priority) {
+            const order = this._compareAtomIds(atomId, ref.atom.id);
+            if (order < 0) {
                 break;
-            } else if (atomId.priority === ref.atom.id.priority) {
-                if (atomId.timestamp > ref.atom.id.timestamp) {
-                    break;
-                } else if (atomId.timestamp === ref.atom.id.timestamp) {
-                    if (atomId.site < ref.atom.id.site) {
-                        break;
-                    }
-                }
             }
             
             if (!idEquals(ref.atom.cause, cause.atom.id)) {
@@ -282,6 +320,58 @@ export class Weave<TOp extends AtomOp> {
         }
 
         return -1;
+    }
+
+    /**
+     * Compares the two atoms to see which should be sorted in front of the other.
+     * Returns -1 if the first should be before the second.
+     * Returns 0 if they are equal.
+     * Returns 1 if the first should be after the second.
+     * @param first The first atom.
+     * @param second The second atom.
+     */
+    private _compareAtoms(first: Atom<TOp>, second: Atom<TOp>): number {
+        const cause = this._compareAtomIds(first.cause, second.cause);
+        if (cause === 0) {
+            return this._compareAtomIds(first.id, second.id);
+        }
+        return cause;
+    }
+
+    /**
+     * Determines if the first atom ID should sort before, at, or after the second atom ID.
+     * Returns -1 if the first should be before the second.
+     * Returns 0 if the IDs are equal.
+     * Returns 1 if the first should be after the second.
+     * @param first The first atom ID.
+     * @param second The second atom ID.
+     */
+    private _compareAtomIds(first: AtomId, second: AtomId) {
+        if (!first && second) {
+            return -1;
+        } else if(!second && first) {
+            return 1;
+        } else if (first === second) {
+            return 0;
+        }
+        if (first.priority > second.priority) {
+            return -1;
+        } else if(first.priority < second.priority) {
+            return 1;
+        } else if (first.priority === second.priority) {
+            if (first.timestamp > second.timestamp) {
+                return -1;
+            } else if(first.timestamp < second.timestamp) {
+                return 1;
+            } else if (first.timestamp === second.timestamp) {
+                if (first.site < second.site) {
+                    return -1;
+                } else if(first.site > second.site) {
+                    return 1;
+                }
+            }
+        }
+        return 0;
     }
 
     /**

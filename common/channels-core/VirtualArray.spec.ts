@@ -24,13 +24,16 @@ describe('VirtualArray', () => {
             expect(a.length).toBe(2);
 
             a.set(0, 5);
-            a.set(1, 9)
+            a.set(1, 9);
             expect(a.get(0)).toBe(5);
             expect(arr[1]).toBe(5);
             expect(a.get(1)).toBe(9);
             expect(arr[2]).toBe(9);
 
-            expect(() => a.set(2, 4)).toThrow();
+            a.set(2, 4);
+            expect(a.length).toBe(3);
+            expect(a.get(2)).toBe(4);
+
             expect(() => a.set(-1, 5)).toThrow();
         });
     });
