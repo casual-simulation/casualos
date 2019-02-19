@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "outDir": "./temp/",
+    "outDir": "./dist/",
   },
   "include": [
     "**/*",
