@@ -3,14 +3,14 @@ import {Observable, Subject, BehaviorSubject, Observer} from 'rxjs';
 import {filter, switchMap} from 'rxjs/operators';
 import {appManager} from './AppManager';
 
-import {ChannelClient, StoreFactory, ChannelConnection, ChannelInfo} from 'common/channels-core';
+import {ChannelClient, StoreFactory, ChannelConnection, ChannelInfo} from 'aux-common/channels-core';
 import {SocketIOConnector} from './channels';
 import {
     FileEvent,
     FilesState,
     storeFactory,
     channelTypes,
-} from 'common/Files';
+} from 'aux-common/Files';
 
 export class SocketManager {
     private _socket: SocketIOClient.Socket;

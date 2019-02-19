@@ -1,4 +1,4 @@
-import { FilesState } from "common/Files";
+import { FilesState } from "aux-common/Files";
 import download from 'downloadjs';
 
 export function downloadAuxState(state: FilesState, name: string) {

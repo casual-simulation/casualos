@@ -6,13 +6,13 @@ import { InteractionManager } from '../InteractionManager';
 import { Ray, Intersection, Vector2, Vector3, Box3 } from 'three';
 import { Physics } from '../../game-engine/Physics';
 import { WorkspaceMesh } from '../../game-engine/WorkspaceMesh';
-import { File, Workspace, Object, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated, PartialFile, fileAdded, FileEvent } from 'common/Files';
+import { File, Workspace, Object, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated, PartialFile, fileAdded, FileEvent } from 'aux-common/Files';
 import { keys, minBy, flatMap } from 'lodash';
 import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance, posToKey } from '../../game-engine/hex';
-import { isFormula, duplicateFile, createFile } from 'common/Files/FileCalculations';
+import { isFormula, duplicateFile, createFile } from 'aux-common/Files/FileCalculations';
 import { BaseFileDragOperation } from './BaseFileDragOperation';
-import { appManager } from 'WebClient/AppManager';
-import { merge } from 'common/utils';
+import { appManager } from '../../AppManager';
+import { merge } from 'aux-common/utils';
 import { FileMesh } from '../../game-engine/FileMesh';
 
 /**

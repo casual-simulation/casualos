@@ -1,5 +1,6 @@
 import { expect } from 'chai';
-import { Channel, ChannelInfo, IChannel } from '../Channel';
+import { Channel, IChannel } from '../Channel';
+import { ChannelInfo } from '../ChannelInfo';
 import { DiscoveryChannelInfo, channelCreated, channelRemoved, createDiscoveryChannelStateStore } from './DiscoveryChannel';
 import { TestConnector } from '../test/TestConnector';
 import { Subject } from 'rxjs';

@@ -16,7 +16,6 @@ import {
     groupBy, keys, every
 } from 'lodash';
 import { HexGridMesh, HexMesh } from "../hex";
-import TagEditor from "WebClient/TagEditor/TagEditor";
 import { GridLevel } from "./GridLevel";
 import { GridTile } from "./GridTile";
 import { calculateTilePoints, calculateGridTileLocalPositions } from "./Grid";

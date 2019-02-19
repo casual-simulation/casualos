@@ -4,7 +4,7 @@ import * as bodyParser from 'body-parser';
 import * as path from 'path';
 import SocketIO from 'socket.io';
 import { SocketIOChannelServer } from './channels';
-import { ChannelClient } from 'common/channels-core';
+import { ChannelClient } from 'aux-common/channels-core';
 import { ChannelServer, ChannelServerConfig } from './ChannelServer';
 import { asyncMiddleware } from './utils';
 

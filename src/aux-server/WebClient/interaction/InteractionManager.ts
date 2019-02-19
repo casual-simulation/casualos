@@ -12,7 +12,7 @@ import {
     UserMode, 
     FileEvent, 
     DEFAULT_WORKSPACE_HEIGHT, 
-    DEFAULT_SCENE_BACKGROUND_COLOR} from '../../common/Files';
+    DEFAULT_SCENE_BACKGROUND_COLOR} from 'aux-common/Files';
 import { FileClickOperation } from './ClickOperation/FileClickOperation';
 import GameView from '../GameView/GameView';
 import { Physics } from '../game-engine/Physics';
@@ -23,7 +23,7 @@ import { FileMesh } from '../game-engine/FileMesh';
 import { Axial, realPosToGridPos, gridDistance, keyToPos, posToKey } from '../game-engine/hex';
 import { MouseButtonId, Input } from '../game-engine/Input';
 import { isBuffer } from 'util';
-import { objectsAtGridPosition, objectsAtWorkspace, tagsMatchingFilter, isMinimized } from 'common/Files/FileCalculations';
+import { objectsAtGridPosition, objectsAtWorkspace, tagsMatchingFilter, isMinimized } from 'aux-common/Files/FileCalculations';
 import { ColorPickerEvent } from './ColorPickerEvent';
 import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';

@@ -14,12 +14,13 @@ import {
     sumBy
 } from 'lodash';
 import { Sandbox } from '../Formulas/Sandbox';
-import formulaLib from 'formula-lib';
-import { FilterFunction, SandboxInterface } from '../Formulas/SandboxInterface';
-import { PartialFile } from 'common/Files';
-import { FilesState } from './FilesChannel';
-import { merge } from 'common/utils';
 
+/// <reference path="../typings/global.d.ts" />
+import formulaLib from 'aux-common/Formulas/formula-lib';
+import { FilterFunction, SandboxInterface } from '../Formulas/SandboxInterface';
+import { PartialFile } from '../Files';
+import { FilesState } from './FilesChannel';
+import { merge } from '../utils';
 
 export var ShortId_Length: number = 5;
 

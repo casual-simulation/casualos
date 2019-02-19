@@ -1,8 +1,7 @@
 import * as io from 'socket.io-client';
 import { Observable, fromEventPattern, merge } from 'rxjs';
-import { ChannelConnector, ChannelConnectionRequest, ChannelConnection, Event, ChannelInfo, BaseConnector } from '../../../common/channels-core';
-import { StateStore } from '../../../common/channels-core/StateStore';
-import { SocketManager } from 'WebClient/SocketManager';
+import { ChannelConnector, ChannelConnectionRequest, ChannelConnection, Event, ChannelInfo, BaseConnector } from 'aux-common/channels-core';
+import { StateStore } from 'aux-common/channels-core/StateStore';
 import { map, startWith } from 'rxjs/operators';
 import { socketEvent } from './Utils';
 

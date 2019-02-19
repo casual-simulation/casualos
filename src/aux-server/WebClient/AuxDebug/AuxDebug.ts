@@ -2,7 +2,7 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { appManager } from '../AppManager';
 import { Prop, Watch,  } from 'vue-property-decorator';
-import { FilesState } from '../../common/Files';
+import { FilesState } from 'aux-common/Files';
 import App from '../App/App';
 import { EventBus } from '../EventBus/EventBus';
 import { SubscriptionLike } from 'rxjs';

@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import { ArgEvent } from '../../common/Events';
+import { ArgEvent } from 'aux-common/Events';
 import { Vector2, Vector3 } from 'three';
 import { find, findIndex, some } from 'lodash';
 import GameView from '../GameView/GameView';

@@ -1,7 +1,7 @@
 import { AuxCausalTree } from "./AuxCausalTree";
-import { AtomFactory } from "common/channels-core/AtomFactory";
+import { AtomFactory } from "../channels-core/AtomFactory";
 import { AuxOp } from "./AuxOpTypes";
-import { FilesState } from "common/Files";
+import { FilesState } from "../Files";
 
 describe('AuxCausalTree', () => {
     describe('value', () => {

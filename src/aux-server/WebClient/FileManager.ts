@@ -31,7 +31,7 @@ import {
   ResolvedConflict,
   DEFAULT_USER_MODE,
   DEFAULT_SCENE_BACKGROUND_COLOR,
-} from 'common/Files';
+} from 'aux-common/Files';
 import { 
   filterFilesBySelection, 
   createWorkspace, 
@@ -46,9 +46,9 @@ import {
   createFile,
   isDestroyed,
   getActiveObjects
-} from 'common/Files/FileCalculations';
-import { merge as mergeObj } from 'common/utils';
-import {ChannelConnection} from 'common/channels-core';
+} from 'aux-common/Files/FileCalculations';
+import { merge as mergeObj } from 'aux-common/utils';
+import {ChannelConnection} from 'aux-common/channels-core';
 import {
   findIndex, 
   flatMap, 

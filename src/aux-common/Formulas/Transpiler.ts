@@ -4,6 +4,29 @@ import {replace} from 'estraverse';
 import {assign} from 'lodash';
 import LRU from 'lru-cache';
 
+declare module 'acorn' {
+    /**
+     * Extends the acorn parser interface.
+     */
+    interface Parser {
+        type: TokenType;
+        start: number;
+        startLoc: number;
+        value: string;
+        pos: number;
+        next(): void;
+        parseLiteral(value: string): Node;
+        parseIdent(): Node;
+        unexpected(): void;
+        startNodeAt(start: number, startLoc: number): Node;
+        readToken(code: number): any;
+        finishToken(token: TokenType): any;
+        finishNode(node: Node, type: string): Node;
+        parseExprAtom(refShortHandDefaultPos: any): Node;
+        parseParenAndDistinguishExpression(canBeArrow: boolean): Node;
+    }
+}
+
 export type ExJsNode = TokenValueNode | ObjectValueNode;
 
 export interface TokenValueNode extends Node {
@@ -185,7 +208,7 @@ export class Transpiler {
     }
 
     private _toJs(node: Node): string {
-        return generate(node, {
+        return generate(<any>node, {
             generator: exJsGenerator
         });
     }

@@ -1,7 +1,10 @@
-import { FileUpdatedEvent } from "common/Files";
+import { FileUpdatedEvent } from "../Files";
 
 declare var __actions: any[];
 declare function uuid(): string;
+
+// declare const lib: string;
+// export default lib;
 
 /**
  * Sums the given array of numbers and returns the result.
@@ -12,7 +15,7 @@ declare function uuid(): string;
  *             If it is not a list, then the result will be the value converted to a number.
  */
 function sum(list: any): number {
-    if(!Array.isArray(list)) {
+    if (!Array.isArray(list)) {
         return parseFloat(list);
     }
 

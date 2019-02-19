@@ -12,14 +12,14 @@ import {
     Color
 } from "three";
 
-import { File, Object, Workspace } from '../../common/Files'
+import { File, Object, Workspace } from 'aux-common/Files'
 import { Text3D } from './Text3D';
 
 // Assets
-import GameView from "WebClient/GameView/GameView";
+import GameView from "../GameView/GameView";
 import { WorkspaceMesh } from "./WorkspaceMesh";
 import { FileMesh } from "./FileMesh";
-import { ArgEvent } from '../../common/Events';
+import { ArgEvent } from 'aux-common/Events';
 import { UserMesh } from "./UserMesh";
 
 /**

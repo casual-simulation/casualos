@@ -16,9 +16,9 @@ import {
     AmbientLight,
     DirectionalLight
 } from "three";
-import { Object, fileRemoved } from 'common/Files';
+import { Object, fileRemoved } from 'aux-common/Files';
 import { FileMesh } from "./FileMesh";
-import { merge } from "common/utils";
+import { merge } from "aux-common/utils";
 
 /**
  * Defines a class that can render a file to a transparent canvas.

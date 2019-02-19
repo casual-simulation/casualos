@@ -1,11 +1,11 @@
-import { AtomReducer } from "common/channels-core/AtomReducer";
+import { AtomReducer } from "../channels-core/AtomReducer";
 import { AuxOp, AuxOpType, TagOp, FileOp, InsertOp, DeleteOp } from "./AuxOpTypes";
-import { Weave, WeaveReference } from 'common/channels-core/Weave';
-import { FilesState, File, Object } from "common/Files";
-import { createFile, createWorkspace } from "common/Files/FileCalculations";
-import { WeaveTraverser } from "common/channels-core/WeaveTraverser";
-import { merge, splice } from "common/utils";
-import { AtomFactory } from "common/channels-core/AtomFactory";
+import { Weave, WeaveReference } from '../channels-core/Weave';
+import { FilesState, File, Object } from "../Files";
+import { createFile, createWorkspace } from "../Files/FileCalculations";
+import { WeaveTraverser } from "../channels-core/WeaveTraverser";
+import { merge, splice } from "../utils";
+import { AtomFactory } from "../channels-core/AtomFactory";
 
 export class AuxReducer implements AtomReducer<AuxOp, FilesState> {
     

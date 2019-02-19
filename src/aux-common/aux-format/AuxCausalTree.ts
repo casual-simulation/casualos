@@ -1,10 +1,10 @@
-import { Weave, WeaveReference } from "common/channels-core/Weave";
+import { Weave, WeaveReference } from "../channels-core/Weave";
 import { AuxOp, FileOp, TagOp, InsertOp, ValueOp } from "./AuxOpTypes";
-import { CausalTree } from "common/channels-core/CausalTree";
-import { FilesState, FileType } from "common/Files";
+import { CausalTree } from "../channels-core/CausalTree";
+import { FilesState, FileType } from "../Files";
 import { AuxReducer } from "./AuxReducer";
 import { root, file, tag, value, del, insert } from "./AuxAtoms";
-import { AtomId, Atom } from "common/channels-core/Atom";
+import { AtomId, Atom } from "../channels-core/Atom";
 
 /**
  * Defines a Causal Tree for aux files.

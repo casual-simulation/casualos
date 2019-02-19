@@ -1,6 +1,6 @@
 import { Subject, Observable, SubscriptionLike, never, ConnectableObservable, BehaviorSubject } from 'rxjs'
 import { filter, map, first, tap, distinctUntilChanged, publish, refCount, flatMap, scan, pairwise, startWith, combineLatest } from 'rxjs/operators';
-import { ChannelInfo } from '../Channel';
+import { ChannelInfo } from '../ChannelInfo';
 import { Event } from '../Event';
 import { StateStore } from '../StateStore';
 import { ChannelConnector, ChannelConnectionRequest, ChannelConnection, ChannelConnectionState, ChannelConnectionMode } from '../ChannelConnector';

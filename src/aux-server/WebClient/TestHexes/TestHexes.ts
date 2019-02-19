@@ -51,7 +51,7 @@ import {
   find
 } from 'lodash';
 
-import { File, Object, Workspace } from 'common/Files';
+import { File, Object, Workspace } from 'aux-common/Files';
 
 import skyTextureUrl from '../public/images/CGSkies_0132_free.jpg';
 import groundModelUrl from '../public/models/ground.gltf';

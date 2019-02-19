@@ -35,7 +35,6 @@ import VRControlsModule from 'three-vrcontrols-module';
 import VREffectModule from 'three-vreffect-module';
 import * as webvrui from 'webvr-ui';
 
-import 'three-examples/loaders/GLTFLoader';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Inject, Prop, Watch, Provide } from 'vue-property-decorator';
@@ -46,7 +45,7 @@ import {
   concatMap, tap,
 } from 'rxjs/operators';
 
-import { File, Object, Workspace, DEFAULT_WORKSPACE_HEIGHT_INCREMENT, DEFAULT_USER_MODE, UserMode, DEFAULT_SCENE_BACKGROUND_COLOR } from 'common/Files';
+import { File, Object, Workspace, DEFAULT_WORKSPACE_HEIGHT_INCREMENT, DEFAULT_USER_MODE, UserMode, DEFAULT_SCENE_BACKGROUND_COLOR } from 'aux-common/Files';
 import { Time } from '../game-engine/Time';
 import { Input, InputType } from '../game-engine/Input';
 import { InputVR } from '../game-engine/InputVR';
@@ -56,12 +55,12 @@ import { File3D } from '../game-engine/File3D';
 // import groundModelPath from '../public/models/ground.gltf';
 import { appManager } from '../AppManager';
 import { InteractionManager } from '../interaction/InteractionManager';
-import { ArgEvent } from '../../common/Events';
+import { ArgEvent } from 'aux-common/Events';
 import { WorkspaceMesh, WorkspaceMeshDebugInfo } from '../game-engine/WorkspaceMesh';
 import { GridChecker } from '../game-engine/grid/GridChecker';
 import { FileMesh } from '../game-engine/FileMesh';
 import { values, flatMap, find, findIndex, debounce } from 'lodash';
-import { getUserMode, createFile, doFilesAppearEqual } from 'common/Files/FileCalculations';
+import { getUserMode, createFile, doFilesAppearEqual } from 'aux-common/Files/FileCalculations';
 import App from '../App/App';
 import MiniFile from '../MiniFile/MiniFile';
 import { FileRenderer } from '../game-engine/FileRenderer';

@@ -1,6 +1,6 @@
 import { assign } from "lodash";
 import { RootOp, AuxOpBase, AuxOpType, FileOp, TagOp, ValueOp, AuxOp, InsertOp, DeleteOp } from "./AuxOpTypes";
-import { FileType } from "common/Files";
+import { FileType } from "../Files";
 
 /**
  * Creates a root atom op.

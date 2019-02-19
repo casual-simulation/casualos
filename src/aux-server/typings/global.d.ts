@@ -5,13 +5,9 @@ declare module 'vue-filepond';
 declare module 'filepond-plugin-file-validate-type';
 declare module 'webxr-polyfill';
 
-declare module '*.svg' {
-  const icon: Vue;
-  export default icon;
-}
 
 declare module '*.jpg' {
-  const surl: string;
+  const url: string;
   export default url;
 }
 
@@ -30,12 +26,14 @@ declare module '*.json' {
   export default json;
 }
 
+// declare module 'three-examples/loaders/GLTFLoader';
+declare module 'three-examples';
 declare module 'monaco-editor/esm/vs/editor/standalone/browser/simpleServices';
 declare module 'three-vrcontrols-module';
 declare module 'three-vreffect-module';
 declare module 'webvr-ui';
 
-declare module 'formula-lib' {
+declare module 'aux-common/Formulas/formula-lib' {
   const lib: string;
   export default lib; 
 }
@@ -45,16 +43,8 @@ declare module 'downloadjs' {
   export default download;
 }
 
-
 declare var PRODUCTION: boolean;
 declare var SENTRY_DSN: string;
 declare var ENABLE_SENTRY: boolean;
 declare var GIT_HASH: string;
 declare var GIT_TAG: string;
-
-
-interface SymbolConstructor {
-  (): symbol;
-  (name: string): symbol;
-  (id: number): symbol;
-}

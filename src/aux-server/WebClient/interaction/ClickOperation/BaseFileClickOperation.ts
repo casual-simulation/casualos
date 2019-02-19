@@ -5,11 +5,11 @@ import { Vector2, Vector3, Intersection } from 'three';
 import { IOperation } from '../IOperation';
 import GameView from '../../GameView/GameView';
 import { InteractionManager } from '../InteractionManager';
-import { UserMode, File } from 'common/Files';
+import { UserMode, File } from 'aux-common/Files';
 import { Physics } from '../../game-engine/Physics';
 import { WorkspaceMesh } from '../../game-engine/WorkspaceMesh';
 import { appManager } from '../../AppManager';
-import { merge } from 'common/utils';
+import { merge } from 'aux-common/utils';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
 
 /**

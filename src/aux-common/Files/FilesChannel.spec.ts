@@ -26,9 +26,9 @@ import { Workspace, Object, File } from './File';
 import { values, assign, merge } from 'lodash';
 import uuid from 'uuid/v4';
 import { objectsAtGridPosition } from './FileCalculations';
-import { TestConnector } from 'common/channels-core/test/TestConnector';
+import { TestConnector } from '../channels-core/test/TestConnector';
 import { Subject } from 'rxjs';
-import { ChannelClient, StoreFactory, ReducingStateStore } from 'common/channels-core';
+import { ChannelClient, StoreFactory, ReducingStateStore } from '../channels-core';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');

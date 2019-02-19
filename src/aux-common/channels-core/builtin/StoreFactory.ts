@@ -1,5 +1,5 @@
 import { StateStoreFactory, StateStore } from '../StateStore';
-import { ChannelInfo } from '../Channel';
+import { ChannelInfo } from '../ChannelInfo';
 
 /**
  * Defines an interface for an object that maps channel types

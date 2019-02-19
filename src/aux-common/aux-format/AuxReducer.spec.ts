@@ -1,7 +1,7 @@
-import { Weave } from "common/channels-core/Weave";
+import { Weave } from "../channels-core/Weave";
 import { AuxOp } from "./AuxOpTypes";
 import { AuxReducer } from "./AuxReducer";
-import { WeaveTraverser } from "common/channels-core/WeaveTraverser";
+import { WeaveTraverser } from "../channels-core/WeaveTraverser";
 import { AuxCausalTree } from "./AuxCausalTree";
 
 describe('AuxReducer', () => {

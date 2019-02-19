@@ -1,5 +1,5 @@
-import { AtomOp } from "common/channels-core/Atom";
-import { FileType } from "common/Files";
+import { AtomOp } from "../channels-core/Atom";
+import { FileType } from "../Files";
 
 /**
  * The list of operation types.

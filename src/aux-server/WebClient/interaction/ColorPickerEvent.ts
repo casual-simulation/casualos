@@ -1,5 +1,5 @@
 import { Vector2 } from "three";
-import { File } from 'common/Files';
+import { File } from 'aux-common/Files';
 
 export interface ColorPickerEvent {
     /**

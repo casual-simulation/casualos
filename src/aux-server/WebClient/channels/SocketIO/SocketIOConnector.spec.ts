@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 import { mock, match, SinonMock } from 'sinon';
 import { SocketIOConnector } from './SocketIOConnector';
-import { Event, ChannelInfo } from '../../../common/channels-core';
-import { ReducingStateStore } from '../../../common/channels-core/StateStore';
+import { Event, ChannelInfo } from 'aux-common/channels-core';
+import { ReducingStateStore } from 'aux-common/channels-core/StateStore';
 
 describe('Socket.IO', () => {
     describe('SocketIOConnector', () => {

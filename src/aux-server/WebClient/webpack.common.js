@@ -9,6 +9,8 @@ const webpack = require('webpack');
 const commitHash = childProcess.execSync('git rev-parse HEAD').toString().trim();
 const latestTag = childProcess.execSync('git describe --abbrev=0 --tags').toString().trim();
 
+const auxCommon = path.resolve(__dirname, '..', '..', 'aux-common');
+
 module.exports = {
   entry: path.resolve(__dirname, 'index.ts'),
   output: {
@@ -29,8 +31,19 @@ module.exports = {
       },
       {
         test: /\.tsx?$/,
-        use: 'ts-loader',
-        exclude: /node_modules/
+        loader: 'ts-loader',
+        include: [__dirname],
+        exclude: /node_modules/,
+      },
+      {
+        test: /\.tsx?$/,
+        loader: 'ts-loader',
+        include: [auxCommon],
+        exclude: /node_modules/,
+        options: {
+          instance: 'common',
+          configFile: path.resolve(auxCommon, 'tsconfig.json')
+        }
       },
       {
         test: /\.css$/,
@@ -62,10 +75,9 @@ module.exports = {
   resolve: {
     extensions: ['.vue', '.ts', '.js', '.css'],
     alias: {
-      'common': 'aux-common',
       'three-examples': path.join(__dirname, '../node_modules/three/examples/js'),
       'fs': 'browserfs',
-      'formula-lib': 'aux-common/formula-lib',
+      'aux-common/Formulas/formula-lib': path.resolve(__dirname, '..', '..', 'aux-common/Formulas/formula-lib.ts'),
       'webxr-polyfill': path.resolve(__dirname, 'public/scripts/webxr-polyfill.js')
     }
   },

@@ -5,7 +5,7 @@ import { Vector2, Vector3, Intersection, Raycaster } from 'three';
 import { IOperation } from '../IOperation';
 import GameView from '../../GameView/GameView';
 import { InteractionManager } from '../InteractionManager';
-import { UserMode, File, DEFAULT_SCENE_BACKGROUND_COLOR } from 'common/Files';
+import { UserMode, File, DEFAULT_SCENE_BACKGROUND_COLOR } from 'aux-common/Files';
 import { Physics } from '../../game-engine/Physics';
 import { appManager } from '../../AppManager';
 import { ColorPickerEvent } from '../ColorPickerEvent';

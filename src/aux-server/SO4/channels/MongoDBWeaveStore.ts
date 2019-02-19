@@ -1,10 +1,10 @@
 import { MongoClient, Db, Collection } from 'mongodb';
 import pify from 'pify';
 import { Subject } from 'rxjs';
-import { ChannelConnector, ChannelConnection, ChannelConnectionRequest, IChannel, Event, MemoryConnector, ConnectionHelper } from 'common/channels-core';
-import { WeaveStore } from 'common/channels-core/WeaveStore';
-import { AtomOp } from 'common/channels-core/Atom';
-import { Weave } from 'common/channels-core/Weave';
+import { ChannelConnector, ChannelConnection, ChannelConnectionRequest, IChannel, Event, MemoryConnector, ConnectionHelper } from 'aux-common/channels-core';
+import { WeaveStore } from 'aux-common/channels-core/WeaveStore';
+import { AtomOp } from 'aux-common/channels-core/Atom';
+import { Weave, WeaveReference } from 'aux-common/channels-core/Weave';
 
 const connect = pify(MongoClient.connect);
 
@@ -46,7 +46,7 @@ export class MongoDBTreeStore implements WeaveStore {
     }
 
     async get<T extends AtomOp>(id: string): Promise<Weave<T>> {
-        const atoms: T[] = await this._collection.findOne({ weave: id });
+        const atoms: WeaveReference<T>[] = await this._collection.findOne({ weave: id });
         const weave = Weave.buildFromArray(atoms);
 
         return weave;

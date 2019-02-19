@@ -1,5 +1,5 @@
 import { Event } from '../Event';
-import { ChannelInfo } from '../Channel';
+import { ChannelInfo } from '../ChannelInfo';
 import {remove} from 'lodash';
 import { StateStore, ReducingStateStore } from '../StateStore';
 

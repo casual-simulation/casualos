@@ -1,7 +1,7 @@
 import {expect} from 'chai';
 import { MemoryConnector } from "./MemoryConnector";
 import { StateStore, ReducingStateStore } from "../StateStore";
-import { ChannelInfo } from "../Channel";
+import { ChannelInfo } from "../ChannelInfo";
 import { Event } from '../Event';
 
 describe('builtin', () => {

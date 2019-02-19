@@ -16,7 +16,7 @@ import {
     Ray,
     Vector2} from "three";
 
-import { Object, Workspace } from '../../common/Files';
+import { Object, Workspace } from 'aux-common/Files';
 import GameView from "../GameView/GameView";
 import { File3D } from "./File3D";
 import { FileMesh } from "./FileMesh";

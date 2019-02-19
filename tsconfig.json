@@ -1,19 +1,16 @@
 {
-    "compilerOptions": {
-      "outDir": "./temp/",
-      "baseUrl": ".",
-      "noImplicitAny": true,
-      "module": "esNext",
-      "esModuleInterop": true,
-      "target": "es5",
-      "allowJs": false,
-      "moduleResolution": "node",
-      "sourceMap": true,
-      "lib": [ "es2015.promise", "es5", "dom" ],
-      "experimentalDecorators": true,
-      "paths": {
-        "von-grid": ["./typings/von-grid/von-grid.d.ts"]
-      }
-    }
-    
+  "compilerOptions": {
+    "outDir": "./temp/",
+    "baseUrl": ".",
+    "noImplicitAny": true,
+    "module": "esNext",
+    "esModuleInterop": true,
+    "target": "es5",
+    "allowJs": false,
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "lib": [ "es2015.promise", "es2015.symbol", "es5", "dom" ],
+    "experimentalDecorators": true,
+    "typeRoots" : ["node_modules/@types", "./typings"],
   }
+}

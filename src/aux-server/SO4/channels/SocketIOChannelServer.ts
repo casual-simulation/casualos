@@ -1,10 +1,10 @@
 import { Socket, Server } from 'socket.io';
-import { ChannelInfo, Event, ChannelClient, ChannelConnection } from '../../common/channels-core';
-import { RealtimeChannel } from 'common/channels-core/RealtimeChannel';
+import { ChannelInfo, Event, ChannelClient, ChannelConnection } from 'aux-common/channels-core';
+import { RealtimeChannel } from 'aux-common/channels-core/RealtimeChannel';
 import { SocketIOChannelConnection } from './SocketIOChannelConnection';
 import { RealtimeChannelServer } from './RealtimeChannelServer';
-import { AuxCausalTree } from 'common/aux-format/AuxCausalTree';
-import { RealtimeChannelInfo } from 'common/channels-core/RealtimeChannelInfo';
+import { AuxCausalTree } from 'aux-common/aux-format/AuxCausalTree';
+import { RealtimeChannelInfo } from 'aux-common/channels-core/RealtimeChannelInfo';
 
 export interface ServerList {
     [key: string]: ChannelConnection<any>;
