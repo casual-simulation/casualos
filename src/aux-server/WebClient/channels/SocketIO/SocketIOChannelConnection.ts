@@ -1,6 +1,5 @@
 import { RealtimeChannelConnection } from "aux-common/channels-core/RealtimeChannelConnection";
 import { ConnectionEvent } from "aux-common/channels-core/ConnectionEvent";
-import * as io from 'socket.io-client';
 import { Observable, merge, Subject, BehaviorSubject, SubscriptionLike } from "rxjs";
 import { socketEvent } from "./Utils";
 import { map, shareReplay } from "rxjs/operators";

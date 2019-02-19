@@ -96,7 +96,7 @@
     "mongodb": "^3.1.10",
     "offline-plugin": "^5.0.6",
     "pepjs": "^0.4.3",
-    "socket.io": "^2.1.1",
+    "socket.io": "^2.2.0",
     "socket.io-client": "^2.2.0",
     "three": "^0.98.0",
     "three-bmfont-text": "^2.3.0",

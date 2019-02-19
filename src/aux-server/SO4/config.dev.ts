@@ -5,6 +5,7 @@ const config: Config = {
     socket: {
         pingInterval: 2000,
         pingTimeout: 10000,
+        serveClient: false
     },
     socketPort: 4567,
     httpPort: 3000,
