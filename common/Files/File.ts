@@ -1,5 +1,7 @@
 export type File = Object | Workspace;
 
+export type FileType = 'object' | 'workspace';
+
 export interface Object {
     type: 'object';
     id: string;

@@ -32,3 +32,14 @@ function decide(...vals: any[]) {
         }
     }
 }
+
+/**
+ * Splices the given string and returns the final result.
+ * @param str The string to splice.
+ * @param index The index that the splice should be started at.
+ * @param deleteCount The number of characters to delete.
+ * @param text The text to insert.
+ */
+export function splice(str: string, index: number, deleteCount: number, text: string) {
+    return str.slice(0, index) + text + str.slice(index + deleteCount);
+}

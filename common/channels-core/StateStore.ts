@@ -1,6 +1,6 @@
 import { Event } from "./Event";
 import { Reducer } from "./Reducer";
-import { ChannelInfo } from "./Channel";
+import { ChannelInfo } from "./ChannelInfo";
 
 /**
  * Defines an interface for objects that manage states and how events affect those states.

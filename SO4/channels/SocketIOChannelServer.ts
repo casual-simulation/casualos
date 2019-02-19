@@ -1,8 +1,17 @@
-import { Server } from 'socket.io';
+import { Socket, Server } from 'socket.io';
 import { ChannelInfo, Event, ChannelClient, ChannelConnection } from '../../common/channels-core';
+import { RealtimeChannel } from 'common/channels-core/RealtimeChannel';
+import { SocketIOChannelConnection } from './SocketIOChannelConnection';
+import { RealtimeChannelServer } from './RealtimeChannelServer';
+import { AuxCausalTree } from 'common/aux-format/AuxCausalTree';
+import { RealtimeChannelInfo } from 'common/channels-core/RealtimeChannelInfo';
 
 export interface ServerList {
     [key: string]: ChannelConnection<any>;
+}
+
+export interface ChannelList {
+    [key: string]: AuxCausalTree;
 }
 
 /**
@@ -15,18 +24,21 @@ export class SocketIOChannelServer {
     private _server: Server;
     private _client: ChannelClient;
     private _serverList: ServerList;
+    private _channelList: ChannelList;
     private _userCount: number;
 
     constructor(server: Server, client: ChannelClient) {
         this._serverList = {};
+        this._channelList = {};
         this._client = client;
         this._server = server;
         this._userCount = 0;
-
+        
         this._server.on('connection', socket => {
             this._userCount += 1;
             console.log('[SocketIOChannelServer] A user connected! There are now', this._userCount, 'users connected.');
 
+            // V1 channels
             socket.on('join_server', (info: ChannelInfo, callback: Function) => {
                 console.log('[SocketIOChannelServer] Joining user to server', info.id);
                 socket.join(info.id, async (err) => {
@@ -44,10 +56,39 @@ export class SocketIOChannelServer {
                 });
             });
 
+            // V2 channels
+            socket.on('join_channel', (info: ChannelInfo, callback: Function) => {
+                socket.join(info.id, err => {
+                    if (err) {
+                        console.log(err);
+                        callback(err);
+                        return;
+                    }
+
+                    const tree = this._getTree(info);
+
+                    const eventName = `event_${info.id}`;
+                    socket.on(eventName, (event) => {
+                        tree.add(event);
+                        socket.to(info.id).emit(eventName, event);
+                    });
+
+                    socket.on(`info_${info.id}`, (event, callback) => {
+
+                    });
+
+                    socket.on('disconnect', () => {
+                        // TODO: Implement events for 
+                    });
+
+                    callback(null);
+                });
+            });
+
             socket.on('disconnect', () => {
                 this._userCount -= 1;
                 console.log('[SocketIOChannelServer] A user disconnected! There are now', this._userCount, 'users connected.');
-            })
+            });
         });
     }
 
@@ -77,6 +118,16 @@ export class SocketIOChannelServer {
             callback(null);
         });
         return connection;
+    }
+
+    private _getTree(info: RealtimeChannelInfo): AuxCausalTree {
+        let tree = this._channelList[info.id];
+        if (!tree) {
+            tree = new AuxCausalTree(1);
+            this._channelList[info.id] = tree;
+        }
+
+        return tree;
     }
 
 }
