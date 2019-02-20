@@ -35,7 +35,7 @@ Make sure you have all the prerequisite tools installed:
 2. Make sure Lerna is installed.
     - `npm install -g lerna`
 3. Bootstrap the project.
-    - `lerna bootstrap --hoist`
+    - `npm run bootstrap`
 3. Start MongoDB.
     1. `cd` to `src/aux-server`
     2. `docker-compose up -d`
