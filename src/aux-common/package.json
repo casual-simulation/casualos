@@ -1,0 +1,49 @@
+{
+  "name": "aux-common",
+  "version": "0.3.0",
+  "description": "Common library for AUX projects",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "watch": "echo 'Nothing to watch!'",
+    "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watchAll"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yeticgi/file-simulator.git"
+  },
+  "keywords": [
+    "aux",
+    "so4",
+    "realtime",
+    "crdt"
+  ],
+  "author": "YETi CGI",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yeticgi/file-simulator/issues"
+  },
+  "homepage": "https://github.com/yeticgi/file-simulator#readme",
+  "private": true,
+  "dependencies": {
+    "@types/acorn": "^4.0.5",
+    "@types/astring": "^1.3.0",
+    "@types/estraverse": "^0.0.6",
+    "@types/lodash": "^4.14.118",
+    "@types/uuid": "^3.3.2",
+    "acorn": "^6.0.4",
+    "astring": "^1.3.1",
+    "estraverse": "^4.2.0",
+    "lodash": "^4.17.11",
+    "lru-cache": "^5.1.1",
+    "rxjs": "^6.4.0",
+    "uuid": "^3.3.2"
+  },
+  "files": [
+    "/lib",
+    "/README.md",
+    "/LICENSE.txt"
+  ]
+}

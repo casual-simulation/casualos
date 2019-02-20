@@ -1,0 +1,78 @@
+{
+    "apps": [{
+        "name": "FILE-SIMULATOR-" + process.env.NODE_ENV,
+        "script": "server/dist/main.js",
+        "env": {
+            "NODE_ENV": "dev"
+        },
+        "env_dev": {
+            "NODE_ENV": "dev"
+        },
+        "env_test": {
+            "NODE_ENV": "test"
+        },
+        "env_production": {
+            "NODE_ENV": "production"
+        },
+
+        "out_file": "/dev/null"
+    }],
+
+    "deploy": {
+
+
+        "dev": {
+            "user": "PM2_USER",
+            "host": "HOST_IP_ADDRESS",
+            "ref": "origin/master",
+            "repo": "git@github.com:user/releases-url.git",
+            "path": "/path/to/repo",
+
+            "pre-setup": "",
+            "post-setup": "",
+            "pre-deploy-local": "",
+            "post-deploy": "npm ci; export NODE_ENV=dev; pm2 reset FILE-SIMULATOR-dev; pm2 startOrRestart ecosystem.json --env dev; pm2 save",
+
+            "env": {
+                "NODE_ENV": "dev",
+                "MONGO_URL": ""
+            }
+        },
+
+        "test": {
+            "user": "PM2_USER",
+            "host": "HOST_IP_ADDRESS",
+            "ref": "origin/develop",
+            "repo": "git@github.com:user/releases-url.git",
+            "path": "/path/to/repo",
+
+            "pre-setup": "",
+            "post-setup": "",
+            "pre-deploy-local": "",
+            "post-deploy": "npm install; export NODE_ENV=test; pm2 reset FILE-SIMULATOR-test; pm2 startOrRestart ecosystem.json --env test; pm2 save",
+
+            "env": {
+                "NODE_ENV": "test",
+                "MONGO_URL": ""
+            }
+        },
+
+        "production": {
+            "user": "PM2_USER",
+            "host": "HOST_IP_ADDRESS",
+            "ref": "origin/master",
+            "repo": "git@github.com:user/releases-url.git",
+            "path": "/path/to/repo",
+
+            "pre-setup": "",
+            "post-setup": "",
+            "pre-deploy-local": "",
+            "post-deploy": "npm ci; export NODE_ENV=production; pm2 reset FILE-SIMULATOR-production; pm2 startOrRestart ecosystem.json --env production; pm2 save",
+
+            "env": {
+                "NODE_ENV": "production",
+                "MONGO_URL": ""
+            }
+        }
+    }
+}
