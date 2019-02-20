@@ -185,21 +185,78 @@ describe('Weave', () => {
 
             expect(site7.get(0)).toEqual(a3Ref);
             expect(site7.length).toEqual(1);
-
-            // expect(version1.sites).toBe({
-            //     1: 6,
-            //     2: 5,
-            //     7: 3
-            // });
         });
     });
 
-            const site = weave.getSite(1);
+    describe('getVersion()', () => {
+        it('should return an array with the latest timestamps from each site', () => {
+            const a1 = atom(atomId(1, 1), null, new Op());
+            const a2 = atom(atomId(9, 2), atomId(1, 1), new Op());
+            const a3 = atom(atomId(2, 3), atomId(1, 1), new Op());
+            const a4 = atom(atomId(1, 4), atomId(1, 2), new Op());
 
-            expect(site.get(0)).toEqual(a1Ref);
-            expect(site.get(1)).toEqual(a2Ref);
-            expect(site.get(2)).toEqual(a3Ref);
-            expect(site.get(3)).toEqual(a4Ref);
+            let first = new Weave();
+            let second = new Weave();
+            first.insertMany(a1, a2, a3, a4);
+            second.insertMany(a1, a3, a2, a4);
+
+            const firstVersion = first.getVersion();
+            const secondVersion = second.getVersion();
+
+            expect(firstVersion.sites).toEqual({
+                1: 4,
+                2: 3,
+                9: 2
+            });
+            expect(firstVersion.sites).toEqual(secondVersion.sites);
+        });
+
+        it('should return the current hash', () => {
+            const a1 = atom(atomId(1, 1), null, new Op());
+            const a2 = atom(atomId(9, 2), atomId(1, 1), new Op());
+            const a3 = atom(atomId(2, 3), atomId(1, 1), new Op());
+            const a4 = atom(atomId(1, 4), atomId(1, 2), new Op());
+
+            let first = new Weave();
+            let second = new Weave();
+            first.insertMany(a1, a2, a3, a4);
+            second.insertMany(a1, a3, a2, a4);
+
+            const firstVersion = first.getVersion();
+            const secondVersion = second.getVersion();
+
+            // We're using the actual hash values to ensure that they never change
+            // without us knowing.
+            expect(firstVersion.hash).toEqual('d1cb4e5a2887396085bfd5f7a277fcd0bbfa25f9e0db3477a2ebc80ec18ce12d');
+            expect(firstVersion.hash).toEqual(secondVersion.hash);
+        });
+
+        it('should return the hash for an empty weave', () => {
+            let first = new Weave();
+            let second = new Weave();
+
+            const firstVersion = first.getVersion();
+            const secondVersion = second.getVersion();
+
+            expect(firstVersion.hash).toEqual('4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945');
+            expect(firstVersion.hash).toEqual(secondVersion.hash);
+        });
+
+        it('should have different hash values for different weaves', () => {
+            const a1 = atom(atomId(1, 1), null, new Op());
+            const a2 = atom(atomId(9, 2), atomId(1, 1), new Op());
+            const a3 = atom(atomId(2, 3), atomId(1, 1), new Op());
+            const a4 = atom(atomId(1, 4), atomId(1, 2), new Op());
+
+            let first = new Weave();
+            let second = new Weave();
+            first.insertMany(a1, a2, a3, a4);
+            second.insertMany(a1, a2, a4);
+
+            const firstVersion = first.getVersion();
+            const secondVersion = second.getVersion();
+
+            expect(firstVersion.hash).not.toEqual(secondVersion.hash);
         });
     });
 

@@ -1,6 +1,9 @@
 import { Atom, AtomId, AtomOp, StorableAtomId, idEquals } from "./Atom";
 import { VirtualArray } from "./VirtualArray";
-import { sortBy, findIndex } from "lodash";
+import { sortBy, findIndex, keys, find } from "lodash";
+import { WeaveVersion, WeaveSiteVersion } from "./WeaveVersion";
+import { sha256 } from 'sha.js';
+import stringify from 'fast-json-stable-stringify';
 
 /**
  * Creates a weave reference.
@@ -121,10 +124,7 @@ export class Weave<TOp extends AtomOp> {
             const ref = reference<T>(atom, siteIndex, cause ? cause.index : null);
             this._atoms.splice(weaveIndex, 0, ref);
             site.insert(siteIndex, ref);
-            this._sites[atom.id.site] = {
-                start: site.start,
-                end: site.end
-            };
+            this._updateSites(atom.id.site, site);
 
             return ref;
         }
@@ -147,6 +147,36 @@ export class Weave<TOp extends AtomOp> {
     getAtom<T extends TOp>(id: AtomId, index: number): WeaveReference<T> {
         const site = this.getSite(id.site);
         return <WeaveReference<T>>site.get(index);
+    }
+
+    /**
+     * Gets the version that this weave is currently at.
+     */
+    getVersion(): WeaveVersion {
+        let knownSites = keys(this._sites);
+        let sites: WeaveSiteVersion = {};
+
+        knownSites.forEach(siteId => {
+            const id = parseInt(siteId);
+            const site = this.getSite(id);
+            const mostRecentAtom = site.get(site.length - 1);
+            sites[id] = mostRecentAtom.atom.id.timestamp;
+        });
+
+        return {
+            sites,
+            hash: this.getHash()
+        };
+    }
+
+    /**
+     * Gets the hash of the weave.
+     */
+    getHash(): string {
+        const json = stringify(this.atoms);
+        let sha = new sha256();
+        sha.update(json);
+        return sha.digest('hex');
     }
 
     /**
