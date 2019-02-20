@@ -7,8 +7,8 @@
   "scripts": {
     "watch": "echo 'Nothing to watch!'",
     "build": "tsc",
-    "type-check": "tsc --noEmit",
-    "type-check:watch": "tsc --noEmit --watch"
+    "test": "jest",
+    "test:watch": "jest --watchAll"
   },
   "repository": {
     "type": "git",
@@ -28,7 +28,12 @@
   "homepage": "https://github.com/yeticgi/file-simulator#readme",
   "devDependencies": {
     "typescript": "^3.1.6",
-    "chai": "^4.2.0"
+    "chai": "^4.2.0",
+    "@types/jest": "^23.3.11",
+    "jest": "^23.6.0",
+    "jest-junit": "^5.2.0",
+    "jest-raw-loader": "^1.0.1",
+    "ts-jest": "^23.10.5"
   },
   "dependencies": {
     "acorn": "^6.0.4",
