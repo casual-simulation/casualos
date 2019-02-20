@@ -1,33 +1,17 @@
-# Process for Teams
+# AUX Server
 
-The repository for the Process for Teams project.
+A web application that serves the AUX Projector and AUX Player experiences.
+Built on top of the AUX Common library.
 
-# Developer Setup
+### AUX Projector
 
-1. Make sure you have Node 10.13.0 or later installed.
-    - If this is your first time installing Node.js, install Node Version Manager ([Mac][nvm-mac], [Windows][nvm-windows]) to help manage different Node versions.
-    - If/once you have NVM installed, you can install node 10.13.0 by running `nvm install 10.13.0`.
-2. Make sure you have Docker ([Mac][docker-for-mac], [Windows][docker-for-windows]) installed.
-3. Run `npm install` in the project directory
-    - This command might take a while as NPM downloads and installs dependencies.
-4. Go to Docker Menu (On top bar) -> Preferences... -> File Sharing and add the `/data` directory.  
-    - You may need to create this directory. Make sure `/data` is owned by you. You may need to: `sudo chown -R $USER /data`
-5. Run `docker-compose up -d`
-    - This command might take a while as docker downloads and runs the mongo image and then boots up.
-6. Run `npm run watch`
-    - This will build the TypeScript into JavaScript and start the node server.
-    - You can view the server at http://localhost:3000
+A single page web application that allows people to edit AUX (Ambient User Experience) files in realtime.
 
-## Run Tests
+### AUX Player
 
-1. Run `npm test`.
+Not implemented.
 
-To watch for changes and re-run tests, run `npx jest --watchAll`.
+### Server
 
-If you're using Visual Studio Code, I recommend getting the Jest extension. It makes it real easy to debug unit tests.
-
-
-[docker-for-mac]: https://docs.docker.com/v17.12/docker-for-mac/install/
-[docker-for-windows]: https://docs.docker.com/docker-for-windows/install/
-[nvm-mac]: https://github.com/creationix/nvm
-[nvm-windows]: https://github.com/coreybutler/nvm-windows
+A Node.JS server that is able to facilitate realtime communication for the AUX Projector and AUX Player applications via WebSockets.
+Also serves the actual AUX Projector and AUX Player dist files.

@@ -2,16 +2,17 @@
   "name": "aux-server",
   "version": "0.3.0",
   "description": "The repository for the AUX server project.",
-  "main": "SO4/dist/main.js",
+  "main": "server/dist/main.js",
   "scripts": {
-    "start": "node SO4/dist/main.js",
-    "watch": "concurrently \"npm:watch:server\" \"npm:watch:client\" \"nodemon SO4/dist/main.js\"",
+    "start": "node server/dist/main.js",
+    "watch": "concurrently \"npm:watch:server\" \"npm:watch:client\" \"nodemon server/dist/main.js\"",
     "build": "npm run build:client && npm run build:server",
-    "build:client": "webpack --config WebClient/webpack.prod.js",
-    "build:client:profile": "webpack --config WebClient/webpack.prod.js --profile --json > bundle_stats.json && webpack-bundle-analyzer bundle_stats.json",
-    "build:server": "webpack --config SO4/webpack.config.js",
-    "watch:server": "webpack --config SO4/webpack.config.js --watch",
-    "watch:client": "webpack --config WebClient/webpack.dev.js --watch",
+    "build:client": "webpack --config aux-projector/webpack.prod.js",
+    "build:client:profile": "webpack --config aux-projector/webpack.prod.js --profile --json > bundle_stats.json && webpack-bundle-analyzer bundle_stats.json",
+    "build:server:profile": "webpack --config server/webpack.config.js --profile --json > server/dist/bundle_stats.json && webpack-bundle-analyzer server/dist/bundle_stats.json",
+    "build:server": "webpack --config server/webpack.config.js",
+    "watch:server": "webpack --config server/webpack.config.js --watch",
+    "watch:client": "webpack --config aux-projector/webpack.dev.js --watch",
     
     "test": "jest",
     "test:watch": "jest --watchAll",
@@ -28,6 +29,12 @@
   },
   "homepage": "https://github.com/yeticgi/process-for-teams#readme",
   "private": true,
+  "files": [
+    "dist",
+    "/README.md",
+    "/CHANGELOG.md",
+    "/docker-compose.yml"
+  ],
   "devDependencies": {
     "@babel/core": "^7.2.0",
     "@babel/plugin-syntax-dynamic-import": "^7.2.0",
@@ -42,7 +49,7 @@
     "@types/sinon": "^5.0.7",
     "@types/socket.io": "^2.1.0",
     "@types/three": "^0.93.10",
-    "@types/uuid": "^3.4.4",
+    "@types/uuid": "^3.3.2",
     "@types/lodash": "^4.14.118",
     "@types/socket.io-client": "^1.4.32",
     "@types/vue-color": "^2.4.1",
@@ -111,6 +118,9 @@
     "vue-router": "^3.0.1",
     "webvr-polyfill": "^0.10.10",
     "webvr-ui": "^0.10.0",
-    "aux-common": "^0.3.0"
+    "aux-common": "^0.3.0",
+    "rxjs": "^6.4.0",
+    "acorn": "^6.0.4",
+    "astring": "^1.3.1"
   }
 }

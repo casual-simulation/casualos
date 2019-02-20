@@ -1,4 +1,4 @@
-# File Simulator Changelog
+# AUX Server Changelog
 
 ## V0.3.0
 ### Date: 2/14/2019

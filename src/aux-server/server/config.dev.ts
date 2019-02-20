@@ -10,7 +10,7 @@ const config: Config = {
     socketPort: 4567,
     httpPort: 3000,
     client: {
-        dist: path.resolve(__dirname, '..', '..', 'WebClient', 'dist')
+        dist: path.resolve(__dirname, '..', '..', 'aux-projector', 'dist')
     },
     channels: {
         mongodb: {

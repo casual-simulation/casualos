@@ -1,5 +1,5 @@
 {
     "ignore": [
-        "WebClient/*"
+        "aux-projector/*"
     ]
 }
