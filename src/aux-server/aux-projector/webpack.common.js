@@ -1,5 +1,6 @@
 const childProcess = require('child_process');
 const path = require('path');
+const process = require('process');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
@@ -8,8 +9,6 @@ const webpack = require('webpack');
 
 const commitHash = childProcess.execSync('git rev-parse HEAD').toString().trim();
 const latestTag = childProcess.execSync('git describe --abbrev=0 --tags').toString().trim();
-
-const auxCommon = path.resolve(__dirname, '..', '..', 'aux-common');
 
 module.exports = {
   entry: path.resolve(__dirname, 'index.ts'),
@@ -66,7 +65,6 @@ module.exports = {
     extensions: ['.vue', '.ts', '.js', '.css'],
     alias: {
       'three-examples': path.join(__dirname, '../node_modules/three/examples/js'),
-      'fs': 'browserfs',
       'webxr-polyfill': path.resolve(__dirname, 'public/scripts/webxr-polyfill.js'),
     },
     symlinks: false
@@ -86,7 +84,7 @@ module.exports = {
     new webpack.DefinePlugin({
       GIT_HASH: JSON.stringify(commitHash),
       GIT_TAG: JSON.stringify(latestTag),
-      SENTRY_DSN: JSON.stringify('***REMOVED***'),
+      SENTRY_DSN: JSON.stringify(process.env.SENTRY_DSN),
     }),
     new OfflinePlugin({
       appShell: '/',

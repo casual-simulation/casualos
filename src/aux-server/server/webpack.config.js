@@ -31,9 +31,7 @@ module.exports = {
   },
   resolve: {
     extensions: [ '.ts', '.js' ],
-    alias: {
-      // 'aux-common/Formulas/formula-lib': path.resolve(__dirname, '..', '..', 'aux-common/Formulas/formula-lib.ts'),
-    },
+    alias: { },
     symlinks: false
   },
   externals: [
