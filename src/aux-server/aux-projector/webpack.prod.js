@@ -64,7 +64,7 @@ module.exports = merge.smart(common, {
         splitChunks: {
             cacheGroups: {
                 vendor: {
-                    test: /[\\/](node_modules|public)[\\/]/,
+                    test: /[\\/](node_modules|public)[\\/](?!aux-common)/,
                     name: 'vendors',
                     chunks: 'all'
                 }
