@@ -32,7 +32,8 @@
     "dist",
     "/README.md",
     "/CHANGELOG.md",
-    "/docker-compose.yml"
+    "/docker-compose.yml",
+    "/LICENSE.txt"
   ],
   "dependencies": {
     "@chenfengyuan/vue-qrcode": "^1.0.0",
