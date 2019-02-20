@@ -1,5 +1,12 @@
 # AUX Server Changelog
 
+## V0.3.1
+### Date: 2/20/2019
+
+### Changes:
+- Added the ability to delete files by dragging them off a workspace.
+- Fixed the `destroy()` function in action scripts.
+
 ## V0.3.0
 ### Date: 2/14/2019
 
