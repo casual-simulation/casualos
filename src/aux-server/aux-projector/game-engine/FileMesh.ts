@@ -1,4 +1,4 @@
-import { Object3D, Mesh, BoxBufferGeometry, MeshStandardMaterial, Color, Vector3, Box3, Sphere, BufferGeometry, BufferAttribute, LineBasicMaterial, LineSegments, SphereGeometry, MeshBasicMaterial, DoubleSide } from "three";
+import { Object3D, Mesh, BoxBufferGeometry, MeshStandardMaterial, Color, Vector3, Box3, Sphere, BufferGeometry, BufferAttribute, LineBasicMaterial, LineSegments, SphereGeometry, MeshBasicMaterial, DoubleSide, Box3Helper } from "three";
 import { Object, File, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_GRID_SCALE } from 'aux-common/Files';
 import { GameObject } from "./GameObject";
 import GameView from '../GameView/GameView';
@@ -15,6 +15,7 @@ import { appManager } from '../AppManager';
 import { FileManager } from "../FileManager";
 import { createLabel } from "./utils";
 import { WorkspaceMesh } from "./WorkspaceMesh";
+import { WordBubble3D } from "./WordBubble3D";
 
 /**
  * Defines a class that represents a mesh for an "object" file.
@@ -39,6 +40,8 @@ export class FileMesh extends GameObject {
      */
     cubeContainer: Object3D;
 
+    wordBubble: WordBubble3D;
+    
     /**
      * The optional label for the file.
      */
@@ -141,6 +144,7 @@ export class FileMesh extends GameObject {
             if (labelMode) {
                 this._updateLabelSize();
                 this.label.setPositionForObject(this.cube);
+                this._updateLabelBoxHelper();
             }
         }
 
@@ -223,7 +227,7 @@ export class FileMesh extends GameObject {
         // We must call this function so that child objects get their positions updated too.
         // Three render function does this automatically but there are functions in here that depend
         // on accurate positioning of child objects.
-        this.updateMatrixWorld(false);
+        this.updateMatrixWorld(true);
     }
 
     private _tagUpdateColor(): void {
@@ -253,8 +257,8 @@ export class FileMesh extends GameObject {
             }
             
             this._updateLabelSize();
-
             this.label.setPositionForObject(this.cube);
+            this._updateLabelBoxHelper();
 
             let labelColor = this.file.tags['label.color'];
             if (labelColor) {
@@ -285,6 +289,19 @@ export class FileMesh extends GameObject {
             }
         }
         this.label.setScale(labelSize);
+    }
+
+    private _labelBoxHelper: Box3Helper;
+    private _updateLabelBoxHelper() {
+        let box = this.label.getBoundingBox();
+
+        if (!this._labelBoxHelper) {
+            this._labelBoxHelper = new Box3Helper(box, new Color("green"));
+            this._gameView.scene.add(this._labelBoxHelper);
+        }
+
+        (<any>this._labelBoxHelper).box = box;
+        this._labelBoxHelper.updateMatrixWorld(true);
     }
 
     private _tagUpdateLine(): void {

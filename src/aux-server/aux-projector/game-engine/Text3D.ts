@@ -11,7 +11,10 @@ import {
     Box3,
     RawShaderMaterial,
     LinearFilter,
-    Euler} from "three";
+    Euler,
+    Sphere,
+    Matrix4,
+    Quaternion} from "three";
 
 import createBMFont, { TextGeometry, TextGeometryOptions } from "three-bmfont-text";
 import GameView from "../GameView/GameView";
@@ -84,6 +87,7 @@ export class Text3D {
         texture.magFilter = LinearFilter;
 
         this._geometry = createBMFont({ font: fontData, text: "", flipY: true, align: "center", width: Text3D.defaultWidth });
+        this._geometry.computeBoundingBox();
         
         var material = new RawShaderMaterial(sdfShader({
             map: texture,
@@ -102,10 +106,6 @@ export class Text3D {
         // Rotate the text mesh so that it is upright when rendered.
         this._mesh.rotateX(ThreeMath.degToRad(180)); 
 
-        // Move label so that its bottom edge is centered on the anchor.
-        // this._mesh.translateX(this._geometry.layout.width / 2);
-        // this._mesh.position.set(-width / 2, 50, 0);
-
         // Add the label anchor as aa child of the file mesh.
         parent.add(this._anchor);
     }
@@ -122,15 +122,50 @@ export class Text3D {
         size.add(new Vector3(0, Text3D.extraSpacing, 0));
         size.divide(this._anchor.scale);
         this._mesh.position.set(-Text3D.defaultWidth / 2, size.y, 0);
+        this._anchor.updateMatrixWorld(true);
     }
 
     /**
      * Gets the position of the text in world space.
      */
-    public getWorldPosition() {
+    public getWorldPosition(): Vector3 {
         let pos = new Vector3();
         this._anchor.getWorldPosition(pos);
         return pos;
+    }
+
+    /**
+     * Get the bounding box of the text.
+     */
+    public getBoundingBox(): Box3 {
+        this._anchor.updateMatrixWorld(true);
+        let boundingBox = this._geometry.boundingBox.clone();
+        boundingBox.min.z = -1;
+        boundingBox.max.z = 1;
+
+        let anchorWorldScale = new Vector3();
+        this._anchor.getWorldScale(anchorWorldScale);
+
+        // Scale down the bounding box so that it matches the size of our anchor.
+        boundingBox.min.multiplyScalar(anchorWorldScale.x);
+        boundingBox.max.multiplyScalar(anchorWorldScale.x);
+
+        let position = new Vector3();
+        this._mesh.getWorldPosition(position);
+        
+        let size = new Vector3();
+        boundingBox.getSize(size);
+
+        position.y += (size.y);
+        
+
+        // Apply the matrix to the bounding box.
+        let matrix = new Matrix4();
+        matrix.setPosition(position);
+        // matrix.compose(position, new Quaternion(), anchorWorldScale);
+        boundingBox.applyMatrix4(matrix);
+
+        return boundingBox;
     }
 
     /**
@@ -138,7 +173,6 @@ export class Text3D {
      * @param text the text to display.
      */
     public setText(text: string) {
-
         // Ignore if the text is already set to provided value.
         if (this._unprocessedText === text) return;
 
@@ -149,6 +183,7 @@ export class Text3D {
             // Text has value, enable the mesh and update the geometry.
             this._anchor.visible = true;
             this._geometry.update(text);
+            this._geometry.computeBoundingBox();
 
         } else {
 
@@ -174,6 +209,7 @@ export class Text3D {
     public setOptions(opt: TextGeometryOptions) {
 
         this._geometry.update(opt);
+        this._geometry.computeBoundingBox();
         this._unprocessedText = opt.text;
 
         if (opt.text) {
@@ -195,6 +231,7 @@ export class Text3D {
      */
     public setScale(scale: number) {
         this._anchor.scale.setScalar(scale);
+        this._anchor.updateMatrixWorld(true);
     }
 
     /**
