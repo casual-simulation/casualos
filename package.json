@@ -11,8 +11,7 @@
   },
   "scripts": {
     "watch": "lerna exec --parallel -- npm run watch",
-    "type-check": "lerna exec -- npm run type-check",
-    "type-check:watch": "lerna exec --parallel -- npm run type-check:watch",
+    "build": "lerna exec -- npm run build",
     "test:watch": "jest --watchAll",
     "test": "jest"
   } 

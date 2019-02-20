@@ -4,7 +4,6 @@ import { ChannelInfo } from '../ChannelInfo';
 import { Event } from '../Event';
 import { StateStore } from '../StateStore';
 import { ChannelConnector, ChannelConnectionRequest, ChannelConnection, ChannelConnectionState, ChannelConnectionMode } from '../ChannelConnector';
-import { createReadStream } from 'fs';
 
 interface EventWrapper {
     event: Event;

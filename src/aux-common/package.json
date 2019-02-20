@@ -6,7 +6,7 @@
   "types": "lib/index.d.ts",
   "scripts": {
     "watch": "echo 'Nothing to watch!'",
-
+    "build": "tsc",
     "type-check": "tsc --noEmit",
     "type-check:watch": "tsc --noEmit --watch"
   },
@@ -27,7 +27,8 @@
   },
   "homepage": "https://github.com/yeticgi/file-simulator#readme",
   "devDependencies": {
-    "typescript": "^3.1.6"
+    "typescript": "^3.1.6",
+    "chai": "^4.2.0"
   },
   "dependencies": {
     "acorn": "^6.0.4",

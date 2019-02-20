@@ -8,7 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceFolder}/SO4/dist/main.js",
+            "program": "${workspaceFolder}/src/aux-server/SO4/dist/main.js",
             "outFiles": [
                 "${workspaceFolder}/temp/**/*.js"
             ]
