@@ -2,6 +2,7 @@ import { AtomOp, Atom, AtomId } from "./Atom";
 import { Weave, WeaveReference } from "./Weave";
 import { AtomFactory } from "./AtomFactory";
 import { AtomReducer } from "./AtomReducer";
+import { sortBy } from "lodash";
 
 /**
  * Defines a class that represents a Causal Tree.
@@ -77,6 +78,22 @@ export class CausalTree<TOp extends AtomOp, TValue> {
         const ref = this.weave.insert(atom);
         this._value = null;
         return ref;
+    }
+
+    /**
+     * Imports the given list of weave references into the tree.
+     * @param refs The references to import.
+     */
+    import<T extends TOp>(refs: WeaveReference<T>[]): void {
+        const newAtoms = this.weave.import(refs);
+        const sortedAtoms = sortBy(newAtoms, a => a.atom.id.timestamp);
+        for (let i = 0; i < sortedAtoms.length; i++) {
+            const ref = sortedAtoms[i];
+            if (ref.atom.id.site !== this._site) {
+                this.factory.updateTime(ref.atom.id.timestamp);
+            }
+        }
+        this._value = null;
     }
 
     /**

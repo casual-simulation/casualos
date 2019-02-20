@@ -190,7 +190,7 @@ describe('Weave', () => {
             const refs = weave.atoms;
 
             let newWeave = new Weave<Op>();
-            newWeave.import(refs);
+            const newAtoms = newWeave.import(refs);
 
             expect(newWeave.atoms.map(a => a.atom)).toEqual([
                 root,
@@ -205,6 +205,13 @@ describe('Weave', () => {
             expect(site.get(1).atom).toBe(child1);
             expect(site.get(2).atom).toBe(child2);
             expect(site.get(3).atom).toBe(child3);
+
+            expect(newAtoms.map(a => a.atom)).toEqual([
+                root,
+                child2,
+                child1,
+                child3
+            ]);
         });
 
         it('should be able to merge another weave into itself', () => {
@@ -229,8 +236,8 @@ describe('Weave', () => {
             const secondRefs = second.atoms;
 
             let newWeave = new Weave<Op>();
-            newWeave.import(firstRefs);
-            newWeave.import(secondRefs);
+            const importedFromFirst = newWeave.import(firstRefs);
+            const importedFromSecond = newWeave.import(secondRefs);
 
             const atoms = newWeave.atoms.map(a => a.atom);
             expect(atoms[0]).toEqual(root);
@@ -241,6 +248,19 @@ describe('Weave', () => {
             expect(atoms[5]).toEqual(child5);
             expect(atoms[6]).toEqual(child3);
             expect(atoms.length).toBe(7);
+
+            expect(importedFromFirst.map(a => a.atom)).toEqual([
+                root,
+                child2,
+                child6,
+                child1,
+                child3
+            ]);
+
+            expect(importedFromSecond.map(a => a.atom)).toEqual([
+                child4,
+                child5
+            ]);
         });
 
         it('should be able to merge a partial weave into itself', () => {

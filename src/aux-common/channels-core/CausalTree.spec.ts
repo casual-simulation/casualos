@@ -63,4 +63,41 @@ describe('CausalTree', () => {
             expect(tree.value).toBe(1);
         });
     });
+
+    describe('import()', () => {
+        it('should update the current time based on the given references', () => {
+            let tree1 = new CausalTree(1, new Reducer());
+            let tree2 = new CausalTree(2, new Reducer());
+
+            const root = tree1.factory.create(new Op(), null); // Time 1
+            tree1.add(root);
+            tree2.add(root); // Time 2
+
+            tree2.add(tree2.factory.create(new Op(OpType.add), root)); // Time 3
+            tree2.add(tree2.factory.create(new Op(OpType.add), root)); // Time 4
+            tree2.add(tree2.factory.create(new Op(OpType.subtract), root)); // Time 5
+
+            tree1.import(tree2.weave.atoms);
+
+            expect(tree1.time).toBe(6);
+        });
+
+        it('should not update the current time when importing duplicates', () => {
+            let tree1 = new CausalTree(1, new Reducer());
+            let tree2 = new CausalTree(2, new Reducer());
+
+            const root = tree1.factory.create(new Op(), null); // Time 1
+            tree1.add(root);
+            tree2.add(root); // Time 2
+
+            tree2.add(tree2.factory.create(new Op(OpType.add), root)); // Time 3
+            tree2.add(tree2.factory.create(new Op(OpType.add), root)); // Time 4
+            tree2.add(tree2.factory.create(new Op(OpType.subtract), root)); // Time 5
+
+            tree1.import(tree2.weave.atoms);
+            tree1.import(tree2.weave.atoms);
+
+            expect(tree1.time).toBe(6);
+        });
+    });
 });

@@ -145,10 +145,12 @@ export class Weave<TOp extends AtomOp> {
     /**
      * Imports the given list of atoms into this weave.
      * The atoms are assumed to be pre-sorted.
+     * Returns the list of atoms that were added to the weave.
      * @param atoms The atoms to import into this weave.
      */
-    import(atoms: WeaveReference<TOp>[]) {
+    import(atoms: WeaveReference<TOp>[]): WeaveReference<TOp>[] {
         
+        let newAtoms: WeaveReference<TOp>[] = [];
         let localOffset = 0;
         for (let i = 0; i < atoms.length; i++) {
             const a = atoms[i];
@@ -159,7 +161,8 @@ export class Weave<TOp extends AtomOp> {
             if (!local) {
                 // Short circut by appending the rest.
                 const finalAtoms = atoms.slice(i);
-                this._atoms.splice(this._atoms.length, 0, ...finalAtoms);
+                this._atoms.push(...finalAtoms);
+                newAtoms.push(...finalAtoms);
 
                 this._yarn.length = this._yarn.length + finalAtoms.length;
 
@@ -183,6 +186,7 @@ export class Weave<TOp extends AtomOp> {
                     // New atom should be before local atom.
                     // insert at this index.
                     this._atoms.splice(i + localOffset, 0, a);
+                    newAtoms.push(a);
                     const site = this.getSite(a.atom.id.site);
                     site.set(a.index, a);
                     this._sites[a.atom.id.site] = {
@@ -200,6 +204,7 @@ export class Weave<TOp extends AtomOp> {
                     order = this._compareAtoms(a.atom, local.atom);
                     if (order < 0) {
                         this._atoms.splice(i + localOffset, 0, a);
+                        newAtoms.push(a);
                         const site = this.getSite(a.atom.id.site);
                         site.set(a.index, a);
                         this._sites[a.atom.id.site] = {
@@ -210,36 +215,8 @@ export class Weave<TOp extends AtomOp> {
                 }
             }
         }
-        
-        // if (this.atoms.length === 0) {
-        //     this._setYarn(atoms);
-        //     this._atoms = atoms.slice();
-        // } else if(atoms.length > 0) {
-        //     const firstParent = atoms[0].cause;
-        //     let i = findIndex(this._atoms, a => a.id.equals(firstParent.id));
 
-        //     for (let i = 0; i < this._atoms.length && atoms.length; i++) {
-        //         const local = this._atoms[i];
-        //         const remote = atoms[i];
-                
-        //     }
-        // }
-        // const length = Math.min(atoms.length, this._atoms.length);
-        // let i = 0;
-        // let b = 0;
-        // while(i < this._atoms.length && b < atoms.length) {
-        //     const localAtom = this._atoms[i];
-        //     const remoteAtom = atoms[i];
-        // }
-        // for (let i = 0; i < this.atoms.length; i++) {
-            
-        //     if (localAtom.id.equals(remoteAtom.id)) {
-        //         continue;
-        //     } else {
-
-        //     }
-        // }
-        // const remaining 
+        return newAtoms;
     }
 
     private _sortYarn() {
