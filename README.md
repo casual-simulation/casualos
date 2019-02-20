@@ -57,6 +57,12 @@ Most of them are NPM scripts, so they're easy to run.
     - `npm run test:watch`
 - Test
     - `npm test`
+- Add a NPM Package
+    - `lerna add <package-name>`
+    - This will add the given NPM package to all of the projects.
+- Add a NPM Package to a specific project
+    - `lerna add <package-name> src/<project-name>`
+    - This will add the given NPM package to all of the projects matching `src/<project-name>`
 
 You can find other scripts in the `package.json` file at the root of the repository.
 
