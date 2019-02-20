@@ -3,5 +3,8 @@
     "compilerOptions": {
         "baseUrl": ".",
         "outDir": "./dist"
-    }
+    },
+    "exclude": [
+        "node_modules"
+    ]
 }

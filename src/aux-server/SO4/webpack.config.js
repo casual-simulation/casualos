@@ -1,8 +1,6 @@
 const path = require('path');
 const nodeExternals = require('webpack-node-externals');
 
-const auxCommon = path.resolve(__dirname, '..', '..', 'aux-common');
-
 module.exports = {
   mode: 'development',
   devtool: 'inline-source-map',
@@ -25,26 +23,17 @@ module.exports = {
       {
         test: /\.tsx?$/,
         loader: 'ts-loader',
-        include: [__dirname],
-        exclude: /node_modules/,
-      },
-      {
-        test: /\.tsx?$/,
-        loader: 'ts-loader',
-        include: [auxCommon],
-        exclude: /node_modules/,
-        options: {
-          instance: 'common',
-          configFile: path.resolve(auxCommon, 'tsconfig.json')
-        }
-      },
+        include: [/aux-common/, __dirname],
+        options: { allowTsInNodeModules: true }
+      }
     ]
   },
   resolve: {
     extensions: [ '.ts', '.js' ],
     alias: {
-      'aux-common/Formulas/formula-lib': path.resolve(__dirname, '..', '..', 'aux-common/Formulas/formula-lib.ts'),
-    }
+      // 'aux-common/Formulas/formula-lib': path.resolve(__dirname, '..', '..', 'aux-common/Formulas/formula-lib.ts'),
+    },
+    symlinks: false
   },
   externals: [nodeExternals({
     whitelist: [ /^aux-common/ ]

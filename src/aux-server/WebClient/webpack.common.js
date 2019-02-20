@@ -32,18 +32,8 @@ module.exports = {
       {
         test: /\.tsx?$/,
         loader: 'ts-loader',
-        include: [__dirname],
-        exclude: /node_modules/,
-      },
-      {
-        test: /\.tsx?$/,
-        loader: 'ts-loader',
-        include: [auxCommon],
-        exclude: /node_modules/,
-        options: {
-          instance: 'common',
-          configFile: path.resolve(auxCommon, 'tsconfig.json')
-        }
+        include: [/aux-common/, __dirname],
+        options: { allowTsInNodeModules: true }
       },
       {
         test: /\.css$/,
@@ -77,9 +67,9 @@ module.exports = {
     alias: {
       'three-examples': path.join(__dirname, '../node_modules/three/examples/js'),
       'fs': 'browserfs',
-      'aux-common/Formulas/formula-lib': path.resolve(__dirname, '..', '..', 'aux-common/Formulas/formula-lib.ts'),
-      'webxr-polyfill': path.resolve(__dirname, 'public/scripts/webxr-polyfill.js')
-    }
+      'webxr-polyfill': path.resolve(__dirname, 'public/scripts/webxr-polyfill.js'),
+    },
+    symlinks: false
   },
   plugins: [
     new CleanWebpackPlugin([
@@ -87,7 +77,7 @@ module.exports = {
     ]),
     new VueLoaderPlugin(),
     new HtmlWebpackPlugin({
-      template: 'WebClient/index.html',
+      template: path.resolve(__dirname, 'index.html'),
       title: 'File Simulator'
     }),
     new webpack.ProvidePlugin({

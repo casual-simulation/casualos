@@ -5,10 +5,7 @@
     "outDir": "./dist/",
   },
   "include": [
-    "**/*",
-    "node_modules/aux-common/**/*"
+    "./**/*",
+    "./node_modules/aux-common/**/*"
   ],
-  "exclude": [
-      "node_modules"
-  ]
 }
