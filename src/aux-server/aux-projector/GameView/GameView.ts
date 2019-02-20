@@ -476,6 +476,7 @@ export default class GameView extends Vue {
 
   private async _fileUpdated(file: File, initialUpdate = false) {
     const obj = this._files[file.id];
+    let shouldRemove = false;
     if (obj) {
       if (file.type === 'object') {
         
@@ -489,20 +490,23 @@ export default class GameView extends Vue {
             this.addToRecentFilesList(file);
           }
         }
-
+        
         if (file.tags._destroyed) {
-          this._fileRemoved(file.id);
-          return;
+          shouldRemove = true;
         }
       } else if (file.type === 'workspace') {
-
         if (file.size <= 0) {
-          this._fileRemoved(file.id);
-          return;
+          shouldRemove = true;
         }
       }
+
       await obj.updateFile(file);
       this.onFileUpdated.invoke(obj);
+
+      if (shouldRemove) {
+        this._fileRemoved(file.id);
+      }
+
     } else {
       console.log('cant find file to update it');
     }

@@ -88,7 +88,6 @@ export abstract class BaseFileDragOperation implements IOperation {
     protected _onDragReleased(): void {
         // Button has been released.
         if (this._freeDragGroup && this._files[0].type === 'object') {
-            console.log('destroy files: ', this._files);
             // Destroy files if free dragging them (trash can)!
             this._destroyFiles(this._files);
         }

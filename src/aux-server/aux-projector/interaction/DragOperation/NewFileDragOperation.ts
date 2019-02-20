@@ -9,7 +9,7 @@ import { WorkspaceMesh } from '../../game-engine/WorkspaceMesh';
 import { File, Workspace, Object, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated, PartialFile, fileAdded, FileEvent } from 'aux-common/Files';
 import { keys, minBy, flatMap } from 'lodash';
 import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance, posToKey } from '../../game-engine/hex';
-import { isFormula, duplicateFile, createFile } from 'aux-common/Files/FileCalculations';
+import { createFile } from 'aux-common/Files/FileCalculations';
 import { BaseFileDragOperation } from './BaseFileDragOperation';
 import { appManager } from '../../AppManager';
 import { merge } from 'aux-common/utils';
@@ -23,20 +23,17 @@ export class NewFileDragOperation extends BaseFileDragOperation {
 
     public static readonly FreeDragDistance: number = 6;
 
-    private _duplicateFile: Object;
     private _fileAdded: boolean;
     private _initialDragMesh: FileMesh;
-    
 
     /**
      * Create a new drag rules.
      * @param input the input module to interface with.
      * @param buttonId the button id of the input that this drag operation is being performed with. If desktop this is the mouse button
      */
-    constructor(gameView: GameView, interaction: InteractionManager, file: File) {
-        super(gameView, interaction, [file]);
+    constructor(gameView: GameView, interaction: InteractionManager, duplicatedFile: File) {
+        super(gameView, interaction, [duplicatedFile]);
 
-        this._duplicateFile = duplicateFile(<Object>file);
     }
 
     protected _updateFile(file: File, data: PartialFile): FileEvent {
@@ -48,8 +45,8 @@ export class NewFileDragOperation extends BaseFileDragOperation {
             }
 
             // Add the duplicated file.
-            this._file = merge(this._duplicateFile, data || {});
-            this._file = createFile(this._duplicateFile.id, this._duplicateFile.tags);
+            this._file = merge(this._file, data || {});
+            this._file = createFile(this._file.id, (<Object>this._file).tags);
             this._files = [this._file];
             this._fileAdded = true;
 
@@ -72,7 +69,7 @@ export class NewFileDragOperation extends BaseFileDragOperation {
         if (!this._fileAdded) {
             // New file has not been added yet, drag a dummy mesh to drag around until it gets added to a workspace.
             if (!this._initialDragMesh) {
-                this._initialDragMesh = this._createDragMesh(this._duplicateFile);
+                this._initialDragMesh = this._createDragMesh(this._file);
             }
 
             const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.camera);
