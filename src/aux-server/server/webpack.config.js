@@ -35,13 +35,13 @@ module.exports = {
     symlinks: false
   },
   externals: [
-    // TODO:
-    // There's some weirdness going on where some
-    // packages aren't getting symlinked into node_modules
-    // and so nodeExternals doesn't know to exclude those
-    // packages from the build
     nodeExternals({
-      whitelist: /^aux-common/
+      whitelist: /^aux-common/,
+      
+      // Use package.json instead of node_modules.
+      // This way we can exclude packages even though they're not in the first node_modules
+      // directory
+      modulesFromFile: true 
     })
   ], // in order to ignore all modules in node_modules folder
   plugins: [
