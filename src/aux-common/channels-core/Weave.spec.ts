@@ -156,8 +156,10 @@ describe('Weave', () => {
         it('should return atoms in order of their timestamps', () => {
             const a1 = atom(atomId(1, 1), null, new Op());
             const a2 = atom(atomId(1, 2), atomId(1, 1), new Op());
-            const a3 = atom(atomId(1, 3), atomId(1, 1), new Op());
+            const a3 = atom(atomId(7, 3), atomId(1, 1), new Op());
             const a4 = atom(atomId(1, 4), atomId(1, 2), new Op());
+            const a5 = atom(atomId(2, 5), atomId(1, 2), new Op());
+            const a6 = atom(atomId(1, 6), atomId(1, 2), new Op());
 
             let weave = new Weave();
 
@@ -165,6 +167,32 @@ describe('Weave', () => {
             const a3Ref = weave.insert(a3);
             const a2Ref = weave.insert(a2);
             const a4Ref = weave.insert(a4);
+            const a5Ref = weave.insert(a5);
+            const a6Ref = weave.insert(a6);
+
+            const site1 = weave.getSite(1);
+            const site2 = weave.getSite(2);
+            const site7 = weave.getSite(7);
+
+            expect(site1.get(0)).toEqual(a1Ref);
+            expect(site1.get(1)).toEqual(a2Ref);
+            expect(site1.get(2)).toEqual(a4Ref);
+            expect(site1.get(3)).toEqual(a6Ref);
+            expect(site1.length).toEqual(4);
+
+            expect(site2.get(0)).toEqual(a5Ref);
+            expect(site2.length).toEqual(1);
+
+            expect(site7.get(0)).toEqual(a3Ref);
+            expect(site7.length).toEqual(1);
+
+            // expect(version1.sites).toBe({
+            //     1: 6,
+            //     2: 5,
+            //     7: 3
+            // });
+        });
+    });
 
             const site = weave.getSite(1);
 

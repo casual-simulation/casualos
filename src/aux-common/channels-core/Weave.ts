@@ -84,7 +84,14 @@ export class Weave<TOp extends AtomOp> {
     getSite(site: number): VirtualArray<WeaveReference<TOp>> {
         const siteIndex = this._sites[site];
         if (typeof siteIndex === 'undefined') {
-            return new VirtualArray(this._yarn, this._yarn.length);
+            const siteIds = this._siteIds();
+            let index = findIndex(siteIds, id => id > site);
+            let yarnIndex = this._yarn.length;
+            if (index >= 0) {
+                const siteAfter = this._sites[siteIds[index]];
+                yarnIndex = siteAfter.start;
+            }
+            return new VirtualArray(this._yarn, yarnIndex, yarnIndex);
         } else {
             return new VirtualArray(this._yarn, siteIndex.start, siteIndex.end);
         }
@@ -217,6 +224,50 @@ export class Weave<TOp extends AtomOp> {
         }
 
         return newAtoms;
+    }
+
+    /**
+     * Updates the sites map.
+     */
+    private _updateSites(siteId: number, site: VirtualArray<WeaveReference<TOp>>) {
+        const siteIds = this._siteIds();
+        let updatedSite = false;
+        for (let i = 0; i < siteIds.length; i++) {
+            let id = siteIds[i];
+            
+            if (id === siteId || (id > siteId && !updatedSite)) {
+                this._sites[siteId] = {
+                    start: site.start,
+                    end: site.end
+                };
+                updatedSite = true;
+            }
+            if (id > siteId) {
+                let current = this.getSite(id);
+                const offset = (site.end - current.start);
+                // offset all the other sites
+                for (let b = i; b < siteIds.length; b++) {
+                    id = siteIds[b];
+                    current = this.getSite(id);
+                    this._sites[id] = {
+                        start: current.start + offset,
+                        end: current.end + offset
+                    };
+                }
+                break;
+            }
+        }
+
+        if (!updatedSite) {
+            this._sites[siteId] = {
+                start: site.start,
+                end: site.end
+            };
+        }
+    }
+
+    private _siteIds() {
+        return keys(this._sites).map(id => parseInt(id)).sort();
     }
 
     private _sortYarn() {
