@@ -5,7 +5,10 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "test": "jest"
+    "watch": "echo 'Nothing to watch!'",
+
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "tsc --noEmit --watch"
   },
   "repository": {
     "type": "git",

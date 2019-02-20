@@ -6,9 +6,14 @@
     "jest": "^23.6.0",
     "jest-junit": "^5.2.0",
     "jest-raw-loader": "^1.0.1",
-    "ts-jest": "^23.10.5"
+    "ts-jest": "^23.10.5",
+    "typescript": "^3.3.3"
   },
   "scripts": {
+    "watch": "lerna exec --parallel -- npm run watch",
+    "type-check": "lerna exec -- npm run type-check",
+    "type-check:watch": "lerna exec --parallel -- npm run type-check:watch",
+    "test:watch": "jest --watchAll",
     "test": "jest"
   } 
 }

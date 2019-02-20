@@ -12,9 +12,13 @@
     "build:server": "webpack --config SO4/webpack.config.js",
     "watch:server": "webpack --config SO4/webpack.config.js --watch",
     "watch:client": "webpack --config WebClient/webpack.dev.js --watch",
+    
     "test": "jest",
     "test:watch": "jest --watchAll",
-    "test:ci": "jest --ci --reporters=default --reporters=jest-junit"
+    "test:ci": "jest --ci --reporters=default --reporters=jest-junit",
+
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "tsc --noEmit --watch"
   },
   "repository": {
     "type": "git",
@@ -58,9 +62,7 @@
     "sinon": "^7.1.1",
     "style-loader": "^0.23.1",
     "terser-webpack-plugin": "^1.2.1",
-    
     "ts-loader": "^5.3.0",
-    "typescript": "^3.1.6",
     "vue-loader": "^15.4.2",
     "vue-svg-loader": "^0.11.0",
     "vue-template-compiler": "^2.5.17",
