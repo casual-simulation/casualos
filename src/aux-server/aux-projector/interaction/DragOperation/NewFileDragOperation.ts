@@ -14,13 +14,17 @@ import { BaseFileDragOperation } from './BaseFileDragOperation';
 import { appManager } from '../../AppManager';
 import { merge } from 'aux-common/utils';
 import { FileMesh } from '../../game-engine/FileMesh';
+import { setParent } from '../../game-engine/utils';
 
 /**
  * New File Drag Operation handles dragging of new files from the file queue.
  */
 export class NewFileDragOperation extends BaseFileDragOperation {
 
-    private _newFile: File;
+    public static readonly FreeDragDistance: number = 6;
+
+    private _duplicateFile: Object;
+    private _fileAdded: boolean;
     private _initialDragMesh: FileMesh;
     
 
@@ -31,38 +35,83 @@ export class NewFileDragOperation extends BaseFileDragOperation {
      */
     constructor(gameView: GameView, interaction: InteractionManager, file: File) {
         super(gameView, interaction, [file]);
+
+        this._duplicateFile = duplicateFile(<Object>file);
     }
 
     protected _updateFile(file: File, data: PartialFile): FileEvent {
-        if (!this._newFile) {
-            const newFile = duplicateFile(<Object>file, data);
-            this._newFile = createFile(newFile.id, newFile.tags);
-            return fileAdded(this._newFile);
+        if (!this._fileAdded) {
+
+            if (this._initialDragMesh) {
+                this._releaseDragMesh(this._initialDragMesh);
+                this._initialDragMesh = null;
+            }
+
+            // Add the duplicated file.
+            this._file = merge(this._duplicateFile, data || {});
+            this._file = createFile(this._duplicateFile.id, this._duplicateFile.tags);
+            this._files = [this._file];
+            this._fileAdded = true;
+
+            return fileAdded(this._file);
         } else {
-            return super._updateFile(this._newFile, data);
+            return super._updateFile(this._file, data);
         }
     }
 
-    // protected _dragFilesFree(): void {
-    //     // File has not been added yet, do a custom drag implementation until we add it by placing it over a workspace.
-    //     if (!this._initialDragMesh) {
-    //         // Instance a file mesh to represent the file in its intial drag state before being added to the world.
-    //         this._initialDragMesh = new FileMesh(this._gameView);
-    //         this._gameView.scene.add(this._initialDragMesh);
-    //         this._initialDragMesh.update(this._file);
-    //     }
+    protected _onDragReleased(): void {
+        if (this._initialDragMesh) {
+            this._releaseDragMesh(this._initialDragMesh);
+            this._initialDragMesh = null;
+        }
 
-    //     const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.camera);
-    //     let worldPos = Physics.pointOnRay(mouseDir, this._freeDragDistance);
-    // }
+        super._onDragReleased();
+    }
 
-    protected _calculateDragPosition(workspace: File3D, gridPosition: Vector2) {
-        return this._interaction.calculateFileDragPosition(workspace, gridPosition, <Object>(this._newFile || this._file));
+    protected _dragFilesFree(): void {
+        if (!this._fileAdded) {
+            // New file has not been added yet, drag a dummy mesh to drag around until it gets added to a workspace.
+            if (!this._initialDragMesh) {
+                this._initialDragMesh = this._createDragMesh(this._duplicateFile);
+            }
+
+            const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.camera);
+            let worldPos = Physics.pointOnRay(mouseDir, NewFileDragOperation.FreeDragDistance);
+            this._initialDragMesh.position.copy(worldPos);
+            this._initialDragMesh.updateMatrixWorld(true);
+        } else {
+            // New file has been added, just do the base file drag operation.
+            super._dragFilesFree();
+        }
     }
 
     protected _combineFiles(eventName: string) {
-        if (this._newFile) {
-            this._gameView.fileManager.action(this._newFile, this._other, eventName);
+        if (this._fileAdded) {
+            this._gameView.fileManager.action(this._file, this._other, eventName);
+        }
+    }
+
+    private _createDragMesh(file: File): FileMesh {
+        // Instance a file mesh to represent the file in its intial drag state before being added to the world.
+        let mesh = new FileMesh(this._gameView);
+        mesh.allowNoWorkspace = true;
+        mesh.update(file);
+
+        if (!mesh.parent) {
+            this._gameView.scene.add(mesh);
+        } else {
+            // KLUDGE: FileMesh will reparent the object to a workspace if the the file has a workspace assigned.
+            // Setting the parent here will force the FileMesh to be in world space again.
+            setParent(mesh, this._gameView.scene, this._gameView.scene);
+        }
+
+
+        return mesh;
+    }
+
+    private _releaseDragMesh(mesh: FileMesh): void {
+        if (mesh) {
+            this._gameView.scene.remove(mesh);
         }
     }
 }

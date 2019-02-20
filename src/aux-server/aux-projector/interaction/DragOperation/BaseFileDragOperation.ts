@@ -42,10 +42,7 @@ export abstract class BaseFileDragOperation implements IOperation {
     constructor(gameView: GameView, interaction: InteractionManager, files: File[]) {
         this._gameView = gameView;
         this._interaction = interaction;
-        this._files = files;
-        if (this._files.length == 1) {
-            this._file = this._files[0];
-        }
+        this._setFiles(files);
         this._lastScreenPos = this._gameView.input.getMouseScreenPos();
     }
 
@@ -103,7 +100,14 @@ export abstract class BaseFileDragOperation implements IOperation {
         }
     }
 
-    private _dragFiles() {
+    protected _setFiles(files: File[]) {
+        this._files = files;
+        if (this._files.length == 1) {
+            this._file = this._files[0];
+        }
+    }
+
+    protected _dragFiles() {
         const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.camera);
         const { good, gridPosition, height, workspace } = this._interaction.pointOnGrid(mouseDir);
 
@@ -116,8 +120,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         }
     }
 
-    protected _dragFilesOnWorkspace(workspace: File3D, gridPosition: Vector2, height: number) {
-
+    protected _dragFilesOnWorkspace(workspace: File3D, gridPosition: Vector2, height: number): void {
         if (this._freeDragGroup) {
             this._releaseFreeDragGroup(this._freeDragGroup);
             this._freeDragGroup = null;
@@ -126,18 +129,17 @@ export abstract class BaseFileDragOperation implements IOperation {
         this._showGrid(workspace);
 
         // calculate index for file
-        const result = this._calculateDragPosition(workspace, gridPosition);
+        const result = this._calcWorkspaceDragPosition(workspace, gridPosition);
 
         this._combine = result.combine;
         this._other = result.other;
         this._updateFilesPositions(this._files, workspace, gridPosition, height, result.index);
     }
 
-
-    protected _dragFilesFree() {
+    protected _dragFilesFree(): void {
         const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.camera);
         const firstFileExists = this._gameView.getFile(this._files[0].id) !== undefined;
-
+        
         if (firstFileExists) {
             // Move the file freely in space at the distance the file is currently from the camera.
             if (!this._freeDragGroup) {
@@ -201,7 +203,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         return fileUpdated(file.id, data);
     }
 
-    protected _calculateDragPosition(workspace: File3D, gridPosition: Vector2) {
+    protected _calcWorkspaceDragPosition(workspace: File3D, gridPosition: Vector2) {
         return this._interaction.calculateFileDragPosition(workspace, gridPosition, ...(<Object[]>this._files));
     }
 
