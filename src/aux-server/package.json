@@ -71,6 +71,7 @@
     "vue-property-decorator": "^7.2.0",
     "vue-router": "^3.0.1",
     "webvr-polyfill": "^0.10.10",
+    "aux-common": "^0.3.0",
     "webvr-ui": "^0.10.0"
   }
 }

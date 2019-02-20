@@ -59,9 +59,5 @@
     "test:watch": "jest --watchAll",
     "test": "jest",
     "test:ci": "jest --ci --reporters=default --reporters=jest-junit"
-  },
-  "dependencies": {
-    "aux-common": "file:src\\aux-common",
-    "aux-server": "file:src\\aux-server"
   }
 }
