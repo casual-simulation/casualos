@@ -2,7 +2,7 @@ import { RealtimeChannelInfo } from "./RealtimeChannelInfo";
 import { CausalTree } from "./CausalTree";
 import { Observable, SubscriptionLike } from "rxjs";
 import { RealtimeChannelConnection } from "./RealtimeChannelConnection";
-import { StateVersionInfo } from "./StateVersionInfo";
+import { SiteVersionInfo } from "./SiteVersionInfo";
 import { filter, map, tap, first } from "rxjs/operators";
 import { ConnectionEvent } from "./ConnectionEvent";
 
@@ -30,6 +30,10 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
         this._connection = connection;
         this._emitName = `event_${info.id}`;
         this._infoName = `info_${info.id}`;
+        this._connection.init([
+            this._emitName,
+            this._infoName
+        ]);
 
         this.events = this._connection.events.pipe(
             filter(e => e.name === this._emitName),
@@ -66,16 +70,11 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
 
     /**
      * Exchanges version information with the remote peer.
+     * Returns a promise that resolves with the remote's version info.
      * @param version The local information.
      */
-    exchangeInfo(version: StateVersionInfo): Promise<StateVersionInfo> {
-        return this._requestResponse({
-            name: this._infoName,
-            data: {
-                version: version,
-                info: this.info
-            }
-        }).then(e => e.data.version);
+    exchangeInfo(version: SiteVersionInfo): Promise<SiteVersionInfo> {
+        return this._connection.request(this._infoName, version);
     }
 
     /**
@@ -113,17 +112,6 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
      */
     unsubscribe(): void {
         this._connection.unsubscribe();
-    }
-
-    private _requestResponse<T extends ConnectionEvent>(request: T): Promise<T> {
-        return new Promise<T>((resolve, reject) => {
-            this._connection.events.pipe(
-                filter(e => e.name === request.name),
-                first()
-            ).subscribe(e => resolve(<T>e), reject);
-
-            this._connection.emit(request);
-        });
     }
 }
 

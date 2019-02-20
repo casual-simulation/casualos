@@ -49,6 +49,14 @@ export class SocketIOChannelConnection implements RealtimeChannelConnection {
         this._socket.emit(event.name, event.data);
     }
 
+    request<T>(name: string, data: T): Promise<T> {
+        return new Promise<T>((resolve, reject) => {
+            this._socket.emit(name, data, (response: T) => {
+                resolve(response);
+            });
+        });
+    }
+
     get connectionStateChanged(): Observable<boolean> {
         return this._connected;
     }

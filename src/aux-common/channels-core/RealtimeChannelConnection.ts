@@ -32,6 +32,14 @@ export interface RealtimeChannelConnection extends SubscriptionLike {
     emit(event: ConnectionEvent): void;
 
     /**
+     * Makes a request to the remote peer.
+     * Returns the response from the server.
+     * @param name The resource to request.
+     * @param data The data to send in the request.
+     */
+    request<T>(name: string, data: T): Promise<T>;
+
+    /**
      * The observable list of connection states.
      * Resolves with true when connected and false when disconnected.
      * Upon subscription, the observable resolves with the current connection state.

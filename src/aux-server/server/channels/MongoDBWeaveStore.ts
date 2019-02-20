@@ -8,7 +8,6 @@ import { Weave, WeaveReference } from 'aux-common/channels-core/Weave';
 
 const connect = pify(MongoClient.connect);
 
-
 /**
  * Defines a class that is able to store a causal tree in MongoDB.
  */
@@ -33,22 +32,19 @@ export class MongoDBTreeStore implements WeaveStore {
         this._collection = this._db.collection(this._collectionName);
     }
 
-    async update<T extends AtomOp>(id: string, weave: Weave<T>): Promise<void> {
-        const atoms = weave.atoms;
+    async update<T extends AtomOp>(id: string, weave: WeaveReference<T>[]): Promise<void> {
         await this._collection.updateOne({ channel: id }, { 
             $set: {
                 channel: id,
-                state: atoms
+                state: weave
             }
         }, {
             upsert: true
         });
     }
 
-    async get<T extends AtomOp>(id: string): Promise<Weave<T>> {
+    async get<T extends AtomOp>(id: string): Promise<WeaveReference<T>[]> {
         const atoms: WeaveReference<T>[] = await this._collection.findOne({ weave: id });
-        const weave = Weave.buildFromArray(atoms);
-
-        return weave;
+        return atoms;
     }
 }
