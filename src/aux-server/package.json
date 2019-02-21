@@ -34,12 +34,15 @@
     "/docker-compose.yml",
     "/LICENSE.txt"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@chenfengyuan/vue-qrcode": "^1.0.0",
     "@sentry/browser": "^4.4.2",
+    "@yeti-cgi/aux-common": "^0.3.0",
     "acorn": "^6.0.4",
     "astring": "^1.3.1",
-    "@yeti-cgi/aux-common": "^0.3.0",
     "axios": "^0.18.0",
     "concurrently": "^4.0.1",
     "downloadjs": "^1.4.7",
