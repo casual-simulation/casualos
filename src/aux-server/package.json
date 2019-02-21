@@ -27,7 +27,6 @@
     "url": "https://github.com/yeticgi/process-for-teams/issues"
   },
   "homepage": "https://github.com/yeticgi/process-for-teams#readme",
-  "private": true,
   "files": [
     "dist",
     "/README.md",
