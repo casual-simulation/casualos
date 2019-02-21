@@ -1,4 +1,4 @@
-import { Object3D, Mesh, BoxBufferGeometry, MeshStandardMaterial, Color, Vector3, Box3, Sphere, BufferGeometry, BufferAttribute, LineBasicMaterial, LineSegments, SphereGeometry, MeshBasicMaterial, DoubleSide } from "three";
+import { Object3D, Mesh, BoxBufferGeometry, MeshStandardMaterial, Color, Vector3, Box3, Sphere, BufferGeometry, BufferAttribute, LineBasicMaterial, LineSegments, SphereGeometry, MeshBasicMaterial, DoubleSide, Box3Helper, Box2, Vector2 } from "three";
 import { Object, File, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_GRID_SCALE } from 'aux-common/Files';
 import { GameObject } from "./GameObject";
 import GameView from '../GameView/GameView';
@@ -13,8 +13,9 @@ import { find, flatMap, sumBy, sortBy } from "lodash";
 import { isArray, parseArray, isFormula, getShortId, fileFromShortId, objectsAtGridPosition, FileCalculationContext, calculateFileValue, calculateNumericalTagValue } from 'aux-common/Files/FileCalculations'
 import { appManager } from '../AppManager';
 import { FileManager } from "../FileManager";
-import { createLabel } from "./utils";
+import { createLabel, convertToBox2 } from "./utils";
 import { WorkspaceMesh } from "./WorkspaceMesh";
+import { WordBubble3D } from "./WordBubble3D";
 
 /**
  * Defines a class that represents a mesh for an "object" file.
@@ -39,6 +40,11 @@ export class FileMesh extends GameObject {
      */
     cubeContainer: Object3D;
 
+    /**
+     * The world bubble for the cube.
+     */
+    wordBubble: WordBubble3D;
+    
     /**
      * The optional label for the file.
      */
@@ -108,6 +114,9 @@ export class FileMesh extends GameObject {
             if (this._gameView) {
                 this.label = createLabel(this._gameView, this);
             }
+
+            this.wordBubble = new WordBubble3D({cornerRadius: 0});
+            this.add(this.wordBubble);
         }
         this.file = (<Object>file) || this.file;
 
@@ -141,6 +150,7 @@ export class FileMesh extends GameObject {
             if (labelMode) {
                 this._updateLabelSize();
                 this.label.setPositionForObject(this.cube);
+                this._updateWorldBubble();
             }
         }
 
@@ -223,7 +233,7 @@ export class FileMesh extends GameObject {
         // We must call this function so that child objects get their positions updated too.
         // Three render function does this automatically but there are functions in here that depend
         // on accurate positioning of child objects.
-        this.updateMatrixWorld(false);
+        this.updateMatrixWorld(true);
     }
 
     private _tagUpdateColor(): void {
@@ -253,8 +263,8 @@ export class FileMesh extends GameObject {
             }
             
             this._updateLabelSize();
-
             this.label.setPositionForObject(this.cube);
+            this._updateWorldBubble();
 
             let labelColor = this.file.tags['label.color'];
             if (labelColor) {
@@ -429,6 +439,18 @@ export class FileMesh extends GameObject {
         } else {
             material.linewidth = 1;
         }
+    }
+
+    private _updateWorldBubble(): void {
+        let cubeBoundingBox = new Box3().setFromObject(this.cube);
+        let arrowPoint = new Vector3();
+        cubeBoundingBox.getCenter(arrowPoint);
+
+        let size = new Vector3();
+        cubeBoundingBox.getSize(size);
+        arrowPoint.y += size.y / 2;
+        
+        this.wordBubble.update(convertToBox2(this.label.boundingBox), arrowPoint);
     }
 
     private _createStrokeGeometry(): BufferGeometry {
