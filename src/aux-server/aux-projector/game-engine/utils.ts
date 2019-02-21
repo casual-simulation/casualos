@@ -1,4 +1,4 @@
-import { Vector3, MeshBasicMaterial, SphereBufferGeometry, Mesh, Object3D, Scene, Matrix4 } from "three";
+import { Vector3, MeshBasicMaterial, SphereBufferGeometry, Mesh, Object3D, Scene, Matrix4, Box2, Vector2, Box3 } from "three";
 import { Text3D } from "./Text3D";
 import robotoFont from '../public/bmfonts/Roboto.json';
 import robotoTexturePath from '../public/bmfonts/Roboto.png';
@@ -45,4 +45,15 @@ export function setParent(object3d: Object3D, parent: Object3D, scene: Scene) {
     }
 
     object3d.updateMatrixWorld(true);
+}
+
+/**
+ * Convert the Box3 object to a box2 object. Basically discards the z components of the Box3's min and max.
+ * @param box3 The Box3 to convert to a Box2.
+ */
+export function convertToBox2(box3: Box3): Box2 {
+    return new Box2(
+        new Vector2(box3.min.x, box3.min.y),
+        new Vector2(box3.max.x, box3.max.y)
+    );
 }

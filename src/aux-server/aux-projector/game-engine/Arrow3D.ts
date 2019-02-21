@@ -24,7 +24,7 @@ import { WorkspaceMesh } from "./WorkspaceMesh";
 
 export class Arrow3D {
 
-    public static DefaultColor: Color = new Color(255,255,255);
+    public static DefaultColor: Color = new Color(1, 1, 1);
     public static DefaultHeadWidth = 0.15;
     public static DefaultHeadLength = 0.3;
 
