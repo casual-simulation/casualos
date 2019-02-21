@@ -16,8 +16,8 @@ export class RealtimeCausalTree<TOp extends AtomOp, T> {
     private _channel: RealtimeChannel<WeaveReference<TOp>>;
 
     /**
-     * 
-     * @param tree 
+     * Creates a new Realtime Causal Tree.
+     * @param tree The tree.
      * @param store 
      * @param channel 
      */
