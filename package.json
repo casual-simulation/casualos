@@ -1,6 +1,7 @@
 {
   "name": "root",
   "private": true,
+  "version": "0.3.0",
   "scripts": {
     "bootstrap": "lerna bootstrap --hoist",
     "watch": "lerna exec --parallel -- npm run watch",
