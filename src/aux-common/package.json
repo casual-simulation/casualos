@@ -1,5 +1,5 @@
 {
-  "name": "aux-common",
+  "name": "@yeti-cgi/aux-common",
   "version": "0.3.0",
   "description": "Common library for AUX projects",
   "main": "lib/index.js",
