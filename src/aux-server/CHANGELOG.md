@@ -1,5 +1,11 @@
 # AUX Server Changelog
 
+## V0.3.2
+### Date: 2/21/2019
+
+### Changes:
+- Implemented a word bubble to help make file labels more readable.
+
 ## V0.3.1
 ### Date: 2/20/2019
 
