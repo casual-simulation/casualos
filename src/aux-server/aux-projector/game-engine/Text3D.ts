@@ -28,7 +28,7 @@ var sdfShader = require('three-bmfont-text/shaders/sdf');
 
 export class Text3D {
 
-    public static Debug_BoundingBox: boolean = true;
+    public static Debug_BoundingBox: boolean = false;
 
     // Map of loaded font textures.
     public static FontTextures: {
