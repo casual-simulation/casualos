@@ -16,10 +16,12 @@ import {
     Matrix4,
     Quaternion,
     Box3Helper,
-    AxesHelper} from "three";
+    AxesHelper,
+    LineBasicMaterial} from "three";
 
 import createBMFont, { TextGeometry, TextGeometryOptions } from "three-bmfont-text";
 import GameView from "../GameView/GameView";
+import { computeBoundingBoxes } from "./utils";
 
 var sdfShader = require('three-bmfont-text/shaders/sdf');
 
@@ -119,47 +121,43 @@ export class Text3D {
         this.updateBoundingBox();
     }
 
-    // private _anchorPosHelper: AxesHelper;
-    // private _meshPosHelper: AxesHelper;
-
     /**
      * Sets the position of the text based on the size of the given object's bounding box.
      */
     public setPositionForObject(obj: Object3D) {
+
         let objBounds = new Box3().setFromObject(obj);
-        let size = new Vector3();
-        objBounds.getSize(size);
+        if (objBounds.isEmpty())
+            return;
 
-        
+        this._mesh.position.set(0, 0, 0);
+
+        let myMinLocal = this._mesh.worldToLocal(this._boundingBox.min.clone());
+        let myMaxLocal = this._mesh.worldToLocal(this._boundingBox.max.clone());
+
+        let myBottomCenterLocal = new Vector3(
+            ((myMaxLocal.x - myMinLocal.x) / 2) + myMinLocal.x,
+            myMinLocal.y,
+            myMinLocal.z
+        );
+
+        // let posOffset = this._mesh.position.clone().sub(myBottomCenterLocal);
+        let posOffset = this._mesh.position.clone().sub(myBottomCenterLocal);
+        // Invert the y offset, we are rotated 180 degrees around the x-axis which makes the y upside down.
+        posOffset.y = -posOffset.y; 
+
+        // Position the mesh some distance above the given object's bounding box.
+        let objSize = new Vector3();
+        objBounds.getSize(objSize);
+
         let paddingScalar = this._anchor.scale.x / Text3D.defaultScale;
-        const maxScalar = 10;
-        if (paddingScalar > maxScalar) {
-            paddingScalar = maxScalar;
-        }
         
+        objSize.add(new Vector3(0, Text3D.extraSpacing * paddingScalar, 0));
+        objSize.divide(this._anchor.scale);
+        this._mesh.position.set(0, objSize.y, 0);
+        this._mesh.position.add(posOffset);
 
-        size.add(new Vector3(0, Text3D.extraSpacing * paddingScalar, 0));
-        size.y /= this._anchor.scale.y;
-        this._mesh.position.set(-Text3D.defaultWidth / 2, size.y, 0);
         this.updateBoundingBox();
-
-        // if (!this._meshPosHelper) {
-        //     this._meshPosHelper = new AxesHelper(.5);
-        //     this._gameView.scene.add(this._meshPosHelper);
-        // }
-
-        // let meshWorldPos = new Vector3();
-        // this._mesh.getWorldPosition(meshWorldPos);
-        // this._meshPosHelper.position.copy(meshWorldPos);
-
-        // if (!this._anchorPosHelper) {
-        //     this._anchorPosHelper = new AxesHelper(1);
-        //     this._gameView.scene.add(this._anchorPosHelper);
-        // }
-
-        // let anchorWorldPos = new Vector3();
-        // this._anchor.getWorldPosition(anchorWorldPos);
-        // this._anchorPosHelper.position.copy(anchorWorldPos);
     }
 
     /**

@@ -35,8 +35,6 @@ export class WordBubble3D extends Object3D {
     private _shapeMeshMaterial: MeshBasicMaterial;
     private _shapeMesh: Mesh;
 
-    // private _posHelper: AxesHelper;
-    // private _arrowPointHelper: AxesHelper;
     private _options: WordBubbleOptions;
 
     constructor(opt?: WordBubbleOptions) {
@@ -50,7 +48,7 @@ export class WordBubble3D extends Object3D {
             paddingWidth: 0.02,
             paddingHeight: 0.02,
             cornerRadius: 0,
-            color: new Color(0.8, 0.8, 0.8)
+            color: new Color(1, 1, 1)
         }
     }
 
@@ -88,18 +86,9 @@ export class WordBubble3D extends Object3D {
         const arrowPointLocal = this.worldToLocal(arrowPoint.clone());
 
         // Clamp arrow width to the size of the box if the box is smaller than the defualt arrow width.
-        let arrowWidth = 0.2;
+        const arrowWidthPct = 0.3;
         const boxWidth = maxLocal.x - minLocal.x;
-        if (boxWidth < arrowWidth) {
-            arrowWidth = boxWidth / 2;
-        }
-
-        // DEBUG ARROW POINT:
-        // if (!this._arrowPointHelper) {
-        //     this._arrowPointHelper = new AxesHelper(1);
-        //     this.add(this._arrowPointHelper);
-        // }
-        // this._arrowPointHelper.position.copy(arrowPointLocal);
+        const arrowWidth = boxWidth * arrowWidthPct;
 
         // Generate base word bubble mesh.
         let shape = new Shape();
