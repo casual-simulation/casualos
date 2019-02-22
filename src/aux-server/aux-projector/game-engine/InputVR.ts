@@ -135,7 +135,7 @@ export class InputVR {
 
         let controller = event.detail;
         controller.standingMatrix = (<any>this._gameView.renderer.vr).getStandingMatrix();
-        controller.head = this._gameView.camera;
+        controller.head = this._gameView.mainCamera;
         
         let controllerMesh = new ControllerMesh(controller, this);
         this._controllerMeshes.push(controllerMesh);

@@ -51,7 +51,7 @@ export class FileDragOperation extends BaseFileDragOperation {
     }
 
     protected _dragWorkspace() {
-        const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.camera);
+        const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.mainCamera);
         const point = Physics.pointOnPlane(mouseDir, this._gameView.groundPlane);
 
         if (point) {

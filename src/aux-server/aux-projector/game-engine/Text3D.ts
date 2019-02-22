@@ -17,17 +17,18 @@ import {
     Quaternion,
     Box3Helper,
     AxesHelper,
-    LineBasicMaterial} from "three";
+    LineBasicMaterial,
+    Layers} from "three";
 
 import createBMFont, { TextGeometry, TextGeometryOptions } from "three-bmfont-text";
 import GameView from "../GameView/GameView";
-import { computeBoundingBoxes } from "./utils";
+import { setLayer } from "./utils";
 
 var sdfShader = require('three-bmfont-text/shaders/sdf');
 
 export class Text3D {
 
-    public static Debug_BoundingBox: boolean = false;
+    public static Debug_BoundingBox: boolean = true;
 
     // Map of loaded font textures.
     public static FontTextures: {
@@ -73,6 +74,11 @@ export class Text3D {
     get boundingBox(): Box3 { return (this._boundingBox && this._anchor.visible) ? this._boundingBox.clone() : new Box3(); }
 
     /**
+     * The Three JS Layers object for this Text 3D.
+     */
+    get layers(): Layers { return this._anchor.layers; }
+
+    /**
      * Create text 3d.
      * @param parent the object3d the text will be parented to. This can be the scene or another object3d.
      * @param fontData  the bmfont data in json format
@@ -102,8 +108,8 @@ export class Text3D {
             map: texture,
             side: DoubleSide,
             transparent: true,
-            depthTest: false,
-            depthWrite: false,
+            // depthTest: false,
+            // depthWrite: false,
             color: new Color(0, 0, 0)
         }));
 
@@ -138,7 +144,7 @@ export class Text3D {
         let myBottomCenterLocal = new Vector3(
             ((myMaxLocal.x - myMinLocal.x) / 2) + myMinLocal.x,
             myMinLocal.y,
-            myMinLocal.z
+            ((myMaxLocal.z - myMinLocal.z) / 2) + myMinLocal.z
         );
 
         // let posOffset = this._mesh.position.clone().sub(myBottomCenterLocal);
@@ -284,6 +290,10 @@ export class Text3D {
 
         this._anchor.rotation.copy(nextRotation);
         this.updateBoundingBox();
+    }
+
+    public setLayer(layer: number) {
+        setLayer(this._anchor, layer, true);
     }
 
     private _updateDebugBoundingBox() {

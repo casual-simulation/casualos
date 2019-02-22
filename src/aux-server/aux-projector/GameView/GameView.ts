@@ -28,7 +28,8 @@ import {
   Vector3,
   GridHelper,
   Quaternion,
-  Matrix4
+  Matrix4,
+  Layers
 } from 'three';
 
 import VRControlsModule from 'three-vrcontrols-module';
@@ -64,6 +65,7 @@ import { getUserMode, createFile, doFilesAppearEqual } from 'aux-common/Files/Fi
 import App from '../App/App';
 import MiniFile from '../MiniFile/MiniFile';
 import { FileRenderer } from '../game-engine/FileRenderer';
+import { debugLayersToString } from '../game-engine/utils';
 
 @Component({
   components: {
@@ -73,7 +75,8 @@ import { FileRenderer } from '../game-engine/FileRenderer';
 export default class GameView extends Vue {
   private _debug: boolean;
   private _scene: Scene;
-  private _camera: PerspectiveCamera;
+  private _mainCamera: PerspectiveCamera;
+  private _uiWorldCamera: PerspectiveCamera;
   private _renderer: WebGLRenderer;
 
   private _enterVr: any;
@@ -98,6 +101,9 @@ export default class GameView extends Vue {
   public onFileAdded: ArgEvent<File3D> = new ArgEvent<File3D>();
   public onFileUpdated: ArgEvent<File3D> = new ArgEvent<File3D>();
   public onFileRemoved: ArgEvent<File3D> = new ArgEvent<File3D>();
+
+  public static readonly Layer_Default: number = 0;
+  public static readonly Layer_UIWorld: number = 1;
 
   /**
    * A map of file IDs to files and meshes.
@@ -162,7 +168,7 @@ export default class GameView extends Vue {
   get input(): Input { return this._input; }
   get inputVR(): InputVR { return this._inputVR; }
   get interactionManager(): InteractionManager { return this._interaction; }
-  get camera(): PerspectiveCamera { return this._camera; }
+  get mainCamera(): PerspectiveCamera { return this._mainCamera; }
   get scene(): Scene { return this._scene; }
   get renderer() { return this._renderer; } 
   get dev() { return !PRODUCTION; }
@@ -315,60 +321,7 @@ export default class GameView extends Vue {
       }
     }
 
-    if (this.vrDisplay && this.vrDisplay.isPresenting) {
-
-      this._vrControls.update();
-      this._renderer.render(this._scene, this._camera);
-      this._vrEffect.render(this._scene, this._camera);
-
-    } else if(this.xrSession && xrFrame) {
-
-      // Update XR stuff
-      this._renderer.autoClear = false;
-      this._scene.background = null;
-      this._renderer.setSize(this.xrSession.baseLayer.framebufferWidth, this.xrSession.baseLayer.framebufferHeight, false)
-      this._renderer.setClearColor('#000', 0);
-      this._renderer.clear();
-
-      this._camera.matrixAutoUpdate = false;
-
-      for (const view of xrFrame.views) {
-        // Each XRView has its own projection matrix, so set the _camera to use that
-        let matrix = new Matrix4();
-        matrix.fromArray(view.viewMatrix);
-
-        let position = new Vector3();
-        position.setFromMatrixPosition(matrix);
-        position.multiplyScalar(10);
-
-        // Move the player up about a foot above the world.
-        position.add(new Vector3(0, 2, 3));
-        this._camera.position.copy(position);
-
-        let rotation = new Quaternion();
-        rotation.setFromRotationMatrix(matrix);
-        this._camera.setRotationFromQuaternion(rotation);
-
-        this._camera.updateMatrix();
-        this._camera.updateMatrixWorld(false);
-
-        this._camera.projectionMatrix.fromArray(view.projectionMatrix);
-  
-        // Set up the _renderer to the XRView's viewport and then render
-        
-        this._renderer.clearDepth();
-        const viewport = view.getViewport(this.xrSession.baseLayer);
-        this._renderer.setViewport(viewport.x, viewport.y, viewport.width, viewport.height);
-        this._renderer.render(this._scene, this._camera);
-      }
-
-    } else {
-
-      this._renderer.autoClear = true;
-      this._camera.matrixAutoUpdate = true;
-      this._renderer.render(this._scene, this._camera);
-
-    }
+    this._renderUpdate(xrFrame);
 
     // console.log(this._camera.position);
 
@@ -387,6 +340,72 @@ export default class GameView extends Vue {
       requestAnimationFrame(() => this._frameUpdate());
 
     }
+  }
+
+  private _renderUpdate(xrFrame?: any) {
+
+    if (this.vrDisplay && this.vrDisplay.isPresenting) {
+
+      this._vrControls.update();
+      this._renderCore();
+      this._vrEffect.render(this._scene, this._mainCamera);
+
+    } else if(this.xrSession && xrFrame) {
+
+      // Update XR stuff
+      this._scene.background = null;
+      this._renderer.setSize(this.xrSession.baseLayer.framebufferWidth, this.xrSession.baseLayer.framebufferHeight, false)
+      this._renderer.setClearColor('#000', 0);
+
+      this._mainCamera.matrixAutoUpdate = false;
+
+      for (const view of xrFrame.views) {
+        // Each XRView has its own projection matrix, so set the _camera to use that
+        let matrix = new Matrix4();
+        matrix.fromArray(view.viewMatrix);
+
+        let position = new Vector3();
+        position.setFromMatrixPosition(matrix);
+        position.multiplyScalar(10);
+
+        // Move the player up about a foot above the world.
+        position.add(new Vector3(0, 2, 3));
+        this._mainCamera.position.copy(position);
+
+        let rotation = new Quaternion();
+        rotation.setFromRotationMatrix(matrix);
+        this._mainCamera.setRotationFromQuaternion(rotation);
+
+        this._mainCamera.updateMatrix();
+        this._mainCamera.updateMatrixWorld(false);
+
+        this._mainCamera.projectionMatrix.fromArray(view.projectionMatrix);
+  
+        // Set up the _renderer to the XRView's viewport and then render
+        const viewport = view.getViewport(this.xrSession.baseLayer);
+        this._renderer.setViewport(viewport.x, viewport.y, viewport.width, viewport.height);
+        
+        this._renderCore();
+      }
+
+    } else {
+
+      this._mainCamera.matrixAutoUpdate = true;
+      this._renderCore();
+    }
+
+  }
+
+  private _renderCore(): void {
+    this._renderer.clear();
+    this._renderer.render(this._scene, this._mainCamera);
+
+    // Set the background color to null when rendering the ui world camera.
+    const originalBackground = this._scene.background.clone();
+    this._scene.background = null;
+    this._renderer.clearDepth(); // Clear depth buffer so that ui objects dont 
+    this._renderer.render(this._scene, this._uiWorldCamera);
+    this._scene.background = originalBackground;
   }
 
   /**
@@ -549,12 +568,24 @@ export default class GameView extends Vue {
       this.scene.background = new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
     }
     
-    // User's camera
-    this._camera = new PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 20000);
-    this._camera.position.z = 5;
-    this._camera.position.y = 3;
-    this._camera.rotation.x = ThreeMath.degToRad(-30);
-    this._camera.updateMatrixWorld(false);
+    // Main camera
+    this._mainCamera = new PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 20000);
+    this._mainCamera.position.z = 5;
+    this._mainCamera.position.y = 3;
+    this._mainCamera.rotation.x = ThreeMath.degToRad(-30);
+    this._mainCamera.layers.enable(GameView.Layer_Default);
+
+    // UI World camera.
+    // This camera is parented to the main camera.
+    this._uiWorldCamera = new PerspectiveCamera(this._mainCamera.fov, this._mainCamera.aspect, this._mainCamera.near, this._mainCamera.far);
+    this._mainCamera.add(this._uiWorldCamera);
+    this._uiWorldCamera.position.set(0,0,0);
+    this._uiWorldCamera.rotation.set(0,0,0);
+
+    // Ui World camera only draws objects on the 'UI World Layer'.
+    this._uiWorldCamera.layers.set(GameView.Layer_UIWorld);
+
+    this._mainCamera.updateMatrixWorld(true);
     
     this._resizeCamera();
     this._setupRenderer();
@@ -591,44 +622,6 @@ export default class GameView extends Vue {
     this._gridMesh = new GridHelper(1000, 300, 0xBBBBBB, 0xBBBBBB);
     this._gridMesh.visible = false;
     this._scene.add(this._gridMesh);
-    
-    // var gltfLoader = new GLTFLoader();
-    // gltfLoader.load(groundModelPath, gltf => {
-    //   gltf.scene.traverse((child) => {
-    //     if ((<any>child).isMesh) {
-    //       this._groundPlaneMesh = <Mesh>child;
-    //       this._groundPlaneMesh.castShadow = false;
-    //       this._groundPlaneMesh.receiveShadow = true;
-    //       this._groundPlaneMesh.position.x = 0;
-    //       this._groundPlaneMesh.position.y = 0;
-    //       this._groundPlaneMesh.position.x = 0;
-    //       this._groundPlaneMesh.rotation.x = ThreeMath.DEG2RAD * -90;
-    //       this._groundPlaneMesh.visible = false;
-    //       this._groundPlaneMesh.updateMatrixWorld(false);
-
-    //       // Scale up the workspace plane.
-    //       this._groundPlaneMesh.scale.multiplyScalar(18000);
-
-    //       this._scene.add(this._groundPlaneMesh);
-    //       return;
-    //     }
-    //   });
-    // });
-
-    // // Skydome
-    // const skydomeGeometry = new SphereBufferGeometry(9000, 64, 8, 0, Math.PI * 2, 0, Math.PI * 0.5);
-    // const skydomeTexture = new TextureLoader().load(skyTexturePath);
-    // const skydomeMaterial = new MeshBasicMaterial({
-    //   side: BackSide,
-    //   map: skydomeTexture,
-    // });
-
-    // this._skydomeMesh = new Mesh(skydomeGeometry, skydomeMaterial);
-    // this._skydomeMesh.castShadow = false;
-    // this._skydomeMesh.receiveShadow = false;
-    // this._skydomeMesh.position.set(0, 0, 0);
-
-    // this._scene.add(this._skydomeMesh);
   }
 
   private _setupRenderer() {
@@ -637,6 +630,7 @@ export default class GameView extends Vue {
       antialias: true,
       alpha: true
     });
+    webGlRenderer.autoClear = false;
     webGlRenderer.shadowMap.enabled = false;
     webGlRenderer.shadowMap.type = PCFSoftShadowMap;
 
@@ -654,7 +648,7 @@ export default class GameView extends Vue {
       this._renderer.shadowMap.enabled = false;
 
       // VR controls
-      this._vrControls = new VRControlsModule(this._camera);
+      this._vrControls = new VRControlsModule(this._mainCamera);
       this._vrControls.standing = true;
   
       // Create VR Effect rendering in stereoscopic mode
@@ -838,10 +832,10 @@ export default class GameView extends Vue {
     this._vrEffect = null; 
     
     // reset camera back to default position.
-    this._camera.position.z = 5;
-    this._camera.position.y = 3;
-    this._camera.rotation.x = ThreeMath.degToRad(-30);
-    this._camera.updateMatrixWorld(false);
+    this._mainCamera.position.z = 5;
+    this._mainCamera.position.y = 3;
+    this._mainCamera.rotation.x = ThreeMath.degToRad(-30);
+    this._mainCamera.updateMatrixWorld(false);
   }
 
   private _handleErrorVR(error: any) {
@@ -866,8 +860,11 @@ export default class GameView extends Vue {
 
   private _resizeCamera() {
     const { width, height } = this._calculateSize();
-    this._camera.aspect = width / height;
-    this._camera.updateProjectionMatrix();
+    this._mainCamera.aspect = width / height;
+    this._mainCamera.updateProjectionMatrix();
+
+    this._uiWorldCamera.aspect = this._mainCamera.aspect;
+    this._uiWorldCamera.updateProjectionMatrix();
   }
 
   private _resizeVR() {

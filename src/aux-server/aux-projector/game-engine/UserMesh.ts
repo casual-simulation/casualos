@@ -114,6 +114,7 @@ export class UserMesh extends GameObject {
             this.camera = new PerspectiveCamera(60, 1, 0.1, 0.5);
             this.cameraHelper = new CameraHelper(this.camera);
             this.label = createLabel(this._gameView, this.cameraHelper);
+            this.label.setLayer(GameView.Layer_UIWorld);
             this.label.setScale(Text3D.defaultScale * 2);
             this.label.setRotation(0, 180, 0);
             this.container.add(this.cameraHelper);
@@ -145,8 +146,8 @@ export class UserMesh extends GameObject {
             this._isActive());
 
         if(isOwnFile) {
-            const camPosition = this._gameView.camera.position;
-            const camRotation = this._gameView.camera.rotation;
+            const camPosition = this._gameView.mainCamera.position;
+            const camRotation = this._gameView.mainCamera.rotation;
             const camRotationVector = new Vector3(0, 0, 1).applyEuler(camRotation);
             const currentPosition = this.file.tags._position;
             

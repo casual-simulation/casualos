@@ -1,4 +1,4 @@
-import { Vector3, MeshBasicMaterial, SphereBufferGeometry, Mesh, Object3D, Scene, Matrix4, Box2, Vector2, Box3 } from "three";
+import { Vector3, MeshBasicMaterial, SphereBufferGeometry, Mesh, Object3D, Scene, Matrix4, Box2, Vector2, Box3, Layers } from "three";
 import { Text3D } from "./Text3D";
 import robotoFont from '../public/bmfonts/Roboto.json';
 import robotoTexturePath from '../public/bmfonts/Roboto.png';
@@ -56,4 +56,51 @@ export function convertToBox2(box3: Box3): Box2 {
         new Vector2(box3.min.x, box3.min.y),
         new Vector2(box3.max.x, box3.max.y)
     );
+}
+
+/**
+ * Set the layer number that the given object 3d is on (and optionally all of its children too).
+ * @param obj The root object 3d to change the layer.
+ * @param layer The layer to set the object 3d to.
+ * @param children Should change all children of given object 3d as well?
+ */
+export function setLayer(obj: Object3D, layer: number, children?: boolean) {
+    obj.layers.set(layer);
+    if (children) {
+        obj.traverse((child) => {
+            child.layers.set(layer);
+        });
+    }
+}
+
+/**
+ * Set the layer mask of the given object 3d (and optionally all of its children too).
+ * @param obj The root object 3d to change the layer.
+ * @param layerMask The layer mask to set the object 3d to.
+ * @param children Should change all children of given object 3d as well?
+ */
+export function setLayerMask(obj: Object3D, layerMask: number, children?: boolean) {
+    obj.layers.mask = layerMask;
+    if (children) {
+        obj.traverse((child) => {
+            child.layers.mask = layerMask;
+        });
+    }
+}
+
+/**
+ * Debug print out all 32 layers for this object and wether or not it belongs to them.
+ * @param obj The object to print out layers for.
+ */
+export function debugLayersToString(obj: Object3D): string {
+    if (!obj) return;
+
+    let output: string = "\n";
+    for (let i = 0; i < 32; i++) {
+        let l = new Layers();
+        l.set(i);
+        output += "[" + i + "]  " + obj.layers.test(l) + "\n";
+    }
+
+    return output;
 }

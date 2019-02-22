@@ -13,7 +13,7 @@ import { find, flatMap, sumBy, sortBy } from "lodash";
 import { isArray, parseArray, isFormula, getShortId, fileFromShortId, objectsAtGridPosition, FileCalculationContext, calculateFileValue, calculateNumericalTagValue } from 'aux-common/Files/FileCalculations'
 import { appManager } from '../AppManager';
 import { FileManager } from "../FileManager";
-import { createLabel, convertToBox2 } from "./utils";
+import { createLabel, convertToBox2, setLayer } from "./utils";
 import { WorkspaceMesh } from "./WorkspaceMesh";
 import { WordBubble3D } from "./WordBubble3D";
 
@@ -113,9 +113,11 @@ export class FileMesh extends GameObject {
 
             if (this._gameView) {
                 this.label = createLabel(this._gameView, this);
+                this.label.setLayer(GameView.Layer_UIWorld);
             }
 
             this.wordBubble = new WordBubble3D({cornerRadius: 0});
+            setLayer(this.wordBubble, GameView.Layer_UIWorld, true);
             this.add(this.wordBubble);
         }
         this.file = (<Object>file) || this.file;
@@ -287,7 +289,7 @@ export class FileMesh extends GameObject {
         if (this.file.tags['label.size.mode']) {
             let mode = appManager.fileManager.calculateFileValue(this.file, 'label.size.mode');
             if (mode === 'auto') {
-                const distanceToCamera = this._gameView.camera.position.distanceTo(this.label.getWorldPosition());
+                const distanceToCamera = this._gameView.mainCamera.position.distanceTo(this.label.getWorldPosition());
                 const extraScale = distanceToCamera / Text3D.virtualDistance;
                 const finalScale = labelSize * extraScale;
                 this.label.setScale(finalScale);

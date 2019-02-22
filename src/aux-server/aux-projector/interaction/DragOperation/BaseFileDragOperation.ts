@@ -107,7 +107,7 @@ export abstract class BaseFileDragOperation implements IOperation {
     }
 
     protected _dragFiles() {
-        const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.camera);
+        const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.mainCamera);
         const { good, gridPosition, height, workspace } = this._interaction.pointOnGrid(mouseDir);
 
         if (this._files.length > 0) {
@@ -136,7 +136,7 @@ export abstract class BaseFileDragOperation implements IOperation {
     }
 
     protected _dragFilesFree(): void {
-        const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.camera);
+        const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.mainCamera);
         const firstFileExists = this._gameView.getFile(this._files[0].id) !== undefined;
         
         if (firstFileExists) {
@@ -147,7 +147,7 @@ export abstract class BaseFileDragOperation implements IOperation {
 
                 // Calculate the distance to perform free drag at.
                 const fileWorldPos = fileMeshes[0].getWorldPosition(new Vector3());
-                const cameraWorldPos = this._gameView.camera.getWorldPosition(new Vector3());
+                const cameraWorldPos = this._gameView.mainCamera.getWorldPosition(new Vector3());
                 this._freeDragDistance = cameraWorldPos.distanceTo(fileWorldPos);
             }
 

@@ -72,7 +72,7 @@ export class NewFileDragOperation extends BaseFileDragOperation {
                 this._initialDragMesh = this._createDragMesh(this._file);
             }
 
-            const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.camera);
+            const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.mainCamera);
             let worldPos = Physics.pointOnRay(mouseDir, NewFileDragOperation.FreeDragDistance);
             this._initialDragMesh.position.copy(worldPos);
             this._initialDragMesh.updateMatrixWorld(true);

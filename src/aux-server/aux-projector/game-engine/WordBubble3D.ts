@@ -28,6 +28,7 @@ import { File3D } from "./File3D";
 import { FileMesh } from "./FileMesh";
 import { WorkspaceMesh } from "./WorkspaceMesh";
 import { merge } from "aux-common/utils";
+import { setLayer, setLayerMask } from "./utils";
 
 export class WordBubble3D extends Object3D {
 
@@ -113,12 +114,18 @@ export class WordBubble3D extends Object3D {
         // Material for word bubble.
         this._shapeMeshMaterial = new MeshBasicMaterial({
             side: DoubleSide,
+            // depthWrite: false,
+            // depthTest: false,
             color: this._options.color
         });
 
         this._shapeGeometry = new ShapeBufferGeometry(shape, 12);
         this._shapeMesh = new Mesh(this._shapeGeometry, this._shapeMeshMaterial);
+        setLayerMask(this._shapeMesh, this.layers.mask, true);
         this.add(this._shapeMesh);
+
+        // Nudge the shape mesh back so that meshes that we encapsulated can render 'on top'.
+        this._shapeMesh.position.set(0, 0, -0.01);
     }
 
     public frameUpdate() {
