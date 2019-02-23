@@ -6,12 +6,18 @@ import { InteractionManager } from '../InteractionManager';
 import { Ray, Intersection, Vector2, Vector3, Box3, AxesHelper, Group, Object3D } from 'three';
 import { Physics } from '../../game-engine/Physics';
 import { WorkspaceMesh } from '../../game-engine/WorkspaceMesh';
-import { File, Workspace, Object, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated, PartialFile, FileEvent } from 'aux-common/Files';
-import { keys, minBy, flatMap } from 'lodash';
-import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance, posToKey } from '../../game-engine/hex';
-import { isFormula, updateFile } from 'aux-common/Files/FileCalculations';
-import { FileManager } from '../../FileManager';
-import { Result } from 'range-parser';
+import { 
+    File, 
+    Workspace, 
+    Object, 
+    DEFAULT_WORKSPACE_SCALE, 
+    fileRemoved, 
+    fileUpdated, 
+    PartialFile, 
+    FileEvent,
+    updateFile
+} from '@yeti-cgi/aux-common';
+
 import { setParent } from '../../game-engine/utils';
 import { FileMesh } from '../../game-engine/FileMesh';
 

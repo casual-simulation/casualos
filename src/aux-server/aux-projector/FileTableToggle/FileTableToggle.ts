@@ -1,7 +1,7 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Provide, Prop, Inject, Watch} from 'vue-property-decorator';
-import {File, Object} from 'aux-common/Files';
+import {File, Object} from '@yeti-cgi/aux-common';
 
 @Component({
     components: {

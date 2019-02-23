@@ -1,25 +1,10 @@
-import {
-    Math as ThreeMath,
-    Mesh,
-    Group,
-    BoxBufferGeometry,
-    MeshStandardMaterial,
-    LineBasicMaterial,
-    Object3D,
-    TextureLoader,
-    DoubleSide,
-    MeshBasicMaterial,
-    Color
-} from "three";
-
-import { File, Object, Workspace } from 'aux-common/Files'
-import { Text3D } from './Text3D';
+import { File, Object, Workspace } from '@yeti-cgi/aux-common'
+import { ArgEvent } from '@yeti-cgi/aux-common/Events';
 
 // Assets
 import GameView from "../GameView/GameView";
 import { WorkspaceMesh } from "./WorkspaceMesh";
 import { FileMesh } from "./FileMesh";
-import { ArgEvent } from 'aux-common/Events';
 import { UserMesh } from "./UserMesh";
 
 /**

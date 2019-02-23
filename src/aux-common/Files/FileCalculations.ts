@@ -16,7 +16,7 @@ import {
 import { Sandbox } from '../Formulas/Sandbox';
 
 /// <reference path="../typings/global.d.ts" />
-import formulaLib from 'aux-common/Formulas/formula-lib';
+import formulaLib from '@yeti-cgi/aux-common/Formulas/formula-lib';
 import { FilterFunction, SandboxInterface } from '../Formulas/SandboxInterface';
 import { PartialFile } from '../Files';
 import { FilesState } from './FilesChannel';

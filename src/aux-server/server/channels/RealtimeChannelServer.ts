@@ -1,6 +1,6 @@
-import { RealtimeChannel } from "aux-common/channels-core/RealtimeChannel";
-import { SubscriptionLike } from "rxjs";
-import { tap } from "rxjs/operators";
+import { RealtimeChannel } from '@yeti-cgi/aux-common/channels-core/RealtimeChannel';
+import { SubscriptionLike } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 interface ChannelSub {
     sub: SubscriptionLike;

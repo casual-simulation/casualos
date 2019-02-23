@@ -3,14 +3,17 @@ import {Observable, Subject, BehaviorSubject, Observer} from 'rxjs';
 import {filter, switchMap} from 'rxjs/operators';
 import {appManager} from './AppManager';
 
-import {ChannelClient, StoreFactory, ChannelConnection, ChannelInfo} from 'aux-common/channels-core';
-import {SocketIOConnector} from './channels';
 import {
+    ChannelClient, 
+    StoreFactory, 
+    ChannelConnection, 
+    ChannelInfo,
     FileEvent,
     FilesState,
     storeFactory,
     channelTypes,
-} from 'aux-common/Files';
+} from '@yeti-cgi/aux-common';
+import {SocketIOConnector} from './channels';
 
 export class SocketManager {
     private _socket: SocketIOClient.Socket;

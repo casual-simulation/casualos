@@ -1,6 +1,6 @@
-import { Vector3, Vector2 } from "three";
-import { range } from "lodash";
-import { Axial } from "./Axial";
+import { Vector3, Vector2 } from 'three';
+import { range } from 'lodash';
+import { Axial } from './Axial';
 
 // (kal)
 // Lots taken from https://www.redblobgames.com/grids/hexagons/

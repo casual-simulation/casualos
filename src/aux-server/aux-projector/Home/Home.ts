@@ -2,17 +2,21 @@ import Vue from 'vue';
 import { Chrome } from 'vue-color';
 import Component from 'vue-class-component';
 import { Inject, Watch } from 'vue-property-decorator';
-import { Object, File, UserMode, DEFAULT_USER_MODE, Workspace} from 'aux-common/Files';
+import { 
+    Object,
+    File,
+    getUserMode,
+    UserMode,
+    DEFAULT_USER_MODE,
+    Workspace
+} from '@yeti-cgi/aux-common';
 import GameView from '../GameView/GameView';
-import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';
 import FileTable from '../FileTable/FileTable';
 import ColorPicker from '../ColorPicker/ColorPicker';
 import { ContextMenuEvent } from '../interaction/ContextMenuEvent';
 import TagEditor from '../TagEditor/TagEditor';
 import { SubscriptionLike } from 'rxjs';
-import { cloneDeep } from 'lodash';
-import { getUserMode } from 'aux-common/Files/FileCalculations';
 import { tap } from 'rxjs/operators';
 import FileTableToggle from '../FileTableToggle/FileTableToggle';
 

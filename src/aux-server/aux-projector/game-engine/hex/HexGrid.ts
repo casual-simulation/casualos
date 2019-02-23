@@ -1,7 +1,7 @@
-import { Vector2 } from "three";
-import { Axial } from "./Axial";
-import { hexWidth } from "./Hex";
-import { keys, values } from "lodash";
+import { Vector2 } from 'three';
+import { Axial } from './Axial';
+import { hexWidth } from './Hex';
+import { keys, values } from 'lodash';
 
 /**
  * Calcualates the real position of this grid position.

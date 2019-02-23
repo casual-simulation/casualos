@@ -1,9 +1,8 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Inject, Watch, Prop } from 'vue-property-decorator';
-import { Object } from 'aux-common/Files';
+import { Object } from '@yeti-cgi/aux-common';
 import { FileRenderer } from '../game-engine/FileRenderer';
-import { calculateFileValue } from 'aux-common/Files/FileCalculations';
 import { appManager } from '../AppManager';
 
 @Component({

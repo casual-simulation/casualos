@@ -1,7 +1,6 @@
 import Vue from 'vue';
-import { ArgEvent } from 'aux-common/Events';
 import { Vector2, Vector3 } from 'three';
-import { find, findIndex, some } from 'lodash';
+import { find, some } from 'lodash';
 import GameView from '../GameView/GameView';
 
 export class Input {

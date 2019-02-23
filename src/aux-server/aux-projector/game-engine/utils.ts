@@ -1,8 +1,8 @@
-import { Vector3, MeshBasicMaterial, SphereBufferGeometry, Mesh, Object3D, Scene, Matrix4, Box2, Vector2, Box3, Layers } from "three";
-import { Text3D } from "./Text3D";
+import { Vector3, MeshBasicMaterial, SphereBufferGeometry, Mesh, Object3D, Scene, Matrix4, Box2, Vector2, Box3, Layers } from 'three';
+import { Text3D } from './Text3D';
 import robotoFont from '../public/bmfonts/Roboto.json';
 import robotoTexturePath from '../public/bmfonts/Roboto.png';
-import GameView from "../GameView/GameView";
+import GameView from '../GameView/GameView';
 
 export function createSphere(position: Vector3, color: number, size: number = 0.1) {
     const sphereMaterial = new MeshBasicMaterial({
@@ -28,7 +28,7 @@ export function createLabel(gameView: GameView, parent: Object3D): Text3D {
 export function setParent(object3d: Object3D, parent: Object3D, scene: Scene) {
 
     if (!object3d) return;
-    if (!scene) throw new Error("utils.setParent needs a valid scene parameter.");
+    if (!scene) throw new Error('utils.setParent needs a valid scene parameter.');
 
     // Detach
     if (object3d.parent && object3d.parent !== scene) {
@@ -95,11 +95,11 @@ export function setLayerMask(obj: Object3D, layerMask: number, children?: boolea
 export function debugLayersToString(obj: Object3D): string {
     if (!obj) return;
 
-    let output: string = "\n";
+    let output: string = '\n';
     for (let i = 0; i < 32; i++) {
         let l = new Layers();
         l.set(i);
-        output += "[" + i + "]  " + obj.layers.test(l) + "\n";
+        output += '[' + i + ']  ' + obj.layers.test(l) + '\n';
     }
 
     return output;

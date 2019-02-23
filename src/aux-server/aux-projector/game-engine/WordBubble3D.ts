@@ -20,15 +20,10 @@ import {
     MeshBasicMaterial,
     ShapeBufferGeometry,
     Box3Helper,
-    AxesHelper} from "three";
-
-import { Object, Workspace } from 'aux-common/Files';
-import GameView from "../GameView/GameView";
-import { File3D } from "./File3D";
-import { FileMesh } from "./FileMesh";
-import { WorkspaceMesh } from "./WorkspaceMesh";
-import { merge } from "aux-common/utils";
-import { setLayer, setLayerMask } from "./utils";
+    AxesHelper
+} from 'three';
+import { merge } from '@yeti-cgi/aux-common/utils';
+import { setLayerMask } from './utils';
 
 export class WordBubble3D extends Object3D {
 
@@ -75,7 +70,7 @@ export class WordBubble3D extends Object3D {
 
         if (this._options.cornerRadius > 0) {
             // Rounded corners.
-            throw new Error("Rounded corners are not supported yet.");
+            throw new Error('Rounded corners are not supported yet.');
         }
 
         let boxWithPadding = box.clone();

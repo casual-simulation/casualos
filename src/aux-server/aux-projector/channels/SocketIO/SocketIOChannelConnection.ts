@@ -1,8 +1,8 @@
-import { RealtimeChannelConnection } from "aux-common/channels-core/RealtimeChannelConnection";
-import { ConnectionEvent } from "aux-common/channels-core/ConnectionEvent";
-import { Observable, merge, Subject, BehaviorSubject, SubscriptionLike } from "rxjs";
-import { socketEvent } from "./Utils";
-import { map, shareReplay } from "rxjs/operators";
+import { RealtimeChannelConnection } from '@yeti-cgi/aux-common/channels-core/RealtimeChannelConnection';
+import { ConnectionEvent } from '@yeti-cgi/aux-common/channels-core/ConnectionEvent';
+import { Observable, merge, Subject, BehaviorSubject, SubscriptionLike } from 'rxjs';
+import { socketEvent } from './Utils';
+import { map, shareReplay } from 'rxjs/operators';
 
 export class SocketIOChannelConnection implements RealtimeChannelConnection {
 

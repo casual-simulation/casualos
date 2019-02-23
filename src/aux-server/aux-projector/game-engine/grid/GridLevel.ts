@@ -1,5 +1,5 @@
-import { GridTile } from "./GridTile";
-import { Vector3, Box3 } from "three";
+import { GridTile } from './GridTile';
+import { Vector3, Box3 } from 'three';
 
 /**
  * Defines an interface that represents a single level of a square grid.

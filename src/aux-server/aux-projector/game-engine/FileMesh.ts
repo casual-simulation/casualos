@@ -1,18 +1,40 @@
-import { Object3D, Mesh, BoxBufferGeometry, MeshStandardMaterial, Color, Vector3, Box3, Sphere, BufferGeometry, BufferAttribute, LineBasicMaterial, LineSegments, SphereGeometry, MeshBasicMaterial, DoubleSide, Box3Helper, Box2, Vector2 } from "three";
-import { Object, File, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_GRID_SCALE } from 'aux-common/Files';
+import {
+    Object3D,
+    Mesh, 
+    BoxBufferGeometry,
+    MeshStandardMaterial,
+    Color,
+    Vector3,
+    Box3,
+    Sphere,
+    BufferGeometry,
+    BufferAttribute,
+    LineBasicMaterial,
+    LineSegments
+} from "three";
+import { 
+    Object,
+    File,
+    DEFAULT_WORKSPACE_SCALE,
+    DEFAULT_WORKSPACE_GRID_SCALE,
+    isArray,
+    parseArray,
+    isFormula,
+    fileFromShortId,
+    objectsAtGridPosition,
+    FileCalculationContext,
+    calculateFileValue,
+    calculateNumericalTagValue
+} from '@yeti-cgi/aux-common/Files';
+import { ArgEvent } from '@yeti-cgi/aux-common/Events';
 import { GameObject } from "./GameObject";
 import GameView from '../GameView/GameView';
 import { calculateGridTileLocalCenter } from "./grid/Grid";
 import { Text3D } from "./Text3D";
-import robotoFont from '../public/bmfonts/Roboto.json';
-import robotoTexturePath from '../public/bmfonts/Roboto.png';
 import { File3D } from "./File3D";
-import { ArgEvent } from 'aux-common/Events';
 import { Arrow3D } from "./Arrow3D";
 import { find, flatMap, sumBy, sortBy } from "lodash";
-import { isArray, parseArray, isFormula, getShortId, fileFromShortId, objectsAtGridPosition, FileCalculationContext, calculateFileValue, calculateNumericalTagValue } from 'aux-common/Files/FileCalculations'
 import { appManager } from '../AppManager';
-import { FileManager } from "../FileManager";
 import { createLabel, convertToBox2, setLayer } from "./utils";
 import { WorkspaceMesh } from "./WorkspaceMesh";
 import { WordBubble3D } from "./WordBubble3D";

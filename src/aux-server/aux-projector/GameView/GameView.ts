@@ -46,7 +46,19 @@ import {
   concatMap, tap,
 } from 'rxjs/operators';
 
-import { File, Object, Workspace, DEFAULT_WORKSPACE_HEIGHT_INCREMENT, DEFAULT_USER_MODE, UserMode, DEFAULT_SCENE_BACKGROUND_COLOR } from 'aux-common/Files';
+import { 
+  File,
+  Object,
+  Workspace,
+  DEFAULT_WORKSPACE_HEIGHT_INCREMENT,
+  DEFAULT_USER_MODE,
+  UserMode,
+  DEFAULT_SCENE_BACKGROUND_COLOR,
+  getUserMode,
+  createFile,
+  doFilesAppearEqual
+} from '@yeti-cgi/aux-common';
+import { ArgEvent } from '@yeti-cgi/aux-common/Events';
 import { Time } from '../game-engine/Time';
 import { Input, InputType } from '../game-engine/Input';
 import { InputVR } from '../game-engine/InputVR';
@@ -56,16 +68,12 @@ import { File3D } from '../game-engine/File3D';
 // import groundModelPath from '../public/models/ground.gltf';
 import { appManager } from '../AppManager';
 import { InteractionManager } from '../interaction/InteractionManager';
-import { ArgEvent } from 'aux-common/Events';
 import { WorkspaceMesh, WorkspaceMeshDebugInfo } from '../game-engine/WorkspaceMesh';
 import { GridChecker } from '../game-engine/grid/GridChecker';
-import { FileMesh } from '../game-engine/FileMesh';
 import { values, flatMap, find, findIndex, debounce } from 'lodash';
-import { getUserMode, createFile, doFilesAppearEqual } from 'aux-common/Files/FileCalculations';
 import App from '../App/App';
 import MiniFile from '../MiniFile/MiniFile';
 import { FileRenderer } from '../game-engine/FileRenderer';
-import { debugLayersToString } from '../game-engine/utils';
 
 @Component({
   components: {

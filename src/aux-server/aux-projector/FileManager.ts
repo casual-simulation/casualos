@@ -31,8 +31,6 @@ import {
   ResolvedConflict,
   DEFAULT_USER_MODE,
   DEFAULT_SCENE_BACKGROUND_COLOR,
-} from 'aux-common/Files';
-import { 
   filterFilesBySelection, 
   createWorkspace, 
   FileCalculationContext,
@@ -45,10 +43,9 @@ import {
   calculateFileValue,
   createFile,
   isDestroyed,
-  getActiveObjects
-} from 'aux-common/Files/FileCalculations';
-import { merge as mergeObj } from 'aux-common/utils';
-import {ChannelConnection} from 'aux-common/channels-core';
+  getActiveObjects,
+  ChannelConnection
+} from '@yeti-cgi/aux-common';
 import {
   findIndex, 
   flatMap, 
@@ -89,7 +86,6 @@ import uuid from 'uuid/v4';
 import {AppManager, appManager} from './AppManager';
 import {SocketManager} from './SocketManager';
 import { SentryError } from '@sentry/core';
-import { calculateObjectPosition } from './game-engine/FileMesh';
 
 export interface SelectedFilesUpdatedEvent { files: Object[]; }
 

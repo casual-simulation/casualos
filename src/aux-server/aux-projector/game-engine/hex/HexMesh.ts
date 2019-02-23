@@ -1,7 +1,7 @@
-import { hex } from "./Hex";
-import { Mesh, BufferGeometry, ExtrudeBufferGeometry, Shape, Material, MeshStandardMaterial, Matrix4, Vector3, MeshBasicMaterial, Color, Box3, Sphere } from "three";
-import { Axial } from "./Axial";
-import { gridPosToRealPos } from "./HexGrid";
+import { hex } from './Hex';
+import { Mesh, BufferGeometry, ExtrudeBufferGeometry, Shape, Material, MeshStandardMaterial, Matrix4, Vector3, MeshBasicMaterial, Color, Box3, Sphere } from 'three';
+import { Axial } from './Axial';
+import { gridPosToRealPos } from './HexGrid';
 
 /**
  * Defines a class that represents a 3D Hex.
@@ -76,7 +76,7 @@ export class HexMesh extends Mesh {
         super(createHexMeshGeometry(size, height), createDefaultHexMaterial(material));
         this.receiveShadow = true;
         // TODO: Find a way to fix three.js's shadows so that they don't cause
-        // fake "shadow borders" when hexes the same height are next to each other.
+        // fake 'shadow borders' when hexes the same height are next to each other.
         // this.castShadow = true;
         this._size = size;
         this._height = height;

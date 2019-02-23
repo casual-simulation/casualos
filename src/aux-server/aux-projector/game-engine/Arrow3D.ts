@@ -14,13 +14,14 @@ import {
     ArrowHelper,
     Sphere,
     Ray,
-    Vector2} from "three";
+    Vector2
+} from 'three';
 
-import { Object, Workspace } from 'aux-common/Files';
-import GameView from "../GameView/GameView";
-import { File3D } from "./File3D";
-import { FileMesh } from "./FileMesh";
-import { WorkspaceMesh } from "./WorkspaceMesh";
+import { Object, Workspace } from '@yeti-cgi/aux-common';
+import GameView from '../GameView/GameView';
+import { File3D } from './File3D';
+import { FileMesh } from './FileMesh';
+import { WorkspaceMesh } from './WorkspaceMesh';
 
 export class Arrow3D {
 

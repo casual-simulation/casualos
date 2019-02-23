@@ -2,10 +2,9 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Prop, Inject} from 'vue-property-decorator';
 import { SubscriptionLike } from 'rxjs';
-import {Object, File} from 'aux-common/Files';
+import { Object, File, getShortId } from '@yeti-cgi/aux-common';
 import FileValue from '../FileValue/FileValue';
 import { appManager } from '../AppManager';
-import { getShortId } from 'aux-common/Files/FileCalculations';
 
 @Component({
     components: {

@@ -11,16 +11,16 @@ import {
     Vector2,
     Object3D,
     Box3Helper
-} from "three";
+} from 'three';
 import {
     groupBy, keys, every
 } from 'lodash';
-import { HexGridMesh, HexMesh } from "../hex";
-import { GridLevel } from "./GridLevel";
-import { GridTile } from "./GridTile";
-import { calculateTilePoints, calculateGridTileLocalPositions } from "./Grid";
-import { WorkspaceMesh } from "../WorkspaceMesh";
-import { createSphere } from "../utils";
+import { HexGridMesh, HexMesh } from '../hex';
+import { GridLevel } from './GridLevel';
+import { GridTile } from './GridTile';
+import { calculateTilePoints, calculateGridTileLocalPositions } from './Grid';
+import { WorkspaceMesh } from '../WorkspaceMesh';
+import { createSphere } from '../utils';
 
 /**
  * Defines a class that can check a HexGridMesh to see which square grid tiles

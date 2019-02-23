@@ -1,7 +1,6 @@
 import { MongoClient, Db, Collection } from 'mongodb';
 import pify from 'pify';
-import { Subject } from 'rxjs';
-import { ChannelConnector, ChannelConnection, ChannelConnectionRequest, IChannel, Event, MemoryConnector, ConnectionHelper } from 'aux-common/channels-core';
+import { ChannelConnectionRequest, MemoryConnector, ConnectionHelper } from '@yeti-cgi/aux-common/channels-core';
 
 const connect = pify(MongoClient.connect);
 

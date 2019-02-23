@@ -1,9 +1,7 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Prop, Inject} from 'vue-property-decorator';
-import { Assignment, isFormula, isAssignment } from 'aux-common/Files/FileCalculations';
-import { SubscriptionLike } from 'rxjs';
-import {Object, File} from 'aux-common/Files';
+import { Object, File, Assignment, isFormula, isAssignment } from '@yeti-cgi/aux-common';
 import {assign} from 'lodash';
 import { appManager } from '../AppManager';
 

@@ -1,4 +1,4 @@
-import { FilesState } from "aux-common/Files";
+import { FilesState } from '@yeti-cgi/aux-common';
 import download from 'downloadjs';
 
 export function downloadAuxState(state: FilesState, name: string) {
