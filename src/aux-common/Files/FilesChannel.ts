@@ -521,6 +521,9 @@ export function calculateActionEvents(state: FilesState, action: Action) {
 export function cleanFile(file: File): File {
     let cleaned = mergeObj({}, file);
     if (cleaned.type === 'object') {
+        // Make sure we're not modifying another file's tags
+        let newTags = mergeObj({}, cleaned.tags);
+        cleaned.tags = newTags;
         for(let property in cleaned.tags) {
             let value = cleaned.tags[property];
             if (value === null || typeof value === 'undefined' || value === '') {
@@ -562,13 +565,6 @@ function fileUpdatedReducer(state: FilesState, event: FileUpdatedEvent) {
         [event.id]: event.update
     });
     newData[event.id] = cleanFile(newData[event.id]);
-
-    // for(let property in newData[event.id].tags) {
-    //     let value = newData[event.id].tags[property];
-    //     if (value === null) {
-    //         delete newData[event.id].tags[property];
-    //     }
-    // }
 
     return newData;
 }

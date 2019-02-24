@@ -155,6 +155,48 @@ describe('FilesChannel', () => {
             });
         });
 
+        describe('transaction', () => {
+            it('should process both events in order', () => {
+                const test: Object = {
+                    id: 'test',
+                    type: 'object',
+                    tags: {
+                        _position: { x: 1, y: 2, z: 3 },
+                        _workspace: 'abc',
+                    }
+                };
+                const state: FilesState = {
+                    test: test
+                };
+
+                const events = [
+                    fileUpdated('test', {
+                        tags: {
+                            abc: 'def'
+                        }
+                    }),
+                    fileUpdated('test', {
+                        tags: {
+                            abc: 'xyz'
+                        }
+                    })
+                ];
+                const newState = filesReducer(state, transaction(events));
+
+                const newTest = <Object>newState['test'];
+
+                expect(newTest).toEqual({
+                    id: 'test',
+                    type: 'object',
+                    tags: {
+                        _position: { x: 1, y: 2, z: 3 },
+                        _workspace: 'abc',
+                        abc: 'xyz'
+                    }
+                });
+            });
+        });
+
     });
 
     describe('fileChangeObservables()', () => {

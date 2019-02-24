@@ -19,7 +19,7 @@ import { Sandbox } from '../Formulas/Sandbox';
 import formulaLib from '@yeti-cgi/aux-common/Formulas/formula-lib';
 import { FilterFunction, SandboxInterface } from '../Formulas/SandboxInterface';
 import { PartialFile } from '../Files';
-import { FilesState } from './FilesChannel';
+import { FilesState, cleanFile } from './FilesChannel';
 import { merge } from '../utils';
 
 export var ShortId_Length: number = 5;
@@ -576,10 +576,13 @@ export function objectsAtWorkspace(objects: Object[], workspaceId: string) {
  * @param data The optional data that should override the existing file data.
  */
 export function duplicateFile(file: Object, data?: PartialFile): Object {
-    let newFile = merge(file, data || {});
+    let newFile = merge(file, data || {}, {
+        tags: {
+            _destroyed: null
+        }
+    });
     newFile.id = uuid();
-    delete newFile.tags._destroyed;
-    return newFile;
+    return <Object>cleanFile(newFile);
 }
 
 /**

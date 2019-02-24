@@ -22,7 +22,7 @@ import {
     cloneDeep
 } from 'lodash';
 import { File, Object, PartialFile } from './File';
-import { FilesState } from './FilesChannel';
+import { FilesState, cleanFile } from './FilesChannel';
 
 describe('FileCalculations', () => {
     describe('isFormula()', () => {
@@ -479,6 +479,7 @@ describe('FileCalculations', () => {
     describe('duplicateFile', () => {
         it('should return a copy with a different ID', () => {
             const first: Object = createFile();
+            first.tags._workspace = 'abc';
             const second = duplicateFile(first);
 
             expect(second.id).not.toEqual(first.id);
@@ -488,6 +489,7 @@ describe('FileCalculations', () => {
         it('should not be destroyed', () => {
             let first: Object = createFile();
             first.tags._destroyed = true;
+            first.tags._workspace = 'abc';
 
             const second = duplicateFile(first);
 
@@ -506,8 +508,52 @@ describe('FileCalculations', () => {
             expect(second.id).not.toEqual(first.id);
             expect(second.tags).toEqual({
                 _position: { x: 0, y: 0, z: 0},
-                _workspace: null,
                 name: 'abcdef'
+            });
+        });
+
+        it('should not modify the original file', () => {
+            let first: Object = createFile();
+            first.tags._destroyed = true;
+
+            const second = duplicateFile(first);
+
+            expect(first.tags._destroyed).toBe(true);
+        });
+    });
+
+    describe('cleanFile()', () => {
+        it('should remove null and undefined tags', () => {
+            let file = createFile('test');
+            file.tags._workspace = null;
+            file.tags._test = undefined;
+
+            const result = cleanFile(file);
+
+            expect(result).toEqual({
+                id: 'test',
+                type: 'object',
+                tags: {
+                    _position: { x: 0, y: 0, z: 0 }
+                }
+            });
+        });
+
+        it('should not modify the given file', () => {
+            let file = createFile('test');
+            file.tags._workspace = null;
+            file.tags._test = undefined;
+
+            const result = cleanFile(file);
+
+            expect(file).toEqual({
+                id: 'test',
+                type: 'object',
+                tags: {
+                    _position: { x: 0, y: 0, z: 0 },
+                    _workspace: null,
+                    _test: undefined
+                }
             });
         });
     });
