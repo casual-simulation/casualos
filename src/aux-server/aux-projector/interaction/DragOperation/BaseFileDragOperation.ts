@@ -84,11 +84,10 @@ export abstract class BaseFileDragOperation implements IOperation {
     }
 
     public dispose(): void {
+        this._disposeCore();
         this._gameView.setGridsVisible(false);
         this._files = null;
         this._file = null;
-
-        this._disposeCore();
     }
 
     protected _onDragReleased(): void {
