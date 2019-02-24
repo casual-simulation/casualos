@@ -3,6 +3,7 @@
   "version": "0.3.2",
   "description": "The repository for the AUX server project.",
   "main": "server/dist/main.js",
+  "private": true,
   "scripts": {
     "start": "node server/dist/main.js",
     "watch": "concurrently \"npm:watch:server\" \"npm:watch:client\" \"nodemon server/dist/main.js\"",
@@ -34,9 +35,6 @@
     "/docker-compose.yml",
     "/LICENSE.txt"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
   "dependencies": {
     "@chenfengyuan/vue-qrcode": "^1.0.0",
     "@sentry/browser": "^4.4.2",
