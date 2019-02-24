@@ -101,7 +101,7 @@ export class Arrow3D {
             this._arrowHelper.visible = false;
 
         }
-        else if (sourceWorkspace.workspaceFile.minimized && targetWorkspace.workspaceFile.minimized) {
+        else if (sourceWorkspace.workspaceFile.minimized && targetWorkspace && targetWorkspace.workspaceFile.minimized) {
 
             // The workspace of both the source file and target file are minimized. Hide arrow and do nothing else.
             this._arrowHelper.visible = false;
@@ -124,7 +124,7 @@ export class Arrow3D {
     
             // Lets get the bounding sphere of the target.
             // This could be either the sphere of the file itself or the sphere of the minimized workspace the file is on.
-            if (targetWorkspace.workspaceFile.minimized) {
+            if (targetWorkspace && targetWorkspace.workspaceFile.minimized) {
                 targetSphere = (<WorkspaceMesh>targetWorkspace.workspace3d.mesh).miniHex.boundingSphere;
             } else {
                 targetSphere = (<FileMesh>this._targetFile3d.mesh).boundingSphere;
