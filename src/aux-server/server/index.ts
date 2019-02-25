@@ -24,10 +24,11 @@
  */
 
 import process from 'process';
-import { Server, Config } from './server';
+import { Server } from './server';
 
 import prodConfig from './config.prod';
 import devConfig from './config.dev'; 
+import { Config } from './config';
 
 const env = process.env.NODE_ENV;
 let config: Config;

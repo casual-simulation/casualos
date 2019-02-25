@@ -1,5 +1,8 @@
-import { Config } from "./server";
 import * as path from 'path';
+import { merge } from "lodash";
+import { Config } from "./config";
+import projectorConfig from './projector.config';
+import playerConfig from './player.config';
 
 const config: Config = {
     socket: {
@@ -9,9 +12,10 @@ const config: Config = {
     },
     socketPort: 4567,
     httpPort: 3000,
-    client: {
-        dist: path.resolve(__dirname, '..', '..', 'aux-projector', 'dist')
-    },
+    clients: [
+        projectorConfig,
+        playerConfig
+    ],
     channels: {
         mongodb: {
             url: 'mongodb://127.0.0.1:27017',
