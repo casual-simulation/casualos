@@ -1,7 +1,7 @@
 import { FileUpdatedEvent, FileEvent, FileAddedEvent } from "../Files";
+import uuid from 'uuid/v4';
 
 let actions: FileEvent[] = [];
-declare function uuid(): string;
 
 export function setActions(value: FileEvent[]) {
     actions = value;
