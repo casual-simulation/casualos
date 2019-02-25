@@ -87,7 +87,7 @@ export class Weave<TOp extends AtomOp> {
     getSite(site: number): VirtualArray<WeaveReference<TOp>> {
         const siteIndex = this._sites[site];
         if (typeof siteIndex === 'undefined') {
-            const siteIds = this._siteIds();
+            const siteIds = this.siteIds();
             let index = findIndex(siteIds, id => id > site);
             let yarnIndex = this._yarn.length;
             if (index >= 0) {
@@ -107,6 +107,11 @@ export class Weave<TOp extends AtomOp> {
     insert<T extends TOp>(atom: Atom<T>): WeaveReference<T> {
         const site = this.getSite(atom.id.site);
         if (!atom.cause) {
+            // check for an existing root atom
+            if (this.atoms.length > 0) {
+                return <WeaveReference<T>>this.atoms[0];
+            }
+
             const ref = reference<T>(atom, 0, null);
             // Add the atom at the root of the weave.
             this._atoms.splice(0, 0, ref);
@@ -118,9 +123,20 @@ export class Weave<TOp extends AtomOp> {
             return ref;
         } else {
             const causeIndex = this._indexOf(atom.cause);
+            if (causeIndex < 0 ) {
+                return null;
+            }
             const cause = this.atoms[causeIndex];
             const weaveIndex = this._weaveIndex(causeIndex, atom.id);
             const siteIndex = this._siteIndex(atom.id, site);
+
+            if (siteIndex >= 0 && siteIndex < site.length) {
+                const existingAtom = site.get(siteIndex);
+                if (existingAtom && idEquals(existingAtom.atom.id, atom.id)) {
+                    return <WeaveReference<T>>existingAtom;
+                }
+            }
+
             const ref = reference<T>(atom, siteIndex, cause ? cause.index : null);
             this._atoms.splice(weaveIndex, 0, ref);
             site.insert(siteIndex, ref);
@@ -153,11 +169,10 @@ export class Weave<TOp extends AtomOp> {
      * Gets the version that this weave is currently at.
      */
     getVersion(): WeaveVersion {
-        let knownSites = keys(this._sites);
+        let knownSites = this.siteIds();
         let sites: WeaveSiteVersion = {};
 
-        knownSites.forEach(siteId => {
-            const id = parseInt(siteId);
+        knownSites.forEach(id => {
             const site = this.getSite(id);
             const mostRecentAtom = site.get(site.length - 1);
             sites[id] = mostRecentAtom.atom.id.timestamp;
@@ -255,12 +270,19 @@ export class Weave<TOp extends AtomOp> {
 
         return newAtoms;
     }
+    
+    /**
+     * Gets the list of site IDs that this weave contains.
+     */
+    siteIds() {
+        return keys(this._sites).map(id => parseInt(id)).sort();
+    }
 
     /**
      * Updates the sites map.
      */
     private _updateSites(siteId: number, site: VirtualArray<WeaveReference<TOp>>) {
-        const siteIds = this._siteIds();
+        const siteIds = this.siteIds();
         let updatedSite = false;
         for (let i = 0; i < siteIds.length; i++) {
             let id = siteIds[i];
@@ -294,10 +316,6 @@ export class Weave<TOp extends AtomOp> {
                 end: site.end
             };
         }
-    }
-
-    private _siteIds() {
-        return keys(this._sites).map(id => parseInt(id)).sort();
     }
 
     private _sortYarn() {
@@ -336,6 +354,8 @@ export class Weave<TOp extends AtomOp> {
             if (atomId.timestamp < ref.atom.id.timestamp) {
                 return i;
             } else if(atomId.timestamp === ref.atom.id.timestamp && atomId.priority > ref.atom.id.priority) {
+                return i;
+            } else if(idEquals(atomId, ref.atom.id)) {
                 return i;
             }
         }

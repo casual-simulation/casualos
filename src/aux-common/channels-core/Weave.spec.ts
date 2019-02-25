@@ -150,6 +150,52 @@ describe('Weave', () => {
                 a2, a3, a4
             ]);
         });
+
+        it('should only allow a single root atom', () => {
+            let weave = new Weave();
+
+            const a1 = atom(atomId(1, 1), null, new Op());
+            const a2 = atom(atomId(2, 1), null, new Op());
+            const ref1 = weave.insert(a1);
+            const ref2 = weave.insert(a1);
+            const ref3 = weave.insert(a2);
+
+            expect(ref1).toBe(ref2);
+            expect(ref1).toBe(ref3);
+            expect(weave.atoms.map(a => a.atom)).toEqual([
+                a1,
+            ]);
+        });
+
+        it('should handle adding the same atom twice as long as its not the root', () => {
+            let weave = new Weave();
+
+            const a1 = atom(atomId(1, 1), null, new Op());
+            const a2 = atom(atomId(1, 2), atomId(1, 1), new Op());
+            const ref1 = weave.insert(a1);
+            const ref2 = weave.insert(a2);
+            const ref3 = weave.insert(a2);
+
+            expect(ref2).toBe(ref3);
+            expect(weave.atoms.map(a => a.atom)).toEqual([
+                a1,
+                a2
+            ]);
+        });
+
+        it('should discard atoms that dont have their parent in the weave', () => {
+            let weave = new Weave();
+
+            const a1 = atom(atomId(1, 1), null, new Op());
+            const a2 = atom(atomId(1, 2), atomId(2, 10), new Op());
+            const ref1 = weave.insert(a1);
+            const ref2 = weave.insert(a2);
+
+            expect(ref2).toBe(null);
+            expect(weave.atoms.map(a => a.atom)).toEqual([
+                a1,
+            ]);
+        });
     });
 
     describe('getSite()', () => {
@@ -193,7 +239,7 @@ describe('Weave', () => {
             const a1 = atom(atomId(1, 1), null, new Op());
             const a2 = atom(atomId(9, 2), atomId(1, 1), new Op());
             const a3 = atom(atomId(2, 3), atomId(1, 1), new Op());
-            const a4 = atom(atomId(1, 4), atomId(1, 2), new Op());
+            const a4 = atom(atomId(1, 4), atomId(2, 3), new Op());
 
             let first = new Weave();
             let second = new Weave();
@@ -215,7 +261,7 @@ describe('Weave', () => {
             const a1 = atom(atomId(1, 1), null, new Op());
             const a2 = atom(atomId(9, 2), atomId(1, 1), new Op());
             const a3 = atom(atomId(2, 3), atomId(1, 1), new Op());
-            const a4 = atom(atomId(1, 4), atomId(1, 2), new Op());
+            const a4 = atom(atomId(1, 4), atomId(2, 3), new Op());
 
             let first = new Weave();
             let second = new Weave();
@@ -227,7 +273,7 @@ describe('Weave', () => {
 
             // We're using the actual hash values to ensure that they never change
             // without us knowing.
-            expect(firstVersion.hash).toEqual('d1cb4e5a2887396085bfd5f7a277fcd0bbfa25f9e0db3477a2ebc80ec18ce12d');
+            expect(firstVersion.hash).toEqual('98838b193c588c5a4c06165410ad0ed5dae49218e3dcb730c17a3ce8e8b1b007');
             expect(firstVersion.hash).toEqual(secondVersion.hash);
         });
 
