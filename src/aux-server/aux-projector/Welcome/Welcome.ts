@@ -8,7 +8,7 @@ import uuid from 'uuid/v4';
 export default class Welcome extends Vue {
     email: string = '';
     
-    get channelId() {
+    get channelId(): string {
         return this.$route.query.id || '';
     }
 

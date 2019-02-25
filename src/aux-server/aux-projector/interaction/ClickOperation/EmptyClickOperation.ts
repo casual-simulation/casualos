@@ -1,12 +1,9 @@
 import { Input, InputType, MouseButtonId } from '../../game-engine/Input';
-import { File3D } from '../../game-engine/File3D';
-import { FileDragOperation } from '../DragOperation/FileDragOperation';
 import { Vector2, Vector3, Intersection, Raycaster } from 'three';
 import { IOperation } from '../IOperation';
 import GameView from '../../GameView/GameView';
 import { InteractionManager } from '../InteractionManager';
-import { UserMode, File, DEFAULT_SCENE_BACKGROUND_COLOR } from 'aux-common/Files';
-import { Physics } from '../../game-engine/Physics';
+import { DEFAULT_SCENE_BACKGROUND_COLOR } from '@yeti-cgi/aux-common';
 import { appManager } from '../../AppManager';
 import { ColorPickerEvent } from '../ColorPickerEvent';
 import { EventBus } from '../../EventBus/EventBus';

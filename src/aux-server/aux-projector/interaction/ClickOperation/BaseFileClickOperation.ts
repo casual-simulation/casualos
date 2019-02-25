@@ -1,15 +1,10 @@
 import { Input, InputType, MouseButtonId } from '../../game-engine/Input';
 import { File3D } from '../../game-engine/File3D';
-import { FileDragOperation } from '../DragOperation/FileDragOperation';
 import { Vector2, Vector3, Intersection } from 'three';
 import { IOperation } from '../IOperation';
 import GameView from '../../GameView/GameView';
 import { InteractionManager } from '../InteractionManager';
-import { UserMode, File } from 'aux-common/Files';
-import { Physics } from '../../game-engine/Physics';
-import { WorkspaceMesh } from '../../game-engine/WorkspaceMesh';
-import { appManager } from '../../AppManager';
-import { merge } from 'aux-common/utils';
+import { UserMode, File } from '@yeti-cgi/aux-common';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
 
 /**

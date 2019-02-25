@@ -2,10 +2,16 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Prop, Inject} from 'vue-property-decorator';
 import { appManager } from '../AppManager';
-import { ConflictDetails, ResolvedConflict, first, second, File } from 'aux-common/Files';
+import {
+    ConflictDetails,
+    ResolvedConflict,
+    first,
+    second,
+    File,
+    fileTags
+} from '@yeti-cgi/aux-common';
 import { groupBy, keys, uniq, assign } from 'lodash';
 import FileTag from '../FileTag/FileTag';
-import { fileTags } from 'aux-common/Files/FileCalculations';
 
 interface FileConflicts {
     id: string;

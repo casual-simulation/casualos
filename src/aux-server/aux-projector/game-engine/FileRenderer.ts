@@ -15,10 +15,9 @@ import {
     HemisphereLight,
     AmbientLight,
     DirectionalLight
-} from "three";
-import { Object, fileRemoved } from 'aux-common/Files';
-import { FileMesh } from "./FileMesh";
-import { merge } from "aux-common/utils";
+} from 'three';
+import { Object, fileRemoved, merge } from '@yeti-cgi/aux-common';
+import { FileMesh } from './FileMesh';
 
 /**
  * Defines a class that can render a file to a transparent canvas.
@@ -69,7 +68,7 @@ export class FileRenderer {
         this._sun = new DirectionalLight(0xffffff, .6);
         this._sun.position.set(0, 5, 10);
         this._sun.position.multiplyScalar(50);
-        this._sun.name = "sun";
+        this._sun.name = 'sun';
         this._sun.castShadow = true;
         this._scene.add(this._sun);
 

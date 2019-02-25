@@ -6,12 +6,18 @@ import { InteractionManager } from '../InteractionManager';
 import { Ray, Intersection, Vector2, Vector3, Box3, AxesHelper, Group, Object3D } from 'three';
 import { Physics } from '../../game-engine/Physics';
 import { WorkspaceMesh } from '../../game-engine/WorkspaceMesh';
-import { File, Workspace, Object, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated, PartialFile, FileEvent } from 'aux-common/Files';
-import { keys, minBy, flatMap } from 'lodash';
-import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance, posToKey } from '../../game-engine/hex';
-import { isFormula, updateFile } from 'aux-common/Files/FileCalculations';
-import { FileManager } from '../../FileManager';
-import { Result } from 'range-parser';
+import { 
+    File, 
+    Workspace, 
+    Object, 
+    DEFAULT_WORKSPACE_SCALE, 
+    fileRemoved, 
+    fileUpdated, 
+    PartialFile, 
+    FileEvent,
+    updateFile
+} from '@yeti-cgi/aux-common';
+
 import { setParent } from '../../game-engine/utils';
 import { FileMesh } from '../../game-engine/FileMesh';
 
@@ -78,11 +84,10 @@ export abstract class BaseFileDragOperation implements IOperation {
     }
 
     public dispose(): void {
+        this._disposeCore();
         this._gameView.setGridsVisible(false);
         this._files = null;
         this._file = null;
-
-        this._disposeCore();
     }
 
     protected _onDragReleased(): void {
@@ -107,7 +112,7 @@ export abstract class BaseFileDragOperation implements IOperation {
     }
 
     protected _dragFiles() {
-        const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.camera);
+        const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.mainCamera);
         const { good, gridPosition, height, workspace } = this._interaction.pointOnGrid(mouseDir);
 
         if (this._files.length > 0) {
@@ -136,7 +141,7 @@ export abstract class BaseFileDragOperation implements IOperation {
     }
 
     protected _dragFilesFree(): void {
-        const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.camera);
+        const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.mainCamera);
         const firstFileExists = this._gameView.getFile(this._files[0].id) !== undefined;
         
         if (firstFileExists) {
@@ -147,7 +152,7 @@ export abstract class BaseFileDragOperation implements IOperation {
 
                 // Calculate the distance to perform free drag at.
                 const fileWorldPos = fileMeshes[0].getWorldPosition(new Vector3());
-                const cameraWorldPos = this._gameView.camera.getWorldPosition(new Vector3());
+                const cameraWorldPos = this._gameView.mainCamera.getWorldPosition(new Vector3());
                 this._freeDragDistance = cameraWorldPos.distanceTo(fileWorldPos);
             }
 

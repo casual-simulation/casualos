@@ -2,16 +2,14 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Provide, Prop, Inject, Watch} from 'vue-property-decorator';
 import { some, union } from 'lodash';
-import {File, Object} from 'aux-common/Files';
+import {File, Object, fileTags, isHiddenTag} from '@yeti-cgi/aux-common';
 import { EventBus } from '../EventBus/EventBus';
-import { fileTags, isHiddenTag } from 'aux-common/Files/FileCalculations';
 import { appManager } from '../AppManager';
 
 import FileRow from '../FileRow/FileRow';
 import TagEditor from '../TagEditor/TagEditor';
 import AlertDialogOptions from '../App/DialogOptions/AlertDialogOptions';
 import FileTag from '../FileTag/FileTag';
-import { lastEventId } from '@sentry/browser';
 import FileTableToggle from '../FileTableToggle/FileTableToggle';
 
 @Component({

@@ -6,10 +6,10 @@ import { InteractionManager } from '../InteractionManager';
 import { Ray, Intersection, Vector2, Vector3, Box3 } from 'three';
 import { Physics } from '../../game-engine/Physics';
 import { WorkspaceMesh } from '../../game-engine/WorkspaceMesh';
-import { File, Workspace, Object, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated } from 'aux-common/Files';
+import { File, Workspace, Object, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated } from '@yeti-cgi/aux-common/Files';
 import { keys, minBy, flatMap } from 'lodash';
 import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance, posToKey } from '../../game-engine/hex';
-import { isFormula } from 'aux-common/Files/FileCalculations';
+import { isFormula } from '@yeti-cgi/aux-common/Files/FileCalculations';
 import { BaseFileDragOperation } from './BaseFileDragOperation';
 
 /**
@@ -51,7 +51,7 @@ export class FileDragOperation extends BaseFileDragOperation {
     }
 
     protected _dragWorkspace() {
-        const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.camera);
+        const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.mainCamera);
         const point = Physics.pointOnPlane(mouseDir, this._gameView.groundPlane);
 
         if (point) {

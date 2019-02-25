@@ -1,20 +1,43 @@
-import { Object3D, Mesh, BoxBufferGeometry, MeshStandardMaterial, Color, Vector3, Box3, Sphere, BufferGeometry, BufferAttribute, LineBasicMaterial, LineSegments, SphereGeometry, MeshBasicMaterial, DoubleSide } from "three";
-import { Object, File, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_GRID_SCALE } from 'aux-common/Files';
+import {
+    Object3D,
+    Mesh, 
+    BoxBufferGeometry,
+    MeshStandardMaterial,
+    Color,
+    Vector3,
+    Box3,
+    Sphere,
+    BufferGeometry,
+    BufferAttribute,
+    LineBasicMaterial,
+    LineSegments
+} from "three";
+import { 
+    Object,
+    File,
+    DEFAULT_WORKSPACE_SCALE,
+    DEFAULT_WORKSPACE_GRID_SCALE,
+    isArray,
+    parseArray,
+    isFormula,
+    fileFromShortId,
+    objectsAtGridPosition,
+    FileCalculationContext,
+    calculateFileValue,
+    calculateNumericalTagValue
+} from '@yeti-cgi/aux-common/Files';
+import { ArgEvent } from '@yeti-cgi/aux-common/Events';
 import { GameObject } from "./GameObject";
 import GameView from '../GameView/GameView';
 import { calculateGridTileLocalCenter } from "./grid/Grid";
 import { Text3D } from "./Text3D";
-import robotoFont from '../public/bmfonts/Roboto.json';
-import robotoTexturePath from '../public/bmfonts/Roboto.png';
 import { File3D } from "./File3D";
-import { ArgEvent } from 'aux-common/Events';
 import { Arrow3D } from "./Arrow3D";
 import { find, flatMap, sumBy, sortBy } from "lodash";
-import { isArray, parseArray, isFormula, getShortId, fileFromShortId, objectsAtGridPosition, FileCalculationContext, calculateFileValue, calculateNumericalTagValue } from 'aux-common/Files/FileCalculations'
 import { appManager } from '../AppManager';
-import { FileManager } from "../FileManager";
-import { createLabel } from "./utils";
+import { createLabel, convertToBox2, setLayer } from "./utils";
 import { WorkspaceMesh } from "./WorkspaceMesh";
+import { WordBubble3D } from "./WordBubble3D";
 
 /**
  * Defines a class that represents a mesh for an "object" file.
@@ -39,6 +62,11 @@ export class FileMesh extends GameObject {
      */
     cubeContainer: Object3D;
 
+    /**
+     * The world bubble for the cube.
+     */
+    wordBubble: WordBubble3D;
+    
     /**
      * The optional label for the file.
      */
@@ -107,7 +135,12 @@ export class FileMesh extends GameObject {
 
             if (this._gameView) {
                 this.label = createLabel(this._gameView, this);
+                this.label.setLayer(GameView.Layer_UIWorld);
             }
+
+            this.wordBubble = new WordBubble3D({cornerRadius: 0});
+            setLayer(this.wordBubble, GameView.Layer_UIWorld, true);
+            this.add(this.wordBubble);
         }
         this.file = (<Object>file) || this.file;
 
@@ -141,6 +174,7 @@ export class FileMesh extends GameObject {
             if (labelMode) {
                 this._updateLabelSize();
                 this.label.setPositionForObject(this.cube);
+                this._updateWorldBubble();
             }
         }
 
@@ -223,7 +257,7 @@ export class FileMesh extends GameObject {
         // We must call this function so that child objects get their positions updated too.
         // Three render function does this automatically but there are functions in here that depend
         // on accurate positioning of child objects.
-        this.updateMatrixWorld(false);
+        this.updateMatrixWorld(true);
     }
 
     private _tagUpdateColor(): void {
@@ -253,8 +287,8 @@ export class FileMesh extends GameObject {
             }
             
             this._updateLabelSize();
-
             this.label.setPositionForObject(this.cube);
+            this._updateWorldBubble();
 
             let labelColor = this.file.tags['label.color'];
             if (labelColor) {
@@ -277,7 +311,7 @@ export class FileMesh extends GameObject {
         if (this.file.tags['label.size.mode']) {
             let mode = appManager.fileManager.calculateFileValue(this.file, 'label.size.mode');
             if (mode === 'auto') {
-                const distanceToCamera = this._gameView.camera.position.distanceTo(this.label.getWorldPosition());
+                const distanceToCamera = this._gameView.mainCamera.position.distanceTo(this.label.getWorldPosition());
                 const extraScale = distanceToCamera / Text3D.virtualDistance;
                 const finalScale = labelSize * extraScale;
                 this.label.setScale(finalScale);
@@ -429,6 +463,18 @@ export class FileMesh extends GameObject {
         } else {
             material.linewidth = 1;
         }
+    }
+
+    private _updateWorldBubble(): void {
+        let cubeBoundingBox = new Box3().setFromObject(this.cube);
+        let arrowPoint = new Vector3();
+        cubeBoundingBox.getCenter(arrowPoint);
+
+        let size = new Vector3();
+        cubeBoundingBox.getSize(size);
+        arrowPoint.y += size.y / 2;
+        
+        this.wordBubble.update(convertToBox2(this.label.boundingBox), arrowPoint);
     }
 
     private _createStrokeGeometry(): BufferGeometry {

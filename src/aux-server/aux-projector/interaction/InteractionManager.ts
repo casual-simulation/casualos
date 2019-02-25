@@ -12,7 +12,12 @@ import {
     UserMode, 
     FileEvent, 
     DEFAULT_WORKSPACE_HEIGHT, 
-    DEFAULT_SCENE_BACKGROUND_COLOR} from 'aux-common/Files';
+    DEFAULT_SCENE_BACKGROUND_COLOR,
+    objectsAtGridPosition,
+    objectsAtWorkspace,
+    tagsMatchingFilter,
+    isMinimized
+} from '@yeti-cgi/aux-common';
 import { FileClickOperation } from './ClickOperation/FileClickOperation';
 import GameView from '../GameView/GameView';
 import { Physics } from '../game-engine/Physics';
@@ -23,7 +28,6 @@ import { FileMesh } from '../game-engine/FileMesh';
 import { Axial, realPosToGridPos, gridDistance, keyToPos, posToKey } from '../game-engine/hex';
 import { MouseButtonId, Input } from '../game-engine/Input';
 import { isBuffer } from 'util';
-import { objectsAtGridPosition, objectsAtWorkspace, tagsMatchingFilter, isMinimized } from 'aux-common/Files/FileCalculations';
 import { ColorPickerEvent } from './ColorPickerEvent';
 import { EventBus } from '../EventBus/EventBus';
 import { appManager } from '../AppManager';
@@ -51,7 +55,7 @@ export class InteractionManager {
         this._gameView = gameView;
         this._raycaster = new Raycaster();
         // this._raycaster.linePrecision = .001;
-        this._cameraControls = new CameraControls(this._gameView.camera, this._gameView);
+        this._cameraControls = new CameraControls(this._gameView.mainCamera, this._gameView);
         this._operations = [];
 
         // Bind event handlers to this instance of the class.
@@ -117,7 +121,7 @@ export class InteractionManager {
                 if (input.isMouseButtonDownOn(this._gameView.gameView)){
 
                     const screenPos = input.getMouseScreenPos();
-                    const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this.getDraggableObjects(), this._gameView.camera);
+                    const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this.getDraggableObjects(), this._gameView.mainCamera);
                     const clickedObject = Physics.firstRaycastHit(raycastResult);
 
                     if (clickedObject) {
@@ -177,7 +181,7 @@ export class InteractionManager {
         const input = this._gameView.input;
         const pagePos = input.getMousePagePos();
         const screenPos = input.getMouseScreenPos();
-        const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this.getDraggableObjects(), this._gameView.camera);
+        const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this.getDraggableObjects(), this._gameView.mainCamera);
         const hit = Physics.firstRaycastHit(raycastResult);
 
         this._cameraControls.enabled = false;
@@ -490,7 +494,7 @@ export class InteractionManager {
     }
 
     public isEmptySpace(screenPos: Vector2): boolean {
-        const raycastResult = Physics.raycastAtScreenPos(screenPos, new Raycaster(), this.getDraggableObjects(), this._gameView.camera);
+        const raycastResult = Physics.raycastAtScreenPos(screenPos, new Raycaster(), this.getDraggableObjects(), this._gameView.mainCamera);
         const clickedObject = Physics.firstRaycastHit(raycastResult);
 
         return clickedObject === undefined || clickedObject === null;

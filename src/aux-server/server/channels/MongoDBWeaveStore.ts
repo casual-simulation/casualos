@@ -1,10 +1,8 @@
 import { MongoClient, Db, Collection } from 'mongodb';
 import pify from 'pify';
-import { Subject } from 'rxjs';
-import { ChannelConnector, ChannelConnection, ChannelConnectionRequest, IChannel, Event, MemoryConnector, ConnectionHelper } from 'aux-common/channels-core';
-import { WeaveStore } from 'aux-common/channels-core/WeaveStore';
-import { AtomOp } from 'aux-common/channels-core/Atom';
-import { Weave, WeaveReference } from 'aux-common/channels-core/Weave';
+import { WeaveStore } from '@yeti-cgi/aux-common/channels-core/WeaveStore';
+import { AtomOp } from '@yeti-cgi/aux-common/channels-core/Atom';
+import { Weave, WeaveReference } from '@yeti-cgi/aux-common/channels-core/Weave';
 
 const connect = pify(MongoClient.connect);
 

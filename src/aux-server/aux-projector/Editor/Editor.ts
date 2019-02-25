@@ -2,7 +2,7 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Provide, Inject} from 'vue-property-decorator';
 import {filter} from 'rxjs/operators';
-import {Object} from 'aux-common/Files';
+import {Object} from '@yeti-cgi/aux-common';
 import FileTable from '../FileTable/FileTable';
 import { appManager } from '../AppManager';
 

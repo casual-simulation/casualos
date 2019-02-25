@@ -1,4 +1,4 @@
-import { Vector3 } from "three";
+import { Vector3 } from 'three';
 
 /**
  * Calculates the corner points for a tile of the given scale.

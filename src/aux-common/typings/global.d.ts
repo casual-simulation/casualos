@@ -1,5 +1,5 @@
 
-declare module 'aux-common/Formulas/formula-lib' {
+declare module '@yeti-cgi/aux-common/Formulas/formula-lib' {
     const lib: string;
     export default lib; 
 }

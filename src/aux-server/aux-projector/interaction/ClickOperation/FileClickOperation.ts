@@ -1,18 +1,18 @@
-import { Input, InputType, MouseButtonId } from '../../game-engine/Input';
 import { File3D } from '../../game-engine/File3D';
 import { FileDragOperation } from '../DragOperation/FileDragOperation';
 import { Vector2, Vector3, Intersection } from 'three';
-import { IOperation } from '../IOperation';
 import GameView from '../../GameView/GameView';
 import { InteractionManager } from '../InteractionManager';
-import { UserMode, File } from 'aux-common/Files';
+import {
+    UserMode,
+    File,
+    duplicateFile
+} from '@yeti-cgi/aux-common';
 import { Physics } from '../../game-engine/Physics';
 import { WorkspaceMesh } from '../../game-engine/WorkspaceMesh';
 import { appManager } from '../../AppManager';
-import { merge } from 'aux-common/utils';
 import { BaseFileClickOperation } from './BaseFileClickOperation';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
-import { duplicateFile } from 'aux-common/Files/FileCalculations';
 
 /**
  * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.

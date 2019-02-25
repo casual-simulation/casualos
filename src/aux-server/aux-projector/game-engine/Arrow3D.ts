@@ -14,17 +14,18 @@ import {
     ArrowHelper,
     Sphere,
     Ray,
-    Vector2} from "three";
+    Vector2
+} from 'three';
 
-import { Object, Workspace } from 'aux-common/Files';
-import GameView from "../GameView/GameView";
-import { File3D } from "./File3D";
-import { FileMesh } from "./FileMesh";
-import { WorkspaceMesh } from "./WorkspaceMesh";
+import { Object, Workspace } from '@yeti-cgi/aux-common';
+import GameView from '../GameView/GameView';
+import { File3D } from './File3D';
+import { FileMesh } from './FileMesh';
+import { WorkspaceMesh } from './WorkspaceMesh';
 
 export class Arrow3D {
 
-    public static DefaultColor: Color = new Color(255,255,255);
+    public static DefaultColor: Color = new Color(1, 1, 1);
     public static DefaultHeadWidth = 0.15;
     public static DefaultHeadLength = 0.3;
 
@@ -100,7 +101,7 @@ export class Arrow3D {
             this._arrowHelper.visible = false;
 
         }
-        else if (sourceWorkspace.workspaceFile.minimized && targetWorkspace.workspaceFile.minimized) {
+        else if (sourceWorkspace.workspaceFile.minimized && targetWorkspace && targetWorkspace.workspaceFile.minimized) {
 
             // The workspace of both the source file and target file are minimized. Hide arrow and do nothing else.
             this._arrowHelper.visible = false;
@@ -123,7 +124,7 @@ export class Arrow3D {
     
             // Lets get the bounding sphere of the target.
             // This could be either the sphere of the file itself or the sphere of the minimized workspace the file is on.
-            if (targetWorkspace.workspaceFile.minimized) {
+            if (targetWorkspace && targetWorkspace.workspaceFile.minimized) {
                 targetSphere = (<WorkspaceMesh>targetWorkspace.workspace3d.mesh).miniHex.boundingSphere;
             } else {
                 targetSphere = (<FileMesh>this._targetFile3d.mesh).boundingSphere;

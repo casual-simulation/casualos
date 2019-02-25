@@ -1,9 +1,12 @@
 import { Socket, Server } from 'socket.io';
-import { ChannelInfo, Event, ChannelClient, ChannelConnection } from 'aux-common/channels-core';
-import { AuxCausalTree } from 'aux-common/aux-format/AuxCausalTree';
-import { RealtimeChannelInfo } from 'aux-common/channels-core/RealtimeChannelInfo';
-import { WeaveStore } from 'aux-common/channels-core/WeaveStore';
-import { AuxOp } from 'aux-common/aux-format/AuxOpTypes';
+import { 
+    ChannelInfo, 
+    Event, 
+    ChannelClient, 
+    ChannelConnection 
+} from '@yeti-cgi/aux-common';
+import { AuxCausalTree } from '@yeti-cgi/aux-common/aux-format/AuxCausalTree';
+import { RealtimeChannelInfo } from '@yeti-cgi/aux-common/channels-core/RealtimeChannelInfo';
 import { SiteVersionInfo } from 'aux-common/channels-core/SiteVersionInfo';
 import { CausalTreeFactory } from 'aux-common/channels-core/CausalTreeFactory';
 import { CausalTree } from 'aux-common/channels-core/CausalTree';

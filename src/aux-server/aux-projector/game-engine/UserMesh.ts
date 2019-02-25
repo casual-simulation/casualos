@@ -1,18 +1,19 @@
-import { Object3D, Mesh, BoxBufferGeometry, MeshStandardMaterial, Color, Vector3, Box3, Sphere, BufferGeometry, BufferAttribute, LineBasicMaterial, LineSegments, SphereGeometry, MeshBasicMaterial, DoubleSide, Vector2, Camera, PerspectiveCamera, CameraHelper, Euler } from "three";
-import { Object, File, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_GRID_SCALE } from 'aux-common/Files';
+import { 
+    Object3D, 
+    Vector3,
+    Box3,
+    Sphere,
+    Camera,
+    PerspectiveCamera,
+    CameraHelper,
+    Euler
+} from "three";
 import { GameObject } from "./GameObject";
 import GameView from '../GameView/GameView';
-import { calculateGridTileLocalCenter } from "./grid/Grid";
 import { Text3D } from "./Text3D";
-import robotoFont from '../public/bmfonts/Roboto.json';
-import robotoTexturePath from '../public/bmfonts/Roboto.png';
-import { File3D } from "./File3D";
-import { ArgEvent } from 'aux-common/Events';
-import { Arrow3D } from "./Arrow3D";
-import { find, flatMap, sumBy, sortBy } from "lodash";
-import { isArray, parseArray, isFormula, getShortId, fileFromShortId, objectsAtGridPosition, FileCalculationContext } from 'aux-common/Files/FileCalculations'
+import { isFormula, FileCalculationContext, Object, File } from '@yeti-cgi/aux-common'
+import { ArgEvent } from '@yeti-cgi/aux-common/Events';
 import { appManager } from '../AppManager';
-import { FileManager } from "../FileManager";
 import { createLabel } from "./utils";
 
 
@@ -114,6 +115,7 @@ export class UserMesh extends GameObject {
             this.camera = new PerspectiveCamera(60, 1, 0.1, 0.5);
             this.cameraHelper = new CameraHelper(this.camera);
             this.label = createLabel(this._gameView, this.cameraHelper);
+            this.label.setLayer(GameView.Layer_UIWorld);
             this.label.setScale(Text3D.defaultScale * 2);
             this.label.setRotation(0, 180, 0);
             this.container.add(this.cameraHelper);
@@ -145,8 +147,8 @@ export class UserMesh extends GameObject {
             this._isActive());
 
         if(isOwnFile) {
-            const camPosition = this._gameView.camera.position;
-            const camRotation = this._gameView.camera.rotation;
+            const camPosition = this._gameView.mainCamera.position;
+            const camRotation = this._gameView.mainCamera.rotation;
             const camRotationVector = new Vector3(0, 0, 1).applyEuler(camRotation);
             const currentPosition = this.file.tags._position;
             

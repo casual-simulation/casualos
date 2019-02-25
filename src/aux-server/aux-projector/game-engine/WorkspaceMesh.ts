@@ -1,10 +1,18 @@
-import { Object3D, Vector3, Color } from "three";
-import { HexGridMesh, HexGrid, HexMesh, keyToPos, Axial } from "./hex";
-import { GridMesh } from "./grid/GridMesh";
-import { Workspace, File, objDiff, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_GRID_SCALE, DEFAULT_MINI_WORKSPACE_SCALE } from "aux-common/Files";
-import { keys, minBy } from "lodash";
-import { GridChecker, GridCheckResults } from "./grid/GridChecker";
-import { GameObject } from "./GameObject";
+import { Object3D, Vector3, Color } from 'three';
+import { HexGridMesh, HexGrid, HexMesh, keyToPos, Axial } from './hex';
+import { GridMesh } from './grid/GridMesh';
+import { 
+    Workspace,
+    File,
+    objDiff,
+    DEFAULT_WORKSPACE_HEIGHT,
+    DEFAULT_WORKSPACE_SCALE,
+    DEFAULT_WORKSPACE_GRID_SCALE,
+    DEFAULT_MINI_WORKSPACE_SCALE
+} from '@yeti-cgi/aux-common/Files';
+import { keys, minBy } from 'lodash';
+import { GridChecker, GridCheckResults } from './grid/GridChecker';
+import { GameObject } from './GameObject';
 
 /**
  * Defines a mesh that represents a workspace.

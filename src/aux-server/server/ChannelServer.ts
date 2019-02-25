@@ -1,8 +1,9 @@
 import {Express} from 'express';
-import { StoreFactory, Event, ReducingStateStore, ChannelClient, MemoryConnector, ChannelConnector } from "aux-common/channels-core";
+import {
+    ChannelClient,
+    storeFactory
+} from "@yeti-cgi/aux-common";
 import { SocketIOChannelServer } from "./channels";
-
-import {filesReducer, FilesStateStore, storeFactory} from 'aux-common/Files';
 import { MongoDBConnector } from './channels/MongoDBConnector';
 
 export interface ChannelServerConfig {

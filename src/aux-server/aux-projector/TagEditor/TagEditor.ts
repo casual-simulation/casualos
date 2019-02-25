@@ -1,7 +1,7 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Inject, Prop, Watch } from 'vue-property-decorator';
-import { validateTag } from 'aux-common/Files/FileCalculations';
+import { validateTag } from '@yeti-cgi/aux-common';
 import { appManager } from '../AppManager';
 import CombineIcon from '../public/icons/combine_icon.svg';
 
