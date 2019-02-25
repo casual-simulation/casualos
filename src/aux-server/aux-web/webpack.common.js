@@ -74,14 +74,14 @@ module.exports = {
     ]),
     new VueLoaderPlugin(),
     new HtmlWebpackPlugin({
-      chunks: ['projector'],
+      chunks: ['projector', 'vendors'],
       // inject: false,
       template: path.resolve(__dirname, 'aux-projector', 'index.html'),
       title: 'File Simulator',
       filename: 'projector-index.html'
     }),
     new HtmlWebpackPlugin({
-      chunks: ['player'],
+      chunks: ['player', 'vendors'],
       // inject: false,
       template: path.resolve(__dirname, 'aux-player', 'index.html'),
       title: 'AUX Player',

@@ -60,7 +60,6 @@ module.exports = merge.smart(common, {
             }),
             new OptimizeCSSAssetsPlugin({})
         ],
-        runtimeChunk: 'single',
         splitChunks: {
             cacheGroups: {
                 vendor: {
