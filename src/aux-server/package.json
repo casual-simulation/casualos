@@ -16,7 +16,8 @@
     "watch:web": "webpack --config aux-web/webpack.dev.js --watch",
     "test": "jest",
     "test:watch": "jest --watchAll",
-    "test:ci": "jest --ci --reporters=default --reporters=jest-junit"
+    "test:ci": "jest --ci --reporters=default --reporters=jest-junit",
+    "clean": "echo \"Nothing to clean\""
   },
   "repository": {
     "type": "git",
