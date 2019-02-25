@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yeticgi/file-simulator.git"
+    "url": "git+https://github.com/yeticgi/aux.git"
   },
   "keywords": [
     "aux",
@@ -25,9 +25,9 @@
   "author": "YETi CGI",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/yeticgi/file-simulator/issues"
+    "url": "https://github.com/yeticgi/aux/issues"
   },
-  "homepage": "https://github.com/yeticgi/file-simulator#readme",
+  "homepage": "https://github.com/yeticgi/aux#readme",
   "publishConfig": {
     "access": "public"
   },
@@ -49,6 +49,7 @@
     "/README.md",
     "/LICENSE.txt",
     "**/*.js",
+    "**/*.js.map",
     "**/*.d.ts"
   ]
 }

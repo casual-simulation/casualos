@@ -20,14 +20,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yeticgi/process-for-teams.git"
+    "url": "git+https://github.com/yeticgi/aux.git"
   },
   "author": "YETi CGI",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/yeticgi/process-for-teams/issues"
+    "url": "https://github.com/yeticgi/aux/issues"
   },
-  "homepage": "https://github.com/yeticgi/process-for-teams#readme",
+  "homepage": "https://github.com/yeticgi/aux#readme",
   "files": [
     "dist",
     "/README.md",
