@@ -114,7 +114,7 @@ export class Sandbox {
 
         function __evalWrapper(js: string): any {
             const finalVars = merge(__this._lib, __variables);
-            const final = __this._lib + '\n' + keys(finalVars).map(v => `var ${v} = finalVars["${v}"];`).join('\n') + '\n' + js;
+            const final = keys(finalVars).map(v => `var ${v} = finalVars["${v}"];`).join('\n') + '\n' + js;
             return eval(final);
         }
 
