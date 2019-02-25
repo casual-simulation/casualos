@@ -1,4 +1,5 @@
 import { WeaveVersion } from "./WeaveVersion";
+import { SiteInfo } from "./SiteIdInfo";
 
 /**
  * Defines an interface for version information
@@ -15,4 +16,9 @@ export interface SiteVersionInfo {
      * Gets the version that the weave for this site is at.
      */
     version: WeaveVersion;
+
+    /**
+     * Gets the list of sites that this site knows about, even if they haven't submitted an atom yet.
+     */
+    knownSites: SiteInfo[];
 }

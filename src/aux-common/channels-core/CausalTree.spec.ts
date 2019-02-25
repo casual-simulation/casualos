@@ -100,4 +100,40 @@ describe('CausalTree', () => {
             expect(tree1.time).toBe(6);
         });
     });
+
+    describe('knownSites', () => {
+        it('should default to only our site ID', () => {
+            let tree1 = new CausalTree(1, new Reducer());
+
+            expect(tree1.knownSites).toEqual([
+                { id: 1 }
+            ]);
+        });
+        
+        it('should not combine with the weaves known sites', () => {
+            let tree1 = new CausalTree(1, new Reducer());
+            let tree2 = new CausalTree(2, new Reducer());
+
+            const root = tree1.factory.create(new Op(), null);
+            tree1.add(root);
+            tree2.add(root);
+
+            expect(tree2.knownSites).toEqual([
+                { id: 2 }
+            ]);
+        });
+
+        it('should allow adding sites via registerSite()', () => {
+            let tree1 = new CausalTree(1, new Reducer());
+
+            tree1.registerSite({
+                id: 12
+            });
+
+            expect(tree1.knownSites).toEqual([
+                { id: 1 },
+                { id: 12 }
+            ]);
+        });
+    });
 });

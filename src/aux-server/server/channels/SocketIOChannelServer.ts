@@ -87,7 +87,8 @@ export class SocketIOChannelServer {
                     socket.on(`info_${info.id}`, (event: SiteVersionInfo, callback: Function) => {
                         const currentVersionInfo: SiteVersionInfo = {
                             siteId: tree.site,
-                            version: tree.weave.getVersion()
+                            version: tree.weave.getVersion(),
+                            knownSites: tree.knownSites
                         };
 
                         callback(currentVersionInfo);

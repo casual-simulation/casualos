@@ -3,6 +3,7 @@ import { Weave, WeaveReference } from "./Weave";
 import { AtomFactory } from "./AtomFactory";
 import { AtomReducer } from "./AtomReducer";
 import { sortBy } from "lodash";
+import { SiteInfo } from "./SiteIdInfo";
 
 /**
  * Defines a class that represents a Causal Tree.
@@ -14,6 +15,7 @@ export class CausalTree<TOp extends AtomOp, TValue> {
     private _factory: AtomFactory<TOp>;
     private _reducer: AtomReducer<TOp, TValue>;
     private _value: TValue;
+    private _knownSites: SiteInfo[];
 
     /**
      * Gets the site that this causal tree represents.
@@ -55,12 +57,22 @@ export class CausalTree<TOp extends AtomOp, TValue> {
     }
 
     /**
+     * Gets the list of sites that this tree knows about.
+     */
+    get knownSites() {
+        return this._knownSites;
+    }
+
+    /**
      * Creates a new Causal Tree with the given site ID.
      * @param site The ID of this site.
      * @param reducer The reducer used to convert a list of operations into a single value.
      */
     constructor(site: number, reducer: AtomReducer<TOp, TValue>) {
         this._site = site;
+        this._knownSites = [
+            { id: site }
+        ];
         this._weave = new Weave<TOp>();
         this._factory = new AtomFactory<TOp>(this._site);
         this._reducer = reducer;
@@ -105,5 +117,13 @@ export class CausalTree<TOp extends AtomOp, TValue> {
     create<T extends TOp>(op: T, parent: WeaveReference<TOp> | Atom<TOp> | AtomId, priority?: number): WeaveReference<T> {
         const atom = this.factory.create(op, parent, priority);
         return this.add(atom);
+    }
+
+    /**
+     * Registers the given site in this tree's known sites list.
+     * @param site The site. 
+     */
+    registerSite(site: SiteInfo) {
+        this._knownSites.push(site);
     }
 }
