@@ -3,14 +3,16 @@ import {
     ChannelInfo, 
     Event, 
     ChannelClient, 
-    ChannelConnection 
+    ChannelConnection, 
+    AuxOp
 } from '@yeti-cgi/aux-common';
 import { AuxCausalTree } from '@yeti-cgi/aux-common/aux-format/AuxCausalTree';
 import { RealtimeChannelInfo } from '@yeti-cgi/aux-common/channels-core/RealtimeChannelInfo';
-import { SiteVersionInfo } from 'aux-common/channels-core/SiteVersionInfo';
-import { CausalTreeFactory } from 'aux-common/channels-core/CausalTreeFactory';
-import { CausalTree } from 'aux-common/channels-core/CausalTree';
-import { AtomOp } from 'aux-common/channels-core/Atom';
+import { SiteVersionInfo } from '@yeti-cgi/aux-common/channels-core/SiteVersionInfo';
+import { CausalTreeFactory } from '@yeti-cgi/aux-common/channels-core/CausalTreeFactory';
+import { CausalTree } from '@yeti-cgi/aux-common/channels-core/CausalTree';
+import { AtomOp } from '@yeti-cgi/aux-common/channels-core/Atom';
+import { WeaveStore } from '@yeti-cgi/aux-common/channels-core/WeaveStore';
 
 export interface ServerList {
     [key: string]: ChannelConnection<any>;
