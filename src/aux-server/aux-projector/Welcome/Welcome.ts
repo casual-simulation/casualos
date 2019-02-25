@@ -9,7 +9,7 @@ export default class Welcome extends Vue {
     email: string = '';
     
     get channelId(): string {
-        return this.$route.query.id || '';
+        return <string>(this.$route.query.id || '');
     }
 
     createUser() {

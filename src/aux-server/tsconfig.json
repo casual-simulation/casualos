@@ -6,6 +6,9 @@
   },
   "include": [
     "./**/*",
-    "./node_modules/@yeti-cgi/aux-common/**/*"
+    // "./node_modules/@yeti-cgi/aux-common/**/*"
   ],
+  "exclude": [
+    "node_modules"
+  ]
 }

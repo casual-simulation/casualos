@@ -9,6 +9,7 @@ import { ReducingStateStore, Event, ChannelConnection } from "../channels-core";
 import {File, Object, Workspace, PartialFile} from './File';
 import { tagsMatchingFilter, createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, isDestroyed, getActiveObjects } from './FileCalculations';
 import { merge as mergeObj } from '../utils';
+import { setActions, getActions } from '../Formulas/formula-lib';
 
 export const first = Symbol('ours');
 export const second = Symbol('second');
@@ -572,14 +573,13 @@ function fileUpdatedReducer(state: FilesState, event: FileUpdatedEvent) {
 function eventActions(objects: Object[], context: FileCalculationContext, file: Object, other: Object, eventName: string): FileEvent[] {
     const filters = tagsMatchingFilter(file, other, eventName, context);
     const scripts = filters.map(f => calculateFileValue(context, other, f));
-    let actions: FileEvent[] = [];
+    setActions([]);
     
     scripts.forEach(s => context.sandbox.run(s, {}, convertToFormulaObject(context, other), {
-        that: convertToFormulaObject(context, file),
-        __actions: actions
+        that: convertToFormulaObject(context, file)
     }));
 
-    return actions;
+    return getActions();
 }
 
 function applyEvents(state: FilesState, events: FileEvent[]) {

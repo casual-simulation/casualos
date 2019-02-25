@@ -20,10 +20,6 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /formula\-lib/,
-        use: 'raw-loader'
-      },
-      {
         test: /\.vue$/,
         use: 'vue-loader',
         exclude: /node_modules/
@@ -31,8 +27,9 @@ module.exports = {
       {
         test: /\.tsx?$/,
         loader: 'ts-loader',
-        include: [/aux-common/, __dirname],
-        options: { allowTsInNodeModules: true }
+        include: [__dirname],
+        exclude: /node_modules/
+        // options: { allowTsInNodeModules: true }
       },
       {
         test: /\.css$/,
@@ -62,12 +59,11 @@ module.exports = {
     ]
   },
   resolve: {
-    extensions: ['.vue', '.ts', '.js', '.css'],
+    extensions: ['.vue', '.js', '.ts', '.css'],
     alias: {
       'three-examples': path.join(__dirname, '../node_modules/three/examples/js'),
       'webxr-polyfill': path.resolve(__dirname, 'public/scripts/webxr-polyfill.js'),
     },
-    symlinks: false
   },
   plugins: [
     new CleanWebpackPlugin([

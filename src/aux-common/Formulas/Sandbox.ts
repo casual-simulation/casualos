@@ -1,6 +1,7 @@
 import {Transpiler} from './Transpiler';
 import {SandboxInterface} from './SandboxInterface';
 import {keys} from 'lodash';
+import { merge } from '../utils';
 
 export interface SandboxMacro {
     test: RegExp;
@@ -30,11 +31,19 @@ export interface SandboxResult<TExtra> {
 }
 
 /**
+ * Defines an interface for an object that contains a set of variables
+ * to inject into a sandbox.
+ */
+export interface SandboxLibrary {
+    [key: string]: any
+}
+
+/**
  * Not a real sandbox BTW. No security is gained from using this right now.
  */
 export class Sandbox {
     private _transpiler: Transpiler;
-    private _lib: string;
+    private _lib: SandboxLibrary;
 
     private _recursionCounter = 0;
 
@@ -53,7 +62,7 @@ export class Sandbox {
      */
     interface: SandboxInterface;
 
-    constructor(lib: string, interface_?: SandboxInterface) {
+    constructor(lib: SandboxLibrary, interface_?: SandboxInterface) {
         this._transpiler = new Transpiler();
         this._lib = lib;
         this.interface = interface_;
@@ -65,12 +74,12 @@ export class Sandbox {
      * @param extras The extra data to include in the run. These extras are passed to the interface during execution.
      * @param context The object that should be mapped to "this" during execution. Enables usage of "this" inside formulas.
      */
-    run<TExtra>(formula: string, extras: TExtra, context: any, variables: { [key: string]: any } = {}) : SandboxResult<TExtra> {
+    run<TExtra>(formula: string, extras: TExtra, context: any, variables: SandboxLibrary = {}) : SandboxResult<TExtra> {
         const macroed = this._replaceMacros(formula);
         return this._runJs(macroed, extras, context, variables);
     }
 
-    private _runJs<TExtra>(__js: string, __extras: TExtra, __context: any, __variables: { [key: string]: any }): SandboxResult<TExtra> {
+    private _runJs<TExtra>(__js: string, __extras: TExtra, __context: any, __variables: SandboxLibrary): SandboxResult<TExtra> {
         const __this = this;
 
         // This works because even though we never decrement
@@ -104,7 +113,8 @@ export class Sandbox {
         }
 
         function __evalWrapper(js: string): any {
-            const final = __this._lib + '\n' + keys(__variables).map(v => `var ${v} = __variables["${v}"];`).join('\n') + '\n' + js;
+            const finalVars = merge(__this._lib, __variables);
+            const final = __this._lib + '\n' + keys(finalVars).map(v => `var ${v} = finalVars["${v}"];`).join('\n') + '\n' + js;
             return eval(final);
         }
 
