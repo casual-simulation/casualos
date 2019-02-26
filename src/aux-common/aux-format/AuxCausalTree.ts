@@ -1,18 +1,19 @@
-import { Weave, WeaveReference } from "../channels-core/Weave";
-import { AuxOp, FileOp, TagOp, InsertOp, ValueOp } from "./AuxOpTypes";
-import { CausalTree } from "../channels-core/CausalTree";
-import { FilesState, FileType } from "../Files";
-import { AuxReducer } from "./AuxReducer";
-import { root, file, tag, value, del, insert } from "./AuxAtoms";
-import { AtomId, Atom } from "../channels-core/Atom";
-import { SiteInfo } from "../channels-core/SiteIdInfo";
+import { Weave, WeaveReference } from '../channels-core/Weave';
+import { AuxOp, FileOp, TagOp, InsertOp, ValueOp } from './AuxOpTypes';
+import { CausalTree } from '../channels-core/CausalTree';
+import { FilesState, FileType } from '../Files';
+import { AuxReducer } from './AuxReducer';
+import { root, file, tag, value, del, insert } from './AuxAtoms';
+import { AtomId, Atom } from '../channels-core/Atom';
+import { SiteInfo } from '../channels-core/SiteIdInfo';
+import { StoredCausalTree } from '../channels-core/StoredCausalTree';
 
 /**
  * Defines a Causal Tree for aux files.
  */
 export class AuxCausalTree extends CausalTree<AuxOp, FilesState> {
-    constructor(site: SiteInfo) {
-        super(site, new AuxReducer());
+    constructor(tree: StoredCausalTree<AuxOp>) {
+        super(tree, new AuxReducer());
     }
 
     /**

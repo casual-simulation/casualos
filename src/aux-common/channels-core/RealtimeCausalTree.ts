@@ -1,8 +1,8 @@
-import { WeaveStore } from "./WeaveStore";
 import { RealtimeChannel } from "./RealtimeChannel";
 import { WeaveReference } from "./Weave";
 import { AtomOp } from "./Atom";
 import { CausalTree } from "./CausalTree";
+import { CausalTreeStore } from "./CausalTreeStore";
 
 /**
  * Defines a realtime causal tree.
@@ -12,7 +12,7 @@ import { CausalTree } from "./CausalTree";
 export class RealtimeCausalTree<TOp extends AtomOp, T> {
 
     private _tree: CausalTree<TOp, T>;
-    private _store: WeaveStore;
+    private _store: CausalTreeStore;
     private _channel: RealtimeChannel<WeaveReference<TOp>>;
 
     /**
@@ -21,7 +21,7 @@ export class RealtimeCausalTree<TOp extends AtomOp, T> {
      * @param store 
      * @param channel 
      */
-    constructor(tree: CausalTree<TOp, T>, store: WeaveStore, channel: RealtimeChannel<WeaveReference<TOp>>) {
+    constructor(tree: CausalTree<TOp, T>, store: CausalTreeStore, channel: RealtimeChannel<WeaveReference<TOp>>) {
 
     }
 

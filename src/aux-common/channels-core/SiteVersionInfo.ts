@@ -10,7 +10,7 @@ export interface SiteVersionInfo {
      * The site ID of the peer that this info is for.
      * Null if the peer does not have a site ID.
      */
-    siteId: number | null;
+    site: SiteInfo | null;
 
     /**
      * Gets the version that the weave for this site is at.

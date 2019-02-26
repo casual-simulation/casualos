@@ -22,7 +22,7 @@ export class CausalTree<TOp extends AtomOp, TValue> {
      * Gets the site that this causal tree represents.
      */
     get site() {
-        return this._site.id;
+        return this._site;
     }
 
     /**
@@ -66,21 +66,21 @@ export class CausalTree<TOp extends AtomOp, TValue> {
 
     /**
      * Creates a new Causal Tree with the given site ID.
-     * @param site The ID of this site.
+     * @param tree The stored tree that this causal tree should be made from.
      * @param reducer The reducer used to convert a list of operations into a single value.
      */
-    constructor(site: SiteInfo, reducer: AtomReducer<TOp, TValue>, knownSites: SiteInfo[] = null, weave: WeaveReference<TOp>[] = null) {
-        this._site = site;
+    constructor(tree: StoredCausalTree<TOp>, reducer: AtomReducer<TOp, TValue>) {
+        this._site = tree.site;
         this._knownSites = unionBy([
-            site
-        ], knownSites || [], site => site.id);
+            this.site
+        ], tree.knownSites || [], site => site.id);
         this._weave = new Weave<TOp>();
         this._factory = new AtomFactory<TOp>(this._site);
         this._reducer = reducer;
         this._value = null;
 
-        if (weave) {
-            this.importWeave(weave);
+        if (tree.weave) {
+            this.importWeave(tree.weave);
         }
     }
 
@@ -89,7 +89,7 @@ export class CausalTree<TOp extends AtomOp, TValue> {
      * @param atom The atom to add to the tree.
      */
     add<T extends TOp>(atom: Atom<T>): WeaveReference<T> {
-        if (atom.id.site !== this.site) {
+        if (atom.id.site !== this.site.id) {
             this.factory.updateTime(atom.id.timestamp);
         }
         const ref = this.weave.insert(atom);
@@ -106,7 +106,7 @@ export class CausalTree<TOp extends AtomOp, TValue> {
         const sortedAtoms = sortBy(newAtoms, a => a.atom.id.timestamp);
         for (let i = 0; i < sortedAtoms.length; i++) {
             const ref = sortedAtoms[i];
-            if (ref.atom.id.site !== this.site) {
+            if (ref.atom.id.site !== this.site.id) {
                 this.factory.updateTime(ref.atom.id.timestamp);
             }
         }

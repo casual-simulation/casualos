@@ -3,6 +3,8 @@ import { AuxOp } from "./AuxOpTypes";
 import { AuxReducer } from "./AuxReducer";
 import { WeaveTraverser } from "../channels-core/WeaveTraverser";
 import { AuxCausalTree } from "./AuxCausalTree";
+import { storedTree } from "../channels-core/StoredCausalTree";
+import { site } from "../channels-core/SiteIdInfo";
 
 describe('AuxReducer', () => {
 
@@ -13,7 +15,7 @@ describe('AuxReducer', () => {
 
         beforeEach(() => {
             reducer = new AuxReducer();
-            site1 = new AuxCausalTree(1);
+            site1 = new AuxCausalTree(storedTree(site(1)));
             traverser = new WeaveTraverser(site1.weave);
         });
 

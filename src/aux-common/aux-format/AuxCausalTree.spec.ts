@@ -3,11 +3,12 @@ import { AtomFactory } from "../channels-core/AtomFactory";
 import { AuxOp } from "./AuxOpTypes";
 import { FilesState } from "../Files";
 import { site } from "../channels-core/SiteIdInfo";
+import { storedTree } from "../channels-core/StoredCausalTree";
 
 describe('AuxCausalTree', () => {
     describe('value', () => {
         it('should add files to the state', () => {
-            let tree = new AuxCausalTree(site(1));
+            let tree = new AuxCausalTree(storedTree(site(1)));
 
             tree.root();
             tree.file('fileId', 'object');
@@ -25,8 +26,8 @@ describe('AuxCausalTree', () => {
         });
 
         it('should use last write wins for duplicate files', () => {
-            let site1 = new AuxCausalTree(site(1));
-            let site2 = new AuxCausalTree(site(2));
+            let site1 = new AuxCausalTree(storedTree(site(1)));
+            let site2 = new AuxCausalTree(storedTree(site(2)));
 
             const root = site1.root();
             site2.add(root.atom);
@@ -57,8 +58,8 @@ describe('AuxCausalTree', () => {
         });
 
         it('should use last write wins for file deletions', () => {
-            let site1 = new AuxCausalTree(site(1));
-            let site2 = new AuxCausalTree(site(2));
+            let site1 = new AuxCausalTree(storedTree(site(1)));
+            let site2 = new AuxCausalTree(storedTree(site(2)));
 
             const root = site1.root();
             site2.add(root.atom);
@@ -81,8 +82,8 @@ describe('AuxCausalTree', () => {
         });
 
         it('should use last write wins for tags', () => {
-            let site1 = new AuxCausalTree(site(1));
-            let site2 = new AuxCausalTree(site(2));
+            let site1 = new AuxCausalTree(storedTree(site(1)));
+            let site2 = new AuxCausalTree(storedTree(site(2)));
 
             const root = site1.root();
             site2.add(root.atom);
@@ -115,8 +116,8 @@ describe('AuxCausalTree', () => {
         });
 
         it('should allow multiple tags', () => {
-            let site1 = new AuxCausalTree(site(1));
-            let site2 = new AuxCausalTree(site(2));
+            let site1 = new AuxCausalTree(storedTree(site(1)));
+            let site2 = new AuxCausalTree(storedTree(site(2)));
 
             const root = site1.root();
             site2.add(root.atom);
@@ -150,8 +151,8 @@ describe('AuxCausalTree', () => {
         });
 
         it('should use last write wins for tag values', () => {
-            let site1 = new AuxCausalTree(site(1));
-            let site2 = new AuxCausalTree(site(2));
+            let site1 = new AuxCausalTree(storedTree(site(1)));
+            let site2 = new AuxCausalTree(storedTree(site(2)));
 
             const root = site1.root();
             site2.add(root.atom);
@@ -182,9 +183,9 @@ describe('AuxCausalTree', () => {
         });
 
         it('should use sequence for tag renaming', () => {
-            let site1 = new AuxCausalTree(site(1));
-            let site2 = new AuxCausalTree(site(2));
-            let site3 = new AuxCausalTree(site(3));
+            let site1 = new AuxCausalTree(storedTree(site(1)));
+            let site2 = new AuxCausalTree(storedTree(site(2)));
+            let site3 = new AuxCausalTree(storedTree(site(3)));
 
             const root = site1.root();
             site2.add(root.atom);
@@ -235,9 +236,9 @@ describe('AuxCausalTree', () => {
         });
 
         it('should use sequence for tag renaming', () => {
-            let site1 = new AuxCausalTree(site(1));
-            let site2 = new AuxCausalTree(site(2));
-            let site3 = new AuxCausalTree(site(3));
+            let site1 = new AuxCausalTree(storedTree(site(1)));
+            let site2 = new AuxCausalTree(storedTree(site(2)));
+            let site3 = new AuxCausalTree(storedTree(site(3)));
 
             const root = site1.root();
             site2.add(root.atom);
@@ -285,7 +286,7 @@ describe('AuxCausalTree', () => {
         });
 
         it('should ignore tags with empty names', () => {
-            let site1 = new AuxCausalTree(site(1));
+            let site1 = new AuxCausalTree(storedTree(site(1)));
 
             const root = site1.root();
 

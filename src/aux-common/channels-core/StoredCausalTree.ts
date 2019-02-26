@@ -10,3 +10,17 @@ export interface StoredCausalTree<T extends AtomOp> {
     knownSites: SiteInfo[],
     weave: WeaveReference<T>[];
 }
+
+/**
+ * Creates a stored causal tree with the given data.
+ * @param site 
+ * @param knownSites 
+ * @param weave 
+ */
+export function storedTree<T extends AtomOp>(site: SiteInfo, knownSites: SiteInfo[] = null, weave: WeaveReference<T>[] = null): StoredCausalTree<T> {
+    return {
+        site: site,
+        knownSites: knownSites,
+        weave: weave
+    };
+}
