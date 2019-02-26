@@ -1,7 +1,15 @@
-import { FileUpdatedEvent } from "../Files";
+import { FileUpdatedEvent, FileEvent, FileAddedEvent } from "../Files";
+import uuid from 'uuid/v4';
 
-declare var __actions: any[];
-declare function uuid(): string;
+let actions: FileEvent[] = [];
+
+export function setActions(value: FileEvent[]) {
+    actions = value;
+}
+
+export function getActions(): FileEvent[] {
+    return actions;
+}
 
 // declare const lib: string;
 // export default lib;
@@ -14,7 +22,7 @@ declare function uuid(): string;
  * @param list The value that should be summed. If it is a list, then the result will be the sum of the items in the list.
  *             If it is not a list, then the result will be the value converted to a number.
  */
-function sum(list: any): number {
+export function sum(list: any): number {
     if (!Array.isArray(list)) {
         return parseFloat(list);
     }
@@ -37,7 +45,7 @@ function sum(list: any): number {
  *             If it is a list, then the result will be sum(list)/list.length.
  *             If it is not a list, then the result will be the value converted to a number.
  */
-function avg(list: any) {
+export function avg(list: any) {
     if(!Array.isArray(list)) {
         return parseFloat(list);
     }
@@ -51,7 +59,7 @@ function avg(list: any) {
  * Calculates the square root of the given number.
  * @param value The number.
  */
-function sqrt(value: any) {
+export function sqrt(value: any) {
     return Math.sqrt(parseFloat(value));
 }
 
@@ -59,7 +67,7 @@ function sqrt(value: any) {
  * Calculates the absolute value of a number.
  * @param number The number to get the absolute value of.
  */
-function abs(number: any) {
+export function abs(number: any) {
     return Math.abs(parseFloat(number));
 }
 
@@ -68,7 +76,7 @@ function abs(number: any) {
  * 
  * @param list The value that the standard deviation should be calculated for.
  */
-function stdDev(list: any) {
+export function stdDev(list: any) {
     if(!Array.isArray(list)) {
         list = [parseFloat(list)];
     }
@@ -84,7 +92,7 @@ function stdDev(list: any) {
  * Sorts the given array in ascending order and returns the sorted values in a new array.
  * @param array The array of numbers to sort.
  */
-function sort(array: any[], direction: ('ASC' | 'DESC') = 'ASC'): any[] {
+export function sort(array: any[], direction: ('ASC' | 'DESC') = 'ASC'): any[] {
     let newArray = array.slice();
     let isAscending = direction.toUpperCase() !== 'DESC';
     if (isAscending) {
@@ -99,7 +107,7 @@ function sort(array: any[], direction: ('ASC' | 'DESC') = 'ASC'): any[] {
  * @param min The smallest allowed value.
  * @param max The largest allowed value.
  */
-function randomInt(min: number = 0, max?: number): number {
+export function randomInt(min: number = 0, max?: number): number {
     min = Math.ceil(min);
     max = Math.floor(max);
     const rand = Math.random();
@@ -115,7 +123,7 @@ function randomInt(min: number = 0, max?: number): number {
  * @param min The smallest allowed value.
  * @param max The largest allowed value.
  */
-function random(min: number = 0, max?: number): number {
+export function random(min: number = 0, max?: number): number {
     const rand = Math.random();
     if (max) {
         return rand * (max - min) + min;
@@ -129,7 +137,7 @@ function random(min: number = 0, max?: number): number {
  * @param values The values to make the string out of.
  * @param separator The separator used to separate values.
  */
-function join(values: any, separator: string = ','): string {
+export function join(values: any, separator: string = ','): string {
     if (Array.isArray(values)) {
         return values.join(separator);
     } else {
@@ -137,8 +145,8 @@ function join(values: any, separator: string = ','): string {
     }
 }
 
-function destroy(file: any) {
-    __actions.push(<FileUpdatedEvent>{
+export function destroy(file: any) {
+    actions.push(<FileUpdatedEvent>{
         type: 'file_updated',
         id: (typeof file === 'object' ? file.id : file),
         update: {
@@ -149,9 +157,9 @@ function destroy(file: any) {
     });
 }
 
-function create(data: any) {
+export function create(data: any) {
     var id = uuid();
-    __actions.push({
+    actions.push(<FileAddedEvent>{
         type: 'file_added',
         id: id,
         file: {
@@ -166,7 +174,7 @@ function create(data: any) {
     });
 }
 
-function copy(...files: any[]) {
+export function copy(...files: any[]) {
     let id = uuid();
 
     let originals = files.map(f => {
@@ -189,9 +197,24 @@ function copy(...files: any[]) {
     delete newFile.tags._original;
     delete newFile.tags.id;
 
-    __actions.push({
+    actions.push(<FileAddedEvent>{
         type: 'file_added',
         id: id,
         file: newFile
     });
 }
+
+export default {
+    sum,
+    avg,
+    sqrt,
+    abs,
+    stdDev,
+    sort,
+    randomInt,
+    random,
+    join,
+    destroy,
+    copy,
+    create
+};

@@ -5,44 +5,27 @@ import * as path from 'path';
 import SocketIO from 'socket.io';
 import { ChannelServer, ChannelServerConfig } from './ChannelServer';
 import { asyncMiddleware } from './utils';
+import { Config, ClientConfig } from './config';
+import vhost from 'vhost';
 
-/**
- * The server config.
- */
-export interface Config {
-    socket: SocketIO.ServerOptions,
-    socketPort: number,
-    httpPort: number,
-    client: {
-        dist: string;
-    },
-    channels: ChannelServerConfig
-};
+export class ClientServer {
+    private _app: express.Express;
+    private _config: ClientConfig;
 
-/**
- * Defines a class that represents a fully featured SO4 server.
- */
-export class Server {
-
-    _app: express.Express;
-    _http: Http.Server;
-    _socket: SocketIO.Server;
-    _channelServer: ChannelServer;
-    _config: Config;
-
-    constructor(config: Config) {
-        this._config = config;
-        this._app = express();
-        this._http = new Http.Server(this._app);
-        this._socket = SocketIO(this._http, config.socket);
-
-        this._channelServer = new ChannelServer(config.channels);
+    get app() {
+        return this._app;
     }
 
-    async configure() {
-        this._app.use(bodyParser.json());
-        await this._channelServer.configure(this._app, this._socket);
+    get config() {
+        return this._config;
+    }
 
+    constructor(config: ClientConfig) {
+        this._app = express();
+        this._config = config;
+    }
+
+    configure() {
         this._app.post('/api/users', asyncMiddleware(async (req, res) => {
             const json = req.body;
 
@@ -62,14 +45,51 @@ export class Server {
             });
         }));
 
-        this._app.use(express.static(this._config.client.dist));
+        this._app.use(express.static(this._config.dist));
 
         this._app.use('*', (req, res) => {
-            res.sendFile(path.join(this._config.client.dist, 'index.html'));
+            res.sendFile(path.join(this._config.dist, this._config.index));
+        });
+    }
+}
+
+/**
+ * Defines a class that represents a fully featured SO4 server.
+ */
+export class Server {
+
+    _app: express.Express;
+    _http: Http.Server;
+    _socket: SocketIO.Server;
+    _channelServer: ChannelServer;
+    _config: Config;
+    _clients: ClientServer[];
+
+    constructor(config: Config) {
+        this._config = config;
+        this._app = express();
+        this._http = new Http.Server(this._app);
+        this._config = config;
+        this._socket = SocketIO(this._http, config.socket);
+        this._clients = this._config.clients.map(c => new ClientServer(c));
+
+        this._channelServer = new ChannelServer(config.channels);
+    }
+
+    async configure() {
+        this._app.use(bodyParser.json());
+        await this._channelServer.configure(this._app, this._socket);
+
+        this._clients.forEach(c => {
+            c.configure();
+
+            c.config.domains.forEach(d => {
+                this._app.use(vhost(d, c.app));
+            });
         });
     }
 
     start() {
-        this._http.listen(this._config.httpPort, () => console.log(`Example app listening on port ${this._config.httpPort}!`));
+        this._http.listen(this._config.httpPort, () => console.log(`Server listening on port ${this._config.httpPort}!`));
     }
 };

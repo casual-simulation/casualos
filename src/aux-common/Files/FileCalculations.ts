@@ -13,10 +13,10 @@ import {
     sortBy,
     sumBy
 } from 'lodash';
-import { Sandbox } from '../Formulas/Sandbox';
+import { Sandbox, SandboxLibrary } from '../Formulas/Sandbox';
 
 /// <reference path="../typings/global.d.ts" />
-import formulaLib from '@yeti-cgi/aux-common/Formulas/formula-lib';
+import formulaLib from '../Formulas/formula-lib';
 import { FilterFunction, SandboxInterface } from '../Formulas/SandboxInterface';
 import { PartialFile } from '../Files';
 import { FilesState, cleanFile } from './FilesChannel';
@@ -503,7 +503,7 @@ export function convertToFormulaObject(context: FileCalculationContext, object: 
  * @param objects The objects that should be included in the context.
  * @param lib The library JavaScript that should be used.
  */
-export function createCalculationContext(objects: Object[], lib: string = formulaLib): FileCalculationContext {
+export function createCalculationContext(objects: Object[], lib: SandboxLibrary = formulaLib): FileCalculationContext {
     const context = {
         sandbox: new Sandbox(lib),
         objects: objects

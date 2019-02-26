@@ -2,17 +2,19 @@
   "name": "@yeti-cgi/aux-common",
   "version": "0.3.0",
   "description": "Common library for AUX projects",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "module": "index.js",
   "scripts": {
-    "watch": "echo 'Nothing to watch!'",
-    "build": "tsc",
+    "watch": "npm run clean && tsc --watch",
+    "clean": "gulp clean",
+    "build": "npm run clean && tsc",
     "test": "jest",
     "test:watch": "jest --watchAll"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yeticgi/file-simulator.git"
+    "url": "git+https://github.com/yeticgi/aux.git"
   },
   "keywords": [
     "aux",
@@ -23,9 +25,9 @@
   "author": "YETi CGI",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/yeticgi/file-simulator/issues"
+    "url": "https://github.com/yeticgi/aux/issues"
   },
-  "homepage": "https://github.com/yeticgi/file-simulator#readme",
+  "homepage": "https://github.com/yeticgi/aux#readme",
   "publishConfig": {
     "access": "public"
   },
@@ -48,8 +50,10 @@
     "uuid": "^3.3.2"
   },
   "files": [
-    "/lib",
     "/README.md",
-    "/LICENSE.txt"
+    "/LICENSE.txt",
+    "**/*.js",
+    "**/*.js.map",
+    "**/*.d.ts"
   ]
 }

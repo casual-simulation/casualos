@@ -7,8 +7,9 @@
     "watch": "lerna exec --parallel -- npm run watch",
     "build": "lerna exec -- npm run build",
     "test:watch": "jest --watchAll",
-    "test": "jest",
-    "test:ci": "jest --ci --reporters=default --reporters=jest-junit"
+    "test": "npm run clean && jest",
+    "test:ci": "npm run clean && jest --ci --reporters=default --reporters=jest-junit",
+    "clean": "lerna exec -- npm run clean"
   },
   "devDependencies": {
     "@babel/core": "^7.2.0",
@@ -30,11 +31,15 @@
     "@types/uuid": "^3.3.2",
     "@types/vue-color": "^2.4.1",
     "babel-loader": "^8.0.4",
+    "braces": "^2.3.2",
     "chai": "^4.2.0",
     "clean-webpack-plugin": "^1.0.0",
     "css-loader": "^1.0.1",
+    "del": "^3.0.0",
     "exports-loader": "^0.7.0",
     "file-loader": "^2.0.0",
+    "gulp": "^4.0.0",
+    "handlebars": "^4.1.0",
     "html-webpack-plugin": "^3.2.0",
     "imports-loader": "^0.8.0",
     "jest": "^24.1.0",
@@ -46,6 +51,7 @@
     "optimize-css-assets-webpack-plugin": "^5.0.1",
     "raw-loader": "^1.0.0",
     "sinon": "^7.2.4",
+    "source-map-loader": "^0.2.4",
     "style-loader": "^0.23.1",
     "terser-webpack-plugin": "^1.2.1",
     "ts-jest": "^24.0.0",
@@ -58,8 +64,6 @@
     "webpack-bundle-analyzer": "^3.0.3",
     "webpack-cli": "^3.1.2",
     "webpack-merge": "^4.1.4",
-    "webpack-node-externals": "^1.7.2",
-    "braces": "^2.3.2",
-    "handlebars": "^4.1.0"
+    "webpack-node-externals": "^1.7.2"
   }
 }

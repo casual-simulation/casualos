@@ -6,28 +6,29 @@
   "private": true,
   "scripts": {
     "start": "node server/dist/main.js",
-    "watch": "concurrently \"npm:watch:server\" \"npm:watch:client\" \"nodemon server/dist/main.js\"",
-    "build": "npm run build:client && npm run build:server",
-    "build:client": "webpack --config aux-projector/webpack.prod.js",
-    "build:client:profile": "webpack --config aux-projector/webpack.prod.js --profile --json > bundle_stats.json && webpack-bundle-analyzer bundle_stats.json",
+    "watch": "concurrently \"npm:watch:server\" \"npm:watch:web\" \"nodemon server/dist/main.js\"",
+    "build": "npm run build:web && npm run build:server",
+    "build:web": "webpack --config aux-web/webpack.prod.js",
+    "build:web:profile": "webpack --config aux-web/webpack.prod.js --profile --json > bundle_stats.json && webpack-bundle-analyzer bundle_stats.json",
     "build:server:profile": "webpack --config server/webpack.config.js --profile --json > server/dist/bundle_stats.json && webpack-bundle-analyzer server/dist/bundle_stats.json",
     "build:server": "webpack --config server/webpack.config.js",
     "watch:server": "webpack --config server/webpack.config.js --watch",
-    "watch:client": "webpack --config aux-projector/webpack.dev.js --watch",
+    "watch:web": "webpack --config aux-web/webpack.dev.js --watch",
     "test": "jest",
     "test:watch": "jest --watchAll",
-    "test:ci": "jest --ci --reporters=default --reporters=jest-junit"
+    "test:ci": "jest --ci --reporters=default --reporters=jest-junit",
+    "clean": "echo \"Nothing to clean\""
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yeticgi/process-for-teams.git"
+    "url": "git+https://github.com/yeticgi/aux.git"
   },
   "author": "YETi CGI",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/yeticgi/process-for-teams/issues"
+    "url": "https://github.com/yeticgi/aux/issues"
   },
-  "homepage": "https://github.com/yeticgi/process-for-teams#readme",
+  "homepage": "https://github.com/yeticgi/aux#readme",
   "files": [
     "dist",
     "/README.md",
@@ -72,6 +73,7 @@
     "vue-property-decorator": "^7.2.0",
     "vue-router": "^3.0.1",
     "webvr-polyfill": "^0.10.10",
-    "webvr-ui": "^0.10.0"
+    "webvr-ui": "^0.10.0",
+    "vhost": "^3.0.2"
   }
 }

@@ -18,21 +18,16 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /formula\-lib/,
-        use: 'raw-loader'
-      },
-      {
         test: /\.tsx?$/,
         loader: 'ts-loader',
-        include: [/aux-common/, __dirname],
-        options: { allowTsInNodeModules: true },
+        include: [__dirname],
+        exclude: /node_modules/
       }
     ]
   },
   resolve: {
-    extensions: [ '.ts', '.js' ],
+    extensions: [ '.js', '.ts' ],
     alias: { },
-    symlinks: false
   },
   externals: [
     nodeExternals({
