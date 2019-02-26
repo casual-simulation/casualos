@@ -34,6 +34,34 @@ class Reducer implements AtomReducer<Op, number> {
 }
 
 describe('CausalTree', () => {
+
+    describe('constructor', () => {
+        it('should import the given weave', () => {
+            let tree1 = new CausalTree(site(1), new Reducer());
+
+            const root = tree1.factory.create(new Op(), null); // Time 1
+            tree1.add(root);
+
+            let tree2 = new CausalTree(site(2), new Reducer(), null, tree1.weave.atoms);
+
+            expect(tree2.weave.atoms.map(r => r.atom)).toEqual([
+                root
+            ]);
+        });
+
+        it('should add the given known sites to the known sites list', () => {
+            let tree1 = new CausalTree(site(1), new Reducer(), [
+                site(2),
+                site(1)
+            ]);
+
+            expect(tree1.knownSites).toEqual([
+                { id: 1 },
+                { id: 2 }
+            ]);
+        });
+    });
+
     describe('insert()', () => {
         it('should update the factory time when adding an atom from another site', () => {
             let tree = new CausalTree(site(1), new Reducer());
@@ -78,7 +106,7 @@ describe('CausalTree', () => {
             tree2.add(tree2.factory.create(new Op(OpType.add), root)); // Time 4
             tree2.add(tree2.factory.create(new Op(OpType.subtract), root)); // Time 5
 
-            tree1.import(tree2.weave.atoms);
+            tree1.importWeave(tree2.weave.atoms);
 
             expect(tree1.time).toBe(6);
         });
@@ -95,8 +123,8 @@ describe('CausalTree', () => {
             tree2.add(tree2.factory.create(new Op(OpType.add), root)); // Time 4
             tree2.add(tree2.factory.create(new Op(OpType.subtract), root)); // Time 5
 
-            tree1.import(tree2.weave.atoms);
-            tree1.import(tree2.weave.atoms);
+            tree1.importWeave(tree2.weave.atoms);
+            tree1.importWeave(tree2.weave.atoms);
 
             expect(tree1.time).toBe(6);
         });
@@ -132,6 +160,16 @@ describe('CausalTree', () => {
             expect(tree1.knownSites).toEqual([
                 { id: 1 },
                 { id: 12 }
+            ]);
+        });
+
+        it('should ignore duplicate sites', () => {
+            let tree1 = new CausalTree(site(1), new Reducer());
+
+            tree1.registerSite(site(1));
+
+            expect(tree1.knownSites).toEqual([
+                { id: 1 }
             ]);
         });
     });

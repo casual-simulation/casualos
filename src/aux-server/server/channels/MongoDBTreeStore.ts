@@ -1,23 +1,23 @@
 import { MongoClient, Db, Collection } from 'mongodb';
 import pify from 'pify';
-import { WeaveStore } from '@yeti-cgi/aux-common/channels-core/WeaveStore';
+import { CausalTreeStore } from '@yeti-cgi/aux-common/channels-core/CausalTreeStore';
 import { AtomOp } from '@yeti-cgi/aux-common/channels-core/Atom';
 import { Weave, WeaveReference } from '@yeti-cgi/aux-common/channels-core/Weave';
+import { StoredCausalTree } from '@yeti-cgi/aux-common/channels-core/StoredCausalTree';
 
 const connect = pify(MongoClient.connect);
 
 /**
  * Defines a class that is able to store a causal tree in MongoDB.
  */
-export class MongoDBTreeStore implements WeaveStore {
-    
+export class MongoDBTreeStore implements CausalTreeStore {
 
     private _client: MongoClient;
     private _db: Db;
     private _collection: Collection;
     private _uri: string;
     private _dbName: string;
-    private _collectionName: string = 'weaves';
+    private _collectionName: string = 'trees';
 
     constructor(uri: string, dbName: string) {
         this._uri = uri;
@@ -30,19 +30,25 @@ export class MongoDBTreeStore implements WeaveStore {
         this._collection = this._db.collection(this._collectionName);
     }
 
-    async update<T extends AtomOp>(id: string, weave: WeaveReference<T>[]): Promise<void> {
+    async update<T extends AtomOp>(id: string, tree: StoredCausalTree<T>): Promise<void> {
+        const wrapper: StorageWrapper<T> = {
+            id: id,
+            tree: tree
+        };
         await this._collection.updateOne({ channel: id }, { 
-            $set: {
-                channel: id,
-                state: weave
-            }
+            $set: wrapper
         }, {
             upsert: true
         });
     }
 
-    async get<T extends AtomOp>(id: string): Promise<WeaveReference<T>[]> {
-        const atoms: WeaveReference<T>[] = await this._collection.findOne({ weave: id });
-        return atoms;
+    async get<T extends AtomOp>(id: string): Promise<StoredCausalTree<T>> {
+        const wrapper: StorageWrapper<T> = await this._collection.findOne({ id: id });
+        return wrapper.tree;
     }
+}
+
+interface StorageWrapper<T extends AtomOp> {
+    id: string;
+    tree: StoredCausalTree<T>;
 }

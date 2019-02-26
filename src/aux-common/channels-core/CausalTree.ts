@@ -2,8 +2,9 @@ import { AtomOp, Atom, AtomId } from "./Atom";
 import { Weave, WeaveReference } from "./Weave";
 import { AtomFactory } from "./AtomFactory";
 import { AtomReducer } from "./AtomReducer";
-import { sortBy } from "lodash";
+import { sortBy, unionBy, find } from "lodash";
 import { SiteInfo } from "./SiteIdInfo";
+import { StoredCausalTree } from "./StoredCausalTree";
 
 /**
  * Defines a class that represents a Causal Tree.
@@ -68,15 +69,19 @@ export class CausalTree<TOp extends AtomOp, TValue> {
      * @param site The ID of this site.
      * @param reducer The reducer used to convert a list of operations into a single value.
      */
-    constructor(site: SiteInfo, reducer: AtomReducer<TOp, TValue>) {
+    constructor(site: SiteInfo, reducer: AtomReducer<TOp, TValue>, knownSites: SiteInfo[] = null, weave: WeaveReference<TOp>[] = null) {
         this._site = site;
-        this._knownSites = [
-            this._site
-        ];
+        this._knownSites = unionBy([
+            site
+        ], knownSites || [], site => site.id);
         this._weave = new Weave<TOp>();
         this._factory = new AtomFactory<TOp>(this._site);
         this._reducer = reducer;
         this._value = null;
+
+        if (weave) {
+            this.importWeave(weave);
+        }
     }
 
     /**
@@ -96,7 +101,7 @@ export class CausalTree<TOp extends AtomOp, TValue> {
      * Imports the given list of weave references into the tree.
      * @param refs The references to import.
      */
-    import<T extends TOp>(refs: WeaveReference<T>[]): void {
+    importWeave<T extends TOp>(refs: WeaveReference<T>[]): void {
         const newAtoms = this.weave.import(refs);
         const sortedAtoms = sortBy(newAtoms, a => a.atom.id.timestamp);
         for (let i = 0; i < sortedAtoms.length; i++) {
@@ -106,6 +111,17 @@ export class CausalTree<TOp extends AtomOp, TValue> {
             }
         }
         this._value = null;
+    }
+
+    /**
+     * Exports this tree into a storable format.
+     */
+    export(): StoredCausalTree<TOp> {
+        return {
+            site: this._site,
+            knownSites: this.knownSites.slice(),
+            weave: this.weave.atoms.slice()
+        };
     }
 
     /**
@@ -124,6 +140,9 @@ export class CausalTree<TOp extends AtomOp, TValue> {
      * @param site The site. 
      */
     registerSite(site: SiteInfo) {
-        this._knownSites.push(site);
+        let existing = find(this._knownSites, s => s.id === site.id);
+        if(!existing) {
+            this._knownSites.push(site);
+        }
     }
 }
