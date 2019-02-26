@@ -16,6 +16,7 @@ export class TestChannelConnection implements RealtimeChannelConnection {
     events: Subject<ConnectionEvent>;
     emitted: ConnectionEvent[];
     requests: TestChannelRequest[];
+    resolve: (name: string, data: any) => any;
     
     _connected: boolean;
     closed: boolean;
@@ -27,6 +28,7 @@ export class TestChannelConnection implements RealtimeChannelConnection {
         this.requests = [];
         this._connected = false;
         this.closed = false;
+        this.resolve = null;
     }
 
     get connected() {
@@ -54,12 +56,16 @@ export class TestChannelConnection implements RealtimeChannelConnection {
 
     request<TResponse>(name: string, data: any): Promise<TResponse> {
         return new Promise((resolve, reject) => {
-            this.requests.push({
-                name,
-                data,
-                resolve,
-                reject
-            });
+            if (this.resolve) {
+                resolve(this.resolve(name, data));
+            } else {
+                this.requests.push({
+                    name,
+                    data,
+                    resolve,
+                    reject
+                });
+            }
         });
     }
 

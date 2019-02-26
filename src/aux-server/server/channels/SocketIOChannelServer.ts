@@ -12,9 +12,7 @@ import { SiteVersionInfo } from '@yeti-cgi/aux-common/channels-core/SiteVersionI
 import { CausalTreeFactory } from '@yeti-cgi/aux-common/channels-core/CausalTreeFactory';
 import { CausalTree } from '@yeti-cgi/aux-common/channels-core/CausalTree';
 import { AtomOp } from '@yeti-cgi/aux-common/channels-core/Atom';
-import { CausalTreeStore } from '@yeti-cgi/aux-common/channels-core/CausalTreeStore';
-import { site } from '@yeti-cgi/aux-common/channels-core/SiteIdInfo';
-import { storedTree } from '@yeti-cgi/aux-common/channels-core/StoredCausalTree';
+import { WeaveStore } from '@yeti-cgi/aux-common/channels-core/WeaveStore';
 
 export interface ServerList {
     [key: string]: ChannelConnection<any>;
@@ -35,16 +33,16 @@ export class SocketIOChannelServer {
     private _client: ChannelClient;
     private _serverList: ServerList;
     private _channelList: ChannelList;
-    private _treeStore: CausalTreeStore;
+    private _weaveStore: WeaveStore;
     private _causalTreeFactory: CausalTreeFactory;
     private _userCount: number;
 
-    constructor(server: Server, client: ChannelClient, treeStore: CausalTreeStore, causalTreeFactory: CausalTreeFactory) {
+    constructor(server: Server, client: ChannelClient, weaveStore: WeaveStore, causalTreeFactory: CausalTreeFactory) {
         this._serverList = {};
         this._channelList = {};
         this._client = client;
         this._server = server;
-        this._treeStore = treeStore;
+        this._weaveStore = weaveStore;
         this._causalTreeFactory = causalTreeFactory;
         this._userCount = 0;
         
@@ -85,14 +83,14 @@ export class SocketIOChannelServer {
                     socket.on(eventName, async (event) => {
                         tree.add(event);
                         socket.to(info.id).emit(eventName, event);
-                        await this._treeStore.update(info.id, tree.export());
+                        await this._weaveStore.update(info.id, tree.weave.atoms);
                     });
 
                     socket.on(`info_${info.id}`, (event: SiteVersionInfo, callback: Function) => {
                         const currentVersionInfo: SiteVersionInfo = {
-                            site: tree.site,
+                            siteId: tree.site,
                             version: tree.weave.getVersion(),
-                            knownSites: tree.knownSites
+                            knownSites: tree.getKnownSites()
                         };
 
                         callback(currentVersionInfo);
@@ -144,9 +142,10 @@ export class SocketIOChannelServer {
     private async _getTree(info: RealtimeChannelInfo): Promise<CausalTree<AtomOp, any>> {
         let tree = this._channelList[info.id];
         if (!tree) {
-            const stored = await this._treeStore.get<AuxOp>(info.id);
-            tree = this._causalTreeFactory.create(info.type, stored || storedTree(site(1)));
+            tree = this._causalTreeFactory.create(info.type, 1);
             this._channelList[info.id] = tree;
+            const weave = await this._weaveStore.get<AuxOp>(info.id);
+            tree.import(weave);
         }
 
         return tree;

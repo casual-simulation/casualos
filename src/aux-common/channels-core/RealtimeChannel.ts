@@ -6,6 +6,9 @@ import { SiteVersionInfo } from "./SiteVersionInfo";
 import { filter, map, tap, first } from "rxjs/operators";
 import { ConnectionEvent } from "./ConnectionEvent";
 import { SiteInfo } from "./SiteIdInfo";
+import { WeaveVersion } from "./WeaveVersion";
+import { WeaveReference } from "./Weave";
+import { AtomOp } from "./Atom";
 
 /**
  * Defines a class for a realtime event channel.
@@ -21,6 +24,7 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
     private _emitName: string;
     private _infoName: string;
     private _requestSiteIdName: string;
+    private _requestWeaveName: string;
 
     /**
      * Creates a new realtime channel.
@@ -33,6 +37,7 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
         this._emitName = `event_${info.id}`;
         this._infoName = `info_${info.id}`;
         this._requestSiteIdName = `siteId_${info.id}`;
+        this._requestWeaveName = `weave_${info.id}`;
         this._connection.init([
             this._emitName,
             this._infoName,
@@ -92,6 +97,23 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
      */
     requestSiteId(site: SiteInfo): Promise<boolean> {
         return this._connection.request(this._requestSiteIdName, site);
+    }
+
+    /**
+     * Sends the given weave to the remote peer and requests
+     * a weave from the remote peer.
+     * If null is given as the current version then the remote peer will return
+     * its entire weave.
+     * TODO: If a version is provided then the remote peer will return a partial weave containing
+     * the full history of any missing atoms.
+     * @param weave The weave to send to the remote server.
+     * @param currentVersion The local weave version.
+     */
+    exchangeWeaves<T extends AtomOp>(weave: WeaveReference<T>[], currentVersion: WeaveVersion | null): Promise<WeaveReference<T>[]> {
+        return this._connection.request(this._requestWeaveName, {
+            weave: weave,
+            currentVersion: currentVersion
+        });
     }
 
     /**

@@ -20,3 +20,30 @@ export interface WeaveVersion {
 export interface WeaveSiteVersion {
     [siteId: number]: number;
 }
+
+/**
+ * Creates a new weave version from the given hash and sites.
+ * @param hash 
+ * @param sites 
+ */
+export function weaveVersion(hash: string, sites: WeaveSiteVersion): WeaveVersion {
+    return {
+        hash,
+        sites
+    };
+}
+
+/**
+ * Determines if the two versions are equal.
+ * @param first The first version.
+ * @param second The second version.
+ */
+export function versionsEqual(first: WeaveVersion, second: WeaveVersion): boolean {
+    if (!first && second) {
+        return false;
+    } else if(first && !second) {
+        return false;
+    } else {
+        return first.hash === second.hash;
+    }
+}

@@ -5,6 +5,7 @@ import { AtomReducer } from "./AtomReducer";
 import { sortBy, unionBy, find } from "lodash";
 import { SiteInfo } from "./SiteIdInfo";
 import { StoredCausalTree } from "./StoredCausalTree";
+import { SiteVersionInfo } from "./SiteVersionInfo";
 
 /**
  * Defines a class that represents a Causal Tree.
@@ -144,5 +145,13 @@ export class CausalTree<TOp extends AtomOp, TValue> {
         if(!existing) {
             this._knownSites.push(site);
         }
+    }
+
+    getVersion(): SiteVersionInfo {
+        return {
+            site: this.site,
+            knownSites: this.knownSites,
+            version: this.weave.getVersion()
+        };
     }
 }
