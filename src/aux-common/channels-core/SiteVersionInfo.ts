@@ -15,10 +15,10 @@ export interface SiteVersionInfo {
     /**
      * Gets the version that the weave for this site is at.
      */
-    version: WeaveVersion;
+    version: WeaveVersion | null;
 
     /**
      * Gets the list of sites that this site knows about, even if they haven't submitted an atom yet.
      */
-    knownSites: SiteInfo[];
+    knownSites: SiteInfo[] | null;
 }

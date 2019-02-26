@@ -13,6 +13,8 @@ import { CausalTreeFactory } from '@yeti-cgi/aux-common/channels-core/CausalTree
 import { CausalTree } from '@yeti-cgi/aux-common/channels-core/CausalTree';
 import { AtomOp } from '@yeti-cgi/aux-common/channels-core/Atom';
 import { CausalTreeStore } from '@yeti-cgi/aux-common/channels-core/CausalTreeStore';
+import { site } from '@yeti-cgi/aux-common/channels-core/SiteIdInfo';
+import { storedTree } from '@yeti-cgi/aux-common/channels-core/StoredCausalTree';
 
 export interface ServerList {
     [key: string]: ChannelConnection<any>;
@@ -142,10 +144,9 @@ export class SocketIOChannelServer {
     private async _getTree(info: RealtimeChannelInfo): Promise<CausalTree<AtomOp, any>> {
         let tree = this._channelList[info.id];
         if (!tree) {
-            tree = this._causalTreeFactory.create(info.type, site(1));
+            const stored = await this._treeStore.get<AuxOp>(info.id);
+            tree = this._causalTreeFactory.create(info.type, stored || storedTree(site(1)));
             this._channelList[info.id] = tree;
-            const weave = await this._treeStore.get<AuxOp>(info.id);
-            tree.importWeave(weave);
         }
 
         return tree;

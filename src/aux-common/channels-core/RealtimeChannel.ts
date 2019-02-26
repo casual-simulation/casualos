@@ -5,6 +5,7 @@ import { RealtimeChannelConnection } from "./RealtimeChannelConnection";
 import { SiteVersionInfo } from "./SiteVersionInfo";
 import { filter, map, tap, first } from "rxjs/operators";
 import { ConnectionEvent } from "./ConnectionEvent";
+import { SiteInfo } from "./SiteIdInfo";
 
 /**
  * Defines a class for a realtime event channel.
@@ -19,6 +20,7 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
     private _connection: RealtimeChannelConnection;
     private _emitName: string;
     private _infoName: string;
+    private _requestSiteIdName: string;
 
     /**
      * Creates a new realtime channel.
@@ -30,9 +32,11 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
         this._connection = connection;
         this._emitName = `event_${info.id}`;
         this._infoName = `info_${info.id}`;
+        this._requestSiteIdName = `siteId_${info.id}`;
         this._connection.init([
             this._emitName,
-            this._infoName
+            this._infoName,
+            this._requestSiteIdName
         ]);
 
         this.events = this._connection.events.pipe(
@@ -75,6 +79,19 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
      */
     exchangeInfo(version: SiteVersionInfo): Promise<SiteVersionInfo> {
         return this._connection.request(this._infoName, version);
+    }
+
+    /**
+     * Requests the given site ID from the remote peer.
+     * This can act as a way to solve race conditions when two peers
+     * try to become the same site at the same time.
+     * 
+     * Returns true if the given site info was granted to this peer.
+     * Otherwise returns false.
+     * @param site The site info that this channel is trying to use.
+     */
+    requestSiteId(site: SiteInfo): Promise<boolean> {
+        return this._connection.request(this._requestSiteIdName, site);
     }
 
     /**

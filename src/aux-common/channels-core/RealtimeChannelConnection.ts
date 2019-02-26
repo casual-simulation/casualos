@@ -37,7 +37,7 @@ export interface RealtimeChannelConnection extends SubscriptionLike {
      * @param name The resource to request.
      * @param data The data to send in the request.
      */
-    request<T>(name: string, data: T): Promise<T>;
+    request<TResponse>(name: string, data: any): Promise<TResponse>;
 
     /**
      * The observable list of connection states.
