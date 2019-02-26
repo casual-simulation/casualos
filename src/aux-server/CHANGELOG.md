@@ -1,7 +1,14 @@
 # AUX Server Changelog
 
+## V0.3.5
+### Date: 2/26/2019
+
+### Changes:
+- Fixed AR mode.
+- Restoring original background color when exiting AR mode.
+
 ## V0.3.4
-### Date: 2/21/2019
+### Date: 2/25/2019
 
 ### Changes:
 - Added stub for AUX Player. 
