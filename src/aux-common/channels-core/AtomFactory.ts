@@ -1,19 +1,20 @@
 import { AtomOp, Atom, AtomId, atom, atomId } from "./Atom";
 import { WeaveReference } from "./Weave";
+import { SiteInfo } from "./SiteIdInfo";
 
 /**
  * Defines a class that can create atoms based on a site ID and lamport timestamp.
  */
 export class AtomFactory<TOp extends AtomOp> {
 
-    private _site: number;
+    private _site: SiteInfo;
     private _time: number;
 
     /**
      * Gets the site ID for this factory.
      */
     get site() {
-        return this._site;
+        return this._site.id;
     }
 
     /**
@@ -28,7 +29,7 @@ export class AtomFactory<TOp extends AtomOp> {
      * @param site 
      * @param timestamp 
      */
-    constructor(site: number, timestamp: number = 0) {
+    constructor(site: SiteInfo, timestamp: number = 0) {
         this._site = site;
         this._time = timestamp;
     }
@@ -54,6 +55,6 @@ export class AtomFactory<TOp extends AtomOp> {
                 (<Atom<TOp>>cause).id ? (<Atom<TOp>>cause).id : cause);
         }
         this._time += 1;
-        return atom(atomId(this._site, this._time, priority), causeId, op);
+        return atom(atomId(this.site, this._time, priority), causeId, op);
     }
 }

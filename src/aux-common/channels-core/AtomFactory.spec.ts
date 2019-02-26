@@ -1,5 +1,6 @@
 import { AtomFactory } from "./AtomFactory";
 import { AtomOp, AtomId, atomId } from "./Atom";
+import { site } from './SiteIdInfo';
 
 class Op implements AtomOp {
     type: number;
@@ -7,7 +8,7 @@ class Op implements AtomOp {
 
 describe('AtomFactory', () => {
     it('should maintain the current lamport time', () => {
-        const factory = new AtomFactory(1, 0);
+        const factory = new AtomFactory(site(1), 0);
 
         // Got event from remote
         factory.updateTime(1);
@@ -25,7 +26,7 @@ describe('AtomFactory', () => {
     });
 
     it('should increment the time after creating events', () => {
-        const factory = new AtomFactory(1, 0);
+        const factory = new AtomFactory(site(1), 0);
 
         const op = new Op();
         const atom = factory.create(op, null);
@@ -38,7 +39,7 @@ describe('AtomFactory', () => {
     });
 
     it('should create atoms with the given cause', () => {
-        const factory = new AtomFactory(1, 0);
+        const factory = new AtomFactory(site(1), 0);
 
         const op = new Op();
         const root = factory.create(op, null);
@@ -55,7 +56,7 @@ describe('AtomFactory', () => {
     });
 
     it('should create atoms with the given cause ID', () => {
-        const factory = new AtomFactory(1, 0);
+        const factory = new AtomFactory(site(1), 0);
 
         factory.updateTime(1);
 

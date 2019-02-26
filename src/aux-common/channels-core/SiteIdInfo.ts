@@ -11,3 +11,13 @@ export interface SiteInfo {
      */
     id: number;
 }
+
+/**
+ * Creates a new SiteInfo object with the given ID.
+ * @param id The ID.
+ */
+export function site(id: number): SiteInfo {
+    return {
+        id: id
+    };
+}

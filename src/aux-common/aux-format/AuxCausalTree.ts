@@ -5,12 +5,13 @@ import { FilesState, FileType } from "../Files";
 import { AuxReducer } from "./AuxReducer";
 import { root, file, tag, value, del, insert } from "./AuxAtoms";
 import { AtomId, Atom } from "../channels-core/Atom";
+import { SiteInfo } from "../channels-core/SiteIdInfo";
 
 /**
  * Defines a Causal Tree for aux files.
  */
 export class AuxCausalTree extends CausalTree<AuxOp, FilesState> {
-    constructor(site: number) {
+    constructor(site: SiteInfo) {
         super(site, new AuxReducer());
     }
 

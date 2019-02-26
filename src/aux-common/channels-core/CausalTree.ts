@@ -10,7 +10,7 @@ import { SiteInfo } from "./SiteIdInfo";
  * That is, a conflict-free replicated data type. (CRDT)
  */
 export class CausalTree<TOp extends AtomOp, TValue> {
-    private _site: number;
+    private _site: SiteInfo;
     private _weave: Weave<TOp>;
     private _factory: AtomFactory<TOp>;
     private _reducer: AtomReducer<TOp, TValue>;
@@ -21,7 +21,7 @@ export class CausalTree<TOp extends AtomOp, TValue> {
      * Gets the site that this causal tree represents.
      */
     get site() {
-        return this._site;
+        return this._site.id;
     }
 
     /**
@@ -68,10 +68,10 @@ export class CausalTree<TOp extends AtomOp, TValue> {
      * @param site The ID of this site.
      * @param reducer The reducer used to convert a list of operations into a single value.
      */
-    constructor(site: number, reducer: AtomReducer<TOp, TValue>) {
+    constructor(site: SiteInfo, reducer: AtomReducer<TOp, TValue>) {
         this._site = site;
         this._knownSites = [
-            { id: site }
+            this._site
         ];
         this._weave = new Weave<TOp>();
         this._factory = new AtomFactory<TOp>(this._site);
@@ -84,7 +84,7 @@ export class CausalTree<TOp extends AtomOp, TValue> {
      * @param atom The atom to add to the tree.
      */
     add<T extends TOp>(atom: Atom<T>): WeaveReference<T> {
-        if (atom.id.site !== this._site) {
+        if (atom.id.site !== this.site) {
             this.factory.updateTime(atom.id.timestamp);
         }
         const ref = this.weave.insert(atom);
@@ -101,7 +101,7 @@ export class CausalTree<TOp extends AtomOp, TValue> {
         const sortedAtoms = sortBy(newAtoms, a => a.atom.id.timestamp);
         for (let i = 0; i < sortedAtoms.length; i++) {
             const ref = sortedAtoms[i];
-            if (ref.atom.id.site !== this._site) {
+            if (ref.atom.id.site !== this.site) {
                 this.factory.updateTime(ref.atom.id.timestamp);
             }
         }

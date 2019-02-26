@@ -2,6 +2,7 @@ import { CausalTree } from "./CausalTree";
 import { Atom, AtomId, AtomOp, atomId, atom } from "./Atom";
 import { AtomReducer } from "./AtomReducer";
 import { Weave } from './Weave';
+import { site } from './SiteIdInfo';
 
 enum OpType {
     root = 0,
@@ -35,7 +36,7 @@ class Reducer implements AtomReducer<Op, number> {
 describe('CausalTree', () => {
     describe('insert()', () => {
         it('should update the factory time when adding an atom from another site', () => {
-            let tree = new CausalTree(1, new Reducer());
+            let tree = new CausalTree(site(1), new Reducer());
 
             tree.add(atom(atomId(2, 3), atomId(2, 2), new Op()));
 
@@ -43,7 +44,7 @@ describe('CausalTree', () => {
         });
 
         it('should not update the factory time when adding an atom from this site', () => {
-            let tree = new CausalTree(1, new Reducer());
+            let tree = new CausalTree(site(1), new Reducer());
 
             tree.add(atom(atomId(1, 3), atomId(1, 2), new Op()));
 
@@ -53,7 +54,7 @@ describe('CausalTree', () => {
 
     describe('value', () => {
         it('should calculate the value using the reducer', () => {
-            let tree = new CausalTree(1, new Reducer());
+            let tree = new CausalTree(site(1), new Reducer());
 
             const root = tree.add(tree.factory.create(new Op(), null));
             tree.create(new Op(OpType.add), root);
@@ -66,8 +67,8 @@ describe('CausalTree', () => {
 
     describe('import()', () => {
         it('should update the current time based on the given references', () => {
-            let tree1 = new CausalTree(1, new Reducer());
-            let tree2 = new CausalTree(2, new Reducer());
+            let tree1 = new CausalTree(site(1), new Reducer());
+            let tree2 = new CausalTree(site(2), new Reducer());
 
             const root = tree1.factory.create(new Op(), null); // Time 1
             tree1.add(root);
@@ -83,8 +84,8 @@ describe('CausalTree', () => {
         });
 
         it('should not update the current time when importing duplicates', () => {
-            let tree1 = new CausalTree(1, new Reducer());
-            let tree2 = new CausalTree(2, new Reducer());
+            let tree1 = new CausalTree(site(1), new Reducer());
+            let tree2 = new CausalTree(site(2), new Reducer());
 
             const root = tree1.factory.create(new Op(), null); // Time 1
             tree1.add(root);
@@ -103,7 +104,7 @@ describe('CausalTree', () => {
 
     describe('knownSites', () => {
         it('should default to only our site ID', () => {
-            let tree1 = new CausalTree(1, new Reducer());
+            let tree1 = new CausalTree(site(1), new Reducer());
 
             expect(tree1.knownSites).toEqual([
                 { id: 1 }
@@ -111,8 +112,8 @@ describe('CausalTree', () => {
         });
         
         it('should not combine with the weaves known sites', () => {
-            let tree1 = new CausalTree(1, new Reducer());
-            let tree2 = new CausalTree(2, new Reducer());
+            let tree1 = new CausalTree(site(1), new Reducer());
+            let tree2 = new CausalTree(site(2), new Reducer());
 
             const root = tree1.factory.create(new Op(), null);
             tree1.add(root);
@@ -124,11 +125,9 @@ describe('CausalTree', () => {
         });
 
         it('should allow adding sites via registerSite()', () => {
-            let tree1 = new CausalTree(1, new Reducer());
+            let tree1 = new CausalTree(site(1), new Reducer());
 
-            tree1.registerSite({
-                id: 12
-            });
+            tree1.registerSite(site(12));
 
             expect(tree1.knownSites).toEqual([
                 { id: 1 },
