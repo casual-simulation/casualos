@@ -29,7 +29,8 @@ import {
   GridHelper,
   Quaternion,
   Matrix4,
-  Layers
+  Layers,
+  Texture
 } from 'three';
 
 import VRControlsModule from 'three-vrcontrols-module';
@@ -105,6 +106,7 @@ export default class GameView extends Vue {
   private _inputVR: InputVR;
   private _interaction: InteractionManager;
   private _gridChecker: GridChecker;
+  private _originalBackground: Color | Texture;
 
   public onFileAdded: ArgEvent<File3D> = new ArgEvent<File3D>();
   public onFileUpdated: ArgEvent<File3D> = new ArgEvent<File3D>();
@@ -361,6 +363,9 @@ export default class GameView extends Vue {
     } else if(this.xrSession && xrFrame) {
 
       // Update XR stuff
+      if (this._scene.background !== null){ 
+          this._originalBackground = this._scene.background.clone();
+      }
       this._scene.background = null;
       this._renderer.setSize(this.xrSession.baseLayer.framebufferWidth, this.xrSession.baseLayer.framebufferHeight, false)
       this._renderer.setClearColor('#000', 0);
@@ -409,11 +414,14 @@ export default class GameView extends Vue {
     this._renderer.render(this._scene, this._mainCamera);
 
     // Set the background color to null when rendering the ui world camera.
-    const originalBackground = this._scene.background.clone();
+    if (this._scene.background !== null) {
+        this._originalBackground = this._scene.background.clone();
+    }
+
     this._scene.background = null;
     this._renderer.clearDepth(); // Clear depth buffer so that ui objects dont 
     this._renderer.render(this._scene, this._uiWorldCamera);
-    this._scene.background = originalBackground;
+    this._scene.background = this._originalBackground;
   }
 
   /**
