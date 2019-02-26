@@ -16,7 +16,7 @@ Make sure you have all the prerequisite tools installed:
 ## First Time Setup
 
 1. Clone the repository.
-    - `git clone https://github.com/yeticgi/file-simulator`
+    - `git clone https://github.com/yeticgi/aux`
 2. Make sure Lerna is installed.
     - `npm install -g lerna`
 3. Bootstrap the project.
