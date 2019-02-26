@@ -6,7 +6,7 @@
     "bootstrap": "lerna bootstrap --hoist",
     "watch": "lerna exec --parallel -- npm run watch",
     "build": "lerna exec -- npm run build",
-    "test:watch": "jest --watchAll",
+    "test:watch": "npm run clean && jest --watchAll",
     "test": "npm run clean && jest",
     "test:ci": "npm run clean && jest --ci --reporters=default --reporters=jest-junit",
     "clean": "lerna exec -- npm run clean"
