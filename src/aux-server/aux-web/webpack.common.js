@@ -32,7 +32,6 @@ module.exports = {
         loader: 'ts-loader',
         include: [__dirname],
         exclude: /node_modules/
-        // options: { allowTsInNodeModules: true }
       },
       {
         test: /\.css$/,
@@ -58,6 +57,14 @@ module.exports = {
       {
         test: /three\/examples\/js/,
         use: 'imports-loader?THREE=three'
+      },
+      {
+        test: /\.js$/,
+        use: ['source-map-loader'],
+        include: [
+          /aux-common/
+        ],
+        enforce: 'pre'
       }
     ]
   },
