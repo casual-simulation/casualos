@@ -2,7 +2,7 @@ import Vue from 'vue';
 import { Swatches } from 'vue-color';
 import Component from "vue-class-component";
 import { ColorPickerEvent } from '../interaction/ColorPickerEvent';
-import { EventBus } from '../EventBus/EventBus';
+import { EventBus } from '../../shared/EventBus';
 import { Prop } from 'vue-property-decorator';
 import { Vector2 } from 'three';
 

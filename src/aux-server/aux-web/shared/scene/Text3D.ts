@@ -21,8 +21,8 @@ import {
     Layers} from "three";
 
 import createBMFont, { TextGeometry, TextGeometryOptions } from "three-bmfont-text";
-import GameView from "../aux-projector/GameView/GameView";
-import { setLayer } from "./utils";
+import { IGameView } from '../IGameView';
+import { setLayer } from "./SceneUtils";
 
 var sdfShader = require('three-bmfont-text/shaders/sdf');
 
@@ -60,7 +60,7 @@ export class Text3D {
     // The bounding box for the text 3d.
     private _boundingBox: Box3;
 
-    private _gameView: GameView;
+    private _gameView: IGameView;
     private _bboxHelper: Box3Helper;
 
     /**
@@ -84,7 +84,7 @@ export class Text3D {
      * @param fontData  the bmfont data in json format
      * @param fontTexturePath the path to the texture atlas for the font.
      */
-    constructor(gameView: GameView, parent: Object3D, fontData: string, fontTexturePath: string) {
+    constructor(gameView: IGameView, parent: Object3D, fontData: string, fontTexturePath: string) {
 
         this._gameView = gameView;
 

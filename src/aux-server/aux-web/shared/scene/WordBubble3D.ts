@@ -23,7 +23,7 @@ import {
     AxesHelper
 } from 'three';
 import { merge } from '@yeti-cgi/aux-common/utils';
-import { setLayerMask } from './utils';
+import { setLayerMask } from './SceneUtils';
 
 export class WordBubble3D extends Object3D {
 

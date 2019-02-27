@@ -1,20 +1,20 @@
-import { Input } from '../../../aux-scene/Input';
-import { File3D } from '../../../aux-scene/File3D';
+import { Input } from '../../../shared/scene/Input';
+import { File3D } from '../../../shared/scene/File3D';
 import { IOperation } from '../IOperation';
 import GameView from '../../GameView/GameView';
 import { InteractionManager } from '../InteractionManager';
 import { Ray, Intersection, Vector2, Vector3, Box3 } from 'three';
-import { Physics } from '../../../aux-scene/Physics';
-import { WorkspaceMesh } from '../../../aux-scene/WorkspaceMesh';
+import { Physics } from '../../../shared/scene/Physics';
+import { WorkspaceMesh } from '../../../shared/scene/WorkspaceMesh';
 import { File, Workspace, Object, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated, PartialFile, fileAdded, FileEvent } from '@yeti-cgi/aux-common/Files';
 import { keys, minBy, flatMap } from 'lodash';
-import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance, posToKey } from '../../../aux-scene/hex';
+import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance, posToKey } from '../../../shared/scene/hex';
 import { createFile } from '@yeti-cgi/aux-common/Files/FileCalculations';
 import { BaseFileDragOperation } from './BaseFileDragOperation';
-import { appManager } from '../../AppManager';
+import { appManager } from '../../../shared/AppManager';
 import { merge } from '@yeti-cgi/aux-common/utils';
-import { FileMesh } from '../../../aux-scene/FileMesh';
-import { setParent } from '../../../aux-scene/utils';
+import { FileMesh } from '../../../shared/scene/FileMesh';
+import { setParent } from '../../../shared/scene/SceneUtils';
 
 /**
  * New File Drag Operation handles dragging of new files from the file queue.

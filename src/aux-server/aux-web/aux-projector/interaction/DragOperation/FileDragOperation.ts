@@ -1,14 +1,14 @@
-import { Input } from '../../../aux-scene/Input';
-import { File3D } from '../../../aux-scene/File3D';
+import { Input } from '../../../shared/scene/Input';
+import { File3D } from '../../../shared/scene/File3D';
 import { IOperation } from '../IOperation';
 import GameView from '../../GameView/GameView';
 import { InteractionManager } from '../InteractionManager';
 import { Ray, Intersection, Vector2, Vector3, Box3 } from 'three';
-import { Physics } from '../../../aux-scene/Physics';
-import { WorkspaceMesh } from '../../../aux-scene/WorkspaceMesh';
+import { Physics } from '../../../shared/scene/Physics';
+import { WorkspaceMesh } from '../../../shared/scene/WorkspaceMesh';
 import { File, Workspace, Object, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated } from '@yeti-cgi/aux-common/Files';
 import { keys, minBy, flatMap } from 'lodash';
-import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance, posToKey } from '../../../aux-scene/hex';
+import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance, posToKey } from '../../../shared/scene/hex';
 import { isFormula } from '@yeti-cgi/aux-common/Files/FileCalculations';
 import { BaseFileDragOperation } from './BaseFileDragOperation';
 

@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import { Vector2, Vector3 } from 'three';
 import { find, some } from 'lodash';
-import GameView from '../aux-projector/GameView/GameView';
+import { IGameView } from '../IGameView';
 
 export class Input {
     /**
@@ -16,7 +16,7 @@ export class Input {
     private _wheelData: WheelData;
     private _targetData: TargetData;
 
-    private _gameView: GameView;
+    private _gameView: IGameView;
     private _inputType: InputType = InputType.Undefined;
 
     // Keep track of the touch data for finger index 0 at all times.
@@ -75,7 +75,7 @@ export class Input {
         return some(elements, e => e === element);
     }
 
-    constructor(gameView: GameView) { 
+    constructor(gameView: IGameView) { 
 
         this._gameView = gameView;
 

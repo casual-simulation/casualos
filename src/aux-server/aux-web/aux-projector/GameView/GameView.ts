@@ -60,28 +60,30 @@ import {
   doFilesAppearEqual
 } from '@yeti-cgi/aux-common';
 import { ArgEvent } from '@yeti-cgi/aux-common/Events';
-import { Time } from '../../aux-scene/Time';
-import { Input, InputType } from '../../aux-scene/Input';
-import { InputVR } from '../../aux-scene/InputVR';
-import { File3D } from '../../aux-scene/File3D';
+import { Time } from '../../shared/scene/Time';
+import { Input, InputType } from '../../shared/scene/Input';
+import { InputVR } from '../../shared/scene/InputVR';
+import { File3D } from '../../shared/scene/File3D';
 
 // import skyTexturePath from '../public/images/CGSkies_0132_free.jpg';
 // import groundModelPath from '../public/models/ground.gltf';
-import { appManager } from '../AppManager';
+import { appManager } from '../../shared/AppManager';
 import { InteractionManager } from '../interaction/InteractionManager';
-import { WorkspaceMesh, WorkspaceMeshDebugInfo } from '../../aux-scene/WorkspaceMesh';
-import { GridChecker } from '../../aux-scene/grid/GridChecker';
+import { WorkspaceMesh, WorkspaceMeshDebugInfo } from '../../shared/scene/WorkspaceMesh';
+import { GridChecker } from '../../shared/scene/grid/GridChecker';
 import { values, flatMap, find, findIndex, debounce } from 'lodash';
 import App from '../App/App';
 import MiniFile from '../MiniFile/MiniFile';
-import { FileRenderer } from '../../aux-scene/FileRenderer';
+import { FileRenderer } from '../../shared/scene/FileRenderer';
+import { IGameView } from '../../shared/IGameView';
+import { LayersHelper } from '../../shared/scene/LayersHelper';
 
 @Component({
   components: {
     'mini-file': MiniFile
   }
 })
-export default class GameView extends Vue {
+export default class GameView extends Vue implements IGameView {
   private _debug: boolean;
   private _scene: Scene;
   private _mainCamera: PerspectiveCamera;
@@ -111,9 +113,6 @@ export default class GameView extends Vue {
   public onFileAdded: ArgEvent<File3D> = new ArgEvent<File3D>();
   public onFileUpdated: ArgEvent<File3D> = new ArgEvent<File3D>();
   public onFileRemoved: ArgEvent<File3D> = new ArgEvent<File3D>();
-
-  public static readonly Layer_Default: number = 0;
-  public static readonly Layer_UIWorld: number = 1;
 
   /**
    * A map of file IDs to files and meshes.
@@ -177,7 +176,6 @@ export default class GameView extends Vue {
   get time(): Time { return this._time; }
   get input(): Input { return this._input; }
   get inputVR(): InputVR { return this._inputVR; }
-  get interactionManager(): InteractionManager { return this._interaction; }
   get mainCamera(): PerspectiveCamera { return this._mainCamera; }
   get scene(): Scene { return this._scene; }
   get renderer() { return this._renderer; } 
@@ -185,7 +183,6 @@ export default class GameView extends Vue {
   get filesMode() { return this.mode === 'files'; }
   get workspacesMode() { return this.mode === 'worksurfaces'; }
   get groundPlane() { return this._groundPlane; }
-
   get gridChecker() { return this._gridChecker; }
 
   get fileManager() {
@@ -195,37 +192,6 @@ export default class GameView extends Vue {
   constructor() {
     super();
     this.addToRecentFilesList = debounce(this.addToRecentFilesList.bind(this), 100);
-  }
-
-  addNewFile() {
-    const workspace = this.getWorkspaces()[0];
-    let tags: Object['tags'] = undefined;
-    if(workspace) {
-      // Find a valid point to place a cube on.
-      const mesh =<WorkspaceMesh>workspace.mesh;
-      const validPoints = flatMap(mesh.squareGrids, g => ({ tiles: g.level.tiles.filter(t => t.valid), level: g.level }))
-        .filter(g => g.tiles.length > 0)
-        .map(g => ({
-          pos: g.tiles[0].gridPosition,
-          height: g.level.tileHeight
-        }));
-      const firstValidPoint = validPoints[0];
-      if (firstValidPoint) {
-        tags = {
-          _position: { x: firstValidPoint.pos.x, y: firstValidPoint.pos.y, z: firstValidPoint.height },
-          _workspace: workspace.file.id
-        };
-      } else {
-        // the first workspace doesn't have a valid point, just place the cube in space.
-      }
-    }
-    this.fileManager.createFile(undefined, tags);
-  }
-
-  addNewWorkspace() {
-    // TODO: Make the user have to drag a workspace onto the world
-    // instead of just clicking a button and a workspace being placed somewhere.
-    this.fileManager.createWorkspace();
   }
 
   toggleDebug() {
@@ -509,6 +475,12 @@ export default class GameView extends Vue {
     }
   }
 
+  addNewWorkspace(): void {
+    // TODO: Make the user have to drag a workspace onto the world
+    // instead of just clicking a button and a workspace being placed somewhere.
+    this.fileManager.createWorkspace();
+  }
+
   private async _fileUpdated(file: File, initialUpdate = false) {
     const obj = this._files[file.id];
     let shouldRemove = false;
@@ -589,7 +561,7 @@ export default class GameView extends Vue {
     this._mainCamera.position.z = 5;
     this._mainCamera.position.y = 3;
     this._mainCamera.rotation.x = ThreeMath.degToRad(-30);
-    this._mainCamera.layers.enable(GameView.Layer_Default);
+    this._mainCamera.layers.enable(LayersHelper.Layer_Default);
 
     // UI World camera.
     // This camera is parented to the main camera.
@@ -599,7 +571,7 @@ export default class GameView extends Vue {
     this._uiWorldCamera.rotation.set(0,0,0);
 
     // Ui World camera only draws objects on the 'UI World Layer'.
-    this._uiWorldCamera.layers.set(GameView.Layer_UIWorld);
+    this._uiWorldCamera.layers.set(LayersHelper.Layer_UIWorld);
 
     this._mainCamera.updateMatrixWorld(true);
     

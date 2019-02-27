@@ -28,23 +28,24 @@ import {
 } from '@yeti-cgi/aux-common/Files';
 import { ArgEvent } from '@yeti-cgi/aux-common/Events';
 import { GameObject } from "./GameObject";
-import GameView from '../aux-projector/GameView/GameView';
+import { IGameView } from '../IGameView';
 import { calculateGridTileLocalCenter } from "./grid/Grid";
 import { Text3D } from "./Text3D";
 import { File3D } from "./File3D";
 import { Arrow3D } from "./Arrow3D";
 import { find, flatMap, sumBy, sortBy } from "lodash";
-import { appManager } from '../aux-projector/AppManager';
-import { createLabel, convertToBox2, setLayer } from "./utils";
+import { appManager } from '../AppManager';
+import { createLabel, convertToBox2, setLayer } from "./SceneUtils";
 import { WorkspaceMesh } from "./WorkspaceMesh";
 import { WordBubble3D } from "./WordBubble3D";
+import { LayersHelper } from "./LayersHelper";
 
 /**
  * Defines a class that represents a mesh for an "object" file.
  */
 export class FileMesh extends GameObject {
 
-    private _gameView: GameView | null;
+    private _gameView: IGameView | null;
     private _context: FileCalculationContext;
 
     /**
@@ -92,7 +93,7 @@ export class FileMesh extends GameObject {
      */
     public onUpdated: ArgEvent<FileMesh> = new ArgEvent<FileMesh>();
 
-    constructor(gameView?: GameView) {
+    constructor(gameView?: IGameView) {
         super();
         this._gameView = gameView;
         this.allowNoWorkspace = false;
@@ -135,11 +136,11 @@ export class FileMesh extends GameObject {
 
             if (this._gameView) {
                 this.label = createLabel(this._gameView, this);
-                this.label.setLayer(GameView.Layer_UIWorld);
+                this.label.setLayer(LayersHelper.Layer_UIWorld);
             }
 
             this.wordBubble = new WordBubble3D({cornerRadius: 0});
-            setLayer(this.wordBubble, GameView.Layer_UIWorld, true);
+            setLayer(this.wordBubble, LayersHelper.Layer_UIWorld, true);
             this.add(this.wordBubble);
         }
         this.file = (<Object>file) || this.file;

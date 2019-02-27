@@ -6,7 +6,7 @@ import { BehaviorSubject, Observable, using, SubscriptionLike } from 'rxjs';
 import { FileManager } from './FileManager';
 import { SocketManager } from './SocketManager';
 import { flatMap, map, scan } from 'rxjs/operators';
-import { downloadAuxState, readFileJson } from './download';
+import { downloadAuxState, readFileJson } from '../aux-projector/download';
 
 export interface User {
     email: string;

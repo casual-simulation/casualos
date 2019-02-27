@@ -1,6 +1,6 @@
 import { Vector2, Vector3, Intersection, Raycaster, Object3D, Ray } from 'three';
 import { ContextMenuEvent, ContextMenuAction } from './ContextMenuEvent';
-import { File3D } from '../../aux-scene/File3D';
+import { File3D } from '../../shared/scene/File3D';
 import { 
     File, 
     Object, 
@@ -20,17 +20,17 @@ import {
 } from '@yeti-cgi/aux-common';
 import { FileClickOperation } from './ClickOperation/FileClickOperation';
 import GameView from '../GameView/GameView';
-import { Physics } from '../../aux-scene/Physics';
+import { Physics } from '../../shared/scene/Physics';
 import { find, flatMap, minBy, keys, maxBy, union, some, sortBy, differenceBy } from 'lodash';
 import { CameraControls } from './CameraControls';
-import { WorkspaceMesh } from '../../aux-scene/WorkspaceMesh';
-import { FileMesh } from '../../aux-scene/FileMesh';
-import { Axial, realPosToGridPos, gridDistance, keyToPos, posToKey } from '../../aux-scene/hex';
-import { MouseButtonId, Input } from '../../aux-scene/Input';
+import { WorkspaceMesh } from '../../shared/scene/WorkspaceMesh';
+import { FileMesh } from '../../shared/scene/FileMesh';
+import { Axial, realPosToGridPos, gridDistance, keyToPos, posToKey } from '../../shared/scene/hex';
+import { MouseButtonId, Input } from '../../shared/scene/Input';
 import { isBuffer } from 'util';
 import { ColorPickerEvent } from './ColorPickerEvent';
-import { EventBus } from '../EventBus/EventBus';
-import { appManager } from '../AppManager';
+import { EventBus } from '../../shared/EventBus';
+import { appManager } from '../../shared/AppManager';
 import { IOperation } from './IOperation';
 import { EmptyClickOperation } from './ClickOperation/EmptyClickOperation';
 import { NewFileClickOperation } from './ClickOperation/NewFileClickOperation';

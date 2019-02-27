@@ -52,7 +52,7 @@ import 'vue-material/dist/theme/default.css';
 import 'pepjs'; // Polyfill for pointer events
 import { polyfill } from 'es6-promise';
 
-import { appManager } from './AppManager';
+import { appManager } from '../shared/AppManager';
 import App from './App/App';
 import Welcome from './Welcome/Welcome';
 import Home from './Home/Home';

@@ -2,7 +2,7 @@ import { IOperation } from "./IOperation";
 import { PerspectiveCamera, Vector3, Spherical, Vector2, Quaternion, Matrix4, Math as ThreeMath, InterpolationEndingModes } from "three";
 import GameView from "../GameView/GameView";
 import { InteractionManager } from "./InteractionManager";
-import { InputType, MouseButtonId } from "../../aux-scene/Input";
+import { InputType, MouseButtonId } from "../../shared/scene/Input";
 
 
 export class CameraControls {

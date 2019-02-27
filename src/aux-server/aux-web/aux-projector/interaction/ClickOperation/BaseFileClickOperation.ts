@@ -1,5 +1,5 @@
-import { Input, InputType, MouseButtonId } from '../../../aux-scene/Input';
-import { File3D } from '../../../aux-scene/File3D';
+import { Input, InputType, MouseButtonId } from '../../../shared/scene/Input';
+import { File3D } from '../../../shared/scene/File3D';
 import { Vector2, Vector3, Intersection } from 'three';
 import { IOperation } from '../IOperation';
 import GameView from '../../GameView/GameView';

@@ -1,7 +1,7 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import Axios from 'axios';
-import {appManager} from '../AppManager';
+import {appManager} from '../../shared/AppManager';
 import uuid from 'uuid/v4';
 
 @Component

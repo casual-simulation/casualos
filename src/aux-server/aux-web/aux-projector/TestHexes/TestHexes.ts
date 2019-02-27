@@ -55,11 +55,11 @@ import { File, Object, Workspace } from '@yeti-cgi/aux-common';
 
 import skyTextureUrl from '../public/images/CGSkies_0132_free.jpg';
 import groundModelUrl from '../public/models/ground.gltf';
-import { appManager } from '../AppManager';
-import { HexGridMesh, Axial, posToKey } from '../../aux-scene/hex';
-import { GridChecker } from '../../aux-scene/grid/GridChecker';
-import { GridMesh } from '../../aux-scene/grid/GridMesh';
-import { WorkspaceMesh } from '../../aux-scene/WorkspaceMesh';
+import { appManager } from '../../shared/AppManager';
+import { HexGridMesh, Axial, posToKey } from '../../shared/scene/hex';
+import { GridChecker } from '../../shared/scene/grid/GridChecker';
+import { GridMesh } from '../../shared/scene/grid/GridMesh';
+import { WorkspaceMesh } from '../../shared/scene/WorkspaceMesh';
 
 @Component({
 })

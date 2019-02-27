@@ -1,6 +1,6 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
-import { appManager } from '../AppManager';
+import { appManager } from '../../shared/AppManager';
 import { Prop, Watch } from 'vue-property-decorator';
 import App from '../App/App';
 import { SubscriptionLike } from 'rxjs';

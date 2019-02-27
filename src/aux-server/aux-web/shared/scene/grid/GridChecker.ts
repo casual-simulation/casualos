@@ -20,7 +20,7 @@ import { GridLevel } from './GridLevel';
 import { GridTile } from './GridTile';
 import { calculateTilePoints, calculateGridTileLocalPositions } from './Grid';
 import { WorkspaceMesh } from '../WorkspaceMesh';
-import { createSphere } from '../utils';
+import { createSphere } from '../SceneUtils';
 
 /**
  * Defines a class that can check a HexGridMesh to see which square grid tiles
