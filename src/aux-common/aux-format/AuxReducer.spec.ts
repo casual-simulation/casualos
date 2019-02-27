@@ -29,6 +29,23 @@ describe('AuxReducer', () => {
             ]);
         });
 
+        it('should preserve non string values if possible', () => {
+            const obj = {
+                num: 123,
+                b: true,
+                str: 'abc'
+            }
+            const root = site1.val(obj, null);
+
+            traverser.next();
+
+            const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+            expect(value).toBe(obj);
+            expect(meta).toEqual([
+                { start: 0, end: null, ref: root }
+            ]);
+        });
+
         describe('single insert', () => {
            
             it('should handle single inserts at the beginning of the string', () => {
@@ -72,8 +89,22 @@ describe('AuxReducer', () => {
                     { start: 0, end: 3, ref: root }
                 ]);
             });
-        });
 
+            it('should convert the value a string if something is inserted', () => {
+                const num = 987;
+                const root = site1.val(num, null);
+                const insert = site1.insert(3, '123', root.atom);
+
+                traverser.next();
+
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                expect(value).toBe('987123');
+                expect(meta).toEqual([
+                    { start: 3, end: 6, ref: insert },
+                    { start: 0, end: null, ref: root }
+                ]);
+            });
+        });
         
         describe('multiple insertions', () => {
             it('should handle multiple insertions at the beginning', () => {
@@ -444,6 +475,16 @@ describe('AuxReducer', () => {
                 ];
 
                 expect(calculateSequenceRef(meta, 1)).toEqual({ ref: root, index: 0 });
+            });
+
+            it('should return the index if the root does not have an end', () => {
+                const root = site1.val('abc', null);
+                const meta: AuxSequenceMetadata[] = [
+                    { start: 0, end: null, ref: root }
+                ];
+
+                expect(calculateSequenceRef(meta, 1)).toEqual({ ref: root, index: 1 });
+                expect(calculateSequenceRef(meta, 100)).toEqual({ ref: root, index: 100 });
             });
 
             it('should return the index within a sequence after another sequence', () => {

@@ -86,25 +86,34 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState> {
             if (!hasValue && ref.atom.value.type === AuxOpType.value) {
                 hasValue = true;
                 meta.ref = ref;
-                value = ref.atom.value.value;
+                const { value: val, meta: valMeta } = this.evalSequence(tree, ref, ref.atom.value.value);
+                value = val;
+                meta.sequence = valMeta;
             }
         }
 
         return { value, meta };
     }
 
-    public evalSequence(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<AuxOp>, value: string): {value: string, meta: AuxSequenceMetadata[] } {
+    public evalSequence(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<AuxOp>, value: any): {value: string, meta: AuxSequenceMetadata[] } {
 
         // list of number pairs
         let offsets: number[] = [];
         let meta: AuxSequenceMetadata[] = [];
         if (parent.atom.value.type === AuxOpType.value || parent.atom.value.type === AuxOpType.tag) {
-            meta.unshift({ start: 0, end: value.length, ref: parent });
+            if (typeof value === 'string') {
+                meta.unshift({ start: 0, end: value.length, ref: parent });
+            } else {
+                meta.unshift({ start: 0, end: null, ref: parent });
+            }
         } else if(parent.atom.value.type === AuxOpType.insert) {
             meta.unshift({ start: parent.atom.value.index, end: parent.atom.value.index + value.length, ref: parent });
         }
         while (tree.peek(parent.atom.id)) {
             const ref = tree.next();
+            if (typeof value !== 'string') {
+                value = value.toString();
+            }
             if (ref.atom.value.type === AuxOpType.delete) {
                 const start = Math.max(ref.atom.value.start || 0, 0);
                 const end = ref.atom.value.end || value.length;
@@ -139,6 +148,7 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState> {
  * @param index The index in the final text that the value should be inserted at.
  */
 export function calculateSequenceRef(meta: AuxSequenceMetadata[], index: number) {
+    const originalIndex = index;
     for (let i = 0; i < meta.length; i++) {
         const part = meta[i];
         if (part.start <= index && part.end >= index) {
@@ -151,7 +161,7 @@ export function calculateSequenceRef(meta: AuxSequenceMetadata[], index: number)
     if (index < 0) {
         return { ref: last.ref, index: last.start };
     } else {
-        return { ref: last.ref, index: last.end };
+        return { ref: last.ref, index: last.end === null ? originalIndex : last.end };
     }
 }
 
