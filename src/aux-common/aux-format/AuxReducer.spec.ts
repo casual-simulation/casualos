@@ -24,9 +24,10 @@ describe('AuxReducer', () => {
             const root = site1.val('abc', null);
             const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
             expect(value).toBe('abc');
-            expect(meta).toEqual([ 
-                { start: 0, end: 3, ref: root }
-            ]);
+            expect(meta).toEqual({
+                indexes: [0, 1, 2],
+                refs: [root, root, root]
+            });
         });
 
         it('should preserve non string values if possible', () => {
@@ -41,9 +42,7 @@ describe('AuxReducer', () => {
 
             const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
             expect(value).toBe(obj);
-            expect(meta).toEqual([
-                { start: 0, end: null, ref: root }
-            ]);
+            expect(meta).toEqual(null);
         });
 
         describe('single insert', () => {
@@ -56,10 +55,10 @@ describe('AuxReducer', () => {
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('123abc');
-                expect(meta).toEqual([
-                    { start: 0, end: 3, ref: insert },
-                    { start: 0, end: 3, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [0, 1, 2, 0, 1, 2],
+                    refs: [insert, insert, insert, root, root, root]
+                });
             });
 
             it('should handle single inserts in the middle of the string', () => {
@@ -70,10 +69,10 @@ describe('AuxReducer', () => {
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('ab123c');
-                expect(meta).toEqual([
-                    { start: 2, end: 5, ref: insert },
-                    { start: 0, end: 3, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [0, 1, 0, 1, 2, 2],
+                    refs: [root, root, insert, insert, insert, root]
+                });
             });
 
             it('should handle single inserts at the end of the string', () => {
@@ -84,25 +83,24 @@ describe('AuxReducer', () => {
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('abc123');
-                expect(meta).toEqual([
-                    { start: 3, end: 6, ref: insert },
-                    { start: 0, end: 3, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [0, 1, 2, 0, 1, 2],
+                    refs: [root, root, root, insert, insert, insert]
+                });
             });
 
             it('should convert the value a string if something is inserted', () => {
-                const num = 987;
-                const root = site1.val(num, null);
+                const root = site1.val(987, null);
                 const insert = site1.insert(3, '123', root.atom);
 
                 traverser.next();
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('987123');
-                expect(meta).toEqual([
-                    { start: 3, end: 6, ref: insert },
-                    { start: 0, end: null, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [0, 1, 2, 0, 1, 2],
+                    refs: [root, root, root, insert, insert, insert]
+                });
             });
         });
         
@@ -119,11 +117,18 @@ describe('AuxReducer', () => {
                 // 456 appears after 123 because both insertions are on
                 // the root.
                 expect(value).toBe('123456abc');
-                expect(meta).toEqual([
-                    { start: 0, end: 3, ref: insert1 },
-                    { start: 0, end: 3, ref: insert2 },
-                    { start: 0, end: 3, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [
+                        0, 1, 2, 
+                        0, 1, 2, 
+                        0, 1, 2
+                    ],
+                    refs: [
+                        insert1, insert1, insert1, 
+                        insert2, insert2, insert2,
+                        root, root, root
+                    ]
+                });
             });
 
             it('should handle multiple insertions at the end', () => {
@@ -135,11 +140,18 @@ describe('AuxReducer', () => {
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('abc123456');
-                expect(meta).toEqual([
-                    { start: 3, end: 6, ref: insert1 },
-                    { start: 3, end: 6, ref: insert2 },
-                    { start: 0, end: 3, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [
+                        0, 1, 2, 
+                        0, 1, 2, 
+                        0, 1, 2
+                    ],
+                    refs: [
+                        root, root, root,
+                        insert1, insert1, insert1, 
+                        insert2, insert2, insert2
+                    ]
+                });
             });
 
             it('should handle multiple insertions in the middle', () => {
@@ -151,11 +163,20 @@ describe('AuxReducer', () => {
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('a123456bc');
-                expect(meta).toEqual([
-                    { start: 1, end: 4, ref: insert1 },
-                    { start: 1, end: 4, ref: insert2 },
-                    { start: 0, end: 3, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [
+                        0,
+                        0, 1, 2, 
+                        0, 1, 2, 
+                        1, 2
+                    ],
+                    refs: [
+                        root,
+                        insert1, insert1, insert1, 
+                        insert2, insert2, insert2,
+                        root, root
+                    ]
+                });
             });
 
             it('should handle chained insertions at the beginning', () => {
@@ -167,11 +188,18 @@ describe('AuxReducer', () => {
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('456123abc');
-                expect(meta).toEqual([
-                    { start: 0, end: 3, ref: second },
-                    { start: 0, end: 3, ref: first },
-                    { start: 0, end: 3, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [
+                        0, 1, 2, 
+                        0, 1, 2, 
+                        0, 1, 2
+                    ],
+                    refs: [
+                        second, second, second,
+                        first, first, first, 
+                        root, root, root
+                    ]
+                });
             });
 
             it('should handle chained insertions at the end of the intermediate string', () => {
@@ -183,11 +211,18 @@ describe('AuxReducer', () => {
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('123456abc');
-                expect(meta).toEqual([
-                    { start: 3, end: 6, ref: second },
-                    { start: 0, end: 3, ref: first },
-                    { start: 0, end: 3, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [
+                        0, 1, 2, 
+                        0, 1, 2, 
+                        0, 1, 2
+                    ],
+                    refs: [
+                        first, first, first, 
+                        second, second, second,
+                        root, root, root
+                    ]
+                });
             });
 
             it('should handle chained insertions in the middle of the intermediate string', () => {
@@ -199,11 +234,20 @@ describe('AuxReducer', () => {
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('124563abc');
-                expect(meta).toEqual([
-                    { start: 2, end: 5, ref: second },
-                    { start: 0, end: 3, ref: first },
-                    { start: 0, end: 3, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [
+                        0, 1, 
+                        0, 1, 2, 
+                        2,
+                        0, 1, 2
+                    ],
+                    refs: [
+                        first, first,
+                        second, second, second,
+                        first,
+                        root, root, root
+                    ]
+                });
             });
         });
 
@@ -217,9 +261,10 @@ describe('AuxReducer', () => {
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('');
-                expect(meta).toEqual([
-                    { start: 0, end: 0, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [],
+                    refs: []
+                });
             });
 
             it('should handle single deletions for the entire string with indicies', () => {
@@ -230,9 +275,10 @@ describe('AuxReducer', () => {
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('');
-                expect(meta).toEqual([
-                    { start: 0, end: 0, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [],
+                    refs: []
+                });
             });
 
             it('should handle single deletions for the beginning of the string', () => {
@@ -243,9 +289,10 @@ describe('AuxReducer', () => {
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('bc');
-                expect(meta).toEqual([
-                    { start: 0, end: 2, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [1, 2],
+                    refs: [root, root]
+                });
             });
 
             it('should handle single deletions for the middle of the string', () => {
@@ -256,9 +303,10 @@ describe('AuxReducer', () => {
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('ac');
-                expect(meta).toEqual([
-                    { start: 0, end: 2, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [0, 2],
+                    refs: [root, root]
+                });
             });
 
             it('should handle single deletions for the end of the string', () => {
@@ -269,9 +317,10 @@ describe('AuxReducer', () => {
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('ab');
-                expect(meta).toEqual([
-                    { start: 0, end: 2, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [0, 1],
+                    refs: [root, root]
+                });
             });
 
             it('should handle negative start indicies', () => {
@@ -282,9 +331,10 @@ describe('AuxReducer', () => {
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('');
-                expect(meta).toEqual([
-                    { start: 0, end: 0, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [],
+                    refs: []
+                });
             });
 
             it('should handle end further than the end of the string', () => {
@@ -295,9 +345,10 @@ describe('AuxReducer', () => {
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('');
-                expect(meta).toEqual([
-                    { start: 0, end: -1, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [],
+                    refs: []
+                });
             });
         });
 
@@ -311,9 +362,10 @@ describe('AuxReducer', () => {
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('bc');
-                expect(meta).toEqual([
-                    { start: 0, end: 2, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [1, 2],
+                    refs: [root, root]
+                });
             });
 
             it('should combine deletes at the end', () => {
@@ -325,9 +377,10 @@ describe('AuxReducer', () => {
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('ab');
-                expect(meta).toEqual([
-                    { start: 0, end: 2, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [0, 1],
+                    refs: [root, root]
+                });
             });
 
             it('should combine deletes in the middle', () => {
@@ -339,9 +392,10 @@ describe('AuxReducer', () => {
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('ac');
-                expect(meta).toEqual([
-                    { start: 0, end: 2, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [0, 2],
+                    refs: [root, root]
+                });
             });
 
             it('should preserve overlapping deletes at the beginning', () => {
@@ -353,9 +407,10 @@ describe('AuxReducer', () => {
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('c');
-                expect(meta).toEqual([
-                    { start: 0, end: 1, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [2],
+                    refs: [root]
+                });
             });
 
             it('should preserve overlapping deletes at the end', () => {
@@ -367,9 +422,10 @@ describe('AuxReducer', () => {
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('a');
-                expect(meta).toEqual([
-                    { start: 0, end: 1, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [0],
+                    refs: [root]
+                });
             });
 
             it('should preserve overlapping deletes anywhere', () => {
@@ -381,9 +437,10 @@ describe('AuxReducer', () => {
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('');
-                expect(meta).toEqual([
-                    { start: 0, end: 0, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [],
+                    refs: []
+                });
             });
 
             it('should preserve sequential deletes', () => {
@@ -395,9 +452,10 @@ describe('AuxReducer', () => {
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('c');
-                expect(meta).toEqual([
-                    { start: 0, end: 1, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [2],
+                    refs: [root]
+                });
             });
         });
 
@@ -411,10 +469,16 @@ describe('AuxReducer', () => {
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('123bc');
-                expect(meta).toEqual([
-                    { start: 0, end: 3, ref: insert },
-                    { start: 0, end: 2, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [
+                        0, 1, 2,
+                        1, 2
+                    ],
+                    refs: [
+                        insert, insert, insert,
+                        root, root
+                    ]
+                });
             });
 
             it('should handle chaining deletes onto inserts', () => {
@@ -429,20 +493,26 @@ describe('AuxReducer', () => {
 
                 const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
                 expect(value).toBe('23ac45');
-                expect(meta).toEqual([
-                    { start: 4, end: 6, ref: insert1 },
-                    { start: 0, end: 2, ref: insert2 },
-                    { start: 0, end: 2, ref: root }
-                ]);
+                expect(meta).toEqual({
+                    indexes: [
+                        1, 2,
+                        0, 2,
+                        0, 1
+                    ],
+                    refs: [
+                        insert2, insert2,
+                        root, root,
+                        insert1, insert1
+                    ]
+                });
             });
         });
 
         describe('calculateSequenceRef', () => {
             it('should return the root if there are no other inserts', () => {
                 const root = site1.val('abc', null);
-                const meta: AuxSequenceMetadata[] = [
-                    { start: 0, end: 3, ref: root }
-                ];
+                traverser.next();
+                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
 
                 expect(calculateSequenceRef(meta, 0)).toEqual({ ref: root, index: 0 });
                 expect(calculateSequenceRef(meta, 1)).toEqual({ ref: root, index: 1 });
@@ -452,39 +522,36 @@ describe('AuxReducer', () => {
 
             it('should return the last valid index if the insert index is after the sequence', () => {
                 const root = site1.val('abc', null);
-                const meta: AuxSequenceMetadata[] = [
-                    { start: 0, end: 3, ref: root }
-                ];
+                traverser.next();
+                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
 
                 expect(calculateSequenceRef(meta, 4)).toEqual({ ref: root, index: 3 });
             });
 
             it('should return the first valid index if the insert index is before the sequence', () => {
                 const root = site1.val('abc', null);
-                const meta: AuxSequenceMetadata[] = [
-                    { start: 0, end: 3, ref: root }
-                ];
+                traverser.next();
+                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
 
                 expect(calculateSequenceRef(meta, -1)).toEqual({ ref: root, index: 0 });
             });
 
             it('should return the first valid index if there is nowhere to place the text', () => {
                 const root = site1.val('abc', null);
-                const meta: AuxSequenceMetadata[] = [
-                    { start: 0, end: 0, ref: root }
-                ];
+                site1.delete(root.atom);
+                traverser.next();
+                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
 
-                expect(calculateSequenceRef(meta, 1)).toEqual({ ref: root, index: 0 });
+                expect(calculateSequenceRef(meta, 1)).toEqual({ ref: null, index: 0 });
             });
 
             it('should return the index if the root does not have an end', () => {
-                const root = site1.val('abc', null);
-                const meta: AuxSequenceMetadata[] = [
-                    { start: 0, end: null, ref: root }
-                ];
+                const root = site1.val(19, null);
+                traverser.next();
+                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
 
-                expect(calculateSequenceRef(meta, 1)).toEqual({ ref: root, index: 1 });
-                expect(calculateSequenceRef(meta, 100)).toEqual({ ref: root, index: 100 });
+                expect(calculateSequenceRef(meta, 1)).toEqual({ ref: null, index: 1 });
+                expect(calculateSequenceRef(meta, 100)).toEqual({ ref: null, index: 100 });
             });
 
             it('should return the index within a sequence after another sequence', () => {
@@ -496,16 +563,13 @@ describe('AuxReducer', () => {
                 site1.delete(insert2.atom, 0, 1);
 
                 // text: "23ac45"
-                const meta: AuxSequenceMetadata[] = [
-                    { start: 4, end: 6, ref: insert1 },
-                    { start: 0, end: 2, ref: insert2 },
-                    { start: 0, end: 2, ref: root }
-                ];
+                traverser.next();
+                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
 
-                expect(calculateSequenceRef(meta, 0)).toEqual({ ref: insert2, index: 0 });
-                expect(calculateSequenceRef(meta, 1)).toEqual({ ref: insert2, index: 1 });
-                expect(calculateSequenceRef(meta, 2)).toEqual({ ref: insert2, index: 2 });
-                expect(calculateSequenceRef(meta, 3)).toEqual({ ref: root, index: 1 });
+                expect(calculateSequenceRef(meta, 0)).toEqual({ ref: insert2, index: 1 });
+                expect(calculateSequenceRef(meta, 1)).toEqual({ ref: insert2, index: 2 });
+                expect(calculateSequenceRef(meta, 2)).toEqual({ ref: root, index: 0 });
+                expect(calculateSequenceRef(meta, 3)).toEqual({ ref: root, index: 2 });
                 expect(calculateSequenceRef(meta, 4)).toEqual({ ref: insert1, index: 0 });
                 expect(calculateSequenceRef(meta, 5)).toEqual({ ref: insert1, index: 1 });
                 expect(calculateSequenceRef(meta, 6)).toEqual({ ref: insert1, index: 2 });

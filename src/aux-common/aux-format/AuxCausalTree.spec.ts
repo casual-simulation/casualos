@@ -1,6 +1,6 @@
 import { AuxCausalTree } from "./AuxCausalTree";
 import { AtomFactory } from "../channels-core/AtomFactory";
-import { AuxOp } from "./AuxOpTypes";
+import { AuxOp, AuxOpType } from "./AuxOpTypes";
 import { DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_GRID_SCALE, DEFAULT_WORKSPACE_COLOR } from "../Files";
 import { site } from "../channels-core/SiteIdInfo";
 import { storedTree } from "../channels-core/StoredCausalTree";
@@ -474,44 +474,104 @@ describe('AuxCausalTree', () => {
                             tags: {
                                 size: { 
                                     ref: size, 
-                                    name: [
-                                        { start: 0, end: 4, ref: size }
-                                    ],
+                                    name: {
+                                        indexes: [
+                                            0, 1, 2, 3
+                                        ],
+                                        refs: [
+                                            size, size, size, size
+                                        ]
+                                    },
                                     value: { 
                                         ref: sizeVal,
-                                        sequence: [
-                                            { start: 0, end: null, ref: sizeVal }
-                                        ]
+                                        sequence: null
                                     }
                                 },
                                 extra: { 
                                     ref: extra,
-                                    name: [
-                                        { start: 0, end: 5, ref: extra }
-                                    ],
+                                    name: {
+                                        indexes: [
+                                            0, 1, 2, 3, 4
+                                        ],
+                                        refs: [
+                                            extra, extra, extra, extra, extra
+                                        ]
+                                    },
                                     value: { 
                                         ref: extraVal, 
-                                        sequence: [
-                                            { start: 0, end: null, ref: extraVal }
-                                        ]
+                                        sequence: null
                                     }
                                 },
                                 last: { 
                                     ref: last,
-                                    name: [
-                                        { start: 0, end: 4, ref: last }
-                                    ],
+                                    name: {
+                                        indexes: [
+                                            0, 1, 2, 3
+                                        ],
+                                        refs: [
+                                            last, last, last, last
+                                        ]
+                                    },
                                     value: { 
                                         ref: lastVal, 
-                                        sequence: [
-                                            { start: 0, end: 6, ref: lastVal }
-                                        ]
+                                        sequence: {
+                                            indexes: [
+                                                0, 1, 2, 3, 4, 5
+                                            ],
+                                            refs: [
+                                                lastVal, lastVal, lastVal, lastVal, lastVal, lastVal
+                                            ]
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 });
+            });
+        });
+    });
+
+    describe('insertInto()', () => {
+        it('should insert the given text into the given value', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            tree.root();
+            const file = tree.file('testId', 'object');
+            const tag = tree.tag('test', file.atom);
+            const val = tree.val('abc', tag.atom);
+
+            const files = tree.value;
+
+            const insert = tree.insertIntoTagValue(files['testId'], 'test', '123', 2);
+
+            expect(insert.atom.value).toMatchObject({
+                index: 2,
+                text: '123'
+            });
+        });
+
+        it('should insert the given text into the given complex tag value', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            tree.root();
+            const file = tree.file('testId', 'object');
+            const tag = tree.tag('test', file.atom);
+            const val = tree.val('abc', tag.atom);
+            const insert1 = tree.insert(0, 'xyz', val.atom); // xyzabc
+            const delete1 = tree.delete(insert1.atom, 0, 1); // yzabc
+            const insert2 = tree.insert(0, '1', val.atom); //   yz1abc
+            const insert3 = tree.insert(3, '?', val.atom); //   yz1abc?
+            const delete2 = tree.delete(val.atom, 0, 3); //     yz1?
+
+            const files = tree.value;
+
+            const insert = tree.insertIntoTagValue(files['testId'], 'test', '5555', 2);
+
+            expect(insert.atom.cause).toEqual(insert2.atom.id);
+            expect(insert.atom.value).toMatchObject({
+                index: 0,
+                text: '5555'
             });
         });
     });

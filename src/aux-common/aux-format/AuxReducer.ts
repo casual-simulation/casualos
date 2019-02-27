@@ -6,8 +6,8 @@ import { createFile, createWorkspace } from "../Files/FileCalculations";
 import { WeaveTraverser } from "../channels-core/WeaveTraverser";
 import { merge, splice } from "../utils";
 import { AtomFactory } from "../channels-core/AtomFactory";
-import { AuxFile, AuxObject, AuxWorkspace, AuxState, AuxSequenceMetadata, AuxFileMetadata, AuxValueMetadata } from "./AuxState";
-import { flatMap } from 'lodash';
+import { AuxFile, AuxObject, AuxWorkspace, AuxState, AuxFileMetadata, AuxValueMetadata, AuxRef, AuxSequenceMetadata } from "./AuxState";
+import { flatMap, fill } from 'lodash';
 
 export class AuxReducer implements AtomReducer<AuxOp, AuxState> {
     
@@ -78,7 +78,7 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState> {
         let hasValue = false;
         let meta: AuxValueMetadata = {
             ref: null,
-            sequence: []
+            sequence: null
         };
 
         while (tree.peek(parent.atom.id)) {
@@ -95,24 +95,23 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState> {
         return { value, meta };
     }
 
-    public evalSequence(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<AuxOp>, value: any): {value: string, meta: AuxSequenceMetadata[] } {
+    public evalSequence(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<AuxOp>, value: any): {value: string, meta: AuxSequenceMetadata } {
 
         // list of number pairs
         let offsets: number[] = [];
-        let meta: AuxSequenceMetadata[] = [];
+        let meta: AuxSequenceMetadata = null;
         if (parent.atom.value.type === AuxOpType.value || parent.atom.value.type === AuxOpType.tag) {
             if (typeof value === 'string') {
-                meta.unshift({ start: 0, end: value.length, ref: parent });
-            } else {
-                meta.unshift({ start: 0, end: null, ref: parent });
+                meta = createSequenceMeta(parent, value);
             }
         } else if(parent.atom.value.type === AuxOpType.insert) {
-            meta.unshift({ start: parent.atom.value.index, end: parent.atom.value.index + value.length, ref: parent });
+            meta = createSequenceMeta(parent, value);
         }
         while (tree.peek(parent.atom.id)) {
             const ref = tree.next();
             if (typeof value !== 'string') {
                 value = value.toString();
+                meta = createSequenceMeta(parent, value);
             }
             if (ref.atom.value.type === AuxOpType.delete) {
                 const start = Math.max(ref.atom.value.start || 0, 0);
@@ -122,23 +121,23 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState> {
                 const index = start + offset;
                 const deleteCount = length + offset;
                 offsets.push(index, -deleteCount);
-                if (deleteCount > 0) {
-                    meta[0].end -= deleteCount;
-                }
+                meta.refs.splice(index, deleteCount);
+                meta.indexes.splice(index, deleteCount);
                 value = splice(value, index, deleteCount, '');
             } else if (ref.atom.value.type === AuxOpType.insert) {
                 const { value: text, meta: refMeta } = this.evalSequence(tree, ref, ref.atom.value.text);
                 const offset = calculateOffsetForIndex(ref.atom.value.index, offsets, false);
                 const index = ref.atom.value.index + offset;
                 offsets.push(index, text.length);
-                meta.unshift(...refMeta.map(m => {
-                    return { start: m.start + offset, end: m.end + offset, ref: m.ref };
-                }));
+                const newMetaRefs = refMeta.refs;
+                const newMetaIndices = refMeta.indexes;
+                meta.refs.splice(index, 0, ...newMetaRefs);
+                meta.indexes.splice(index, 0, ...newMetaIndices);
                 value = splice(value, index, 0, text);
             }
         }
 
-        return { value, meta: flatMap(meta) };
+        return { value, meta };
     }
 }
 
@@ -147,21 +146,48 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState> {
  * @param meta The metadata for the sequence.
  * @param index The index in the final text that the value should be inserted at.
  */
-export function calculateSequenceRef(meta: AuxSequenceMetadata[], index: number) {
-    const originalIndex = index;
-    for (let i = 0; i < meta.length; i++) {
-        const part = meta[i];
-        if (part.start <= index && part.end >= index) {
-            return { ref: part.ref, index: index - part.start };
-        } else if (part.end <= index) {
-            index -= part.end;
+export function calculateSequenceRef(meta: AuxSequenceMetadata, index: number): { ref: AuxRef, index: number } {
+    if (meta === null) {
+        return { ref: null, index };
+    } else if (index >= meta.indexes.length) {
+        if (meta.indexes.length > 0) {
+            return { 
+                ref: meta.refs[meta.refs.length - 1],
+                index: meta.indexes[meta.indexes.length - 1] + 1
+            };
+        } else {
+            return { ref: null, index: 0 };
+        }
+    } else if (index < 0) {
+        if (meta.indexes.length > 0) {
+            return { 
+                ref: meta.refs[0],
+                index: meta.indexes[0]
+            };
+        } else {
+            return { ref: null, index: 0 };
         }
     }
-    const last = meta[meta.length - 1];
-    if (index < 0) {
-        return { ref: last.ref, index: last.start };
-    } else {
-        return { ref: last.ref, index: last.end === null ? originalIndex : last.end };
+    const ref = meta.refs[index];
+    const idx = meta.indexes[index];
+
+    return { ref, index: idx };
+}
+
+function createSequenceMeta(ref: AuxRef, value: string): AuxSequenceMetadata {
+    let refs = new Array<AuxRef>(value.length);
+    let indexes = new Array<number>(value.length);
+    fill(refs, ref, 0, value.length);
+    fillIndexes(indexes);
+    return {
+        refs,
+        indexes
+    };
+}
+
+function fillIndexes(arr: number[]) {
+    for (let i = 0; i < arr.length; i++) {
+        arr[i] = i;
     }
 }
 

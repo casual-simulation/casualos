@@ -2,17 +2,18 @@ import { Weave, WeaveReference } from '../channels-core/Weave';
 import { AuxOp, FileOp, TagOp, InsertOp, ValueOp } from './AuxOpTypes';
 import { CausalTree } from '../channels-core/CausalTree';
 import { FilesState, FileType } from '../Files';
-import { AuxReducer } from './AuxReducer';
+import { AuxReducer, calculateSequenceRef } from './AuxReducer';
 import { root, file, tag, value, del, insert } from './AuxAtoms';
 import { AtomId, Atom } from '../channels-core/Atom';
 import { SiteInfo } from '../channels-core/SiteIdInfo';
 import { StoredCausalTree } from '../channels-core/StoredCausalTree';
-import { AuxState } from './AuxState';
+import { AuxState, AuxTagMetadata, AuxValueMetadata, AuxFile } from './AuxState';
 
 /**
  * Defines a Causal Tree for aux files.
  */
 export class AuxCausalTree extends CausalTree<AuxOp, AuxState> {
+    
     constructor(tree: StoredCausalTree<AuxOp>) {
         super(tree, new AuxReducer());
     }
@@ -68,5 +69,18 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState> {
      */
     insert(index: number, text: string, atom: Atom<ValueOp> | Atom<TagOp> | Atom<InsertOp> | AtomId) {
         return this.create(insert(index, text), atom);
+    }
+
+    /**
+     * Inserts the given text into the given tag or value on the given file.
+     * @param file The file that the text should be inserted into.
+     * @param tag The tag that the text should be inserted into.
+     * @param text The text that should be inserted. 
+     * @param index The index that the text should be inserted at.
+     */
+    insertIntoTagValue(file: AuxFile, tag: string, text: string, index: number): WeaveReference<InsertOp> {
+        const sequence = file.metadata.tags[tag].value.sequence;
+        const result = calculateSequenceRef(sequence, index);
+        return this.insert(result.index, text, result.ref.atom);
     }
 }

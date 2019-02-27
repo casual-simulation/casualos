@@ -31,7 +31,7 @@ export interface AuxFileMetadata {
  */
 export interface AuxTagMetadata {
     ref: AuxRef;
-    name: AuxSequenceMetadata[];
+    name: AuxSequenceMetadata;
     value: AuxValueMetadata;
 }
 
@@ -46,24 +46,24 @@ export interface AuxValueMetadata {
      * The array is ordered from the youngest to the oldest
      * so that finding the correct parent for insertions and deletions is easy.
      */
-    sequence: AuxSequenceMetadata[];
+    sequence: AuxSequenceMetadata;
 }
 
 /**
  * Defines an interface that contains metadata for an AUX sequence.
  */
 export interface AuxSequenceMetadata {
-    ref: AuxRef;
 
     /**
-     * The index in the string that this metadata starts at.
+     * The list of indicies that relate a text position to
+     * an index in a ref.
      */
-    start: number;
+    indexes: number[];
 
     /**
-     * The index in the string that this metadata ends at.
+     * The list of refs.
      */
-    end: number;
+    refs: AuxRef[];
 }
 
 /**
