@@ -1,6 +1,6 @@
 import { Weave } from "../channels-core/Weave";
 import { AuxOp } from "./AuxOpTypes";
-import { AuxReducer, calculateSequenceRef } from "./AuxReducer";
+import { AuxReducer, calculateSequenceRef, calculateSequenceRefs } from "./AuxReducer";
 import { WeaveTraverser } from "../channels-core/WeaveTraverser";
 import { AuxCausalTree } from "./AuxCausalTree";
 import { storedTree } from "../channels-core/StoredCausalTree";
@@ -508,7 +508,7 @@ describe('AuxReducer', () => {
             });
         });
 
-        describe('calculateSequenceRef', () => {
+        describe('calculateSequenceRef()', () => {
             it('should return the root if there are no other inserts', () => {
                 const root = site1.val('abc', null);
                 traverser.next();
@@ -573,6 +573,49 @@ describe('AuxReducer', () => {
                 expect(calculateSequenceRef(meta, 4)).toEqual({ ref: insert1, index: 0 });
                 expect(calculateSequenceRef(meta, 5)).toEqual({ ref: insert1, index: 1 });
                 expect(calculateSequenceRef(meta, 6)).toEqual({ ref: insert1, index: 2 });
+            });
+        });
+
+        describe('calculateSequenceRefs()', () => {
+            it('should return all the refs and indexes that the given span covers', () => {
+                const root = site1.val('abc', null);
+                const insert1 = site1.insert(3, '456', root.atom);
+                const insert2 = site1.insert(0, '123', root.atom);
+                site1.delete(root.atom, 1, 2);
+                site1.delete(insert1.atom, 2, 3);
+                site1.delete(insert2.atom, 0, 1);
+
+                // text: "23ac45"
+                traverser.next();
+                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+
+                expect(calculateSequenceRefs(meta, 0, 0)).toEqual([
+                    { ref: insert2, index: 1 }
+                ]);
+                expect(calculateSequenceRefs(meta, 0, 1)).toEqual([
+                    { ref: insert2, index: 1, length: 1 },
+                ]);
+                expect(calculateSequenceRefs(meta, 0, 2)).toEqual([
+                    { ref: insert2, index: 1, length: 2 },
+                ]);
+                expect(calculateSequenceRefs(meta, 0, 3)).toEqual([
+                    { ref: insert2, index: 1, length: 2 },
+                    { ref: root, index: 0, length: 1 },
+                ]);
+                expect(calculateSequenceRefs(meta, 0, 4)).toEqual([
+                    { ref: insert2, index: 1, length: 2 },
+                    { ref: root, index: 0, length: 3 },
+                ]);
+                expect(calculateSequenceRefs(meta, 0, 5)).toEqual([
+                    { ref: insert2, index: 1, length: 2 },
+                    { ref: root, index: 0, length: 3 }, // need to delete all the root values
+                    { ref: insert1, index: 0, length: 1 }
+                ]);
+                expect(calculateSequenceRefs(meta, 0, 6)).toEqual([
+                    { ref: insert2, index: 1, length: 2 },
+                    { ref: root, index: 0, length: 3 }, // need to delete all the root values
+                    { ref: insert1, index: 0, length: 2 }
+                ]);
             });
         });
     });

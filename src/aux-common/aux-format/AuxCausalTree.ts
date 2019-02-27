@@ -1,5 +1,5 @@
 import { Weave, WeaveReference } from '../channels-core/Weave';
-import { AuxOp, FileOp, TagOp, InsertOp, ValueOp } from './AuxOpTypes';
+import { AuxOp, FileOp, TagOp, InsertOp, ValueOp, DeleteOp } from './AuxOpTypes';
 import { CausalTree } from '../channels-core/CausalTree';
 import { FilesState, FileType } from '../Files';
 import { AuxReducer, calculateSequenceRef } from './AuxReducer';
@@ -79,8 +79,71 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState> {
      * @param index The index that the text should be inserted at.
      */
     insertIntoTagValue(file: AuxFile, tag: string, text: string, index: number): WeaveReference<InsertOp> {
-        const sequence = file.metadata.tags[tag].value.sequence;
-        const result = calculateSequenceRef(sequence, index);
-        return this.insert(result.index, text, result.ref.atom);
+        const tagMeta = this._getTagMetadata(file, tag);
+        if (tagMeta) {
+            const result = calculateSequenceRef(tagMeta.value.sequence, index);
+            return this.insert(result.index, text, <Atom<TagOp>>result.ref.atom);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Inserts the given text into the given tag name.
+     * Note that after inserting the text the tag name will change.
+     * @param tag The tag whose name should be updated.
+     * @param text The text to insert into the tag name.
+     * @param index The index that the text should be inserted at.
+     */
+    insertIntoTagName(file: AuxFile, tag: string, text: string, index: number): WeaveReference<InsertOp> {
+        const tagMeta = this._getTagMetadata(file, tag);
+        if (tagMeta) {
+            const result = calculateSequenceRef(tagMeta.name, index);
+            return this.insert(result.index, text, <Atom<TagOp>>result.ref.atom);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Deletes a segment of text from the given tag's value.
+     * @param file The file that the text should be deleted from.
+     * @param tag The tag that the text should be deleted from.
+     * @param index The index that the text should be deleted at.
+     * @param length The number of characters to delete.
+     */
+    deleteFromTagValue(file: AuxFile, tag: string, index: number, length: number): WeaveReference<DeleteOp> {
+        const tagMeta = this._getTagMetadata(file, tag);
+        if (tagMeta) {
+            const result = calculateSequenceRef(tagMeta.value.sequence, index);
+            return this.delete(<Atom<TagOp>>result.ref.atom, result.index, result.index + length);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Deletes a segment of text from the given tag's name.
+     * Note that after inserting the text the tag name will change.
+     * @param tag The tag whose name should be updated.
+     * @param index The index that the characters should be deleted from.
+     * @param length The number of characters to delete. 
+     */
+    deleteFromTagName(file: AuxFile, tag: string, index: number, length: number): WeaveReference<DeleteOp> {
+        const tagMeta = this._getTagMetadata(file, tag);
+        if (tagMeta) {
+            const result = calculateSequenceRef(tagMeta.name, index);
+            return this.delete(<Atom<TagOp>>result.ref.atom, result.index, result.index + length);
+        } else {
+            return null;
+        }
+    }
+
+    private _getTagMetadata(file: AuxFile, tag: string): AuxTagMetadata {
+        if (file && file.metadata && file.metadata.tags[tag]) {
+            return file.metadata.tags[tag];
+        } else {
+            return null;
+        }
     }
 }

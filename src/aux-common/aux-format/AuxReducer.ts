@@ -8,6 +8,7 @@ import { merge, splice } from "../utils";
 import { AtomFactory } from "../channels-core/AtomFactory";
 import { AuxFile, AuxObject, AuxWorkspace, AuxState, AuxFileMetadata, AuxValueMetadata, AuxRef, AuxSequenceMetadata } from "./AuxState";
 import { flatMap, fill } from 'lodash';
+import { MetaProperty } from "estree";
 
 export class AuxReducer implements AtomReducer<AuxOp, AuxState> {
     
@@ -142,36 +143,93 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState> {
 }
 
 /**
+ * Defines an interface for objects that refer to a specific index in
+ * a tag name, tag value, or insert op.
+ * 
+ * Can represent a span or just a location.
+ */
+export interface SequenceRef {
+    ref: AuxRef;
+    index: number;
+    length?: number;
+}
+
+/**
  * Calculates the ref and index within said ref that the given index falls at.
  * @param meta The metadata for the sequence.
  * @param index The index in the final text that the value should be inserted at.
  */
-export function calculateSequenceRef(meta: AuxSequenceMetadata, index: number): { ref: AuxRef, index: number } {
+export function calculateSequenceRef(meta: AuxSequenceMetadata, index: number): SequenceRef {
+    const refs = calculateSequenceRefs(meta, index);
+    if (refs && refs.length > 0) {
+        return refs[0];
+    } else {
+        return null;
+    }
+}
+
+
+export function calculateSequenceRefs(meta: AuxSequenceMetadata, index: number, length?: number): SequenceRef[] {
+    // Check for nulls
     if (meta === null) {
-        return { ref: null, index };
+        if (typeof length !== 'undefined') {
+            return [{ ref: null, index, length }];
+        } else {
+            return [{ ref: null, index }];
+        }
     } else if (index >= meta.indexes.length) {
         if (meta.indexes.length > 0) {
-            return { 
+            return [{ 
                 ref: meta.refs[meta.refs.length - 1],
-                index: meta.indexes[meta.indexes.length - 1] + 1
-            };
+                index: meta.indexes[meta.indexes.length - 1] + 1,
+            }];
         } else {
-            return { ref: null, index: 0 };
+            return [{ ref: null, index: 0 }];
         }
     } else if (index < 0) {
         if (meta.indexes.length > 0) {
-            return { 
+            return [{ 
                 ref: meta.refs[0],
                 index: meta.indexes[0]
-            };
+            }];
         } else {
-            return { ref: null, index: 0 };
+            return [{ ref: null, index: 0 }];
         }
     }
+    let refs: SequenceRef[] = [];
     const ref = meta.refs[index];
     const idx = meta.indexes[index];
+    
+    if (length <= 0 || typeof length === 'undefined') {
+        refs.push({ ref, index: idx });
+    } else {
+        let currentRef = ref;
+        let currentIndex = idx;
+        let lastIndex = idx;
+        for (let i = 0; i < length; i++) {
+            let nextRef = meta.refs[i];
+            if (currentRef !== nextRef) {
+                refs.push({
+                    ref: currentRef,
+                    index: currentIndex,
+                    length: (lastIndex - currentIndex) + 1
+                });
+                currentRef = nextRef;
+                currentIndex = meta.indexes[i];
+                lastIndex = currentIndex;
+            } else {
+                lastIndex = meta.indexes[i];
+            }
+        }
 
-    return { ref, index: idx };
+        refs.push({ 
+            ref: currentRef, 
+            index: currentIndex, 
+            length: (lastIndex - currentIndex) + 1
+        });
+    }
+
+    return refs;
 }
 
 function createSequenceMeta(ref: AuxRef, value: string): AuxSequenceMetadata {

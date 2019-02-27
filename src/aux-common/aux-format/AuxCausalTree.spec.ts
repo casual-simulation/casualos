@@ -575,4 +575,25 @@ describe('AuxCausalTree', () => {
             });
         });
     });
+
+    describe('deleteFrom()', () => {
+        it('should delete the specified section of text', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            tree.root();
+            const file = tree.file('testId', 'object');
+            const tag = tree.tag('test', file.atom);
+            const val = tree.val('abc', tag.atom);
+
+            const files = tree.value;
+
+            const deleted = tree.deleteFromTagValue(files['testId'], 'test', 1, 2);
+
+            expect(deleted.atom.value).toMatchObject({
+                start: 1,
+                end: 3
+            });
+        });
+
+    });
 });
