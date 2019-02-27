@@ -7,11 +7,12 @@ import { root, file, tag, value, del, insert } from './AuxAtoms';
 import { AtomId, Atom } from '../channels-core/Atom';
 import { SiteInfo } from '../channels-core/SiteIdInfo';
 import { StoredCausalTree } from '../channels-core/StoredCausalTree';
+import { AuxState } from './AuxState';
 
 /**
  * Defines a Causal Tree for aux files.
  */
-export class AuxCausalTree extends CausalTree<AuxOp, FilesState> {
+export class AuxCausalTree extends CausalTree<AuxOp, AuxState> {
     constructor(tree: StoredCausalTree<AuxOp>) {
         super(tree, new AuxReducer());
     }
