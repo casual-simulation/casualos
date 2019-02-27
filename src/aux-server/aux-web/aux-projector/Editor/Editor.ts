@@ -4,7 +4,7 @@ import {Provide, Inject} from 'vue-property-decorator';
 import {filter} from 'rxjs/operators';
 import {Object} from '@yeti-cgi/aux-common';
 import FileTable from '../FileTable/FileTable';
-import { appManager } from '../AppManager';
+import { appManager } from '../../shared/AppManager';
 
 @Component({
     components: {

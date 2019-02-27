@@ -2,7 +2,7 @@ import { File, Object, Workspace } from '@yeti-cgi/aux-common'
 import { ArgEvent } from '@yeti-cgi/aux-common/Events';
 
 // Assets
-import GameView from "../aux-projector/GameView/GameView";
+import { IGameView } from "../IGameView";
 import { WorkspaceMesh } from "./WorkspaceMesh";
 import { FileMesh } from "./FileMesh";
 import { UserMesh } from "./UserMesh";
@@ -26,7 +26,7 @@ export class File3D {
     /**
      * The GameView that manages this file3d.
      */
-    private _gameView: GameView;
+    private _gameView: IGameView;
 
     /**
      * Event that is fired when this file is updated.
@@ -39,7 +39,7 @@ export class File3D {
      * @param gameView The game view that manages this file3d.
      * @param file The file that this file3d represents.
      */
-    constructor(gameView: GameView, file: File) {
+    constructor(gameView: IGameView, file: File) {
         this.file = file;
         this._gameView = gameView;
 

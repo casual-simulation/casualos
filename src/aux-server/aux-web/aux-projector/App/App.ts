@@ -1,15 +1,15 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Provide, Watch} from 'vue-property-decorator';
-import { appManager, User } from '../AppManager';
+import { appManager, User } from '../../shared/AppManager';
 import { EventBus } from '../EventBus/EventBus';
 import ConfirmDialogOptions from './DialogOptions/ConfirmDialogOptions';
 import AlertDialogOptions from './DialogOptions/AlertDialogOptions';
 import { SubscriptionLike, Subscription } from 'rxjs';
 import { FilesState, ConflictDetails, UserMode, Object, getUserMode } from '@yeti-cgi/aux-common';
-import { MergeStatus } from '../FileManager';
+import { MergeStatus } from '../../shared/FileManager';
 import SnackbarOptions from './Snackbar/SnackbarOptions';
-import { copyToClipboard } from '../utils';
+import { copyToClipboard } from '../../shared/SharedUtils';
 import { tap } from 'rxjs/operators';
 import { findIndex } from 'lodash';
 import QRCode from '@chenfengyuan/vue-qrcode';

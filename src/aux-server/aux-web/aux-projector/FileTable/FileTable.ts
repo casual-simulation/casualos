@@ -4,7 +4,7 @@ import {Provide, Prop, Inject, Watch} from 'vue-property-decorator';
 import { some, union } from 'lodash';
 import {File, Object, fileTags, isHiddenTag} from '@yeti-cgi/aux-common';
 import { EventBus } from '../EventBus/EventBus';
-import { appManager } from '../AppManager';
+import { appManager } from '../../shared/AppManager';
 
 import FileRow from '../FileRow/FileRow';
 import TagEditor from '../TagEditor/TagEditor';

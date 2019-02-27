@@ -57,12 +57,9 @@ import 'offline-plugin/runtime';
 // import App from './App/App';
 // import Welcome from './Welcome/Welcome';
 // import Home from './Home/Home';
-// import Editor from './Editor/Editor';
-// import MergeConflicts from './MergeConflicts/MergeConflicts';
-// import AuxDebug from './AuxDebug/AuxDebug';
 
 // Import the WebXR Polyfill
-// import 'webxr-polyfill';
+import 'webxr-polyfill';
 
 
 // Setup the Promise shim for browsers that don't support promises.
@@ -70,26 +67,26 @@ polyfill();
 
 
 
-// Vue.use(VueRouter);
-// Vue.use(MdButton);
-// Vue.use(MdCheckbox);
-// Vue.use(MdContent);
-// Vue.use(MdApp);
-// Vue.use(MdCard);
-// Vue.use(MdToolbar);
-// Vue.use(MdField);
-// Vue.use(MdProgress);
-// Vue.use(MdDrawer);
-// Vue.use(MdList);
-// Vue.use(MdMenu);
-// Vue.use(MdDialog);
-// Vue.use(MdDialogConfirm);
-// Vue.use(MdDialogAlert)
-// Vue.use(MdTabs);
-// Vue.use(MdTooltip);
-// Vue.use(MdSnackbar);
-// Vue.use(MdSwitch);
-// Vue.use(MdBadge);
+Vue.use(VueRouter);
+Vue.use(MdButton);
+Vue.use(MdCheckbox);
+Vue.use(MdContent);
+Vue.use(MdApp);
+Vue.use(MdCard);
+Vue.use(MdToolbar);
+Vue.use(MdField);
+Vue.use(MdProgress);
+Vue.use(MdDrawer);
+Vue.use(MdList);
+Vue.use(MdMenu);
+Vue.use(MdDialog);
+Vue.use(MdDialogConfirm);
+Vue.use(MdDialogAlert)
+Vue.use(MdTabs);
+Vue.use(MdTooltip);
+Vue.use(MdSnackbar);
+Vue.use(MdSwitch);
+Vue.use(MdBadge);
 
 // const routes: RouteConfig[] = [
 //     {
@@ -101,28 +98,6 @@ polyfill();
 //         path: '/:id?',
 //         name: 'home',
 //         component: Home,
-//     },
-//     {
-//         path: '/editor/:id?',
-//         name: 'editor',
-//         component: Editor
-//     },
-//     {
-//         path: '/merge-conflicts/:id?',
-//         name: 'merge-conflicts',
-//         component: MergeConflicts,
-//         beforeEnter: (to, from, next) => {
-//             if (appManager.fileManager && appManager.fileManager.mergeStatus) {
-//                 next();
-//             } else {
-//                 next({ name: 'home', params: { id: appManager.user.channelId } });
-//             }
-//         }
-//     },
-//     {
-//         path: '/aux-debug/:id?',
-//         name: 'aux-debug',
-//         component: AuxDebug
 //     }
 // ]
 

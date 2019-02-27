@@ -9,12 +9,13 @@ import {
     Euler
 } from "three";
 import { GameObject } from "./GameObject";
-import GameView from '../aux-projector/GameView/GameView';
+import { IGameView } from '../IGameView';
 import { Text3D } from "./Text3D";
 import { isFormula, FileCalculationContext, Object, File } from '@yeti-cgi/aux-common'
 import { ArgEvent } from '@yeti-cgi/aux-common/Events';
-import { appManager } from '../aux-projector/AppManager';
-import { createLabel } from "./utils";
+import { appManager } from '../AppManager';
+import { createLabel } from "./SceneUtils";
+import { LayersHelper } from "./LayersHelper";
 
 
 /**
@@ -43,7 +44,7 @@ export const DEFAULT_USER_ROTATION_INCREMENT = 1 * (Math.PI/180);
  */
 export class UserMesh extends GameObject {
 
-    private _gameView: GameView;
+    private _gameView: IGameView;
     private _context: FileCalculationContext;
     private _lastActiveCheckTime: number;
 
@@ -77,7 +78,7 @@ export class UserMesh extends GameObject {
      */
     public onUpdated: ArgEvent<UserMesh> = new ArgEvent<UserMesh>();
 
-    constructor(gameView: GameView) {
+    constructor(gameView: IGameView) {
         super();
         this._gameView = gameView;
     }
@@ -115,7 +116,7 @@ export class UserMesh extends GameObject {
             this.camera = new PerspectiveCamera(60, 1, 0.1, 0.5);
             this.cameraHelper = new CameraHelper(this.camera);
             this.label = createLabel(this._gameView, this.cameraHelper);
-            this.label.setLayer(GameView.Layer_UIWorld);
+            this.label.setLayer(LayersHelper.Layer_UIWorld);
             this.label.setScale(Text3D.defaultScale * 2);
             this.label.setRotation(0, 180, 0);
             this.container.add(this.cameraHelper);

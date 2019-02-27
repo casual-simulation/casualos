@@ -1,4 +1,4 @@
-import { File3D } from '../../../aux-scene/File3D';
+import { File3D } from '../../../shared/scene/File3D';
 import { FileDragOperation } from '../DragOperation/FileDragOperation';
 import { Vector2, Vector3, Intersection } from 'three';
 import GameView from '../../GameView/GameView';
@@ -8,9 +8,9 @@ import {
     File,
     duplicateFile
 } from '@yeti-cgi/aux-common';
-import { Physics } from '../../../aux-scene/Physics';
-import { WorkspaceMesh } from '../../../aux-scene/WorkspaceMesh';
-import { appManager } from '../../AppManager';
+import { Physics } from '../../../shared/scene/Physics';
+import { WorkspaceMesh } from '../../../shared/scene/WorkspaceMesh';
+import { appManager } from '../../../shared/AppManager';
 import { BaseFileClickOperation } from './BaseFileClickOperation';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
 

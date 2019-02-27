@@ -4,7 +4,7 @@ import {Prop, Inject} from 'vue-property-decorator';
 import { SubscriptionLike } from 'rxjs';
 import { Object, File, getShortId } from '@yeti-cgi/aux-common';
 import FileValue from '../FileValue/FileValue';
-import { appManager } from '../AppManager';
+import { appManager } from '../../shared/AppManager';
 
 @Component({
     components: {

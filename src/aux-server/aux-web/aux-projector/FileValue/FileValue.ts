@@ -3,7 +3,7 @@ import Component from 'vue-class-component';
 import {Prop, Inject} from 'vue-property-decorator';
 import { Object, File, Assignment, isFormula, isAssignment } from '@yeti-cgi/aux-common';
 import {assign} from 'lodash';
-import { appManager } from '../AppManager';
+import { appManager } from '../../shared/AppManager';
 
 @Component({
     watch: {

@@ -1,11 +1,11 @@
-import { Input } from '../../../aux-scene/Input';
-import { File3D } from '../../../aux-scene/File3D';
+import { Input } from '../../../shared/scene/Input';
+import { File3D } from '../../../shared/scene/File3D';
 import { IOperation } from '../IOperation';
 import GameView from '../../GameView/GameView';
 import { InteractionManager } from '../InteractionManager';
 import { Ray, Intersection, Vector2, Vector3, Box3, AxesHelper, Group, Object3D } from 'three';
-import { Physics } from '../../../aux-scene/Physics';
-import { WorkspaceMesh } from '../../../aux-scene/WorkspaceMesh';
+import { Physics } from '../../../shared/scene/Physics';
+import { WorkspaceMesh } from '../../../shared/scene/WorkspaceMesh';
 import { 
     File, 
     Workspace, 
@@ -18,8 +18,8 @@ import {
     updateFile
 } from '@yeti-cgi/aux-common';
 
-import { setParent } from '../../../aux-scene/utils';
-import { FileMesh } from '../../../aux-scene/FileMesh';
+import { setParent } from '../../../shared/scene/SceneUtils';
+import { FileMesh } from '../../../shared/scene/FileMesh';
 
 /**
  * Shared class for both FileDragOperation and NewFileDragOperation.

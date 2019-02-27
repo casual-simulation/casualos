@@ -1,10 +1,10 @@
-import { Input, InputType, MouseButtonId } from '../../../aux-scene/Input';
+import { Input, InputType, MouseButtonId } from '../../../shared/scene/Input';
 import { Vector2, Vector3, Intersection, Raycaster } from 'three';
 import { IOperation } from '../IOperation';
 import GameView from '../../GameView/GameView';
 import { InteractionManager } from '../InteractionManager';
 import { DEFAULT_SCENE_BACKGROUND_COLOR } from '@yeti-cgi/aux-common';
-import { appManager } from '../../AppManager';
+import { appManager } from '../../../shared/AppManager';
 import { ColorPickerEvent } from '../ColorPickerEvent';
 import { EventBus } from '../../EventBus/EventBus';
 

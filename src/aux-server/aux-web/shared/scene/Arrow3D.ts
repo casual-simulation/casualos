@@ -18,10 +18,10 @@ import {
 } from 'three';
 
 import { Object, Workspace } from '@yeti-cgi/aux-common';
-import GameView from '../aux-projector/GameView/GameView';
 import { File3D } from './File3D';
 import { FileMesh } from './FileMesh';
 import { WorkspaceMesh } from './WorkspaceMesh';
+import { IGameView } from '../IGameView';
 
 export class Arrow3D {
 
@@ -44,12 +44,12 @@ export class Arrow3D {
      */
     private _targetFile3d: File3D;
 
-    private _gameView: GameView;
+    private _gameView: IGameView;
 
     public get sourceFile3d() { return this._sourceFile3d; }
     public get targetFile3d() { return this._targetFile3d; }
 
-    constructor(gameView: GameView, sourceFile3d: File3D, targetFile3d: File3D) {
+    constructor(gameView: IGameView, sourceFile3d: File3D, targetFile3d: File3D) {
         this._gameView = gameView;
         this._sourceFile3d = sourceFile3d;
         this._targetFile3d = targetFile3d;

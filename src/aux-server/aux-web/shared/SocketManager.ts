@@ -13,7 +13,7 @@ import {
     storeFactory,
     channelTypes,
 } from '@yeti-cgi/aux-common';
-import {SocketIOConnector} from './channels';
+import {SocketIOConnector} from '../aux-projector/channels';
 
 export class SocketManager {
     private _socket: SocketIOClient.Socket;

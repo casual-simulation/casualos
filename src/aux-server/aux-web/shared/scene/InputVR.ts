@@ -1,5 +1,5 @@
 import VRController from 'three-vrcontroller-module';
-import GameView from '../aux-projector/GameView/GameView';
+import { IGameView } from '../IGameView';
 import { MeshStandardMaterial, Mesh, CylinderGeometry, BoxGeometry, Object3D, Ray, Vector3 } from 'three';
 import { InputState } from './Input';
 import { find, remove } from 'lodash';
@@ -13,9 +13,9 @@ export class InputVR {
     public debugLevel: number = 0;
     
     private _controllerMeshes: ControllerMesh[];
-    private _gameView: GameView;
+    private _gameView: IGameView;
 
-    constructor(gameView: GameView) {
+    constructor(gameView: IGameView) {
 
         this._gameView = gameView;
         this._controllerMeshes = [];

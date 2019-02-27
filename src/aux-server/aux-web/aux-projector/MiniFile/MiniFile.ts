@@ -2,8 +2,8 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Inject, Watch, Prop } from 'vue-property-decorator';
 import { Object } from '@yeti-cgi/aux-common';
-import { FileRenderer } from '../../aux-scene/FileRenderer';
-import { appManager } from '../AppManager';
+import { FileRenderer } from '../../shared/scene/FileRenderer';
+import { appManager } from '../../shared/AppManager';
 
 @Component({
     components: {
