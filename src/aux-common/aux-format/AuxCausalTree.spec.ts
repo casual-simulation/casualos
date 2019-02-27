@@ -589,8 +589,58 @@ describe('AuxCausalTree', () => {
 
             const deleted = tree.deleteFromTagValue(files['testId'], 'test', 1, 2);
 
-            expect(deleted.atom.value).toMatchObject({
+            expect(deleted.length).toBe(1);
+            expect(deleted[0].atom.value).toMatchObject({
                 start: 1,
+                end: 3
+            });
+        });
+
+        it('should create deletions spanning multiple insertions', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            tree.root();
+            const file = tree.file('testId', 'object');
+            const tag = tree.tag('test', file.atom);
+            const val = tree.val('abc', tag.atom);
+            const insert1 = tree.insert(0, '1', val.atom);
+            const insert2 = tree.insert(0, '2', insert1.atom);
+            const insert3 = tree.insert(2, '3', val.atom);
+
+            // "21ab3c"
+            const files = tree.value;
+
+            const deleted = tree.deleteFromTagValue(files['testId'], 'test', 0, 6);
+
+            expect(deleted.length).toBe(5);
+            
+            expect(deleted[0].atom.cause).toEqual(insert2.atom.id);
+            expect(deleted[0].atom.value).toMatchObject({
+                start: 0,
+                end: 1
+            });
+            
+            expect(deleted[1].atom.cause).toEqual(insert1.atom.id);
+            expect(deleted[1].atom.value).toMatchObject({
+                start: 0,
+                end: 1
+            });
+            
+            expect(deleted[2].atom.cause).toEqual(val.atom.id);
+            expect(deleted[2].atom.value).toMatchObject({
+                start: 0,
+                end: 2
+            });
+
+            expect(deleted[3].atom.cause).toEqual(insert3.atom.id);
+            expect(deleted[3].atom.value).toMatchObject({
+                start: 0,
+                end: 1
+            });
+
+            expect(deleted[4].atom.cause).toEqual(val.atom.id);
+            expect(deleted[4].atom.value).toMatchObject({
+                start: 2,
                 end: 3
             });
         });

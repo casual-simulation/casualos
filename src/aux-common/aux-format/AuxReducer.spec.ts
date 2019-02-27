@@ -577,6 +577,18 @@ describe('AuxReducer', () => {
         });
 
         describe('calculateSequenceRefs()', () => {
+            it('should return the proper deletion length', () => {
+                const root = site1.val('abc', null);
+
+                // text: "23ac45"
+                traverser.next();
+                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+
+                expect(calculateSequenceRefs(meta, 1, 2)).toEqual([
+                    { ref: root, index: 1, length: 2 }
+                ]);
+            });
+
             it('should return all the refs and indexes that the given span covers', () => {
                 const root = site1.val('abc', null);
                 const insert1 = site1.insert(3, '456', root.atom);

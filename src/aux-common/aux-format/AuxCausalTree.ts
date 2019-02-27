@@ -2,7 +2,7 @@ import { Weave, WeaveReference } from '../channels-core/Weave';
 import { AuxOp, FileOp, TagOp, InsertOp, ValueOp, DeleteOp } from './AuxOpTypes';
 import { CausalTree } from '../channels-core/CausalTree';
 import { FilesState, FileType } from '../Files';
-import { AuxReducer, calculateSequenceRef } from './AuxReducer';
+import { AuxReducer, calculateSequenceRef, calculateSequenceRefs } from './AuxReducer';
 import { root, file, tag, value, del, insert } from './AuxAtoms';
 import { AtomId, Atom } from '../channels-core/Atom';
 import { SiteInfo } from '../channels-core/SiteIdInfo';
@@ -112,11 +112,11 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState> {
      * @param index The index that the text should be deleted at.
      * @param length The number of characters to delete.
      */
-    deleteFromTagValue(file: AuxFile, tag: string, index: number, length: number): WeaveReference<DeleteOp> {
+    deleteFromTagValue(file: AuxFile, tag: string, index: number, length: number): WeaveReference<DeleteOp>[] {
         const tagMeta = this._getTagMetadata(file, tag);
         if (tagMeta) {
-            const result = calculateSequenceRef(tagMeta.value.sequence, index);
-            return this.delete(<Atom<TagOp>>result.ref.atom, result.index, result.index + length);
+            const result = calculateSequenceRefs(tagMeta.value.sequence, index, length);
+            return result.map(r => this.delete(<Atom<TagOp>>r.ref.atom, r.index, r.index + r.length));
         } else {
             return null;
         }
@@ -129,11 +129,11 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState> {
      * @param index The index that the characters should be deleted from.
      * @param length The number of characters to delete. 
      */
-    deleteFromTagName(file: AuxFile, tag: string, index: number, length: number): WeaveReference<DeleteOp> {
+    deleteFromTagName(file: AuxFile, tag: string, index: number, length: number): WeaveReference<DeleteOp>[] {
         const tagMeta = this._getTagMetadata(file, tag);
         if (tagMeta) {
-            const result = calculateSequenceRef(tagMeta.name, index);
-            return this.delete(<Atom<TagOp>>result.ref.atom, result.index, result.index + length);
+            const result = calculateSequenceRefs(tagMeta.name, index);
+            return result.map(r => this.delete(<Atom<TagOp>>r.ref.atom, r.index, r.index + r.length));
         } else {
             return null;
         }

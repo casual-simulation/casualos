@@ -203,29 +203,31 @@ export function calculateSequenceRefs(meta: AuxSequenceMetadata, index: number, 
     if (length <= 0 || typeof length === 'undefined') {
         refs.push({ ref, index: idx });
     } else {
+        let start = index;
         let currentRef = ref;
-        let currentIndex = idx;
-        let lastIndex = idx;
-        for (let i = 0; i < length; i++) {
+        let currentRefIndex = idx;
+        let lastRefIndex = idx;
+        for (let counter = 0; counter < length; counter++) {
+            let i = start + counter;
             let nextRef = meta.refs[i];
             if (currentRef !== nextRef) {
                 refs.push({
                     ref: currentRef,
-                    index: currentIndex,
-                    length: (lastIndex - currentIndex) + 1
+                    index: currentRefIndex,
+                    length: (lastRefIndex - currentRefIndex) + 1
                 });
                 currentRef = nextRef;
-                currentIndex = meta.indexes[i];
-                lastIndex = currentIndex;
+                currentRefIndex = meta.indexes[i];
+                lastRefIndex = currentRefIndex;
             } else {
-                lastIndex = meta.indexes[i];
+                lastRefIndex = meta.indexes[i];
             }
         }
 
         refs.push({ 
             ref: currentRef, 
-            index: currentIndex, 
-            length: (lastIndex - currentIndex) + 1
+            index: currentRefIndex, 
+            length: (lastRefIndex - currentRefIndex) + 1
         });
     }
 
