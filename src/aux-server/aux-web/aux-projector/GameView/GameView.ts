@@ -475,6 +475,12 @@ export default class GameView extends Vue implements IGameView {
     }
   }
 
+  addNewWorkspace(): void {
+    // TODO: Make the user have to drag a workspace onto the world
+    // instead of just clicking a button and a workspace being placed somewhere.
+    this.fileManager.createWorkspace();
+  }
+
   private async _fileUpdated(file: File, initialUpdate = false) {
     const obj = this._files[file.id];
     let shouldRemove = false;
