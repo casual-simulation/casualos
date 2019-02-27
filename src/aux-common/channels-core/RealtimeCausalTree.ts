@@ -67,7 +67,7 @@ export class RealtimeCausalTree<TOp extends AtomOp, T> {
     async init(): Promise<void> {
         const stored = await this._store.get(this.id);
         if (stored) {
-            this._tree = <CausalTree<TOp, T>>this._factory.create(this.type, stored);
+            this._setTree(<CausalTree<TOp, T>>this._factory.create(this.type, stored));
         }
 
         this._subs.push(this._channel.connectionStateChanged.pipe(
@@ -78,7 +78,7 @@ export class RealtimeCausalTree<TOp extends AtomOp, T> {
             map(data => <CausalTree<TOp, T>>this._factory.create(this.type, storedTree(data.site, data.version.knownSites))),
             flatMap(tree => this._channel.exchangeWeaves<TOp>([], tree.weave.getVersion()), (tree, weave) => ({tree, weave})),
             tap(data => data.tree.importWeave(data.weave)),
-            tap(data => this._tree = data.tree)
+            tap(data => this._setTree(data.tree))
         ).subscribe());
 
         this._subs.push(this._channel.connectionStateChanged.pipe(
@@ -90,6 +90,10 @@ export class RealtimeCausalTree<TOp extends AtomOp, T> {
             flatMap(versions => this._channel.exchangeWeaves<TOp>(this._tree.weave.atoms, versions.local.version), (versions, weave) => ({ versions, weave })),
             tap(data => this._tree.importWeave(data.weave)),
             tap(data => this._importKnownSites(data.versions.remote))
+        ).subscribe());
+        
+        this._subs.push(this._channel.events.pipe(
+            tap(e => this.tree.add(e.atom))
         ).subscribe());
     }
 
@@ -103,6 +107,16 @@ export class RealtimeCausalTree<TOp extends AtomOp, T> {
                 version: null
             };
         }
+    }
+
+    private _setTree(tree: CausalTree<TOp, T>) {
+        this._tree = tree;
+        this._subs.push(this._tree.atomAdded.pipe(
+            filter(ref => ref.atom.id.site === this._tree.site.id),
+            tap(ref => {
+                this._channel.emit(ref)
+            })
+        ).subscribe());
     }
 
     private _importKnownSites(version: SiteVersionInfo) {

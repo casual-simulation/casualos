@@ -1,7 +1,7 @@
 import { CausalTree } from "./CausalTree";
 import { Atom, AtomId, AtomOp, atomId, atom } from "./Atom";
 import { AtomReducer } from "./AtomReducer";
-import { Weave } from './Weave';
+import { Weave, WeaveReference } from './Weave';
 import { site } from './SiteIdInfo';
 import { storedTree } from "./StoredCausalTree";
 
@@ -63,7 +63,7 @@ describe('CausalTree', () => {
         });
     });
 
-    describe('insert()', () => {
+    describe('add()', () => {
         it('should update the factory time when adding an atom from another site', () => {
             let tree = new CausalTree(storedTree(site(1)), new Reducer());
 
@@ -78,6 +78,26 @@ describe('CausalTree', () => {
             tree.add(atom(atomId(1, 3), atomId(1, 2), new Op()));
 
             expect(tree.factory.time).toBe(0);
+        });
+
+        it('should trigger an event when an atom gets added', () => {
+            let tree = new CausalTree(storedTree(site(1)), new Reducer());
+
+            let refs: WeaveReference<Op>[] = [];
+            tree.atomAdded.subscribe(ref => {
+                refs.push(ref);
+            });
+
+            // no parent so it's skipped
+            const skipped = tree.add(atom(atomId(1, 3), atomId(1, 2), new Op()));
+
+            const root = tree.add(atom(atomId(1, 3), null, new Op()));
+            const child = tree.add(atom(atomId(1, 4), atomId(1, 3), new Op()));
+
+            expect(refs).toEqual([
+                root,
+                child
+            ]);
         });
     });
 

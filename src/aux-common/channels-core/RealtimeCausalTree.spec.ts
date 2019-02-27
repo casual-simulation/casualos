@@ -401,4 +401,64 @@ describe('RealtimeCausalTree', () => {
         });
     });
 
+    describe('events', () => {
+        it('should try to insert new atoms into the tree', async () => {
+            let weave = new Weave<Op>();
+
+            const root = weave.insert(atom(atomId(1, 0), null, new Op()));
+            const first = weave.insert(atom(atomId(1, 2), atomId(1, 0), new Op()));
+
+            await realtime.init();
+            connection.setConnected(true);
+            await flushPromises();
+
+            // send root event
+            connection.events.next({
+                name: 'event_abc',
+                data: root
+            });
+
+            connection.events.next({
+                name: 'event_abc',
+                data: first
+            });
+
+            expect(realtime.tree.weave.atoms).toEqual([
+                root,
+                first
+            ]);
+        });
+
+        it('should send new atoms through the channel', async () => {
+            await realtime.init();
+            connection.setConnected(true);
+            await flushPromises();
+
+            const root = realtime.tree.add(atom(atomId(2, 1), null, new Op()));
+            const child = realtime.tree.add(atom(atomId(2, 2), atomId(2, 1), new Op()));
+            const skipped = realtime.tree.add(atom(atomId(2, 3), atomId(2, 10), new Op()));
+            const alsoSkipped = realtime.tree.add(atom(atomId(3, 4), atomId(2, 1), new Op()));
+
+            expect(connection.emitted).toContainEqual({
+                name: 'event_abc',
+                data: root
+            });
+
+            expect(connection.emitted).toContainEqual({
+                name: 'event_abc',
+                data: child
+            });
+
+            expect(connection.emitted).not.toContainEqual({
+                name: 'event_abc',
+                data: skipped
+            });
+
+            expect(connection.emitted).not.toContainEqual({
+                name: 'event_abc',
+                data: alsoSkipped
+            });
+        }); 
+    });
+
 });

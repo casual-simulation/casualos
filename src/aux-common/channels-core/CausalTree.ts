@@ -6,6 +6,7 @@ import { sortBy, unionBy, find } from "lodash";
 import { SiteInfo } from "./SiteIdInfo";
 import { StoredCausalTree } from "./StoredCausalTree";
 import { SiteVersionInfo } from "./SiteVersionInfo";
+import { Subject } from 'rxjs';
 
 /**
  * Defines a class that represents a Causal Tree.
@@ -18,6 +19,7 @@ export class CausalTree<TOp extends AtomOp, TValue> {
     private _reducer: AtomReducer<TOp, TValue>;
     private _value: TValue;
     private _knownSites: SiteInfo[];
+    private _atomAdded: Subject<WeaveReference<TOp>>;
 
     /**
      * Gets the site that this causal tree represents.
@@ -66,6 +68,13 @@ export class CausalTree<TOp extends AtomOp, TValue> {
     }
 
     /**
+     * Gets an observable that resolves whenever a new atom is added to this tree.
+     */
+    get atomAdded() {
+        return this._atomAdded;
+    }
+
+    /**
      * Creates a new Causal Tree with the given site ID.
      * @param tree The stored tree that this causal tree should be made from.
      * @param reducer The reducer used to convert a list of operations into a single value.
@@ -79,6 +88,7 @@ export class CausalTree<TOp extends AtomOp, TValue> {
         this._factory = new AtomFactory<TOp>(this._site);
         this._reducer = reducer;
         this._value = null;
+        this._atomAdded = new Subject<WeaveReference<TOp>>();
 
         if (tree.weave) {
             this.importWeave(tree.weave);
@@ -94,6 +104,9 @@ export class CausalTree<TOp extends AtomOp, TValue> {
             this.factory.updateTime(atom.id.timestamp);
         }
         const ref = this.weave.insert(atom);
+        if (ref) {
+            this._atomAdded.next(ref);
+        }
         this._value = null;
         return ref;
     }
