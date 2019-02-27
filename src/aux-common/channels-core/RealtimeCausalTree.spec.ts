@@ -28,7 +28,7 @@ class NumberReducer implements AtomReducer<Op, number> {
 }
 
 describe('RealtimeCausalTree', () => {
-    let realtime: RealtimeCausalTree<Op, number>;
+    let realtime: RealtimeCausalTree<Tree>;
     let store: TestCausalTreeStore;
     let factory: CausalTreeFactory;
     let channel: RealtimeChannel<WeaveReference<Op>>;
@@ -62,7 +62,7 @@ describe('RealtimeCausalTree', () => {
             id: 'abc',
             type: 'numbers'
         }, connection);
-        realtime = new RealtimeCausalTree<Op,number>(factory, store, channel);
+        realtime = new RealtimeCausalTree<Tree>(factory, store, channel);
 
         connection.resolve = (name, data) => {
             flush = true;

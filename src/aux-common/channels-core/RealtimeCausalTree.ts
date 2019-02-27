@@ -17,11 +17,11 @@ import { WeaveVersion, versionsEqual } from "./WeaveVersion";
  * That is, an object that is able to keep a causal tree updated
  * based on events from a realtime channel.
  */
-export class RealtimeCausalTree<TOp extends AtomOp, T> {
+export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any>> {
 
-    private _tree: CausalTree<TOp, T>;
+    private _tree: TTree;
     private _store: CausalTreeStore;
-    private _channel: RealtimeChannel<WeaveReference<TOp>>;
+    private _channel: RealtimeChannel<WeaveReference<AtomOp>>;
     private _factory: CausalTreeFactory;
     private _subs: SubscriptionLike[];
 
@@ -53,7 +53,7 @@ export class RealtimeCausalTree<TOp extends AtomOp, T> {
      * @param store The store used to persistently store the tree.
      * @param channel The channel used to communicate with other devices.
      */
-    constructor(factory: CausalTreeFactory, store: CausalTreeStore, channel: RealtimeChannel<WeaveReference<TOp>>) {
+    constructor(factory: CausalTreeFactory, store: CausalTreeStore, channel: RealtimeChannel<WeaveReference<AtomOp>>) {
         this._factory = factory;
         this._store = store;
         this._channel = channel;
@@ -67,7 +67,7 @@ export class RealtimeCausalTree<TOp extends AtomOp, T> {
     async init(): Promise<void> {
         const stored = await this._store.get(this.id);
         if (stored) {
-            this._setTree(<CausalTree<TOp, T>>this._factory.create(this.type, stored));
+            this._setTree(<TTree>this._factory.create(this.type, stored));
         }
 
         this._subs.push(this._channel.connectionStateChanged.pipe(
@@ -75,8 +75,8 @@ export class RealtimeCausalTree<TOp extends AtomOp, T> {
             takeWhile(connected => this.tree === null),
             flatMap(c => this._channel.exchangeInfo(this.getVersion())),
             flatMap(version => this._requestSiteId(version), (version, site) => ({ version, site })),
-            map(data => <CausalTree<TOp, T>>this._factory.create(this.type, storedTree(data.site, data.version.knownSites))),
-            flatMap(tree => this._channel.exchangeWeaves<TOp>([], tree.weave.getVersion()), (tree, weave) => ({tree, weave})),
+            map(data => <TTree>this._factory.create(this.type, storedTree(data.site, data.version.knownSites))),
+            flatMap(tree => this._channel.exchangeWeaves([], tree.weave.getVersion()), (tree, weave) => ({tree, weave})),
             tap(data => data.tree.importWeave(data.weave)),
             tap(data => this._setTree(data.tree))
         ).subscribe());
@@ -87,7 +87,7 @@ export class RealtimeCausalTree<TOp extends AtomOp, T> {
             map(c => this.getVersion()),
             flatMap(localVersion => this._channel.exchangeInfo(localVersion), (local, remote) => ({local, remote})),
             filter(versions => !versionsEqual(versions.local.version, versions.remote.version)),
-            flatMap(versions => this._channel.exchangeWeaves<TOp>(this._tree.weave.atoms, versions.local.version), (versions, weave) => ({ versions, weave })),
+            flatMap(versions => this._channel.exchangeWeaves(this._tree.weave.atoms, versions.local.version), (versions, weave) => ({ versions, weave })),
             tap(data => this._tree.importWeave(data.weave)),
             tap(data => this._importKnownSites(data.versions.remote))
         ).subscribe());
@@ -109,7 +109,7 @@ export class RealtimeCausalTree<TOp extends AtomOp, T> {
         }
     }
 
-    private _setTree(tree: CausalTree<TOp, T>) {
+    private _setTree(tree: TTree) {
         this._tree = tree;
         this._subs.push(this._tree.atomAdded.pipe(
             filter(ref => ref.atom.id.site === this._tree.site.id),
