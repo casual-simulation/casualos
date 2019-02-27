@@ -53,8 +53,8 @@ import 'pepjs'; // Polyfill for pointer events
 import { polyfill } from 'es6-promise';
 import 'offline-plugin/runtime';
 
-// import { appManager } from './AppManager';
-// import App from './App/App';
+import { appManager } from '../shared/AppManager';
+import App from './App/App';
 // import Welcome from './Welcome/Welcome';
 // import Home from './Home/Home';
 
@@ -88,23 +88,23 @@ Vue.use(MdSnackbar);
 Vue.use(MdSwitch);
 Vue.use(MdBadge);
 
-// const routes: RouteConfig[] = [
-//     {
-//         path: '/login',
-//         name: 'login',
-//         component: Welcome,
-//     },
-//     {
-//         path: '/:id?',
-//         name: 'home',
-//         component: Home,
-//     }
-// ]
+const routes: RouteConfig[] = [
+    // {
+    //     path: '/login',
+    //     name: 'login',
+    //     component: Welcome,
+    // },
+    // {
+    //     path: '/:id?',
+    //     name: 'home',
+    //     component: Home,
+    // }
+]
 
-// const router = new VueRouter({
-//     mode: 'history',
-//     routes
-// });
+const router = new VueRouter({
+    mode: 'history',
+    routes
+});
 
 // router.beforeEach((to, from, next) => {
 //     appManager.initPromise.then(() => {
@@ -137,7 +137,7 @@ Vue.use(MdBadge);
 //     });
 // });
 
-// const app = new Vue({
-//     router,
-//     render: createEle => createEle(App)
-// }).$mount('#app');
+const app = new Vue({
+    router,
+    render: createEle => createEle(App)
+}).$mount('#app');

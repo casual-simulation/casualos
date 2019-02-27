@@ -29,7 +29,7 @@ import { Axial, realPosToGridPos, gridDistance, keyToPos, posToKey } from '../..
 import { MouseButtonId, Input } from '../../shared/scene/Input';
 import { isBuffer } from 'util';
 import { ColorPickerEvent } from './ColorPickerEvent';
-import { EventBus } from '../EventBus/EventBus';
+import { EventBus } from '../../shared/EventBus';
 import { appManager } from '../../shared/AppManager';
 import { IOperation } from './IOperation';
 import { EmptyClickOperation } from './ClickOperation/EmptyClickOperation';

@@ -3,12 +3,12 @@ import Component from 'vue-class-component';
 import {Provide, Prop, Inject, Watch} from 'vue-property-decorator';
 import { some, union } from 'lodash';
 import {File, Object, fileTags, isHiddenTag} from '@yeti-cgi/aux-common';
-import { EventBus } from '../EventBus/EventBus';
+import { EventBus } from '../../shared/EventBus';
 import { appManager } from '../../shared/AppManager';
 
 import FileRow from '../FileRow/FileRow';
 import TagEditor from '../TagEditor/TagEditor';
-import AlertDialogOptions from '../App/DialogOptions/AlertDialogOptions';
+import AlertDialogOptions from '../../shared/AlertDialogOptions'
 import FileTag from '../FileTag/FileTag';
 import FileTableToggle from '../FileTableToggle/FileTableToggle';
 

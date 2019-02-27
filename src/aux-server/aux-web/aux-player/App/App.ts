@@ -16,11 +16,6 @@ import QRCode from '@chenfengyuan/vue-qrcode';
 import CubeIcon from '../public/icons/Cube.svg';
 import HexIcon from '../public/icons/Hexagon.svg';
 
-import vueFilePond from 'vue-filepond';
-import 'filepond/dist/filepond.min.css';
-// import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type';
-
-const FilePond = vueFilePond();
 
 export interface SidebarItem {
     id: string;
@@ -33,9 +28,6 @@ export interface SidebarItem {
     components: {
         'app': App,
         'qr-code': QRCode,
-        'file-pond': FilePond,
-        'cube-icon': CubeIcon,
-        'hex-icon': HexIcon,
     }
 })
 
@@ -76,19 +68,9 @@ export default class App extends Vue {
     loggedIn: boolean = false;
 
     /**
-     * The current user mode.
-     */
-    userMode: boolean = true;
-
-    /**
      * Whether to show the QR Code.
      */
     showQRCode: boolean = false;
-
-    /**
-     * Whether to show the file upload dialog.
-     */
-    showFileUpload: boolean = false;
 
     /**
      * The session/
@@ -96,33 +78,12 @@ export default class App extends Vue {
     session: string = '';
 
     /**
-     * The files that have been uploaded by the user.
-     */
-    uploadedFiles: File[] = [];
-
-    /**
      * The extra sidebar items shown in the app.
      */
     extraItems: SidebarItem[] = [];
-
-    onUserModeChanged() {
-        const mode: UserMode = this.userMode ? 'files' : 'worksurfaces';
-        appManager.fileManager.updateFile(appManager.fileManager.userFile, {
-            tags: {
-                _mode: mode
-            }
-        });
-    }
-
-    private _calculateUserMode(file: Object): boolean {
-        return getUserMode(file) === 'files'
-    }
-
+    
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
-
-    remainingConflicts: ConflictDetails[] = [];
-    currentMergeState: MergeStatus<FilesState> = null;
 
     private _subs: SubscriptionLike[] = [];
 
@@ -164,10 +125,6 @@ export default class App extends Vue {
 
     url() {
         return location.href;
-    }
-
-    currentUserMode() {
-        return this.userMode ? 'Files' : 'Worksurfaces';
     }
 
     forcedOffline() {
@@ -213,15 +170,8 @@ export default class App extends Vue {
                 appManager.checkForUpdates();
             }));
 
-            subs.push(fileManager.syncFailed.subscribe(state => {
-                this._showSyncFailed();
-                this.remainingConflicts = state.remainingConflicts;
-                this.currentMergeState = state;
-            }));
-
             subs.push(fileManager.resynced.subscribe(resynced => {
                 console.log('[App] Resynced!');
-                this.remainingConflicts = [];
                 if (this.lostConnection || this.startedOffline || resynced) {
                     this._showSynced();
                 }
@@ -229,12 +179,6 @@ export default class App extends Vue {
                 this.startedOffline = false;
                 this.synced = true;
             }));
-
-            subs.push(fileManager.fileChanged(fileManager.userFile).pipe(
-                tap(file => {
-                    this.userMode = this._calculateUserMode(<Object>file);
-                })
-            ).subscribe());
 
             subs.push(new Subscription(() => {
                 this.loggedIn = false;
@@ -266,44 +210,11 @@ export default class App extends Vue {
         this.$router.push({ name: 'login', query: { id: this.session } });
     }
 
-    download() {
-        appManager.downloadState();
-    }
-
-    upload() {
-        this.showFileUpload = true;
-    }
-
-    cancelFileUpload() {
-        this.showFileUpload = false;
-        this.uploadedFiles = [];
-    }
-
-    async uploadFiles() {
-        await Promise.all(this.uploadedFiles.map(f => appManager.uploadState(f)));
-        this.showFileUpload = false;
-    }
-
-    fileAdded(err: any, data: FilePondFile) {
-        this.uploadedFiles.push(data.file);
-    }
-
-    fileRemoved(data: FilePondFile) {
-        const index = this.uploadedFiles.indexOf(data.file);
-        if (index >= 0) {
-            this.uploadedFiles.splice(index, 1);
-        }
-    }
-
-
     snackbarClick(action: SnackbarOptions['action']) {
         if (action) {
             switch(action.type) {
                 case 'refresh':
                     this.refreshPage();
-                    break;
-                case 'fix-conflicts':
-                    this.fixConflicts();
                     break;
             }
         }
@@ -315,25 +226,6 @@ export default class App extends Vue {
 
     menuClicked() {
         this.showNavigation = !this.showNavigation;
-    }
-
-    nukeSite() {
-        if (this.online && this.synced) {
-            let options = new ConfirmDialogOptions();
-            options.title = 'Delete Everything?';
-            options.body = 'Are you sure you want to delete everything? This is permanent and cannot be undone.';
-            options.okText = 'Delete';
-            options.cancelText = 'Keep';
-            
-            EventBus.$once(options.okEvent, () => {
-                appManager.fileManager.deleteEverything();
-                EventBus.$off(options.cancelEvent);
-            });
-            EventBus.$once(options.cancelEvent, () => {
-                EventBus.$off(options.okEvent);
-            });
-            EventBus.$emit('showConfirmDialog', options);
-        }
     }
 
     refreshPage() {
@@ -404,17 +296,6 @@ export default class App extends Vue {
         this.snackbar = {
             visible: true,
             message: 'Synced!'
-        };
-    }
-
-    private _showSyncFailed() {
-        this.snackbar = {
-            visible:  true,
-            message: 'Conflicts occurred while syncing.',
-            action: {
-                label: 'Fix now',
-                type: 'fix-conflicts'
-            }
         };
     }
     

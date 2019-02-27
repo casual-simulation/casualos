@@ -6,7 +6,7 @@ import { InteractionManager } from '../InteractionManager';
 import { DEFAULT_SCENE_BACKGROUND_COLOR } from '@yeti-cgi/aux-common';
 import { appManager } from '../../../shared/AppManager';
 import { ColorPickerEvent } from '../ColorPickerEvent';
-import { EventBus } from '../../EventBus/EventBus';
+import { EventBus } from '../../../shared/EventBus';
 
 /**
  * Empty Click Operation handles clicking of empty space for mouse and touch input with the primary (left/first finger) interaction button.
