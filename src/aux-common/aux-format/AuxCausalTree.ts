@@ -8,6 +8,7 @@ import { AtomId, Atom } from '../causal-trees/Atom';
 import { SiteInfo } from '../causal-trees/SiteIdInfo';
 import { StoredCausalTree } from '../causal-trees/StoredCausalTree';
 import { AuxState, AuxTagMetadata, AuxValueMetadata, AuxFile } from './AuxState';
+import { getTagMetadata, insertIntoTagValue, insertIntoTagName, deleteFromTagValue, deleteFromTagName } from './AuxTreeCalculations';
 
 /**
  * Defines a Causal Tree for aux files.
@@ -79,13 +80,8 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState> {
      * @param index The index that the text should be inserted at.
      */
     insertIntoTagValue(file: AuxFile, tag: string, text: string, index: number): WeaveReference<InsertOp> {
-        const tagMeta = this._getTagMetadata(file, tag);
-        if (tagMeta) {
-            const result = calculateSequenceRef(tagMeta.value.sequence, index);
-            return this.insert(result.index, text, <Atom<TagOp>>result.ref.atom);
-        } else {
-            return null;
-        }
+        const precalc = insertIntoTagValue(file, tag, text, index);
+        return this.createFromPrecalculated(precalc);
     }
 
     /**
@@ -96,13 +92,8 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState> {
      * @param index The index that the text should be inserted at.
      */
     insertIntoTagName(file: AuxFile, tag: string, text: string, index: number): WeaveReference<InsertOp> {
-        const tagMeta = this._getTagMetadata(file, tag);
-        if (tagMeta) {
-            const result = calculateSequenceRef(tagMeta.name, index);
-            return this.insert(result.index, text, <Atom<TagOp>>result.ref.atom);
-        } else {
-            return null;
-        }
+        const precalc = insertIntoTagName(file, tag, text, index);
+        return this.createFromPrecalculated(precalc);
     }
 
     /**
@@ -113,13 +104,8 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState> {
      * @param length The number of characters to delete.
      */
     deleteFromTagValue(file: AuxFile, tag: string, index: number, length: number): WeaveReference<DeleteOp>[] {
-        const tagMeta = this._getTagMetadata(file, tag);
-        if (tagMeta) {
-            const result = calculateSequenceRefs(tagMeta.value.sequence, index, length);
-            return result.map(r => this.delete(<Atom<TagOp>>r.ref.atom, r.index, r.index + r.length));
-        } else {
-            return null;
-        }
+        const precalc = deleteFromTagValue(file, tag, index, length);
+        return this.createManyFromPrecalculated(precalc);
     }
 
     /**
@@ -130,20 +116,7 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState> {
      * @param length The number of characters to delete. 
      */
     deleteFromTagName(file: AuxFile, tag: string, index: number, length: number): WeaveReference<DeleteOp>[] {
-        const tagMeta = this._getTagMetadata(file, tag);
-        if (tagMeta) {
-            const result = calculateSequenceRefs(tagMeta.name, index);
-            return result.map(r => this.delete(<Atom<TagOp>>r.ref.atom, r.index, r.index + r.length));
-        } else {
-            return null;
-        }
-    }
-
-    private _getTagMetadata(file: AuxFile, tag: string): AuxTagMetadata {
-        if (file && file.metadata && file.metadata.tags[tag]) {
-            return file.metadata.tags[tag];
-        } else {
-            return null;
-        }
+        const precalc = deleteFromTagName(file, tag, index, length);
+        return this.createManyFromPrecalculated(precalc);
     }
 }

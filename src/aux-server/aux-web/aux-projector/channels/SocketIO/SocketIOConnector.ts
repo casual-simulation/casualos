@@ -2,7 +2,7 @@ import * as io from 'socket.io-client';
 import { Observable, fromEventPattern, merge } from 'rxjs';
 import { ChannelConnectionRequest, ChannelConnection, Event, ChannelInfo, BaseConnector } from '@yeti-cgi/aux-common';
 import { map, startWith } from 'rxjs/operators';
-import { socketEvent } from './Utils';
+import { socketEvent } from '../../../shared/socket-io/Utils';
 
 export class SocketIOConnector extends BaseConnector {
     private _socket: typeof io.Socket;

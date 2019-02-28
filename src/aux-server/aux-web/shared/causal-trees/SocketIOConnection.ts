@@ -1,10 +1,13 @@
-import { RealtimeChannelConnection } from '@yeti-cgi/aux-common/channels-core/RealtimeChannelConnection';
-import { ConnectionEvent } from '@yeti-cgi/aux-common/channels-core/ConnectionEvent';
+import { RealtimeChannelConnection } from '@yeti-cgi/aux-common/causal-trees/RealtimeChannelConnection';
+import { ConnectionEvent } from '@yeti-cgi/aux-common/causal-trees/ConnectionEvent';
 import { Observable, merge, Subject, BehaviorSubject, SubscriptionLike } from 'rxjs';
-import { socketEvent } from './Utils';
+import { socketEvent } from '../socket-io/Utils';
 import { map, shareReplay } from 'rxjs/operators';
 
-export class SocketIOChannelConnection implements RealtimeChannelConnection {
+/**
+ * Defines a RealtimeChannelConnection that can use Socket.IO.
+ */
+export class SocketIOConnection implements RealtimeChannelConnection {
 
     private _socket: typeof io.Socket;
     private _events: Subject<ConnectionEvent>;
@@ -12,6 +15,10 @@ export class SocketIOChannelConnection implements RealtimeChannelConnection {
     private _connected: BehaviorSubject<boolean>;
     private _sub: SubscriptionLike;
 
+    /**
+     * Creates a new RealtimeChannelConnection for Socket.IO.
+     * @param socket The Socket.IO instance.
+     */
     constructor(socket: typeof io.Socket) {
         this.closed = false;
         this._socket = socket;

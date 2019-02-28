@@ -16,3 +16,4 @@ export * from './VirtualArray';
 export * from './Weave';
 export * from './WeaveTraverser';
 export * from './WeaveVersion';
+export * from './PrecalculatedOp';

@@ -1,5 +1,5 @@
-import { CausalTreeFactory } from "causal-trees";
-import { AuxCausalTree } from "index";
+import { CausalTreeFactory } from "../causal-trees";
+import { AuxCausalTree } from "./AuxCausalTree";
 
 /**
  * Creates a new Causal Tree Factory that can create all the tree types required for AUX applications.

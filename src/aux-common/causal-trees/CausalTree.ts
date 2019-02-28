@@ -6,6 +6,7 @@ import { sortBy, unionBy, find } from "lodash";
 import { SiteInfo } from "./SiteIdInfo";
 import { StoredCausalTree } from "./StoredCausalTree";
 import { SiteVersionInfo } from "./SiteVersionInfo";
+import { PrecalculatedOp } from './PrecalculatedOp';
 import { Subject } from 'rxjs';
 
 /**
@@ -110,6 +111,7 @@ export class CausalTree<TOp extends AtomOp, TValue> {
         this._value = null;
         return ref;
     }
+    
 
     /**
      * Imports the given list of weave references into the tree.
@@ -147,6 +149,27 @@ export class CausalTree<TOp extends AtomOp, TValue> {
     create<T extends TOp>(op: T, parent: WeaveReference<TOp> | Atom<TOp> | AtomId, priority?: number): WeaveReference<T> {
         const atom = this.factory.create(op, parent, priority);
         return this.add(atom);
+    }
+
+    /**
+     * Creates a new atom from the given precalculated operation and adds it to the tree's history.
+     * @param precalc The operation to create and add.
+     */
+    createFromPrecalculated<T extends TOp>(precalc: PrecalculatedOp<T>): WeaveReference<T> {
+        if (precalc) {
+            return this.create<T>(precalc.op, <Atom<TOp>>precalc.cause, precalc.priority);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Creates a new atom from the given precalculated operation and adds it to the tree's history.
+     * @param precalc The operation to create and add.
+     */
+    createManyFromPrecalculated<T extends TOp>(precalc: PrecalculatedOp<T>[]): WeaveReference<T>[] {
+        const nonNull = precalc.filter(pc => !!pc);
+        return nonNull.map(pc => this.createFromPrecalculated(pc));
     }
 
     /**
