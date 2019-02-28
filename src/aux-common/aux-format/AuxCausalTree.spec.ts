@@ -1,11 +1,12 @@
 import { AuxCausalTree } from "./AuxCausalTree";
 import { AtomFactory } from "../causal-trees/AtomFactory";
 import { AuxOp, AuxOpType } from "./AuxOpTypes";
-import { DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_GRID_SCALE, DEFAULT_WORKSPACE_COLOR } from "../Files";
+import { DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_GRID_SCALE, DEFAULT_WORKSPACE_COLOR, createFile } from "../Files";
 import { site } from "../causal-trees/SiteIdInfo";
 import { storedTree } from "../causal-trees/StoredCausalTree";
 import { AuxState } from "./AuxState";
-import { atomId } from "../causal-trees/Atom";
+import { atomId, atom } from "../causal-trees/Atom";
+import { file, tag, value } from "./AuxAtoms";
 
 describe('AuxCausalTree', () => {
     describe('value', () => {
@@ -645,5 +646,41 @@ describe('AuxCausalTree', () => {
             });
         });
 
+    });
+
+    describe('addFile()', () => {
+        it('should add the given object to the state', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+            const newFile = createFile('test', <any>{
+                abc: 'def',
+                num: 5
+            });
+
+            const root = tree.root();
+            const result = tree.addFile(newFile);
+
+            const fileAtom = atom(atomId(1, 2), root.atom.id, file('test', 'object'));
+            const abcTag = atom(atomId(1, 3), fileAtom.id, tag('abc'));
+            const abcTagValue = atom(atomId(1, 4, 1), abcTag.id, value('def'));
+
+            const numTag = atom(atomId(1, 5), fileAtom.id, tag('num'));
+            const numTagValue = atom(atomId(1, 6, 1), numTag.id, value(5));
+
+            expect(result.map(ref => ref.atom)).toEqual([
+                fileAtom,
+                abcTag,
+                abcTagValue,
+                numTag,
+                numTagValue
+            ]);
+            expect(tree.weave.atoms.map(ref => ref.atom)).toEqual([
+                root.atom,
+                fileAtom,
+                numTag,
+                numTagValue,
+                abcTag,
+                abcTagValue
+            ]);
+        });
     });
 });

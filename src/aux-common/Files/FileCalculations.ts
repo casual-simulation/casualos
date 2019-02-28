@@ -11,7 +11,8 @@ import {
     values,
     isEqual,
     sortBy,
-    sumBy
+    sumBy,
+    difference
 } from 'lodash';
 import { Sandbox, SandboxLibrary } from '../Formulas/Sandbox';
 
@@ -426,6 +427,21 @@ export function toggleFileSelection(file: Object, selectionId: string, userId: s
  */
 export function newSelectionId() {
     return `_selection_${uuid()}`;
+}
+
+/**
+ * Gets the list of tags that are on the given file.
+ * @param file 
+ */
+export function tagsOnFile(file: File): string[] {
+    if (file.type === 'object') {
+        let tags = keys(file.tags);
+        return tags;
+    } else {
+        let ignored = ['id', 'type'];
+        let tags = keys(file);
+        return difference(tags, ignored);
+    }
 }
 
 /**

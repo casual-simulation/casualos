@@ -1,7 +1,7 @@
 import { Weave, WeaveReference } from '../causal-trees/Weave';
 import { AuxOp, FileOp, TagOp, InsertOp, ValueOp, DeleteOp } from './AuxOpTypes';
 import { CausalTree } from '../causal-trees/CausalTree';
-import { FilesState, FileType } from '../Files';
+import { FilesState, FileType, FileEvent, PartialFile, Object, File, Workspace, tagsOnFile } from '../Files';
 import { AuxReducer, calculateSequenceRef, calculateSequenceRefs } from './AuxReducer';
 import { root, file, tag, value, del, insert } from './AuxAtoms';
 import { AtomId, Atom } from '../causal-trees/Atom';
@@ -9,12 +9,12 @@ import { SiteInfo } from '../causal-trees/SiteIdInfo';
 import { StoredCausalTree } from '../causal-trees/StoredCausalTree';
 import { AuxState, AuxTagMetadata, AuxValueMetadata, AuxFile } from './AuxState';
 import { getTagMetadata, insertIntoTagValue, insertIntoTagName, deleteFromTagValue, deleteFromTagName } from './AuxTreeCalculations';
+import { flatMap } from 'lodash';
 
 /**
  * Defines a Causal Tree for aux files.
  */
-export class AuxCausalTree extends CausalTree<AuxOp, AuxState> {
-    
+export class AuxCausalTree extends CausalTree<AuxOp, AuxState> {    
     constructor(tree: StoredCausalTree<AuxOp>) {
         super(tree, new AuxReducer());
     }
@@ -118,5 +118,41 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState> {
     deleteFromTagName(file: AuxFile, tag: string, index: number, length: number): WeaveReference<DeleteOp>[] {
         const precalc = deleteFromTagName(file, tag, index, length);
         return this.createManyFromPrecalculated(precalc);
+    }
+
+    /**
+     * Adds the given events to the tree.
+     * @param events 
+     */
+    addEvents(events: FileEvent[]) {
+        
+    }
+    
+    /**
+     * Adds the given file to the tree.
+     * @param file The file to add to the tree.
+     */
+    addFile(file: File): WeaveReference<AuxOp>[] {
+        const f = this.file(file.id, file.type);
+        let tags = tagsOnFile(file);
+        let refs = tags.map(t => {
+            const tag = this.tag(t, f.atom);
+            const val = this.val(file.type === 'object' ? file.tags[t] : (<any>file)[t], tag.atom);
+            return [tag, val];
+        });
+
+        return [
+            f,
+            ...flatMap(refs)
+        ];
+    }
+
+    /**
+     * Updates the given file.
+     * @param file The file to update.
+     * @param newData The new data to include in the file.
+     */
+    updateFile(file: AuxFile, newData: PartialFile) {
+        
     }
 }

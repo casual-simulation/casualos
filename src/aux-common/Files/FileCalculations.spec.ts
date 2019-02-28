@@ -17,7 +17,9 @@ import {
     duplicateFile,
     doFilesAppearEqual,
     isTagWellKnown,
-    calculateStateDiff
+    calculateStateDiff,
+    tagsOnFile,
+    createWorkspace
 } from './FileCalculations';
 import {
     cloneDeep
@@ -528,6 +530,40 @@ describe('FileCalculations', () => {
             // expect(result.removedFiles[0]).toBe(prevState['removed']);
             // expect(result.updatedFiles.length).toBe(1);
             // expect(result.updatedFiles[0]).toBe(currState['updated']);
+        });
+    });
+
+    describe('tagsOnFile()', () => {
+        it('should return the tag names that are on objects', () => {
+
+            expect(tagsOnFile(createFile('test'))).toEqual([
+                '_position',
+                '_workspace'
+            ]);
+
+            expect(tagsOnFile(createFile('test', {
+                _position: { x: 0, y: 0, z: 0 },
+                _workspace: null,
+                test: 123,
+                abc: undefined
+            }))).toEqual([
+                '_position',
+                '_workspace',
+                'test',
+                'abc'
+            ]);
+        });
+
+        it('should return the property names that are on workspaces', () => {
+            expect(tagsOnFile(createWorkspace('test'))).toEqual([
+                'position',
+                'size',
+                'grid',
+                'scale',
+                'defaultHeight',
+                'gridScale',
+                'color'
+            ]);
         });
     });
 
