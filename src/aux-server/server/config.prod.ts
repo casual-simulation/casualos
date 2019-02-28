@@ -19,9 +19,14 @@ const config: Config = {
     ],
     channels: {
         mongodb: {
-            url: process.env.MONGO_URL,
             dbName: 'SO4'
         }
+    },
+    mongodb: {
+        url: process.env.MONGO_URL
+    },
+    trees: {
+        dbName: 'aux-trees'
     }
 };
 

@@ -17,18 +17,16 @@ export class MongoDBConnector extends MemoryConnector {
     private _client: MongoClient;
     private _db: Db;
     private _collection: Collection;
-    private _uri: string;
     private _dbName: string;
     private _collectionName: string = 'channels';
 
-    constructor(uri: string, dbName: string) {
+    constructor(client: MongoClient, dbName: string) {
         super();
-        this._uri = uri;
+        this._client = client;
         this._dbName = dbName;
     }
 
-    async init() {
-        this._client = await connect(this._uri);
+    init() {
         this._db = this._client.db(this._dbName);
         this._collection = this._db.collection(this._collectionName);
     }

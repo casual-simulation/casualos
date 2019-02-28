@@ -1,11 +1,6 @@
 import { MongoClient, Db, Collection } from 'mongodb';
 import pify from 'pify';
-import { CausalTreeStore } from '@yeti-cgi/aux-common/channels-core/CausalTreeStore';
-import { AtomOp } from '@yeti-cgi/aux-common/channels-core/Atom';
-import { Weave, WeaveReference } from '@yeti-cgi/aux-common/channels-core/Weave';
-import { StoredCausalTree } from '@yeti-cgi/aux-common/channels-core/StoredCausalTree';
-
-const connect = pify(MongoClient.connect);
+import { CausalTreeStore, AtomOp, StoredCausalTree } from '@yeti-cgi/aux-common/causal-trees';
 
 /**
  * Defines a class that is able to store a causal tree in MongoDB.
@@ -15,17 +10,15 @@ export class MongoDBTreeStore implements CausalTreeStore {
     private _client: MongoClient;
     private _db: Db;
     private _collection: Collection;
-    private _uri: string;
     private _dbName: string;
     private _collectionName: string = 'trees';
 
-    constructor(uri: string, dbName: string) {
-        this._uri = uri;
+    constructor(client: MongoClient, dbName: string) {
+        this._client = client;
         this._dbName = dbName;
     }
 
     async init() {
-        this._client = await connect(this._uri);
         this._db = this._client.db(this._dbName);
         this._collection = this._db.collection(this._collectionName);
     }

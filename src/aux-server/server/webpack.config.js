@@ -2,6 +2,9 @@ const path = require('path');
 const nodeExternals = require('webpack-node-externals');
 const webpack = require('webpack');
 
+const commitHash = childProcess.execSync('git rev-parse HEAD').toString().trim();
+const latestTag = childProcess.execSync('git describe --abbrev=0 --tags').toString().trim();
+
 module.exports = {
   mode: 'development',
   devtool: 'none',
@@ -47,6 +50,10 @@ module.exports = {
     new webpack.ContextReplacementPlugin(
       /express/,
       /express/
-    )
+    ),
+    new webpack.DefinePlugin({
+        GIT_HASH: JSON.stringify(commitHash),
+        GIT_TAG: JSON.stringify(latestTag),
+    }),
   ]
 };

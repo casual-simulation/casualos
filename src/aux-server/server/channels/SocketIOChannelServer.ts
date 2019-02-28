@@ -6,20 +6,9 @@ import {
     ChannelConnection, 
     AuxOp
 } from '@yeti-cgi/aux-common';
-import { AuxCausalTree } from '@yeti-cgi/aux-common/aux-format/AuxCausalTree';
-import { RealtimeChannelInfo } from '@yeti-cgi/aux-common/channels-core/RealtimeChannelInfo';
-import { SiteVersionInfo } from '@yeti-cgi/aux-common/channels-core/SiteVersionInfo';
-import { CausalTreeFactory } from '@yeti-cgi/aux-common/channels-core/CausalTreeFactory';
-import { CausalTree } from '@yeti-cgi/aux-common/channels-core/CausalTree';
-import { AtomOp } from '@yeti-cgi/aux-common/channels-core/Atom';
-import { WeaveStore } from '@yeti-cgi/aux-common/channels-core/WeaveStore';
 
 export interface ServerList {
     [key: string]: ChannelConnection<any>;
-}
-
-export interface ChannelList {
-    [key: string]: CausalTree<AtomOp, any>;
 }
 
 /**
@@ -32,23 +21,13 @@ export class SocketIOChannelServer {
     private _server: Server;
     private _client: ChannelClient;
     private _serverList: ServerList;
-    private _channelList: ChannelList;
-    private _weaveStore: WeaveStore;
-    private _causalTreeFactory: CausalTreeFactory;
-    private _userCount: number;
 
-    constructor(server: Server, client: ChannelClient, weaveStore: WeaveStore, causalTreeFactory: CausalTreeFactory) {
+    constructor(server: Server, client: ChannelClient) {
         this._serverList = {};
-        this._channelList = {};
         this._client = client;
         this._server = server;
-        this._weaveStore = weaveStore;
-        this._causalTreeFactory = causalTreeFactory;
-        this._userCount = 0;
         
         this._server.on('connection', socket => {
-            this._userCount += 1;
-            console.log('[SocketIOChannelServer] A user connected! There are now', this._userCount, 'users connected.');
 
             // V1 channels
             socket.on('join_server', (info: ChannelInfo, callback: Function) => {
@@ -68,45 +47,7 @@ export class SocketIOChannelServer {
                 });
             });
 
-            // V2 channels
-            socket.on('join_channel', (info: ChannelInfo, callback: Function) => {
-                socket.join(info.id, async err => {
-                    if (err) {
-                        console.log(err);
-                        callback(err);
-                        return;
-                    }
-
-                    const tree = await this._getTree(info);
-
-                    const eventName = `event_${info.id}`;
-                    socket.on(eventName, async (event) => {
-                        tree.add(event);
-                        socket.to(info.id).emit(eventName, event);
-                        await this._weaveStore.update(info.id, tree.weave.atoms);
-                    });
-
-                    socket.on(`info_${info.id}`, (event: SiteVersionInfo, callback: Function) => {
-                        const currentVersionInfo: SiteVersionInfo = {
-                            siteId: tree.site,
-                            version: tree.weave.getVersion(),
-                            knownSites: tree.getKnownSites()
-                        };
-
-                        callback(currentVersionInfo);
-                    });
-
-                    socket.on('disconnect', () => {
-                        // TODO: Implement events for disconnecting
-                    });
-
-                    callback(null);
-                });
-            });
-
             socket.on('disconnect', () => {
-                this._userCount -= 1;
-                console.log('[SocketIOChannelServer] A user disconnected! There are now', this._userCount, 'users connected.');
             });
         });
     }
@@ -137,18 +78,6 @@ export class SocketIOChannelServer {
             callback(null);
         });
         return connection;
-    }
-
-    private async _getTree(info: RealtimeChannelInfo): Promise<CausalTree<AtomOp, any>> {
-        let tree = this._channelList[info.id];
-        if (!tree) {
-            tree = this._causalTreeFactory.create(info.type, 1);
-            this._channelList[info.id] = tree;
-            const weave = await this._weaveStore.get<AuxOp>(info.id);
-            tree.import(weave);
-        }
-
-        return tree;
     }
 
 }
