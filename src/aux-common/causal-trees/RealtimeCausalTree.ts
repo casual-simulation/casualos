@@ -6,7 +6,7 @@ import { CausalTreeStore } from "./CausalTreeStore";
 import { CausalTreeFactory } from "./CausalTreeFactory";
 import { SiteVersionInfo } from "./SiteVersionInfo";
 import { SiteInfo, site } from "./SiteIdInfo";
-import { SubscriptionLike } from 'rxjs';
+import { SubscriptionLike, Subject, Observable } from 'rxjs';
 import { filter, flatMap, takeWhile, skipWhile, tap, map } from 'rxjs/operators';
 import { maxBy } from 'lodash';
 import { storedTree } from "./StoredCausalTree";
@@ -23,7 +23,16 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any>> {
     private _store: CausalTreeStore;
     private _channel: RealtimeChannel<WeaveReference<AtomOp>>;
     private _factory: CausalTreeFactory;
+    private _updated: Subject<this>;
+    private _errors: Subject<any>;
     private _subs: SubscriptionLike[];
+
+    /**
+     * Gets the realtime channel that this tree is using.
+     */
+    get channel() {
+        return this._channel;
+    }
 
     /**
      * Gets the tree that this class is currently wrapping.
@@ -47,6 +56,20 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any>> {
     }
 
     /**
+     * Gets an observable that resolves whenever this tree is updated.
+     */
+    get onUpdated(): Observable<this> {
+        return this._updated;
+    }
+
+    /**
+     * Gets an observable that resolves whenever an error happens in this tree.
+     */
+    get onError(): Observable<any> {
+        return this._errors;
+    }
+
+    /**
      * Creates a new Realtime Causal Tree.
      * @param type The type of the tree.
      * @param factory The factory used to create new trees.
@@ -57,6 +80,8 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any>> {
         this._factory = factory;
         this._store = store;
         this._channel = channel;
+        this._updated = new Subject<this>();
+        this._errors = new Subject<any>();
         this._tree = null;
         this._subs = [];
     }
@@ -68,6 +93,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any>> {
         const stored = await this._store.get(this.id);
         if (stored) {
             this._setTree(<TTree>this._factory.create(this.type, stored));
+            this._updated.next(this);
         }
 
         this._subs.push(this._channel.connectionStateChanged.pipe(
@@ -78,8 +104,9 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any>> {
             map(data => <TTree>this._factory.create(this.type, storedTree(data.site, data.version.knownSites))),
             flatMap(tree => this._channel.exchangeWeaves([], tree.weave.getVersion()), (tree, weave) => ({tree, weave})),
             tap(data => data.tree.importWeave(data.weave)),
-            tap(data => this._setTree(data.tree))
-        ).subscribe());
+            tap(data => this._setTree(data.tree)),
+            tap(data => this._updated.next(this))
+        ).subscribe(null, err => this._errors.next(err)));
 
         this._subs.push(this._channel.connectionStateChanged.pipe(
             filter(connected => connected),
@@ -89,12 +116,15 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any>> {
             filter(versions => !versionsEqual(versions.local.version, versions.remote.version)),
             flatMap(versions => this._channel.exchangeWeaves(this._tree.weave.atoms, versions.local.version), (versions, weave) => ({ versions, weave })),
             tap(data => this._tree.importWeave(data.weave)),
-            tap(data => this._importKnownSites(data.versions.remote))
-        ).subscribe());
+            tap(data => this._importKnownSites(data.versions.remote)),
+            tap(data => this._updated.next(this))
+        ).subscribe(null, err => this._errors.next(err)));
         
         this._subs.push(this._channel.events.pipe(
-            tap(e => this.tree.add(e.atom))
-        ).subscribe());
+            filter(e => this.tree !== null),
+            tap(e => this.tree.add(e.atom)),
+            tap(data => this._updated.next(this))
+        ).subscribe(null, err => this._errors.next(err)));
     }
 
     getVersion(): SiteVersionInfo {
@@ -115,7 +145,8 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any>> {
             filter(ref => ref.atom.id.site === this._tree.site.id),
             tap(ref => {
                 this._channel.emit(ref)
-            })
+            }),
+            tap(ref => this._updated.next(this))
         ).subscribe());
     }
 

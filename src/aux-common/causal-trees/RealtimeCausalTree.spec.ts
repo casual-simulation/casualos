@@ -39,11 +39,15 @@ describe('RealtimeCausalTree', () => {
     let siteVersion: SiteVersionInfo;
     let allowSiteId: boolean[];
     let localWeaves: WeaveReference<Op>[][];
+    let errors: any[] = [];
+    let updated: RealtimeCausalTree<Tree>[] = [];
     
     beforeEach(() => {
         flush = false;
         weave = [];
         localWeaves = [];
+        errors = [];
+        updated = [];
         knownSites = [ 
             site(1)
         ];
@@ -63,6 +67,8 @@ describe('RealtimeCausalTree', () => {
             type: 'numbers'
         }, connection);
         realtime = new RealtimeCausalTree<Tree>(factory, store, channel);
+        realtime.onError.subscribe(e => errors.push(e));
+        realtime.onUpdated.subscribe(tree => updated.push(tree));
 
         connection.resolve = (name, data) => {
             flush = true;
@@ -79,6 +85,10 @@ describe('RealtimeCausalTree', () => {
                 return weave;
             }
         };
+    });
+
+    afterEach(() => {
+        expect(errors).toEqual([]);
     });
 
     async function flushPromise() {
@@ -124,6 +134,9 @@ describe('RealtimeCausalTree', () => {
 
             expect(realtime.tree).not.toBe(null);
             expect(realtime.tree.site).toEqual(site(2));
+            expect(updated).toEqual([
+                realtime
+            ]);
         });
 
         it('should continue to increment the site ID until a request is granted', async () => {
@@ -138,6 +151,7 @@ describe('RealtimeCausalTree', () => {
 
             expect(realtime.tree).not.toBe(null);
             expect(realtime.tree.site).toEqual(site(5));
+            expect(updated.length).toBe(1);
         });
 
         it('should be based on the largest site ID from the known sites list', async () => {
@@ -149,6 +163,7 @@ describe('RealtimeCausalTree', () => {
 
             expect(realtime.tree).not.toBe(null);
             expect(realtime.tree.site).toEqual(site(100));
+            expect(updated.length).toBe(1);
         });
 
         it('should get the weave from the remote site and import it', async () => {
@@ -164,6 +179,7 @@ describe('RealtimeCausalTree', () => {
 
             expect(realtime.tree).not.toBe(null);
             expect(realtime.tree.weave.atoms).toEqual(weave);
+            expect(updated.length).toBe(1);
         });
 
         it('should send an empty weave to the remote site', async () => {
@@ -181,6 +197,7 @@ describe('RealtimeCausalTree', () => {
             expect(localWeaves).toEqual([
                 []
             ]);
+            expect(updated.length).toBe(1);
         });
 
         it('should import the remote known sites', async () => {
@@ -194,6 +211,7 @@ describe('RealtimeCausalTree', () => {
             expect(realtime.tree.knownSites).toContainEqual(site(1));
             expect(realtime.tree.knownSites).toContainEqual(site(99));
             expect(realtime.tree.knownSites).toContainEqual(site(10));
+            expect(updated.length).toBe(1);
         });
     });
 
@@ -218,6 +236,7 @@ describe('RealtimeCausalTree', () => {
 
             expect(realtime.tree).not.toBe(null);
             expect(realtime.tree.weave.atoms).toEqual(localWeave.atoms);
+            expect(updated.length).toBe(1);
         });
 
         it('should import the remote weave atoms', async () => {
@@ -251,6 +270,7 @@ describe('RealtimeCausalTree', () => {
             await flushPromises();
 
             expect(realtime.tree.weave.atoms).toEqual(finalWeave.atoms);
+            expect(updated.length).toBe(2);
         });
 
         it('should import the remote known sites', async () => {
@@ -276,6 +296,7 @@ describe('RealtimeCausalTree', () => {
             expect(realtime.tree.knownSites).toContainEqual(site(2));
             expect(realtime.tree.knownSites).toContainEqual(site(1));
             expect(realtime.tree.knownSites).toContainEqual(site(1999));
+            expect(updated.length).toBe(2);
         });
     });
 
@@ -319,6 +340,7 @@ describe('RealtimeCausalTree', () => {
             await flushPromises();
 
             expect(realtime.tree.weave.atoms).toEqual(finalWeave.atoms);
+            expect(updated.length).toBe(3);
         });
 
         it('should not request if the versions are the same', async () => {
@@ -367,6 +389,10 @@ describe('RealtimeCausalTree', () => {
             await flushPromises();
 
             expect(realtime.tree.weave.atoms).toEqual(finalWeave.atoms);
+
+            // 1 connection + 1 load from store
+            // second is skipped because no atoms were imported
+            expect(updated.length).toBe(2);
         });
 
         it('should import the remote known sites', async () => {
@@ -398,6 +424,7 @@ describe('RealtimeCausalTree', () => {
 
             expect(realtime.tree.knownSites).toContainEqual(site(15));
             expect(realtime.tree.knownSites).toContainEqual(site(23));
+            expect(updated.length).toBe(3);
         });
     });
 
@@ -427,6 +454,7 @@ describe('RealtimeCausalTree', () => {
                 root,
                 first
             ]);
+            expect(updated.length).toBe(3);
         });
 
         it('should send new atoms through the channel', async () => {
@@ -458,7 +486,36 @@ describe('RealtimeCausalTree', () => {
                 name: 'event_abc',
                 data: alsoSkipped
             });
+
+            // 1 connection + 2 events
+            expect(updated.length).toBe(3);
         }); 
+
+        it('should ignore events if the tree has not been initialized', async () => {
+            
+            let weave = new Weave<Op>();
+
+            const root = weave.insert(atom(atomId(1, 0), null, new Op()));
+            const first = weave.insert(atom(atomId(1, 2), atomId(1, 0), new Op()));
+
+            await realtime.init();
+            await flushPromises();
+
+
+             // send root event
+             connection.events.next({
+                name: 'event_abc',
+                data: root
+            });
+
+            connection.events.next({
+                name: 'event_abc',
+                data: first
+            });
+
+            expect(realtime.tree).toBe(null);
+            expect(updated.length).toBe(0);
+        });
     });
 
 });
