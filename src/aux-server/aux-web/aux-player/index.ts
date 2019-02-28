@@ -55,8 +55,8 @@ import 'offline-plugin/runtime';
 
 import { appManager } from '../shared/AppManager';
 import App from './App/App';
-// import Welcome from './Welcome/Welcome';
-// import Home from './Home/Home';
+import Welcome from './Welcome/Welcome';
+import Home from './Home/Home';
 
 // Import the WebXR Polyfill
 import 'webxr-polyfill';
@@ -89,16 +89,16 @@ Vue.use(MdSwitch);
 Vue.use(MdBadge);
 
 const routes: RouteConfig[] = [
-    // {
-    //     path: '/login',
-    //     name: 'login',
-    //     component: Welcome,
-    // },
-    // {
-    //     path: '/:id?',
-    //     name: 'home',
-    //     component: Home,
-    // }
+    {
+        path: '/login',
+        name: 'login',
+        component: Welcome,
+    },
+    {
+        path: '/:id?',
+        name: 'home',
+        component: Home,
+    }
 ]
 
 const router = new VueRouter({
@@ -106,36 +106,36 @@ const router = new VueRouter({
     routes
 });
 
-// router.beforeEach((to, from, next) => {
-//     appManager.initPromise.then(() => {
-//         const channelId = to.params.id || null;
-//         if (to.path !== '/login') {
-//             if (!appManager.user) {
-//                 next({ name: 'login', query: { id: channelId } });
-//                 return;
-//             } else {
-//                 if (appManager.user.channelId != channelId) {
-//                     return appManager.loginOrCreateUser(appManager.user.email, channelId).then(() => {
-//                         location.reload();
-//                         next();
-//                     }, ex => {
-//                         console.error(ex);
-//                         next({ name: 'login', query: { id: channelId } });
-//                     });
-//                 }
-//             }
-//         } else {
-//             if (appManager.user) {
-//                 next({ name: 'home', params: { id: appManager.user.channelId }});
-//                 return;
-//             }
-//         }
-//         next();
-//     }, ex => {
-//         console.error(ex);
-//         next({ name: 'login' });
-//     });
-// });
+router.beforeEach((to, from, next) => {
+    appManager.initPromise.then(() => {
+        const channelId = to.params.id || null;
+        if (to.path !== '/login') {
+            if (!appManager.user) {
+                next({ name: 'login', query: { id: channelId } });
+                return;
+            } else {
+                if (appManager.user.channelId != channelId) {
+                    return appManager.loginOrCreateUser(appManager.user.email, channelId).then(() => {
+                        location.reload();
+                        next();
+                    }, ex => {
+                        console.error(ex);
+                        next({ name: 'login', query: { id: channelId } });
+                    });
+                }
+            }
+        } else {
+            if (appManager.user) {
+                next({ name: 'home', params: { id: appManager.user.channelId }});
+                return;
+            }
+        }
+        next();
+    }, ex => {
+        console.error(ex);
+        next({ name: 'login' });
+    });
+});
 
 const app = new Vue({
     router,
