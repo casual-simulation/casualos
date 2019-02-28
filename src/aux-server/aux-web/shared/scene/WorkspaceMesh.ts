@@ -161,10 +161,12 @@ export class WorkspaceMesh extends GameObject {
 
         this.updateMatrixWorld(false);
 
-        this._debugInfo = {
-            gridChecker: gridUpdate,
-            id: this.id
-        };
+        if (this._debug) {
+            this._debugInfo = {
+                gridChecker: gridUpdate,
+                id: this.id
+            };
+        }
     }
 
     public frameUpdate() {

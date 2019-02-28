@@ -51,6 +51,7 @@ export class GridChecker {
     private _xImbalance: number;
     private _yImbalance: number;
     private _heightSpacing: number;
+    private _debug: boolean = false;
 
     constructor(heightSpacing: number) {
         this._heightSpacing = 1 / heightSpacing;
@@ -61,9 +62,14 @@ export class GridChecker {
             preserveDrawingBuffer: true,
             antialias: false
         });
+        this._debug = false;
         this._renderer.setClearColor(new Color(), 0);
 
         this._scene.add(this._camera);
+    }
+
+    setDebug(debug: boolean) {
+        this._debug = debug;
     }
 
     async check(grid: HexGridMesh): Promise<GridCheckResults> {
@@ -107,7 +113,7 @@ export class GridChecker {
         const data = new Uint8Array(size.width * size.height * 4);
         gl.readPixels(0, 0, size.width, size.height, gl.RGBA, gl.UNSIGNED_BYTE, data);
 
-        const image = this._renderer.domElement.toDataURL();
+        const image = this._debug ? this._renderer.domElement.toDataURL() : '';
 
         this._teardownScene();
 
@@ -147,7 +153,7 @@ export class GridChecker {
                     valid,
                     gridPosition: new Vector2(gridX, gridY),
                     localPosition: tilePoints.center,
-                    points: points,
+                    // points: points,
                     localPoints: tilePoints.points
                 });
             }
