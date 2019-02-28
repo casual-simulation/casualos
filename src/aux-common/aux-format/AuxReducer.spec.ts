@@ -1,10 +1,10 @@
-import { Weave } from "../channels-core/Weave";
+import { Weave } from "../causal-trees/Weave";
 import { AuxOp } from "./AuxOpTypes";
 import { AuxReducer, calculateSequenceRef, calculateSequenceRefs } from "./AuxReducer";
-import { WeaveTraverser } from "../channels-core/WeaveTraverser";
+import { WeaveTraverser } from "../causal-trees/WeaveTraverser";
 import { AuxCausalTree } from "./AuxCausalTree";
-import { storedTree } from "../channels-core/StoredCausalTree";
-import { site } from "../channels-core/SiteIdInfo";
+import { storedTree } from "../causal-trees/StoredCausalTree";
+import { site } from "../causal-trees/SiteIdInfo";
 import { AuxSequenceMetadata } from "./AuxState";
 
 describe('AuxReducer', () => {

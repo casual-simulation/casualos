@@ -1,4 +1,4 @@
-import { RealtimeCausalTree } from "channels-core/RealtimeCausalTree";
+import { RealtimeCausalTree } from "../causal-trees/RealtimeCausalTree";
 import { AuxCausalTree } from "./AuxCausalTree";
 
 export type RealtimeAuxTree = RealtimeCausalTree<AuxCausalTree>;

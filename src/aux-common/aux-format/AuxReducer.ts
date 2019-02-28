@@ -1,11 +1,11 @@
-import { AtomReducer } from "../channels-core/AtomReducer";
+import { AtomReducer } from "../causal-trees/AtomReducer";
 import { AuxOp, AuxOpType, TagOp, FileOp, InsertOp, DeleteOp } from "./AuxOpTypes";
-import { Weave, WeaveReference } from '../channels-core/Weave';
+import { Weave, WeaveReference } from '../causal-trees/Weave';
 import { FilesState, File, Object } from "../Files";
 import { createFile, createWorkspace } from "../Files/FileCalculations";
-import { WeaveTraverser } from "../channels-core/WeaveTraverser";
+import { WeaveTraverser } from "../causal-trees/WeaveTraverser";
 import { merge, splice } from "../utils";
-import { AtomFactory } from "../channels-core/AtomFactory";
+import { AtomFactory } from "../causal-trees/AtomFactory";
 import { AuxFile, AuxObject, AuxWorkspace, AuxState, AuxFileMetadata, AuxValueMetadata, AuxRef, AuxSequenceMetadata } from "./AuxState";
 import { flatMap, fill } from 'lodash';
 import { MetaProperty } from "estree";

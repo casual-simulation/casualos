@@ -1,11 +1,11 @@
 import { AuxCausalTree } from "./AuxCausalTree";
-import { AtomFactory } from "../channels-core/AtomFactory";
+import { AtomFactory } from "../causal-trees/AtomFactory";
 import { AuxOp, AuxOpType } from "./AuxOpTypes";
 import { DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_GRID_SCALE, DEFAULT_WORKSPACE_COLOR } from "../Files";
-import { site } from "../channels-core/SiteIdInfo";
-import { storedTree } from "../channels-core/StoredCausalTree";
+import { site } from "../causal-trees/SiteIdInfo";
+import { storedTree } from "../causal-trees/StoredCausalTree";
 import { AuxState } from "./AuxState";
-import { atomId } from "../channels-core/Atom";
+import { atomId } from "../causal-trees/Atom";
 
 describe('AuxCausalTree', () => {
     describe('value', () => {

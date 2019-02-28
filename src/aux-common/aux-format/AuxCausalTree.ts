@@ -1,12 +1,12 @@
-import { Weave, WeaveReference } from '../channels-core/Weave';
+import { Weave, WeaveReference } from '../causal-trees/Weave';
 import { AuxOp, FileOp, TagOp, InsertOp, ValueOp, DeleteOp } from './AuxOpTypes';
-import { CausalTree } from '../channels-core/CausalTree';
+import { CausalTree } from '../causal-trees/CausalTree';
 import { FilesState, FileType } from '../Files';
 import { AuxReducer, calculateSequenceRef, calculateSequenceRefs } from './AuxReducer';
 import { root, file, tag, value, del, insert } from './AuxAtoms';
-import { AtomId, Atom } from '../channels-core/Atom';
-import { SiteInfo } from '../channels-core/SiteIdInfo';
-import { StoredCausalTree } from '../channels-core/StoredCausalTree';
+import { AtomId, Atom } from '../causal-trees/Atom';
+import { SiteInfo } from '../causal-trees/SiteIdInfo';
+import { StoredCausalTree } from '../causal-trees/StoredCausalTree';
 import { AuxState, AuxTagMetadata, AuxValueMetadata, AuxFile } from './AuxState';
 
 /**

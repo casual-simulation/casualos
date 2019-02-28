@@ -1,6 +1,6 @@
 import { File, Object, Workspace } from '../Files';
-import { AtomId } from 'channels-core/Atom';
-import { WeaveReference } from 'channels-core/Weave';
+import { AtomId } from '../causal-trees/Atom';
+import { WeaveReference } from '../causal-trees/Weave';
 import { AuxOp } from './AuxOpTypes';
 
 export type AuxFile = AuxObject | AuxWorkspace;
