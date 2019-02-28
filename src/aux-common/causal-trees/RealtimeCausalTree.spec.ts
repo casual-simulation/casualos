@@ -40,7 +40,7 @@ describe('RealtimeCausalTree', () => {
     let allowSiteId: boolean[];
     let localWeaves: WeaveReference<Op>[][];
     let errors: any[] = [];
-    let updated: RealtimeCausalTree<Tree>[] = [];
+    let updated: WeaveReference<Op>[][] = [];
     
     beforeEach(() => {
         flush = false;
@@ -68,7 +68,7 @@ describe('RealtimeCausalTree', () => {
         }, connection);
         realtime = new RealtimeCausalTree<Tree>(factory, store, channel);
         realtime.onError.subscribe(e => errors.push(e));
-        realtime.onUpdated.subscribe(tree => updated.push(tree));
+        realtime.onUpdated.subscribe(refs => updated.push(refs));
 
         connection.resolve = (name, data) => {
             flush = true;
@@ -90,18 +90,6 @@ describe('RealtimeCausalTree', () => {
     afterEach(() => {
         expect(errors).toEqual([]);
     });
-
-    async function flushPromise() {
-        flush = false;
-        await Promise.resolve();
-    }
-
-    async function flushPromises() {
-        // Resolve all the pending promises
-        while (flush) {
-            await flushPromise();
-        }
-    }
 
     describe('init()', () => {
         it('should have a null tree by default', async () => {
@@ -130,13 +118,11 @@ describe('RealtimeCausalTree', () => {
             await realtime.init();
 
             connection.setConnected(true);
-            await flushPromises();
+            await connection.flushPromises();
 
             expect(realtime.tree).not.toBe(null);
             expect(realtime.tree.site).toEqual(site(2));
-            expect(updated).toEqual([
-                realtime
-            ]);
+            expect(updated.length).toBe(1);
         });
 
         it('should continue to increment the site ID until a request is granted', async () => {
@@ -147,7 +133,7 @@ describe('RealtimeCausalTree', () => {
             
             await realtime.init();
             connection.setConnected(true);
-            await flushPromises();
+            await connection.flushPromises();
 
             expect(realtime.tree).not.toBe(null);
             expect(realtime.tree.site).toEqual(site(5));
@@ -159,7 +145,7 @@ describe('RealtimeCausalTree', () => {
 
             await realtime.init();
             connection.setConnected(true);
-            await flushPromises();
+            await connection.flushPromises();
 
             expect(realtime.tree).not.toBe(null);
             expect(realtime.tree.site).toEqual(site(100));
@@ -175,7 +161,7 @@ describe('RealtimeCausalTree', () => {
 
             await realtime.init();
             connection.setConnected(true);
-            await flushPromises();
+            await connection.flushPromises();
 
             expect(realtime.tree).not.toBe(null);
             expect(realtime.tree.weave.atoms).toEqual(weave);
@@ -191,7 +177,7 @@ describe('RealtimeCausalTree', () => {
 
             await realtime.init();
             connection.setConnected(true);
-            await flushPromises();
+            await connection.flushPromises();
 
             expect(realtime.tree).not.toBe(null);
             expect(localWeaves).toEqual([
@@ -206,7 +192,7 @@ describe('RealtimeCausalTree', () => {
 
             await realtime.init();
             connection.setConnected(true);
-            await flushPromises();
+            await connection.flushPromises();
 
             expect(realtime.tree.knownSites).toContainEqual(site(1));
             expect(realtime.tree.knownSites).toContainEqual(site(99));
@@ -267,7 +253,7 @@ describe('RealtimeCausalTree', () => {
 
             await realtime.init();
             connection.setConnected(true);
-            await flushPromises();
+            await connection.flushPromises();
 
             expect(realtime.tree.weave.atoms).toEqual(finalWeave.atoms);
             expect(updated.length).toBe(2);
@@ -291,7 +277,7 @@ describe('RealtimeCausalTree', () => {
 
             await realtime.init();
             connection.setConnected(true);
-            await flushPromises();
+            await connection.flushPromises();
 
             expect(realtime.tree.knownSites).toContainEqual(site(2));
             expect(realtime.tree.knownSites).toContainEqual(site(1));
@@ -329,7 +315,7 @@ describe('RealtimeCausalTree', () => {
 
             await realtime.init();
             connection.setConnected(true);
-            await flushPromises();
+            await connection.flushPromises();
 
             remoteWeave.insert(atom(atomId(1, 5), atomId(1, 0), new Op()));
             finalWeave.import(remoteWeave.atoms);
@@ -337,7 +323,7 @@ describe('RealtimeCausalTree', () => {
 
             connection.setConnected(false);
             connection.setConnected(true);
-            await flushPromises();
+            await connection.flushPromises();
 
             expect(realtime.tree.weave.atoms).toEqual(finalWeave.atoms);
             expect(updated.length).toBe(3);
@@ -370,7 +356,7 @@ describe('RealtimeCausalTree', () => {
 
             await realtime.init();
             connection.setConnected(true);
-            await flushPromises();
+            await connection.flushPromises();
 
             siteVersion = {
                 site: site(1),
@@ -386,7 +372,7 @@ describe('RealtimeCausalTree', () => {
 
             connection.setConnected(false);
             connection.setConnected(true);
-            await flushPromises();
+            await connection.flushPromises();
 
             expect(realtime.tree.weave.atoms).toEqual(finalWeave.atoms);
 
@@ -413,14 +399,14 @@ describe('RealtimeCausalTree', () => {
 
             await realtime.init();
             connection.setConnected(true);
-            await flushPromises();
+            await connection.flushPromises();
 
             knownSites.push(site(15));
             knownSites.push(site(23));
 
             connection.setConnected(false);
             connection.setConnected(true);
-            await flushPromises();
+            await connection.flushPromises();
 
             expect(realtime.tree.knownSites).toContainEqual(site(15));
             expect(realtime.tree.knownSites).toContainEqual(site(23));
@@ -437,7 +423,7 @@ describe('RealtimeCausalTree', () => {
 
             await realtime.init();
             connection.setConnected(true);
-            await flushPromises();
+            await connection.flushPromises();
 
             // send root event
             connection.events.next({
@@ -460,7 +446,7 @@ describe('RealtimeCausalTree', () => {
         it('should send new atoms through the channel', async () => {
             await realtime.init();
             connection.setConnected(true);
-            await flushPromises();
+            await connection.flushPromises();
 
             const root = realtime.tree.add(atom(atomId(2, 1), null, new Op()));
             const child = realtime.tree.add(atom(atomId(2, 2), atomId(2, 1), new Op()));
@@ -499,8 +485,7 @@ describe('RealtimeCausalTree', () => {
             const first = weave.insert(atom(atomId(1, 2), atomId(1, 0), new Op()));
 
             await realtime.init();
-            await flushPromises();
-
+            await connection.flushPromises();
 
              // send root event
              connection.events.next({

@@ -1,10 +1,55 @@
 
-import { Atom, WeaveReference, AtomOp, PrecalculatedOp, precalculatedOp } from "../causal-trees";
-import { AuxFile, AuxTagMetadata } from "./AuxState";
-import { InsertOp, DeleteOp } from "./AuxOpTypes";
+import { Atom, WeaveReference, AtomOp, PrecalculatedOp, precalculatedOp, RealtimeCausalTree } from "../causal-trees";
+import { AuxFile, AuxTagMetadata, AuxObject } from "./AuxState";
+import { InsertOp, DeleteOp, AuxOp } from "./AuxOpTypes";
 import { calculateSequenceRef, calculateSequenceRefs } from "./AuxReducer";
 import { insert, del } from "./AuxAtoms";
+import { AuxCausalTree } from "./AuxCausalTree";
+import { map, startWith, pairwise, flatMap } from "rxjs/operators";
+import { sortBy } from "lodash";
+import { File, Object, calculateStateDiff, FilesState, PartialFile, createFile } from "../Files";
+import uuid from "uuid/v4";
 
+/**
+ * Builds the fileAdded, fileRemoved, and fileUpdated observables from the given channel connection.
+ * @param connection The channel connection.
+ */
+export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
+    const states = tree.onUpdated.pipe(
+        map(e => ({ state: tree.tree.value, event: <WeaveReference<AuxOp>[]>e })), 
+        startWith({ state: <FilesState>null, event: <WeaveReference<AuxOp>[]>null })
+    );
+
+    // pair new states with their previous values
+    const statePairs = states.pipe(pairwise());
+
+    // calculate the difference between the current state and new state.
+    const stateDiffs = statePairs.pipe(
+        map(pair => {
+            const prev = pair[0];
+            const curr = pair[1];
+
+            return calculateStateDiff(prev.state, curr.state, curr.event);
+        })
+    );
+
+    const fileAdded = stateDiffs.pipe(flatMap(diff => {
+        return sortBy(diff.addedFiles, f => f.type === 'object');
+    }));
+
+    const fileRemoved = stateDiffs.pipe(
+      flatMap(diff => diff.removedFiles),
+      map(f => f.id)
+    );
+
+    const fileUpdated = stateDiffs.pipe(flatMap(diff => diff.updatedFiles));
+
+    return {
+        fileAdded,
+        fileRemoved,
+        fileUpdated
+    };
+}
 
 /**
  * Gets the metadata for the given tag.

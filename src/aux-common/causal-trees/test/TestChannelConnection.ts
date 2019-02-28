@@ -16,6 +16,7 @@ export class TestChannelConnection implements RealtimeChannelConnection {
     events: Subject<ConnectionEvent>;
     emitted: ConnectionEvent[];
     requests: TestChannelRequest[];
+    flush: boolean;
     resolve: (name: string, data: any) => any;
     
     _connected: boolean;
@@ -28,6 +29,7 @@ export class TestChannelConnection implements RealtimeChannelConnection {
         this.requests = [];
         this._connected = false;
         this.closed = false;
+        this.flush = false;
         this.resolve = null;
     }
 
@@ -57,6 +59,7 @@ export class TestChannelConnection implements RealtimeChannelConnection {
     request<TResponse>(name: string, data: any): Promise<TResponse> {
         return new Promise((resolve, reject) => {
             if (this.resolve) {
+                this.flush = true;
                 resolve(this.resolve(name, data));
             } else {
                 this.requests.push({
@@ -75,5 +78,17 @@ export class TestChannelConnection implements RealtimeChannelConnection {
 
     unsubscribe(): void {
         this.closed = true;
+    }
+
+    async flushPromise() {
+        this.flush = false;
+        await Promise.resolve();
+    }
+
+    async flushPromises() {
+        // Resolve all the pending promises
+        while (this.flush) {
+            await this.flushPromise();
+        }
     }
 }

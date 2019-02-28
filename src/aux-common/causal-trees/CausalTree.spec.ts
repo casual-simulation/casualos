@@ -4,6 +4,7 @@ import { AtomReducer } from "./AtomReducer";
 import { Weave, WeaveReference } from './Weave';
 import { site } from './SiteIdInfo';
 import { storedTree } from "./StoredCausalTree";
+import { precalculatedOp } from "./PrecalculatedOp";
 
 enum OpType {
     root = 0,
@@ -192,6 +193,18 @@ describe('CausalTree', () => {
             expect(tree1.knownSites).toEqual([
                 { id: 1 }
             ]);
+        });
+    });
+
+    describe('createFromPrecalculated()', () => {
+        it('should add the given op to the tree', () => {
+            let tree1 = new CausalTree(storedTree(site(1)), new Reducer());
+
+            tree1.createFromPrecalculated(precalculatedOp(
+                new Op(),
+            ));
+
+            expect(tree1.weave.atoms.length).toBe(1);
         });
     });
 });

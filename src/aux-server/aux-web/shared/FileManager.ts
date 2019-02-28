@@ -44,7 +44,10 @@ import {
   createFile,
   isDestroyed,
   getActiveObjects,
-  ChannelConnection
+  ChannelConnection,
+  AuxCausalTree,
+  AuxFile,
+  AuxObject
 } from '@yeti-cgi/aux-common';
 import {
   findIndex, 
@@ -87,6 +90,7 @@ import {AppManager, appManager} from './AppManager';
 import {SocketManager} from './SocketManager';
 import { SentryError } from '@sentry/core';
 import { CausalTreeManager } from './causal-trees/CausalTreeManager';
+import { RealtimeCausalTree } from '@yeti-cgi/aux-common/causal-trees';
 
 export interface SelectedFilesUpdatedEvent { files: Object[]; }
 
@@ -116,13 +120,13 @@ export class FileManager {
   private _fileRemovedObservable: ReplaySubject<string>;
   private _fileUpdatedObservable: Subject<File>;
   private _selectedFilesUpdated: BehaviorSubject<SelectedFilesUpdatedEvent>;
-  private _files: ChannelConnection<FilesState>;
   private _reconnectedObservable: Subject<MergedObject<FilesState>>;
   private _resyncedObservable: Subject<boolean>;
   private _syncFailedObservable: Subject<MergeStatus<FilesState>>;
   private _disconnectedObservable: Subject<FilesState>;
   private _mergeStatus: MergeStatus<FilesState> = null;
   private _id: string;
+  private _aux: RealtimeCausalTree<AuxCausalTree>;
 
   private get _allFiles(): File[] {
     return values(this.filesState);
@@ -131,8 +135,8 @@ export class FileManager {
   /**
    * Gets all the files that represent an object.
    */
-  get objects(): Object[] {
-    return getActiveObjects(this.filesState);
+  get objects(): AuxObject[] {
+    return <AuxObject[]>getActiveObjects(this.filesState);
   }
 
   /**
@@ -181,7 +185,7 @@ export class FileManager {
     return this._status;
   }
 
-  get userFile(): Object {
+  get userFile(): AuxObject {
     if (!this._appManager.user) {
       return;
     }
@@ -205,14 +209,14 @@ export class FileManager {
    * or may not be synced to the serer.
    */
   get isOnline(): boolean {
-    return ['online', 'online-disconnected'].indexOf(this._files.state) >= 0;
+    return this._aux.channel.isConnected;
   }
 
   /**
    * Gets whether the app is synced to the server.
    */
   get isSynced(): boolean {
-    return this._files.state === 'online';
+    return this.isOnline;
   }
 
   /**
@@ -263,12 +267,12 @@ export class FileManager {
    * Gets the current local file state.
    */
   get filesState() {
-    return this._files.store.state();
+    return this._aux.tree.value;
   }
 
-  constructor(app: AppManager, socket: SocketManager) {
+  constructor(app: AppManager, treeManager: CausalTreeManager) {
     this._appManager = app;
-    this._socketManager = socket;
+    this._treeManager = treeManager;
   }
 
   /**
@@ -287,7 +291,7 @@ export class FileManager {
    * Gets a list of files that the given user has selected.
    * @param user The file of the user.
    */
-  selectedFilesForUser(user: Object) {
+  selectedFilesForUser(user: AuxObject) {
     return filterFilesBySelection(this.objects, user.tags._selection);
   }
 
@@ -295,7 +299,7 @@ export class FileManager {
    * Selects the given file for the current user.
    * @param file The file to select.
    */
-  selectFile(file: Object) {
+  selectFile(file: AuxObject) {
     this._selectFileForUser(file, this.userFile);
   }
 
@@ -310,7 +314,7 @@ export class FileManager {
    * Sets the file that is currently being edited by the current user.
    * @param file The file.
    */
-  setEditedFile(file: Object) {
+  setEditedFile(file: AuxObject) {
     this._setEditedFileForUser(file, this.userFile);
   }
 
@@ -331,34 +335,37 @@ export class FileManager {
    * Removes the given file.
    * @param file The file to remove.
    */
-  async removeFile(file: File) {
-    console.log('[FileManager] Remove File', file.id);
-    this._files.emit(fileRemoved(file.id));
+  async removeFile(file: AuxFile) {
+    if (this._aux.tree) {
+        console.log('[FileManager] Remove File', file.id);
+        this._aux.tree.delete(file.metadata.ref.atom);
+    } else {
+        console.warn('[FileManager] Tree is not loaded yet. Invalid Operation!');
+    }
+    // this._files.emit(fileRemoved(file.id));
   }
 
   /**
    * Updates the given file with the given data.
    */
-  async updateFile(file: File, newData: PartialFile) {
+  async updateFile(file: AuxFile, newData: PartialFile) {
     updateFile(file, this.userFile.id, newData, () => this.createContext());
-    this._files.emit(fileUpdated(file.id, newData));
+
+    this._aux.tree.updateFile(file, newData);
   }
 
   async createFile(id?: string, tags?: Object['tags']) {
     console.log('[FileManager] Create File');
 
     const file = createFile(id, tags);
-    this._files.emit(fileAdded(file));
-    
-    return file;
+    this._aux.tree.addFile(file);
   }
 
   async createWorkspace() {
     console.log('[FileManager] Create File');
 
     const workspace: Workspace = createWorkspace();
-
-    this._files.emit(fileAdded(workspace));
+    this._aux.tree.addFile(workspace);
   }
 
   async action(sender: File, receiver: File, eventName: string) {
@@ -366,12 +373,15 @@ export class FileManager {
 
     // Calculate the events on a single client and then run them in a transaction to make sure the order is right.
     const actionData = action(sender.id, receiver.id, eventName);
-    const result = calculateActionEvents(this._files.store.state(), actionData);
-    this._files.emit(transaction(result.events));
+    const result = calculateActionEvents(this._aux.tree.value, actionData);
+
+    this._aux.tree.addEvents(result);
+
+    // this._files.emit(transaction(result.events));
   }
 
   transaction(...events: FileEvent[]) {
-    this._files.emit(transaction(events));
+    this._aux.tree.addEvents(events);
   }
 
   /**
@@ -379,38 +389,19 @@ export class FileManager {
    * @param state The state to add.
    */
   addState(state: FilesState) {
-    this._files.emit(addState(state));
+    // this._files.emit(addState(state));
   }
 
   // TODO: This seems like a pretty dangerous function to keep around,
   // but we'll add a config option to prevent this from happening on real sites.
   deleteEverything() {
     console.warn('[FileManager] Delete Everything!');
-    const deleteOps = this._allFiles.map(f => fileRemoved(f.id));
-    this._files.emit(transaction(deleteOps));
+    // const deleteOps = this._allFiles.map(f => fileRemoved(f.id));
+    // this._files.emit(transaction(deleteOps));
     setTimeout(() => {
       appManager.logout();
       location.reload();
     }, 200);
-  }
-
-  /**
-   * Resolves the given conflicts into the current merge status.
-   * @param resolved 
-   */
-  resolveConflicts(resolved: ResolvedConflict[]) {
-    if (this._mergeStatus &&  this._mergeStatus.remainingConflicts.length > 0) {
-      const result = resolveConflicts(this._mergeStatus.merge, resolved);
-      if (result.success) {
-        this._publishMergeResults(result);
-      } else {
-        this._mergeStatus = {
-          merge: result,
-          remainingConflicts: difference(this._mergeStatus.remainingConflicts, resolved.map(r => r.details)),
-          resolvedConflicts: [...this._mergeStatus.resolvedConflicts, ...resolved]
-        };
-      }
-    }
   }
 
   /**
@@ -425,38 +416,16 @@ export class FileManager {
   }
 
   /**
-   * Reports the merge results to the server.
-   * This will update the server state to match the state that was determined from the merge result.
-   * Upon becomming reconnected to the server, this function MUST be called in order for the user's local changes
-   * to be synced to the server and for their future changes to be pushed to the server.
-   * @param results The merge results.
-   */
-  private _publishMergeResults(results: MergedObject<FilesState>) {
-    this._setStatus('Merged and reconnected!');
-    this._mergeStatus = null;
-    const didReSync = results.final;
-    this._offlineServerState = null;
-    if (results.final) {
-      const event = addState(results.final);
-      this._files.reconnect();
-      this._files.emit(event);
-    } else {
-      this._files.reconnect();
-    }
-    this._resyncedObservable.next(didReSync);
-  }
-
-  /**
    * Clears the selection that the given user has.
    * @param user The file for the user to clear the selection of.
    */
-  private _clearSelectionForUser(user: Object) {
+  private _clearSelectionForUser(user: AuxObject) {
     console.log('[FileManager] Clear selection for', user.id);
     const update = updateUserSelection(null, null);
     this.updateFile(user, update);
   }
 
-  private _selectFileForUser(file: Object, user: Object) {
+  private _selectFileForUser(file: AuxObject, user: AuxObject) {
     console.log('[FileManager] Select File:', file.id);
     
     const {id, newId} = selectionIdForUser(user);
@@ -470,7 +439,7 @@ export class FileManager {
     }
   }
 
-  private _setEditedFileForUser(file: Object, user: Object) {
+  private _setEditedFileForUser(file: AuxObject, user: AuxObject) {
     if (file.id !== user.tags._editingFile) {
       console.log('[FileManager] Edit File:', file.id);
       
@@ -504,23 +473,20 @@ export class FileManager {
     this._reconnectedObservable = new Subject<MergedObject<FilesState>>();
     this._resyncedObservable = new Subject<boolean>();
     this._syncFailedObservable = new Subject<MergeStatus<FilesState>>();
-    this._files = await this._socketManager.getFilesChannel(this._id);
+    
+    await this._treeManager.init();
 
-    this._setupOffline();
+    this._aux = await this._treeManager.getTree<AuxCausalTree>({
+        id: this._id,
+        type: 'aux'
+    });
+
     await this._initUserFile();
     await this._initGlobalsFile();
 
-    // Replay the existing files for the components that need it this way
-    const filesState = this._files.store.state();
-    const existingFiles = values(filesState);
-    const orderedFiles = sortBy(existingFiles, f => f.type === 'object');
-    const existingFilesObservable = from(orderedFiles);
+    const { fileAdded, fileRemoved, fileUpdated } = fileChangeObservables(this._aux);
 
-    const { fileAdded, fileRemoved, fileUpdated } = fileChangeObservables(this._files);
-
-    const allFilesAdded = mergeObservables(fileAdded, existingFilesObservable);
-
-    this._subscriptions.push(allFilesAdded.subscribe(this._fileDiscoveredObservable));
+    this._subscriptions.push(fileAdded.subscribe(this._fileDiscoveredObservable));
     this._subscriptions.push(fileRemoved.subscribe(this._fileRemovedObservable));
     this._subscriptions.push(fileUpdated.subscribe(this._fileUpdatedObservable));
     const alreadySelected = this.selectedObjects;
@@ -541,6 +507,8 @@ export class FileManager {
         }));
 
     this._subscriptions.push(allSelectedFilesUpdated.subscribe(this._selectedFilesUpdated));
+
+    await this._aux.init();
 
     this._setStatus('Initialized.');
 
@@ -576,137 +544,6 @@ export class FileManager {
   private _setStatus(status: string) {
     this._status = status;
     console.log('[FileManager] Status:', status);
-  }
-
-  private get _offlineServerState(): FilesState {
-    const json = localStorage.getItem(`offline_server_state_${this._id}`);
-    if (json) {
-      return JSON.parse(json);
-    } else {
-      return null;
-    }
-  }
-
-  private set _offlineServerState(state: FilesState) {
-    if (state !== null && typeof state !== 'undefined') {
-      localStorage.setItem(`offline_server_state_${this._id}`, JSON.stringify(state));
-    } else {
-      localStorage.setItem(`offline_server_state_${this._id}`, null);
-    }
-  }
-
-  private _setupOffline() {
-    this._subscriptions.push(this._files.connectionStates.subscribe(async state => {
-      try {
-        if (state.mode === 'offline') {
-          this._disconnected(state.lastKnownServerState);
-        } else if(state.mode === 'online-disconnected') {
-          await this._reconnected(state.lastKnownServerState);
-        }
-      } catch(ex) {
-        Sentry.captureException(ex);
-        console.error(ex);
-      }
-    }));
-  }
-
-  private async _reconnected(state: FilesState) {
-    Sentry.addBreadcrumb({
-      message: 'Reconnected to server',
-      category: 'net',
-      level: Sentry.Severity.Warning,
-      type: 'default'
-    });
-    this._setStatus('Reconnected!');
-
-    // get the old server state
-    const offline = this._offlineServerState;
-    const newState = state;
-    const localState = this.filesState;
-
-    const mergeReport = mergeFiles(offline, localState, newState, {
-      
-    });
-
-    this._reconnectedObservable.next(mergeReport);
-
-    if (mergeReport.success) {
-      console.log('[FileManager] Merge success!');
-      this._publishMergeResults(mergeReport);
-    } else {
-      const { fixed, notFixable, automaticallyFixed } = await this._resolveConflicts(mergeReport);
-
-      if (notFixable.length > 0) {
-          console.log('[App] Merge has conflicts that are not automatically fixable!');
-          this._mergeStatus = {
-            merge: automaticallyFixed,
-            remainingConflicts: notFixable,
-            resolvedConflicts: fixed
-          };
-
-          this._syncFailedObservable.next(this._mergeStatus);
-      } else {
-          this._publishMergeResults(automaticallyFixed);
-      }
-    }
-  }
-
-  private _disconnected(state: FilesState) {
-    Sentry.addBreadcrumb({
-      message: 'Disconnected from server',
-      category: 'net',
-      level: Sentry.Severity.Warning,
-      type: 'default'
-    });
-    this._setStatus('Disconnected :(');
-    
-    // only save if we have resolved any previous merge conflicts
-    if (!this._offlineServerState) {
-      // save the current state to persistent storage
-      this._offlineServerState = state;
-    }
-    this._disconnectedObservable.next(state);
-  }
-
-  private async _resolveConflicts(merge: MergedObject<FilesState>) {
-      console.error('[App] Merge Failed! Conflicts:', merge.conflicts);
-      const conflicts = listMergeConflicts(merge);
-
-      return await this._fixAutomaticConflicts(conflicts, merge);
-  }
-
-  private async _fixAutomaticConflicts(conflicts: ConflictDetails[], merge: MergedObject<FilesState>) {
-      // TODO: This is probably a stupid idea, but might actually be worth it
-      // to cut down on how many conflicts a user sees.
-      const automaticallyFixable = conflicts.map(details => {
-        let value;
-        let fixable = false;
-        if (some(details.path, p => p === '_position')) {
-          fixable = true;
-          value = details.conflict[second]; // Take the server path for new _position data
-        } else if (some(details.path, p => p === '_rotation')) {
-            fixable = true;
-            value = details.conflict[second]; // Take the server path for new _rotation data
-        } else if(some(details.path, p => p === '_lastActiveTime')) {
-          fixable = true;
-          value = details.conflict[second]; // Take the server path for new _lastActiveTime data
-        }
-
-        return {
-          fixable: fixable,
-          details: details,
-          value: value
-        };
-      }).filter(r => r.fixable);
-
-      const notFixable = difference(conflicts, automaticallyFixable.map(f => f.details));
-      const automaticallyFixed = await resolveConflicts(merge, automaticallyFixable);
-
-      return {
-          fixed: automaticallyFixable,
-          notFixable,
-          automaticallyFixed
-      };
   }
 
   public dispose() {

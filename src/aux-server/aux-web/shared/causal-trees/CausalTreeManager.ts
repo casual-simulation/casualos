@@ -19,6 +19,7 @@ export class CausalTreeManager implements SubscriptionLike {
     private _socket: typeof io.Socket;
     private _factory: CausalTreeFactory;
     private _store: CausalTreeStore;
+    private _initialized: boolean;
 
     /**
      * Creates a new Causal Tree Manager.
@@ -27,6 +28,7 @@ export class CausalTreeManager implements SubscriptionLike {
     constructor(socket: typeof io.Socket) {
         this._socket = socket;
         this._trees = {};
+        this._initialized = false;
         this._factory = auxCausalTreeFactory();
         this._store = new BrowserCausalTreeStore();
         this._events = new Subject<MessageEvent>();
@@ -40,11 +42,16 @@ export class CausalTreeManager implements SubscriptionLike {
      * Initializes the Causal Tree Manager.
      */
     async init(): Promise<void> {
+        if (this._initialized) {
+            return;
+        }
+        this._initialized = true;
         await this._store.init();
     }
 
     /**
      * Gets a realtime tree for the given channel info.
+     * The returned tree needs to be initialized.
      * @param info The info that identifies the tree that should be retrieved or created.
      */
     async getTree<TTree extends CausalTree<AtomOp, any>>(info: RealtimeChannelInfo): Promise<RealtimeCausalTree<TTree>> {

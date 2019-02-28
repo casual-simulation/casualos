@@ -1,7 +1,7 @@
 import { File, Object, Workspace } from '../Files';
 import { AtomId } from '../causal-trees/Atom';
 import { WeaveReference } from '../causal-trees/Weave';
-import { AuxOp } from './AuxOpTypes';
+import { AuxOp, FileOp, ValueOp, TagOp } from './AuxOpTypes';
 
 export type AuxFile = AuxObject | AuxWorkspace;
 export type AuxRef = WeaveReference<AuxOp>;
@@ -20,7 +20,7 @@ export interface AuxObject extends Object {
  * Defines an interface that contains metadata for an AUX Object.
  */
 export interface AuxFileMetadata {
-    ref: AuxRef;
+    ref: WeaveReference<FileOp>;
     tags: {
         [key: string]: AuxTagMetadata
     }
@@ -30,7 +30,7 @@ export interface AuxFileMetadata {
  * Defines an interface that contains metadata for an AUX tag.
  */
 export interface AuxTagMetadata {
-    ref: AuxRef;
+    ref: WeaveReference<TagOp>;
     name: AuxSequenceMetadata;
     value: AuxValueMetadata;
 }
@@ -39,7 +39,7 @@ export interface AuxTagMetadata {
  * Defines an interface that contains metadata for an AUX tag value.
  */
 export interface AuxValueMetadata {
-    ref: AuxRef;
+    ref: WeaveReference<ValueOp>;
 
     /**
      * The sequence that this value is using.
