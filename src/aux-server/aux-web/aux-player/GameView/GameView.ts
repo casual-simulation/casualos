@@ -133,7 +133,7 @@ export default class GameView extends Vue implements IGameView {
     get filesMode(): boolean { throw new Error("AUX Player does not implement filesMode."); }
     get workspacesMode(): boolean { throw new Error("AUX Player does not implement workspacesMode."); }
     get groundPlane(): Plane { return this._groundPlane; }
-    get gridChecker(): GridChecker { throw new Error("AUX Player does not implement grid checker."); }
+    get gridChecker(): GridChecker { return null; }
 
     get fileManager() {
         return appManager.fileManager;
@@ -238,14 +238,6 @@ export default class GameView extends Vue implements IGameView {
             .subscribe());
         this._subs.push(this.fileManager.fileUpdated
             .pipe(concatMap(file => this._fileUpdated(file)))
-            .subscribe());
-
-        this._subs.push(this.fileManager.fileChanged(this.fileManager.userFile)
-            .pipe(tap(() => {
-
-                this._gridMesh.visible = this.workspacesMode;
-
-            }))
             .subscribe());
 
         this._subs.push(this.fileManager.fileChanged(this.fileManager.globalsFile)
@@ -517,7 +509,7 @@ export default class GameView extends Vue implements IGameView {
 
         // Grid plane
         this._gridMesh = new GridHelper(1000, 300, 0xBBBBBB, 0xBBBBBB);
-        this._gridMesh.visible = false;
+        this._gridMesh.visible = true;
         this._scene.add(this._gridMesh);
     }
 
