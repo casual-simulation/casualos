@@ -86,6 +86,7 @@ import uuid from 'uuid/v4';
 import {AppManager, appManager} from './AppManager';
 import {SocketManager} from './SocketManager';
 import { SentryError } from '@sentry/core';
+import { CausalTreeManager } from './causal-trees/CausalTreeManager';
 
 export interface SelectedFilesUpdatedEvent { files: Object[]; }
 
@@ -106,6 +107,7 @@ export interface MergeStatus<T> {
 export class FileManager {
   private _appManager: AppManager;
   private _socketManager: SocketManager;
+  private _treeManager: CausalTreeManager;
 
   private _subscriptions: SubscriptionLike[];
   private _status: string;

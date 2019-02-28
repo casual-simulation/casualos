@@ -65,7 +65,11 @@ module.exports = {
           /aux-common/
         ],
         enforce: 'pre'
-      }
+      },
+      {
+        test: /\.worker\.ts$/,
+        use: 'worker-loader'
+      },
     ]
   },
   resolve: {

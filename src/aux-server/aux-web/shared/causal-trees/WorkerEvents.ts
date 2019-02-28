@@ -1,12 +1,16 @@
-export type WorkerEvent = GetTreeRequest | GetTreeResponse;
+import { AtomOp, RealtimeChannelInfo, WeaveReference } from "@yeti-cgi/aux-common/causal-trees";
 
-export interface GetTreeRequest {
-    type: 'get_tree_req';
-    treeType: string;
+export type WorkerEvent = CalculateValue | ValueCalculated;
+
+export interface CalculateValue {
+    type: 'calculate';
     id: string;
+    weave: WeaveReference<AtomOp>[];
+    treeType: string;
 }
 
-export interface GetTreeResponse {
-    type: 'get_tree_resp';
+export interface ValueCalculated {
+    type: 'value_calculated';
     id: string;
+    value: any;
 }
