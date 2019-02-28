@@ -139,36 +139,12 @@ export default class GameView extends Vue implements IGameView {
   xrSessionInitParameters: any = null;
   vrDisplay: VRDisplay = null;
   vrCapable: boolean = false;
-
   selectedRecentFile: Object = null;
   recentFiles: Object[] = [];
 
   @Inject() addSidebarItem: App['addSidebarItem'];
   @Inject() removeSidebarItem: App['removeSidebarItem'];
-
   @Provide() fileRenderer: FileRenderer = new FileRenderer();
-
-  @Watch('debug')
-  debugChanged(val: boolean, previous: boolean) {
-    this.showDebugInfo(val);
-    this.updateDebugInfo();
-  }
-
-  updateDebugInfo() {
-    this.getFiles().forEach(f => f.mesh.update());
-    this.debugInfo = {
-      workspaces: this.getWorkspaces().map(w => (<WorkspaceMesh>w.mesh).getDebugInfo()),
-    };
-  }
-
-  selectRecentFile(file: Object) {
-    if(!this.selectedRecentFile || this.selectedRecentFile.id !== file.id) {
-      this.selectedRecentFile = file;
-      this.addToRecentFilesList(file, true);
-    } else {
-      this.selectedRecentFile = null;
-    }
-  }
 
   get fileQueue(): HTMLElement { return <HTMLElement>this.$refs.fileQueue; }
   get gameView(): HTMLElement { return <HTMLElement>this.$refs.gameView; }
@@ -184,28 +160,25 @@ export default class GameView extends Vue implements IGameView {
   get workspacesMode() { return this.mode === 'worksurfaces'; }
   get groundPlane() { return this._groundPlane; }
   get gridChecker() { return this._gridChecker; }
-
-  get fileManager() {
-    return appManager.fileManager;
-  }
+  get fileManager() { return appManager.fileManager; }
 
   constructor() {
     super();
     this.addToRecentFilesList = debounce(this.addToRecentFilesList.bind(this), 100);
   }
 
-  toggleDebug() {
+  public toggleDebug() {
     this.debug = !this.debug;
   }
 
-  setGridsVisible(visible: boolean) {
+  public setGridsVisible(visible: boolean) {
     this.getWorkspaces().forEach(workspace => {
       const mesh = <WorkspaceMesh>workspace.mesh;
       mesh.gridsVisible = visible;
     });
   }
 
-  async mounted() {
+  public async mounted() {
     this._handleResize = this._handleResize.bind(this);
     window.addEventListener('resize', this._handleResize);
     window.addEventListener('vrdisplaypresentchange', this._handleResize);
@@ -268,7 +241,7 @@ export default class GameView extends Vue implements IGameView {
     this._frameUpdate();
   }
 
-  beforeDestroy() {
+  public beforeDestroy() {
     window.removeEventListener('resize', this._handleResize);
     window.removeEventListener('vrdisplaypresentchange', this._handleResize);
     this.removeSidebarItem('enable_xr');
@@ -390,6 +363,28 @@ export default class GameView extends Vue implements IGameView {
     this._scene.background = this._originalBackground;
   }
 
+  @Watch('debug')
+  public debugChanged(val: boolean, previous: boolean) {
+    this.showDebugInfo(val);
+    this.updateDebugInfo();
+  }
+
+  public updateDebugInfo() {
+    this.getFiles().forEach(f => f.mesh.update());
+    this.debugInfo = {
+      workspaces: this.getWorkspaces().map(w => (<WorkspaceMesh>w.mesh).getDebugInfo()),
+    };
+  }
+
+  public selectRecentFile(file: Object) {
+    if(!this.selectedRecentFile || this.selectedRecentFile.id !== file.id) {
+      this.selectedRecentFile = file;
+      this.addToRecentFilesList(file, true);
+    } else {
+      this.selectedRecentFile = null;
+    }
+  }
+
   /**
    * Returns the file id that is represented by the specified mesh id.
    * @param meshId The id of the mesh.
@@ -409,28 +404,28 @@ export default class GameView extends Vue implements IGameView {
   /**
    * Gets all of the files.
    */
-  getFiles() {
+  public getFiles() {
     return values(this._files);
   }
 
   /**
    * Gets all of the objects.
    */
-  getObjects() {
+  public getObjects() {
     return this.getFiles().filter(f => f.file.type === 'object');
   }
 
   /**
    * Gets all of the workspaces.
    */
-  getWorkspaces() {
+  public getWorkspaces() {
     return this.getFiles().filter(f => f.file.type === 'workspace');
   }
 
   /**
    * Toggles whether debug information is shown.
    */
-  toggleDebugInfo() {
+  public toggleDebugInfo() {
     this.showDebugInfo(!this._debug);
   }
 
@@ -438,7 +433,7 @@ export default class GameView extends Vue implements IGameView {
    * Sets whether to show debug information.
    * @param debug Whether to show debug info.
    */
-  showDebugInfo(debug: boolean) {
+  public showDebugInfo(debug: boolean) {
     this._debug = debug;
     this.getFiles().forEach(w => w.mesh.showDebugInfo(debug));
   }
@@ -449,7 +444,7 @@ export default class GameView extends Vue implements IGameView {
    * @param file The file to add to the list.
    * @param updateList Whether the list should be reordered.
    */
-  addToRecentFilesList(file: Object, reorderList: boolean = false) {
+  public addToRecentFilesList(file: Object, reorderList: boolean = false) {
     const index = findIndex(this.recentFiles, f => doFilesAppearEqual(file, f));
     // if file is already in the list
     if (index >= 0) {
@@ -475,7 +470,7 @@ export default class GameView extends Vue implements IGameView {
     }
   }
 
-  addNewWorkspace(): void {
+  public addNewWorkspace(): void {
     // TODO: Make the user have to drag a workspace onto the world
     // instead of just clicking a button and a workspace being placed somewhere.
     this.fileManager.createWorkspace();
