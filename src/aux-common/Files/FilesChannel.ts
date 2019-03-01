@@ -405,6 +405,15 @@ export function calculateActionEvents(state: FilesState, action: Action) {
 }
 
 /**
+ * Determines whether the given tag value is a valid value or if
+ * it represents nothing.
+ * @param value The value.
+ */
+export function hasValue(value: string) {
+    return !(value === null || typeof value === 'undefined' || value === '');
+}
+
+/**
  * Cleans the file by removing any null or undefined properties.
  * @param file The file to clean.
  */
@@ -416,7 +425,7 @@ export function cleanFile(file: File): File {
         cleaned.tags = newTags;
         for(let property in cleaned.tags) {
             let value = cleaned.tags[property];
-            if (value === null || typeof value === 'undefined' || value === '') {
+            if (!hasValue(value)) {
                 delete cleaned.tags[property];
             }
         }

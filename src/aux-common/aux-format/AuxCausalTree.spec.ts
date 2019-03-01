@@ -1,12 +1,14 @@
 import { AuxCausalTree } from "./AuxCausalTree";
 import { AtomFactory } from "../causal-trees/AtomFactory";
 import { AuxOp, AuxOpType } from "./AuxOpTypes";
-import { DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_GRID_SCALE, DEFAULT_WORKSPACE_COLOR, createFile } from "../Files";
+import { DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_GRID_SCALE, DEFAULT_WORKSPACE_COLOR, createFile, createWorkspace, fileUpdated, fileAdded, fileRemoved, transaction, addState } from "../Files";
 import { site } from "../causal-trees/SiteIdInfo";
 import { storedTree } from "../causal-trees/StoredCausalTree";
 import { AuxState } from "./AuxState";
 import { atomId, atom } from "../causal-trees/Atom";
-import { file, tag, value } from "./AuxAtoms";
+import { file, tag, value, del } from "./AuxAtoms";
+
+Date.now = jest.fn();
 
 describe('AuxCausalTree', () => {
     describe('value', () => {
@@ -658,6 +660,290 @@ describe('AuxCausalTree', () => {
 
             const root = tree.root();
             const result = tree.addFile(newFile);
+
+            const fileAtom = atom(atomId(1, 2), root.atom.id, file('test', 'object'));
+            const abcTag = atom(atomId(1, 3), fileAtom.id, tag('abc'));
+            const abcTagValue = atom(atomId(1, 4, 1), abcTag.id, value('def'));
+
+            const numTag = atom(atomId(1, 5), fileAtom.id, tag('num'));
+            const numTagValue = atom(atomId(1, 6, 1), numTag.id, value(5));
+
+            expect(result.map(ref => ref.atom)).toEqual([
+                fileAtom,
+                abcTag,
+                abcTagValue,
+                numTag,
+                numTagValue
+            ]);
+            expect(tree.weave.atoms.map(ref => ref.atom)).toEqual([
+                root.atom,
+                fileAtom,
+                numTag,
+                numTagValue,
+                abcTag,
+                abcTagValue
+            ]);
+        });
+
+        it('should add the given workspace to the state', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+            const newFile = createWorkspace('test');
+
+            const root = tree.root();
+            const result = tree.addFile(newFile);
+
+            const fileAtom = atom(atomId(1, 2), root.atom.id, file('test', 'workspace'));
+            const positionTag = atom(atomId(1, 3), fileAtom.id, tag('position'));
+            const positionTagValue = atom(atomId(1, 4, 1), positionTag.id, value({x: 0, y: 0, z: 0}));
+
+            const resultAtoms = result.map(ref => ref.atom);
+            expect(resultAtoms).toContainEqual(fileAtom);
+            expect(resultAtoms).toContainEqual(positionTag);
+            expect(resultAtoms).toContainEqual(positionTagValue);
+
+            const treeAtoms = tree.weave.atoms.map(ref => ref.atom);
+            expect(treeAtoms).toContainEqual(fileAtom);
+            expect(treeAtoms).toContainEqual(positionTag);
+            expect(treeAtoms).toContainEqual(positionTagValue);
+        });
+    });
+
+    describe('updateFile()', () => {
+        it('should update the object with the given values', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            const file = tree.file('test', 'object');
+            const result = tree.updateFile(tree.value['test'], {
+                tags: {
+                    _position: { x: 1, y: 0, z: 0 },
+                    abc: '123',
+                    num: 99,
+                    b: true
+                }
+            });
+
+            const positionTag = atom(atomId(1, 2), file.atom.id, tag('_position'));
+            const positionTagValue = atom(atomId(1, 3, 1), positionTag.id, value({ x: 1, y: 0, z: 0 }));
+
+            const abcTag = atom(atomId(1, 4), file.atom.id, tag('abc'));
+            const abcTagValue = atom(atomId(1, 5, 1), abcTag.id, value('123'));
+
+            const numTag = atom(atomId(1, 6), file.atom.id, tag('num'));
+            const numTagValue = atom(atomId(1, 7, 1), numTag.id, value(99));
+
+            const bTag = atom(atomId(1, 8), file.atom.id, tag('b'));
+            const bTagValue = atom(atomId(1, 9, 1), bTag.id, value(true));
+
+            expect(result.map(ref => ref.atom)).toEqual([
+                positionTag,
+                positionTagValue,
+                abcTag,
+                abcTagValue,
+                numTag,
+                numTagValue,
+                bTag,
+                bTagValue
+            ]);
+        });
+    });
+
+    describe('addEvents()', () => {
+        it('should handle file update events', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            const file = tree.file('test', 'object');
+            const result = tree.addEvents([
+                fileUpdated('test', {
+                    tags: {
+                        _position: { x: 1, y: 0, z: 0 },
+                        abc: '123',
+                        num: 99,
+                        b: true
+                    }
+                })
+            ]);
+
+            const positionTag = atom(atomId(1, 2), file.atom.id, tag('_position'));
+            const positionTagValue = atom(atomId(1, 3, 1), positionTag.id, value({ x: 1, y: 0, z: 0 }));
+
+            const abcTag = atom(atomId(1, 4), file.atom.id, tag('abc'));
+            const abcTagValue = atom(atomId(1, 5, 1), abcTag.id, value('123'));
+
+            const numTag = atom(atomId(1, 6), file.atom.id, tag('num'));
+            const numTagValue = atom(atomId(1, 7, 1), numTag.id, value(99));
+
+            const bTag = atom(atomId(1, 8), file.atom.id, tag('b'));
+            const bTagValue = atom(atomId(1, 9, 1), bTag.id, value(true));
+
+            expect(result.map(ref => ref.atom)).toEqual([
+                positionTag,
+                positionTagValue,
+                abcTag,
+                abcTagValue,
+                numTag,
+                numTagValue,
+                bTag,
+                bTagValue
+            ]);
+        });
+
+        it('should handle file added events', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+            const newFile = createFile('test', <any>{
+                abc: 'def',
+                num: 5
+            });
+
+            const root = tree.root();
+            const result = tree.addEvents([
+                fileAdded(newFile)
+            ]);
+
+            const fileAtom = atom(atomId(1, 2), root.atom.id, file('test', 'object'));
+            const abcTag = atom(atomId(1, 3), fileAtom.id, tag('abc'));
+            const abcTagValue = atom(atomId(1, 4, 1), abcTag.id, value('def'));
+
+            const numTag = atom(atomId(1, 5), fileAtom.id, tag('num'));
+            const numTagValue = atom(atomId(1, 6, 1), numTag.id, value(5));
+
+            expect(result.map(ref => ref.atom)).toEqual([
+                fileAtom,
+                abcTag,
+                abcTagValue,
+                numTag,
+                numTagValue
+            ]);
+            expect(tree.weave.atoms.map(ref => ref.atom)).toEqual([
+                root.atom,
+                fileAtom,
+                numTag,
+                numTagValue,
+                abcTag,
+                abcTagValue
+            ]);
+        });
+
+        it('should handle file removed events', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            const root = tree.root();
+            const file = tree.file('test', 'object');
+
+            const result = tree.addEvents([
+                fileRemoved('test')
+            ]);
+
+            const deleteFile = atom(atomId(1, 3, 1), file.atom.id, del());
+
+            expect(result.map(ref => ref.atom)).toEqual([
+                deleteFile
+            ]);
+            expect(tree.weave.atoms.map(ref => ref.atom)).toEqual([
+                root.atom,
+                file.atom,
+                deleteFile,
+            ]);
+        });
+
+        it('should handle transaction events', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            const root = tree.root();
+            const newFile = tree.file('test', 'object');
+            const newFile2 = createFile('test', <any>{
+                abc: 'def',
+                num: 5
+            });
+
+            const result = tree.addEvents([
+                transaction([
+                    fileRemoved('test'),
+                    fileAdded(newFile2)
+                ])
+            ]);
+
+            const deleteFile = atom(atomId(1, 3, 1), newFile.atom.id, del());
+
+            const fileAtom = atom(atomId(1, 4), root.atom.id, file('test', 'object'));
+            const abcTag = atom(atomId(1, 5), fileAtom.id, tag('abc'));
+            const abcTagValue = atom(atomId(1, 6, 1), abcTag.id, value('def'));
+
+            const numTag = atom(atomId(1, 7), fileAtom.id, tag('num'));
+            const numTagValue = atom(atomId(1, 8, 1), numTag.id, value(5));
+
+            expect(result.map(ref => ref.atom)).toEqual([
+                deleteFile,
+                fileAtom,
+                abcTag,
+                abcTagValue,
+                numTag,
+                numTagValue
+            ]);
+            expect(tree.weave.atoms.map(ref => ref.atom)).toEqual([
+                root.atom,
+                fileAtom,
+                numTag,
+                numTagValue,
+                abcTag,
+                abcTagValue,
+                newFile.atom,
+                deleteFile,
+            ]);
+        });
+
+        it('should add files from add_state events', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            const root = tree.root();
+            const newFile = createFile('test', <any>{
+                abc: 'def',
+                num: 5
+            });
+
+            const result = tree.addEvents([
+                addState({
+                    'test': newFile
+                })
+            ]);
+
+            const fileAtom = atom(atomId(1, 2), root.atom.id, file('test', 'object'));
+            const abcTag = atom(atomId(1, 3), fileAtom.id, tag('abc'));
+            const abcTagValue = atom(atomId(1, 4, 1), abcTag.id, value('def'));
+
+            const numTag = atom(atomId(1, 5), fileAtom.id, tag('num'));
+            const numTagValue = atom(atomId(1, 6, 1), numTag.id, value(5));
+
+            expect(result.map(ref => ref.atom)).toEqual([
+                fileAtom,
+                abcTag,
+                abcTagValue,
+                numTag,
+                numTagValue
+            ]);
+            expect(tree.weave.atoms.map(ref => ref.atom)).toEqual([
+                root.atom,
+                fileAtom,
+                numTag,
+                numTagValue,
+                abcTag,
+                abcTagValue
+            ]);
+        });
+
+        it('should update files from add_state events', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            const root = tree.root();
+            const newFile = createFile('test', <any>{
+                abc: 'def',
+                num: 5
+            });
+
+            const result = tree.addEvents([
+                addState({
+                    'test': newFile
+                })
+            ]);
 
             const fileAtom = atom(atomId(1, 2), root.atom.id, file('test', 'object'));
             const abcTag = atom(atomId(1, 3), fileAtom.id, tag('abc'));

@@ -536,12 +536,12 @@ describe('FileCalculations', () => {
     describe('tagsOnFile()', () => {
         it('should return the tag names that are on objects', () => {
 
-            expect(tagsOnFile(createFile('test'))).toEqual([
+            expect(tagsOnFile('object', createFile('test'))).toEqual([
                 '_position',
                 '_workspace'
             ]);
 
-            expect(tagsOnFile(createFile('test', {
+            expect(tagsOnFile('object', createFile('test', {
                 _position: { x: 0, y: 0, z: 0 },
                 _workspace: null,
                 test: 123,
@@ -555,7 +555,7 @@ describe('FileCalculations', () => {
         });
 
         it('should return the property names that are on workspaces', () => {
-            expect(tagsOnFile(createWorkspace('test'))).toEqual([
+            expect(tagsOnFile('workspace', createWorkspace('test'))).toEqual([
                 'position',
                 'size',
                 'grid',
@@ -963,7 +963,7 @@ describe('FileCalculations', () => {
         });
     });
 
-    describe('duplicateFile', () => {
+    describe('duplicateFile()', () => {
         it('should return a copy with a different ID', () => {
             const first: Object = createFile();
             first.tags._workspace = 'abc';

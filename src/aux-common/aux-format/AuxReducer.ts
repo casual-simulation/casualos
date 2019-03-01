@@ -1,5 +1,5 @@
 import { AtomReducer } from "../causal-trees/AtomReducer";
-import { AuxOp, AuxOpType, TagOp, FileOp, InsertOp, DeleteOp } from "./AuxOpTypes";
+import { AuxOp, AuxOpType, TagOp, FileOp, InsertOp, DeleteOp, ValueOp } from "./AuxOpTypes";
 import { Weave, WeaveReference } from '../causal-trees/Weave';
 import { FilesState, File, Object } from "../Files";
 import { createFile, createWorkspace } from "../Files/FileCalculations";
@@ -22,7 +22,7 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState> {
             if (ref.atom.value.type === AuxOpType.file) {
                 const id = ref.atom.value.id;
                 if (typeof value[id] === 'undefined') {
-                    value[id] = this._evalFile(tree, ref, ref.atom.value);
+                    value[id] = this._evalFile(tree, <WeaveReference<FileOp>>ref, ref.atom.value);
                 }
             }
         }
@@ -30,7 +30,7 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState> {
         return value;
     }
 
-    private _evalFile(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<AuxOp>, file: FileOp): AuxFile {
+    private _evalFile(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<FileOp>, file: FileOp): AuxFile {
         const id = file.id;
         let data: any = {};
         let meta: AuxFileMetadata = {
@@ -49,7 +49,7 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState> {
                     let { value, meta: valueMeta } = this._evalTag(tree, ref, ref.atom.value);
                     data[name] = value;
                     meta.tags[name] = {
-                        ref: ref,
+                        ref: <WeaveReference<TagOp>>ref,
                         name: nameMeta,
                         value: valueMeta
                     };
@@ -86,7 +86,7 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState> {
             const ref = tree.next();
             if (!hasValue && ref.atom.value.type === AuxOpType.value) {
                 hasValue = true;
-                meta.ref = ref;
+                meta.ref = <WeaveReference<ValueOp>>ref;
                 const { value: val, meta: valMeta } = this.evalSequence(tree, ref, ref.atom.value.value);
                 value = val;
                 meta.sequence = valMeta;

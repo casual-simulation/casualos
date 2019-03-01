@@ -1,4 +1,4 @@
-import { Object, File, Workspace, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_GRID_SCALE, DEFAULT_USER_MODE, DEFAULT_WORKSPACE_COLOR, UserMode } from './File';
+import { Object, File, Workspace, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_GRID_SCALE, DEFAULT_USER_MODE, DEFAULT_WORKSPACE_COLOR, UserMode, FileType } from './File';
 import uuid from 'uuid/v4';
 import {
     flatMap,
@@ -433,8 +433,8 @@ export function newSelectionId() {
  * Gets the list of tags that are on the given file.
  * @param file 
  */
-export function tagsOnFile(file: File): string[] {
-    if (file.type === 'object') {
+export function tagsOnFile(type: FileType, file: PartialFile): string[] {
+    if (type === 'object') {
         let tags = keys(file.tags);
         return tags;
     } else {
@@ -442,6 +442,28 @@ export function tagsOnFile(file: File): string[] {
         let tags = keys(file);
         return difference(tags, ignored);
     }
+}
+
+/**
+ * Gets the specified tag from the specified file.
+ * @param file The file that the tag should be retrieved from.
+ * @param tag The tag to retrieve.
+ */
+export function getTag(type: FileType, file: PartialFile, tag: string) {
+    if(type === 'object') {
+        return file.tags[tag];
+    } else {
+        return (<any>file)[tag];
+    }
+}
+
+/**
+ * Gets the specified tag from the specified file.
+ * @param file The file that the tag should be retrieved from.
+ * @param tag The tag to retrieve.
+ */
+export function getFileTag(file: File, tag: string) {
+    return getTag(file.type, file, tag);
 }
 
 /**
