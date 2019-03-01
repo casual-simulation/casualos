@@ -522,6 +522,8 @@ describe('Weave', () => {
             const atoms = newWeave.atoms.map(a => a.atom);
 
             const site1 = newWeave.getSite(1);
+            expect(site1.start).toBe(0);
+            expect(site1.end).toBe(6);
             expect(site1.get(0).atom).toEqual(root);
             expect(site1.get(1).atom).toEqual(child1);
             expect(site1.get(2).atom).toEqual(child2);
@@ -531,6 +533,8 @@ describe('Weave', () => {
             expect(site1.length).toBe(6);
 
             const site2 = newWeave.getSite(2);
+            expect(site2.start).toBe(6);
+            expect(site2.end).toBe(10);
             expect(site2.get(0).atom).toEqual(child4);
             expect(site2.get(1).atom).toEqual(child5);
             expect(site2.get(2).atom).toEqual(child7);

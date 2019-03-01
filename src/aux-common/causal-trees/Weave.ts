@@ -216,8 +216,6 @@ export class Weave<TOp extends AtomOp> {
                 this._atoms.push(...finalAtoms);
                 newAtoms.push(...finalAtoms);
 
-                this._yarn.length = this._yarn.length + finalAtoms.length;
-
                 for (let b = 0; b < finalAtoms.length; b++) {
                     const ref = finalAtoms[b];
                     const site = this.getSite(ref.atom.id.site);
