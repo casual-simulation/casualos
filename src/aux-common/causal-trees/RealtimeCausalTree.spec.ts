@@ -142,7 +142,7 @@ describe('RealtimeCausalTree', () => {
             expect(updated.length).toBe(1);
         });
 
-        it('should be based on the largest site ID from the known sites list', async () => {
+        it('should be based on the first unused site ID from the known sites list', async () => {
             knownSites.push(site(99));
 
             await realtime.init();

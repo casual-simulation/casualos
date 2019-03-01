@@ -283,7 +283,7 @@ describe('Weave', () => {
 
             // We're using the actual hash values to ensure that they never change
             // without us knowing.
-            expect(firstVersion.hash).toEqual('98838b193c588c5a4c06165410ad0ed5dae49218e3dcb730c17a3ce8e8b1b007');
+            expect(firstVersion.hash).toEqual('81fbf0adf3747b3758a436b132ec6d9be8b69191e926badae90ce3e8da43cb82');
             expect(firstVersion.hash).toEqual(secondVersion.hash);
         });
 

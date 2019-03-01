@@ -2,8 +2,7 @@ import { Atom, AtomId, AtomOp, StorableAtomId, idEquals } from "./Atom";
 import { VirtualArray } from "./VirtualArray";
 import { sortBy, findIndex, keys, find } from "lodash";
 import { WeaveVersion, WeaveSiteVersion } from "./WeaveVersion";
-import { sha256 } from 'sha.js';
-import stringify from 'fast-json-stable-stringify';
+import { getHash, getHashBuffer } from './Hash';
 
 /**
  * Creates a weave reference.
@@ -12,10 +11,16 @@ import stringify from 'fast-json-stable-stringify';
  * @param causeIndex 
  */
 export function reference<T extends AtomOp>(atom: Atom<T>, index: number, causeIndex: number): WeaveReference<T> {
+    const hash = getHashBuffer([atom, index, causeIndex]);
     return {
         atom,
         index,
-        causeIndex
+        causeIndex,
+        
+        // Read only 32 bits of the hash.
+        // This should be good enough to prevent collisions for weaves 
+        // of up to ~2 billion atoms instead of never.
+        checksum: hash.readUInt32BE(0)
     };
 }
 
@@ -41,6 +46,12 @@ export interface WeaveReference<TOp extends AtomOp> {
      * The index in the site that is this atom's cause.
      */
     causeIndex: number;
+
+    /**
+     * The checksum for this reference.
+     * Used to verify that a reference is valid.
+     */
+    checksum: number;
 }
 
 /**
@@ -188,10 +199,7 @@ export class Weave<TOp extends AtomOp> {
      * Gets the hash of the weave.
      */
     getHash(): string {
-        const json = stringify(this.atoms);
-        let sha = new sha256();
-        sha.update(json);
-        return sha.digest('hex');
+        return getHash(this.atoms);
     }
 
     /**
