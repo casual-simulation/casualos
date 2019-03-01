@@ -86,17 +86,6 @@ describe('FileCalculations', () => {
     
     describe('calculateStateDiff()', () => {
 
-        it('should return the same previous and current states', () => {
-            const prevState: FilesState = {};
-            const currState: FilesState = {};
-
-            const result = calculateStateDiff(prevState, currState);
-
-            expect(result.prev).toBe(prevState);
-            expect(result.current).toBe(currState);
-            expect(prevState).not.toBe(currState);
-        });
-
         it('should return no changes', () => {
             const prevState: FilesState = {
                 'test': {

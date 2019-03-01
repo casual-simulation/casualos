@@ -3,12 +3,52 @@ import { RealtimeCausalTree, RealtimeChannel, WeaveReference, AtomOp, storedTree
 import { auxCausalTreeFactory } from "./AuxCausalTreeFactory";
 import { TestCausalTreeStore } from "../causal-trees/test/TestCausalTreeStore";
 import { TestChannelConnection } from "../causal-trees/test/TestChannelConnection";
-import { fileChangeObservables } from "./AuxTreeCalculations";
+import { fileChangeObservables, getAtomFile } from "./AuxTreeCalculations";
 import { AuxCausalTree } from "./AuxCausalTree";
 import { TestScheduler } from 'rxjs/testing';
 import { AsyncScheduler } from "rxjs/internal/scheduler/AsyncScheduler";
 
 describe('AuxTreeCalculations', () => {
+
+    describe('getAtomFile()', () => {
+        it('should get the file that the given tag is under', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            tree.root();
+            const file = tree.file('test', 'object');
+            const test = tree.tag('test', file.atom);
+            const val = tree.val('123', test.atom);
+
+            const result = getAtomFile(tree.weave, val);
+
+            expect(result).toBe(file);
+        });
+
+        it('should handle file deletions', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            const root = tree.root();
+            const file = tree.file('test', 'object');
+            const del = tree.delete(file.atom);
+
+            const result = getAtomFile(tree.weave, del);
+
+            expect(result).toBe(file);
+        });
+
+        it('should return null if it is not childed to a file', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            const root = tree.root();
+            const file = tree.file('test', 'object');
+            const test = tree.tag('test', file.atom);
+            const val = tree.val('123', test.atom);
+
+            const result = getAtomFile(tree.weave, root);
+
+            expect(result).toBe(null);
+        });
+    });
      
     describe('fileChangeObservables()', () => {
         let scheduler: TestScheduler;

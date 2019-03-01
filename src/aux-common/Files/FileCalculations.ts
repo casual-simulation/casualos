@@ -62,9 +62,6 @@ export interface FileCalculationContext {
  * to FilesState objects.
  */
 export interface FilesStateDiff {
-    prev: FilesState;
-    current: FilesState;
-    
     addedFiles: File[];
     removedFiles: File[];
     updatedFiles: File[];
@@ -566,8 +563,6 @@ export function calculateStateDiff(prev: FilesState, current: FilesState, events
     // }
 
     let diff: FilesStateDiff = {
-        prev: prev,
-        current: current,
         addedFiles: [],
         removedFiles: [],
         updatedFiles: []

@@ -1,14 +1,14 @@
 
-import { Atom, WeaveReference, AtomOp, PrecalculatedOp, precalculatedOp, RealtimeCausalTree } from "../causal-trees";
-import { AuxFile, AuxTagMetadata, AuxObject } from "./AuxState";
-import { InsertOp, DeleteOp, AuxOp } from "./AuxOpTypes";
+import { Atom, WeaveReference, AtomOp, PrecalculatedOp, precalculatedOp, RealtimeCausalTree, Weave } from "../causal-trees";
+import { AuxFile, AuxTagMetadata, AuxObject, AuxState } from "./AuxState";
+import { InsertOp, DeleteOp, AuxOp, AuxOpType, FileOp } from "./AuxOpTypes";
 import { calculateSequenceRef, calculateSequenceRefs } from "./AuxReducer";
 import { insert, del } from "./AuxAtoms";
 import { AuxCausalTree } from "./AuxCausalTree";
 import { map, startWith, pairwise, flatMap, bufferTime } from "rxjs/operators";
-import { flatMap as mapFlat } from 'lodash';
+import { flatMap as mapFlat, values } from 'lodash';
 import { sortBy } from "lodash";
-import { File, Object, calculateStateDiff, FilesState, PartialFile, createFile } from "../Files";
+import { File, Object, calculateStateDiff, FilesState, PartialFile, createFile, FilesStateDiff } from "../Files";
 import uuid from "uuid/v4";
 
 /**
@@ -16,22 +16,46 @@ import uuid from "uuid/v4";
  * @param connection The channel connection.
  */
 export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
-    const states = tree.onUpdated.pipe(
+
+    const stateDiffs = tree.onUpdated.pipe(
         bufferTime(50),
-        map(e => ({ state: tree.tree.value, event: <WeaveReference<AuxOp>[]>null })), 
-        startWith({ state: <FilesState>null, event: <WeaveReference<AuxOp>[]>null })
-    );
+        map(e => mapFlat(e)),
+        map(events => {
+            let addedFiles: AuxFile[] = [];
+            let updatedFiles: AuxState = {};
+            let deletedFiles: AuxFile[] = [];
+            events.forEach((e: WeaveReference<AuxOp>) => {
+                if (e.atom.value.type === AuxOpType.file) {
+                    const id = e.atom.value.id;
+                    addedFiles.push(tree.tree.value[id]);
+                    return;
+                } else if(e.atom.value.type === AuxOpType.delete) {
+                    let cause = tree.tree.weave.getAtom(e.atom.cause, e.causeIndex);
+                    if (cause.atom.value.type === AuxOpType.file) {
+                        const id = cause.atom.value.id;
+                        deletedFiles.push(tree.tree.value[id]);
+                        return;
+                    }
+                }
 
-    // pair new states with their previous values
-    const statePairs = states.pipe(pairwise());
+                // Some update happened
+                const file = getAtomFile(tree.tree.weave, e);
+                if (file) {
+                    const id = file.atom.value.id;
+                    if(!updatedFiles[id]) {
+                        updatedFiles[id] = tree.tree.value[id];
+                    }
+                }
+            });
 
-    // calculate the difference between the current state and new state.
-    const stateDiffs = statePairs.pipe(
-        map(pair => {
-            const prev = pair[0];
-            const curr = pair[1];
 
-            return calculateStateDiff(prev.state, curr.state, curr.event);
+            let diff: FilesStateDiff = {
+                addedFiles: addedFiles,
+                removedFiles: deletedFiles,
+                updatedFiles: values(updatedFiles)
+            };
+
+            return diff;
         })
     );
 
@@ -51,6 +75,20 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
         fileRemoved,
         fileUpdated
     };
+}
+
+/**
+ * Gets the File Atom that the given atom is childed under.
+ */
+export function getAtomFile(weave: Weave<AuxOp>, ref: WeaveReference<AuxOp>): WeaveReference<FileOp> {
+    if (ref.atom.value.type === AuxOpType.file) {
+        return <WeaveReference<FileOp>>ref;
+    }
+    if (!ref.atom.cause) {
+        return null;
+    }
+    const cause = weave.getAtom(ref.atom.cause, ref.causeIndex);
+    return getAtomFile(weave, cause);
 }
 
 /**
