@@ -22,10 +22,11 @@ module.exports = {
   },
   module: {
     rules: [
-      {
-        test: /\.worker\.ts$/,
-        use: 'worker-loader'
-      },
+        // TODO: Re-enable sometime
+    //   {
+    //     test: /\.worker\.ts$/,
+    //     use: 'worker-loader'
+    //   },
       {
         test: /\.vue$/,
         use: 'vue-loader',
