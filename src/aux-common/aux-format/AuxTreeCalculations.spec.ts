@@ -5,11 +5,27 @@ import { TestCausalTreeStore } from "../causal-trees/test/TestCausalTreeStore";
 import { TestChannelConnection } from "../causal-trees/test/TestChannelConnection";
 import { fileChangeObservables } from "./AuxTreeCalculations";
 import { AuxCausalTree } from "./AuxCausalTree";
+import { TestScheduler } from 'rxjs/testing';
+import { AsyncScheduler } from "rxjs/internal/scheduler/AsyncScheduler";
 
 describe('AuxTreeCalculations', () => {
      
     describe('fileChangeObservables()', () => {
+        let scheduler: TestScheduler;
+
+        beforeEach(() => {
+            scheduler = new TestScheduler((actual, expected) => {
+                expect(actual).toEqual(expected);
+            });
+            AsyncScheduler.delegate = scheduler;
+        });
+
+        afterEach(() => {
+            AsyncScheduler.delegate = null;
+        });
+
         it('should sort added files so workspaces are first', async () => {
+            
             const factory = auxCausalTreeFactory();
             const store = new TestCausalTreeStore();
             const connection = new TestChannelConnection();
@@ -18,19 +34,18 @@ describe('AuxTreeCalculations', () => {
                 type: 'aux'
             }, connection);
             const tree = new RealtimeCausalTree<AuxCausalTree>(factory, store, channel);
-
             
             let stored = new AuxCausalTree(storedTree(site(1)));
             stored.root();
-
+            
             await store.update('test', stored.export());
             await tree.init();
             await connection.flushPromises();
-
+            
             const { fileAdded } = fileChangeObservables(tree);
-
+            
             const fileIds: string[] = [];
-
+            
             fileAdded.subscribe(file => {
                 fileIds.push(file.id);
             });
@@ -38,7 +53,7 @@ describe('AuxTreeCalculations', () => {
             tree.tree.file('abc', 'object');
             tree.tree.file('def', 'object');
 
-            await Promise.resolve();
+            scheduler.flush();
 
             expect(fileIds).toEqual([
                 'abc',
@@ -53,7 +68,7 @@ describe('AuxTreeCalculations', () => {
             const channel = new RealtimeChannel<WeaveReference<AtomOp>>({
                 id: 'test',
                 type: 'aux'
-            }, connection);
+            }, connection); 
             const tree = new RealtimeCausalTree<AuxCausalTree>(factory, store, channel);
 
             let stored = new AuxCausalTree(storedTree(site(1)));
@@ -73,13 +88,11 @@ describe('AuxTreeCalculations', () => {
                 fileIds.push(file.id);
             });
 
-            // tree.tree.root();
-            // tree.tree.file('test', 'object');
-            // tree.tree.file('zdf', 'object');
+            scheduler.flush();
 
             expect(fileIds).toEqual([
-                'zdf',
-                'test'
+                'test',
+                'zdf'
             ]);
         });
     });

@@ -72,15 +72,19 @@ describe('AuxCausalTree', () => {
 
                 const first = site1.file('fileId', 'object');
                 const firstTag = site1.tag('test', first.atom);
+                const firstTagValue = site1.val(null, firstTag.atom);
 
                 site2.add(first.atom);
                 site2.add(firstTag.atom);
+                site2.add(firstTagValue.atom);
 
                 const second = site2.file('fileId', 'object');
                 const secondTag = site2.tag('other', second.atom);
+                const secondTagValue = site2.val(null, secondTag.atom);
 
                 site1.add(second.atom);
                 site1.add(secondTag.atom);
+                site1.add(secondTagValue.atom);
                 
                 expect(site1.value).toMatchObject({
                     'fileId': {
@@ -117,6 +121,22 @@ describe('AuxCausalTree', () => {
                 expect(site1.value).toEqual({});
             });
 
+            it('should use defaults for tags that dont have values', () => {
+                let site1 = new AuxCausalTree(storedTree(site(1)));
+                const root = site1.root();
+
+                const first = site1.file('fileId', 'workspace');
+                const sizeTag = site1.tag('size', first.atom);
+
+                expect(site1.value).toMatchObject({
+                    'fileId': {
+                        id: 'fileId',
+                        type: 'workspace',
+                        size: 1
+                    }
+                });
+            });
+
             it('should use last write wins for tags', () => {
                 let site1 = new AuxCausalTree(storedTree(site(1)));
                 let site2 = new AuxCausalTree(storedTree(site(2)));
@@ -147,10 +167,6 @@ describe('AuxCausalTree', () => {
                             _workspace: null,
                             test: '123'
                         },
-                        // metadata: {
-                        //     ref: first,
-                        //     tags: {}
-                        // }
                     }
                 });
             });
@@ -703,6 +719,30 @@ describe('AuxCausalTree', () => {
                 numTagValue,
                 bTag,
                 bTagValue
+            ]);
+        });
+
+        it('should handle nested objects', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            const file = tree.file('test', 'object');
+            tree.updateFile(tree.value['test'], {
+                tags: {
+                    _position: { x: 0, y: 0, z: 0 },
+                }
+            });
+
+            const result = tree.updateFile(tree.value['test'], {
+                tags: {
+                    _position: { x: 1 },
+                }
+            });
+
+            const positionTag = atom(atomId(1, 2), file.atom.id, tag('_position'));
+            const positionTagValue = atom(atomId(1, 4, 1), positionTag.id, value({ x: 1, y: 0, z: 0 }));
+
+            expect(result.map(ref => ref.atom)).toEqual([
+                positionTagValue
             ]);
         });
     });

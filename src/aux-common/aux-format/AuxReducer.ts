@@ -49,13 +49,15 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState> {
             } else if(ref.atom.value.type === AuxOpType.tag) {
                 let { value: name, meta: nameMeta } = this.evalSequence(tree.fork(), ref, ref.atom.value.name);
                 if (name && typeof data[name] === 'undefined') {
-                    let { value, meta: valueMeta } = this._evalTag(tree, ref, ref.atom.value);
-                    data[name] = value;
-                    meta.tags[name] = {
-                        ref: <WeaveReference<TagOp>>ref,
-                        name: nameMeta,
-                        value: valueMeta
-                    };
+                    let { value, meta: valueMeta, hasValue } = this._evalTag(tree, ref, ref.atom.value);
+                    if (hasValue) {
+                        data[name] = value;
+                        meta.tags[name] = {
+                            ref: <WeaveReference<TagOp>>ref,
+                            name: nameMeta,
+                            value: valueMeta
+                        };
+                    }
                 }
             }
         }
@@ -77,7 +79,7 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState> {
         }
     }
 
-    private _evalTag(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<AuxOp>, tag: TagOp): { value: any, meta: AuxValueMetadata } {
+    private _evalTag(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<AuxOp>, tag: TagOp): { value: any, meta: AuxValueMetadata, hasValue: boolean } {
         let value: any = null;
         let hasValue = false;
         let meta: AuxValueMetadata = {
@@ -96,7 +98,7 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState> {
             }
         }
 
-        return { value, meta };
+        return { value, meta, hasValue };
     }
 
     public evalSequence(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<AuxOp>, value: any): {value: string, meta: AuxSequenceMetadata } {

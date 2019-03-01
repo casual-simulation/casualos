@@ -445,7 +445,7 @@ export function tagsOnFile(type: FileType, file: PartialFile): string[] {
 }
 
 /**
- * Gets the specified tag from the specified file.
+ * Gets the specified tag value from the specified file.
  * @param file The file that the tag should be retrieved from.
  * @param tag The tag to retrieve.
  */

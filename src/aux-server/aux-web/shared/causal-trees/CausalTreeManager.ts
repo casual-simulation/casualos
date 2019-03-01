@@ -1,5 +1,5 @@
 import io from 'socket.io-client';
-import CausalTreeWorker from './AuxCausalTree.worker';
+// import CausalTreeWorker from './AuxCausalTree.worker';
 import { WorkerEvent, ValueCalculated } from './WorkerEvents';
 import { SubscriptionLike, Subject, Observable } from 'rxjs';
 import { first, map, filter, tap } from 'rxjs/operators';
@@ -13,7 +13,7 @@ import { BrowserCausalTreeStore } from './BrowserCausalTreeStore';
  */
 export class CausalTreeManager implements SubscriptionLike {
     closed: boolean;
-    private _worker: Worker;
+    // private _worker: Worker;
     private _trees: TreeMap;
     private _events: Subject<MessageEvent>;
     private _socket: typeof io.Socket;
@@ -32,9 +32,9 @@ export class CausalTreeManager implements SubscriptionLike {
         this._factory = auxCausalTreeFactory();
         this._store = new BrowserCausalTreeStore();
         this._events = new Subject<MessageEvent>();
-        this._worker = new CausalTreeWorker();
-        this._worker.onmessage = (msg) => this._onMessage(msg);
-        this._worker.onerror = (err) => this._onError(err);
+        // this._worker = new CausalTreeWorker();
+        // this._worker.onmessage = (msg) => this._onMessage(msg);
+        // this._worker.onerror = (err) => this._onError(err);
         this.closed = false;
     }
 
@@ -71,41 +71,41 @@ export class CausalTreeManager implements SubscriptionLike {
      * This means it won't block the main thread and so won't cause the UI to stutter.
      * @param tree The tree.
      */
-    async calculateTreeValue<T>(tree: RealtimeCausalTree<CausalTree<AtomOp, T>>): Promise<T> {
-        const result = await this._request<ValueCalculated>({
-            type: 'calculate',
-            id: tree.id,
-            treeType: tree.channel.info.type,
-            weave: tree.tree.weave.atoms
-        });
+    // async calculateTreeValue<T>(tree: RealtimeCausalTree<CausalTree<AtomOp, T>>): Promise<T> {
+    //     const result = await this._request<ValueCalculated>({
+    //         type: 'calculate',
+    //         id: tree.id,
+    //         treeType: tree.channel.info.type,
+    //         weave: tree.tree.weave.atoms
+    //     });
 
-        return result.value;
-    }
+    //     return result.value;
+    // }
 
     unsubscribe(): void {
         if (!this.closed) {
-            this._worker.terminate();
+            // this._worker.terminate();
             this._events.unsubscribe();
             this.closed = true;
         }
     }
 
-    private _onMessage(msg: MessageEvent) {
-        this._events.next(msg);
-    }
+    // private _onMessage(msg: MessageEvent) {
+    //     this._events.next(msg);
+    // }
 
-    private _onError(err: ErrorEvent) {
-        this._events.error(err);
-    }
+    // private _onError(err: ErrorEvent) {
+    //     this._events.error(err);
+    // }
 
-    private _request<T>(event: WorkerEvent): Promise<T> {
-        this._worker.postMessage(event);
+    // private _request<T>(event: WorkerEvent): Promise<T> {
+    //     this._worker.postMessage(event);
 
-        return this._events.pipe(
-            first(m => m.data.type === event.type),
-            map(m => <T>m.data)
-        ).toPromise();
-    }
+    //     return this._events.pipe(
+    //         first(m => m.data.type === event.type),
+    //         map(m => <T>m.data)
+    //     ).toPromise();
+    // }
 }
 
 interface TreeMap {

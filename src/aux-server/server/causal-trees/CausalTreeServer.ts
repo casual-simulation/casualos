@@ -45,7 +45,7 @@ export class CausalTreeServer {
 
                     const eventName = `event_${info.id}`;
                     socket.on(eventName, async (event: WeaveReference<AtomOp>) => {
-                        console.log(event);
+                        // console.log(event);
                         tree.add(event.atom);
                         socket.to(info.id).emit(eventName, event);
 

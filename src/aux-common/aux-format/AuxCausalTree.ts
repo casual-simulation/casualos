@@ -10,6 +10,7 @@ import { StoredCausalTree } from '../causal-trees/StoredCausalTree';
 import { AuxState, AuxTagMetadata, AuxValueMetadata, AuxFile } from './AuxState';
 import { getTagMetadata, insertIntoTagValue, insertIntoTagName, deleteFromTagValue, deleteFromTagName } from './AuxTreeCalculations';
 import { flatMap, keys } from 'lodash';
+import { merge } from '../utils';
 
 /**
  * Defines a Causal Tree for aux files.
@@ -182,8 +183,12 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState> {
         let tags = tagsOnFile(file.type, newData);
         let refs = flatMap(tags, t => {
             const tagMeta = file.metadata.tags[t];
-            const newVal = getTag(file.type, newData, t);
+            let newVal = getTag(file.type, newData, t);
             if (tagMeta) {
+                const oldVal = getFileTag(file, t);
+                if (typeof newVal === 'object' && !Array.isArray(newVal) && !Array.isArray(oldVal)) {
+                    newVal = merge(oldVal, newVal);
+                }
                 // tag is on the file
                 const val = this.val(newVal, tagMeta.ref.atom);
                 return [val];

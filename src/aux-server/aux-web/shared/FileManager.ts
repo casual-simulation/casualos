@@ -130,6 +130,7 @@ export class FileManager {
   private _mergeStatus: MergeStatus<FilesState> = null;
   private _id: string;
   private _aux: RealtimeCausalTree<AuxCausalTree>;
+    _errored: boolean;
 
   private get _allFiles(): File[] {
     return values(this.filesState);
@@ -460,62 +461,72 @@ export class FileManager {
   }
 
   private async _init(id: string) {
-    this._setStatus('Starting...');
+    if(this._errored) {
+        return;
+    }
+    try {
+        this._setStatus('Starting...');
 
-    this._id = id ? `aux-${id}` : 'aux-default';
+        this._id = id ? `aux-${id}` : 'aux-default';
 
-    this._subscriptions = [];
-    this._fileDiscoveredObservable = new ReplaySubject<AuxFile>();
-    this._fileRemovedObservable = new ReplaySubject<string>();
-    this._fileUpdatedObservable = new Subject<AuxFile>();
-    this._selectedFilesUpdated =
-        new BehaviorSubject<SelectedFilesUpdatedEvent>({files: []});
-    this._disconnectedObservable = new Subject<FilesState>();
-    this._reconnectedObservable = new Subject<MergedObject<FilesState>>();
-    this._resyncedObservable = new Subject<boolean>();
-    this._syncFailedObservable = new Subject<MergeStatus<FilesState>>();
-    
-    await this._treeManager.init();
+        this._subscriptions = [];
+        this._fileDiscoveredObservable = new ReplaySubject<AuxFile>();
+        this._fileRemovedObservable = new ReplaySubject<string>();
+        this._fileUpdatedObservable = new Subject<AuxFile>();
+        this._selectedFilesUpdated =
+            new BehaviorSubject<SelectedFilesUpdatedEvent>({files: []});
+        this._disconnectedObservable = new Subject<FilesState>();
+        this._reconnectedObservable = new Subject<MergedObject<FilesState>>();
+        this._resyncedObservable = new Subject<boolean>();
+        this._syncFailedObservable = new Subject<MergeStatus<FilesState>>();
+        
+        await this._treeManager.init();
 
-    this._aux = await this._treeManager.getTree<AuxCausalTree>({
-        id: this._id,
-        type: 'aux'
-    });
-    this._subscriptions.push(this._aux.onError.subscribe(err => console.error(err)));
+        this._aux = await this._treeManager.getTree<AuxCausalTree>({
+            id: this._id,
+            type: 'aux'
+        });
+        this._subscriptions.push(this._aux.onError.subscribe(err => console.error(err)));
 
-    await this._aux.init();
-    await this._aux.onUpdated.pipe(rxFirst()).toPromise();
+        await this._aux.init();
+        await this._aux.onUpdated.pipe(rxFirst()).toPromise();
 
-    await this._initUserFile();
-    await this._initGlobalsFile();
+        console.log('[FileManager] Got Tree:', this._aux.tree.site.id);
 
-    const { fileAdded, fileRemoved, fileUpdated } = fileChangeObservables(this._aux);
+        await this._initUserFile();
+        await this._initGlobalsFile();
 
-    this._subscriptions.push(fileAdded.subscribe(this._fileDiscoveredObservable));
-    this._subscriptions.push(fileRemoved.subscribe(this._fileRemovedObservable));
-    this._subscriptions.push(fileUpdated.subscribe(this._fileUpdatedObservable));
-    const alreadySelected = this.selectedObjects;
-    const alreadySelectedObservable = from(alreadySelected);
+        const { fileAdded, fileRemoved, fileUpdated } = fileChangeObservables(this._aux);
 
-    const allFilesSelected = alreadySelectedObservable;
+        this._subscriptions.push(fileAdded.subscribe(this._fileDiscoveredObservable));
+        this._subscriptions.push(fileRemoved.subscribe(this._fileRemovedObservable));
+        this._subscriptions.push(fileUpdated.subscribe(this._fileUpdatedObservable));
+        const alreadySelected = this.selectedObjects;
+        const alreadySelectedObservable = from(alreadySelected);
 
-    const allFilesSelectedUpdatedAddedAndRemoved = mergeObservables(
-        allFilesSelected, 
-        fileAdded.pipe(map(f => f.id)),
-        fileUpdated.pipe(map(f => f.id)), 
-        fileRemoved);
+        const allFilesSelected = alreadySelectedObservable;
 
-    const allSelectedFilesUpdated =
-        allFilesSelectedUpdatedAddedAndRemoved.pipe(map(file => {
-          const selectedFiles = this.selectedObjects;
-          return {files: selectedFiles};
-        }));
+        const allFilesSelectedUpdatedAddedAndRemoved = mergeObservables(
+            allFilesSelected, 
+            fileAdded.pipe(map(f => f.id)),
+            fileUpdated.pipe(map(f => f.id)), 
+            fileRemoved);
 
-    this._subscriptions.push(allSelectedFilesUpdated.subscribe(this._selectedFilesUpdated));
+        const allSelectedFilesUpdated =
+            allFilesSelectedUpdatedAddedAndRemoved.pipe(map(file => {
+            const selectedFiles = this.selectedObjects;
+            return {files: selectedFiles};
+            }));
 
-    this._setStatus('Initialized.');
+        this._subscriptions.push(allSelectedFilesUpdated.subscribe(this._selectedFilesUpdated));
 
-    return this._id;
+        this._setStatus('Initialized.');
+
+        return this._id;
+    } catch(ex) {
+        this._errored = true;
+        console.error(ex);
+    }
   }
 
   private async _initUserFile() {
