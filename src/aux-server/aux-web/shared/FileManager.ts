@@ -81,7 +81,8 @@ import {
   pairwise,
   flatMap as rxFlatMap,
   skip,
-  startWith
+  startWith,
+  first as rxFirst
 } from 'rxjs/operators';
 import * as Sentry from '@sentry/browser';
 import uuid from 'uuid/v4';
@@ -92,7 +93,9 @@ import { SentryError } from '@sentry/core';
 import { CausalTreeManager } from './causal-trees/CausalTreeManager';
 import { RealtimeCausalTree } from '@yeti-cgi/aux-common/causal-trees';
 
-export interface SelectedFilesUpdatedEvent { files: Object[]; }
+export interface SelectedFilesUpdatedEvent { 
+    files: AuxObject[];
+}
 
 /**
  * Defines an interface for an object that tracks the status of a merge.
@@ -116,9 +119,9 @@ export class FileManager {
   private _subscriptions: SubscriptionLike[];
   private _status: string;
   private _initPromise: Promise<string>;
-  private _fileDiscoveredObservable: ReplaySubject<File>;
+  private _fileDiscoveredObservable: ReplaySubject<AuxFile>;
   private _fileRemovedObservable: ReplaySubject<string>;
-  private _fileUpdatedObservable: Subject<File>;
+  private _fileUpdatedObservable: Subject<AuxFile>;
   private _selectedFilesUpdated: BehaviorSubject<SelectedFilesUpdatedEvent>;
   private _reconnectedObservable: Subject<MergedObject<FilesState>>;
   private _resyncedObservable: Subject<boolean>;
@@ -157,7 +160,7 @@ export class FileManager {
    * Gets an observable that resolves whenever a new file is discovered.
    * That is, it was created or added by another user.
    */
-  get fileDiscovered(): Observable<File> {
+  get fileDiscovered(): Observable<AuxFile> {
     return this._fileDiscoveredObservable;
   }
 
@@ -173,7 +176,7 @@ export class FileManager {
   /**
    * Gets an observable that resolves whenever a file is updated.
    */
-  get fileUpdated(): Observable<File> {
+  get fileUpdated(): Observable<AuxFile> {
     return this._fileUpdatedObservable;
   }
 
@@ -196,7 +199,7 @@ export class FileManager {
     return null;
   }
 
-  get globalsFile(): Object {
+  get globalsFile(): AuxObject {
     let objs = this.objects.filter((o => o.id === 'globals'));
     if (objs.length > 0) {
       return objs[0];
@@ -375,9 +378,7 @@ export class FileManager {
     const actionData = action(sender.id, receiver.id, eventName);
     const result = calculateActionEvents(this._aux.tree.value, actionData);
 
-    this._aux.tree.addEvents(result);
-
-    // this._files.emit(transaction(result.events));
+    this._aux.tree.addEvents(result.events);
   }
 
   transaction(...events: FileEvent[]) {
@@ -389,7 +390,7 @@ export class FileManager {
    * @param state The state to add.
    */
   addState(state: FilesState) {
-    // this._files.emit(addState(state));
+      this._aux.tree.addEvents([addState(state)]);
   }
 
   // TODO: This seems like a pretty dangerous function to keep around,
@@ -461,12 +462,12 @@ export class FileManager {
   private async _init(id: string) {
     this._setStatus('Starting...');
 
-    this._id = id;
+    this._id = id ? `aux-${id}` : 'aux-default';
 
     this._subscriptions = [];
-    this._fileDiscoveredObservable = new ReplaySubject<File>();
+    this._fileDiscoveredObservable = new ReplaySubject<AuxFile>();
     this._fileRemovedObservable = new ReplaySubject<string>();
-    this._fileUpdatedObservable = new Subject<File>();
+    this._fileUpdatedObservable = new Subject<AuxFile>();
     this._selectedFilesUpdated =
         new BehaviorSubject<SelectedFilesUpdatedEvent>({files: []});
     this._disconnectedObservable = new Subject<FilesState>();
@@ -480,6 +481,10 @@ export class FileManager {
         id: this._id,
         type: 'aux'
     });
+    this._subscriptions.push(this._aux.onError.subscribe(err => console.error(err)));
+
+    await this._aux.init();
+    await this._aux.onUpdated.pipe(rxFirst()).toPromise();
 
     await this._initUserFile();
     await this._initGlobalsFile();
@@ -507,8 +512,6 @@ export class FileManager {
         }));
 
     this._subscriptions.push(allSelectedFilesUpdated.subscribe(this._selectedFilesUpdated));
-
-    await this._aux.init();
 
     this._setStatus('Initialized.');
 

@@ -196,6 +196,16 @@ describe('Weave', () => {
                 a1,
             ]);
         });
+
+        it('should not allow inserting atoms with a cause as the root', () => {
+            let weave = new Weave();
+
+            const a1 = atom(atomId(1, 1), atomId(1, 2), new Op());
+            const ref1 = weave.insert(a1);
+
+            expect(ref1).toBe(null);
+            expect(weave.atoms.map(a => a.atom)).toEqual([]);
+        });
     });
 
     describe('getSite()', () => {

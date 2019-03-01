@@ -57,7 +57,8 @@ import {
   DEFAULT_SCENE_BACKGROUND_COLOR,
   getUserMode,
   createFile,
-  doFilesAppearEqual
+  doFilesAppearEqual,
+  AuxFile
 } from '@yeti-cgi/aux-common';
 import { ArgEvent } from '@yeti-cgi/aux-common/Events';
 import { Time } from '../../shared/scene/Time';
@@ -476,7 +477,7 @@ export default class GameView extends Vue implements IGameView {
     this.fileManager.createWorkspace();
   }
 
-  private async _fileUpdated(file: File, initialUpdate = false) {
+  private async _fileUpdated(file: AuxFile, initialUpdate = false) {
     const obj = this._files[file.id];
     let shouldRemove = false;
     if (obj) {
@@ -514,7 +515,7 @@ export default class GameView extends Vue implements IGameView {
     }
   }
 
-  private async _fileAdded(file: File) {
+  private async _fileAdded(file: AuxFile) {
     if (file.type === 'object' && (file.tags._hidden || file.tags._destroyed) && !file.tags._user) {
       return;
     }

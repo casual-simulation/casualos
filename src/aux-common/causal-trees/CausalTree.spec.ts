@@ -133,6 +133,26 @@ describe('CausalTree', () => {
             expect(tree1.time).toBe(6);
         });
 
+        it('should update the current time even when importing from the same site', () => {
+            let tree1 = new CausalTree(storedTree(site(1)), new Reducer());
+
+            let tree2 = new CausalTree(storedTree(site(1)), new Reducer());
+
+            const root = tree1.factory.create(new Op(), null); // Time 1
+            tree1.add(root);
+            tree2.add(root); // Time 2
+            
+            tree2.factory.updateTime(1);
+
+            tree2.add(tree2.factory.create(new Op(OpType.add), root)); // Time 3
+            tree2.add(tree2.factory.create(new Op(OpType.add), root)); // Time 4
+            tree2.add(tree2.factory.create(new Op(OpType.subtract), root)); // Time 5
+
+            tree1.importWeave(tree2.weave.atoms);
+
+            expect(tree1.time).toBe(6);
+        });
+
         it('should not update the current time when importing duplicates', () => {
             let tree1 = new CausalTree(storedTree(site(1)), new Reducer());
             let tree2 = new CausalTree(storedTree(site(2)), new Reducer());

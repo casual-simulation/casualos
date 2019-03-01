@@ -97,6 +97,13 @@ export class CausalTree<TOp extends AtomOp, TValue> {
     }
 
     /**
+     * Creates a root element on this tree.
+     */
+    root(): WeaveReference<TOp> {
+        throw new Error('Must be implemented in inheriting class');
+    }
+
+    /**
      * Adds the given atom to this Causal Tree's history.
      * @param atom The atom to add to the tree.
      */
@@ -105,10 +112,10 @@ export class CausalTree<TOp extends AtomOp, TValue> {
             this.factory.updateTime(atom.id.timestamp);
         }
         const ref = this.weave.insert(atom);
+        this._value = null;
         if (ref) {
             this._atomAdded.next(ref);
         }
-        this._value = null;
         return ref;
     }
     
@@ -122,7 +129,7 @@ export class CausalTree<TOp extends AtomOp, TValue> {
         const sortedAtoms = sortBy(newAtoms, a => a.atom.id.timestamp);
         for (let i = 0; i < sortedAtoms.length; i++) {
             const ref = sortedAtoms[i];
-            if (ref.atom.id.site !== this.site.id) {
+            if (ref.atom.id.site !== this.site.id || ref.atom.id.timestamp >= this.time) {
                 this.factory.updateTime(ref.atom.id.timestamp);
             }
         }

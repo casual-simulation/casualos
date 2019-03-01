@@ -22,7 +22,10 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState> {
             if (ref.atom.value.type === AuxOpType.file) {
                 const id = ref.atom.value.id;
                 if (typeof value[id] === 'undefined') {
-                    value[id] = this._evalFile(tree, <WeaveReference<FileOp>>ref, ref.atom.value);
+                    const file = this._evalFile(tree, <WeaveReference<FileOp>>ref, ref.atom.value);
+                    if (file) {
+                        value[id] = file;
+                    }
                 }
             }
         }

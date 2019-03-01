@@ -1,5 +1,5 @@
 import { Socket, Server } from 'socket.io';
-import { CausalTreeStore, CausalTreeFactory, CausalTree, AtomOp, RealtimeChannelInfo, storedTree, site, SiteVersionInfo, SiteInfo, ExchangeWeavesResponse, ExchangeWeavesRequest } from '@yeti-cgi/aux-common/causal-trees';
+import { CausalTreeStore, CausalTreeFactory, CausalTree, AtomOp, RealtimeChannelInfo, storedTree, site, SiteVersionInfo, SiteInfo, ExchangeWeavesResponse, ExchangeWeavesRequest, WeaveReference } from '@yeti-cgi/aux-common/causal-trees';
 import { AuxOp } from '@yeti-cgi/aux-common/aux-format';
 import { find } from 'lodash';
 
@@ -44,8 +44,9 @@ export class CausalTreeServer {
                     const tree = await this._getTree(info);
 
                     const eventName = `event_${info.id}`;
-                    socket.on(eventName, async (event) => {
-                        tree.add(event);
+                    socket.on(eventName, async (event: WeaveReference<AtomOp>) => {
+                        console.log(event);
+                        tree.add(event.atom);
                         socket.to(info.id).emit(eventName, event);
 
                         // TODO: Change to batch updates so we're not smashing the DB connection
@@ -114,6 +115,7 @@ export class CausalTreeServer {
                 tree = this._factory.create(info.type, stored);
             } else {
                 tree = this._factory.create(info.type, storedTree(site(1)));
+                tree.root();
             }
             this._treeList[info.id] = tree;
         }

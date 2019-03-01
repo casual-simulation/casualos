@@ -33,3 +33,9 @@ function calculateValue(e: CalculateValue): any {
     weave.import(e.weave);
     return reducer.eval(weave);
 }
+
+export interface WebpackWorker {
+    new (): Worker;
+}
+
+export default (<any>null) as WebpackWorker;

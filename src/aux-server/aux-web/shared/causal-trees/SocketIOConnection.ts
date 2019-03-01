@@ -23,7 +23,7 @@ export class SocketIOConnection implements RealtimeChannelConnection {
         this.closed = false;
         this._socket = socket;
         this._events = new Subject<ConnectionEvent>();
-        this._connected = new BehaviorSubject<boolean>(false);
+        this._connected = new BehaviorSubject<boolean>(socket.connected);
 
         const connected = socketEvent<void>(this._socket, 'connect').pipe(map(()=> true));
         const disconnected = socketEvent<void>(this._socket, 'disconnect').pipe(map(() => false));

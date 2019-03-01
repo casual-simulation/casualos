@@ -56,8 +56,6 @@ import { appManager } from '../shared/AppManager';
 import App from './App/App';
 import Welcome from './Welcome/Welcome';
 import Home from './Home/Home';
-import Editor from './Editor/Editor';
-import MergeConflicts from './MergeConflicts/MergeConflicts';
 import AuxDebug from './AuxDebug/AuxDebug';
 
 // Import the WebXR Polyfill
@@ -66,8 +64,6 @@ import 'webxr-polyfill';
 
 // Setup the Promise shim for browsers that don't support promises.
 polyfill();
-
-
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
@@ -100,23 +96,6 @@ const routes: RouteConfig[] = [
         path: '/:id?',
         name: 'home',
         component: Home,
-    },
-    {
-        path: '/editor/:id?',
-        name: 'editor',
-        component: Editor
-    },
-    {
-        path: '/merge-conflicts/:id?',
-        name: 'merge-conflicts',
-        component: MergeConflicts,
-        beforeEnter: (to, from, next) => {
-            if (appManager.fileManager && appManager.fileManager.mergeStatus) {
-                next();
-            } else {
-                next({ name: 'home', params: { id: appManager.user.channelId } });
-            }
-        }
     },
     {
         path: '/aux-debug/:id?',

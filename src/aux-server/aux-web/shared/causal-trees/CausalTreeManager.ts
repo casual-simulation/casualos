@@ -1,5 +1,5 @@
 import io from 'socket.io-client';
-import CausalTreeWorker from 'CausalTree.worker';
+import CausalTreeWorker from './AuxCausalTree.worker';
 import { WorkerEvent, ValueCalculated } from './WorkerEvents';
 import { SubscriptionLike, Subject, Observable } from 'rxjs';
 import { first, map, filter, tap } from 'rxjs/operators';
@@ -13,7 +13,7 @@ import { BrowserCausalTreeStore } from './BrowserCausalTreeStore';
  */
 export class CausalTreeManager implements SubscriptionLike {
     closed: boolean;
-    private _worker: CausalTreeWorker;
+    private _worker: Worker;
     private _trees: TreeMap;
     private _events: Subject<MessageEvent>;
     private _socket: typeof io.Socket;

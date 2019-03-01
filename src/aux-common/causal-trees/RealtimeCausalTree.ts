@@ -6,7 +6,7 @@ import { CausalTreeStore } from "./CausalTreeStore";
 import { CausalTreeFactory } from "./CausalTreeFactory";
 import { SiteVersionInfo } from "./SiteVersionInfo";
 import { SiteInfo, site } from "./SiteIdInfo";
-import { SubscriptionLike, Subject, Observable } from 'rxjs';
+import { SubscriptionLike, Subject, Observable, ReplaySubject } from 'rxjs';
 import { filter, flatMap, takeWhile, skipWhile, tap, map } from 'rxjs/operators';
 import { maxBy } from 'lodash';
 import { storedTree } from "./StoredCausalTree";
@@ -23,7 +23,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any>> {
     private _store: CausalTreeStore;
     private _channel: RealtimeChannel<WeaveReference<AtomOp>>;
     private _factory: CausalTreeFactory;
-    private _updated: Subject<WeaveReference<AtomOp>[]>;
+    private _updated: ReplaySubject<WeaveReference<AtomOp>[]>;
     private _errors: Subject<any>;
     private _subs: SubscriptionLike[];
 
@@ -80,7 +80,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any>> {
         this._factory = factory;
         this._store = store;
         this._channel = channel;
-        this._updated = new Subject<WeaveReference<AtomOp>[]>();
+        this._updated = new ReplaySubject<WeaveReference<AtomOp>[]>(1);
         this._errors = new Subject<any>();
         this._tree = null;
         this._subs = [];

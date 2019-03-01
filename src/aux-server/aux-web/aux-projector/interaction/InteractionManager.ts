@@ -16,7 +16,8 @@ import {
     objectsAtGridPosition,
     objectsAtWorkspace,
     tagsMatchingFilter,
-    isMinimized
+    isMinimized,
+    AuxObject
 } from '@yeti-cgi/aux-common';
 import { FileClickOperation } from './ClickOperation/FileClickOperation';
 import GameView from '../GameView/GameView';
@@ -388,7 +389,7 @@ export class InteractionManager {
     }
 
     public selectFile(file: File3D) {
-        this._gameView.fileManager.selectFile(<Object>file.file);
+        this._gameView.fileManager.selectFile(<AuxObject>file.file);
     }
 
     /**

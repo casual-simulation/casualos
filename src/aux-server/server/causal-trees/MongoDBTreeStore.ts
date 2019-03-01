@@ -37,7 +37,11 @@ export class MongoDBTreeStore implements CausalTreeStore {
 
     async get<T extends AtomOp>(id: string): Promise<StoredCausalTree<T>> {
         const wrapper: StorageWrapper<T> = await this._collection.findOne({ id: id });
-        return wrapper.tree;
+        if (wrapper) {
+            return wrapper.tree;
+        } else {
+            return null;
+        }
     }
 }
 

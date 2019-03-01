@@ -106,11 +106,13 @@ export class Server {
         this._http.listen(this._config.httpPort, () => console.log(`Server listening on port ${this._config.httpPort}!`));
     }
 
-    private _configureSocketServices() {
+    private async _configureSocketServices() {
         this._channelServer = new ChannelServer(this._config.channels, this._socket, this._mongoClient);
+        const store = new MongoDBTreeStore(this._mongoClient, this._config.trees.dbName);
+        await store.init();
         this._treeServer = new CausalTreeServer(
             this._socket,
-            new MongoDBTreeStore(this._mongoClient, this._config.trees.dbName), 
+            store, 
             auxCausalTreeFactory());
 
         this._socket.on('connection', (socket) => {

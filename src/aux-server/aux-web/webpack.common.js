@@ -23,6 +23,10 @@ module.exports = {
   module: {
     rules: [
       {
+        test: /\.worker\.ts$/,
+        use: 'worker-loader'
+      },
+      {
         test: /\.vue$/,
         use: 'vue-loader',
         exclude: /node_modules/
@@ -65,10 +69,6 @@ module.exports = {
           /aux-common/
         ],
         enforce: 'pre'
-      },
-      {
-        test: /\.worker\.ts$/,
-        use: 'worker-loader'
       },
     ]
   },

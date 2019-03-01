@@ -80,6 +80,8 @@ describe('RealtimeCausalTree', () => {
                 } else {
                     return true;
                 }
+            } else if(name === 'join_channel') {
+                return null;
             } else {
                 localWeaves.push(data.weave);
                 return weave;

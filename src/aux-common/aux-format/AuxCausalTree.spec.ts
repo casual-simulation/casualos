@@ -59,32 +59,6 @@ describe('AuxCausalTree', () => {
                         defaultHeight: DEFAULT_WORKSPACE_HEIGHT,
                         gridScale: DEFAULT_WORKSPACE_GRID_SCALE,
                         color: DEFAULT_WORKSPACE_COLOR,
-                        // metadata: {
-                        //     ref: file,
-                        //     tags: {
-                        //         size: { 
-                        //             ref: size, 
-                        //             value: { 
-                        //                 ref: sizeVal, 
-                        //                 name: [
-                        //                     { start:  }
-                        //                 ],
-                        //                 sequence: [
-                        //                     { start: 0, end: 3, ref: sizeVal }
-                        //                 ]
-                        //             }
-                        //         },
-                        //         extra: { 
-                        //             ref: extra,
-                        //             value: { 
-                        //                 ref: extraVal, 
-                        //                 sequence: [
-                        //                     { start: 0, end: 3, ref: extraVal }
-                        //                 ]
-                        //             }
-                        //         }
-                        //     }
-                        // }
                     }
                 });
             });
@@ -117,18 +91,6 @@ describe('AuxCausalTree', () => {
                             _workspace: null,
                             other: null
                         },
-                        // metadata: {
-                        //     ref: second,
-                        //     tags: {
-                        //         test: {
-                        //             ref: firstTag,
-                                    
-                        //         },
-                        //         other: {
-                        //             ref: secondTag
-                        //         }
-                        //     }
-                        // }
                     }
                 });
             });
@@ -152,9 +114,7 @@ describe('AuxCausalTree', () => {
                 
                 site1.add(deleteFile.atom);
                 
-                expect(site1.value).toEqual({
-                    'fileId': null
-                });
+                expect(site1.value).toEqual({});
             });
 
             it('should use last write wins for tags', () => {

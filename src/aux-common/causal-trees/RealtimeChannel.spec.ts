@@ -120,21 +120,18 @@ describe('RealtimeChannel', () => {
     });
 
     describe('join_channel', () => {
-        it('should emit join event when we become connected', () => {
+        it('should emit join request when we become connected', () => {
 
             connection.setConnected(true);
 
             // Channel should emit join event
 
-            expect(connection.emitted).toEqual([
-                {
-                    name: 'join_channel',
-                    data: {
-                        id: 'abc',
-                        type: 'numbers'
-                    }
-                }
-            ]);
+            expect(connection.requests.length).toBe(1);
+            expect(connection.requests[0].name).toEqual('join_channel');
+            expect(connection.requests[0].data).toEqual({
+                id: 'abc',
+                type: 'numbers'
+            });
         });
 
         it('should emit the join event again after going offline and back online', () => {
@@ -142,22 +139,17 @@ describe('RealtimeChannel', () => {
             connection.setConnected(false);
             connection.setConnected(true);
 
-            expect(connection.emitted).toEqual([
-                {
-                    name: 'join_channel',
-                    data: {
-                        id: 'abc',
-                        type: 'numbers'
-                    }
-                },
-                {
-                    name: 'join_channel',
-                    data: {
-                        id: 'abc',
-                        type: 'numbers'
-                    }
-                }
-            ]);
+            expect(connection.requests.length).toBe(2);
+            expect(connection.requests[0].name).toEqual('join_channel');
+            expect(connection.requests[0].data).toEqual({
+                id: 'abc',
+                type: 'numbers'
+            });
+            expect(connection.requests[1].name).toEqual('join_channel');
+            expect(connection.requests[1].data).toEqual({
+                id: 'abc',
+                type: 'numbers'
+            });
         });
     });
 });

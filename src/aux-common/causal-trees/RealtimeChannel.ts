@@ -3,7 +3,7 @@ import { CausalTree } from "./CausalTree";
 import { Observable, SubscriptionLike } from "rxjs";
 import { RealtimeChannelConnection } from "./RealtimeChannelConnection";
 import { SiteVersionInfo } from "./SiteVersionInfo";
-import { filter, map, tap, first } from "rxjs/operators";
+import { filter, map, tap, first, flatMap } from "rxjs/operators";
 import { ConnectionEvent } from "./ConnectionEvent";
 import { SiteInfo } from "./SiteIdInfo";
 import { WeaveVersion } from "./WeaveVersion";
@@ -51,12 +51,7 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
 
         this.connectionStateChanged.pipe(
             filter(connected => connected),
-            tap(connected => {
-                this._connection.emit({
-                    name: 'join_channel',
-                    data: this.info
-                });
-            })
+            flatMap(connected => this._connection.request('join_channel', this.info))
         ).subscribe();
     }
 
