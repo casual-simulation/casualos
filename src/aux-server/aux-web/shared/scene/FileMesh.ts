@@ -39,6 +39,7 @@ import { createLabel, convertToBox2, setLayer } from "./SceneUtils";
 import { WorkspaceMesh } from "./WorkspaceMesh";
 import { WordBubble3D } from "./WordBubble3D";
 import { LayersHelper } from "./LayersHelper";
+import { ClientType } from "./ClientType";
 
 /**
  * Defines a class that represents a mesh for an "object" file.
@@ -325,6 +326,11 @@ export class FileMesh extends GameObject {
     private _tagUpdateLine(): void {
 
         if(!this._gameView) {
+            return;
+        }
+
+        // Only draw lines in the Builder client.
+        if (this._gameView.clientType !== ClientType.Builder) {
             return;
         }
 

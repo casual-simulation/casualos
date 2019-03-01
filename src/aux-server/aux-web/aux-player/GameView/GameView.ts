@@ -54,6 +54,7 @@ import App from '../App/App';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { IGameView } from '../../shared/IGameView';
 import { LayersHelper } from '../../shared/scene/LayersHelper';
+import { ClientType } from '../../shared/scene/ClientType';
 
 @Component({
     components: {
@@ -120,6 +121,7 @@ export default class GameView extends Vue implements IGameView {
 
     @Provide() fileRenderer: FileRenderer = new FileRenderer();
 
+    get clientType(): ClientType { return ClientType.Player; }
     get fileQueue(): HTMLElement { return <HTMLElement>this.$refs.fileQueue; }
     get gameView(): HTMLElement { return <HTMLElement>this.$refs.gameView; }
     get canvas() { return this._canvas; }
@@ -130,8 +132,8 @@ export default class GameView extends Vue implements IGameView {
     get scene(): Scene { return this._scene; }
     get renderer(): WebGLRenderer { return this._renderer; }
     get dev(): boolean { return !PRODUCTION; }
-    get filesMode(): boolean { throw new Error("AUX Player does not implement filesMode."); }
-    get workspacesMode(): boolean { throw new Error("AUX Player does not implement workspacesMode."); }
+    get filesMode(): boolean { console.error("AUX Player does not implement filesMode."); return false; }
+    get workspacesMode(): boolean { console.error("AUX Player does not implement workspacesMode."); return false; }
     get groundPlane(): Plane { return this._groundPlane; }
     get gridChecker(): GridChecker { return null; }
 
