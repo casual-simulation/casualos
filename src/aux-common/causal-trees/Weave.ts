@@ -237,8 +237,10 @@ export class Weave<TOp extends AtomOp> {
             } else {
                 // Could either be the same, a new sibling, or a new child of the current subtree
 
-                let order = this._compareAtoms(a.atom, local.atom);
-                if (order === 0) {
+                let order = this._compareAtoms(a, local);
+                if (isNaN(order)) {
+                    break;
+                } else if (order === 0) {
                     // Atoms are equal, no action needed.
                 } else if(order < 0) {
                     // New atom should be before local atom.
@@ -259,7 +261,7 @@ export class Weave<TOp extends AtomOp> {
                         local = this._atoms[i + localOffset];
                     } while(local && a.atom.id.timestamp <= local.atom.cause.timestamp);
                     
-                    order = this._compareAtoms(a.atom, local.atom);
+                    order = this._compareAtoms(a, local);
                     if (order < 0) {
                         this._atoms.splice(i + localOffset, 0, a);
                         newAtoms.push(a);
@@ -414,10 +416,14 @@ export class Weave<TOp extends AtomOp> {
      * @param first The first atom.
      * @param second The second atom.
      */
-    private _compareAtoms(first: Atom<TOp>, second: Atom<TOp>): number {
-        const cause = this._compareAtomIds(first.cause, second.cause);
+    private _compareAtoms(first: WeaveReference<TOp>, second: WeaveReference<TOp>): number {
+        const cause = this._compareAtomIds(first.atom.cause, second.atom.cause);
         if (cause === 0) {
-            return this._compareAtomIds(first.id, second.id);
+            let order = this._compareAtomIds(first.atom.id, second.atom.id);
+            if (order === 0 && first.checksum !== second.checksum) {
+                return NaN;
+            }
+            return order;
         }
         return cause;
     }

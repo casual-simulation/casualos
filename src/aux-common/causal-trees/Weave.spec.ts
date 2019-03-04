@@ -6,6 +6,10 @@ describe('Weave', () => {
 
     class Op implements AtomOp {
         type: number;
+
+        constructor(type?: number) {
+            this.type = type;
+        }
     }
 
     describe('insert()', () => {
@@ -542,6 +546,49 @@ describe('Weave', () => {
             expect(site2.length).toBe(4);
         });
 
+        it('should reject all children when the parent checksum doesnt match', () => {
+            let first = new Weave<Op>();
+
+            const root = atom<Op>(atomId(1, 0), null, new Op());
+            const child1 = atom<Op>(atomId(1, 1), root.id, new Op());
+
+            const root2 = atom<Op>(atomId(1, 0), null, new Op(1));
+            const child3 = atom<Op>(atomId(2, 2), root.id, new Op());
+
+            first.insertMany(root, child1);
+
+            let second = new Weave<Op>();
+            second.insertMany(root2, child1, child3);
+
+            expect(first.atoms[0].checksum).not.toEqual(second.atoms[0].checksum);
+            expect(first.atoms[1].checksum).toEqual(second.atoms[2].checksum);
+
+            const firstRefs = first.atoms;
+            const secondRefs = second.atoms;
+
+            let newWeave = new Weave<Op>();
+            newWeave.import(firstRefs);
+
+            // Note that the partial weave must contain a complete causal chain.
+            // That is, every parent node to the leafs
+            newWeave.import(secondRefs);
+
+            const atoms = newWeave.atoms.map(a => a.atom);
+
+            expect(atoms.length).toBe(2);
+            expect(atoms[0]).toEqual(root);
+            expect(atoms[1]).toEqual(child1);
+
+            const site1 = newWeave.getSite(1);
+            expect(site1.start).toBe(0);
+            expect(site1.end).toBe(2);
+            expect(site1.get(0).atom).toEqual(root);
+            expect(site1.get(1).atom).toEqual(child1);
+            expect(site1.length).toBe(2);
+
+            const site2 = newWeave.getSite(2);
+            expect(site2.length).toBe(0);
+        });
     });
 
 });
