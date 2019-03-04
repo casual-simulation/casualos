@@ -142,11 +142,14 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any>> {
     private _setTree(tree: TTree) {
         this._tree = tree;
         this._subs.push(this._tree.atomAdded.pipe(
-            filter(ref => ref.atom.id.site === this._tree.site.id),
-            tap(ref => {
-                this._channel.emit(ref)
+            map(refs => refs.filter(ref => ref.atom.id.site === this._tree.site.id)),
+            filter(refs => refs.length > 0),
+            tap(refs => {
+                refs.forEach(ref => {
+                    this._channel.emit(ref);
+                });
             }),
-            tap(ref => this._updated.next([ref]))
+            tap(ref => this._updated.next(ref))
         ).subscribe());
     }
 

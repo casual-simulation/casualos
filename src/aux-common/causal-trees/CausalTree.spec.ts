@@ -84,7 +84,7 @@ describe('CausalTree', () => {
         it('should trigger an event when an atom gets added', () => {
             let tree = new CausalTree(storedTree(site(1)), new Reducer());
 
-            let refs: WeaveReference<Op>[] = [];
+            let refs: WeaveReference<Op>[][] = [];
             tree.atomAdded.subscribe(ref => {
                 refs.push(ref);
             });
@@ -96,8 +96,8 @@ describe('CausalTree', () => {
             const child = tree.add(atom(atomId(1, 4), atomId(1, 3), new Op()));
 
             expect(refs).toEqual([
-                root,
-                child
+                [root],
+                [child]
             ]);
         });
     });

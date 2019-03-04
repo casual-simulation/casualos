@@ -20,7 +20,9 @@ export class CausalTree<TOp extends AtomOp, TValue> {
     private _reducer: AtomReducer<TOp, TValue>;
     private _value: TValue;
     private _knownSites: SiteInfo[];
-    private _atomAdded: Subject<WeaveReference<TOp>>;
+    private _atomAdded: Subject<WeaveReference<TOp>[]>;
+    private _isBatching: boolean;
+    private _batch: WeaveReference<TOp>[];
 
     /**
      * Gets the site that this causal tree represents.
@@ -89,7 +91,9 @@ export class CausalTree<TOp extends AtomOp, TValue> {
         this._factory = new AtomFactory<TOp>(this._site);
         this._reducer = reducer;
         this._value = null;
-        this._atomAdded = new Subject<WeaveReference<TOp>>();
+        this._atomAdded = new Subject<WeaveReference<TOp>[]>();
+        this._isBatching = false;
+        this._batch = [];
 
         if (tree.weave) {
             this.importWeave(tree.weave);
@@ -114,11 +118,32 @@ export class CausalTree<TOp extends AtomOp, TValue> {
         const ref = this.weave.insert(atom);
         this._value = null;
         if (ref) {
-            this._atomAdded.next(ref);
+            if (this._isBatching) {
+                this._batch.push(ref);
+            } else {
+                this._atomAdded.next([ref]);
+            }
         }
         return ref;
     }
     
+    /**
+     * Batches all the operations in the given function so that
+     * only a single notification is sent.
+     * @param func 
+     */
+    batch(func: () => void) {
+        try {
+            this._isBatching = true;
+            func();
+        } finally {
+            if (this._batch.length > 0) {
+                this._atomAdded.next(this._batch);
+                this._batch = [];
+            }
+            this._isBatching = false;
+        }
+    }
 
     /**
      * Imports the given list of weave references into the tree.
