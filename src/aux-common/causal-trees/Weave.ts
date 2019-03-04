@@ -382,7 +382,7 @@ export class Weave<TOp extends AtomOp> {
      * @param atom The atom ID to search for.
      */
     private _indexOf(id: AtomId): number {
-        for (let i = this._atoms.length - 1; i >= 0; i--) {
+        for (let i = 0; i < this._atoms.length; i++) {
             const ref = this._atoms[i];
             if (idEquals(ref.atom.id, id)) {
                 return i;
