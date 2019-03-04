@@ -1,7 +1,7 @@
 import { Atom, AtomId, AtomOp, StorableAtomId, idEquals } from "./Atom";
 import { VirtualArray } from "./VirtualArray";
 import { sortBy, findIndex, keys, find } from "lodash";
-import { WeaveVersion, WeaveSiteVersion } from "./WeaveVersion";
+import { WeaveVersion, WeaveSiteVersion, weaveVersion } from "./WeaveVersion";
 import { getHash, getHashBuffer } from './Hash';
 
 /**
@@ -59,6 +59,7 @@ export interface WeaveReference<TOp extends AtomOp> {
  * That is, the depth-first preorder traversal of a causal tree.
  */
 export class Weave<TOp extends AtomOp> {
+    
     private _atoms: WeaveReference<TOp>[];
     private _sites: SiteMap;
     private _version: number;
@@ -168,12 +169,70 @@ export class Weave<TOp extends AtomOp> {
     }
 
     /**
+     * Removes the given reference from the weave.
+     * @param ref The reference to remove.
+     */
+    remove(ref: WeaveReference<TOp>): boolean {
+        if (!ref) {
+            return false;
+        }
+        const span = this._getSpan(ref);
+        if (!span) {
+            return false;
+        }
+        this._removeSpan(span.index, span.length);
+        return true;
+    }
+
+    /**
+     * Removes all of the siblings of the given atom that happened before it.
+     * @param ref The reference whose older siblings should be removed.
+     */
+    removeBefore(ref: WeaveReference<TOp>): boolean {
+        if (!ref) {
+            return false;
+        }
+        if (!ref.atom.cause) {
+            return false;
+        }
+        const cause = this.getAtom(ref.atom.cause, ref.causeIndex);
+        if (!cause) {
+            return false;
+        }
+        const span = this._getSpan(cause);
+        if (!span) {
+            return false;
+        }
+        const refIndex = weaveIndexOf(this._atoms, ref.atom.id, span.index);
+        const refSpan = this._getSpan(ref, refIndex);
+        const startSplice = refIndex + refSpan.length;
+        const spliceLength = span.length - (refIndex - span.index);
+        this._removeSpan(startSplice, spliceLength);
+        return true;
+    }
+
+    private _removeSpan(index: number, length: number) {
+        const removed = this._atoms.splice(index, length);
+        const ordered = this._sortInYarnOrder(removed);
+        for (let i = ordered.length - 1; i >= 0; i--) {
+            const r = ordered[i];
+            const site = this.getSite(r.atom.id.site);
+            site.remove(r.index);
+            this._updateSites(r.atom.id.site, site);
+        }
+    }
+
+    /**
      * Gets the atom for the given reference.
      * @param reference The reference.
      */
     getAtom<T extends TOp>(id: AtomId, index: number): WeaveReference<T> {
         const site = this.getSite(id.site);
-        return <WeaveReference<T>>site.get(index);
+        if (index >= 0 && index < site.length) {
+            return <WeaveReference<T>>site.get(index);
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -310,8 +369,29 @@ export class Weave<TOp extends AtomOp> {
         }
     }
 
+    /**
+     * Gets the index that the given ref starts and and the number of children it has
+     * after it.
+     * Returns null if the given ref doesn't exist in the weave.
+     */
+    private _getSpan(ref: WeaveReference<TOp>, start: number = 0) {
+        const index = this._indexOf(ref.atom.id);
+        if (index >= 0) {
+            for (let i = index + 1; i < this._atoms.length; i++) {
+                const child = this._atoms[i];
+                if (child.atom.cause.timestamp < ref.atom.id.timestamp) {
+                    return { index, length: i - index };
+                }
+            }
+
+            return { index, length: (this._atoms.length - index) + 1 };
+        } else {
+            return null;
+        }
+    }
+
     private _sortYarn() {
-        this._yarn = sortBy(this._yarn, ['atom.id.site', 'atom.id.timestamp', 'atom.id.priority']);
+        this._yarn = this._sortInYarnOrder(this._yarn);
 
         let currentSite = null;
         let siteStart = 0;
@@ -335,6 +415,10 @@ export class Weave<TOp extends AtomOp> {
                 end: this._yarn.length
             };
         }
+    }
+
+    private _sortInYarnOrder(refs: WeaveReference<TOp>[]) {
+        return sortBy(refs, ['atom.id.site', 'atom.id.timestamp', 'atom.id.priority']);
     }
 
     /**
@@ -381,15 +465,8 @@ export class Weave<TOp extends AtomOp> {
      * Finds the index that the atom with the given ID is in the atoms array.
      * @param atom The atom ID to search for.
      */
-    private _indexOf(id: AtomId): number {
-        for (let i = 0; i < this._atoms.length; i++) {
-            const ref = this._atoms[i];
-            if (idEquals(ref.atom.id, id)) {
-                return i;
-            }
-        }
-
-        return -1;
+    private _indexOf(id: AtomId, start: number = 0): number {
+        return weaveIndexOf(this._atoms, id, start);
     }
 
     /**
@@ -468,4 +545,22 @@ export class Weave<TOp extends AtomOp> {
  */
 export interface SiteMap {
     [site: number]: {start: number, end: number};
+}
+
+/**
+ * Finds the index of the given atom in the given array.
+ * Returns -1 if the atom could not be found.
+ * @param arr The array to search through.
+ * @param id The ID of the atom to find.
+ * @param start The optional starting index.
+ */
+export function weaveIndexOf<TOp extends AtomOp>(arr: WeaveReference<TOp>[], id: AtomId, start: number = 0): number {
+    for (let i = start; i < arr.length; i++) {
+        const ref = arr[i];
+        if (idEquals(ref.atom.id, id)) {
+            return i;
+        }
+    }
+
+    return -1;
 }
