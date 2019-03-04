@@ -42,15 +42,14 @@ export class CausalTreeServer {
                     }
 
                     const tree = await this._getTree(info);
+                    const timeout = setTimeout(async () => {
+                        await this._treeStore.update(info.id, tree.export());
+                    }, 1000);
 
                     const eventName = `event_${info.id}`;
                     socket.on(eventName, async (event: WeaveReference<AtomOp>) => {
-                        // console.log(event);
                         tree.add(event.atom);
                         socket.to(info.id).emit(eventName, event);
-
-                        // TODO: Change to batch updates so we're not smashing the DB connection
-                        await this._treeStore.update(info.id, tree.export());
                     });
 
                     socket.on(`info_${info.id}`, async (event: SiteVersionInfo, callback: (resp: SiteVersionInfo) => void) => {
