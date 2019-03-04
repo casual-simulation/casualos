@@ -107,7 +107,7 @@ export default class GameView extends Vue implements IGameView {
     private _subs: SubscriptionLike[];
 
     debug: boolean = false;
-    mode: UserMode = DEFAULT_USER_MODE;
+    context: string = null;
     xrCapable: boolean = false;
     xrDisplay: any = null;
     xrSession: any = null;
@@ -240,6 +240,12 @@ export default class GameView extends Vue implements IGameView {
             .subscribe());
         this._subs.push(this.fileManager.fileUpdated
             .pipe(concatMap(file => this._fileUpdated(file)))
+            .subscribe());
+
+        this._subs.push(this.fileManager.fileChanged(this.fileManager.userFile)
+        .pipe(tap(file => {
+                this.context = (<Object>file).tags.context;
+            }))
             .subscribe());
 
         this._subs.push(this.fileManager.fileChanged(this.fileManager.globalsFile)

@@ -95,7 +95,7 @@ const routes: RouteConfig[] = [
         component: Welcome,
     },
     {
-        path: '/:id?',
+        path: '/:id?/:context?',
         name: 'home',
         component: Home,
     }
@@ -109,9 +109,10 @@ const router = new VueRouter({
 router.beforeEach((to, from, next) => {
     appManager.initPromise.then(() => {
         const channelId = to.params.id || null;
+        const contextId = to.params.context || null;
         if (to.path !== '/login') {
             if (!appManager.user) {
-                next({ name: 'login', query: { id: channelId } });
+                next({ name: 'login', query: { id: channelId, context: contextId } });
                 return;
             } else {
                 if (appManager.user.channelId != channelId) {
@@ -120,16 +121,29 @@ router.beforeEach((to, from, next) => {
                         next();
                     }, ex => {
                         console.error(ex);
-                        next({ name: 'login', query: { id: channelId } });
+                        next({ name: 'login', query: { id: channelId, context: contextId } });
                     });
                 }
             }
         } else {
             if (appManager.user) {
-                next({ name: 'home', params: { id: appManager.user.channelId }});
+                next({ name: 'home', params: { id: appManager.user.channelId, context: contextId }});
                 return;
             }
         }
+
+        if (appManager.user) {
+            const userFile = appManager.fileManager.userFile;
+            if (userFile.tags.context != contextId) {
+                // Set the context for the user.
+                console.log('[Router] Setting user\'s context to: ' + contextId);
+                appManager.fileManager.updateFile(userFile, { tags: { context: contextId }}).then(() => {
+                    next();
+                    return;
+                });
+            }
+        }
+
         next();
     }, ex => {
         console.error(ex);

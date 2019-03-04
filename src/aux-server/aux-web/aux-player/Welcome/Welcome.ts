@@ -12,6 +12,10 @@ export default class Welcome extends Vue {
         return <string>(this.$route.query.id || '');
     }
 
+    get contextId(): string {
+        return <string>(this.$route.query.context || '');
+    }
+
     createUser() {
         console.log('[Welcome] Email submitted: ' + this.email);
         this._login(this.email);
@@ -23,7 +27,10 @@ export default class Welcome extends Vue {
     
     private async _login(email: string) {
         if (await appManager.loginOrCreateUser(email, this.channelId)) {
-            this.$router.push({ name: 'home', params: { id: this.channelId || null } });
+            this.$router.push({ name: 'home', params: { 
+                id: this.channelId || null, 
+                context: this.contextId || null 
+            }});
         } else {
             // TODO: Show an error message
         }
