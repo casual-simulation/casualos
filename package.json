@@ -9,7 +9,8 @@
     "test:watch": "npm run clean && jest --watchAll",
     "test": "npm run clean && jest",
     "test:ci": "npm run clean && jest --ci --reporters=default --reporters=jest-junit",
-    "clean": "lerna exec -- npm run clean"
+    "clean": "lerna exec -- npm run clean",
+    "debug:server:chrome": "node --inspect src/aux-server/server/dist/main.js"
   },
   "devDependencies": {
     "@babel/core": "^7.2.0",
