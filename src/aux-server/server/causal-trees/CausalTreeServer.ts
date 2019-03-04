@@ -42,6 +42,8 @@ export class CausalTreeServer {
                     }
 
                     const tree = await this._getTree(info);
+
+                    // TODO: Dispose of timeout when all players leave the channel
                     const timeout = setTimeout(async () => {
                         await this._treeStore.update(info.id, tree.export());
                     }, 1000);
