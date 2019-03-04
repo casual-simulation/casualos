@@ -224,15 +224,7 @@ export class Weave<TOp extends AtomOp> {
                 this._atoms.push(...finalAtoms);
                 newAtoms.push(...finalAtoms);
 
-                for (let b = 0; b < finalAtoms.length; b++) {
-                    const ref = finalAtoms[b];
-                    const site = this.getSite(ref.atom.id.site);
-                    site.set(ref.index, ref);
-                    this._sites[ref.atom.id.site] = {
-                        start: site.start,
-                        end: site.end
-                    };
-                }
+                this._yarn.push(...finalAtoms);
                 break;
             } else {
                 // Could either be the same, a new sibling, or a new child of the current subtree
@@ -247,12 +239,7 @@ export class Weave<TOp extends AtomOp> {
                     // insert at this index.
                     this._atoms.splice(i + localOffset, 0, a);
                     newAtoms.push(a);
-                    const site = this.getSite(a.atom.id.site);
-                    site.set(a.index, a);
-                    this._sites[a.atom.id.site] = {
-                        start: site.start,
-                        end: site.end
-                    };
+                    this._yarn.push(a);
                 } else if(order > 0) {
                     // New atom should be after local atom.
                     // Skip local atoms until we find the right place to put the new atom.
@@ -265,16 +252,13 @@ export class Weave<TOp extends AtomOp> {
                     if (order < 0) {
                         this._atoms.splice(i + localOffset, 0, a);
                         newAtoms.push(a);
-                        const site = this.getSite(a.atom.id.site);
-                        site.set(a.index, a);
-                        this._sites[a.atom.id.site] = {
-                            start: site.start,
-                            end: site.end
-                        };
+                        this._yarn.push(a);
                     }
                 }
             }
         }
+
+        this._sortYarn();
 
         return newAtoms;
     }

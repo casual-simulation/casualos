@@ -492,58 +492,108 @@ describe('Weave', () => {
             expect(atoms.length).toBe(10);
         });
 
-        it('should keep the yarn updated', () => {
-            let first = new Weave<Op>();
+        describe('yarn', () => {
 
-            const root = atom<Op>(atomId(1, 0), null, new Op());
-            const child1 = atom<Op>(atomId(1, 1), root.id, new Op());
-            const child2 = atom<Op>(atomId(1, 2), root.id, new Op());
-            const child3 = atom<Op>(atomId(1, 3), child1.id, new Op());
-            const child6 = atom<Op>(atomId(1, 6), child2.id, new Op());
-            const child9 = atom<Op>(atomId(1, 7), child6.id, new Op());
+            it('should keep the yarn updated', () => {
+                let first = new Weave<Op>();
 
-            first.insertMany(root, child1, child2, child3, child6, child9);
+                const root = atom<Op>(atomId(1, 0), null, new Op());
+                const child1 = atom<Op>(atomId(1, 1), root.id, new Op());
+                const child2 = atom<Op>(atomId(1, 2), root.id, new Op());
+                const child3 = atom<Op>(atomId(1, 3), child1.id, new Op());
+                const child6 = atom<Op>(atomId(1, 6), child2.id, new Op());
+                const child9 = atom<Op>(atomId(1, 7), child6.id, new Op());
 
-            let second = new Weave<Op>();
+                first.insertMany(root, child1, child2, child3, child6, child9);
 
-            const child4 = atom<Op>(atomId(2, 4), root.id, new Op());
-            const child5 = atom<Op>(atomId(2, 5), child1.id, new Op());
-            const child7 = atom<Op>(atomId(2, 6), child5.id, new Op());
-            const child8 = atom<Op>(atomId(2, 7), child7.id, new Op());
+                let second = new Weave<Op>();
 
-            second.insertMany(root, child1, child4, child5, child7, child8);
+                const child4 = atom<Op>(atomId(2, 4), root.id, new Op());
+                const child5 = atom<Op>(atomId(2, 5), child1.id, new Op());
+                const child7 = atom<Op>(atomId(2, 6), child5.id, new Op());
+                const child8 = atom<Op>(atomId(2, 7), child7.id, new Op());
 
-            const firstRefs = first.atoms;
-            const secondRefs = second.atoms;
+                second.insertMany(root, child1, child4, child5, child7, child8);
 
-            let newWeave = new Weave<Op>();
-            newWeave.import(firstRefs);
+                const firstRefs = first.atoms;
+                const secondRefs = second.atoms;
 
-            // Note that the partial weave must contain a complete causal chain.
-            // That is, every parent node to the leafs
-            newWeave.import(secondRefs);
+                let newWeave = new Weave<Op>();
+                newWeave.import(firstRefs);
 
-            const atoms = newWeave.atoms.map(a => a.atom);
+                // Note that the partial weave must contain a complete causal chain.
+                // That is, every parent node to the leafs
+                newWeave.import(secondRefs);
 
-            const site1 = newWeave.getSite(1);
-            expect(site1.start).toBe(0);
-            expect(site1.end).toBe(6);
-            expect(site1.get(0).atom).toEqual(root);
-            expect(site1.get(1).atom).toEqual(child1);
-            expect(site1.get(2).atom).toEqual(child2);
-            expect(site1.get(3).atom).toEqual(child3);
-            expect(site1.get(4).atom).toEqual(child6);
-            expect(site1.get(5).atom).toEqual(child9);
-            expect(site1.length).toBe(6);
+                const atoms = newWeave.atoms.map(a => a.atom);
 
-            const site2 = newWeave.getSite(2);
-            expect(site2.start).toBe(6);
-            expect(site2.end).toBe(10);
-            expect(site2.get(0).atom).toEqual(child4);
-            expect(site2.get(1).atom).toEqual(child5);
-            expect(site2.get(2).atom).toEqual(child7);
-            expect(site2.get(3).atom).toEqual(child8);
-            expect(site2.length).toBe(4);
+                const site1 = newWeave.getSite(1);
+                expect(site1.start).toBe(0);
+                expect(site1.end).toBe(6);
+                expect(site1.get(0).atom).toEqual(root);
+                expect(site1.get(1).atom).toEqual(child1);
+                expect(site1.get(2).atom).toEqual(child2);
+                expect(site1.get(3).atom).toEqual(child3);
+                expect(site1.get(4).atom).toEqual(child6);
+                expect(site1.get(5).atom).toEqual(child9);
+                expect(site1.length).toBe(6);
+
+                const site2 = newWeave.getSite(2);
+                expect(site2.start).toBe(6);
+                expect(site2.end).toBe(10);
+                expect(site2.get(0).atom).toEqual(child4);
+                expect(site2.get(1).atom).toEqual(child5);
+                expect(site2.get(2).atom).toEqual(child7);
+                expect(site2.get(3).atom).toEqual(child8);
+                expect(site2.length).toBe(4);
+            });
+
+            it('should handle atoms getting inserted in weird orders', () => {
+                let first = new Weave<Op>();
+
+                const root = atom<Op>(atomId(1, 0), null, new Op());
+                const child1 = atom<Op>(atomId(1, 1), root.id, new Op());
+
+                first.insertMany(root, child1);
+
+                let second = new Weave<Op>();
+
+                const child4 = atom<Op>(atomId(2, 4), root.id, new Op());
+                second.insertMany(root, child1, child4);
+
+                let third = new Weave<Op>();
+
+                const child5 = atom<Op>(atomId(3, 5), root.id, new Op());
+                third.insertMany(root, child1, child4, child5);
+
+                const firstRefs = first.atoms;
+                const secondRefs = second.atoms;
+
+                let newWeave = new Weave<Op>();
+                newWeave.import(firstRefs);
+                newWeave.import(third.atoms);
+
+                const atoms = newWeave.atoms.map(a => a.atom);
+
+                const site1 = newWeave.getSite(1);
+                expect(site1.start).toBe(0);
+                expect(site1.end).toBe(2);
+                expect(site1.get(0).atom).toEqual(root);
+                expect(site1.get(1).atom).toEqual(child1);
+                expect(site1.length).toBe(2);
+
+                const site2 = newWeave.getSite(2);
+                expect(site2.start).toBe(2);
+                expect(site2.end).toBe(3);
+                expect(site2.get(0).atom).toEqual(child4);
+                expect(site2.length).toBe(1);
+
+                const site3 = newWeave.getSite(3);
+                expect(site3.start).toBe(3);
+                expect(site3.end).toBe(4);
+                expect(site3.get(0).atom).toEqual(child5);
+                expect(site3.length).toBe(1);
+            });
         });
 
         it('should reject all children when the parent checksum doesnt match', () => {
