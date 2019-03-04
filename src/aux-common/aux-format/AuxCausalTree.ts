@@ -127,26 +127,27 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState> {
      * @param value The optional precalculated value to use for resolving tree references.
      */
     addEvents(events: FileEvent[], value?: AuxState): WeaveReference<AuxOp>[] {
-        value = value || this.value;
-        const results = flatMap(events, e => {
-            if (e.type === 'file_updated') {
-                const file = value[e.id];
-                return this.updateFile(file, e.update);
-            } else if(e.type === 'file_added') {
-                return this.addFile(e.file);
-            } else if(e.type === 'file_removed') {
-                const file = value[e.id];
-                return this.removeFile(file);
-            } else if(e.type === 'transaction') {
-                return this.addEvents(e.events, value);
-            } else if(e.type === 'apply_state') {
-                return this.applyState(e.state, value);
-            }
+        return this.batch(() => {
+            value = value || this.value;
+            const results = flatMap(events, e => {
+                    if (e.type === 'file_updated') {
+                    const file = value[e.id];
+                    return this.updateFile(file, e.update);
+                } else if(e.type === 'file_added') {
+                    return this.addFile(e.file);
+                } else if(e.type === 'file_removed') {
+                    const file = value[e.id];
+                    return this.removeFile(file);
+                } else if(e.type === 'transaction') {
+                    return this.addEvents(e.events, value);
+                } else if(e.type === 'apply_state') {
+                    return this.applyState(e.state, value);
+                }
+            });
+            return results;
         });
-
-        return results;
     }
-
+    
     /**
      * Removes the given file from the state by marking it as deleted.
      * @param file The file to remove.
@@ -160,18 +161,20 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState> {
      * @param file The file to add to the tree.
      */
     addFile(file: File): WeaveReference<AuxOp>[] {
-        const f = this.file(file.id, file.type);
-        let tags = tagsOnFile(file.type, file);
-        let refs = flatMap(tags, t => {
-            const tag = this.tag(t, f.atom);
-            const val = this.val(file.type === 'object' ? file.tags[t] : (<any>file)[t], tag.atom);
-            return [tag, val];
-        });
+        return this.batch(() => {
+            const f = this.file(file.id, file.type);
+            let tags = tagsOnFile(file.type, file);
+            let refs = flatMap(tags, t => {
+                const tag = this.tag(t, f.atom);
+                const val = this.val(file.type === 'object' ? file.tags[t] : (<any>file)[t], tag.atom);
+                return [tag, val];
+            });
 
-        return [
-            f,
-            ...refs
-        ];
+            return [
+                f,
+                ...refs
+            ];
+        });
     }
 
     /**
@@ -180,26 +183,28 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState> {
      * @param newData The new data to include in the file.
      */
     updateFile(file: AuxFile, newData: PartialFile): WeaveReference<AuxOp>[] {
-        let tags = tagsOnFile(file.type, newData);
-        let refs = flatMap(tags, t => {
-            const tagMeta = file.metadata.tags[t];
-            let newVal = getTag(file.type, newData, t);
-            if (tagMeta) {
-                const oldVal = getFileTag(file, t);
-                if (typeof newVal === 'object' && !Array.isArray(newVal) && !Array.isArray(oldVal)) {
-                    newVal = merge(oldVal, newVal);
+        return this.batch(() => {
+            let tags = tagsOnFile(file.type, newData);
+            let refs = flatMap(tags, t => {
+                const tagMeta = file.metadata.tags[t];
+                let newVal = getTag(file.type, newData, t);
+                if (tagMeta) {
+                    const oldVal = getFileTag(file, t);
+                    if (typeof newVal === 'object' && !Array.isArray(newVal) && !Array.isArray(oldVal)) {
+                        newVal = merge(oldVal, newVal);
+                    }
+                    // tag is on the file
+                    const val = this.val(newVal, tagMeta.ref.atom);
+                    return [val];
+                } else {
+                    const tag = this.tag(t, file.metadata.ref.atom);
+                    const val = this.val(newVal, tag.atom);
+                    return [tag, val];
                 }
-                // tag is on the file
-                const val = this.val(newVal, tagMeta.ref.atom);
-                return [val];
-            } else {
-                const tag = this.tag(t, file.metadata.ref.atom);
-                const val = this.val(newVal, tag.atom);
-                return [tag, val];
-            }
-        });
+            });
 
-        return refs;
+            return refs;
+        });
     }
 
     /**

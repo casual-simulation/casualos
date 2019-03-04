@@ -132,10 +132,10 @@ export class CausalTree<TOp extends AtomOp, TValue> {
      * only a single notification is sent.
      * @param func 
      */
-    batch(func: () => void) {
+    batch<T>(func: () => T): T {
         try {
             this._isBatching = true;
-            func();
+            return func();
         } finally {
             if (this._batch.length > 0) {
                 this._atomAdded.next(this._batch);

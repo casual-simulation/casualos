@@ -18,8 +18,6 @@ import uuid from "uuid/v4";
 export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
 
     const stateDiffs = tree.onUpdated.pipe(
-        bufferTime(50),
-        map(e => mapFlat(e)),
         map(events => {
             let addedFiles: AuxFile[] = [];
             let updatedFiles: AuxState = {};

@@ -7,6 +7,7 @@ import { storedTree } from "../causal-trees/StoredCausalTree";
 import { AuxState } from "./AuxState";
 import { atomId, atom } from "../causal-trees/Atom";
 import { file, tag, value, del } from "./AuxAtoms";
+import { WeaveReference } from "../causal-trees";
 
 Date.now = jest.fn();
 
@@ -682,6 +683,32 @@ describe('AuxCausalTree', () => {
             expect(treeAtoms).toContainEqual(positionTag);
             expect(treeAtoms).toContainEqual(positionTagValue);
         });
+
+        it('should batch the updates together', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+            const newFile = createWorkspace('test');
+
+            const root = tree.root();
+            
+            let updates: WeaveReference<AuxOp>[][] = [];
+            tree.atomAdded.subscribe(refs => updates.push(refs));
+            const result = tree.addFile(newFile);
+
+            const fileAtom = atom(atomId(1, 2), root.atom.id, file('test', 'workspace'));
+            const positionTag = atom(atomId(1, 3), fileAtom.id, tag('position'));
+            const positionTagValue = atom(atomId(1, 4, 1), positionTag.id, value({x: 0, y: 0, z: 0}));
+
+            expect(updates.length).toBe(1);
+            const resultAtoms = result.map(ref => ref.atom);
+            expect(resultAtoms).toContainEqual(fileAtom);
+            expect(resultAtoms).toContainEqual(positionTag);
+            expect(resultAtoms).toContainEqual(positionTagValue);
+
+            const treeAtoms = tree.weave.atoms.map(ref => ref.atom);
+            expect(treeAtoms).toContainEqual(fileAtom);
+            expect(treeAtoms).toContainEqual(positionTag);
+            expect(treeAtoms).toContainEqual(positionTagValue);
+        });
     });
 
     describe('updateFile()', () => {
@@ -744,6 +771,37 @@ describe('AuxCausalTree', () => {
             expect(result.map(ref => ref.atom)).toEqual([
                 positionTagValue
             ]);
+        });
+
+        it('should batch the updates together', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            const file = tree.file('test', 'object');
+            
+            let updates: WeaveReference<AuxOp>[][] = [];
+            tree.atomAdded.subscribe(refs => updates.push(refs));
+            
+            tree.updateFile(tree.value['test'], {
+                tags: {
+                    _position: { x: 0, y: 0, z: 0 },
+                }
+            });
+
+            const result = tree.updateFile(tree.value['test'], {
+                tags: {
+                    _position: { x: 1 },
+                }
+            });
+
+            const positionTag = atom(atomId(1, 2), file.atom.id, tag('_position'));
+            const positionTagValue = atom(atomId(1, 4, 1), positionTag.id, value({ x: 1, y: 0, z: 0 }));
+
+            
+            expect(updates.length).toBe(2);
+            expect(result.map(ref => ref.atom)).toEqual([
+                positionTagValue
+            ]);
+
         });
     });
 
@@ -952,6 +1010,49 @@ describe('AuxCausalTree', () => {
             const numTag = atom(atomId(1, 5), fileAtom.id, tag('num'));
             const numTagValue = atom(atomId(1, 6, 1), numTag.id, value(5));
 
+            expect(result.map(ref => ref.atom)).toEqual([
+                fileAtom,
+                abcTag,
+                abcTagValue,
+                numTag,
+                numTagValue
+            ]);
+            expect(tree.weave.atoms.map(ref => ref.atom)).toEqual([
+                root.atom,
+                fileAtom,
+                numTag,
+                numTagValue,
+                abcTag,
+                abcTagValue
+            ]);
+        });
+
+        it('should batch updates', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            const root = tree.root();
+            const newFile = createFile('test', <any>{
+                abc: 'def',
+                num: 5
+            });
+
+            let updates: WeaveReference<AuxOp>[][] = [];
+            tree.atomAdded.subscribe(refs => updates.push(refs));
+
+            const result = tree.addEvents([
+                addState({
+                    'test': newFile
+                })
+            ]);
+
+            const fileAtom = atom(atomId(1, 2), root.atom.id, file('test', 'object'));
+            const abcTag = atom(atomId(1, 3), fileAtom.id, tag('abc'));
+            const abcTagValue = atom(atomId(1, 4, 1), abcTag.id, value('def'));
+
+            const numTag = atom(atomId(1, 5), fileAtom.id, tag('num'));
+            const numTagValue = atom(atomId(1, 6, 1), numTag.id, value(5));
+
+            expect(updates.length).toBe(1);
             expect(result.map(ref => ref.atom)).toEqual([
                 fileAtom,
                 abcTag,

@@ -100,6 +100,30 @@ describe('CausalTree', () => {
                 [child]
             ]);
         });
+
+        it('should batch multiple updates into one', () => {
+            let tree = new CausalTree(storedTree(site(1)), new Reducer());
+
+            let refs: WeaveReference<Op>[][] = [];
+            tree.atomAdded.subscribe(ref => {
+                refs.push(ref);
+            });
+
+            let skipped;
+            let root: WeaveReference<Op>;
+            let child: WeaveReference<Op>;
+            tree.batch(() => {
+                // no parent so it's skipped
+                skipped = tree.add(atom(atomId(1, 3), atomId(1, 2), new Op()));
+                
+                root = tree.add(atom(atomId(1, 3), null, new Op()));
+                child = tree.add(atom(atomId(1, 4), atomId(1, 3), new Op()));
+            });
+
+            expect(refs).toEqual([
+                [root, child]
+            ]);
+        });
     });
 
     describe('value', () => {
