@@ -446,18 +446,25 @@ export class Weave<TOp extends AtomOp> {
 
     /**
      * Finds the index that an atom should appear at in a yarn.
+     * Uses binary search.
      */
     private _siteIndex(atomId: AtomId, site: VirtualArray<WeaveReference<TOp>>): number {
-        for (let i = site.length - 1; i >= 0; i--) {
-            const ref = site.get(i);
-            if (atomId.timestamp < ref.atom.id.timestamp) {
-                return i;
-            } else if(atomId.timestamp === ref.atom.id.timestamp && atomId.priority > ref.atom.id.priority) {
-                return i;
+        let left = 0;
+        let right = site.length - 1;
+
+        while(left <= right) {
+            let m = Math.floor((left + right) / 2);
+            let ref = site.get(m);
+            if (atomId.timestamp < ref.atom.id.timestamp || 
+                (atomId.timestamp === ref.atom.id.timestamp && atomId.priority > ref.atom.id.priority)) {
+                right = m - 1;
             } else if(idEquals(atomId, ref.atom.id)) {
-                return i;
+                return m;
+            } else {
+                left = m + 1;
             }
         }
+
         return site.length;
     }
 
