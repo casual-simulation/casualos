@@ -6,6 +6,8 @@ import { IGameView } from "../IGameView";
 import { WorkspaceMesh } from "./WorkspaceMesh";
 import { FileMesh } from "./FileMesh";
 import { UserMesh } from "./UserMesh";
+import { Object3D } from 'three';
+import { GameObject } from './GameObject';
 
 /**
  * Defines an object that groups Three.js related information
@@ -45,8 +47,11 @@ export class File3D {
 
         if (file.type === 'object') {
             this.mesh = this._createFile(file);
-        } else {
+        } else if (file.type === 'workspace') {
             this.mesh = this._createWorkSurface(file);
+        } else {
+            console.error("[File3D] File doesnt seem to represent a valid object.", JSON.stringify(file, null, 1));
+            return;
         }
 
         this.mesh.name = `${file.type}_${file.id}`;
@@ -89,9 +94,14 @@ export class File3D {
         }
     }
 
-    private _createWorkSurface(data: Workspace) {
+    private _createWorkSurface(data: Workspace): WorkspaceMesh {
         let mesh = new WorkspaceMesh();
         mesh.gridGhecker = this._gameView.gridChecker;
+        return mesh;
+    }
+
+    private _createDummy(): GameObject {
+        let mesh = new GameObject();
         return mesh;
     }
 }

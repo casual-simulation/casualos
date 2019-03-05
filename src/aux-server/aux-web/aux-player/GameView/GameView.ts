@@ -24,7 +24,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Inject, Watch, Provide } from 'vue-property-decorator';
 import {
-    SubscriptionLike,
+    SubscriptionLike, BehaviorSubject, Observable,
 } from 'rxjs';
 import {
     concatMap, tap,
@@ -104,10 +104,14 @@ export default class GameView extends Vue implements IGameView {
         [mesh: number]: string
     } = {};
 
-    private _subs: SubscriptionLike[];
+    private _fileSubs: SubscriptionLike[];
+
+    /**
+     * The current context that we are displaying.
+     */
+    private _userContext: BehaviorSubject<string>;
 
     debug: boolean = false;
-    context: string = null;
     xrCapable: boolean = false;
     xrDisplay: any = null;
     xrSession: any = null;
@@ -136,10 +140,8 @@ export default class GameView extends Vue implements IGameView {
     get workspacesMode(): boolean { console.error("AUX Player does not implement workspacesMode."); return false; }
     get groundPlane(): Plane { return this._groundPlane; }
     get gridChecker(): GridChecker { return null; }
-
-    get fileManager() {
-        return appManager.fileManager;
-    }
+    get fileManager() { return appManager.fileManager; }
+    get userContextObservable(): Observable<string> { return this._userContext; }
 
     constructor() {
         super();
@@ -224,41 +226,15 @@ export default class GameView extends Vue implements IGameView {
         this._time = new Time();
         this._files = {};
         this._fileIds = {};
-        this._subs = [];
+        this._fileSubs = [];
+        this._userContext = new BehaviorSubject(null);
         this._setupScene();
         this._input = new Input(this);
         this._inputVR = new InputVR(this);
         // this._interaction = new InteractionManager(this);
         // this._gridChecker = new GridChecker(DEFAULT_WORKSPACE_HEIGHT_INCREMENT);
 
-        // Subscriptions to file events.
-        this._subs.push(this.fileManager.fileDiscovered
-            .pipe(concatMap(file => this._fileAdded(file)))
-            .subscribe());
-        this._subs.push(this.fileManager.fileRemoved
-            .pipe(tap(file => this._fileRemoved(file)))
-            .subscribe());
-        this._subs.push(this.fileManager.fileUpdated
-            .pipe(concatMap(file => this._fileUpdated(file)))
-            .subscribe());
-
-        this._subs.push(this.fileManager.fileChanged(this.fileManager.userFile)
-        .pipe(tap(file => {
-                this.context = (<Object>file).tags.context;
-            }))
-            .subscribe());
-
-        this._subs.push(this.fileManager.fileChanged(this.fileManager.globalsFile)
-            .pipe(tap(file => {
-
-                // Update the scene background color.
-                let sceneBackgroundColor = (<Object>file).tags._sceneBackgroundColor;
-                if (sceneBackgroundColor) {
-                    this._scene.background = new Color(sceneBackgroundColor);;
-                }
-
-            }))
-            .subscribe());
+        this._triggerFilesRefresh();
 
         if (this.dev) {
             this.addSidebarItem('debug_mode', 'Debug', () => {
@@ -279,11 +255,11 @@ export default class GameView extends Vue implements IGameView {
         this.removeSidebarItem('debug_mode');
         this._input.dispose();
 
-        if (this._subs) {
-            this._subs.forEach(sub => {
+        if (this._fileSubs) {
+            this._fileSubs.forEach(sub => {
                 sub.unsubscribe();
             });
-            this._subs = [];
+            this._fileSubs = [];
         }
     }
 
@@ -392,7 +368,15 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private async _fileUpdated(file: File, initialUpdate = false) {
-        const obj = this._files[file.id];
+        let obj = this._files[file.id];
+
+        if (!obj) {
+            if (this._shouldDisplayFile(file)) {
+                this._fileAdded(file);
+                return;
+            }
+        }
+
         let shouldRemove = false;
         if (obj) {
             if (file.type === 'object') {
@@ -422,22 +406,20 @@ export default class GameView extends Vue implements IGameView {
             if (shouldRemove) {
                 this._fileRemoved(file.id);
             }
-
-        } else {
-            console.log('cant find file to update it');
         }
     }
 
     private async _fileAdded(file: File) {
-        if (file.type === 'object' && (file.tags._hidden || file.tags._destroyed) && !file.tags._user) {
+        if (!this._shouldDisplayFile(file)) {
             return;
         }
 
-        var obj = new File3D(this, file);
+        console.log("[GameView] adding file to scene: ", JSON.stringify(file, null, 1));
 
+        var obj = new File3D(this, file);
         this._files[file.id] = obj;
         this._fileIds[obj.mesh.id] = obj.file.id;
-
+        
         await this._fileUpdated(file, true);
         this.onFileAdded.invoke(obj);
     }
@@ -451,6 +433,92 @@ export default class GameView extends Vue implements IGameView {
 
             this.onFileRemoved.invoke(obj);
         }
+    }
+
+    /**
+     * Trigger a refresh of the GameView's file representations.
+     * This will effectively clear all current file representations and create new ones for the current context.
+     */
+    private _triggerFilesRefresh(): void {
+        // Unsubscribe from the current file subscriptions.
+        if (this._fileSubs) {
+            this._fileSubs.forEach(sub => {
+                sub.unsubscribe();
+            });
+            this._fileSubs = [];
+        }
+
+        // Clear all current file representations.
+        const keys = Object.keys(this._files);
+        keys.forEach((key) => {
+            this._fileRemoved(key);
+        });
+
+        // Subscribe to file events.
+        this._fileSubs.push(this.fileManager.fileDiscovered
+            .pipe(concatMap(file => this._fileAdded(file)))
+            .subscribe());
+        this._fileSubs.push(this.fileManager.fileRemoved
+            .pipe(tap(file => this._fileRemoved(file)))
+            .subscribe());
+        this._fileSubs.push(this.fileManager.fileUpdated
+            .pipe(concatMap(file => this._fileUpdated(file)))
+            .subscribe());
+
+        this._fileSubs.push(this.fileManager.fileChanged(this.fileManager.userFile)
+            .pipe(tap(file => {
+                const userContext = (<Object>file).tags._userContext;
+                if (this._userContext.value !== userContext) {
+                    this._userContext.next(userContext);
+                }
+            }))
+            .subscribe());
+
+        this._fileSubs.push(this.fileManager.fileChanged(this.fileManager.globalsFile)
+            .pipe(tap(file => {
+
+                // Update the scene background color.
+                let sceneBackgroundColor = (<Object>file).tags._sceneBackgroundColor;
+                if (sceneBackgroundColor) {
+                    this._scene.background = new Color(sceneBackgroundColor);;
+                }
+
+            }))
+            .subscribe());
+    }
+
+    /**
+     * Returns wether or not the given file should be displayed in 3d.
+     * @param file The file
+     */
+    private _shouldDisplayFile(file: File): boolean {
+        // Don't display files without a defined type.
+        if (!file.type) {
+            return false;
+        }
+
+        // AUX Player doesnt display workspaces.
+        if (file.type === 'workspace') {
+            return false;
+        }
+
+        // AUX Player doesnt display objects unless user is in a context.
+        if (!this._userContext.value) {
+            return false;
+        }
+        
+        if (file.type === 'object' && !file.tags._user) {
+            // Dont display normal files that are hidden or destroyed.
+            if (file.tags._hidden || file.tags._destroyed) {
+                return false;
+            }
+            // Dont display normal files that are not tagged with the user's current context.
+            if (file.tags[this._userContext.value] !== 'true') {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private _setupScene() {

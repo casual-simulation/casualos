@@ -23,6 +23,7 @@ export interface Object {
         _destroyed?: any;
         _index?: number;
         _user?: string;
+        _userContext?: string;
         _mode?: UserMode;
         _movable?: boolean;
         _editingFile?: string;
