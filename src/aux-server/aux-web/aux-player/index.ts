@@ -53,20 +53,18 @@ import 'pepjs'; // Polyfill for pointer events
 import { polyfill } from 'es6-promise';
 import 'offline-plugin/runtime';
 
-import { appManager } from '../shared/AppManager';
+import { appManager, AppType } from '../shared/AppManager';
 import App from './App/App';
 import Welcome from './Welcome/Welcome';
 import Home from './Home/Home';
 
 // Import the WebXR Polyfill
 import 'webxr-polyfill';
-import { PartialFile } from '@yeti-cgi/aux-common';
-
 
 // Setup the Promise shim for browsers that don't support promises.
 polyfill();
 
-
+appManager.appType = AppType.Player;
 
 Vue.use(VueRouter);
 Vue.use(MdButton);

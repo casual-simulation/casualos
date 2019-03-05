@@ -4,7 +4,6 @@ import { Input } from "./scene/Input";
 import { InputVR } from "./scene/InputVR";
 import { File3D } from "./scene/File3D";
 import { GridChecker } from "./scene/grid/GridChecker";
-import { ClientType } from "./scene/ClientType";
 import { ArgEvent } from "@yeti-cgi/aux-common/Events";
 
 /**
@@ -13,7 +12,6 @@ import { ArgEvent } from "@yeti-cgi/aux-common/Events";
  */
 export interface IGameView {
     
-    readonly clientType: ClientType;
     readonly fileQueue: HTMLElement;
     readonly gameView: HTMLElement;
     readonly canvas: HTMLCanvasElement;

@@ -37,7 +37,8 @@ import {
     DEFAULT_USER_MODE,
     UserMode,
     DEFAULT_SCENE_BACKGROUND_COLOR,
-    createFile
+    createFile,
+    isFileInContext
 } from '@yeti-cgi/aux-common';
 import { ArgEvent } from '@yeti-cgi/aux-common/Events';
 import { Time } from '../../shared/scene/Time';
@@ -54,7 +55,7 @@ import App from '../App/App';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { IGameView } from '../../shared/IGameView';
 import { LayersHelper } from '../../shared/scene/LayersHelper';
-import { ClientType } from '../../shared/scene/ClientType';
+import { FileManager } from 'aux-web/shared/FileManager';
 
 @Component({
     components: {
@@ -125,7 +126,6 @@ export default class GameView extends Vue implements IGameView {
 
     @Provide() fileRenderer: FileRenderer = new FileRenderer();
 
-    get clientType(): ClientType { return ClientType.Player; }
     get fileQueue(): HTMLElement { return <HTMLElement>this.$refs.fileQueue; }
     get gameView(): HTMLElement { return <HTMLElement>this.$refs.gameView; }
     get canvas() { return this._canvas; }
@@ -141,6 +141,7 @@ export default class GameView extends Vue implements IGameView {
     get groundPlane(): Plane { return this._groundPlane; }
     get gridChecker(): GridChecker { return null; }
     get fileManager() { return appManager.fileManager; }
+    get userContext(): string { return this._userContext.value; }
     get userContextObservable(): Observable<string> { return this._userContext; }
 
     constructor() {
@@ -375,12 +376,15 @@ export default class GameView extends Vue implements IGameView {
                 this._fileAdded(file);
                 return;
             }
+        } else {
+            if (!this._shouldDisplayFile(file)) {
+                this._fileRemoved(file.id);
+                return;
+            }
         }
 
-        let shouldRemove = false;
         if (obj) {
             if (file.type === 'object') {
-
                 if (!initialUpdate) {
                     if (!file.tags._user && file.tags._lastEditedBy === this.fileManager.userFile.id) {
                         if (this.selectedRecentFile && file.id === this.selectedRecentFile.id) {
@@ -390,22 +394,10 @@ export default class GameView extends Vue implements IGameView {
                         }
                     }
                 }
-
-                if (file.tags._destroyed) {
-                    shouldRemove = true;
-                }
-            } else if (file.type === 'workspace') {
-                if (file.size <= 0) {
-                    shouldRemove = true;
-                }
             }
-
+    
             await obj.updateFile(file);
             this.onFileUpdated.invoke(obj);
-
-            if (shouldRemove) {
-                this._fileRemoved(file.id);
-            }
         }
     }
 
@@ -413,8 +405,6 @@ export default class GameView extends Vue implements IGameView {
         if (!this._shouldDisplayFile(file)) {
             return;
         }
-
-        console.log("[GameView] adding file to scene: ", JSON.stringify(file, null, 1));
 
         var obj = new File3D(this, file);
         this._files[file.id] = obj;
@@ -512,8 +502,9 @@ export default class GameView extends Vue implements IGameView {
             if (file.tags._hidden || file.tags._destroyed) {
                 return false;
             }
+
             // Dont display normal files that are not tagged with the user's current context.
-            if (file.tags[this._userContext.value] !== 'true') {
+            if (!isFileInContext(this.fileManager.createContext(), file, this._userContext.value)) {
                 return false;
             }
         }

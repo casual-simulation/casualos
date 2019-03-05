@@ -546,7 +546,7 @@ export function tagMatchesFilter(tag: string, file: Object, eventName: string, c
  * @param workspaceId The ID of the workspace that the objects need to be on.
  * @param position The position that the objects need to be at.
  */
-export function objectsAtGridPosition(objects: Object[], workspaceId: string, position: Object['tags']['_position']) {
+export function objectsAtWorkspaceGridPosition(objects: Object[], workspaceId: string, position: Object['tags']['_position']) {
     return sortBy(objects.filter(o => {
         return o.type === 'object' && 
             o.tags._workspace === workspaceId &&
@@ -557,7 +557,24 @@ export function objectsAtGridPosition(objects: Object[], workspaceId: string, po
 }
 
 /**
- * Filters the given list of objets to those that are assigned to the given workspace ID.
+ * Filters the given list of objects to those matching the given grid position.
+ * The returned list is in the order of their indexes.
+ * @param objects The objects to filter.
+ * @param workspaceId The ID of the workspace that the objects need to be on.
+ * @param position The position that the objects need to be at.
+ */
+// export function objectsAtContextGridPosition(objects: Object[], contextId: string, position: Object['tags']['_position']) {
+//     return sortBy(objects.filter(o => {
+//         return o.type === 'object' && 
+//             o.tags[contextId] === workspaceId &&
+//             o.tags._position &&
+//             o.tags._position.x === position.x &&
+//             o.tags._position.y === position.y
+//     }), o => o.tags._index || 0);
+// }
+
+/**
+ * Filters the given list of objects to those that are assigned to the given workspace ID.
  * @param objects The objects to filter.
  * @param workspaceId The ID of the workspace that the objects need to be on,
  */
@@ -665,6 +682,29 @@ export function calculateNumericalTagValue(context: FileCalculationContext, file
     return defaultValue
 }
 
+/**
+ * Returns wether or not the given file resides in the given context id.
+ * @param context The file calculation context to run formulas with.
+ * @param file The file.
+ * @param contextId The id of the context that we are asking if the file is in.
+ */
+export function isFileInContext(context: FileCalculationContext, file: Object, contextId: string): boolean {
+    if (!contextId) return false;
+
+    if (file.tags._user) {
+        const result = calculateFileValue(context, file, '_userContext');
+        return result == contextId;
+    } else {
+        const result = calculateFileValue(context, file, contextId);
+
+        if (typeof result === 'string') {
+            return result === 'true';
+        } else {
+            return result === true;
+        }
+    }
+}
+
 function _parseFilterValue(value: string): any {
     if (isArray(value)) {
         const split = parseArray(value);
@@ -722,7 +762,6 @@ function _formatValue(value: any): string {
 }
 
 function _calculateValue(context: FileCalculationContext, object: any, tag: string, formula: string): any {
-    const isString = typeof formula === 'string';
     if (isFormula(formula)) {
         const result = _calculateFormulaValue(context, object, tag, formula);
         if (result.success) {
@@ -790,7 +829,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
     list(obj: any) {
         const position = obj._position;
         const workspace = obj._workspace;
-        const objs = objectsAtGridPosition(this.objects, workspace, position);
+        const objs = objectsAtWorkspaceGridPosition(this.objects, workspace, position);
         return objs;
     }
 

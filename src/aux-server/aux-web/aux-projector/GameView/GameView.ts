@@ -77,7 +77,6 @@ import MiniFile from '../MiniFile/MiniFile';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { IGameView } from '../../shared/IGameView';
 import { LayersHelper } from '../../shared/scene/LayersHelper';
-import { ClientType } from '../../shared/scene/ClientType';
 
 @Component({
   components: {
@@ -147,7 +146,6 @@ export default class GameView extends Vue implements IGameView {
   @Inject() removeSidebarItem: App['removeSidebarItem'];
   @Provide() fileRenderer: FileRenderer = new FileRenderer();
 
-  get clientType(): ClientType { return ClientType.Builder; }
   get fileQueue(): HTMLElement { return <HTMLElement>this.$refs.fileQueue; }
   get gameView(): HTMLElement { return <HTMLElement>this.$refs.gameView; }
   get canvas() { return this._canvas; }
@@ -554,7 +552,7 @@ export default class GameView extends Vue implements IGameView {
             return false;
         }
     }
-    
+
     return true;
   }
 

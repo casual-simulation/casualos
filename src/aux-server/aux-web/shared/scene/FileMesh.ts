@@ -21,7 +21,7 @@ import {
     parseArray,
     isFormula,
     fileFromShortId,
-    objectsAtGridPosition,
+    objectsAtWorkspaceGridPosition,
     FileCalculationContext,
     calculateFileValue,
     calculateNumericalTagValue
@@ -39,7 +39,8 @@ import { createLabel, convertToBox2, setLayer } from "./SceneUtils";
 import { WorkspaceMesh } from "./WorkspaceMesh";
 import { WordBubble3D } from "./WordBubble3D";
 import { LayersHelper } from "./LayersHelper";
-import { ClientType } from "./ClientType";
+import { AppType } from "../AppManager";
+import GameView from "../../aux-player/GameView/GameView";
 
 /**
  * Defines a class that represents a mesh for an "object" file.
@@ -98,6 +99,11 @@ export class FileMesh extends GameObject {
         super();
         this._gameView = gameView;
         this.allowNoWorkspace = false;
+
+        if (appManager.appType === AppType.Player) {
+            // AUX Player does not use workspaces. FileMesh needs to operate without one.
+            this.allowNoWorkspace = true;
+        }
     }
 
     get boundingBox(): Box3 {
@@ -223,43 +229,52 @@ export class FileMesh extends GameObject {
 
     private _tagUpdatePosition(): void {
         
-        const workspace = this._gameView ? this._gameView.getFile(this.file.tags._workspace) : null;
-        const scale = this._calculateScale(workspace);
-        const cubeScale = calculateScale(this._context, this.file, scale);
-        if (workspace && workspace.file.type === 'workspace') {
-            (<WorkspaceMesh>workspace.mesh).container.add(this);
+        if (appManager.appType === AppType.Builder) {
+
+            const workspace = this._gameView ? this._gameView.getFile(this.file.tags._workspace) : null;
+            const scale = this._calculateScale(workspace);
+            const cubeScale = calculateScale(this._context, this.file, scale);
+            if (workspace && workspace.file.type === 'workspace') {
+                (<WorkspaceMesh>workspace.mesh).container.add(this);
+                this.cubeContainer.scale.set(cubeScale.x, cubeScale.y, cubeScale.z);
+                this.cubeContainer.position.set(0, cubeScale.y / 2, 0);
+            } else {
+                if (!this.allowNoWorkspace) {
+                    console.log('[FileMesh] File should be deleted', this.file.id, this.file.tags._workspace);
+                }
+                this.visible = this.allowNoWorkspace;
+                this.parent = null;
+                this.cubeContainer.scale.set(cubeScale.x, cubeScale.y, cubeScale.z);
+                this.cubeContainer.position.set(0, 0, 0);
+            }
+    
+            if (this.file.tags._position && workspace && workspace.file.type === 'workspace') {
+                const localPosition = calculateObjectPositionOnWorkspace(this._context, this.file, scale );
+                this.position.set(localPosition.x, localPosition.y, localPosition.z);
+            } else {
+                // Default position
+                this.position.set(0, 0, 0);
+            }
+    
+            // We must call this function so that child objects get their positions updated too.
+            // Three render function does this automatically but there are functions in here that depend
+            // on accurate positioning of child objects.
+            this.updateMatrixWorld(true);
+
+        } else if (appManager.appType === AppType.Player) {
+            const cubeScale = calculateScale(this._context, this.file, 1.0);
             this.cubeContainer.scale.set(cubeScale.x, cubeScale.y, cubeScale.z);
             this.cubeContainer.position.set(0, cubeScale.y / 2, 0);
-        } else {
-            if (!this.allowNoWorkspace) {
-                console.log('[FileMesh] File should be deleted', this.file.id, this.file.tags._workspace);
-            }
-            this.visible = this.allowNoWorkspace;
-            this.parent = null;
-            this.cubeContainer.scale.set(cubeScale.x, cubeScale.y, cubeScale.z);
-            this.cubeContainer.position.set(0, 0, 0);
-        }
 
-        if (this.file.tags._position && workspace && workspace.file.type === 'workspace') {
-            const localPosition = calculateObjectPosition(
-                this._context,
-                this.file,
-                scale
-            );
-            
-            this.position.set(
-                localPosition.x,
-                localPosition.y,
-                localPosition.z);
-        } else {
-            // Default position
-            this.position.set(0, 0, 0);
-        }
+            const userContext = (<GameView>this._gameView).userContext;
+            const localPosition = calculateObjectPositionInContext(this._context, this.file, userContext);
+            this.position.set(localPosition.x, localPosition.y, localPosition.z);
 
-        // We must call this function so that child objects get their positions updated too.
-        // Three render function does this automatically but there are functions in here that depend
-        // on accurate positioning of child objects.
-        this.updateMatrixWorld(true);
+            // We must call this function so that child objects get their positions updated too.
+            // Three render function does this automatically but there are functions in here that depend
+            // on accurate positioning of child objects.
+            this.updateMatrixWorld(true);
+        }
     }
 
     private _tagUpdateColor(): void {
@@ -330,7 +345,7 @@ export class FileMesh extends GameObject {
         }
 
         // Only draw lines in the Builder client.
-        if (this._gameView.clientType !== ClientType.Builder) {
+        if (appManager.appType !== AppType.Builder) {
             return;
         }
 
@@ -530,7 +545,7 @@ export class FileMesh extends GameObject {
  * Calculates the scale of the given object. 
  * @param workspaceScale 
  */
-export function calculateScale(context: FileCalculationContext, obj: Object, workspaceScale: number) {
+export function calculateScale(context: FileCalculationContext, obj: Object, workspaceScale: number): Vector3 {
     const scaleX = calculateNumericalTagValue(context, obj, 'scale.x', 1);
     const scaleY = calculateNumericalTagValue(context, obj, 'scale.y', 1);
     const scaleZ = calculateNumericalTagValue(context, obj, 'scale.z', 1);
@@ -543,14 +558,14 @@ export function calculateScale(context: FileCalculationContext, obj: Object, wor
  * @param file The file.
  * @param scale The workspace scale. Usually calculated from the workspace scale.
  */
-export function calculateObjectPosition(context: FileCalculationContext, file: Object, scale: number) {
+export function calculateObjectPositionOnWorkspace(context: FileCalculationContext, file: Object, scale: number): Vector3 {
     const localPosition = calculateGridTileLocalCenter(
         file.tags._position.x, 
         file.tags._position.y, 
         file.tags._position.z,
         scale);
     
-    const objectsAtPosition = objectsAtGridPosition(context.objects, file.tags._workspace, file.tags._position);
+    const objectsAtPosition = objectsAtWorkspaceGridPosition(context.objects, file.tags._workspace, file.tags._position);
     const sortedByIndex = sortBy(objectsAtPosition, o => o.tags._index || 0);
     const index = file.tags._index || 0;
     const objectsBelowThis = sortedByIndex.slice(0, index);
@@ -559,4 +574,21 @@ export function calculateObjectPosition(context: FileCalculationContext, file: O
     const indexOffset = new Vector3(0, totalScales * scale, 0);
     localPosition.add(indexOffset);
     return localPosition;
+}
+
+/**
+ * 
+ * @param context The file calculation context to use to calculate forumula values.
+ * @param file The file to calculate position for.
+ * @param contextId The id of the context we want to get positional data for the given file.
+ */
+export function calculateObjectPositionInContext(context: FileCalculationContext, file: Object, contextId: string): Vector3 {
+    let posX = calculateNumericalTagValue(context, file, contextId + '.x', 0);
+    let posY = calculateNumericalTagValue(context, file, contextId + '.y', 0);
+    let posZ = calculateNumericalTagValue(context, file, contextId + '.z', 0);
+
+    // We need to flip the y position to match the way the coordinates on workspaces in AUX Builder work.
+    posY = -posY;
+
+    return new Vector3(posX, posZ, posY);
 }

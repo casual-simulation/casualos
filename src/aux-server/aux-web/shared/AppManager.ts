@@ -32,7 +32,15 @@ export interface VersionInfo {
     latestTaggedVersion: string;
 }
 
+export enum AppType {
+    Builder = 'builder',
+    Player = 'player'
+}
+
 export class AppManager {
+    
+    public appType: AppType;
+
     private _userSubject: BehaviorSubject<User>;
     private _updateAvailable: BehaviorSubject<boolean>;
     private _fileManager: FileManager;

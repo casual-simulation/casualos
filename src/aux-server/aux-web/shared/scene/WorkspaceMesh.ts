@@ -81,7 +81,7 @@ export class WorkspaceMesh extends GameObject {
         this.add(this.miniHex);
         this._debugInfo = {
             id: this.id,
-            gridChecker: null
+            gridCheckResults: null
         };
     }
 
@@ -134,7 +134,7 @@ export class WorkspaceMesh extends GameObject {
         this.position.y = this.workspace.position.y;
         this.position.z = this.workspace.position.z;
 
-        let gridUpdate: GridCheckResults = this._debugInfo.gridChecker;
+        let gridUpdate: GridCheckResults = this._debugInfo.gridCheckResults;
 
         if (this._gridChanged(this.workspace, prev) || force) {
             this.updateHexGrid();
@@ -163,7 +163,7 @@ export class WorkspaceMesh extends GameObject {
 
         if (this._debug) {
             this._debugInfo = {
-                gridChecker: gridUpdate,
+                gridCheckResults: gridUpdate,
                 id: this.id
             };
         }
@@ -232,5 +232,5 @@ export class WorkspaceMesh extends GameObject {
 
 export interface WorkspaceMeshDebugInfo {
     id: number;
-    gridChecker: GridCheckResults;
+    gridCheckResults: GridCheckResults;
 }

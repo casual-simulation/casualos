@@ -13,7 +13,7 @@ import {
     FileEvent, 
     DEFAULT_WORKSPACE_HEIGHT, 
     DEFAULT_SCENE_BACKGROUND_COLOR,
-    objectsAtGridPosition,
+    objectsAtWorkspaceGridPosition,
     objectsAtWorkspace,
     tagsMatchingFilter,
     isMinimized
@@ -452,7 +452,7 @@ export class InteractionManager {
      * @param gridPosition The grid position that the files should be retrieved for.
      */
     public objectsAtGridPosition(workspace: File3D, gridPosition: Vector2) {
-        return objectsAtGridPosition(this._gameView.getObjects().map(o => <Object>o.file), workspace.file.id, {
+        return objectsAtWorkspaceGridPosition(this._gameView.getObjects().map(o => <Object>o.file), workspace.file.id, {
             x: gridPosition.x,
             y: gridPosition.y,
             z: 0
