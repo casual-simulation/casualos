@@ -4,6 +4,7 @@ import { Input } from "./scene/Input";
 import { InputVR } from "./scene/InputVR";
 import { File3D } from "./scene/File3D";
 import { GridChecker } from "./scene/grid/GridChecker";
+import { ClientType } from "./scene/ClientType";
 
 /**
  * Interface that described what properties and functions should be available to a GameView class/component implementation.
@@ -11,6 +12,7 @@ import { GridChecker } from "./scene/grid/GridChecker";
  */
 export interface IGameView {
     
+    readonly clientType: ClientType;
     readonly fileQueue: HTMLElement;
     readonly gameView: HTMLElement;
     readonly canvas: HTMLCanvasElement;

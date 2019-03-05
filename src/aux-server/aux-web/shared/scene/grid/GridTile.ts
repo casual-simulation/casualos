@@ -21,11 +21,6 @@ export interface GridTile {
     gridPosition: Vector2;
 
     /**
-     * The tile-relative corner points of the tile.
-     */
-    points: Vector3[]
-
-    /**
      * The workspace relative corner points of the tile.
      */
     localPoints: Vector3[];
