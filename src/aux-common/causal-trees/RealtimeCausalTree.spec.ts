@@ -17,13 +17,13 @@ class Op implements AtomOp {
     type: number;
 }
 
-class Tree extends CausalTree<Op, number> {
+class Tree extends CausalTree<Op, number, any> {
 
 }
 
-class NumberReducer implements AtomReducer<Op, number> {
-    eval(weave: Weave<Op>): number {
-        return 0;
+class NumberReducer implements AtomReducer<Op, number, any> {
+    eval(weave: Weave<Op>): [number, any] {
+        return [0, null];
     }
 }
 

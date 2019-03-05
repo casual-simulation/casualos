@@ -17,7 +17,7 @@ import { WeaveVersion, versionsEqual } from "./WeaveVersion";
  * That is, an object that is able to keep a causal tree updated
  * based on events from a realtime channel.
  */
-export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any>> {
+export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
 
     private _tree: TTree;
     private _store: CausalTreeStore;
