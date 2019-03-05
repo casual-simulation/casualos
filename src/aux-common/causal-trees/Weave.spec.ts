@@ -271,7 +271,7 @@ describe('Weave', () => {
             expect(atoms).toEqual([]);
 
             const site1 = weave.getSite(1);
-            expect(site1.length).toBe(2);
+            expect(site1.length).toBe(0);
         });
 
         it('should remove all the children of the given reference when it is in the middle of the weave', () => {
@@ -300,48 +300,16 @@ describe('Weave', () => {
             ]);
 
             const site1 = weave.getSite(1);
-            expect(site1.length).toBe(2);
+            expect(site1.length).toBe(1);
             expect(site1.start).toBe(0);
-            expect(site1.end).toBe(2);
+            expect(site1.end).toBe(1);
             expect(site1.get(0)).toBe(ref1);
-            expect(site1.get(1)).toBe(ref2);
 
             const site2 = weave.getSite(2);
-            expect(site2.length).toBe(3);
-            expect(site2.start).toBe(2);
-            expect(site2.end).toBe(5);
-            expect(site2.get(0)).toBe(ref3);
-            expect(site2.get(1)).toBe(ref4);
-            expect(site2.get(2)).toBe(ref5);
-        });
-
-        it('should preserve the site indexes', () => {
-            let weave = new Weave();
-
-            const a1 = atom(atomId(1, 1), null, new Op());
-            const ref1 = weave.insert(a1);
-
-            const a2 = atom(atomId(1, 2), atomId(1, 1), new Op());
-            const ref2 = weave.insert(a2);
-            
-            const a3 = atom(atomId(2, 3), atomId(1, 2), new Op());
-            const ref3 = weave.insert(a3);
-
-            const a4 = atom(atomId(2, 4), atomId(1, 2), new Op());
-            const ref4 = weave.insert(a4);
-
-            const a5 = atom(atomId(2, 5), atomId(1, 1), new Op());
-            const ref5 = weave.insert(a5);
-            
-            expect(weave.remove(ref2)).toBe(true);
-
-            const atoms = weave.atoms.map(a => a.atom);
-            expect(atoms).toEqual([
-                a1, a5
-            ]);
-
-            const parent = weave.getAtom(ref3.atom.cause, ref3.causeIndex);
-            expect(parent).toBe(ref2);
+            expect(site2.length).toBe(1);
+            expect(site2.start).toBe(1);
+            expect(site2.end).toBe(2);
+            expect(site2.get(0)).toBe(ref5);
         });
     });
 
