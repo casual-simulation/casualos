@@ -54,7 +54,7 @@ export class CausalTreeManager implements SubscriptionLike {
      * The returned tree needs to be initialized.
      * @param info The info that identifies the tree that should be retrieved or created.
      */
-    async getTree<TTree extends CausalTree<AtomOp, any>>(info: RealtimeChannelInfo): Promise<RealtimeCausalTree<TTree>> {
+    async getTree<TTree extends CausalTree<AtomOp, any, any>>(info: RealtimeChannelInfo): Promise<RealtimeCausalTree<TTree>> {
         let realtime = <RealtimeCausalTree<TTree>>this._trees[info.id];
         if (!realtime) {
             let connection = new SocketIOConnection(this._socket);
@@ -109,5 +109,5 @@ export class CausalTreeManager implements SubscriptionLike {
 }
 
 interface TreeMap {
-    [key: string]: RealtimeCausalTree<CausalTree<AtomOp, any>>;
+    [key: string]: RealtimeCausalTree<CausalTree<AtomOp, any, any>>;
 }

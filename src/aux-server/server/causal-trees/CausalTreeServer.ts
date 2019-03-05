@@ -108,7 +108,7 @@ export class CausalTreeServer {
         });
     }
 
-    private async _getTree(info: RealtimeChannelInfo): Promise<CausalTree<AtomOp, any>> {
+    private async _getTree(info: RealtimeChannelInfo): Promise<CausalTree<AtomOp, any, any>> {
         let tree = this._treeList[info.id];
         if (!tree) {
             const stored = await this._treeStore.get<AtomOp>(info.id);

@@ -16,5 +16,5 @@ export interface AtomReducer<TOp extends AtomOp, TValue, TMetadata> {
      * @param meta The last metadata that was returned from this reducer. If undefined, then this
      *              is the first time the reducer has been called this session.
      */
-    eval(weave: Weave<TOp>, refs: WeaveReference<TOp>[], value?: TValue, meta?: TMetadata): [TValue, TMetadata];
+    eval(weave: Weave<TOp>, refs?: WeaveReference<TOp>[], value?: TValue, meta?: TMetadata): [TValue, TMetadata];
 }

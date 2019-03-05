@@ -4,7 +4,7 @@ import { AtomOp, AtomReducer, Weave } from '@yeti-cgi/aux-common/causal-trees';
 
 const ctx: Worker = self as any;
 let reducers: {
-    [type: string]: AtomReducer<AtomOp, any>
+    [type: string]: AtomReducer<AtomOp, any, any>
 } = {};
 
 ctx.onmessage = (msg) => {
