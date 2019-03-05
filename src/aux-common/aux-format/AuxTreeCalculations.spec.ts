@@ -111,6 +111,12 @@ describe('AuxTreeCalculations', () => {
             }, connection); 
             const tree = new RealtimeCausalTree<AuxCausalTree>(factory, store, channel);
 
+            const fileIds: string[] = [];
+            const { fileAdded } = fileChangeObservables(tree);
+            fileAdded.subscribe(file => {
+                fileIds.push(file.id);
+            });
+
             let stored = new AuxCausalTree(storedTree(site(1)));
             stored.root();
             stored.file('test', 'object');
@@ -119,14 +125,6 @@ describe('AuxTreeCalculations', () => {
             await store.update('test', stored.export());
             await tree.init();
             await connection.flushPromises();
-
-            const { fileAdded } = fileChangeObservables(tree);
-
-            const fileIds: string[] = [];
-
-            fileAdded.subscribe(file => {
-                fileIds.push(file.id);
-            });
 
             scheduler.flush();
 
