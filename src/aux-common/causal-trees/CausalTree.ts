@@ -169,7 +169,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * Imports the given list of weave references into the tree.
      * @param refs The references to import.
      */
-    importWeave<T extends TOp>(refs: WeaveReference<T>[]): void {
+    importWeave<T extends TOp>(refs: WeaveReference<T>[]): WeaveReference<TOp>[] {
         const newAtoms = this.weave.import(refs);
         const sortedAtoms = sortBy(newAtoms, a => a.atom.id.timestamp);
         for (let i = 0; i < sortedAtoms.length; i++) {
@@ -179,6 +179,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
             }
         }
         [this._value, this._metadata] = this._calculateValue(refs);
+        return newAtoms;
     }
 
     /**

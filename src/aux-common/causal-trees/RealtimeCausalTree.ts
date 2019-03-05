@@ -103,7 +103,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
             flatMap(version => this._requestSiteId(version), (version, site) => ({ version, site })),
             map(data => <TTree>this._factory.create(this.type, storedTree(data.site, data.version.knownSites))),
             flatMap(tree => this._channel.exchangeWeaves([], tree.weave.getVersion()), (tree, weave) => ({tree, weave})),
-            tap(data => data.tree.importWeave(data.weave)),
+            map(data => ({...data, weave: data.tree.importWeave(data.weave)})),
             tap(data => this._setTree(data.tree)),
             tap(data => this._updated.next(data.weave))
         ).subscribe(null, err => this._errors.next(err)));
@@ -115,7 +115,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
             flatMap(localVersion => this._channel.exchangeInfo(localVersion), (local, remote) => ({local, remote})),
             filter(versions => !versionsEqual(versions.local.version, versions.remote.version)),
             flatMap(versions => this._channel.exchangeWeaves(this._tree.weave.atoms, versions.local.version), (versions, weave) => ({ versions, weave })),
-            tap(data => this._tree.importWeave(data.weave)),
+            map(data => ({...data, weave: this._tree.importWeave(data.weave) })),
             tap(data => this._importKnownSites(data.versions.remote)),
             tap(data => this._updated.next(data.weave))
         ).subscribe(null, err => this._errors.next(err)));

@@ -235,8 +235,8 @@ describe('RealtimeCausalTree', () => {
 
             let remoteWeave = new Weave<Op>();
             remoteWeave.insert(atom(atomId(1, 0), null, new Op()));
-            remoteWeave.insert(atom(atomId(1, 1), atomId(1, 0), new Op()));
-            remoteWeave.insert(atom(atomId(1, 2), atomId(1, 0), new Op()));
+            const newRef1 = remoteWeave.insert(atom(atomId(1, 1), atomId(1, 0), new Op()));
+            const newRef2 = remoteWeave.insert(atom(atomId(1, 2), atomId(1, 0), new Op()));
 
             
             let finalWeave = new Weave<Op>();
@@ -319,7 +319,7 @@ describe('RealtimeCausalTree', () => {
             connection.setConnected(true);
             await connection.flushPromises();
 
-            remoteWeave.insert(atom(atomId(1, 5), atomId(1, 0), new Op()));
+            const addedRef = remoteWeave.insert(atom(atomId(1, 5), atomId(1, 0), new Op()));
             finalWeave.import(remoteWeave.atoms);
             weave.splice(0, weave.length, ...remoteWeave.atoms);
 
@@ -328,6 +328,9 @@ describe('RealtimeCausalTree', () => {
             await connection.flushPromises();
 
             expect(realtime.tree.weave.atoms).toEqual(finalWeave.atoms);
+            expect(updated[2]).toEqual([
+                addedRef
+            ]);
             expect(updated.length).toBe(3);
         });
 
