@@ -1,3 +1,5 @@
+import { getHashBuffer } from "./Hash";
+
 /**
  * Defines an interface for normal JS objects that represent Atom IDs.
  */
@@ -87,6 +89,12 @@ export interface Atom<T extends AtomOp> {
      * The operation that the atom contains.
      */
     value: T;
+
+    /**
+     * The checksum for this atom.
+     * Used to verify that a atom is valid.
+     */
+    checksum: number;
 }
 
 /**
@@ -96,9 +104,15 @@ export interface Atom<T extends AtomOp> {
  * @param value 
  */
 export function atom<T extends AtomOp>(id: AtomId, cause: AtomId, value: T): Atom<T> {
+    const hash = getHashBuffer([id, cause, value]);
     return {
         id,
         cause,
-        value
+        value,
+        
+        // Read only 32 bits of the hash.
+        // This should be good enough to prevent collisions for weaves 
+        // of up to ~2 billion atoms instead of never.
+        checksum: hash.readUInt32BE(0)
     };
 }

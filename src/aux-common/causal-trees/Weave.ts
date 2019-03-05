@@ -11,16 +11,10 @@ import { getHash, getHashBuffer } from './Hash';
  * @param causeIndex 
  */
 export function reference<T extends AtomOp>(atom: Atom<T>, index: number, causeIndex: number): WeaveReference<T> {
-    const hash = getHashBuffer([atom, index, causeIndex]);
     return {
         atom,
         index,
         causeIndex,
-        
-        // Read only 32 bits of the hash.
-        // This should be good enough to prevent collisions for weaves 
-        // of up to ~2 billion atoms instead of never.
-        checksum: hash.readUInt32BE(0)
     };
 }
 
@@ -46,12 +40,6 @@ export interface WeaveReference<TOp extends AtomOp> {
      * The index in the site that is this atom's cause.
      */
     causeIndex: number;
-
-    /**
-     * The checksum for this reference.
-     * Used to verify that a reference is valid.
-     */
-    checksum: number;
 }
 
 /**
@@ -313,7 +301,7 @@ export class Weave<TOp extends AtomOp> {
             } else {
                 // Could either be the same, a new sibling, or a new child of the current subtree
 
-                let order = this._compareAtoms(a, local);
+                let order = this._compareAtoms(a.atom, local.atom);
                 if (isNaN(order)) {
                     break;
                 } else if (order === 0) {
@@ -332,7 +320,7 @@ export class Weave<TOp extends AtomOp> {
                         local = this._atoms[i + localOffset];
                     } while(local && a.atom.id.timestamp <= local.atom.cause.timestamp);
                     
-                    order = this._compareAtoms(a, local);
+                    order = this._compareAtoms(a.atom, local.atom);
                     if (order < 0) {
                         this._atoms.splice(i + localOffset, 0, a);
                         newAtoms.push(a);
@@ -552,10 +540,10 @@ export class Weave<TOp extends AtomOp> {
      * @param first The first atom.
      * @param second The second atom.
      */
-    private _compareAtoms(first: WeaveReference<TOp>, second: WeaveReference<TOp>): number {
-        const cause = this._compareAtomIds(first.atom.cause, second.atom.cause);
+    private _compareAtoms(first: Atom<TOp>, second: Atom<TOp>): number {
+        const cause = this._compareAtomIds(first.cause, second.cause);
         if (cause === 0) {
-            let order = this._compareAtomIds(first.atom.id, second.atom.id);
+            let order = this._compareAtomIds(first.id, second.id);
             if (order === 0 && first.checksum !== second.checksum) {
                 return NaN;
             }

@@ -628,7 +628,7 @@ describe('Weave', () => {
 
             // We're using the actual hash values to ensure that they never change
             // without us knowing.
-            expect(firstVersion.hash).toEqual('81fbf0adf3747b3758a436b132ec6d9be8b69191e926badae90ce3e8da43cb82');
+            expect(firstVersion.hash).toEqual('f6fc3f6c7000a06aef13f65d7c10dffa8a08b45fd90c467e963d682592f14d2d');
             expect(firstVersion.hash).toEqual(secondVersion.hash);
         });
 
@@ -951,8 +951,8 @@ describe('Weave', () => {
             let second = new Weave<Op>();
             second.insertMany(root2, child1, child3);
 
-            expect(first.atoms[0].checksum).not.toEqual(second.atoms[0].checksum);
-            expect(first.atoms[1].checksum).toEqual(second.atoms[2].checksum);
+            expect(first.atoms[0].atom.checksum).not.toEqual(second.atoms[0].atom.checksum);
+            expect(first.atoms[1].atom.checksum).toEqual(second.atoms[2].atom.checksum);
 
             const firstRefs = first.atoms;
             const secondRefs = second.atoms;
