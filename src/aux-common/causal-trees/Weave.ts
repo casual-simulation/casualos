@@ -330,6 +330,29 @@ export class Weave<TOp extends AtomOp> {
     }
 
     /**
+     * Calculates the chain of references from the root directly to the given reference.
+     * Returns the chain from the given reference to the rootmost reference.
+     * @param weave The weave that the reference is from.
+     * @param ref The reference.
+     */
+    referenceChain(ref: WeaveReference<TOp>): WeaveReference<TOp>[] {
+        let chain = [ref];
+
+        let cause = ref.atom.cause;
+        let causeIndex = ref.causeIndex;
+        while(cause) {
+            const causeRef = this.getAtom(cause, causeIndex);
+            
+            chain.push(causeRef);
+
+            cause = causeRef.atom.cause;
+            causeIndex = causeRef.causeIndex;
+        }
+
+        return chain;
+    }
+
+    /**
      * Updates the sites map.
      */
     private _updateSites(siteId: number, site: VirtualArray<WeaveReference<TOp>>) {

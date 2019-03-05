@@ -262,6 +262,6 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
 
 
     private _calculateValue(refs: WeaveReference<TOp>[]): [TValue, TMetadata] {
-        return this._reducer.eval(this._weave, refs, this._value);
+        return this._reducer.eval(this._weave, refs, this._value, this._metadata);
     }
 }

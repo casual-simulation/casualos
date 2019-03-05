@@ -22,18 +22,14 @@ export class WeaveTraverser<TOp extends AtomOp> {
     peek(parent?: AtomId): WeaveReference<TOp> {
         if (this._index < this._weave.atoms.length) {
             const atom = this._weave.atoms[this._index];
-            if (parent) {
-                if (idEquals(parent, atom.atom.cause)) {
-                    return atom;
-                } else {
-                    return null;
-                }
-            } else {
+            if (!parent) {
                 return atom;
             }
-        } else {
-            return null;
-        }
+            if (idEquals(parent, atom.atom.cause)) {
+                return atom;
+            }
+        } 
+        return null;
     }
 
     /**

@@ -875,4 +875,37 @@ describe('Weave', () => {
         });
     });
 
+    describe('referenceChain()', () => {
+        it('should the given reference if it is the root', () => {
+            let weave = new Weave<Op>();
+
+            const root = weave.insert(atom(atomId(1, 0), null, new Op()));
+            const chain = weave.referenceChain(root);
+
+            expect(chain).toEqual([
+                root
+            ]);
+        });
+        it('should return all the ancestors of the given reference', () => {
+            let weave = new Weave<Op>();
+
+            const root = weave.insert(atom(atomId(1, 0), null, new Op()));
+            const child = weave.insert(atom(atomId(1, 1), atomId(1, 0), new Op()));
+            const sibling = weave.insert(atom(atomId(1, 4), atomId(1, 0), new Op()));
+            const grandChild = weave.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
+            const grandSibling = weave.insert(atom(atomId(1, 5), atomId(1, 1), new Op()));
+            const greatGrandChild = weave.insert(atom(atomId(1, 3), atomId(1, 2), new Op()));
+            const greatGrandSibling = weave.insert(atom(atomId(1, 6), atomId(1, 2), new Op()));
+
+            const chain = weave.referenceChain(greatGrandChild);
+
+            expect(chain).toEqual([
+                greatGrandChild,
+                grandChild,
+                child,
+                root
+            ]);
+        });
+    });
+
 });

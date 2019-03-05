@@ -1,6 +1,6 @@
 import { Weave } from "../causal-trees/Weave";
 import { AuxOp } from "./AuxOpTypes";
-import { AuxReducer, calculateSequenceRef, calculateSequenceRefs } from "./AuxReducer";
+import { AuxReducer, calculateSequenceRef, calculateSequenceRefs, AuxReducerMetadata } from "./AuxReducer";
 import { WeaveTraverser } from "../causal-trees/WeaveTraverser";
 import { AuxCausalTree } from "./AuxCausalTree";
 import { storedTree } from "../causal-trees/StoredCausalTree";
@@ -13,16 +13,20 @@ describe('AuxReducer', () => {
         let reducer: AuxReducer;
         let site1: AuxCausalTree;
         let traverser: WeaveTraverser<AuxOp>;
+        let metadata: AuxReducerMetadata;
 
         beforeEach(() => {
             reducer = new AuxReducer();
             site1 = new AuxCausalTree(storedTree(site(1)));
             traverser = new WeaveTraverser(site1.weave);
+            metadata = {
+                cache: new Map()
+            };
         });
 
         it('should return the initial value if there are no children', () => {
             const root = site1.val('abc', null);
-            const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+            const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
             expect(value).toBe('abc');
             expect(meta).toEqual({
                 indexes: [0, 1, 2],
@@ -40,7 +44,7 @@ describe('AuxReducer', () => {
 
             traverser.next();
 
-            const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+            const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
             expect(value).toBe(obj);
             expect(meta).toEqual(null);
         });
@@ -53,7 +57,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('123abc');
                 expect(meta).toEqual({
                     indexes: [0, 1, 2, 0, 1, 2],
@@ -67,7 +71,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('ab123c');
                 expect(meta).toEqual({
                     indexes: [0, 1, 0, 1, 2, 2],
@@ -81,7 +85,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('abc123');
                 expect(meta).toEqual({
                     indexes: [0, 1, 2, 0, 1, 2],
@@ -95,7 +99,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('987123');
                 expect(meta).toEqual({
                     indexes: [0, 1, 2, 0, 1, 2],
@@ -112,7 +116,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
 
                 // 456 appears after 123 because both insertions are on
                 // the root.
@@ -138,7 +142,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('abc123456');
                 expect(meta).toEqual({
                     indexes: [
@@ -161,7 +165,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('a123456bc');
                 expect(meta).toEqual({
                     indexes: [
@@ -186,7 +190,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('456123abc');
                 expect(meta).toEqual({
                     indexes: [
@@ -209,7 +213,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('123456abc');
                 expect(meta).toEqual({
                     indexes: [
@@ -232,7 +236,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('124563abc');
                 expect(meta).toEqual({
                     indexes: [
@@ -259,7 +263,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('');
                 expect(meta).toEqual({
                     indexes: [],
@@ -273,7 +277,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('');
                 expect(meta).toEqual({
                     indexes: [],
@@ -287,7 +291,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('bc');
                 expect(meta).toEqual({
                     indexes: [1, 2],
@@ -301,7 +305,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('ac');
                 expect(meta).toEqual({
                     indexes: [0, 2],
@@ -315,7 +319,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('ab');
                 expect(meta).toEqual({
                     indexes: [0, 1],
@@ -329,7 +333,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('');
                 expect(meta).toEqual({
                     indexes: [],
@@ -343,7 +347,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('');
                 expect(meta).toEqual({
                     indexes: [],
@@ -360,7 +364,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('bc');
                 expect(meta).toEqual({
                     indexes: [1, 2],
@@ -375,7 +379,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('ab');
                 expect(meta).toEqual({
                     indexes: [0, 1],
@@ -390,7 +394,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('ac');
                 expect(meta).toEqual({
                     indexes: [0, 2],
@@ -405,7 +409,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('c');
                 expect(meta).toEqual({
                     indexes: [2],
@@ -420,7 +424,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('a');
                 expect(meta).toEqual({
                     indexes: [0],
@@ -435,7 +439,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('');
                 expect(meta).toEqual({
                     indexes: [],
@@ -450,7 +454,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('c');
                 expect(meta).toEqual({
                     indexes: [2],
@@ -467,7 +471,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('123bc');
                 expect(meta).toEqual({
                     indexes: [
@@ -491,7 +495,7 @@ describe('AuxReducer', () => {
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
                 expect(value).toBe('23ac45');
                 expect(meta).toEqual({
                     indexes: [
@@ -512,7 +516,7 @@ describe('AuxReducer', () => {
             it('should return the root if there are no other inserts', () => {
                 const root = site1.val('abc', null);
                 traverser.next();
-                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
 
                 expect(calculateSequenceRef(meta, 0)).toEqual({ ref: root, index: 0 });
                 expect(calculateSequenceRef(meta, 1)).toEqual({ ref: root, index: 1 });
@@ -523,7 +527,7 @@ describe('AuxReducer', () => {
             it('should return the last valid index if the insert index is after the sequence', () => {
                 const root = site1.val('abc', null);
                 traverser.next();
-                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
 
                 expect(calculateSequenceRef(meta, 4)).toEqual({ ref: root, index: 3 });
             });
@@ -531,7 +535,7 @@ describe('AuxReducer', () => {
             it('should return the first valid index if the insert index is before the sequence', () => {
                 const root = site1.val('abc', null);
                 traverser.next();
-                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
 
                 expect(calculateSequenceRef(meta, -1)).toEqual({ ref: root, index: 0 });
             });
@@ -540,7 +544,7 @@ describe('AuxReducer', () => {
                 const root = site1.val('abc', null);
                 site1.delete(root.atom);
                 traverser.next();
-                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
 
                 expect(calculateSequenceRef(meta, 1)).toEqual({ ref: null, index: 0 });
             });
@@ -548,7 +552,7 @@ describe('AuxReducer', () => {
             it('should return the index if the root does not have an end', () => {
                 const root = site1.val(19, null);
                 traverser.next();
-                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
 
                 expect(calculateSequenceRef(meta, 1)).toEqual({ ref: null, index: 1 });
                 expect(calculateSequenceRef(meta, 100)).toEqual({ ref: null, index: 100 });
@@ -564,7 +568,7 @@ describe('AuxReducer', () => {
 
                 // text: "23ac45"
                 traverser.next();
-                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
 
                 expect(calculateSequenceRef(meta, 0)).toEqual({ ref: insert2, index: 1 });
                 expect(calculateSequenceRef(meta, 1)).toEqual({ ref: insert2, index: 2 });
@@ -582,7 +586,7 @@ describe('AuxReducer', () => {
 
                 // text: "23ac45"
                 traverser.next();
-                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
 
                 expect(calculateSequenceRefs(meta, 1, 2)).toEqual([
                     { ref: root, index: 1, length: 2 }
@@ -599,7 +603,7 @@ describe('AuxReducer', () => {
 
                 // text: "23ac45"
                 traverser.next();
-                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value);
+                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
 
                 expect(calculateSequenceRefs(meta, 0, 0)).toEqual([
                     { ref: insert2, index: 1 }
