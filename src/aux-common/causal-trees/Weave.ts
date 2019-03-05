@@ -236,9 +236,6 @@ export class Weave<TOp extends AtomOp> {
             }
 
             this._sizeMap.delete(r.atom.id);
-            const site = this.getSite(r.atom.id.site);
-            site.remove(r.index);
-            this._updateSites(r.atom.id.site, site);
         }
     }
 
