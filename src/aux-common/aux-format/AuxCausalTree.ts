@@ -2,7 +2,7 @@ import { Weave, WeaveReference } from '../causal-trees/Weave';
 import { AuxOp, FileOp, TagOp, InsertOp, ValueOp, DeleteOp, AuxOpType } from './AuxOpTypes';
 import { CausalTree } from '../causal-trees/CausalTree';
 import { FilesState, FileType, FileEvent, PartialFile, Object, File, Workspace, tagsOnFile, getFileTag, hasValue, getTag } from '../Files';
-import { AuxReducer, calculateSequenceRef, calculateSequenceRefs } from './AuxReducer';
+import { AuxReducer, AuxReducerMetadata } from './AuxReducer';
 import { root, file, tag, value, del, insert } from './AuxAtoms';
 import { AtomId, Atom } from '../causal-trees/Atom';
 import { SiteInfo } from '../causal-trees/SiteIdInfo';
@@ -15,7 +15,7 @@ import { merge } from '../utils';
 /**
  * Defines a Causal Tree for aux files.
  */
-export class AuxCausalTree extends CausalTree<AuxOp, AuxState> {
+export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadata> {
 
     /**
      * Creates a new AUX Causal Tree.

@@ -13,11 +13,12 @@ import { Subject } from 'rxjs';
  * Defines a class that represents a Causal Tree.
  * That is, a conflict-free replicated data type. (CRDT)
  */
-export class CausalTree<TOp extends AtomOp, TValue> {
+export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
     private _site: SiteInfo;
     private _weave: Weave<TOp>;
     private _factory: AtomFactory<TOp>;
-    private _reducer: AtomReducer<TOp, TValue>;
+    private _reducer: AtomReducer<TOp, TValue, TMetadata>;
+    private _metadata: TMetadata;
     private _value: TValue;
     private _knownSites: SiteInfo[];
     private _atomAdded: Subject<WeaveReference<TOp>[]>;
@@ -62,10 +63,14 @@ export class CausalTree<TOp extends AtomOp, TValue> {
      * Gets the currently stored value in the tree.
      */
     get value() {
-        if (this._value === null) {
-            this._value = this._reducer.eval(this.weave);
-        }
         return this._value;
+    }
+
+    /**
+     * Gets the currently stored metadata.
+     */
+    get metadata() {
+        return this._metadata;
     }
 
     /**
@@ -87,7 +92,7 @@ export class CausalTree<TOp extends AtomOp, TValue> {
      * @param tree The stored tree that this causal tree should be made from.
      * @param reducer The reducer used to convert a list of operations into a single value.
      */
-    constructor(tree: StoredCausalTree<TOp>, reducer: AtomReducer<TOp, TValue>) {
+    constructor(tree: StoredCausalTree<TOp>, reducer: AtomReducer<TOp, TValue, TMetadata>) {
         this._site = tree.site;
         this._knownSites = unionBy([
             this.site
@@ -95,7 +100,8 @@ export class CausalTree<TOp extends AtomOp, TValue> {
         this._weave = new Weave<TOp>();
         this._factory = new AtomFactory<TOp>(this._site);
         this._reducer = reducer;
-        this._value = null;
+        this._value = undefined;
+        this._metadata = undefined;
         this._atomAdded = new Subject<WeaveReference<TOp>[]>();
         this._isBatching = false;
         this._batch = [];
@@ -122,7 +128,6 @@ export class CausalTree<TOp extends AtomOp, TValue> {
             this.factory.updateTime(atom.id.timestamp);
         }
         const ref = this.weave.insert(atom);
-        this._value = null;
         if (ref) {
             if (this._isBatching) {
                 this._batch.push(ref);
@@ -131,6 +136,7 @@ export class CausalTree<TOp extends AtomOp, TValue> {
                 if (this.garbageCollect) {
                     this.collectGarbage(refs);
                 }
+                [this._value, this._metadata] = this._calculateValue(refs);
                 this._atomAdded.next(refs);
             }
         }
@@ -151,6 +157,7 @@ export class CausalTree<TOp extends AtomOp, TValue> {
                 if (this.garbageCollect) {
                     this.collectGarbage(this._batch);
                 }
+                [this._value, this._metadata] = this._calculateValue(this._batch);
                 this._atomAdded.next(this._batch);
                 this._batch = [];
             }
@@ -171,7 +178,7 @@ export class CausalTree<TOp extends AtomOp, TValue> {
                 this.factory.updateTime(ref.atom.id.timestamp);
             }
         }
-        this._value = null;
+        [this._value, this._metadata] = this._calculateValue(refs);
     }
 
     /**
@@ -244,4 +251,17 @@ export class CausalTree<TOp extends AtomOp, TValue> {
      * @param refs The weave references that were added to the tree.
      */
     protected collectGarbage(refs: WeaveReference<TOp>[]): void {}
+
+    /**
+     * Recalculates the values associated the given references.
+     * This can be used as a performance improvement to only recalculate the parts of the
+     * tree's value that were affected by the additions.
+     * @param refs The references that were added to the tree.
+     */
+    protected recalculateValues(refs: WeaveReference<TOp>[]): void {}
+
+
+    private _calculateValue(refs: WeaveReference<TOp>[]): [TValue, TMetadata] {
+        return this._reducer.eval(this._weave, refs, this._value);
+    }
 }

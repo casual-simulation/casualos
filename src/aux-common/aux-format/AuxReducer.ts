@@ -10,9 +10,17 @@ import { AuxFile, AuxObject, AuxWorkspace, AuxState, AuxFileMetadata, AuxValueMe
 import { flatMap, fill } from 'lodash';
 import { MetaProperty } from "estree";
 
-export class AuxReducer implements AtomReducer<AuxOp, AuxState> {
+/**
+ * Defines a type for a map from weave references to their calculated values.
+ */
+export type AuxReducerMetadata = Map<WeaveReference<AuxOp>, any>;
+
+/**
+ * Defines an AtomReducer that is able to produce AuxState from a weave of Aux operations.
+ */
+export class AuxReducer implements AtomReducer<AuxOp, AuxState, AuxReducerMetadata> {
     
-    eval(weave: Weave<AuxOp>): AuxState {
+    eval(weave: Weave<AuxOp>, refs: WeaveReference<AuxOp>[], old?: AuxState, metadata?: AuxReducerMetadata): [AuxState, AuxReducerMetadata] {
         let value: AuxState = {};
         let tree = new WeaveTraverser<AuxOp>(weave);
 
@@ -30,7 +38,7 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState> {
             }
         }
 
-        return value;
+        return [value, null];
     }
 
     private _evalFile(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<FileOp>, file: FileOp): AuxFile {

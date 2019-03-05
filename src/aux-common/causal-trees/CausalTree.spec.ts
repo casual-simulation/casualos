@@ -20,8 +20,8 @@ class Op implements AtomOp {
     }
 }
 
-class Reducer implements AtomReducer<Op, number> {
-    eval(weave: Weave<Op>): number {
+class Reducer implements AtomReducer<Op, number, any> {
+    eval(weave: Weave<Op>): [number, any] {
         let val = 0;
         for (let i = 0; i < weave.atoms.length; i++) {
             const ref = weave.atoms[i];
@@ -31,7 +31,7 @@ class Reducer implements AtomReducer<Op, number> {
                 val -= 1;
             }
         }
-        return val;
+        return [val, null];
     }
 }
 
