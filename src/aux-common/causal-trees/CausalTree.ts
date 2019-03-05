@@ -25,6 +25,11 @@ export class CausalTree<TOp extends AtomOp, TValue> {
     private _batch: WeaveReference<TOp>[];
 
     /**
+     * Gets or sets whether the causal tree should collect garbage.
+     */
+    garbageCollect: boolean;
+
+    /**
      * Gets the site that this causal tree represents.
      */
     get site() {
@@ -94,6 +99,7 @@ export class CausalTree<TOp extends AtomOp, TValue> {
         this._atomAdded = new Subject<WeaveReference<TOp>[]>();
         this._isBatching = false;
         this._batch = [];
+        this.garbageCollect = false;
 
         if (tree.weave) {
             this.importWeave(tree.weave);
@@ -121,7 +127,11 @@ export class CausalTree<TOp extends AtomOp, TValue> {
             if (this._isBatching) {
                 this._batch.push(ref);
             } else {
-                this._atomAdded.next([ref]);
+                const refs = [ref];
+                if (this.garbageCollect) {
+                    this.collectGarbage(refs);
+                }
+                this._atomAdded.next(refs);
             }
         }
         return ref;
@@ -138,6 +148,9 @@ export class CausalTree<TOp extends AtomOp, TValue> {
             return func();
         } finally {
             if (this._batch.length > 0) {
+                if (this.garbageCollect) {
+                    this.collectGarbage(this._batch);
+                }
                 this._atomAdded.next(this._batch);
                 this._batch = [];
             }
@@ -215,6 +228,9 @@ export class CausalTree<TOp extends AtomOp, TValue> {
         }
     }
 
+    /**
+     * Gets the version of the tree.
+     */
     getVersion(): SiteVersionInfo {
         return {
             site: this.site,
@@ -222,4 +238,10 @@ export class CausalTree<TOp extends AtomOp, TValue> {
             version: this.weave.getVersion()
         };
     }
+
+    /**
+     * Performs garbage collection of the tree's weave after a set of atoms were added to the tree.
+     * @param refs The weave references that were added to the tree.
+     */
+    protected collectGarbage(refs: WeaveReference<TOp>[]): void {}
 }

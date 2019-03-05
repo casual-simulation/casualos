@@ -432,6 +432,27 @@ describe('AuxCausalTree', () => {
             });
         });
 
+        describe('garbage collection (garbage collect === true)', () => {
+            it('should remove old values when adding a new value atom', () => {
+                let tree = new AuxCausalTree(storedTree(site(1)));
+
+                tree.garbageCollect = true;
+
+                const root = tree.root();
+                const file = tree.file('fileId', 'object');
+                const test = tree.tag('test', file.atom);
+                const testVal1 = tree.val(99, test.atom);
+                const testVal2 = tree.val('hello, world', test.atom);
+
+                expect(tree.weave.atoms).toEqual([
+                    root,
+                    file,
+                    test,
+                    testVal2
+                ]);
+            });
+        });
+
         describe('metadata', () => {
             it('should produce metadata', () => {
                 let tree = new AuxCausalTree(storedTree(site(1)));

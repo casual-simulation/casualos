@@ -1,5 +1,5 @@
 import { Weave, WeaveReference } from '../causal-trees/Weave';
-import { AuxOp, FileOp, TagOp, InsertOp, ValueOp, DeleteOp } from './AuxOpTypes';
+import { AuxOp, FileOp, TagOp, InsertOp, ValueOp, DeleteOp, AuxOpType } from './AuxOpTypes';
 import { CausalTree } from '../causal-trees/CausalTree';
 import { FilesState, FileType, FileEvent, PartialFile, Object, File, Workspace, tagsOnFile, getFileTag, hasValue, getTag } from '../Files';
 import { AuxReducer, calculateSequenceRef, calculateSequenceRefs } from './AuxReducer';
@@ -15,7 +15,12 @@ import { merge } from '../utils';
 /**
  * Defines a Causal Tree for aux files.
  */
-export class AuxCausalTree extends CausalTree<AuxOp, AuxState> {    
+export class AuxCausalTree extends CausalTree<AuxOp, AuxState> {
+
+    /**
+     * Creates a new AUX Causal Tree.
+     * @param tree The stored tree that this object should be constructed from.
+     */
     constructor(tree: StoredCausalTree<AuxOp>) {
         super(tree, new AuxReducer());
     }
@@ -227,5 +232,14 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState> {
         });
 
         return refs;
+    }
+
+    protected collectGarbage(refs: WeaveReference<AuxOp>[]): void {
+        for (let i = 0; i < refs.length; i++) {
+            const ref = refs[i];
+            if (ref.atom.value.type === AuxOpType.value) {
+                this.weave.removeBefore(ref);
+            }
+        }
     }
 }
