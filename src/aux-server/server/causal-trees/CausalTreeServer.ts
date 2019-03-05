@@ -130,5 +130,5 @@ export class CausalTreeServer {
  * Defines a list of causal trees mapped by their channel IDs.
  */
 export interface TreeMap {
-    [key: string]: CausalTree<AtomOp, any>;
+    [key: string]: CausalTree<AtomOp, any, any>;
 }
