@@ -482,6 +482,81 @@ describe('Weave', () => {
         });
     });
 
+    describe('getAtomSize()', () => {
+        it('should return undefined if the ID is not in the weave', () => {
+            let weave = new Weave();
+
+            const a1 = atom(atomId(1, 1), null, new Op());
+
+            expect(weave.getAtomSize(a1.id)).toBeUndefined();
+        });
+
+        it('should return 1 when the reference has no children', () => {
+            let weave = new Weave();
+
+            const a1 = weave.insert(atom(atomId(1, 1), null, new Op()));
+
+            expect(weave.getAtomSize(a1.atom.id)).toBe(1);
+        });
+        
+        it('should return 2 when the reference has a single child', () => {
+            let weave = new Weave();
+
+            const a1 = weave.insert(atom(atomId(1, 1), null, new Op()));
+            const a2 = weave.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
+
+            expect(weave.getAtomSize(a1.atom.id)).toBe(2);
+            expect(weave.getAtomSize(a2.atom.id)).toBe(1);
+        });
+
+        it('should return the total width that the reference has', () => {
+            let weave = new Weave();
+
+            const a1 = weave.insert(atom(atomId(1, 1), null, new Op()));
+            const a2 = weave.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
+            const a3 = weave.insert(atom(atomId(1, 3), atomId(1, 1), new Op()));
+            const a4 = weave.insert(atom(atomId(1, 4), atomId(1, 2), new Op()));
+            const a5 = weave.insert(atom(atomId(1, 5), atomId(1, 2), new Op()));
+
+            expect(weave.getAtomSize(a1.atom.id)).toBe(5);
+            expect(weave.getAtomSize(a2.atom.id)).toBe(3);
+            expect(weave.getAtomSize(a3.atom.id)).toBe(1);
+            expect(weave.getAtomSize(a4.atom.id)).toBe(1);
+            expect(weave.getAtomSize(a5.atom.id)).toBe(1);
+        });
+
+        it('should update after deletes', () => {
+            let weave = new Weave();
+
+            const a1 = weave.insert(atom(atomId(1, 1), null, new Op()));
+            const a2 = weave.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
+
+            weave.remove(a2);
+
+            expect(weave.getAtomSize(a2.atom.id)).toBeUndefined();
+            expect(weave.getAtomSize(a1.atom.id)).toBe(1);
+        });
+
+        it('should update after imports', () => {
+            let original = new Weave();
+
+            const a1 = original.insert(atom(atomId(1, 1), null, new Op()));
+            const a2 = original.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
+            const a3 = original.insert(atom(atomId(1, 3), atomId(1, 1), new Op()));
+            const a4 = original.insert(atom(atomId(1, 4), atomId(1, 2), new Op()));
+            const a5 = original.insert(atom(atomId(1, 5), atomId(1, 2), new Op()));
+
+            let weave = new Weave();
+            weave.import(original.atoms);
+
+            expect(weave.getAtomSize(a1.atom.id)).toBe(5);
+            expect(weave.getAtomSize(a2.atom.id)).toBe(3);
+            expect(weave.getAtomSize(a3.atom.id)).toBe(1);
+            expect(weave.getAtomSize(a4.atom.id)).toBe(1);
+            expect(weave.getAtomSize(a5.atom.id)).toBe(1);
+        });
+    });
+
     describe('getVersion()', () => {
         it('should return an array with the latest timestamps from each site', () => {
             const a1 = atom(atomId(1, 1), null, new Op());

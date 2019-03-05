@@ -42,15 +42,28 @@ export class WeaveTraverser<TOp extends AtomOp> {
     }
 
     /**
+     * Gets the current atom.
+     */
+    current(): WeaveReference<TOp> {
+        return this._weave.atoms[this._index];
+    }
+
+    /**
      * Skips atoms until the next atom is a sibling of the given parent.
      * @param parent The parent to skip out of.
      */
     skip(parent: AtomId) {
-        while (this.peek(parent)) {
-            const ref = this.next();
-            const nextRef = this.peek();
-            if (nextRef && idEquals(ref.atom.id, nextRef.atom.cause)) {
-                this.skip(ref.atom.id);
+        const current = this.current();
+        if (current && idEquals(parent, current.atom.id)) {
+            const size = this._weave.getAtomSize(parent);
+            this._index += size;
+        } else {
+            while (this.peek(parent)) {
+                const ref = this.next();
+                const nextRef = this.peek();
+                if (nextRef && idEquals(ref.atom.id, nextRef.atom.cause)) {
+                    this.skip(ref.atom.id);
+                }
             }
         }
     }

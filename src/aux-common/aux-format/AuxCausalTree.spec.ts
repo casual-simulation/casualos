@@ -1070,21 +1070,34 @@ describe('AuxCausalTree', () => {
                 num: 5
             });
 
+            const otherFile = tree.file('other', 'object');
+            const otherTag = tree.tag('tag', otherFile.atom);
+            const otherTagValue = tree.val('99', otherTag.atom);
+
             let updates: WeaveReference<AuxOp>[][] = [];
             tree.atomAdded.subscribe(refs => updates.push(refs));
 
             const result = tree.addEvents([
                 addState({
-                    'test': newFile
+                    'test': newFile,
+                    'other': <any><Partial<Object>>{
+                        id: 'other',
+                        type: 'object',
+                        tags: {
+                            tag: 'hello'
+                        }
+                    }
                 })
             ]);
 
-            const fileAtom = atom(atomId(1, 2), root.atom.id, file('test', 'object'));
-            const abcTag = atom(atomId(1, 3), fileAtom.id, tag('abc'));
-            const abcTagValue = atom(atomId(1, 4, 1), abcTag.id, value('def'));
+            const fileAtom = atom(atomId(1, 5), root.atom.id, file('test', 'object'));
+            const abcTag = atom(atomId(1, 6), fileAtom.id, tag('abc'));
+            const abcTagValue = atom(atomId(1, 7, 1), abcTag.id, value('def'));
 
-            const numTag = atom(atomId(1, 5), fileAtom.id, tag('num'));
-            const numTagValue = atom(atomId(1, 6, 1), numTag.id, value(5));
+            const numTag = atom(atomId(1, 8), fileAtom.id, tag('num'));
+            const numTagValue = atom(atomId(1, 9, 1), numTag.id, value(5));
+
+            const newOtherTagValue = atom(atomId(1, 10, 1), otherTag.atom.id, value('hello'));
 
             expect(updates.length).toBe(1);
             expect(result.map(ref => ref.atom)).toEqual([
@@ -1092,7 +1105,8 @@ describe('AuxCausalTree', () => {
                 abcTag,
                 abcTagValue,
                 numTag,
-                numTagValue
+                numTagValue,
+                newOtherTagValue
             ]);
             expect(tree.weave.atoms.map(ref => ref.atom)).toEqual([
                 root.atom,
@@ -1100,7 +1114,11 @@ describe('AuxCausalTree', () => {
                 numTag,
                 numTagValue,
                 abcTag,
-                abcTagValue
+                abcTagValue,
+                otherFile.atom,
+                otherTag.atom,
+                newOtherTagValue,
+                otherTagValue.atom
             ]);
         });
     });

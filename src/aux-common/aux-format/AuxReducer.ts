@@ -39,6 +39,12 @@ export interface AuxTagValue {
  */
 export class AuxReducer implements AtomReducer<AuxOp, AuxState, AuxReducerMetadata> {
     
+    // TODO: Improve Performance.
+    //       On weaves with a large number of last write wins (LWW)
+    //       atoms WeaveTraverser.skip() ends up being ~50% of the cost
+    //       of this method.
+    //       Clearly, this can be improved by simply removing old LWW atoms from the weave
+    //       but it would still be nice to improve.
     eval(weave: Weave<AuxOp>, refs?: WeaveReference<AuxOp>[], old?: AuxState, metadata?: AuxReducerMetadata): [AuxState, AuxReducerMetadata] {
         let value: AuxState = {};
         metadata = (refs && old && metadata) ? metadata : {
@@ -150,7 +156,9 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState, AuxReducerMetada
 
         while (tree.peek(parent.atom.id)) {
             const ref = tree.next();
-            if (!hasValue && ref.atom.value.type === AuxOpType.value) {
+            if (hasValue) {
+                tree.skip(parent.atom.id);
+            } else if (ref.atom.value.type === AuxOpType.value) {
                 hasValue = true;
                 meta.ref = <WeaveReference<ValueOp>>ref;
                 const { value: val, meta: valMeta } = this.evalSequence(tree, ref, ref.atom.value.value, metadata);

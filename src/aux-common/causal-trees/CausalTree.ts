@@ -149,6 +149,9 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * @param func 
      */
     batch<T>(func: () => T): T {
+        if (this._isBatching) {
+            return func();
+        }
         try {
             this._isBatching = true;
             return func();

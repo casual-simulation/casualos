@@ -65,13 +65,21 @@ export class Weave<TOp extends AtomOp> {
     private _version: number;
 
     /**
+     * A map of atom IDs to the total number of atoms that they contain.
+     * 
+     * This can effectively be used as a skip list so that jumping between parent nodes
+     * is a quick operation. (much quicker than O(n) and closer to O(log n))
+     */
+    private _sizeMap: Map<AtomId, number>;
+
+    /**
      * The yarn of the weave.
      * Yarn is just a fancy name for an array that is split into
      * different segments where each segment represents a particular site's
      * atoms.
      * 
-     * In the context of Causal Trees, yarn is useful because it gives us an easy way to prune the tree
-     * without causing errors. Once pruned we can simply recreate the tree via re-inserting everything.
+     * In the context of Causal Trees, yarn is useful because it gives us an easy way to determine what version of the tree we have
+     * without iterating through each atom.
      */
     private _yarn: WeaveReference<TOp>[];
 
@@ -90,6 +98,7 @@ export class Weave<TOp extends AtomOp> {
         this._atoms = [];
         this._yarn = [];
         this._sites = {};
+        this._sizeMap = new Map();
     }
 
     /**
@@ -128,6 +137,7 @@ export class Weave<TOp extends AtomOp> {
             // Add the atom at the root of the weave.
             this._atoms.splice(0, 0, ref);
             site.insert(0, ref);
+            this._sizeMap.set(atom.id, 1);
             this._sites[atom.id.site] = {
                 start: site.start,
                 end: site.end
@@ -148,11 +158,12 @@ export class Weave<TOp extends AtomOp> {
                     return <WeaveReference<T>>existingAtom;
                 }
             }
-
             const ref = reference<T>(atom, siteIndex, cause ? cause.index : null);
             this._atoms.splice(weaveIndex, 0, ref);
             site.insert(siteIndex, ref);
             this._updateSites(atom.id.site, site);
+            
+            this._updateAtomSizes([ref]);
 
             return ref;
         }
@@ -216,6 +227,15 @@ export class Weave<TOp extends AtomOp> {
         const ordered = this._sortInYarnOrder(removed);
         for (let i = ordered.length - 1; i >= 0; i--) {
             const r = ordered[i];
+
+            const chain = this.referenceChain(r);
+            for (let i = 1; i < chain.length; i++) {
+                const id = chain[i].atom.id;
+                const current = this.getAtomSize(id);
+                this._sizeMap.set(id, current - 1);
+            }
+
+            this._sizeMap.delete(r.atom.id);
             const site = this.getSite(r.atom.id.site);
             site.remove(r.index);
             this._updateSites(r.atom.id.site, site);
@@ -233,6 +253,14 @@ export class Weave<TOp extends AtomOp> {
         } else {
             return null;
         }
+    }
+
+    /**
+     * Gets the total number of children that the given atom contains.
+     * @param id The ID of the atom to find the size of. If the tree doesn't contain the given reference then undefined is returned.
+     */
+    getAtomSize(id: AtomId): number {
+        return this._sizeMap.get(id);
     }
 
     /**
@@ -318,6 +346,7 @@ export class Weave<TOp extends AtomOp> {
         }
 
         this._sortYarn();
+        this._updateAtomSizes(newAtoms);
 
         return newAtoms;
     }
@@ -389,6 +418,22 @@ export class Weave<TOp extends AtomOp> {
                 start: site.start,
                 end: site.end
             };
+        }
+    }
+
+    /**
+     * Updates the sizes of the given references in the map.
+     * @param refs The references to update.
+     */
+    private _updateAtomSizes(refs: WeaveReference<TOp>[]) {
+        for (let i = 0; i < refs.length; i++) {
+            const ref = refs[i];
+            const chain = this.referenceChain(ref);
+            for (let b = 0; b < chain.length; b++) {
+                const id = chain[b].atom.id;
+                const current = this.getAtomSize(id) || 0;
+                this._sizeMap.set(id, current + 1);
+            }
         }
     }
 
@@ -493,6 +538,9 @@ export class Weave<TOp extends AtomOp> {
 
     /**
      * Finds the index that the atom with the given ID is in the atoms array.
+     * TODO: Improve performance. This function is ~90% of the cost of inserting atoms.
+     *       It's kinda tricky to do because the weave can't use traditional algorithms like
+     *       binary search because its not sorted in a regular manner.
      * @param atom The atom ID to search for.
      */
     private _indexOf(id: AtomId, start: number = 0): number {
