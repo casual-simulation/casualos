@@ -49,7 +49,7 @@ export interface WeaveReference<TOp extends AtomOp> {
 export class Weave<TOp extends AtomOp> {
     
     private _atoms: WeaveReference<TOp>[];
-    private _sites: SiteMap;
+    private _sites: SiteMap<TOp>;
     private _version: number;
 
     /**
@@ -59,17 +59,6 @@ export class Weave<TOp extends AtomOp> {
      * is a quick operation. (much quicker than O(n) and closer to O(log n))
      */
     private _sizeMap: Map<AtomId, number>;
-
-    /**
-     * The yarn of the weave.
-     * Yarn is just a fancy name for an array that is split into
-     * different segments where each segment represents a particular site's
-     * atoms.
-     * 
-     * In the context of Causal Trees, yarn is useful because it gives us an easy way to determine what version of the tree we have
-     * without iterating through each atom.
-     */
-    private _yarn: WeaveReference<TOp>[];
 
     /**
      * Gets the list of atoms stored in this weave.
@@ -84,7 +73,6 @@ export class Weave<TOp extends AtomOp> {
      */
     constructor() {
         this._atoms = [];
-        this._yarn = [];
         this._sites = {};
         this._sizeMap = new Map();
     }
@@ -93,20 +81,13 @@ export class Weave<TOp extends AtomOp> {
      * Gets the list of atoms for a site.
      * @param site The site identifier.
      */
-    getSite(site: number): VirtualArray<WeaveReference<TOp>> {
-        const siteIndex = this._sites[site];
-        if (typeof siteIndex === 'undefined') {
-            const siteIds = this.siteIds();
-            let index = findIndex(siteIds, id => id > site);
-            let yarnIndex = this._yarn.length;
-            if (index >= 0) {
-                const siteAfter = this._sites[siteIds[index]];
-                yarnIndex = siteAfter.start;
-            }
-            return new VirtualArray(this._yarn, yarnIndex, yarnIndex);
-        } else {
-            return new VirtualArray(this._yarn, siteIndex.start, siteIndex.end);
+    getSite(siteId: number): WeaveReference<TOp>[] {
+        let site = this._sites[siteId];
+        if (typeof site === 'undefined') {
+            site = [];
+            this._sites[siteId] = site;
         }
+        return site;
     }
 
     /**
@@ -124,12 +105,8 @@ export class Weave<TOp extends AtomOp> {
             const ref = reference<T>(atom, 0, null);
             // Add the atom at the root of the weave.
             this._atoms.splice(0, 0, ref);
-            site.insert(0, ref);
+            site[0] = ref;
             this._sizeMap.set(atom.id, 1);
-            this._sites[atom.id.site] = {
-                start: site.start,
-                end: site.end
-            };
             return ref;
         } else {
             const causeIndex = this._indexOf(atom.cause);
@@ -141,15 +118,14 @@ export class Weave<TOp extends AtomOp> {
             const siteIndex = this._siteIndex(atom.id, site);
 
             if (siteIndex >= 0 && siteIndex < site.length) {
-                const existingAtom = site.get(siteIndex);
+                const existingAtom = site[siteIndex];
                 if (existingAtom && idEquals(existingAtom.atom.id, atom.id)) {
                     return <WeaveReference<T>>existingAtom;
                 }
             }
             const ref = reference<T>(atom, siteIndex, cause ? cause.index : null);
             this._atoms.splice(weaveIndex, 0, ref);
-            site.insert(siteIndex, ref);
-            this._updateSites(atom.id.site, site);
+            site[siteIndex] = ref;
             
             this._updateAtomSizes([ref]);
 
@@ -212,9 +188,8 @@ export class Weave<TOp extends AtomOp> {
 
     private _removeSpan(index: number, length: number) {
         const removed = this._atoms.splice(index, length);
-        const ordered = this._sortInYarnOrder(removed);
-        for (let i = ordered.length - 1; i >= 0; i--) {
-            const r = ordered[i];
+        for (let i = removed.length - 1; i >= 0; i--) {
+            const r = removed[i];
 
             const chain = this.referenceChain(r);
             for (let i = 1; i < chain.length; i++) {
@@ -225,8 +200,7 @@ export class Weave<TOp extends AtomOp> {
 
             this._sizeMap.delete(r.atom.id);
             const site = this.getSite(r.atom.id.site);
-            site.remove(r.index);
-            this._updateSites(r.atom.id.site, site);
+            delete site[r.index];
         }
     }
 
@@ -237,7 +211,7 @@ export class Weave<TOp extends AtomOp> {
     getAtom<T extends TOp>(id: AtomId, index: number): WeaveReference<T> {
         const site = this.getSite(id.site);
         if (index >= 0 && index < site.length) {
-            return <WeaveReference<T>>site.get(index);
+            return <WeaveReference<T>>site[index];
         } else {
             return null;
         }
@@ -260,7 +234,7 @@ export class Weave<TOp extends AtomOp> {
 
         knownSites.forEach(id => {
             const site = this.getSite(id);
-            const mostRecentAtom = site.get(site.length - 1);
+            const mostRecentAtom = site[site.length - 1];
             sites[id] = mostRecentAtom.atom.id.timestamp;
         });
 
@@ -299,7 +273,11 @@ export class Weave<TOp extends AtomOp> {
                 this._atoms.push(...finalAtoms);
                 newAtoms.push(...finalAtoms);
 
-                this._yarn.push(...finalAtoms);
+                for (let b = 0; b < finalAtoms.length; b++) {
+                    const ref = finalAtoms[b];
+                    const site = this.getSite(ref.atom.id.site);
+                    site[ref.index] = ref;
+                }
                 break;
             } else {
                 // Could either be the same, a new sibling, or a new child of the current subtree
@@ -314,7 +292,9 @@ export class Weave<TOp extends AtomOp> {
                     // insert at this index.
                     this._atoms.splice(i + localOffset, 0, a);
                     newAtoms.push(a);
-                    this._yarn.push(a);
+                    
+                    const site = this.getSite(a.atom.id.site);
+                    site[a.index] = a;
                 } else if(order > 0) {
                     // New atom should be after local atom.
                     // Skip local atoms until we find the right place to put the new atom.
@@ -327,13 +307,14 @@ export class Weave<TOp extends AtomOp> {
                     if (order < 0) {
                         this._atoms.splice(i + localOffset, 0, a);
                         newAtoms.push(a);
-                        this._yarn.push(a);
+
+                        const site = this.getSite(a.atom.id.site);
+                        site[a.index] = a;
                     }
                 }
             }
         }
 
-        this._sortYarn();
         this._updateAtomSizes(newAtoms);
 
         return newAtoms;
@@ -367,46 +348,6 @@ export class Weave<TOp extends AtomOp> {
         }
 
         return chain;
-    }
-
-    /**
-     * Updates the sites map.
-     */
-    private _updateSites(siteId: number, site: VirtualArray<WeaveReference<TOp>>) {
-        const siteIds = this.siteIds();
-        let updatedSite = false;
-        for (let i = 0; i < siteIds.length; i++) {
-            let id = siteIds[i];
-            
-            if (id === siteId || (id > siteId && !updatedSite)) {
-                this._sites[siteId] = {
-                    start: site.start,
-                    end: site.end
-                };
-                updatedSite = true;
-            }
-            if (id > siteId) {
-                let current = this.getSite(id);
-                const offset = (site.end - current.start);
-                // offset all the other sites
-                for (let b = i; b < siteIds.length; b++) {
-                    id = siteIds[b];
-                    current = this.getSite(id);
-                    this._sites[id] = {
-                        start: current.start + offset,
-                        end: current.end + offset
-                    };
-                }
-                break;
-            }
-        }
-
-        if (!updatedSite) {
-            this._sites[siteId] = {
-                start: site.start,
-                end: site.end
-            };
-        }
     }
 
     /**
@@ -446,48 +387,17 @@ export class Weave<TOp extends AtomOp> {
         }
     }
 
-    private _sortYarn() {
-        this._yarn = this._sortInYarnOrder(this._yarn);
-
-        let currentSite = null;
-        let siteStart = 0;
-        for (let i = 0; i < this._yarn.length; i++) {
-            const ref = this._yarn[i];
-            const newSite = ref.atom.id.site;
-            if (currentSite !== newSite) {
-                if (currentSite) {
-                    this._sites[currentSite] = {
-                        start: siteStart,
-                        end: i
-                    };
-                }
-                siteStart = i;
-                currentSite = ref.atom.id.site;
-            }
-        }
-        if (currentSite) {
-            this._sites[currentSite] = {
-                start: siteStart,
-                end: this._yarn.length
-            };
-        }
-    }
-
-    private _sortInYarnOrder(refs: WeaveReference<TOp>[]) {
-        return sortBy(refs, ['atom.id.site', 'atom.id.timestamp', 'atom.id.priority']);
-    }
-
     /**
      * Finds the index that an atom should appear at in a yarn.
      * Uses binary search.
      */
-    private _siteIndex(atomId: AtomId, site: VirtualArray<WeaveReference<TOp>>): number {
+    private _siteIndex(atomId: AtomId, site: WeaveReference<TOp>[]): number {
         let left = 0;
         let right = site.length - 1;
 
         while(left <= right) {
             let m = Math.floor((left + right) / 2);
-            let ref = site.get(m);
+            let ref = site[m];
             if (atomId.timestamp < ref.atom.id.timestamp || 
                 (atomId.timestamp === ref.atom.id.timestamp && atomId.priority > ref.atom.id.priority)) {
                 right = m - 1;
@@ -609,8 +519,8 @@ export class Weave<TOp extends AtomOp> {
  * This is used to make it easy to jump to a specific site's atoms
  * even though they are stored in the same array.
  */
-export interface SiteMap {
-    [site: number]: {start: number, end: number};
+export interface SiteMap<TOp extends AtomOp> {
+    [site: number]: WeaveReference<TOp>[];
 }
 
 /**

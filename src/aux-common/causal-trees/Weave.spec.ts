@@ -271,7 +271,9 @@ describe('Weave', () => {
             expect(atoms).toEqual([]);
 
             const site1 = weave.getSite(1);
-            expect(site1.length).toBe(0);
+            expect(site1.length).toBe(2);
+            expect(site1[0]).toBe(undefined);
+            expect(site1[1]).toBe(undefined);
         });
 
         it('should remove all the children of the given reference when it is in the middle of the weave', () => {
@@ -300,16 +302,15 @@ describe('Weave', () => {
             ]);
 
             const site1 = weave.getSite(1);
-            expect(site1.length).toBe(1);
-            expect(site1.start).toBe(0);
-            expect(site1.end).toBe(1);
-            expect(site1.get(0)).toBe(ref1);
+            expect(site1.length).toBe(2);
+            expect(site1[0]).toBe(ref1);
+            expect(site1[1]).toBe(undefined);
 
             const site2 = weave.getSite(2);
-            expect(site2.length).toBe(1);
-            expect(site2.start).toBe(1);
-            expect(site2.end).toBe(2);
-            expect(site2.get(0)).toBe(ref5);
+            expect(site2.length).toBe(3);
+            expect(site2[0]).toBe(undefined);
+            expect(site2[1]).toBe(undefined);
+            expect(site2[2]).toBe(ref5);
         });
     });
 
@@ -468,16 +469,16 @@ describe('Weave', () => {
             const site2 = weave.getSite(2);
             const site7 = weave.getSite(7);
 
-            expect(site1.get(0)).toEqual(a1Ref);
-            expect(site1.get(1)).toEqual(a2Ref);
-            expect(site1.get(2)).toEqual(a4Ref);
-            expect(site1.get(3)).toEqual(a6Ref);
+            expect(site1[0]).toEqual(a1Ref);
+            expect(site1[1]).toEqual(a2Ref);
+            expect(site1[2]).toEqual(a4Ref);
+            expect(site1[3]).toEqual(a6Ref);
             expect(site1.length).toEqual(4);
 
-            expect(site2.get(0)).toEqual(a5Ref);
+            expect(site2[0]).toEqual(a5Ref);
             expect(site2.length).toEqual(1);
 
-            expect(site7.get(0)).toEqual(a3Ref);
+            expect(site7[0]).toEqual(a3Ref);
             expect(site7.length).toEqual(1);
         });
     });
@@ -655,10 +656,10 @@ describe('Weave', () => {
 
             const site = newWeave.getSite(1);
 
-            expect(site.get(0).atom).toBe(root);
-            expect(site.get(1).atom).toBe(child1);
-            expect(site.get(2).atom).toBe(child2);
-            expect(site.get(3).atom).toBe(child3);
+            expect(site[0].atom).toBe(root);
+            expect(site[1].atom).toBe(child1);
+            expect(site[2].atom).toBe(child2);
+            expect(site[3].atom).toBe(child3);
 
             expect(newAtoms.map(a => a.atom)).toEqual([
                 root,
@@ -837,23 +838,19 @@ describe('Weave', () => {
                 const atoms = newWeave.atoms.map(a => a.atom);
 
                 const site1 = newWeave.getSite(1);
-                expect(site1.start).toBe(0);
-                expect(site1.end).toBe(6);
-                expect(site1.get(0).atom).toEqual(root);
-                expect(site1.get(1).atom).toEqual(child1);
-                expect(site1.get(2).atom).toEqual(child2);
-                expect(site1.get(3).atom).toEqual(child3);
-                expect(site1.get(4).atom).toEqual(child6);
-                expect(site1.get(5).atom).toEqual(child9);
+                expect(site1[0].atom).toEqual(root);
+                expect(site1[1].atom).toEqual(child1);
+                expect(site1[2].atom).toEqual(child2);
+                expect(site1[3].atom).toEqual(child3);
+                expect(site1[4].atom).toEqual(child6);
+                expect(site1[5].atom).toEqual(child9);
                 expect(site1.length).toBe(6);
 
                 const site2 = newWeave.getSite(2);
-                expect(site2.start).toBe(6);
-                expect(site2.end).toBe(10);
-                expect(site2.get(0).atom).toEqual(child4);
-                expect(site2.get(1).atom).toEqual(child5);
-                expect(site2.get(2).atom).toEqual(child7);
-                expect(site2.get(3).atom).toEqual(child8);
+                expect(site2[0].atom).toEqual(child4);
+                expect(site2[1].atom).toEqual(child5);
+                expect(site2[2].atom).toEqual(child7);
+                expect(site2[3].atom).toEqual(child8);
                 expect(site2.length).toBe(4);
             });
 
@@ -885,22 +882,16 @@ describe('Weave', () => {
                 const atoms = newWeave.atoms.map(a => a.atom);
 
                 const site1 = newWeave.getSite(1);
-                expect(site1.start).toBe(0);
-                expect(site1.end).toBe(2);
-                expect(site1.get(0).atom).toEqual(root);
-                expect(site1.get(1).atom).toEqual(child1);
+                expect(site1[0].atom).toEqual(root);
+                expect(site1[1].atom).toEqual(child1);
                 expect(site1.length).toBe(2);
 
                 const site2 = newWeave.getSite(2);
-                expect(site2.start).toBe(2);
-                expect(site2.end).toBe(3);
-                expect(site2.get(0).atom).toEqual(child4);
+                expect(site2[0].atom).toEqual(child4);
                 expect(site2.length).toBe(1);
 
                 const site3 = newWeave.getSite(3);
-                expect(site3.start).toBe(3);
-                expect(site3.end).toBe(4);
-                expect(site3.get(0).atom).toEqual(child5);
+                expect(site3[0].atom).toEqual(child5);
                 expect(site3.length).toBe(1);
             });
         });
@@ -939,10 +930,8 @@ describe('Weave', () => {
             expect(atoms[1]).toEqual(child1);
 
             const site1 = newWeave.getSite(1);
-            expect(site1.start).toBe(0);
-            expect(site1.end).toBe(2);
-            expect(site1.get(0).atom).toEqual(root);
-            expect(site1.get(1).atom).toEqual(child1);
+            expect(site1[0].atom).toEqual(root);
+            expect(site1[1].atom).toEqual(child1);
             expect(site1.length).toBe(2);
 
             const site2 = newWeave.getSite(2);
