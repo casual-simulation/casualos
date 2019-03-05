@@ -511,15 +511,12 @@ export default class GameView extends Vue implements IGameView {
       if (shouldRemove) {
         this._fileRemoved(file.id);
       }
-
-    } else {
-      console.log('cant find file to update it');
     }
   }
 
   private async _fileAdded(file: AuxFile) {
-    if (file.type === 'object' && (file.tags._hidden || file.tags._destroyed) && !file.tags._user) {
-      return;
+    if (!this._shouldDisplayFile(file)) {
+        return;
     }
     
     var obj = new File3D(this, file);
@@ -540,6 +537,26 @@ export default class GameView extends Vue implements IGameView {
 
       this.onFileRemoved.invoke(obj);
     }
+  }
+
+  /**
+   * Returns wether or not the given file should be displayed in 3d.
+   * @param file The file
+   */
+  private _shouldDisplayFile(file: File): boolean {
+    // Don't display files without a defined type.
+    if (!file.type) {
+        return false;
+    }
+
+    if (file.type === 'object' && !file.tags._user) {
+        // Dont display normal files that are hidden or destroyed.
+        if (file.tags._hidden || file.tags._destroyed) {
+            return false;
+        }
+    }
+    
+    return true;
   }
 
   private _setupScene() {

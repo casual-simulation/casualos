@@ -5,6 +5,7 @@ import { InputVR } from "./scene/InputVR";
 import { File3D } from "./scene/File3D";
 import { GridChecker } from "./scene/grid/GridChecker";
 import { ClientType } from "./scene/ClientType";
+import { ArgEvent } from "@yeti-cgi/aux-common/Events";
 
 /**
  * Interface that described what properties and functions should be available to a GameView class/component implementation.
@@ -27,6 +28,10 @@ export interface IGameView {
     readonly workspacesMode: boolean
     readonly groundPlane: Plane;
     readonly gridChecker: GridChecker;
+
+    onFileAdded: ArgEvent<File3D>;
+    onFileUpdated: ArgEvent<File3D>;
+    onFileRemoved: ArgEvent<File3D>;
 
 
     /**

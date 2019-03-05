@@ -60,6 +60,7 @@ import Home from './Home/Home';
 
 // Import the WebXR Polyfill
 import 'webxr-polyfill';
+import { PartialFile } from '@yeti-cgi/aux-common';
 
 // Setup the Promise shim for browsers that don't support promises.
 polyfill();
@@ -131,10 +132,10 @@ router.beforeEach((to, from, next) => {
 
         if (appManager.user) {
             const userFile = appManager.fileManager.userFile;
-            if (userFile.tags.context != contextId) {
+            if (userFile.tags._userContext != contextId) {
                 // Set the context for the user.
                 console.log('[Router] Setting user\'s context to: ' + contextId);
-                appManager.fileManager.updateFile(userFile, { tags: { context: contextId }}).then(() => {
+                appManager.fileManager.updateFile(userFile, { tags: { _userContext: contextId }}).then(() => {
                     next();
                     return;
                 });
