@@ -166,7 +166,7 @@ describe('FileCalculations', () => {
             expect(result.addedFiles.length).toBe(0);
             expect(result.updatedFiles.length).toBe(0);
             expect(result.removedFiles.length).toBe(1);
-            expect(result.removedFiles[0]).toBe(prevState['test']);
+            expect(result.removedFiles[0]).toBe('test');
         });
 
         it('should detect that a file was updated', () => {
@@ -319,7 +319,7 @@ describe('FileCalculations', () => {
             expect(result.addedFiles[0]).toBe(currState['new']);
             expect(result.addedFiles[1]).toBe(currState['new2']);
             expect(result.removedFiles.length).toBe(1);
-            expect(result.removedFiles[0]).toBe(prevState['removed']);
+            expect(result.removedFiles[0]).toBe('removed');
             expect(result.updatedFiles.length).toBe(1);
             expect(result.updatedFiles[0]).toBe(currState['updated']);
         });

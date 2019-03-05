@@ -21,17 +21,20 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
         map(events => {
             let addedFiles: AuxFile[] = [];
             let updatedFiles: AuxState = {};
-            let deletedFiles: AuxFile[] = [];
+            let deletedFiles: string[] = [];
             events.forEach((e: WeaveReference<AuxOp>) => {
                 if (e.atom.value.type === AuxOpType.file) {
                     const id = e.atom.value.id;
-                    addedFiles.push(tree.tree.value[id]);
+                    const val = tree.tree.value[id];
+                    if (val) {
+                        addedFiles.push(val);
+                    }
                     return;
                 } else if(e.atom.value.type === AuxOpType.delete) {
                     let cause = tree.tree.weave.getAtom(e.atom.cause, e.causeIndex);
                     if (cause.atom.value.type === AuxOpType.file) {
                         const id = cause.atom.value.id;
-                        deletedFiles.push(tree.tree.value[id]);
+                        deletedFiles.push(id);
                         return;
                     }
                 }
@@ -40,8 +43,9 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
                 const file = getAtomFile(tree.tree.weave, e);
                 if (file) {
                     const id = file.atom.value.id;
-                    if(!updatedFiles[id]) {
-                        updatedFiles[id] = tree.tree.value[id];
+                    const val = tree.tree.value[id];
+                    if(!updatedFiles[id] && val) {
+                        updatedFiles[id] = val;
                     }
                 }
             });
@@ -62,8 +66,7 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
     }));
 
     const fileRemoved = stateDiffs.pipe(
-      flatMap(diff => diff.removedFiles),
-      map(f => f.id)
+      flatMap(diff => diff.removedFiles)
     );
 
     const fileUpdated = stateDiffs.pipe(flatMap(diff => diff.updatedFiles));

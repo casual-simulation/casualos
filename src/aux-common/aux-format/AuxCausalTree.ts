@@ -158,6 +158,9 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
      * @param file The file to remove.
      */
     removeFile(file: AuxFile): WeaveReference<AuxOp>[] {
+        if (!file) {
+            return [];
+        }
         return [this.delete(file.metadata.ref.atom)];
     }
     

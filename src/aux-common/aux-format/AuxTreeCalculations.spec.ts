@@ -3,10 +3,11 @@ import { RealtimeCausalTree, RealtimeChannel, WeaveReference, AtomOp, storedTree
 import { auxCausalTreeFactory } from "./AuxCausalTreeFactory";
 import { TestCausalTreeStore } from "../causal-trees/test/TestCausalTreeStore";
 import { TestChannelConnection } from "../causal-trees/test/TestChannelConnection";
-import { fileChangeObservables, getAtomFile } from "./AuxTreeCalculations";
+import { fileChangeObservables, getAtomFile, insertIntoTagName } from "./AuxTreeCalculations";
 import { AuxCausalTree } from "./AuxCausalTree";
 import { TestScheduler } from 'rxjs/testing';
 import { AsyncScheduler } from "rxjs/internal/scheduler/AsyncScheduler";
+import { tap } from "rxjs/operators";
 
 describe('AuxTreeCalculations', () => {
 
@@ -85,10 +86,10 @@ describe('AuxTreeCalculations', () => {
             const { fileAdded } = fileChangeObservables(tree);
             
             const fileIds: string[] = [];
-            
+            const errorHandler = jest.fn();
             fileAdded.subscribe(file => {
                 fileIds.push(file.id);
-            });
+            }, errorHandler);
 
             tree.tree.file('abc', 'object');
             tree.tree.file('def', 'object');
@@ -99,6 +100,7 @@ describe('AuxTreeCalculations', () => {
                 'abc',
                 'def'
             ]);
+            expect(errorHandler).not.toBeCalled();
         });
 
         it('should send a diff for the current files', async () => {
@@ -113,9 +115,10 @@ describe('AuxTreeCalculations', () => {
 
             const fileIds: string[] = [];
             const { fileAdded } = fileChangeObservables(tree);
+            const errorHandler = jest.fn();
             fileAdded.subscribe(file => {
                 fileIds.push(file.id);
-            });
+            }, errorHandler);
 
             let stored = new AuxCausalTree(storedTree(site(1)));
             stored.root();
@@ -132,6 +135,87 @@ describe('AuxTreeCalculations', () => {
                 'test',
                 'zdf'
             ]);
+            expect(errorHandler).not.toBeCalled();
+        });
+
+        it('should handle deleted files', async () => {
+            const factory = auxCausalTreeFactory();
+            const store = new TestCausalTreeStore();
+            const connection = new TestChannelConnection();
+            const channel = new RealtimeChannel<WeaveReference<AtomOp>>({
+                id: 'test',
+                type: 'aux'
+            }, connection); 
+            const tree = new RealtimeCausalTree<AuxCausalTree>(factory, store, channel);
+
+            const fileIds: string[] = [];
+            const updatedFiles: string[] = [];
+            const { fileAdded, fileUpdated } = fileChangeObservables(tree);
+            const errorHandler = jest.fn();
+            fileAdded.pipe(tap(file => fileIds.push(file.id)))
+                .subscribe(null, errorHandler);
+            fileUpdated.pipe(tap(file => updatedFiles.push(file.id)))
+                .subscribe(null, errorHandler);
+
+            let stored = new AuxCausalTree(storedTree(site(1)));
+            stored.root();
+            const file = stored.file('test', 'object');
+            const update = stored.tag('abc', file.atom);
+            const deleted = stored.delete(file.atom);
+
+            await store.update('test', stored.export());
+            await tree.init();
+            await connection.flushPromises();
+
+            scheduler.flush();
+
+            expect(fileIds).toEqual([]);
+            expect(updatedFiles).toEqual([]);
+            expect(errorHandler).not.toBeCalled();
+        });
+
+        it('should send file deleted events', async () => {
+            const factory = auxCausalTreeFactory();
+            const store = new TestCausalTreeStore();
+            const connection = new TestChannelConnection();
+            const channel = new RealtimeChannel<WeaveReference<AtomOp>>({
+                id: 'test',
+                type: 'aux'
+            }, connection); 
+            const tree = new RealtimeCausalTree<AuxCausalTree>(factory, store, channel);
+
+            const fileIds: string[] = [];
+            const updatedFiles: string[] = [];
+            const removedFiles: string[] = [];
+            const { fileAdded, fileUpdated, fileRemoved } = fileChangeObservables(tree);
+            const errorHandler = jest.fn();
+            fileAdded.pipe(tap(file => fileIds.push(file.id)))
+                .subscribe(null, errorHandler);
+            fileUpdated.pipe(tap(file => updatedFiles.push(file.id)))
+                .subscribe(null, errorHandler);
+            fileRemoved.pipe(tap(file => removedFiles.push(file)))
+                .subscribe(null, errorHandler);
+
+            let stored = new AuxCausalTree(storedTree(site(1)));
+            stored.root();
+            const file = stored.file('test', 'object');
+
+            await store.update('test', stored.export());
+            await tree.init();
+            await connection.flushPromises();
+
+            const del = tree.tree.delete(file.atom);
+
+            scheduler.flush();
+
+            expect(fileIds).toEqual([
+                'test'
+            ]);
+            expect(updatedFiles).toEqual([]);
+            expect(removedFiles).toEqual([
+                'test'
+            ]);
+            expect(errorHandler).not.toBeCalled();
         });
     });
 });

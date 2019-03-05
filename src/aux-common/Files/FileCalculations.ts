@@ -63,7 +63,7 @@ export interface FileCalculationContext {
  */
 export interface FilesStateDiff {
     addedFiles: File[];
-    removedFiles: File[];
+    removedFiles: string[];
     updatedFiles: File[];
 }
 
@@ -575,7 +575,7 @@ export function calculateStateDiff(prev: FilesState, current: FilesState, events
         const currVal = current[id];
         
         if (prevVal && !currVal) {
-            diff.removedFiles.push(prevVal);
+            diff.removedFiles.push(prevVal.id);
         } else if(!prevVal && currVal) {
             diff.addedFiles.push(currVal);
         } else if(!isEqual(prevVal, currVal)) {

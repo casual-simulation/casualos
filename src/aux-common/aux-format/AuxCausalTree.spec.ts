@@ -645,7 +645,6 @@ describe('AuxCausalTree', () => {
                 end: 3
             });
         });
-
     });
 
     describe('addFile()', () => {
@@ -922,6 +921,20 @@ describe('AuxCausalTree', () => {
                 file.atom,
                 deleteFile,
             ]);
+        });
+
+        it('should handle file removed events on already deleted files', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            tree.root();
+            const file = tree.file('testId', 'object');
+            const del = tree.delete(file.atom);
+
+            const result = tree.addEvents([
+                fileRemoved('test')
+            ]);
+
+            expect(result.map(ref => ref.atom)).toEqual([]);
         });
 
         it('should handle transaction events', () => {
