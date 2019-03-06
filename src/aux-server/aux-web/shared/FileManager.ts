@@ -123,11 +123,6 @@ export class FileManager {
   private _fileRemovedObservable: ReplaySubject<string>;
   private _fileUpdatedObservable: Subject<AuxFile>;
   private _selectedFilesUpdated: BehaviorSubject<SelectedFilesUpdatedEvent>;
-  private _reconnectedObservable: Subject<MergedObject<FilesState>>;
-  private _resyncedObservable: Subject<boolean>;
-  private _syncFailedObservable: Subject<MergeStatus<FilesState>>;
-  private _disconnectedObservable: Subject<FilesState>;
-  private _mergeStatus: MergeStatus<FilesState> = null;
   private _id: string;
   private _aux: RealtimeCausalTree<AuxCausalTree>;
     _errored: boolean;
@@ -224,47 +219,10 @@ export class FileManager {
   }
 
   /**
-   * Gets the observable that resolves when the browser becomes disconnected from
-   * the server.
+   * Gets the observable that resolves whenever the connection state changes.
    */
-  get disconnected(): Observable<FilesState> {
-    return this._disconnectedObservable;
-  }
-
-  /**
-   * Gets the observable that resolves when the browser becomes reconnected to the server.
-   * Contains the merge report that attempts to sync the remote state with the local state.
-   * Note that being reconnected to the server does not mean that we are synced with the server.
-   * It only means that we have the capability to communicate with the server.
-   */
-  get reconnected(): Observable<MergedObject<FilesState>> {
-    return this._reconnectedObservable;
-  }
-
-  /**
-   * Gets the observable that resolves when the app has reconnected to the server but is unable to
-   * resolve all the merge conflicts automatically. Contains the current merge state along with what conflicts are remaining and what needs to be done.
-   */
-  get syncFailed(): Observable<MergeStatus<FilesState>> {
-    return this._syncFailedObservable;
-  }
-
-  /**
-   * Gets the observable that resolves when the app becomes synced with the server after
-   * being disconnected. This means that our state is up to date with the server.
-   * 
-   * Resolves with whether the sync required a merge or if the local data was already up-to-date.
-   */
-  get resynced(): Observable<boolean> {
-    return this._resyncedObservable;
-  }
-
-  /**
-   * Gets the current merge status.
-   * Null if no merge conflicts exist.
-   */
-  get mergeStatus(): MergeStatus<FilesState> {
-    return this._mergeStatus;
+  get connectionStateChanged(): Observable<boolean> {
+    return this._aux.channel.connectionStateChanged;
   }
 
   /**
@@ -475,10 +433,6 @@ export class FileManager {
         this._fileUpdatedObservable = new Subject<AuxFile>();
         this._selectedFilesUpdated =
             new BehaviorSubject<SelectedFilesUpdatedEvent>({files: []});
-        this._disconnectedObservable = new Subject<FilesState>();
-        this._reconnectedObservable = new Subject<MergedObject<FilesState>>();
-        this._resyncedObservable = new Subject<boolean>();
-        this._syncFailedObservable = new Subject<MergeStatus<FilesState>>();
         
         await this._treeManager.init();
 
