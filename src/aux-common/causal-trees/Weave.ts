@@ -198,6 +198,9 @@ export class Weave<TOp extends AtomOp> {
      * @param reference The reference.
      */
     getAtom<T extends TOp>(id: AtomId): WeaveReference<T> {
+        if (!id) {
+            return null;
+        }
         const site = this.getSite(id.site);
         if (id.timestamp >= 0 && id.timestamp < site.length) {
             return <WeaveReference<T>>site[id.timestamp];
@@ -259,17 +262,39 @@ export class Weave<TOp extends AtomOp> {
             if (!local) {
                 // Short circut by appending the rest.
                 const finalAtoms = atoms.slice(i);
-                this._atoms.push(...finalAtoms);
-                newAtoms.push(...finalAtoms);
 
                 for (let b = 0; b < finalAtoms.length; b++) {
                     const ref = finalAtoms[b];
+                    if (ref.atom.cause) {
+                        const cause = this.getAtom(ref.atom.cause);
+                        if (!cause) {
+                            // prevent atoms without parents
+                            // if the input is properly sorted,
+                            // then it is impossible to end up with
+                            // an atom without a cause.
+                            continue;
+                        }
+                    }
+                    
+                    this._atoms.push(ref);
+                    newAtoms.push(ref);
                     const site = this.getSite(ref.atom.id.site);
                     site[ref.atom.id.timestamp] = ref;
                 }
                 break;
             } else {
                 // Could either be the same, a new sibling, or a new child of the current subtree
+
+                if (a.atom.cause) {
+                    const cause = this.getAtom(a.atom.cause);
+                    if (!cause) {
+                        // prevent atoms without parents
+                        // if the input is properly sorted,
+                        // then it is impossible to end up with
+                        // an atom without a cause.
+                        continue;
+                    }
+                }
 
                 let order = this._compareAtoms(a.atom, local.atom);
                 if (isNaN(order)) {

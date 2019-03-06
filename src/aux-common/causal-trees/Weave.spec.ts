@@ -633,6 +633,27 @@ describe('Weave', () => {
     });
 
     describe('import()', () => {
+        it('should prevent importing atoms that dont have causes', () => {
+            let weave = new Weave<Op>();
+
+            const root = atom<Op>(atomId(1, 0), null, new Op());
+            const child1 = atom<Op>(atomId(1, 1), root.id, new Op());
+            const child3 = atom<Op>(atomId(1, 2), child1.id, new Op());
+            
+            weave.insertMany(root, child1, child3);
+            
+            const child2 = atom<Op>(atomId(2, 2), atomId(2, 196), new Op());
+
+            const ref = reference(child2);
+
+            let newWeave = new Weave<Op>();
+            newWeave.import([
+                ...weave.atoms,
+                ref
+            ]);
+
+            expect(newWeave.atoms).toEqual(weave.atoms);
+        });
 
         it('should add the given list of atoms to the list verbatim', () => {
             let weave = new Weave<Op>();
