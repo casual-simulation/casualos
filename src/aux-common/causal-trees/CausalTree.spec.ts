@@ -21,7 +21,10 @@ class Op implements AtomOp {
 }
 
 class Reducer implements AtomReducer<Op, number, any> {
-    eval(weave: Weave<Op>): [number, any] {
+    refs: WeaveReference<Op>[];
+
+    eval(weave: Weave<Op>, refs?: WeaveReference<Op>[]): [number, any] {
+        this.refs = refs;
         let val = 0;
         for (let i = 0; i < weave.atoms.length; i++) {
             const ref = weave.atoms[i];
@@ -193,6 +196,29 @@ describe('CausalTree', () => {
             tree1.importWeave(tree2.weave.atoms);
 
             expect(tree1.time).toBe(6);
+        });
+
+        it('should only include the atoms that were added to the weave when calculating', () => {
+            const reducer = new Reducer();
+            let tree1 = new CausalTree(storedTree(site(1)), reducer);
+            let tree2 = new CausalTree(storedTree(site(2)), new Reducer());
+
+            const root = tree1.factory.create(new Op(), null);
+            tree1.add(root);
+            tree2.add(root);
+
+            const add1 = tree2.add(atom(atomId(2, 10), root.id, new Op(OpType.add)));
+            const add2 = tree2.add(atom(atomId(2, 11), root.id, new Op(OpType.add)));
+            const sub = tree2.add(atom(atomId(2, 12), add2.atom.id, new Op(OpType.subtract)));
+
+            tree2.weave.remove(add2);
+
+            tree1.importWeave([...tree2.weave.atoms, sub]);
+
+            expect(reducer.refs).toEqual([
+                add1
+            ]);
+            expect(tree1.value).toBe(1);
         });
     });
 

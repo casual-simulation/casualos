@@ -31,7 +31,7 @@ describe('RealtimeCausalTree', () => {
     let realtime: RealtimeCausalTree<Tree>;
     let store: TestCausalTreeStore;
     let factory: CausalTreeFactory;
-    let channel: RealtimeChannel<WeaveReference<Op>>;
+    let channel: RealtimeChannel<WeaveReference<Op>[]>;
     let connection: TestChannelConnection;
     let flush = false;
     let weave: WeaveReference<Op>[];
@@ -62,7 +62,7 @@ describe('RealtimeCausalTree', () => {
             'numbers': (tree) => new Tree(tree, new NumberReducer())
         });
         connection = new TestChannelConnection();
-        channel = new RealtimeChannel<WeaveReference<Op>>({
+        channel = new RealtimeChannel<WeaveReference<Op>[]>({
             id: 'abc',
             type: 'numbers'
         }, connection);
@@ -433,12 +433,12 @@ describe('RealtimeCausalTree', () => {
             // send root event
             connection.events.next({
                 name: 'event_abc',
-                data: root
+                data: [root]
             });
 
             connection.events.next({
                 name: 'event_abc',
-                data: first
+                data: [first]
             });
 
             expect(realtime.tree.weave.atoms).toEqual([
@@ -460,22 +460,22 @@ describe('RealtimeCausalTree', () => {
 
             expect(connection.emitted).toContainEqual({
                 name: 'event_abc',
-                data: root
+                data: [root]
             });
 
             expect(connection.emitted).toContainEqual({
                 name: 'event_abc',
-                data: child
+                data: [child]
             });
 
             expect(connection.emitted).not.toContainEqual({
                 name: 'event_abc',
-                data: skipped
+                data: [skipped]
             });
 
             expect(connection.emitted).not.toContainEqual({
                 name: 'event_abc',
-                data: alsoSkipped
+                data: [alsoSkipped]
             });
 
             // 1 connection + 2 events
@@ -495,12 +495,12 @@ describe('RealtimeCausalTree', () => {
              // send root event
              connection.events.next({
                 name: 'event_abc',
-                data: root
+                data: [root]
             });
 
             connection.events.next({
                 name: 'event_abc',
-                data: first
+                data: [first]
             });
 
             expect(realtime.tree).toBe(null);

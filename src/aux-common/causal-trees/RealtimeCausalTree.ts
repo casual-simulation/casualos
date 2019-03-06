@@ -21,7 +21,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
 
     private _tree: TTree;
     private _store: CausalTreeStore;
-    private _channel: RealtimeChannel<WeaveReference<AtomOp>>;
+    private _channel: RealtimeChannel<WeaveReference<AtomOp>[]>;
     private _factory: CausalTreeFactory;
     private _updated: ReplaySubject<WeaveReference<AtomOp>[]>;
     private _errors: Subject<any>;
@@ -76,7 +76,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
      * @param store The store used to persistently store the tree.
      * @param channel The channel used to communicate with other devices.
      */
-    constructor(factory: CausalTreeFactory, store: CausalTreeStore, channel: RealtimeChannel<WeaveReference<AtomOp>>) {
+    constructor(factory: CausalTreeFactory, store: CausalTreeStore, channel: RealtimeChannel<WeaveReference<AtomOp>[]>) {
         this._factory = factory;
         this._store = store;
         this._channel = channel;
@@ -122,8 +122,8 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         
         this._subs.push(this._channel.events.pipe(
             filter(e => this.tree !== null),
-            map(e => this.tree.add(e.atom)),
-            tap(ref => this._updated.next([ref]))
+            map(e => this.tree.addMany(e)),
+            tap(refs => this._updated.next(refs))
         ).subscribe(null, err => this._errors.next(err)));
     }
 
@@ -144,11 +144,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         this._subs.push(this._tree.atomAdded.pipe(
             map(refs => refs.filter(ref => ref.atom.id.site === this._tree.site.id)),
             filter(refs => refs.length > 0),
-            tap(refs => {
-                refs.forEach(ref => {
-                    this._channel.emit(ref);
-                });
-            }),
+            tap(refs => this._channel.emit(refs)),
             tap(ref => this._updated.next(ref))
         ).subscribe());
     }

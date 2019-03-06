@@ -444,9 +444,15 @@ describe('AuxCausalTree', () => {
                 const testVal1 = tree.val(99, test.atom);
                 const testVal2 = tree.val('hello, world', test.atom);
 
+                const test2 = tree.tag('test2', file.atom);
+                const test2Val1 = tree.val(99, test2.atom);
+                const test2Val2 = tree.val('hello, world', test2.atom);
+
                 expect(tree.weave.atoms).toEqual([
                     root,
                     file,
+                    test2,
+                    test2Val2,
                     test,
                     testVal2
                 ]);

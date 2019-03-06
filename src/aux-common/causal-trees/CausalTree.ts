@@ -142,6 +142,27 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         }
         return ref;
     }
+
+    /**
+     * Adds the given list of references to this causal tree's history.
+     * @param refs The references to add.
+     */
+    addMany(refs: WeaveReference<TOp>[]): WeaveReference<TOp>[] {
+        return this.batch(() => {
+            let added: WeaveReference<TOp>[] = [];
+            for (let i = 0; i < refs.length; i++) {
+                let ref = refs[i];
+                if (ref) {
+                    let result = this.add(ref.atom);
+                    if (result) {
+                        added.push(result);
+                    }
+                }
+            }
+
+            return added;
+        });
+    }
     
     /**
      * Batches all the operations in the given function so that
@@ -181,7 +202,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
                 this.factory.updateTime(ref.atom.id.timestamp);
             }
         }
-        [this._value, this._metadata] = this._calculateValue(refs);
+        [this._value, this._metadata] = this._calculateValue(newAtoms);
         return newAtoms;
     }
 

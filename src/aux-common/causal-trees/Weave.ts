@@ -160,17 +160,17 @@ export class Weave<TOp extends AtomOp> {
         if (!cause) {
             return false;
         }
-        const span = this._getSpan(cause);
-        if (!span) {
+        const causeSpan = this._getSpan(cause);
+        if (!causeSpan) {
             return false;
         }
-        const refIndex = weaveIndexOf(this._atoms, ref.atom.id, span.index);
-        const refSpan = this._getSpan(ref, refIndex);
+        const refSpan = this._getSpan(ref, causeSpan.index);
         if (!refSpan) {
             return false;
         }
-        const startSplice = refIndex + refSpan.length;
-        const spliceLength = span.length - (refIndex - span.index);
+        const startSplice = refSpan.index + refSpan.length;
+        const endSplice = causeSpan.index + causeSpan.length;
+        const spliceLength = (endSplice - startSplice);
         this._removeSpan(startSplice, spliceLength);
         return true;
     }
@@ -226,8 +226,7 @@ export class Weave<TOp extends AtomOp> {
 
         knownSites.forEach(id => {
             const site = this.getSite(id);
-            const mostRecentAtom = site[site.length - 1];
-            sites[id] = mostRecentAtom.atom.id.timestamp;
+            sites[id] = site.length - 1;
         });
 
         return {
@@ -382,21 +381,15 @@ export class Weave<TOp extends AtomOp> {
      * Gets the index that the given ref starts and and the number of children it has
      * after it.
      * Returns null if the given ref doesn't exist in the weave.
+     * @param ref The reference.
+     * @param start The index to start searching at.
      */
     private _getSpan(ref: WeaveReference<TOp>, start: number = 0) {
-        const index = this._indexOf(ref.atom.id);
-        if (index >= 0) {
-            for (let i = index + 1; i < this._atoms.length; i++) {
-                const child = this._atoms[i];
-                if (child.atom.cause.timestamp < ref.atom.id.timestamp) {
-                    return { index, length: i - index };
-                }
-            }
-
-            return { index, length: (this._atoms.length - index) + 1 };
-        } else {
+        const index = this._indexOf(ref.atom.id, start);
+        if (index < 0) {
             return null;
         }
+        return { index, length: this.getAtomSize(ref.atom.id) };
     }
 
     /**
