@@ -1,7 +1,7 @@
 import { Weave, WeaveReference } from '../causal-trees/Weave';
 import { AuxOp, FileOp, TagOp, InsertOp, ValueOp, DeleteOp, AuxOpType } from './AuxOpTypes';
 import { CausalTree } from '../causal-trees/CausalTree';
-import { FilesState, FileType, FileEvent, PartialFile, Object, File, Workspace, tagsOnFile, getFileTag, hasValue, getTag } from '../Files';
+import { FilesState, FileEvent, PartialFile, Object, File, Workspace, tagsOnFile, getFileTag, hasValue, getTag } from '../Files';
 import { AuxReducer, AuxReducerMetadata } from './AuxReducer';
 import { root, file, tag, value, del, insert } from './AuxAtoms';
 import { AtomId, Atom } from '../causal-trees/Atom';
@@ -36,8 +36,8 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
      * Creates a new file atom and adds it to the tree.
      * @param id The ID of the file.
      */
-    file(id: string, type: FileType) {
-        return this.create(file(id, type), this.weave.atoms[0]);
+    file(id: string) {
+        return this.create(file(id), this.weave.atoms[0]);
     }
 
     /**
@@ -170,11 +170,11 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
      */
     addFile(file: File): WeaveReference<AuxOp>[] {
         return this.batch(() => {
-            const f = this.file(file.id, file.type);
-            let tags = tagsOnFile(file.type, file);
+            const f = this.file(file.id);
+            let tags = tagsOnFile(file);
             let refs = flatMap(tags, t => {
                 const tag = this.tag(t, f.atom);
-                const val = this.val(file.type === 'object' ? file.tags[t] : (<any>file)[t], tag.atom);
+                const val = this.val(file.tags[t], tag.atom);
                 return [tag, val];
             });
 
@@ -192,10 +192,10 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
      */
     updateFile(file: AuxFile, newData: PartialFile): WeaveReference<AuxOp>[] {
         return this.batch(() => {
-            let tags = tagsOnFile(file.type, newData);
+            let tags = tagsOnFile(newData);
             let refs = flatMap(tags, t => {
                 const tagMeta = file.metadata.tags[t];
-                let newVal = getTag(file.type, newData, t);
+                let newVal = getTag(newData, t);
                 if (tagMeta) {
                     const oldVal = getFileTag(file, t);
                     if (newVal && typeof newVal === 'object' && !Array.isArray(newVal) && !Array.isArray(oldVal)) {

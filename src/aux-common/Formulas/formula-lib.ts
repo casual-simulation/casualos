@@ -159,19 +159,21 @@ export function destroy(file: any) {
 
 export function create(data: any) {
     var id = uuid();
-    actions.push(<FileAddedEvent>{
+
+    let event: FileAddedEvent = {
         type: 'file_added',
         id: id,
         file: {
+            id: id,
             tags: {
-                _position: {x: 0, y: 0, z:0},
+                _position: {x:0, y:0, z:0},
                 _workspace: null,
-                ...data,
-            },
-            type: 'object',
-            id: id
+                ...data
+            }
         }
-    });
+    };
+
+    actions.push(event);
 }
 
 export function copy(...files: any[]) {
@@ -182,9 +184,8 @@ export function copy(...files: any[]) {
     });
 
     let newFile = {
+        id: id,
         tags: <any>{},
-        type: 'object',
-        id: id
     };
 
     originals.forEach(o => {
@@ -197,11 +198,13 @@ export function copy(...files: any[]) {
     delete newFile.tags._original;
     delete newFile.tags.id;
 
-    actions.push(<FileAddedEvent>{
+    let event: FileAddedEvent = {
         type: 'file_added',
         id: id,
         file: newFile
-    });
+    }
+
+    actions.push(event);
 }
 
 export default {

@@ -1,4 +1,4 @@
-import { Object, File, Workspace, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_GRID_SCALE, DEFAULT_USER_MODE, DEFAULT_WORKSPACE_COLOR, UserMode, FileType } from './File';
+import { Object, File, Workspace, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_GRID_SCALE, DEFAULT_USER_MODE, DEFAULT_WORKSPACE_COLOR, UserMode } from './File';
 import uuid from 'uuid/v4';
 import {
     flatMap,
@@ -72,7 +72,7 @@ export interface FilesStateDiff {
  * @param workspace The workspace.
  */
 export function isMinimized(workspace: Workspace) {
-    return !!workspace.minimized;
+    return !!workspace.tags.minimized;
 }
 
 /**
@@ -105,12 +105,7 @@ export function filterFilesBySelection(files: Object[], selectionId: string) {
    * output list.
    */
 export function fileTags(files: File[], currentTags: string[], extraTags: string[]) {
-    const fileTags = flatMap(files, f => {
-        if (f.type === 'object') {
-            return keys(f.tags);
-        }
-        return [];
-    });
+    const fileTags = flatMap(files, f => keys(f.tags));
     // Only keep tags that don't start with an underscore (_)
     const nonHiddenTags = fileTags.filter(t => !isHiddenTag(t));
     const tagsToKeep = union(nonHiddenTags, extraTags);
@@ -248,7 +243,7 @@ export function isDestroyed(object: Object) {
  * @param state The state to get the active objects of.
  */
 export function getActiveObjects(state: FilesState) {
-    return <Object[]>values(state).filter(f => f.type === 'object' && !isDestroyed(f));
+    return <Object[]>values(state).filter(f => !isDestroyed(f));
 }
 
 /**
@@ -430,15 +425,9 @@ export function newSelectionId() {
  * Gets the list of tags that are on the given file.
  * @param file 
  */
-export function tagsOnFile(type: FileType, file: PartialFile): string[] {
-    if (type === 'object') {
-        let tags = keys(file.tags);
-        return tags;
-    } else {
-        let ignored = ['id', 'type'];
-        let tags = keys(file);
-        return difference(tags, ignored);
-    }
+export function tagsOnFile(file: PartialFile): string[] {
+    let tags = keys(file.tags);
+    return tags;
 }
 
 /**
@@ -446,12 +435,8 @@ export function tagsOnFile(type: FileType, file: PartialFile): string[] {
  * @param file The file that the tag should be retrieved from.
  * @param tag The tag to retrieve.
  */
-export function getTag(type: FileType, file: PartialFile, tag: string) {
-    if(type === 'object') {
-        return file.tags[tag];
-    } else {
-        return (<any>file)[tag];
-    }
+export function getTag(file: PartialFile, tag: string) {
+    return file.tags[tag];
 }
 
 /**
@@ -460,7 +445,7 @@ export function getTag(type: FileType, file: PartialFile, tag: string) {
  * @param tag The tag to retrieve.
  */
 export function getFileTag(file: File, tag: string) {
-    return getTag(file.type, file, tag);
+    return getTag(file, tag);
 }
 
 /**
@@ -472,7 +457,7 @@ export function createFile(id = uuid(), tags: Object['tags'] = {
     _position: { x: 0, y: 0, z: 0},
     _workspace: <string>null
 }) {
-    const file: Object = {id: id, type: 'object', tags: tags};
+    const file: Object = {id: id, tags: tags};
 
     return file;
 }
@@ -481,16 +466,19 @@ export function createFile(id = uuid(), tags: Object['tags'] = {
  * Creates a new Workspace with default values.
  */
 export function createWorkspace(id = uuid()): Workspace {
+    const builderContextId = uuid();
     return {
         id: id,
-        type: 'workspace',
-        position: {x: 0, y: 0, z: 0},
-        size: 1,
-        grid: {},
-        scale: DEFAULT_WORKSPACE_SCALE,
-        defaultHeight: DEFAULT_WORKSPACE_HEIGHT,
-        gridScale: DEFAULT_WORKSPACE_GRID_SCALE,
-        color: DEFAULT_WORKSPACE_COLOR
+        tags: {
+            _workspace: builderContextId,
+            position: {x: 0, y: 0, z: 0},
+            size: 1,
+            grid: {},
+            scale: DEFAULT_WORKSPACE_SCALE,
+            defaultHeight: DEFAULT_WORKSPACE_HEIGHT,
+            gridScale: DEFAULT_WORKSPACE_GRID_SCALE,
+            color: DEFAULT_WORKSPACE_COLOR
+        }
     };
 }
 
@@ -666,8 +654,7 @@ export function tagMatchesFilter(tag: string, file: Object, eventName: string, c
  */
 export function objectsAtWorkspaceGridPosition(objects: Object[], workspaceId: string, position: Object['tags']['_position']) {
     return sortBy(objects.filter(o => {
-        return o.type === 'object' && 
-            o.tags._workspace === workspaceId &&
+        return o.tags._workspace === workspaceId &&
             o.tags._position &&
             o.tags._position.x === position.x &&
             o.tags._position.y === position.y
@@ -698,7 +685,7 @@ export function objectsAtWorkspaceGridPosition(objects: Object[], workspaceId: s
  */
 export function objectsAtWorkspace(objects: Object[], workspaceId: string) {
     return objects.filter(o => {
-        return o.type === 'object' && o.tags._workspace === workspaceId;
+        return o.tags._workspace === workspaceId;
     });
 }
 

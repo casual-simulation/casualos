@@ -3,7 +3,7 @@ import { AtomId } from '../causal-trees/Atom';
 import { WeaveReference } from '../causal-trees/Weave';
 import { AuxOp, FileOp, ValueOp, TagOp } from './AuxOpTypes';
 
-export type AuxFile = AuxObject | AuxWorkspace;
+export type AuxFile = AuxObject;
 export type AuxRef = WeaveReference<AuxOp>;
 
 /**
@@ -64,16 +64,6 @@ export interface AuxSequenceMetadata {
      * The list of refs.
      */
     refs: AuxRef[];
-}
-
-/**
- * Defines an interface that contains state for an AUX Workspace.
- */
-export interface AuxWorkspace extends Workspace {
-    /**
-     * The metadata for the workspace.
-     */
-    metadata: AuxFileMetadata;
 }
 
 /**

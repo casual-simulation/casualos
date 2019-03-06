@@ -62,7 +62,7 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
     );
 
     const fileAdded = stateDiffs.pipe(flatMap(diff => {
-        return sortBy(diff.addedFiles, f => f.type === 'object', f => f.id);
+        return sortBy(diff.addedFiles, f => f.id);
     }));
 
     const fileRemoved = stateDiffs.pipe(

@@ -89,15 +89,16 @@ describe('FileCalculations', () => {
         it('should return no changes', () => {
             const prevState: FilesState = {
                 'test': {
-                    type: 'workspace',
                     id: 'test',
-                    position: {x:0, y:0, z:0},
-                    size: 1,
-                    grid: {},
-                    scale: 0.5,
-                    defaultHeight: 0.1,
-                    gridScale: 0.2,
-                    color: "#999999"
+                    tags: {
+                        _position: {x:0, y:0, z:0},
+                        size: 1,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
                 }
             };
             const currState: FilesState = {
@@ -114,20 +115,20 @@ describe('FileCalculations', () => {
         it('should detect that a file was added', () => {
             const prevState: FilesState = {
                 'test': {
-                    type: 'workspace',
                     id: 'test',
-                    position: {x:0, y:0, z:0},
-                    size: 1,
-                    grid: {},
-                    scale: 0.5,
-                    defaultHeight: 0.1,
-                    gridScale: 0.2,
-                    color: "#999999"
+                    tags: {
+                        position: {x:0, y:0, z:0},
+                        size: 1,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
                 }
             };
             const currState: FilesState = {
                 'new': {
-                    type:'object',
                     id: 'new',
                     tags: {
                         _position: {x:0,y:0,z:0},
@@ -148,15 +149,16 @@ describe('FileCalculations', () => {
         it('should detect that a file was removed', () => {
             const prevState: FilesState = {
                 'test': {
-                    type: 'workspace',
                     id: 'test',
-                    position: {x:0, y:0, z:0},
-                    size: 1,
-                    grid: {},
-                    scale: 0.5,
-                    defaultHeight: 0.1,
-                    gridScale: 0.2,
-                    color: "#999999"
+                    tags: {
+                        position: {x:0, y:0, z:0},
+                        size: 1,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
                 }
             };
             const currState: FilesState = {};
@@ -172,18 +174,18 @@ describe('FileCalculations', () => {
         it('should detect that a file was updated', () => {
             const prevState: FilesState = {
                 'test': {
-                    type: 'workspace',
                     id: 'test',
-                    position: {x:0, y:0, z:0},
-                    size: 1,
-                    grid: {},
-                    scale: 0.5,
-                    defaultHeight: 0.1,
-                    gridScale: 0.2,
-                    color: "#999999"
+                    tags: {
+                        position: {x:0, y:0, z:0},
+                        size: 1,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
                 },
                 'updated': {
-                    type: 'object',
                     id: 'updated',
                     tags: {
                         _position: {x:0, y:0, z:0},
@@ -194,7 +196,6 @@ describe('FileCalculations', () => {
             const currState: FilesState = {
                 'test': prevState['test'],
                 'updated': {
-                    type: 'object',
                     id: 'updated',
                     tags: {
                         _position: {x:0, y:0, z:0},
@@ -214,18 +215,18 @@ describe('FileCalculations', () => {
         it('should use deep equality for updates', () => {
             const prevState: FilesState = {
                 'test': {
-                    type: 'workspace',
                     id: 'test',
-                    position: {x:0, y:0, z:0},
-                    size: 1,
-                    grid: {},
-                    scale: 0.5,
-                    defaultHeight: 0.1,
-                    gridScale: 0.2,
-                    color: "#999999"
+                    tags: {
+                        _position: {x:0, y:0, z:0},
+                        size: 1,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
                 },
                 'updated': {
-                    type: 'object',
                     id: 'updated',
                     tags: {
                         _position: {x:0, y:0, z:0},
@@ -236,7 +237,6 @@ describe('FileCalculations', () => {
             const currState: FilesState = {
                 'test': prevState['test'],
                 'updated': {
-                    type: 'object',
                     id: 'updated',
                     tags: {
                         _position: {x:0, y:0, z:0},
@@ -255,29 +255,30 @@ describe('FileCalculations', () => {
         it('should handle multiple changes at once', () => {
             const prevState: FilesState = {
                 'test': {
-                    type: 'workspace',
                     id: 'test',
-                    position: {x:0, y:0, z:0},
-                    size: 1,
-                    grid: {},
-                    scale: 0.5,
-                    defaultHeight: 0.1,
-                    gridScale: 0.2,
-                    color: "#999999"
+                    tags: {
+                        position: {x:0, y:0, z:0},
+                        size: 1,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
                 },
                 'removed': {
-                    type: 'workspace',
                     id: 'removed',
-                    position: {x:0, y:0, z:0},
-                    size: 2,
-                    grid: {},
-                    scale: 0.5,
-                    defaultHeight: 0.1,
-                    gridScale: 0.2,
-                    color: "#999999"
+                    tags: {
+                        position: {x:0, y:0, z:0},
+                        size: 2,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
                 },
                 'updated': {
-                    type: 'object',
                     id: 'updated',
                     tags: {
                         _position: {x:0, y:0, z:0},
@@ -288,7 +289,6 @@ describe('FileCalculations', () => {
             const currState: FilesState = {
                 'test': prevState['test'],
                 'updated': {
-                    type: 'object',
                     id: 'updated',
                     tags: {
                         _position: {x:0, y:0, z:0},
@@ -296,7 +296,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 'new': {
-                    type: 'object',
                     id: 'new',
                     tags: {
                         _position: {x:1, y:0, z:3},
@@ -304,7 +303,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 'new2': {
-                    type: 'object',
                     id: 'new',
                     tags: {
                         _position: {x:1, y:15, z:3},
@@ -327,21 +325,21 @@ describe('FileCalculations', () => {
         it.skip('should short-circut when a file_added event is given', () => {
             const prevState: FilesState = {
                 'test': {
-                    type: 'workspace',
                     id: 'test',
-                    position: {x:0, y:0, z:0},
-                    size: 1,
-                    grid: {},
-                    scale: 0.5,
-                    defaultHeight: 0.1,
-                    gridScale: 0.2,
-                    color: "#999999"
+                    tags: {
+                        position: {x:0, y:0, z:0},
+                        size: 1,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
                 },
             };
             const currState: FilesState = {
                 'test': prevState['test'],
                 'new': {
-                    type: 'object',
                     id: 'new',
                     tags: {
                         _position: {x:1, y:0, z:3},
@@ -366,18 +364,18 @@ describe('FileCalculations', () => {
         it.skip('should short-circut when a file_removed event is given', () => {
             const prevState: FilesState = {
                 'test': {
-                    type: 'workspace',
                     id: 'test',
-                    position: {x:0, y:0, z:0},
-                    size: 1,
-                    grid: {},
-                    scale: 0.5,
-                    defaultHeight: 0.1,
-                    gridScale: 0.2,
-                    color: "#999999"
+                    tags: {
+                        position: {x:0, y:0, z:0},
+                        size: 1,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
                 },
                 'old': {
-                    type: 'object',
                     id: 'old',
                     tags: {
                         _position: {x:1, y:0, z:3},
@@ -405,28 +403,30 @@ describe('FileCalculations', () => {
         it.skip('should short-circut when a file_updated event is given', () => {
             const prevState: FilesState = {
                 'updated': {
-                    type: 'workspace',
                     id: 'updated',
-                    position: {x:0, y:0, z:0},
-                    size: 1,
-                    grid: {},
-                    scale: 0.5,
-                    defaultHeight: 0.1,
-                    gridScale: 0.2,
-                    color: "#999999"
+                    tags: {
+                        position: {x:0, y:0, z:0},
+                        size: 1,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
                 },
             };
             const currState: FilesState = {
                 'updated': {
-                    type: 'workspace',
                     id: 'updated',
-                    position: {x:2, y:1, z:3},
-                    size: 1,
-                    grid: {},
-                    scale: 0.5,
-                    defaultHeight: 0.1,
-                    gridScale: 0.2,
-                    color: "#999999"
+                    tags: {
+                        position: {x:2, y:1, z:3},
+                        size: 1,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
                 },
             };
 
@@ -448,29 +448,30 @@ describe('FileCalculations', () => {
         it.skip('should not short-circut when a action event is given', () => {
             const prevState: FilesState = {
                 'test': {
-                    type: 'workspace',
                     id: 'test',
-                    position: {x:0, y:0, z:0},
-                    size: 1,
-                    grid: {},
-                    scale: 0.5,
-                    defaultHeight: 0.1,
-                    gridScale: 0.2,
-                    color: "#999999"
+                    tags: {
+                        position: {x:0, y:0, z:0},
+                        size: 1,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
                 },
                 'removed': {
-                    type: 'workspace',
                     id: 'removed',
-                    position: {x:0, y:0, z:0},
-                    size: 2,
-                    grid: {},
-                    scale: 0.5,
-                    defaultHeight: 0.1,
-                    gridScale: 0.2,
-                    color: "#999999"
+                    tags: {
+                        position: {x:0, y:0, z:0},
+                        size: 2,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
                 },
                 'updated': {
-                    type: 'object',
                     id: 'updated',
                     tags: {
                         _position: {x:0, y:0, z:0},
@@ -481,7 +482,6 @@ describe('FileCalculations', () => {
             const currState: FilesState = {
                 'test': prevState['test'],
                 'updated': {
-                    type: 'object',
                     id: 'updated',
                     tags: {
                         _position: {x:0, y:0, z:0},
@@ -489,7 +489,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 'new': {
-                    type: 'object',
                     id: 'new',
                     tags: {
                         _position: {x:1, y:0, z:3},
@@ -497,7 +496,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 'new2': {
-                    type: 'object',
                     id: 'new',
                     tags: {
                         _position: {x:1, y:15, z:3},
@@ -525,12 +523,12 @@ describe('FileCalculations', () => {
     describe('tagsOnFile()', () => {
         it('should return the tag names that are on objects', () => {
 
-            expect(tagsOnFile('object', createFile('test'))).toEqual([
+            expect(tagsOnFile(createFile('test'))).toEqual([
                 '_position',
                 '_workspace'
             ]);
 
-            expect(tagsOnFile('object', createFile('test', {
+            expect(tagsOnFile(createFile('test', {
                 _position: { x: 0, y: 0, z: 0 },
                 _workspace: null,
                 test: 123,
@@ -544,7 +542,8 @@ describe('FileCalculations', () => {
         });
 
         it('should return the property names that are on workspaces', () => {
-            expect(tagsOnFile('workspace', createWorkspace('test'))).toEqual([
+            expect(tagsOnFile(createWorkspace('test'))).toEqual([
+                '_workspace',
                 'position',
                 'size',
                 'grid',
@@ -561,7 +560,6 @@ describe('FileCalculations', () => {
             const state: FilesState = {
                 first: {
                     id: 'first',
-                    type: 'object',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'test'
@@ -569,7 +567,6 @@ describe('FileCalculations', () => {
                 },
                 second: {
                     id: 'second',
-                    type: 'object',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'test'
@@ -577,14 +574,15 @@ describe('FileCalculations', () => {
                 },
                 workspace: {
                     id: 'workspace',
-                    type: 'workspace',
-                    defaultHeight: 1,
-                    grid: {},
-                    gridScale: 1,
-                    position: { x:0, y: 0, z: 0},
-                    size: 1,
-                    scale: 1,
-                    color: "#999999"
+                    tags: {
+                        defaultHeight: 1,
+                        grid: {},
+                        gridScale: 1,
+                        position: { x:0, y: 0, z: 0},
+                        size: 1,
+                        scale: 1,
+                        color: "#999999"
+                    }
                 }
             };
 
@@ -592,7 +590,8 @@ describe('FileCalculations', () => {
 
             expect(objects).toEqual([
                 state['first'],
-                state['second']
+                state['second'],
+                state['workspace']
             ]);
         });
 
@@ -600,7 +599,6 @@ describe('FileCalculations', () => {
             const state: FilesState = {
                 first: {
                     id: 'first',
-                    type: 'object',
                     tags: {
                         _destroyed: true,
                         _position: { x: 0, y: 0, z: 0 },
@@ -609,7 +607,6 @@ describe('FileCalculations', () => {
                 },
                 second: {
                     id: 'second',
-                    type: 'object',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'test'
@@ -1008,7 +1005,6 @@ describe('FileCalculations', () => {
 
             expect(result).toEqual({
                 id: 'test',
-                type: 'object',
                 tags: {
                     _position: { x: 0, y: 0, z: 0 }
                 }
@@ -1024,7 +1020,6 @@ describe('FileCalculations', () => {
 
             expect(file).toEqual({
                 id: 'test',
-                type: 'object',
                 tags: {
                     _position: { x: 0, y: 0, z: 0 },
                     _workspace: null,
@@ -1348,7 +1343,6 @@ describe('FileCalculations', () => {
         it('should return the list of tags that the files have minus ones that start with underscores', () => {
             const files: File[] = [
                 {
-                    type: 'object',
                     id: 'test',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -1356,7 +1350,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 {
-                    type: 'object',
                     id: 'test2',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -1365,7 +1358,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 {
-                    type: 'object',
                     id: 'test3',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -1374,7 +1366,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 {
-                    type: 'object',
                     id: 'test4',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -1395,7 +1386,6 @@ describe('FileCalculations', () => {
         it('should preserve the order of the current tags', () => {
             const files: File[] = [
                 {
-                    type: 'object',
                     id: 'test',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -1403,7 +1393,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 {
-                    type: 'object',
                     id: 'test2',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -1412,7 +1401,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 {
-                    type: 'object',
                     id: 'test3',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -1421,7 +1409,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 {
-                    type: 'object',
                     id: 'test4',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -1445,7 +1432,6 @@ describe('FileCalculations', () => {
         it('should include the given extra tags', () => {
             const files: File[] = [
                 {
-                    type: 'object',
                     id: 'test',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -1453,7 +1439,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 {
-                    type: 'object',
                     id: 'test2',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -1462,7 +1447,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 {
-                    type: 'object',
                     id: 'test3',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -1471,7 +1455,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 {
-                    type: 'object',
                     id: 'test4',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -1497,7 +1480,6 @@ describe('FileCalculations', () => {
         it('should not include extra tags that are given in the currrentTags array', () => {
             const files: File[] = [
                 {
-                    type: 'object',
                     id: 'test',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -1505,7 +1487,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 {
-                    type: 'object',
                     id: 'test2',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -1514,7 +1495,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 {
-                    type: 'object',
                     id: 'test3',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -1523,7 +1503,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 {
-                    type: 'object',
                     id: 'test4',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },

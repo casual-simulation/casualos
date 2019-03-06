@@ -16,7 +16,7 @@ describe('AuxTreeCalculations', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             tree.root();
-            const file = tree.file('test', 'object');
+            const file = tree.file('test');
             const test = tree.tag('test', file.atom);
             const val = tree.val('123', test.atom);
 
@@ -29,7 +29,7 @@ describe('AuxTreeCalculations', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             const root = tree.root();
-            const file = tree.file('test', 'object');
+            const file = tree.file('test');
             const del = tree.delete(file.atom);
 
             const result = getAtomFile(tree.weave, del);
@@ -41,7 +41,7 @@ describe('AuxTreeCalculations', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             const root = tree.root();
-            const file = tree.file('test', 'object');
+            const file = tree.file('test');
             const test = tree.tag('test', file.atom);
             const val = tree.val('123', test.atom);
 
@@ -70,7 +70,7 @@ describe('AuxTreeCalculations', () => {
             const factory = auxCausalTreeFactory();
             const store = new TestCausalTreeStore();
             const connection = new TestChannelConnection();
-            const channel = new RealtimeChannel<WeaveReference<AtomOp>>({
+            const channel = new RealtimeChannel<WeaveReference<AtomOp>[]>({
                 id: 'test',
                 type: 'aux'
             }, connection);
@@ -91,8 +91,8 @@ describe('AuxTreeCalculations', () => {
                 fileIds.push(file.id);
             }, errorHandler);
 
-            tree.tree.file('abc', 'object');
-            tree.tree.file('def', 'object');
+            tree.tree.file('abc');
+            tree.tree.file('def');
 
             scheduler.flush();
 
@@ -107,7 +107,7 @@ describe('AuxTreeCalculations', () => {
             const factory = auxCausalTreeFactory();
             const store = new TestCausalTreeStore();
             const connection = new TestChannelConnection();
-            const channel = new RealtimeChannel<WeaveReference<AtomOp>>({
+            const channel = new RealtimeChannel<WeaveReference<AtomOp>[]>({
                 id: 'test',
                 type: 'aux'
             }, connection); 
@@ -122,8 +122,8 @@ describe('AuxTreeCalculations', () => {
 
             let stored = new AuxCausalTree(storedTree(site(1)));
             stored.root();
-            stored.file('test', 'object');
-            stored.file('zdf', 'object');
+            stored.file('test');
+            stored.file('zdf');
 
             await store.update('test', stored.export());
             await tree.init();
@@ -142,7 +142,7 @@ describe('AuxTreeCalculations', () => {
             const factory = auxCausalTreeFactory();
             const store = new TestCausalTreeStore();
             const connection = new TestChannelConnection();
-            const channel = new RealtimeChannel<WeaveReference<AtomOp>>({
+            const channel = new RealtimeChannel<WeaveReference<AtomOp>[]>({
                 id: 'test',
                 type: 'aux'
             }, connection); 
@@ -159,7 +159,7 @@ describe('AuxTreeCalculations', () => {
 
             let stored = new AuxCausalTree(storedTree(site(1)));
             stored.root();
-            const file = stored.file('test', 'object');
+            const file = stored.file('test');
             const update = stored.tag('abc', file.atom);
             const deleted = stored.delete(file.atom);
 
@@ -178,7 +178,7 @@ describe('AuxTreeCalculations', () => {
             const factory = auxCausalTreeFactory();
             const store = new TestCausalTreeStore();
             const connection = new TestChannelConnection();
-            const channel = new RealtimeChannel<WeaveReference<AtomOp>>({
+            const channel = new RealtimeChannel<WeaveReference<AtomOp>[]>({
                 id: 'test',
                 type: 'aux'
             }, connection); 
@@ -198,7 +198,7 @@ describe('AuxTreeCalculations', () => {
 
             let stored = new AuxCausalTree(storedTree(site(1)));
             stored.root();
-            const file = stored.file('test', 'object');
+            const file = stored.file('test');
 
             await store.update('test', stored.export());
             await tree.init();

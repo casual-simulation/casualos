@@ -10,103 +10,8 @@ import {File, Object, Workspace, PartialFile} from './File';
 import { tagsMatchingFilter, createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, isDestroyed, getActiveObjects, calculateStateDiff, FilesStateDiff } from './FileCalculations';
 import { merge as mergeObj } from '../utils';
 import { setActions, getActions } from '../Formulas/formula-lib';
-
-export const first = Symbol('ours');
-export const second = Symbol('second');
-
 export interface FilesState {
     [id: string]: File;
-}
-
-
-/**
- * Represents details about a conflict.
- */
-export interface ConflictDetails {
-    conflict: Conflict;
-    path: string[];
-}
-
-/**
- * Represents a conflict that has been resolved with a specific value.
- */
-export interface ResolvedConflict {
-    details: ConflictDetails;
-
-    /**
-     * The value that the conflict was resolved with.
-     */
-    value: any;
-}
-
-/**
- * Represents a conflict.
- * That is, two changes to a property that were conflicting.
- */
-export interface Conflict {
-    [first]: any;
-    [second]: any;
-}
-
-/**
- * Determines if the given object is a conflict object.
- * @param obj Whether the object represents a conflict.
- */
-export function isConflict(obj: any) {
-    return obj && typeof obj === 'object' && obj.hasOwnProperty(first);
-}
-
-/**
- * Defines an interface for file data that contains merge conflicts.
- */
-export interface Conflicts {
-    [id: string]: Conflict | Conflicts;
-}
-
-/**
- * Defines an interface for a object that is being merged with another object.
- */
-export interface MergedObject<T> {
-    /**
-     * Whether the merge operation was successful.
-     */
-    success: boolean;
-
-    /**
-     * The base version of the file.
-     */
-    base: T;
-
-    /**
-     * The first parent for the merge.
-     */
-    first: T;
-
-    /**
-     * The second parent for the merge.
-     */
-    second: T;
-
-    /**
-     * The conflicts that exist between the first and second parents.
-     */
-    conflicts: Conflicts;
-
-    /**
-     * The changes that need to be made to base in order to merge both first and second together.
-     */
-    final: any;
-}
-
-// export interface FileMergeDiff {
-//     addedFiles: MergedFile[];
-//     removedFiles: MergedFile[];
-//     updatedFiles: MergedFile[];
-// }
-
-export interface FileMergeResult {
-    success: boolean;
-    changes: FilesStateDiff;
 }
 
 export type FileEvent = 
@@ -116,29 +21,6 @@ export type FileEvent =
     FileTransactionEvent |
     ApplyStateEvent;
 
-/**
- * Defines the base reducer for the files channel. For more info google "Redux reducer".
- * @param state The current state.
- * @param event The event that should be used to manipulate the state.
- */
-export function filesReducer(state: FilesState, event: FileEvent) {
-    state = state || {};
-
-    if (event.type === 'file_added') {
-        return fileAddedReducer(state, event);
-    } else if(event.type === 'file_removed') {
-        return fileRemovedReducer(state, event);
-    } else if(event.type === 'file_updated') {
-        return fileUpdatedReducer(state, event);
-    } else if(event.type === 'transaction') {
-        return applyEvents(state, event.events);
-    } else if(event.type === 'apply_state') {
-        return applyState(state, event.state);
-    }
-
-    return state;
-}
-
 
 export interface DiffOptions {
     /**
@@ -146,229 +28,6 @@ export interface DiffOptions {
      * both parents or just the changes needed to turn parent 1 into parent 2.
      */
     fullDiff?: boolean;
-}
-
-/**
- * Calculates the diff between two objects.
- * @param first The first object.
- * @param second The second object.
- */
-export function objDiff(firstId: symbol | string, first: any, secondId: symbol | string, second: any, options?: DiffOptions) {
-    const opts = mergeObj({
-        fullDiff: true
-    }, options || {});
-
-    if (first !== second && second === null && !opts.fullDiff) {
-        return null;
-    }
-
-    let diff: Conflicts = {};
-    let allKeys = union(keys(first), keys(second));
-
-    allKeys.forEach(key => {
-        const firstVal = first ? first[key] : undefined;
-        const secondVal = second ? second[key] : undefined;
-
-        if (!isEqual(firstVal, secondVal)) {
-            if (!Array.isArray(firstVal) && !Array.isArray(secondVal) &&  typeof firstVal === 'object' && typeof secondVal === 'object') {
-                diff[key] = objDiff(firstId, firstVal, secondId, secondVal, opts);
-            } else if(opts.fullDiff) {
-                diff[key] = {
-                    [firstId]: firstVal,
-                    [secondId]: secondVal
-                };
-            } else {
-                diff[key] = secondVal;
-            }
-        }
-    });
-
-    return diff;
-}
-
-/**
- * Attempts to merge the two given files together.
- * @param base The last shared file between the two parents.
- * @param parent1 The first parent.
- * @param parent2 The second parent.
- * @param options The merge options.
- */
-export function mergeFiles<T>(base: T, parent1: T, parent2: T, options?: any): MergedObject<T> {
-
-    // use symbols because they are unique and won't conflict with user-defined
-    // property names.
-    const baseId = Symbol('base');
-    const parent1Id = Symbol('parent1');
-    const parent2Id = Symbol('parent2');
-    const diff1Id = Symbol('diff1');
-    const diff2Id = Symbol('diff2');
-    let parent1Diff = objDiff(baseId, base, parent1Id, parent1, { fullDiff: false });
-    let parent2Diff = objDiff(baseId, base, parent2Id, parent2, { fullDiff: false });
-    let diffDiff = objDiff(diff1Id, parent1Diff, diff2Id, parent2Diff);
-    let conflicts = diffConflicts(diffDiff, diff1Id, diff2Id);
-    let final = diffNonConflicts(diffDiff, diff1Id, diff2Id);
-
-    let merged: MergedObject<T> = {
-        base: base,
-        first: parent1,
-        second: parent2,
-        conflicts: conflicts,
-        final: conflicts && !final ? {} : final,
-        success: conflicts === null
-    };
-
-    return merged;
-}
-
-/**
- * Resolves the specified conflicts in the given merge using the given conflict handler.
- * Returns a new merged object that has been updated with the given changes.
- * @param merge The merge.
- * @param resolved The conflicts that should be resolved.
- */
-export function resolveConflicts<T>(merge: MergedObject<T>, resolved: ResolvedConflict[]): MergedObject<T> {
-    let obj = {};
-    let conflicts = mergeObj({}, merge.conflicts);
-    resolved.forEach(r => {
-        set(obj, r.details.path, r.value);
-        unset(conflicts, r.details.path);
-
-        // Remove empty objects
-        let p = r.details.path;
-        while(p.length > 1) {
-            p = p.slice(0, p.length - 1);
-            const k = keys(get(conflicts, p));
-            if (k.length === 0) {
-                unset(conflicts, p);
-            } else {
-                break;
-            }
-        }
-    });
-
-    const conflictsLeft = keys(conflicts);
-    return mergeObj({}, merge, {
-        success: conflictsLeft.length <= 0,
-        conflicts: conflictsLeft.length <= 0 ? null : conflicts,
-        final: obj
-    });
-}
-
-export function listMergeConflicts<T>(merge: MergedObject<T>): ConflictDetails[] {
-    return conflictDetails(merge.conflicts, []);
-}
-
-function conflictDetails(conflicts: any, path: string[]): ConflictDetails[] {
-    if (isConflict(conflicts)) {
-        return [{
-            conflict: conflicts,
-            path: path.slice()
-        }];
-    }
-
-    let all: ConflictDetails[] = [];
-    for(const prop in conflicts) {
-        all.push(...conflictDetails(conflicts[prop], [...path, prop]));
-    }
-
-    return all;
-}
-
-/**
- * Reduces the the given nested file conflicts to a single deep file conflicts file.
- * @param diff 
- */
-function diffConflicts(diff: Conflicts, parent1Id: symbol | string, parent2Id: symbol | string): Conflicts {
-    const results: any = transform(diff, (result: any, value: any, key) => {
-        const isDiff = value && typeof value === 'object' && value.hasOwnProperty(parent1Id);
-        let parent1: Conflicts = value[parent1Id];
-        let parent2: Conflicts = value[parent2Id];
-
-        // Value was modified by first but not by second.
-        // No Conflict.
-        if (typeof parent1 !== 'undefined' && typeof parent2 === 'undefined') {
-            
-            // Value was modified by second but not by first.
-            // No Conflict.
-        } else if(typeof parent1 === 'undefined' && typeof parent2 !== 'undefined') {
-          
-            // Value was modified by neither. No conflict.
-        } else if(isDiff && typeof parent1 === 'undefined' && typeof parent2 === 'undefined') { 
-
-            // Value was modified by both and they're different.
-            // (otherwise it wouldn't be in the diff)
-            // Conflict.
-        } else if(isDiff) {
-            result[key] = {
-                [first]: parent1,
-                [second]: parent2
-            };
-
-            // Value isn't a diff.
-        } else {
-            const conflicts = diffConflicts(value, parent1Id, parent2Id);
-            if (conflicts) {
-                result[key] = conflicts;
-            }
-        }
-    }, {});
-
-    const k = keys(results);
-    if (k.length > 0) {
-        return results;
-    } else {
-        return null;
-    }
-}
-
-function diffNonConflicts(diff: Conflicts, parent1Id: symbol | string, parent2Id: symbol | string): PartialFile {
-    const results = transform(diff, (result, value: any, key) => {
-        const isDiff = value && typeof value === 'object' && value.hasOwnProperty(parent1Id);
-        let parent1: Conflicts = value[parent1Id];
-        let parent2: Conflicts = value[parent2Id];
-        
-        // Value was modified by first but not by second.
-        // No Conflict.
-        if (typeof parent1 !== 'undefined' && typeof parent2 === 'undefined') {
-            result[key] = parent1;
-            
-            // Value was modified by second but not by first.
-            // No Conflict.
-        } else if(typeof parent1 === 'undefined' && typeof parent2 !== 'undefined') {
-            result[key] = parent2;
-          
-            // Value was modified by neither. No conflict.
-        } else if(isDiff && typeof parent1 === 'undefined' && typeof parent2 === 'undefined') { 
-            result[key] = null;
-
-            // Value was modified by both and they're different.
-            // (otherwise it wouldn't be in the diff)
-            // Conflict.
-        } else if(isDiff) {
-
-            // Value isn't a diff.
-        } else {
-            const conflicts = diffNonConflicts(value, parent1Id, parent2Id);
-            if (conflicts) {
-                result[key] = conflicts;
-            }
-        }
-    }, {});
-
-    const k = keys(results);
-    if (k.length > 0) {
-        return results;
-    } else {
-        return null;
-    }
-}
-
-/**
- * Applies the changes contained in the merge result to the base and returns the result.
- * @param mergeResult 
- */
-export function applyMerge<T>(mergeResult: MergedObject<T>): T {
-    return mergeWith({}, mergeResult.base, mergeResult.final, copyArrays);
 }
 
 /**
@@ -419,54 +78,18 @@ export function hasValue(value: string) {
  */
 export function cleanFile(file: File): File {
     let cleaned = mergeObj({}, file);
-    if (cleaned.type === 'object') {
-        // Make sure we're not modifying another file's tags
-        let newTags = mergeObj({}, cleaned.tags);
-        cleaned.tags = newTags;
-        for(let property in cleaned.tags) {
-            let value = cleaned.tags[property];
-            if (!hasValue(value)) {
-                delete cleaned.tags[property];
-            }
+    // Make sure we're not modifying another file's tags
+    let newTags = mergeObj({}, cleaned.tags);
+    cleaned.tags = newTags;
+    for (let property in cleaned.tags) {
+        let value = cleaned.tags[property];
+        if (!hasValue(value)) {
+            delete cleaned.tags[property];
         }
     }
     return cleaned;
 }
 
-/**
- * The reducer for the "file_added" event type.
- * @param state 
- * @param event 
- */
-function fileAddedReducer(state: FilesState, event: FileAddedEvent) {
-    return mergeObj({}, state, {
-        [event.id]: event.file
-    });
-}
-
-/**
- * The reducer for the "file_removed" event type.
- * @param state 
- * @param event 
- */
-function fileRemovedReducer(state: FilesState, event: FileRemovedEvent) {
-    const { [event.id]: removed, ...others } = state;
-    return others;
-}
-
-/**
- * The reducer for the "file_updated" event type.
- * @param state 
- * @param event 
- */
-function fileUpdatedReducer(state: FilesState, event: FileUpdatedEvent) {
-    let newData = mergeObj({}, state, {
-        [event.id]: event.update
-    });
-    newData[event.id] = cleanFile(newData[event.id]);
-
-    return newData;
-}
 
 function eventActions(objects: Object[], context: FileCalculationContext, file: Object, other: Object, eventName: string): FileEvent[] {
     const filters = tagsMatchingFilter(file, other, eventName, context);
@@ -478,24 +101,6 @@ function eventActions(objects: Object[], context: FileCalculationContext, file: 
     }));
 
     return getActions();
-}
-
-function applyEvents(state: FilesState, events: FileEvent[]) {
-    for (let i = 0; i < events.length; i++) {
-        state = filesReducer(state, events[i]);
-    }
-
-    return state;
-}
-
-function applyState(state: FilesState, additionalState: FilesState) {
-    return mergeWith({}, state, additionalState, copyArrays);
-}
-
-export class FilesStateStore extends ReducingStateStore<FilesState> {
-    constructor(defaultState: FilesState) {
-        super(defaultState, filesReducer);
-    }
 }
 
 export interface FileAddedEvent extends Event {
@@ -561,16 +166,14 @@ export function fileAdded(file: File): FileAddedEvent {
     return {
         type: 'file_added',
         id: file.id,
-        file: file,
-        creation_time: new Date()
+        file: file
     };
 }
 
 export function fileRemoved(fileId: string): FileRemovedEvent {
     return {
         type: 'file_removed',
-        id: fileId,
-        creation_time: new Date()
+        id: fileId
     };
 }
 
@@ -579,14 +182,12 @@ export function fileUpdated(id: string, update: PartialFile): FileUpdatedEvent {
         type: 'file_updated',
         id: id,
         update: update,
-        creation_time: new Date()
     };
 }
 
 export function transaction(events: FileEvent[]): FileTransactionEvent {
     return {
         type: 'transaction',
-        creation_time: new Date(),
         events: events
     };
 }
@@ -603,13 +204,6 @@ export function action(senderFileId: string, receiverFileId: string, eventName: 
 export function addState(state: FilesState): ApplyStateEvent {
     return {
         type: 'apply_state',
-        creation_time:  new Date(),
         state: state
     };
-}
-
-function copyArrays(objValue: any, srcValue: any) {
-    if (Array.isArray(objValue)) {
-        return srcValue;
-    }
 }

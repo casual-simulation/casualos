@@ -6,7 +6,7 @@ import { createFile, createWorkspace } from "../Files/FileCalculations";
 import { WeaveTraverser } from "../causal-trees/WeaveTraverser";
 import { merge, splice } from "../utils";
 import { AtomFactory } from "../causal-trees/AtomFactory";
-import { AuxFile, AuxObject, AuxWorkspace, AuxState, AuxFileMetadata, AuxValueMetadata, AuxRef, AuxSequenceMetadata } from "./AuxState";
+import { AuxFile, AuxObject, AuxState, AuxFileMetadata, AuxValueMetadata, AuxRef, AuxSequenceMetadata } from "./AuxState";
 import { flatMap, fill } from 'lodash';
 import { MetaProperty } from "estree";
 
@@ -118,22 +118,14 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState, AuxReducerMetada
                 }
             }
         }
-
-        if (file.fileType === 'object') {
-            let file: AuxObject = {
-                ...createFile(id),
-                metadata: meta
-            };
-            file.tags = merge(file.tags, data);
-            return file;
-        } else {
-            let workspace: AuxWorkspace = {
-                ...createWorkspace(id),
-                metadata: meta
-            };
-            workspace = merge(workspace, data);
-            return workspace;
-        }
+        
+        let auxFile: AuxObject = {
+            id: id,
+            metadata: meta,
+            tags: {}
+        };
+        auxFile.tags = merge(auxFile.tags, data);
+        return auxFile;
     }
 
     private _evalTag(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<TagOp>, tag: TagOp, metadata: AuxReducerMetadata): AuxTag {

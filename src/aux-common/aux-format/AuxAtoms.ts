@@ -1,6 +1,5 @@
 import { assign } from "lodash";
 import { RootOp, AuxOpBase, AuxOpType, FileOp, TagOp, ValueOp, AuxOp, InsertOp, DeleteOp } from "./AuxOpTypes";
-import { FileType } from "../Files";
 
 /**
  * Creates a root atom op.
@@ -12,10 +11,9 @@ export function root(): RootOp {
 /**
  * Creates a file atom op.
  */
-export function file(id: string, type: FileType): FileOp {
+export function file(id: string): FileOp {
     return op<FileOp>(AuxOpType.file, {
-        id,
-        fileType: type
+        id
     });
 }
 
