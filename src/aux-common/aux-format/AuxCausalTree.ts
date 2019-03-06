@@ -9,7 +9,7 @@ import { SiteInfo } from '../causal-trees/SiteIdInfo';
 import { StoredCausalTree } from '../causal-trees/StoredCausalTree';
 import { AuxState, AuxTagMetadata, AuxValueMetadata, AuxFile } from './AuxState';
 import { getTagMetadata, insertIntoTagValue, insertIntoTagName, deleteFromTagValue, deleteFromTagName } from './AuxTreeCalculations';
-import { flatMap, keys } from 'lodash';
+import { flatMap, keys, isEqual } from 'lodash';
 import { merge } from '../utils';
 
 /**
@@ -198,12 +198,17 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
                 let newVal = getTag(file.type, newData, t);
                 if (tagMeta) {
                     const oldVal = getFileTag(file, t);
-                    if (typeof newVal === 'object' && !Array.isArray(newVal) && !Array.isArray(oldVal)) {
+                    if (newVal && typeof newVal === 'object' && !Array.isArray(newVal) && !Array.isArray(oldVal)) {
                         newVal = merge(oldVal, newVal);
                     }
-                    // tag is on the file
-                    const val = this.val(newVal, tagMeta.ref.atom);
-                    return [val];
+
+                    if (!isEqual(oldVal, newVal)) {
+                        // tag is on the file
+                        const val = this.val(newVal, tagMeta.ref.atom);
+                        return [val];
+                    } else {
+                        return [];
+                    }
                 } else {
                     const tag = this.tag(t, file.metadata.ref.atom);
                     const val = this.val(newVal, tag.atom);

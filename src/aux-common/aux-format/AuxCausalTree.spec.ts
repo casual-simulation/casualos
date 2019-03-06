@@ -827,7 +827,31 @@ describe('AuxCausalTree', () => {
             expect(result.map(ref => ref.atom)).toEqual([
                 positionTagValue
             ]);
+        });
 
+        it('should not write duplicates', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            const file = createFile('test', {
+                _workspace: null,
+                _position: { x: 0, y: 0, z: 0 },
+                test: 99
+            });
+            tree.addFile(file);
+            
+            let updates: WeaveReference<AuxOp>[][] = [];
+            tree.atomAdded.subscribe(refs => updates.push(refs));
+            
+            const result = tree.updateFile(tree.value['test'], {
+                tags: {
+                    test: 99,
+                    _workspace: null,
+                    _position: { x: 0, y: 0, z: 0 }
+                }
+            });
+
+            expect(updates.length).toBe(0);
+            expect(result.map(ref => ref.atom)).toEqual([]);
         });
     });
 
