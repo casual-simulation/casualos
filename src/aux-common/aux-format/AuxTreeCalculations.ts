@@ -31,7 +31,7 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
                     }
                     return;
                 } else if(e.atom.value.type === AuxOpType.delete) {
-                    let cause = tree.tree.weave.getAtom(e.atom.cause, e.causeIndex);
+                    let cause = tree.tree.weave.getAtom(e.atom.cause);
                     if (cause.atom.value.type === AuxOpType.file) {
                         const id = cause.atom.value.id;
                         deletedFiles.push(id);
@@ -88,7 +88,7 @@ export function getAtomFile(weave: Weave<AuxOp>, ref: WeaveReference<AuxOp>): We
     if (!ref.atom.cause) {
         return null;
     }
-    const cause = weave.getAtom(ref.atom.cause, ref.causeIndex);
+    const cause = weave.getAtom(ref.atom.cause);
     return getAtomFile(weave, cause);
 }
 

@@ -10,11 +10,9 @@ import { getHash, getHashBuffer } from './Hash';
  * @param index 
  * @param causeIndex 
  */
-export function reference<T extends AtomOp>(atom: Atom<T>, index: number, causeIndex: number): WeaveReference<T> {
+export function reference<T extends AtomOp>(atom: Atom<T>): WeaveReference<T> {
     return {
-        atom,
-        index,
-        causeIndex,
+        atom
     };
 }
 
@@ -28,18 +26,6 @@ export interface WeaveReference<TOp extends AtomOp> {
      * The atom that this reference refers to.
      */
     atom: Atom<TOp>;
-
-    /**
-     * The index in the site that this atom refers to.
-     * Because sites cannot create concurrent atoms,
-     * this value will always be valid.
-     */
-    index: number;
-
-    /**
-     * The index in the site that is this atom's cause.
-     */
-    causeIndex: number;
 }
 
 /**
@@ -102,10 +88,10 @@ export class Weave<TOp extends AtomOp> {
                 return <WeaveReference<T>>this.atoms[0];
             }
 
-            const ref = reference<T>(atom, 0, null);
+            const ref = reference<T>(atom);
             // Add the atom at the root of the weave.
             this._atoms.splice(0, 0, ref);
-            site[0] = ref;
+            site[ref.atom.id.timestamp] = ref;
             this._sizeMap.set(atom.id, 1);
             return ref;
         } else {
@@ -115,7 +101,7 @@ export class Weave<TOp extends AtomOp> {
             }
             const cause = this.atoms[causeIndex];
             const weaveIndex = this._weaveIndex(causeIndex, atom.id);
-            const siteIndex = this._siteIndex(atom.id, site);
+            const siteIndex = atom.id.timestamp;
 
             if (siteIndex >= 0 && siteIndex < site.length) {
                 const existingAtom = site[siteIndex];
@@ -123,7 +109,7 @@ export class Weave<TOp extends AtomOp> {
                     return <WeaveReference<T>>existingAtom;
                 }
             }
-            const ref = reference<T>(atom, siteIndex, cause ? cause.index : null);
+            const ref = reference<T>(atom);
             this._atoms.splice(weaveIndex, 0, ref);
             site[siteIndex] = ref;
             
@@ -170,7 +156,7 @@ export class Weave<TOp extends AtomOp> {
         if (!ref.atom.cause) {
             return false;
         }
-        const cause = this.getAtom(ref.atom.cause, ref.causeIndex);
+        const cause = this.getAtom(ref.atom.cause);
         if (!cause) {
             return false;
         }
@@ -180,6 +166,9 @@ export class Weave<TOp extends AtomOp> {
         }
         const refIndex = weaveIndexOf(this._atoms, ref.atom.id, span.index);
         const refSpan = this._getSpan(ref, refIndex);
+        if (!refSpan) {
+            return false;
+        }
         const startSplice = refIndex + refSpan.length;
         const spliceLength = span.length - (refIndex - span.index);
         this._removeSpan(startSplice, spliceLength);
@@ -200,7 +189,7 @@ export class Weave<TOp extends AtomOp> {
 
             this._sizeMap.delete(r.atom.id);
             const site = this.getSite(r.atom.id.site);
-            delete site[r.index];
+            delete site[r.atom.id.timestamp];
         }
     }
 
@@ -208,10 +197,10 @@ export class Weave<TOp extends AtomOp> {
      * Gets the atom for the given reference.
      * @param reference The reference.
      */
-    getAtom<T extends TOp>(id: AtomId, index: number): WeaveReference<T> {
+    getAtom<T extends TOp>(id: AtomId): WeaveReference<T> {
         const site = this.getSite(id.site);
-        if (index >= 0 && index < site.length) {
-            return <WeaveReference<T>>site[index];
+        if (id.timestamp >= 0 && id.timestamp < site.length) {
+            return <WeaveReference<T>>site[id.timestamp];
         } else {
             return null;
         }
@@ -276,7 +265,7 @@ export class Weave<TOp extends AtomOp> {
                 for (let b = 0; b < finalAtoms.length; b++) {
                     const ref = finalAtoms[b];
                     const site = this.getSite(ref.atom.id.site);
-                    site[ref.index] = ref;
+                    site[ref.atom.id.timestamp] = ref;
                 }
                 break;
             } else {
@@ -294,7 +283,7 @@ export class Weave<TOp extends AtomOp> {
                     newAtoms.push(a);
                     
                     const site = this.getSite(a.atom.id.site);
-                    site[a.index] = a;
+                    site[a.atom.id.timestamp] = a;
                 } else if(order > 0) {
                     // New atom should be after local atom.
                     // Skip local atoms until we find the right place to put the new atom.
@@ -309,7 +298,7 @@ export class Weave<TOp extends AtomOp> {
                         newAtoms.push(a);
 
                         const site = this.getSite(a.atom.id.site);
-                        site[a.index] = a;
+                        site[a.atom.id.timestamp] = a;
                     }
                 }
             }
@@ -337,14 +326,12 @@ export class Weave<TOp extends AtomOp> {
         let chain = [ref];
 
         let cause = ref.atom.cause;
-        let causeIndex = ref.causeIndex;
         while(cause) {
-            const causeRef = this.getAtom(cause, causeIndex);
+            const causeRef = this.getAtom(cause);
             
             chain.push(causeRef);
 
             cause = causeRef.atom.cause;
-            causeIndex = causeRef.causeIndex;
         }
 
         return chain;
@@ -385,30 +372,6 @@ export class Weave<TOp extends AtomOp> {
         } else {
             return null;
         }
-    }
-
-    /**
-     * Finds the index that an atom should appear at in a yarn.
-     * Uses binary search.
-     */
-    private _siteIndex(atomId: AtomId, site: WeaveReference<TOp>[]): number {
-        let left = 0;
-        let right = site.length - 1;
-
-        while(left <= right) {
-            let m = Math.floor((left + right) / 2);
-            let ref = site[m];
-            if (atomId.timestamp < ref.atom.id.timestamp || 
-                (atomId.timestamp === ref.atom.id.timestamp && atomId.priority > ref.atom.id.priority)) {
-                right = m - 1;
-            } else if(idEquals(atomId, ref.atom.id)) {
-                return m;
-            } else {
-                left = m + 1;
-            }
-        }
-
-        return site.length;
     }
 
     /**
