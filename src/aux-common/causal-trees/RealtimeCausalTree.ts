@@ -84,6 +84,10 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         this._errors = new Subject<any>();
         this._tree = null;
         this._subs = [];
+
+        this._subs.push(this._updated.pipe(
+            flatMap(async (u) => await this._store.update(this.id, this.tree.export()))
+        ).subscribe(null, err => this._errors.next(err)));
     }
 
     /**
