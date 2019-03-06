@@ -36,10 +36,12 @@ export class SocketIOConnection implements RealtimeChannelConnection {
         this._knownEvents = knownEventNames;
         this._knownEvents.forEach(name => {
             this._socket.on(name, (data: any) => {
-                this._events.next({
-                    name,
-                    data
-                });
+                setTimeout(() => {
+                    this._events.next({
+                        name,
+                        data
+                    });
+                }, 0);
             });
         });
     }
