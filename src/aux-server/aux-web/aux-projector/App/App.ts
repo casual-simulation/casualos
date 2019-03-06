@@ -121,9 +121,6 @@ export default class App extends Vue {
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
 
-    remainingConflicts: ConflictDetails[] = [];
-    currentMergeState: MergeStatus<FilesState> = null;
-
     private _subs: SubscriptionLike[] = [];
 
     get version() {
@@ -198,36 +195,22 @@ export default class App extends Vue {
                 }
             }, 1000);
 
-            subs.push(fileManager.disconnected.subscribe(_ => {
-                this._showConnectionLost();
-                this.online = false;
-                this.synced = false;
-                this.lostConnection = true;
-            }));
-
-            subs.push(fileManager.reconnected.subscribe(async state => {
-                this.online = true;
-                if (this.lostConnection) {
-                    this._showConnectionRegained();
+            subs.push(fileManager.connectionStateChanged.subscribe(connected => {
+                if (!connected) {
+                    this._showConnectionLost();
+                    this.online = false;
+                    this.synced = false;
+                    this.lostConnection = true;
+                } else {
+                    this.online = true;
+                    if (this.lostConnection) {
+                        this._showConnectionRegained();
+                    }
+                    this.lostConnection = false;
+                    this.startedOffline = false;
+                    this.synced = true;
+                    appManager.checkForUpdates();
                 }
-                appManager.checkForUpdates();
-            }));
-
-            subs.push(fileManager.syncFailed.subscribe(state => {
-                this._showSyncFailed();
-                this.remainingConflicts = state.remainingConflicts;
-                this.currentMergeState = state;
-            }));
-
-            subs.push(fileManager.resynced.subscribe(resynced => {
-                console.log('[App] Resynced!');
-                this.remainingConflicts = [];
-                if (this.lostConnection || this.startedOffline || resynced) {
-                    this._showSynced();
-                }
-                this.lostConnection = false;
-                this.startedOffline = false;
-                this.synced = true;
             }));
 
             subs.push(fileManager.fileChanged(fileManager.userFile).pipe(

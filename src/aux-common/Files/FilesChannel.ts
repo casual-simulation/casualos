@@ -7,7 +7,7 @@ import {
 } from 'rxjs/operators';
 import { ReducingStateStore, Event, ChannelConnection } from "../channels-core";
 import {File, Object, Workspace, PartialFile} from './File';
-import { tagsMatchingFilter, createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, isDestroyed, getActiveObjects } from './FileCalculations';
+import { tagsMatchingFilter, createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, isDestroyed, getActiveObjects, calculateStateDiff, FilesStateDiff } from './FileCalculations';
 import { merge as mergeObj } from '../utils';
 import { setActions, getActions } from '../Formulas/formula-lib';
 
@@ -18,14 +18,6 @@ export interface FilesState {
     [id: string]: File;
 }
 
-export interface FilesStateDiff {
-    prev: FilesState;
-    current: FilesState;
-    
-    addedFiles: File[];
-    removedFiles: File[];
-    updatedFiles: File[];
-}
 
 /**
  * Represents details about a conflict.
@@ -147,70 +139,6 @@ export function filesReducer(state: FilesState, event: FileEvent) {
     return state;
 }
 
-/**
- * Calculates the difference between the two given states.
- * In particular, it calculates which operations need to be performed on prev in order to get current.
- * The returned object contains the files that were added, removed, and/or updated between the two states.
- * This operation runs in O(n) time where n is the number of files.
- * @param prev The previous state.
- * @param current The current state.
- * @param event If provided, this event will be used to help short-circut the diff calculation to be O(1) whenever the event is a 'file_added', 'file_removed', or 'file_updated' event.
- */
-export function calculateStateDiff(prev: FilesState, current: FilesState, event?: FileEvent): FilesStateDiff {
-
-    if (event) {
-        if (event.type === 'file_added') {
-            return {
-                prev: prev,
-                current: current,
-                addedFiles: [current[event.id]],
-                removedFiles: [],
-                updatedFiles: []
-            };
-        } else if(event.type === 'file_removed') {
-            return {
-                prev: prev,
-                current: current,
-                addedFiles: [],
-                removedFiles: [prev[event.id]],
-                updatedFiles: []
-            };
-        } else if(event.type === 'file_updated') {
-            return {
-                prev: prev,
-                current: current,
-                addedFiles: [],
-                removedFiles: [],
-                updatedFiles: [current[event.id]]
-            };
-        }
-    }
-
-    let diff: FilesStateDiff = {
-        prev: prev,
-        current: current,
-        addedFiles: [],
-        removedFiles: [],
-        updatedFiles: []
-    };
-
-    const ids = union(keys(prev), keys(current));
-
-    ids.forEach(id => {
-        const prevVal = prev[id];
-        const currVal = current[id];
-        
-        if (prevVal && !currVal) {
-            diff.removedFiles.push(prevVal);
-        } else if(!prevVal && currVal) {
-            diff.addedFiles.push(currVal);
-        } else if(!isEqual(prevVal, currVal)) {
-            diff.updatedFiles.push(currVal);
-        }
-    });
-
-    return diff;
-}
 
 export interface DiffOptions {
     /**
@@ -444,45 +372,6 @@ export function applyMerge<T>(mergeResult: MergedObject<T>): T {
 }
 
 /**
- * Builds the fileAdded, fileRemoved, and fileUpdated observables from the given channel connection.
- * @param connection The channel connection.
- */
-export function fileChangeObservables(connection: ChannelConnection<FilesState>) {
-    const states = connection.events.pipe(
-        rxMap(e => ({state: connection.store.state(), event: e})), 
-        startWith({state: connection.store.state(), event: null})
-    );
-
-    // pair new states with their previous values
-    const statePairs = states.pipe(rxPairwise());
-
-    // calculate the difference between the current state and new state.
-    const stateDiffs = statePairs.pipe(rxMap(pair => {
-      const prev = pair[0];
-      const curr = pair[1];
-
-      return calculateStateDiff(prev.state, curr.state, <FileEvent>curr.event);
-    }));
-
-    const fileAdded = stateDiffs.pipe(rxFlatMap(diff => {
-        return sortBy(diff.addedFiles, f => f.type === 'object');
-    }));
-
-    const fileRemoved = stateDiffs.pipe(
-      rxFlatMap(diff => diff.removedFiles),
-      rxMap(f => f.id)
-    );
-
-    const fileUpdated = stateDiffs.pipe(rxFlatMap(diff => diff.updatedFiles));
-
-    return {
-        fileAdded,
-        fileRemoved,
-        fileUpdated
-    };
-}
-
-/**
  * Calculates the set of events that should be run for the given action.
  * @param state The current file state.
  * @param action The action to process.
@@ -516,6 +405,15 @@ export function calculateActionEvents(state: FilesState, action: Action) {
 }
 
 /**
+ * Determines whether the given tag value is a valid value or if
+ * it represents nothing.
+ * @param value The value.
+ */
+export function hasValue(value: string) {
+    return !(value === null || typeof value === 'undefined' || value === '');
+}
+
+/**
  * Cleans the file by removing any null or undefined properties.
  * @param file The file to clean.
  */
@@ -527,7 +425,7 @@ export function cleanFile(file: File): File {
         cleaned.tags = newTags;
         for(let property in cleaned.tags) {
             let value = cleaned.tags[property];
-            if (value === null || typeof value === 'undefined' || value === '') {
+            if (!hasValue(value)) {
                 delete cleaned.tags[property];
             }
         }

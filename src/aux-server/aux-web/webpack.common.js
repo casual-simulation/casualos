@@ -22,6 +22,11 @@ module.exports = {
   },
   module: {
     rules: [
+        // TODO: Re-enable sometime
+    //   {
+    //     test: /\.worker\.ts$/,
+    //     use: 'worker-loader'
+    //   },
       {
         test: /\.vue$/,
         use: 'vue-loader',
@@ -65,7 +70,7 @@ module.exports = {
           /aux-common/
         ],
         enforce: 'pre'
-      }
+      },
     ]
   },
   resolve: {

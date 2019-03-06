@@ -64,6 +64,6 @@ export function del(start?: number, end?: number): DeleteOp {
 export function op<T extends AuxOp>(type: T['type'], extra: Partial<T>): T {
     return <T>assign({
         type: type,
-        unix: new Date().getTime()
+        unix: Date.now()
     }, extra);
 }

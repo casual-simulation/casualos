@@ -13,6 +13,8 @@ import {
 import { keys, minBy } from 'lodash';
 import { GridChecker, GridCheckResults } from './grid/GridChecker';
 import { GameObject } from './GameObject';
+import { AuxFile, AuxWorkspace } from '@yeti-cgi/aux-common/aux-format';
+import { idEquals } from '@yeti-cgi/aux-common/causal-trees';
 
 /**
  * Defines a mesh that represents a workspace.
@@ -37,7 +39,7 @@ export class WorkspaceMesh extends GameObject {
     /**
      * The workspace for this mesh.
      */
-    workspace: Workspace;
+    workspace: AuxWorkspace;
 
     /**
      * The container for everything on the workspace.
@@ -117,12 +119,12 @@ export class WorkspaceMesh extends GameObject {
      * @param workspace The new workspace data. If not provided the mesh will re-update using the existing data.
      * @param force Whether to force the workspace to update everything, even aspects that have not changed.
      */
-    async update(workspace?: File, force?: boolean) {
+    async update(workspace?: AuxFile, force?: boolean) {
         if (workspace && workspace.type !== 'workspace') {
             return;
         }
         const prev = this.workspace;
-        this.workspace = (<Workspace>workspace) || prev;
+        this.workspace = (<AuxWorkspace>workspace) || prev;
 
         this.visible = !!this.workspace.position;
         this.container.visible = !this.workspace.minimized;
@@ -225,8 +227,16 @@ export class WorkspaceMesh extends GameObject {
         return results;
     }
 
-    private _gridChanged(current: Workspace, previous: Workspace) {
-        return !previous || current.size !== previous.size || current.grid !== previous.grid
+    private _gridChanged(current: AuxWorkspace, previous: AuxWorkspace) {
+        if (!previous || current.size !== previous.size) {
+            return true;
+        } else {
+            const currentGrid = current.metadata.tags['grid'];
+            const previousGrid = previous.metadata.tags['grid'];
+
+            return !(currentGrid === previousGrid ||
+                (currentGrid && previousGrid && idEquals(currentGrid.value.ref.atom.id, previousGrid.value.ref.atom.id)));
+        }
     }
 }
 

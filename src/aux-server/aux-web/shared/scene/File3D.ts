@@ -1,4 +1,4 @@
-import { File, Object, Workspace } from '@yeti-cgi/aux-common'
+import { File, Object, Workspace, AuxFile } from '@yeti-cgi/aux-common'
 import { ArgEvent } from '@yeti-cgi/aux-common/Events';
 
 // Assets
@@ -18,7 +18,7 @@ export class File3D {
     /**
      * The file (workspace or object) that this object represents.
      */
-    public file: File;
+    public file: AuxFile;
 
     /**
      * The 3D mesh that represents the file.
@@ -41,7 +41,7 @@ export class File3D {
      * @param gameView The game view that manages this file3d.
      * @param file The file that this file3d represents.
      */
-    constructor(gameView: IGameView, file: File) {
+    constructor(gameView: IGameView, file: AuxFile) {
         this.file = file;
         this._gameView = gameView;
 
@@ -65,7 +65,7 @@ export class File3D {
      * Update the file that this file3d represents.
      * @param file The file data that this file3d represents.
      */
-    public async updateFile(file: File) {
+    public async updateFile(file: AuxFile) {
         this.file = file;
         await this.mesh.update(this.file);
         this.onUpdated.invoke(this);

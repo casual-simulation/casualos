@@ -29,3 +29,5 @@ export * from './channels-core';
 export * from './Files';
 export * from './Formulas';
 export * from './aux-format';
+export * from './AppVersion';
+export * from './ApiVersion';

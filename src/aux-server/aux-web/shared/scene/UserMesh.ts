@@ -11,7 +11,7 @@ import {
 import { GameObject } from "./GameObject";
 import { IGameView } from '../IGameView';
 import { Text3D } from "./Text3D";
-import { isFormula, FileCalculationContext, Object, File } from '@yeti-cgi/aux-common'
+import { isFormula, FileCalculationContext, Object, File, AuxObject } from '@yeti-cgi/aux-common'
 import { ArgEvent } from '@yeti-cgi/aux-common/Events';
 import { appManager } from '../AppManager';
 import { createLabel } from "./SceneUtils";
@@ -51,7 +51,7 @@ export class UserMesh extends GameObject {
     /**
      * The data for the mesh.
      */
-    file: Object;
+    file: AuxObject;
 
     /**
      * The cube that acts as the visual representation of the file.
@@ -123,7 +123,7 @@ export class UserMesh extends GameObject {
             this.add(this.camera);
             this.add(this.container);
         }
-        this.file = (<Object>file) || this.file;
+        this.file = (<AuxObject>file) || this.file;
 
         this._context = appManager.fileManager.createContext();
 

@@ -1,4 +1,4 @@
-import { AtomOp } from "../channels-core/Atom";
+import { AtomOp } from "../causal-trees/Atom";
 import { FileType } from "../Files";
 
 /**

@@ -60,12 +60,10 @@ import Home from './Home/Home';
 
 // Import the WebXR Polyfill
 import 'webxr-polyfill';
-
 // Setup the Promise shim for browsers that don't support promises.
 polyfill();
 
 appManager.appType = AppType.Player;
-
 Vue.use(VueRouter);
 Vue.use(MdButton);
 Vue.use(MdCheckbox);

@@ -1,4 +1,4 @@
-import { Object, File, Workspace, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_GRID_SCALE, DEFAULT_USER_MODE, DEFAULT_WORKSPACE_COLOR, UserMode } from './File';
+import { Object, File, Workspace, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_GRID_SCALE, DEFAULT_USER_MODE, DEFAULT_WORKSPACE_COLOR, UserMode, FileType } from './File';
 import uuid from 'uuid/v4';
 import {
     flatMap,
@@ -11,7 +11,8 @@ import {
     values,
     isEqual,
     sortBy,
-    sumBy
+    sumBy,
+    difference
 } from 'lodash';
 import { Sandbox, SandboxLibrary } from '../Formulas/Sandbox';
 
@@ -19,8 +20,10 @@ import { Sandbox, SandboxLibrary } from '../Formulas/Sandbox';
 import formulaLib from '../Formulas/formula-lib';
 import { FilterFunction, SandboxInterface } from '../Formulas/SandboxInterface';
 import { PartialFile } from '../Files';
-import { FilesState, cleanFile } from './FilesChannel';
+import { FilesState, cleanFile, FileEvent } from './FilesChannel';
 import { merge } from '../utils';
+import { WeaveReference, AtomOp } from '../causal-trees';
+import { AuxOp, AuxOpType } from '../aux-format';
 
 export var ShortId_Length: number = 5;
 
@@ -52,6 +55,16 @@ export interface FileCalculationContext {
      * The sandbox that should be used to run JS.
      */
     sandbox: Sandbox;
+}
+
+/**
+ * Defines an interface that represents the difference between
+ * to FilesState objects.
+ */
+export interface FilesStateDiff {
+    addedFiles: File[];
+    removedFiles: string[];
+    updatedFiles: File[];
 }
 
 /**
@@ -414,6 +427,43 @@ export function newSelectionId() {
 }
 
 /**
+ * Gets the list of tags that are on the given file.
+ * @param file 
+ */
+export function tagsOnFile(type: FileType, file: PartialFile): string[] {
+    if (type === 'object') {
+        let tags = keys(file.tags);
+        return tags;
+    } else {
+        let ignored = ['id', 'type'];
+        let tags = keys(file);
+        return difference(tags, ignored);
+    }
+}
+
+/**
+ * Gets the specified tag value from the specified file.
+ * @param file The file that the tag should be retrieved from.
+ * @param tag The tag to retrieve.
+ */
+export function getTag(type: FileType, file: PartialFile, tag: string) {
+    if(type === 'object') {
+        return file.tags[tag];
+    } else {
+        return (<any>file)[tag];
+    }
+}
+
+/**
+ * Gets the specified tag from the specified file.
+ * @param file The file that the tag should be retrieved from.
+ * @param tag The tag to retrieve.
+ */
+export function getFileTag(file: File, tag: string) {
+    return getTag(file.type, file, tag);
+}
+
+/**
  * Creates a file with a new ID and the given tags.
  * @param id 
  * @param tags 
@@ -466,6 +516,74 @@ export function updateFile(file: File, userId: string, newData: PartialFile, cre
             }
         }
     }
+}
+
+/**
+ * Calculates the difference between the two given states.
+ * In particular, it calculates which operations need to be performed on prev in order to get current.
+ * The returned object contains the files that were added, removed, and/or updated between the two states.
+ * This operation runs in O(n) time where n is the number of files.
+ * @param prev The previous state.
+ * @param current The current state.
+ * @param events If provided, this event will be used to help short-circut the diff calculation to be O(1) whenever the event is a 'file_added', 'file_removed', or 'file_updated' event.
+ */
+export function calculateStateDiff(prev: FilesState, current: FilesState, events?: WeaveReference<AuxOp>[]): FilesStateDiff {
+
+    prev = prev || {};
+    current = current || {};
+
+    // TODO:
+    // if (events && events.length === 1) {
+    //     const event = events[0];
+    //     if (event.atom.value.type === AuxOpType.file) {
+    //         return {
+    //             prev: prev,
+    //             current: current,
+    //             addedFiles: [current[event.id]],
+    //             removedFiles: [],
+    //             updatedFiles: []
+    //         };
+    //     } else if(event.type === 'file_removed') {
+    //         return {
+    //             prev: prev,
+    //             current: current,
+    //             addedFiles: [],
+    //             removedFiles: [prev[event.id]],
+    //             updatedFiles: []
+    //         };
+    //     } else if(event.type === 'file_updated') {
+    //         return {
+    //             prev: prev,
+    //             current: current,
+    //             addedFiles: [],
+    //             removedFiles: [],
+    //             updatedFiles: [current[event.id]]
+    //         };
+    //     }
+    // }
+
+    let diff: FilesStateDiff = {
+        addedFiles: [],
+        removedFiles: [],
+        updatedFiles: []
+    };
+
+    const ids = union(keys(prev), keys(current));
+
+    ids.forEach(id => {
+        const prevVal = prev[id];
+        const currVal = current[id];
+        
+        if (prevVal && !currVal) {
+            diff.removedFiles.push(prevVal.id);
+        } else if(!prevVal && currVal) {
+            diff.addedFiles.push(currVal);
+        } else if(!isEqual(prevVal, currVal)) {
+            diff.updatedFiles.push(currVal);
+        }
+    });
+
+    return diff;
 }
 
 /**

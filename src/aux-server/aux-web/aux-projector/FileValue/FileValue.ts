@@ -1,7 +1,7 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Prop, Inject} from 'vue-property-decorator';
-import { Object, File, Assignment, isFormula, isAssignment } from '@yeti-cgi/aux-common';
+import { Object, File, Assignment, isFormula, isAssignment, AuxObject, AuxFile } from '@yeti-cgi/aux-common';
 import {assign} from 'lodash';
 import { appManager } from '../../shared/AppManager';
 
@@ -22,7 +22,7 @@ import { appManager } from '../../shared/AppManager';
     }
 })
 export default class FileRow extends Vue {
-    @Prop() file: Object;
+    @Prop() file: AuxObject;
     @Prop() tag: string;
     @Prop() readOnly: boolean;
     @Prop() updateTime: number;
@@ -39,7 +39,7 @@ export default class FileRow extends Vue {
         super();
     }
 
-    valueChanged(file: File, tag: string, value: string) {
+    valueChanged(file: AuxFile, tag: string, value: string) {
         if (file.type === 'object') {
             this.$emit('tagChanged', tag);
             this.fileManager.updateFile(file, {

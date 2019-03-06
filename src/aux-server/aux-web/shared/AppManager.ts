@@ -7,6 +7,7 @@ import { FileManager } from './FileManager';
 import { SocketManager } from './SocketManager';
 import { flatMap, map, scan } from 'rxjs/operators';
 import { downloadAuxState, readFileJson } from '../aux-projector/download';
+import { CausalTreeManager } from './causal-trees/CausalTreeManager';
 
 export interface User {
     email: string;
@@ -45,12 +46,14 @@ export class AppManager {
     private _updateAvailable: BehaviorSubject<boolean>;
     private _fileManager: FileManager;
     private _socketManager: SocketManager;
+    private _treeManager: CausalTreeManager;
     private _initPromise: Promise<void>;
     private _user: User;
 
     constructor() {
         this._socketManager = new SocketManager();
-        this._fileManager = new FileManager(this, this._socketManager);
+        this._treeManager = new CausalTreeManager(this._socketManager.socket);
+        this._fileManager = new FileManager(this, this._treeManager);
         this._initPromise = this._init();
     }
 

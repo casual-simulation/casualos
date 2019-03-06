@@ -2,7 +2,7 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Provide, Prop, Inject, Watch} from 'vue-property-decorator';
 import { some, union } from 'lodash';
-import {File, Object, fileTags, isHiddenTag} from '@yeti-cgi/aux-common';
+import {File, Object, fileTags, isHiddenTag, AuxObject} from '@yeti-cgi/aux-common';
 import { EventBus } from '../../shared/EventBus';
 import { appManager } from '../../shared/AppManager';
 
@@ -23,7 +23,7 @@ import FileTableToggle from '../FileTableToggle/FileTableToggle';
 })
 export default class FileTable extends Vue {
     
-    @Prop() files: Object[];
+    @Prop() files: AuxObject[];
     @Prop({ default: (() => <any>[]) }) extraTags: string[];
     @Prop({ default: false }) readOnly: boolean;
 

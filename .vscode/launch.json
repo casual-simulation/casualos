@@ -10,7 +10,8 @@
             "name": "Launch Program",
             "program": "${workspaceFolder}/src/aux-server/server/dist/main.js",
             "outFiles": [
-                "${workspaceFolder}/temp/**/*.js"
+                "${workspaceFolder}/src/aux-server/**/*.js",
+                "${workspaceFolder}/src/aux-common/**/*.js"
             ]
         }
     ]
