@@ -20,7 +20,7 @@ import {
 import { Workspace, Object, File } from './File';
 import { values, assign, merge } from 'lodash';
 import uuid from 'uuid/v4';
-import { objectsAtGridPosition, calculateStateDiff } from './FileCalculations';
+import { objectsAtWorkspaceGridPosition, calculateStateDiff } from './FileCalculations';
 import { TestConnector } from '../channels-core/test/TestConnector';
 import { Subject } from 'rxjs';
 import { ChannelClient, StoreFactory, ReducingStateStore } from '../channels-core';
@@ -1297,7 +1297,7 @@ describe('FilesChannel', () => {
                     }
                 ];
 
-                const matching = objectsAtGridPosition(objs, 'abc', {
+                const matching = objectsAtWorkspaceGridPosition(objs, 'abc', {
                     x: 0,
                     y: 0,
                     z: 10
