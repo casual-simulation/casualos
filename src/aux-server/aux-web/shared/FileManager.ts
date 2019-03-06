@@ -492,6 +492,10 @@ export class FileManager {
         await this._aux.onUpdated.pipe(rxFirst()).toPromise();
 
         console.log('[FileManager] Got Tree:', this._aux.tree.site.id);
+                    
+        // TODO: Implement the ability to keep old atoms around while
+        //       preserving performance provided by garbage collection.
+        this._aux.tree.garbageCollect = true;
 
         await this._initUserFile();
         await this._initGlobalsFile();
