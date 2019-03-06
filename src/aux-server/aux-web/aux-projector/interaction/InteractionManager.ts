@@ -306,7 +306,7 @@ export class InteractionManager {
     }
 
     public shrinkWorkspace(file: File3D) {
-        if (file && file.file.tags.type === 'workspace') {
+        if (file && file.file.tags._isWorkspace) {
             const size = file.file.tags.size;
             this._gameView.fileManager.updateFile(file.file, {
                 tags: {
@@ -321,7 +321,7 @@ export class InteractionManager {
      * @param file 
      */
     public minimizeWorkspace(file: File3D) {
-        if (file && file.file.tags.type === 'workspace') {
+        if (file && file.file.tags._isWorkspace) {
             const minimized = !isMinimized(file.file);
             this._gameView.fileManager.updateFile(file.file, {
                 tags: {

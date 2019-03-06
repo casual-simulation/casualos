@@ -131,7 +131,7 @@ export class FileMesh extends GameObject {
      * @param force Whether to force the mesh to update everything, not just the parts that have changed.
      */
     update(file?: File, force?: boolean) {
-        if (file) {
+        if (!file) {
             return;
         }
         if (!this.file) {

@@ -1,5 +1,5 @@
 <template>
-  <tr class="file-row" v-if="file.type === 'object'">
+  <tr class="file-row" v-if="file">
     <td class="file-close">
       <md-button class="md-icon-button md-dense" @click="toggleFile(file)">
         <md-icon>remove</md-icon>

@@ -117,7 +117,7 @@ export class WorkspaceMesh extends GameObject {
      * @param force Whether to force the workspace to update everything, even aspects that have not changed.
      */
     async update(workspace?: AuxFile, force?: boolean) {
-        if (workspace) {
+        if (!workspace) {
             return;
         }
         const prev = this.workspace;

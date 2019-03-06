@@ -420,8 +420,7 @@ export default class GameView extends Vue implements IGameView {
    * Gets all of the workspaces.
    */
   public getWorkspaces() {
-      // TODO: Fix
-    return this.getFiles();
+    return this.getFiles().filter(file => file.file.tags._isWorkspace);
   }
 
   /**
@@ -482,7 +481,7 @@ export default class GameView extends Vue implements IGameView {
     const obj = this._files[file.id];
     let shouldRemove = false;
     if (obj) {
-    //   if (file.type === 'object') {
+      if (!file.tags._isWorkspace) {
         
         if (!initialUpdate) { 
           if (!file.tags._user && file.tags._lastEditedBy === this.fileManager.userFile.id) {
@@ -498,12 +497,12 @@ export default class GameView extends Vue implements IGameView {
         if (file.tags._destroyed) {
           shouldRemove = true;
         }
-    //   }
-    //   else if (file.type === 'workspace') {
-    //     if (file.size <= 0) {
-    //       shouldRemove = true;
-    //     }
-    //   }
+      }
+      else {
+        if (file.tags.size <= 0) {
+          shouldRemove = true;
+        }
+      }
 
       await obj.updateFile(file);
       this.onFileUpdated.invoke(obj);
