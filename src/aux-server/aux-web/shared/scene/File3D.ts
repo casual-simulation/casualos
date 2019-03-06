@@ -45,16 +45,13 @@ export class File3D {
         this.file = file;
         this._gameView = gameView;
 
-        if (file.type === 'object') {
+        if (!file.tags._isWorkspace) {
             this.mesh = this._createFile(file);
-        } else if (file.type === 'workspace') {
-            this.mesh = this._createWorkSurface(file);
         } else {
-            console.error("[File3D] File doesnt seem to represent a valid object.", JSON.stringify(file, null, 1));
-            return;
+            this.mesh = this._createWorkSurface(file);
         }
 
-        this.mesh.name = `${file.type}_${file.id}`;
+        this.mesh.name = `${file.tags._isWorkspace ? 'workspace' : 'object'}_${file.id}`;
 
         // Add this file3d's mesh to scene so that it and all its childre get rendered.
         this._gameView.scene.add(this.mesh);

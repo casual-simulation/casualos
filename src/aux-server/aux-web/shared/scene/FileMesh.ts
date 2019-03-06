@@ -131,7 +131,7 @@ export class FileMesh extends GameObject {
      * @param force Whether to force the mesh to update everything, not just the parts that have changed.
      */
     update(file?: File, force?: boolean) {
-        if (file && file.type !== 'object') {
+        if (file) {
             return;
         }
         if (!this.file) {
@@ -201,9 +201,9 @@ export class FileMesh extends GameObject {
     }
 
     private _calculateScale(workspace: File3D): number {
-        if(workspace && workspace.file.type === 'workspace') {
-            const scale = workspace.file.scale || DEFAULT_WORKSPACE_SCALE;
-            const gridScale = workspace.file.gridScale || DEFAULT_WORKSPACE_GRID_SCALE;
+        if(workspace) {
+            const scale = workspace.file.tags.scale || DEFAULT_WORKSPACE_SCALE;
+            const gridScale = workspace.file.tags.gridScale || DEFAULT_WORKSPACE_GRID_SCALE;
             return scale * gridScale;
         } else {
             return DEFAULT_WORKSPACE_SCALE * DEFAULT_WORKSPACE_GRID_SCALE;
@@ -234,7 +234,7 @@ export class FileMesh extends GameObject {
             const workspace = this._gameView ? this._gameView.getFile(this.file.tags._workspace) : null;
             const scale = this._calculateScale(workspace);
             const cubeScale = calculateScale(this._context, this.file, scale);
-            if (workspace && workspace.file.type === 'workspace') {
+            if (workspace) {
                 (<WorkspaceMesh>workspace.mesh).container.add(this);
                 this.cubeContainer.scale.set(cubeScale.x, cubeScale.y, cubeScale.z);
                 this.cubeContainer.position.set(0, cubeScale.y / 2, 0);
@@ -248,7 +248,7 @@ export class FileMesh extends GameObject {
                 this.cubeContainer.position.set(0, 0, 0);
             }
     
-            if (this.file.tags._position && workspace && workspace.file.type === 'workspace') {
+            if (this.file.tags._position && workspace) {
                 const localPosition = calculateObjectPositionOnWorkspace(this._context, this.file, scale );
                 this.position.set(localPosition.x, localPosition.y, localPosition.z);
             } else {

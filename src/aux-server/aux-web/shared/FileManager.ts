@@ -1,36 +1,16 @@
 
 import {
   File, 
-  fileAdded, 
-  FileAddedEvent, 
   FileEvent, 
-  FileRemovedEvent, 
   FilesState, 
-  fileUpdated, 
-  FileUpdatedEvent, 
   Object, 
   PartialFile, 
   Workspace,
   action,
-  calculateStateDiff,
   fileChangeObservables,
   calculateActionEvents,
-  transaction,
-  mergeFiles,
-  applyMerge,
-  FileTransactionEvent,
-  fileRemoved,
-  objDiff,
   addState,
-  first,
-  MergedObject,
-  listMergeConflicts,
-  ConflictDetails,
-  resolveConflicts,
-  second,
-  ResolvedConflict,
   DEFAULT_USER_MODE,
-  DEFAULT_SCENE_BACKGROUND_COLOR,
   filterFilesBySelection, 
   createWorkspace, 
   FileCalculationContext,
@@ -42,28 +22,15 @@ import {
   calculateFormattedFileValue,
   calculateFileValue,
   createFile,
-  isDestroyed,
   getActiveObjects,
-  ChannelConnection,
   AuxCausalTree,
   AuxFile,
   AuxObject
 } from '@yeti-cgi/aux-common';
 import {
-  findIndex, 
-  flatMap, 
-  intersection, 
   keys, 
-  mapValues,
-  merge, 
-  sortBy, 
   union, 
-  uniq, 
-  values,
-  difference,
-  some,
-  assign
-} from 'lodash';
+  values} from 'lodash';
 import {
   BehaviorSubject, 
   from, 
@@ -76,20 +43,12 @@ import {
 import {
   filter, 
   map, 
-  shareReplay, 
-  scan, 
-  pairwise,
-  flatMap as rxFlatMap,
-  skip,
   startWith,
   first as rxFirst
 } from 'rxjs/operators';
-import * as Sentry from '@sentry/browser';
-import uuid from 'uuid/v4';
 
 import {AppManager, appManager} from './AppManager';
 import {SocketManager} from './SocketManager';
-import { SentryError } from '@sentry/core';
 import { CausalTreeManager } from './causal-trees/CausalTreeManager';
 import { RealtimeCausalTree } from '@yeti-cgi/aux-common/causal-trees';
 
@@ -98,22 +57,11 @@ export interface SelectedFilesUpdatedEvent {
 }
 
 /**
- * Defines an interface for an object that tracks the status of a merge.
- * Contains the current state, what conflcits have been resolved, and what conflicts are remaining.
- */
-export interface MergeStatus<T> {
-  merge: MergedObject<T>;
-  resolvedConflicts: ResolvedConflict[];
-  remainingConflicts: ConflictDetails[];
-}
-
-/**
  * Defines a class that interfaces with the AppManager and SocketManager
  * to reactively edit files.
  */
 export class FileManager {
   private _appManager: AppManager;
-  private _socketManager: SocketManager;
   private _treeManager: CausalTreeManager;
 
   private _subscriptions: SubscriptionLike[];
@@ -127,9 +75,6 @@ export class FileManager {
   private _aux: RealtimeCausalTree<AuxCausalTree>;
     _errored: boolean;
 
-  private get _allFiles(): File[] {
-    return values(this.filesState);
-  }
 
   /**
    * Gets all the files that represent an object.
@@ -471,7 +416,7 @@ export class FileManager {
             fileRemoved);
 
         const allSelectedFilesUpdated =
-            allFilesSelectedUpdatedAddedAndRemoved.pipe(map(file => {
+            allFilesSelectedUpdatedAddedAndRemoved.pipe(map(() => {
             const selectedFiles = this.selectedObjects;
             return {files: selectedFiles};
             }));

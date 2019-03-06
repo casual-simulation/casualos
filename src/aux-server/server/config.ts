@@ -1,4 +1,3 @@
-import { ChannelServerConfig } from "./ChannelServer";
 
 /**
  * The server config.
@@ -8,7 +7,6 @@ export interface Config {
     socketPort: number,
     httpPort: number,
     clients: ClientConfig[],
-    channels: ChannelServerConfig,
     mongodb: MongoDbConfig;
     trees: CausalTreeServerConfig;
 };

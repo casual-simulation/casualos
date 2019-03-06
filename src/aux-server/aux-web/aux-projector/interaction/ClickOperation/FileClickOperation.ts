@@ -29,8 +29,8 @@ export class FileClickOperation extends BaseFileClickOperation {
     }
 
     protected _createDragOperation(): BaseFileDragOperation {
-        const workspace = this._file.type === 'workspace' ? this._file3D : null;
-        if (this._file.type === 'object') {
+        const workspace = this._file.tags._isWorkspace ? this._file3D : null;
+        if (!this._file.tags._isWorkspace) {
             const fileWorkspace = this._file.tags._workspace ? this._gameView.getFile(this._file.tags._workspace) : null;
             if (fileWorkspace && this._file.tags._position) {
                 const gridPosition = new Vector2(this._file.tags._position.x, this._file.tags._position.y);
@@ -45,7 +45,7 @@ export class FileClickOperation extends BaseFileClickOperation {
 
     protected _performClick(): void {
         // If we let go of the mouse button without starting a drag operation, this constitues a 'click'.
-        if (this._file.type === 'object') {
+        if (!this._file.tags._isWorkspace) {
 
             if (this._interaction.isInCorrectMode(this._file)) {
                 // Select the file we are operating on.
@@ -53,7 +53,7 @@ export class FileClickOperation extends BaseFileClickOperation {
             }
 
             // If we're clicking on a workspace show the context menu for it.
-        } else if(this._file.type === 'workspace') {
+        } else if(this._file.tags._isWorkspace) {
 
             if (!this._interaction.isInCorrectMode(this._file) && this._gameView.selectedRecentFile) {
                 // Create file at clicked workspace position.

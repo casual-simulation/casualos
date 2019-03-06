@@ -16,11 +16,6 @@ const config: Config = {
         projectorConfig,
         playerConfig
     ],
-    channels: {
-        mongodb: {
-            dbName: 'SO4'
-        }
-    },
     mongodb: {
         url: 'mongodb://127.0.0.1:27017',
     },

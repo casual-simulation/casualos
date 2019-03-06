@@ -16,6 +16,7 @@ export interface File {
         defaultHeight?: number | null;
         color?: string;
         minimized?: boolean | null;
+        _isWorkspace?: boolean;
         _workspace?: string | null;
         _position?: {
             x: number;

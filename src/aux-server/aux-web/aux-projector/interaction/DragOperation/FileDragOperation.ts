@@ -58,7 +58,7 @@ export class FileDragOperation extends BaseFileDragOperation {
 
             // if the workspace is only 1 tile large and not minimized
             const workspace = <Workspace>this._workspace.file;
-            if (workspace.size === 1 && !workspace.minimized && (!workspace.grid || keys(workspace.grid).length === 0)) {
+            if (workspace.tags.size === 1 && !workspace.tags.minimized && (!workspace.tags.grid || keys(workspace.tags.grid).length === 0)) {
                 // check if it is close to another workspace.
                 const closest = this._interaction.closestWorkspace(point, this._workspace);
 
@@ -75,7 +75,7 @@ export class FileDragOperation extends BaseFileDragOperation {
 
             if (this._attachWorkspace) {
                 const w = <Workspace>this._attachWorkspace.file;
-                const scale = w.scale || DEFAULT_WORKSPACE_SCALE;
+                const scale = w.tags.scale || DEFAULT_WORKSPACE_SCALE;
                 const realPos = gridPosToRealPos(this._attachPoint, scale);
                 point.copy(new Vector3(realPos.x, 0, realPos.y)).add(this._attachWorkspace.mesh.position);
                 point.setY(0);
@@ -88,10 +88,12 @@ export class FileDragOperation extends BaseFileDragOperation {
             }
 
             this._gameView.fileManager.updateFile(this._workspace.file, {
-                position: {
-                    x: final.x,
-                    y: final.y,
-                    z: final.z
+                tags: {
+                    position: {
+                        x: final.x,
+                        y: final.y,
+                        z: final.z
+                    }
                 }
             });
         }
@@ -104,9 +106,11 @@ export class FileDragOperation extends BaseFileDragOperation {
         this._gameView.fileManager.transaction(
             fileRemoved(this._workspace.file.id),
             fileUpdated(this._attachWorkspace.file.id, {
-                grid: {
-                    [posToKey(this._attachPoint)]: {
-                        height: height
+                tags: {
+                    grid: {
+                        [posToKey(this._attachPoint)]: {
+                            height: height
+                        }
                     }
                 }
             })

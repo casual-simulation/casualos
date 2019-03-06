@@ -228,7 +228,7 @@ export class InteractionManager {
 
         const fileId = this._gameView.getFileId(mesh.id);
         const file = fileId ? this._gameView.getFile(fileId) : null;
-        if (file && file.file.type === 'object') {
+        if (file) {
             return file;
         } else {
             return this.findObjectForMesh(mesh.parent);
@@ -242,7 +242,7 @@ export class InteractionManager {
 
         const fileId = this._gameView.getFileId(mesh.id);
         const file = fileId ? this._gameView.getFile(fileId) : null;
-        if (file && file.file.type === 'workspace') {
+        if (file) {
             return file;
         } else {
             return this.findWorkspaceForMesh(mesh.parent);
@@ -250,8 +250,8 @@ export class InteractionManager {
     }
  
     public canShrinkWorkspace(file: File3D) {
-        if (file && file.file.type === 'workspace' && file.file.size >= 1) {
-            if (file.file.size === 1) {
+        if (file && file.file.tags.size >= 1) {
+            if (file.file.tags.size === 1) {
                 // Can only shrink to zero size if there are no objects on the workspace.
                 const allObjects = this._gameView.getObjects().map((o) => { return <Object>o.file });
                 const workspaceObjects = objectsAtWorkspace(allObjects, file.file.id);
@@ -264,10 +264,12 @@ export class InteractionManager {
     }
 
     public expandWorkspace(file: File3D) {
-        if (file && file.file.type === 'workspace') {
-            const size = file.file.size;
+        if (file) {
+            const size = file.file.tags.size;
             this._gameView.fileManager.updateFile(file.file, {
-                size: (size || 0) + 1
+                tags: {
+                    size: (size || 0) + 1
+                }
             });
         }
     }
@@ -277,7 +279,11 @@ export class InteractionManager {
      * @param file The file.
      */
     public isInCorrectMode(file: File) {
-        return (file.type === 'workspace' && this.mode === 'worksurfaces') || (file.type === 'object' && this.mode === 'files');
+        if (file.tags._isWorkspace) {
+            return this.mode === 'worksurfaces';
+        } else {
+            return this.mode === 'files';
+        }
     }
     
     /**
@@ -289,19 +295,23 @@ export class InteractionManager {
     public updateTileHeightAtGridPosition(file: File3D, position: Axial, height: number) {
         const key = posToKey(position);
         this._gameView.fileManager.updateFile(file.file, {
-            grid: {
-                [key]: {
-                    height: height
+            tags: {
+                grid: {
+                    [key]: {
+                        height: height
+                    }
                 }
             }
         });
     }
 
     public shrinkWorkspace(file: File3D) {
-        if (file && file.file.type === 'workspace') {
-            const size = file.file.size;
+        if (file && file.file.tags.type === 'workspace') {
+            const size = file.file.tags.size;
             this._gameView.fileManager.updateFile(file.file, {
-                size: (size || 0) - 1
+                tags: {
+                    size: (size || 0) - 1
+                }
             });
         }
     }
@@ -311,10 +321,12 @@ export class InteractionManager {
      * @param file 
      */
     public minimizeWorkspace(file: File3D) {
-        if (file && file.file.type === 'workspace') {
+        if (file && file.file.tags.type === 'workspace') {
             const minimized = !isMinimized(file.file);
             this._gameView.fileManager.updateFile(file.file, {
-                minimized: minimized
+                tags: {
+                    minimized: minimized
+                }
             });
         }
     }
@@ -331,7 +343,7 @@ export class InteractionManager {
         if (hit) {
             const point = hit.point;
             const workspace = this.findWorkspaceForIntersection(hit);
-            if (workspace && workspace.file.type === 'workspace' && !workspace.file.minimized) {
+            if (workspace && workspace.file.tags._isWorkspace && !workspace.file.tags.minimized) {
                 const workspaceMesh = <WorkspaceMesh>workspace.mesh;
                 const closest = workspaceMesh.closestTileToPoint(point);
 
@@ -357,15 +369,15 @@ export class InteractionManager {
      * @param exclude The optional workspace to exclude from the search.
      */
     public closestWorkspace(point: Vector3, exclude?: File3D) {
-        const workspaceMeshes = this._gameView.getWorkspaces().filter(mesh => mesh !== exclude && !(<Workspace>mesh.file).minimized);
+        const workspaceMeshes = this._gameView.getWorkspaces().filter(mesh => mesh !== exclude && !mesh.file.tags.minimized);
         const center = new Axial();
 
         const gridPositions = workspaceMeshes.map(mesh => {
             const w = <Workspace>mesh.file;
             const gridPos = this._worldPosToGridPos(mesh, point);
-            const tilePositions = w.grid ? keys(w.grid).map(keyToPos) : [];
+            const tilePositions = w.tags.grid ? keys(w.tags.grid).map(keyToPos) : [];
             const distToCenter = gridDistance(center, gridPos);
-            const scaledDistance = distToCenter - (w.size - 1);
+            const scaledDistance = distToCenter - (w.tags.size - 1);
             const distances = [
                 { position: center, distance: scaledDistance },
                 ...tilePositions.map(pos => ({
@@ -466,7 +478,7 @@ export class InteractionManager {
      * @param other The second file.
      */
     public canCombineFiles(file: Object, other: Object): boolean {
-        if (file && other && file.type === 'object' && other.type === 'object' && file.id !== other.id) {
+        if (file && other && !file.tags._isWorkspace && !other.tags._isWorkspace && file.id !== other.id) {
             const context = this._gameView.fileManager.createContext();
             const tags = union(tagsMatchingFilter(file, other, '+', context), tagsMatchingFilter(other, file, '+', context));
             return tags.length > 0;
@@ -488,7 +500,7 @@ export class InteractionManager {
 
     public getSurfaceObjects() {
         if (this._surfaceObjectsDirty) {
-            this._surfaceColliders = flatMap(this._gameView.getFiles().filter(f => f.file.type === 'workspace'), f => f.mesh.colliders);
+            this._surfaceColliders = flatMap(this._gameView.getFiles().filter(f => f.file.tags._isWorkspace), f => f.mesh.colliders);
             this._surfaceObjectsDirty = false;
         }
         return this._surfaceColliders;
@@ -517,11 +529,11 @@ export class InteractionManager {
 
         if (file) {
 
-            if (file.mesh instanceof WorkspaceMesh && file.file.type === 'workspace') {
+            if (file.mesh instanceof WorkspaceMesh && file.file.tags._isWorkspace) {
                 
                 const tile = this._worldPosToGridPos(file, point);
-                const currentTile = file.file.grid ? file.file.grid[posToKey(tile)] : null;
-                const currentHeight = (!!currentTile ? currentTile.height : (file.file.defaultHeight || DEFAULT_WORKSPACE_HEIGHT)) || DEFAULT_WORKSPACE_HEIGHT;
+                const currentTile = file.file.tags.grid ? file.file.tags.grid[posToKey(tile)] : null;
+                const currentHeight = (!!currentTile ? currentTile.height : (file.file.tags.defaultHeight || DEFAULT_WORKSPACE_HEIGHT)) || DEFAULT_WORKSPACE_HEIGHT;
                 const increment = DEFAULT_WORKSPACE_HEIGHT_INCREMENT; // TODO: Replace with a configurable value.
                 const minHeight = DEFAULT_WORKSPACE_MIN_HEIGHT; // TODO: This too
                 const minimized = isMinimized(file.file);
@@ -543,11 +555,11 @@ export class InteractionManager {
                         
                         // This function is invoked as the color picker changes the color value.
                         let colorUpdated = (hexColor: string) => {
-                            appManager.fileManager.updateFile(file.file, { color: hexColor });
+                            appManager.fileManager.updateFile(file.file, { tags: {color: hexColor }});
                         };
                         
                         let workspace = <Workspace>file.file;
-                        let colorPickerEvent: ColorPickerEvent = { pagePos: pagePos, initialColor: workspace.color, colorUpdated: colorUpdated };
+                        let colorPickerEvent: ColorPickerEvent = { pagePos: pagePos, initialColor: workspace.tags.color, colorUpdated: colorUpdated };
                         
                         EventBus.$emit('onColorPicker', colorPickerEvent);
                     }});
@@ -563,8 +575,8 @@ export class InteractionManager {
     }
 
     private _worldPosToGridPos(file: File3D, pos: Vector3) {
-        const w = <Workspace>file.file;
-        const scale = w.scale || DEFAULT_WORKSPACE_SCALE;
+        const w = file.file;
+        const scale = w.tags.scale || DEFAULT_WORKSPACE_SCALE;
         const localPos = new Vector3().copy(pos).sub(file.mesh.position);
         return realPosToGridPos(new Vector2(localPos.x, localPos.z), scale);
     }

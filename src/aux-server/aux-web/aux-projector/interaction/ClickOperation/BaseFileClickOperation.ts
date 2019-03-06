@@ -103,7 +103,7 @@ export abstract class BaseFileClickOperation implements IOperation {
     }
 
     protected _canDragFile(file: File) {
-        if (file.type === 'workspace') {
+        if (file.tags._isWorkspace) {
             // Workspaces are always movable.
             return true;
         } else {

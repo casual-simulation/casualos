@@ -176,7 +176,7 @@ export default class GameView extends Vue implements IGameView {
      * Gets all of the objects.
      */
     public getObjects() {
-        return this.getFiles().filter(f => f.file.type === 'object');
+        return this.getFiles();
     }
 
     public getWorkspaces(): File3D[] {
@@ -385,14 +385,12 @@ export default class GameView extends Vue implements IGameView {
         }
 
         if (obj) {
-            if (file.type === 'object') {
-                if (!initialUpdate) {
-                    if (!file.tags._user && file.tags._lastEditedBy === this.fileManager.userFile.id) {
-                        if (this.selectedRecentFile && file.id === this.selectedRecentFile.id) {
-                            this.selectedRecentFile = file;
-                        } else {
-                            this.selectedRecentFile = null;
-                        }
+            if (!initialUpdate) {
+                if (!file.tags._user && file.tags._lastEditedBy === this.fileManager.userFile.id) {
+                    if (this.selectedRecentFile && file.id === this.selectedRecentFile.id) {
+                        this.selectedRecentFile = file;
+                    } else {
+                        this.selectedRecentFile = null;
                     }
                 }
             }
@@ -484,21 +482,21 @@ export default class GameView extends Vue implements IGameView {
      */
     private _shouldDisplayFile(file: File): boolean {
         // Don't display files without a defined type.
-        if (!file.type) {
-            return false;
-        }
+        // if (!file.type) {
+        //     return false;
+        // }
 
-        // AUX Player doesnt display workspaces.
-        if (file.type === 'workspace') {
-            return false;
-        }
+        // TODO: AUX Player doesnt display workspaces.
+        // if (file.type === 'workspace') {
+        //     return false;
+        // }
 
         // AUX Player doesnt display objects unless user is in a context.
         if (!this._userContext.value) {
             return false;
         }
         
-        if (file.type === 'object' && !file.tags._user) {
+        if (!file.tags._user) {
             // Dont display normal files that are hidden or destroyed.
             if (file.tags._hidden || file.tags._destroyed) {
                 return false;

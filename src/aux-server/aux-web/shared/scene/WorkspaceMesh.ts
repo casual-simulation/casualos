@@ -1,10 +1,7 @@
 import { Object3D, Vector3, Color } from 'three';
 import { HexGridMesh, HexGrid, HexMesh, keyToPos, Axial } from './hex';
 import { GridMesh } from './grid/GridMesh';
-import { 
-    Workspace,
-    File,
-    objDiff,
+import {
     DEFAULT_WORKSPACE_HEIGHT,
     DEFAULT_WORKSPACE_SCALE,
     DEFAULT_WORKSPACE_GRID_SCALE,
@@ -13,7 +10,7 @@ import {
 import { keys, minBy } from 'lodash';
 import { GridChecker, GridCheckResults } from './grid/GridChecker';
 import { GameObject } from './GameObject';
-import { AuxFile, AuxWorkspace } from '@yeti-cgi/aux-common/aux-format';
+import { AuxFile } from '@yeti-cgi/aux-common/aux-format';
 import { idEquals } from '@yeti-cgi/aux-common/causal-trees';
 
 /**
@@ -39,7 +36,7 @@ export class WorkspaceMesh extends GameObject {
     /**
      * The workspace for this mesh.
      */
-    workspace: AuxWorkspace;
+    workspace: AuxFile;
 
     /**
      * The container for everything on the workspace.
@@ -120,21 +117,21 @@ export class WorkspaceMesh extends GameObject {
      * @param force Whether to force the workspace to update everything, even aspects that have not changed.
      */
     async update(workspace?: AuxFile, force?: boolean) {
-        if (workspace && workspace.type !== 'workspace') {
+        if (workspace) {
             return;
         }
         const prev = this.workspace;
-        this.workspace = (<AuxWorkspace>workspace) || prev;
+        this.workspace = (workspace) || prev;
 
-        this.visible = !!this.workspace.position;
-        this.container.visible = !this.workspace.minimized;
+        this.visible = !!this.workspace.tags.position;
+        this.container.visible = !this.workspace.tags.minimized;
         this.miniHex.visible = !this.container.visible;
-        if (!this.workspace.position) {
+        if (!this.workspace.tags.position) {
             return;
         }
-        this.position.x = this.workspace.position.x;
-        this.position.y = this.workspace.position.y;
-        this.position.z = this.workspace.position.z;
+        this.position.x = this.workspace.tags.position.x;
+        this.position.y = this.workspace.tags.position.y;
+        this.position.z = this.workspace.tags.position.z;
 
         let gridUpdate: GridCheckResults = this._debugInfo.gridCheckResults;
 
@@ -154,8 +151,8 @@ export class WorkspaceMesh extends GameObject {
             }
         }
 
-        if (this.workspace.color) {
-            let color = new Color(this.workspace.color);
+        if (this.workspace.tags.color) {
+            let color = new Color(this.workspace.tags.color);
             let hexes = this.hexGrid.hexes;
             hexes.forEach((h) => { h.color = color; });
             this.miniHex.color = color;
@@ -188,19 +185,19 @@ export class WorkspaceMesh extends GameObject {
         }
         
         this.hexGrid = HexGridMesh.createFilledInHexGrid(
-            this.workspace.size, 
-            this.workspace.defaultHeight || DEFAULT_WORKSPACE_HEIGHT, 
-            this.workspace.scale || DEFAULT_WORKSPACE_SCALE);
+            this.workspace.tags.size, 
+            this.workspace.tags.defaultHeight || DEFAULT_WORKSPACE_HEIGHT, 
+            this.workspace.tags.scale || DEFAULT_WORKSPACE_SCALE);
         
-        const positionsKeys = this.workspace.grid ? keys(this.workspace.grid) : [];
+        const positionsKeys = this.workspace.tags.grid ? keys(this.workspace.tags.grid) : [];
         positionsKeys.forEach(key => {
             const position = keyToPos(key);
-            const workspaceHex = this.workspace.grid[key];
+            const workspaceHex = this.workspace.tags.grid[key];
             
             const hex = this.hexGrid.addAt(position);
-            let nextHeight = workspaceHex.height || this.workspace.defaultHeight || DEFAULT_WORKSPACE_HEIGHT;
+            let nextHeight = workspaceHex.height || this.workspace.tags.defaultHeight || DEFAULT_WORKSPACE_HEIGHT;
             if (nextHeight < 0) {
-                nextHeight = this.workspace.defaultHeight || DEFAULT_WORKSPACE_HEIGHT;
+                nextHeight = this.workspace.tags.defaultHeight || DEFAULT_WORKSPACE_HEIGHT;
             }
             hex.height = nextHeight;
         });
@@ -218,7 +215,7 @@ export class WorkspaceMesh extends GameObject {
             this.container.remove(...this.squareGrids);
         }
 
-        checker.tileRatio = this.workspace.gridScale || DEFAULT_WORKSPACE_GRID_SCALE;
+        checker.tileRatio = this.workspace.tags.gridScale || DEFAULT_WORKSPACE_GRID_SCALE;
         const results = await checker.check(this.hexGrid);
         const levels = results.levels;
         this.squareGrids = levels.map(l => new GridMesh(l));
@@ -227,8 +224,8 @@ export class WorkspaceMesh extends GameObject {
         return results;
     }
 
-    private _gridChanged(current: AuxWorkspace, previous: AuxWorkspace) {
-        if (!previous || current.size !== previous.size) {
+    private _gridChanged(current: AuxFile, previous: AuxFile) {
+        if (!previous || current.tags.size !== previous.tags.size) {
             return true;
         } else {
             const currentGrid = current.metadata.tags['grid'];

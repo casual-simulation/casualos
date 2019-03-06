@@ -67,7 +67,6 @@ export const DiscoveryChannelInfo: ChannelInfo = {
 export function channelCreated(info: ChannelInfo): ChannelCreatedEvent {
     return {
         type: 'channel_created',
-        creation_time: new Date(),
         info: info
     };
 }
@@ -79,7 +78,6 @@ export function channelCreated(info: ChannelInfo): ChannelCreatedEvent {
 export function channelRemoved(channel_id: string): ChannelRemovedEvent {
     return {
         type: 'channel_removed',
-        creation_time: new Date(),
         channel_id: channel_id
     };
 }

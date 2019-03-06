@@ -471,6 +471,7 @@ export function createWorkspace(id = uuid()): Workspace {
         id: id,
         tags: {
             _workspace: builderContextId,
+            _isWorkspace: true,
             position: {x: 0, y: 0, z: 0},
             size: 1,
             grid: {},

@@ -6,7 +6,6 @@ import SocketIO from 'socket.io';
 import vhost from 'vhost';
 import pify from 'pify';
 import { MongoClient } from 'mongodb';
-import { ChannelServer, ChannelServerConfig } from './ChannelServer';
 import { asyncMiddleware } from './utils';
 import { Config, ClientConfig } from './config';
 import { CausalTreeServer } from './causal-trees/CausalTreeServer';
@@ -70,7 +69,6 @@ export class Server {
     private _app: express.Express;
     private _http: Http.Server;
     private _socket: SocketIO.Server;
-    private _channelServer: ChannelServer;
     private _treeServer: CausalTreeServer;
     private _config: Config;
     private _clients: ClientServer[];
@@ -107,7 +105,6 @@ export class Server {
     }
 
     private async _configureSocketServices() {
-        this._channelServer = new ChannelServer(this._config.channels, this._socket, this._mongoClient);
         const store = new MongoDBTreeStore(this._mongoClient, this._config.trees.dbName);
         await store.init();
         this._treeServer = new CausalTreeServer(

@@ -60,7 +60,7 @@ export abstract class BaseFileDragOperation implements IOperation {
 
             if (!curScreenPos.equals(this._lastScreenPos)) {
 
-                if (this._file && this._file.type === 'workspace') {
+                if (this._file && this._file.tags._isWorkspace) {
                     this._dragWorkspace();
                 } else {
                     this._dragFiles();
@@ -92,7 +92,7 @@ export abstract class BaseFileDragOperation implements IOperation {
 
     protected _onDragReleased(): void {
         // Button has been released.
-        if (this._freeDragGroup && this._files[0].type === 'object') {
+        if (this._freeDragGroup && !this._files[0].tags._isWorkspace) {
             // Destroy files if free dragging them (trash can)!
             this._destroyFiles(this._files);
         }

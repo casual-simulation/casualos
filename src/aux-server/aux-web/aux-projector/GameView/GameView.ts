@@ -413,14 +413,15 @@ export default class GameView extends Vue implements IGameView {
    * Gets all of the objects.
    */
   public getObjects() {
-    return this.getFiles().filter(f => f.file.type === 'object');
+    return this.getFiles().filter(file => !file.file.tags._isWorkspace);
   }
 
   /**
    * Gets all of the workspaces.
    */
   public getWorkspaces() {
-    return this.getFiles().filter(f => f.file.type === 'workspace');
+      // TODO: Fix
+    return this.getFiles();
   }
 
   /**
@@ -481,7 +482,7 @@ export default class GameView extends Vue implements IGameView {
     const obj = this._files[file.id];
     let shouldRemove = false;
     if (obj) {
-      if (file.type === 'object') {
+    //   if (file.type === 'object') {
         
         if (!initialUpdate) { 
           if (!file.tags._user && file.tags._lastEditedBy === this.fileManager.userFile.id) {
@@ -497,11 +498,12 @@ export default class GameView extends Vue implements IGameView {
         if (file.tags._destroyed) {
           shouldRemove = true;
         }
-      } else if (file.type === 'workspace') {
-        if (file.size <= 0) {
-          shouldRemove = true;
-        }
-      }
+    //   }
+    //   else if (file.type === 'workspace') {
+    //     if (file.size <= 0) {
+    //       shouldRemove = true;
+    //     }
+    //   }
 
       await obj.updateFile(file);
       this.onFileUpdated.invoke(obj);
@@ -543,11 +545,11 @@ export default class GameView extends Vue implements IGameView {
    */
   private _shouldDisplayFile(file: File): boolean {
     // Don't display files without a defined type.
-    if (!file.type) {
-        return false;
-    }
+    // if (!file.type) {
+    //     return false;
+    // }
 
-    if (file.type === 'object' && !file.tags._user) {
+    if (!file.tags._user) {
         // Dont display normal files that are hidden or destroyed.
         if (file.tags._hidden || file.tags._destroyed) {
             return false;
