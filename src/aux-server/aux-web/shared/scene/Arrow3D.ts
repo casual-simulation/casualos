@@ -18,10 +18,11 @@ import {
 } from 'three';
 
 import { Object, Workspace } from '@yeti-cgi/aux-common';
-import { File3D } from './File3D';
 import { FileMesh } from './FileMesh';
 import { WorkspaceMesh } from './WorkspaceMesh';
 import { IGameView } from '../IGameView';
+import { AuxFile3D } from './AuxFile3D';
+import { ContextGroup3D } from './ContextGroup3D';
 
 export class Arrow3D {
 
@@ -37,19 +38,19 @@ export class Arrow3D {
     /**
      * The file that this arrow is coming from.
      */
-    private _sourceFile3d: File3D;
+    private _sourceFile3d: AuxFile3D;
 
     /**
      * The file that this arrow is pointing towards.
      */
-    private _targetFile3d: File3D;
+    private _targetFile3d: AuxFile3D;
 
     private _gameView: IGameView;
 
     public get sourceFile3d() { return this._sourceFile3d; }
     public get targetFile3d() { return this._targetFile3d; }
 
-    constructor(gameView: IGameView, sourceFile3d: File3D, targetFile3d: File3D) {
+    constructor(gameView: IGameView, sourceFile3d: AuxFile3D, targetFile3d: AuxFile3D) {
         this._gameView = gameView;
         this._sourceFile3d = sourceFile3d;
         this._targetFile3d = targetFile3d;
@@ -101,7 +102,7 @@ export class Arrow3D {
             this._arrowHelper.visible = false;
 
         }
-        else if (sourceWorkspace.workspaceFile.tags.minimized && targetWorkspace && targetWorkspace.workspaceFile.tags.minimized) {
+        else if (sourceWorkspace.file.tags.minimized && targetWorkspace && targetWorkspace.file.tags.minimized) {
 
             // The workspace of both the source file and target file are minimized. Hide arrow and do nothing else.
             this._arrowHelper.visible = false;
@@ -111,11 +112,11 @@ export class Arrow3D {
             this._arrowHelper.visible = true;
     
             // Update arrow origin.
-            if (sourceWorkspace.workspaceFile.tags.minimized) {
-                let miniHexSphere = (<WorkspaceMesh>sourceWorkspace.workspace3d.mesh).miniHex.boundingSphere;
+            if (sourceWorkspace.file.tags.minimized) {
+                let miniHexSphere = (sourceWorkspace.surface).miniHex.boundingSphere;
                 this.setOrigin(miniHexSphere.center, true);
             } else {
-                let sourceSphere = (<FileMesh>this._sourceFile3d.mesh).boundingSphere;
+                let sourceSphere = (this._sourceFile3d).boundingSphere;
                 this.setOrigin(sourceSphere.center, true);
             }
             
@@ -124,10 +125,10 @@ export class Arrow3D {
     
             // Lets get the bounding sphere of the target.
             // This could be either the sphere of the file itself or the sphere of the minimized workspace the file is on.
-            if (targetWorkspace && targetWorkspace.workspaceFile.tags.minimized) {
-                targetSphere = (<WorkspaceMesh>targetWorkspace.workspace3d.mesh).miniHex.boundingSphere;
+            if (targetWorkspace && targetWorkspace.file.tags.minimized) {
+                targetSphere = (targetWorkspace.surface).miniHex.boundingSphere;
             } else {
-                targetSphere = (<FileMesh>this._targetFile3d.mesh).boundingSphere;
+                targetSphere = (this._targetFile3d).boundingSphere;
             }
         
             let targetCenterLocal = this._gameView.scene.worldToLocal(targetSphere.center.clone());
@@ -152,18 +153,20 @@ export class Arrow3D {
         this._targetFile3d = null;
     }
 
-    private _getWorkspace (file: Object) { 
+    private _getWorkspace (file: Object): ContextGroup3D { 
 
-        let workspace3d = this._gameView.getFile(file.tags._workspace);
+        // TODO: Fix
+        return null;
+        // let workspace3d = this._gameView.getFile(file.tags._workspace);
 
-        let workspaceFile: Workspace = undefined;
-        if (workspace3d) {
-            workspaceFile =  <Workspace>workspace3d.file;
-        }
+        // let workspaceFile: Workspace = undefined;
+        // if (workspace3d) {
+        //     workspaceFile =  <Workspace>workspace3d.file;
+        // }
 
-        return {
-            workspace3d: workspace3d,
-            workspaceFile:  workspaceFile
-        }
+        // return {
+        //     workspace3d: workspace3d,
+        //     workspaceFile:  workspaceFile
+        // }
     }
 }

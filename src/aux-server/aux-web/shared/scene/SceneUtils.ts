@@ -1,4 +1,4 @@
-import { Vector3, MeshBasicMaterial, SphereBufferGeometry, Mesh, Object3D, Scene, Matrix4, Box2, Vector2, Box3, Layers } from 'three';
+import { Vector3, MeshBasicMaterial, SphereBufferGeometry, Mesh, Object3D, Scene, Matrix4, Box2, Vector2, Box3, Layers, BoxBufferGeometry, MeshStandardMaterial } from 'three';
 import { Text3D } from './Text3D';
 import robotoFont from '../public/bmfonts/Roboto.json';
 import robotoTexturePath from '../public/bmfonts/Roboto.png';
@@ -17,6 +17,19 @@ export function createSphere(position: Vector3, color: number, size: number = 0.
 export function createLabel(gameView: IGameView, parent: Object3D): Text3D {
     const label = new Text3D(gameView, parent, robotoFont, robotoTexturePath);
     return label;
+}
+
+export function createCube(size: number): Mesh {
+    let geometry = new BoxBufferGeometry(size, size, size);
+    let material = new MeshStandardMaterial({
+        color: 0x00ff00,
+        metalness: .1,
+        roughness: 0.6
+    });
+    const cube = new Mesh(geometry, material);
+    cube.castShadow = true;
+    cube.receiveShadow = false;
+    return cube;
 }
 
 /**

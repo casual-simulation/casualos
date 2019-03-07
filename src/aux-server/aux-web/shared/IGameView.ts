@@ -2,11 +2,10 @@ import { WebGLRenderer, Plane, PerspectiveCamera, Scene } from "three";
 import { Time } from "./scene/Time";
 import { Input } from "./scene/Input";
 import { InputVR } from "./scene/InputVR";
-import { File3D } from "./scene/File3D";
 import { GridChecker } from "./scene/grid/GridChecker";
 import { ArgEvent } from "@yeti-cgi/aux-common/Events";
 import { AuxFile } from "@yeti-cgi/aux-common/aux-format";
-import { BuilderContext3D } from "./scene/BuilderContext3D";
+import { ContextGroup3D } from "./scene/ContextGroup3D";
 
 /**
  * Interface that described what properties and functions should be available to a GameView class/component implementation.
@@ -64,5 +63,5 @@ export interface IGameView {
     /**
      * Gets the list of contexts that this game view contains.
      */
-    getContexts(): BuilderContext3D[];
+    getContexts(): ContextGroup3D[];
 }

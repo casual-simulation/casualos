@@ -1,6 +1,5 @@
 import { AuxFile } from "@yeti-cgi/aux-common/aux-format";
 import { WorkspaceMesh } from "./WorkspaceMesh";
-import { FileMesh } from "./FileMesh";
 import { GameObject } from "./GameObject";
 import { FileCalculationContext, TagUpdatedEvent, hasValue, calculateFileValue } from "@yeti-cgi/aux-common";
 import { difference, flatMap } from "lodash";
@@ -12,7 +11,7 @@ import { Context3D } from "./Context3D";
  * Note that each aux file gets its own builder context.
  * Whether or not anything is visualized in the context depends on the file tags.
  */
-export class BuilderContext3D extends GameObject {
+export class ContextGroup3D extends GameObject {
 
     /**
      * The file that this context represents.
@@ -30,11 +29,17 @@ export class BuilderContext3D extends GameObject {
     contexts: Map<string, Context3D>;
 
     /**
+     * The tag that this context group should look for.
+     */
+    tag: string;
+
+    /**
      * Creates a new Builder Context 3D Object.
      * @param The file that this builder represents.
      */
     constructor(file: AuxFile) {
         super();
+        this.tag = 'builder.context';
         this.file = file;
         this.contexts = new Map();
     }
@@ -99,11 +104,11 @@ export class BuilderContext3D extends GameObject {
      * @param calc The file calculation context that should be used.
      */
     private _updateContexts(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
-        updates.forEach(update => {
-            if (update.tag === 'builder.context') {
-                this._updateBuilderContext(file, update, calc);
-            }
-        });
+        const contexts = calculateFileValue(calc, file, 'builder.context');
+        // TODO: Handle scenarios where builder.context is empty or null
+        if (contexts) {
+            this._updateBuilderContext(file, contexts, calc);
+        }
     }
 
     /**
@@ -115,17 +120,18 @@ export class BuilderContext3D extends GameObject {
     private _updateWorkspace(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
         if (!this.surface) {
             this.surface = new WorkspaceMesh();
+            this.add(this.surface);
         }
 
         this.surface.update(file);
     }
 
-    private _updateBuilderContext(file: AuxFile, update: TagUpdatedEvent, calc: FileCalculationContext) {
+    private _updateBuilderContext(file: AuxFile, newContexts: string | string[], calc: FileCalculationContext) {
         let contexts: string[];
-        if (Array.isArray(update.calculatedValue)) {
-            contexts = update.calculatedValue;
-        } else if (typeof update.calculatedValue === 'string') {
-            contexts = [update.calculatedValue];
+        if (Array.isArray(newContexts)) {
+            contexts = newContexts;
+        } else if (typeof newContexts === 'string') {
+            contexts = [newContexts];
         }
 
         if (contexts) {

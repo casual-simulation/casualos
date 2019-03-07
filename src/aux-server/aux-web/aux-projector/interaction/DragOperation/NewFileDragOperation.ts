@@ -1,5 +1,4 @@
 import { Input } from '../../../shared/scene/Input';
-import { File3D } from '../../../shared/scene/File3D';
 import { IOperation } from '../IOperation';
 import GameView from '../../GameView/GameView';
 import { InteractionManager } from '../InteractionManager';
@@ -13,8 +12,9 @@ import { createFile } from '@yeti-cgi/aux-common/Files/FileCalculations';
 import { BaseFileDragOperation } from './BaseFileDragOperation';
 import { appManager } from '../../../shared/AppManager';
 import { merge } from '@yeti-cgi/aux-common/utils';
-import { FileMesh } from '../../../shared/scene/FileMesh';
 import { setParent } from '../../../shared/scene/SceneUtils';
+import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
+import { AuxFile } from '@yeti-cgi/aux-common';
 
 /**
  * New File Drag Operation handles dragging of new files from the file queue.
@@ -24,7 +24,7 @@ export class NewFileDragOperation extends BaseFileDragOperation {
     public static readonly FreeDragDistance: number = 6;
 
     private _fileAdded: boolean;
-    private _initialDragMesh: FileMesh;
+    private _initialDragMesh: AuxFile3D;
 
     /**
      * Create a new drag rules.
@@ -33,7 +33,6 @@ export class NewFileDragOperation extends BaseFileDragOperation {
      */
     constructor(gameView: GameView, interaction: InteractionManager, duplicatedFile: File) {
         super(gameView, interaction, [duplicatedFile]);
-
     }
 
     protected _updateFile(file: File, data: PartialFile): FileEvent {
@@ -46,7 +45,7 @@ export class NewFileDragOperation extends BaseFileDragOperation {
 
             // Add the duplicated file.
             this._file = merge(this._file, data || {});
-            this._file = createFile(this._file.id, (<Object>this._file).tags);
+            this._file = createFile(this._file.id, this._file.tags);
             this._files = [this._file];
             this._fileAdded = true;
 
@@ -88,11 +87,13 @@ export class NewFileDragOperation extends BaseFileDragOperation {
         }
     }
 
-    private _createDragMesh(file: File): FileMesh {
+    private _createDragMesh(file: File): AuxFile3D {
         // Instance a file mesh to represent the file in its intial drag state before being added to the world.
-        let mesh = new FileMesh(this._gameView);
-        mesh.allowNoWorkspace = true;
-        mesh.update(file);
+        let mesh = new AuxFile3D(file, []);
+        // mesh.allowNoWorkspace = true;
+        
+        // TODO: Fix
+        // mesh.fileUpdated(file, []);
 
         if (!mesh.parent) {
             this._gameView.scene.add(mesh);
@@ -106,7 +107,7 @@ export class NewFileDragOperation extends BaseFileDragOperation {
         return mesh;
     }
 
-    private _releaseDragMesh(mesh: FileMesh): void {
+    private _releaseDragMesh(mesh: AuxFile3D): void {
         if (mesh) {
             this._gameView.scene.remove(mesh);
         }

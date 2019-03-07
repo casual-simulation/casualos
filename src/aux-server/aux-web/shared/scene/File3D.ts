@@ -1,104 +1,104 @@
-import { File, Object, Workspace, AuxFile } from '@yeti-cgi/aux-common'
-import { ArgEvent } from '@yeti-cgi/aux-common/Events';
+// import { File, Object, Workspace, AuxFile } from '@yeti-cgi/aux-common'
+// import { ArgEvent } from '@yeti-cgi/aux-common/Events';
 
-// Assets
-import { IGameView } from "../IGameView";
-import { WorkspaceMesh } from "./WorkspaceMesh";
-import { FileMesh } from "./FileMesh";
-import { UserMesh } from "./UserMesh";
-import { Object3D } from 'three';
-import { GameObject } from './GameObject';
+// // Assets
+// import { IGameView } from "../IGameView";
+// import { WorkspaceMesh } from "./WorkspaceMesh";
+// import { FileMesh } from "./FileMesh";
+// import { UserMesh } from "./UserMesh";
+// import { Object3D } from 'three';
+// import { GameObject } from './GameObject';
 
-/**
- * Defines an object that groups Three.js related information
- * with the object/workspace data that they represent.
- */
-export class File3D {
+// /**
+//  * Defines an object that groups Three.js related information
+//  * with the object/workspace data that they represent.
+//  */
+// export class File3D {
 
-    /**
-     * The file (workspace or object) that this object represents.
-     */
-    public file: AuxFile;
+//     /**
+//      * The file (workspace or object) that this object represents.
+//      */
+//     public file: AuxFile;
 
-    /**
-     * The 3D mesh that represents the file.
-     */
-    public mesh: WorkspaceMesh | FileMesh | UserMesh;
+//     /**
+//      * The 3D mesh that represents the file.
+//      */
+//     public mesh: WorkspaceMesh | FileMesh | UserMesh;
 
-    /**
-     * The GameView that manages this file3d.
-     */
-    private _gameView: IGameView;
+//     /**
+//      * The GameView that manages this file3d.
+//      */
+//     private _gameView: IGameView;
 
-    /**
-     * Event that is fired when this file is updated.
-     */
-    public onUpdated: ArgEvent<File3D> = new ArgEvent<File3D>();
+//     /**
+//      * Event that is fired when this file is updated.
+//      */
+//     public onUpdated: ArgEvent<File3D> = new ArgEvent<File3D>();
 
-    /**
-     * Defines an object that groups Three.js related information
-     * with the object/workspace data that they represent.
-     * @param gameView The game view that manages this file3d.
-     * @param file The file that this file3d represents.
-     */
-    constructor(gameView: IGameView, file: AuxFile) {
-        this.file = file;
-        this._gameView = gameView;
+//     /**
+//      * Defines an object that groups Three.js related information
+//      * with the object/workspace data that they represent.
+//      * @param gameView The game view that manages this file3d.
+//      * @param file The file that this file3d represents.
+//      */
+//     constructor(gameView: IGameView, file: AuxFile) {
+//         this.file = file;
+//         this._gameView = gameView;
 
-        if (!file.tags._isWorkspace) {
-            this.mesh = this._createFile(file);
-        } else {
-            this.mesh = this._createWorkSurface(file);
-        }
+//         if (!file.tags._isWorkspace) {
+//             this.mesh = this._createFile(file);
+//         } else {
+//             this.mesh = this._createWorkSurface(file);
+//         }
 
-        this.mesh.name = `${file.tags._isWorkspace ? 'workspace' : 'object'}_${file.id}`;
+//         this.mesh.name = `${file.tags._isWorkspace ? 'workspace' : 'object'}_${file.id}`;
 
-        // Add this file3d's mesh to scene so that it and all its childre get rendered.
-        this._gameView.scene.add(this.mesh);
-    }
+//         // Add this file3d's mesh to scene so that it and all its childre get rendered.
+//         this._gameView.scene.add(this.mesh);
+//     }
 
 
-    /**
-     * Update the file that this file3d represents.
-     * @param file The file data that this file3d represents.
-     */
-    public async updateFile(file: AuxFile) {
-        this.file = file;
-        await this.mesh.update(this.file);
-        this.onUpdated.invoke(this);
-    }
+//     /**
+//      * Update the file that this file3d represents.
+//      * @param file The file data that this file3d represents.
+//      */
+//     public async updateFile(file: AuxFile) {
+//         this.file = file;
+//         await this.mesh.update(this.file);
+//         this.onUpdated.invoke(this);
+//     }
 
-    /**
-     * Updates the file and does anything that needs to be run on a per-frame basis.
-     */
-    public frameUpdate() {
-        this.mesh.frameUpdate();
-    }
+//     /**
+//      * Updates the file and does anything that needs to be run on a per-frame basis.
+//      */
+//     public frameUpdate() {
+//         this.mesh.frameUpdate();
+//     }
 
-    /**
-     * Call dispose allow this object to clean itself up when being removed.
-     */
-    public dispose(): void {
-        this.mesh.dispose();
-        this.mesh.parent.remove(this.mesh);
-    }
+//     /**
+//      * Call dispose allow this object to clean itself up when being removed.
+//      */
+//     public dispose(): void {
+//         this.mesh.dispose();
+//         this.mesh.parent.remove(this.mesh);
+//     }
 
-    private _createFile(file: Object): FileMesh | UserMesh {
-        if (file.tags._user) {
-            return new UserMesh(this._gameView);
-        } else {
-            return new FileMesh(this._gameView);
-        }
-    }
+//     private _createFile(file: Object): FileMesh | UserMesh {
+//         if (file.tags._user) {
+//             return new UserMesh(this._gameView);
+//         } else {
+//             return new FileMesh(this._gameView);
+//         }
+//     }
 
-    private _createWorkSurface(data: Workspace): WorkspaceMesh {
-        let mesh = new WorkspaceMesh();
-        mesh.gridGhecker = this._gameView.gridChecker;
-        return mesh;
-    }
+//     private _createWorkSurface(data: Workspace): WorkspaceMesh {
+//         let mesh = new WorkspaceMesh();
+//         mesh.gridGhecker = this._gameView.gridChecker;
+//         return mesh;
+//     }
 
-    private _createDummy(): GameObject {
-        let mesh = new GameObject();
-        return mesh;
-    }
-}
+//     private _createDummy(): GameObject {
+//         let mesh = new GameObject();
+//         return mesh;
+//     }
+// }

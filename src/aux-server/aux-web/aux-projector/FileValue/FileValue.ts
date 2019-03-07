@@ -40,7 +40,7 @@ export default class FileRow extends Vue {
     }
 
     valueChanged(file: AuxFile, tag: string, value: string) {
-        if (!file.tags._isWorkspace) {
+        if (!file.tags['builder.context']) {
             this.$emit('tagChanged', tag);
             this.fileManager.updateFile(file, {
                 tags: {

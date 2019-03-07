@@ -31,7 +31,6 @@ import { GameObject } from "./GameObject";
 import { IGameView } from '../IGameView';
 import { calculateGridTileLocalCenter } from "./grid/Grid";
 import { Text3D } from "./Text3D";
-import { File3D } from "./File3D";
 import { Arrow3D } from "./Arrow3D";
 import { find, flatMap, sumBy, sortBy } from "lodash";
 import { appManager } from '../AppManager';
@@ -40,6 +39,7 @@ import { WorkspaceMesh } from "./WorkspaceMesh";
 import { WordBubble3D } from "./WordBubble3D";
 import { LayersHelper } from "./LayersHelper";
 import { AppType } from "../AppManager";
+import { createCube } from './SceneUtils';
 import GameView from "../../aux-player/GameView/GameView";
 
 /**
@@ -136,7 +136,7 @@ export class FileMesh extends GameObject {
         }
         if (!this.file) {
             this.cubeContainer = new Object3D();
-            this.cube = this._createCube(1);
+            this.cube = createCube(1);
             this.colliders.push(this.cube);
             this.cubeContainer.add(this.cube);
             this.add(this.cubeContainer);
@@ -200,81 +200,68 @@ export class FileMesh extends GameObject {
         }
     }
 
-    private _calculateScale(workspace: File3D): number {
-        if(workspace) {
-            const scale = workspace.file.tags.scale || DEFAULT_WORKSPACE_SCALE;
-            const gridScale = workspace.file.tags.gridScale || DEFAULT_WORKSPACE_GRID_SCALE;
-            return scale * gridScale;
-        } else {
-            return DEFAULT_WORKSPACE_SCALE * DEFAULT_WORKSPACE_GRID_SCALE;
-        }
-    }
+    // private _calculateScale(workspace: File3D): number {
+    //     if(workspace) {
+    //         const scale = workspace.file.tags.scale || DEFAULT_WORKSPACE_SCALE;
+    //         const gridScale = workspace.file.tags.gridScale || DEFAULT_WORKSPACE_GRID_SCALE;
+    //         return scale * gridScale;
+    //     } else {
+    //         return DEFAULT_WORKSPACE_SCALE * DEFAULT_WORKSPACE_GRID_SCALE;
+    //     }
+    // }
 
     private _getColor(color: string): Color {
         return new Color(color);
     }
 
-    private _createCube(size: number): Mesh {
-        let geometry = new BoxBufferGeometry(size, size, size);
-        let material = new MeshStandardMaterial({
-            color: 0x00ff00,
-            metalness: .1,
-            roughness: 0.6
-        });
-        const cube = new Mesh(geometry, material);
-        cube.castShadow = true;
-        cube.receiveShadow = false;
-        return cube;
-    }
-
     private _tagUpdatePosition(): void {
         
-        if (appManager.appType === AppType.Builder) {
+        // if (appManager.appType === AppType.Builder) {
 
-            const workspace = this._gameView ? this._gameView.getFile(this.file.tags._workspace) : null;
-            const scale = this._calculateScale(workspace);
-            const cubeScale = calculateScale(this._context, this.file, scale);
-            if (workspace) {
-                (<WorkspaceMesh>workspace.mesh).container.add(this);
-                this.cubeContainer.scale.set(cubeScale.x, cubeScale.y, cubeScale.z);
-                this.cubeContainer.position.set(0, cubeScale.y / 2, 0);
-            } else {
-                if (!this.allowNoWorkspace) {
-                    console.log('[FileMesh] File should be deleted', this.file.id, this.file.tags._workspace);
-                }
-                this.visible = this.allowNoWorkspace;
-                this.parent = null;
-                this.cubeContainer.scale.set(cubeScale.x, cubeScale.y, cubeScale.z);
-                this.cubeContainer.position.set(0, 0, 0);
-            }
+        //     const workspace = this._gameView ? this._gameView.getFile(this.file.tags._workspace) : null;
+        //     const scale = this._calculateScale(workspace);
+        //     const cubeScale = calculateScale(this._context, this.file, scale);
+        //     if (workspace) {
+        //         (<WorkspaceMesh>workspace.mesh).container.add(this);
+        //         this.cubeContainer.scale.set(cubeScale.x, cubeScale.y, cubeScale.z);
+        //         this.cubeContainer.position.set(0, cubeScale.y / 2, 0);
+        //     } else {
+        //         if (!this.allowNoWorkspace) {
+        //             console.log('[FileMesh] File should be deleted', this.file.id, this.file.tags._workspace);
+        //         }
+        //         this.visible = this.allowNoWorkspace;
+        //         this.parent = null;
+        //         this.cubeContainer.scale.set(cubeScale.x, cubeScale.y, cubeScale.z);
+        //         this.cubeContainer.position.set(0, 0, 0);
+        //     }
     
-            if (this.file.tags._position && workspace) {
-                const localPosition = calculateObjectPositionOnWorkspace(this._context, this.file, scale );
-                this.position.set(localPosition.x, localPosition.y, localPosition.z);
-            } else {
-                // Default position
-                this.position.set(0, 0, 0);
-            }
+        //     if (this.file.tags._position && workspace) {
+        //         const localPosition = calculateObjectPositionOnWorkspace(this._context, this.file, scale );
+        //         this.position.set(localPosition.x, localPosition.y, localPosition.z);
+        //     } else {
+        //         // Default position
+        //         this.position.set(0, 0, 0);
+        //     }
     
-            // We must call this function so that child objects get their positions updated too.
-            // Three render function does this automatically but there are functions in here that depend
-            // on accurate positioning of child objects.
-            this.updateMatrixWorld(true);
+        //     // We must call this function so that child objects get their positions updated too.
+        //     // Three render function does this automatically but there are functions in here that depend
+        //     // on accurate positioning of child objects.
+        //     this.updateMatrixWorld(true);
 
-        } else if (appManager.appType === AppType.Player) {
-            const cubeScale = calculateScale(this._context, this.file, 1.0);
-            this.cubeContainer.scale.set(cubeScale.x, cubeScale.y, cubeScale.z);
-            this.cubeContainer.position.set(0, cubeScale.y / 2, 0);
+        // } else if (appManager.appType === AppType.Player) {
+        //     const cubeScale = calculateScale(this._context, this.file, 1.0);
+        //     this.cubeContainer.scale.set(cubeScale.x, cubeScale.y, cubeScale.z);
+        //     this.cubeContainer.position.set(0, cubeScale.y / 2, 0);
 
-            const userContext = (<GameView>this._gameView).userContext;
-            const localPosition = calculateObjectPositionInContext(this._context, this.file, userContext);
-            this.position.set(localPosition.x, localPosition.y, localPosition.z);
+        //     const userContext = (<GameView>this._gameView).userContext;
+        //     const localPosition = calculateObjectPositionInContext(this._context, this.file, userContext);
+        //     this.position.set(localPosition.x, localPosition.y, localPosition.z);
 
-            // We must call this function so that child objects get their positions updated too.
-            // Three render function does this automatically but there are functions in here that depend
-            // on accurate positioning of child objects.
-            this.updateMatrixWorld(true);
-        }
+        //     // We must call this function so that child objects get their positions updated too.
+        //     // Three render function does this automatically but there are functions in here that depend
+        //     // on accurate positioning of child objects.
+        //     this.updateMatrixWorld(true);
+        // }
     }
 
     private _tagUpdateColor(): void {
@@ -365,45 +352,45 @@ export class FileMesh extends GameObject {
                 // Can't create line to self.
                 if (this.file.id === targetFileId) return;
                 
-                let targetFile = this._gameView.getFile(targetFileId);
-                if (!targetFile) {
+                // let targetFile = this._gameView.getFile(targetFileId);
+                // if (!targetFile) {
 
-                    // If not matching file is found on first try then it may be a short id.
-                    // Lets try searching for it.
+                //     // If not matching file is found on first try then it may be a short id.
+                //     // Lets try searching for it.
 
-                    if (!files) {
-                        // Init the searchable files list from file manager.
-                        files = appManager.fileManager.objects;
-                    }
+                //     if (!files) {
+                //         // Init the searchable files list from file manager.
+                //         files = appManager.fileManager.objects;
+                //     }
 
-                    let file = fileFromShortId(files, targetFileId);
-                    if (file) {
-                        // Found file with short id.
-                        targetFile = this._gameView.getFile(file.id);
-                    } else {
-                        // Not file found for short id.
-                        return;
-                    }
+                //     let file = fileFromShortId(files, targetFileId);
+                //     if (file) {
+                //         // Found file with short id.
+                //         // targetFile = this._gameView.getFile(file.id);
+                //     } else {
+                //         // Not file found for short id.
+                //         return;
+                //     }
 
-                }
+                // }
 
                 // Initialize arrows array if needed.
                 if (!this.arrows) this.arrows = [];
 
-                let targetArrow: Arrow3D = find(this.arrows, (a: Arrow3D) => { return a.targetFile3d === targetFile });
-                if (!targetArrow) {
-                    // Create arrow for target.
-                    let sourceFile = this._gameView.getFile(this.file.id);
-                    targetArrow = new Arrow3D(this._gameView, sourceFile, targetFile);
-                    this.arrows.push(targetArrow);
-                }
+                // let targetArrow: Arrow3D = find(this.arrows, (a: Arrow3D) => { return a.targetFile3d === targetFile });
+                // if (!targetArrow) {
+                //     // Create arrow for target.
+                //     // let sourceFile = this._gameView.getFile(this.file.id);
+                //     // targetArrow = new Arrow3D(this._gameView, sourceFile, targetFile);
+                //     // this.arrows.push(targetArrow);
+                // }
 
-                if (targetArrow) {
-                    targetArrow.setColor(color);
-                    targetArrow.update();
-                    // Add the target file id to the valid ids list.
-                    validLineIds.push(targetFile.file.id);
-                }
+                // if (targetArrow) {
+                //     targetArrow.setColor(color);
+                //     targetArrow.update();
+                //     // Add the target file id to the valid ids list.
+                //     // validLineIds.push(targetFile.file.id);
+                // }
             }
 
             let lineColorTagValue = this.file.tags['line.color'];

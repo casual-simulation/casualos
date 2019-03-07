@@ -1,5 +1,4 @@
 import { Input, InputType, MouseButtonId } from '../../../shared/scene/Input';
-import { File3D } from '../../../shared/scene/File3D';
 import { Vector2, Vector3, Intersection } from 'three';
 import { IOperation } from '../IOperation';
 import GameView from '../../GameView/GameView';
@@ -103,7 +102,7 @@ export abstract class BaseFileClickOperation implements IOperation {
     }
 
     protected _canDragFile(file: File) {
-        if (file.tags._isWorkspace) {
+        if (file.tags['builder.context']) {
             // Workspaces are always movable.
             return true;
         } else {

@@ -1,7 +1,8 @@
 import { GameObject } from "./GameObject";
 import { AuxFile } from "@yeti-cgi/aux-common/aux-format";
-import { Object3D } from "three";
-import { TagUpdatedEvent, FileCalculationContext } from "@yeti-cgi/aux-common";
+import { Object3D, Mesh, SceneUtils } from "three";
+import { File, TagUpdatedEvent, FileCalculationContext } from "@yeti-cgi/aux-common";
+import { createCube } from "./SceneUtils";
 
 /**
  * Defines a class that is able to display Aux files.
@@ -11,12 +12,19 @@ export class AuxFile3D extends GameObject {
     /**
      * The file for the mesh.
      */
-    file: AuxFile;
+    file: File;
 
-    constructor(file: AuxFile, colliders: Object3D[]) {
+    cube: Mesh;
+    
+    // TODO: Implement
+    boundingSphere: any;
+
+    constructor(file: File, colliders: Object3D[]) {
         super();
         this.file = file;
         this.colliders = colliders;
+        this.cube = createCube(1);
+        this.add(this.cube);
     }
 
     /**

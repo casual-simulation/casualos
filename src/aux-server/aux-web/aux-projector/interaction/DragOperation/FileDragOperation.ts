@@ -1,5 +1,4 @@
 import { Input } from '../../../shared/scene/Input';
-import { File3D } from '../../../shared/scene/File3D';
 import { IOperation } from '../IOperation';
 import GameView from '../../GameView/GameView';
 import { InteractionManager } from '../InteractionManager';
@@ -11,16 +10,17 @@ import { keys, minBy, flatMap } from 'lodash';
 import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance, posToKey } from '../../../shared/scene/hex';
 import { isFormula } from '@yeti-cgi/aux-common/Files/FileCalculations';
 import { BaseFileDragOperation } from './BaseFileDragOperation';
-import { BuilderContext3D } from 'aux-web/shared/scene/BuilderContext3D';
+import { ContextGroup3D } from 'aux-web/shared/scene/ContextGroup3D';
 import { AuxFile3D } from 'aux-web/shared/scene/AuxFile3D';
+import { AuxFile } from '@yeti-cgi/aux-common';
 
 /**
  * File Drag Operation handles dragging of files for mouse and touch input.
  */
 export class FileDragOperation extends BaseFileDragOperation {
 
-    private _workspace: BuilderContext3D;
-    private _attachWorkspace: BuilderContext3D;
+    private _workspace: ContextGroup3D;
+    private _attachWorkspace: ContextGroup3D;
     private _attachPoint: Axial;
 
     private _workspaceDelta: Vector3;
@@ -30,7 +30,7 @@ export class FileDragOperation extends BaseFileDragOperation {
      * @param input the input module to interface with.
      * @param buttonId the button id of the input that this drag operation is being performed with. If desktop this is the mouse button
      */
-    constructor(gameView: GameView, interaction: InteractionManager, hit: Intersection, files: AuxFile3D[], workspace: BuilderContext3D) {
+    constructor(gameView: GameView, interaction: InteractionManager, hit: Intersection, files: File[], workspace: ContextGroup3D) {
         super(gameView, interaction, files);
 
         this._workspace = workspace;
@@ -79,7 +79,7 @@ export class FileDragOperation extends BaseFileDragOperation {
                 const w = <Workspace>this._attachWorkspace.file;
                 const scale = w.tags.scale || DEFAULT_WORKSPACE_SCALE;
                 const realPos = gridPosToRealPos(this._attachPoint, scale);
-                point.copy(new Vector3(realPos.x, 0, realPos.y)).add(this._attachWorkspace.mesh.position);
+                point.copy(new Vector3(realPos.x, 0, realPos.y)).add(this._attachWorkspace.position);
                 point.setY(0);
             }
 
@@ -102,7 +102,7 @@ export class FileDragOperation extends BaseFileDragOperation {
     }
 
     protected _attachWorkspaces() {
-        const mesh = <WorkspaceMesh>this._workspace.mesh;
+        const mesh = this._workspace.surface;
         const height = mesh.hexGrid.hexes[0].height;
 
         this._gameView.fileManager.transaction(

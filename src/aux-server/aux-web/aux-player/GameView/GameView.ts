@@ -45,7 +45,7 @@ import { ArgEvent } from '@yeti-cgi/aux-common/Events';
 import { Time } from '../../shared/scene/Time';
 import { Input, InputType } from '../../shared/scene/Input';
 import { InputVR } from '../../shared/scene/InputVR';
-import { File3D } from '../../shared/scene/File3D';
+import { Context3D } from '../../shared/scene/Context3D';
 
 import { appManager } from '../../shared/AppManager';
 // import { InteractionManager } from '../interaction/InteractionManager';
@@ -57,6 +57,7 @@ import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { IGameView } from '../../shared/IGameView';
 import { LayersHelper } from '../../shared/scene/LayersHelper';
 import { FileManager } from 'aux-web/shared/FileManager';
+import { ContextGroup3D } from 'aux-web/shared/scene/ContextGroup3D';
 
 @Component({
     components: {
@@ -88,23 +89,14 @@ export default class GameView extends Vue implements IGameView {
     private _gridChecker: GridChecker;
     private _originalBackground: Color | Texture;
 
-    public onFileAdded: ArgEvent<File3D> = new ArgEvent<File3D>();
-    public onFileUpdated: ArgEvent<File3D> = new ArgEvent<File3D>();
-    public onFileRemoved: ArgEvent<File3D> = new ArgEvent<File3D>();
+    public onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
+    public onFileUpdated: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
+    public onFileRemoved: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
 
     /**
-     * A map of file IDs to files and meshes.
+     * The current context 3d that the AUX Player is rendering.
      */
-    private _files: {
-        [id: string]: File3D
-    } = {};
-
-    /**
-     * A map of mesh IDs to file IDs.
-     */
-    private _fileIds: {
-        [mesh: number]: string
-    } = {};
+    private _context: ContextGroup3D;
 
     private _fileSubs: SubscriptionLike[];
 
@@ -153,34 +145,38 @@ export default class GameView extends Vue implements IGameView {
      * Returns the file id that is represented by the specified mesh id.
      * @param meshId The id of the mesh.
      */
-    public getFileId(meshId: number): string {
-        return this._fileIds[meshId];
-    }
+    // public getFileId(meshId: number): string {
+    //     return this._fileIds[meshId];
+    // }
 
-    /**
-     * Returns the file that matches the specified file id.
-     * @param fileId The id of the file.
-     */
-    public getFile(fileId: string): File3D {
-        return this._files[fileId];
-    }
+    // /**
+    //  * Returns the file that matches the specified file id.
+    //  * @param fileId The id of the file.
+    //  */
+    // public getFile(fileId: string): File3D {
+    //     return this._files[fileId];
+    // }
 
-    /**
-     * Gets all of the files.
-     */
-    public getFiles() {
-        return values(this._files);
-    }
+    // /**
+    //  * Gets all of the files.
+    //  */
+    // public getFiles() {
+    //     return values(this._files);
+    // }
 
-    /**
-     * Gets all of the objects.
-     */
-    public getObjects() {
-        return this.getFiles();
-    }
+    // /**
+    //  * Gets all of the objects.
+    //  */
+    // public getObjects() {
+    //     return this.getFiles();
+    // }
 
-    public getWorkspaces(): File3D[] {
-        throw new Error("AUX Player does not interface with workspaces.");
+    // public getWorkspaces(): File3D[] {
+    //     throw new Error("AUX Player does not interface with workspaces.");
+    // }
+
+    public getContexts(): ContextGroup3D[] {
+        return [this._context];
     }
 
     /**
@@ -196,7 +192,8 @@ export default class GameView extends Vue implements IGameView {
      */
     public showDebugInfo(debug: boolean) {
         this._debug = debug;
-        this.getFiles().forEach(w => w.mesh.showDebugInfo(debug));
+        // TODO:
+        // this.getFiles().forEach(w => w.mesh.showDebugInfo(debug));
     }
 
     public toggleDebug() {
@@ -226,8 +223,8 @@ export default class GameView extends Vue implements IGameView {
         window.addEventListener('vrdisplaypresentchange', this._handleResize);
 
         this._time = new Time();
-        this._files = {};
-        this._fileIds = {};
+        // this._files = {};
+        // this._fileIds = {};
         this._fileSubs = [];
         this._userContext = new BehaviorSubject(null);
         this._setupScene();
@@ -271,12 +268,7 @@ export default class GameView extends Vue implements IGameView {
         this._inputVR.update();
         // this._interaction.update();
 
-        for (let id in this._files) {
-            const file = this._files[id];
-            if (file) {
-                file.frameUpdate();
-            }
-        }
+        this._context.frameUpdate();
 
         this._renderUpdate(xrFrame);
 
@@ -370,21 +362,7 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private async _fileUpdated(file: AuxFile, initialUpdate = false) {
-        let obj = this._files[file.id];
-
-        if (!obj) {
-            if (this._shouldDisplayFile(file)) {
-                this._fileAdded(file);
-                return;
-            }
-        } else {
-            if (!this._shouldDisplayFile(file)) {
-                this._fileRemoved(file.id);
-                return;
-            }
-        }
-
-        if (obj) {
+        if (!file.tags['builder.context']) {
             if (!initialUpdate) {
                 if (!file.tags._user && file.tags._lastEditedBy === this.fileManager.userFile.id) {
                     if (this.selectedRecentFile && file.id === this.selectedRecentFile.id) {
@@ -394,10 +372,13 @@ export default class GameView extends Vue implements IGameView {
                     }
                 }
             }
-    
-            await obj.updateFile(file);
-            this.onFileUpdated.invoke(obj);
         }
+        
+        let calc = this.fileManager.createContext();
+        // TODO: Implement Tag Updates
+        this._context.fileUpdated(file, [], calc);
+        
+        this.onFileUpdated.invoke(file);
     }
 
     private async _fileAdded(file: AuxFile) {
@@ -405,23 +386,25 @@ export default class GameView extends Vue implements IGameView {
             return;
         }
 
-        var obj = new File3D(this, file);
-        this._files[file.id] = obj;
-        this._fileIds[obj.mesh.id] = obj.file.id;
+        let calc = this.fileManager.createContext();
+        this._context.fileAdded(file, calc);
         
         await this._fileUpdated(file, true);
-        this.onFileAdded.invoke(obj);
+        this.onFileAdded.invoke(file);
     }
 
     private _fileRemoved(id: string) {
-        const obj = this._files[id];
-        if (obj) {
-            delete this._fileIds[obj.mesh.id];
-            delete this._files[id];
-            obj.dispose();
+        const calc = this.fileManager.createContext();
+        this._context.fileRemoved(id, calc);
 
-            this.onFileRemoved.invoke(obj);
-        }
+        this.onFileRemoved.invoke(null);
+        // const obj = this._files[id];
+        // if (obj) {
+        //     delete this._fileIds[obj.mesh.id];
+        //     delete this._files[id];
+        //     obj.dispose();
+
+        // }
     }
 
     /**
@@ -438,10 +421,11 @@ export default class GameView extends Vue implements IGameView {
         }
 
         // Clear all current file representations.
-        const keys = Object.keys(this._files);
-        keys.forEach((key) => {
-            this._fileRemoved(key);
-        });
+        // TODO: Fix
+        // const keys = Object.keys(this._files);
+        // keys.forEach((key) => {
+        //     this._fileRemoved(key);
+        // });
 
         // Subscribe to file events.
         this._fileSubs.push(this.fileManager.fileDiscovered
@@ -481,16 +465,6 @@ export default class GameView extends Vue implements IGameView {
      * @param file The file
      */
     private _shouldDisplayFile(file: File): boolean {
-        // Don't display files without a defined type.
-        // if (!file.type) {
-        //     return false;
-        // }
-
-        // TODO: AUX Player doesnt display workspaces.
-        // if (file.type === 'workspace') {
-        //     return false;
-        // }
-
         // AUX Player doesnt display objects unless user is in a context.
         if (!this._userContext.value) {
             return false;

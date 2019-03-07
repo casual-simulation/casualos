@@ -16,7 +16,6 @@ export interface File {
         defaultHeight?: number | null;
         color?: string;
         minimized?: boolean | null;
-        _isWorkspace?: boolean;
         _workspace?: string | null;
         _position?: {
             x: number;
@@ -51,6 +50,13 @@ export interface File {
         ['scale.x']?: number;
         ['scale.y']?: number;
         ['scale.z']?: number;
+
+        // Builder related tags
+        ['builder.context']?: string | string[];
+        ['builder.context.x']?: number;
+        ['builder.context.y']?: number;
+        ['builder.context.z']?: number;
+
         [key: string]: any;
     }
 };

@@ -17,7 +17,7 @@ import {
     DirectionalLight
 } from 'three';
 import { Object, fileRemoved, merge } from '@yeti-cgi/aux-common';
-import { FileMesh } from './FileMesh';
+import { AuxFile3D } from './AuxFile3D';
 
 /**
  * Defines a class that can render a file to a transparent canvas.
@@ -39,7 +39,7 @@ export class FileRenderer {
     private _size: Vector3 = new Vector3();
     private _worldPosition: Vector3;
     private _group: Object3D;
-    private _file: FileMesh;
+    private _file: AuxFile3D;
     private _xImbalance: number;
     private _yImbalance: number;
 
@@ -73,8 +73,8 @@ export class FileRenderer {
         this._scene.add(this._sun);
 
         this._group = new Object3D();
-        this._file = new FileMesh(null);
-        this._file.allowNoWorkspace = true;
+        this._file = new AuxFile3D(null, []);
+        // this._file.allowNoWorkspace = true;
 
         this._group.add(this._file);
         this._scene.add(this._group);
@@ -86,7 +86,9 @@ export class FileRenderer {
                 _destroyed: false
             }
         });
-        this._file.update(file);
+
+        // TODO: Fix
+        // this._file.update(file);
 
         this._updateBounds();
         this._updateCamera();

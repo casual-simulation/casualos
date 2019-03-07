@@ -1,6 +1,5 @@
 import { Vector2, Vector3, Intersection, Raycaster, Object3D, Ray } from 'three';
 import { ContextMenuEvent, ContextMenuAction } from './ContextMenuEvent';
-import { File3D } from '../../shared/scene/File3D';
 import { 
     File, 
     Object, 
@@ -13,20 +12,18 @@ import {
     FileEvent, 
     DEFAULT_WORKSPACE_HEIGHT, 
     DEFAULT_SCENE_BACKGROUND_COLOR,
-    objectsAtWorkspaceGridPosition,
     objectsAtWorkspace,
     tagsMatchingFilter,
     isMinimized,
     AuxObject,
-    AuxFile
+    AuxFile,
+    objectsAtWorkspaceGridPosition
 } from '@yeti-cgi/aux-common';
 import { FileClickOperation } from './ClickOperation/FileClickOperation';
 import GameView from '../GameView/GameView';
 import { Physics } from '../../shared/scene/Physics';
 import { find, flatMap, minBy, keys, maxBy, union, some, sortBy, differenceBy } from 'lodash';
 import { CameraControls } from './CameraControls';
-import { WorkspaceMesh } from '../../shared/scene/WorkspaceMesh';
-import { FileMesh } from '../../shared/scene/FileMesh';
 import { Axial, realPosToGridPos, gridDistance, keyToPos, posToKey } from '../../shared/scene/hex';
 import { MouseButtonId, Input } from '../../shared/scene/Input';
 import { isBuffer } from 'util';
@@ -36,8 +33,8 @@ import { appManager } from '../../shared/AppManager';
 import { IOperation } from './IOperation';
 import { EmptyClickOperation } from './ClickOperation/EmptyClickOperation';
 import { NewFileClickOperation } from './ClickOperation/NewFileClickOperation';
-import { AuxFile3D } from 'aux-web/shared/scene/AuxFile3D';
-import { BuilderContext3D } from 'aux-web/shared/scene/BuilderContext3D';
+import { AuxFile3D } from '../../shared/scene/AuxFile3D';
+import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 
 export class InteractionManager {
 
@@ -199,7 +196,7 @@ export class InteractionManager {
         }
     }
 
-    public fileForIntersection(hit: Intersection): AuxFile3D | BuilderContext3D {
+    public fileForIntersection(hit: Intersection): AuxFile3D | ContextGroup3D {
         const obj = this.findObjectForIntersection(hit);
         if (obj) {
             return obj;
@@ -216,7 +213,7 @@ export class InteractionManager {
         return this.findObjectForMesh(obj.object);
     }
 
-    public findWorkspaceForIntersection(obj: Intersection): BuilderContext3D | null {
+    public findWorkspaceForIntersection(obj: Intersection): ContextGroup3D | null {
         if (!obj) {
             return null;
         }
@@ -242,12 +239,12 @@ export class InteractionManager {
         // }
     }
 
-    public findWorkspaceForMesh(mesh: Object3D): BuilderContext3D | null {
+    public findWorkspaceForMesh(mesh: Object3D): ContextGroup3D | null {
         if (!mesh) {
             return null;
         }
 
-        if (mesh instanceof BuilderContext3D) {
+        if (mesh instanceof ContextGroup3D) {
             return mesh;
         } else {
             return this.findWorkspaceForMesh(mesh.parent);
@@ -260,7 +257,7 @@ export class InteractionManager {
         // }
     }
  
-    public canShrinkWorkspace(file: BuilderContext3D) {
+    public canShrinkWorkspace(file: ContextGroup3D) {
         if (file && file.file.tags.size >= 1) {
             if (file.file.tags.size === 1) {
                 // Can only shrink to zero size if there are no objects on the workspace.
@@ -274,7 +271,7 @@ export class InteractionManager {
         }
     }
 
-    public expandWorkspace(file: BuilderContext3D) {
+    public expandWorkspace(file: ContextGroup3D) {
         if (file) {
             const size = file.file.tags.size;
             this._gameView.fileManager.updateFile(file.file, {
@@ -290,7 +287,7 @@ export class InteractionManager {
      * @param file The file.
      */
     public isInCorrectMode(file: File) {
-        if (file.tags._isWorkspace) {
+        if (file.tags['builder.context']) {
             return this.mode === 'worksurfaces';
         } else {
             return this.mode === 'files';
@@ -303,7 +300,7 @@ export class InteractionManager {
      * @param position The tile position.
      * @param height The new height.
      */
-    public updateTileHeightAtGridPosition(file: BuilderContext3D, position: Axial, height: number) {
+    public updateTileHeightAtGridPosition(file: ContextGroup3D, position: Axial, height: number) {
         const key = posToKey(position);
         this._gameView.fileManager.updateFile(file.file, {
             tags: {
@@ -316,8 +313,8 @@ export class InteractionManager {
         });
     }
 
-    public shrinkWorkspace(file: BuilderContext3D) {
-        if (file && file.file.tags._isWorkspace) {
+    public shrinkWorkspace(file: ContextGroup3D) {
+        if (file && file.file.tags['builder.context']) {
             const size = file.file.tags.size;
             this._gameView.fileManager.updateFile(file.file, {
                 tags: {
@@ -331,8 +328,8 @@ export class InteractionManager {
      * Minimizes or maximizes the given workspace.
      * @param file 
      */
-    public minimizeWorkspace(file: BuilderContext3D) {
-        if (file && file.file.tags._isWorkspace) {
+    public minimizeWorkspace(file: ContextGroup3D) {
+        if (file && file.file.tags['builder.context']) {
             const minimized = !isMinimized(file.file);
             this._gameView.fileManager.updateFile(file.file, {
                 tags: {
@@ -354,7 +351,7 @@ export class InteractionManager {
         if (hit) {
             const point = hit.point;
             const workspace = this.findWorkspaceForIntersection(hit);
-            if (workspace && workspace.file.tags._isWorkspace && !workspace.file.tags.minimized) {
+            if (workspace && workspace.file.tags['builder.context'] && !workspace.file.tags.minimized) {
                 const workspaceMesh = workspace.surface;
                 const closest = workspaceMesh.closestTileToPoint(point);
 
@@ -379,7 +376,7 @@ export class InteractionManager {
      * @param point The point.
      * @param exclude The optional workspace to exclude from the search.
      */
-    public closestWorkspace(point: Vector3, exclude?: AuxFile3D | BuilderContext3D) {
+    public closestWorkspace(point: Vector3, exclude?: AuxFile3D | ContextGroup3D) {
         const workspaceMeshes = this._gameView.getContexts().filter(context => context !== exclude && !context.file.tags.minimized);
         const center = new Axial();
 
@@ -412,7 +409,8 @@ export class InteractionManager {
     }
 
     public selectFile(file: AuxFile3D) {
-        this._gameView.fileManager.selectFile(file.file);
+        // TODO: Make sure this isn't broken
+        this._gameView.fileManager.selectFile(<AuxFile>file.file);
     }
 
     /**
@@ -422,7 +420,7 @@ export class InteractionManager {
      * @param gridPosition The grid position that the file is being dragged to.
      * @param file The file that is being dragged.
      */
-    public calculateFileDragPosition(workspace: BuilderContext3D, gridPosition: Vector2, ...files: Object[]) {
+    public calculateFileDragPosition(workspace: ContextGroup3D, gridPosition: Vector2, ...files: File[]) {
         const objs = differenceBy(this.objectsAtGridPosition(workspace, gridPosition), files, f => f.id);
 
         const canCombine = objs.length === 1 && 
@@ -446,10 +444,12 @@ export class InteractionManager {
      * @param files The files that we're trying to find the next index for.
      * @param objs The objects at the same grid position.
      */
-    private _nextAvailableObjectIndex(workspace: BuilderContext3D, gridPosition: Vector2, files: Object[], objs: Object[]): number {
+    private _nextAvailableObjectIndex(workspace: ContextGroup3D, gridPosition: Vector2, files: File[], objs: File[]): number {
         const except = differenceBy(objs, files, f => f.id);
+
         const indexes = except.map(o => ({
             object: o,
+            // TODO: Replace with context index
             index: o.tags._index || 0
         }));
 
@@ -475,7 +475,7 @@ export class InteractionManager {
      * @param workspace The workspace.
      * @param gridPosition The grid position that the files should be retrieved for.
      */
-    public objectsAtGridPosition(workspace: BuilderContext3D, gridPosition: Vector2) {
+    public objectsAtGridPosition(workspace: ContextGroup3D, gridPosition: Vector2) {
         return objectsAtWorkspaceGridPosition(workspace.getFiles().map(f => f.file), workspace.file.id, {
             x: gridPosition.x,
             y: gridPosition.y,
@@ -489,7 +489,7 @@ export class InteractionManager {
      * @param other The second file.
      */
     public canCombineFiles(file: Object, other: Object): boolean {
-        if (file && other && !file.tags._isWorkspace && !other.tags._isWorkspace && file.id !== other.id) {
+        if (file && other && !file.tags['builder.context'] && !other.tags['builder.context'] && file.id !== other.id) {
             const context = this._gameView.fileManager.createContext();
             const tags = union(tagsMatchingFilter(file, other, '+', context), tagsMatchingFilter(other, file, '+', context));
             return tags.length > 0;
@@ -511,7 +511,7 @@ export class InteractionManager {
 
     public getSurfaceObjects() {
         if (this._surfaceObjectsDirty) {
-            this._surfaceColliders = flatMap(this._gameView.getContexts().filter(f => f.file.tags._isWorkspace), f => f.surface.colliders);
+            this._surfaceColliders = flatMap(this._gameView.getContexts().filter(f => f.file.tags['builder.context']), f => f.surface.colliders);
             this._surfaceObjectsDirty = false;
         }
         return this._surfaceColliders;
@@ -534,13 +534,13 @@ export class InteractionManager {
         return true;
     }
 
-    private _contextMenuActions(file: AuxFile3D | BuilderContext3D, point: Vector3, pagePos: Vector2): ContextMenuAction[] {
+    private _contextMenuActions(file: AuxFile3D | ContextGroup3D, point: Vector3, pagePos: Vector2): ContextMenuAction[] {
         
         let actions: ContextMenuAction[] = [];
 
         if (file) {
 
-            if (file instanceof BuilderContext3D && file.file.tags._isWorkspace) {
+            if (file instanceof ContextGroup3D && file.file.tags['builder.context']) {
                 
                 const tile = this._worldPosToGridPos(file, point);
                 const currentTile = file.file.tags.grid ? file.file.tags.grid[posToKey(tile)] : null;
@@ -585,7 +585,7 @@ export class InteractionManager {
         return actions;
     }
 
-    private _worldPosToGridPos(file: BuilderContext3D | AuxFile3D, pos: Vector3) {
+    private _worldPosToGridPos(file: ContextGroup3D | AuxFile3D, pos: Vector3) {
         const w = file.file;
         const scale = w.tags.scale || DEFAULT_WORKSPACE_SCALE;
         const localPos = new Vector3().copy(pos).sub(file.position);

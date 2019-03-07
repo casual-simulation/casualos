@@ -23,7 +23,7 @@ import { PartialFile } from '../Files';
 import { FilesState, cleanFile, FileEvent } from './FilesChannel';
 import { merge } from '../utils';
 import { WeaveReference, AtomOp } from '../causal-trees';
-import { AuxOp, AuxOpType } from '../aux-format';
+import { AuxOp, AuxOpType, AuxFile } from '../aux-format';
 
 export var ShortId_Length: number = 5;
 
@@ -457,7 +457,7 @@ export function createFile(id = uuid(), tags: Object['tags'] = {
     _position: { x: 0, y: 0, z: 0},
     _workspace: <string>null
 }) {
-    const file: Object = {id: id, tags: tags};
+    const file: File = {id: id, tags: tags};
 
     return file;
 }
@@ -470,9 +470,10 @@ export function createWorkspace(id = uuid()): Workspace {
     return {
         id: id,
         tags: {
-            _workspace: builderContextId,
-            _isWorkspace: true,
-            position: {x: 0, y: 0, z: 0},
+            'builder.context': builderContextId,
+            'builder.context.x': 0,
+            'builder.context.y': 0,
+            'builder.context.z': 0,
             size: 1,
             grid: {},
             scale: DEFAULT_WORKSPACE_SCALE,
@@ -653,7 +654,7 @@ export function tagMatchesFilter(tag: string, file: Object, eventName: string, c
  * @param workspaceId The ID of the workspace that the objects need to be on.
  * @param position The position that the objects need to be at.
  */
-export function objectsAtWorkspaceGridPosition(objects: Object[], workspaceId: string, position: Object['tags']['_position']) {
+export function objectsAtWorkspaceGridPosition(objects: File[], workspaceId: string, position: Object['tags']['_position']) {
     return sortBy(objects.filter(o => {
         return o.tags._workspace === workspaceId &&
             o.tags._position &&

@@ -65,7 +65,6 @@ import { ArgEvent } from '@yeti-cgi/aux-common/Events';
 import { Time } from '../../shared/scene/Time';
 import { Input, InputType } from '../../shared/scene/Input';
 import { InputVR } from '../../shared/scene/InputVR';
-import { File3D } from '../../shared/scene/File3D';
 
 // import skyTexturePath from '../public/images/CGSkies_0132_free.jpg';
 // import groundModelPath from '../public/models/ground.gltf';
@@ -79,7 +78,7 @@ import MiniFile from '../MiniFile/MiniFile';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { IGameView } from '../../shared/IGameView';
 import { LayersHelper } from '../../shared/scene/LayersHelper';
-import { BuilderContext3D } from 'aux-web/shared/scene/BuilderContext3D';
+import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 
 @Component({
   components: {
@@ -117,7 +116,7 @@ export default class GameView extends Vue implements IGameView {
   public onFileUpdated: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
   public onFileRemoved: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
 
-  private _contexts: BuilderContext3D[];
+  private _contexts: ContextGroup3D[];
 
   private _subs: SubscriptionLike[];
 
@@ -156,6 +155,9 @@ export default class GameView extends Vue implements IGameView {
   constructor() {
     super();
     this.addToRecentFilesList = debounce(this.addToRecentFilesList.bind(this), 100);
+    this.onFileAdded = new ArgEvent<AuxFile>();
+    this.onFileUpdated = new ArgEvent<AuxFile>();
+    this.onFileRemoved = new ArgEvent<AuxFile>();
   }
 
   public toggleDebug() {
@@ -180,6 +182,7 @@ export default class GameView extends Vue implements IGameView {
     this.recentFiles = [
       createFile()
     ];
+    this._contexts = [];
     this._subs = [];
     this._setupScene();
     this._input = new Input(this);
@@ -480,7 +483,7 @@ export default class GameView extends Vue implements IGameView {
 
   private async _fileUpdated(file: AuxFile, initialUpdate = false) {
     let shouldRemove = false;
-    if (!file.tags._isWorkspace) {
+    if (!file.tags['builder.context']) {
         if (!initialUpdate) { 
             if (!file.tags._user && file.tags._lastEditedBy === this.fileManager.userFile.id) {
             if (this.selectedRecentFile  && file.id === this.selectedRecentFile.id) {
@@ -514,10 +517,14 @@ export default class GameView extends Vue implements IGameView {
   }
 
   private async _fileAdded(file: AuxFile) {
-    let context = new BuilderContext3D(file);
+    let context = new ContextGroup3D(file);
     this._contexts.push(context);
-
     this.scene.add(context);
+
+    let calc = this.fileManager.createContext();
+    this._contexts.forEach(c => {
+        c.fileAdded(file, calc);
+    });
 
     // if (!this._shouldDisplayFile(file)) {
     //     return;

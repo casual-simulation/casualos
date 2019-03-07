@@ -123,15 +123,12 @@ export class WorkspaceMesh extends GameObject {
         const prev = this.workspace;
         this.workspace = (workspace) || prev;
 
-        this.visible = !!this.workspace.tags.position;
+        this.visible = !!this.workspace.tags['builder.context'];
         this.container.visible = !this.workspace.tags.minimized;
         this.miniHex.visible = !this.container.visible;
-        if (!this.workspace.tags.position) {
-            return;
-        }
-        this.position.x = this.workspace.tags.position.x;
-        this.position.y = this.workspace.tags.position.y;
-        this.position.z = this.workspace.tags.position.z;
+        this.position.x = this.workspace.tags['builder.context.x'] || 0;
+        this.position.y = this.workspace.tags['builder.context.y'] || 0;
+        this.position.z = this.workspace.tags['builder.context.z'] || 0;
 
         let gridUpdate: GridCheckResults = this._debugInfo.gridCheckResults;
 
