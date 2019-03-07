@@ -129,11 +129,14 @@ export class BuilderContext3D extends GameObject {
 
             newContexts.forEach(c => {
                 this.contexts.set(c.context, c);
-                // TODO: Add to visual tree
+                this.add(c);
             });
             removedContexts.forEach(c => {
-                this.contexts.delete(c);
-                // TODO: Remove from visual tree
+                const context = this.contexts.get(c);
+                if (typeof context !== 'undefined') {
+                    this.contexts.delete(c);
+                    this.remove(context);
+                }
             });
         }
     }
@@ -141,5 +144,4 @@ export class BuilderContext3D extends GameObject {
     private currentContexts(): string[] {
         return [...this.contexts.keys()];
     }
-
 }

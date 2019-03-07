@@ -1,7 +1,8 @@
 import { GameObject } from "./GameObject";
 import { AuxFile } from "@yeti-cgi/aux-common/aux-format";
 import { FileCalculationContext, calculateFileValue, TagUpdatedEvent } from "@yeti-cgi/aux-common";
-import { Object3D } from "three";
+import { Object3D, SceneUtils } from "three";
+import { AuxFile3D } from "./AuxFile3D";
 
 /**
  * Defines a class that represents the visualization of a context.
@@ -16,7 +17,7 @@ export class Context3D extends GameObject {
     /**
      * The files that are in this context.
      */
-    files: Map<string, AuxFile>;
+    files: Map<string, AuxFile3D>;
 
     /**
      * Creates a new context which represents a grouping of files.
@@ -71,19 +72,24 @@ export class Context3D extends GameObject {
 
     private _addFile(file: AuxFile) {
         console.log('[Context3D] Add', file.id, 'to context', this.context);
-        this.files.set(file.id, file);
-        // TODO: Add to visual tree
+        const mesh = new AuxFile3D(file, this.colliders);
+        this.files.set(file.id, mesh);
+        this.add(mesh);
     }
 
     private _removeFile(file: AuxFile) {
         console.log('[Context3D] Remove', file.id, 'from context', this.context);
-        if (this.files.delete(file.id)) {
-            // TODO: Remove from visual tree
+        const mesh = this.files.get(file.id);
+        if (typeof mesh !== 'undefined') {
+            this.remove(mesh);
+            this.files.delete(file.id);
         }
     }
 
     private _updateFile(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
-        // TODO: Propogate update
+        this.files.forEach(mesh => {
+            mesh.fileUpdated(file, updates, calc);
+        });
     }
 
     private _shouldBeInContext(file: AuxFile, calc: FileCalculationContext): boolean {
