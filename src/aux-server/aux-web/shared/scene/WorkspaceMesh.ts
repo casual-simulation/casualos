@@ -5,7 +5,8 @@ import {
     DEFAULT_WORKSPACE_HEIGHT,
     DEFAULT_WORKSPACE_SCALE,
     DEFAULT_WORKSPACE_GRID_SCALE,
-    DEFAULT_MINI_WORKSPACE_SCALE
+    DEFAULT_MINI_WORKSPACE_SCALE,
+    AuxDomain
 } from '@yeti-cgi/aux-common/Files';
 import { keys, minBy } from 'lodash';
 import { GridChecker, GridCheckResults } from './grid/GridChecker';
@@ -49,6 +50,11 @@ export class WorkspaceMesh extends GameObject {
     miniHex: HexMesh;
 
     /**
+     * The domain that this mesh should look at.
+     */
+    domain: AuxDomain;
+
+    /**
      * Sets the visibility of the grids on this workspace.
      */
     set gridsVisible(visible: boolean) {
@@ -68,9 +74,10 @@ export class WorkspaceMesh extends GameObject {
     /**
      * Creates a new WorkspaceMesh.
      */
-    constructor() {
+    constructor(domain: AuxDomain) {
         super();
         this.container = new Object3D();
+        this.domain = domain;
         this.miniHex = new HexMesh(
             new Axial(0, 0), 
             DEFAULT_MINI_WORKSPACE_SCALE, 
@@ -123,12 +130,13 @@ export class WorkspaceMesh extends GameObject {
         const prev = this.workspace;
         this.workspace = (workspace) || prev;
 
-        this.visible = !!this.workspace.tags['builder.context'];
-        this.container.visible = !this.workspace.tags.minimized;
+        // TODO: Be able to use formulas
+        this.visible = !!this.workspace.tags[`${this.domain}.context`];
+        this.container.visible = !this.workspace.tags[`${this.domain}.context.minimized`];
         this.miniHex.visible = !this.container.visible;
-        this.position.x = this.workspace.tags['builder.context.x'] || 0;
-        this.position.y = this.workspace.tags['builder.context.y'] || 0;
-        this.position.z = this.workspace.tags['builder.context.z'] || 0;
+        this.position.x = this.workspace.tags[`${this.domain}.context.x`] || 0;
+        this.position.y = this.workspace.tags[`${this.domain}.context.y`] || 0;
+        this.position.z = this.workspace.tags[`${this.domain}.context.z`] || 0;
 
         let gridUpdate: GridCheckResults = this._debugInfo.gridCheckResults;
 
@@ -148,8 +156,10 @@ export class WorkspaceMesh extends GameObject {
             }
         }
 
-        if (this.workspace.tags.color) {
-            let color = new Color(this.workspace.tags.color);
+        // TODO: Be able to use formulas
+        const colorValue = this.workspace.tags[`${this.domain}.context.color`];
+        if (colorValue) {
+            let color = new Color(colorValue);
             let hexes = this.hexGrid.hexes;
             hexes.forEach((h) => { h.color = color; });
             this.miniHex.color = color;
@@ -181,20 +191,25 @@ export class WorkspaceMesh extends GameObject {
             this.container.remove(this.hexGrid);
         }
         
+        // TODO: Be able to use formulas
+        const size = this.workspace.tags[`${this.domain}.context.size`];
+        const defaultHeight = this.workspace.tags[`${this.domain}.context.defaultHeight`];
+        const scale = this.workspace.tags[`${this.domain}.context.scale`];
         this.hexGrid = HexGridMesh.createFilledInHexGrid(
-            this.workspace.tags.size, 
-            this.workspace.tags.defaultHeight || DEFAULT_WORKSPACE_HEIGHT, 
-            this.workspace.tags.scale || DEFAULT_WORKSPACE_SCALE);
+            size, 
+            defaultHeight || DEFAULT_WORKSPACE_HEIGHT, 
+            scale || DEFAULT_WORKSPACE_SCALE);
         
-        const positionsKeys = this.workspace.tags.grid ? keys(this.workspace.tags.grid) : [];
+        const grid = this.workspace.tags[`${this.domain}.context.grid`];
+        const positionsKeys = grid ? keys(grid) : [];
         positionsKeys.forEach(key => {
             const position = keyToPos(key);
-            const workspaceHex = this.workspace.tags.grid[key];
+            const workspaceHex = this.workspace.tags[`${this.domain}.context.grid.${key}`];
             
             const hex = this.hexGrid.addAt(position);
-            let nextHeight = workspaceHex.height || this.workspace.tags.defaultHeight || DEFAULT_WORKSPACE_HEIGHT;
+            let nextHeight = workspaceHex.height || defaultHeight || DEFAULT_WORKSPACE_HEIGHT;
             if (nextHeight < 0) {
-                nextHeight = this.workspace.tags.defaultHeight || DEFAULT_WORKSPACE_HEIGHT;
+                nextHeight = defaultHeight || DEFAULT_WORKSPACE_HEIGHT;
             }
             hex.height = nextHeight;
         });
@@ -212,7 +227,9 @@ export class WorkspaceMesh extends GameObject {
             this.container.remove(...this.squareGrids);
         }
 
-        checker.tileRatio = this.workspace.tags.gridScale || DEFAULT_WORKSPACE_GRID_SCALE;
+        // TODO: Be able to use formulas
+        const gridScale = this.workspace.tags[`${this.domain}.context.grid.scale`];
+        checker.tileRatio = gridScale || DEFAULT_WORKSPACE_GRID_SCALE;
         const results = await checker.check(this.hexGrid);
         const levels = results.levels;
         this.squareGrids = levels.map(l => new GridMesh(l));
@@ -222,11 +239,11 @@ export class WorkspaceMesh extends GameObject {
     }
 
     private _gridChanged(current: AuxFile, previous: AuxFile) {
-        if (!previous || current.tags.size !== previous.tags.size) {
+        if (!previous || current.tags[`${this.domain}.context.size`] !== previous.tags[`${this.domain}.context.size`]) {
             return true;
         } else {
-            const currentGrid = current.metadata.tags['grid'];
-            const previousGrid = previous.metadata.tags['grid'];
+            const currentGrid = current.metadata.tags[`${this.domain}.context.grid`];
+            const previousGrid = previous.metadata.tags[`${this.domain}.context.grid`];
 
             return !(currentGrid === previousGrid ||
                 (currentGrid && previousGrid && idEquals(currentGrid.value.ref.atom.id, previousGrid.value.ref.atom.id)));

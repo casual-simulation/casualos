@@ -36,6 +36,7 @@ export abstract class BaseFileDragOperation implements IOperation {
     protected _lastScreenPos: Vector2;
     protected _combine: boolean;
     protected _other: File;
+    protected _context: string;
 
     private _freeDragGroup: Group;
     private _freeDragDistance: number;
@@ -51,6 +52,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         this._interaction = interaction;
         this._setFiles(files);
         this._lastScreenPos = this._gameView.input.getMouseScreenPos();
+        this._context = null;
     }
 
     public update(): void {
@@ -185,20 +187,31 @@ export abstract class BaseFileDragOperation implements IOperation {
     }
 
     protected _updateFilesPositions(files: File[], workspace: ContextGroup3D, gridPosition: Vector2, height: number, index: number) {
+        let previousContext: string = null;
+        if (!workspace.contexts.get(this._context)){
+            const contexts = [...workspace.contexts.keys()];
+            if (contexts.length > 0) {
+                previousContext = this._context;
+                this._context = contexts[0];
+            }
+        }
+
         let events: FileEvent[] = [];
         for (let i = 0; i < files.length; i++) {
             // TODO: Replace with context
-             events.push(this._updateFile(files[i], {
+            let tags = {
                 tags: {
-                    _workspace: workspace.file.id,
-                    _position: {
-                        x: gridPosition.x,
-                        y: gridPosition.y,
-                        z: height
-                    },
+                    [this._context]: true,
+                    [`${this._context}.x`]: gridPosition.x,
+                    [`${this._context}.y`]: gridPosition.y,
+                    [`${this._context}.z`]: height,
                     _index: index + i
                 }
-            }));
+            };
+            if (previousContext) {
+                tags.tags[previousContext] = null;
+            }
+             events.push(this._updateFile(files[i], tags));
         }
 
         this._gameView.fileManager.transaction(...events);

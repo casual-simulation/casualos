@@ -89,7 +89,7 @@ export class NewFileDragOperation extends BaseFileDragOperation {
 
     private _createDragMesh(file: File): AuxFile3D {
         // Instance a file mesh to represent the file in its intial drag state before being added to the world.
-        let mesh = new AuxFile3D(file, []);
+        let mesh = new AuxFile3D(file, null, null, null, []);
         // mesh.allowNoWorkspace = true;
         
         // TODO: Fix
@@ -109,6 +109,7 @@ export class NewFileDragOperation extends BaseFileDragOperation {
 
     private _releaseDragMesh(mesh: AuxFile3D): void {
         if (mesh) {
+            mesh.dispose();
             this._gameView.scene.remove(mesh);
         }
     }

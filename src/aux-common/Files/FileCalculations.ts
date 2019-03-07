@@ -1,4 +1,4 @@
-import { Object, File, Workspace, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_GRID_SCALE, DEFAULT_USER_MODE, DEFAULT_WORKSPACE_COLOR, UserMode } from './File';
+import { Object, File, Workspace, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_GRID_SCALE, DEFAULT_USER_MODE, DEFAULT_WORKSPACE_COLOR, UserMode, AuxDomain } from './File';
 import uuid from 'uuid/v4';
 import {
     flatMap,
@@ -453,10 +453,7 @@ export function getFileTag(file: File, tag: string) {
  * @param id 
  * @param tags 
  */
-export function createFile(id = uuid(), tags: Object['tags'] = {
-    _position: { x: 0, y: 0, z: 0},
-    _workspace: <string>null
-}) {
+export function createFile(id = uuid(), tags: Object['tags'] = {}) {
     const file: File = {id: id, tags: tags};
 
     return file;
@@ -474,12 +471,12 @@ export function createWorkspace(id = uuid()): Workspace {
             'builder.context.x': 0,
             'builder.context.y': 0,
             'builder.context.z': 0,
-            size: 1,
-            grid: {},
-            scale: DEFAULT_WORKSPACE_SCALE,
-            defaultHeight: DEFAULT_WORKSPACE_HEIGHT,
-            gridScale: DEFAULT_WORKSPACE_GRID_SCALE,
-            color: DEFAULT_WORKSPACE_COLOR
+            'builder.context.size': 1,
+            'builder.context.grid': {},
+            'builder.context.scale': DEFAULT_WORKSPACE_SCALE,
+            'builder.context.defaultHeight': DEFAULT_WORKSPACE_HEIGHT,
+            'builder.context.grid.scale': DEFAULT_WORKSPACE_GRID_SCALE,
+            'builder.context.color': DEFAULT_WORKSPACE_COLOR
         }
     };
 }
@@ -505,6 +502,20 @@ export function updateFile(file: File, userId: string, newData: PartialFile, cre
                 }
             }
         }
+    }
+}
+
+/**
+ * Calculates the grid scale for the given workspace.
+ * @param workspace 
+ */
+export function calculateGridScale(calc: FileCalculationContext, workspace: AuxFile, domain: AuxDomain): number {
+    if (workspace) {
+        const scale = calculateNumericalTagValue(calc, workspace, `${domain}.context.scale`, DEFAULT_WORKSPACE_SCALE);
+        const gridScale =  calculateNumericalTagValue(calc, workspace, `${domain}.context.grid.scale`, DEFAULT_WORKSPACE_GRID_SCALE);
+        return scale * gridScale;
+    } else {
+        return DEFAULT_WORKSPACE_SCALE * DEFAULT_WORKSPACE_GRID_SCALE;
     }
 }
 

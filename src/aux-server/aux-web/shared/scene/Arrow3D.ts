@@ -18,7 +18,6 @@ import {
 } from 'three';
 
 import { Object, Workspace } from '@yeti-cgi/aux-common';
-import { FileMesh } from './FileMesh';
 import { WorkspaceMesh } from './WorkspaceMesh';
 import { IGameView } from '../IGameView';
 import { AuxFile3D } from './AuxFile3D';

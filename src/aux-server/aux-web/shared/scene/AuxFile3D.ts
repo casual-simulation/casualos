@@ -1,8 +1,13 @@
 import { GameObject } from "./GameObject";
 import { AuxFile } from "@yeti-cgi/aux-common/aux-format";
-import { Object3D, Mesh, SceneUtils } from "three";
-import { File, TagUpdatedEvent, FileCalculationContext } from "@yeti-cgi/aux-common";
+import { Object3D, Mesh, SceneUtils, Box3, Sphere, Group } from "three";
+import { File, TagUpdatedEvent, FileCalculationContext, AuxDomain } from "@yeti-cgi/aux-common";
 import { createCube } from "./SceneUtils";
+import { AuxFile3DDecorator } from "./AuxFile3DDecorator";
+import { ContextPositionDecorator } from "./decorators/ContextPositionDecorator";
+import { MeshCubeDecorator } from "./decorators/MeshCubeDecorator";
+import { ContextGroup3D } from "./ContextGroup3D";
+import { ScaleDecorator } from "./decorators/ScaleDecorator";
 
 /**
  * Defines a class that is able to display Aux files.
@@ -10,21 +15,61 @@ import { createCube } from "./SceneUtils";
 export class AuxFile3D extends GameObject {
 
     /**
+     * The context this file visualization was created for.
+     */
+    context: string;
+
+    /**
+     * The domain that this file visualization is in.
+     */
+    domain: AuxDomain;
+
+    /**
+     * The context group that this visualization belongs to.
+     */
+    contextGroup: ContextGroup3D;
+
+    /**
      * The file for the mesh.
      */
     file: File;
 
-    cube: Mesh;
-    
-    // TODO: Implement
-    boundingSphere: any;
+    /**
+     * The things that are displayed by this file.
+     */
+    display: Group;
 
-    constructor(file: File, colliders: Object3D[]) {
+    /**
+     * The list of decorators that this file is using.
+     */
+    decorators: AuxFile3DDecorator[];
+
+    get boundingBox(): Box3 {
+        return new Box3().setFromObject(this.display);
+    }
+
+    get boundingSphere(): Sphere {
+        let box = new Box3().setFromObject(this.display);
+        let sphere = new Sphere();
+        sphere = box.getBoundingSphere(sphere);
+
+        return sphere;
+    }
+
+    constructor(file: File, contextGroup: ContextGroup3D, context: string, domain: AuxDomain, colliders: Object3D[]) {
         super();
         this.file = file;
+        this.contextGroup = contextGroup;
         this.colliders = colliders;
-        this.cube = createCube(1);
-        this.add(this.cube);
+        this.context = context;
+        this.display = new Group();
+        this.add(this.display);
+
+        this.decorators = [
+            new ScaleDecorator(),
+            new ContextPositionDecorator(),
+            new MeshCubeDecorator(),
+        ];
     }
 
     /**
@@ -44,7 +89,12 @@ export class AuxFile3D extends GameObject {
      * @param calc The calculation context.
      */
     fileUpdated(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
-        // TODO:
+        // TODO: Add the ability for decorators to update when other files
+        // get updated. (like arrows)
+        if (file.id === this.file.id) {
+            this.file = file;
+            this.decorators.forEach(d => d.fileUpdated(this, calc));
+        }
     }
 
     /**
@@ -54,6 +104,19 @@ export class AuxFile3D extends GameObject {
      */
     fileRemoved(file: AuxFile, calc: FileCalculationContext) {
         // TODO:
+    }
+    
+    frameUpdate(): void {
+        if (this.decorators) {
+            this.decorators.forEach(d => d.frameUpdate());
+        }
+    }
+
+    dispose() {
+        super.dispose();
+        if (this.decorators) {
+            this.decorators.forEach(d => { d.dispose(); });
+        }
     }
 
 }

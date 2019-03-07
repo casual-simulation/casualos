@@ -109,7 +109,7 @@ export class FileDragOperation extends BaseFileDragOperation {
             fileRemoved(this._workspace.file.id),
             fileUpdated(this._attachWorkspace.file.id, {
                 tags: {
-                    grid: {
+                    [`${this._workspace.domain}.context.grid`]: {
                         [posToKey(this._attachPoint)]: {
                             height: height
                         }

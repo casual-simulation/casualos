@@ -73,7 +73,7 @@ export class FileRenderer {
         this._scene.add(this._sun);
 
         this._group = new Object3D();
-        this._file = new AuxFile3D(null, []);
+        this._file = new AuxFile3D(null, null, null, 'builder', []);
         // this._file.allowNoWorkspace = true;
 
         this._group.add(this._file);

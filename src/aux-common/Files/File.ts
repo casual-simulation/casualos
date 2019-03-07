@@ -1,6 +1,8 @@
 
 export type PartialFile = Partial<File>;
 
+export type AuxDomain = 'builder' | 'player';
+
 export type Object = File;
 export type Workspace = File;
 
@@ -10,18 +12,7 @@ export interface File {
         grid?: {
             [key: string]: WorkspaceHex;
         } | null,
-        size?: number;
-        scale?: number | null;
-        gridScale?: number | null;
-        defaultHeight?: number | null;
-        color?: string;
-        minimized?: boolean | null;
-        _workspace?: string | null;
-        _position?: {
-            x: number;
-            y: number;
-            z: number;
-        } | null;
+        
         _rotation?: {
             x?: number;
             y?: number;
@@ -56,6 +47,15 @@ export interface File {
         ['builder.context.x']?: number;
         ['builder.context.y']?: number;
         ['builder.context.z']?: number;
+        ['builder.context.scale']?: number;
+        ['builder.context.grid']?: {
+            [key: string]: WorkspaceHex;
+        } | null,
+        ['builder.context.grid.scale']?: number;
+        ['builder.context.defaultHeight']?: number;
+        ['builder.context.color']?: string;
+        ['builder.context.size']?: number;
+        ['builder.context.minimized']?: boolean | null;
 
         [key: string]: any;
     }

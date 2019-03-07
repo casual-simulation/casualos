@@ -1,8 +1,10 @@
-import { Vector3, MeshBasicMaterial, SphereBufferGeometry, Mesh, Object3D, Scene, Matrix4, Box2, Vector2, Box3, Layers, BoxBufferGeometry, MeshStandardMaterial } from 'three';
+import { Vector3, MeshBasicMaterial, SphereBufferGeometry, Mesh, Object3D, Scene, Matrix4, Box2, Vector2, Box3, Layers, BoxBufferGeometry, MeshStandardMaterial, BufferGeometry, BufferAttribute } from 'three';
 import { Text3D } from './Text3D';
 import robotoFont from '../public/bmfonts/Roboto.json';
 import robotoTexturePath from '../public/bmfonts/Roboto.png';
 import { IGameView } from '../IGameView';
+import { flatMap } from 'lodash';
+import { calculateNumericalTagValue, FileCalculationContext, File } from '@yeti-cgi/aux-common';
 
 export function createSphere(position: Vector3, color: number, size: number = 0.1) {
     const sphereMaterial = new MeshBasicMaterial({
@@ -30,6 +32,47 @@ export function createCube(size: number): Mesh {
     cube.castShadow = true;
     cube.receiveShadow = false;
     return cube;
+}
+
+export function createCubeStrokeGeometry(): BufferGeometry {
+    const geo = new BufferGeometry();
+
+    let verticies: number[][] = [
+        [-0.5, -0.5, -0.5], // left  bottom back  - 0
+        [ 0.5, -0.5, -0.5], // right bottom back  - 1
+        [-0.5,  0.5, -0.5], // left  top    back  - 2
+        [ 0.5,  0.5, -0.5], // right top    back  - 3
+        [-0.5, -0.5,  0.5], // left  bottom front - 4
+        [ 0.5, -0.5,  0.5], // right bottom front - 5
+        [-0.5,  0.5,  0.5], // left  top    front - 6
+        [ 0.5,  0.5,  0.5], // right top    front - 7
+    ];
+
+    const indicies = [
+        0,1,
+        0,2,
+        0,4,
+
+        4,5,
+        4,6,
+
+        5,7,
+        5,1,
+
+        1,3,
+
+        2,3,
+        2,6,
+
+        3,7,
+
+        6,7,
+    ];
+    const lines: number[] = flatMap(indicies, i => verticies[i]);
+    const array = new Float32Array(lines);
+    geo.addAttribute('position', new BufferAttribute(array, 3));
+
+    return geo;
 }
 
 /**
@@ -116,4 +159,21 @@ export function debugLayersToString(obj: Object3D): string {
     }
 
     return output;
+}
+
+
+/**
+ * Calculates the scale.x, scale.y, and scale.z values from the given object.
+ * @param context The calculation context.
+ * @param obj The object.
+ * @param multiplier The value that scale values should be multiplied by.
+ * @param defaultScale The default value.
+ * @param prefix The optional prefix for the tags.
+ */
+export function calculateScale(context: FileCalculationContext, obj: File, multiplier: number = 1, defaultScale: number = 1, prefix: string = ''): Vector3 {
+    const scaleX = calculateNumericalTagValue(context, obj, `${prefix}scale.x`, defaultScale);
+    const scaleY = calculateNumericalTagValue(context, obj, `${prefix}scale.y`, defaultScale);
+    const scaleZ = calculateNumericalTagValue(context, obj, `${prefix}scale.z`, defaultScale);
+
+    return new Vector3(scaleX * multiplier, scaleZ * multiplier, scaleY * multiplier);
 }

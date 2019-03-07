@@ -1,9 +1,10 @@
 import { AuxFile } from "@yeti-cgi/aux-common/aux-format";
 import { WorkspaceMesh } from "./WorkspaceMesh";
 import { GameObject } from "./GameObject";
-import { FileCalculationContext, TagUpdatedEvent, hasValue, calculateFileValue } from "@yeti-cgi/aux-common";
+import { FileCalculationContext, TagUpdatedEvent, hasValue, calculateFileValue, AuxDomain } from "@yeti-cgi/aux-common";
 import { difference, flatMap } from "lodash";
 import { Context3D } from "./Context3D";
+import { GridChecker } from "./grid/GridChecker";
 
 /**
  * Defines a class that represents a visualization of a context for the AUX Builder.
@@ -29,9 +30,16 @@ export class ContextGroup3D extends GameObject {
     contexts: Map<string, Context3D>;
 
     /**
-     * The tag that this context group should look for.
+     * The domain that the group is for.
      */
-    tag: string;
+    domain: AuxDomain;
+
+    // TODO: Move this to a builder specific class
+    private _checker: GridChecker;
+
+    setGridChecker(gridChecker: GridChecker) {
+        this._checker = gridChecker;
+    }
 
     /**
      * Creates a new Builder Context 3D Object.
@@ -39,7 +47,7 @@ export class ContextGroup3D extends GameObject {
      */
     constructor(file: AuxFile) {
         super();
-        this.tag = 'builder.context';
+        this.domain = 'builder';
         this.file = file;
         this.contexts = new Map();
     }
@@ -74,11 +82,11 @@ export class ContextGroup3D extends GameObject {
      * @param updates The updates that happened on the file.
      * @param calc The file calculation context that should be used.
      */
-    fileUpdated(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
+    async fileUpdated(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
         if (file.id === this.file.id) {
             this.file = file;
             this._updateContexts(file, updates, calc);
-            this._updateWorkspace(file, updates, calc);
+            await this._updateWorkspace(file, updates, calc);
         }
         
         this.contexts.forEach(context => {
@@ -118,12 +126,16 @@ export class ContextGroup3D extends GameObject {
      * @param calc 
      */
     private _updateWorkspace(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
-        if (!this.surface) {
-            this.surface = new WorkspaceMesh();
-            this.add(this.surface);
+        // TODO: Get this to update with the builder.context
+        if (file.tags[`${this.domain}.context`]) {
+            if (!this.surface) {
+                this.surface = new WorkspaceMesh(this.domain);
+                this.surface.gridGhecker = this._checker;
+                this.add(this.surface);
+            }
+            
+            this.surface.update(file);
         }
-
-        this.surface.update(file);
     }
 
     private _updateBuilderContext(file: AuxFile, newContexts: string | string[], calc: FileCalculationContext) {
@@ -138,7 +150,7 @@ export class ContextGroup3D extends GameObject {
             const currentContexts = this.currentContexts();
             const missingContexts = difference(contexts, currentContexts);
             const removedContexts = difference(currentContexts, contexts);
-            const newContexts = missingContexts.map(c => new Context3D(c, this.colliders));
+            const newContexts = missingContexts.map(c => new Context3D(c, this, this.domain, this.colliders));
 
             newContexts.forEach(c => {
                 this.contexts.set(c.context, c);

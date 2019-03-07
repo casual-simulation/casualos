@@ -1,8 +1,9 @@
 import { GameObject } from "./GameObject";
 import { AuxFile } from "@yeti-cgi/aux-common/aux-format";
-import { FileCalculationContext, calculateFileValue, TagUpdatedEvent } from "@yeti-cgi/aux-common";
+import { FileCalculationContext, calculateFileValue, TagUpdatedEvent, AuxDomain } from "@yeti-cgi/aux-common";
 import { Object3D, SceneUtils } from "three";
 import { AuxFile3D } from "./AuxFile3D";
+import { ContextGroup3D } from "./ContextGroup3D";
 
 /**
  * Defines a class that represents the visualization of a context.
@@ -15,19 +16,31 @@ export class Context3D extends GameObject {
     context: string;
 
     /**
+     * The domain this object is in.
+     */
+    domain: AuxDomain;
+
+    /**
      * The files that are in this context.
      */
     files: Map<string, AuxFile3D>;
+
+    /**
+     * The group that this context belongs to.
+     */
+    contextGroup: ContextGroup3D;
 
     /**
      * Creates a new context which represents a grouping of files.
      * @param context The tag that this context represents.
      * @param colliders The array that new colliders should be added to.
      */
-    constructor(context: string, colliders: Object3D[]) {
+    constructor(context: string, group: ContextGroup3D, domain: AuxDomain, colliders: Object3D[]) {
         super();
         this.context = context;
         this.colliders = colliders;
+        this.domain = domain;
+        this.contextGroup = group;
         this.files = new Map();
     }
 
@@ -70,9 +83,21 @@ export class Context3D extends GameObject {
         this._removeFile(id);
     }
 
+    frameUpdate(): void {
+        if (this.files) {
+            this.files.forEach(f => f.frameUpdate());
+        }
+    }
+
+    dispose(): void {
+        if (this.files) {
+            this.files.forEach(f => { f.dispose(); });
+        }
+    }
+
     private _addFile(file: AuxFile) {
         console.log('[Context3D] Add', file.id, 'to context', this.context);
-        const mesh = new AuxFile3D(file, this.colliders);
+        const mesh = new AuxFile3D(file, this.contextGroup, this.context, this.domain, this.colliders);
         this.files.set(file.id, mesh);
         this.add(mesh);
     }
@@ -95,4 +120,5 @@ export class Context3D extends GameObject {
     private _shouldBeInContext(file: AuxFile, calc: FileCalculationContext): boolean {
         return calculateFileValue(calc, file, this.context);
     }
+
 }
