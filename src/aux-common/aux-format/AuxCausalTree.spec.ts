@@ -657,8 +657,8 @@ describe('AuxCausalTree', () => {
             const result = tree.addFile(newFile);
 
             const fileAtom = atom(atomId(1, 2), root.atom.id, file('test'));
-            const positionTag = atom(atomId(1, 5), fileAtom.id, tag('position'));
-            const positionTagValue = atom(atomId(1, 6, 1), positionTag.id, value({x: 0, y: 0, z: 0}));
+            const positionTag = atom(atomId(1, 7), fileAtom.id, tag('position'));
+            const positionTagValue = atom(atomId(1, 8, 1), positionTag.id, value({x: 0, y: 0, z: 0}));
 
             const resultAtoms = result.map(ref => ref.atom);
             expect(resultAtoms).toContainEqual(fileAtom);
@@ -682,8 +682,8 @@ describe('AuxCausalTree', () => {
             const result = tree.addFile(newFile);
 
             const fileAtom = atom(atomId(1, 2), root.atom.id, file('test'));
-            const positionTag = atom(atomId(1, 5), fileAtom.id, tag('position'));
-            const positionTagValue = atom(atomId(1, 6, 1), positionTag.id, value({x: 0, y: 0, z: 0}));
+            const positionTag = atom(atomId(1, 7), fileAtom.id, tag('position'));
+            const positionTagValue = atom(atomId(1, 8, 1), positionTag.id, value({x: 0, y: 0, z: 0}));
 
             expect(updates.length).toBe(1);
             const resultAtoms = result.map(ref => ref.atom);

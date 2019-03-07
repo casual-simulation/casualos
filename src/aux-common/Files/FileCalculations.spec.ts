@@ -544,6 +544,7 @@ describe('FileCalculations', () => {
         it('should return the property names that are on workspaces', () => {
             expect(tagsOnFile(createWorkspace('test'))).toEqual([
                 '_workspace',
+                '_isWorkspace',
                 'position',
                 'size',
                 'grid',
