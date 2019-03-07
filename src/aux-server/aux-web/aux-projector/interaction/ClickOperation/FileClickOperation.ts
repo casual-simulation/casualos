@@ -6,23 +6,26 @@ import { InteractionManager } from '../InteractionManager';
 import {
     UserMode,
     File,
-    duplicateFile
+    duplicateFile,
+    AuxFile
 } from '@yeti-cgi/aux-common';
 import { Physics } from '../../../shared/scene/Physics';
 import { WorkspaceMesh } from '../../../shared/scene/WorkspaceMesh';
 import { appManager } from '../../../shared/AppManager';
 import { BaseFileClickOperation } from './BaseFileClickOperation';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
+import { AuxFile3D } from 'aux-web/shared/scene/AuxFile3D';
+import { BuilderContext3D } from 'aux-web/shared/scene/BuilderContext3D';
 
 /**
  * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
  */
 export class FileClickOperation extends BaseFileClickOperation {
 
-    private _file3D: File3D;
+    private _file3D: AuxFile3D | BuilderContext3D;
     private _hit: Intersection;
 
-    constructor(mode: UserMode, gameView: GameView, interaction: InteractionManager, file: File3D, hit: Intersection) {
+    constructor(mode: UserMode, gameView: GameView, interaction: InteractionManager, file: AuxFile3D | BuilderContext3D, hit: Intersection) {
         super(mode, gameView, interaction, file.file);
         this._file3D = file;
         this._hit = hit;
@@ -31,16 +34,16 @@ export class FileClickOperation extends BaseFileClickOperation {
     protected _createDragOperation(): BaseFileDragOperation {
         const workspace = this._file.tags._isWorkspace ? this._file3D : null;
         if (!this._file.tags._isWorkspace) {
-            const fileWorkspace = this._file.tags._workspace ? this._gameView.getFile(this._file.tags._workspace) : null;
+            const fileWorkspace = this._file.tags._workspace ? this._interaction.findWorkspaceForMesh(this._file3D) : null;
             if (fileWorkspace && this._file.tags._position) {
                 const gridPosition = new Vector2(this._file.tags._position.x, this._file.tags._position.y);
                 const objects = this._interaction.objectsAtGridPosition(fileWorkspace, gridPosition);
                 const file = this._file;
                 const draggedObjects = objects.filter(o => o.tags._index >= file.tags._index);
-                return new FileDragOperation(this._gameView, this._interaction, this._hit, draggedObjects, workspace);
+                return new FileDragOperation(this._gameView, this._interaction, this._hit, draggedObjects, <BuilderContext3D>workspace);
             }
         }
-        return new FileDragOperation(this._gameView, this._interaction, this._hit, [this._file], workspace);
+        return new FileDragOperation(this._gameView, this._interaction, this._hit, [this._file], <BuilderContext3D>workspace);
     }
 
     protected _performClick(): void {
@@ -49,7 +52,7 @@ export class FileClickOperation extends BaseFileClickOperation {
 
             if (this._interaction.isInCorrectMode(this._file)) {
                 // Select the file we are operating on.
-                this._interaction.selectFile(this._file3D);
+                this._interaction.selectFile(<AuxFile3D>this._file3D);
             }
 
             // If we're clicking on a workspace show the context menu for it.
@@ -57,7 +60,7 @@ export class FileClickOperation extends BaseFileClickOperation {
 
             if (!this._interaction.isInCorrectMode(this._file) && this._gameView.selectedRecentFile) {
                 // Create file at clicked workspace position.
-                let workspaceMesh = <WorkspaceMesh>this._file3D.mesh;
+                let workspaceMesh = (<BuilderContext3D>this._file3D).surface;
                 let closest = workspaceMesh.closestTileToPoint(this._hit.point);
 
                 if (closest) {

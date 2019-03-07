@@ -55,7 +55,7 @@ export class Context3D extends GameObject {
         if (!isInContext && shouldBeInContext) {
             this._addFile(file);
         } else if (isInContext && !shouldBeInContext) {
-            this._removeFile(file);
+            this._removeFile(file.id);
         } else if(isInContext && shouldBeInContext) {
             this._updateFile(file, updates, calc);
         }
@@ -63,11 +63,11 @@ export class Context3D extends GameObject {
 
     /**
      * Notifies this context that the given file was removed from the state.
-     * @param file The file.
+     * @param file The ID of the file that was removed.
      * @param calc The calculation context.
      */
-    fileRemoved(file: AuxFile, calc: FileCalculationContext) {
-        this._removeFile(file);
+    fileRemoved(id: string, calc: FileCalculationContext) {
+        this._removeFile(id);
     }
 
     private _addFile(file: AuxFile) {
@@ -77,12 +77,12 @@ export class Context3D extends GameObject {
         this.add(mesh);
     }
 
-    private _removeFile(file: AuxFile) {
-        console.log('[Context3D] Remove', file.id, 'from context', this.context);
-        const mesh = this.files.get(file.id);
+    private _removeFile(id: string) {
+        console.log('[Context3D] Remove', id, 'from context', this.context);
+        const mesh = this.files.get(id);
         if (typeof mesh !== 'undefined') {
             this.remove(mesh);
-            this.files.delete(file.id);
+            this.files.delete(id);
         }
     }
 

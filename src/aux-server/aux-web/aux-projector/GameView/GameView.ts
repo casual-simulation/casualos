@@ -58,7 +58,8 @@ import {
   getUserMode,
   createFile,
   doFilesAppearEqual,
-  AuxFile
+  AuxFile,
+  createCalculationContext
 } from '@yeti-cgi/aux-common';
 import { ArgEvent } from '@yeti-cgi/aux-common/Events';
 import { Time } from '../../shared/scene/Time';
@@ -78,6 +79,7 @@ import MiniFile from '../MiniFile/MiniFile';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { IGameView } from '../../shared/IGameView';
 import { LayersHelper } from '../../shared/scene/LayersHelper';
+import { BuilderContext3D } from 'aux-web/shared/scene/BuilderContext3D';
 
 @Component({
   components: {
@@ -111,23 +113,11 @@ export default class GameView extends Vue implements IGameView {
   private _gridChecker: GridChecker;
   private _originalBackground: Color | Texture;
 
-  public onFileAdded: ArgEvent<File3D> = new ArgEvent<File3D>();
-  public onFileUpdated: ArgEvent<File3D> = new ArgEvent<File3D>();
-  public onFileRemoved: ArgEvent<File3D> = new ArgEvent<File3D>();
+  public onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
+  public onFileUpdated: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
+  public onFileRemoved: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
 
-  /**
-   * A map of file IDs to files and meshes.
-   */
-  private _files: {
-    [id: string]: File3D
-  } = {};
-
-  /**
-   * A map of mesh IDs to file IDs.
-   */
-  private _fileIds: {
-    [mesh: number]: string
-  } = {};
+  private _contexts: BuilderContext3D[];
 
   private _subs: SubscriptionLike[];
 
@@ -173,10 +163,11 @@ export default class GameView extends Vue implements IGameView {
   }
 
   public setGridsVisible(visible: boolean) {
-    this.getWorkspaces().forEach(workspace => {
-      const mesh = <WorkspaceMesh>workspace.mesh;
-      mesh.gridsVisible = visible;
-    });
+      // TODO:
+    // this.getWorkspaces().forEach(workspace => {
+    //   const mesh = <WorkspaceMesh>workspace.mesh;
+    //   mesh.gridsVisible = visible;
+    // });
   }
 
   public async mounted() {
@@ -186,8 +177,6 @@ export default class GameView extends Vue implements IGameView {
     
     this._time = new Time();
     this.debugInfo = null;
-    this._files = {};
-    this._fileIds = {};
     this.recentFiles = [
       createFile()
     ];
@@ -264,12 +253,15 @@ export default class GameView extends Vue implements IGameView {
     this._inputVR.update();
     this._interaction.update();
 
-    for (let id in this._files) {
-      const file = this._files[id];
-      if (file) {
-        file.frameUpdate();
-      }
-    }
+    this._contexts.forEach(context => {
+        context.frameUpdate();
+    });
+    // for (let id in this._contexts) {
+    //   const file = this._files[id];
+    //   if (file) {
+    //     file.frameUpdate();
+    //   }
+    // }
 
     this._renderUpdate(xrFrame);
 
@@ -371,10 +363,11 @@ export default class GameView extends Vue implements IGameView {
   }
 
   public updateDebugInfo() {
-    this.getFiles().forEach(f => f.mesh.update());
-    this.debugInfo = {
-      workspaces: this.getWorkspaces().map(w => (<WorkspaceMesh>w.mesh).getDebugInfo()),
-    };
+      // TODO:
+    // this.getFiles().forEach(f => f.mesh.update());
+    // this.debugInfo = {
+    //   workspaces: this.getWorkspaces().map(w => (<WorkspaceMesh>w.mesh).getDebugInfo()),
+    // };
   }
 
   public selectRecentFile(file: Object) {
@@ -390,37 +383,44 @@ export default class GameView extends Vue implements IGameView {
    * Returns the file id that is represented by the specified mesh id.
    * @param meshId The id of the mesh.
    */
-  public getFileId(meshId: number): string {
-    return this._fileIds[meshId];
-  }
+//   public getFileId(meshId: number): string {
+//     return this._fileIds[meshId];
+//   }
 
   /**
    * Returns the file that matches the specified file id.
    * @param fileId The id of the file.
    */
-  public getFile(fileId: string): File3D {
-    return this._files[fileId];
-  }
+//   public getFile(fileId: string): File3D {
+//     return this._files[fileId];
+//   }
 
   /**
    * Gets all of the files.
    */
-  public getFiles() {
-    return values(this._files);
-  }
+//   public getFiles() {
+//     return values(this._files);
+//   }
 
   /**
    * Gets all of the objects.
    */
-  public getObjects() {
-    return this.getFiles().filter(file => !file.file.tags._isWorkspace);
-  }
+//   public getObjects() {
+//     return this.getFiles().filter(file => !file.file.tags._isWorkspace);
+//   }
 
   /**
    * Gets all of the workspaces.
    */
-  public getWorkspaces() {
-    return this.getFiles().filter(file => file.file.tags._isWorkspace);
+//   public getWorkspaces() {
+//     return this.getFiles().filter(file => file.file.tags._isWorkspace);
+//   }
+
+  /**
+   * Gets the list of contexts that this game view contains.
+   */
+  public getContexts() {
+      return this._contexts.filter(c => c.contexts.size > 0);
   }
 
   /**
@@ -436,7 +436,8 @@ export default class GameView extends Vue implements IGameView {
    */
   public showDebugInfo(debug: boolean) {
     this._debug = debug;
-    this.getFiles().forEach(w => w.mesh.showDebugInfo(debug));
+    // TODO:
+    // this.getFiles().forEach(w => w.mesh.showDebugInfo(debug));
   }
 
   /**
@@ -478,64 +479,73 @@ export default class GameView extends Vue implements IGameView {
   }
 
   private async _fileUpdated(file: AuxFile, initialUpdate = false) {
-    const obj = this._files[file.id];
     let shouldRemove = false;
-    if (obj) {
-      if (!file.tags._isWorkspace) {
-        
+    if (!file.tags._isWorkspace) {
         if (!initialUpdate) { 
-          if (!file.tags._user && file.tags._lastEditedBy === this.fileManager.userFile.id) {
+            if (!file.tags._user && file.tags._lastEditedBy === this.fileManager.userFile.id) {
             if (this.selectedRecentFile  && file.id === this.selectedRecentFile.id) {
-              this.selectedRecentFile = file;
+                this.selectedRecentFile = file;
             } else {
-              this.selectedRecentFile = null;
+                this.selectedRecentFile = null;
             }
             this.addToRecentFilesList(file);
-          }
+            }
         }
         
         if (file.tags._destroyed) {
-          shouldRemove = true;
+            shouldRemove = true;
         }
-      }
-      else {
+    } else {
         if (file.tags.size <= 0) {
-          shouldRemove = true;
+            shouldRemove = true;
         }
-      }
+    }
 
-      await obj.updateFile(file);
-      this.onFileUpdated.invoke(obj);
+    const calc = this.fileManager.createContext();
+    this._contexts.forEach(c => {
+        c.fileUpdated(file, [], calc);
+    });
+    // await obj.updateFile(file);
+    this.onFileUpdated.invoke(file);
 
-      if (shouldRemove) {
+    if (shouldRemove) {
         this._fileRemoved(file.id);
-      }
     }
   }
 
   private async _fileAdded(file: AuxFile) {
-    if (!this._shouldDisplayFile(file)) {
-        return;
-    }
-    
-    var obj = new File3D(this, file);
+    let context = new BuilderContext3D(file);
+    this._contexts.push(context);
 
-    this._files[file.id] = obj;
-    this._fileIds[obj.mesh.id] = obj.file.id;
+    this.scene.add(context);
+
+    // if (!this._shouldDisplayFile(file)) {
+    //     return;
+    // }
+    
+    // var obj = new File3D(this, file);
+
+    // this._files[file.id] = obj;
+    // this._fileIds[obj.mesh.id] = obj.file.id;
 
     await this._fileUpdated(file, true);
-    this.onFileAdded.invoke(obj);
+    this.onFileAdded.invoke(file);
   }
 
   private _fileRemoved(id: string) {
-    const obj = this._files[id];
-    if (obj) {
-      delete this._fileIds[obj.mesh.id];
-      delete this._files[id];
-      obj.dispose();
+    const calc = this.fileManager.createContext();
+    this._contexts.forEach(context => {
+        context.fileRemoved(id, calc);
+    });
+    this.onFileRemoved.invoke(null);
 
-      this.onFileRemoved.invoke(obj);
-    }
+    // const obj = this._files[id];
+    // if (obj) {
+    //   delete this._fileIds[obj.mesh.id];
+    //   delete this._files[id];
+    //   obj.dispose();
+
+    // }
   }
 
   /**

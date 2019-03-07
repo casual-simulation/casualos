@@ -5,6 +5,8 @@ import { InputVR } from "./scene/InputVR";
 import { File3D } from "./scene/File3D";
 import { GridChecker } from "./scene/grid/GridChecker";
 import { ArgEvent } from "@yeti-cgi/aux-common/Events";
+import { AuxFile } from "@yeti-cgi/aux-common/aux-format";
+import { BuilderContext3D } from "./scene/BuilderContext3D";
 
 /**
  * Interface that described what properties and functions should be available to a GameView class/component implementation.
@@ -27,35 +29,40 @@ export interface IGameView {
     readonly groundPlane: Plane;
     readonly gridChecker: GridChecker;
 
-    onFileAdded: ArgEvent<File3D>;
-    onFileUpdated: ArgEvent<File3D>;
-    onFileRemoved: ArgEvent<File3D>;
+    onFileAdded: ArgEvent<AuxFile>;
+    onFileUpdated: ArgEvent<AuxFile>;
+    onFileRemoved: ArgEvent<AuxFile>;
 
 
     /**
      * Returns the file id that is represented by the specified mesh id.
      * @param meshId The id of the mesh.
      */
-    getFileId(meshId: number): string;
+    // getFileId(meshId: number): string;
 
     /**
      * Returns the file that matches the specified file id.
      * @param fileId The id of the file.
      */
-    getFile(fileId: string): File3D;
+    // getFile(fileId: string): File3D;
 
     /**
      * Gets all of the files.
      */
-    getFiles(): File3D[];
+    // getFiles(): File3D[];
 
     /**
      * Gets all of the objects.
      */
-    getObjects(): File3D[];
+    // getObjects(): File3D[];
 
     /**
      * Gets all of the workspaces.
      */
-    getWorkspaces(): File3D[];
+    // getWorkspaces(): File3D[];
+
+    /**
+     * Gets the list of contexts that this game view contains.
+     */
+    getContexts(): BuilderContext3D[];
 }

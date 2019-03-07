@@ -11,14 +11,16 @@ import { keys, minBy, flatMap } from 'lodash';
 import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance, posToKey } from '../../../shared/scene/hex';
 import { isFormula } from '@yeti-cgi/aux-common/Files/FileCalculations';
 import { BaseFileDragOperation } from './BaseFileDragOperation';
+import { BuilderContext3D } from 'aux-web/shared/scene/BuilderContext3D';
+import { AuxFile3D } from 'aux-web/shared/scene/AuxFile3D';
 
 /**
  * File Drag Operation handles dragging of files for mouse and touch input.
  */
 export class FileDragOperation extends BaseFileDragOperation {
 
-    private _workspace: File3D;
-    private _attachWorkspace: File3D;
+    private _workspace: BuilderContext3D;
+    private _attachWorkspace: BuilderContext3D;
     private _attachPoint: Axial;
 
     private _workspaceDelta: Vector3;
@@ -28,7 +30,7 @@ export class FileDragOperation extends BaseFileDragOperation {
      * @param input the input module to interface with.
      * @param buttonId the button id of the input that this drag operation is being performed with. If desktop this is the mouse button
      */
-    constructor(gameView: GameView, interaction: InteractionManager, hit: Intersection, files: File[], workspace: File3D) {
+    constructor(gameView: GameView, interaction: InteractionManager, hit: Intersection, files: AuxFile3D[], workspace: BuilderContext3D) {
         super(gameView, interaction, files);
 
         this._workspace = workspace;
@@ -37,7 +39,7 @@ export class FileDragOperation extends BaseFileDragOperation {
             // calculate the delta needed to be applied to the pointer
             // positions to have the pointer drag around the originally tapped point
             // instead of where the anchor is.
-            this._workspaceDelta = new Vector3().copy(this._workspace.mesh.position).sub(hit.point);
+            this._workspaceDelta = new Vector3().copy(this._workspace.position).sub(hit.point);
             this._workspaceDelta.setY(0);
         }
     }

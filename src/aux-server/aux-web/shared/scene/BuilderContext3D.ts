@@ -3,7 +3,7 @@ import { WorkspaceMesh } from "./WorkspaceMesh";
 import { FileMesh } from "./FileMesh";
 import { GameObject } from "./GameObject";
 import { FileCalculationContext, TagUpdatedEvent, hasValue, calculateFileValue } from "@yeti-cgi/aux-common";
-import { difference } from "lodash";
+import { difference, flatMap } from "lodash";
 import { Context3D } from "./Context3D";
 
 /**
@@ -37,6 +37,13 @@ export class BuilderContext3D extends GameObject {
         super();
         this.file = file;
         this.contexts = new Map();
+    }
+
+    /**
+     * Gets the files that are contained by this builder context.
+     */
+    getFiles() {
+        return flatMap([...this.contexts.values()], c => [...c.files.values()]);
     }
 
     frameUpdate() {
@@ -76,12 +83,12 @@ export class BuilderContext3D extends GameObject {
 
     /**
      * Notifies the builder context that the given file was removed from the state.
-     * @param file The file that was removed.
+     * @param id The ID of the file that was removed.
      * @param calc The file calculation context that should be used.
      */
-    fileRemoved(file: AuxFile, calc: FileCalculationContext) {
+    fileRemoved(id: string, calc: FileCalculationContext) {
         this.contexts.forEach(context => {
-            context.fileRemoved(file, calc);
+            context.fileRemoved(id, calc);
         });
     }
 
