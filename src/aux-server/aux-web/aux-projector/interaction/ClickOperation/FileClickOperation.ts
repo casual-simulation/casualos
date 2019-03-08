@@ -7,15 +7,19 @@ import {
     UserMode,
     File,
     duplicateFile,
-    AuxFile
+    AuxFile,
+    FileCalculationContext,
+    getFileIndex,
+    getFilePosition
 } from '@yeti-cgi/aux-common';
 import { Physics } from '../../../shared/scene/Physics';
 import { WorkspaceMesh } from '../../../shared/scene/WorkspaceMesh';
 import { appManager } from '../../../shared/AppManager';
 import { BaseFileClickOperation } from './BaseFileClickOperation';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
-import { AuxFile3D } from 'aux-web/shared/scene/AuxFile3D';
-import { ContextGroup3D } from 'aux-web/shared/scene/ContextGroup3D';
+import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
+import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
+import { objectsAtGridPosition } from '../../../shared/scene/SceneUtils';
 
 /**
  * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
@@ -31,15 +35,19 @@ export class FileClickOperation extends BaseFileClickOperation {
         this._hit = hit;
     }
 
-    protected _createDragOperation(): BaseFileDragOperation {
+    protected _createDragOperation(calc: FileCalculationContext): BaseFileDragOperation {
+        // TODO: Be able to use different domains
         const workspace = this._file.tags['builder.context'] ? this._file3D : null;
         if (!this._file.tags['builder.context']) {
-            const fileWorkspace = this._file.tags._workspace ? this._interaction.findWorkspaceForMesh(this._file3D) : null;
-            if (fileWorkspace && this._file.tags._position) {
-                const gridPosition = new Vector2(this._file.tags._position.x, this._file.tags._position.y);
-                const objects = this._interaction.objectsAtGridPosition(fileWorkspace, gridPosition);
+            const file3D: AuxFile3D = <AuxFile3D>this._file3D;
+            const fileWorkspace = this._interaction.findWorkspaceForMesh(this._file3D);
+            const position = getFilePosition(calc, file3D.file, file3D.context);
+            if (fileWorkspace && position) {
+                const objects = objectsAtGridPosition(calc, fileWorkspace, position);
                 const file = this._file;
-                const draggedObjects = objects.filter(o => o.tags._index >= file.tags._index);
+                const index = getFileIndex(calc, file, file3D.context);
+                const draggedObjects = objects.filter(o => getFileIndex(calc, o.file, o.context) >= index)
+                    .map(o => o.file);
                 return new FileDragOperation(this._gameView, this._interaction, this._hit, draggedObjects, <ContextGroup3D>workspace);
             }
         }
@@ -60,15 +68,19 @@ export class FileClickOperation extends BaseFileClickOperation {
 
             if (!this._interaction.isInCorrectMode(this._file) && this._gameView.selectedRecentFile) {
                 // Create file at clicked workspace position.
-                let workspaceMesh = (<ContextGroup3D>this._file3D).surface;
+                const workspace = <ContextGroup3D>this._file3D;
+                let workspaceMesh = workspace.surface;
                 let closest = workspaceMesh.closestTileToPoint(this._hit.point);
 
                 if (closest) {
+                    const context = this._interaction.firstContextInWorkspace(workspace);
                     let newFile = duplicateFile(this._gameView.selectedRecentFile, {
                         tags: {
-                            _position: { x: closest.tile.gridPosition.x, y: closest.tile.gridPosition.y, z: closest.tile.localPosition.y },
-                            _workspace: this._file.id,
-                            _index: 0
+                            [context]: true,
+                            [`${context}.x`]: closest.tile.gridPosition.x,
+                            [`${context}.y`]: closest.tile.gridPosition.y,
+                            [`${context}.z`]: closest.tile.localPosition.y,
+                            [`${context}.index`]: 0
                         }
                     });
 

@@ -659,19 +659,44 @@ export function tagMatchesFilter(tag: string, file: Object, eventName: string, c
 }
 
 /**
+ * Gets the index that the given file is at in the given context.
+ * @param calc The calculation context to use.
+ * @param file The file.
+ * @param workspaceId The context.
+ */
+export function getFileIndex(calc: FileCalculationContext, file: File, context: string): number {
+    return calculateNumericalTagValue(calc, file, `${context}.index`, 0);
+}
+
+/**
+ * Gets the position that the given file is at in the given context.
+ * @param calc The calculation context to use.
+ * @param file The file.
+ * @param context The context.
+ */
+export function getFilePosition(calc: FileCalculationContext, file: File, context: string): { x: number, y: number, z: number} {
+    return {
+        x: calculateNumericalTagValue(calc, file, `${context}.x`, 0),
+        y: calculateNumericalTagValue(calc, file, `${context}.y`, 0),
+        z: calculateNumericalTagValue(calc, file, `${context}.z`, 0)
+    };
+}
+
+
+/**
  * Filters the given list of objects to those matching the given workspace ID and grid position.
  * The returned list is in the order of their indexes.
  * @param objects The objects to filter.
  * @param workspaceId The ID of the workspace that the objects need to be on.
  * @param position The position that the objects need to be at.
  */
-export function objectsAtWorkspaceGridPosition(objects: File[], workspaceId: string, position: Object['tags']['_position']) {
-    return sortBy(objects.filter(o => {
+export function objectsAtWorkspaceGridPosition(objects: File[], workspaceId: string, position: Object['tags']['_position']): File[] {
+    return <File[]>sortBy(objects.filter(o => {
         return o.tags._workspace === workspaceId &&
             o.tags._position &&
             o.tags._position.x === position.x &&
             o.tags._position.y === position.y
-    }), o => o.tags._index || 0);
+    }), o => o.tags[`${workspaceId}.index`] || 0);
 }
 
 /**

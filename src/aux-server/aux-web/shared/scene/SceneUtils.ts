@@ -3,8 +3,9 @@ import { Text3D } from './Text3D';
 import robotoFont from '../public/bmfonts/Roboto.json';
 import robotoTexturePath from '../public/bmfonts/Roboto.png';
 import { IGameView } from '../IGameView';
-import { flatMap } from 'lodash';
-import { calculateNumericalTagValue, FileCalculationContext, File } from '@yeti-cgi/aux-common';
+import { flatMap, sortBy } from 'lodash';
+import { calculateNumericalTagValue, FileCalculationContext, File, getFilePosition, getFileIndex } from '@yeti-cgi/aux-common';
+import { ContextGroup3D } from './ContextGroup3D';
 
 export function createSphere(position: Vector3, color: number, size: number = 0.1) {
     const sphereMaterial = new MeshBasicMaterial({
@@ -176,4 +177,20 @@ export function calculateScale(context: FileCalculationContext, obj: File, multi
     const scaleZ = calculateNumericalTagValue(context, obj, `${prefix}scale.z`, defaultScale);
 
     return new Vector3(scaleX * multiplier, scaleZ * multiplier, scaleY * multiplier);
+}
+
+/**
+ * Finds the files on the given workspace and at the given grid position.
+ * @param workspace The workspace.
+ * @param gridPosition The grid position that the files should be retrieved for.
+ */
+export function objectsAtGridPosition(calc: FileCalculationContext, workspace: ContextGroup3D, gridPosition: { x: number, y: number }) {
+    return sortBy(workspace.getFiles().filter(f => {
+        if (workspace.contexts.has(f.context)) {
+            const position = getFilePosition(calc, f.file, f.context);
+            return position.x === gridPosition.x &&
+                position.y === gridPosition.y;
+        }
+        return false;
+    }), f => getFileIndex(calc, f.file, f.context));
 }

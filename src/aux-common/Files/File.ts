@@ -9,9 +9,6 @@ export type Workspace = File;
 export interface File {
     id: string;
     tags: {
-        grid?: {
-            [key: string]: WorkspaceHex;
-        } | null,
         
         _rotation?: {
             x?: number;
@@ -21,7 +18,6 @@ export interface File {
         _hidden?: boolean;
         _selection?: string;
         _destroyed?: any;
-        _index?: number;
         _user?: string;
         _userContext?: string;
         _mode?: UserMode;

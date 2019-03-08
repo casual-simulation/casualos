@@ -3,7 +3,7 @@ import { Vector2, Vector3, Intersection } from 'three';
 import { IOperation } from '../IOperation';
 import GameView from '../../GameView/GameView';
 import { InteractionManager } from '../InteractionManager';
-import { UserMode, File } from '@yeti-cgi/aux-common';
+import { UserMode, File, FileCalculationContext } from '@yeti-cgi/aux-common';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
 
 /**
@@ -33,7 +33,7 @@ export abstract class BaseFileClickOperation implements IOperation {
         this._startScreenPos = this._gameView.input.getMouseScreenPos();
     }
 
-    public update(): void {
+    public update(calc: FileCalculationContext): void {
         if (this._finished) return;
 
         // Update drag operation if one is active.
@@ -42,7 +42,7 @@ export abstract class BaseFileClickOperation implements IOperation {
                 this._dragOperation.dispose();
                 this._dragOperation = null;
             } else {
-                this._dragOperation.update();
+                this._dragOperation.update(calc);
             }
         }
 
@@ -67,7 +67,7 @@ export abstract class BaseFileClickOperation implements IOperation {
                     this._triedDragging = true;
 
                     if (this._interaction.isInCorrectMode(this._file) && this._canDragFile(this._file)) {
-                        this._dragOperation = this._createDragOperation();
+                        this._dragOperation = this._createDragOperation(calc);
                     }
                 }
 
@@ -97,7 +97,7 @@ export abstract class BaseFileClickOperation implements IOperation {
 
     protected abstract _performClick(): void;
 
-    protected _createDragOperation(): BaseFileDragOperation {
+    protected _createDragOperation(calc: FileCalculationContext): BaseFileDragOperation {
         throw new Error('Not implemented.');
     }
 

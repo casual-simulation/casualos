@@ -8,7 +8,7 @@ import { WorkspaceMesh } from '../../../shared/scene/WorkspaceMesh';
 import { File, Workspace, Object, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated } from '@yeti-cgi/aux-common/Files';
 import { keys, minBy, flatMap } from 'lodash';
 import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance, posToKey } from '../../../shared/scene/hex';
-import { isFormula } from '@yeti-cgi/aux-common/Files/FileCalculations';
+import { isFormula, FileCalculationContext } from '@yeti-cgi/aux-common/Files/FileCalculations';
 import { BaseFileDragOperation } from './BaseFileDragOperation';
 import { ContextGroup3D } from 'aux-web/shared/scene/ContextGroup3D';
 import { AuxFile3D } from 'aux-web/shared/scene/AuxFile3D';
@@ -52,7 +52,7 @@ export class FileDragOperation extends BaseFileDragOperation {
         }
     }
 
-    protected _dragWorkspace() {
+    protected _dragWorkspace(calc: FileCalculationContext) {
         const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.mainCamera);
         const point = Physics.pointOnPlane(mouseDir, this._gameView.groundPlane);
 

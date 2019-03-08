@@ -17,7 +17,10 @@ import {
     isMinimized,
     AuxObject,
     AuxFile,
-    objectsAtWorkspaceGridPosition
+    objectsAtWorkspaceGridPosition,
+    getFileIndex,
+    FileCalculationContext,
+    getFilePosition
 } from '@yeti-cgi/aux-common';
 import { FileClickOperation } from './ClickOperation/FileClickOperation';
 import GameView from '../GameView/GameView';
@@ -35,6 +38,7 @@ import { EmptyClickOperation } from './ClickOperation/EmptyClickOperation';
 import { NewFileClickOperation } from './ClickOperation/NewFileClickOperation';
 import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
+import { objectsAtGridPosition } from '../../shared/scene/SceneUtils';
 
 export class InteractionManager {
 
@@ -72,9 +76,10 @@ export class InteractionManager {
 
     public update(): void {
 
+        const calc = this._gameView.fileManager.createContext();
         // Update active operations and dispose of any that are finished.
         this._operations = this._operations.filter((o) => {
-            o.update();
+            o.update(calc);
 
             if (o.isFinished()) {
                 o.dispose();
@@ -246,6 +251,8 @@ export class InteractionManager {
 
         if (mesh instanceof ContextGroup3D) {
             return mesh;
+        } else if (mesh instanceof AuxFile3D) {
+            return mesh.contextGroup;
         } else {
             return this.findWorkspaceForMesh(mesh.parent);
         }
@@ -420,14 +427,14 @@ export class InteractionManager {
      * @param gridPosition The grid position that the file is being dragged to.
      * @param file The file that is being dragged.
      */
-    public calculateFileDragPosition(workspace: ContextGroup3D, gridPosition: Vector2, ...files: File[]) {
-        const objs = differenceBy(this.objectsAtGridPosition(workspace, gridPosition), files, f => f.id);
+    public calculateFileDragPosition(calc: FileCalculationContext, workspace: ContextGroup3D, gridPosition: Vector2, ...files: File[]) {
+        const objs = differenceBy(objectsAtGridPosition(calc, workspace, gridPosition), files, f => f.id);
 
         const canCombine = objs.length === 1 && 
             files.length === 1 &&
-            this.canCombineFiles(files[0], objs[0]);
+            this.canCombineFiles(files[0], objs[0].file);
 
-        const index = this._nextAvailableObjectIndex(workspace, gridPosition, files, objs);
+        const index = this._nextAvailableObjectIndex(calc, workspace, gridPosition, files, objs);
 
         return {
             combine: canCombine,
@@ -444,13 +451,13 @@ export class InteractionManager {
      * @param files The files that we're trying to find the next index for.
      * @param objs The objects at the same grid position.
      */
-    private _nextAvailableObjectIndex(workspace: ContextGroup3D, gridPosition: Vector2, files: File[], objs: File[]): number {
-        const except = differenceBy(objs, files, f => f.id);
+    private _nextAvailableObjectIndex(calc: FileCalculationContext, workspace: ContextGroup3D, gridPosition: Vector2, files: File[], objs: AuxFile3D[]): number {
+        const except = differenceBy(objs, files, f => f instanceof AuxFile3D ? f.file.id : f.id);
 
         const indexes = except.map(o => ({
             object: o,
             // TODO: Replace with context index
-            index: o.tags._index || 0
+            index: getFileIndex(calc, o.file, o.context)
         }));
 
         // TODO: Improve to handle other scenarios like:
@@ -471,19 +478,6 @@ export class InteractionManager {
     }
 
     /**
-     * Finds the files on the given workspace and at the given grid position.
-     * @param workspace The workspace.
-     * @param gridPosition The grid position that the files should be retrieved for.
-     */
-    public objectsAtGridPosition(workspace: ContextGroup3D, gridPosition: Vector2) {
-        return objectsAtWorkspaceGridPosition(workspace.getFiles().map(f => f.file), workspace.file.id, {
-            x: gridPosition.x,
-            y: gridPosition.y,
-            z: 0
-        });
-    }
-
-    /**
      * Determines if the two files can be combined and includes the resolved events if so.
      * @param file The first file.
      * @param other The second file.
@@ -495,6 +489,17 @@ export class InteractionManager {
             return tags.length > 0;
         }
         return false;
+    }
+
+    /**
+     * Gets the first context that the given workspace has.
+     */
+    public firstContextInWorkspace(workspace: ContextGroup3D): string {
+        const contexts = [...workspace.contexts.keys()];
+        if (contexts.length > 0) {
+            return contexts[0];
+        }
+        return null;
     }
 
     public isFile(hit: Intersection): boolean {

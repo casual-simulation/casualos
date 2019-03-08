@@ -83,7 +83,7 @@ export class NewFileDragOperation extends BaseFileDragOperation {
 
     protected _combineFiles(eventName: string) {
         if (this._fileAdded) {
-            this._gameView.fileManager.action(this._file, this._other, eventName);
+            this._gameView.fileManager.action(this._file, this._other.file, eventName);
         }
     }
 

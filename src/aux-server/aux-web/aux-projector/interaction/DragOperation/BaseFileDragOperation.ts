@@ -15,7 +15,8 @@ import {
     PartialFile, 
     FileEvent,
     updateFile,
-    AuxFile
+    AuxFile,
+    FileCalculationContext
 } from '@yeti-cgi/aux-common';
 
 import { setParent } from '../../../shared/scene/SceneUtils';
@@ -35,7 +36,7 @@ export abstract class BaseFileDragOperation implements IOperation {
     protected _finished: boolean;
     protected _lastScreenPos: Vector2;
     protected _combine: boolean;
-    protected _other: File;
+    protected _other: AuxFile3D;
     protected _context: string;
 
     private _freeDragGroup: Group;
@@ -55,7 +56,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         this._context = null;
     }
 
-    public update(): void {
+    public update(calc: FileCalculationContext): void {
         if (this._finished) return;
 
         if (this._gameView.input.getMouseButtonHeld(0)) {
@@ -64,9 +65,9 @@ export abstract class BaseFileDragOperation implements IOperation {
             if (!curScreenPos.equals(this._lastScreenPos)) {
 
                 if (this._file && this._file.tags['builder.context']) {
-                    this._dragWorkspace();
+                    this._dragWorkspace(calc);
                 } else {
-                    this._dragFiles();
+                    this._dragFiles(calc);
                 }
 
                 this._lastScreenPos = curScreenPos;
@@ -114,20 +115,20 @@ export abstract class BaseFileDragOperation implements IOperation {
         }
     }
 
-    protected _dragFiles() {
+    protected _dragFiles(calc: FileCalculationContext) {
         const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.mainCamera);
         const { good, gridPosition, height, workspace } = this._interaction.pointOnGrid(mouseDir);
 
         if (this._files.length > 0) {
             if (good) {
-                this._dragFilesOnWorkspace(workspace, gridPosition, height);
+                this._dragFilesOnWorkspace(calc, workspace, gridPosition, height);
             } else {
                 this._dragFilesFree();
             }
         }
     }
 
-    protected _dragFilesOnWorkspace(workspace: ContextGroup3D, gridPosition: Vector2, height: number): void {
+    protected _dragFilesOnWorkspace(calc: FileCalculationContext, workspace: ContextGroup3D, gridPosition: Vector2, height: number): void {
         if (this._freeDragGroup) {
             this._releaseFreeDragGroup(this._freeDragGroup);
             this._freeDragGroup = null;
@@ -136,7 +137,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         this._showGrid(workspace);
 
         // calculate index for file
-        const result = this._calcWorkspaceDragPosition(workspace, gridPosition);
+        const result = this._calcWorkspaceDragPosition(calc, workspace, gridPosition);
 
         this._combine = result.combine;
         this._other = result.other;
@@ -165,10 +166,10 @@ export abstract class BaseFileDragOperation implements IOperation {
         // }
     }
 
-    protected _dragWorkspace(): void {}
+    protected _dragWorkspace(calc: FileCalculationContext): void {}
 
     protected _combineFiles(eventName: string) {
-        this._gameView.fileManager.action(this._file, this._other, eventName);
+        this._gameView.fileManager.action(this._file, this._other.file, eventName);
     }
 
 
@@ -189,23 +190,20 @@ export abstract class BaseFileDragOperation implements IOperation {
     protected _updateFilesPositions(files: File[], workspace: ContextGroup3D, gridPosition: Vector2, height: number, index: number) {
         let previousContext: string = null;
         if (!workspace.contexts.get(this._context)){
-            const contexts = [...workspace.contexts.keys()];
-            if (contexts.length > 0) {
-                previousContext = this._context;
-                this._context = contexts[0];
-            }
+            const next = this._interaction.firstContextInWorkspace(workspace);
+            previousContext = this._context;
+            this._context = next;
         }
 
         let events: FileEvent[] = [];
         for (let i = 0; i < files.length; i++) {
-            // TODO: Replace with context
             let tags = {
                 tags: {
                     [this._context]: true,
                     [`${this._context}.x`]: gridPosition.x,
                     [`${this._context}.y`]: gridPosition.y,
                     [`${this._context}.z`]: height,
-                    _index: index + i
+                    [`${this._context}.index`]: index + i
                 }
             };
             if (previousContext) {
@@ -222,8 +220,8 @@ export abstract class BaseFileDragOperation implements IOperation {
         return fileUpdated(file.id, data);
     }
 
-    protected _calcWorkspaceDragPosition(workspace: ContextGroup3D, gridPosition: Vector2) {
-        return this._interaction.calculateFileDragPosition(workspace, gridPosition, ...this._files);
+    protected _calcWorkspaceDragPosition(calc: FileCalculationContext, workspace: ContextGroup3D, gridPosition: Vector2) {
+        return this._interaction.calculateFileDragPosition(calc, workspace, gridPosition, ...this._files);
     }
 
     protected _showGrid(workspace: ContextGroup3D): void {
