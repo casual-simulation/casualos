@@ -82,9 +82,9 @@ export class ContextGroup3D extends GameObject {
         return flatMap([...this.contexts.values()], c => [...c.files.values()]);
     }
 
-    frameUpdate() {
+    frameUpdate(calc: FileCalculationContext) {
         this.contexts.forEach(context => {
-            context.frameUpdate();
+            context.frameUpdate(calc);
         });
     }
 

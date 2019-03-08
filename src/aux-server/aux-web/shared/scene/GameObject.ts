@@ -18,8 +18,8 @@ export class GameObject extends Object3D {
     /**
      * Runs any logic that the object needs to do each frame.
      */
-    frameUpdate() {
-    }
+    // frameUpdate() {
+    // }
 
     /**
      * Allows object to clean itself up before being removed.

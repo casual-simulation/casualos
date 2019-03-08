@@ -8,6 +8,7 @@ import { ContextPositionDecorator } from "./decorators/ContextPositionDecorator"
 import { MeshCubeDecorator } from "./decorators/MeshCubeDecorator";
 import { ContextGroup3D } from "./ContextGroup3D";
 import { ScaleDecorator } from "./decorators/ScaleDecorator";
+import { LabelDecorator } from "./decorators/LabelDecorator";
 
 /**
  * Defines a class that is able to display Aux files.
@@ -69,6 +70,7 @@ export class AuxFile3D extends GameObject {
             new ScaleDecorator(),
             new ContextPositionDecorator(),
             new MeshCubeDecorator(),
+            new LabelDecorator(this)
         ];
     }
 
@@ -108,9 +110,9 @@ export class AuxFile3D extends GameObject {
         // TODO:
     }
     
-    frameUpdate(): void {
+    frameUpdate(calc: FileCalculationContext): void {
         if (this.decorators) {
-            this.decorators.forEach(d => d.frameUpdate());
+            this.decorators.forEach(d => d.frameUpdate(calc));
         }
     }
 

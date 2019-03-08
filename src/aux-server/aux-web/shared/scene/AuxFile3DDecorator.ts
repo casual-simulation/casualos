@@ -6,6 +6,6 @@ import { FileCalculationContext } from "@yeti-cgi/aux-common";
  */
 export interface AuxFile3DDecorator {
     fileUpdated(file3D: AuxFile3D, calc: FileCalculationContext): void;
-    frameUpdate(): void;
+    frameUpdate(calc: FileCalculationContext): void;
     dispose(): void;
 }

@@ -183,7 +183,6 @@ export class WorkspaceMesh extends GameObject {
     }
 
     public frameUpdate() {
-        super.frameUpdate();
     }
 
     public dispose() {

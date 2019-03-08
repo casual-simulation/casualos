@@ -17,8 +17,8 @@ export function createSphere(position: Vector3, color: number, size: number = 0.
     return sphere;
 }
 
-export function createLabel(gameView: IGameView, parent: Object3D): Text3D {
-    const label = new Text3D(gameView, parent, robotoFont, robotoTexturePath);
+export function createLabel(): Text3D {
+    const label = new Text3D(robotoFont, robotoTexturePath);
     return label;
 }
 

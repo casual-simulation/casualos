@@ -26,7 +26,7 @@ import { setLayer } from "./SceneUtils";
 
 var sdfShader = require('three-bmfont-text/shaders/sdf');
 
-export class Text3D {
+export class Text3D extends Object3D {
 
     public static Debug_BoundingBox: boolean = false;
 
@@ -60,7 +60,6 @@ export class Text3D {
     // The bounding box for the text 3d.
     private _boundingBox: Box3;
 
-    private _gameView: IGameView;
     private _bboxHelper: Box3Helper;
 
     /**
@@ -80,13 +79,11 @@ export class Text3D {
 
     /**
      * Create text 3d.
-     * @param parent the object3d the text will be parented to. This can be the scene or another object3d.
      * @param fontData  the bmfont data in json format
      * @param fontTexturePath the path to the texture atlas for the font.
      */
-    constructor(gameView: IGameView, parent: Object3D, fontData: string, fontTexturePath: string) {
-
-        this._gameView = gameView;
+    constructor(fontData: string, fontTexturePath: string) {
+        super();
 
         if (!Text3D.FontTextures[fontTexturePath]) {
             // Load font texture and store it for other 3d texts to use.
@@ -122,8 +119,7 @@ export class Text3D {
         this._mesh.rotateX(ThreeMath.degToRad(180));
 
         // Add the label anchor as aa child of the file mesh.
-        parent.add(this._anchor);
-        // this._gameView.scene.add(this._anchor);
+        this.add(this._anchor);
         this.updateBoundingBox();
     }
 
@@ -198,7 +194,7 @@ export class Text3D {
         box.applyMatrix4(matrix);
 
         this._boundingBox = box;
-        this._updateDebugBoundingBox();
+        // this._updateDebugBoundingBox();
     }
 
     /**
@@ -267,15 +263,6 @@ export class Text3D {
         this.updateBoundingBox();
     }
 
-    /**
-     * Set the parent of this text 3d.
-     * @param parent The object 3d to attach this text 3d under.
-     */
-    public setParent(parent: Object3D) {
-        SceneUtils.detach(this._anchor, this._anchor.parent, this._gameView.scene);
-        SceneUtils.attach(this._anchor, this._gameView.scene, parent);
-    }
-
     public setRotation(x?: number, y?: number, z?: number) {
         let nextRotation = new Euler().copy(this._anchor.rotation);
         if (!(x === null || typeof x === 'undefined')) {
@@ -301,7 +288,6 @@ export class Text3D {
 
         if (!this._bboxHelper) {
             this._bboxHelper = new Box3Helper(this._boundingBox, new Color(0, 1, 0));
-            this._gameView.scene.add(this._bboxHelper);
         }
 
         (<any>this._bboxHelper).box = this._boundingBox;
