@@ -32,7 +32,7 @@ export class NewFileDragOperation extends BaseFileDragOperation {
      * @param buttonId the button id of the input that this drag operation is being performed with. If desktop this is the mouse button
      */
     constructor(gameView: GameView, interaction: InteractionManager, duplicatedFile: File) {
-        super(gameView, interaction, [duplicatedFile]);
+        super(gameView, interaction, [duplicatedFile], null);
     }
 
     protected _updateFile(file: File, data: PartialFile): FileEvent {

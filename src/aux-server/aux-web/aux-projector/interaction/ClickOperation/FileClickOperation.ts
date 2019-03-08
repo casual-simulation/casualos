@@ -47,14 +47,19 @@ export class FileClickOperation extends BaseFileClickOperation {
             const position = getFilePosition(calc, file3D.file, file3D.context);
             if (fileWorkspace && position) {
                 const objects = objectsAtGridPosition(calc, fileWorkspace, position);
+                if (objects.length === 0) {
+                    console.log('Found no objects at', position);
+                    console.log(file3D.file);
+                    console.log(file3D.context);
+                }
                 const file = this._file;
                 const index = getFileIndex(calc, file, file3D.context);
                 const draggedObjects = objects.filter(o => getFileIndex(calc, o.file, o.context) >= index)
                     .map(o => o.file);
-                return new FileDragOperation(this._gameView, this._interaction, this._hit, draggedObjects, <ContextGroup3D>workspace);
+                return new FileDragOperation(this._gameView, this._interaction, this._hit, draggedObjects, <ContextGroup3D>workspace, file3D.context);
             }
         }
-        return new FileDragOperation(this._gameView, this._interaction, this._hit, [this._file3D.file], <ContextGroup3D>workspace);
+        return new FileDragOperation(this._gameView, this._interaction, this._hit, [this._file3D.file], <ContextGroup3D>workspace, null);
     }
 
     protected _performClick(calc: FileCalculationContext): void {

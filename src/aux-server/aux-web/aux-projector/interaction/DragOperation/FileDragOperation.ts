@@ -30,8 +30,8 @@ export class FileDragOperation extends BaseFileDragOperation {
      * @param input the input module to interface with.
      * @param buttonId the button id of the input that this drag operation is being performed with. If desktop this is the mouse button
      */
-    constructor(gameView: GameView, interaction: InteractionManager, hit: Intersection, files: File[], workspace: ContextGroup3D) {
-        super(gameView, interaction, files);
+    constructor(gameView: GameView, interaction: InteractionManager, hit: Intersection, files: File[], workspace: ContextGroup3D, context: string) {
+        super(gameView, interaction, files, context);
 
         this._workspace = workspace;
 

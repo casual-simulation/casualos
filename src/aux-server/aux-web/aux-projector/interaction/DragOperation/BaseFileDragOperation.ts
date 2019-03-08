@@ -48,12 +48,12 @@ export abstract class BaseFileDragOperation implements IOperation {
      * @param input the input module to interface with.
      * @param buttonId the button id of the input that this drag operation is being performed with. If desktop this is the mouse button
      */
-    constructor(gameView: GameView, interaction: InteractionManager, files: File[]) {
+    constructor(gameView: GameView, interaction: InteractionManager, files: File[], context: string) {
         this._gameView = gameView;
         this._interaction = interaction;
         this._setFiles(files);
         this._lastScreenPos = this._gameView.input.getMouseScreenPos();
-        this._context = null;
+        this._context = context;
     }
 
     public update(calc: FileCalculationContext): void {
