@@ -91,11 +91,9 @@ export class FileDragOperation extends BaseFileDragOperation {
 
             this._gameView.fileManager.updateFile(this._workspace.file, {
                 tags: {
-                    position: {
-                        x: final.x,
-                        y: final.y,
-                        z: final.z
-                    }
+                    'builder.context.x': final.x,
+                    'builder.context.y': final.y,
+                    'builder.context.z': final.z
                 }
             });
         }

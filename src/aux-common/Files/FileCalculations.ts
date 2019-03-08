@@ -682,6 +682,20 @@ export function getFilePosition(calc: FileCalculationContext, file: File, contex
     };
 }
 
+/**
+ * Gets the position that the context should be at using the given file.
+ * @param calc The calculation context to use.
+ * @param contextFile The file that represents the context.
+ * @param domain The domain.
+ */
+export function getContextPosition(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): { x: number, y: number, z: number } {
+    return {
+        x: calculateNumericalTagValue(calc, contextFile, `${domain}.context.x`, 0),
+        y: calculateNumericalTagValue(calc, contextFile, `${domain}.context.y`, 0),
+        z: calculateNumericalTagValue(calc, contextFile, `${domain}.context.z`, 0)
+    };
+}
+
 
 /**
  * Filters the given list of objects to those matching the given workspace ID and grid position.

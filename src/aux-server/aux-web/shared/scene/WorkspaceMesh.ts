@@ -134,9 +134,6 @@ export class WorkspaceMesh extends GameObject {
         this.visible = !!this.workspace.tags[`${this.domain}.context`];
         this.container.visible = !this.workspace.tags[`${this.domain}.context.minimized`];
         this.miniHex.visible = !this.container.visible;
-        this.position.x = this.workspace.tags[`${this.domain}.context.x`] || 0;
-        this.position.y = this.workspace.tags[`${this.domain}.context.y`] || 0;
-        this.position.z = this.workspace.tags[`${this.domain}.context.z`] || 0;
 
         let gridUpdate: GridCheckResults = this._debugInfo.gridCheckResults;
 

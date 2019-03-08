@@ -1,10 +1,11 @@
 import { AuxFile } from "@yeti-cgi/aux-common/aux-format";
 import { WorkspaceMesh } from "./WorkspaceMesh";
 import { GameObject } from "./GameObject";
-import { FileCalculationContext, TagUpdatedEvent, hasValue, calculateFileValue, AuxDomain } from "@yeti-cgi/aux-common";
+import { FileCalculationContext, TagUpdatedEvent, hasValue, calculateFileValue, AuxDomain, getContextPosition } from "@yeti-cgi/aux-common";
 import { difference, flatMap } from "lodash";
 import { Context3D } from "./Context3D";
 import { GridChecker } from "./grid/GridChecker";
+import { Object3D } from "three";
 
 /**
  * Defines a class that represents a visualization of a context for the AUX Builder.
@@ -13,6 +14,8 @@ import { GridChecker } from "./grid/GridChecker";
  * Whether or not anything is visualized in the context depends on the file tags.
  */
 export class ContextGroup3D extends GameObject {
+
+    private _childColliders: Object3D[];
 
     /**
      * The file that this context represents.
@@ -36,6 +39,18 @@ export class ContextGroup3D extends GameObject {
 
     // TODO: Move this to a builder specific class
     private _checker: GridChecker;
+
+    get colliders() {
+        if (this.surface) {
+            return flatMap([this._childColliders, this.surface.colliders]);
+        } else {
+            return this._childColliders;
+        }
+    }
+
+    set colliders(value: Object3D[]) {
+        this._childColliders = value;
+    }
 
     setGridChecker(gridChecker: GridChecker) {
         this._checker = gridChecker;
@@ -135,6 +150,11 @@ export class ContextGroup3D extends GameObject {
             }
             
             this.surface.update(file);
+            const position = getContextPosition(calc, this.file, this.domain);
+
+            this.position.x = position.x;
+            this.position.y = position.y;
+            this.position.z = position.z;
         }
     }
 
@@ -150,7 +170,7 @@ export class ContextGroup3D extends GameObject {
             const currentContexts = this.currentContexts();
             const missingContexts = difference(contexts, currentContexts);
             const removedContexts = difference(currentContexts, contexts);
-            const newContexts = missingContexts.map(c => new Context3D(c, this, this.domain, this.colliders));
+            const newContexts = missingContexts.map(c => new Context3D(c, this, this.domain, this._childColliders));
 
             newContexts.forEach(c => {
                 this.contexts.set(c.context, c);
