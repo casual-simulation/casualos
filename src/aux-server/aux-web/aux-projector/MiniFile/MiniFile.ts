@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Inject, Watch, Prop } from 'vue-property-decorator';
-import { Object } from '@yeti-cgi/aux-common';
+import { Object, AuxFile } from '@yeti-cgi/aux-common';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { appManager } from '../../shared/AppManager';
 
@@ -11,7 +11,7 @@ import { appManager } from '../../shared/AppManager';
 })
 export default class MiniFile extends Vue {
 
-    @Prop() file: Object;
+    @Prop() file: AuxFile;
     @Prop({ default: false }) large: boolean;
     @Prop({ default: false }) selected: boolean;
 
@@ -22,7 +22,7 @@ export default class MiniFile extends Vue {
     @Inject() fileRenderer: FileRenderer;
 
     @Watch('file')
-    private async _fileChanged(file: Object) {
+    private async _fileChanged(file: AuxFile) {
         this.image = await this.fileRenderer.render(file);
         let label = file.tags.label;
         if (label) {

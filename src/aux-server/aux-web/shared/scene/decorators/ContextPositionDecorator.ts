@@ -31,25 +31,6 @@ export class ContextPositionDecorator implements AuxFile3DDecorator {
 }
 
 /**
- * Calculates the position of the file and returns it.
- * @param file The file.
- * @param scale The workspace scale. Usually calculated from the workspace scale.
- */
-// export function calculateObjectPositionOnWorkspace(context: FileCalculationContext, file: File, scale: number): Vector3 {
-    
-    
-//     const objectsAtPosition = objectsAtWorkspaceGridPosition(context.objects, file.tags._workspace, file.tags._position);
-//     const sortedByIndex = sortBy(objectsAtPosition, o => o.tags._index || 0);
-//     const index = file.tags._index || 0;
-//     const objectsBelowThis = sortedByIndex.slice(0, index);
-//     const totalScales = sumBy(objectsBelowThis, obj => calculateNumericalTagValue(context, obj, 'scale.z', 1));
-
-//     const indexOffset = new Vector3(0, totalScales * scale, 0);
-//     localPosition.add(indexOffset);
-//     return localPosition;
-// }
-
-/**
  * 
  * @param context The file calculation context to use to calculate forumula values.
  * @param file The file to calculate position for.
