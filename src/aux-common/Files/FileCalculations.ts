@@ -480,7 +480,11 @@ export function createWorkspace(id = uuid()): Workspace {
             'builder.context.scale': DEFAULT_WORKSPACE_SCALE,
             'builder.context.defaultHeight': DEFAULT_WORKSPACE_HEIGHT,
             'builder.context.grid.scale': DEFAULT_WORKSPACE_GRID_SCALE,
-            'builder.context.color': DEFAULT_WORKSPACE_COLOR
+            'builder.context.color': DEFAULT_WORKSPACE_COLOR,
+            [builderContextId]: true,
+            [`${builderContextId}.x`]: 0,
+            [`${builderContextId}.y`]: 0,
+            [`${builderContextId}.z`]: DEFAULT_WORKSPACE_HEIGHT
         }
     };
 }

@@ -40,14 +40,12 @@ export default class FileRow extends Vue {
     }
 
     valueChanged(file: AuxFile, tag: string, value: string) {
-        if (!file.tags['builder.context']) {
-            this.$emit('tagChanged', tag);
-            this.fileManager.updateFile(file, {
-                tags: {
-                    [tag]: value,
-                }
-            });
-        }
+        this.$emit('tagChanged', tag);
+        this.fileManager.updateFile(file, {
+            tags: {
+                [tag]: value,
+            }
+        });
     }
 
     focus() {

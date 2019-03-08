@@ -3,8 +3,10 @@ import { Vector2, Vector3, Intersection } from 'three';
 import { IOperation } from '../IOperation';
 import GameView from '../../GameView/GameView';
 import { InteractionManager } from '../InteractionManager';
-import { UserMode, File, FileCalculationContext } from '@yeti-cgi/aux-common';
+import { UserMode, File, FileCalculationContext, AuxFile } from '@yeti-cgi/aux-common';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
+import { AuxFile3D } from 'aux-web/shared/scene/AuxFile3D';
+import { ContextGroup3D } from 'aux-web/shared/scene/ContextGroup3D';
 
 /**
  * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
@@ -17,16 +19,18 @@ export abstract class BaseFileClickOperation implements IOperation {
     protected _interaction: InteractionManager;
     protected _mode: UserMode;
     protected _file: File;
+    protected _file3D: AuxFile3D | ContextGroup3D | null;
     protected _finished: boolean;
     protected _triedDragging: boolean;
 
     protected _startScreenPos: Vector2;
     protected _dragOperation: BaseFileDragOperation;
 
-    constructor(mode: UserMode, gameView: GameView, interaction: InteractionManager, file: File) {
+    constructor(mode: UserMode, gameView: GameView, interaction: InteractionManager, file: File, file3D: AuxFile3D | ContextGroup3D | null) {
         this._gameView = gameView;
         this._interaction = interaction;
         this._file = file;
+        this._file3D = file3D;
         this._mode = mode;
         
         // Store the screen position of the input when the click occured.
@@ -66,7 +70,7 @@ export abstract class BaseFileClickOperation implements IOperation {
                     // Attempt to start dragging now that we've crossed the threshold.
                     this._triedDragging = true;
 
-                    if (this._interaction.isInCorrectMode(this._file) && this._canDragFile(this._file)) {
+                    if (this._interaction.isInCorrectMode(this._file3D) && this._canDragFile(this._file)) {
                         this._dragOperation = this._createDragOperation(calc);
                     }
                 }

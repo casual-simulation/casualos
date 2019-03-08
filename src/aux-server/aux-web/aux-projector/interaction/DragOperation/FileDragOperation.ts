@@ -44,6 +44,14 @@ export class FileDragOperation extends BaseFileDragOperation {
         }
     }
 
+    protected _drag(calc: FileCalculationContext) {
+        if (this._workspace) {
+            this._dragWorkspace(calc);
+        } else {
+            this._dragFiles(calc);
+        }
+    }
+
     protected _disposeCore() {
         if (this._attachWorkspace) {
             this._attachWorkspaces();
@@ -97,8 +105,8 @@ export class FileDragOperation extends BaseFileDragOperation {
             this._gameView.fileManager.updateFile(this._workspace.file, {
                 tags: {
                     'builder.context.x': final.x,
-                    'builder.context.y': final.y,
-                    'builder.context.z': final.z
+                    'builder.context.y': final.z,
+                    'builder.context.z': final.y
                 }
             });
         }

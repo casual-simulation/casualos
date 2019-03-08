@@ -11,7 +11,7 @@ import { BaseFileClickOperation } from './BaseFileClickOperation';
 export class NewFileClickOperation extends BaseFileClickOperation {
 
     constructor(mode: UserMode, gameView: GameView, interaction: InteractionManager, file: File) {
-        super(mode, gameView, interaction, file);
+        super(mode, gameView, interaction, file, null);
     }
     
     protected _performClick(): void {

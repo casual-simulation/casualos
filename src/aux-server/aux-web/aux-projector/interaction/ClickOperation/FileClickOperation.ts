@@ -26,19 +26,22 @@ import { objectsAtGridPosition } from '../../../shared/scene/SceneUtils';
  */
 export class FileClickOperation extends BaseFileClickOperation {
 
-    private _file3D: AuxFile3D | ContextGroup3D;
     private _hit: Intersection;
 
     constructor(mode: UserMode, gameView: GameView, interaction: InteractionManager, file: AuxFile3D | ContextGroup3D, hit: Intersection) {
-        super(mode, gameView, interaction, file.file);
+        super(mode, gameView, interaction, file.file, file);
         this._file3D = file;
         this._hit = hit;
     }
 
+    protected _getWorkspace(): ContextGroup3D | null {
+        return this._file3D instanceof ContextGroup3D ? this._file3D : null;
+    }
+
     protected _createDragOperation(calc: FileCalculationContext): BaseFileDragOperation {
         // TODO: Be able to use different domains
-        const workspace = this._file.tags['builder.context'] ? this._file3D : null;
-        if (!this._file.tags['builder.context']) {
+        const workspace = this._getWorkspace();
+        if (!workspace) {
             const file3D: AuxFile3D = <AuxFile3D>this._file3D;
             const fileWorkspace = this._interaction.findWorkspaceForMesh(this._file3D);
             const position = getFilePosition(calc, file3D.file, file3D.context);
@@ -55,20 +58,20 @@ export class FileClickOperation extends BaseFileClickOperation {
     }
 
     protected _performClick(calc: FileCalculationContext): void {
+        const workspace = this._getWorkspace();
         // If we let go of the mouse button without starting a drag operation, this constitues a 'click'.
-        if (!this._file.tags['builder.context']) {
+        if (!workspace) {
 
-            if (this._interaction.isInCorrectMode(this._file)) {
+            if (this._interaction.isInCorrectMode(this._file3D)) {
                 // Select the file we are operating on.
                 this._interaction.selectFile(<AuxFile3D>this._file3D);
             }
 
             // If we're clicking on a workspace show the context menu for it.
-        } else if(this._file.tags['builder.context']) {
+        } else if(workspace) {
 
-            if (!this._interaction.isInCorrectMode(this._file) && this._gameView.selectedRecentFile) {
+            if (!this._interaction.isInCorrectMode(this._file3D) && this._gameView.selectedRecentFile) {
                 // Create file at clicked workspace position.
-                const workspace = <ContextGroup3D>this._file3D;
                 let workspaceMesh = workspace.surface;
                 let closest = workspaceMesh.closestTileToPoint(this._hit.point);
 

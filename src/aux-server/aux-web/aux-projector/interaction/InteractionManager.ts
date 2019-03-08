@@ -144,7 +144,7 @@ export class InteractionManager {
                             let fileClickOperation = new FileClickOperation(this.mode, this._gameView, this, file, clickedObject);
                             this._operations.push(fileClickOperation);
 
-                            if (this.isInCorrectMode(file.file)) {
+                            if (this.isInCorrectMode(file)) {
                                 this._cameraControls.enabled = false;
                             } else {
                                 this._cameraControls.enabled = true;
@@ -297,8 +297,11 @@ export class InteractionManager {
      * Determines if we're in the correct mode to manipulate the given file.
      * @param file The file.
      */
-    public isInCorrectMode(file: File) {
-        if (file.tags['builder.context']) {
+    public isInCorrectMode(file: AuxFile3D | ContextGroup3D) {
+        if (!file) {
+            return true;
+        }
+        if (file instanceof ContextGroup3D) {
             return this.mode === 'worksurfaces';
         } else {
             return this.mode === 'files';
@@ -354,7 +357,7 @@ export class InteractionManager {
      * Calculates the grid location and workspace that the given ray intersects with.
      * @param ray The ray to test.
      */
-    public pointOnGrid(ray: Ray) {
+    public pointOnGrid(calc: FileCalculationContext, ray: Ray) {
         const raycaster = new Raycaster(ray.origin, ray.direction, 0, Number.POSITIVE_INFINITY);
         const workspaces = this.getSurfaceObjects();
         const hits = raycaster.intersectObjects(workspaces, true);
@@ -362,7 +365,7 @@ export class InteractionManager {
         if (hit) {
             const point = hit.point;
             const workspace = this.findWorkspaceForIntersection(hit);
-            if (workspace && workspace.file.tags['builder.context'] && !workspace.file.tags.minimized) {
+            if (workspace && workspace.file.tags[`${workspace.domain}.context`] && !getContextMinimized(calc, workspace.file, workspace.domain)) {
                 const workspaceMesh = workspace.surface;
                 const closest = workspaceMesh.closestTileToPoint(point);
 
@@ -489,6 +492,7 @@ export class InteractionManager {
      * @param other The second file.
      */
     public canCombineFiles(file: Object, other: Object): boolean {
+        // TODO: Make this work even if the file is a "workspace"
         if (file && other && !file.tags['builder.context'] && !other.tags['builder.context'] && file.id !== other.id) {
             const context = this._gameView.fileManager.createContext();
             const tags = union(tagsMatchingFilter(file, other, '+', context), tagsMatchingFilter(other, file, '+', context));
@@ -551,7 +555,7 @@ export class InteractionManager {
 
         if (file) {
 
-            if (file instanceof ContextGroup3D && file.file.tags['builder.context']) {
+            if (file instanceof ContextGroup3D && file.file.tags[`${file.domain}.context`]) {
                 
                 const tile = this._worldPosToGridPos(calc, file, point);
                 const currentTile = file.file.tags.grid ? file.file.tags.grid[posToKey(tile)] : null;
@@ -560,7 +564,7 @@ export class InteractionManager {
                 const minHeight = DEFAULT_WORKSPACE_MIN_HEIGHT; // TODO: This too
                 const minimized = isMinimized(calc, file.file, file.domain);
                 
-                if (this.isInCorrectMode(file.file)) {
+                if (this.isInCorrectMode(file)) {
                     if (!minimized) {
                         actions.push({ label: 'Raise', onClick: () => this.updateTileHeightAtGridPosition(file, tile, currentHeight + increment) });
                         if (currentTile && currentHeight - increment >= minHeight) {

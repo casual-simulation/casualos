@@ -64,11 +64,7 @@ export abstract class BaseFileDragOperation implements IOperation {
 
             if (!curScreenPos.equals(this._lastScreenPos)) {
 
-                if (this._file && this._file.tags['builder.context']) {
-                    this._dragWorkspace(calc);
-                } else {
-                    this._dragFiles(calc);
-                }
+                this._drag(calc);
 
                 this._lastScreenPos = curScreenPos;
             }
@@ -96,7 +92,7 @@ export abstract class BaseFileDragOperation implements IOperation {
 
     protected _onDragReleased(): void {
         // Button has been released.
-        if (this._freeDragGroup && !this._files[0].tags['builder.context']) {
+        if (this._freeDragGroup) {
             // Destroy files if free dragging them (trash can)!
             this._destroyFiles(this._files);
         }
@@ -115,9 +111,13 @@ export abstract class BaseFileDragOperation implements IOperation {
         }
     }
 
+    protected _drag(calc: FileCalculationContext) {
+        this._dragFiles(calc);
+    }
+
     protected _dragFiles(calc: FileCalculationContext) {
         const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.mainCamera);
-        const { good, gridPosition, height, workspace } = this._interaction.pointOnGrid(mouseDir);
+        const { good, gridPosition, height, workspace } = this._interaction.pointOnGrid(calc, mouseDir);
 
         if (this._files.length > 0) {
             if (good) {
@@ -165,8 +165,6 @@ export abstract class BaseFileDragOperation implements IOperation {
         //     this._freeDragGroup.updateMatrixWorld(true);
         // }
     }
-
-    protected _dragWorkspace(calc: FileCalculationContext): void {}
 
     protected _combineFiles(eventName: string) {
         this._gameView.fileManager.action(this._file, this._other.file, eventName);
