@@ -255,13 +255,15 @@ export function isFilterTag(tag: string) {
 }
 
 export const WELL_KNOWN_TAGS = [
-    '_position',
-    '_hidden',
-    '_destroyed',
-    '_index',
-    '_workspace',
-    '_lastEditedBy',
-    '_lastActiveTime'
+    /\.x$/,
+    /\.y$/,
+    /\.z$/,
+    /_hidden$/,
+    /_destroyed$/,
+    /\.index$/,
+    /_lastEditedBy/,
+    /_lastActiveTime/,
+    /^_context_/,
 ];
 
 /**
@@ -270,8 +272,10 @@ export const WELL_KNOWN_TAGS = [
  * @param includeSelectionTags Whether to include selection tags.
  */
 export function isTagWellKnown(tag: string, includeSelectionTags: boolean = true): boolean {
-    if (WELL_KNOWN_TAGS.indexOf(tag) >= 0) {
-        return true;
+    for (let i = 0; i < WELL_KNOWN_TAGS.length; i++) {
+        if (WELL_KNOWN_TAGS[i].test(tag)) {
+            return true;
+        }
     }
 
     if (includeSelectionTags && tag.indexOf('_selection_') === 0) {
@@ -463,7 +467,7 @@ export function createFile(id = uuid(), tags: Object['tags'] = {}) {
  * Creates a new Workspace with default values.
  */
 export function createWorkspace(id = uuid()): Workspace {
-    const builderContextId = uuid();
+    const builderContextId = `_context_${uuid()}`;
     return {
         id: id,
         tags: {
