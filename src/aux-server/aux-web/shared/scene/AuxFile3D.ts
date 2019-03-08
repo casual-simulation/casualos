@@ -1,7 +1,7 @@
 import { GameObject } from "./GameObject";
 import { AuxFile } from "@yeti-cgi/aux-common/aux-format";
 import { Object3D, Mesh, SceneUtils, Box3, Sphere, Group } from "three";
-import { File, TagUpdatedEvent, FileCalculationContext, AuxDomain } from "@yeti-cgi/aux-common";
+import { File, TagUpdatedEvent, FileCalculationContext, AuxDomain, isFileInContext } from "@yeti-cgi/aux-common";
 import { createCube } from "./SceneUtils";
 import { AuxFile3DDecorator } from "./AuxFile3DDecorator";
 import { ContextPositionDecorator } from "./decorators/ContextPositionDecorator";
@@ -91,8 +91,10 @@ export class AuxFile3D extends GameObject {
     fileUpdated(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
         // TODO: Add the ability for decorators to update when other files
         // get updated. (like arrows)
-        if (file.id === this.file.id) {
-            this.file = file;
+        if (this._shouldUpdate(calc, file)) {
+            if (file.id === this.file.id) {
+                this.file = file;
+            }
             this.decorators.forEach(d => d.fileUpdated(this, calc));
         }
     }
@@ -118,5 +120,10 @@ export class AuxFile3D extends GameObject {
             this.decorators.forEach(d => { d.dispose(); });
         }
     }
+
+    private _shouldUpdate(calc: FileCalculationContext, file: AuxFile): boolean {
+        return file.id === this.file.id ||
+            isFileInContext(calc, file, this.context);
+    };
 
 }
