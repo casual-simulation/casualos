@@ -540,9 +540,21 @@ export default class GameView extends Vue implements IGameView {
 
   private _fileRemoved(id: string) {
     const calc = this.fileManager.createContext();
-    this._contexts.forEach(context => {
+    let removedIndex: number = -1;
+    this._contexts.forEach((context, index) => {
         context.fileRemoved(id, calc);
+
+        if (context.file.id === id) {
+            removedIndex = index;
+        }
     });
+
+    if (removedIndex >= 0) {
+        const context = this._contexts[removedIndex];
+        this.scene.remove(context);
+        this._contexts.splice(removedIndex, 1);
+    }
+
     this.onFileRemoved.invoke(null);
 
     // const obj = this._files[id];

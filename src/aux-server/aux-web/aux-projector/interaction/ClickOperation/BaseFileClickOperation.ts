@@ -75,7 +75,7 @@ export abstract class BaseFileClickOperation implements IOperation {
         } else {
 
             if (!this._dragOperation && !this._triedDragging) {
-                this._performClick();
+                this._performClick(calc);
             }
 
             // Button has been released. This click operation is finished.
@@ -95,7 +95,7 @@ export abstract class BaseFileClickOperation implements IOperation {
         }
     }
 
-    protected abstract _performClick(): void;
+    protected abstract _performClick(calc: FileCalculationContext): void;
 
     protected _createDragOperation(calc: FileCalculationContext): BaseFileDragOperation {
         throw new Error('Not implemented.');

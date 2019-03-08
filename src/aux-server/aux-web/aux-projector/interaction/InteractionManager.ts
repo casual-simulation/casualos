@@ -20,7 +20,11 @@ import {
     objectsAtWorkspaceGridPosition,
     getFileIndex,
     FileCalculationContext,
-    getFilePosition
+    getFilePosition,
+    getContextMinimized,
+    getContextGrid,
+    getContextSize,
+    getContextScale
 } from '@yeti-cgi/aux-common';
 import { FileClickOperation } from './ClickOperation/FileClickOperation';
 import GameView from '../GameView/GameView';
@@ -183,7 +187,7 @@ export class InteractionManager {
 
     }
 
-    public showContextMenu() {
+    public showContextMenu(calc: FileCalculationContext) {
         const input = this._gameView.input;
         const pagePos = input.getMousePagePos();
         const screenPos = input.getMouseScreenPos();
@@ -192,7 +196,7 @@ export class InteractionManager {
 
         this._cameraControls.enabled = false;
         const file = this.fileForIntersection(hit);
-        const actions = this._contextMenuActions(file, hit.point, pagePos);
+        const actions = this._contextMenuActions(calc, file, hit.point, pagePos);
 
         if (actions) {
             // Now send the actual context menu event.
@@ -278,12 +282,12 @@ export class InteractionManager {
         }
     }
 
-    public expandWorkspace(file: ContextGroup3D) {
+    private expandWorkspace(calc: FileCalculationContext, file: ContextGroup3D) {
         if (file) {
-            const size = file.file.tags.size;
+            const size = getContextSize(calc, file.file, file.domain);
             this._gameView.fileManager.updateFile(file.file, {
                 tags: {
-                    size: (size || 0) + 1
+                    [`${file.domain}.context.size`]: (size || 0) + 1
                 }
             });
         }
@@ -320,12 +324,12 @@ export class InteractionManager {
         });
     }
 
-    public shrinkWorkspace(file: ContextGroup3D) {
+    private shrinkWorkspace(calc: FileCalculationContext, file: ContextGroup3D) {
         if (file && file.file.tags['builder.context']) {
-            const size = file.file.tags.size;
+            const size = getContextSize(calc, file.file, file.domain);
             this._gameView.fileManager.updateFile(file.file, {
                 tags: {
-                    size: (size || 0) - 1
+                    [`${file.domain}.context.size`]: (size || 0) - 1
                 }
             });
         }
@@ -335,12 +339,12 @@ export class InteractionManager {
      * Minimizes or maximizes the given workspace.
      * @param file 
      */
-    public minimizeWorkspace(file: ContextGroup3D) {
+    private toggleWorkspace(calc: FileCalculationContext, file: ContextGroup3D) {
         if (file && file.file.tags['builder.context']) {
-            const minimized = !isMinimized(file.file);
+            const minimized = !isMinimized(calc, file.file, file.domain);
             this._gameView.fileManager.updateFile(file.file, {
                 tags: {
-                    minimized: minimized
+                    [`${file.domain}.context.minimized`]: minimized
                 }
             });
         }
@@ -383,16 +387,18 @@ export class InteractionManager {
      * @param point The point.
      * @param exclude The optional workspace to exclude from the search.
      */
-    public closestWorkspace(point: Vector3, exclude?: AuxFile3D | ContextGroup3D) {
-        const workspaceMeshes = this._gameView.getContexts().filter(context => context !== exclude && !context.file.tags.minimized);
+    public closestWorkspace(calc: FileCalculationContext, point: Vector3, exclude?: AuxFile3D | ContextGroup3D) {
+        const workspaceMeshes = this._gameView.getContexts().filter(context => context !== exclude && !getContextMinimized(calc, context.file, context.domain));
         const center = new Axial();
 
         const gridPositions = workspaceMeshes.map(mesh => {
             const w = <Workspace>mesh.file;
-            const gridPos = this._worldPosToGridPos(mesh, point);
-            const tilePositions = w.tags.grid ? keys(w.tags.grid).map(keyToPos) : [];
+            const gridPos = this._worldPosToGridPos(calc, mesh, point);
+            const grid = getContextGrid(calc, w, mesh.domain);
+            const tilePositions = grid ? keys(grid).map(keyToPos) : [];
             const distToCenter = gridDistance(center, gridPos);
-            const scaledDistance = distToCenter - (w.tags.size - 1);
+            const size = getContextSize(calc, w, mesh.domain);
+            const scaledDistance = distToCenter - (size - 1);
             const distances = [
                 { position: center, distance: scaledDistance },
                 ...tilePositions.map(pos => ({
@@ -539,7 +545,7 @@ export class InteractionManager {
         return true;
     }
 
-    private _contextMenuActions(file: AuxFile3D | ContextGroup3D, point: Vector3, pagePos: Vector2): ContextMenuAction[] {
+    private _contextMenuActions(calc: FileCalculationContext, file: AuxFile3D | ContextGroup3D, point: Vector3, pagePos: Vector2): ContextMenuAction[] {
         
         let actions: ContextMenuAction[] = [];
 
@@ -547,12 +553,12 @@ export class InteractionManager {
 
             if (file instanceof ContextGroup3D && file.file.tags['builder.context']) {
                 
-                const tile = this._worldPosToGridPos(file, point);
+                const tile = this._worldPosToGridPos(calc, file, point);
                 const currentTile = file.file.tags.grid ? file.file.tags.grid[posToKey(tile)] : null;
                 const currentHeight = (!!currentTile ? currentTile.height : (file.file.tags.defaultHeight || DEFAULT_WORKSPACE_HEIGHT)) || DEFAULT_WORKSPACE_HEIGHT;
                 const increment = DEFAULT_WORKSPACE_HEIGHT_INCREMENT; // TODO: Replace with a configurable value.
                 const minHeight = DEFAULT_WORKSPACE_MIN_HEIGHT; // TODO: This too
-                const minimized = isMinimized(file.file);
+                const minimized = isMinimized(calc, file.file, file.domain);
                 
                 if (this.isInCorrectMode(file.file)) {
                     if (!minimized) {
@@ -561,9 +567,9 @@ export class InteractionManager {
                             actions.push({ label: 'Lower', onClick: () => this.updateTileHeightAtGridPosition(file, tile, currentHeight - increment) });
                         }
                         
-                        actions.push({ label: 'Expand', onClick: () => this.expandWorkspace(file) });
+                        actions.push({ label: 'Expand', onClick: () => this.expandWorkspace(calc, file) });
                         if (this.canShrinkWorkspace(file)) {
-                            actions.push({ label: 'Shrink', onClick: () => this.shrinkWorkspace(file) });
+                            actions.push({ label: 'Shrink', onClick: () => this.shrinkWorkspace(calc, file) });
                         }
                     }
 
@@ -582,7 +588,7 @@ export class InteractionManager {
                 }
     
                 const minimizedLabel = minimized ? 'Maximize' : 'Minimize';
-                actions.push({ label: minimizedLabel, onClick: () => this.minimizeWorkspace(file) });
+                actions.push({ label: minimizedLabel, onClick: () => this.toggleWorkspace(calc, file) });
             }
 
         }
@@ -590,9 +596,9 @@ export class InteractionManager {
         return actions;
     }
 
-    private _worldPosToGridPos(file: ContextGroup3D | AuxFile3D, pos: Vector3) {
+    private _worldPosToGridPos(calc: FileCalculationContext, file: ContextGroup3D, pos: Vector3) {
         const w = file.file;
-        const scale = w.tags.scale || DEFAULT_WORKSPACE_SCALE;
+        const scale = getContextScale(calc, file.file, file.domain);
         const localPos = new Vector3().copy(pos).sub(file.position);
         return realPosToGridPos(new Vector2(localPos.x, localPos.z), scale);
     }

@@ -201,7 +201,7 @@ export class WorkspaceMesh extends GameObject {
         const positionsKeys = grid ? keys(grid) : [];
         positionsKeys.forEach(key => {
             const position = keyToPos(key);
-            const workspaceHex = this.workspace.tags[`${this.domain}.context.grid.${key}`];
+            const workspaceHex = grid[key];
             
             const hex = this.hexGrid.addAt(position);
             let nextHeight = workspaceHex.height || defaultHeight || DEFAULT_WORKSPACE_HEIGHT;

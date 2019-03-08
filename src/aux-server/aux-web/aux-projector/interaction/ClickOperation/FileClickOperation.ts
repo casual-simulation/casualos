@@ -54,7 +54,7 @@ export class FileClickOperation extends BaseFileClickOperation {
         return new FileDragOperation(this._gameView, this._interaction, this._hit, [this._file3D.file], <ContextGroup3D>workspace);
     }
 
-    protected _performClick(): void {
+    protected _performClick(calc: FileCalculationContext): void {
         // If we let go of the mouse button without starting a drag operation, this constitues a 'click'.
         if (!this._file.tags['builder.context']) {
 
@@ -87,7 +87,7 @@ export class FileClickOperation extends BaseFileClickOperation {
                     appManager.fileManager.createFile(newFile.id, newFile.tags);
                 }
             } else {
-                this._interaction.showContextMenu();
+                this._interaction.showContextMenu(calc);
             }
         }
     }

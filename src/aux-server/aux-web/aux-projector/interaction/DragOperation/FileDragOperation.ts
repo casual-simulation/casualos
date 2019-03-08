@@ -8,7 +8,7 @@ import { WorkspaceMesh } from '../../../shared/scene/WorkspaceMesh';
 import { File, Workspace, Object, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated } from '@yeti-cgi/aux-common/Files';
 import { keys, minBy, flatMap } from 'lodash';
 import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance, posToKey } from '../../../shared/scene/hex';
-import { isFormula, FileCalculationContext } from '@yeti-cgi/aux-common/Files/FileCalculations';
+import { isFormula, FileCalculationContext, getContextMinimized, getContextSize, getContextGrid } from '@yeti-cgi/aux-common/Files/FileCalculations';
 import { BaseFileDragOperation } from './BaseFileDragOperation';
 import { ContextGroup3D } from 'aux-web/shared/scene/ContextGroup3D';
 import { AuxFile3D } from 'aux-web/shared/scene/AuxFile3D';
@@ -60,9 +60,14 @@ export class FileDragOperation extends BaseFileDragOperation {
 
             // if the workspace is only 1 tile large and not minimized
             const workspace = <Workspace>this._workspace.file;
-            if (workspace.tags.size === 1 && !workspace.tags.minimized && (!workspace.tags.grid || keys(workspace.tags.grid).length === 0)) {
+            const domain = this._workspace.domain;
+            const size = getContextSize(calc, workspace, domain);
+            const minimized = getContextMinimized(calc, workspace, domain);
+            const grid = getContextGrid(calc, workspace, domain);
+            const files = this._workspace.getFiles();
+            if (size === 1 && !minimized && (!grid || keys(grid).length === 0) && files.length === 0) {
                 // check if it is close to another workspace.
-                const closest = this._interaction.closestWorkspace(point, this._workspace);
+                const closest = this._interaction.closestWorkspace(calc, point, this._workspace);
 
                 if (closest) {
                     if (closest.distance <= 1) {

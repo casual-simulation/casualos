@@ -71,8 +71,8 @@ export interface FilesStateDiff {
  * Determines if the given workspace is currently minimized.
  * @param workspace The workspace.
  */
-export function isMinimized(workspace: Workspace) {
-    return !!workspace.tags.minimized;
+export function isMinimized(calc: FileCalculationContext, workspace: Workspace, domain: AuxDomain) {
+    return getContextMinimized(calc, workspace, domain);
 }
 
 /**
@@ -683,6 +683,17 @@ export function getFilePosition(calc: FileCalculationContext, file: File, contex
 }
 
 /**
+ * Gets a value from the given context file related to the given domain.
+ * @param calc The calculation context.
+ * @param contextFile The file that represents the context.
+ * @param domain The domain.
+ * @param name The name of the value to get.
+ */
+export function getContextValue(calc: FileCalculationContext, contextFile: File, domain: string, name: string): any {
+    return calculateFileValue(calc, contextFile, `${domain}.context.${name}`);
+}
+
+/**
  * Gets the position that the context should be at using the given file.
  * @param calc The calculation context to use.
  * @param contextFile The file that represents the context.
@@ -696,6 +707,45 @@ export function getContextPosition(calc: FileCalculationContext, contextFile: Fi
     };
 }
 
+/**
+ * Gets whether the context is minimized.
+ * @param calc The calculation context to use.
+ * @param contextFile The file that represents the context.
+ * @param domain The domain.
+ */
+export function getContextMinimized(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): boolean {
+    return getContextValue(calc, contextFile, domain, 'minimized');
+}
+
+/**
+ * Gets the size of the context.
+ * @param calc The calculation context to use.
+ * @param contextFile The file that represents the context.
+ * @param domain The domain.
+ */
+export function getContextSize(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): number {
+    return getContextValue(calc, contextFile, domain, 'size');
+}
+
+/**
+ * Gets the grid of the context.
+ * @param calc The calculation context to use.
+ * @param contextFile The file that represents the context.
+ * @param domain The domain.
+ */
+export function getContextGrid(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): File['tags']['builder.context.grid'] {
+    return getContextValue(calc, contextFile, domain, 'grid');
+}
+
+/**
+ * Gets the scale of the context.
+ * @param calc The calculation context to use.
+ * @param contextFile The file that represents the context.
+ * @param domain The domain.
+ */
+export function getContextScale(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): number {
+    return getContextValue(calc, contextFile, domain, 'scale') || DEFAULT_WORKSPACE_SCALE;
+}
 
 /**
  * Filters the given list of objects to those matching the given workspace ID and grid position.
@@ -819,7 +869,6 @@ export function parseFilterTag(tag: string) {
 export function getUserMode(object: Object): UserMode {
     return object.tags._mode || DEFAULT_USER_MODE;
 }
-
 
 /**
  * Calculates the value of the given tag on the given file. If the result is not a number, then the given default value
