@@ -165,11 +165,11 @@ export default class GameView extends Vue implements IGameView {
   }
 
   public setGridsVisible(visible: boolean) {
-      // TODO:
-    // this.getWorkspaces().forEach(workspace => {
-    //   const mesh = <WorkspaceMesh>workspace.mesh;
-    //   mesh.gridsVisible = visible;
-    // });
+      this._contexts.forEach(c => {
+        if(c.surface) {
+            c.surface.gridsVisible = visible;
+        }
+      });
   }
 
   public async mounted() {
