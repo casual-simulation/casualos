@@ -123,7 +123,8 @@ export class AuxFile3D extends GameObject {
 
     private _shouldUpdate(calc: FileCalculationContext, file: AuxFile): boolean {
         return file.id === this.file.id ||
-            isFileInContext(calc, file, this.context);
+            isFileInContext(calc, file, this.context) ||
+            (this.contextGroup && this.contextGroup.file.id === file.id);
     };
 
 }

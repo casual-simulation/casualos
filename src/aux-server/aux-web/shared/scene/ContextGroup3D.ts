@@ -5,7 +5,7 @@ import { FileCalculationContext, TagUpdatedEvent, hasValue, calculateFileValue, 
 import { difference, flatMap } from "lodash";
 import { Context3D } from "./Context3D";
 import { GridChecker } from "./grid/GridChecker";
-import { Object3D } from "three";
+import { Object3D, Group } from "three";
 
 /**
  * Defines a class that represents a visualization of a context for the AUX Builder.
@@ -26,6 +26,11 @@ export class ContextGroup3D extends GameObject {
      * The workspace that this context contains.
      */
     surface: WorkspaceMesh;
+
+    /**
+     * The group that contains the contexts that this group is displaying.
+     */
+    display: Group;
 
     /**
      * The contexts that are represented by this builder context.
@@ -64,7 +69,10 @@ export class ContextGroup3D extends GameObject {
         super();
         this.domain = 'builder';
         this.file = file;
+        this.display = new Group();
         this.contexts = new Map();
+
+        this.add(this.display);
     }
 
     /**
@@ -145,7 +153,7 @@ export class ContextGroup3D extends GameObject {
      * @param updates 
      * @param calc 
      */
-    private _updateWorkspace(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
+    private async _updateWorkspace(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
         // TODO: Get this to update with the builder.context
         if (file.tags[`${this.domain}.context`]) {
             if (!this.surface) {
@@ -154,9 +162,10 @@ export class ContextGroup3D extends GameObject {
                 this.add(this.surface);
             }
             
-            this.surface.update(file);
+            await this.surface.update(calc, file);
             const position = getContextPosition(calc, this.file, this.domain);
 
+            this.display.visible = this.surface.container.visible;
             this.position.x = position.x;
             this.position.y = position.z;
             this.position.z = position.y;
@@ -179,13 +188,13 @@ export class ContextGroup3D extends GameObject {
 
             newContexts.forEach(c => {
                 this.contexts.set(c.context, c);
-                this.add(c);
+                this.display.add(c);
             });
             removedContexts.forEach(c => {
                 const context = this.contexts.get(c);
                 if (typeof context !== 'undefined') {
                     this.contexts.delete(c);
-                    this.remove(context);
+                    this.display.remove(context);
                 }
             });
         }

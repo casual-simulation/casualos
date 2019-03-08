@@ -6,7 +6,17 @@ import {
     DEFAULT_WORKSPACE_SCALE,
     DEFAULT_WORKSPACE_GRID_SCALE,
     DEFAULT_MINI_WORKSPACE_SCALE,
-    AuxDomain
+    AuxDomain,
+    FileCalculationContext,
+    calculateFileValue,
+    getContextSize,
+    getContextDefaultHeight,
+    getContextScale,
+    getContextGrid,
+    getContextGridScale,
+    isMinimized,
+    isContext,
+    getContextColor
 } from '@yeti-cgi/aux-common/Files';
 import { keys, minBy } from 'lodash';
 import { GridChecker, GridCheckResults } from './grid/GridChecker';
@@ -97,7 +107,8 @@ export class WorkspaceMesh extends GameObject {
      */
     showDebugInfo(debug: boolean) {
         this._debug = debug;
-        this.update(undefined, true);
+        // TODO: Fix sometime
+        // this.update(undefined, true);
     }
 
     /**
@@ -120,27 +131,27 @@ export class WorkspaceMesh extends GameObject {
     /**
      * Updates the mesh with the new workspace data and optionally updates the square grid using the given
      * grid checker.
+     * @param calc The file calculation context.
      * @param workspace The new workspace data. If not provided the mesh will re-update using the existing data.
      * @param force Whether to force the workspace to update everything, even aspects that have not changed.
      */
-    async update(workspace?: AuxFile, force?: boolean) {
+    async update(calc: FileCalculationContext, workspace?: AuxFile, force?: boolean) {
         if (!workspace) {
             return;
         }
         const prev = this.workspace;
         this.workspace = (workspace) || prev;
 
-        // TODO: Be able to use formulas
-        this.visible = !!this.workspace.tags[`${this.domain}.context`];
-        this.container.visible = !this.workspace.tags[`${this.domain}.context.minimized`];
+        this.visible = !!isContext(calc, this.workspace, this.domain);
+        this.container.visible = !isMinimized(calc, this.workspace, this.domain);
         this.miniHex.visible = !this.container.visible;
 
         let gridUpdate: GridCheckResults = this._debugInfo.gridCheckResults;
 
-        if (this._gridChanged(this.workspace, prev) || force) {
-            this.updateHexGrid();
+        if (this._gridChanged(this.workspace, prev, calc) || force) {
+            this.updateHexGrid(calc);
             if (this._checker) {
-                gridUpdate = await this.updateSquareGrids(this._checker);
+                gridUpdate = await this.updateSquareGrids(this._checker, calc);
 
                 if (this._debugMesh) {
                     this.remove(this._debugMesh);
@@ -153,8 +164,7 @@ export class WorkspaceMesh extends GameObject {
             }
         }
 
-        // TODO: Be able to use formulas
-        const colorValue = this.workspace.tags[`${this.domain}.context.color`];
+        const colorValue = getContextColor(calc, this.workspace, this.domain);
         if (colorValue) {
             let color = new Color(colorValue);
             let hexes = this.hexGrid.hexes;
@@ -183,21 +193,20 @@ export class WorkspaceMesh extends GameObject {
     /**
      * Updates the hex grid to match the workspace data.
      */
-    public updateHexGrid() {
+    public updateHexGrid(calc: FileCalculationContext) {
         if (this.hexGrid) {
             this.container.remove(this.hexGrid);
         }
         
-        // TODO: Be able to use formulas
-        const size = this.workspace.tags[`${this.domain}.context.size`];
-        const defaultHeight = this.workspace.tags[`${this.domain}.context.defaultHeight`];
-        const scale = this.workspace.tags[`${this.domain}.context.scale`];
+        const size = getContextSize(calc, this.workspace, this.domain);
+        const defaultHeight = getContextDefaultHeight(calc, this.workspace, this.domain);
+        const scale = getContextScale(calc, this.workspace, this.domain);
         this.hexGrid = HexGridMesh.createFilledInHexGrid(
             size, 
             defaultHeight || DEFAULT_WORKSPACE_HEIGHT, 
             scale || DEFAULT_WORKSPACE_SCALE);
         
-        const grid = this.workspace.tags[`${this.domain}.context.grid`];
+        const grid = getContextGrid(calc, this.workspace, this.domain);
         const positionsKeys = grid ? keys(grid) : [];
         positionsKeys.forEach(key => {
             const position = keyToPos(key);
@@ -219,13 +228,12 @@ export class WorkspaceMesh extends GameObject {
      * Updates the square grid to match the workspace data.
      * @param checker The grid checker to use.
      */
-    async updateSquareGrids(checker: GridChecker) {
+    async updateSquareGrids(checker: GridChecker, calc: FileCalculationContext) {
         if (this.squareGrids) {
             this.container.remove(...this.squareGrids);
         }
 
-        // TODO: Be able to use formulas
-        const gridScale = this.workspace.tags[`${this.domain}.context.grid.scale`];
+        const gridScale = getContextGridScale(calc, this.workspace, this.domain);
         checker.tileRatio = gridScale || DEFAULT_WORKSPACE_GRID_SCALE;
         const results = await checker.check(this.hexGrid);
         const levels = results.levels;
@@ -235,15 +243,22 @@ export class WorkspaceMesh extends GameObject {
         return results;
     }
 
-    private _gridChanged(current: AuxFile, previous: AuxFile) {
-        if (!previous || current.tags[`${this.domain}.context.size`] !== previous.tags[`${this.domain}.context.size`]) {
+    private _gridChanged(current: AuxFile, previous: AuxFile, calc: FileCalculationContext) {
+        if (!previous) {
             return true;
         } else {
-            const currentGrid = current.metadata.tags[`${this.domain}.context.grid`];
-            const previousGrid = previous.metadata.tags[`${this.domain}.context.grid`];
+            const currentSize = getContextSize(calc, current, this.domain);
+            const previousSize = getContextSize(calc, previous, this.domain);
+            if (currentSize !== previousSize) {
+                return true;
+            } else {
 
-            return !(currentGrid === previousGrid ||
-                (currentGrid && previousGrid && idEquals(currentGrid.value.ref.atom.id, previousGrid.value.ref.atom.id)));
+                const currentGrid = current.metadata.tags[`${this.domain}.context.grid`];
+                const previousGrid = previous.metadata.tags[`${this.domain}.context.grid`];
+                
+                return !(currentGrid === previousGrid ||
+                    (currentGrid && previousGrid && idEquals(currentGrid.value.ref.atom.id, previousGrid.value.ref.atom.id)));
+            }
         }
     }
 }

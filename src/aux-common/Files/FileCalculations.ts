@@ -76,6 +76,13 @@ export function isMinimized(calc: FileCalculationContext, workspace: Workspace, 
 }
 
 /**
+ * Determines if the given file contains data for a context.
+ */
+export function isContext(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): boolean {
+    return calculateFileValue(calc, contextFile, `${domain}.context`);
+}
+
+/**
  * Filters the given list of files by whether they belong to the given selection.
  * @param files The files to filter.
  * @param selectionId The selection to check.
@@ -726,6 +733,16 @@ export function getContextMinimized(calc: FileCalculationContext, contextFile: F
 }
 
 /**
+ * Gets the color of the context.
+ * @param calc The calculation context to use.
+ * @param contextFile The file that represents the context.
+ * @param domain The domain.
+ */
+export function getContextColor(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): string {
+    return getContextValue(calc, contextFile, domain, 'color');
+}
+
+/**
  * Gets the size of the context.
  * @param calc The calculation context to use.
  * @param contextFile The file that represents the context.
@@ -745,6 +762,17 @@ export function getContextGrid(calc: FileCalculationContext, contextFile: File, 
     return getContextValue(calc, contextFile, domain, 'grid');
 }
 
+
+/**
+ * Gets the grid scale of the context.
+ * @param calc The calculation context to use.
+ * @param contextFile The file that represents the context.
+ * @param domain The domain.
+ */
+export function getContextGridScale(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): number {
+    return getContextValue(calc, contextFile, domain, 'grid.scale');
+}
+
 /**
  * Gets the scale of the context.
  * @param calc The calculation context to use.
@@ -753,6 +781,16 @@ export function getContextGrid(calc: FileCalculationContext, contextFile: File, 
  */
 export function getContextScale(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): number {
     return getContextValue(calc, contextFile, domain, 'scale') || DEFAULT_WORKSPACE_SCALE;
+}
+
+/**
+ * Gets the default height of the context.
+ * @param calc The calculation context to use.
+ * @param contextFile The file that represents the context.
+ * @param domain The domain.
+ */
+export function getContextDefaultHeight(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): number {
+    return getContextValue(calc, contextFile, domain, 'defaultHeight');
 }
 
 /**
