@@ -86,6 +86,11 @@ export class ContextGroup3D extends GameObject {
      * @param calc The file calculation context that should be used.
      */
     fileAdded(file: AuxFile, calc: FileCalculationContext) {
+        if (file.id === this.file.id) {
+            this.file = file;
+            this._updateContexts(file, calc);
+        }
+        
         this.contexts.forEach(context => {
             context.fileAdded(file, calc);
         });
@@ -100,7 +105,7 @@ export class ContextGroup3D extends GameObject {
     async fileUpdated(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
         if (file.id === this.file.id) {
             this.file = file;
-            this._updateContexts(file, updates, calc);
+            this._updateContexts(file, calc);
             await this._updateWorkspace(file, updates, calc);
         }
         
@@ -126,7 +131,7 @@ export class ContextGroup3D extends GameObject {
      * @param newFile The new context file.
      * @param calc The file calculation context that should be used.
      */
-    private _updateContexts(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
+    private _updateContexts(file: AuxFile, calc: FileCalculationContext) {
         const contexts = calculateFileValue(calc, file, 'builder.context');
         // TODO: Handle scenarios where builder.context is empty or null
         if (contexts) {
