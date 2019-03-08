@@ -8,9 +8,11 @@ export class ScaleDecorator implements AuxFile3DDecorator {
 
 
     fileUpdated(file3D: AuxFile3D, calc: FileCalculationContext): void {
-        const gridScale = calculateGridScale(calc, file3D.contextGroup.file, file3D.domain);
-        const scale = calculateScale(calc, file3D.file, gridScale);
-        file3D.display.scale.set(scale.x, scale.y, scale.z);
+        if (file3D.contextGroup) {
+            const gridScale = calculateGridScale(calc, file3D.contextGroup.file, file3D.domain);
+            const scale = calculateScale(calc, file3D.file, gridScale);
+            file3D.display.scale.set(scale.x, scale.y, scale.z);
+        }
     }
 
     frameUpdate(): void {

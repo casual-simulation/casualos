@@ -16,8 +16,9 @@ import {
     AmbientLight,
     DirectionalLight
 } from 'three';
-import { Object, fileRemoved, merge } from '@yeti-cgi/aux-common';
+import { Object, fileRemoved, merge, AuxObject, createCalculationContext } from '@yeti-cgi/aux-common';
 import { AuxFile3D } from './AuxFile3D';
+import formulaLib from '@yeti-cgi/aux-common/Formulas/formula-lib';
 
 /**
  * Defines a class that can render a file to a transparent canvas.
@@ -80,15 +81,16 @@ export class FileRenderer {
         this._scene.add(this._group);
     }
 
-    async render(file: Object): Promise<string> {
+    async render(file: AuxObject): Promise<string> {
         file = merge(file, {
             tags: {
                 _destroyed: false
             }
         });
-
-        // TODO: Fix
-        // this._file.update(file);
+        
+        const calc = createCalculationContext([file], formulaLib);
+        this._file.file = file;
+        this._file.fileUpdated(file, [], calc);
 
         this._updateBounds();
         this._updateCamera();
@@ -121,7 +123,7 @@ export class FileRenderer {
     private _updateScene() {
         this._group.position.copy(this._worldPosition);
 
-        this._camera.position.set(this._worldPosition.x - 1, this._worldPosition.y + 1, this._worldPosition.z - 1);
+        this._camera.position.set(this._worldPosition.x - 1, this._worldPosition.y + 1.5, this._worldPosition.z - 1);
         this._camera.updateMatrixWorld(true);
     }
 
