@@ -10,7 +10,7 @@ import {
 import { Workspace, Object, File } from './File';
 import { values, assign, merge } from 'lodash';
 import uuid from 'uuid/v4';
-import { objectsAtWorkspaceGridPosition, calculateStateDiff } from './FileCalculations';
+import { objectsAtContextGridPosition, calculateStateDiff } from './FileCalculations';
 import { TestConnector } from '../channels-core/test/TestConnector';
 import { Subject } from 'rxjs';
 import { ChannelClient, StoreFactory, ReducingStateStore } from '../channels-core';

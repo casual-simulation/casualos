@@ -796,35 +796,22 @@ export function getContextDefaultHeight(calc: FileCalculationContext, contextFil
 /**
  * Filters the given list of objects to those matching the given workspace ID and grid position.
  * The returned list is in the order of their indexes.
- * @param objects The objects to filter.
- * @param workspaceId The ID of the workspace that the objects need to be on.
+ * @param calc The file calculation context to use.
+ * @param context The ID of the context that the objects need to be on.
  * @param position The position that the objects need to be at.
  */
-export function objectsAtWorkspaceGridPosition(objects: File[], workspaceId: string, position: Object['tags']['_position']): File[] {
+export function objectsAtContextGridPosition(calc: FileCalculationContext, context: string, position: { x: number, y: number }): File[] {
+    const objects = calc.objects;
     return <File[]>sortBy(objects.filter(o => {
-        return o.tags._workspace === workspaceId &&
-            o.tags._position &&
-            o.tags._position.x === position.x &&
-            o.tags._position.y === position.y
-    }), o => o.tags[`${workspaceId}.index`] || 0);
+        if (isFileInContext(calc, o, context)) {
+            const pos = getFilePosition(calc, o, context);
+            return pos && 
+                position.x === pos.x &&
+                position.y === pos.y;
+        }
+        return false;
+    }), o => getFileIndex(calc, o, context));
 }
-
-/**
- * Filters the given list of objects to those matching the given grid position.
- * The returned list is in the order of their indexes.
- * @param objects The objects to filter.
- * @param workspaceId The ID of the workspace that the objects need to be on.
- * @param position The position that the objects need to be at.
- */
-// export function objectsAtContextGridPosition(objects: Object[], contextId: string, position: Object['tags']['_position']) {
-//     return sortBy(objects.filter(o => {
-//         return o.type === 'object' && 
-//             o.tags[contextId] === workspaceId &&
-//             o.tags._position &&
-//             o.tags._position.x === position.x &&
-//             o.tags._position.y === position.y
-//     }), o => o.tags._index || 0);
-// }
 
 /**
  * Filters the given list of objects to those that are assigned to the given workspace ID.
@@ -1078,10 +1065,18 @@ class SandboxInterfaceImpl implements SandboxInterface {
       return _singleOrArray(filtered);
     }
 
-    list(obj: any) {
-        const position = obj._position;
-        const workspace = obj._workspace;
-        const objs = objectsAtWorkspaceGridPosition(this.objects, workspace, position);
+    list(obj: any, context: string) {
+        if (!context) {
+            return [];
+        }
+        const x: number = obj[`${context}.x`];
+        const y: number = obj[`${context}.y`];
+
+        if (typeof x !== 'number' || typeof y !== 'number') {
+            return [];
+        }
+
+        const objs = objectsAtContextGridPosition(this.context, context, { x, y });
         return objs;
     }
 

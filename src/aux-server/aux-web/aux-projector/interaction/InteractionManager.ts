@@ -17,7 +17,7 @@ import {
     isMinimized,
     AuxObject,
     AuxFile,
-    objectsAtWorkspaceGridPosition,
+    objectsAtContextGridPosition,
     getFileIndex,
     FileCalculationContext,
     getFilePosition,
@@ -42,7 +42,6 @@ import { EmptyClickOperation } from './ClickOperation/EmptyClickOperation';
 import { NewFileClickOperation } from './ClickOperation/NewFileClickOperation';
 import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
-import { objectsAtGridPosition } from '../../shared/scene/SceneUtils';
 
 export class InteractionManager {
 
@@ -432,18 +431,19 @@ export class InteractionManager {
     /**
      * Calculates whether the given file should be stacked onto another file or if
      * it should be combined with another file.
-     * @param workspace The workspace.
+     * @param calc The file calculation context.
+     * @param context The context.
      * @param gridPosition The grid position that the file is being dragged to.
      * @param file The file that is being dragged.
      */
-    public calculateFileDragPosition(calc: FileCalculationContext, workspace: ContextGroup3D, gridPosition: Vector2, ...files: File[]) {
-        const objs = differenceBy(objectsAtGridPosition(calc, workspace, gridPosition), files, f => f.id);
+    public calculateFileDragPosition(calc: FileCalculationContext, context: string, gridPosition: Vector2, ...files: File[]) {
+        const objs = differenceBy(objectsAtContextGridPosition(calc, context, gridPosition), files, f => f.id);
 
         const canCombine = objs.length === 1 && 
             files.length === 1 &&
-            this.canCombineFiles(files[0], objs[0].file);
+            this.canCombineFiles(files[0], objs[0]);
 
-        const index = this._nextAvailableObjectIndex(calc, workspace, gridPosition, files, objs);
+        const index = this._nextAvailableObjectIndex(calc, context, gridPosition, files, objs);
 
         return {
             combine: canCombine,
@@ -455,18 +455,18 @@ export class InteractionManager {
     /**
      * Calculates the next available index that an object can be placed at on the given workspace at the
      * given grid position.
-     * @param workspace The workspace.
+     * @param context The context.
      * @param gridPosition The grid position that the next available index should be found for.
      * @param files The files that we're trying to find the next index for.
      * @param objs The objects at the same grid position.
      */
-    private _nextAvailableObjectIndex(calc: FileCalculationContext, workspace: ContextGroup3D, gridPosition: Vector2, files: File[], objs: AuxFile3D[]): number {
+    private _nextAvailableObjectIndex(calc: FileCalculationContext, context: string, gridPosition: Vector2, files: File[], objs: File[]): number {
         const except = differenceBy(objs, files, f => f instanceof AuxFile3D ? f.file.id : f.id);
 
         const indexes = except.map(o => ({
             object: o,
             // TODO: Replace with context index
-            index: getFileIndex(calc, o.file, o.context)
+            index: getFileIndex(calc, o, context)
         }));
 
         // TODO: Improve to handle other scenarios like:
@@ -518,7 +518,7 @@ export class InteractionManager {
 
     public getDraggableObjects() {
         if (this._draggableObjectsDirty) {
-            this._draggableColliders = flatMap(this._gameView.getContexts(), f => f.colliders).filter(c => this._isVisible(c));
+            this._draggableColliders = flatMap(this._gameView.getContexts(), f => f.colliders);
             this._draggableObjectsDirty = false;
         }
         return this._draggableColliders;

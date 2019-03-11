@@ -36,8 +36,9 @@ export abstract class BaseFileDragOperation implements IOperation {
     protected _finished: boolean;
     protected _lastScreenPos: Vector2;
     protected _combine: boolean;
-    protected _other: AuxFile3D;
+    protected _other: File;
     protected _context: string;
+    private _previousContext: string;
 
     private _freeDragGroup: Group;
     private _freeDragDistance: number;
@@ -54,6 +55,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         this._setFiles(files);
         this._lastScreenPos = this._gameView.input.getMouseScreenPos();
         this._context = context;
+        this._previousContext = null;
     }
 
     public update(calc: FileCalculationContext): void {
@@ -136,12 +138,19 @@ export abstract class BaseFileDragOperation implements IOperation {
 
         this._showGrid(workspace);
 
+        this._previousContext= null;
+        if (!workspace.contexts.get(this._context)){
+            const next = this._interaction.firstContextInWorkspace(workspace);
+            this._previousContext = this._context;
+            this._context = next;
+        }
+
         // calculate index for file
-        const result = this._calcWorkspaceDragPosition(calc, workspace, gridPosition);
+        const result = this._calcWorkspaceDragPosition(calc, gridPosition);
 
         this._combine = result.combine;
         this._other = result.other;
-        this._updateFilesPositions(this._files, workspace, gridPosition, height, result.index);
+        this._updateFilesPositions(this._files, gridPosition, height, result.index);
     }
 
     protected _dragFilesFree(): void {
@@ -167,7 +176,7 @@ export abstract class BaseFileDragOperation implements IOperation {
     }
 
     protected _combineFiles(eventName: string) {
-        this._gameView.fileManager.action(this._file, this._other.file, eventName);
+        this._gameView.fileManager.action(this._file, this._other, eventName);
     }
 
 
@@ -185,13 +194,8 @@ export abstract class BaseFileDragOperation implements IOperation {
         this._gameView.fileManager.transaction(...events);
     }
 
-    protected _updateFilesPositions(files: File[], workspace: ContextGroup3D, gridPosition: Vector2, height: number, index: number) {
-        let previousContext: string = null;
-        if (!workspace.contexts.get(this._context)){
-            const next = this._interaction.firstContextInWorkspace(workspace);
-            previousContext = this._context;
-            this._context = next;
-        }
+    protected _updateFilesPositions(files: File[], gridPosition: Vector2, height: number, index: number) {
+        
 
         let events: FileEvent[] = [];
         for (let i = 0; i < files.length; i++) {
@@ -204,8 +208,8 @@ export abstract class BaseFileDragOperation implements IOperation {
                     [`${this._context}.index`]: index + i
                 }
             };
-            if (previousContext) {
-                tags.tags[previousContext] = null;
+            if (this._previousContext) {
+                tags.tags[this._previousContext] = null;
             }
              events.push(this._updateFile(files[i], tags));
         }
@@ -218,8 +222,8 @@ export abstract class BaseFileDragOperation implements IOperation {
         return fileUpdated(file.id, data);
     }
 
-    protected _calcWorkspaceDragPosition(calc: FileCalculationContext, workspace: ContextGroup3D, gridPosition: Vector2) {
-        return this._interaction.calculateFileDragPosition(calc, workspace, gridPosition, ...this._files);
+    protected _calcWorkspaceDragPosition(calc: FileCalculationContext, gridPosition: Vector2) {
+        return this._interaction.calculateFileDragPosition(calc, this._context, gridPosition, ...this._files);
     }
 
     protected _showGrid(workspace: ContextGroup3D): void {
