@@ -435,9 +435,12 @@ export class FileManager {
   private async _initUserFile() {
     this._setStatus('Updating user file...');
     let userFile = this.userFile;
+    const userContext = `_user_${appManager.user.username}_${this._aux.tree.site.id}`;
     if (!userFile) {
       await this.createFile(this._appManager.user.username, {
         _hidden: true,
+        [userContext]: true,
+        ['builder.context']: userContext,
         _user: this._appManager.user.username,
         _position: { x: 0, y: 0, z: 0},
         _mode: DEFAULT_USER_MODE,

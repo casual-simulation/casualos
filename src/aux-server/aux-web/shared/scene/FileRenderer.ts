@@ -19,6 +19,7 @@ import {
 import { Object, fileRemoved, merge, AuxObject, createCalculationContext } from '@yeti-cgi/aux-common';
 import { AuxFile3D } from './AuxFile3D';
 import formulaLib from '@yeti-cgi/aux-common/Formulas/formula-lib';
+import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
 
 /**
  * Defines a class that can render a file to a transparent canvas.
@@ -74,7 +75,7 @@ export class FileRenderer {
         this._scene.add(this._sun);
 
         this._group = new Object3D();
-        this._file = new AuxFile3D(null, null, null, 'builder', []);
+        this._file = new AuxFile3D(null, null, null, 'builder', [], new AuxFile3DDecoratorFactory(null));
         // this._file.allowNoWorkspace = true;
 
         this._group.add(this._file);

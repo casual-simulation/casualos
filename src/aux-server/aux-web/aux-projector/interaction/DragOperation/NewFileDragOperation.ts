@@ -15,6 +15,7 @@ import { merge } from '@yeti-cgi/aux-common/utils';
 import { setParent } from '../../../shared/scene/SceneUtils';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
 import { AuxFile } from '@yeti-cgi/aux-common';
+import { AuxFile3DDecoratorFactory } from '../../../shared/scene/decorators/AuxFile3DDecoratorFactory';
 
 /**
  * New File Drag Operation handles dragging of new files from the file queue.
@@ -89,7 +90,7 @@ export class NewFileDragOperation extends BaseFileDragOperation {
 
     private _createDragMesh(file: File): AuxFile3D {
         // Instance a file mesh to represent the file in its intial drag state before being added to the world.
-        let mesh = new AuxFile3D(file, null, null, null, []);
+        let mesh = new AuxFile3D(file, null, null, null, [], new AuxFile3DDecoratorFactory(null));
         // mesh.allowNoWorkspace = true;
         
         // TODO: Fix

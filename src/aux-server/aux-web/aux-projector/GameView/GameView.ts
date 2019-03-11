@@ -79,6 +79,7 @@ import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { IGameView } from '../../shared/IGameView';
 import { LayersHelper } from '../../shared/scene/LayersHelper';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
+import { AuxFile3DDecoratorFactory } from '../../shared/scene/decorators/AuxFile3DDecoratorFactory';
 
 @Component({
   components: {
@@ -117,8 +118,8 @@ export default class GameView extends Vue implements IGameView {
   public onFileRemoved: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
 
   private _contexts: ContextGroup3D[];
-
   private _subs: SubscriptionLike[];
+  private _decoratorFactory: AuxFile3DDecoratorFactory;
 
   debug: boolean = false;
   debugInfo: GameViewDebugInfo = null;
@@ -184,6 +185,7 @@ export default class GameView extends Vue implements IGameView {
     ];
     this._contexts = [];
     this._subs = [];
+    this._decoratorFactory = new AuxFile3DDecoratorFactory(this);
     this._setupScene();
     this._input = new Input(this);
     this._inputVR = new InputVR(this);
@@ -518,7 +520,7 @@ export default class GameView extends Vue implements IGameView {
   }
 
   private async _fileAdded(file: AuxFile) {
-    let context = new ContextGroup3D(file);
+    let context = new ContextGroup3D(file, this._decoratorFactory);
     context.setGridChecker(this._gridChecker);
     this._contexts.push(context);
     this.scene.add(context);

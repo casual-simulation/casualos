@@ -1,18 +1,13 @@
-import { Input } from '../../../shared/scene/Input';
-import { IOperation } from '../IOperation';
 import GameView from '../../GameView/GameView';
 import { InteractionManager } from '../InteractionManager';
-import { Ray, Intersection, Vector2, Vector3, Box3 } from 'three';
+import { Intersection, Vector3 } from 'three';
 import { Physics } from '../../../shared/scene/Physics';
-import { WorkspaceMesh } from '../../../shared/scene/WorkspaceMesh';
-import { File, Workspace, Object, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated } from '@yeti-cgi/aux-common/Files';
-import { keys, minBy, flatMap } from 'lodash';
-import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance, posToKey } from '../../../shared/scene/hex';
-import { isFormula, FileCalculationContext, getContextMinimized, getContextSize, getContextGrid } from '@yeti-cgi/aux-common/Files/FileCalculations';
+import { File, Workspace, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated } from '@yeti-cgi/aux-common/Files';
+import { keys } from 'lodash';
+import { gridPosToRealPos, Axial, posToKey } from '../../../shared/scene/hex';
+import { FileCalculationContext, getContextMinimized, getContextSize, getContextGrid } from '@yeti-cgi/aux-common/Files/FileCalculations';
 import { BaseFileDragOperation } from './BaseFileDragOperation';
-import { ContextGroup3D } from 'aux-web/shared/scene/ContextGroup3D';
-import { AuxFile3D } from 'aux-web/shared/scene/AuxFile3D';
-import { AuxFile } from '@yeti-cgi/aux-common';
+import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
 
 /**
  * File Drag Operation handles dragging of files for mouse and touch input.

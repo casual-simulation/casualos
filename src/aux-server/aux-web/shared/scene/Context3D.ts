@@ -4,6 +4,7 @@ import { FileCalculationContext, calculateFileValue, TagUpdatedEvent, AuxDomain 
 import { Object3D, SceneUtils } from "three";
 import { AuxFile3D } from "./AuxFile3D";
 import { ContextGroup3D } from "./ContextGroup3D";
+import { AuxFile3DDecoratorFactory } from "./decorators/AuxFile3DDecoratorFactory";
 
 /**
  * Defines a class that represents the visualization of a context.
@@ -30,18 +31,21 @@ export class Context3D extends GameObject {
      */
     contextGroup: ContextGroup3D;
 
+    private _decoratorFactory: AuxFile3DDecoratorFactory;
+
     /**
      * Creates a new context which represents a grouping of files.
      * @param context The tag that this context represents.
      * @param colliders The array that new colliders should be added to.
      */
-    constructor(context: string, group: ContextGroup3D, domain: AuxDomain, colliders: Object3D[]) {
+    constructor(context: string, group: ContextGroup3D, domain: AuxDomain, colliders: Object3D[], decoratorFactory: AuxFile3DDecoratorFactory) {
         super();
         this.context = context;
         this.colliders = colliders;
         this.domain = domain;
         this.contextGroup = group;
         this.files = new Map();
+        this._decoratorFactory = decoratorFactory;
     }
 
     /**
@@ -97,7 +101,7 @@ export class Context3D extends GameObject {
 
     private _addFile(file: AuxFile) {
         console.log('[Context3D] Add', file.id, 'to context', this.context);
-        const mesh = new AuxFile3D(file, this.contextGroup, this.context, this.domain, this.colliders);
+        const mesh = new AuxFile3D(file, this.contextGroup, this.context, this.domain, this.colliders, this._decoratorFactory);
         this.files.set(file.id, mesh);
         this.add(mesh);
     }

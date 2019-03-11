@@ -6,6 +6,7 @@ import { difference, flatMap } from "lodash";
 import { Context3D } from "./Context3D";
 import { GridChecker } from "./grid/GridChecker";
 import { Object3D, Group } from "three";
+import { AuxFile3DDecoratorFactory } from "./decorators/AuxFile3DDecoratorFactory";
 
 /**
  * Defines a class that represents a visualization of a context for the AUX Builder.
@@ -44,6 +45,7 @@ export class ContextGroup3D extends GameObject {
 
     // TODO: Move this to a builder specific class
     private _checker: GridChecker;
+    private _decoratorFactory: AuxFile3DDecoratorFactory;
 
     get colliders() {
         if (this.surface) {
@@ -65,12 +67,13 @@ export class ContextGroup3D extends GameObject {
      * Creates a new Builder Context 3D Object.
      * @param The file that this builder represents.
      */
-    constructor(file: AuxFile) {
+    constructor(file: AuxFile, decoratorFactory: AuxFile3DDecoratorFactory) {
         super();
         this.domain = 'builder';
         this.file = file;
         this.display = new Group();
         this.contexts = new Map();
+        this._decoratorFactory = decoratorFactory;
 
         this.add(this.display);
     }
@@ -184,7 +187,7 @@ export class ContextGroup3D extends GameObject {
             const currentContexts = this.currentContexts();
             const missingContexts = difference(contexts, currentContexts);
             const removedContexts = difference(currentContexts, contexts);
-            const newContexts = missingContexts.map(c => new Context3D(c, this, this.domain, this._childColliders));
+            const newContexts = missingContexts.map(c => new Context3D(c, this, this.domain, this._childColliders, this._decoratorFactory));
 
             newContexts.forEach(c => {
                 this.contexts.set(c.context, c);

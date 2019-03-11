@@ -9,6 +9,8 @@ import { MeshCubeDecorator } from "./decorators/MeshCubeDecorator";
 import { ContextGroup3D } from "./ContextGroup3D";
 import { ScaleDecorator } from "./decorators/ScaleDecorator";
 import { LabelDecorator } from "./decorators/LabelDecorator";
+import { UserMeshDecorator } from "./decorators/UserMeshDecorator";
+import { AuxFile3DDecoratorFactory } from "./decorators/AuxFile3DDecoratorFactory";
 
 /**
  * Defines a class that is able to display Aux files.
@@ -57,7 +59,7 @@ export class AuxFile3D extends GameObject {
         return sphere;
     }
 
-    constructor(file: File, contextGroup: ContextGroup3D, context: string, domain: AuxDomain, colliders: Object3D[]) {
+    constructor(file: File, contextGroup: ContextGroup3D, context: string, domain: AuxDomain, colliders: Object3D[], decoratorFactory: AuxFile3DDecoratorFactory) {
         super();
         this.file = file;
         this.contextGroup = contextGroup;
@@ -65,13 +67,8 @@ export class AuxFile3D extends GameObject {
         this.context = context;
         this.display = new Group();
         this.add(this.display);
-
-        this.decorators = [
-            new ScaleDecorator(),
-            new ContextPositionDecorator(),
-            new MeshCubeDecorator(),
-            new LabelDecorator(this)
-        ];
+        
+        this.decorators = decoratorFactory.loadDecorators(this);
     }
 
     /**
