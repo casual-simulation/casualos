@@ -9,7 +9,7 @@ import {
 import { Text3D } from "../Text3D";
 import { isFormula, FileCalculationContext, Object, File, AuxObject, AuxFile } from '@yeti-cgi/aux-common'
 import { appManager } from '../../AppManager';
-import { createLabel, setLayer } from "../SceneUtils";
+import { setLayer } from "../SceneUtils";
 import { LayersHelper } from "../LayersHelper";
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
@@ -77,7 +77,7 @@ export class UserMeshDecorator extends AuxFile3DDecorator {
         this.container = new Object3D();
         this.camera = new PerspectiveCamera(60, 1, 0.1, 0.5);
         this.cameraHelper = new CameraHelper(this.camera);
-        this.label = createLabel();
+        this.label = new Text3D();
         this.cameraHelper.add(this.label);
         setLayer(this.label, LayersHelper.Layer_UIWorld);
         this.label.setScale(Text3D.defaultScale * 2);

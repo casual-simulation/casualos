@@ -12,11 +12,26 @@ import {
     LinearFilter,
     Euler,
     Matrix4,
-    Box3Helper} from "three";
+    Box3Helper,
+    FontLoader} from "three";
 
+import robotoFont from '../public/bmfonts/Roboto.json';
+import robotoTexturePath from '../public/bmfonts/Roboto.png';
 import createBMFont, { TextGeometry, TextGeometryOptions } from "three-bmfont-text";
 
 var sdfShader = require('three-bmfont-text/shaders/sdf');
+
+export interface Text3DFont {
+    /**
+     * The path to the json data for the font.
+     */
+    dataPath: string;
+
+    /**
+     * The path the to texture for the font.
+     */
+    texturePath: string;
+}
 
 export class Text3D extends Object3D {
 
@@ -66,18 +81,19 @@ export class Text3D extends Object3D {
 
     /**
      * Create text 3d.
-     * @param fontData  the bmfont data in json format
-     * @param fontTexturePath the path to the texture atlas for the font.
+     * @param font what font to use for the text3d.
      */
-    constructor(fontData: string, fontTexturePath: string) {
+    constructor(font?: Text3DFont) {
         super();
 
-        if (!Text3D.FontTextures[fontTexturePath]) {
+        if (!font) font = { dataPath: robotoFont, texturePath: robotoTexturePath };
+
+        if (!Text3D.FontTextures[font.texturePath]) {
             // Load font texture and store it for other 3d texts to use.
-            Text3D.FontTextures[fontTexturePath] = new TextureLoader().load(fontTexturePath);
+            Text3D.FontTextures[font.texturePath] = new TextureLoader().load(font.texturePath);
         }
 
-        var texture = Text3D.FontTextures[fontTexturePath];
+        var texture = Text3D.FontTextures[font.texturePath];
         
         // Modify filtering of texture for optimal SDF rendering.
         // This effectively disables the use of any mip maps, allowing the SDF shader to continue
@@ -86,7 +102,7 @@ export class Text3D extends Object3D {
         texture.minFilter = LinearFilter;
         texture.magFilter = LinearFilter;
 
-        this._geometry = createBMFont({ font: fontData, text: "", flipY: true, align: "center", width: Text3D.defaultWidth });
+        this._geometry = createBMFont({ font: font.dataPath, text: "", flipY: true, align: "center", width: Text3D.defaultWidth });
         
         var material = new RawShaderMaterial(sdfShader({
             map: texture,
