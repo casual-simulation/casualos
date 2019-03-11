@@ -7,7 +7,7 @@ import {
     Euler
 } from "three";
 import { Text3D } from "../Text3D";
-import { isFormula, FileCalculationContext, Object, File, AuxObject, AuxFile } from '@yeti-cgi/aux-common'
+import { isFormula, FileCalculationContext, Object, File, AuxObject, AuxFile, getFilePosition, getFileRotation } from '@yeti-cgi/aux-common'
 import { appManager } from '../../AppManager';
 import { createLabel, setLayer } from "../SceneUtils";
 import { LayersHelper } from "../LayersHelper";
@@ -79,21 +79,23 @@ export class UserMeshDecorator implements AuxFile3DDecorator {
             this.container = new Object3D();
             this.camera = new PerspectiveCamera(60, 1, 0.1, 0.5);
             this.cameraHelper = new CameraHelper(this.camera);
-            this.label = createLabel();
-            this.cameraHelper.add(this.label);
-            setLayer(this.label, LayersHelper.Layer_UIWorld);
-            this.label.setScale(Text3D.defaultScale * 2);
-            this.label.setRotation(0, 180, 0);
+            // this.label = createLabel();
+            // this.cameraHelper.add(this.label);
+            // setLayer(this.label, LayersHelper.Layer_UIWorld);
+            // this.label.setScale(Text3D.defaultScale * 2);
+            // this.label.setRotation(0, 180, 0);
             this.container.add(this.cameraHelper);
             file3D.display.add(this.camera);
-            file3D.display.add(this.container);
+            file3D.add(this.container);
+
+            this.camera.position.set(0, 0, 0);
+            this.camera.rotation.set(0, 0, 0);
         }
 
         this.file3D = file3D;
-
+        
         this._updateCameraMatrix();
-        this._updateLabel();
-
+        // this._updateLabel();
         this.cameraHelper.update();
     }
 
@@ -103,10 +105,10 @@ export class UserMeshDecorator implements AuxFile3DDecorator {
 
         let file = <AuxObject>this.file3D.file;
 
-        const isOwnFile = !!this._mainCamera;
+        const isOwnFile = this.file3D.file.tags._user === appManager.user.username;
+
         // visible if not destroyed, has a position, and was active in the last minute
         this.container.visible = (!file.tags._destroyed &&
-            !!file.tags._position &&
             !isOwnFile &&
             this._isActive());
 
@@ -114,13 +116,8 @@ export class UserMeshDecorator implements AuxFile3DDecorator {
             const camPosition = this._mainCamera.position;
             const camRotation = this._mainCamera.rotation;
             const camRotationVector = new Vector3(0, 0, 1).applyEuler(camRotation);
-            const currentPosition = file.tags._position;
-
-            const currentRotation = file.tags._rotation ? new Euler(
-                file.tags._rotation.x,
-                file.tags._rotation.y,
-                file.tags._rotation.z,
-            ) : new Euler();
+            const currentPosition = this.file3D.display.position;
+            const currentRotation = this.file3D.display.rotation;
 
             const currentRotationVector = new Vector3(0, 0, 1).applyEuler(currentRotation);
             const distance = camPosition.distanceTo(new Vector3(currentPosition.x, currentPosition.y, currentPosition.z));
@@ -128,16 +125,12 @@ export class UserMeshDecorator implements AuxFile3DDecorator {
             if (distance > DEFAULT_USER_MOVEMENT_INCREMENT || angle > DEFAULT_USER_ROTATION_INCREMENT) {
                 appManager.fileManager.updateFile(file, {
                     tags: {
-                        _position: {
-                            x: camPosition.x,
-                            y: camPosition.y,
-                            z: camPosition.z,
-                        },
-                        _rotation: {
-                            x: camRotation.x,
-                            y: camRotation.y,
-                            z: camRotation.z,
-                        }
+                        [`${this.file3D.context}.x`]: camPosition.x,
+                        [`${this.file3D.context}.y`]: camPosition.z,
+                        [`${this.file3D.context}.z`]: camPosition.y,
+                        [`${this.file3D.context}.rotation.x`]: camRotation.x,
+                        [`${this.file3D.context}.rotation.y`]: camRotation.z,
+                        [`${this.file3D.context}.rotation.z`]: camRotation.y,
                     }
                 });
             }
@@ -172,21 +165,21 @@ export class UserMeshDecorator implements AuxFile3DDecorator {
 
 
     private _updateCameraMatrix(): void {
-        let file = this.file3D.file;
+        // let file = this.file3D.file;
 
-        if (file.tags._position) {
-            this.camera.position.set(
-                file.tags._position.x,
-                file.tags._position.y,
-                file.tags._position.z);
-        }
+        // if (file.tags._position) {
+        //     this.camera.position.set(
+        //         file.tags._position.x,
+        //         file.tags._position.y,
+        //         file.tags._position.z);
+        // }
 
-        if (file.tags._rotation) {
-            this.camera.rotation.set(
-                file.tags._rotation.x,
-                file.tags._rotation.y,
-                file.tags._rotation.z);
-        }
+        // if (file.tags._rotation) {
+        //     this.camera.rotation.set(
+        //         file.tags._rotation.x,
+        //         file.tags._rotation.y,
+        //         file.tags._rotation.z);
+        // }
 
         // We must call this function so that child objects get their positions updated too.
         // Three render function does this automatically but there are functions in here that depend

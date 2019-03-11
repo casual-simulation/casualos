@@ -62,6 +62,7 @@ export class AuxFile3D extends GameObject {
     constructor(file: File, contextGroup: ContextGroup3D, context: string, domain: AuxDomain, colliders: Object3D[], decoratorFactory: AuxFile3DDecoratorFactory) {
         super();
         this.file = file;
+        this.domain = domain;
         this.contextGroup = contextGroup;
         this.colliders = colliders;
         this.context = context;

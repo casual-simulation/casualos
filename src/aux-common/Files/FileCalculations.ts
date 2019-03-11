@@ -697,6 +697,21 @@ export function getFilePosition(calc: FileCalculationContext, file: File, contex
     };
 }
 
+
+/**
+ * Gets the rotation that the given file is at in the given context.
+ * @param calc The calculation context to use.
+ * @param file The file.
+ * @param context The context.
+ */
+export function getFileRotation(calc: FileCalculationContext, file: File, context: string): { x: number, y: number, z: number} {
+    return {
+        x: calculateNumericalTagValue(calc, file, `${context}.rotation.x`, 0),
+        y: calculateNumericalTagValue(calc, file, `${context}.rotation.y`, 0),
+        z: calculateNumericalTagValue(calc, file, `${context}.rotation.z`, 0)
+    };
+}
+
 /**
  * Gets a value from the given context file related to the given domain.
  * @param calc The calculation context.
