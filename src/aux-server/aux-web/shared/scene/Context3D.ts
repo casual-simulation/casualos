@@ -54,7 +54,9 @@ export class Context3D extends GameObject {
      * @param calc The calculation context that should be used.
      */
     fileAdded(file: AuxFile, calc: FileCalculationContext) {
-        if (this._shouldBeInContext(file, calc)) {
+        const isInContext = typeof this.files.get(file.id) !== 'undefined';
+        const shouldBeInContext = this._shouldBeInContext(file, calc);
+        if (!isInContext && shouldBeInContext) {
             this._addFile(file);
         }
     }

@@ -37,7 +37,9 @@ export class MeshCubeDecorator implements AuxFile3DDecorator {
             const material = <MeshStandardMaterial>this.cube.material;
             const color = calculateFileValue(calc, file3D.file, 'color');
             material.visible = !isTransparent(color);
-            material.color = new Color(color);
+            if (material.visible) {
+                material.color = new Color(color);
+            }
         } else {
             const material = <MeshStandardMaterial>this.cube.material;
             material.visible = true;
@@ -63,7 +65,9 @@ export class MeshCubeDecorator implements AuxFile3DDecorator {
         const material = <LineBasicMaterial>this.stroke.material;
         if (typeof colorValue !== 'undefined') {
             material.visible = !isTransparent(colorValue);
-            material.color = new Color(colorValue);
+            if (material.visible) {
+                material.color = new Color(colorValue);
+            }
         } else {
             material.visible = true;
             material.color = new Color(0x999999);
