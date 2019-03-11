@@ -39,7 +39,7 @@ export const DEFAULT_USER_ROTATION_INCREMENT = 1 * (Math.PI / 180);
 /**
  * Defines a class that represents a mesh for an "user" file.
  */
-export class UserMeshDecorator implements AuxFile3DDecorator {
+export class UserMeshDecorator extends AuxFile3DDecorator {
 
     private _lastActiveCheckTime: number;
 
@@ -70,37 +70,31 @@ export class UserMeshDecorator implements AuxFile3DDecorator {
 
     private _mainCamera: Camera;
 
-    constructor(mainCamera?: Camera) {
+    constructor(file3D: AuxFile3D, mainCamera?: Camera) {
+        super(file3D);
         this._mainCamera = mainCamera;
+
+        this.container = new Object3D();
+        this.camera = new PerspectiveCamera(60, 1, 0.1, 0.5);
+        this.cameraHelper = new CameraHelper(this.camera);
+        this.label = createLabel();
+        this.cameraHelper.add(this.label);
+        setLayer(this.label, LayersHelper.Layer_UIWorld);
+        this.label.setScale(Text3D.defaultScale * 2);
+        this.label.setRotation(0, 180, 0);
+        this.container.add(this.cameraHelper);
+        this.file3D.display.add(this.camera);
+        this.file3D.display.add(this.container);
     }
 
-    fileUpdated(file3D: AuxFile3D, calc: FileCalculationContext): void {
-        if (!this.file3D) {
-            this.container = new Object3D();
-            this.camera = new PerspectiveCamera(60, 1, 0.1, 0.5);
-            this.cameraHelper = new CameraHelper(this.camera);
-            this.label = createLabel();
-            this.cameraHelper.add(this.label);
-            setLayer(this.label, LayersHelper.Layer_UIWorld);
-            this.label.setScale(Text3D.defaultScale * 2);
-            this.label.setRotation(0, 180, 0);
-            this.container.add(this.cameraHelper);
-            file3D.display.add(this.camera);
-            file3D.display.add(this.container);
-        }
-
-        this.file3D = file3D;
-
+    fileUpdated(calc: FileCalculationContext): void {
         this._updateCameraMatrix();
         this._updateLabel();
 
         this.cameraHelper.update();
     }
 
-    frameUpdate() {
-        if (!this.file3D)
-            return;
-
+    frameUpdate(calc: FileCalculationContext) {
         let file = <AuxObject>this.file3D.file;
 
         const isOwnFile = !!this._mainCamera;

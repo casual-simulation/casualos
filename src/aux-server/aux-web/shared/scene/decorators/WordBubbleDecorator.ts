@@ -3,21 +3,25 @@ import { AuxFile3D } from "../AuxFile3D";
 import { FileCalculationContext } from "@yeti-cgi/aux-common";
 import { WordBubble3D } from "../WordBubble3D";
 
-export class WordBubbleDecorator implements AuxFile3DDecorator {    
+export class WordBubbleDecorator extends AuxFile3DDecorator {    
 
     /**
      * The world bubble for the cube.
      */
     wordBubble: WordBubble3D;
 
-    fileUpdated(file3D: AuxFile3D, calc: FileCalculationContext): void {
+    constructor(file3D: AuxFile3D) {
+        super(file3D);
+    }
+
+    fileUpdated(calc: FileCalculationContext): void {
 
         // this.wordBubble = new WordBubble3D({cornerRadius: 0});
         // setLayer(this.wordBubble, LayersHelper.Layer_UIWorld, true);
         // this.add(this.wordBubble);
     }
 
-    frameUpdate(): void {
+    frameUpdate(calc: FileCalculationContext): void {
     }
 
     dispose(): void {
