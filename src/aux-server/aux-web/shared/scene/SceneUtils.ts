@@ -178,3 +178,12 @@ export function calculateScale(context: FileCalculationContext, obj: File, multi
 
     return new Vector3(scaleX * multiplier, scaleZ * multiplier, scaleY * multiplier);
 }
+
+
+/**
+ * Determines whether the given color means transparent.
+ * @param color The color to check.
+ */
+export function isTransparent(color: string): boolean {
+    return color === 'transparent' || color === 'clear';
+}
