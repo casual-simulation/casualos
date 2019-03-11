@@ -10,7 +10,8 @@ import {
     AuxFile,
     FileCalculationContext,
     getFileIndex,
-    getFilePosition
+    getFilePosition,
+    objectsAtContextGridPosition
 } from '@yeti-cgi/aux-common';
 import { Physics } from '../../../shared/scene/Physics';
 import { WorkspaceMesh } from '../../../shared/scene/WorkspaceMesh';
@@ -19,7 +20,6 @@ import { BaseFileClickOperation } from './BaseFileClickOperation';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
 import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
-import { objectsAtGridPosition } from '../../../shared/scene/SceneUtils';
 
 /**
  * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
@@ -43,19 +43,20 @@ export class FileClickOperation extends BaseFileClickOperation {
         const workspace = this._getWorkspace();
         if (!workspace) {
             const file3D: AuxFile3D = <AuxFile3D>this._file3D;
+            const context = file3D.context;
             const fileWorkspace = this._interaction.findWorkspaceForMesh(this._file3D);
-            const position = getFilePosition(calc, file3D.file, file3D.context);
+            const position = getFilePosition(calc, file3D.file, context);
             if (fileWorkspace && position) {
-                const objects = objectsAtGridPosition(calc, fileWorkspace, position);
+                const objects = objectsAtContextGridPosition(calc, context, position);
                 if (objects.length === 0) {
                     console.log('Found no objects at', position);
                     console.log(file3D.file);
-                    console.log(file3D.context);
+                    console.log(context);
                 }
                 const file = this._file;
                 const index = getFileIndex(calc, file, file3D.context);
-                const draggedObjects = objects.filter(o => getFileIndex(calc, o.file, o.context) >= index)
-                    .map(o => o.file);
+                const draggedObjects = objects.filter(o => getFileIndex(calc, o, context) >= index)
+                    .map(o => o);
                 return new FileDragOperation(this._gameView, this._interaction, this._hit, draggedObjects, <ContextGroup3D>workspace, file3D.context);
             }
         }

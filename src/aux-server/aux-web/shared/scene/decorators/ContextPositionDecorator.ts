@@ -1,9 +1,8 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
-import { calculateNumericalTagValue, FileCalculationContext, File, calculateGridScale, file, objectsAtWorkspaceGridPosition, getFilePosition, getFileIndex } from "@yeti-cgi/aux-common";
+import { calculateNumericalTagValue, FileCalculationContext, File, calculateGridScale, file, objectsAtContextGridPosition, getFilePosition, getFileIndex } from "@yeti-cgi/aux-common";
 import { Vector3 } from "three";
 import { calculateGridTileLocalCenter } from "../grid/Grid";
-import { objectsAtGridPosition } from "../SceneUtils";
 import { sumBy } from "lodash";
 import { ContextGroup3D } from "../ContextGroup3D";
 
@@ -38,11 +37,11 @@ export class ContextPositionDecorator implements AuxFile3DDecorator {
  */
 export function calculateObjectPositionInContext(context: FileCalculationContext, file: AuxFile3D, scale: number): Vector3 {
     const position = getFilePosition(context, file.file, file.context);
-    const objectsAtPosition = objectsAtGridPosition(context, file.contextGroup, position);
+    const objectsAtPosition = objectsAtContextGridPosition(context, file.context, position);
     
     const index = getFileIndex(context, file.file, file.context);
     const objectsBelowThis = objectsAtPosition.slice(0, index);
-    const totalScales = sumBy(objectsBelowThis, obj => calculateNumericalTagValue(context, obj.file, 'scale.z', 1));
+    const totalScales = sumBy(objectsBelowThis, obj => calculateNumericalTagValue(context, obj, 'scale.z', 1));
     const indexOffset = new Vector3(0, totalScales * scale, 0);
     
     let localPosition = calculateGridTileLocalCenter(

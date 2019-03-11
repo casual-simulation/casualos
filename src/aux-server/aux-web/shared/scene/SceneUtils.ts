@@ -178,19 +178,3 @@ export function calculateScale(context: FileCalculationContext, obj: File, multi
 
     return new Vector3(scaleX * multiplier, scaleZ * multiplier, scaleY * multiplier);
 }
-
-/**
- * Finds the files on the given workspace and at the given grid position.
- * @param workspace The workspace.
- * @param gridPosition The grid position that the files should be retrieved for.
- */
-export function objectsAtGridPosition(calc: FileCalculationContext, workspace: ContextGroup3D, gridPosition: { x: number, y: number }) {
-    return sortBy(workspace.getFiles().filter(f => {
-        if (workspace.contexts.has(f.context)) {
-            const position = getFilePosition(calc, f.file, f.context);
-            return position.x === gridPosition.x &&
-                position.y === gridPosition.y;
-        }
-        return false;
-    }), f => getFileIndex(calc, f.file, f.context));
-}
