@@ -1065,10 +1065,18 @@ class SandboxInterfaceImpl implements SandboxInterface {
       return _singleOrArray(filtered);
     }
 
-    list(obj: any) {
-        const position = obj._position;
-        const workspace = obj._workspace;
-        const objs = objectsAtContextGridPosition(this.objects, workspace, position);
+    list(obj: any, context: string) {
+        if (!context) {
+            return [];
+        }
+        const x: number = obj[`${context}.x`];
+        const y: number = obj[`${context}.y`];
+
+        if (typeof x !== 'number' || typeof y !== 'number') {
+            return [];
+        }
+
+        const objs = objectsAtContextGridPosition(this.context, context, { x, y });
         return objs;
     }
 
