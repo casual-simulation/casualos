@@ -1,19 +1,23 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
-import { FileCalculationContext } from "@yeti-cgi/aux-common";
+import { FileCalculationContext, AuxFile } from "@yeti-cgi/aux-common";
 import { Arrow3D } from "../Arrow3D";
 
-export class LineToDecorator implements AuxFile3DDecorator {    
+export class LineToDecorator extends AuxFile3DDecorator {    
 
     /**
      * The optional arrows for the file.
      */
     arrows: Arrow3D[];
 
-    fileUpdated(file3D: AuxFile3D, calc: FileCalculationContext): void {
+    constructor(file3D: AuxFile3D) {
+        super(file3D);
+    }
+    
+    fileUpdated(calc: FileCalculationContext): void {
     }
 
-    frameUpdate(): void {
+    frameUpdate(calc: FileCalculationContext): void {
     }
 
     dispose(): void {

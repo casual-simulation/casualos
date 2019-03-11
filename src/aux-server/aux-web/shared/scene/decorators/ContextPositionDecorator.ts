@@ -6,32 +6,36 @@ import { calculateGridTileLocalCenter } from "../grid/Grid";
 import { sumBy } from "lodash";
 import { ContextGroup3D } from "../ContextGroup3D";
 
-export class ContextPositionDecorator implements AuxFile3DDecorator {
+export class ContextPositionDecorator extends AuxFile3DDecorator {
     
-    fileUpdated(file3D: AuxFile3D, calc: FileCalculationContext): void {
-        const userContext = file3D.context;
+    constructor(file3D: AuxFile3D) {
+        super(file3D);
+    }
+
+    fileUpdated(calc: FileCalculationContext): void {
+        const userContext = this.file3D.context;
         if (userContext) {
-            const grid = getContextGrid(calc, file3D.contextGroup.file, file3D.domain);
+            const grid = getContextGrid(calc, this.file3D.contextGroup.file, this.file3D.domain);
             if (grid) {
-                const scale = calculateGridScale(calc, file3D.contextGroup.file, file3D.domain);
-                const localPosition = calculateObjectPositionInGrid(calc, file3D, scale);
-                file3D.display.position.set(localPosition.x, localPosition.y, localPosition.z);
+                const scale = calculateGridScale(calc, this.file3D.contextGroup.file, this.file3D.domain);
+                const localPosition = calculateObjectPositionInGrid(calc, this.file3D, scale);
+                this.file3D.display.position.set(localPosition.x, localPosition.y, localPosition.z);
             } else {
-                const position = getFilePosition(calc, file3D.file, file3D.context);
-                file3D.display.position.set(position.x, position.z, position.y);
+                const position = getFilePosition(calc, this.file3D.file, this.file3D.context);
+                this.file3D.display.position.set(position.x, position.z, position.y);
             }
 
-            const rotation = getFileRotation(calc, file3D.file, file3D.context);
-            file3D.display.rotation.set(rotation.x, rotation.z, rotation.y);
+            const rotation = getFileRotation(calc, this.file3D.file, this.file3D.context);
+            this.file3D.display.rotation.set(rotation.x, rotation.z, rotation.y);
             
             // We must call this function so that child objects get their positions updated too.
             // Three render function does this automatically but there are functions in here that depend
             // on accurate positioning of child objects.
-            file3D.updateMatrixWorld(true);
+            this.file3D.updateMatrixWorld(true);
         }
     }
 
-    frameUpdate(): void {
+    frameUpdate(calc: FileCalculationContext): void {
     }
 
     dispose(): void {

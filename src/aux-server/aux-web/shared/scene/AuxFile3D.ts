@@ -95,7 +95,7 @@ export class AuxFile3D extends GameObject {
             if (file.id === this.file.id) {
                 this.file = file;
             }
-            this.decorators.forEach(d => d.fileUpdated(this, calc));
+            this.decorators.forEach(d => d.fileUpdated(calc));
         }
     }
 

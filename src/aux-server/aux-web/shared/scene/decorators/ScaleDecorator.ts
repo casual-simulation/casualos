@@ -4,19 +4,23 @@ import { FileCalculationContext, calculateGridScale, getContextGrid } from "@yet
 import { Text3D } from "../Text3D";
 import { calculateScale } from "../SceneUtils";
 
-export class ScaleDecorator implements AuxFile3DDecorator {
+export class ScaleDecorator extends AuxFile3DDecorator {
 
 
-    fileUpdated(file3D: AuxFile3D, calc: FileCalculationContext): void {
-        if (file3D.contextGroup) {
-            const grid = getContextGrid(calc, file3D.contextGroup.file, file3D.domain);
-            const gridScale = !!grid ? calculateGridScale(calc, file3D.contextGroup.file, file3D.domain) : 1;
-            const scale = calculateScale(calc, file3D.file, gridScale);
-            file3D.display.scale.set(scale.x, scale.y, scale.z);
+    constructor(file3D: AuxFile3D) {
+        super(file3D);
+    }
+
+    fileUpdated(calc: FileCalculationContext): void {
+        if (this.file3D.contextGroup) {
+            const grid = getContextGrid(calc, this.file3D.contextGroup.file, this.file3D.domain);
+            const gridScale = !!grid ? calculateGridScale(calc, this.file3D.contextGroup.file, this.file3D.domain) : 1;
+            const scale = calculateScale(calc, this.file3D.file, gridScale);
+            this.file3D.display.scale.set(scale.x, scale.y, scale.z);
         }
     }
 
-    frameUpdate(): void {
+    frameUpdate(calc: FileCalculationContext): void {
     }
 
     dispose(): void {

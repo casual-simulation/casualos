@@ -9,7 +9,7 @@ import {
 import { Text3D } from "../Text3D";
 import { isFormula, FileCalculationContext, Object, File, AuxObject, AuxFile, getFilePosition, getFileRotation } from '@yeti-cgi/aux-common'
 import { appManager } from '../../AppManager';
-import { createLabel, setLayer } from "../SceneUtils";
+import { setLayer } from "../SceneUtils";
 import { LayersHelper } from "../LayersHelper";
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
@@ -39,7 +39,7 @@ export const DEFAULT_USER_ROTATION_INCREMENT = 1 * (Math.PI / 180);
 /**
  * Defines a class that represents a mesh for an "user" file.
  */
-export class UserMeshDecorator implements AuxFile3DDecorator {
+export class UserMeshDecorator extends AuxFile3DDecorator {
 
     private _lastActiveCheckTime: number;
 
@@ -70,40 +70,30 @@ export class UserMeshDecorator implements AuxFile3DDecorator {
 
     private _mainCamera: Camera;
 
-    constructor(mainCamera?: Camera) {
+    constructor(file3D: AuxFile3D, mainCamera?: Camera) {
+        super(file3D);
         this._mainCamera = mainCamera;
+
+        this.container = new Object3D();
+        this.camera = new PerspectiveCamera(60, 1, 0.1, 0.5);
+        this.cameraHelper = new CameraHelper(this.camera);
+        // this.label = new Text3D();
+        // this.cameraHelper.add(this.label);
+        // setLayer(this.label, LayersHelper.Layer_UIWorld);
+        // this.label.setScale(Text3D.defaultScale * 2);
+        // this.label.setRotation(0, 180, 0);
+        this.container.add(this.cameraHelper);
+        this.file3D.display.add(this.camera);
+        this.file3D.add(this.container);
     }
 
-    fileUpdated(file3D: AuxFile3D, calc: FileCalculationContext): void {
-        if (!this.file3D) {
-            this.container = new Object3D();
-            this.camera = new PerspectiveCamera(60, 1, 0.1, 0.5);
-            this.cameraHelper = new CameraHelper(this.camera);
-            // this.label = createLabel();
-            // this.cameraHelper.add(this.label);
-            // setLayer(this.label, LayersHelper.Layer_UIWorld);
-            // this.label.setScale(Text3D.defaultScale * 2);
-            // this.label.setRotation(0, 180, 0);
-            this.container.add(this.cameraHelper);
-            this.container.visible = false;
-            file3D.display.add(this.camera);
-            file3D.add(this.container);
-
-            this.camera.position.set(0, 0, 0);
-            this.camera.rotation.set(0, 0, 0);
-        }
-
-        this.file3D = file3D;
-        
+    fileUpdated(calc: FileCalculationContext): void {
         this._updateCameraMatrix();
         // this._updateLabel();
         this.cameraHelper.update();
     }
 
-    frameUpdate() {
-        if (!this.file3D)
-            return;
-
+    frameUpdate(calc: FileCalculationContext) {
         let file = <AuxObject>this.file3D.file;
 
         const isOwnFile = this.file3D.file.tags._user === appManager.user.username;

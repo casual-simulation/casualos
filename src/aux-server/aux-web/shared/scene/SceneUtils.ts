@@ -1,7 +1,5 @@
 import { Vector3, MeshBasicMaterial, SphereBufferGeometry, Mesh, Object3D, Scene, Matrix4, Box2, Vector2, Box3, Layers, BoxBufferGeometry, MeshStandardMaterial, BufferGeometry, BufferAttribute } from 'three';
 import { Text3D } from './Text3D';
-import robotoFont from '../public/bmfonts/Roboto.json';
-import robotoTexturePath from '../public/bmfonts/Roboto.png';
 import { IGameView } from '../IGameView';
 import { flatMap, sortBy } from 'lodash';
 import { calculateNumericalTagValue, FileCalculationContext, File, getFilePosition, getFileIndex } from '@yeti-cgi/aux-common';
@@ -15,11 +13,6 @@ export function createSphere(position: Vector3, color: number, size: number = 0.
     const sphere = new Mesh(sphereGeometry, sphereMaterial);
     sphere.position.copy(position);
     return sphere;
-}
-
-export function createLabel(): Text3D {
-    const label = new Text3D(robotoFont, robotoTexturePath);
-    return label;
 }
 
 export function createCube(size: number): Mesh {

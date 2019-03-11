@@ -5,7 +5,7 @@ import { Mesh, MeshStandardMaterial, Color, LineSegments, BufferGeometry, Buffer
 import { createCube, createCubeStrokeGeometry, isTransparent } from "../SceneUtils";
 import { flatMap } from "lodash";
 
-export class MeshCubeDecorator implements AuxFile3DDecorator {
+export class MeshCubeDecorator extends AuxFile3DDecorator {
 
     container: Group;
 
@@ -16,74 +16,68 @@ export class MeshCubeDecorator implements AuxFile3DDecorator {
      */
     stroke: LineSegments;
 
-    fileUpdated(file3D: AuxFile3D, calc: FileCalculationContext): void {
+    constructor(file3D: AuxFile3D) {
+        super(file3D);
 
         // Container
-        if (!this.container) {
-            this.container = new Group();
-            this.container.position.set(0, .5, 0);
-            file3D.display.add(this.container);
-        }
+        this.container = new Group();
+        this.container.position.set(0, .5, 0);
+        this.file3D.display.add(this.container);
 
         // Cube Mesh
-        if (!this.cube) {
-            this.cube = createCube(1);
-            this.container.add(this.cube);
-            file3D.colliders.push(this.cube);
-        }
-
-        // Color
-        if (file3D.file.tags.color) {
-            const material = <MeshStandardMaterial>this.cube.material;
-            const color = calculateFileValue(calc, file3D.file, 'color');
-            material.visible = !isTransparent(color);
-            if (material.visible) {
-                material.color = new Color(color);
-            }
-        } else {
-            const material = <MeshStandardMaterial>this.cube.material;
-            material.visible = true;
-            material.color = new Color(0xFFFFFF);
-        }
+        this.cube = createCube(1);
+        this.container.add(this.cube);
+        this.file3D.colliders.push(this.cube);
 
         // Stroke
-        if (!this.stroke) {
-            // Create the stroke mesh
-            const geo = createCubeStrokeGeometry();
-            const material = new LineBasicMaterial({
-                color: 0x000000
-            });
-            
-            this.stroke = new LineSegments(geo, material);
-            this.container.add(this.stroke);
+        const geo = createCubeStrokeGeometry();
+        const material = new LineBasicMaterial({
+            color: 0x000000
+        });
+        
+        this.stroke = new LineSegments(geo, material);
+        this.container.add(this.stroke);
+    }
+
+    fileUpdated(calc: FileCalculationContext): void {
+        // Color
+        const cubeMat = <MeshStandardMaterial>this.cube.material;
+        if (this.file3D.file.tags.color) {
+            const color = calculateFileValue(calc, this.file3D.file, 'color');
+            cubeMat.visible = !isTransparent(color);
+            if (cubeMat.visible) {
+                cubeMat.color = new Color(color);
+            }
+        } else {
+            cubeMat.visible = true;
+            cubeMat.color = new Color(0xFFFFFF);
         }
 
         this.stroke.visible = true;
-        const colorValue = calculateFileValue(calc, file3D.file, 'stroke.color');
-        const width:number = calculateFileValue(calc, file3D.file, 'stroke.width');
+        const strokeColorValue = calculateFileValue(calc, this.file3D.file, 'stroke.color');
+        const strokeWidth:number = calculateFileValue(calc, this.file3D.file, 'stroke.width');
 
-        const material = <LineBasicMaterial>this.stroke.material;
-        if (typeof colorValue !== 'undefined') {
-            material.visible = !isTransparent(colorValue);
-            if (material.visible) {
-                material.color = new Color(colorValue);
+        const strokeMat = <LineBasicMaterial>this.stroke.material;
+        if (typeof strokeColorValue !== 'undefined') {
+            strokeMat.visible = !isTransparent(strokeColorValue);
+            if (strokeMat.visible) {
+                strokeMat.color = new Color(strokeColorValue);
             }
         } else {
-            material.visible = true;
-            material.color = new Color(0x999999);
+            strokeMat.visible = true;
+            strokeMat.color = new Color(0x999999);
         }
 
-        if(typeof width !== 'undefined'){
-            material.linewidth = width;
+        if(typeof strokeWidth !== 'undefined'){
+            strokeMat.linewidth = strokeWidth;
         } else {
-            material.linewidth = 1;
+            strokeMat.linewidth = 1;
         }
     }
 
-    frameUpdate(): void {
+    frameUpdate(calc: FileCalculationContext): void {
     }
 
     dispose(): void {
-        // cube mesh will get removed when AuxFile3D finishes disposing itself.
     }
 }
