@@ -6,23 +6,15 @@ import {
     Color,
     TextureLoader,
     Texture,
-    SceneUtils,
     Vector3,
     Box3,
     RawShaderMaterial,
     LinearFilter,
     Euler,
-    Sphere,
     Matrix4,
-    Quaternion,
-    Box3Helper,
-    AxesHelper,
-    LineBasicMaterial,
-    Layers} from "three";
+    Box3Helper} from "three";
 
 import createBMFont, { TextGeometry, TextGeometryOptions } from "three-bmfont-text";
-import { IGameView } from '../IGameView';
-import { setLayer } from "./SceneUtils";
 
 var sdfShader = require('three-bmfont-text/shaders/sdf');
 
@@ -71,11 +63,6 @@ export class Text3D extends Object3D {
      * The bounding box of this text 3d. This bounding box is in world space.
      */
     get boundingBox(): Box3 { return (this._boundingBox && this._anchor.visible) ? this._boundingBox.clone() : new Box3(); }
-
-    /**
-     * The Three JS Layers object for this Text 3D.
-     */
-    get layers(): Layers { return this._anchor.layers; }
 
     /**
      * Create text 3d.
@@ -277,10 +264,6 @@ export class Text3D extends Object3D {
 
         this._anchor.rotation.copy(nextRotation);
         this.updateBoundingBox();
-    }
-
-    public setLayer(layer: number) {
-        setLayer(this._anchor, layer, true);
     }
 
     private _updateDebugBoundingBox() {

@@ -83,9 +83,9 @@ export class Context3D extends GameObject {
         this._removeFile(id);
     }
 
-    frameUpdate(): void {
+    frameUpdate(calc: FileCalculationContext): void {
         if (this.files) {
-            this.files.forEach(f => f.frameUpdate());
+            this.files.forEach(f => f.frameUpdate(calc));
         }
     }
 

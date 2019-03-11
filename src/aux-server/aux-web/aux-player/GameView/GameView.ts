@@ -39,7 +39,8 @@ import {
     DEFAULT_SCENE_BACKGROUND_COLOR,
     createFile,
     isFileInContext,
-    AuxFile
+    AuxFile,
+    FileCalculationContext
 } from '@yeti-cgi/aux-common';
 import { ArgEvent } from '@yeti-cgi/aux-common/Events';
 import { Time } from '../../shared/scene/Time';
@@ -264,11 +265,13 @@ export default class GameView extends Vue implements IGameView {
 
     private _frameUpdate(xrFrame?: any) {
 
+        let calc = this.fileManager.createContext();
+
         this._input.update();
         this._inputVR.update();
         // this._interaction.update();
 
-        this._context.frameUpdate();
+        this._context.frameUpdate(calc);
 
         this._renderUpdate(xrFrame);
 
@@ -276,7 +279,7 @@ export default class GameView extends Vue implements IGameView {
 
         if (this.vrDisplay && this.vrDisplay.isPresenting) {
 
-            this.vrDisplay.requestAnimationFrame(() => this._frameUpdate());
+            this.vrDisplay.requestAnimationFrame(() => this._frameUpdate(calc));
 
         } else if (this.xrSession) {
 
@@ -284,7 +287,7 @@ export default class GameView extends Vue implements IGameView {
 
         } else {
 
-            requestAnimationFrame(() => this._frameUpdate());
+            requestAnimationFrame(() => this._frameUpdate(calc));
 
         }
     }
@@ -382,11 +385,12 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private async _fileAdded(file: AuxFile) {
-        if (!this._shouldDisplayFile(file)) {
+        let calc = this.fileManager.createContext();
+        
+        if (!this._shouldDisplayFile(file, calc)) {
             return;
         }
 
-        let calc = this.fileManager.createContext();
         this._context.fileAdded(file, calc);
         
         await this._fileUpdated(file, true);
@@ -464,7 +468,7 @@ export default class GameView extends Vue implements IGameView {
      * Returns wether or not the given file should be displayed in 3d.
      * @param file The file
      */
-    private _shouldDisplayFile(file: File): boolean {
+    private _shouldDisplayFile(file: File, calc: FileCalculationContext): boolean {
         // AUX Player doesnt display objects unless user is in a context.
         if (!this._userContext.value) {
             return false;
@@ -477,7 +481,7 @@ export default class GameView extends Vue implements IGameView {
             }
 
             // Dont display normal files that are not tagged with the user's current context.
-            if (!isFileInContext(this.fileManager.createContext(), file, this._userContext.value)) {
+            if (!isFileInContext(calc, file, this._userContext.value)) {
                 return false;
             }
         }

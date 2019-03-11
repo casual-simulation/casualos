@@ -252,12 +252,14 @@ export default class GameView extends Vue implements IGameView {
 
   private _frameUpdate(xrFrame?: any) {
 
+    let calc = this.fileManager.createContext();
+
     this._input.update();
     this._inputVR.update();
     this._interaction.update();
 
     this._contexts.forEach(context => {
-        context.frameUpdate();
+        context.frameUpdate(calc);
     });
     // for (let id in this._contexts) {
     //   const file = this._files[id];

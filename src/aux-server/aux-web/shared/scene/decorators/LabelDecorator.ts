@@ -2,7 +2,7 @@ import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
 import { FileCalculationContext, AuxFile, calculateFileValue, isFormula, calculateFormattedFileValue, calculateNumericalTagValue } from "@yeti-cgi/aux-common";
 import { Text3D } from "../Text3D";
-import { createLabel } from "../SceneUtils";
+import { createLabel, setLayer } from "../SceneUtils";
 import { LayersHelper } from "../LayersHelper";
 import { Color } from "three";
 
@@ -25,7 +25,7 @@ export class LabelDecorator implements AuxFile3DDecorator {
     fileUpdated(file3D: AuxFile3D, calc: FileCalculationContext): void {
         if (!this.label) {
             this.label = createLabel();
-            this.label.setLayer(LayersHelper.Layer_UIWorld);
+            setLayer(this.label, LayersHelper.Layer_UIWorld);
             file3D.display.add(this.label);
         }
 
