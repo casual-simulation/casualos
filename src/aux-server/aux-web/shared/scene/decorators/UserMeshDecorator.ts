@@ -85,6 +85,7 @@ export class UserMeshDecorator implements AuxFile3DDecorator {
             // this.label.setScale(Text3D.defaultScale * 2);
             // this.label.setRotation(0, 180, 0);
             this.container.add(this.cameraHelper);
+            this.container.visible = false;
             file3D.display.add(this.camera);
             file3D.add(this.container);
 
