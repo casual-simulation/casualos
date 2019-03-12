@@ -8,13 +8,14 @@ import { gridPosToRealPos, Axial, posToKey } from '../../../shared/scene/hex';
 import { FileCalculationContext, getContextMinimized, getContextSize, getContextGrid } from '@yeti-cgi/aux-common/Files/FileCalculations';
 import { BaseFileDragOperation } from './BaseFileDragOperation';
 import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
+import { BuilderGroup3D } from '../../../shared/scene/BuilderGroup3D';
 
 /**
  * File Drag Operation handles dragging of files for mouse and touch input.
  */
 export class FileDragOperation extends BaseFileDragOperation {
 
-    private _workspace: ContextGroup3D;
+    private _workspace: BuilderGroup3D;
     private _attachWorkspace: ContextGroup3D;
     private _attachPoint: Axial;
 
@@ -25,7 +26,7 @@ export class FileDragOperation extends BaseFileDragOperation {
      * @param input the input module to interface with.
      * @param buttonId the button id of the input that this drag operation is being performed with. If desktop this is the mouse button
      */
-    constructor(gameView: GameView, interaction: InteractionManager, hit: Intersection, files: File[], workspace: ContextGroup3D, context: string) {
+    constructor(gameView: GameView, interaction: InteractionManager, hit: Intersection, files: File[], workspace: BuilderGroup3D, context: string) {
         super(gameView, interaction, files, context);
 
         this._workspace = workspace;

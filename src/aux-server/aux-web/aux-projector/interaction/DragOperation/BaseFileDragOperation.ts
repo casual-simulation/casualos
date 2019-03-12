@@ -21,7 +21,8 @@ import {
 
 import { setParent } from '../../../shared/scene/SceneUtils';
 import { ContextGroup3D } from 'aux-web/shared/scene/ContextGroup3D';
-import { AuxFile3D } from 'aux-web/shared/scene/AuxFile3D';
+import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
+import { BuilderGroup3D } from '../../../shared/scene/BuilderGroup3D';
 
 /**
  * Shared class for both FileDragOperation and NewFileDragOperation.
@@ -130,7 +131,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         }
     }
 
-    protected _dragFilesOnWorkspace(calc: FileCalculationContext, workspace: ContextGroup3D, gridPosition: Vector2, height: number): void {
+    protected _dragFilesOnWorkspace(calc: FileCalculationContext, workspace: BuilderGroup3D, gridPosition: Vector2, height: number): void {
         if (this._freeDragGroup) {
             this._releaseFreeDragGroup(this._freeDragGroup);
             this._freeDragGroup = null;
@@ -226,7 +227,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         return this._interaction.calculateFileDragPosition(calc, this._context, gridPosition, ...this._files);
     }
 
-    protected _showGrid(workspace: ContextGroup3D): void {
+    protected _showGrid(workspace: BuilderGroup3D): void {
         if (this._gridWorkspace) {
             this._gridWorkspace.gridsVisible = false;
         }

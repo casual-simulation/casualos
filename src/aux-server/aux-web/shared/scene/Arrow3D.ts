@@ -22,6 +22,7 @@ import { WorkspaceMesh } from './WorkspaceMesh';
 import { IGameView } from '../IGameView';
 import { AuxFile3D } from './AuxFile3D';
 import { ContextGroup3D } from './ContextGroup3D';
+import { BuilderGroup3D } from './BuilderGroup3D';
 
 export class Arrow3D {
 
@@ -111,7 +112,7 @@ export class Arrow3D {
             this._arrowHelper.visible = true;
     
             // Update arrow origin.
-            if (sourceWorkspace.file.tags.minimized) {
+            if (sourceWorkspace instanceof BuilderGroup3D && sourceWorkspace.file.tags.minimized) {
                 let miniHexSphere = (sourceWorkspace.surface).miniHex.boundingSphere;
                 this.setOrigin(miniHexSphere.center, true);
             } else {
@@ -124,7 +125,7 @@ export class Arrow3D {
     
             // Lets get the bounding sphere of the target.
             // This could be either the sphere of the file itself or the sphere of the minimized workspace the file is on.
-            if (targetWorkspace && targetWorkspace.file.tags.minimized) {
+            if (targetWorkspace && targetWorkspace instanceof BuilderGroup3D && targetWorkspace.file.tags.minimized) {
                 targetSphere = (targetWorkspace.surface).miniHex.boundingSphere;
             } else {
                 targetSphere = (this._targetFile3d).boundingSphere;
