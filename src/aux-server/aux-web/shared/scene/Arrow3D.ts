@@ -110,7 +110,8 @@ export class Arrow3D extends Object3D {
                 let miniHexSphere = (sourceWorkspace.surface).miniHex.boundingSphere;
                 this.setOrigin(miniHexSphere.center, true);
             } else {
-                let sourceSphere = (this._sourceFile3d).boundingSphere;
+                this._sourceFile3d.computeBoundingObjects();
+                let sourceSphere = this._sourceFile3d.boundingSphere;
                 this.setOrigin(sourceSphere.center, true);
             }
             
@@ -122,6 +123,7 @@ export class Arrow3D extends Object3D {
             if (targetWorkspace instanceof BuilderGroup3D && targetMinimized) {
                 targetSphere = (targetWorkspace.surface).miniHex.boundingSphere;
             } else {
+                this._targetFile3d.computeBoundingObjects();
                 targetSphere = (this._targetFile3d).boundingSphere;
             }
         
