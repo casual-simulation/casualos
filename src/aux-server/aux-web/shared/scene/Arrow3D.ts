@@ -96,13 +96,7 @@ export class Arrow3D extends Object3D {
         const sourceMinimized = sourceWorkspace && isMinimized(calc, sourceWorkspace.file, sourceWorkspace.domain);
         const targetMinimized = targetWorkspace && isMinimized(calc, targetWorkspace.file, targetWorkspace.domain);
 
-        if (sourceFile.tags._hidden || targetFile.tags._hidden) {
-
-            // Hide arrow if source file or target file is not visible, and do nothing else.
-            this._arrowHelper.visible = false;
-
-        }
-        else if (sourceMinimized && targetMinimized) {
+        if (sourceMinimized && targetMinimized) {
 
             // The workspace of both the source file and target file are minimized. Hide arrow and do nothing else.
             this._arrowHelper.visible = false;

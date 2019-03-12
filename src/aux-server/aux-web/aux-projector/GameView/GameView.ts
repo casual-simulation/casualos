@@ -581,7 +581,7 @@ export default class GameView extends Vue implements IGameView {
 
     if (!file.tags._user) {
         // Dont display normal files that are hidden or destroyed.
-        if (file.tags._hidden || file.tags._destroyed) {
+        if (file.tags._destroyed) {
             return false;
         }
     }
