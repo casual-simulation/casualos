@@ -903,6 +903,31 @@ describe('AuxCausalTree', () => {
             expect(updates.length).toBe(0);
             expect(result.map(ref => ref.atom)).toEqual([]);
         });
+
+        it('should allow setting null', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            const file = createFile('test', {
+                _workspace: null,
+                _position: { x: 0, y: 0, z: 0 },
+                test: 99
+            });
+            tree.addFile(file);
+            
+            let updates: WeaveReference<AuxOp>[][] = [];
+            tree.atomAdded.subscribe(refs => updates.push(refs));
+            
+            const result = tree.updateFile(tree.value['test'], {
+                tags: {
+                    test: null
+                }
+            });
+
+            expect(updates.length).toBe(1);
+            expect(result.map(ref => ref.atom)).toEqual([
+                atom(atomId(1, 8, 1), atomId(1, 6), value(null))
+            ]);
+        });
     });
 
     describe('addEvents()', () => {

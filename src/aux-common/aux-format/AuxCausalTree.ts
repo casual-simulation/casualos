@@ -202,7 +202,9 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
                         newVal = merge(oldVal, newVal);
                     }
 
-                    if (!isEqual(oldVal, newVal) && hasValue(oldVal) && hasValue(newVal)) {
+                    const hasOld = hasValue(oldVal);
+                    const hasNew = hasValue(newVal);
+                    if (!isEqual(oldVal, newVal) && (hasOld || hasNew)) {
                         // tag is on the file
                         const val = this.val(newVal, tagMeta.ref.atom);
                         return [val];
