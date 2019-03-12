@@ -51,14 +51,15 @@ import { Context3D } from '../../shared/scene/Context3D';
 import { appManager } from '../../shared/AppManager';
 // import { InteractionManager } from '../interaction/InteractionManager';
 import { GridChecker } from '../../shared/scene/grid/GridChecker';
-import { values, find } from 'lodash';
+import { values, find, flatMap } from 'lodash';
 import App from '../App/App';
 // import MiniFile from '../MiniFile/MiniFile';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { IGameView } from '../../shared/IGameView';
 import { LayersHelper } from '../../shared/scene/LayersHelper';
-import { FileManager } from 'aux-web/shared/FileManager';
-import { ContextGroup3D } from 'aux-web/shared/scene/ContextGroup3D';
+import { FileManager } from '../../shared/FileManager';
+import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
+import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 
 @Component({
     components: {
@@ -140,6 +141,10 @@ export default class GameView extends Vue implements IGameView {
 
     constructor() {
         super();
+    }
+
+    public findFilesById(id: string): AuxFile3D[] {
+        return flatMap(this._context.getFiles().filter(f => f.file.id === id));
     }
 
     /**

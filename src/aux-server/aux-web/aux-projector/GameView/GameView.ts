@@ -81,6 +81,7 @@ import { LayersHelper } from '../../shared/scene/LayersHelper';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { AuxFile3DDecoratorFactory } from '../../shared/scene/decorators/AuxFile3DDecoratorFactory';
 import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
+import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 
 @Component({
   components: {
@@ -172,6 +173,10 @@ export default class GameView extends Vue implements IGameView {
             c.surface.gridsVisible = visible;
         }
       });
+  }
+
+  public findFilesById(id: string): AuxFile3D[] {
+      return flatMap(this._contexts.map(c => c.getFiles().filter(f => f.file.id === id)));
   }
 
   public async mounted() {

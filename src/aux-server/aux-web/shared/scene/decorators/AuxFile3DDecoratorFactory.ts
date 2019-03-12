@@ -7,6 +7,7 @@ import { MeshCubeDecorator } from "./MeshCubeDecorator";
 import { LabelDecorator } from "./LabelDecorator";
 import { UserMeshDecorator } from "./UserMeshDecorator";
 import { AuxFile3D } from "../AuxFile3D";
+import { LineToDecorator } from "./LineToDecorator";
 
 export class AuxFile3DDecoratorFactory { 
 
@@ -26,7 +27,8 @@ export class AuxFile3DDecoratorFactory {
 
         if (!!this.gameView) {
             decorators.push(
-                new LabelDecorator(file3d, this.gameView.mainCamera)
+                new LabelDecorator(file3d, this.gameView.mainCamera),
+                new LineToDecorator(file3d, this.gameView)
             );
         }
 
@@ -45,7 +47,6 @@ export class AuxFile3DDecoratorFactory {
             );
         }
 
-        
         return decorators;
     }
 }

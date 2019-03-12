@@ -6,12 +6,13 @@ import { GridChecker } from "./scene/grid/GridChecker";
 import { ArgEvent } from "@yeti-cgi/aux-common/Events";
 import { AuxFile } from "@yeti-cgi/aux-common/aux-format";
 import { ContextGroup3D } from "./scene/ContextGroup3D";
+import { AuxFile3DFinder } from "./AuxFile3DFinder";
 
 /**
  * Interface that described what properties and functions should be available to a GameView class/component implementation.
  * Concept of a GameView is shared across aux-web applications. This interface will ensure shared functionality across these applications.
  */
-export interface IGameView {
+export interface IGameView extends AuxFile3DFinder {
     
     readonly fileQueue: HTMLElement;
     readonly gameView: HTMLElement;
