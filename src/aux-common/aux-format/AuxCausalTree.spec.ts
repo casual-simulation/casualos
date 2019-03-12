@@ -1,7 +1,20 @@
 import { AuxCausalTree } from "./AuxCausalTree";
 import { AtomFactory } from "../causal-trees/AtomFactory";
 import { AuxOp, AuxOpType } from "./AuxOpTypes";
-import { DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_GRID_SCALE, DEFAULT_WORKSPACE_COLOR, createFile, createWorkspace, fileUpdated, fileAdded, fileRemoved, transaction, addState } from "../Files";
+import { 
+    DEFAULT_WORKSPACE_SCALE, 
+    DEFAULT_WORKSPACE_HEIGHT,
+    DEFAULT_WORKSPACE_GRID_SCALE, 
+    DEFAULT_WORKSPACE_COLOR, 
+    createFile, 
+    createWorkspace, 
+    fileUpdated, 
+    fileAdded, 
+    fileRemoved, 
+    transaction, 
+    addState,
+    File
+} from "../Files";
 import { site } from "../causal-trees/SiteIdInfo";
 import { storedTree } from "../causal-trees/StoredCausalTree";
 import { AuxState } from "./AuxState";
@@ -651,14 +664,19 @@ describe('AuxCausalTree', () => {
 
         it('should add the given workspace to the state', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
-            const newFile = createWorkspace('test');
+            const newFile: File = {
+                id: 'test',
+                tags: {
+                    'position': { x: 0, y: 0, z: 0}
+                }
+            };
 
             const root = tree.root();
             const result = tree.addFile(newFile);
 
             const fileAtom = atom(atomId(1, 2), root.atom.id, file('test'));
-            const positionTag = atom(atomId(1, 7), fileAtom.id, tag('position'));
-            const positionTagValue = atom(atomId(1, 8, 1), positionTag.id, value({x: 0, y: 0, z: 0}));
+            const positionTag = atom(atomId(1, 3), fileAtom.id, tag('position'));
+            const positionTagValue = atom(atomId(1, 4, 1), positionTag.id, value({x: 0, y: 0, z: 0}));
 
             const resultAtoms = result.map(ref => ref.atom);
             expect(resultAtoms).toContainEqual(fileAtom);
@@ -673,7 +691,12 @@ describe('AuxCausalTree', () => {
 
         it('should batch the updates together', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
-            const newFile = createWorkspace('test');
+            const newFile = {
+                id: 'test',
+                tags: {
+                    'position': { x: 0, y: 0, z: 0}
+                }
+            };
 
             const root = tree.root();
             
@@ -682,8 +705,8 @@ describe('AuxCausalTree', () => {
             const result = tree.addFile(newFile);
 
             const fileAtom = atom(atomId(1, 2), root.atom.id, file('test'));
-            const positionTag = atom(atomId(1, 7), fileAtom.id, tag('position'));
-            const positionTagValue = atom(atomId(1, 8, 1), positionTag.id, value({x: 0, y: 0, z: 0}));
+            const positionTag = atom(atomId(1, 3), fileAtom.id, tag('position'));
+            const positionTagValue = atom(atomId(1, 4, 1), positionTag.id, value({x: 0, y: 0, z: 0}));
 
             expect(updates.length).toBe(1);
             const resultAtoms = result.map(ref => ref.atom);

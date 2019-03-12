@@ -113,13 +113,6 @@ describe('AuxTreeCalculations', () => {
             }, connection); 
             const tree = new RealtimeCausalTree<AuxCausalTree>(factory, store, channel);
 
-            const fileIds: string[] = [];
-            const { fileAdded } = fileChangeObservables(tree);
-            const errorHandler = jest.fn();
-            fileAdded.subscribe(file => {
-                fileIds.push(file.id);
-            }, errorHandler);
-
             let stored = new AuxCausalTree(storedTree(site(1)));
             stored.root();
             stored.file('test');
@@ -128,8 +121,15 @@ describe('AuxTreeCalculations', () => {
             await store.update('test', stored.export());
             await tree.init();
             await connection.flushPromises();
-
             scheduler.flush();
+
+            const fileIds: string[] = [];
+            const { fileAdded } = fileChangeObservables(tree);
+            const errorHandler = jest.fn();
+            fileAdded.subscribe(file => {
+                fileIds.push(file.id);
+            }, errorHandler);
+
 
             expect(fileIds).toEqual([
                 'test',
@@ -148,15 +148,6 @@ describe('AuxTreeCalculations', () => {
             }, connection); 
             const tree = new RealtimeCausalTree<AuxCausalTree>(factory, store, channel);
 
-            const fileIds: string[] = [];
-            const updatedFiles: string[] = [];
-            const { fileAdded, fileUpdated } = fileChangeObservables(tree);
-            const errorHandler = jest.fn();
-            fileAdded.pipe(tap(file => fileIds.push(file.id)))
-                .subscribe(null, errorHandler);
-            fileUpdated.pipe(tap(file => updatedFiles.push(file.id)))
-                .subscribe(null, errorHandler);
-
             let stored = new AuxCausalTree(storedTree(site(1)));
             stored.root();
             const file = stored.file('test');
@@ -166,8 +157,16 @@ describe('AuxTreeCalculations', () => {
             await store.update('test', stored.export());
             await tree.init();
             await connection.flushPromises();
-
             scheduler.flush();
+
+            const fileIds: string[] = [];
+            const updatedFiles: string[] = [];
+            const { fileAdded, fileUpdated } = fileChangeObservables(tree);
+            const errorHandler = jest.fn();
+            fileAdded.pipe(tap(file => fileIds.push(file.id)))
+                .subscribe(null, errorHandler);
+            fileUpdated.pipe(tap(file => updatedFiles.push(file.id)))
+                .subscribe(null, errorHandler);
 
             expect(fileIds).toEqual([]);
             expect(updatedFiles).toEqual([]);
@@ -184,6 +183,16 @@ describe('AuxTreeCalculations', () => {
             }, connection); 
             const tree = new RealtimeCausalTree<AuxCausalTree>(factory, store, channel);
 
+            let stored = new AuxCausalTree(storedTree(site(1)));
+            stored.root();
+            const file = stored.file('test');
+
+            await store.update('test', stored.export());
+            await tree.init();
+            await connection.flushPromises();
+
+            scheduler.flush();
+            
             const fileIds: string[] = [];
             const updatedFiles: string[] = [];
             const removedFiles: string[] = [];
@@ -196,17 +205,8 @@ describe('AuxTreeCalculations', () => {
             fileRemoved.pipe(tap(file => removedFiles.push(file)))
                 .subscribe(null, errorHandler);
 
-            let stored = new AuxCausalTree(storedTree(site(1)));
-            stored.root();
-            const file = stored.file('test');
-
-            await store.update('test', stored.export());
-            await tree.init();
-            await connection.flushPromises();
-
             const del = tree.tree.delete(file.atom);
 
-            scheduler.flush();
 
             expect(fileIds).toEqual([
                 'test'

@@ -23,7 +23,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
     private _store: CausalTreeStore;
     private _channel: RealtimeChannel<WeaveReference<AtomOp>[]>;
     private _factory: CausalTreeFactory;
-    private _updated: ReplaySubject<WeaveReference<AtomOp>[]>;
+    private _updated: Subject<WeaveReference<AtomOp>[]>;
     private _errors: Subject<any>;
     private _subs: SubscriptionLike[];
 
@@ -80,7 +80,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         this._factory = factory;
         this._store = store;
         this._channel = channel;
-        this._updated = new ReplaySubject<WeaveReference<AtomOp>[]>(1);
+        this._updated = new Subject<WeaveReference<AtomOp>[]>();
         this._errors = new Subject<any>();
         this._tree = null;
         this._subs = [];

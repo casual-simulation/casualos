@@ -472,9 +472,10 @@ export function createFile(id = uuid(), tags: Object['tags'] = {}) {
 
 /**
  * Creates a new Workspace with default values.
+ * @param id The ID of the new workspace.
+ * @param builderContextId The tag that should be used for contexts stored on this workspace.
  */
-export function createWorkspace(id = uuid()): Workspace {
-    const builderContextId = `_context_${uuid()}`;
+export function createWorkspace(id = uuid(), builderContextId: string = `_context_${uuid()}`): Workspace {
     return {
         id: id,
         tags: {
