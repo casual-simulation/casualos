@@ -388,7 +388,7 @@ export class FileManager {
         this._subscriptions.push(this._aux.onError.subscribe(err => console.error(err)));
 
         await this._aux.init();
-        await this._aux.onUpdated.pipe(rxFirst()).toPromise();
+        await this._aux.waitToGetTreeFromServer();
 
         console.log('[FileManager] Got Tree:', this._aux.tree.site.id);
                     

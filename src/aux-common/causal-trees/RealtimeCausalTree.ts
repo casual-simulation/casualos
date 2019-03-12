@@ -7,7 +7,7 @@ import { CausalTreeFactory } from "./CausalTreeFactory";
 import { SiteVersionInfo } from "./SiteVersionInfo";
 import { SiteInfo, site } from "./SiteIdInfo";
 import { SubscriptionLike, Subject, Observable, ReplaySubject } from 'rxjs';
-import { filter, flatMap, takeWhile, skipWhile, tap, map } from 'rxjs/operators';
+import { filter, flatMap, takeWhile, skipWhile, tap, map, first } from 'rxjs/operators';
 import { maxBy } from 'lodash';
 import { storedTree } from "./StoredCausalTree";
 import { WeaveVersion, versionsEqual } from "./WeaveVersion";
@@ -131,6 +131,18 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         ).subscribe(null, err => this._errors.next(err)));
     }
 
+    /**
+     * Returns a promise that waits to get the tree from the server if it hasn't been retrieved yet.
+     */
+    async waitToGetTreeFromServer() {
+        if (!this.tree) {
+            await this.onUpdated.pipe(first()).toPromise();
+        }
+    }
+
+    /**
+     * Gets the version info from the tree.
+     */
     getVersion(): SiteVersionInfo {
         if (this.tree) {
             return this.tree.getVersion();
