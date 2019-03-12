@@ -67,18 +67,18 @@ export class LineToDecorator extends AuxFile3DDecorator {
                 
                 if (Array.isArray(calculatedValue)) { 
                     // Array of objects.
-                    calculatedValue.forEach((o) => { if (o) { this._trySetupLines(o.id, validLineIds, lineColor); } });
+                    calculatedValue.forEach((o) => { if (o) { this._trySetupLines(calc, o.id, validLineIds, lineColor); } });
                 } else {
                     // Single object.
-                    if (calculatedValue) { this._trySetupLines(calculatedValue.id, validLineIds, lineColor); }
+                    if (calculatedValue) { this._trySetupLines(calc, calculatedValue.id, validLineIds, lineColor); }
                 }
             } else {
                 if (isArray(lineTo)) {
                     // Array of strings.
-                    parseArray(lineTo).forEach((s) => { this._trySetupLines(s, validLineIds, lineColor); });
+                    parseArray(lineTo).forEach((s) => { this._trySetupLines(calc, s, validLineIds, lineColor); });
                 } else {
                     // Single string.
-                    this._trySetupLines(lineTo, validLineIds, lineColor);
+                    this._trySetupLines(calc, lineTo, validLineIds, lineColor);
                 }
             }
         }
@@ -100,7 +100,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
         }
     }
 
-    private _trySetupLines(targetFileId: string, validLineIds: number[], color?: Color) {
+    private _trySetupLines(calc: FileCalculationContext, targetFileId: string, validLineIds: number[], color?: Color) {
         // Undefined target filed id.
         if (!targetFileId) return;
 
@@ -109,10 +109,10 @@ export class LineToDecorator extends AuxFile3DDecorator {
         if (this.file3D.file.id === targetFileId) return;
 
         const files = this._finder.findFilesById(targetFileId);
-        files.forEach(f => this._trySetupLine(f, validLineIds, color));
+        files.forEach(f => this._trySetupLine(calc, f, validLineIds, color));
     }
 
-    private _trySetupLine(targetFile: AuxFile3D, validLineIds: number[], color?: Color) {
+    private _trySetupLine(calc: FileCalculationContext, targetFile: AuxFile3D, validLineIds: number[], color?: Color) {
         
         if (!targetFile) {
             // No file found.
@@ -133,7 +133,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
 
         if (targetArrow) {
             targetArrow.setColor(color);
-            targetArrow.update();
+            targetArrow.update(calc);
             // Add the target file id to the valid ids list.
             validLineIds.push(targetFile.id);
         }

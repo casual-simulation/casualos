@@ -56,7 +56,6 @@ export class Arrow3D extends Object3D {
         // Create the arrow mesh.
         this._arrowHelper = new ArrowHelper(new Vector3(0,0,0), new Vector3(0,0,0), 0, Arrow3D.DefaultColor.getHex());
         this.add(this._arrowHelper);
-        this.update();
     }
 
     /**
