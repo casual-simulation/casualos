@@ -94,9 +94,7 @@ describe('AuxCausalTree', () => {
                 expect(site1.value).toMatchObject({
                     'fileId': {
                         id: 'fileId',
-                        tags: {
-                            other: null
-                        },
+                        tags: {},
                     }
                 });
             });
@@ -130,10 +128,56 @@ describe('AuxCausalTree', () => {
                 const first = site1.file('fileId');
                 const sizeTag = site1.tag('size', first.atom);
 
+                expect(site1.value['fileId'].tags).toEqual({});
+            });
+
+            it('should ignore tags that have null values', () => {
+                let site1 = new AuxCausalTree(storedTree(site(1)));
+                const root = site1.root();
+
+                const first = site1.file('fileId');
+                const sizeTag = site1.tag('size', first.atom);
+                const sizeVal = site1.val(null, sizeTag.atom);
+
+                expect(site1.value['fileId'].tags).toEqual({});
+            });
+
+            it('should ignore tags that have undefined values', () => {
+                let site1 = new AuxCausalTree(storedTree(site(1)));
+                const root = site1.root();
+
+                const first = site1.file('fileId');
+                const sizeTag = site1.tag('size', first.atom);
+                const sizeVal = site1.val(undefined, sizeTag.atom);
+
+                expect(site1.value['fileId'].tags).toEqual({});
+            });
+
+            it('should ignore tags that have empty string values', () => {
+                let site1 = new AuxCausalTree(storedTree(site(1)));
+                const root = site1.root();
+
+                const first = site1.file('fileId');
+                const sizeTag = site1.tag('size', first.atom);
+                const sizeVal = site1.val('', sizeTag.atom);
+
+                expect(site1.value['fileId'].tags).toEqual({});
+            });
+
+            it('should not tags that have whitespace string values', () => {
+                let site1 = new AuxCausalTree(storedTree(site(1)));
+                const root = site1.root();
+
+                const first = site1.file('fileId');
+                const sizeTag = site1.tag('size', first.atom);
+                const sizeVal = site1.val('\n', sizeTag.atom);
+
                 expect(site1.value).toMatchObject({
                     'fileId': {
                         id: 'fileId',
-                        tags: {}
+                        tags: {
+                            size: '\n'
+                        }
                     }
                 });
             });
@@ -554,6 +598,28 @@ describe('AuxCausalTree', () => {
                 index: 0,
                 text: '5555'
             });
+        });
+
+        it('should handle inserting emojii', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            tree.root();
+            const file = tree.file('testId');
+            const tag = tree.tag('test', file.atom);
+            const val = tree.val('the quick brown fox jumped over the lazy dog', tag.atom);
+
+            const files = tree.value;
+
+            const insert = tree.insertIntoTagValue(files['testId'], 'test', '🦊', 16);
+
+            expect(insert.atom.cause).toEqual(val.atom.id);
+            expect(insert.atom.value).toMatchObject({
+                index: 16,
+                text: '🦊'
+            });
+            expect(tree.value['testId'].tags.test).toEqual(
+                'the quick brown 🦊fox jumped over the lazy dog'
+            );
         });
     });
 

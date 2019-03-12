@@ -1,7 +1,7 @@
 import { AtomReducer } from "../causal-trees/AtomReducer";
 import { AuxOp, AuxOpType, TagOp, FileOp, InsertOp, DeleteOp, ValueOp } from "./AuxOpTypes";
 import { Weave, WeaveReference } from '../causal-trees/Weave';
-import { FilesState, File, Object } from "../Files";
+import { FilesState, File, Object, hasValue } from "../Files";
 import { createFile, createWorkspace } from "../Files/FileCalculations";
 import { WeaveTraverser } from "../causal-trees/WeaveTraverser";
 import { merge, splice } from "../utils";
@@ -108,8 +108,11 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState, AuxReducerMetada
                     tree.skip(ref.atom.id);
                 }
 
-                if (tag && tag.name.value && tag.value.hasValue && typeof data[tag.name.value] === 'undefined') {
-                    data[tag.name.value] = tag.value.value;
+                if (tag && tag.name.value && tag.value.hasValue && typeof meta.tags[tag.name.value] === 'undefined') {
+
+                    if (hasValue(tag.value.value)) {
+                        data[tag.name.value] = tag.value.value;
+                    }
                     meta.tags[tag.name.value] = {
                         ref: <WeaveReference<TagOp>>ref,
                         name: tag.name.meta,
