@@ -95,10 +95,11 @@ export class ContextGroup3D extends GameObject {
      * @param file The file that was added.
      * @param calc The file calculation context that should be used.
      */
-    fileAdded(file: AuxFile, calc: FileCalculationContext) {
+    async fileAdded(file: AuxFile, calc: FileCalculationContext) {
         if (file.id === this.file.id) {
             this.file = file;
             this._updateContexts(file, calc);
+            await this._updateThis(file, [], calc);
         }
         
         this.contexts.forEach(context => {

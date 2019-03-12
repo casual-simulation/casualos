@@ -524,10 +524,8 @@ export default class GameView extends Vue implements IGameView {
     this.scene.add(context);
 
     let calc = this.fileManager.createContext();
-    this._contexts.forEach(c => {
-        c.fileAdded(file, calc);
-    });
-
+    await Promise.all([...this._contexts.values()].map(c => c.fileAdded(file, calc)));
+    
     // if (!this._shouldDisplayFile(file)) {
     //     return;
     // }

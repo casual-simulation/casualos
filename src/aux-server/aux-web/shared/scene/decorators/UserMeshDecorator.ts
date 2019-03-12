@@ -173,7 +173,7 @@ export class UserMeshDecorator extends AuxFile3DDecorator {
                 this.label.setText(label);
             }
 
-            this.label.setPositionForObject(this.camera);
+            // this.label.setPositionForObject(this.camera);
         } else {
             this.label.setText("");
         }

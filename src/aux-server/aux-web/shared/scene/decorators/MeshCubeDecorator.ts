@@ -68,11 +68,13 @@ export class MeshCubeDecorator extends AuxFile3DDecorator {
             strokeMat.color = new Color(0x999999);
         }
 
-        if(typeof strokeWidth !== 'undefined'){
+        if (typeof strokeWidth !== 'undefined'){
             strokeMat.linewidth = strokeWidth;
         } else {
             strokeMat.linewidth = 1;
         }
+
+        this.file3D.display.updateMatrixWorld(false);
     }
 
     frameUpdate(calc: FileCalculationContext): void {

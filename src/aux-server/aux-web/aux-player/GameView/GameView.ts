@@ -391,7 +391,7 @@ export default class GameView extends Vue implements IGameView {
             return;
         }
 
-        this._context.fileAdded(file, calc);
+        await this._context.fileAdded(file, calc);
         
         await this._fileUpdated(file, true);
         this.onFileAdded.invoke(file);

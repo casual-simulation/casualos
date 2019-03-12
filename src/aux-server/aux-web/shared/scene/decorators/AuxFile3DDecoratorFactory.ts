@@ -25,13 +25,6 @@ export class AuxFile3DDecoratorFactory {
             new ContextPositionDecorator(file3d)
         );
 
-        if (!!this.gameView) {
-            decorators.push(
-                new LabelDecorator(file3d, this.gameView.mainCamera, this.gameView.scene),
-                new LineToDecorator(file3d, this.gameView)
-            );
-        }
-
         let regex = /^_user/;
         let isUser = regex.test(file3d.context);
         
@@ -44,6 +37,13 @@ export class AuxFile3DDecoratorFactory {
         } else {
             decorators.push(
                 new MeshCubeDecorator(file3d)
+            );
+        }
+
+        if (!!this.gameView) {
+            decorators.push(
+                new LabelDecorator(file3d, this.gameView.mainCamera, this.gameView.scene),
+                new LineToDecorator(file3d, this.gameView)
             );
         }
 

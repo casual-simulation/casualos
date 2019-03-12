@@ -60,14 +60,15 @@ export class BuilderGroup3D extends ContextGroup3D {
                 this.surface.gridGhecker = this._checker;
                 this.add(this.surface);
             }
-            
-            await this.surface.update(calc, file);
             const position = getContextPosition(calc, this.file, this.domain);
 
             this.display.visible = this.surface.container.visible;
             this.position.x = position.x;
             this.position.y = position.z;
             this.position.z = position.y;
+
+            this.display.updateMatrixWorld(true);
+            await this.surface.update(calc, file);
         }
     }
 }

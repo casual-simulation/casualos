@@ -83,29 +83,14 @@ export class AuxFile3D extends GameObject {
      */
     computeBoundingObjects(): void {
         // Calculate Bounding Box
-        let calc = appManager.fileManager.createContext();
-
-        let worldPos = new Vector3();
-        this.display.getWorldPosition(worldPos);
-
-        let scale: Vector3;
-        if (this.contextGroup) {
-            // Take the context group's grid scale into account when calculating the file's scale.
-            const grid = getContextGrid(calc, this.contextGroup.file, this.domain);
-            const gridScale = !!grid ? calculateGridScale(calc, this.contextGroup.file, this.domain) : 1;
-            scale = calculateScale(calc, this.file, gridScale);
-        } else {
-            scale = calculateScale(calc, this.file);
-        }
-
         if (this._boundingBox === null) {
             this._boundingBox = new Box3();
             if (AuxFile3D.Debug_BoundingBox) {
                 DebugObjectManager.debugBox3(`AuxFile3D_${this.file.id}_BoundingBox`, this._boundingBox);
             }
         }
-        let center = new Vector3(worldPos.x, worldPos.y + (scale.y * 0.5), worldPos.z);
-        this._boundingBox.setFromCenterAndSize(center, scale);
+        
+        this._boundingBox.setFromObject(this.display);
 
         if (AuxFile3D.Debug_BoundingBox) {
             DebugObjectManager.forceUpdate(`AuxFile3D_${this.file.id}_BoundingBox`);
