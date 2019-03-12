@@ -9,7 +9,6 @@ export type Workspace = File;
 export interface File {
     id: string;
     tags: {
-        _hidden?: boolean;
         _selection?: string;
         _destroyed?: any;
         _user?: string;

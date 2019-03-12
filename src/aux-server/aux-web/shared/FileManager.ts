@@ -445,13 +445,10 @@ export class FileManager {
     const userContext = `_user_${appManager.user.username}_${this._aux.tree.site.id}`;
     if (!userFile) {
       await this.createFile(this._appManager.user.username, {
-        _hidden: true,
         [userContext]: true,
         ['builder.context']: userContext,
         _user: this._appManager.user.username,
-        _position: { x: 0, y: 0, z: 0},
         _mode: DEFAULT_USER_MODE,
-        _workspace: null
       });
     }
   }
@@ -460,11 +457,7 @@ export class FileManager {
     this._setStatus('Updating globals file...');
     let globalsFile = this.globalsFile;
     if (!globalsFile) {
-      await this.createFile('globals', {
-        _hidden: true,
-        _workspace: null,
-        _position: { x:0, y: 0, z: 0}
-      });
+      await this.createFile('globals', {});
     }
   }
 
