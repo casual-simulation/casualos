@@ -1,8 +1,8 @@
-import { FilesState } from '@yeti-cgi/aux-common';
+import { FilesState, AuxCausalTree } from '@yeti-cgi/aux-common';
 import download from 'downloadjs';
 
-export function downloadAuxState(state: FilesState, name: string) {
-    return downloadFile(new Blob([JSON.stringify(state)], {
+export function downloadAuxState(tree: AuxCausalTree, name: string) {
+    return downloadFile(new Blob([JSON.stringify(tree.export())], {
         type: 'application/json'
     }), `${name}.aux`, 'application/json');
 }

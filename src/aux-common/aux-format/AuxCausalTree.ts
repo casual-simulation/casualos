@@ -1,7 +1,7 @@
 import { Weave, WeaveReference } from '../causal-trees/Weave';
 import { AuxOp, FileOp, TagOp, InsertOp, ValueOp, DeleteOp, AuxOpType } from './AuxOpTypes';
 import { CausalTree } from '../causal-trees/CausalTree';
-import { FilesState, FileEvent, PartialFile, Object, File, Workspace, tagsOnFile, getFileTag, hasValue, getTag } from '../Files';
+import { FilesState, FileEvent, PartialFile, Object, File, Workspace, tagsOnFile, getFileTag, hasValue, getTag, cleanFile } from '../Files';
 import { AuxReducer, AuxReducerMetadata } from './AuxReducer';
 import { root, file, tag, value, del, insert } from './AuxAtoms';
 import { AtomId, Atom } from '../causal-trees/Atom';
@@ -202,7 +202,9 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
                         newVal = merge(oldVal, newVal);
                     }
 
-                    if (!isEqual(oldVal, newVal)) {
+                    const hasOld = hasValue(oldVal);
+                    const hasNew = hasValue(newVal);
+                    if (!isEqual(oldVal, newVal) && (hasOld || hasNew)) {
                         // tag is on the file
                         const val = this.val(newVal, tagMeta.ref.atom);
                         return [val];

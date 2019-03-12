@@ -1,7 +1,20 @@
 import { AuxCausalTree } from "./AuxCausalTree";
 import { AtomFactory } from "../causal-trees/AtomFactory";
 import { AuxOp, AuxOpType } from "./AuxOpTypes";
-import { DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_GRID_SCALE, DEFAULT_WORKSPACE_COLOR, createFile, createWorkspace, fileUpdated, fileAdded, fileRemoved, transaction, addState } from "../Files";
+import { 
+    DEFAULT_WORKSPACE_SCALE, 
+    DEFAULT_WORKSPACE_HEIGHT,
+    DEFAULT_WORKSPACE_GRID_SCALE, 
+    DEFAULT_WORKSPACE_COLOR, 
+    createFile, 
+    createWorkspace, 
+    fileUpdated, 
+    fileAdded, 
+    fileRemoved, 
+    transaction, 
+    addState,
+    File
+} from "../Files";
 import { site } from "../causal-trees/SiteIdInfo";
 import { storedTree } from "../causal-trees/StoredCausalTree";
 import { AuxState } from "./AuxState";
@@ -81,9 +94,7 @@ describe('AuxCausalTree', () => {
                 expect(site1.value).toMatchObject({
                     'fileId': {
                         id: 'fileId',
-                        tags: {
-                            other: null
-                        },
+                        tags: {},
                     }
                 });
             });
@@ -117,10 +128,56 @@ describe('AuxCausalTree', () => {
                 const first = site1.file('fileId');
                 const sizeTag = site1.tag('size', first.atom);
 
+                expect(site1.value['fileId'].tags).toEqual({});
+            });
+
+            it('should ignore tags that have null values', () => {
+                let site1 = new AuxCausalTree(storedTree(site(1)));
+                const root = site1.root();
+
+                const first = site1.file('fileId');
+                const sizeTag = site1.tag('size', first.atom);
+                const sizeVal = site1.val(null, sizeTag.atom);
+
+                expect(site1.value['fileId'].tags).toEqual({});
+            });
+
+            it('should ignore tags that have undefined values', () => {
+                let site1 = new AuxCausalTree(storedTree(site(1)));
+                const root = site1.root();
+
+                const first = site1.file('fileId');
+                const sizeTag = site1.tag('size', first.atom);
+                const sizeVal = site1.val(undefined, sizeTag.atom);
+
+                expect(site1.value['fileId'].tags).toEqual({});
+            });
+
+            it('should ignore tags that have empty string values', () => {
+                let site1 = new AuxCausalTree(storedTree(site(1)));
+                const root = site1.root();
+
+                const first = site1.file('fileId');
+                const sizeTag = site1.tag('size', first.atom);
+                const sizeVal = site1.val('', sizeTag.atom);
+
+                expect(site1.value['fileId'].tags).toEqual({});
+            });
+
+            it('should not tags that have whitespace string values', () => {
+                let site1 = new AuxCausalTree(storedTree(site(1)));
+                const root = site1.root();
+
+                const first = site1.file('fileId');
+                const sizeTag = site1.tag('size', first.atom);
+                const sizeVal = site1.val('\n', sizeTag.atom);
+
                 expect(site1.value).toMatchObject({
                     'fileId': {
                         id: 'fileId',
-                        tags: {}
+                        tags: {
+                            size: '\n'
+                        }
                     }
                 });
             });
@@ -542,6 +599,28 @@ describe('AuxCausalTree', () => {
                 text: '5555'
             });
         });
+
+        it('should handle inserting emojii', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            tree.root();
+            const file = tree.file('testId');
+            const tag = tree.tag('test', file.atom);
+            const val = tree.val('the quick brown fox jumped over the lazy dog', tag.atom);
+
+            const files = tree.value;
+
+            const insert = tree.insertIntoTagValue(files['testId'], 'test', '🦊', 16);
+
+            expect(insert.atom.cause).toEqual(val.atom.id);
+            expect(insert.atom.value).toMatchObject({
+                index: 16,
+                text: '🦊'
+            });
+            expect(tree.value['testId'].tags.test).toEqual(
+                'the quick brown 🦊fox jumped over the lazy dog'
+            );
+        });
     });
 
     describe('deleteFrom()', () => {
@@ -651,14 +730,19 @@ describe('AuxCausalTree', () => {
 
         it('should add the given workspace to the state', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
-            const newFile = createWorkspace('test');
+            const newFile: File = {
+                id: 'test',
+                tags: {
+                    'position': { x: 0, y: 0, z: 0}
+                }
+            };
 
             const root = tree.root();
             const result = tree.addFile(newFile);
 
             const fileAtom = atom(atomId(1, 2), root.atom.id, file('test'));
-            const positionTag = atom(atomId(1, 7), fileAtom.id, tag('position'));
-            const positionTagValue = atom(atomId(1, 8, 1), positionTag.id, value({x: 0, y: 0, z: 0}));
+            const positionTag = atom(atomId(1, 3), fileAtom.id, tag('position'));
+            const positionTagValue = atom(atomId(1, 4, 1), positionTag.id, value({x: 0, y: 0, z: 0}));
 
             const resultAtoms = result.map(ref => ref.atom);
             expect(resultAtoms).toContainEqual(fileAtom);
@@ -673,7 +757,12 @@ describe('AuxCausalTree', () => {
 
         it('should batch the updates together', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
-            const newFile = createWorkspace('test');
+            const newFile = {
+                id: 'test',
+                tags: {
+                    'position': { x: 0, y: 0, z: 0}
+                }
+            };
 
             const root = tree.root();
             
@@ -682,8 +771,8 @@ describe('AuxCausalTree', () => {
             const result = tree.addFile(newFile);
 
             const fileAtom = atom(atomId(1, 2), root.atom.id, file('test'));
-            const positionTag = atom(atomId(1, 7), fileAtom.id, tag('position'));
-            const positionTagValue = atom(atomId(1, 8, 1), positionTag.id, value({x: 0, y: 0, z: 0}));
+            const positionTag = atom(atomId(1, 3), fileAtom.id, tag('position'));
+            const positionTagValue = atom(atomId(1, 4, 1), positionTag.id, value({x: 0, y: 0, z: 0}));
 
             expect(updates.length).toBe(1);
             const resultAtoms = result.map(ref => ref.atom);
@@ -813,6 +902,31 @@ describe('AuxCausalTree', () => {
 
             expect(updates.length).toBe(0);
             expect(result.map(ref => ref.atom)).toEqual([]);
+        });
+
+        it('should allow setting null', () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            const file = createFile('test', {
+                _workspace: null,
+                _position: { x: 0, y: 0, z: 0 },
+                test: 99
+            });
+            tree.addFile(file);
+            
+            let updates: WeaveReference<AuxOp>[][] = [];
+            tree.atomAdded.subscribe(refs => updates.push(refs));
+            
+            const result = tree.updateFile(tree.value['test'], {
+                tags: {
+                    test: null
+                }
+            });
+
+            expect(updates.length).toBe(1);
+            expect(result.map(ref => ref.atom)).toEqual([
+                atom(atomId(1, 8, 1), atomId(1, 6), value(null))
+            ]);
         });
     });
 

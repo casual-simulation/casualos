@@ -17,13 +17,14 @@ import {
     Vector2
 } from 'three';
 
-import { Object, Workspace } from '@yeti-cgi/aux-common';
+import { Object, Workspace, isMinimized, FileCalculationContext } from '@yeti-cgi/aux-common';
 import { WorkspaceMesh } from './WorkspaceMesh';
 import { IGameView } from '../IGameView';
 import { AuxFile3D } from './AuxFile3D';
 import { ContextGroup3D } from './ContextGroup3D';
+import { BuilderGroup3D } from './BuilderGroup3D';
 
-export class Arrow3D {
+export class Arrow3D extends Object3D {
 
     public static DefaultColor: Color = new Color(1, 1, 1);
     public static DefaultHeadWidth = 0.15;
@@ -44,20 +45,17 @@ export class Arrow3D {
      */
     private _targetFile3d: AuxFile3D;
 
-    private _gameView: IGameView;
-
     public get sourceFile3d() { return this._sourceFile3d; }
     public get targetFile3d() { return this._targetFile3d; }
 
-    constructor(gameView: IGameView, sourceFile3d: AuxFile3D, targetFile3d: AuxFile3D) {
-        this._gameView = gameView;
+    constructor(sourceFile3d: AuxFile3D, targetFile3d: AuxFile3D) {
+        super();
         this._sourceFile3d = sourceFile3d;
         this._targetFile3d = targetFile3d;
 
         // Create the arrow mesh.
         this._arrowHelper = new ArrowHelper(new Vector3(0,0,0), new Vector3(0,0,0), 0, Arrow3D.DefaultColor.getHex());
-        this._gameView.scene.add(this._arrowHelper);
-        this.update();
+        this.add(this._arrowHelper);
     }
 
     /**
@@ -65,7 +63,7 @@ export class Arrow3D {
      */
     public setOrigin(origin: Vector3, isWorldspace?: boolean) {
         if (isWorldspace) {
-            this._arrowHelper.position.copy(this._gameView.scene.worldToLocal(origin.clone()));
+            this._arrowHelper.position.copy(this.worldToLocal(origin.clone()));
         } else {
             this._arrowHelper.position.copy(origin);
         }
@@ -86,14 +84,17 @@ export class Arrow3D {
         this._arrowHelper.setLength(length, Arrow3D.DefaultHeadLength, Arrow3D.DefaultHeadWidth);
     }
 
-    public update() {
+    public update(calc: FileCalculationContext) {
         if (!this._arrowHelper) return;
         
         let sourceFile = <Object>this._sourceFile3d.file;
         let targetFile = <Object>this._targetFile3d.file;
         
-        let sourceWorkspace = this._getWorkspace(sourceFile);
-        let targetWorkspace = this._getWorkspace(targetFile);
+        let sourceWorkspace = this._getWorkspace(this._sourceFile3d);
+        let targetWorkspace = this._getWorkspace(this._targetFile3d);
+
+        const sourceMinimized = sourceWorkspace && isMinimized(calc, sourceWorkspace.file, sourceWorkspace.domain);
+        const targetMinimized = targetWorkspace && isMinimized(calc, targetWorkspace.file, targetWorkspace.domain);
 
         if (sourceFile.tags._hidden || targetFile.tags._hidden) {
 
@@ -101,7 +102,7 @@ export class Arrow3D {
             this._arrowHelper.visible = false;
 
         }
-        else if (sourceWorkspace.file.tags.minimized && targetWorkspace && targetWorkspace.file.tags.minimized) {
+        else if (sourceMinimized && targetMinimized) {
 
             // The workspace of both the source file and target file are minimized. Hide arrow and do nothing else.
             this._arrowHelper.visible = false;
@@ -111,7 +112,7 @@ export class Arrow3D {
             this._arrowHelper.visible = true;
     
             // Update arrow origin.
-            if (sourceWorkspace.file.tags.minimized) {
+            if (sourceWorkspace instanceof BuilderGroup3D && sourceMinimized) {
                 let miniHexSphere = (sourceWorkspace.surface).miniHex.boundingSphere;
                 this.setOrigin(miniHexSphere.center, true);
             } else {
@@ -124,13 +125,13 @@ export class Arrow3D {
     
             // Lets get the bounding sphere of the target.
             // This could be either the sphere of the file itself or the sphere of the minimized workspace the file is on.
-            if (targetWorkspace && targetWorkspace.file.tags.minimized) {
+            if (targetWorkspace instanceof BuilderGroup3D && targetMinimized) {
                 targetSphere = (targetWorkspace.surface).miniHex.boundingSphere;
             } else {
                 targetSphere = (this._targetFile3d).boundingSphere;
             }
         
-            let targetCenterLocal = this._gameView.scene.worldToLocal(targetSphere.center.clone());
+            let targetCenterLocal = this.worldToLocal(targetSphere.center.clone());
             let dir = targetCenterLocal.clone().sub(this._arrowHelper.position);
     
             // Decrease length of direction vector so that it only goes 
@@ -145,27 +146,14 @@ export class Arrow3D {
     }
 
     public dispose() {
-        this._gameView.scene.remove(this._arrowHelper);
+        this.remove(this._arrowHelper);
         this._arrowHelper = null;
 
         this._sourceFile3d = null;
         this._targetFile3d = null;
     }
 
-    private _getWorkspace (file: Object): ContextGroup3D { 
-
-        // TODO: Fix
-        return null;
-        // let workspace3d = this._gameView.getFile(file.tags._workspace);
-
-        // let workspaceFile: Workspace = undefined;
-        // if (workspace3d) {
-        //     workspaceFile =  <Workspace>workspace3d.file;
-        // }
-
-        // return {
-        //     workspace3d: workspace3d,
-        //     workspaceFile:  workspaceFile
-        // }
+    private _getWorkspace (file3d: AuxFile3D): ContextGroup3D { 
+        return file3d.contextGroup;
     }
 }

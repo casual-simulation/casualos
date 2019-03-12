@@ -156,22 +156,6 @@ export class UserMeshDecorator extends AuxFile3DDecorator {
 
 
     private _updateCameraMatrix(): void {
-        // let file = this.file3D.file;
-
-        // if (file.tags._position) {
-        //     this.camera.position.set(
-        //         file.tags._position.x,
-        //         file.tags._position.y,
-        //         file.tags._position.z);
-        // }
-
-        // if (file.tags._rotation) {
-        //     this.camera.rotation.set(
-        //         file.tags._rotation.x,
-        //         file.tags._rotation.y,
-        //         file.tags._rotation.z);
-        // }
-
         // We must call this function so that child objects get their positions updated too.
         // Three render function does this automatically but there are functions in here that depend
         // on accurate positioning of child objects.

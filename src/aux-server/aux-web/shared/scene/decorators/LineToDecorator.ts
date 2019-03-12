@@ -1,7 +1,10 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
-import { FileCalculationContext, AuxFile } from "@yeti-cgi/aux-common";
+import { FileCalculationContext, AuxFile, isFormula, calculateFormattedFileValue, calculateFileValue, isArray, parseArray } from "@yeti-cgi/aux-common";
 import { Arrow3D } from "../Arrow3D";
+import { Color } from "three";
+import { AuxFile3DFinder } from "aux-web/shared/AuxFile3DFinder";
+import { find } from "lodash";
 
 export class LineToDecorator extends AuxFile3DDecorator {    
 
@@ -10,14 +13,17 @@ export class LineToDecorator extends AuxFile3DDecorator {
      */
     arrows: Arrow3D[];
 
-    constructor(file3D: AuxFile3D) {
+    private _finder: AuxFile3DFinder;
+
+    constructor(file3D: AuxFile3D, fileFinder: AuxFile3DFinder) {
         super(file3D);
+        this._finder = fileFinder;
     }
     
-    fileUpdated(calc: FileCalculationContext): void {
-    }
+    fileUpdated(calc: FileCalculationContext): void {}
 
     frameUpdate(calc: FileCalculationContext): void {
+        this._tagUpdateLine(calc);
     }
 
     dispose(): void {
@@ -27,124 +33,109 @@ export class LineToDecorator extends AuxFile3DDecorator {
             })
         }
     }
-    
 
-    // private _tagUpdateLine(): void {
+    private _tagUpdateLine(calc: FileCalculationContext): void {
 
-    //     if(!this._gameView) {
-    //         return;
-    //     }
+        if (!this._finder) {
+            return;
+        }
 
-    //     // Only draw lines in the Builder client.
-    //     if (appManager.appType !== AppType.Builder) {
-    //         return;
-    //     }
+        let lineTo = this.file3D.file.tags['line.to'];
+        let validLineIds: number[];
 
-    //     let lineTo = this.file.tags['line.to'];
-    //     let validLineIds: string[];
+        if (lineTo) {
+            validLineIds = [];
 
-    //     if (lineTo) {
+            // Local function for setting up a line. Will add the targetFileId to the validLineIds array if successful.
 
-    //         let files: Object[];
-    //         validLineIds = [];
+            let lineColorTagValue = this.file3D.file.tags['line.color'];
+            let lineColor: Color;
 
-    //         // Local function for setting up a line. Will add the targetFileId to the validLineIds array if successful.
-    //         let trySetupLine = (targetFileId: string, color?: Color): void => {
+            if (lineColorTagValue) {
+                if (isFormula(lineColorTagValue)) {
+                    let calculatedValue = calculateFormattedFileValue(calc, this.file3D.file, 'line.color');
+                    lineColor = new Color(calculatedValue);
+                } else {
+                    lineColor = new Color(lineColorTagValue);
+                }
+            }
+
+            // Parse the line.to tag.
+            // It can either be a formula or a handtyped string.
+            if (isFormula(lineTo)) {
+                let calculatedValue = calculateFileValue(calc, this.file3D.file, 'line.to');
                 
-    //             // Undefined target filed id.
-    //             if (!targetFileId) return;
-    //             // Can't create line to self.
-    //             if (this.file.id === targetFileId) return;
-                
-    //             // let targetFile = this._gameView.getFile(targetFileId);
-    //             // if (!targetFile) {
-
-    //             //     // If not matching file is found on first try then it may be a short id.
-    //             //     // Lets try searching for it.
-
-    //             //     if (!files) {
-    //             //         // Init the searchable files list from file manager.
-    //             //         files = appManager.fileManager.objects;
-    //             //     }
-
-    //             //     let file = fileFromShortId(files, targetFileId);
-    //             //     if (file) {
-    //             //         // Found file with short id.
-    //             //         // targetFile = this._gameView.getFile(file.id);
-    //             //     } else {
-    //             //         // Not file found for short id.
-    //             //         return;
-    //             //     }
-
-    //             // }
-
-    //             // Initialize arrows array if needed.
-    //             if (!this.arrows) this.arrows = [];
-
-    //             // let targetArrow: Arrow3D = find(this.arrows, (a: Arrow3D) => { return a.targetFile3d === targetFile });
-    //             // if (!targetArrow) {
-    //             //     // Create arrow for target.
-    //             //     // let sourceFile = this._gameView.getFile(this.file.id);
-    //             //     // targetArrow = new Arrow3D(this._gameView, sourceFile, targetFile);
-    //             //     // this.arrows.push(targetArrow);
-    //             // }
-
-    //             // if (targetArrow) {
-    //             //     targetArrow.setColor(color);
-    //             //     targetArrow.update();
-    //             //     // Add the target file id to the valid ids list.
-    //             //     // validLineIds.push(targetFile.file.id);
-    //             // }
-    //         }
-
-    //         let lineColorTagValue = this.file.tags['line.color'];
-    //         let lineColor: Color;
-
-    //         if (lineColorTagValue) {
-    //             if (isFormula(lineColorTagValue)) {
-    //                 let calculatedValue = appManager.fileManager.calculateFormattedFileValue(this.file, 'line.color');
-    //                 lineColor = this._getColor(calculatedValue);
-    //             } else {
-    //                 lineColor = this._getColor(lineColorTagValue);
-    //             }
-    //         }
-
-    //         // Parse the line.to tag.
-    //         // It can either be a formula or a handtyped string.
-    //         if (isFormula(lineTo)) {
-    //             let calculatedValue = appManager.fileManager.calculateFileValue(this.file, 'line.to');
-                
-    //             if (Array.isArray(calculatedValue)) { 
-    //                 // Array of objects.
-    //                 calculatedValue.forEach((o) => { if (o) { trySetupLine(o.id, lineColor); } });
-    //             } else {
-    //                 // Single object.
-    //                 if (calculatedValue) { trySetupLine(calculatedValue.id, lineColor); }
-    //             }
-    //         } else {
-    //             if (isArray(lineTo)) {
-    //                 // Array of strings.
-    //                 parseArray(lineTo).forEach((s) => { trySetupLine(s, lineColor); });
-    //             } else {
-    //                 // Single string.
-    //                 trySetupLine(lineTo, lineColor);
-    //             }
-    //         }
-    //     }
+                if (Array.isArray(calculatedValue)) { 
+                    // Array of objects.
+                    calculatedValue.forEach((o) => { if (o) { this._trySetupLines(calc, o.id, validLineIds, lineColor); } });
+                } else {
+                    // Single object.
+                    if (calculatedValue) { this._trySetupLines(calc, calculatedValue.id, validLineIds, lineColor); }
+                }
+            } else {
+                if (isArray(lineTo)) {
+                    // Array of strings.
+                    parseArray(lineTo).forEach((s) => { this._trySetupLines(calc, s, validLineIds, lineColor); });
+                } else {
+                    // Single string.
+                    this._trySetupLines(calc, lineTo, validLineIds, lineColor);
+                }
+            }
+        }
         
-    //     if (this.arrows) {
-    //         // Filter out lines that are no longer being used.
-    //         this.arrows = this.arrows.filter((a) => {
-    //             if (a && a.targetFile3d) {
-    //                 if (validLineIds && validLineIds.indexOf(a.targetFile3d.file.id) >= 0) {
-    //                     // This line is active, keep it in.
-    //                     return true;
-    //                 }
-    //             }
-    //             // This line is no longer used, filter it out.
-    //             a.dispose();
-    //             return false;
-    //         });
-    //     }
-    // }
+        if (this.arrows) {
+            // Filter out lines that are no longer being used.
+            this.arrows = this.arrows.filter((a) => {
+                if (a && a.targetFile3d) {
+                    if (validLineIds && validLineIds.indexOf(a.targetFile3d.id) >= 0) {
+                        // This line is active, keep it in.
+                        return true;
+                    }
+                }
+                // This line is no longer used, filter it out.
+                this.file3D.remove(a);
+                a.dispose();
+                return false;
+            });
+        }
+    }
+
+    private _trySetupLines(calc: FileCalculationContext, targetFileId: string, validLineIds: number[], color?: Color) {
+        // Undefined target filed id.
+        if (!targetFileId) return;
+
+        // Can't create line to self.
+        // TODO: Make it so you can make lines to other visualizations of this
+        if (this.file3D.file.id === targetFileId) return;
+
+        const files = this._finder.findFilesById(targetFileId);
+        files.forEach(f => this._trySetupLine(calc, f, validLineIds, color));
+    }
+
+    private _trySetupLine(calc: FileCalculationContext, targetFile: AuxFile3D, validLineIds: number[], color?: Color) {
+        
+        if (!targetFile) {
+            // No file found.
+            return;
+        }
+
+        // Initialize arrows array if needed.
+        if (!this.arrows) this.arrows = [];
+
+        let targetArrow: Arrow3D = find(this.arrows, (a: Arrow3D) => { return a.targetFile3d === targetFile });
+        if (!targetArrow) {
+            // Create arrow for target.
+            let sourceFile = this.file3D;
+            targetArrow = new Arrow3D(sourceFile, targetFile);
+            this.file3D.add(targetArrow);
+            this.arrows.push(targetArrow);
+        }
+
+        if (targetArrow) {
+            targetArrow.setColor(color);
+            targetArrow.update(calc);
+            // Add the target file id to the valid ids list.
+            validLineIds.push(targetFile.id);
+        }
+    }
 }

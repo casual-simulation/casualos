@@ -5,8 +5,8 @@ import GameView from '../../GameView/GameView';
 import { InteractionManager } from '../InteractionManager';
 import { UserMode, File, FileCalculationContext, AuxFile } from '@yeti-cgi/aux-common';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
-import { AuxFile3D } from 'aux-web/shared/scene/AuxFile3D';
-import { ContextGroup3D } from 'aux-web/shared/scene/ContextGroup3D';
+import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
+import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
 
 /**
  * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.

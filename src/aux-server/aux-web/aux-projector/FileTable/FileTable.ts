@@ -58,12 +58,7 @@ export default class FileTable extends Vue {
 
     @Watch('files')
     filesChanged() {
-        const editingTags = this.lastEditedTag ? [this.lastEditedTag] : [];
-        const allExtraTags = union(this.extraTags, this.addedTags, editingTags);
-        this.tags = fileTags(
-            this.files, 
-            this.tags, 
-            allExtraTags);
+        this._updateTags();
         this.numFilesSelected = this.files.length;
     }
 
@@ -123,12 +118,12 @@ export default class FileTable extends Vue {
     removeTag(tag: string) {
         if (tag === this.lastEditedTag || tag === this.newTag) {
             this.lastEditedTag = null;
-            this.tags = fileTags(this.files, this.tags, this.extraTags);
         }
         const index = this.addedTags.indexOf(tag);
         if (index >= 0) {
             this.addedTags.splice(index, 1);
         }
+        this._updateTags();
     }
 
     tagHasValue(tag: string): boolean {
@@ -152,7 +147,16 @@ export default class FileTable extends Vue {
     }
 
     async created() {
-        this.tags = fileTags(this.files, this.tags, this.lastEditedTag ? [this.lastEditedTag, ...this.extraTags] : this.extraTags);
+        this._updateTags();
         this.numFilesSelected = this.files.length;
+    }
+
+    private _updateTags() {
+        const editingTags = this.lastEditedTag ? [this.lastEditedTag] : [];
+        const allExtraTags = union(this.extraTags, this.addedTags, editingTags);
+        this.tags = fileTags(
+            this.files, 
+            this.tags, 
+            allExtraTags);
     }
 };

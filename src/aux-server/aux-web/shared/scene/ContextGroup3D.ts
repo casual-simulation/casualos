@@ -24,11 +24,6 @@ export class ContextGroup3D extends GameObject {
     file: AuxFile;
 
     /**
-     * The workspace that this context contains.
-     */
-    surface: WorkspaceMesh;
-
-    /**
      * The group that contains the contexts that this group is displaying.
      */
     display: Group;
@@ -43,33 +38,37 @@ export class ContextGroup3D extends GameObject {
      */
     domain: AuxDomain;
 
-    // TODO: Move this to a builder specific class
-    private _checker: GridChecker;
     private _decoratorFactory: AuxFile3DDecoratorFactory;
 
+    /**
+     * Gets the colliders that should be used for this context group.
+     */
+    get groupColliders() {
+        return super.colliders;
+    }
+
+    /**
+     * Sets the colliders that should be used for this context group.
+     */
+    set groupColliders(value: Object3D[]) {
+        super.colliders = value;
+    }
+
     get colliders() {
-        if (this.surface) {
-            return flatMap([this._childColliders, this.surface.colliders]);
-        } else {
-            return this._childColliders;
-        }
+        return flatMap([this._childColliders, this.groupColliders]);
     }
 
     set colliders(value: Object3D[]) {
         this._childColliders = value;
     }
 
-    setGridChecker(gridChecker: GridChecker) {
-        this._checker = gridChecker;
-    }
-
     /**
      * Creates a new Builder Context 3D Object.
      * @param The file that this builder represents.
      */
-    constructor(file: AuxFile, decoratorFactory: AuxFile3DDecoratorFactory) {
+    constructor(file: AuxFile, domain: AuxDomain, decoratorFactory: AuxFile3DDecoratorFactory) {
         super();
-        this.domain = 'builder';
+        this.domain = domain;
         this.file = file;
         this.display = new Group();
         this.contexts = new Map();
@@ -117,7 +116,7 @@ export class ContextGroup3D extends GameObject {
         if (file.id === this.file.id) {
             this.file = file;
             this._updateContexts(file, calc);
-            await this._updateWorkspace(file, updates, calc);
+            await this._updateThis(file, updates, calc);
         }
         
         this.contexts.forEach(context => {
@@ -150,30 +149,7 @@ export class ContextGroup3D extends GameObject {
         }
     }
 
-    /**
-     * Updates this builder's workspace.
-     * @param file 
-     * @param updates 
-     * @param calc 
-     */
-    private async _updateWorkspace(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
-        // TODO: Get this to update with the builder.context
-        if (file.tags[`${this.domain}.context`]) {
-            if (!this.surface) {
-                this.surface = new WorkspaceMesh(this.domain);
-                this.surface.gridGhecker = this._checker;
-                this.add(this.surface);
-            }
-            
-            await this.surface.update(calc, file);
-            const position = getContextPosition(calc, this.file, this.domain);
-
-            this.display.visible = this.surface.container.visible;
-            this.position.x = position.x;
-            this.position.y = position.z;
-            this.position.z = position.y;
-        }
-    }
+    protected async _updateThis(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {}
 
     private _updateBuilderContext(file: AuxFile, newContexts: string | string[], calc: FileCalculationContext) {
         let contexts: string[];

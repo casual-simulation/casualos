@@ -15,10 +15,20 @@
             autocorrect="off">
     </span>
     <span v-else>
-        <md-field>
+        <md-field ref="mdField">
             <span v-if="!isAction" class="hashtag md-prefix">#</span>
             <span v-else class="event-name-svg-container md-prefix"><combine-icon class="event-name-svg" /></span>
-            <md-input 
+            <input
+                class="md-input"
+                ref="inputBox"
+                v-bind:value="editorValue" 
+                :placeholder="placeholder"
+                v-on:input="onInput"
+                @focus.stop="onFocus"
+                @blur.stop="onBlur"
+                autocapitalize="none"
+                autocorrect="off"/>
+            <!-- <md-input 
                 ref="inputBox"
                 :value="editorValue" 
                 :placeholder="placeholder"
@@ -26,7 +36,7 @@
                 @focus.stop="onFocus"
                 @blur.stop="onBlur"
                 autocapitalize="none"
-                autocorrect="off"></md-input>
+                autocorrect="off"></md-input> -->
         </md-field>
     </span>
 

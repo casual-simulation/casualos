@@ -42,6 +42,7 @@ import { EmptyClickOperation } from './ClickOperation/EmptyClickOperation';
 import { NewFileClickOperation } from './ClickOperation/NewFileClickOperation';
 import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
+import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 
 export class InteractionManager {
 
@@ -204,7 +205,7 @@ export class InteractionManager {
         }
     }
 
-    public fileForIntersection(hit: Intersection): AuxFile3D | ContextGroup3D {
+    public fileForIntersection(hit: Intersection): AuxFile3D | BuilderGroup3D {
         const obj = this.findObjectForIntersection(hit);
         if (obj) {
             return obj;
@@ -221,7 +222,7 @@ export class InteractionManager {
         return this.findObjectForMesh(obj.object);
     }
 
-    public findWorkspaceForIntersection(obj: Intersection): ContextGroup3D | null {
+    public findWorkspaceForIntersection(obj: Intersection): BuilderGroup3D | null {
         if (!obj) {
             return null;
         }
@@ -247,15 +248,15 @@ export class InteractionManager {
         // }
     }
 
-    public findWorkspaceForMesh(mesh: Object3D): ContextGroup3D | null {
+    public findWorkspaceForMesh(mesh: Object3D): BuilderGroup3D | null {
         if (!mesh) {
             return null;
         }
 
-        if (mesh instanceof ContextGroup3D) {
+        if (mesh instanceof BuilderGroup3D) {
             return mesh;
         } else if (mesh instanceof AuxFile3D) {
-            return mesh.contextGroup;
+            return <BuilderGroup3D>mesh.contextGroup;
         } else {
             return this.findWorkspaceForMesh(mesh.parent);
         }
@@ -424,7 +425,6 @@ export class InteractionManager {
     }
 
     public selectFile(file: AuxFile3D) {
-        // TODO: Make sure this isn't broken
         this._gameView.fileManager.selectFile(<AuxFile>file.file);
     }
 
@@ -518,7 +518,7 @@ export class InteractionManager {
 
     public getDraggableObjects() {
         if (this._draggableObjectsDirty) {
-            this._draggableColliders = flatMap(this._gameView.getContexts(), f => f.colliders);
+            this._draggableColliders = flatMap(this._gameView.getContexts(), f => f.colliders).filter(c => this._isVisible(c));
             this._draggableObjectsDirty = false;
         }
         return this._draggableColliders;

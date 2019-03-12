@@ -20,6 +20,7 @@ import { BaseFileClickOperation } from './BaseFileClickOperation';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
 import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
+import { BuilderGroup3D } from '../../../shared/scene/BuilderGroup3D';
 
 /**
  * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
@@ -34,8 +35,8 @@ export class FileClickOperation extends BaseFileClickOperation {
         this._hit = hit;
     }
 
-    protected _getWorkspace(): ContextGroup3D | null {
-        return this._file3D instanceof ContextGroup3D ? this._file3D : null;
+    protected _getWorkspace(): BuilderGroup3D | null {
+        return this._file3D instanceof BuilderGroup3D ? this._file3D : null;
     }
 
     protected _createDragOperation(calc: FileCalculationContext): BaseFileDragOperation {
@@ -57,10 +58,10 @@ export class FileClickOperation extends BaseFileClickOperation {
                 const index = getFileIndex(calc, file, file3D.context);
                 const draggedObjects = objects.filter(o => getFileIndex(calc, o, context) >= index)
                     .map(o => o);
-                return new FileDragOperation(this._gameView, this._interaction, this._hit, draggedObjects, <ContextGroup3D>workspace, file3D.context);
+                return new FileDragOperation(this._gameView, this._interaction, this._hit, draggedObjects, <BuilderGroup3D>workspace, file3D.context);
             }
         }
-        return new FileDragOperation(this._gameView, this._interaction, this._hit, [this._file3D.file], <ContextGroup3D>workspace, null);
+        return new FileDragOperation(this._gameView, this._interaction, this._hit, [this._file3D.file], <BuilderGroup3D>workspace, null);
     }
 
     protected _performClick(calc: FileCalculationContext): void {

@@ -134,9 +134,7 @@ export class AuxFile3D extends GameObject {
      * @param updates The updates that happened on the file.
      * @param calc The calculation context.
      */
-    fileUpdated(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
-        // TODO: Add the ability for decorators to update when other files
-        // get updated. (like arrows)
+    fileUpdated(file: File, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
         if (this._shouldUpdate(calc, file)) {
             if (file.id === this.file.id) {
                 this.file = file;
@@ -170,7 +168,7 @@ export class AuxFile3D extends GameObject {
         }
     }
 
-    private _shouldUpdate(calc: FileCalculationContext, file: AuxFile): boolean {
+    private _shouldUpdate(calc: FileCalculationContext, file: File): boolean {
         return file.id === this.file.id ||
             isFileInContext(calc, file, this.context) ||
             (this.contextGroup && this.contextGroup.file.id === file.id);

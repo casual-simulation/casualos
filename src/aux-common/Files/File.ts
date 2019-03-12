@@ -9,12 +9,6 @@ export type Workspace = File;
 export interface File {
     id: string;
     tags: {
-        
-        _rotation?: {
-            x?: number;
-            y?: number;
-            z?: number;
-        };
         _hidden?: boolean;
         _selection?: string;
         _destroyed?: any;
@@ -43,6 +37,9 @@ export interface File {
         ['builder.context.x']?: number;
         ['builder.context.y']?: number;
         ['builder.context.z']?: number;
+        ['builder.context.rotation.x']?: number;
+        ['builder.context.rotation.y']?: number;
+        ['builder.context.rotation.z']?: number;
         ['builder.context.scale']?: number;
         ['builder.context.grid']?: {
             [key: string]: WorkspaceHex;
