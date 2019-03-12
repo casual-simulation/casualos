@@ -82,7 +82,7 @@ th:last-child {
     color: #13bd13b4;
 }
 
-.file-table-actions>div {
+.file-table-actions .file-table-form {
     height: 100%;
     display: flex;
     flex: 1;
