@@ -57,7 +57,7 @@ export class Context3D extends GameObject {
         const isInContext = typeof this.files.get(file.id) !== 'undefined';
         const shouldBeInContext = this._shouldBeInContext(file, calc);
         if (!isInContext && shouldBeInContext) {
-            this._addFile(file);
+            this._addFile(file, calc);
         }
     }
 
@@ -72,7 +72,7 @@ export class Context3D extends GameObject {
         const shouldBeInContext = this._shouldBeInContext(file, calc);
 
         if (!isInContext && shouldBeInContext) {
-            this._addFile(file);
+            this._addFile(file, calc);
         } else if (isInContext && !shouldBeInContext) {
             this._removeFile(file.id);
         } else if(isInContext && shouldBeInContext) {
@@ -101,11 +101,13 @@ export class Context3D extends GameObject {
         }
     }
 
-    private _addFile(file: AuxFile) {
+    private _addFile(file: AuxFile, calc: FileCalculationContext) {
         console.log('[Context3D] Add', file.id, 'to context', this.context);
         const mesh = new AuxFile3D(file, this.contextGroup, this.context, this.domain, this.colliders, this._decoratorFactory);
         this.files.set(file.id, mesh);
         this.add(mesh);
+
+        mesh.fileUpdated(file, [], calc);
     }
 
     private _removeFile(id: string) {

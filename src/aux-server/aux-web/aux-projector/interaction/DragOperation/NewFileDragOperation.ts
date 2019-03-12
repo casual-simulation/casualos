@@ -8,7 +8,7 @@ import { WorkspaceMesh } from '../../../shared/scene/WorkspaceMesh';
 import { File, Workspace, Object, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated, PartialFile, fileAdded, FileEvent } from '@yeti-cgi/aux-common/Files';
 import { keys, minBy, flatMap } from 'lodash';
 import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance, posToKey } from '../../../shared/scene/hex';
-import { createFile } from '@yeti-cgi/aux-common/Files/FileCalculations';
+import { createFile, FileCalculationContext } from '@yeti-cgi/aux-common/Files/FileCalculations';
 import { BaseFileDragOperation } from './BaseFileDragOperation';
 import { appManager } from '../../../shared/AppManager';
 import { merge } from '@yeti-cgi/aux-common/utils';
@@ -65,11 +65,11 @@ export class NewFileDragOperation extends BaseFileDragOperation {
         super._onDragReleased();
     }
 
-    protected _dragFilesFree(): void {
+    protected _dragFilesFree(calc: FileCalculationContext): void {
         if (!this._fileAdded) {
             // New file has not been added yet, drag a dummy mesh to drag around until it gets added to a workspace.
             if (!this._initialDragMesh) {
-                this._initialDragMesh = this._createDragMesh(this._file);
+                this._initialDragMesh = this._createDragMesh(calc, this._file);
             }
 
             const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.mainCamera);
@@ -78,7 +78,7 @@ export class NewFileDragOperation extends BaseFileDragOperation {
             this._initialDragMesh.updateMatrixWorld(true);
         } else {
             // New file has been added, just do the base file drag operation.
-            super._dragFilesFree();
+            super._dragFilesFree(calc);
         }
     }
 
@@ -86,26 +86,6 @@ export class NewFileDragOperation extends BaseFileDragOperation {
         if (this._fileAdded) {
             this._gameView.fileManager.action(this._file, this._other, eventName);
         }
-    }
-
-    private _createDragMesh(file: File): AuxFile3D {
-        // Instance a file mesh to represent the file in its intial drag state before being added to the world.
-        let mesh = new AuxFile3D(file, null, null, null, [], new AuxFile3DDecoratorFactory(null));
-        // mesh.allowNoWorkspace = true;
-        
-        // TODO: Fix
-        // mesh.fileUpdated(file, []);
-
-        if (!mesh.parent) {
-            this._gameView.scene.add(mesh);
-        } else {
-            // KLUDGE: FileMesh will reparent the object to a workspace if the the file has a workspace assigned.
-            // Setting the parent here will force the FileMesh to be in world space again.
-            setParent(mesh, this._gameView.scene, this._gameView.scene);
-        }
-
-
-        return mesh;
     }
 
     private _releaseDragMesh(mesh: AuxFile3D): void {
