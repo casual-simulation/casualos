@@ -114,6 +114,7 @@ export class Context3D extends GameObject {
         console.log('[Context3D] Remove', id, 'from context', this.context);
         const mesh = this.files.get(id);
         if (typeof mesh !== 'undefined') {
+            mesh.dispose();
             this.remove(mesh);
             this.files.delete(id);
         }
