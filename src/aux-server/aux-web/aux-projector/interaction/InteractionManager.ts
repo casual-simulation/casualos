@@ -518,7 +518,7 @@ export class InteractionManager {
 
     public getDraggableObjects() {
         if (this._draggableObjectsDirty) {
-            this._draggableColliders = flatMap(this._gameView.getContexts(), f => f.colliders);
+            this._draggableColliders = flatMap(this._gameView.getContexts(), f => f.colliders).filter(c => this._isVisible(c));
             this._draggableObjectsDirty = false;
         }
         return this._draggableColliders;
