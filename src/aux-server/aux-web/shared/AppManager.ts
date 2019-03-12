@@ -8,6 +8,8 @@ import { SocketManager } from './SocketManager';
 import { flatMap, map, scan } from 'rxjs/operators';
 import { downloadAuxState, readFileJson } from '../aux-projector/download';
 import { CausalTreeManager } from './causal-trees/CausalTreeManager';
+import { StoredCausalTree } from '@yeti-cgi/aux-common/causal-trees';
+import { AuxOp, FilesState } from '@yeti-cgi/aux-common';
 
 export interface User {
     email: string;
@@ -106,7 +108,7 @@ export class AppManager {
      * Downloads the current local application state to a file.
      */
     downloadState(): void {
-        downloadAuxState(this.fileManager.filesState, `${this.user.name}-${this.user.channelId || 'default'}`);
+        downloadAuxState(this.fileManager.aux.tree, `${this.user.name}-${this.user.channelId || 'default'}`);
     }
 
     /**
@@ -115,8 +117,16 @@ export class AppManager {
      */
     async uploadState(file: File): Promise<void> {
         const json = await readFileJson(file);
-        const state = JSON.parse(json);
-        this.fileManager.addState(state);
+        const state: StoredCausalTree<AuxOp> = JSON.parse(json);
+        if (state.site && state.knownSites && state.weave) {
+            console.log('[AppManager] Importing Weave.');
+            const results = this.fileManager.aux.tree.importWeave(state.weave);
+            console.log(`[AppManager] Added ${results.length} atoms.`);
+        } else {
+            console.log('[AppManager] Old file detected, adding state.');
+            this.fileManager.addState(<FilesState><unknown>state);
+        }
+        // this.fileManager.addState(state);
     }
 
     /**

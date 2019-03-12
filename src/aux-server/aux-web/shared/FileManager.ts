@@ -177,6 +177,13 @@ export class FileManager {
     return this._aux.tree.value;
   }
 
+  /**
+   * Gets the realtime causal tree that the file manager is using.
+   */
+  get aux() {
+    return this._aux;
+  }
+
   constructor(app: AppManager, treeManager: CausalTreeManager) {
     this._appManager = app;
     this._treeManager = treeManager;
