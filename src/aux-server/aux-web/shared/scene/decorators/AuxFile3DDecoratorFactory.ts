@@ -26,7 +26,7 @@ export class AuxFile3DDecoratorFactory {
 
         if (!!this.gameView) {
             decorators.push(
-                new LabelDecorator(file3d, this.gameView.mainCamera)
+                new LabelDecorator(file3d, this.gameView.mainCamera, this.gameView.scene)
             );
         }
 

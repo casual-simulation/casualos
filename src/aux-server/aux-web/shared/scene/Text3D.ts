@@ -18,6 +18,9 @@ import {
 import robotoFont from '../public/bmfonts/Roboto.json';
 import robotoTexturePath from '../public/bmfonts/Roboto.png';
 import createBMFont, { TextGeometry, TextGeometryOptions } from "three-bmfont-text";
+import { findParentScene } from "./SceneUtils";
+import { DebugObjectManager } from "./DebugObjectManager";
+import { Debug } from "@sentry/core/dist/integrations";
 
 var sdfShader = require('three-bmfont-text/shaders/sdf');
 
@@ -44,7 +47,7 @@ export class Text3D extends Object3D {
 
     public static readonly defaultWidth: number = 200;
     public static readonly extraSpacing: number = .12;
-    public static readonly defaultScale: number = 0.004;
+    public static readonly defaultScale: number = .004;
 
     /**
      * The distance that should be used when the text sizing mode === 'auto'.
@@ -58,16 +61,11 @@ export class Text3D extends Object3D {
     // The text mesh that is holding onto the text geometry that gets rendered by three.
     private _mesh: Mesh;
 
-    // The 3d scene object that is the parent/anchor of the textMesh.
-    private _anchor: Object3D;
-
     // the text that was last set on this text3d.
     private _unprocessedText: string;
 
     // The bounding box for the text 3d.
     private _boundingBox: Box3;
-
-    private _bboxHelper: Box3Helper;
 
     /**
      * the text that was last set on this text3d.
@@ -77,7 +75,7 @@ export class Text3D extends Object3D {
     /**
      * The bounding box of this text 3d. This bounding box is in world space.
      */
-    get boundingBox(): Box3 { return (this._boundingBox && this._anchor.visible) ? this._boundingBox.clone() : new Box3(); }
+    get boundingBox(): Box3 { return (this._boundingBox && this.visible) ? this._boundingBox.clone() : new Box3(); }
 
     /**
      * Create text 3d.
@@ -114,64 +112,51 @@ export class Text3D extends Object3D {
         }));
 
         this._mesh = new Mesh(this._geometry, material);
-        this._anchor = new Object3D();
-        this._anchor.add(this._mesh);
+        this.add(this._mesh);
         this.setScale(Text3D.defaultScale);
 
         // Rotate the text mesh so that it is upright when rendered.
         this._mesh.rotateX(ThreeMath.degToRad(180));
+        this._mesh.position.set(0,0,0);
 
-        // Add the label anchor as aa child of the file mesh.
-        this.add(this._anchor);
         this.updateBoundingBox();
     }
 
     /**
-     * Sets the position of the text based on the size of the given object's bounding box.
+     * Sets the position of the text based on the size of the given bounding box.
+     * The text will appear above the given bounding box.
      */
-    public setPositionForObject(obj: Object3D) {
-
-        let objBounds = new Box3().setFromObject(obj);
-        if (objBounds.isEmpty())
+    public setPositionForBounds(bounds: Box3) {
+        if (!bounds || bounds.isEmpty())
             return;
 
-        this._mesh.position.set(0, 0, 0);
+        let myMin = this._boundingBox.min.clone();
+        let myMax = this._boundingBox.max.clone();
 
-        let myMinLocal = this._mesh.worldToLocal(this._boundingBox.min.clone());
-        let myMaxLocal = this._mesh.worldToLocal(this._boundingBox.max.clone());
-
-        let myBottomCenterLocal = new Vector3(
-            ((myMaxLocal.x - myMinLocal.x) / 2) + myMinLocal.x,
-            myMinLocal.y,
-            ((myMaxLocal.z - myMinLocal.z) / 2) + myMinLocal.z
+        let bottomCenter = new Vector3(
+            ((myMax.x - myMin.x) / 2) + myMin.x,
+            myMin.y,
+            ((myMax.z - myMin.z) / 2) + myMin.z
         );
 
-        // let posOffset = this._mesh.position.clone().sub(myBottomCenterLocal);
-        let posOffset = this._mesh.position.clone().sub(myBottomCenterLocal);
-        // Invert the y offset, we are rotated 180 degrees around the x-axis which makes the y upside down.
-        posOffset.y = -posOffset.y; 
+        let posOffset = this.position.clone().sub(bottomCenter);
 
-        // Position the mesh some distance above the given object's bounding box.
-        let objSize = new Vector3();
-        objBounds.getSize(objSize);
+        // // Position the mesh some distance above the given object's bounding box.
+        let targetSize = new Vector3();
+        bounds.getSize(targetSize);
+        let targetCenter = new Vector3();
+        bounds.getCenter(targetCenter);
 
-        let paddingScalar = this._anchor.scale.x / Text3D.defaultScale;
-        
-        objSize.add(new Vector3(0, Text3D.extraSpacing * paddingScalar, 0));
-        objSize.divide(this._anchor.scale);
-        this._mesh.position.set(0, objSize.y, 0);
-        this._mesh.position.add(posOffset);
+        let paddingScalar = this.scale.x / Text3D.defaultScale;
+
+        this.position.set(
+            targetCenter.x, 
+            targetCenter.y + (targetSize.y * 0.5) + (Text3D.extraSpacing * paddingScalar), 
+            targetCenter.z
+        );
+        this.position.add(posOffset);
 
         this.updateBoundingBox();
-    }
-
-    /**
-     * Gets the position of the text in world space.
-     */
-    public getWorldPosition(): Vector3 {
-        let pos = new Vector3();
-        this._anchor.getWorldPosition(pos);
-        return pos;
     }
 
     /**
@@ -179,14 +164,14 @@ export class Text3D extends Object3D {
      * This is normally run automatically after updating attributes of the text 3d.
      */
     public updateBoundingBox(): void {
-        this._anchor.updateMatrixWorld(true);
+        this.updateMatrixWorld(true);
         this._geometry.computeBoundingBox();
         let box = this._geometry.boundingBox.clone();
         box.min.z = -1;
         box.max.z = 1;
 
         let anchorWorldScale = new Vector3();
-        this._anchor.getWorldScale(anchorWorldScale);
+        this.getWorldScale(anchorWorldScale);
 
         let position = new Vector3();
         this._mesh.getWorldPosition(position);
@@ -196,8 +181,15 @@ export class Text3D extends Object3D {
         matrix.compose(position, this._mesh.quaternion.clone(), anchorWorldScale);
         box.applyMatrix4(matrix);
 
-        this._boundingBox = box;
-        // this._updateDebugBoundingBox();
+        if (!this._boundingBox) {
+            this._boundingBox = new Box3();
+
+            if (Text3D.Debug_BoundingBox) {
+                DebugObjectManager.debugBox3(`Text3D_${this._geometry.id}_BoundingBox`, this._boundingBox);
+            }
+        }
+
+        this._boundingBox.copy(box);
     }
 
     /**
@@ -213,14 +205,14 @@ export class Text3D extends Object3D {
         if (text) {
 
             // Text has value, enable the mesh and update the geometry.
-            this._anchor.visible = true;
+            this.visible = true;
             this._geometry.update(text);
             this.updateBoundingBox();
 
         } else {
 
             // Disable the text's rendering.
-            this._anchor.visible = false;
+            this.visible = false;
 
         }
     }
@@ -246,13 +238,13 @@ export class Text3D extends Object3D {
         if (opt.text) {
 
             // Text has value, enable the mesh.
-            this._anchor.visible = true;
+            this.visible = true;
             this.updateBoundingBox();
 
         } else {
 
             // Disable the text's rendering.
-            this._anchor.visible = false;
+            this.visible = false;
 
         }
     }
@@ -262,12 +254,12 @@ export class Text3D extends Object3D {
      * @param scale The scale of the text mesh. (default is 0.004)
      */
     public setScale(scale: number) {
-        this._anchor.scale.setScalar(scale);
+        this.scale.setScalar(scale);
         this.updateBoundingBox();
     }
 
     public setRotation(x?: number, y?: number, z?: number) {
-        let nextRotation = new Euler().copy(this._anchor.rotation);
+        let nextRotation = new Euler().copy(this.rotation);
         if (!(x === null || typeof x === 'undefined')) {
             nextRotation.x = x * (Math.PI / 180);
         }
@@ -278,18 +270,13 @@ export class Text3D extends Object3D {
             nextRotation.z = z * (Math.PI / 180);
         }
 
-        this._anchor.rotation.copy(nextRotation);
+        this.rotation.copy(nextRotation);
         this.updateBoundingBox();
     }
 
-    private _updateDebugBoundingBox() {
-        if (!Text3D.Debug_BoundingBox) return;
-
-        if (!this._bboxHelper) {
-            this._bboxHelper = new Box3Helper(this._boundingBox, new Color(0, 1, 0));
+    public dispose(): void {
+        if (Text3D.Debug_BoundingBox) {
+            DebugObjectManager.remove(`Text3D_${this._geometry.id}_BoundingBox`);
         }
-
-        (<any>this._bboxHelper).box = this._boundingBox;
-        this._bboxHelper.updateMatrixWorld(true);
     }
 }

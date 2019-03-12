@@ -80,6 +80,7 @@ import { IGameView } from '../../shared/IGameView';
 import { LayersHelper } from '../../shared/scene/LayersHelper';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { AuxFile3DDecoratorFactory } from '../../shared/scene/decorators/AuxFile3DDecoratorFactory';
+import { DebugObjectManager } from '../../shared/scene/DebugObjectManager';
 
 @Component({
   components: {
@@ -102,8 +103,6 @@ export default class GameView extends Vue implements IGameView {
   private _skylight: HemisphereLight;
 
   private _groundPlane: Plane;
-  private _groundPlaneMesh: Mesh;
-  private _skydomeMesh: Mesh;
   private _gridMesh: GridHelper;
   private _canvas: HTMLCanvasElement;
   private _time: Time;
@@ -187,6 +186,7 @@ export default class GameView extends Vue implements IGameView {
     this._subs = [];
     this._decoratorFactory = new AuxFile3DDecoratorFactory(this);
     this._setupScene();
+    DebugObjectManager.init(this._scene);
     this._input = new Input(this);
     this._inputVR = new InputVR(this);
     this._interaction = new InteractionManager(this);
@@ -263,17 +263,10 @@ export default class GameView extends Vue implements IGameView {
     this._contexts.forEach(context => {
         context.frameUpdate(calc);
     });
-    // for (let id in this._contexts) {
-    //   const file = this._files[id];
-    //   if (file) {
-    //     file.frameUpdate();
-    //   }
-    // }
+
+    DebugObjectManager.frameUpdate();
 
     this._renderUpdate(xrFrame);
-
-    // console.log(this._camera.position);
-
     this._time.update();
 
     if (this.vrDisplay && this.vrDisplay.isPresenting) {

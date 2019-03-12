@@ -4,6 +4,7 @@ import { IGameView } from '../IGameView';
 import { flatMap, sortBy } from 'lodash';
 import { calculateNumericalTagValue, FileCalculationContext, File, getFilePosition, getFileIndex } from '@yeti-cgi/aux-common';
 import { ContextGroup3D } from './ContextGroup3D';
+import { AuxFile3D } from './AuxFile3D';
 
 export function createSphere(position: Vector3, color: number, size: number = 0.1) {
     const sphereMaterial = new MeshBasicMaterial({
@@ -98,6 +99,23 @@ export function setParent(object3d: Object3D, parent: Object3D, scene: Scene) {
 }
 
 /**
+ * Find the scene object that the given object is parented to.
+ * Will return null if no parent scene is found.
+ * @param object3d The object to find the parent scene for.
+ */
+export function findParentScene(object3d: Object3D): Scene {
+    if (!object3d) {
+        return null;
+    }
+
+    if (object3d instanceof Scene) {
+        return object3d;
+    } else {
+        return findParentScene(object3d.parent);
+    }
+}
+
+/**
  * Convert the Box3 object to a box2 object. Basically discards the z components of the Box3's min and max.
  * @param box3 The Box3 to convert to a Box2.
  */
@@ -154,7 +172,6 @@ export function debugLayersToString(obj: Object3D): string {
 
     return output;
 }
-
 
 /**
  * Calculates the scale.x, scale.y, and scale.z values from the given object.

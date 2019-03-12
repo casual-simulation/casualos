@@ -57,8 +57,8 @@ import App from '../App/App';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { IGameView } from '../../shared/IGameView';
 import { LayersHelper } from '../../shared/scene/LayersHelper';
-import { FileManager } from 'aux-web/shared/FileManager';
-import { ContextGroup3D } from 'aux-web/shared/scene/ContextGroup3D';
+import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
+import { DebugObjectManager } from '../../shared/scene/DebugObjectManager';
 
 @Component({
     components: {
@@ -229,6 +229,7 @@ export default class GameView extends Vue implements IGameView {
         this._fileSubs = [];
         this._userContext = new BehaviorSubject(null);
         this._setupScene();
+        DebugObjectManager.init(this._scene);
         this._input = new Input(this);
         this._inputVR = new InputVR(this);
         // this._interaction = new InteractionManager(this);
@@ -265,31 +266,25 @@ export default class GameView extends Vue implements IGameView {
 
     private _frameUpdate(xrFrame?: any) {
 
+        
         let calc = this.fileManager.createContext();
-
+        
         this._input.update();
         this._inputVR.update();
         // this._interaction.update();
-
         this._context.frameUpdate(calc);
-
+        DebugObjectManager.frameUpdate();
         this._renderUpdate(xrFrame);
-
         this._time.update();
-
+        
         if (this.vrDisplay && this.vrDisplay.isPresenting) {
-
             this.vrDisplay.requestAnimationFrame(() => this._frameUpdate(calc));
-
         } else if (this.xrSession) {
-
             this.xrSession.requestFrame((nextXRFrame: any) => this._frameUpdate(nextXRFrame));
-
         } else {
-
             requestAnimationFrame(() => this._frameUpdate(calc));
-
         }
+        
     }
 
     private _renderUpdate(xrFrame?: any) {

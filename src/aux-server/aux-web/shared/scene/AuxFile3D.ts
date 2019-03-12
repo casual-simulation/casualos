@@ -1,8 +1,8 @@
 import { GameObject } from "./GameObject";
 import { AuxFile } from "@yeti-cgi/aux-common/aux-format";
-import { Object3D, Mesh, SceneUtils, Box3, Sphere, Group } from "three";
-import { File, TagUpdatedEvent, FileCalculationContext, AuxDomain, isFileInContext } from "@yeti-cgi/aux-common";
-import { createCube } from "./SceneUtils";
+import { Object3D, Mesh, SceneUtils, Box3, Sphere, Group, Vector3, Box3Helper, Color } from "three";
+import { File, TagUpdatedEvent, FileCalculationContext, AuxDomain, isFileInContext, getContextGrid, calculateGridScale } from "@yeti-cgi/aux-common";
+import { createCube, calculateScale, findParentScene } from "./SceneUtils";
 import { AuxFile3DDecorator } from "./AuxFile3DDecorator";
 import { ContextPositionDecorator } from "./decorators/ContextPositionDecorator";
 import { MeshCubeDecorator } from "./decorators/MeshCubeDecorator";
@@ -11,11 +11,15 @@ import { ScaleDecorator } from "./decorators/ScaleDecorator";
 import { LabelDecorator } from "./decorators/LabelDecorator";
 import { UserMeshDecorator } from "./decorators/UserMeshDecorator";
 import { AuxFile3DDecoratorFactory } from "./decorators/AuxFile3DDecoratorFactory";
+import { appManager } from "../AppManager";
+import { DebugObjectManager } from "./DebugObjectManager";
 
 /**
  * Defines a class that is able to display Aux files.
  */
 export class AuxFile3D extends GameObject {
+
+    static Debug_BoundingBox: boolean = false;
 
     /**
      * The context this file visualization was created for.
@@ -47,16 +51,18 @@ export class AuxFile3D extends GameObject {
      */
     decorators: AuxFile3DDecorator[];
 
+    private _boundingBox: Box3 = null;
+    private _boundingSphere: Sphere = null;
+
+    /**
+     * The bounding box 
+     */
     get boundingBox(): Box3 {
-        return new Box3().setFromObject(this.display);
+        return this._boundingBox.clone();
     }
 
     get boundingSphere(): Sphere {
-        let box = new Box3().setFromObject(this.display);
-        let sphere = new Sphere();
-        sphere = box.getBoundingSphere(sphere);
-
-        return sphere;
+        return this._boundingSphere.clone();
     }
 
     constructor(file: File, contextGroup: ContextGroup3D, context: string, domain: AuxDomain, colliders: Object3D[], decoratorFactory: AuxFile3DDecoratorFactory) {
@@ -70,6 +76,46 @@ export class AuxFile3D extends GameObject {
         this.add(this.display);
         
         this.decorators = decoratorFactory.loadDecorators(this);
+    }
+
+    /**
+     * Update the internally cached representation of this aux file 3d's bounding box and sphere.
+     */
+    computeBoundingObjects(): void {
+        // Calculate Bounding Box
+        let calc = appManager.fileManager.createContext();
+
+        let worldPos = new Vector3();
+        this.display.getWorldPosition(worldPos);
+
+        let scale: Vector3;
+        if (this.contextGroup) {
+            // Take the context group's grid scale into account when calculating the file's scale.
+            const grid = getContextGrid(calc, this.contextGroup.file, this.domain);
+            const gridScale = !!grid ? calculateGridScale(calc, this.contextGroup.file, this.domain) : 1;
+            scale = calculateScale(calc, this.file, gridScale);
+        } else {
+            scale = calculateScale(calc, this.file);
+        }
+
+        if (this._boundingBox === null) {
+            this._boundingBox = new Box3();
+            if (AuxFile3D.Debug_BoundingBox) {
+                DebugObjectManager.debugBox3(`AuxFile3D_${this.file.id}_BoundingBox`, this._boundingBox);
+            }
+        }
+        let center = new Vector3(worldPos.x, worldPos.y + (scale.y * 0.5), worldPos.z);
+        this._boundingBox.setFromCenterAndSize(center, scale);
+
+        if (AuxFile3D.Debug_BoundingBox) {
+            DebugObjectManager.forceUpdate(`AuxFile3D_${this.file.id}_BoundingBox`);
+        }
+
+        // Calculate Bounding Sphere
+        if (this._boundingSphere === null) {
+            this._boundingSphere = new Sphere();
+        }
+        this._boundingBox.getBoundingSphere(this._boundingSphere);
     }
 
     /**
@@ -119,6 +165,9 @@ export class AuxFile3D extends GameObject {
         if (this.decorators) {
             this.decorators.forEach(d => { d.dispose(); });
         }
+        if (AuxFile3D.Debug_BoundingBox) {
+            DebugObjectManager.remove(`AuxFile3D_${this.file.id}_BoundingBox`);
+        }
     }
 
     private _shouldUpdate(calc: FileCalculationContext, file: AuxFile): boolean {
@@ -126,5 +175,4 @@ export class AuxFile3D extends GameObject {
             isFileInContext(calc, file, this.context) ||
             (this.contextGroup && this.contextGroup.file.id === file.id);
     };
-
 }
