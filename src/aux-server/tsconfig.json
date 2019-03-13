@@ -3,6 +3,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "outDir": "./dist/",
+    "paths": {
+        "vue-json-tree-view": ["aux-web/shared/public/VueJsonTreeView/index.ts"]
+    }
   },
   "include": [
     "./**/*",
@@ -10,5 +13,5 @@
   ],
   "exclude": [
     "node_modules"
-  ]
+  ],
 }
