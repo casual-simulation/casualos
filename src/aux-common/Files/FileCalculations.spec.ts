@@ -19,7 +19,9 @@ import {
     isTagWellKnown,
     calculateStateDiff,
     tagsOnFile,
-    createWorkspace
+    createWorkspace,
+    isFileMovable,
+    isFileStackable
 } from './FileCalculations';
 import {
     cloneDeep
@@ -1054,6 +1056,70 @@ describe('FileCalculations', () => {
                     _test: undefined
                 }
             });
+        });
+    });
+
+    describe('isFileMovable()', () => {
+        it('should return true when aux.movable has no value', () => {
+            let file = createFile('test', {});
+            const context = createCalculationContext([file]);
+            expect(isFileMovable(context, file)).toBe(true);
+        });
+
+        it('should return false when aux.movable is false', () => {
+            let file = createFile('test', {
+                ['aux.movable']: false
+            });
+            const context = createCalculationContext([file]);
+            expect(isFileMovable(context, file)).toBe(false);
+        });
+
+        it('should return false when aux.movable calculates to false', () => {
+            let file = createFile('test', {
+                ['aux.movable']: '=false'
+            });
+            const context = createCalculationContext([file]);
+            expect(isFileMovable(context, file)).toBe(false);
+        });
+
+        it('should return true when aux.movable has any other value', () => {
+            let file = createFile('test', {
+                ['aux.movable']: 'anything'
+            });
+            const context = createCalculationContext([file]);
+            expect(isFileMovable(context, file)).toBe(true);
+        });
+    });
+
+    describe('isFileStackable()', () => {
+        it('should return true when aux.stackable has no value', () => {
+            let file = createFile('test', {});
+            const context = createCalculationContext([file]);
+            expect(isFileStackable(context, file)).toBe(true);
+        });
+
+        it('should return false when aux.stackable is false', () => {
+            let file = createFile('test', {
+                ['aux.stackable']: false
+            });
+            const context = createCalculationContext([file]);
+            expect(isFileStackable(context, file)).toBe(false);
+        });
+
+        it('should return false when aux.stackable calculates to false', () => {
+            let file = createFile('test', {
+                ['aux.stackable']: '=false'
+            });
+            const context = createCalculationContext([file]);
+            expect(isFileStackable(context, file)).toBe(false);
+        });
+
+        it('should return true when aux.stackable has any other value', () => {
+            let file = createFile('test', {
+                ['aux.stackable']: 'anything'
+            });
+            const context = createCalculationContext([file]);
+            expect(isFileStackable(context, file)).toBe(true);
         });
     });
 

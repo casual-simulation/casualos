@@ -963,7 +963,7 @@ export function calculateNumericalTagValue(context: FileCalculationContext, file
  * @param defaultValue The default value to use.
  */
 export function calculateBooleanTagValue(context: FileCalculationContext, file: Object, tag: string, defaultValue: boolean): boolean {
-    if (file.tags[tag]) {
+    if (typeof file.tags[tag] !== 'undefined') {
         const result = calculateFileValue(context, file, tag);
         if (typeof result === 'boolean' && result !== null) {
             return result;
