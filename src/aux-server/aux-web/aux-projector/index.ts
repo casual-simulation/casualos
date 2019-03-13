@@ -93,15 +93,15 @@ const routes: RouteConfig[] = [
         component: Welcome,
     },
     {
+        path: '/aux-debug/:id?',
+        name: 'aux-debug',
+        component: AuxDebug
+    },
+    {
         path: '/:id?',
         name: 'home',
         component: Home,
     },
-    {
-        path: '/aux-debug/:id?',
-        name: 'aux-debug',
-        component: AuxDebug
-    }
 ]
 
 const router = new VueRouter({
