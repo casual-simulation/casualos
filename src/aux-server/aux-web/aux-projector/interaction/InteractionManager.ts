@@ -502,7 +502,7 @@ export class InteractionManager {
      */
     public canCombineFiles(file: Object, other: Object): boolean {
         // TODO: Make this work even if the file is a "workspace"
-        if (file && other && !file.tags['builder.context'] && !other.tags['builder.context'] && file.id !== other.id) {
+        if (file && other && !file.tags['aux.builder.context'] && !other.tags['aux.builder.context'] && file.id !== other.id) {
             const context = this._gameView.fileManager.createContext();
             const tags = union(tagsMatchingFilter(file, other, '+', context), tagsMatchingFilter(other, file, '+', context));
             return tags.length > 0;
