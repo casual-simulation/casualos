@@ -22,7 +22,7 @@ import * as webvrui from 'webvr-ui';
 
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Inject, Watch, Provide } from 'vue-property-decorator';
+import { Inject, Provide } from 'vue-property-decorator';
 import {
     SubscriptionLike, BehaviorSubject, Observable,
 } from 'rxjs';
@@ -33,11 +33,7 @@ import {
 import {
     File,
     Object,
-    DEFAULT_WORKSPACE_HEIGHT_INCREMENT,
-    DEFAULT_USER_MODE,
-    UserMode,
     DEFAULT_SCENE_BACKGROUND_COLOR,
-    createFile,
     isFileInContext,
     AuxFile,
     FileCalculationContext
@@ -46,14 +42,12 @@ import { ArgEvent } from '@yeti-cgi/aux-common/Events';
 import { Time } from '../../shared/scene/Time';
 import { Input, InputType } from '../../shared/scene/Input';
 import { InputVR } from '../../shared/scene/InputVR';
-import { Context3D } from '../../shared/scene/Context3D';
 
 import { appManager } from '../../shared/AppManager';
 // import { InteractionManager } from '../interaction/InteractionManager';
 import { GridChecker } from '../../shared/scene/grid/GridChecker';
-import { values, find, flatMap } from 'lodash';
+import { find, flatMap } from 'lodash';
 import App from '../App/App';
-// import MiniFile from '../MiniFile/MiniFile';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { IGameView } from '../../shared/IGameView';
 import { LayersHelper } from '../../shared/scene/LayersHelper';
@@ -145,40 +139,6 @@ export default class GameView extends Vue implements IGameView {
         return flatMap(this._context.getFiles().filter(f => f.file.id === id));
     }
 
-    /**
-     * Returns the file id that is represented by the specified mesh id.
-     * @param meshId The id of the mesh.
-     */
-    // public getFileId(meshId: number): string {
-    //     return this._fileIds[meshId];
-    // }
-
-    // /**
-    //  * Returns the file that matches the specified file id.
-    //  * @param fileId The id of the file.
-    //  */
-    // public getFile(fileId: string): File3D {
-    //     return this._files[fileId];
-    // }
-
-    // /**
-    //  * Gets all of the files.
-    //  */
-    // public getFiles() {
-    //     return values(this._files);
-    // }
-
-    // /**
-    //  * Gets all of the objects.
-    //  */
-    // public getObjects() {
-    //     return this.getFiles();
-    // }
-
-    // public getWorkspaces(): File3D[] {
-    //     throw new Error("AUX Player does not interface with workspaces.");
-    // }
-
     public getContexts(): ContextGroup3D[] {
         return [this._context];
     }
@@ -244,16 +204,16 @@ export default class GameView extends Vue implements IGameView {
     private _frameUpdate(xrFrame?: any) {
 
         DebugObjectManager.update();
-        
+
         let calc = this.fileManager.createContext();
-        
+
         this._input.update();
         this._inputVR.update();
         // this._interaction.update();
         this._context.frameUpdate(calc);
         this._renderUpdate(xrFrame);
         this._time.update();
-        
+
         if (this.vrDisplay && this.vrDisplay.isPresenting) {
             this.vrDisplay.requestAnimationFrame(() => this._frameUpdate(calc));
         } else if (this.xrSession) {
@@ -261,7 +221,7 @@ export default class GameView extends Vue implements IGameView {
         } else {
             requestAnimationFrame(() => this._frameUpdate(calc));
         }
-        
+
     }
 
     private _renderUpdate(xrFrame?: any) {
@@ -348,23 +308,23 @@ export default class GameView extends Vue implements IGameView {
                 }
             }
         }
-        
+
         let calc = this.fileManager.createContext();
         // TODO: Implement Tag Updates
         this._context.fileUpdated(file, [], calc);
-        
+
         this.onFileUpdated.invoke(file);
     }
 
     private async _fileAdded(file: AuxFile) {
         let calc = this.fileManager.createContext();
-        
+
         if (!this._shouldDisplayFile(file, calc)) {
             return;
         }
 
         await this._context.fileAdded(file, calc);
-        
+
         await this._fileUpdated(file, true);
         this.onFileAdded.invoke(file);
     }
@@ -445,7 +405,7 @@ export default class GameView extends Vue implements IGameView {
         if (!this._userContext.value) {
             return false;
         }
-        
+
         if (!file.tags._user) {
             // Dont display normal files that are hidden or destroyed.
             if (file.tags._hidden || file.tags._destroyed) {
