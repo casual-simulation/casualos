@@ -725,6 +725,14 @@ export function getContextValue(calc: FileCalculationContext, contextFile: File,
 }
 
 /**
+ * Gets whether the given file is stackable.
+ * @param calc The calculation context.
+ * @param file The file to check.
+ */
+export function isFileStackable(calc: FileCalculationContext, file: File): boolean {
+    return calculateBooleanTagValue(calc, file, 'aux.stackable', true);
+}
+/**
  * Gets the position that the context should be at using the given file.
  * @param calc The calculation context to use.
  * @param contextFile The file that represents the context.
@@ -931,6 +939,23 @@ export function calculateNumericalTagValue(context: FileCalculationContext, file
     if (file.tags[tag]) {
         const result = calculateFileValue(context, file, tag);
         if (typeof result === 'number' && result !== null) {
+            return result;
+        }
+    }
+    return defaultValue
+}
+
+/**
+ * Calculates the value of the given tag on the given file. If the result is not a boolean, then the given default value is returned.
+ * @param context The context.
+ * @param file The file.
+ * @param tag The tag.
+ * @param defaultValue The default value to use.
+ */
+export function calculateBooleanTagValue(context: FileCalculationContext, file: Object, tag: string, defaultValue: boolean): boolean {
+    if (file.tags[tag]) {
+        const result = calculateFileValue(context, file, tag);
+        if (typeof result === 'boolean' && result !== null) {
             return result;
         }
     }

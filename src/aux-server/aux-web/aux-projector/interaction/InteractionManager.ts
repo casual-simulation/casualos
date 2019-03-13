@@ -24,7 +24,8 @@ import {
     getContextMinimized,
     getContextGrid,
     getContextSize,
-    getContextScale
+    getContextScale,
+    isFileStackable
 } from '@yeti-cgi/aux-common';
 import { FileClickOperation } from './ClickOperation/FileClickOperation';
 import GameView from '../GameView/GameView';
@@ -443,10 +444,18 @@ export class InteractionManager {
             files.length === 1 &&
             this.canCombineFiles(files[0], objs[0]);
 
+        // Can stack if we're dragging more than one file,
+        // or (if the single file we're dragging is stackable and 
+        // the stack we're dragging onto is stackable)
+        const canStack = files.length !== 1 || 
+            (isFileStackable(calc, files[0]) &&
+             (objs.length === 0 || isFileStackable(calc, objs[0])));
+
         const index = this._nextAvailableObjectIndex(calc, context, gridPosition, files, objs);
 
         return {
             combine: canCombine,
+            stackable: canStack,
             other: canCombine ? objs[0] : null,
             index: index
         };

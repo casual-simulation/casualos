@@ -881,6 +881,7 @@ describe('FileCalculations', () => {
             expect(isTagWellKnown('color')).toBe(false);
             expect(isTagWellKnown('label.color')).toBe(false);
             expect(isTagWellKnown('line')).toBe(false);
+            expect(isTagWellKnown('aux.stackable')).toBe(false);
             expect(isTagWellKnown('+(#tag:"value")')).toBe(false);
             expect(isTagWellKnown('📦')).toBe(false);
         });
