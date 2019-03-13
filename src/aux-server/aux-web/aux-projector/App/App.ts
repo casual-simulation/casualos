@@ -12,12 +12,9 @@ import { copyToClipboard } from '../../shared/SharedUtils';
 import { tap } from 'rxjs/operators';
 import { findIndex } from 'lodash';
 import QRCode from '@chenfengyuan/vue-qrcode';
-import CubeIcon from '../public/icons/Cube.svg';
-import HexIcon from '../public/icons/Hexagon.svg';
 
 import vueFilePond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
-// import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type';
 
 const FilePond = vueFilePond();
 
@@ -32,12 +29,9 @@ export interface SidebarItem {
     components: {
         'app': App,
         'qr-code': QRCode,
-        'file-pond': FilePond,
-        'cube-icon': CubeIcon,
-        'hex-icon': HexIcon,
+        'file-pond': FilePond
     }
 })
-
 export default class App extends Vue {
 
     showNavigation:boolean = false;
@@ -109,7 +103,8 @@ export default class App extends Vue {
      */
     get dev() { return !PRODUCTION; }
 
-    onUserModeChanged() {
+    toggleUserMode() {
+        this.userMode = !this.userMode;
         const mode: UserMode = this.userMode ? 'files' : 'worksurfaces';
         appManager.fileManager.updateFile(appManager.fileManager.userFile, {
             tags: {
