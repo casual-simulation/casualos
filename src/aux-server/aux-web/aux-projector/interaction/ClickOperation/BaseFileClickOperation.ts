@@ -106,7 +106,7 @@ export abstract class BaseFileClickOperation implements IOperation {
     }
 
     protected _canDragFile(calc: FileCalculationContext, file: File) {
-        if (file.tags['builder.context']) {
+        if (file.tags['aux.builder.context']) {
             // Workspaces are always movable.
             return true;
         } else {

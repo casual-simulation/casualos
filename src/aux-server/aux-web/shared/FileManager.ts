@@ -446,7 +446,7 @@ export class FileManager {
     if (!userFile) {
       await this.createFile(this._appManager.user.username, {
         [userContext]: true,
-        ['builder.context']: userContext,
+        ['aux.builder.context']: userContext,
         _user: this._appManager.user.username,
         _mode: DEFAULT_USER_MODE,
       });
