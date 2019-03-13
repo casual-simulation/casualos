@@ -136,6 +136,12 @@ export class ContextGroup3D extends GameObject {
         });
     }
 
+    dispose(): void {
+        this.contexts.forEach((context => {
+            context.dispose();
+        }));
+    }
+
     /**
      * Updates the contexts that this builder should be displaying.
      * @param old The old context file.
