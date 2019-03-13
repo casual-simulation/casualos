@@ -206,7 +206,7 @@ export default class GameView extends Vue implements IGameView {
         this._fileSubs = [];
         this._userContext = new BehaviorSubject(null);
         this._setupScene();
-        DebugObjectManager.init(this._scene);
+        DebugObjectManager.init(this._time, this._scene);
         this._input = new Input(this);
         this._inputVR = new InputVR(this);
         // this._interaction = new InteractionManager(this);
@@ -243,6 +243,7 @@ export default class GameView extends Vue implements IGameView {
 
     private _frameUpdate(xrFrame?: any) {
 
+        DebugObjectManager.update();
         
         let calc = this.fileManager.createContext();
         
@@ -250,7 +251,6 @@ export default class GameView extends Vue implements IGameView {
         this._inputVR.update();
         // this._interaction.update();
         this._context.frameUpdate(calc);
-        DebugObjectManager.frameUpdate();
         this._renderUpdate(xrFrame);
         this._time.update();
         

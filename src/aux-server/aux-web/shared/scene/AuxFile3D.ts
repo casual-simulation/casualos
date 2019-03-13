@@ -19,8 +19,6 @@ import { DebugObjectManager } from "./DebugObjectManager";
  */
 export class AuxFile3D extends GameObject {
 
-    static Debug_BoundingBox: boolean = false;
-
     /**
      * The context this file visualization was created for.
      */
@@ -58,14 +56,14 @@ export class AuxFile3D extends GameObject {
      * Returns a copy of the file 3d's current bounding box.
      */
     get boundingBox(): Box3 {
-        return this._boundingBox.clone();
+        return this._boundingBox ? this._boundingBox.clone() : null;
     }
 
     /**
      * Returns a copy of the file 3d's current bounding sphere.
      */
     get boundingSphere(): Sphere {
-        return this._boundingSphere.clone();
+        return this._boundingSphere ? this._boundingSphere.clone() : null;
     }
 
     constructor(file: File, contextGroup: ContextGroup3D, context: string, domain: AuxDomain, colliders: Object3D[], decoratorFactory: AuxFile3DDecoratorFactory) {
@@ -88,16 +86,9 @@ export class AuxFile3D extends GameObject {
         // Calculate Bounding Box
         if (this._boundingBox === null) {
             this._boundingBox = new Box3();
-            if (AuxFile3D.Debug_BoundingBox) {
-                DebugObjectManager.debugBox3(`AuxFile3D_${this.file.id}_BoundingBox`, this._boundingBox);
-            }
         }
         
         this._boundingBox.setFromObject(this.display);
-
-        if (AuxFile3D.Debug_BoundingBox) {
-            DebugObjectManager.forceUpdate(`AuxFile3D_${this.file.id}_BoundingBox`);
-        }
 
         // Calculate Bounding Sphere
         if (this._boundingSphere === null) {
@@ -150,9 +141,6 @@ export class AuxFile3D extends GameObject {
         super.dispose();
         if (this.decorators) {
             this.decorators.forEach(d => { d.dispose(); });
-        }
-        if (AuxFile3D.Debug_BoundingBox) {
-            DebugObjectManager.remove(`AuxFile3D_${this.file.id}_BoundingBox`);
         }
     }
 

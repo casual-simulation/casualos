@@ -38,8 +38,6 @@ export interface Text3DFont {
 
 export class Text3D extends Object3D {
 
-    public static Debug_BoundingBox: boolean = false;
-
     // Map of loaded font textures.
     public static FontTextures: {
         [texturePath: string]: Texture
@@ -183,10 +181,6 @@ export class Text3D extends Object3D {
 
         if (!this._boundingBox) {
             this._boundingBox = new Box3();
-
-            if (Text3D.Debug_BoundingBox) {
-                DebugObjectManager.debugBox3(`Text3D_${this._geometry.id}_BoundingBox`, this._boundingBox);
-            }
         }
 
         this._boundingBox.copy(box);
@@ -274,9 +268,6 @@ export class Text3D extends Object3D {
         this.updateBoundingBox();
     }
 
-    public dispose(): void {
-        if (Text3D.Debug_BoundingBox) {
-            DebugObjectManager.remove(`Text3D_${this._geometry.id}_BoundingBox`);
-        }
+    public dispose(): void { 
     }
 }

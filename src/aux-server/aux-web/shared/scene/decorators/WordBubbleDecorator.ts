@@ -69,9 +69,6 @@ export class WordBubbleDecorator extends AuxFile3DDecorator {
         // });
 
         // if (elementsBoundingBox) {
-        //     // DebugObjectManager.remove(`WordBubbleElements_${this.file3D.id}`);
-        //     // DebugObjectManager.debugBox3(`WordBubbleElements_${this.file3D.id}`, elementsBoundingBox, null, null, false);
-            
         //     this.wordBubble.update(convertToBox2(elementsBoundingBox), arrowPoint);
         // }
     }
