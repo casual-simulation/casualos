@@ -4,7 +4,7 @@ import { FileCalculationContext, AuxFile, calculateFileValue, isFormula, calcula
 import { Text3D } from "../Text3D";
 import { setLayer, findParentScene } from "../SceneUtils";
 import { LayersHelper } from "../LayersHelper";
-import { Color, Camera, Object3D, Mesh, Vector3, Scene } from "three";
+import { Color, Camera, Object3D, Mesh, Vector3, Scene, Box3 } from "three";
 import { MeshCubeDecorator } from "./MeshCubeDecorator";
 
 export class LabelDecorator extends AuxFile3DDecorator {    
@@ -29,8 +29,6 @@ export class LabelDecorator extends AuxFile3DDecorator {
         // without worrying about what the AuxFile3D scale is etc.
         this._scene = scene;
         this._scene.add(this.label);
-
-        console.log('[LabelDecorator] Constructor');
     }
 
     fileUpdated(calc: FileCalculationContext): void {
@@ -80,6 +78,10 @@ export class LabelDecorator extends AuxFile3DDecorator {
     dispose(): void {
         this.label.dispose();
         this._scene.remove(this.label);
+    }
+
+    getBoundingBox(): Box3 {
+        return this.label.boundingBox;
     }
 
     private _updateLabelSize(calc: FileCalculationContext) {

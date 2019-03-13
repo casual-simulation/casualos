@@ -55,12 +55,15 @@ export class AuxFile3D extends GameObject {
     private _boundingSphere: Sphere = null;
 
     /**
-     * The bounding box 
+     * Returns a copy of the file 3d's current bounding box.
      */
     get boundingBox(): Box3 {
         return this._boundingBox.clone();
     }
 
+    /**
+     * Returns a copy of the file 3d's current bounding sphere.
+     */
     get boundingSphere(): Sphere {
         return this._boundingSphere.clone();
     }

@@ -8,6 +8,7 @@ import { LabelDecorator } from "./LabelDecorator";
 import { UserMeshDecorator } from "./UserMeshDecorator";
 import { AuxFile3D } from "../AuxFile3D";
 import { LineToDecorator } from "./LineToDecorator";
+import { WordBubbleDecorator } from "./WordBubbleDecorator";
 
 export class AuxFile3DDecoratorFactory { 
 
@@ -19,11 +20,6 @@ export class AuxFile3DDecoratorFactory {
 
     loadDecorators(file3d: AuxFile3D): AuxFile3DDecorator[] {
         let decorators: AuxFile3DDecorator[] = [];
-
-        decorators.push(
-            new ScaleDecorator(file3d),
-            new ContextPositionDecorator(file3d)
-        );
 
         let regex = /^_user/;
         let isUser = regex.test(file3d.context);
@@ -40,9 +36,19 @@ export class AuxFile3DDecoratorFactory {
             );
         }
 
+        decorators.push(
+            new ScaleDecorator(file3d),
+            new ContextPositionDecorator(file3d)
+        );
+
         if (!!this.gameView) {
+
+            let labelDecorator = new LabelDecorator(file3d, this.gameView.mainCamera, this.gameView.scene); 
+            let wordBubbleDecorator = new WordBubbleDecorator(file3d, this.gameView.scene, labelDecorator);
+
             decorators.push(
-                new LabelDecorator(file3d, this.gameView.mainCamera, this.gameView.scene),
+                labelDecorator,
+                wordBubbleDecorator,
                 new LineToDecorator(file3d, this.gameView)
             );
         }
