@@ -877,11 +877,11 @@ describe('FileCalculations', () => {
         });
 
         it('should return false for normal tags', () => {
-            expect(isTagWellKnown('_movable')).toBe(false);
-            expect(isTagWellKnown('color')).toBe(false);
-            expect(isTagWellKnown('label.color')).toBe(false);
-            expect(isTagWellKnown('line')).toBe(false);
+            expect(isTagWellKnown('aux.movable')).toBe(false);
             expect(isTagWellKnown('aux.stackable')).toBe(false);
+            expect(isTagWellKnown('aux.color')).toBe(false);
+            expect(isTagWellKnown('aux.label.color')).toBe(false);
+            expect(isTagWellKnown('aux.line')).toBe(false);
             expect(isTagWellKnown('+(#tag:"value")')).toBe(false);
             expect(isTagWellKnown('📦')).toBe(false);
         });

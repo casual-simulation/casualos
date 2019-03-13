@@ -732,6 +732,16 @@ export function getContextValue(calc: FileCalculationContext, contextFile: File,
 export function isFileStackable(calc: FileCalculationContext, file: File): boolean {
     return calculateBooleanTagValue(calc, file, 'aux.stackable', true);
 }
+
+/**
+ * Gets whether the given file is movable.
+ * @param calc The calculation context.
+ * @param file The file to check.
+ */
+export function isFileMovable(calc: FileCalculationContext, file: File): boolean {
+    return calculateBooleanTagValue(calc, file, 'aux.movable', true);
+}
+
 /**
  * Gets the position that the context should be at using the given file.
  * @param calc The calculation context to use.
