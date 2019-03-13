@@ -15,20 +15,18 @@ export class LabelDecorator extends AuxFile3DDecorator {
     label: Text3D | null;
 
     private _camera: Camera;
-    private _scene: Scene;
 
-    constructor(file3D: AuxFile3D, camera: Camera, scene: Scene) {
+    constructor(file3D: AuxFile3D, camera: Camera) {
         super(file3D);
         this._camera = camera;
 
         this.label = new Text3D();
         setLayer(this.label, LayersHelper.Layer_UIWorld, true);
 
-        // Parent the labels to the scene. 
+        // Parent the labels directly to the file.
         // Labels do all kinds of weird stuff with their transforms, so this makes it easier to let them do that
         // without worrying about what the AuxFile3D scale is etc.
-        this._scene = scene;
-        this._scene.add(this.label);
+        this.file3D.add(this.label);
     }
 
     fileUpdated(calc: FileCalculationContext): void {
@@ -77,7 +75,7 @@ export class LabelDecorator extends AuxFile3DDecorator {
 
     dispose(): void {
         this.label.dispose();
-        this._scene.remove(this.label);
+        this.file3D.remove(this.label);
     }
 
     getBoundingBox(): Box3 {

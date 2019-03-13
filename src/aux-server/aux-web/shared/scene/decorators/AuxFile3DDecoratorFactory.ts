@@ -43,8 +43,8 @@ export class AuxFile3DDecoratorFactory {
 
         if (!!this.gameView) {
 
-            let labelDecorator = new LabelDecorator(file3d, this.gameView.mainCamera, this.gameView.scene); 
-            let wordBubbleDecorator = new WordBubbleDecorator(file3d, this.gameView.scene, labelDecorator);
+            let labelDecorator = new LabelDecorator(file3d, this.gameView.mainCamera); 
+            let wordBubbleDecorator = new WordBubbleDecorator(file3d, labelDecorator);
 
             decorators.push(
                 labelDecorator,
