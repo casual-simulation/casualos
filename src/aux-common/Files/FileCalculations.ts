@@ -79,7 +79,7 @@ export function isMinimized(calc: FileCalculationContext, workspace: Workspace, 
  * Determines if the given file contains data for a context.
  */
 export function isContext(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): boolean {
-    return calculateFileValue(calc, contextFile, `aux.${domain}.context`);
+    return !!calculateFileValue(calc, contextFile, `aux.${domain}.context`);
 }
 
 /**

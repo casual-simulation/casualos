@@ -62,13 +62,13 @@ export class BuilderGroup3D extends ContextGroup3D {
             }
             const position = getContextPosition(calc, this.file, this.domain);
 
-            this.display.visible = this.surface.container.visible;
             this.position.x = position.x;
             this.position.y = position.z;
             this.position.z = position.y;
-
+            
             this.updateMatrixWorld(true);
             await this.surface.update(calc, file);
+            this.display.visible = this.surface.container.visible;
         }
     }
 }
