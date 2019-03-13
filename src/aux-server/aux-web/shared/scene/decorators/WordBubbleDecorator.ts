@@ -5,7 +5,7 @@ import { WordBubble3D } from "../WordBubble3D";
 import { WordBubbleElement } from "../WordBubbleElement";
 import { setLayer, convertToBox2 } from "../SceneUtils";
 import { LayersHelper } from "../LayersHelper";
-import { Scene, Box3, Vector3 } from "three";
+import { Scene, Box3, Vector3, Color } from "three";
 import { DebugObjectManager } from "../DebugObjectManager";
 
 export class WordBubbleDecorator extends AuxFile3DDecorator {    
@@ -20,13 +20,13 @@ export class WordBubbleDecorator extends AuxFile3DDecorator {
 
     constructor(file3D: AuxFile3D, scene: Scene, ...elements: WordBubbleElement[]) {
         super(file3D);
-        // this._scene = scene;
-        // this._elements = elements;
+        this._scene = scene;
+        this._elements = elements;
 
-        // this.wordBubble = new WordBubble3D({cornerRadius: 0});
-        // setLayer(this.wordBubble, LayersHelper.Layer_UIWorld, true);
-        // this._scene.add(this.wordBubble);
-        // this.wordBubble.visible = false;
+        this.wordBubble = new WordBubble3D({cornerRadius: 0});
+        setLayer(this.wordBubble, LayersHelper.Layer_UIWorld, true);
+        this._scene.add(this.wordBubble);
+        this.wordBubble.visible = false;
     }
 
     fileUpdated(calc: FileCalculationContext): void {
@@ -34,42 +34,47 @@ export class WordBubbleDecorator extends AuxFile3DDecorator {
     }
 
     frameUpdate(calc: FileCalculationContext): void {
+        // HACK: This is purely for debugging. 
+        // Make sure to remove this before committing!
+        this._updateWorldBubble();
     }
 
     dispose(): void {
+        this.wordBubble.dispose();
+        this._scene.remove(this.wordBubble);
     }
 
     private _updateWorldBubble(): void {
-        // let fileBoundingBox = this.file3D.boundingBox;
-        // if (!fileBoundingBox) {
-        //     this.wordBubble.visible = false;
-        //     return;
-        // }
+        let fileBoundingBox = this.file3D.boundingBox;
+        if (!fileBoundingBox) {
+            this.wordBubble.visible = false;
+            return;
+        }
 
-        // this.wordBubble.visible = true;
+        this.wordBubble.visible = true;
 
-        // let arrowPoint = new Vector3();
-        // fileBoundingBox.getCenter(arrowPoint);
+        let arrowPoint = new Vector3();
+        fileBoundingBox.getCenter(arrowPoint);
 
-        // let size = new Vector3();
-        // fileBoundingBox.getSize(size);
-        // arrowPoint.y += size.y / 2;
+        let size = new Vector3();
+        fileBoundingBox.getSize(size);
+        arrowPoint.y += size.y / 2;
         
-        // let elementsBoundingBox:Box3 = null;
+        let elementsBoundingBox:Box3 = null;
 
-        // this._elements.forEach((e) => {
-        //     let elementBox = e.getBoundingBox();
-        //     if (elementBox) {
-        //         if (elementsBoundingBox === null) {
-        //             elementsBoundingBox = new Box3(elementBox.min, elementBox.max);
-        //         } else {
-        //             elementsBoundingBox.union(elementBox);
-        //         }
-        //     }
-        // });
+        this._elements.forEach((e) => {
+            let elementBox = e.getBoundingBox();
+            if (elementBox) {
+                if (elementsBoundingBox === null) {
+                    elementsBoundingBox = new Box3(elementBox.min, elementBox.max);
+                } else {
+                    elementsBoundingBox.union(elementBox);
+                }
+            }
+        });
 
-        // if (elementsBoundingBox) {
-        //     this.wordBubble.update(convertToBox2(elementsBoundingBox), arrowPoint);
-        // }
+        if (elementsBoundingBox) {
+            this.wordBubble.update(convertToBox2(elementsBoundingBox), arrowPoint);
+        }
     }
 }

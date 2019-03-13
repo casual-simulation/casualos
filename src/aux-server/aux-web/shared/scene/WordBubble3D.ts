@@ -23,7 +23,9 @@ import {
     AxesHelper
 } from 'three';
 import { merge } from '@yeti-cgi/aux-common/utils';
-import { setLayerMask } from './SceneUtils';
+import { setLayerMask, convertToBox2 } from './SceneUtils';
+import { DebugObjectManager } from './DebugObjectManager';
+import { Debug } from '@sentry/core/dist/integrations';
 
 export class WordBubble3D extends Object3D {
 
@@ -72,14 +74,14 @@ export class WordBubble3D extends Object3D {
             // Rounded corners.
             throw new Error('Rounded corners are not supported yet.');
         }
-
+        
         let boxWithPadding = box.clone();
         boxWithPadding.expandByVector(new Vector2(this._options.paddingWidth, this._options.paddingHeight));
-
+        
         // Get local space conversion of min, max, and arrowPoint.
-        const minLocal = this.worldToLocal(new Vector3(boxWithPadding.min.x, boxWithPadding.min.y, 0));
-        const maxLocal = this.worldToLocal(new Vector3(boxWithPadding.max.x, boxWithPadding.max.y, 0));
         const arrowPointLocal = this.worldToLocal(arrowPoint.clone());
+        const minLocal = this.worldToLocal(new Vector3(boxWithPadding.min.x, boxWithPadding.min.y, arrowPointLocal.z));
+        const maxLocal = this.worldToLocal(new Vector3(boxWithPadding.max.x, boxWithPadding.max.y, arrowPointLocal.z));
 
         // Clamp arrow width to the size of the box if the box is smaller than the defualt arrow width.
         const arrowWidthPct = 0.3;
@@ -91,20 +93,21 @@ export class WordBubble3D extends Object3D {
 
         // Sharp corners.
         shape.moveTo(arrowPointLocal.x, arrowPointLocal.y);
-        shape.lineTo(-arrowWidth / 2, minLocal.y);
+        shape.lineTo((-arrowWidth / 2) + arrowPointLocal.x, minLocal.y);
         shape.lineTo(minLocal.x, minLocal.y);
         shape.lineTo(minLocal.x, maxLocal.y);
         shape.lineTo(maxLocal.x, maxLocal.y);
         shape.lineTo(maxLocal.x, minLocal.y);
-        shape.lineTo(arrowWidth / 2, minLocal.y);
+        shape.lineTo((arrowWidth / 2) + arrowPointLocal.x, minLocal.y);
 
-        // shape.moveTo(0, 0);
-        // shape.lineTo(-this._options.arrowWidth, min.y);
-        // shape.lineTo(min.x, min.y);
-        // shape.lineTo(min.x, max.y);
-        // shape.lineTo(max.x, max.y);
-        // shape.lineTo(max.x, min.y);
-        // shape.lineTo(this._options.arrowWidth, min.y);
+        // let points: Vector2[] = shape.getPoints();
+        // points.forEach((p, i) => {
+        //     let p3d = new Vector3(p.x, p.y, 0);
+        //     let step = 1 / points.length;
+        //     let cval = step * i;
+        //     let color = new Color(1, cval, 0);
+        //     DebugObjectManager.debugPoint(p3d, this, 0.05, false, color);
+        // });
 
         // Material for word bubble.
         this._shapeMeshMaterial = new MeshBasicMaterial({
@@ -120,12 +123,10 @@ export class WordBubble3D extends Object3D {
         this.add(this._shapeMesh);
 
         // Nudge the shape mesh back so that meshes that we encapsulated can render 'on top'.
-        this._shapeMesh.position.set(0, 0, -0.01);
+        this._shapeMesh.position.set(0, 0, arrowPointLocal.z - 0.01);
     }
 
-    public frameUpdate() {
-        if (this._shapeMesh) {
-        }
+    dispose(): void {
     }
 }
 
