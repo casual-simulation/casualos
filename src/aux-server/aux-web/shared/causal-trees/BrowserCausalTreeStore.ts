@@ -6,11 +6,7 @@ export class BrowserCausalTreeStore implements CausalTreeStore {
     constructor() {
     }
 
-    async init(): Promise<void> {
-        localForage.config({
-            name: 'aux'
-        });
-    }
+    async init(): Promise<void> {}
 
     async update<T extends AtomOp>(id: string, tree: StoredCausalTree<T>): Promise<void> {
         await localForage.setItem(`tree_${id}`, tree);

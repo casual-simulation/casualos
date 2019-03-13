@@ -69,6 +69,10 @@
                         <md-icon>update</md-icon>
                         <span class="md-list-item-text">An new version is available!</span>
                     </md-list-item>
+                    <router-link v-if="dev && getUser() != null" tag="md-list-item" :to="{ name: 'aux-debug', params: { id: session } }">
+                        <md-icon>bug_report</md-icon>
+                        <span class="md-list-item-text">Debug</span>
+                    </router-link>
                     <md-list-item v-for="item in extraItems" :key="item.id" @click="item.click()">
                         <md-icon v-if="item.icon">{{item.icon}}</md-icon>
                         <span class="md-list-item-text">{{item.text}}</span>

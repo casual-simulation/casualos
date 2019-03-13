@@ -67,7 +67,6 @@ import { DebugObjectManager } from '../../shared/scene/DebugObjectManager';
     }
 })
 export default class GameView extends Vue implements IGameView {
-    private _debug: boolean;
     private _scene: Scene;
     private _mainCamera: PerspectiveCamera;
     private _uiWorldCamera: PerspectiveCamera;
@@ -107,7 +106,6 @@ export default class GameView extends Vue implements IGameView {
      */
     private _userContext: BehaviorSubject<string>;
 
-    debug: boolean = false;
     xrCapable: boolean = false;
     xrDisplay: any = null;
     xrSession: any = null;
@@ -185,32 +183,6 @@ export default class GameView extends Vue implements IGameView {
         return [this._context];
     }
 
-    /**
-     * Toggles whether debug information is shown.
-     */
-    public toggleDebugInfo() {
-        this.showDebugInfo(!this._debug);
-    }
-
-    /**
-     * Sets whether to show debug information.
-     * @param debug Whether to show debug info.
-     */
-    public showDebugInfo(debug: boolean) {
-        this._debug = debug;
-        // TODO:
-        // this.getFiles().forEach(w => w.mesh.showDebugInfo(debug));
-    }
-
-    public toggleDebug() {
-        this.debug = !this.debug;
-    }
-
-    @Watch('debug')
-    public debugChanged(val: boolean) {
-        this.showDebugInfo(val);
-    }
-
     public setGridsVisible(visible: boolean) {
         console.warn("TODO: Implement setGridsVisible for AUX Player");
     }
@@ -242,11 +214,11 @@ export default class GameView extends Vue implements IGameView {
 
         this._triggerFilesRefresh();
 
-        if (this.dev) {
-            this.addSidebarItem('debug_mode', 'Debug', () => {
-                this.toggleDebug();
-            }, 'bug_report');
-        }
+        // if (this.dev) {
+        //     this.addSidebarItem('debug_mode', 'Debug', () => {
+        //         this.toggleDebug();
+        //     }, 'bug_report');
+        // }
 
         this._setupWebVR();
         await this._setupWebXR();

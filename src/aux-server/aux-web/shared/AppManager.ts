@@ -10,6 +10,7 @@ import { downloadAuxState, readFileJson } from '../aux-projector/download';
 import { CausalTreeManager } from './causal-trees/CausalTreeManager';
 import { StoredCausalTree } from '@yeti-cgi/aux-common/causal-trees';
 import { AuxOp, FilesState } from '@yeti-cgi/aux-common';
+import localForage from 'localforage';
 
 export interface User {
     email: string;
@@ -153,6 +154,10 @@ export class AppManager {
     private async _init() {
         this._initSentry();
         this._initOffline();
+        localForage.config({
+            name: 'aux'
+        });
+        
         await this._initUser();
     }
 
@@ -216,9 +221,6 @@ export class AppManager {
     }
 
     private async _initUser() {
-        const localStorage = window.localStorage;
-        const user: User = JSON.parse(localStorage.getItem("user"));
-
         this._user = null;
         this._userSubject = new BehaviorSubject<User>(null);
         this._userSubject.subscribe(user => {
@@ -231,6 +233,9 @@ export class AppManager {
             });
         });
 
+        const userJson = await localForage.getItem<string>('user');
+        const user: User = JSON.parse(userJson);
+
         if (user) {
             this._user = user;
             await this._fileManager.init(this._user.channelId);
@@ -238,13 +243,11 @@ export class AppManager {
         }
     }
 
-    private _saveUser() {
-        const localStorage = window.localStorage;
-
+    private async _saveUser() {
         if (this.user) {
-            localStorage.setItem("user", JSON.stringify(this.user));
+            await localForage.setItem("user", JSON.stringify(this.user));
         } else {
-            localStorage.removeItem("user");
+            await localForage.removeItem("user");
         }
     }
 
