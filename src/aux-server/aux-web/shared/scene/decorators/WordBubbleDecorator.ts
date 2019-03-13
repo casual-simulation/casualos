@@ -15,17 +15,15 @@ export class WordBubbleDecorator extends AuxFile3DDecorator {
      */
     wordBubble: WordBubble3D;
 
-    private _scene: Scene;
     private _elements: WordBubbleElement[];
 
-    constructor(file3D: AuxFile3D, scene: Scene, ...elements: WordBubbleElement[]) {
+    constructor(file3D: AuxFile3D, ...elements: WordBubbleElement[]) {
         super(file3D);
-        this._scene = scene;
         this._elements = elements;
 
         this.wordBubble = new WordBubble3D({cornerRadius: 0});
         setLayer(this.wordBubble, LayersHelper.Layer_UIWorld, true);
-        this._scene.add(this.wordBubble);
+        this.file3D.add(this.wordBubble);
         this.wordBubble.visible = false;
     }
 
@@ -41,7 +39,7 @@ export class WordBubbleDecorator extends AuxFile3DDecorator {
 
     dispose(): void {
         this.wordBubble.dispose();
-        this._scene.remove(this.wordBubble);
+        this.file3D.remove(this.wordBubble);
     }
 
     private _updateWorldBubble(): void {
