@@ -14,22 +14,23 @@ export interface File {
         _user?: string;
         _userContext?: string;
         _mode?: UserMode;
-        _movable?: boolean;
+        
         _editingFile?: string;
         _lastActiveTime?: number;
         _lastEditedBy?: string;
         _sceneBackgroundColor?: string;
-        ['stroke.color']?: string;
-        ['stroke.width']?: number;
-        ['line.to']?: string;
-        ['line.color']?: string;
-        ['label']?: string;
-        ['label.color']?: string;
-        ['label.size']?: number;
-        ['label.size.mode']?: 'auto' | null;
-        ['scale.x']?: number;
-        ['scale.y']?: number;
-        ['scale.z']?: number;
+
+        ['aux.color']?: unknown;
+        ['aux.movable']?: unknown;
+        ['aux.stackable']?: unknown;
+        ['aux.stroke.color']?: unknown;
+        ['aux.stroke.width']?: unknown;
+        ['aux.line.to']?: unknown;
+        ['aux.line.color']?: unknown;
+        ['aux.label']?: unknown;
+        ['aux.label.color']?: unknown;
+        ['aux.label.size']?: unknown;
+        ['aux.label.size.mode']?: 'auto' | null;
 
         // Builder related tags
         ['builder.context']?: string | string[];

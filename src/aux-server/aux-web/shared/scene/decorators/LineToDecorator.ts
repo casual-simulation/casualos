@@ -40,7 +40,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
             return;
         }
 
-        let lineTo = this.file3D.file.tags['line.to'];
+        let lineTo = this.file3D.file.tags['aux.line.to'];
         let validLineIds: number[];
 
         if (lineTo) {
@@ -48,22 +48,22 @@ export class LineToDecorator extends AuxFile3DDecorator {
 
             // Local function for setting up a line. Will add the targetFileId to the validLineIds array if successful.
 
-            let lineColorTagValue = this.file3D.file.tags['line.color'];
+            let lineColorTagValue = this.file3D.file.tags['aux.line.color'];
             let lineColor: Color;
 
             if (lineColorTagValue) {
                 if (isFormula(lineColorTagValue)) {
-                    let calculatedValue = calculateFormattedFileValue(calc, this.file3D.file, 'line.color');
+                    let calculatedValue = calculateFormattedFileValue(calc, this.file3D.file, 'aux.line.color');
                     lineColor = new Color(calculatedValue);
                 } else {
-                    lineColor = new Color(lineColorTagValue);
+                    lineColor = new Color(<string>lineColorTagValue);
                 }
             }
 
             // Parse the line.to tag.
             // It can either be a formula or a handtyped string.
             if (isFormula(lineTo)) {
-                let calculatedValue = calculateFileValue(calc, this.file3D.file, 'line.to');
+                let calculatedValue = calculateFileValue(calc, this.file3D.file, 'aux.line.to');
                 
                 if (Array.isArray(calculatedValue)) { 
                     // Array of objects.
@@ -75,10 +75,10 @@ export class LineToDecorator extends AuxFile3DDecorator {
             } else {
                 if (isArray(lineTo)) {
                     // Array of strings.
-                    parseArray(lineTo).forEach((s) => { this._trySetupLines(calc, s, validLineIds, lineColor); });
+                    parseArray(<string>lineTo).forEach((s) => { this._trySetupLines(calc, s, validLineIds, lineColor); });
                 } else {
                     // Single string.
-                    this._trySetupLines(calc, lineTo, validLineIds, lineColor);
+                    this._trySetupLines(calc, <string>lineTo, validLineIds, lineColor);
                 }
             }
         }

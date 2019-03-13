@@ -32,29 +32,29 @@ export class LabelDecorator extends AuxFile3DDecorator {
     }
 
     fileUpdated(calc: FileCalculationContext): void {
-        let label = this.file3D.file.tags.label;
+        let label = this.file3D.file.tags['aux.label'];
 
         if (label) {
 
             if (isFormula(label)) {
-                let calculatedValue = calculateFormattedFileValue(calc, this.file3D.file, 'label');
+                let calculatedValue = calculateFormattedFileValue(calc, this.file3D.file, 'aux.label');
                 this.label.setText(calculatedValue);
             } else {
-                this.label.setText(label);
+                this.label.setText(<string>label);
             }
             
             this._updateLabelSize(calc);
             this.file3D.computeBoundingObjects();
             this.label.setPositionForBounds(this.file3D.boundingBox);
 
-            let labelColor = this.file3D.file.tags['label.color'];
+            let labelColor = this.file3D.file.tags['aux.label.color'];
             if (labelColor) {
 
                 if (isFormula(labelColor)) {
-                    let calculatedValue = calculateFormattedFileValue(calc, this.file3D.file, 'label.color');
+                    let calculatedValue = calculateFormattedFileValue(calc, this.file3D.file, 'aux.label.color');
                     this.label.setColor(new Color(calculatedValue));
                 } else {
-                    this.label.setColor(new Color(labelColor));
+                    this.label.setColor(new Color(<string>labelColor));
                 }
             }
 
@@ -66,7 +66,7 @@ export class LabelDecorator extends AuxFile3DDecorator {
     frameUpdate(calc: FileCalculationContext): void {
         if (this.label) {
             // update label scale
-            let labelMode = calculateFileValue(calc, this.file3D.file, 'label.size.mode');
+            let labelMode = calculateFileValue(calc, this.file3D.file, 'aux.label.size.mode');
             if (labelMode) {
                 this._updateLabelSize(calc);
                 this.file3D.computeBoundingObjects();
@@ -85,9 +85,9 @@ export class LabelDecorator extends AuxFile3DDecorator {
     }
 
     private _updateLabelSize(calc: FileCalculationContext) {
-        let labelSize = calculateNumericalTagValue(calc, this.file3D.file, 'label.size', 1) * Text3D.defaultScale;
-        if (this.file3D.file.tags['label.size.mode']) {
-            let mode = calculateFileValue(calc, this.file3D.file, 'label.size.mode');
+        let labelSize = calculateNumericalTagValue(calc, this.file3D.file, 'aux.label.size', 1) * Text3D.defaultScale;
+        if (this.file3D.file.tags['aux.label.size.mode']) {
+            let mode = calculateFileValue(calc, this.file3D.file, 'aux.label.size.mode');
             if (mode === 'auto') {
                 let labelWorldPos = new Vector3();
                 this.label.getWorldPosition(labelWorldPos);

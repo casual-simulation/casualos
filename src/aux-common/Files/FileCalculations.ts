@@ -185,7 +185,7 @@ export function calculateFormattedFileValue(context: FileCalculationContext, fil
 /**
  * Determines if the given value represents a formula.
  */
-export function isFormula(value: string): boolean {
+export function isFormula(value: unknown): boolean {
     return typeof value === 'string' && value.indexOf('=') === 0;
 }
 
@@ -208,7 +208,7 @@ export function containsFormula(value: string): boolean {
 /**
  * Determines if the given string value represents an array.
  */
-export function isArray(value: string): boolean {
+export function isArray(value: unknown): boolean {
     return typeof value === 'string' && value.indexOf('[') === 0 && value.lastIndexOf(']') === value.length - 1;
 }
 
@@ -296,7 +296,7 @@ export function isTagWellKnown(tag: string, includeSelectionTags: boolean = true
  * Determines if the files are equal disregarding well-known hidden tags
  * and their IDs. File "appearance equality" means instead of asking "are these files exactly the same?"
  * we ask "are these files functionally the same?". In this respect we care about things like color, label, etc.
- * We also care about things like _movable but not _position, _index _selection, etc.
+ * We also care about things like aux.movable but not _position, _index _selection, etc.
  * 
  * Well-known hidden tags include:
  * - _position
