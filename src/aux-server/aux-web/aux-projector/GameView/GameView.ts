@@ -440,7 +440,7 @@ export default class GameView extends Vue implements IGameView {
   private async _fileUpdated(file: AuxFile, initialUpdate = false) {
     let shouldRemove = false;
     // TODO: Work with all domains
-    if (!file.tags['builder.context']) {
+    if (!file.tags['aux.builder.context']) {
         if (!initialUpdate) { 
             if (!file.tags._user && file.tags._lastEditedBy === this.fileManager.userFile.id) {
                 if (this.selectedRecentFile  && file.id === this.selectedRecentFile.id) {
