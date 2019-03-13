@@ -78,6 +78,7 @@ module.exports = {
     alias: {
       'three-examples': path.join(__dirname, '../node_modules/three/examples/js'),
       'webxr-polyfill': path.resolve(__dirname, 'aux-projector/public/scripts/webxr-polyfill.js'),
+      'vue-json-tree-view': path.resolve(__dirname, 'shared/public/VueJsonTreeView/index.ts')
     },
   },
   plugins: [

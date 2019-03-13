@@ -12,12 +12,10 @@ export class ScaleDecorator extends AuxFile3DDecorator {
     }
 
     fileUpdated(calc: FileCalculationContext): void {
-        if (this.file3D.contextGroup) {
-            const grid = getContextGrid(calc, this.file3D.contextGroup.file, this.file3D.domain);
-            const gridScale = !!grid ? calculateGridScale(calc, this.file3D.contextGroup.file, this.file3D.domain) : 1;
-            const scale = calculateScale(calc, this.file3D.file, gridScale);
-            this.file3D.display.scale.set(scale.x, scale.y, scale.z);
-        }
+        const grid = this.file3D.contextGroup ? getContextGrid(calc, this.file3D.contextGroup.file, this.file3D.domain) : null;
+        const gridScale = !!grid ? calculateGridScale(calc, this.file3D.contextGroup.file, this.file3D.domain) : 1;
+        const scale = calculateScale(calc, this.file3D.file, gridScale);
+        this.file3D.display.scale.set(scale.x, scale.y, scale.z);
     }
 
     frameUpdate(calc: FileCalculationContext): void {

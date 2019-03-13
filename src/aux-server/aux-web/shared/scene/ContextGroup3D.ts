@@ -98,8 +98,8 @@ export class ContextGroup3D extends GameObject {
     async fileAdded(file: AuxFile, calc: FileCalculationContext) {
         if (file.id === this.file.id) {
             this.file = file;
-            this._updateContexts(file, calc);
             await this._updateThis(file, [], calc);
+            this._updateContexts(file, calc);
         }
         
         this.contexts.forEach(context => {
@@ -116,8 +116,8 @@ export class ContextGroup3D extends GameObject {
     async fileUpdated(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
         if (file.id === this.file.id) {
             this.file = file;
-            this._updateContexts(file, calc);
             await this._updateThis(file, updates, calc);
+            this._updateContexts(file, calc);
         }
         
         this.contexts.forEach(context => {

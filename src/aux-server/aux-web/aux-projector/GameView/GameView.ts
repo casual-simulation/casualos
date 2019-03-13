@@ -70,7 +70,6 @@ import { InputVR } from '../../shared/scene/InputVR';
 // import groundModelPath from '../public/models/ground.gltf';
 import { appManager } from '../../shared/AppManager';
 import { InteractionManager } from '../interaction/InteractionManager';
-import { WorkspaceMesh, WorkspaceMeshDebugInfo } from '../../shared/scene/WorkspaceMesh';
 import { GridChecker } from '../../shared/scene/grid/GridChecker';
 import { values, flatMap, find, findIndex, debounce } from 'lodash';
 import App from '../App/App';
@@ -89,7 +88,6 @@ import { AuxFile3D } from '../../shared/scene/AuxFile3D';
   }
 })
 export default class GameView extends Vue implements IGameView {
-  private _debug: boolean;
   private _scene: Scene;
   private _mainCamera: PerspectiveCamera;
   private _uiWorldCamera: PerspectiveCamera;
@@ -121,8 +119,6 @@ export default class GameView extends Vue implements IGameView {
   private _subs: SubscriptionLike[];
   private _decoratorFactory: AuxFile3DDecoratorFactory;
 
-  debug: boolean = false;
-  debugInfo: GameViewDebugInfo = null;
   mode: UserMode = DEFAULT_USER_MODE;
   xrCapable: boolean = false;
   xrDisplay: any = null;
@@ -161,10 +157,6 @@ export default class GameView extends Vue implements IGameView {
     this.onFileRemoved = new ArgEvent<AuxFile>();
   }
 
-  public toggleDebug() {
-    this.debug = !this.debug;
-  }
-
   public setGridsVisible(visible: boolean) {
       this._contexts.forEach(c => {
         if(c.surface) {
@@ -183,7 +175,6 @@ export default class GameView extends Vue implements IGameView {
     window.addEventListener('vrdisplaypresentchange', this._handleResize);
     
     this._time = new Time();
-    this.debugInfo = null;
     this.recentFiles = [
       createFile()
     ];
@@ -230,12 +221,6 @@ export default class GameView extends Vue implements IGameView {
       }))
       .subscribe());
 
-    if (this.dev) {
-      this.addSidebarItem('debug_mode', 'Debug', () => {
-        this.toggleDebug();
-      }, 'bug_report');
-    }
-
     this._setupWebVR();
     await this._setupWebXR();
     this._frameUpdate();
@@ -246,7 +231,6 @@ export default class GameView extends Vue implements IGameView {
     window.removeEventListener('vrdisplaypresentchange', this._handleResize);
     this.removeSidebarItem('enable_xr');
     this.removeSidebarItem('disable_xr');
-    this.removeSidebarItem('debug_mode');
     this._input.dispose();
 
     if (this._subs) {
@@ -361,20 +345,6 @@ export default class GameView extends Vue implements IGameView {
     this._scene.background = this._originalBackground;
   }
 
-  @Watch('debug')
-  public debugChanged(val: boolean, previous: boolean) {
-    this.showDebugInfo(val);
-    this.updateDebugInfo();
-  }
-
-  public updateDebugInfo() {
-      // TODO:
-    // this.getFiles().forEach(f => f.mesh.update());
-    // this.debugInfo = {
-    //   workspaces: this.getWorkspaces().map(w => (<WorkspaceMesh>w.mesh).getDebugInfo()),
-    // };
-  }
-
   public selectRecentFile(file: Object) {
     if(!this.selectedRecentFile || this.selectedRecentFile.id !== file.id) {
       this.selectedRecentFile = file;
@@ -426,23 +396,6 @@ export default class GameView extends Vue implements IGameView {
    */
   public getContexts() {
       return this._contexts.filter(c => c.contexts.size > 0);
-  }
-
-  /**
-   * Toggles whether debug information is shown.
-   */
-  public toggleDebugInfo() {
-    this.showDebugInfo(!this._debug);
-  }
-
-  /**
-   * Sets whether to show debug information.
-   * @param debug Whether to show debug info.
-   */
-  public showDebugInfo(debug: boolean) {
-    this._debug = debug;
-    // TODO:
-    // this.getFiles().forEach(w => w.mesh.showDebugInfo(debug));
   }
 
   /**
@@ -916,10 +869,3 @@ export default class GameView extends Vue implements IGameView {
     return <HTMLElement>this.$refs.container;
   }
 };
-
-/**
- * Defines an interface for debug info that the game view has.
- */
-export interface GameViewDebugInfo {
-  workspaces: WorkspaceMeshDebugInfo[];
-}

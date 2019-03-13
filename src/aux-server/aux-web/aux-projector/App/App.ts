@@ -104,6 +104,11 @@ export default class App extends Vue {
      */
     extraItems: SidebarItem[] = [];
 
+    /**
+     * Gets whether we're in developer mode.
+     */
+    get dev() { return !PRODUCTION; }
+
     onUserModeChanged() {
         const mode: UserMode = this.userMode ? 'files' : 'worksurfaces';
         appManager.fileManager.updateFile(appManager.fileManager.userFile, {

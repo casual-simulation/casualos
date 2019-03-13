@@ -10,7 +10,7 @@
             <span>Upload AUX</span>
         </md-button>
         <div class="json-content">
-            <pre>{{auxJson}}</pre>
+            <tree-view :data="auxJson" :options="{ limitRenderDepth: true, maxDepth: 2 }"></tree-view>
         </div>
     </div>
 </template>

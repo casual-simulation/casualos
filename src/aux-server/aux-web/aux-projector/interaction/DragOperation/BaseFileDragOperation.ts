@@ -43,6 +43,7 @@ export abstract class BaseFileDragOperation implements IOperation {
     private _previousContext: string;
 
     private _freeDragGroup: Group;
+    private _freeDragMeshes: AuxFile3D[];
     private _freeDragDistance: number;
     private _freeDragPrevParent: Object3D;
 
@@ -165,16 +166,21 @@ export abstract class BaseFileDragOperation implements IOperation {
         if (firstFileExists) {
             // Move the file freely in space at the distance the file is currently from the camera.
             if (!this._freeDragGroup) {
-                const fileMeshes = this._files.map(f => this._createDragMesh(calc, f));
-                this._freeDragGroup = this._createFreeDragGroup(fileMeshes);
+                this._freeDragMeshes = this._files.map(f => this._createDragMesh(calc, f));
+                this._freeDragGroup = this._createFreeDragGroup(this._freeDragMeshes);
 
                 this._updateFileContexts(this._files, false);
 
                 // Calculate the distance to perform free drag at.
-                const fileWorldPos = fileMeshes[0].getWorldPosition(new Vector3());
+                const fileWorldPos = this._freeDragMeshes[0].getWorldPosition(new Vector3());
                 const cameraWorldPos = this._gameView.mainCamera.getWorldPosition(new Vector3());
                 this._freeDragDistance = cameraWorldPos.distanceTo(fileWorldPos);
             }
+
+            this._freeDragMeshes.forEach(m => {
+                m.fileUpdated(m.file, [], calc);
+                // m.frameUpdate(calc);
+            });
 
             let worldPos = Physics.pointOnRay(mouseDir, this._freeDragDistance);
             this._freeDragGroup.position.copy(worldPos);
@@ -282,6 +288,9 @@ export abstract class BaseFileDragOperation implements IOperation {
      * Put the the files pack in the workspace and remove the group.
      */
     private _releaseFreeDragGroup(group: Group): void {
+        this._freeDragMeshes.forEach(m => {
+            m.dispose();
+        });
         // Remove the group object from the scene.
         this._gameView.scene.remove(group);
     }
@@ -293,7 +302,7 @@ export abstract class BaseFileDragOperation implements IOperation {
      */
     protected _createDragMesh(calc: FileCalculationContext, file: File): AuxFile3D {
         // Instance a file mesh to represent the file in its intial drag state before being added to the world.
-        let mesh = new AuxFile3D(file, null, null, null, [], new AuxFile3DDecoratorFactory(null));
+        let mesh = new AuxFile3D(file, null, null, null, [], new AuxFile3DDecoratorFactory(this._gameView));
         
         mesh.fileUpdated(file, [], calc);
 
