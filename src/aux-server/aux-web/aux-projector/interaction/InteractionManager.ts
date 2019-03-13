@@ -24,7 +24,8 @@ import {
     getContextMinimized,
     getContextGrid,
     getContextSize,
-    getContextScale
+    getContextScale,
+    isFileStackable
 } from '@yeti-cgi/aux-common';
 import { FileClickOperation } from './ClickOperation/FileClickOperation';
 import GameView from '../GameView/GameView';
@@ -287,7 +288,7 @@ export class InteractionManager {
             const size = getContextSize(calc, file.file, file.domain);
             this._gameView.fileManager.updateFile(file.file, {
                 tags: {
-                    [`${file.domain}.context.size`]: (size || 0) + 1
+                    [`aux.${file.domain}.context.size`]: (size || 0) + 1
                 }
             });
         }
@@ -328,11 +329,11 @@ export class InteractionManager {
     }
 
     private shrinkWorkspace(calc: FileCalculationContext, file: ContextGroup3D) {
-        if (file && file.file.tags['builder.context']) {
+        if (file && file.file.tags[`aux.${file.domain}.context`]) {
             const size = getContextSize(calc, file.file, file.domain);
             this._gameView.fileManager.updateFile(file.file, {
                 tags: {
-                    [`${file.domain}.context.size`]: (size || 0) - 1
+                    [`aux.${file.domain}.context.size`]: (size || 0) - 1
                 }
             });
         }
@@ -343,11 +344,11 @@ export class InteractionManager {
      * @param file 
      */
     private toggleWorkspace(calc: FileCalculationContext, file: ContextGroup3D) {
-        if (file && file.file.tags['builder.context']) {
+        if (file && file.file.tags[`aux.${file.domain}.context`]) {
             const minimized = !isMinimized(calc, file.file, file.domain);
             this._gameView.fileManager.updateFile(file.file, {
                 tags: {
-                    [`${file.domain}.context.minimized`]: minimized
+                    [`aux.${file.domain}.context.minimized`]: minimized
                 }
             });
         }
@@ -365,7 +366,7 @@ export class InteractionManager {
         if (hit) {
             const point = hit.point;
             const workspace = this.findWorkspaceForIntersection(hit);
-            if (workspace && workspace.file.tags[`${workspace.domain}.context`] && !getContextMinimized(calc, workspace.file, workspace.domain)) {
+            if (workspace && workspace.file.tags[`aux.${workspace.domain}.context`] && !getContextMinimized(calc, workspace.file, workspace.domain)) {
                 const workspaceMesh = workspace.surface;
                 const closest = workspaceMesh.closestTileToPoint(point);
 
@@ -443,10 +444,18 @@ export class InteractionManager {
             files.length === 1 &&
             this.canCombineFiles(files[0], objs[0]);
 
+        // Can stack if we're dragging more than one file,
+        // or (if the single file we're dragging is stackable and 
+        // the stack we're dragging onto is stackable)
+        const canStack = files.length !== 1 || 
+            (isFileStackable(calc, files[0]) &&
+             (objs.length === 0 || isFileStackable(calc, objs[0])));
+
         const index = this._nextAvailableObjectIndex(calc, context, gridPosition, files, objs);
 
         return {
             combine: canCombine,
+            stackable: canStack,
             other: canCombine ? objs[0] : null,
             index: index
         };
@@ -526,7 +535,7 @@ export class InteractionManager {
 
     public getSurfaceObjects() {
         if (this._surfaceObjectsDirty) {
-            this._surfaceColliders = flatMap(this._gameView.getContexts().filter(f => f.file.tags['builder.context']), f => f.surface.colliders);
+            this._surfaceColliders = flatMap(this._gameView.getContexts().filter(f => f.file.tags[`aux.${f.domain}.context`]), f => f.surface.colliders);
             this._surfaceObjectsDirty = false;
         }
         return this._surfaceColliders;
@@ -555,7 +564,7 @@ export class InteractionManager {
 
         if (file) {
 
-            if (file instanceof ContextGroup3D && file.file.tags[`${file.domain}.context`]) {
+            if (file instanceof ContextGroup3D && file.file.tags[`aux.${file.domain}.context`]) {
                 
                 const tile = this._worldPosToGridPos(calc, file, point);
                 const currentTile = file.file.tags.grid ? file.file.tags.grid[posToKey(tile)] : null;

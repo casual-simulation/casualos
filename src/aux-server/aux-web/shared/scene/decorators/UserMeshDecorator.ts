@@ -163,14 +163,14 @@ export class UserMeshDecorator extends AuxFile3DDecorator {
     }
 
     private _updateLabel(): void {
-        let label = this.file3D.file.tags.label || this.file3D.file.id;
+        let label = this.file3D.file.tags['aux.label'] || this.file3D.file.id;
 
         if (label) {
             if (isFormula(label)) {
-                let calculatedValue = appManager.fileManager.calculateFormattedFileValue(this.file3D.file, 'label');
+                let calculatedValue = appManager.fileManager.calculateFormattedFileValue(this.file3D.file, 'aux.label');
                 this.label.setText(calculatedValue);
             } else {
-                this.label.setText(label);
+                this.label.setText(<string>label);
             }
 
             // this.label.setPositionForObject(this.camera);

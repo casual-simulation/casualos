@@ -156,7 +156,10 @@ export abstract class BaseFileDragOperation implements IOperation {
 
         this._combine = result.combine;
         this._other = result.other;
-        this._updateFilesPositions(this._files, gridPosition, height, result.index);
+
+        if (result.stackable || result.index === 0) {
+            this._updateFilesPositions(this._files, gridPosition, height, result.index);
+        }
     }
 
     protected _dragFilesFree(calc: FileCalculationContext): void {
