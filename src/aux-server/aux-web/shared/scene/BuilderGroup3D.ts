@@ -54,7 +54,7 @@ export class BuilderGroup3D extends ContextGroup3D {
      * @param calc 
      */
     private async _updateWorkspace(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
-        if (file.tags[`${this.domain}.context`]) {
+        if (file.tags[`aux.${this.domain}.context`]) {
             if (!this.surface) {
                 this.surface = new WorkspaceMesh(this.domain);
                 this.surface.gridGhecker = this._checker;

@@ -42,8 +42,8 @@ export class MeshCubeDecorator extends AuxFile3DDecorator {
     fileUpdated(calc: FileCalculationContext): void {
         // Color
         const cubeMat = <MeshStandardMaterial>this.cube.material;
-        if (this.file3D.file.tags.color) {
-            const color = calculateFileValue(calc, this.file3D.file, 'color');
+        if (this.file3D.file.tags['aux.color']) {
+            const color = calculateFileValue(calc, this.file3D.file, 'aux.color');
             cubeMat.visible = !isTransparent(color);
             if (cubeMat.visible) {
                 cubeMat.color = new Color(color);
@@ -54,8 +54,8 @@ export class MeshCubeDecorator extends AuxFile3DDecorator {
         }
 
         this.stroke.visible = true;
-        const strokeColorValue = calculateFileValue(calc, this.file3D.file, 'stroke.color');
-        const strokeWidth:number = calculateFileValue(calc, this.file3D.file, 'stroke.width');
+        const strokeColorValue = calculateFileValue(calc, this.file3D.file, 'aux.stroke.color');
+        const strokeWidth:number = calculateFileValue(calc, this.file3D.file, 'aux.stroke.width');
 
         const strokeMat = <LineBasicMaterial>this.stroke.material;
         if (typeof strokeColorValue !== 'undefined') {

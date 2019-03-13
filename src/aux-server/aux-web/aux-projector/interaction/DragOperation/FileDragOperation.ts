@@ -100,9 +100,9 @@ export class FileDragOperation extends BaseFileDragOperation {
 
             this._gameView.fileManager.updateFile(this._workspace.file, {
                 tags: {
-                    'builder.context.x': final.x,
-                    'builder.context.y': final.z,
-                    'builder.context.z': final.y
+                    [`aux.${this._workspace.domain}.context.x`]: final.x,
+                    [`aux.${this._workspace.domain}.context.y`]: final.z,
+                    [`aux.${this._workspace.domain}.context.z`]: final.y
                 }
             });
         }
@@ -116,7 +116,7 @@ export class FileDragOperation extends BaseFileDragOperation {
             fileRemoved(this._workspace.file.id),
             fileUpdated(this._attachWorkspace.file.id, {
                 tags: {
-                    [`${this._workspace.domain}.context.grid`]: {
+                    [`aux.${this._workspace.domain}.context.grid`]: {
                         [posToKey(this._attachPoint)]: {
                             height: height
                         }

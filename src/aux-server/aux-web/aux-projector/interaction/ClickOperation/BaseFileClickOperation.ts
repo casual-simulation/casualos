@@ -3,7 +3,7 @@ import { Vector2, Vector3, Intersection } from 'three';
 import { IOperation } from '../IOperation';
 import GameView from '../../GameView/GameView';
 import { InteractionManager } from '../InteractionManager';
-import { UserMode, File, FileCalculationContext, AuxFile } from '@yeti-cgi/aux-common';
+import { UserMode, File, FileCalculationContext, AuxFile, isFileMovable } from '@yeti-cgi/aux-common';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
 import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
@@ -70,7 +70,7 @@ export abstract class BaseFileClickOperation implements IOperation {
                     // Attempt to start dragging now that we've crossed the threshold.
                     this._triedDragging = true;
 
-                    if (this._interaction.isInCorrectMode(this._file3D) && this._canDragFile(this._file)) {
+                    if (this._interaction.isInCorrectMode(this._file3D) && this._canDragFile(calc, this._file)) {
                         this._dragOperation = this._createDragOperation(calc);
                     }
                 }
@@ -105,20 +105,12 @@ export abstract class BaseFileClickOperation implements IOperation {
         throw new Error('Not implemented.');
     }
 
-    protected _canDragFile(file: File) {
+    protected _canDragFile(calc: FileCalculationContext, file: File) {
         if (file.tags['builder.context']) {
             // Workspaces are always movable.
             return true;
         } else {
-            const hasTag = typeof file.tags._movable !== 'undefined';
-            if (hasTag) {
-                // Movability is determined by the result of the calculation
-                const movable = this._gameView.fileManager.calculateFileValue(file, '_movable');
-                return !!movable;
-            } else {
-                // File is movable because that is the default
-                return true;
-            }
+            return isFileMovable(calc, file);
         }
     }
 }

@@ -1,6 +1,6 @@
 import GameView from '../../GameView/GameView';
 import { InteractionManager } from '../InteractionManager';
-import { UserMode, File, Object, duplicateFile } from '@yeti-cgi/aux-common';
+import { UserMode, File, Object, duplicateFile, FileCalculationContext } from '@yeti-cgi/aux-common';
 import { NewFileDragOperation } from '../DragOperation/NewFileDragOperation';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
 import { BaseFileClickOperation } from './BaseFileClickOperation';
@@ -23,7 +23,7 @@ export class NewFileClickOperation extends BaseFileClickOperation {
         return new NewFileDragOperation(this._gameView, this._interaction, duplicatedFile);
     }
 
-    protected _canDragFile(file: File) {
+    protected _canDragFile(calc: FileCalculationContext, file: File) {
         return true;
     }
 }

@@ -79,7 +79,7 @@ export function isMinimized(calc: FileCalculationContext, workspace: Workspace, 
  * Determines if the given file contains data for a context.
  */
 export function isContext(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): boolean {
-    return calculateFileValue(calc, contextFile, `${domain}.context`);
+    return calculateFileValue(calc, contextFile, `aux.${domain}.context`);
 }
 
 /**
@@ -185,7 +185,7 @@ export function calculateFormattedFileValue(context: FileCalculationContext, fil
 /**
  * Determines if the given value represents a formula.
  */
-export function isFormula(value: string): boolean {
+export function isFormula(value: unknown): boolean {
     return typeof value === 'string' && value.indexOf('=') === 0;
 }
 
@@ -208,7 +208,7 @@ export function containsFormula(value: string): boolean {
 /**
  * Determines if the given string value represents an array.
  */
-export function isArray(value: string): boolean {
+export function isArray(value: unknown): boolean {
     return typeof value === 'string' && value.indexOf('[') === 0 && value.lastIndexOf(']') === value.length - 1;
 }
 
@@ -296,7 +296,7 @@ export function isTagWellKnown(tag: string, includeSelectionTags: boolean = true
  * Determines if the files are equal disregarding well-known hidden tags
  * and their IDs. File "appearance equality" means instead of asking "are these files exactly the same?"
  * we ask "are these files functionally the same?". In this respect we care about things like color, label, etc.
- * We also care about things like _movable but not _position, _index _selection, etc.
+ * We also care about things like aux.movable but not _position, _index _selection, etc.
  * 
  * Well-known hidden tags include:
  * - _position
@@ -479,16 +479,16 @@ export function createWorkspace(id = uuid(), builderContextId: string = `_contex
     return {
         id: id,
         tags: {
-            'builder.context': builderContextId,
-            'builder.context.x': 0,
-            'builder.context.y': 0,
-            'builder.context.z': 0,
-            'builder.context.size': 1,
-            'builder.context.grid': {},
-            'builder.context.scale': DEFAULT_WORKSPACE_SCALE,
-            'builder.context.defaultHeight': DEFAULT_WORKSPACE_HEIGHT,
-            'builder.context.grid.scale': DEFAULT_WORKSPACE_GRID_SCALE,
-            'builder.context.color': DEFAULT_WORKSPACE_COLOR,
+            'aux.builder.context': builderContextId,
+            'aux.builder.context.x': 0,
+            'aux.builder.context.y': 0,
+            'aux.builder.context.z': 0,
+            'aux.builder.context.size': 1,
+            'aux.builder.context.grid': {},
+            'aux.builder.context.scale': DEFAULT_WORKSPACE_SCALE,
+            'aux.builder.context.defaultHeight': DEFAULT_WORKSPACE_HEIGHT,
+            'aux.builder.context.grid.scale': DEFAULT_WORKSPACE_GRID_SCALE,
+            'aux.builder.context.color': DEFAULT_WORKSPACE_COLOR,
             [builderContextId]: true,
             [`${builderContextId}.x`]: 0,
             [`${builderContextId}.y`]: 0,
@@ -527,8 +527,8 @@ export function updateFile(file: File, userId: string, newData: PartialFile, cre
  */
 export function calculateGridScale(calc: FileCalculationContext, workspace: AuxFile, domain: AuxDomain): number {
     if (workspace) {
-        const scale = calculateNumericalTagValue(calc, workspace, `${domain}.context.scale`, DEFAULT_WORKSPACE_SCALE);
-        const gridScale =  calculateNumericalTagValue(calc, workspace, `${domain}.context.grid.scale`, DEFAULT_WORKSPACE_GRID_SCALE);
+        const scale = calculateNumericalTagValue(calc, workspace, `aux.${domain}.context.scale`, DEFAULT_WORKSPACE_SCALE);
+        const gridScale =  calculateNumericalTagValue(calc, workspace, `aux.${domain}.context.grid.scale`, DEFAULT_WORKSPACE_GRID_SCALE);
         return scale * gridScale;
     } else {
         return DEFAULT_WORKSPACE_SCALE * DEFAULT_WORKSPACE_GRID_SCALE;
@@ -721,7 +721,25 @@ export function getFileRotation(calc: FileCalculationContext, file: File, contex
  * @param name The name of the value to get.
  */
 export function getContextValue(calc: FileCalculationContext, contextFile: File, domain: string, name: string): any {
-    return calculateFileValue(calc, contextFile, `${domain}.context.${name}`);
+    return calculateFileValue(calc, contextFile, `aux.${domain}.context.${name}`);
+}
+
+/**
+ * Gets whether the given file is stackable.
+ * @param calc The calculation context.
+ * @param file The file to check.
+ */
+export function isFileStackable(calc: FileCalculationContext, file: File): boolean {
+    return calculateBooleanTagValue(calc, file, 'aux.stackable', true);
+}
+
+/**
+ * Gets whether the given file is movable.
+ * @param calc The calculation context.
+ * @param file The file to check.
+ */
+export function isFileMovable(calc: FileCalculationContext, file: File): boolean {
+    return calculateBooleanTagValue(calc, file, 'aux.movable', true);
 }
 
 /**
@@ -732,9 +750,9 @@ export function getContextValue(calc: FileCalculationContext, contextFile: File,
  */
 export function getContextPosition(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): { x: number, y: number, z: number } {
     return {
-        x: calculateNumericalTagValue(calc, contextFile, `${domain}.context.x`, 0),
-        y: calculateNumericalTagValue(calc, contextFile, `${domain}.context.y`, 0),
-        z: calculateNumericalTagValue(calc, contextFile, `${domain}.context.z`, 0)
+        x: calculateNumericalTagValue(calc, contextFile, `aux.${domain}.context.x`, 0),
+        y: calculateNumericalTagValue(calc, contextFile, `aux.${domain}.context.y`, 0),
+        z: calculateNumericalTagValue(calc, contextFile, `aux.${domain}.context.z`, 0)
     };
 }
 
@@ -774,7 +792,7 @@ export function getContextSize(calc: FileCalculationContext, contextFile: File, 
  * @param contextFile The file that represents the context.
  * @param domain The domain.
  */
-export function getContextGrid(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): File['tags']['builder.context.grid'] {
+export function getContextGrid(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): File['tags']['aux.builder.context.grid'] {
     return getContextValue(calc, contextFile, domain, 'grid');
 }
 
@@ -931,6 +949,23 @@ export function calculateNumericalTagValue(context: FileCalculationContext, file
     if (file.tags[tag]) {
         const result = calculateFileValue(context, file, tag);
         if (typeof result === 'number' && result !== null) {
+            return result;
+        }
+    }
+    return defaultValue
+}
+
+/**
+ * Calculates the value of the given tag on the given file. If the result is not a boolean, then the given default value is returned.
+ * @param context The context.
+ * @param file The file.
+ * @param tag The tag.
+ * @param defaultValue The default value to use.
+ */
+export function calculateBooleanTagValue(context: FileCalculationContext, file: Object, tag: string, defaultValue: boolean): boolean {
+    if (typeof file.tags[tag] !== 'undefined') {
+        const result = calculateFileValue(context, file, tag);
+        if (typeof result === 'boolean' && result !== null) {
             return result;
         }
     }
