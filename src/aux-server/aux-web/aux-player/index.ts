@@ -49,6 +49,10 @@ import {
 } from 'vue-material/dist/components';
 import 'vue-material/dist/vue-material.min.css';
 import 'vue-material/dist/theme/default.css';
+
+import '../shared/public/fonts/MaterialIcons/MaterialIcons.css';
+import '../shared/public/fonts/Roboto/Roboto.css';
+
 import 'pepjs'; // Polyfill for pointer events
 import { polyfill } from 'es6-promise';
 import 'offline-plugin/runtime';
