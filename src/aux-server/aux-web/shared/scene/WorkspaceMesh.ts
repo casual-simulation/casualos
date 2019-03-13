@@ -252,8 +252,8 @@ export class WorkspaceMesh extends GameObject {
                 return true;
             } else {
 
-                const currentGrid = current.metadata.tags[`${this.domain}.context.grid`];
-                const previousGrid = previous.metadata.tags[`${this.domain}.context.grid`];
+                const currentGrid = current.metadata.tags[`aux.${this.domain}.context.grid`];
+                const previousGrid = previous.metadata.tags[`aux.${this.domain}.context.grid`];
                 
                 return !(currentGrid === previousGrid ||
                     (currentGrid && previousGrid && idEquals(currentGrid.value.ref.atom.id, previousGrid.value.ref.atom.id)));

@@ -79,7 +79,7 @@ export function isMinimized(calc: FileCalculationContext, workspace: Workspace, 
  * Determines if the given file contains data for a context.
  */
 export function isContext(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): boolean {
-    return calculateFileValue(calc, contextFile, `${domain}.context`);
+    return calculateFileValue(calc, contextFile, `aux.${domain}.context`);
 }
 
 /**
@@ -479,16 +479,16 @@ export function createWorkspace(id = uuid(), builderContextId: string = `_contex
     return {
         id: id,
         tags: {
-            'builder.context': builderContextId,
-            'builder.context.x': 0,
-            'builder.context.y': 0,
-            'builder.context.z': 0,
-            'builder.context.size': 1,
-            'builder.context.grid': {},
-            'builder.context.scale': DEFAULT_WORKSPACE_SCALE,
-            'builder.context.defaultHeight': DEFAULT_WORKSPACE_HEIGHT,
-            'builder.context.grid.scale': DEFAULT_WORKSPACE_GRID_SCALE,
-            'builder.context.color': DEFAULT_WORKSPACE_COLOR,
+            'aux.builder.context': builderContextId,
+            'aux.builder.context.x': 0,
+            'aux.builder.context.y': 0,
+            'aux.builder.context.z': 0,
+            'aux.builder.context.size': 1,
+            'aux.builder.context.grid': {},
+            'aux.builder.context.scale': DEFAULT_WORKSPACE_SCALE,
+            'aux.builder.context.defaultHeight': DEFAULT_WORKSPACE_HEIGHT,
+            'aux.builder.context.grid.scale': DEFAULT_WORKSPACE_GRID_SCALE,
+            'aux.builder.context.color': DEFAULT_WORKSPACE_COLOR,
             [builderContextId]: true,
             [`${builderContextId}.x`]: 0,
             [`${builderContextId}.y`]: 0,
@@ -527,8 +527,8 @@ export function updateFile(file: File, userId: string, newData: PartialFile, cre
  */
 export function calculateGridScale(calc: FileCalculationContext, workspace: AuxFile, domain: AuxDomain): number {
     if (workspace) {
-        const scale = calculateNumericalTagValue(calc, workspace, `${domain}.context.scale`, DEFAULT_WORKSPACE_SCALE);
-        const gridScale =  calculateNumericalTagValue(calc, workspace, `${domain}.context.grid.scale`, DEFAULT_WORKSPACE_GRID_SCALE);
+        const scale = calculateNumericalTagValue(calc, workspace, `aux.${domain}.context.scale`, DEFAULT_WORKSPACE_SCALE);
+        const gridScale =  calculateNumericalTagValue(calc, workspace, `aux.${domain}.context.grid.scale`, DEFAULT_WORKSPACE_GRID_SCALE);
         return scale * gridScale;
     } else {
         return DEFAULT_WORKSPACE_SCALE * DEFAULT_WORKSPACE_GRID_SCALE;
@@ -721,7 +721,7 @@ export function getFileRotation(calc: FileCalculationContext, file: File, contex
  * @param name The name of the value to get.
  */
 export function getContextValue(calc: FileCalculationContext, contextFile: File, domain: string, name: string): any {
-    return calculateFileValue(calc, contextFile, `${domain}.context.${name}`);
+    return calculateFileValue(calc, contextFile, `aux.${domain}.context.${name}`);
 }
 
 /**
@@ -750,9 +750,9 @@ export function isFileMovable(calc: FileCalculationContext, file: File): boolean
  */
 export function getContextPosition(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): { x: number, y: number, z: number } {
     return {
-        x: calculateNumericalTagValue(calc, contextFile, `${domain}.context.x`, 0),
-        y: calculateNumericalTagValue(calc, contextFile, `${domain}.context.y`, 0),
-        z: calculateNumericalTagValue(calc, contextFile, `${domain}.context.z`, 0)
+        x: calculateNumericalTagValue(calc, contextFile, `aux.${domain}.context.x`, 0),
+        y: calculateNumericalTagValue(calc, contextFile, `aux.${domain}.context.y`, 0),
+        z: calculateNumericalTagValue(calc, contextFile, `aux.${domain}.context.z`, 0)
     };
 }
 
@@ -792,7 +792,7 @@ export function getContextSize(calc: FileCalculationContext, contextFile: File, 
  * @param contextFile The file that represents the context.
  * @param domain The domain.
  */
-export function getContextGrid(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): File['tags']['builder.context.grid'] {
+export function getContextGrid(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): File['tags']['aux.builder.context.grid'] {
     return getContextValue(calc, contextFile, domain, 'grid');
 }
 

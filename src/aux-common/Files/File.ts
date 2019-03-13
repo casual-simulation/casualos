@@ -33,22 +33,22 @@ export interface File {
         ['aux.label.size.mode']?: 'auto' | null;
 
         // Builder related tags
-        ['builder.context']?: string | string[];
-        ['builder.context.x']?: number;
-        ['builder.context.y']?: number;
-        ['builder.context.z']?: number;
-        ['builder.context.rotation.x']?: number;
-        ['builder.context.rotation.y']?: number;
-        ['builder.context.rotation.z']?: number;
-        ['builder.context.scale']?: number;
-        ['builder.context.grid']?: {
+        ['aux.builder.context']?: string | string[];
+        ['aux.builder.context.x']?: number;
+        ['aux.builder.context.y']?: number;
+        ['aux.builder.context.z']?: number;
+        ['aux.builder.context.rotation.x']?: number;
+        ['aux.builder.context.rotation.y']?: number;
+        ['aux.builder.context.rotation.z']?: number;
+        ['aux.builder.context.scale']?: number;
+        ['aux.builder.context.grid']?: {
             [key: string]: WorkspaceHex;
         } | null,
-        ['builder.context.grid.scale']?: number;
-        ['builder.context.defaultHeight']?: number;
-        ['builder.context.color']?: string;
-        ['builder.context.size']?: number;
-        ['builder.context.minimized']?: boolean | null;
+        ['aux.builder.context.grid.scale']?: number;
+        ['aux.builder.context.defaultHeight']?: number;
+        ['aux.builder.context.color']?: string;
+        ['aux.builder.context.size']?: number;
+        ['aux.builder.context.minimized']?: boolean | null;
 
         [key: string]: any;
     }
