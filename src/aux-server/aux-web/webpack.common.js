@@ -60,6 +60,17 @@ module.exports = {
         ]
       },
       {
+        test: /\.(ttf|woff|woff2)$/,
+        use: [
+          {
+            loader: 'file-loader',
+            options: {
+                name: './fonts/[name].[ext]'
+            }
+          }
+        ]
+      },
+      {
         test: /three\/examples\/js/,
         use: 'imports-loader?THREE=three'
       },
