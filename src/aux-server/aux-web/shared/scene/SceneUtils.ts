@@ -1,4 +1,4 @@
-import { Vector3, MeshBasicMaterial, SphereBufferGeometry, Mesh, Object3D, Scene, Matrix4, Box2, Vector2, Box3, Layers, BoxBufferGeometry, MeshStandardMaterial, BufferGeometry, BufferAttribute, Material } from 'three';
+import { Vector3, MeshBasicMaterial, SphereBufferGeometry, Mesh, Object3D, Scene, Matrix4, Box2, Vector2, Box3, Layers, BoxBufferGeometry, MeshStandardMaterial, BufferGeometry, BufferAttribute, Material, Geometry } from 'three';
 import { Text3D } from './Text3D';
 import { IGameView } from '../IGameView';
 import { flatMap, sortBy } from 'lodash';
@@ -208,5 +208,21 @@ export function disposeMaterial(material: Material | Material[]) {
         material.forEach(m => m.dispose());
     } else {
         material.dispose();
+    }
+}
+
+/**
+ * Releases any unmanaged resources used by the given mesh.
+ * @param mesh The mesh to dispose.
+ * @param disposeGeometry Whether to dispose the mesh's geometry. Default true.
+ * @param disposeMat Whether to dispose the mesh's material(s). Default true.
+ */
+export function disposeMesh(mesh: { geometry: Geometry | BufferGeometry, material: Material | Material[] }, disposeGeometry: boolean = true, disposeMat: boolean = true) {
+    if (!mesh) return;
+    if (disposeGeometry) {
+        mesh.geometry.dispose();
+    }
+    if (disposeMat) {
+        disposeMaterial(mesh.material);
     }
 }

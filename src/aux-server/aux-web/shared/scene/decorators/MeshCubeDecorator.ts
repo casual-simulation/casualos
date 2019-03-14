@@ -2,7 +2,7 @@ import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
 import { FileCalculationContext, calculateFileValue } from "@yeti-cgi/aux-common";
 import { Mesh, MeshStandardMaterial, Color, LineSegments, BufferGeometry, BufferAttribute, LineBasicMaterial, Group } from "three";
-import { createCube, createCubeStrokeGeometry, isTransparent } from "../SceneUtils";
+import { createCube, createCubeStrokeGeometry, isTransparent, disposeMaterial, disposeMesh } from "../SceneUtils";
 import { flatMap } from "lodash";
 
 export class MeshCubeDecorator extends AuxFile3DDecorator {
@@ -81,5 +81,17 @@ export class MeshCubeDecorator extends AuxFile3DDecorator {
     }
 
     dispose(): void {
+        const index = this.file3D.colliders.indexOf(this.cube);
+        if (index >= 0) {
+            this.file3D.colliders.splice(index, 1);
+        }
+
+        this.file3D.display.remove(this.container);
+        disposeMesh(this.cube);
+        disposeMesh(this.stroke);
+        
+        this.cube = null;
+        this.container = null;
+        this.stroke = null;
     }
 }

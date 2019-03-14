@@ -30,7 +30,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
         if (this.arrows) {
             this.arrows.forEach((a) => {
                 a.dispose();
-            })
+            });
         }
     }
 
