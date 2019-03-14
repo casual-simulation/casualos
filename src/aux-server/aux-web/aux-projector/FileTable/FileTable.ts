@@ -2,7 +2,7 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Provide, Prop, Inject, Watch} from 'vue-property-decorator';
 import { some, union } from 'lodash';
-import {File, Object, fileTags, isHiddenTag, AuxObject} from '@yeti-cgi/aux-common';
+import {File, Object, fileTags, isHiddenTag, AuxObject, hasValue} from '@yeti-cgi/aux-common';
 import { EventBus } from '../../shared/EventBus';
 import { appManager } from '../../shared/AppManager';
 
@@ -127,7 +127,7 @@ export default class FileTable extends Vue {
     }
 
     tagHasValue(tag: string): boolean {
-        return some(this.files, f => f.tags[tag]);
+        return some(this.files, f => hasValue(f.tags[tag]));
     }
 
     isHiddenTag(tag: string): boolean {
