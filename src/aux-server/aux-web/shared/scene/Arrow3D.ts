@@ -23,6 +23,7 @@ import { IGameView } from '../IGameView';
 import { AuxFile3D } from './AuxFile3D';
 import { ContextGroup3D } from './ContextGroup3D';
 import { BuilderGroup3D } from './BuilderGroup3D';
+import { disposeMaterial } from './SceneUtils';
 
 export class Arrow3D extends Object3D {
 
@@ -143,6 +144,10 @@ export class Arrow3D extends Object3D {
 
     public dispose() {
         this.remove(this._arrowHelper);
+        this._arrowHelper.line.geometry.dispose();
+        disposeMaterial(this._arrowHelper.line.material);
+        this._arrowHelper.cone.geometry.dispose();
+        disposeMaterial(this._arrowHelper.cone.material);
         this._arrowHelper = null;
 
         this._sourceFile3d = null;

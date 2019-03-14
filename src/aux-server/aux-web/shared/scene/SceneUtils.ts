@@ -1,4 +1,4 @@
-import { Vector3, MeshBasicMaterial, SphereBufferGeometry, Mesh, Object3D, Scene, Matrix4, Box2, Vector2, Box3, Layers, BoxBufferGeometry, MeshStandardMaterial, BufferGeometry, BufferAttribute } from 'three';
+import { Vector3, MeshBasicMaterial, SphereBufferGeometry, Mesh, Object3D, Scene, Matrix4, Box2, Vector2, Box3, Layers, BoxBufferGeometry, MeshStandardMaterial, BufferGeometry, BufferAttribute, Material } from 'three';
 import { Text3D } from './Text3D';
 import { IGameView } from '../IGameView';
 import { flatMap, sortBy } from 'lodash';
@@ -196,4 +196,17 @@ export function calculateScale(context: FileCalculationContext, obj: File, multi
  */
 export function isTransparent(color: string): boolean {
     return color === 'transparent' || color === 'clear';
+}
+
+/**
+ * Disposes the given material(s).
+ * @param material The material(s) to dispose.
+ */
+export function disposeMaterial(material: Material | Material[]) {
+    if (!material) return;
+    if(Array.isArray(material)) {
+        material.forEach(m => m.dispose());
+    } else {
+        material.dispose();
+    }
 }

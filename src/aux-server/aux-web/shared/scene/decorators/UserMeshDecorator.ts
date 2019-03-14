@@ -9,7 +9,7 @@ import {
 import { Text3D } from "../Text3D";
 import { isFormula, FileCalculationContext, Object, File, AuxObject, AuxFile, getFilePosition, getFileRotation } from '@yeti-cgi/aux-common'
 import { appManager } from '../../AppManager';
-import { setLayer } from "../SceneUtils";
+import { setLayer, disposeMaterial } from "../SceneUtils";
 import { LayersHelper } from "../LayersHelper";
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
@@ -134,6 +134,15 @@ export class UserMeshDecorator extends AuxFile3DDecorator {
     }
 
     dispose() {
+        this.file3D.remove(this.container);
+        this.file3D.display.remove(this.camera);
+
+        this.cameraHelper.geometry.dispose();
+        disposeMaterial(this.cameraHelper.material);
+
+        this.camera = null;
+        this.cameraHelper = null;
+        this.container = null;
     }
 
     private _checkIsActive() {
