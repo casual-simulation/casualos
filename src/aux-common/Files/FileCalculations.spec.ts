@@ -1022,6 +1022,37 @@ describe('FileCalculations', () => {
                 'aux.other': 100,
                 'myTag': 'Hello'
             });
+            expect(first.tags).toEqual({
+                'aux.other': 100,
+                'myTag': 'Hello',
+                'aux._context_abcdefg': true,
+                'aux._context_1234567': true,
+                'aux._context_1234567.x': 1,
+                'aux._context_1234567.y': 2,
+                'aux._context_1234567.z': 3,
+                'aux._selection_99999': true,
+            });
+        });
+
+        it('should keep the tags that the new data contains', () => {
+            let first: Object = createFile();
+            first.tags[`aux.other`] = 100;
+            first.tags[`myTag`] = 'Hello';
+
+            const second = duplicateFile(first, {
+                tags: {
+                    [`aux._selection_99999`]: true,
+                    [`aux._context_abcdefg`]: true
+                }
+            });
+
+            expect(second.id).not.toEqual(first.id);
+            expect(second.tags).toEqual({
+                'aux.other': 100,
+                'myTag': 'Hello',
+                'aux._context_abcdefg': true,
+                'aux._selection_99999': true
+            });
         });
 
         it('should merge in the additional changes', () => {

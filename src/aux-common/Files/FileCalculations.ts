@@ -12,7 +12,8 @@ import {
     isEqual,
     sortBy,
     sumBy,
-    difference
+    difference,
+    cloneDeep
 } from 'lodash';
 import { Sandbox, SandboxLibrary } from '../Formulas/Sandbox';
 
@@ -868,18 +869,19 @@ export function objectsAtWorkspace(objects: Object[], workspaceId: string) {
  * @param data The optional data that should override the existing file data.
  */
 export function duplicateFile(file: Object, data?: PartialFile): Object {
-    let newFile = merge(file, data || {}, {
+    let copy = cloneDeep(file);
+    const tags = tagsOnFile(copy);
+    const tagsToRemove = tags.filter(t => isTagWellKnown(t));
+    tagsToRemove.forEach(t => {
+        delete copy.tags[t];
+    });
+
+    let newFile = merge(copy, data || {}, {
         tags: {
             _destroyed: null
         }
     });
     newFile.id = uuid();
-
-    const tags = tagsOnFile(newFile);
-    const tagsToRemove = tags.filter(t => isTagWellKnown(t));
-    tagsToRemove.forEach(t => {
-        delete newFile.tags[t];
-    });
 
     return <Object>cleanFile(newFile);
 }
