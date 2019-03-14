@@ -26,7 +26,8 @@ import {
     getContextSize,
     getContextScale,
     isFileStackable,
-    getContextDefaultHeight
+    getContextDefaultHeight,
+    getContextColor
 } from '@yeti-cgi/aux-common';
 import { FileClickOperation } from './ClickOperation/FileClickOperation';
 import GameView from '../GameView/GameView';
@@ -593,11 +594,16 @@ export class InteractionManager {
                         
                         // This function is invoked as the color picker changes the color value.
                         let colorUpdated = (hexColor: string) => {
-                            appManager.fileManager.updateFile(file.file, { tags: {color: hexColor }});
+                            appManager.fileManager.updateFile(file.file, { 
+                                tags: { 
+                                    [`aux.${file.domain}.context.color`]: hexColor 
+                                }
+                            });
                         };
                         
                         let workspace = <Workspace>file.file;
-                        let colorPickerEvent: ColorPickerEvent = { pagePos: pagePos, initialColor: workspace.tags.color, colorUpdated: colorUpdated };
+                        const currentColor = getContextColor(calc, file.file, file.domain);
+                        let colorPickerEvent: ColorPickerEvent = { pagePos: pagePos, initialColor: currentColor, colorUpdated: colorUpdated };
                         
                         EventBus.$emit('onColorPicker', colorPickerEvent);
                     }});
