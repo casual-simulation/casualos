@@ -9,7 +9,7 @@ import { ReducingStateStore, Event, ChannelConnection } from "../channels-core";
 import {File, Object, Workspace, PartialFile} from './File';
 import { tagsMatchingFilter, createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, isDestroyed, getActiveObjects, calculateStateDiff, FilesStateDiff } from './FileCalculations';
 import { merge as mergeObj } from '../utils';
-import { setActions, getActions } from '../Formulas/formula-lib';
+import { setActions, getActions, setFileState } from '../Formulas/formula-lib';
 export interface FilesState {
     [id: string]: File;
 }
@@ -40,8 +40,8 @@ export function calculateActionEvents(state: FilesState, action: Action) {
     const sender = <Object>state[action.senderFileId];
     const receiver = <Object>state[action.receiverFileId];
     const context = createCalculationContext(objects);
-    const firstEvents = eventActions(objects, context, sender, receiver, action.eventName);
-    const secondEvents = eventActions(objects, context, receiver, sender, action.eventName);
+    const firstEvents = eventActions(state, objects, context, sender, receiver, action.eventName);
+    const secondEvents = eventActions(state, objects, context, receiver, sender, action.eventName);
     const events = [
         ...firstEvents,
         ...secondEvents,
@@ -91,16 +91,21 @@ export function cleanFile(file: File): File {
 }
 
 
-function eventActions(objects: Object[], context: FileCalculationContext, file: Object, other: Object, eventName: string): FileEvent[] {
+function eventActions(state: FilesState, objects: Object[], context: FileCalculationContext, file: Object, other: Object, eventName: string): FileEvent[] {
     const filters = tagsMatchingFilter(file, other, eventName, context);
     const scripts = filters.map(f => calculateFileValue(context, other, f));
-    setActions([]);
+    let previous = getActions();
+    let actions: FileEvent[] = [];
+    setActions(actions);
+    setFileState(state);
     
     scripts.forEach(s => context.sandbox.run(s, {}, convertToFormulaObject(context, other), {
         that: convertToFormulaObject(context, file)
     }));
 
-    return getActions();
+    setActions(previous);
+    setFileState(null);
+    return actions;
 }
 
 export interface FileAddedEvent extends Event {
