@@ -246,7 +246,7 @@ export default class GameView extends Vue implements IGameView {
             .pipe(tap(file => {
 
                 // Update the scene background color.
-                let sceneBackgroundColor = (<Object>file).tags._sceneBackgroundColor;
+                let sceneBackgroundColor = (<Object>file).tags['aux.scene.color'];
                 if (sceneBackgroundColor) {
                     this._scene.background = new Color(sceneBackgroundColor);;
                 }
@@ -489,8 +489,8 @@ export default class GameView extends Vue implements IGameView {
 
         let globalsFile = this.fileManager.globalsFile;
 
-        if (globalsFile && globalsFile.tags._sceneBackgroundColor) {
-            this.scene.background = new Color(globalsFile.tags._sceneBackgroundColor);
+        if (globalsFile && globalsFile.tags['aux.scene.color']) {
+            this.scene.background = new Color(globalsFile.tags['aux.scene.color']);
         } else {
             this.scene.background = new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
         }

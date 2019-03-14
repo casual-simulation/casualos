@@ -18,7 +18,7 @@ export interface File {
         _editingFile?: string;
         _lastActiveTime?: number;
         _lastEditedBy?: string;
-        _sceneBackgroundColor?: string;
+        ['aux.scene.color']?: string;
 
         ['aux.color']?: unknown;
         ['aux.movable']?: unknown;

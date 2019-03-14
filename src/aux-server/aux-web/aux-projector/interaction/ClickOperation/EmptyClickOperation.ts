@@ -84,7 +84,7 @@ export class EmptyClickOperation implements IOperation {
         let colorUpdated = (hexColor: string) => {
             appManager.fileManager.updateFile(globalsFile, { 
                 tags: { 
-                    _sceneBackgroundColor: hexColor
+                    'aux.scene.color': hexColor
                 } 
             })
         };
@@ -98,7 +98,7 @@ export class EmptyClickOperation implements IOperation {
             }
         };
 
-        let initialColor = globalsFile.tags._sceneBackgroundColor;
+        let initialColor = globalsFile.tags['aux.scene.color'];
         if (!initialColor) {
             initialColor = DEFAULT_SCENE_BACKGROUND_COLOR;
         }
