@@ -117,7 +117,10 @@ export class UserMeshDecorator extends AuxFile3DDecorator {
                 appManager.fileManager.updateFile(file, {
                     tags: {
                         [`${this.file3D.context}.x`]: camPosition.x,
-                        [`${this.file3D.context}.y`]: camPosition.z,
+
+                        // Mirror the Y coordinate so it works with ContextPositionDecorator
+                        [`${this.file3D.context}.y`]: -camPosition.z,
+
                         [`${this.file3D.context}.z`]: camPosition.y,
                         [`${this.file3D.context}.rotation.x`]: camRotation.x,
                         [`${this.file3D.context}.rotation.y`]: camRotation.z,
