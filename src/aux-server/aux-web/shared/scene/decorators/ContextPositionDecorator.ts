@@ -21,8 +21,9 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
                 const localPosition = calculateObjectPositionInGrid(calc, this.file3D, scale);
                 this.file3D.display.position.set(localPosition.x, localPosition.y, localPosition.z);
             } else {
-                const position = getFilePosition(calc, this.file3D.file, this.file3D.context);
-                this.file3D.display.position.set(position.x, position.z, position.y);
+                const scale = 1; // We dont have a grid, just use scale of 1.
+                const localPosition = calculateObjectPositionInGrid(calc, this.file3D, scale);
+                this.file3D.display.position.set(localPosition.x, localPosition.y, localPosition.z);
             }
 
             const rotation = getFileRotation(calc, this.file3D.file, this.file3D.context);
