@@ -18,7 +18,7 @@ import {
     isContext,
     getContextColor
 } from '@yeti-cgi/aux-common/Files';
-import { keys, minBy } from 'lodash';
+import { keys, minBy, isEqual } from 'lodash';
 import { GridChecker, GridCheckResults } from './grid/GridChecker';
 import { GameObject } from './GameObject';
 import { AuxFile } from '@yeti-cgi/aux-common/aux-format';
@@ -252,11 +252,10 @@ export class WorkspaceMesh extends GameObject {
                 return true;
             } else {
 
-                const currentGrid = current.metadata.tags[`aux.${this.domain}.context.grid`];
-                const previousGrid = previous.metadata.tags[`aux.${this.domain}.context.grid`];
+                const currentGrid = getContextGrid(calc, current, this.domain);
+                const previousGrid = getContextGrid(calc, previous, this.domain);
                 
-                return !(currentGrid === previousGrid ||
-                    (currentGrid && previousGrid && idEquals(currentGrid.value.ref.atom.id, previousGrid.value.ref.atom.id)));
+                return !isEqual(currentGrid, previousGrid);
             }
         }
     }
