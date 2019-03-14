@@ -143,22 +143,21 @@ export class ContextGroup3D extends GameObject {
     }
 
     /**
-     * Updates the contexts that this builder should be displaying.
-     * @param old The old context file.
-     * @param newFile The new context file.
+     * Updates the contexts that this context group should be displaying.
+     * @param file The context file.
      * @param calc The file calculation context that should be used.
      */
     private _updateContexts(file: AuxFile, calc: FileCalculationContext) {
         const contexts = calculateFileValue(calc, file, `aux.${this.domain}.context`);
         // TODO: Handle scenarios where builder.context is empty or null
         if (contexts) {
-            this._updateBuilderContext(file, contexts, calc);
+            this._addContexts(file, contexts, calc);
         }
     }
 
     protected async _updateThis(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {}
 
-    private _updateBuilderContext(file: AuxFile, newContexts: string | string[], calc: FileCalculationContext) {
+    private _addContexts(file: AuxFile, newContexts: string | string[], calc: FileCalculationContext) {
         let contexts: string[];
         if (Array.isArray(newContexts)) {
             contexts = newContexts;

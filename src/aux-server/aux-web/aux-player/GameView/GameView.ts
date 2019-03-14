@@ -13,7 +13,7 @@ import {
     GridHelper,
     Quaternion,
     Matrix4,
-    Texture
+    Texture,
 } from 'three';
 
 import VRControlsModule from 'three-vrcontrols-module';
@@ -31,12 +31,10 @@ import {
 } from 'rxjs/operators';
 
 import {
-    File,
     Object,
     DEFAULT_SCENE_BACKGROUND_COLOR,
-    isFileInContext,
     AuxFile,
-    FileCalculationContext
+    calculateFileValue
 } from '@yeti-cgi/aux-common';
 import { ArgEvent } from '@yeti-cgi/aux-common/Events';
 import { Time } from '../../shared/scene/Time';
@@ -54,6 +52,7 @@ import { LayersHelper } from '../../shared/scene/LayersHelper';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { DebugObjectManager } from '../../shared/scene/DebugObjectManager';
+import { AuxFile3DDecoratorFactory } from '../../shared/scene/decorators/AuxFile3DDecoratorFactory';
 
 @Component({
     components: {
@@ -89,11 +88,12 @@ export default class GameView extends Vue implements IGameView {
     public onFileRemoved: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
 
     /**
-     * The current context 3d that the AUX Player is rendering.
+     * The current context group 3d that the AUX Player is rendering.
      */
-    private _context: ContextGroup3D;
+    private _contextGroup: ContextGroup3D;
 
     private _fileSubs: SubscriptionLike[];
+    private _decoratorFactory: AuxFile3DDecoratorFactory;
 
     /**
      * The current context that we are displaying.
@@ -136,11 +136,11 @@ export default class GameView extends Vue implements IGameView {
     }
 
     public findFilesById(id: string): AuxFile3D[] {
-        return flatMap(this._context.getFiles().filter(f => f.file.id === id));
+        return flatMap(this._contextGroup.getFiles().filter(f => f.file.id === id));
     }
 
     public getContexts(): ContextGroup3D[] {
-        return [this._context];
+        return [this._contextGroup];
     }
 
     public setGridsVisible(visible: boolean) {
@@ -161,27 +161,18 @@ export default class GameView extends Vue implements IGameView {
         window.addEventListener('vrdisplaypresentchange', this._handleResize);
 
         this._time = new Time();
-        // this._files = {};
-        // this._fileIds = {};
         this._fileSubs = [];
+        this._decoratorFactory = new AuxFile3DDecoratorFactory(this);
         this._userContext = new BehaviorSubject(null);
         this._setupScene();
         DebugObjectManager.init(this._time, this._scene);
         this._input = new Input(this);
         this._inputVR = new InputVR(this);
         // this._interaction = new InteractionManager(this);
-        // this._gridChecker = new GridChecker(DEFAULT_WORKSPACE_HEIGHT_INCREMENT);
-
-        this._triggerFilesRefresh();
-
-        // if (this.dev) {
-        //     this.addSidebarItem('debug_mode', 'Debug', () => {
-        //         this.toggleDebug();
-        //     }, 'bug_report');
-        // }
 
         this._setupWebVR();
         await this._setupWebXR();
+        this._triggerFilesRefresh();
         this._frameUpdate();
     }
 
@@ -210,7 +201,11 @@ export default class GameView extends Vue implements IGameView {
         this._input.update();
         this._inputVR.update();
         // this._interaction.update();
-        this._context.frameUpdate(calc);
+
+        if (this._contextGroup) {
+            this._contextGroup.frameUpdate(calc);
+        }
+
         this._renderUpdate(xrFrame);
         this._time.update();
 
@@ -296,59 +291,12 @@ export default class GameView extends Vue implements IGameView {
         this._scene.background = this._originalBackground;
     }
 
-    private async _fileUpdated(file: AuxFile, initialUpdate = false) {
-        if (!file.tags['aux.builder.context']) {
-            if (!initialUpdate) {
-                if (!file.tags._user && file.tags._lastEditedBy === this.fileManager.userFile.id) {
-                    if (this.selectedRecentFile && file.id === this.selectedRecentFile.id) {
-                        this.selectedRecentFile = file;
-                    } else {
-                        this.selectedRecentFile = null;
-                    }
-                }
-            }
-        }
-
-        let calc = this.fileManager.createContext();
-        // TODO: Implement Tag Updates
-        this._context.fileUpdated(file, [], calc);
-
-        this.onFileUpdated.invoke(file);
-    }
-
-    private async _fileAdded(file: AuxFile) {
-        let calc = this.fileManager.createContext();
-
-        if (!this._shouldDisplayFile(file, calc)) {
-            return;
-        }
-
-        await this._context.fileAdded(file, calc);
-
-        await this._fileUpdated(file, true);
-        this.onFileAdded.invoke(file);
-    }
-
-    private _fileRemoved(id: string) {
-        const calc = this.fileManager.createContext();
-        this._context.fileRemoved(id, calc);
-
-        this.onFileRemoved.invoke(null);
-        // const obj = this._files[id];
-        // if (obj) {
-        //     delete this._fileIds[obj.mesh.id];
-        //     delete this._files[id];
-        //     obj.dispose();
-
-        // }
-    }
-
     /**
      * Trigger a refresh of the GameView's file representations.
      * This will effectively clear all current file representations and create new ones for the current context.
      */
     private _triggerFilesRefresh(): void {
-        // Unsubscribe from the current file subscriptions.
+        // Unsubscribe from current file events.
         if (this._fileSubs) {
             this._fileSubs.forEach(sub => {
                 sub.unsubscribe();
@@ -356,29 +304,20 @@ export default class GameView extends Vue implements IGameView {
             this._fileSubs = [];
         }
 
-        // Clear all current file representations.
-        // TODO: Fix
-        // const keys = Object.keys(this._files);
-        // keys.forEach((key) => {
-        //     this._fileRemoved(key);
-        // });
+        // Dispose of the currnet context group.
+        if (this._contextGroup) {
+            this._contextGroup.dispose();
+            this._scene.remove(this._contextGroup);
+            this._contextGroup = null;
+        }
 
         // Subscribe to file events.
-        this._fileSubs.push(this.fileManager.fileDiscovered
-            .pipe(concatMap(file => this._fileAdded(file)))
-            .subscribe());
-        this._fileSubs.push(this.fileManager.fileRemoved
-            .pipe(tap(file => this._fileRemoved(file)))
-            .subscribe());
-        this._fileSubs.push(this.fileManager.fileUpdated
-            .pipe(concatMap(file => this._fileUpdated(file)))
-            .subscribe());
-
         this._fileSubs.push(this.fileManager.fileChanged(this.fileManager.userFile)
             .pipe(tap(file => {
-                const userContext = (<Object>file).tags._userContext;
-                if (this._userContext.value !== userContext) {
-                    this._userContext.next(userContext);
+                const userContextValue = (<Object>file).tags._userContext;
+                if (this._userContext.value !== userContextValue) {
+                    this._userContext.next(userContextValue);
+                    console.log('[GameView] Changed user context to: ', userContextValue);
                 }
             }))
             .subscribe());
@@ -394,31 +333,82 @@ export default class GameView extends Vue implements IGameView {
 
             }))
             .subscribe());
+
+        this._fileSubs.push(this.fileManager.fileDiscovered
+            .pipe(concatMap(file => this._fileAdded(file)))
+            .subscribe());
+        this._fileSubs.push(this.fileManager.fileRemoved
+            .pipe(tap(file => this._fileRemoved(file)))
+            .subscribe());
+        this._fileSubs.push(this.fileManager.fileUpdated
+            .pipe(concatMap(file => this._fileUpdated(file)))
+            .subscribe());
     }
 
-    /**
-     * Returns wether or not the given file should be displayed in 3d.
-     * @param file The file
-     */
-    private _shouldDisplayFile(file: File, calc: FileCalculationContext): boolean {
-        // AUX Player doesnt display objects unless user is in a context.
-        if (!this._userContext.value) {
-            return false;
+    private async _fileAdded(file: AuxFile) {
+        let calc = this.fileManager.createContext();
+
+        if (!this._contextGroup) {
+            // We dont have a context group yet. We are in search of a file that defines a player context that matches the user's current context.
+            if (file.tags[`aux.player.context`]) {
+                // This file defines a player context. But does it match the user's current context?
+                const contextValue = calculateFileValue(calc, file, `aux.player.context`);
+                let contexts: string[];
+                if (Array.isArray(contextValue)) {
+                    contexts = contextValue;
+                } else if (typeof contextValue === 'string') {
+                    contexts = [contextValue];
+                }
+
+                // Now that we have an array of defined player context values from the file, check if the user's current context is one of them.
+                const matchesUserContext: boolean = contexts.indexOf(this.userContext) != -1;
+                if (matchesUserContext) {
+                    console.log('[GameView] Aux Player context matches user\'s current context. Context Group created.', file);
+                    // Create ContextGroup3D for this file that we will use to render all files in the context.
+                    this._contextGroup = new ContextGroup3D(file, 'player', this._decoratorFactory);
+                    this._scene.add(this._contextGroup);
+                } else {
+                    console.log('[GameView] Aux Player contexts dont match user\'s current context. skipping.', file);
+                }
+            }
         }
 
-        if (!file.tags._user) {
-            // Dont display normal files that are hidden or destroyed.
-            if (file.tags._hidden || file.tags._destroyed) {
-                return false;
-            }
+        if (this._contextGroup) {
+            await this._contextGroup.fileAdded(file, calc);
+            await this._fileUpdated(file, true);
+            this.onFileAdded.invoke(file);
+        }
+    }
 
-            // Dont display normal files that are not tagged with the user's current context.
-            if (!isFileInContext(calc, file, this._userContext.value)) {
-                return false;
+    private async _fileUpdated(file: AuxFile, initialUpdate = false) {
+        if (!file.tags['aux.builder.context']) {
+            if (!initialUpdate) {
+                if (!file.tags._user && file.tags._lastEditedBy === this.fileManager.userFile.id) {
+                    if (this.selectedRecentFile && file.id === this.selectedRecentFile.id) {
+                        this.selectedRecentFile = file;
+                    } else {
+                        this.selectedRecentFile = null;
+                    }
+                }
             }
         }
 
-        return true;
+        if (this._contextGroup) {
+            let calc = this.fileManager.createContext();
+            // TODO: Implement Tag Updates
+            this._contextGroup.fileUpdated(file, [], calc);
+    
+            this.onFileUpdated.invoke(file);
+        }
+    }
+
+    private _fileRemoved(id: string) {
+        if (this._contextGroup) {
+            const calc = this.fileManager.createContext();
+            this._contextGroup.fileRemoved(id, calc);
+
+            this.onFileRemoved.invoke(null);
+        }
     }
 
     private _setupScene() {
@@ -428,9 +418,9 @@ export default class GameView extends Vue implements IGameView {
         let globalsFile = this.fileManager.globalsFile;
 
         if (globalsFile && globalsFile.tags._sceneBackgroundColor) {
-            this.scene.background = new Color(globalsFile.tags._sceneBackgroundColor);
+            this._scene.background = new Color(globalsFile.tags._sceneBackgroundColor);
         } else {
-            this.scene.background = new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
+            this._scene.background = new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
         }
 
         // Main camera
