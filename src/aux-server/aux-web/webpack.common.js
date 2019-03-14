@@ -20,6 +20,17 @@ module.exports = {
     filename: '[name].js',
     path: path.resolve(__dirname, 'dist')
   },
+  node: {
+    console: false,
+    global: true,
+    process: false,
+    __filename: 'mock',
+    __dirname: 'mock',
+
+    // Buffer is needed for sha.js
+    Buffer: true,
+    setImmediate: false
+  },
   module: {
     rules: [
         // TODO: Re-enable sometime
