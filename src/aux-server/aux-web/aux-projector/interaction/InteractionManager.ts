@@ -25,7 +25,9 @@ import {
     getContextGrid,
     getContextSize,
     getContextScale,
-    isFileStackable
+    isFileStackable,
+    getContextDefaultHeight,
+    getContextColor
 } from '@yeti-cgi/aux-common';
 import { FileClickOperation } from './ClickOperation/FileClickOperation';
 import GameView from '../GameView/GameView';
@@ -319,7 +321,7 @@ export class InteractionManager {
         const key = posToKey(position);
         this._gameView.fileManager.updateFile(file.file, {
             tags: {
-                grid: {
+                [`aux.${file.domain}.context.grid`]: {
                     [key]: {
                         height: height
                     }
@@ -567,8 +569,10 @@ export class InteractionManager {
             if (file instanceof ContextGroup3D && file.file.tags[`aux.${file.domain}.context`]) {
                 
                 const tile = this._worldPosToGridPos(calc, file, point);
-                const currentTile = file.file.tags.grid ? file.file.tags.grid[posToKey(tile)] : null;
-                const currentHeight = (!!currentTile ? currentTile.height : (file.file.tags.defaultHeight || DEFAULT_WORKSPACE_HEIGHT)) || DEFAULT_WORKSPACE_HEIGHT;
+                const currentGrid = getContextGrid(calc, file.file, file.domain);
+                const currentTile = currentGrid ? currentGrid[posToKey(tile)] : null;
+                const defaultHeight = getContextDefaultHeight(calc, file.file, file.domain);
+                const currentHeight = (!!currentTile ? currentTile.height : defaultHeight) || DEFAULT_WORKSPACE_HEIGHT;
                 const increment = DEFAULT_WORKSPACE_HEIGHT_INCREMENT; // TODO: Replace with a configurable value.
                 const minHeight = DEFAULT_WORKSPACE_MIN_HEIGHT; // TODO: This too
                 const minimized = isMinimized(calc, file.file, file.domain);
@@ -590,11 +594,16 @@ export class InteractionManager {
                         
                         // This function is invoked as the color picker changes the color value.
                         let colorUpdated = (hexColor: string) => {
-                            appManager.fileManager.updateFile(file.file, { tags: {color: hexColor }});
+                            appManager.fileManager.updateFile(file.file, { 
+                                tags: { 
+                                    [`aux.${file.domain}.context.color`]: hexColor 
+                                }
+                            });
                         };
                         
                         let workspace = <Workspace>file.file;
-                        let colorPickerEvent: ColorPickerEvent = { pagePos: pagePos, initialColor: workspace.tags.color, colorUpdated: colorUpdated };
+                        const currentColor = getContextColor(calc, file.file, file.domain);
+                        let colorPickerEvent: ColorPickerEvent = { pagePos: pagePos, initialColor: currentColor, colorUpdated: colorUpdated };
                         
                         EventBus.$emit('onColorPicker', colorPickerEvent);
                     }});
