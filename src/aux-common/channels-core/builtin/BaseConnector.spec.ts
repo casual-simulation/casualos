@@ -76,17 +76,17 @@ describe('builtin', () => {
 
                 serverEvents.next({
                     type: 'add',
-                    creation_time: new Date()
+                    // creation_time: new Date()
                 });
 
                 serverEvents.next({
                     type: 'add',
-                    creation_time: new Date()
+                    // creation_time: new Date()
                 });
 
                 serverEvents.next({
                     type: 'subtract',
-                    creation_time: new Date()
+                    // creation_time: new Date()
                 });
 
                 expect(events.length).to.equal(3);
@@ -117,17 +117,14 @@ describe('builtin', () => {
 
                 connection.emit({
                     type: 'add',
-                    creation_time: new Date()
                 });
 
                 connection.emit({
                     type: 'add',
-                    creation_time: new Date()
                 });
 
                 connection.emit({
                     type: 'subtract',
-                    creation_time: new Date()
                 });
 
                 expect(events.length).to.equal(3);
@@ -171,7 +168,6 @@ describe('builtin', () => {
 
                 connection.emit({
                     type: 'add',
-                    creation_time: new Date()
                 });
 
                 expect(store.state()).to.equal(1);
@@ -188,7 +184,6 @@ describe('builtin', () => {
 
                 connection.emit({
                     type: 'add',
-                    creation_time: new Date()
                 });
 
                 expect(eventsSentToServer.length).to.equal(1, 'should not send an event to the server when offline.');
@@ -225,7 +220,6 @@ describe('builtin', () => {
 
                 connection.emit({
                     type: 'add',
-                    creation_time: new Date()
                 });
 
                 expect(store.state()).to.equal(1);
@@ -244,7 +238,6 @@ describe('builtin', () => {
 
                 connection.emit({
                     type: 'add',
-                    creation_time: new Date()
                 });
 
                 expect(eventsSentToServer.length).to.equal(1, 'should not emit events to server while offline.');
@@ -255,7 +248,6 @@ describe('builtin', () => {
 
                 connection.emit({
                     type: 'add',
-                    creation_time: new Date()
                 });
 
                 expect(eventsSentToServer.length).to.equal(1, 'should not emit events to server while online-disconnected.');
@@ -264,7 +256,6 @@ describe('builtin', () => {
 
                 connection.emit({
                     type: 'add',
-                    creation_time: new Date()
                 });
 
                 expect(eventsSentToServer.length).to.equal(2, 'should emit event after reconnect() gets called.');
@@ -301,7 +292,6 @@ describe('builtin', () => {
 
                 connection.emit({
                     type: 'add',
-                    creation_time: new Date()
                 });
 
                 expect(store.state()).to.equal(1);
@@ -319,7 +309,6 @@ describe('builtin', () => {
 
                 connection.emit({
                     type: 'add',
-                    creation_time: new Date()
                 });
 
                 expect(store.state()).to.equal(2);
@@ -331,7 +320,6 @@ describe('builtin', () => {
 
                 connection.emit({
                     type: 'add',
-                    creation_time: new Date()
                 });
 
                 expect(eventsSentToServer.length).to.equal(2, 'should not send an event to the server when offline.');

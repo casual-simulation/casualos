@@ -63,7 +63,6 @@ describe('builtin', () => {
                 store: store
             }).then(connection => {
                 connection.emit({
-                    creation_time: new Date(),
                     type: 'add'
                 });
 
@@ -75,11 +74,9 @@ describe('builtin', () => {
 
         it('should preserve the store state', () => {
             store.process({
-                creation_time: new Date(),
                 type: 'add'
             });
             store.process({
-                creation_time: new Date(),
                 type: 'add'
             });
 
