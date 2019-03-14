@@ -163,7 +163,7 @@ export function getShortId(file: File | Object): string {
  * @param tag The tag to test.
  */
 export function isHiddenTag(tag: string): boolean {
-    return (/^_/.test(tag));
+    return (/^_/.test(tag) || /(\w+)\._/.test(tag));
 }
 
 export function calculateFileValue(context: FileCalculationContext, object: Object, tag: string) {
@@ -270,7 +270,7 @@ export const WELL_KNOWN_TAGS = [
     /\.index$/,
     /_lastEditedBy/,
     /_lastActiveTime/,
-    /^_context_/,
+    /^aux\._context_/,
 ];
 
 /**
@@ -285,7 +285,7 @@ export function isTagWellKnown(tag: string, includeSelectionTags: boolean = true
         }
     }
 
-    if (includeSelectionTags && tag.indexOf('_selection_') === 0) {
+    if (includeSelectionTags && tag.indexOf('aux._selection_') === 0) {
         return true;
     }
 
@@ -429,7 +429,7 @@ export function toggleFileSelection(file: Object, selectionId: string, userId: s
  * Creates a new selection id.
  */
 export function newSelectionId() {
-    return `_selection_${uuid()}`;
+    return `aux._selection_${uuid()}`;
 }
 
 /**
@@ -475,7 +475,7 @@ export function createFile(id = uuid(), tags: Object['tags'] = {}) {
  * @param id The ID of the new workspace.
  * @param builderContextId The tag that should be used for contexts stored on this workspace.
  */
-export function createWorkspace(id = uuid(), builderContextId: string = `_context_${uuid()}`): Workspace {
+export function createWorkspace(id = uuid(), builderContextId: string = `aux._context_${uuid()}`): Workspace {
     return {
         id: id,
         tags: {
@@ -860,9 +860,10 @@ export function objectsAtWorkspace(objects: Object[], workspaceId: string) {
 
 /**
  * Duplicates the given file and returns a new file with a new ID but the same tags.
- * The file will be exactly the same as the previous except for 2 things.
+ * The file will be exactly the same as the previous except for 3 things.
  * First, it will have a different ID.
  * Second, it will never be marked as destroyed.
+ * Third, it will not have any well known tags. (see isTagWellKnown())
  * @param file The file to duplicate.
  * @param data The optional data that should override the existing file data.
  */
@@ -873,6 +874,13 @@ export function duplicateFile(file: Object, data?: PartialFile): Object {
         }
     });
     newFile.id = uuid();
+
+    const tags = tagsOnFile(newFile);
+    const tagsToRemove = tags.filter(t => isTagWellKnown(t));
+    tagsToRemove.forEach(t => {
+        delete newFile.tags[t];
+    });
+
     return <Object>cleanFile(newFile);
 }
 
