@@ -244,12 +244,14 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
         return refs;
     }
 
-    protected collectGarbage(refs: WeaveReference<AuxOp>[]): void {
+    protected collectGarbage(refs: WeaveReference<AuxOp>[]): WeaveReference<AuxOp>[] {
+        let removed: WeaveReference<AuxOp>[] = [];
         for (let i = 0; i < refs.length; i++) {
             const ref = refs[i];
             if (ref.atom.value.type === AuxOpType.value) {
-                this.weave.removeBefore(ref);
+                removed.push(...this.weave.removeBefore(ref));
             }
         }
+        return removed;
     }
 }

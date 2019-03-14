@@ -22,6 +22,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
     private _value: TValue;
     private _knownSites: SiteInfo[];
     private _atomAdded: Subject<WeaveReference<TOp>[]>;
+    private _atomArchived: Subject<WeaveReference<TOp>[]>;
     private _isBatching: boolean;
     private _batch: WeaveReference<TOp>[];
 
@@ -88,6 +89,13 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
     }
 
     /**
+     * Gets an observable that resolves whenever one or more atoms are garbage collected and should be archived.
+     */
+    get atomsArchived() {
+        return this._atomArchived;
+    }
+
+    /**
      * Creates a new Causal Tree with the given site ID.
      * @param tree The stored tree that this causal tree should be made from.
      * @param reducer The reducer used to convert a list of operations into a single value.
@@ -103,6 +111,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         this._value = undefined;
         this._metadata = undefined;
         this._atomAdded = new Subject<WeaveReference<TOp>[]>();
+        this._atomArchived = new Subject<WeaveReference<TOp>[]>();
         this._isBatching = false;
         this._batch = [];
         this.garbageCollect = false;
@@ -134,7 +143,10 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
             } else {
                 const refs = [ref];
                 if (this.garbageCollect) {
-                    this.collectGarbage(refs);
+                    const removed = this.collectGarbage(refs);
+                    if (removed.length > 0) {
+                        this._atomArchived.next(removed);
+                    }
                 }
                 [this._value, this._metadata] = this._calculateValue(refs);
                 this._atomAdded.next(refs);
@@ -273,9 +285,12 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
 
     /**
      * Performs garbage collection of the tree's weave after a set of atoms were added to the tree.
+     * Returns the references that were removed from the tree.
      * @param refs The weave references that were added to the tree.
      */
-    protected collectGarbage(refs: WeaveReference<TOp>[]): void {}
+    protected collectGarbage(refs: WeaveReference<TOp>[]): WeaveReference<TOp>[] {
+        return [];
+    }
 
     /**
      * Recalculates the values associated the given references.

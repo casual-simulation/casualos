@@ -131,48 +131,48 @@ export class Weave<TOp extends AtomOp> {
 
     /**
      * Removes the given reference from the weave.
+     * Returns the references that were removed.
      * @param ref The reference to remove.
      */
-    remove(ref: WeaveReference<TOp>): boolean {
+    remove(ref: WeaveReference<TOp>): WeaveReference<TOp>[] {
         if (!ref) {
-            return false;
+            return [];
         }
         const span = this._getSpan(ref);
         if (!span) {
-            return false;
+            return [];
         }
-        this._removeSpan(span.index, span.length);
-        return true;
+        return this._removeSpan(span.index, span.length);
     }
 
     /**
      * Removes all of the siblings of the given atom that happened before it.
+     * Returns the references that were removed.
      * @param ref The reference whose older siblings should be removed.
      */
-    removeBefore(ref: WeaveReference<TOp>): boolean {
+    removeBefore(ref: WeaveReference<TOp>): WeaveReference<TOp>[] {
         if (!ref) {
-            return false;
+            return [];
         }
         if (!ref.atom.cause) {
-            return false;
+            return [];
         }
         const cause = this.getAtom(ref.atom.cause);
         if (!cause) {
-            return false;
+            return [];
         }
         const causeSpan = this._getSpan(cause);
         if (!causeSpan) {
-            return false;
+            return [];
         }
         const refSpan = this._getSpan(ref, causeSpan.index);
         if (!refSpan) {
-            return false;
+            return [];
         }
         const startSplice = refSpan.index + refSpan.length;
         const endSplice = causeSpan.index + causeSpan.length;
         const spliceLength = (endSplice - startSplice);
-        this._removeSpan(startSplice, spliceLength);
-        return true;
+        return this._removeSpan(startSplice, spliceLength);
     }
 
     private _removeSpan(index: number, length: number) {
@@ -191,6 +191,7 @@ export class Weave<TOp extends AtomOp> {
             const site = this.getSite(r.atom.id.site);
             delete site[r.atom.id.timestamp];
         }
+        return removed;
     }
 
     /**

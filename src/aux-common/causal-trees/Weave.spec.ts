@@ -215,12 +215,12 @@ describe('Weave', () => {
     });
 
     describe('remove()', () => {
-        it('should return false when given null', () => {
+        it('should return empty when given null', () => {
             let weave = new Weave();
-            expect(weave.remove(null)).toBe(false);
+            expect(weave.remove(null)).toEqual([]);
         });
 
-        it('should return false when given a reference thats not in the weave', () => {
+        it('should return empty when given a reference thats not in the weave', () => {
             let weave = new Weave();
 
             const a1 = atom(atomId(1, 1), null, new Op());
@@ -232,7 +232,7 @@ describe('Weave', () => {
             const a3 = atom(atomId(2, 3), atomId(1, 1), new Op());
             const ref3 = reference(a3);
             
-            expect(weave.remove(ref3)).toBe(false);
+            expect(weave.remove(ref3)).toEqual([]);
         });
 
         it('should remove the given reference from the weave', () => {
@@ -247,7 +247,9 @@ describe('Weave', () => {
             const a3 = atom(atomId(2, 3), atomId(1, 1), new Op());
             const ref3 = weave.insert(a3);
             
-            expect(weave.remove(ref3)).toBe(true);
+            expect(weave.remove(ref3)).toEqual([
+                ref3
+            ]);
 
             const atoms = weave.atoms.map(a => a.atom);
             expect(atoms).toEqual([
@@ -267,7 +269,11 @@ describe('Weave', () => {
             const a3 = atom(atomId(2, 3), atomId(1, 1), new Op());
             const ref3 = weave.insert(a3);
             
-            expect(weave.remove(ref1)).toBe(true);
+            expect(weave.remove(ref1)).toEqual([
+                ref1,
+                ref3,
+                ref2
+            ]);
 
             const atoms = weave.atoms.map(a => a.atom);
             expect(atoms).toEqual([]);
@@ -296,7 +302,11 @@ describe('Weave', () => {
             const a5 = atom(atomId(2, 5), atomId(1, 1), new Op());
             const ref5 = weave.insert(a5);
             
-            expect(weave.remove(ref2)).toBe(true);
+            expect(weave.remove(ref2)).toEqual([
+                ref2,
+                ref4,
+                ref3,
+            ]);
 
             const atoms = weave.atoms.map(a => a.atom);
             expect(atoms).toEqual([
@@ -317,13 +327,13 @@ describe('Weave', () => {
     });
 
     describe('removeBefore()', () => {
-        it('should return false if given null', () => {
+        it('should return empty if given null', () => {
             let weave = new Weave();
-            expect(weave.removeBefore(null)).toBe(false);
-            expect(weave.removeBefore(undefined)).toBe(false);
+            expect(weave.removeBefore(null)).toEqual([]);
+            expect(weave.removeBefore(undefined)).toEqual([]);
         });
 
-        it('should return false if given an atom that is not in the weave', () => {
+        it('should return empty if given an atom that is not in the weave', () => {
             let weave = new Weave();
 
             const a1 = atom(atomId(1, 1), null, new Op());
@@ -338,7 +348,7 @@ describe('Weave', () => {
             const a4 = atom(atomId(2, 4), atomId(1, 1), new Op());
             const ref4 = reference(a4);
             
-            expect(weave.removeBefore(ref4)).toBe(false);
+            expect(weave.removeBefore(ref4)).toEqual([]);
         });
 
         it('should remove all of the sibling references that occurred before the given reference', () => {
@@ -356,7 +366,10 @@ describe('Weave', () => {
             const a4 = atom(atomId(2, 4), atomId(1, 1), new Op());
             const ref4 = weave.insert(a4);
             
-            expect(weave.removeBefore(ref4)).toBe(true);
+            expect(weave.removeBefore(ref4)).toEqual([
+                ref3,
+                ref2,
+            ]);
 
             const atoms = weave.atoms.map(a => a.atom);
             expect(atoms).toEqual([
@@ -376,7 +389,7 @@ describe('Weave', () => {
             const a3 = atom(atomId(1, 3), atomId(1, 2), new Op());
             const ref3 = weave.insert(a3);
             
-            expect(weave.removeBefore(ref2)).toBe(true);
+            expect(weave.removeBefore(ref2)).toEqual([]);
 
             const atoms = weave.atoms.map(a => a.atom);
             expect(atoms).toEqual([
@@ -402,7 +415,10 @@ describe('Weave', () => {
             const a5 = atom(atomId(1, 5), atomId(1, 4), new Op());
             const ref5 = weave.insert(a5);
             
-            expect(weave.removeBefore(ref4)).toBe(true);
+            expect(weave.removeBefore(ref4)).toEqual([
+                ref2,
+                ref3,
+            ]);
 
             const atoms = weave.atoms.map(a => a.atom);
             expect(atoms).toEqual([
@@ -440,7 +456,11 @@ describe('Weave', () => {
             const a9 = atom(atomId(1, 9), atomId(1, 1), new Op());
             const ref9 = weave.insert(a9);
 
-            expect(weave.removeBefore(ref7)).toBe(true);
+            expect(weave.removeBefore(ref7)).toEqual([
+                ref4,
+                ref6,
+                ref5
+            ]);
 
             const atoms = weave.atoms.map(a => a.atom);
             expect(atoms).toEqual([

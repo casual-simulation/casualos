@@ -2,7 +2,7 @@ import { RealtimeChannel } from "./RealtimeChannel";
 import { WeaveReference } from "./Weave";
 import { AtomOp } from "./Atom";
 import { CausalTree } from "./CausalTree";
-import { CausalTreeStore } from "./CausalTreeStore";
+import { CausalTreeStore, ArchivingCausalTreeStore } from "./CausalTreeStore";
 import { CausalTreeFactory } from "./CausalTreeFactory";
 import { SiteVersionInfo } from "./SiteVersionInfo";
 import { SiteInfo, site } from "./SiteIdInfo";
@@ -20,12 +20,17 @@ import { WeaveVersion, versionsEqual } from "./WeaveVersion";
 export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
 
     private _tree: TTree;
-    private _store: CausalTreeStore;
+    private _store: ArchivingCausalTreeStore;
     private _channel: RealtimeChannel<WeaveReference<AtomOp>[]>;
     private _factory: CausalTreeFactory;
     private _updated: Subject<WeaveReference<AtomOp>[]>;
     private _errors: Subject<any>;
     private _subs: SubscriptionLike[];
+
+    /**
+     * Gets or sets whether the tree should store archived atoms.
+     */
+    storeArchivedAtoms: boolean = false;
 
     /**
      * Gets the realtime channel that this tree is using.
@@ -76,7 +81,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
      * @param store The store used to persistently store the tree.
      * @param channel The channel used to communicate with other devices.
      */
-    constructor(factory: CausalTreeFactory, store: CausalTreeStore, channel: RealtimeChannel<WeaveReference<AtomOp>[]>) {
+    constructor(factory: CausalTreeFactory, store: ArchivingCausalTreeStore, channel: RealtimeChannel<WeaveReference<AtomOp>[]>) {
         this._factory = factory;
         this._store = store;
         this._channel = channel;
@@ -162,7 +167,13 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
             filter(refs => refs.length > 0),
             tap(refs => this._channel.emit(refs)),
             tap(ref => this._updated.next(ref))
-        ).subscribe());
+        ).subscribe(null, error => this._errors.next(error)));
+
+        this._subs.push(this._tree.atomsArchived.pipe(
+            filter(a => this.storeArchivedAtoms),
+            flatMap(refs => this._store.archiveAtoms(this.id, refs.map(r => r.atom)))
+        ).subscribe(null, error => this._errors.next(error)));
+
     }
 
     private _importKnownSites(version: SiteVersionInfo) {
