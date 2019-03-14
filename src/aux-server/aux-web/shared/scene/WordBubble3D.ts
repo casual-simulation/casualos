@@ -62,6 +62,8 @@ export class WordBubble3D extends Object3D {
     public regenerateMesh(box: Box2, arrowPoint: Vector3, opt?: WordBubbleOptions) {
         if (this._shapeMesh) {
             this.remove(this._shapeMesh);
+            this._shapeGeometry.dispose();
+            this._shapeMeshMaterial.dispose();
             this._shapeMesh = null;
         }
 
