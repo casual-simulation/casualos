@@ -39,6 +39,10 @@
                         <md-icon>cloud_download</md-icon>
                         <span class="md-list-item-text">Download AUX</span>
                     </md-list-item>
+                    <md-list-item @click="fork" v-if="getUser() != null">
+                        <fork-icon class="md-icon md-icon-font md-theme-default"></fork-icon>
+                        <span class="md-list-item-text">Fork AUX</span>
+                    </md-list-item>
                     <md-list-item @click="logout" v-if="getUser() != null">
                         <md-icon>exit_to_app</md-icon>
                         <span class="md-list-item-text">Logout</span>

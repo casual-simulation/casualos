@@ -12,6 +12,7 @@ import { copyToClipboard } from '../../shared/SharedUtils';
 import { tap } from 'rxjs/operators';
 import { findIndex } from 'lodash';
 import QRCode from '@chenfengyuan/vue-qrcode';
+import ForkIcon from '../public/icons/repo-forked.svg';
 
 import vueFilePond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
@@ -29,7 +30,8 @@ export interface SidebarItem {
     components: {
         'app': App,
         'qr-code': QRCode,
-        'file-pond': FilePond
+        'file-pond': FilePond,
+        'fork-icon': ForkIcon
     }
 })
 export default class App extends Vue {
@@ -254,6 +256,10 @@ export default class App extends Vue {
 
     upload() {
         this.showFileUpload = true;
+    }
+
+    fork() {
+        console.log('[App] Fork');
     }
 
     cancelFileUpload() {
