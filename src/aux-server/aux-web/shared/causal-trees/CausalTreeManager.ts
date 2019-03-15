@@ -60,6 +60,7 @@ export class CausalTreeManager implements SubscriptionLike {
             let connection = new SocketIOConnection(this._socket);
             let channel = new RealtimeChannel<WeaveReference<AtomOp>[]>(info, connection);
             realtime = new RealtimeCausalTree<TTree>(this._factory, this._store, channel);
+            realtime.storeArchivedAtoms = true;
             this._trees[info.id] = realtime;
         }
         

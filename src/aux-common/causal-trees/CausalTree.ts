@@ -191,7 +191,10 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         } finally {
             if (this._batch.length > 0) {
                 if (this.garbageCollect) {
-                    this.collectGarbage(this._batch);
+                    const removed = this.collectGarbage(this._batch);
+                    if (removed.length > 0) {
+                        this._atomArchived.next(removed);
+                    }
                 }
                 [this._value, this._metadata] = this._calculateValue(this._batch);
                 this._atomAdded.next(this._batch);

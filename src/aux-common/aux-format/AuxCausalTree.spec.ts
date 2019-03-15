@@ -503,6 +503,34 @@ describe('AuxCausalTree', () => {
                     test2Val1
                 ]);
             });
+
+            it('should emit atomsArchived events after batched GC', () => {
+                let tree = new AuxCausalTree(storedTree(site(1)));
+
+                tree.garbageCollect = true;
+                
+                let archived: WeaveReference<AuxOp>[] = [];
+                let error = jest.fn();
+                tree.atomsArchived.subscribe(a => {
+                    archived.push(...a);
+                }, error);
+
+                const root = tree.root();
+                const file = tree.file('fileId');
+                const test = tree.tag('test', file.atom);
+
+                let testVal1: WeaveReference<AuxOp>;
+                let testVal2: WeaveReference<AuxOp>;
+                tree.batch(() => {
+                    testVal1 = tree.val(99, test.atom);
+                    testVal2 = tree.val('hello, world', test.atom);
+                });
+
+                expect(error).not.toBeCalled();
+                expect(archived).toEqual([
+                    testVal1
+                ]);
+            });
         });
 
         describe('metadata', () => {
