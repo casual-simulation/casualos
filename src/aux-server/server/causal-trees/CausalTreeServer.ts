@@ -1,7 +1,8 @@
 import { Socket, Server } from 'socket.io';
-import { CausalTreeStore, CausalTreeFactory, CausalTree, AtomOp, RealtimeChannelInfo, storedTree, site, SiteVersionInfo, SiteInfo, ExchangeWeavesResponse, ExchangeWeavesRequest, WeaveReference } from '@yeti-cgi/aux-common/causal-trees';
+import { CausalTreeStore, CausalTreeFactory, CausalTree, AtomOp, RealtimeChannelInfo, storedTree, site, SiteVersionInfo, SiteInfo, ExchangeWeavesResponse, ExchangeWeavesRequest, WeaveReference, ArchivingCausalTreeStore } from '@yeti-cgi/aux-common/causal-trees';
 import { AuxOp } from '@yeti-cgi/aux-common/aux-format';
 import { find } from 'lodash';
+import { bufferTime, flatMap, filter } from 'rxjs/operators';
 
 /**
  * Defines a class that is able to serve a set causal trees over Socket.io.
@@ -10,7 +11,7 @@ import { find } from 'lodash';
 export class CausalTreeServer {
 
     private _server: Server;
-    private _treeStore: CausalTreeStore;
+    private _treeStore: ArchivingCausalTreeStore;
     private _factory: CausalTreeFactory;
     private _treeList: TreeMap;
 
@@ -20,7 +21,7 @@ export class CausalTreeServer {
      * @param treeStore The Causal Tree store that should be used.
      * @param causalTreeFactory The Causal Tree factory that should be used.
      */
-    constructor(socketServer: Server, treeStore: CausalTreeStore, causalTreeFactory: CausalTreeFactory) {
+    constructor(socketServer: Server, treeStore: ArchivingCausalTreeStore, causalTreeFactory: CausalTreeFactory) {
         this._server = socketServer;
         this._treeStore = treeStore;
         this._factory = causalTreeFactory;
@@ -42,6 +43,16 @@ export class CausalTreeServer {
                     }
 
                     const tree = await this._getTree(info);
+
+                    const sub = tree.atomsArchived.pipe(
+                        bufferTime(1000),
+                        filter(batch => batch.length > 0),
+                        flatMap(batch => batch),
+                        flatMap(async refs => {
+                            const atoms = refs.map(r => r.atom);
+                            await this._treeStore.archiveAtoms(info.id, atoms);
+                        })
+                    ).subscribe(null, err => console.error(err));
 
                     // TODO: Dispose of timeout when all players leave the channel
                     const timeout = setTimeout(async () => {

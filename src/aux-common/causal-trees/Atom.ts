@@ -98,6 +98,21 @@ export interface Atom<T extends AtomOp> {
 }
 
 /**
+ * Defines an interface that represents an atom that has been archived.
+ */
+export interface ArchivedAtom {
+    /**
+     * The key that relates this atom to a particular tree/weave.
+     */
+    key: string;
+
+    /**
+     * The atom that was archived.
+     */
+    atom: Atom<any>;
+}
+
+/**
  * Creates a new atom.
  * @param id 
  * @param cause 
