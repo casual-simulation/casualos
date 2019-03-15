@@ -1,5 +1,5 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
-import { IGameView } from "aux-web/shared/IGameView";
+import { IGameView } from "../../../shared/IGameView";
 import { File, file } from "@yeti-cgi/aux-common";
 import { ScaleDecorator } from "./ScaleDecorator";
 import { ContextPositionDecorator } from "./ContextPositionDecorator";

@@ -15,7 +15,7 @@ import GameView from '../GameView/GameView';
 import { appManager } from '../../shared/AppManager';
 import FileTable from '../FileTable/FileTable';
 import ColorPicker from '../ColorPicker/ColorPicker';
-import { ContextMenuEvent } from '../interaction/ContextMenuEvent';
+import { ContextMenuEvent } from '../../shared/interaction/ContextMenuEvent';
 import TagEditor from '../TagEditor/TagEditor';
 import { SubscriptionLike } from 'rxjs';
 import { tap } from 'rxjs/operators';

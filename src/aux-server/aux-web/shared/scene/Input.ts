@@ -157,12 +157,32 @@ export class Input {
     }
 
     /**
+     * Determines if the mouse down event happened directly over any of the given elements.
+     * @param elements The elements to test.
+     */
+    public isMouseButtonDownOnAny(elements: HTMLElement[]): boolean {
+        const downElement = this._targetData.inputDown;
+        const matchingElement = elements.find((e) => Input.isElementContainedByOrEqual(downElement, e));
+        return !!matchingElement;
+    }
+
+    /**
      * Determines if the mouse is currently focusing the given html element.
-     * @param element 
+     * @param element The element to test.
      */
     public isMouseFocusing(element: HTMLElement): boolean {
         const overElement = this._targetData.inputOver;
         return Input.isElementContainedByOrEqual(overElement, element);
+    }
+
+    /**
+     * Determines if the mouse is currently focusing any of the given html elements.
+     * @param elements The elements to test.
+     */
+    public isMouseFocusingAny(elements: HTMLElement[]): boolean {
+        const overElement = this._targetData.inputOver;
+        const matchingElement = elements.find((e) => Input.isElementContainedByOrEqual(overElement, e));
+        return !!matchingElement;
     }
 
     /**
@@ -614,7 +634,7 @@ export class Input {
         if (this._inputType == InputType.Undefined) this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch) return;
 
-        if (this.isMouseFocusing(this._gameView.gameView) || this.isMouseFocusing(this._gameView.fileQueue)) {
+        if (this.isMouseFocusing(this._gameView.gameView) || this.isMouseFocusingAny(this._gameView.uiHtmlElements)) {
             // This prevents the browser from doing things like allow the pull down refresh on Chrome.
             event.preventDefault();
         }

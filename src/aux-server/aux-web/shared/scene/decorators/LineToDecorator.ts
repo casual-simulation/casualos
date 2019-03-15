@@ -3,7 +3,7 @@ import { AuxFile3D } from "../AuxFile3D";
 import { FileCalculationContext, AuxFile, isFormula, calculateFormattedFileValue, calculateFileValue, isArray, parseArray } from "@yeti-cgi/aux-common";
 import { Arrow3D } from "../Arrow3D";
 import { Color } from "three";
-import { AuxFile3DFinder } from "aux-web/shared/AuxFile3DFinder";
+import { AuxFile3DFinder } from "../../../shared/AuxFile3DFinder";
 import { find } from "lodash";
 
 export class LineToDecorator extends AuxFile3DDecorator {    

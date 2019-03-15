@@ -1,8 +1,8 @@
 import { IOperation } from "./IOperation";
 import { PerspectiveCamera, Vector3, Spherical, Vector2, Quaternion, Matrix4, Math as ThreeMath, InterpolationEndingModes } from "three";
-import GameView from "../GameView/GameView";
-import { InteractionManager } from "./InteractionManager";
+import { BaseInteractionManager } from "./BaseInteractionManager";
 import { InputType, MouseButtonId } from "../../shared/scene/Input";
+import { IGameView } from "../../shared/IGameView";
 
 
 export class CameraControls {
@@ -62,7 +62,7 @@ export class CameraControls {
     public zoom0: number;
 
     private _camera: PerspectiveCamera;
-    private _gameView: GameView;
+    private _gameView: IGameView;
     private _enabled = true;
 
     private state: STATE;
@@ -128,7 +128,7 @@ export class CameraControls {
     }
 
 
-    constructor(camera: PerspectiveCamera, gameView: GameView) {
+    constructor(camera: PerspectiveCamera, gameView: IGameView) {
         this._camera = camera;
         this._gameView = gameView;
 

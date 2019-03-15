@@ -1,35 +1,38 @@
 
-import { FileDragOperation } from '../DragOperation/FileDragOperation';
-import { Vector2, Vector3, Intersection } from 'three';
-import GameView from '../../GameView/GameView';
-import { InteractionManager } from '../InteractionManager';
+import { BuilderFileDragOperation } from '../DragOperation/BuilderFileDragOperation';
+import { Intersection } from 'three';
 import {
     UserMode,
     File,
     duplicateFile,
-    AuxFile,
     FileCalculationContext,
     getFileIndex,
     getFilePosition,
-    objectsAtContextGridPosition
+    objectsAtContextGridPosition,
+    isFileMovable
 } from '@yeti-cgi/aux-common';
-import { Physics } from '../../../shared/scene/Physics';
-import { WorkspaceMesh } from '../../../shared/scene/WorkspaceMesh';
 import { appManager } from '../../../shared/AppManager';
-import { BaseFileClickOperation } from './BaseFileClickOperation';
-import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
+import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperation/BaseFileClickOperation';
+import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
 import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
 import { BuilderGroup3D } from '../../../shared/scene/BuilderGroup3D';
+import { BuilderInteractionManager } from '../BuilderInteractionManager';
+import GameView from '../../GameView/GameView';
 
 /**
  * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
  */
-export class FileClickOperation extends BaseFileClickOperation {
+export class BuilderFileClickOperation extends BaseFileClickOperation {
+
+    // This overrides the base class BaseInteractionManager
+    protected _interaction: BuilderInteractionManager;
+    // This overrides the base class IGameView
+    protected _gameView: GameView;
 
     private _hit: Intersection;
 
-    constructor(mode: UserMode, gameView: GameView, interaction: InteractionManager, file: AuxFile3D | ContextGroup3D, hit: Intersection) {
+    constructor(mode: UserMode, gameView: GameView, interaction: BuilderInteractionManager, file: AuxFile3D | ContextGroup3D, hit: Intersection) {
         super(mode, gameView, interaction, file.file, file);
         this._file3D = file;
         this._hit = hit;
@@ -58,10 +61,10 @@ export class FileClickOperation extends BaseFileClickOperation {
                 const index = getFileIndex(calc, file, file3D.context);
                 const draggedObjects = objects.filter(o => getFileIndex(calc, o, context) >= index)
                     .map(o => o);
-                return new FileDragOperation(this._gameView, this._interaction, this._hit, draggedObjects, <BuilderGroup3D>workspace, file3D.context);
+                return new BuilderFileDragOperation(this._gameView, this._interaction, this._hit, draggedObjects, <BuilderGroup3D>workspace, file3D.context);
             }
         }
-        return new FileDragOperation(this._gameView, this._interaction, this._hit, [this._file3D.file], <BuilderGroup3D>workspace, null);
+        return new BuilderFileDragOperation(this._gameView, this._interaction, this._hit, [this._file3D.file], <BuilderGroup3D>workspace, null);
     }
 
     protected _performClick(calc: FileCalculationContext): void {
@@ -99,6 +102,15 @@ export class FileClickOperation extends BaseFileClickOperation {
             } else {
                 this._interaction.showContextMenu(calc);
             }
+        }
+    }
+
+    protected _canDragFile(calc: FileCalculationContext, file: File): boolean {
+        if (file.tags['aux.builder.context']) {
+            // Workspaces are always movable.
+            return true;
+        } else {
+            return this._interaction.isInCorrectMode(this._file3D) && isFileMovable(calc, file);
         }
     }
 }

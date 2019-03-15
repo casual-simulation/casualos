@@ -1,26 +1,17 @@
-import { Input } from '../../../shared/scene/Input';
-import { IOperation } from '../IOperation';
-import GameView from '../../GameView/GameView';
-import { InteractionManager } from '../InteractionManager';
-import { Ray, Intersection, Vector2, Vector3, Box3 } from 'three';
 import { Physics } from '../../../shared/scene/Physics';
-import { WorkspaceMesh } from '../../../shared/scene/WorkspaceMesh';
-import { File, Workspace, Object, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated, PartialFile, fileAdded, FileEvent } from '@yeti-cgi/aux-common/Files';
-import { keys, minBy, flatMap } from 'lodash';
-import { keyToPos, gridPosToRealPos, realPosToGridPos, Axial, gridDistance, posToKey } from '../../../shared/scene/hex';
+import { File, PartialFile, fileAdded, FileEvent } from '@yeti-cgi/aux-common/Files';
 import { createFile, FileCalculationContext } from '@yeti-cgi/aux-common/Files/FileCalculations';
-import { BaseFileDragOperation } from './BaseFileDragOperation';
 import { appManager } from '../../../shared/AppManager';
 import { merge } from '@yeti-cgi/aux-common/utils';
-import { setParent } from '../../../shared/scene/SceneUtils';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
-import { AuxFile } from '@yeti-cgi/aux-common';
-import { AuxFile3DDecoratorFactory } from '../../../shared/scene/decorators/AuxFile3DDecoratorFactory';
+import { BaseBuilderFileDragOperation } from './BaseBuilderFileDragOperation';
+import GameView from '../../GameView/GameView';
+import { BuilderInteractionManager } from '../BuilderInteractionManager';
 
 /**
  * New File Drag Operation handles dragging of new files from the file queue.
  */
-export class NewFileDragOperation extends BaseFileDragOperation {
+export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
 
     public static readonly FreeDragDistance: number = 6;
 
@@ -32,7 +23,7 @@ export class NewFileDragOperation extends BaseFileDragOperation {
      * @param input the input module to interface with.
      * @param buttonId the button id of the input that this drag operation is being performed with. If desktop this is the mouse button
      */
-    constructor(gameView: GameView, interaction: InteractionManager, duplicatedFile: File) {
+    constructor(gameView: GameView, interaction: BuilderInteractionManager, duplicatedFile: File) {
         super(gameView, interaction, [duplicatedFile], null);
     }
 
@@ -73,7 +64,7 @@ export class NewFileDragOperation extends BaseFileDragOperation {
             }
 
             const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.mainCamera);
-            let worldPos = Physics.pointOnRay(mouseDir, NewFileDragOperation.FreeDragDistance);
+            let worldPos = Physics.pointOnRay(mouseDir, BuilderNewFileDragOperation.FreeDragDistance);
             this._initialDragMesh.position.copy(worldPos);
             this._initialDragMesh.updateMatrixWorld(true);
         } else {
@@ -84,7 +75,7 @@ export class NewFileDragOperation extends BaseFileDragOperation {
 
     protected _combineFiles(eventName: string) {
         if (this._fileAdded) {
-            this._gameView.fileManager.action(this._file, this._other, eventName);
+            appManager.fileManager.action(this._file, this._other, eventName);
         }
     }
 
