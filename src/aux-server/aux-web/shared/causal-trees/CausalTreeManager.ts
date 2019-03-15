@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 import { WorkerEvent, ValueCalculated } from './WorkerEvents';
 import { SubscriptionLike, Subject, Observable } from 'rxjs';
 import { first, map, filter, tap } from 'rxjs/operators';
-import { AtomOp, RealtimeChannelInfo, PrecalculatedOp, RealtimeCausalTree, CausalTree, RealtimeChannel, WeaveReference, CausalTreeFactory, CausalTreeStore } from '@yeti-cgi/aux-common/causal-trees';
+import { AtomOp, RealtimeChannelInfo, PrecalculatedOp, RealtimeCausalTree, CausalTree, RealtimeChannel, WeaveReference, CausalTreeFactory, CausalTreeStore, ArchivingCausalTreeStore } from '@yeti-cgi/aux-common/causal-trees';
 import { SocketIOConnection } from './SocketIOConnection';
 import { auxCausalTreeFactory } from '@yeti-cgi/aux-common';
 import { BrowserCausalTreeStore } from './BrowserCausalTreeStore';
@@ -18,7 +18,7 @@ export class CausalTreeManager implements SubscriptionLike {
     private _events: Subject<MessageEvent>;
     private _socket: typeof io.Socket;
     private _factory: CausalTreeFactory;
-    private _store: CausalTreeStore;
+    private _store: ArchivingCausalTreeStore;
     private _initialized: boolean;
 
     /**

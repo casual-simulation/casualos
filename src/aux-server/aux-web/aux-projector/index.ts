@@ -127,7 +127,8 @@ router.beforeEach((to, from, next) => {
                         next();
                     }, ex => {
                         console.error(ex);
-                        next({ name: 'login', query: { id: channelId } });
+                        next();
+                        // next({ name: 'login', query: { id: channelId } });
                     });
                 }
             }

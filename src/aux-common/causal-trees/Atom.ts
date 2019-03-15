@@ -116,3 +116,12 @@ export function atom<T extends AtomOp>(id: AtomId, cause: AtomId, value: T): Ato
         checksum: hash.readUInt32BE(0)
     };
 }
+
+/**
+ * Converts the given atom ID into a string that is suitable for
+ * storage.
+ * @param id The ID.
+ */
+export function atomIdToString(id: AtomId): string {
+    return `${id.site}@${id.timestamp}:${id.priority}`;
+}
