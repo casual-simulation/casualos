@@ -1,27 +1,28 @@
-import { Input, InputType, MouseButtonId } from '../../../shared/scene/Input';
-import { Vector2, Vector3, Intersection, Raycaster } from 'three';
-import { IOperation } from '../IOperation';
-import GameView from '../../GameView/GameView';
-import { InteractionManager } from '../InteractionManager';
+import { Input } from '../../../shared/scene/Input';
+import { Vector2 } from 'three';
+import { IOperation } from '../../../shared/interaction/IOperation';
 import { DEFAULT_SCENE_BACKGROUND_COLOR } from '@yeti-cgi/aux-common';
 import { appManager } from '../../../shared/AppManager';
 import { ColorPickerEvent } from '../ColorPickerEvent';
 import { EventBus } from '../../../shared/EventBus';
+import { BuilderInteractionManager } from '../BuilderInteractionManager';
+import GameView from '../../GameView/GameView';
 
 /**
  * Empty Click Operation handles clicking of empty space for mouse and touch input with the primary (left/first finger) interaction button.
  */
-export class EmptyClickOperation implements IOperation {
+export class BuilderEmptyClickOperation implements IOperation {
 
     public static readonly DragThreshold: number = 0.02;
     public static CanOpenColorPicker = true;
+    
+    protected _interaction: BuilderInteractionManager;
 
     private _gameView: GameView;
-    private _interaction: InteractionManager;
     private _finished: boolean;
     private _startScreenPos: Vector2;
 
-    constructor(gameView: GameView, interaction: InteractionManager) {
+    constructor(gameView: GameView, interaction: BuilderInteractionManager) {
         this._gameView = gameView;
         this._interaction = interaction;
 
@@ -37,7 +38,7 @@ export class EmptyClickOperation implements IOperation {
             const curScreenPos = this._gameView.input.getMouseScreenPos();
             const distance = curScreenPos.distanceTo(this._startScreenPos);
 
-            if (distance < EmptyClickOperation.DragThreshold) {
+            if (distance < BuilderEmptyClickOperation.DragThreshold) {
 
                 if (this._interaction.mode === 'worksurfaces') {
 
@@ -46,7 +47,7 @@ export class EmptyClickOperation implements IOperation {
                     if (this._interaction.isEmptySpace(screenPos)) {
 
                         // Still not clicking on anything.
-                        if (EmptyClickOperation.CanOpenColorPicker && !this._gameView.xrSession) {
+                        if (BuilderEmptyClickOperation.CanOpenColorPicker && !this._gameView.xrSession) {
                             this.sceneBackgroundColorPicker(this._gameView.input.getMousePagePos());
                         }
 
@@ -55,9 +56,9 @@ export class EmptyClickOperation implements IOperation {
 
             }
 
-            if (!EmptyClickOperation.CanOpenColorPicker) {
+            if (!BuilderEmptyClickOperation.CanOpenColorPicker) {
                 // Turn color picker opening back on for the next empty click.
-                EmptyClickOperation.CanOpenColorPicker = true;
+                BuilderEmptyClickOperation.CanOpenColorPicker = true;
             }
 
             // Button has been released. This click operation is finished.
@@ -94,7 +95,7 @@ export class EmptyClickOperation implements IOperation {
             let screenPos = Input.screenPosition(inputPagePos, this._gameView.gameView);
             if (this._interaction.isEmptySpace(screenPos)) {
                 // temporarily disable color picker opening, until the next empty click.
-                EmptyClickOperation.CanOpenColorPicker = false;
+                BuilderEmptyClickOperation.CanOpenColorPicker = false;
             }
         };
 

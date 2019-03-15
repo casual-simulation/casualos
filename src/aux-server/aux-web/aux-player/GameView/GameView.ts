@@ -40,9 +40,7 @@ import { ArgEvent } from '@yeti-cgi/aux-common/Events';
 import { Time } from '../../shared/scene/Time';
 import { Input, InputType } from '../../shared/scene/Input';
 import { InputVR } from '../../shared/scene/InputVR';
-
 import { appManager } from '../../shared/AppManager';
-// import { InteractionManager } from '../interaction/InteractionManager';
 import { GridChecker } from '../../shared/scene/grid/GridChecker';
 import { find, flatMap } from 'lodash';
 import App from '../App/App';
@@ -53,6 +51,7 @@ import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { DebugObjectManager } from '../../shared/scene/DebugObjectManager';
 import { AuxFile3DDecoratorFactory } from '../../shared/scene/decorators/AuxFile3DDecoratorFactory';
+import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
 
 @Component({
     components: {
@@ -79,8 +78,8 @@ export default class GameView extends Vue implements IGameView {
     private _time: Time;
     private _input: Input;
     private _inputVR: InputVR;
-    //   private _interaction: InteractionManager;
-    private _gridChecker: GridChecker;
+    private _interaction: PlayerInteractionManager;
+    // private _gridChecker: GridChecker;
     private _originalBackground: Color | Texture;
 
     public onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
@@ -113,7 +112,7 @@ export default class GameView extends Vue implements IGameView {
 
     @Provide() fileRenderer: FileRenderer = new FileRenderer();
 
-    get fileQueue(): HTMLElement { return <HTMLElement>this.$refs.fileQueue; }
+    get uiHtmlElements(): HTMLElement[] { return []; }
     get gameView(): HTMLElement { return <HTMLElement>this.$refs.gameView; }
     get canvas() { return this._canvas; }
     get time(): Time { return this._time; }
@@ -144,7 +143,7 @@ export default class GameView extends Vue implements IGameView {
     }
 
     public setGridsVisible(visible: boolean) {
-        console.warn("TODO: Implement setGridsVisible for AUX Player");
+        // This currently does nothing for AUX Player, we dont really show any grids right now.
     }
 
     public selectRecentFile(file: Object) {
@@ -168,7 +167,7 @@ export default class GameView extends Vue implements IGameView {
         DebugObjectManager.init(this._time, this._scene);
         this._input = new Input(this);
         this._inputVR = new InputVR(this);
-        // this._interaction = new InteractionManager(this);
+        this._interaction = new PlayerInteractionManager(this);
 
         this._setupWebVR();
         await this._setupWebXR();
@@ -200,7 +199,7 @@ export default class GameView extends Vue implements IGameView {
 
         this._input.update();
         this._inputVR.update();
-        // this._interaction.update();
+        this._interaction.update();
 
         if (this._contextGroup) {
             this._contextGroup.frameUpdate(calc);

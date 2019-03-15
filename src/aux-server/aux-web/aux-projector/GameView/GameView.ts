@@ -48,7 +48,6 @@ import { Input, InputType } from '../../shared/scene/Input';
 import { InputVR } from '../../shared/scene/InputVR';
 
 import { appManager } from '../../shared/AppManager';
-import { InteractionManager } from '../interaction/InteractionManager';
 import { GridChecker } from '../../shared/scene/grid/GridChecker';
 import { flatMap, find, findIndex, debounce } from 'lodash';
 import App from '../App/App';
@@ -60,6 +59,7 @@ import { AuxFile3DDecoratorFactory } from '../../shared/scene/decorators/AuxFile
 import { DebugObjectManager } from '../../shared/scene/DebugObjectManager';
 import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import { AuxFile3D } from '../../shared/scene/AuxFile3D';
+import { BuilderInteractionManager } from '../interaction/BuilderInteractionManager';
 
 @Component({
     components: {
@@ -86,7 +86,7 @@ export default class GameView extends Vue implements IGameView {
     private _time: Time;
     private _input: Input;
     private _inputVR: InputVR;
-    private _interaction: InteractionManager;
+    private _interaction: BuilderInteractionManager;
     private _gridChecker: GridChecker;
     private _originalBackground: Color | Texture;
 
@@ -112,7 +112,7 @@ export default class GameView extends Vue implements IGameView {
     @Inject() removeSidebarItem: App['removeSidebarItem'];
     @Provide() fileRenderer: FileRenderer = new FileRenderer();
 
-    get fileQueue(): HTMLElement { return <HTMLElement>this.$refs.fileQueue; }
+    get uiHtmlElements(): HTMLElement[] { return [<HTMLElement>this.$refs.fileQueue]; }
     get gameView(): HTMLElement { return <HTMLElement>this.$refs.gameView; }
     get canvas() { return this._canvas; }
     get time(): Time { return this._time; }
@@ -219,7 +219,7 @@ export default class GameView extends Vue implements IGameView {
         DebugObjectManager.init(this._time, this._scene);
         this._input = new Input(this);
         this._inputVR = new InputVR(this);
-        this._interaction = new InteractionManager(this);
+        this._interaction = new BuilderInteractionManager(this);
         this._gridChecker = new GridChecker(DEFAULT_WORKSPACE_HEIGHT_INCREMENT);
 
         // Subscriptions to file events.

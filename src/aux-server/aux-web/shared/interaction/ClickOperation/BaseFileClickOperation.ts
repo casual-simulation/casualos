@@ -1,12 +1,12 @@
 import { Input, InputType, MouseButtonId } from '../../../shared/scene/Input';
 import { Vector2, Vector3, Intersection } from 'three';
 import { IOperation } from '../IOperation';
-import GameView from '../../GameView/GameView';
-import { InteractionManager } from '../InteractionManager';
+import { BaseInteractionManager } from '../BaseInteractionManager';
 import { UserMode, File, FileCalculationContext, AuxFile, isFileMovable } from '@yeti-cgi/aux-common';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
 import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
+import { IGameView } from '../../../shared/IGameView';
 
 /**
  * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
@@ -15,8 +15,8 @@ export abstract class BaseFileClickOperation implements IOperation {
 
     public static readonly DragThreshold: number = 0.03;
 
-    protected _gameView: GameView;
-    protected _interaction: InteractionManager;
+    protected _gameView: IGameView;
+    protected _interaction: BaseInteractionManager;
     protected _mode: UserMode;
     protected _file: File;
     protected _file3D: AuxFile3D | ContextGroup3D | null;
@@ -26,7 +26,7 @@ export abstract class BaseFileClickOperation implements IOperation {
     protected _startScreenPos: Vector2;
     protected _dragOperation: BaseFileDragOperation;
 
-    constructor(mode: UserMode, gameView: GameView, interaction: InteractionManager, file: File, file3D: AuxFile3D | ContextGroup3D | null) {
+    constructor(mode: UserMode, gameView: IGameView, interaction: BaseInteractionManager, file: File, file3D: AuxFile3D | ContextGroup3D | null) {
         this._gameView = gameView;
         this._interaction = interaction;
         this._file = file;
@@ -70,7 +70,7 @@ export abstract class BaseFileClickOperation implements IOperation {
                     // Attempt to start dragging now that we've crossed the threshold.
                     this._triedDragging = true;
 
-                    if (this._interaction.isInCorrectMode(this._file3D) && this._canDragFile(calc, this._file)) {
+                    if (this._canDragFile(calc, this._file)) {
                         this._dragOperation = this._createDragOperation(calc);
                     }
                 }
@@ -105,12 +105,7 @@ export abstract class BaseFileClickOperation implements IOperation {
         throw new Error('Not implemented.');
     }
 
-    protected _canDragFile(calc: FileCalculationContext, file: File) {
-        if (file.tags['aux.builder.context']) {
-            // Workspaces are always movable.
-            return true;
-        } else {
-            return isFileMovable(calc, file);
-        }
+    protected _canDragFile(calc: FileCalculationContext, file: File): boolean {
+        return isFileMovable(calc, file);
     }
 }

@@ -1,19 +1,25 @@
-import GameView from '../../GameView/GameView';
-import { InteractionManager } from '../InteractionManager';
 import { Intersection, Vector3 } from 'three';
 import { Physics } from '../../../shared/scene/Physics';
 import { File, Workspace, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated } from '@yeti-cgi/aux-common/Files';
 import { keys } from 'lodash';
 import { gridPosToRealPos, Axial, posToKey } from '../../../shared/scene/hex';
 import { FileCalculationContext, getContextMinimized, getContextSize, getContextGrid } from '@yeti-cgi/aux-common/Files/FileCalculations';
-import { BaseFileDragOperation } from './BaseFileDragOperation';
 import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
 import { BuilderGroup3D } from '../../../shared/scene/BuilderGroup3D';
+import { appManager } from '../../../shared/AppManager';
+import GameView from '../../GameView/GameView';
+import { BuilderInteractionManager } from '../BuilderInteractionManager';
+import { BaseBuilderFileDragOperation } from './BaseBuilderFileDragOperation';
 
 /**
  * File Drag Operation handles dragging of files for mouse and touch input.
  */
-export class FileDragOperation extends BaseFileDragOperation {
+export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
+
+    // This overrides the base class BaseInteractionManager
+    protected _interaction: BuilderInteractionManager;
+    // This overrides the base class IGameView
+    protected _gameView: GameView;
 
     private _workspace: BuilderGroup3D;
     private _attachWorkspace: ContextGroup3D;
@@ -26,7 +32,7 @@ export class FileDragOperation extends BaseFileDragOperation {
      * @param input the input module to interface with.
      * @param buttonId the button id of the input that this drag operation is being performed with. If desktop this is the mouse button
      */
-    constructor(gameView: GameView, interaction: InteractionManager, hit: Intersection, files: File[], workspace: BuilderGroup3D, context: string) {
+    constructor(gameView: GameView, interaction: BuilderInteractionManager, hit: Intersection, files: File[], workspace: BuilderGroup3D, context: string) {
         super(gameView, interaction, files, context);
 
         this._workspace = workspace;
@@ -40,11 +46,11 @@ export class FileDragOperation extends BaseFileDragOperation {
         }
     }
 
-    protected _drag(calc: FileCalculationContext) {
+    protected _onDrag(calc: FileCalculationContext) {
         if (this._workspace) {
-            this._dragWorkspace(calc);
+            this._onDragWorkspace(calc);
         } else {
-            this._dragFiles(calc);
+            super._onDrag(calc);
         }
     }
 
@@ -56,7 +62,7 @@ export class FileDragOperation extends BaseFileDragOperation {
         }
     }
 
-    protected _dragWorkspace(calc: FileCalculationContext) {
+    protected _onDragWorkspace(calc: FileCalculationContext) {
         const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.mainCamera);
         const point = Physics.pointOnPlane(mouseDir, this._gameView.groundPlane);
 
@@ -98,7 +104,7 @@ export class FileDragOperation extends BaseFileDragOperation {
                 final.add(this._workspaceDelta);
             }
 
-            this._gameView.fileManager.updateFile(this._workspace.file, {
+            appManager.fileManager.updateFile(this._workspace.file, {
                 tags: {
                     [`aux.${this._workspace.domain}.context.x`]: final.x,
                     [`aux.${this._workspace.domain}.context.y`]: final.z,
@@ -112,7 +118,7 @@ export class FileDragOperation extends BaseFileDragOperation {
         const mesh = this._workspace.surface;
         const height = mesh.hexGrid.hexes[0].height;
 
-        this._gameView.fileManager.transaction(
+        appManager.fileManager.transaction(
             fileRemoved(this._workspace.file.id),
             fileUpdated(this._attachWorkspace.file.id, {
                 tags: {

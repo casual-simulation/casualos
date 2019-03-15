@@ -7,14 +7,15 @@ import { ArgEvent } from "@yeti-cgi/aux-common/Events";
 import { AuxFile } from "@yeti-cgi/aux-common/aux-format";
 import { ContextGroup3D } from "./scene/ContextGroup3D";
 import { AuxFile3DFinder } from "./AuxFile3DFinder";
+import Vue from "vue";
 
 /**
  * Interface that described what properties and functions should be available to a GameView class/component implementation.
  * Concept of a GameView is shared across aux-web applications. This interface will ensure shared functionality across these applications.
  */
-export interface IGameView extends AuxFile3DFinder {
+export interface IGameView extends AuxFile3DFinder, Vue {
     
-    readonly fileQueue: HTMLElement;
+    readonly uiHtmlElements: HTMLElement[];
     readonly gameView: HTMLElement;
     readonly canvas: HTMLCanvasElement;
     readonly time: Time;
@@ -32,37 +33,22 @@ export interface IGameView extends AuxFile3DFinder {
     onFileAdded: ArgEvent<AuxFile>;
     onFileUpdated: ArgEvent<AuxFile>;
     onFileRemoved: ArgEvent<AuxFile>;
+    
+    xrCapable: boolean;
+    xrDisplay: any;
+    xrSession: any;
+    vrDisplay: VRDisplay;
+    vrCapable: boolean;
 
-
-    /**
-     * Returns the file id that is represented by the specified mesh id.
-     * @param meshId The id of the mesh.
-     */
-    // getFileId(meshId: number): string;
-
-    /**
-     * Returns the file that matches the specified file id.
-     * @param fileId The id of the file.
-     */
-    // getFile(fileId: string): File3D;
-
-    /**
-     * Gets all of the files.
-     */
-    // getFiles(): File3D[];
-
-    /**
-     * Gets all of the objects.
-     */
-    // getObjects(): File3D[];
-
-    /**
-     * Gets all of the workspaces.
-     */
-    // getWorkspaces(): File3D[];
+    selectedRecentFile: Object;
 
     /**
      * Gets the list of contexts that this game view contains.
      */
     getContexts(): ContextGroup3D[];
+
+    /**
+     * Sets the visibility of the file grids.
+     */
+    setGridsVisible(visible: boolean): void;
 }
