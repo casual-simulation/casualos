@@ -68,6 +68,38 @@ export class CausalTreeManager implements SubscriptionLike {
     }
 
     /**
+     * Forks the given realtime causal tree into a new channel.
+     * The new channel will contain the exact same tree as the one given but will be served over the given ID.
+     * @param tree The tree to fork.
+     * @param newId The ID of the channel that should be used for the fork.
+     */
+    async forkTree<TTree extends CausalTree<AtomOp, any, any>>(realtime: RealtimeCausalTree<TTree>, newId: string): Promise<RealtimeCausalTree<TTree>> {
+        let oldTree = <RealtimeCausalTree<TTree>>this._trees[newId];
+        if (oldTree) {
+            throw new Error('The given channel ID already exists.');
+        }
+
+        const info: RealtimeChannelInfo = {
+            type: realtime.channel.info.type,
+            id: newId,
+            bare: true
+        };
+
+        await this._store.update(newId, realtime.tree.export());
+
+        let connection = new SocketIOConnection(this._socket);
+        let channel = new RealtimeChannel<WeaveReference<AtomOp>[]>(info, connection);
+        let newRealtime = new RealtimeCausalTree<TTree>(this._factory, this._store, channel);
+        newRealtime.storeArchivedAtoms = true;
+        this._trees[info.id] = newRealtime;
+
+        await newRealtime.init();
+        await newRealtime.waitToGetTreeFromServer();
+
+        return newRealtime;
+    }
+
+    /**
      * Calculates the value for the given tree asynchronously.
      * This means it won't block the main thread and so won't cause the UI to stutter.
      * @param tree The tree.

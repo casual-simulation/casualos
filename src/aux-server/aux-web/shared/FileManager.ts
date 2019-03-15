@@ -376,6 +376,20 @@ export class FileManager {
     return createCalculationContext(this.objects);
   }
 
+  /**
+   * Forks the current session's aux into the given session ID.
+   * @param forkName The ID of the new session.
+   */
+  async forkAux(forkName: string) {
+    const id = this._getTreeName(forkName);
+    console.log('[FileManager] Making fork', forkName);
+    const forked = await this._treeManager.forkTree(this.aux, id);
+  }
+
+  private _getTreeName(id: string) {
+    return id ? `aux-${id}` : 'aux-default';
+  }
+
   private async _init(id: string) {
     if(this._errored) {
         return;
@@ -383,7 +397,7 @@ export class FileManager {
     try {
         this._setStatus('Starting...');
 
-        this._id = id ? `aux-${id}` : 'aux-default';
+        this._id = this._getTreeName(id);
 
         this._subscriptions = [];
         this._fileDiscoveredObservable = new ReplaySubject<AuxFile>();

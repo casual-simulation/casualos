@@ -287,6 +287,19 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
     }
 
     /**
+     * Forks the given causal tree and returns a new tree that contains the same state.
+     * Note that this method does not copy over configuration options such as collectGarbage.
+     * Also note that this method should be overridden in child classes to ensure that the proper type
+     * is being created.
+     * @param type The type of the tree that is being forked.
+     * @param tree The tree to fork.
+     */
+    fork(): CausalTree<TOp, TValue, TMetadata> {
+        const stored = this.export();
+        return new CausalTree<TOp, TValue, TMetadata>(stored, this._reducer);
+    }
+
+    /**
      * Performs garbage collection of the tree's weave after a set of atoms were added to the tree.
      * Returns the references that were removed from the tree.
      * @param refs The weave references that were added to the tree.

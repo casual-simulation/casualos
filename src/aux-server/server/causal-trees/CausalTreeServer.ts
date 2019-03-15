@@ -127,7 +127,9 @@ export class CausalTreeServer {
                 tree = this._factory.create(info.type, stored);
             } else {
                 tree = this._factory.create(info.type, storedTree(site(1)));
-                tree.root();
+                if (!info.bare) {
+                    tree.root();
+                }
             }
 
             // TODO: Implement the ability to keep old atoms around while

@@ -58,8 +58,7 @@ export enum AppType {
     Player = 'player'
 }
 
-export class AppManager {
-    
+export class AppManager {    
     public appType: AppType;
 
     private _db: AppDatabase;
@@ -87,6 +86,10 @@ export class AppManager {
 
     get socketManager() {
         return this._socketManager;
+    }
+
+    get treeManager() {
+        return this._treeManager;
     }
 
     get fileManager() {

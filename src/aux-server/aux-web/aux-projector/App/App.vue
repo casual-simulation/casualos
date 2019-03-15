@@ -108,8 +108,24 @@
                     <file-pond allow-multiple="false" @addfile="fileAdded" @removefile="fileRemoved"/>
                 </div>
                 <md-dialog-actions>
-                    <md-button class="md-primary" @click="cancelFileUpload">Close</md-button>
+                    <md-button @click="cancelFileUpload">Close</md-button>
                     <md-button class="md-primary" @click="uploadFiles" :disabled="uploadedFiles.length <= 0">Upload</md-button>
+                </md-dialog-actions>
+            </md-dialog>
+
+            <md-dialog :md-active.sync="showFork" class="fork-dialog">
+                <md-dialog-title>Fork AUX</md-dialog-title>
+                <md-dialog-content>
+                    <div class="fork-container">
+                        <md-field>
+                            <label for="fork-name">Fork Name</label>
+                            <md-input name="fork-name" id="fork-name" v-model="forkName"/>
+                        </md-field>
+                    </div>
+                </md-dialog-content>
+                <md-dialog-actions>
+                    <md-button @click="cancelFork">Cancel</md-button>
+                    <md-button class="md-primary" @click="finishFork" :disabled="!forkName || forkName.length === 0">Fork</md-button>
                 </md-dialog-actions>
             </md-dialog>
 

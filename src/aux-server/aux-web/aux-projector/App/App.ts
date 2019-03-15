@@ -86,9 +86,19 @@ export default class App extends Vue {
     showFileUpload: boolean = false;
 
     /**
+     * Whether to show the fork dialog.
+     */
+    showFork: boolean = false;
+
+    /**
      * The session/
      */
     session: string = '';
+
+    /**
+     * The name of the fork to create.
+     */
+    forkName: string = '';
 
     /**
      * The files that have been uploaded by the user.
@@ -259,7 +269,17 @@ export default class App extends Vue {
     }
 
     fork() {
-        console.log('[App] Fork');
+        this.showFork = true;
+    }
+
+    async finishFork() {
+        await appManager.fileManager.forkAux(this.forkName);
+        this.$router.push({ name: 'home', params: { id: this.forkName }});
+    }
+
+    cancelFork() {
+        this.showFork = false;
+        this.forkName = '';
     }
 
     cancelFileUpload() {
