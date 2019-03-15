@@ -25,7 +25,8 @@ import {
   getActiveObjects,
   AuxCausalTree,
   AuxFile,
-  AuxObject
+  AuxObject,
+  fileRemoved
 } from '@yeti-cgi/aux-common';
 import {
   keys, 
@@ -308,12 +309,17 @@ export class FileManager {
   // but we'll add a config option to prevent this from happening on real sites.
   deleteEverything() {
     console.warn('[FileManager] Delete Everything!');
-    // const deleteOps = this._allFiles.map(f => fileRemoved(f.id));
-    // this._files.emit(transaction(deleteOps));
-    setTimeout(() => {
-      appManager.logout();
-      location.reload();
-    }, 200);
+    const state = this.filesState;
+    const fileIds = keys(state);
+    const files = fileIds.map(id => state[id]);
+    const nonUserOrGlobalFiles = files.filter(f => !f.tags._user && f.id !== 'globals');
+    const deleteOps = nonUserOrGlobalFiles.map(f => fileRemoved(f.id));
+    this.transaction(...deleteOps);
+    
+    // setTimeout(() => {
+    //   appManager.logout();
+    //   location.reload();
+    // }, 200);
   }
 
   /**
