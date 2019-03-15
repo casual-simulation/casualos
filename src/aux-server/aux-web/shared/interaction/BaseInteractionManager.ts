@@ -1,33 +1,20 @@
-import { Vector2, Vector3, Intersection, Raycaster, Object3D, Ray } from 'three';
+import { Vector2, Vector3, Intersection, Raycaster, Object3D } from 'three';
 import { ContextMenuEvent, ContextMenuAction } from './ContextMenuEvent';
 import { 
-    File, 
     Object,
     tagsMatchingFilter,
-    isMinimized,
     AuxFile,
-    objectsAtContextGridPosition,
-    getFileIndex,
     FileCalculationContext,
-    getContextMinimized,
-    getContextGrid,
-    getContextSize,
-    getContextScale,
-    isFileStackable,
-    getContextDefaultHeight,
-    getContextColor
 } from '@yeti-cgi/aux-common';
 import { Physics } from '../scene/Physics';
-import { flatMap, minBy, keys, maxBy, union, differenceBy } from 'lodash';
+import { flatMap, union } from 'lodash';
 import { CameraControls } from './CameraControls';
-import { Axial, realPosToGridPos, gridDistance, keyToPos, posToKey } from '../scene/hex';
-import { MouseButtonId, Input } from '../scene/Input';
-import { EventBus } from '../EventBus';
+import { MouseButtonId } from '../scene/Input';
 import { appManager } from '../AppManager';
 import { IOperation } from './IOperation';
 import { AuxFile3D } from '../scene/AuxFile3D';
-import { ContextGroup3D } from '../scene/ContextGroup3D';
 import { IGameView } from '../IGameView';
+import { GameObject } from '../scene/GameObject';
 
 export abstract class BaseInteractionManager {
 
@@ -109,17 +96,17 @@ export abstract class BaseInteractionManager {
                 if (input.isMouseButtonDownOn(this._gameView.gameView)){
                     const screenPos = input.getMouseScreenPos();
                     const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this.getDraggableObjects(), this._gameView.mainCamera);
-                    const clickedObject = Physics.firstRaycastHit(raycastResult);
+                    const hit = Physics.firstRaycastHit(raycastResult);
 
-                    if (clickedObject) {
-                        const file = this.findObjectForIntersection(clickedObject);
+                    if (hit) {
+                        const gameObject = this.findGameObjectObjectForHit(hit);
 
-                        if (file) {
-                            // Start file click operation on file.
-                            let fileClickOperation = this.createFileClickOperation(file, clickedObject);
-                            if (fileClickOperation !== null) {
+                        if (gameObject) {
+                            // Start game object click operation.
+                            let gameObjectClickOperation = this.createGameObjectClickOperation(gameObject, hit);
+                            if (gameObjectClickOperation !== null) {
                                 this._cameraControls.enabled = false;
-                                this._operations.push(fileClickOperation);
+                                this._operations.push(gameObjectClickOperation);
                             }
                         }
                     } else {
@@ -159,8 +146,8 @@ export abstract class BaseInteractionManager {
         const hit = Physics.firstRaycastHit(raycastResult);
 
         this._cameraControls.enabled = false;
-        const file = this.findObjectForIntersection(hit);
-        const actions = this._contextMenuActions(calc, file, hit.point, pagePos);
+        const gameObject = this.findGameObjectObjectForHit(hit);
+        const actions = this._contextMenuActions(calc, gameObject, hit.point, pagePos);
 
         if (actions) {
             // Now send the actual context menu event.
@@ -169,23 +156,23 @@ export abstract class BaseInteractionManager {
         }
     }
 
-    findObjectForIntersection(obj: Intersection): AuxFile3D | null {
-        if (!obj) {
+    findGameObjectObjectForHit(hit: Intersection): GameObject {
+        if (!hit) {
             return null;
         }
         
-        return this.findObjectForMesh(obj.object);
+        return this.findGameObjectUpHierarchy(hit.object);
     }
 
-    findObjectForMesh(mesh: Object3D): AuxFile3D | null {
-        if (!mesh) {
+    findGameObjectUpHierarchy(object: Object3D): GameObject {
+        if (!object) {
             return null;
         }
 
-        if (mesh instanceof AuxFile3D) {
-            return mesh;
+        if (object instanceof AuxFile3D) {
+            return object;
         } else {
-            return this.findObjectForMesh(mesh.parent);
+            return this.findGameObjectUpHierarchy(object.parent);
         }
     }
 
@@ -255,9 +242,9 @@ export abstract class BaseInteractionManager {
     // Abstractions
     //
 
-    abstract createFileClickOperation(file: AuxFile3D, hit: Intersection): IOperation;
+    abstract createGameObjectClickOperation(gameObject: GameObject, hit: Intersection): IOperation;
     abstract createEmptyClickOperation(): IOperation;
     abstract createHtmlElementClickOperation(element: HTMLElement): IOperation;
     
-    protected abstract _contextMenuActions(calc: FileCalculationContext, file: AuxFile3D | ContextGroup3D, point: Vector3, pagePos: Vector2): ContextMenuAction[];
+    protected abstract _contextMenuActions(calc: FileCalculationContext, gameObject: GameObject, point: Vector3, pagePos: Vector2): ContextMenuAction[];
 }

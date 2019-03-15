@@ -1,4 +1,3 @@
-
 import { BuilderFileDragOperation } from '../DragOperation/BuilderFileDragOperation';
 import { Intersection } from 'three';
 import {
@@ -34,7 +33,6 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
 
     constructor(mode: UserMode, gameView: GameView, interaction: BuilderInteractionManager, file: AuxFile3D | ContextGroup3D, hit: Intersection) {
         super(mode, gameView, interaction, file.file, file);
-        this._file3D = file;
         this._hit = hit;
     }
 

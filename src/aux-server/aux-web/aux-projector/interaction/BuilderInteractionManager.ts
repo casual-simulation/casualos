@@ -34,6 +34,7 @@ import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import GameView from '../GameView/GameView';
+import { GameObject } from '../../shared/scene/GameObject';
 
 export class BuilderInteractionManager extends BaseInteractionManager {
 
@@ -50,9 +51,13 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         this._surfaceObjectsDirty = true;
     }
 
-    createFileClickOperation(file: AuxFile3D, hit: Intersection): IOperation {
-        let fileClickOp = new BuilderFileClickOperation(this.mode, this._gameView, this, file, hit);
-        return fileClickOp;
+    createGameObjectClickOperation(gameObject: GameObject, hit: Intersection): IOperation {
+        if (gameObject instanceof AuxFile3D || gameObject instanceof ContextGroup3D) {
+            let fileClickOp = new BuilderFileClickOperation(this.mode, this._gameView, this, gameObject, hit);
+            return fileClickOp;
+        } else {
+            return null;
+        }
     }
 
     createEmptyClickOperation(): IOperation {
@@ -71,26 +76,13 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         return null;
     }
 
-    showContextMenu(calc: FileCalculationContext) {
-        const input = this._gameView.input;
-        const pagePos = input.getMousePagePos();
-        const screenPos = input.getMouseScreenPos();
-        const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this.getDraggableObjects(), this._gameView.mainCamera);
-        const hit = Physics.firstRaycastHit(raycastResult);
-
-        this._cameraControls.enabled = false;
-        const file = this.fileForIntersection(hit);
-        const actions = this._contextMenuActions(calc, file, hit.point, pagePos);
-
-        if (actions) {
-            // Now send the actual context menu event.
-            let menuEvent: ContextMenuEvent = { pagePos: pagePos, actions: actions };
-            this._gameView.$emit('onContextMenu', menuEvent);
+    findGameObjectObjectForHit(hit: Intersection): GameObject {
+        if (!hit) {
+            return null;
         }
-    }
+        
+        let obj = this.findGameObjectUpHierarchy(hit.object);
 
-    fileForIntersection(hit: Intersection): AuxFile3D | BuilderGroup3D {
-        const obj = this.findObjectForIntersection(hit);
         if (obj) {
             return obj;
         } else {
@@ -98,15 +90,15 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         }
     }
 
-    findWorkspaceForIntersection(obj: Intersection): BuilderGroup3D | null {
-        if (!obj) {
+    findWorkspaceForIntersection(hit: Intersection): BuilderGroup3D {
+        if (!hit) {
             return null;
         }
         
-        return this.findWorkspaceForMesh(obj.object);
+        return this.findWorkspaceForMesh(hit.object);
     }
 
-    findWorkspaceForMesh(mesh: Object3D): BuilderGroup3D | null {
+    findWorkspaceForMesh(mesh: Object3D): BuilderGroup3D {
         if (!mesh) {
             return null;
         }
@@ -262,33 +254,33 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         return this._surfaceColliders;
     }
 
-    protected _contextMenuActions(calc: FileCalculationContext, file: AuxFile3D | ContextGroup3D, point: Vector3, pagePos: Vector2): ContextMenuAction[] {
+    protected _contextMenuActions(calc: FileCalculationContext, gameObject: GameObject, point: Vector3, pagePos: Vector2): ContextMenuAction[] {
         
         let actions: ContextMenuAction[] = [];
 
-        if (file) {
+        if (gameObject) {
 
-            if (file instanceof ContextGroup3D && file.file.tags[`aux.${file.domain}.context`]) {
+            if (gameObject instanceof ContextGroup3D && gameObject.file.tags[`aux.${gameObject.domain}.context`]) {
                 
-                const tile = this._worldPosToGridPos(calc, file, point);
-                const currentGrid = getContextGrid(calc, file.file, file.domain);
+                const tile = this._worldPosToGridPos(calc, gameObject, point);
+                const currentGrid = getContextGrid(calc, gameObject.file, gameObject.domain);
                 const currentTile = currentGrid ? currentGrid[posToKey(tile)] : null;
-                const defaultHeight = getContextDefaultHeight(calc, file.file, file.domain);
+                const defaultHeight = getContextDefaultHeight(calc, gameObject.file, gameObject.domain);
                 const currentHeight = (!!currentTile ? currentTile.height : defaultHeight) || DEFAULT_WORKSPACE_HEIGHT;
                 const increment = DEFAULT_WORKSPACE_HEIGHT_INCREMENT; // TODO: Replace with a configurable value.
                 const minHeight = DEFAULT_WORKSPACE_MIN_HEIGHT; // TODO: This too
-                const minimized = isMinimized(calc, file.file, file.domain);
+                const minimized = isMinimized(calc, gameObject.file, gameObject.domain);
                 
-                if (this.isInCorrectMode(file)) {
+                if (this.isInCorrectMode(gameObject)) {
                     if (!minimized) {
-                        actions.push({ label: 'Raise', onClick: () => this.updateTileHeightAtGridPosition(file, tile, currentHeight + increment) });
+                        actions.push({ label: 'Raise', onClick: () => this.updateTileHeightAtGridPosition(gameObject, tile, currentHeight + increment) });
                         if (currentTile && currentHeight - increment >= minHeight) {
-                            actions.push({ label: 'Lower', onClick: () => this.updateTileHeightAtGridPosition(file, tile, currentHeight - increment) });
+                            actions.push({ label: 'Lower', onClick: () => this.updateTileHeightAtGridPosition(gameObject, tile, currentHeight - increment) });
                         }
                         
-                        actions.push({ label: 'Expand', onClick: () => this._expandWorkspace(calc, file) });
-                        if (this.canShrinkWorkspace(file)) {
-                            actions.push({ label: 'Shrink', onClick: () => this._shrinkWorkspace(calc, file) });
+                        actions.push({ label: 'Expand', onClick: () => this._expandWorkspace(calc, gameObject) });
+                        if (this.canShrinkWorkspace(gameObject)) {
+                            actions.push({ label: 'Shrink', onClick: () => this._shrinkWorkspace(calc, gameObject) });
                         }
                     }
 
@@ -296,15 +288,15 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                         
                         // This function is invoked as the color picker changes the color value.
                         let colorUpdated = (hexColor: string) => {
-                            appManager.fileManager.updateFile(file.file, { 
+                            appManager.fileManager.updateFile(gameObject.file, { 
                                 tags: { 
-                                    [`aux.${file.domain}.context.color`]: hexColor 
+                                    [`aux.${gameObject.domain}.context.color`]: hexColor 
                                 }
                             });
                         };
                         
-                        let workspace = <Workspace>file.file;
-                        const currentColor = getContextColor(calc, file.file, file.domain);
+                        let workspace = <Workspace>gameObject.file;
+                        const currentColor = getContextColor(calc, gameObject.file, gameObject.domain);
                         let colorPickerEvent: ColorPickerEvent = { pagePos: pagePos, initialColor: currentColor, colorUpdated: colorUpdated };
                         
                         EventBus.$emit('onColorPicker', colorPickerEvent);
@@ -312,7 +304,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 }
     
                 const minimizedLabel = minimized ? 'Maximize' : 'Minimize';
-                actions.push({ label: minimizedLabel, onClick: () => this._toggleWorkspace(calc, file) });
+                actions.push({ label: minimizedLabel, onClick: () => this._toggleWorkspace(calc, gameObject) });
             }
 
         }
