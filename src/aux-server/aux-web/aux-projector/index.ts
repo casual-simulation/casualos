@@ -140,7 +140,7 @@ router.beforeEach((to, from, next) => {
         next();
     }, ex => {
         console.error(ex);
-        next({ name: 'login' });
+        next();
     });
 });
 
