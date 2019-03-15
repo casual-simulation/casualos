@@ -2,7 +2,7 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Inject, Prop, Watch } from 'vue-property-decorator';
 import { validateTag } from '@yeti-cgi/aux-common';
-import { appManager } from '../AppManager';
+import { appManager } from '../../shared/AppManager';
 import CombineIcon from '../public/icons/combine_icon.svg';
 
 /**
@@ -62,22 +62,32 @@ export default class TagEditor extends Vue {
 
     get editorValue() {
         if (this.isAction) {
-            return this.value.slice(1);
+            return this.value.slice(1) || '';
         } else {
-            return this.value;
+            return this.value || '';
         }
     }
 
-    onInput(value: string) {
-        this.$emit('input', this._convertToFinalValue(value));
+    onInput(event: any) {
         this.$nextTick(() => {
+            this.$emit('input', this._convertToFinalValue(event.target.value));
             this.changed = true;
             const error = this.errorMessage;
             this.$emit('valid', !error);
         });
     }
 
+    // onInput(event: string) {
+    //     this.$nextTick(() => {
+    //         this.$emit('input', this._convertToFinalValue(event));
+    //         this.changed = true;
+    //         const error = this.errorMessage;
+    //         this.$emit('valid', !error);
+    //     });
+    // }
+
     focus() {
+        
         let element: any = this.$refs.inputBox;
         let html: HTMLInputElement;
         if (element.focus) {
@@ -93,10 +103,12 @@ export default class TagEditor extends Vue {
 
     onFocus() {
         this.focused = true;
+        (<any>this.$refs.mdField).MdField.focused = true;
     }
 
     onBlur() {
         this.focused = false;
+        (<any>this.$refs.mdField).MdField.focused = false;
     }
 
     constructor() {

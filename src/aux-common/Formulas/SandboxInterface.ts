@@ -25,7 +25,7 @@ export interface SandboxInterface {
      * Lists the objects on the same grid space as the given object.
      * @param obj The object.
      */
-    list(obj: any): any;
+    list(obj: any, context: string): any;
 
     /**
      * Calculates a new UUID.

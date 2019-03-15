@@ -8,13 +8,14 @@ import {
     getUserMode,
     UserMode,
     DEFAULT_USER_MODE,
-    Workspace
+    Workspace,
+    AuxObject
 } from '@yeti-cgi/aux-common';
 import GameView from '../GameView/GameView';
-import { appManager } from '../AppManager';
+import { appManager } from '../../shared/AppManager';
 import FileTable from '../FileTable/FileTable';
 import ColorPicker from '../ColorPicker/ColorPicker';
-import { ContextMenuEvent } from '../interaction/ContextMenuEvent';
+import { ContextMenuEvent } from '../../shared/interaction/ContextMenuEvent';
 import TagEditor from '../TagEditor/TagEditor';
 import { SubscriptionLike } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -42,7 +43,7 @@ export default class Home extends Vue {
     contextMenuVisible: boolean = false;
     contextMenuEvent: ContextMenuEvent = null;
     status: string = '';
-    files: Object[] = [];
+    files: AuxObject[] = [];
     tags: string[] = [];
     updateTime: number = -1;
     mode: UserMode = DEFAULT_USER_MODE;
@@ -87,7 +88,7 @@ export default class Home extends Vue {
         });
     }
 
-    tagFocusChanged({ file, tag, focused }: { file: Object, tag: string, focused: boolean }) {
+    tagFocusChanged({ file, tag, focused }: { file: AuxObject, tag: string, focused: boolean }) {
         this.fileManager.setEditedFile(file);
     }
 

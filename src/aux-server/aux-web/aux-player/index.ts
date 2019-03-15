@@ -49,120 +49,110 @@ import {
 } from 'vue-material/dist/components';
 import 'vue-material/dist/vue-material.min.css';
 import 'vue-material/dist/theme/default.css';
+
+import '../shared/public/fonts/MaterialIcons/MaterialIcons.css';
+import '../shared/public/fonts/Roboto/Roboto.css';
+
 import 'pepjs'; // Polyfill for pointer events
 import { polyfill } from 'es6-promise';
 import 'offline-plugin/runtime';
 
-// import { appManager } from './AppManager';
-// import App from './App/App';
-// import Welcome from './Welcome/Welcome';
-// import Home from './Home/Home';
-// import Editor from './Editor/Editor';
-// import MergeConflicts from './MergeConflicts/MergeConflicts';
-// import AuxDebug from './AuxDebug/AuxDebug';
+import { appManager, AppType } from '../shared/AppManager';
+import App from './App/App';
+import Welcome from './Welcome/Welcome';
+import Home from './Home/Home';
 
 // Import the WebXR Polyfill
-// import 'webxr-polyfill';
-
-
+import 'webxr-polyfill';
 // Setup the Promise shim for browsers that don't support promises.
 polyfill();
 
+appManager.appType = AppType.Player;
+Vue.use(VueRouter);
+Vue.use(MdButton);
+Vue.use(MdCheckbox);
+Vue.use(MdContent);
+Vue.use(MdApp);
+Vue.use(MdCard);
+Vue.use(MdToolbar);
+Vue.use(MdField);
+Vue.use(MdProgress);
+Vue.use(MdDrawer);
+Vue.use(MdList);
+Vue.use(MdMenu);
+Vue.use(MdDialog);
+Vue.use(MdDialogConfirm);
+Vue.use(MdDialogAlert)
+Vue.use(MdTabs);
+Vue.use(MdTooltip);
+Vue.use(MdSnackbar);
+Vue.use(MdSwitch);
+Vue.use(MdBadge);
 
+const routes: RouteConfig[] = [
+    {
+        path: '/login',
+        name: 'login',
+        component: Welcome,
+    },
+    {
+        path: '/:id?/:context?',
+        name: 'home',
+        component: Home,
+    }
+]
 
-// Vue.use(VueRouter);
-// Vue.use(MdButton);
-// Vue.use(MdCheckbox);
-// Vue.use(MdContent);
-// Vue.use(MdApp);
-// Vue.use(MdCard);
-// Vue.use(MdToolbar);
-// Vue.use(MdField);
-// Vue.use(MdProgress);
-// Vue.use(MdDrawer);
-// Vue.use(MdList);
-// Vue.use(MdMenu);
-// Vue.use(MdDialog);
-// Vue.use(MdDialogConfirm);
-// Vue.use(MdDialogAlert)
-// Vue.use(MdTabs);
-// Vue.use(MdTooltip);
-// Vue.use(MdSnackbar);
-// Vue.use(MdSwitch);
-// Vue.use(MdBadge);
+const router = new VueRouter({
+    mode: 'history',
+    routes
+});
 
-// const routes: RouteConfig[] = [
-//     {
-//         path: '/login',
-//         name: 'login',
-//         component: Welcome,
-//     },
-//     {
-//         path: '/:id?',
-//         name: 'home',
-//         component: Home,
-//     },
-//     {
-//         path: '/editor/:id?',
-//         name: 'editor',
-//         component: Editor
-//     },
-//     {
-//         path: '/merge-conflicts/:id?',
-//         name: 'merge-conflicts',
-//         component: MergeConflicts,
-//         beforeEnter: (to, from, next) => {
-//             if (appManager.fileManager && appManager.fileManager.mergeStatus) {
-//                 next();
-//             } else {
-//                 next({ name: 'home', params: { id: appManager.user.channelId } });
-//             }
-//         }
-//     },
-//     {
-//         path: '/aux-debug/:id?',
-//         name: 'aux-debug',
-//         component: AuxDebug
-//     }
-// ]
+router.beforeEach((to, from, next) => {
+    appManager.initPromise.then(() => {
+        const channelId = to.params.id || null;
+        const contextId = to.params.context || null;
+        if (to.path !== '/login') {
+            if (!appManager.user) {
+                next({ name: 'login', query: { id: channelId, context: contextId } });
+                return;
+            } else {
+                if (appManager.user.channelId != channelId) {
+                    return appManager.loginOrCreateUser(appManager.user.email, channelId).then(() => {
+                        location.reload();
+                        next();
+                    }, ex => {
+                        console.error(ex);
+                        next({ name: 'login', query: { id: channelId, context: contextId } });
+                    });
+                }
+            }
+        } else {
+            if (appManager.user) {
+                next({ name: 'home', params: { id: appManager.user.channelId, context: contextId }});
+                return;
+            }
+        }
 
-// const router = new VueRouter({
-//     mode: 'history',
-//     routes
-// });
+        if (appManager.user) {
+            const userFile = appManager.fileManager.userFile;
+            if (userFile.tags._userContext != contextId) {
+                // Set the context for the user.
+                console.log('[Router] Setting user\'s context to: ' + contextId);
+                appManager.fileManager.updateFile(userFile, { tags: { _userContext: contextId }}).then(() => {
+                    next();
+                    return;
+                });
+            }
+        }
 
-// router.beforeEach((to, from, next) => {
-//     appManager.initPromise.then(() => {
-//         const channelId = to.params.id || null;
-//         if (to.path !== '/login') {
-//             if (!appManager.user) {
-//                 next({ name: 'login', query: { id: channelId } });
-//                 return;
-//             } else {
-//                 if (appManager.user.channelId != channelId) {
-//                     return appManager.loginOrCreateUser(appManager.user.email, channelId).then(() => {
-//                         location.reload();
-//                         next();
-//                     }, ex => {
-//                         console.error(ex);
-//                         next({ name: 'login', query: { id: channelId } });
-//                     });
-//                 }
-//             }
-//         } else {
-//             if (appManager.user) {
-//                 next({ name: 'home', params: { id: appManager.user.channelId }});
-//                 return;
-//             }
-//         }
-//         next();
-//     }, ex => {
-//         console.error(ex);
-//         next({ name: 'login' });
-//     });
-// });
+        next();
+    }, ex => {
+        console.error(ex);
+        next({ name: 'login' });
+    });
+});
 
-// const app = new Vue({
-//     router,
-//     render: createEle => createEle(App)
-// }).$mount('#app');
+const app = new Vue({
+    router,
+    render: createEle => createEle(App)
+}).$mount('#app');

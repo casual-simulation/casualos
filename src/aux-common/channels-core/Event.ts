@@ -9,9 +9,4 @@ export interface Event {
      * This helps determine how the event should be applied to the state.
      */
     type: string;
-
-    /**
-     * The time that the event got registered by the server.
-     */
-    creation_time: Date;
 }

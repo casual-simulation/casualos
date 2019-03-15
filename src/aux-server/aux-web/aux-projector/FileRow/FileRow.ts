@@ -2,9 +2,9 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Prop, Inject} from 'vue-property-decorator';
 import { SubscriptionLike } from 'rxjs';
-import { Object, File, getShortId } from '@yeti-cgi/aux-common';
+import { Object, File, getShortId, AuxObject } from '@yeti-cgi/aux-common';
 import FileValue from '../FileValue/FileValue';
-import { appManager } from '../AppManager';
+import { appManager } from '../../shared/AppManager';
 
 @Component({
     components: {
@@ -12,7 +12,7 @@ import { appManager } from '../AppManager';
     }
 })
 export default class FileRow extends Vue {
-    @Prop() file: Object;
+    @Prop() file: AuxObject;
     @Prop() tags: string[];
     @Prop({ default: false }) readOnly: boolean;
     @Prop({}) updateTime: number;
@@ -27,7 +27,7 @@ export default class FileRow extends Vue {
         super();
     }
 
-    toggleFile(file: Object) {
+    toggleFile(file: AuxObject) {
         this.fileManager.selectFile(file);
     }
 

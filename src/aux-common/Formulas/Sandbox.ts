@@ -108,8 +108,8 @@ export class Sandbox {
             return __this.interface.uuid();
         }
 
-        function list(obj: any): any {
-            return __this.interface.list(obj);
+        function list(obj: any, context: string): any {
+            return __this.interface.list(obj, context);
         }
 
         function __evalWrapper(js: string): any {

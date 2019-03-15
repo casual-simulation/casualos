@@ -20,8 +20,24 @@ module.exports = {
     filename: '[name].js',
     path: path.resolve(__dirname, 'dist')
   },
+  node: {
+    console: false,
+    global: true,
+    process: false,
+    __filename: 'mock',
+    __dirname: 'mock',
+
+    // Buffer is needed for sha.js
+    Buffer: true,
+    setImmediate: false
+  },
   module: {
     rules: [
+        // TODO: Re-enable sometime
+    //   {
+    //     test: /\.worker\.ts$/,
+    //     use: 'worker-loader'
+    //   },
       {
         test: /\.vue$/,
         use: 'vue-loader',
@@ -55,6 +71,17 @@ module.exports = {
         ]
       },
       {
+        test: /\.(ttf|woff|woff2)$/,
+        use: [
+          {
+            loader: 'file-loader',
+            options: {
+                name: './fonts/[name].[ext]'
+            }
+          }
+        ]
+      },
+      {
         test: /three\/examples\/js/,
         use: 'imports-loader?THREE=three'
       },
@@ -65,7 +92,7 @@ module.exports = {
           /aux-common/
         ],
         enforce: 'pre'
-      }
+      },
     ]
   },
   resolve: {
@@ -73,6 +100,7 @@ module.exports = {
     alias: {
       'three-examples': path.join(__dirname, '../node_modules/three/examples/js'),
       'webxr-polyfill': path.resolve(__dirname, 'aux-projector/public/scripts/webxr-polyfill.js'),
+      'vue-json-tree-view': path.resolve(__dirname, 'shared/public/VueJsonTreeView/index.ts')
     },
   },
   plugins: [

@@ -56,8 +56,7 @@ describe('Socket.IO', () => {
                 init();
 
                 let event: Event = {
-                    type: 'test',
-                    creation_time: new Date()
+                    type: 'test'
                 };
                 let emit = socketIOMock.expects('emit').once()
                     .withArgs('join_server', info, match.func);

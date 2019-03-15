@@ -33,11 +33,6 @@ declare module 'three-vrcontrols-module';
 declare module 'three-vreffect-module';
 declare module 'webvr-ui';
 
-declare module '@yeti-cgi/aux-common/Formulas/formula-lib' {
-  const lib: string;
-  export default lib; 
-}
-
 declare module 'downloadjs' {
   function download(data: any, fileName: string, mimeType: string): void;
   export default download;

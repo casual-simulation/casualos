@@ -1,130 +1,64 @@
-export type File = Object | Workspace;
 
-export type FileType = 'object' | 'workspace';
+export type PartialFile = Partial<File>;
 
-export interface Object {
-    type: 'object';
+export type AuxDomain = 'builder' | 'player';
+
+export type Object = File;
+export type Workspace = File;
+
+export interface File {
     id: string;
-
     tags: {
-        _workspace: string | null;
-        _position: {
-            x: number;
-            y: number;
-            z: number;
-        } | null;
-        _rotation?: {
-            x?: number;
-            y?: number;
-            z?: number;
-        };
-        _hidden?: boolean;
         _selection?: string;
         _destroyed?: any;
-        _index?: number;
         _user?: string;
+        _userContext?: string;
         _mode?: UserMode;
-        _movable?: boolean;
+        
         _editingFile?: string;
         _lastActiveTime?: number;
         _lastEditedBy?: string;
-        _sceneBackgroundColor?: string;
-        ['stroke.color']?: string;
-        ['stroke.width']?: number;
-        ['line.to']?: string;
-        ['line.color']?: string;
-        ['label']?: string;
-        ['label.color']?: string;
-        ['label.size']?: number;
-        ['label.size.mode']?: 'auto' | null;
-        ['scale.x']?: number;
-        ['scale.y']?: number;
-        ['scale.z']?: number;
-        [key: string]: any;
-    };
-}
+        ['aux.scene.color']?: string;
 
-/**
- * Defines an interface for a workspace.
- */
-export interface Workspace {
-    type: 'workspace';
-    id: string;
-    position: {
-        x: number;
-        y: number;
-        z: number;
-    };
-    grid: {
-        [key: string]: WorkspaceHex;
-    } | null,
-    size: number;
-    scale: number | null;
-    gridScale: number | null;
-    defaultHeight: number | null;
-    color: string;
-    minimized?: boolean | null;
-}
+        ['aux.color']?: unknown;
+        ['aux.movable']?: unknown;
+        ['aux.stackable']?: unknown;
+        ['aux.stroke.color']?: unknown;
+        ['aux.stroke.width']?: unknown;
+        ['aux.line.to']?: unknown;
+        ['aux.line.color']?: unknown;
+        ['aux.label']?: unknown;
+        ['aux.label.color']?: unknown;
+        ['aux.label.size']?: unknown;
+        ['aux.label.size.mode']?: 'auto' | null;
+
+        // Builder related tags
+        ['aux.builder.context']?: string | string[];
+        ['aux.builder.context.x']?: number;
+        ['aux.builder.context.y']?: number;
+        ['aux.builder.context.z']?: number;
+        ['aux.builder.context.rotation.x']?: number;
+        ['aux.builder.context.rotation.y']?: number;
+        ['aux.builder.context.rotation.z']?: number;
+        ['aux.builder.context.scale']?: number;
+        ['aux.builder.context.grid']?: {
+            [key: string]: WorkspaceHex;
+        } | null,
+        ['aux.builder.context.grid.scale']?: number;
+        ['aux.builder.context.defaultHeight']?: number;
+        ['aux.builder.context.color']?: string;
+        ['aux.builder.context.size']?: number;
+        ['aux.builder.context.minimized']?: boolean | null;
+
+        [key: string]: any;
+    }
+};
 
 /**
  * Defines an interface for a hex in a workspace.
  */
 export interface WorkspaceHex {
     height: number;
-}
-
-export interface PartialFile {
-    id?: string;
-    type?: string;
-    size?: number;
-    position?: {
-        x: number;
-        y: number;
-        z: number;
-    };
-    tags?: {
-        _workspace?: string;
-        _position?: {
-            x?: number;
-            y?: number;
-            z?: number;
-        };
-        _rotation?: {
-            x?: number;
-            y?: number;
-            z?: number;
-        };
-        _hidden?: boolean;
-        _selection?: string;
-        _destroyed?: boolean;
-        _index?: number;
-        _user?: string;
-        _mode?: UserMode;
-        _movable?: boolean;
-        _editingFile?: string;
-        _lastActiveTime?: number;
-        _lastEditedBy?: string;
-        _sceneBackgroundColor?: string;
-        ['stroke.color']?: string;
-        ['stroke.width']?: number;
-        ['line.to']?: string;
-        ['line.color']?: string;
-        ['label']?: string;
-        ['label.color']?: string;
-        ['label.size']?: number;
-        ['label.size.mode']?: 'auto' | null;
-        ['scale.x']?: number;
-        ['scale.y']?: number;
-        ['scale.z']?: number;
-        [key: string]: any;
-    },
-    grid?: {
-        [key: string]: WorkspaceHex
-    },
-    scale?: number;
-    gridScale?: number;
-    color?: string;
-    minimized?: boolean | null;
 }
 
 /**

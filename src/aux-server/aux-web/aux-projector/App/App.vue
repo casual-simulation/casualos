@@ -12,10 +12,12 @@
                     </a>
                 </div>
                 <div class="md-toolbar-section-end">
-                    <md-switch class="user-mode-toggle" v-if="loggedIn" v-model="userMode" @change="onUserModeChanged">
-                        <cube-icon v-if="userMode" />
-                        <hex-icon v-else />
-                    </md-switch>
+                    <md-button v-if="loggedIn" class="md-icon-button user-mode-toggle" @click="toggleUserMode()">
+                        <md-icon v-if="userMode">settings</md-icon>
+                        <md-icon v-else>close</md-icon>
+                    </md-button>
+                    <!-- <md-switch class="user-mode-toggle" v-if="loggedIn" v-model="userMode" @change="onUserModeChanged">
+                    </md-switch> -->
                 </div>
             </md-toolbar>
 
@@ -65,14 +67,14 @@
                             <span v-else>Offline</span>
                         </span>
                     </md-list-item>
-                    <md-list-item :to="{ name: 'merge-conflicts', params: { id: session } }" v-if="remainingConflicts.length > 0">
-                        <md-icon id="fix-merge-conflicts-icon">build</md-icon>
-                        <span class="md-list-item-text">Fix Merge Conflicts</span>
-                    </md-list-item>
                     <md-list-item v-if="updateAvailable" @click="refreshPage()">
                         <md-icon>update</md-icon>
                         <span class="md-list-item-text">An new version is available!</span>
                     </md-list-item>
+                    <router-link v-if="dev && getUser() != null" tag="md-list-item" :to="{ name: 'aux-debug', params: { id: session } }">
+                        <md-icon>bug_report</md-icon>
+                        <span class="md-list-item-text">Debug</span>
+                    </router-link>
                     <md-list-item v-for="item in extraItems" :key="item.id" @click="item.click()">
                         <md-icon v-if="item.icon">{{item.icon}}</md-icon>
                         <span class="md-list-item-text">{{item.text}}</span>

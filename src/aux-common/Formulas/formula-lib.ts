@@ -1,7 +1,8 @@
-import { FileUpdatedEvent, FileEvent, FileAddedEvent } from "../Files";
+import { File, FileUpdatedEvent, FileEvent, FileAddedEvent, action, FilesState, calculateActionEvents } from "../Files";
 import uuid from 'uuid/v4';
 
 let actions: FileEvent[] = [];
+let state: FilesState = null;
 
 export function setActions(value: FileEvent[]) {
     actions = value;
@@ -9,6 +10,14 @@ export function setActions(value: FileEvent[]) {
 
 export function getActions(): FileEvent[] {
     return actions;
+}
+
+export function setFileState(value: FilesState) {
+    state = value;
+}
+
+export function getFileState(): FilesState {
+    return state;
 }
 
 // declare const lib: string;
@@ -159,19 +168,21 @@ export function destroy(file: any) {
 
 export function create(data: any) {
     var id = uuid();
-    actions.push(<FileAddedEvent>{
+
+    let event: FileAddedEvent = {
         type: 'file_added',
         id: id,
         file: {
+            id: id,
             tags: {
-                _position: {x: 0, y: 0, z:0},
+                _position: {x:0, y:0, z:0},
                 _workspace: null,
-                ...data,
-            },
-            type: 'object',
-            id: id
+                ...data
+            }
         }
-    });
+    };
+
+    actions.push(event);
 }
 
 export function copy(...files: any[]) {
@@ -182,9 +193,8 @@ export function copy(...files: any[]) {
     });
 
     let newFile = {
+        id: id,
         tags: <any>{},
-        type: 'object',
-        id: id
     };
 
     originals.forEach(o => {
@@ -197,11 +207,26 @@ export function copy(...files: any[]) {
     delete newFile.tags._original;
     delete newFile.tags.id;
 
-    actions.push(<FileAddedEvent>{
+    let event: FileAddedEvent = {
         type: 'file_added',
         id: id,
         file: newFile
-    });
+    }
+
+    actions.push(event);
+}
+
+export function combine(first: File | string, second: File | string) {
+    event('+', first, second);
+}
+
+export function event(name: string, first: File | string, second: File | string) {
+    if (!!state) {
+        let firstId: string = typeof first === 'string' ? first : first.id;
+        let secondId: string = typeof second === 'string' ? second : second.id;
+        let results = calculateActionEvents(state, action(firstId, secondId, name));
+        actions.push(...results.events);
+    }
 }
 
 export default {
@@ -216,5 +241,7 @@ export default {
     join,
     destroy,
     copy,
-    create
+    create,
+    combine,
+    event
 };

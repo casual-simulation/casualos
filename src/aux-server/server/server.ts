@@ -3,10 +3,18 @@ import express from 'express';
 import * as bodyParser from 'body-parser';
 import * as path from 'path';
 import SocketIO from 'socket.io';
-import { ChannelServer, ChannelServerConfig } from './ChannelServer';
+import vhost from 'vhost';
+import pify from 'pify';
+import { MongoClient } from 'mongodb';
 import { asyncMiddleware } from './utils';
 import { Config, ClientConfig } from './config';
-import vhost from 'vhost';
+import { CausalTreeServer } from './causal-trees/CausalTreeServer';
+import { MongoDBTreeStore } from './causal-trees/MongoDBTreeStore';
+import { auxCausalTreeFactory } from '@yeti-cgi/aux-common/aux-format';
+import { AppVersion, apiVersion } from '@yeti-cgi/aux-common';
+
+
+const connect = pify(MongoClient.connect);
 
 export class ClientServer {
     private _app: express.Express;
@@ -58,12 +66,14 @@ export class ClientServer {
  */
 export class Server {
 
-    _app: express.Express;
-    _http: Http.Server;
-    _socket: SocketIO.Server;
-    _channelServer: ChannelServer;
-    _config: Config;
-    _clients: ClientServer[];
+    private _app: express.Express;
+    private _http: Http.Server;
+    private _socket: SocketIO.Server;
+    private _treeServer: CausalTreeServer;
+    private _config: Config;
+    private _clients: ClientServer[];
+    private _mongoClient: MongoClient;
+    private _userCount: number;
 
     constructor(config: Config) {
         this._config = config;
@@ -72,13 +82,14 @@ export class Server {
         this._config = config;
         this._socket = SocketIO(this._http, config.socket);
         this._clients = this._config.clients.map(c => new ClientServer(c));
-
-        this._channelServer = new ChannelServer(config.channels);
+        this._userCount = 0;
     }
-
+    
     async configure() {
+        this._mongoClient = await connect(this._config.mongodb.url);
+
+        this._configureSocketServices();
         this._app.use(bodyParser.json());
-        await this._channelServer.configure(this._app, this._socket);
 
         this._clients.forEach(c => {
             c.configure();
@@ -91,5 +102,32 @@ export class Server {
 
     start() {
         this._http.listen(this._config.httpPort, () => console.log(`Server listening on port ${this._config.httpPort}!`));
+    }
+
+    private async _configureSocketServices() {
+        const store = new MongoDBTreeStore(this._mongoClient, this._config.trees.dbName);
+        await store.init();
+        this._treeServer = new CausalTreeServer(
+            this._socket,
+            store, 
+            auxCausalTreeFactory());
+
+        this._socket.on('connection', (socket) => {
+            this._userCount += 1;
+            console.log('[Server] A user connected! There are now', this._userCount, 'users connected.');
+
+            socket.on('version', (callback: (version: AppVersion) => void) => {
+                callback({
+                    gitTag: GIT_TAG,
+                    gitHash: GIT_HASH,
+                    apiVersion: apiVersion
+                });
+            });
+
+            socket.on('disconnect', () => {
+                this._userCount -= 1;
+                console.log('[Server] A user disconnected! There are now', this._userCount, 'users connected.');
+            });
+        });
     }
 };

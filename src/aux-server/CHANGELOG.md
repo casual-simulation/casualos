@@ -1,5 +1,56 @@
 # AUX Server Changelog
 
+## V0.3.6
+### Date: 3/15/2019
+
+### Changes:
+- Changed to using Causal Trees for history.
+    - **This is a breaking change**
+    - This gives us the ability to support offline mode and keep action history.
+    - Because of how the system is designed, every merge conflict can be resolved in a reasonable manner.
+    - This is a new storage format, so data needs to be migrated.
+    - This is also fairly new, so it may have some weird bugs.
+- Removed file types.
+    - **This is a breaking change**
+    - This allows any file to visualize any grouping of files. (e.g. look like a worksurface)
+    - As a result, the only difference between a file and a worksurface is what tags the file has.
+    - This means that new worksurfaces will have a file on them by default. This file is the data for the worksurface.
+    - To create a workspace:
+        - Make a file that has `builder.context` set to any value.
+        - This value is the context that the file is visualizing.
+        - _To make other files show up in this context you simply create a tag with the same name as the context as set its value to `true`._
+        - **Note that when you create a worksurface in worksurface mode we do this for you automatically.**
+    - A couple tags were changed:
+        - `_position`
+            - Split into 3 different tags. (x, y, z)
+            - To change the position of a file you use `{context}.x`, `{context}.y`, and `{context}.z` as the tag names.
+        - `_workspace`
+            - Now to place a file on a workspace you set the `{context}` tag to `true`
+        - All existing tags have been moved to the `aux` namespace.
+            - This affects `color`, `scale`, `stroke`, `line`, `label`, `movable`, and `stackable`.
+            - They have been changed to `aux.color`, `aux.scale`, `aux.stroke`, `aux.line`, `aux.label`, `aux.movable`, and `aux.stackable`.
+        - `_hidden`
+            - This option has been removed in favor of setting the `aux.color` tag to `transparent` or `clear`.
+            - To remove the lines you simply need to set the `stroke.color` tag to `transparent`/`clear`.
+    - Several new tags were added:
+        - `builder.context`
+            - Setting this to a value will cause the file to visualize the context that was specified.
+            - This means appearing like a worksurface and showing any files that have the related `{context}` tag set to `true`.
+        - `builder.context.x`, `builder.context.y`, `builder.context.z`,
+            - These tags specify the X, Y, and Z positions that the center of the worksurface is placed at.
+        - `builder.context.scale`
+            - This tag specifies the scale of the worksurface. (how big it is)
+        - `builder.context.grid.scale`
+            - This tag specifies the scale of the grid relative to the worksurface. (how big the grid squares are)
+        - `builder.context.defaultHeight`
+            - This tag specifies how tall the hexes on the worksurface are by default.
+        - `builder.context.size`
+            - This tag specifies how many hexes from the center the worksurface contains.
+        - `builder.context.minimized`
+            - This tag specifies whether the worksurface is minimized.
+        - `builder.context.color`
+            - This tag specifies the color that the worksurface is.
+
 ## V0.3.5
 ### Date: 2/26/2019
 

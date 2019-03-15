@@ -1,24 +1,20 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Provide, Watch} from 'vue-property-decorator';
-import { appManager, User } from '../AppManager';
-import { EventBus } from '../EventBus/EventBus';
-import ConfirmDialogOptions from './DialogOptions/ConfirmDialogOptions';
-import AlertDialogOptions from './DialogOptions/AlertDialogOptions';
+import { appManager, User } from '../../shared/AppManager';
+import { EventBus } from '../../shared/EventBus';
+import ConfirmDialogOptions from '../../shared/ConfirmDialogOptions';
+import AlertDialogOptions from '../../shared/AlertDialogOptions';
 import { SubscriptionLike, Subscription } from 'rxjs';
-import { FilesState, ConflictDetails, UserMode, Object, getUserMode } from '@yeti-cgi/aux-common';
-import { MergeStatus } from '../FileManager';
-import SnackbarOptions from './Snackbar/SnackbarOptions';
-import { copyToClipboard } from '../utils';
+import { UserMode, Object, getUserMode } from '@yeti-cgi/aux-common';
+import SnackbarOptions from '../../shared/SnackbarOptions';
+import { copyToClipboard } from '../../shared/SharedUtils';
 import { tap } from 'rxjs/operators';
 import { findIndex } from 'lodash';
 import QRCode from '@chenfengyuan/vue-qrcode';
-import CubeIcon from '../public/icons/Cube.svg';
-import HexIcon from '../public/icons/Hexagon.svg';
 
 import vueFilePond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
-// import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type';
 
 const FilePond = vueFilePond();
 
@@ -33,12 +29,9 @@ export interface SidebarItem {
     components: {
         'app': App,
         'qr-code': QRCode,
-        'file-pond': FilePond,
-        'cube-icon': CubeIcon,
-        'hex-icon': HexIcon,
+        'file-pond': FilePond
     }
 })
-
 export default class App extends Vue {
 
     showNavigation:boolean = false;
@@ -105,7 +98,13 @@ export default class App extends Vue {
      */
     extraItems: SidebarItem[] = [];
 
-    onUserModeChanged() {
+    /**
+     * Gets whether we're in developer mode.
+     */
+    get dev() { return !PRODUCTION; }
+
+    toggleUserMode() {
+        this.userMode = !this.userMode;
         const mode: UserMode = this.userMode ? 'files' : 'worksurfaces';
         appManager.fileManager.updateFile(appManager.fileManager.userFile, {
             tags: {
@@ -120,9 +119,6 @@ export default class App extends Vue {
 
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
-
-    remainingConflicts: ConflictDetails[] = [];
-    currentMergeState: MergeStatus<FilesState> = null;
 
     private _subs: SubscriptionLike[] = [];
 
@@ -198,36 +194,22 @@ export default class App extends Vue {
                 }
             }, 1000);
 
-            subs.push(fileManager.disconnected.subscribe(_ => {
-                this._showConnectionLost();
-                this.online = false;
-                this.synced = false;
-                this.lostConnection = true;
-            }));
-
-            subs.push(fileManager.reconnected.subscribe(async state => {
-                this.online = true;
-                if (this.lostConnection) {
-                    this._showConnectionRegained();
+            subs.push(fileManager.connectionStateChanged.subscribe(connected => {
+                if (!connected) {
+                    this._showConnectionLost();
+                    this.online = false;
+                    this.synced = false;
+                    this.lostConnection = true;
+                } else {
+                    this.online = true;
+                    if (this.lostConnection) {
+                        this._showConnectionRegained();
+                    }
+                    this.lostConnection = false;
+                    this.startedOffline = false;
+                    this.synced = true;
+                    appManager.checkForUpdates();
                 }
-                appManager.checkForUpdates();
-            }));
-
-            subs.push(fileManager.syncFailed.subscribe(state => {
-                this._showSyncFailed();
-                this.remainingConflicts = state.remainingConflicts;
-                this.currentMergeState = state;
-            }));
-
-            subs.push(fileManager.resynced.subscribe(resynced => {
-                console.log('[App] Resynced!');
-                this.remainingConflicts = [];
-                if (this.lostConnection || this.startedOffline || resynced) {
-                    this._showSynced();
-                }
-                this.lostConnection = false;
-                this.startedOffline = false;
-                this.synced = true;
             }));
 
             subs.push(fileManager.fileChanged(fileManager.userFile).pipe(
@@ -315,37 +297,6 @@ export default class App extends Vue {
 
     menuClicked() {
         this.showNavigation = !this.showNavigation;
-    }
-
-    testConfirmDialog() {
-        var options = new ConfirmDialogOptions();
-        options.title = 'Title goes here';
-        options.body = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
-        options.okText = 'Yay';
-        options.cancelText = 'Nah';
-
-        // Hook up event listeners
-        var handleOk = () => {
-            console.log('Test dialog ok clicked.');
-        };
-        var handleCancel = () => {
-            console.log('Test dialog cancel clicked.');
-        };
-        EventBus.$once(options.okEvent, handleOk);
-        EventBus.$once(options.cancelEvent, handleCancel);
-
-        // Emit dialog event.
-        EventBus.$emit('showConfirmDialog', options);
-    }
-
-    testAlertDialog() {
-        var options = new AlertDialogOptions();
-        options.title = 'Title goes here';
-        options.body = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
-        options.confirmText = 'Alrighty';
-
-        // Emit dialog event.
-        EventBus.$emit('showAlertDialog', options);
     }
 
     nukeSite() {
@@ -481,12 +432,18 @@ export default class App extends Vue {
         console.log('[App] handleShowAlertDialog ' + this.showAlertDialog + ' ' + JSON.stringify(this.alertDialogOptions));
     }
 
+    /**
+     * Click event from App.vue
+     */
     private onConfirmDialogOk ()
     {
         if (this.confirmDialogOptions.okEvent != null)
             EventBus.$emit(this.confirmDialogOptions.okEvent);
     }
 
+    /**
+     * Click event from App.vue
+     */
     private onConfirmDialogCancel ()
     {
         if (this.confirmDialogOptions.cancelEvent != null)

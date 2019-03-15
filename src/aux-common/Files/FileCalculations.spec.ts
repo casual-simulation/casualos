@@ -16,7 +16,13 @@ import {
     parseArray,
     duplicateFile,
     doFilesAppearEqual,
-    isTagWellKnown
+    isTagWellKnown,
+    calculateStateDiff,
+    tagsOnFile,
+    createWorkspace,
+    isFileMovable,
+    isFileStackable,
+    newSelectionId
 } from './FileCalculations';
 import {
     cloneDeep
@@ -80,12 +86,486 @@ describe('FileCalculations', () => {
         });
     });
 
+    
+    describe('calculateStateDiff()', () => {
+
+        it('should return no changes', () => {
+            const prevState: FilesState = {
+                'test': {
+                    id: 'test',
+                    tags: {
+                        _position: {x:0, y:0, z:0},
+                        size: 1,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
+                }
+            };
+            const currState: FilesState = {
+                'test': prevState['test']
+            };
+
+            const result = calculateStateDiff(prevState, currState);
+
+            expect(result.addedFiles.length).toBe(0);
+            expect(result.removedFiles.length).toBe(0);
+            expect(result.updatedFiles.length).toBe(0);
+        });
+
+        it('should detect that a file was added', () => {
+            const prevState: FilesState = {
+                'test': {
+                    id: 'test',
+                    tags: {
+                        position: {x:0, y:0, z:0},
+                        size: 1,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
+                }
+            };
+            const currState: FilesState = {
+                'new': {
+                    id: 'new',
+                    tags: {
+                        _position: {x:0,y:0,z:0},
+                        _workspace: 'test',
+                    }
+                },
+                'test': prevState['test']
+            };
+
+            const result = calculateStateDiff(prevState, currState);
+
+            expect(result.removedFiles.length).toBe(0);
+            expect(result.updatedFiles.length).toBe(0);
+            expect(result.addedFiles.length).toBe(1);
+            expect(result.addedFiles[0]).toBe(currState['new']);
+        });
+
+        it('should detect that a file was removed', () => {
+            const prevState: FilesState = {
+                'test': {
+                    id: 'test',
+                    tags: {
+                        position: {x:0, y:0, z:0},
+                        size: 1,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
+                }
+            };
+            const currState: FilesState = {};
+
+            const result = calculateStateDiff(prevState, currState);
+
+            expect(result.addedFiles.length).toBe(0);
+            expect(result.updatedFiles.length).toBe(0);
+            expect(result.removedFiles.length).toBe(1);
+            expect(result.removedFiles[0]).toBe('test');
+        });
+
+        it('should detect that a file was updated', () => {
+            const prevState: FilesState = {
+                'test': {
+                    id: 'test',
+                    tags: {
+                        position: {x:0, y:0, z:0},
+                        size: 1,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
+                },
+                'updated': {
+                    id: 'updated',
+                    tags: {
+                        _position: {x:0, y:0, z:0},
+                        _workspace: 'test'
+                    }
+                }
+            };
+            const currState: FilesState = {
+                'test': prevState['test'],
+                'updated': {
+                    id: 'updated',
+                    tags: {
+                        _position: {x:0, y:0, z:0},
+                        _workspace: null
+                    }
+                }
+            };
+
+            const result = calculateStateDiff(prevState, currState);
+
+            expect(result.addedFiles.length).toBe(0);
+            expect(result.removedFiles.length).toBe(0);
+            expect(result.updatedFiles.length).toBe(1);
+            expect(result.updatedFiles[0]).toBe(currState['updated']);
+        });
+
+        it('should use deep equality for updates', () => {
+            const prevState: FilesState = {
+                'test': {
+                    id: 'test',
+                    tags: {
+                        _position: {x:0, y:0, z:0},
+                        size: 1,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
+                },
+                'updated': {
+                    id: 'updated',
+                    tags: {
+                        _position: {x:0, y:0, z:0},
+                        _workspace: 'test'
+                    }
+                }
+            };
+            const currState: FilesState = {
+                'test': prevState['test'],
+                'updated': {
+                    id: 'updated',
+                    tags: {
+                        _position: {x:0, y:0, z:0},
+                        _workspace: 'test'
+                    }
+                }
+            };
+
+            const result = calculateStateDiff(prevState, currState);
+
+            expect(result.addedFiles.length).toBe(0);
+            expect(result.removedFiles.length).toBe(0);
+            expect(result.updatedFiles.length).toBe(0);
+        });
+
+        it('should handle multiple changes at once', () => {
+            const prevState: FilesState = {
+                'test': {
+                    id: 'test',
+                    tags: {
+                        position: {x:0, y:0, z:0},
+                        size: 1,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
+                },
+                'removed': {
+                    id: 'removed',
+                    tags: {
+                        position: {x:0, y:0, z:0},
+                        size: 2,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
+                },
+                'updated': {
+                    id: 'updated',
+                    tags: {
+                        _position: {x:0, y:0, z:0},
+                        _workspace: 'test'
+                    }
+                }
+            };
+            const currState: FilesState = {
+                'test': prevState['test'],
+                'updated': {
+                    id: 'updated',
+                    tags: {
+                        _position: {x:0, y:0, z:0},
+                        _workspace: null
+                    }
+                },
+                'new': {
+                    id: 'new',
+                    tags: {
+                        _position: {x:1, y:0, z:3},
+                        _workspace: null
+                    }
+                },
+                'new2': {
+                    id: 'new',
+                    tags: {
+                        _position: {x:1, y:15, z:3},
+                        _workspace: 'test'
+                    }
+                }
+            };
+
+            const result = calculateStateDiff(prevState, currState);
+
+            expect(result.addedFiles.length).toBe(2);
+            expect(result.addedFiles[0]).toBe(currState['new']);
+            expect(result.addedFiles[1]).toBe(currState['new2']);
+            expect(result.removedFiles.length).toBe(1);
+            expect(result.removedFiles[0]).toBe('removed');
+            expect(result.updatedFiles.length).toBe(1);
+            expect(result.updatedFiles[0]).toBe(currState['updated']);
+        });
+
+        it.skip('should short-circut when a file_added event is given', () => {
+            const prevState: FilesState = {
+                'test': {
+                    id: 'test',
+                    tags: {
+                        position: {x:0, y:0, z:0},
+                        size: 1,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
+                },
+            };
+            const currState: FilesState = {
+                'test': prevState['test'],
+                'new': {
+                    id: 'new',
+                    tags: {
+                        _position: {x:1, y:0, z:3},
+                        _workspace: null
+                    }
+                }
+            };
+
+            // const result = calculateStateDiff(prevState, currState, {
+            //     type: 'file_added',
+            //     creation_time: new Date(),
+            //     file: currState['new'],
+            //     id: 'new'
+            // });
+
+            // expect(result.removedFiles.length).toBe(0);
+            // expect(result.updatedFiles.length).toBe(0);
+            // expect(result.addedFiles.length).toBe(1);
+            // expect(result.addedFiles[0]).toBe(currState['new']);
+        });
+
+        it.skip('should short-circut when a file_removed event is given', () => {
+            const prevState: FilesState = {
+                'test': {
+                    id: 'test',
+                    tags: {
+                        position: {x:0, y:0, z:0},
+                        size: 1,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
+                },
+                'old': {
+                    id: 'old',
+                    tags: {
+                        _position: {x:1, y:0, z:3},
+                        _workspace: null
+                    }
+                }
+            };
+            const currState: FilesState = {
+                'test': prevState['test'],
+                
+            };
+
+            // const result = calculateStateDiff(prevState, currState, {
+            //     type: 'file_removed',
+            //     creation_time: new Date(),
+            //     id: 'old'
+            // });
+
+            // expect(result.addedFiles.length).toBe(0);
+            // expect(result.updatedFiles.length).toBe(0);
+            // expect(result.removedFiles.length).toBe(1);
+            // expect(result.removedFiles[0]).toBe(prevState['old']);
+        });
+
+        it.skip('should short-circut when a file_updated event is given', () => {
+            const prevState: FilesState = {
+                'updated': {
+                    id: 'updated',
+                    tags: {
+                        position: {x:0, y:0, z:0},
+                        size: 1,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
+                },
+            };
+            const currState: FilesState = {
+                'updated': {
+                    id: 'updated',
+                    tags: {
+                        position: {x:2, y:1, z:3},
+                        size: 1,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
+                },
+            };
+
+            // const result = calculateStateDiff(prevState, currState, {
+            //     type: 'file_updated',
+            //     creation_time: new Date(),
+            //     id: 'updated',
+            //     update: { 
+            //         position: {x:2, y:1, z:3},
+            //     }
+            // });
+
+            // expect(result.addedFiles.length).toBe(0);
+            // expect(result.removedFiles.length).toBe(0);
+            // expect(result.updatedFiles.length).toBe(1);
+            // expect(result.updatedFiles[0]).toBe(currState['updated']);
+        });
+
+        it.skip('should not short-circut when a action event is given', () => {
+            const prevState: FilesState = {
+                'test': {
+                    id: 'test',
+                    tags: {
+                        position: {x:0, y:0, z:0},
+                        size: 1,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
+                },
+                'removed': {
+                    id: 'removed',
+                    tags: {
+                        position: {x:0, y:0, z:0},
+                        size: 2,
+                        grid: {},
+                        scale: 0.5,
+                        defaultHeight: 0.1,
+                        gridScale: 0.2,
+                        color: "#999999"
+                    }
+                },
+                'updated': {
+                    id: 'updated',
+                    tags: {
+                        _position: {x:0, y:0, z:0},
+                        _workspace: 'test'
+                    }
+                }
+            };
+            const currState: FilesState = {
+                'test': prevState['test'],
+                'updated': {
+                    id: 'updated',
+                    tags: {
+                        _position: {x:0, y:0, z:0},
+                        _workspace: null
+                    }
+                },
+                'new': {
+                    id: 'new',
+                    tags: {
+                        _position: {x:1, y:0, z:3},
+                        _workspace: null
+                    }
+                },
+                'new2': {
+                    id: 'new',
+                    tags: {
+                        _position: {x:1, y:15, z:3},
+                        _workspace: 'test'
+                    }
+                }
+            };
+
+            // const result = calculateStateDiff(prevState, currState, {
+            //     type: 'transaction',
+            //     creation_time: new Date(),
+            //     events: []
+            // });
+
+            // expect(result.addedFiles.length).toBe(2);
+            // expect(result.addedFiles[0]).toBe(currState['new']);
+            // expect(result.addedFiles[1]).toBe(currState['new2']);
+            // expect(result.removedFiles.length).toBe(1);
+            // expect(result.removedFiles[0]).toBe(prevState['removed']);
+            // expect(result.updatedFiles.length).toBe(1);
+            // expect(result.updatedFiles[0]).toBe(currState['updated']);
+        });
+    });
+
+    describe('tagsOnFile()', () => {
+        it('should return the tag names that are on objects', () => {
+
+            expect(tagsOnFile(createFile('test'))).toEqual([]);
+
+            expect(tagsOnFile(createFile('test', {
+                _position: { x: 0, y: 0, z: 0 },
+                _workspace: null,
+                test: 123,
+                abc: undefined
+            }))).toEqual([
+                '_position',
+                '_workspace',
+                'test',
+                'abc'
+            ]);
+        });
+
+        it('should return the property names that are on workspaces', () => {
+            expect(tagsOnFile(createWorkspace('test', 'testContext'))).toEqual([
+                'aux.builder.context',
+                'aux.builder.context.x',
+                'aux.builder.context.y',
+                'aux.builder.context.z',
+                'aux.builder.context.size',
+                'aux.builder.context.grid',
+                'aux.builder.context.scale',
+                'aux.builder.context.defaultHeight',
+                'aux.builder.context.grid.scale',
+                'aux.builder.context.color',
+                'testContext',
+                'testContext.x',
+                'testContext.y',
+                'testContext.z',
+            ]);
+        });
+    });
+
     describe('getActiveObjects()', () => {
         it('should return only objects', () => {
             const state: FilesState = {
                 first: {
                     id: 'first',
-                    type: 'object',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'test'
@@ -93,7 +573,6 @@ describe('FileCalculations', () => {
                 },
                 second: {
                     id: 'second',
-                    type: 'object',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'test'
@@ -101,14 +580,15 @@ describe('FileCalculations', () => {
                 },
                 workspace: {
                     id: 'workspace',
-                    type: 'workspace',
-                    defaultHeight: 1,
-                    grid: {},
-                    gridScale: 1,
-                    position: { x:0, y: 0, z: 0},
-                    size: 1,
-                    scale: 1,
-                    color: "#999999"
+                    tags: {
+                        defaultHeight: 1,
+                        grid: {},
+                        gridScale: 1,
+                        position: { x:0, y: 0, z: 0},
+                        size: 1,
+                        scale: 1,
+                        color: "#999999"
+                    }
                 }
             };
 
@@ -116,7 +596,8 @@ describe('FileCalculations', () => {
 
             expect(objects).toEqual([
                 state['first'],
-                state['second']
+                state['second'],
+                state['workspace']
             ]);
         });
 
@@ -124,7 +605,6 @@ describe('FileCalculations', () => {
             const state: FilesState = {
                 first: {
                     id: 'first',
-                    type: 'object',
                     tags: {
                         _destroyed: true,
                         _position: { x: 0, y: 0, z: 0 },
@@ -133,7 +613,6 @@ describe('FileCalculations', () => {
                 },
                 second: {
                     id: 'second',
-                    type: 'object',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'test'
@@ -375,33 +854,43 @@ describe('FileCalculations', () => {
 
     describe('isTagWellKnown()', () => {
         it('should return true for some builtin tags', () => {
-            expect(isTagWellKnown('_position')).toBe(true);
-            expect(isTagWellKnown('_index')).toBe(true);
+            expect(isTagWellKnown('abc.index')).toBe(true);
             expect(isTagWellKnown('_hidden')).toBe(true);
             expect(isTagWellKnown('_destroyed')).toBe(true);
             expect(isTagWellKnown('_lastEditedBy')).toBe(true);
             expect(isTagWellKnown('_lastActiveTime')).toBe(true);
-            expect(isTagWellKnown('_workspace')).toBe(true);
+        });
+
+        it('should return true for autogenerated context tags', () => {
+            expect(isTagWellKnown('aux._context_test')).toBe(true);
+            expect(isTagWellKnown('aux._context_ something else')).toBe(true);
+            expect(isTagWellKnown('aux._context_ 😊😜😢')).toBe(true);
         });
 
         it('should return true for selection tags', () => {
-            expect(isTagWellKnown('_selection_09a1ee66-bb0f-4f9e-81d2-d8d4da5683b8')).toBe(true);
-            expect(isTagWellKnown('_selection_6a7aa1c5-807c-4390-9982-ff8b2dd5b54e')).toBe(true);
-            expect(isTagWellKnown('_selection_83e80481-13a1-439e-94e6-f3b73942288f')).toBe(true);
+            expect(isTagWellKnown('aux._selection_09a1ee66-bb0f-4f9e-81d2-d8d4da5683b8')).toBe(true);
+            expect(isTagWellKnown('aux._selection_6a7aa1c5-807c-4390-9982-ff8b2dd5b54e')).toBe(true);
+            expect(isTagWellKnown('aux._selection_83e80481-13a1-439e-94e6-f3b73942288f')).toBe(true);
         });
 
         it('should return false for selection tags when they should be ignored', () => {
-            expect(isTagWellKnown('_selection_09a1ee66-bb0f-4f9e-81d2-d8d4da5683b8', false)).toBe(false);
-            expect(isTagWellKnown('_selection_6a7aa1c5-807c-4390-9982-ff8b2dd5b54e', false)).toBe(false);
-            expect(isTagWellKnown('_selection_83e80481-13a1-439e-94e6-f3b73942288f', false)).toBe(false);
+            expect(isTagWellKnown('aux._selection_09a1ee66-bb0f-4f9e-81d2-d8d4da5683b8', false)).toBe(false);
+            expect(isTagWellKnown('aux._selection_6a7aa1c5-807c-4390-9982-ff8b2dd5b54e', false)).toBe(false);
+            expect(isTagWellKnown('aux._selection_83e80481-13a1-439e-94e6-f3b73942288f', false)).toBe(false);
         });
 
         it('should return false for normal tags', () => {
-            expect(isTagWellKnown('_movable')).toBe(false);
-            expect(isTagWellKnown('color')).toBe(false);
-            expect(isTagWellKnown('label.color')).toBe(false);
-            expect(isTagWellKnown('line')).toBe(false);
+            expect(isTagWellKnown('aux.movable')).toBe(false);
+            expect(isTagWellKnown('aux.stackable')).toBe(false);
+            expect(isTagWellKnown('aux.color')).toBe(false);
+            expect(isTagWellKnown('aux.label.color')).toBe(false);
+            expect(isTagWellKnown('aux.line')).toBe(false);
             expect(isTagWellKnown('+(#tag:"value")')).toBe(false);
+            expect(isTagWellKnown('_context_test')).toBe(false);
+            expect(isTagWellKnown('_context_ something else')).toBe(false);
+            expect(isTagWellKnown('_context_ 😊😜😢')).toBe(false);
+            expect(isTagWellKnown('_selection_09a1ee66-bb0f-4f9e-81d2-d8d4da5683b8')).toBe(false);
+            expect(isTagWellKnown('📦')).toBe(false);
         });
     });
 
@@ -430,8 +919,20 @@ describe('FileCalculations', () => {
             let first = createFile();
             let second = createFile();
 
-            first.tags['_selection_83e80481-13a1-439e-94e6-f3b73942288f'] = 'a';
-            second.tags['_selection_83e80481-13a1-439e-94e6-f3b73942288f'] = 'b';
+            first.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] = 'a';
+            second.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] = 'b';
+
+            const result = doFilesAppearEqual(first, second);
+
+            expect(result).toBe(true);
+        });
+
+        it('should ignore context tags', () => {
+            let first = createFile();
+            let second = createFile();
+
+            first.tags['aux._context_83e80481-13a1-439e-94e6-f3b73942288f'] = 'a';
+            second.tags['aux._context_83e80481-13a1-439e-94e6-f3b73942288f'] = 'b';
 
             const result = doFilesAppearEqual(first, second);
 
@@ -442,8 +943,8 @@ describe('FileCalculations', () => {
             let first = createFile();
             let second = createFile();
 
-            first.tags['_selection_83e80481-13a1-439e-94e6-f3b73942288f'] = 'a';
-            second.tags['_selection_83e80481-13a1-439e-94e6-f3b73942288f'] = 'b';
+            first.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] = 'a';
+            second.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] = 'b';
 
             const result = doFilesAppearEqual(first, second, { ignoreSelectionTags: false });
 
@@ -467,8 +968,8 @@ describe('FileCalculations', () => {
             let first = createFile();
             let second = createFile();
 
-            first.tags._position = { x: 1, y: 2, z: 3 };
-            second.tags._position = { x: 0, y: 0, z: 0 };
+            first.tags['_context_A.x'] = 1;
+            second.tags['_context_B.x'] = 0;
 
             const result = doFilesAppearEqual(first, second);
 
@@ -476,7 +977,13 @@ describe('FileCalculations', () => {
         });
     });
 
-    describe('duplicateFile', () => {
+    describe('newSelectionId()', () => {
+        it('should return IDs that are well known', () => {
+            expect(isTagWellKnown(newSelectionId())).toBe(true);
+        });
+    });
+
+    describe('duplicateFile()', () => {
         it('should return a copy with a different ID', () => {
             const first: Object = createFile();
             first.tags._workspace = 'abc';
@@ -497,8 +1004,62 @@ describe('FileCalculations', () => {
             expect(second.tags._destroyed).toBe(undefined);
         });
 
-        it('should merge in the additional changes', () => {
+        it('should not have any auto-generated contexts or selections', () => {
             let first: Object = createFile();
+            first.tags[`aux.other`] = 100;
+            first.tags[`myTag`] = 'Hello';
+            first.tags[`aux._context_abcdefg`] = true;
+            first.tags[`aux._context_1234567`] = true;
+            first.tags[`aux._context_1234567.x`] = 1;
+            first.tags[`aux._context_1234567.y`] = 2;
+            first.tags[`aux._context_1234567.z`] = 3;
+            first.tags[`aux._selection_99999`] = true;
+
+            const second = duplicateFile(first);
+
+            expect(second.id).not.toEqual(first.id);
+            expect(second.tags).toEqual({
+                'aux.other': 100,
+                'myTag': 'Hello'
+            });
+            expect(first.tags).toEqual({
+                'aux.other': 100,
+                'myTag': 'Hello',
+                'aux._context_abcdefg': true,
+                'aux._context_1234567': true,
+                'aux._context_1234567.x': 1,
+                'aux._context_1234567.y': 2,
+                'aux._context_1234567.z': 3,
+                'aux._selection_99999': true,
+            });
+        });
+
+        it('should keep the tags that the new data contains', () => {
+            let first: Object = createFile();
+            first.tags[`aux.other`] = 100;
+            first.tags[`myTag`] = 'Hello';
+
+            const second = duplicateFile(first, {
+                tags: {
+                    [`aux._selection_99999`]: true,
+                    [`aux._context_abcdefg`]: true
+                }
+            });
+
+            expect(second.id).not.toEqual(first.id);
+            expect(second.tags).toEqual({
+                'aux.other': 100,
+                'myTag': 'Hello',
+                'aux._context_abcdefg': true,
+                'aux._selection_99999': true
+            });
+        });
+
+        it('should merge in the additional changes', () => {
+            let first: Object = createFile('test', {
+                testTag: 'abcdefg',
+                name: 'ken'
+            });
             const second = duplicateFile(first, {
                 tags: {
                     name: 'abcdef'
@@ -507,7 +1068,7 @@ describe('FileCalculations', () => {
 
             expect(second.id).not.toEqual(first.id);
             expect(second.tags).toEqual({
-                _position: { x: 0, y: 0, z: 0},
+                testTag: 'abcdefg',
                 name: 'abcdef'
             });
         });
@@ -524,37 +1085,115 @@ describe('FileCalculations', () => {
 
     describe('cleanFile()', () => {
         it('should remove null and undefined tags', () => {
-            let file = createFile('test');
-            file.tags._workspace = null;
-            file.tags._test = undefined;
+            let file = createFile('test', {
+                'testTag': 'abcdefg',
+                'other': 0,
+                'falsy': false,
+                'truthy': true,
+                _workspace: null,
+                _test: undefined
+            });
 
             const result = cleanFile(file);
 
             expect(result).toEqual({
                 id: 'test',
-                type: 'object',
                 tags: {
-                    _position: { x: 0, y: 0, z: 0 }
+                    'testTag': 'abcdefg',
+                    'other': 0,
+                    'falsy': false,
+                    'truthy': true,
                 }
             });
         });
 
         it('should not modify the given file', () => {
-            let file = createFile('test');
-            file.tags._workspace = null;
-            file.tags._test = undefined;
+            let file = createFile('test', {
+                'testTag': 'abcdefg',
+                'other': 0,
+                'falsy': false,
+                'truthy': true,
+                _workspace: null,
+                _test: undefined
+            });
 
             const result = cleanFile(file);
 
             expect(file).toEqual({
                 id: 'test',
-                type: 'object',
                 tags: {
-                    _position: { x: 0, y: 0, z: 0 },
+                    'testTag': 'abcdefg',
+                    'other': 0,
+                    'falsy': false,
+                    'truthy': true,
                     _workspace: null,
                     _test: undefined
                 }
             });
+        });
+    });
+
+    describe('isFileMovable()', () => {
+        it('should return true when aux.movable has no value', () => {
+            let file = createFile('test', {});
+            const context = createCalculationContext([file]);
+            expect(isFileMovable(context, file)).toBe(true);
+        });
+
+        it('should return false when aux.movable is false', () => {
+            let file = createFile('test', {
+                ['aux.movable']: false
+            });
+            const context = createCalculationContext([file]);
+            expect(isFileMovable(context, file)).toBe(false);
+        });
+
+        it('should return false when aux.movable calculates to false', () => {
+            let file = createFile('test', {
+                ['aux.movable']: '=false'
+            });
+            const context = createCalculationContext([file]);
+            expect(isFileMovable(context, file)).toBe(false);
+        });
+
+        it('should return true when aux.movable has any other value', () => {
+            let file = createFile('test', {
+                ['aux.movable']: 'anything'
+            });
+            const context = createCalculationContext([file]);
+            expect(isFileMovable(context, file)).toBe(true);
+        });
+    });
+
+    describe('isFileStackable()', () => {
+        it('should return true when aux.stackable has no value', () => {
+            let file = createFile('test', {});
+            const context = createCalculationContext([file]);
+            expect(isFileStackable(context, file)).toBe(true);
+        });
+
+        it('should return false when aux.stackable is false', () => {
+            let file = createFile('test', {
+                ['aux.stackable']: false
+            });
+            const context = createCalculationContext([file]);
+            expect(isFileStackable(context, file)).toBe(false);
+        });
+
+        it('should return false when aux.stackable calculates to false', () => {
+            let file = createFile('test', {
+                ['aux.stackable']: '=false'
+            });
+            const context = createCalculationContext([file]);
+            expect(isFileStackable(context, file)).toBe(false);
+        });
+
+        it('should return true when aux.stackable has any other value', () => {
+            let file = createFile('test', {
+                ['aux.stackable']: 'anything'
+            });
+            const context = createCalculationContext([file]);
+            expect(isFileStackable(context, file)).toBe(true);
         });
     });
 
@@ -866,13 +1505,25 @@ describe('FileCalculations', () => {
             expect(isHiddenTag(' _underscored')).toBe(false);
             expect(isHiddenTag('+tag')).toBe(false);
         });
+
+        it('should be true for tags that start with underscores after dots', () => {
+            expect(isHiddenTag('aux._')).toBe(true);
+            expect(isHiddenTag('aux._context_')).toBe(true);
+            expect(isHiddenTag('aux._selection')).toBe(true);
+            expect(isHiddenTag('domain._hidden')).toBe(true);
+            
+            expect(isHiddenTag('._')).toBe(false);
+            expect(isHiddenTag('-._')).toBe(false);
+            expect(isHiddenTag('\\._')).toBe(false);
+            expect(isHiddenTag('abc,_context_')).toBe(false);
+            expect(isHiddenTag('aux.test_')).toBe(false);
+        });
     });
 
     describe('fileTags()', () => {
         it('should return the list of tags that the files have minus ones that start with underscores', () => {
             const files: File[] = [
                 {
-                    type: 'object',
                     id: 'test',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -880,7 +1531,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 {
-                    type: 'object',
                     id: 'test2',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -889,7 +1539,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 {
-                    type: 'object',
                     id: 'test3',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -898,7 +1547,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 {
-                    type: 'object',
                     id: 'test4',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -919,7 +1567,6 @@ describe('FileCalculations', () => {
         it('should preserve the order of the current tags', () => {
             const files: File[] = [
                 {
-                    type: 'object',
                     id: 'test',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -927,7 +1574,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 {
-                    type: 'object',
                     id: 'test2',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -936,7 +1582,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 {
-                    type: 'object',
                     id: 'test3',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -945,7 +1590,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 {
-                    type: 'object',
                     id: 'test4',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -969,7 +1613,6 @@ describe('FileCalculations', () => {
         it('should include the given extra tags', () => {
             const files: File[] = [
                 {
-                    type: 'object',
                     id: 'test',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -977,7 +1620,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 {
-                    type: 'object',
                     id: 'test2',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -986,7 +1628,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 {
-                    type: 'object',
                     id: 'test3',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -995,7 +1636,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 {
-                    type: 'object',
                     id: 'test4',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -1021,7 +1661,6 @@ describe('FileCalculations', () => {
         it('should not include extra tags that are given in the currrentTags array', () => {
             const files: File[] = [
                 {
-                    type: 'object',
                     id: 'test',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -1029,7 +1668,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 {
-                    type: 'object',
                     id: 'test2',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -1038,7 +1676,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 {
-                    type: 'object',
                     id: 'test3',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -1047,7 +1684,6 @@ describe('FileCalculations', () => {
                     }
                 },
                 {
-                    type: 'object',
                     id: 'test4',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },

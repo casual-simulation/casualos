@@ -8,31 +8,33 @@
         <div v-if="!isMakingNewTag">
           <md-button
             class="new-tag-button"
-            @click="addTag(true)">+action</md-button>
+            @click="addTag()">+tag</md-button>
           <md-button
             class="new-tag-button"
-            @click="addTag()">+tag</md-button>
+            @click="addTag(true)">+action</md-button>
         </div>
         <div v-else>
-          <div class="finish-tag-button-wrapper">
-            <md-button
-              class="md-icon-button finish-tag-button"
-              @click="addTag()">
-              <md-icon class="done">check</md-icon>
-            </md-button>
-            <md-button
-              class="md-icon-button finish-tag-button"
-              @click="cancelNewTag()">
-              <md-icon class="cancel">cancel</md-icon>
-            </md-button>
-          </div>
-          <tag-editor 
-            ref="tagEditor"
-            :useMaterialInput="true"
-            v-model="newTag"
-            :tagExists="newTagExists"
-            :isAction="isMakingNewAction"
-            @valid="newTagValidityUpdated"></tag-editor>
+            <form class="file-table-form" @submit.prevent="addTag()">
+                <div class="finish-tag-button-wrapper">
+                    <md-button
+                        class="md-icon-button finish-tag-button"
+                        type="submit">
+                    <md-icon class="done">check</md-icon>
+                    </md-button>
+                    <md-button
+                        class="md-icon-button finish-tag-button"
+                        @click="cancelNewTag()">
+                    <md-icon class="cancel">cancel</md-icon>
+                    </md-button>
+                </div>
+                <tag-editor 
+                    ref="tagEditor"
+                    :useMaterialInput="true"
+                    v-model="newTag"
+                    :tagExists="newTagExists"
+                    :isAction="isMakingNewAction"
+                    @valid="newTagValidityUpdated"></tag-editor>
+            </form>
         </div>
       </div>
     </div>

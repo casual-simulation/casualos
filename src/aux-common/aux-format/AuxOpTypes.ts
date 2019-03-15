@@ -1,5 +1,4 @@
-import { AtomOp } from "../channels-core/Atom";
-import { FileType } from "../Files";
+import { AtomOp } from "../causal-trees/Atom";
 
 /**
  * The list of operation types.
@@ -50,11 +49,6 @@ export interface FileOp extends AuxOpBase {
      *  The ID of the file.
      */
     id: string;
-
-    /**
-     * The type of the file.
-     */
-    fileType: FileType;
 }
 
 /**

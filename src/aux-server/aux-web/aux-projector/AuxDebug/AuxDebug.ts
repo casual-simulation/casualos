@@ -1,14 +1,20 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
-import { appManager } from '../AppManager';
+import { appManager } from '../../shared/AppManager';
 import { Prop, Watch } from 'vue-property-decorator';
 import App from '../App/App';
 import { SubscriptionLike } from 'rxjs';
+import { TreeView } from 'vue-json-tree-view';
+import { FilesState } from '@yeti-cgi/aux-common';
 
-@Component
+@Component({
+    components: {
+        'tree-view': TreeView
+    }
+})
 export default class AuxDebug extends Vue {
 
-    auxJson: string = null;
+    auxJson: FilesState = null;
     
     private _subs: SubscriptionLike[];
 
@@ -22,10 +28,11 @@ export default class AuxDebug extends Vue {
 
     constructor() {
         super();
+        this.auxJson = null;
     }
 
     created() {
-        this.auxJson = JSON.stringify(this.fileManager.filesState, null, 2);
+        this.auxJson = this.fileManager.filesState;
 
         this._subs = [];
         this._subs.push(this.fileManager.fileDiscovered.subscribe((file) => { this.refreshAuxJson()}));
@@ -42,7 +49,7 @@ export default class AuxDebug extends Vue {
     }
 
     refreshAuxJson() {
-        this.auxJson = JSON.stringify(this.fileManager.filesState, null, 2);
+        this.auxJson = this.fileManager.filesState;
     }
 
     beforeDestroy() {

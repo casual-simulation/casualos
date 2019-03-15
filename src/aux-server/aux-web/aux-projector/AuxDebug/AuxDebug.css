@@ -1,8 +1,32 @@
-.json-content {
+/* .json-content {
     margin-top: 16px;
     height: 100%;
     width: 100%;
     overflow: scroll;
+} */
+
+.tree-view-item-value-number {
+    color: #00AA00;
+    background: #FFF;
+}
+
+.tree-view-item-value-boolean {
+    color: #FF00AA;
+    background: #FFF;
+}
+
+.tree-view-item-value-string {
+    color: #FF9900;
+    background: #FFF;
+}
+
+.tree-view-item-value-null {
+    color: #333;
+    background: #FFF;
+}
+
+.tree-view-item-key {
+    font-weight: bold;
 }
 
 .aux-debug .md-button {

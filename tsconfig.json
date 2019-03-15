@@ -5,11 +5,11 @@
     "noImplicitAny": true,
     "module": "esNext",
     "esModuleInterop": true,
-    "target": "es5",
+    "target": "es6",
     "allowJs": false,
     "moduleResolution": "node",
     "sourceMap": true,
-    "lib": [ "es2015.promise", "es2015.symbol", "es5", "dom" ],
+    "lib": [ "es2015", "es5", "dom" ],
     "experimentalDecorators": true,
     "typeRoots" : ["node_modules/@types", "./typings"]
   }

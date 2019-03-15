@@ -16,11 +16,11 @@ const config: Config = {
         projectorConfig,
         playerConfig
     ],
-    channels: {
-        mongodb: {
-            url: 'mongodb://127.0.0.1:27017',
-            dbName: 'SO4'
-        }
+    mongodb: {
+        url: 'mongodb://127.0.0.1:27017',
+    },
+    trees: {
+        dbName: 'aux-trees'
     }
 };
 

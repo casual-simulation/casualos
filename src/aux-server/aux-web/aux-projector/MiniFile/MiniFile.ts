@@ -1,9 +1,9 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Inject, Watch, Prop } from 'vue-property-decorator';
-import { Object } from '@yeti-cgi/aux-common';
-import { FileRenderer } from '../../aux-scene/FileRenderer';
-import { appManager } from '../AppManager';
+import { Object, AuxFile } from '@yeti-cgi/aux-common';
+import { FileRenderer } from '../../shared/scene/FileRenderer';
+import { appManager } from '../../shared/AppManager';
 
 @Component({
     components: {
@@ -11,7 +11,7 @@ import { appManager } from '../AppManager';
 })
 export default class MiniFile extends Vue {
 
-    @Prop() file: Object;
+    @Prop() file: AuxFile;
     @Prop({ default: false }) large: boolean;
     @Prop({ default: false }) selected: boolean;
 
@@ -22,15 +22,15 @@ export default class MiniFile extends Vue {
     @Inject() fileRenderer: FileRenderer;
 
     @Watch('file')
-    private async _fileChanged(file: Object) {
+    private async _fileChanged(file: AuxFile) {
         this.image = await this.fileRenderer.render(file);
-        let label = file.tags.label;
+        let label = file.tags['aux.label'];
         if (label) {
-            this.label = appManager.fileManager.calculateFormattedFileValue(file, 'label');
+            this.label = appManager.fileManager.calculateFormattedFileValue(file, 'aux.label');
 
-            const labelColor = file.tags['label.color'];
+            const labelColor = file.tags['aux.label.color'];
             if (labelColor) {
-                this.labelColor = appManager.fileManager.calculateFormattedFileValue(file, 'label.color');
+                this.labelColor = appManager.fileManager.calculateFormattedFileValue(file, 'aux.label.color');
 
             } else {
                 this.labelColor = '#000';

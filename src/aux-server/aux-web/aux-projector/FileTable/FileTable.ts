@@ -2,13 +2,13 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Provide, Prop, Inject, Watch} from 'vue-property-decorator';
 import { some, union } from 'lodash';
-import {File, Object, fileTags, isHiddenTag} from '@yeti-cgi/aux-common';
-import { EventBus } from '../EventBus/EventBus';
-import { appManager } from '../AppManager';
+import {File, Object, fileTags, isHiddenTag, AuxObject, hasValue} from '@yeti-cgi/aux-common';
+import { EventBus } from '../../shared/EventBus';
+import { appManager } from '../../shared/AppManager';
 
 import FileRow from '../FileRow/FileRow';
 import TagEditor from '../TagEditor/TagEditor';
-import AlertDialogOptions from '../App/DialogOptions/AlertDialogOptions';
+import AlertDialogOptions from '../../shared/AlertDialogOptions'
 import FileTag from '../FileTag/FileTag';
 import FileTableToggle from '../FileTableToggle/FileTableToggle';
 
@@ -23,7 +23,7 @@ import FileTableToggle from '../FileTableToggle/FileTableToggle';
 })
 export default class FileTable extends Vue {
     
-    @Prop() files: Object[];
+    @Prop() files: AuxObject[];
     @Prop({ default: (() => <any>[]) }) extraTags: string[];
     @Prop({ default: false }) readOnly: boolean;
 
@@ -58,12 +58,7 @@ export default class FileTable extends Vue {
 
     @Watch('files')
     filesChanged() {
-        const editingTags = this.lastEditedTag ? [this.lastEditedTag] : [];
-        const allExtraTags = union(this.extraTags, this.addedTags, editingTags);
-        this.tags = fileTags(
-            this.files, 
-            this.tags, 
-            allExtraTags);
+        this._updateTags();
         this.numFilesSelected = this.files.length;
     }
 
@@ -123,16 +118,16 @@ export default class FileTable extends Vue {
     removeTag(tag: string) {
         if (tag === this.lastEditedTag || tag === this.newTag) {
             this.lastEditedTag = null;
-            this.tags = fileTags(this.files, this.tags, this.extraTags);
         }
         const index = this.addedTags.indexOf(tag);
         if (index >= 0) {
             this.addedTags.splice(index, 1);
         }
+        this._updateTags();
     }
 
     tagHasValue(tag: string): boolean {
-        return some(this.files, f => f.tags[tag]);
+        return some(this.files, f => hasValue(f.tags[tag]));
     }
 
     isHiddenTag(tag: string): boolean {
@@ -152,7 +147,16 @@ export default class FileTable extends Vue {
     }
 
     async created() {
-        this.tags = fileTags(this.files, this.tags, this.lastEditedTag ? [this.lastEditedTag, ...this.extraTags] : this.extraTags);
+        this._updateTags();
         this.numFilesSelected = this.files.length;
+    }
+
+    private _updateTags() {
+        const editingTags = this.lastEditedTag ? [this.lastEditedTag] : [];
+        const allExtraTags = union(this.extraTags, this.addedTags, editingTags);
+        this.tags = fileTags(
+            this.files, 
+            this.tags, 
+            allExtraTags);
     }
 };

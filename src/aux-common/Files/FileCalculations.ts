@@ -1,4 +1,4 @@
-import { Object, File, Workspace, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_GRID_SCALE, DEFAULT_USER_MODE, DEFAULT_WORKSPACE_COLOR, UserMode } from './File';
+import { Object, File, Workspace, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_GRID_SCALE, DEFAULT_USER_MODE, DEFAULT_WORKSPACE_COLOR, UserMode, AuxDomain } from './File';
 import uuid from 'uuid/v4';
 import {
     flatMap,
@@ -11,7 +11,9 @@ import {
     values,
     isEqual,
     sortBy,
-    sumBy
+    sumBy,
+    difference,
+    cloneDeep
 } from 'lodash';
 import { Sandbox, SandboxLibrary } from '../Formulas/Sandbox';
 
@@ -19,8 +21,10 @@ import { Sandbox, SandboxLibrary } from '../Formulas/Sandbox';
 import formulaLib from '../Formulas/formula-lib';
 import { FilterFunction, SandboxInterface } from '../Formulas/SandboxInterface';
 import { PartialFile } from '../Files';
-import { FilesState, cleanFile } from './FilesChannel';
+import { FilesState, cleanFile, FileEvent } from './FilesChannel';
 import { merge } from '../utils';
+import { WeaveReference, AtomOp } from '../causal-trees';
+import { AuxOp, AuxOpType, AuxFile } from '../aux-format';
 
 export var ShortId_Length: number = 5;
 
@@ -55,11 +59,28 @@ export interface FileCalculationContext {
 }
 
 /**
+ * Defines an interface that represents the difference between
+ * to FilesState objects.
+ */
+export interface FilesStateDiff {
+    addedFiles: File[];
+    removedFiles: string[];
+    updatedFiles: File[];
+}
+
+/**
  * Determines if the given workspace is currently minimized.
  * @param workspace The workspace.
  */
-export function isMinimized(workspace: Workspace) {
-    return !!workspace.minimized;
+export function isMinimized(calc: FileCalculationContext, workspace: Workspace, domain: AuxDomain) {
+    return getContextMinimized(calc, workspace, domain);
+}
+
+/**
+ * Determines if the given file contains data for a context.
+ */
+export function isContext(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): boolean {
+    return !!calculateFileValue(calc, contextFile, `aux.${domain}.context`);
 }
 
 /**
@@ -92,12 +113,7 @@ export function filterFilesBySelection(files: Object[], selectionId: string) {
    * output list.
    */
 export function fileTags(files: File[], currentTags: string[], extraTags: string[]) {
-    const fileTags = flatMap(files, f => {
-        if (f.type === 'object') {
-            return keys(f.tags);
-        }
-        return [];
-    });
+    const fileTags = flatMap(files, f => keys(f.tags));
     // Only keep tags that don't start with an underscore (_)
     const nonHiddenTags = fileTags.filter(t => !isHiddenTag(t));
     const tagsToKeep = union(nonHiddenTags, extraTags);
@@ -148,7 +164,7 @@ export function getShortId(file: File | Object): string {
  * @param tag The tag to test.
  */
 export function isHiddenTag(tag: string): boolean {
-    return (/^_/.test(tag));
+    return (/^_/.test(tag) || /(\w+)\._/.test(tag));
 }
 
 export function calculateFileValue(context: FileCalculationContext, object: Object, tag: string) {
@@ -170,7 +186,7 @@ export function calculateFormattedFileValue(context: FileCalculationContext, fil
 /**
  * Determines if the given value represents a formula.
  */
-export function isFormula(value: string): boolean {
+export function isFormula(value: unknown): boolean {
     return typeof value === 'string' && value.indexOf('=') === 0;
 }
 
@@ -193,7 +209,7 @@ export function containsFormula(value: string): boolean {
 /**
  * Determines if the given string value represents an array.
  */
-export function isArray(value: string): boolean {
+export function isArray(value: unknown): boolean {
     return typeof value === 'string' && value.indexOf('[') === 0 && value.lastIndexOf(']') === value.length - 1;
 }
 
@@ -235,7 +251,7 @@ export function isDestroyed(object: Object) {
  * @param state The state to get the active objects of.
  */
 export function getActiveObjects(state: FilesState) {
-    return <Object[]>values(state).filter(f => f.type === 'object' && !isDestroyed(f));
+    return <Object[]>values(state).filter(f => !isDestroyed(f));
 }
 
 /**
@@ -247,13 +263,15 @@ export function isFilterTag(tag: string) {
 }
 
 export const WELL_KNOWN_TAGS = [
-    '_position',
-    '_hidden',
-    '_destroyed',
-    '_index',
-    '_workspace',
-    '_lastEditedBy',
-    '_lastActiveTime'
+    /\.x$/,
+    /\.y$/,
+    /\.z$/,
+    /_hidden$/,
+    /_destroyed$/,
+    /\.index$/,
+    /_lastEditedBy/,
+    /_lastActiveTime/,
+    /^aux\._context_/,
 ];
 
 /**
@@ -262,11 +280,13 @@ export const WELL_KNOWN_TAGS = [
  * @param includeSelectionTags Whether to include selection tags.
  */
 export function isTagWellKnown(tag: string, includeSelectionTags: boolean = true): boolean {
-    if (WELL_KNOWN_TAGS.indexOf(tag) >= 0) {
-        return true;
+    for (let i = 0; i < WELL_KNOWN_TAGS.length; i++) {
+        if (WELL_KNOWN_TAGS[i].test(tag)) {
+            return true;
+        }
     }
 
-    if (includeSelectionTags && tag.indexOf('_selection_') === 0) {
+    if (includeSelectionTags && tag.indexOf('aux._selection_') === 0) {
         return true;
     }
 
@@ -277,7 +297,7 @@ export function isTagWellKnown(tag: string, includeSelectionTags: boolean = true
  * Determines if the files are equal disregarding well-known hidden tags
  * and their IDs. File "appearance equality" means instead of asking "are these files exactly the same?"
  * we ask "are these files functionally the same?". In this respect we care about things like color, label, etc.
- * We also care about things like _movable but not _position, _index _selection, etc.
+ * We also care about things like aux.movable but not _position, _index _selection, etc.
  * 
  * Well-known hidden tags include:
  * - _position
@@ -410,7 +430,34 @@ export function toggleFileSelection(file: Object, selectionId: string, userId: s
  * Creates a new selection id.
  */
 export function newSelectionId() {
-    return `_selection_${uuid()}`;
+    return `aux._selection_${uuid()}`;
+}
+
+/**
+ * Gets the list of tags that are on the given file.
+ * @param file 
+ */
+export function tagsOnFile(file: PartialFile): string[] {
+    let tags = keys(file.tags);
+    return tags;
+}
+
+/**
+ * Gets the specified tag value from the specified file.
+ * @param file The file that the tag should be retrieved from.
+ * @param tag The tag to retrieve.
+ */
+export function getTag(file: PartialFile, tag: string) {
+    return file.tags[tag];
+}
+
+/**
+ * Gets the specified tag from the specified file.
+ * @param file The file that the tag should be retrieved from.
+ * @param tag The tag to retrieve.
+ */
+export function getFileTag(file: File, tag: string) {
+    return getTag(file, tag);
 }
 
 /**
@@ -418,29 +465,36 @@ export function newSelectionId() {
  * @param id 
  * @param tags 
  */
-export function createFile(id = uuid(), tags: Object['tags'] = {
-    _position: { x: 0, y: 0, z: 0},
-    _workspace: <string>null
-}) {
-    const file: Object = {id: id, type: 'object', tags: tags};
+export function createFile(id = uuid(), tags: Object['tags'] = {}) {
+    const file: File = {id: id, tags: tags};
 
     return file;
 }
 
 /**
  * Creates a new Workspace with default values.
+ * @param id The ID of the new workspace.
+ * @param builderContextId The tag that should be used for contexts stored on this workspace.
  */
-export function createWorkspace(id = uuid()): Workspace {
+export function createWorkspace(id = uuid(), builderContextId: string = `aux._context_${uuid()}`): Workspace {
     return {
         id: id,
-        type: 'workspace',
-        position: {x: 0, y: 0, z: 0},
-        size: 1,
-        grid: {},
-        scale: DEFAULT_WORKSPACE_SCALE,
-        defaultHeight: DEFAULT_WORKSPACE_HEIGHT,
-        gridScale: DEFAULT_WORKSPACE_GRID_SCALE,
-        color: DEFAULT_WORKSPACE_COLOR
+        tags: {
+            'aux.builder.context': builderContextId,
+            'aux.builder.context.x': 0,
+            'aux.builder.context.y': 0,
+            'aux.builder.context.z': 0,
+            'aux.builder.context.size': 1,
+            'aux.builder.context.grid': {},
+            'aux.builder.context.scale': DEFAULT_WORKSPACE_SCALE,
+            'aux.builder.context.defaultHeight': DEFAULT_WORKSPACE_HEIGHT,
+            'aux.builder.context.grid.scale': DEFAULT_WORKSPACE_GRID_SCALE,
+            'aux.builder.context.color': DEFAULT_WORKSPACE_COLOR,
+            [builderContextId]: true,
+            [`${builderContextId}.x`]: 0,
+            [`${builderContextId}.y`]: 0,
+            [`${builderContextId}.z`]: DEFAULT_WORKSPACE_HEIGHT
+        }
     };
 }
 
@@ -466,6 +520,88 @@ export function updateFile(file: File, userId: string, newData: PartialFile, cre
             }
         }
     }
+}
+
+/**
+ * Calculates the grid scale for the given workspace.
+ * @param workspace 
+ */
+export function calculateGridScale(calc: FileCalculationContext, workspace: AuxFile, domain: AuxDomain): number {
+    if (workspace) {
+        const scale = calculateNumericalTagValue(calc, workspace, `aux.${domain}.context.scale`, DEFAULT_WORKSPACE_SCALE);
+        const gridScale =  calculateNumericalTagValue(calc, workspace, `aux.${domain}.context.grid.scale`, DEFAULT_WORKSPACE_GRID_SCALE);
+        return scale * gridScale;
+    } else {
+        return DEFAULT_WORKSPACE_SCALE * DEFAULT_WORKSPACE_GRID_SCALE;
+    }
+}
+
+/**
+ * Calculates the difference between the two given states.
+ * In particular, it calculates which operations need to be performed on prev in order to get current.
+ * The returned object contains the files that were added, removed, and/or updated between the two states.
+ * This operation runs in O(n) time where n is the number of files.
+ * @param prev The previous state.
+ * @param current The current state.
+ * @param events If provided, this event will be used to help short-circut the diff calculation to be O(1) whenever the event is a 'file_added', 'file_removed', or 'file_updated' event.
+ */
+export function calculateStateDiff(prev: FilesState, current: FilesState, events?: WeaveReference<AuxOp>[]): FilesStateDiff {
+
+    prev = prev || {};
+    current = current || {};
+
+    // TODO:
+    // if (events && events.length === 1) {
+    //     const event = events[0];
+    //     if (event.atom.value.type === AuxOpType.file) {
+    //         return {
+    //             prev: prev,
+    //             current: current,
+    //             addedFiles: [current[event.id]],
+    //             removedFiles: [],
+    //             updatedFiles: []
+    //         };
+    //     } else if(event.type === 'file_removed') {
+    //         return {
+    //             prev: prev,
+    //             current: current,
+    //             addedFiles: [],
+    //             removedFiles: [prev[event.id]],
+    //             updatedFiles: []
+    //         };
+    //     } else if(event.type === 'file_updated') {
+    //         return {
+    //             prev: prev,
+    //             current: current,
+    //             addedFiles: [],
+    //             removedFiles: [],
+    //             updatedFiles: [current[event.id]]
+    //         };
+    //     }
+    // }
+
+    let diff: FilesStateDiff = {
+        addedFiles: [],
+        removedFiles: [],
+        updatedFiles: []
+    };
+
+    const ids = union(keys(prev), keys(current));
+
+    ids.forEach(id => {
+        const prevVal = prev[id];
+        const currVal = current[id];
+        
+        if (prevVal && !currVal) {
+            diff.removedFiles.push(prevVal.id);
+        } else if(!prevVal && currVal) {
+            diff.addedFiles.push(currVal);
+        } else if(!isEqual(prevVal, currVal)) {
+            diff.updatedFiles.push(currVal);
+        }
+    });
+
+    return diff;
 }
 
 /**
@@ -540,48 +676,213 @@ export function tagMatchesFilter(tag: string, file: Object, eventName: string, c
 }
 
 /**
- * Filters the given list of objects to those matching the given workspace ID and grid position.
- * The returned list is in the order of their indexes.
- * @param objects The objects to filter.
- * @param workspaceId The ID of the workspace that the objects need to be on.
- * @param position The position that the objects need to be at.
+ * Gets the index that the given file is at in the given context.
+ * @param calc The calculation context to use.
+ * @param file The file.
+ * @param workspaceId The context.
  */
-export function objectsAtGridPosition(objects: Object[], workspaceId: string, position: Object['tags']['_position']) {
-    return sortBy(objects.filter(o => {
-        return o.type === 'object' && 
-            o.tags._workspace === workspaceId &&
-            o.tags._position &&
-            o.tags._position.x === position.x &&
-            o.tags._position.y === position.y
-    }), o => o.tags._index || 0);
+export function getFileIndex(calc: FileCalculationContext, file: File, context: string): number {
+    return calculateNumericalTagValue(calc, file, `${context}.index`, 0);
 }
 
 /**
- * Filters the given list of objets to those that are assigned to the given workspace ID.
+ * Gets the position that the given file is at in the given context.
+ * @param calc The calculation context to use.
+ * @param file The file.
+ * @param context The context.
+ */
+export function getFilePosition(calc: FileCalculationContext, file: File, context: string): { x: number, y: number, z: number} {
+    return {
+        x: calculateNumericalTagValue(calc, file, `${context}.x`, 0),
+        y: calculateNumericalTagValue(calc, file, `${context}.y`, 0),
+        z: calculateNumericalTagValue(calc, file, `${context}.z`, 0)
+    };
+}
+
+
+/**
+ * Gets the rotation that the given file is at in the given context.
+ * @param calc The calculation context to use.
+ * @param file The file.
+ * @param context The context.
+ */
+export function getFileRotation(calc: FileCalculationContext, file: File, context: string): { x: number, y: number, z: number} {
+    return {
+        x: calculateNumericalTagValue(calc, file, `${context}.rotation.x`, 0),
+        y: calculateNumericalTagValue(calc, file, `${context}.rotation.y`, 0),
+        z: calculateNumericalTagValue(calc, file, `${context}.rotation.z`, 0)
+    };
+}
+
+/**
+ * Gets a value from the given context file related to the given domain.
+ * @param calc The calculation context.
+ * @param contextFile The file that represents the context.
+ * @param domain The domain.
+ * @param name The name of the value to get.
+ */
+export function getContextValue(calc: FileCalculationContext, contextFile: File, domain: string, name: string): any {
+    return calculateFileValue(calc, contextFile, `aux.${domain}.context.${name}`);
+}
+
+/**
+ * Gets whether the given file is stackable.
+ * @param calc The calculation context.
+ * @param file The file to check.
+ */
+export function isFileStackable(calc: FileCalculationContext, file: File): boolean {
+    return calculateBooleanTagValue(calc, file, 'aux.stackable', true);
+}
+
+/**
+ * Gets whether the given file is movable.
+ * @param calc The calculation context.
+ * @param file The file to check.
+ */
+export function isFileMovable(calc: FileCalculationContext, file: File): boolean {
+    return calculateBooleanTagValue(calc, file, 'aux.movable', true);
+}
+
+/**
+ * Gets the position that the context should be at using the given file.
+ * @param calc The calculation context to use.
+ * @param contextFile The file that represents the context.
+ * @param domain The domain.
+ */
+export function getContextPosition(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): { x: number, y: number, z: number } {
+    return {
+        x: calculateNumericalTagValue(calc, contextFile, `aux.${domain}.context.x`, 0),
+        y: calculateNumericalTagValue(calc, contextFile, `aux.${domain}.context.y`, 0),
+        z: calculateNumericalTagValue(calc, contextFile, `aux.${domain}.context.z`, 0)
+    };
+}
+
+/**
+ * Gets whether the context is minimized.
+ * @param calc The calculation context to use.
+ * @param contextFile The file that represents the context.
+ * @param domain The domain.
+ */
+export function getContextMinimized(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): boolean {
+    return getContextValue(calc, contextFile, domain, 'minimized');
+}
+
+/**
+ * Gets the color of the context.
+ * @param calc The calculation context to use.
+ * @param contextFile The file that represents the context.
+ * @param domain The domain.
+ */
+export function getContextColor(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): string {
+    return getContextValue(calc, contextFile, domain, 'color');
+}
+
+/**
+ * Gets the size of the context.
+ * @param calc The calculation context to use.
+ * @param contextFile The file that represents the context.
+ * @param domain The domain.
+ */
+export function getContextSize(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): number {
+    return getContextValue(calc, contextFile, domain, 'size');
+}
+
+/**
+ * Gets the grid of the context.
+ * @param calc The calculation context to use.
+ * @param contextFile The file that represents the context.
+ * @param domain The domain.
+ */
+export function getContextGrid(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): File['tags']['aux.builder.context.grid'] {
+    return getContextValue(calc, contextFile, domain, 'grid');
+}
+
+
+/**
+ * Gets the grid scale of the context.
+ * @param calc The calculation context to use.
+ * @param contextFile The file that represents the context.
+ * @param domain The domain.
+ */
+export function getContextGridScale(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): number {
+    return getContextValue(calc, contextFile, domain, 'grid.scale');
+}
+
+/**
+ * Gets the scale of the context.
+ * @param calc The calculation context to use.
+ * @param contextFile The file that represents the context.
+ * @param domain The domain.
+ */
+export function getContextScale(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): number {
+    return getContextValue(calc, contextFile, domain, 'scale') || DEFAULT_WORKSPACE_SCALE;
+}
+
+/**
+ * Gets the default height of the context.
+ * @param calc The calculation context to use.
+ * @param contextFile The file that represents the context.
+ * @param domain The domain.
+ */
+export function getContextDefaultHeight(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): number {
+    return getContextValue(calc, contextFile, domain, 'defaultHeight');
+}
+
+/**
+ * Filters the given list of objects to those matching the given workspace ID and grid position.
+ * The returned list is in the order of their indexes.
+ * @param calc The file calculation context to use.
+ * @param context The ID of the context that the objects need to be on.
+ * @param position The position that the objects need to be at.
+ */
+export function objectsAtContextGridPosition(calc: FileCalculationContext, context: string, position: { x: number, y: number }): File[] {
+    const objects = calc.objects;
+    return <File[]>sortBy(objects.filter(o => {
+        if (isFileInContext(calc, o, context)) {
+            const pos = getFilePosition(calc, o, context);
+            return pos && 
+                position.x === pos.x &&
+                position.y === pos.y;
+        }
+        return false;
+    }), o => getFileIndex(calc, o, context));
+}
+
+/**
+ * Filters the given list of objects to those that are assigned to the given workspace ID.
  * @param objects The objects to filter.
  * @param workspaceId The ID of the workspace that the objects need to be on,
  */
 export function objectsAtWorkspace(objects: Object[], workspaceId: string) {
     return objects.filter(o => {
-        return o.type === 'object' && o.tags._workspace === workspaceId;
+        return o.tags._workspace === workspaceId;
     });
 }
 
 /**
  * Duplicates the given file and returns a new file with a new ID but the same tags.
- * The file will be exactly the same as the previous except for 2 things.
+ * The file will be exactly the same as the previous except for 3 things.
  * First, it will have a different ID.
  * Second, it will never be marked as destroyed.
+ * Third, it will not have any well known tags. (see isTagWellKnown())
  * @param file The file to duplicate.
  * @param data The optional data that should override the existing file data.
  */
 export function duplicateFile(file: Object, data?: PartialFile): Object {
-    let newFile = merge(file, data || {}, {
+    let copy = cloneDeep(file);
+    const tags = tagsOnFile(copy);
+    const tagsToRemove = tags.filter(t => isTagWellKnown(t));
+    tagsToRemove.forEach(t => {
+        delete copy.tags[t];
+    });
+
+    let newFile = merge(copy, data || {}, {
         tags: {
             _destroyed: null
         }
     });
     newFile.id = uuid();
+
     return <Object>cleanFile(newFile);
 }
 
@@ -646,7 +947,6 @@ export function getUserMode(object: Object): UserMode {
     return object.tags._mode || DEFAULT_USER_MODE;
 }
 
-
 /**
  * Calculates the value of the given tag on the given file. If the result is not a number, then the given default value
  * is returned.
@@ -663,6 +963,46 @@ export function calculateNumericalTagValue(context: FileCalculationContext, file
         }
     }
     return defaultValue
+}
+
+/**
+ * Calculates the value of the given tag on the given file. If the result is not a boolean, then the given default value is returned.
+ * @param context The context.
+ * @param file The file.
+ * @param tag The tag.
+ * @param defaultValue The default value to use.
+ */
+export function calculateBooleanTagValue(context: FileCalculationContext, file: Object, tag: string, defaultValue: boolean): boolean {
+    if (typeof file.tags[tag] !== 'undefined') {
+        const result = calculateFileValue(context, file, tag);
+        if (typeof result === 'boolean' && result !== null) {
+            return result;
+        }
+    }
+    return defaultValue
+}
+
+/**
+ * Returns wether or not the given file resides in the given context id.
+ * @param context The file calculation context to run formulas with.
+ * @param file The file.
+ * @param contextId The id of the context that we are asking if the file is in.
+ */
+export function isFileInContext(context: FileCalculationContext, file: Object, contextId: string): boolean {
+    if (!contextId) return false;
+
+    if (file.tags._user) {
+        const result = calculateFileValue(context, file, '_userContext');
+        return result == contextId;
+    } else {
+        const result = calculateFileValue(context, file, contextId);
+
+        if (typeof result === 'string') {
+            return result === 'true';
+        } else {
+            return result === true;
+        }
+    }
 }
 
 function _parseFilterValue(value: string): any {
@@ -722,7 +1062,6 @@ function _formatValue(value: any): string {
 }
 
 function _calculateValue(context: FileCalculationContext, object: any, tag: string, formula: string): any {
-    const isString = typeof formula === 'string';
     if (isFormula(formula)) {
         const result = _calculateFormulaValue(context, object, tag, formula);
         if (result.success) {
@@ -787,10 +1126,18 @@ class SandboxInterfaceImpl implements SandboxInterface {
       return _singleOrArray(filtered);
     }
 
-    list(obj: any) {
-        const position = obj._position;
-        const workspace = obj._workspace;
-        const objs = objectsAtGridPosition(this.objects, workspace, position);
+    list(obj: any, context: string) {
+        if (!context) {
+            return [];
+        }
+        const x: number = obj[`${context}.x`];
+        const y: number = obj[`${context}.y`];
+
+        if (typeof x !== 'number' || typeof y !== 'number') {
+            return [];
+        }
+
+        const objs = objectsAtContextGridPosition(this.context, context, { x, y });
         return objs;
     }
 
