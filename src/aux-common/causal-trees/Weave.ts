@@ -36,7 +36,6 @@ export class Weave<TOp extends AtomOp> {
     
     private _atoms: WeaveReference<TOp>[];
     private _sites: SiteMap<TOp>;
-    private _version: number;
 
     /**
      * A map of atom IDs to the total number of atoms that they contain.
@@ -211,7 +210,8 @@ export class Weave<TOp extends AtomOp> {
     }
 
     /**
-     * Gets the total number of children that the given atom contains.
+     * Gets the size of the atom with the given ID.
+     * The size of an atom is defined as the number of children it has plus 1.
      * @param id The ID of the atom to find the size of. If the tree doesn't contain the given reference then undefined is returned.
      */
     getAtomSize(id: AtomId): number {
@@ -241,6 +241,59 @@ export class Weave<TOp extends AtomOp> {
      */
     getHash(): string {
         return getHash(this.atoms);
+    }
+
+    /**
+     * Gets a new weave that contains only the atoms needed to keep the given version consistent.
+     * @param version The version of the weave to get.
+     */
+    getWeft(version: WeaveSiteVersion, preserveChildren: boolean = false): Weave<TOp> {
+        let newWeave = this.copy();
+
+        if (preserveChildren) {
+            // travel from leaf nodes to the root node
+            for (let i = newWeave.atoms.length - 1; i >= 0; i--) {
+                const ref = newWeave.atoms[i];
+                const id = ref.atom.id;
+                const site = id.site;
+                const oldestAllowed = version[site];
+                if (!oldestAllowed || id.timestamp > oldestAllowed) {
+                    // When preserving children,
+                    // we only remove an atom if it has no children.
+                    if (newWeave.getAtomSize(id) === 1) {
+                        newWeave.remove(ref);
+                    }
+                }
+            }
+        } else {
+            for (let i = 0; i < newWeave.atoms.length; i++) {
+                const ref = newWeave.atoms[i];
+                const id = ref.atom.id;
+                const site = id.site;
+                const oldestAllowed = version[site];
+                if (!oldestAllowed || id.timestamp > oldestAllowed) {
+                    newWeave.remove(ref);
+                    i -= 1;
+                }
+            }
+        }
+        newWeave._trimSites();
+
+        return newWeave;
+    }
+
+    /**
+     * Copies this weave and returns the clone.
+     */
+    copy(): Weave<TOp> {
+        let newWeave = new Weave<TOp>();
+        newWeave._atoms = this._atoms.slice();
+        newWeave._sizeMap = new Map(this._sizeMap);
+        newWeave._sites = {};
+        for (let key in this._sites) {
+            newWeave._sites[key] = this._sites[key].slice();
+        }
+        return newWeave;
     }
 
     /**
@@ -360,6 +413,29 @@ export class Weave<TOp extends AtomOp> {
         }
 
         return chain;
+    }
+
+    /**
+     * Trims the site map so that it only contains spaces for atoms that are currently in this weave.
+     * As a result, getVersion() will no longer show the latest timestamp from each site but only 
+     * the latest timestamp that is currently in the site.
+     */
+    private _trimSites() {
+        for (let siteId in this._sites) {
+            let site = this._sites[siteId];
+            let i = site.length;
+            while (i > 0) {
+                if (typeof site[i - 1] !== 'undefined') {
+                    break;
+                }
+                i -= 1;
+            }
+            site.splice(i);
+
+            if (site.length === 0) {
+                delete this._sites[siteId];
+            }
+        }
     }
 
     /**

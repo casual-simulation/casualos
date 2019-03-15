@@ -580,6 +580,116 @@ describe('Weave', () => {
         });
     });
 
+    describe('getWeft()', () => {
+        it('should return a new weave without atoms from excluded sites', () => {
+            const a1 = atom(atomId(1, 1), null, new Op());
+            const a2 = atom(atomId(2, 2), atomId(1, 1), new Op());
+            const a3 = atom(atomId(3, 3), atomId(1, 1), new Op());
+            const a4 = atom(atomId(4, 4), atomId(2, 2), new Op());
+
+            let weave = new Weave();
+            weave.insertMany(a1, a2, a3, a4);
+
+            const newWeave = weave.getWeft({
+                1: 1,
+                2: 2,
+                3: 3
+            });
+
+            expect(newWeave.atoms.map(ref => ref.atom)).toEqual([
+                a1,
+                a3,
+                a2
+            ]);
+            
+            const newVersion = newWeave.getVersion();
+            expect(newVersion.sites).toEqual({
+                1: 1,
+                2: 2,
+                3: 3
+            });
+        });
+
+        it('should preserve causal relationships', () => {
+            const a11 = atom(atomId(1, 1), null, new Op());
+            const a22 = atom(atomId(2, 2), atomId(1, 1), new Op());
+            const a23 = atom(atomId(2, 3), atomId(2, 2), new Op());
+            const a34 = atom(atomId(3, 4), atomId(2, 3), new Op());
+            const a45 = atom(atomId(4, 5), atomId(3, 4), new Op());
+
+            let weave = new Weave();
+            weave.insertMany(a11, a22, a23, a34, a45);
+
+            const newWeave = weave.getWeft({
+                1: 1,
+                2: 2, // cut off a23
+                3: 4,
+                4: 5
+            });
+
+            expect(newWeave.atoms.map(ref => ref.atom)).toEqual([
+                a11,
+                a22,
+                // a34, and a45 get removed because they depend on a23
+            ]);
+            
+            const newVersion = newWeave.getVersion();
+            expect(newVersion.sites).toEqual({
+                1: 1,
+                2: 2
+            });
+        });
+
+        it('should allow preserving children', () => {
+            const a11 = atom(atomId(1, 1), null, new Op());
+            const a22 = atom(atomId(2, 2), atomId(1, 1), new Op());
+            const a23 = atom(atomId(2, 3), atomId(2, 2), new Op());
+            const a34 = atom(atomId(3, 4), atomId(2, 3), new Op());
+            const a35 = atom(atomId(3, 5), atomId(2, 3), new Op());
+            const a46 = atom(atomId(4, 6), atomId(3, 4), new Op());
+
+            let weave = new Weave();
+            weave.insertMany(a11, a22, a23, a34, a35, a46);
+
+            const newWeave = weave.getWeft({
+                1: 1,
+                2: 2, // a34 gets preserved because it is a child of a23
+                3: 4  // and we tell the weave to keep all from site 3 timestamp 4 or earlier
+            }, true);
+
+            expect(newWeave.atoms.map(ref => ref.atom)).toEqual([
+                a11,
+                a22,
+                a23,
+                a34
+            ]);
+            
+            const newVersion = newWeave.getVersion();
+            expect(newVersion.sites).toEqual({
+                1: 1,
+                2: 3,
+                3: 4
+            });
+        });
+    });
+
+    describe('copy()', () => {
+        it('should copy the weave', () => {
+            const a1 = atom(atomId(1, 1), null, new Op());
+            const a2 = atom(atomId(2, 2), atomId(1, 1), new Op());
+            const a3 = atom(atomId(3, 3), atomId(1, 1), new Op());
+            const a4 = atom(atomId(4, 4), atomId(2, 2), new Op());
+
+            let weave = new Weave();
+            weave.insertMany(a1, a2, a3, a4);
+
+            let newWeave = weave.copy();
+
+            expect(newWeave).not.toBe(weave);
+            expect(newWeave).toEqual(weave);
+        });
+    });
+
     describe('getVersion()', () => {
         it('should return an array with the latest timestamps from each site', () => {
             const a1 = atom(atomId(1, 1), null, new Op());
