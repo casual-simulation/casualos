@@ -211,6 +211,9 @@ export abstract class BaseInteractionManager {
     }
 
     protected _isVisible(obj: Object3D) {
+        if (!obj) {
+            return false;
+        }
         while(obj) {
             if (!obj.visible) {
                 return false;
