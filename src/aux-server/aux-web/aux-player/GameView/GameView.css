@@ -17,6 +17,41 @@ html.ar-app .webxr-sessions canvas {
     margin: -16px;
 }
 
+.toolbar {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+}
+
+.toolbar-layout {
+    display: flex;
+    align-items: flex-end;
+    padding: 5px 10px;
+    line-height: 24px;
+    background-color: #fff;
+    color: rgba(0,0,0,0.87);
+    border-radius: 20px;
+    box-shadow: 0 3px 1px -2px rgba(0,0,0,.2), 0 2px 2px 0 rgba(0,0,0,.14), 0 1px 5px 0 rgba(0,0,0,.12);
+}
+
+.toolbar-layout > *:not(:first-child) {
+    margin-left: 5px;
+}
+
+.toolbar-label {
+    align-self: center;
+}
+
+.toolbar-button {
+    margin: 0;
+}
+
+.toolbar-button-icon {
+    vertical-align: middle;
+    stroke: var(--md-theme-default-text-primary-on-accent, #fff);
+    fill: var(--md-theme-default-text-primary-on-accent, #fff);
+}
+
 .vr-button-container {
     margin-left: 16px;
 }

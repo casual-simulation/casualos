@@ -52,10 +52,12 @@ import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { DebugObjectManager } from '../../shared/scene/DebugObjectManager';
 import { AuxFile3DDecoratorFactory } from '../../shared/scene/decorators/AuxFile3DDecoratorFactory';
 import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
+import InventoryFile from '../InventoryFile/InventoryFile';
+import { InventoryContext } from '../InventoryContext';
 
 @Component({
     components: {
-        // 'mini-file': MiniFile
+        'inventory-file': InventoryFile
     }
 })
 export default class GameView extends Vue implements IGameView {
@@ -105,14 +107,15 @@ export default class GameView extends Vue implements IGameView {
     xrSessionInitParameters: any = null;
     vrDisplay: VRDisplay = null;
     vrCapable: boolean = false;
-    selectedRecentFile: Object = null;
+
+    inventoryContext: InventoryContext = null;
 
     @Inject() addSidebarItem: App['addSidebarItem'];
     @Inject() removeSidebarItem: App['removeSidebarItem'];
 
     @Provide() fileRenderer: FileRenderer = new FileRenderer();
 
-    get uiHtmlElements(): HTMLElement[] { return []; }
+    get uiHtmlElements(): HTMLElement[] { return [<HTMLElement>this.$refs.inventory]; }
     get gameView(): HTMLElement { return <HTMLElement>this.$refs.gameView; }
     get canvas() { return this._canvas; }
     get time(): Time { return this._time; }
@@ -144,14 +147,6 @@ export default class GameView extends Vue implements IGameView {
 
     public setGridsVisible(visible: boolean) {
         // This currently does nothing for AUX Player, we dont really show any grids right now.
-    }
-
-    public selectRecentFile(file: Object) {
-        if (!this.selectedRecentFile || this.selectedRecentFile.id !== file.id) {
-            this.selectedRecentFile = file;
-        } else {
-            this.selectedRecentFile = null;
-        }
     }
 
     public async mounted() {
@@ -203,6 +198,10 @@ export default class GameView extends Vue implements IGameView {
 
         if (this._contextGroup) {
             this._contextGroup.frameUpdate(calc);
+        }
+
+        if (this.inventoryContext) {
+            this.inventoryContext.frameUpdate(calc);
         }
 
         this._renderUpdate(xrFrame);
@@ -303,11 +302,17 @@ export default class GameView extends Vue implements IGameView {
             this._fileSubs = [];
         }
 
-        // Dispose of the currnet context group.
+        // Dispose of the current context group.
         if (this._contextGroup) {
             this._contextGroup.dispose();
             this._scene.remove(this._contextGroup);
             this._contextGroup = null;
+        }
+
+        // Dispose of the current inventory context.
+        if (this.inventoryContext) {
+            this.inventoryContext.dispose();
+            this.inventoryContext = null;
         }
 
         // Subscribe to file events.
@@ -316,7 +321,13 @@ export default class GameView extends Vue implements IGameView {
                 const userContextValue = (<Object>file).tags._userContext;
                 if (this._userContext.value !== userContextValue) {
                     this._userContext.next(userContextValue);
-                    console.log('[GameView] Changed user context to: ', userContextValue);
+                    console.log('[GameView] User changed context to: ', userContextValue);
+                }
+
+                const userInventoryContextValue = (<Object>file).tags._userInventoryContext;
+                if (!this.inventoryContext || (this.inventoryContext.context !== userInventoryContextValue)) {
+                    this.inventoryContext = new InventoryContext(userInventoryContextValue);
+                    console.log('[GameView] User changed inventory context to: ', userInventoryContextValue);
                 }
             }))
             .subscribe());
@@ -374,40 +385,41 @@ export default class GameView extends Vue implements IGameView {
 
         if (this._contextGroup) {
             await this._contextGroup.fileAdded(file, calc);
-            await this._fileUpdated(file, true);
-            this.onFileAdded.invoke(file);
         }
+        
+        if (this.inventoryContext) {
+            await this.inventoryContext.fileAdded(file, calc);
+        }
+
+        await this._fileUpdated(file, true);
+        this.onFileAdded.invoke(file);
     }
 
     private async _fileUpdated(file: AuxFile, initialUpdate = false) {
-        if (!file.tags['aux.builder.context']) {
-            if (!initialUpdate) {
-                if (!file.tags._user && file.tags._lastEditedBy === this.fileManager.userFile.id) {
-                    if (this.selectedRecentFile && file.id === this.selectedRecentFile.id) {
-                        this.selectedRecentFile = file;
-                    } else {
-                        this.selectedRecentFile = null;
-                    }
-                }
-            }
-        }
-
+        let calc = this.fileManager.createContext();
         if (this._contextGroup) {
-            let calc = this.fileManager.createContext();
             // TODO: Implement Tag Updates
             this._contextGroup.fileUpdated(file, [], calc);
-    
-            this.onFileUpdated.invoke(file);
         }
+
+        if (this.inventoryContext) {
+            this.inventoryContext.fileUpdated(file, [], calc);
+        }
+
+        this.onFileUpdated.invoke(file);
     }
 
     private _fileRemoved(id: string) {
+        const calc = this.fileManager.createContext();
         if (this._contextGroup) {
-            const calc = this.fileManager.createContext();
             this._contextGroup.fileRemoved(id, calc);
-
-            this.onFileRemoved.invoke(null);
         }
+
+        if (this.inventoryContext) {
+            this.inventoryContext.fileRemoved(id, calc);
+        }
+        
+        this.onFileRemoved.invoke(null);
     }
 
     private _setupScene() {

@@ -449,11 +449,13 @@ export class FileManager {
     this._setStatus('Updating user file...');
     let userFile = this.userFile;
     const userContext = `_user_${appManager.user.username}_${this._aux.tree.site.id}`;
+    const userInventoryContext = `_user_${appManager.user.username}_${this._aux.tree.site.id}_inventory`;
     if (!userFile) {
       await this.createFile(this._appManager.user.username, {
         [userContext]: true,
         ['aux.builder.context']: userContext,
         _user: this._appManager.user.username,
+        _userInventoryContext: userInventoryContext,
         _mode: DEFAULT_USER_MODE,
       });
     }

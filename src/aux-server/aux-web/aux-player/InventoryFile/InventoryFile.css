@@ -1,0 +1,31 @@
+
+.inventory-file {
+    padding: 5px;
+    border-bottom: 1px solid transparent;
+    text-align: center;
+}
+
+.inventory-file:hover {
+    cursor: pointer;
+}
+
+.inventory-file.active {
+    border-bottom: 1px solid #000;
+}
+
+.inventory-file-cube {
+    width: 64px;
+}
+
+.inventory-file-cube .inventory-file-img {
+    background-color: transparent;
+    /* border: 1px solid #000; */
+    height: 64px;
+}
+
+.inventory-file-cube .inventory-file-text {
+    max-width: 100%;
+    max-height: 32px;
+    line-height: 16px;
+    overflow: hidden;
+}
