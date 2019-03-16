@@ -182,7 +182,12 @@ export abstract class BaseInteractionManager {
 
     getDraggableObjects() {
         if (this._draggableObjectsDirty) {
-            this._draggableColliders = flatMap(this._gameView.getContexts(), f => f.colliders).filter(c => this._isVisible(c));
+            const contexts = this._gameView.getContexts();
+            if (contexts && contexts.length > 0) {
+                this._draggableColliders = flatMap(contexts.filter((c) => !!c), f => f.colliders).filter(c => this._isVisible(c));
+            } else {
+                this._draggableColliders = [];
+            }
             this._draggableObjectsDirty = false;
         }
         return this._draggableColliders;
