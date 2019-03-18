@@ -1347,6 +1347,29 @@ describe('FileCalculations', () => {
             });
         });
 
+        it('should return success if filter is empty', () => {
+            let result = parseFilterTag('event()');
+            expect(result).toEqual({
+                success: true,
+                eventName: 'event',
+                filter: null
+            });
+
+            result = parseFilterTag('event( )');
+            expect(result).toEqual({
+                success: true,
+                eventName: 'event',
+                filter: null
+            });
+
+            result = parseFilterTag('event( ab)');
+            expect(result).toEqual({
+                success: false,
+                eventName: 'event',
+                partialSuccess: true
+            });
+        })
+
         it('should return partial success if it was able to parse the event name', () => {
             const result = parseFilterTag('+ (');
             expect(result).toEqual({

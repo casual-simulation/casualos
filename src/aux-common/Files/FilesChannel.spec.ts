@@ -133,6 +133,84 @@ describe('FilesChannel', () => {
                 })
             ]);
         });
+
+        it('should not destroy the files when running a non combine event', () => {
+            const state: FilesState = {
+                thisFile: {
+                    id: 'thisFile',
+                    tags: {
+                        _position: { x:0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        'abcdef(#name:"Joe")': 'copy(this)'
+                    }
+                },
+                thatFile: {
+                    id: 'thatFile',
+                    tags: {
+                        _position: { x:0, y: 0, z: 0 },
+                        _workspace: 'def',
+                        name: 'Joe'
+                    }
+                }
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const fileAction = action('abcdef', ['thisFile', 'thatFile']);
+            const result = calculateActionEvents(state, fileAction);
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+            
+            expect(result.events).toEqual([
+                fileAdded({
+                    id: 'uuid-0',
+                    tags: {
+                        _position: { x:0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        'abcdef(#name:"Joe")': 'copy(this)'
+                    }
+                })
+            ]);
+        });
+
+        it('should run actions when no filter is provided', () => {
+            const state: FilesState = {
+                thisFile: {
+                    id: 'thisFile',
+                    tags: {
+                        _position: { x:0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        'abcdef()': 'copy(this)'
+                    }
+                },
+                thatFile: {
+                    id: 'thatFile',
+                    tags: {
+                        _position: { x:0, y: 0, z: 0 },
+                        _workspace: 'def',
+                        name: 'Joe'
+                    }
+                }
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const fileAction = action('abcdef', ['thisFile', 'thatFile']);
+            const result = calculateActionEvents(state, fileAction);
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+            
+            expect(result.events).toEqual([
+                fileAdded({
+                    id: 'uuid-0',
+                    tags: {
+                        _position: { x:0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        'abcdef()': 'copy(this)'
+                    }
+                })
+            ]);
+        });
     });
 
 });
