@@ -406,6 +406,10 @@ export default class GameView extends Vue implements IGameView {
             this.inventoryContext.fileUpdated(file, [], calc);
         }
 
+        if (file.tags._destroyed) {
+            this._fileRemoved(file.id);
+        }
+
         this.onFileUpdated.invoke(file);
     }
 
