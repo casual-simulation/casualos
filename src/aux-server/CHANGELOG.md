@@ -1,5 +1,23 @@
 # AUX Server Changelog
 
+## V0.3.9
+### Date: 3/18/2019
+
+### Changes:
+- Fixed Aux Player file added event ordering.
+- Reworked actions function to take an arbitrary number of files.
+- Added ability to have tag filters that match everything.
+- Added `shout` formula function.
+    ```
+    shout(eventName)
+    ```
+- Added `goToContext` formula function.
+    ```
+    goToContext(simulationId, contextId)
+    ```
+- Calling `onClick` action on file that gets clicked by the user in Aux Player.
+- Fixed Aux Player showing destroyed files.
+
 ## V0.3.8
 ### Date: 3/18/2019
 
