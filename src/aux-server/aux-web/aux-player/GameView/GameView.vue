@@ -4,7 +4,18 @@
     <div class="game-canvas" ref="gameView"></div>
     <slot></slot>
     <div class="ui-container">
-      <span v-show="vrDisplay" id="vr-button-container" class="vr-button-container"></span>
+        <div class="toolbar">
+          <span v-show="vrDisplay" id="vr-button-container" class="vr-button-container"></span>
+
+          <div ref="inventory">
+            <div v-if="!vrDisplay && inventoryContext" class="toolbar-layout">
+              <inventory-file v-for="(file, index) in inventoryContext.files" :key="index" 
+                :file="file" 
+                :selected="inventoryContext.selectedFile === file"
+                @click="inventoryContext.selectFile(file)"></inventory-file>
+            </div>
+          </div>
+        </div>
     </div>
   </div>
 </template>

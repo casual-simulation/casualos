@@ -1,5 +1,12 @@
 # AUX Server Changelog
 
+## V0.3.7
+### Date: 3/17/2019
+
+### Changes:
+- Added InventoryContext to hold onto user’s inventory data much in the same way Context3D does (WIP). Ported over some MiniFile stuff from Aux Projector to get inventory display framework up (WIP).
+- Renamed pointOnGrid to pointOnWorkspaceGrid for clarification.
+
 ## V0.3.6
 ### Date: 3/15/2019
 

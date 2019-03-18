@@ -164,7 +164,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      * Calculates the grid location and workspace that the given ray intersects with.
      * @param ray The ray to test.
      */
-    pointOnGrid(calc: FileCalculationContext, ray: Ray) {
+    pointOnWorkspaceGrid(calc: FileCalculationContext, ray: Ray) {
         const raycaster = new Raycaster(ray.origin, ray.direction, 0, Number.POSITIVE_INFINITY);
         const workspaces = this.getSurfaceObjects();
         const hits = raycaster.intersectObjects(workspaces, true);

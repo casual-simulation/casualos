@@ -13,6 +13,7 @@ export interface File {
         _destroyed?: any;
         _user?: string;
         _userContext?: string;
+        _userInventoryContext?: string;
         _mode?: UserMode;
         
         _editingFile?: string;

@@ -51,12 +51,8 @@ html.ar-app .webxr-sessions canvas {
     align-self: center;
 }
 
-.vr-button-container {
-    margin-left: 16px;
-}
-
-.divider {
-    border-left: #333 1px solid;
+.toolbar-button {
+    margin: 0;
 }
 
 .toolbar-button-icon {
@@ -65,8 +61,12 @@ html.ar-app .webxr-sessions canvas {
     fill: var(--md-theme-default-text-primary-on-accent, #fff);
 }
 
-.toolbar-button {
-    margin: 0;
+.vr-button-container {
+    margin-left: 16px;
+}
+
+.divider {
+    border-left: #333 1px solid;
 }
 
 .md-button.md-theme-default.md-fab:not([disabled]).add-button {
