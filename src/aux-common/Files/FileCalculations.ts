@@ -668,9 +668,13 @@ export function tagsMatchingFilter(file: Object, other: Object, eventName: strin
 export function tagMatchesFilter(tag: string, file: Object, eventName: string, context: FileCalculationContext): boolean {
     const parsed = parseFilterTag(tag);
     if(parsed.success && parsed.eventName === eventName) {
-        const calculatedValue = calculateFileValue(context, file, parsed.filter.tag);
-        return calculatedValue === parsed.filter.value ||
+        if (!!parsed.filter) {
+            const calculatedValue = calculateFileValue(context, file, parsed.filter.tag);
+            return calculatedValue === parsed.filter.value ||
             (Array.isArray(parsed.filter.value) && isEqual(file.tags[parsed.filter.tag], parsed.filter.value))
+        } else {
+            return true;
+        }
     }
     return false;
 }
@@ -923,6 +927,19 @@ export function parseFilterTag(tag: string) {
                             tag: tagName,
                             value: finalValue
                         }
+                    };
+                }
+            }
+
+            let lastParen = tag.lastIndexOf(')');
+            if (lastParen > firstParenIndex) {
+                let between = tag.slice(firstParenIndex + 1, lastParen);
+                // Only whitespace is allowed
+                if (/^\s*$/.test(between)) {
+                    return {
+                        success: true,
+                        eventName: eventName,
+                        filter: null
                     };
                 }
             }

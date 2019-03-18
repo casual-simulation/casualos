@@ -1,5 +1,6 @@
 import { File, FileUpdatedEvent, FileEvent, FileAddedEvent, action, FilesState, calculateActionEvents } from "../Files";
 import uuid from 'uuid/v4';
+import { every } from "lodash";
 
 let actions: FileEvent[] = [];
 let state: FilesState = null;
@@ -217,16 +218,23 @@ export function copy(...files: any[]) {
 }
 
 export function combine(first: File | string, second: File | string) {
-    event('+', first, second);
+    event('+', [first, second]);
 }
 
-export function event(name: string, first: File | string, second: File | string) {
+export function event(name: string, files: (File | string)[]) {
     if (!!state) {
-        let firstId: string = typeof first === 'string' ? first : first.id;
-        let secondId: string = typeof second === 'string' ? second : second.id;
-        let results = calculateActionEvents(state, action(firstId, secondId, name));
+        let ids = !!files ? files.map(f => typeof f === 'string' ? f : f.id) : null;
+        let results = calculateActionEvents(state, action(name, ids));
         actions.push(...results.events);
     }
+}
+
+/**
+ * Shouts the given event to every file.
+ * @param name The event name.
+ */
+export function shout(name: string) {
+    event(name, null);
 }
 
 export default {
@@ -243,5 +251,6 @@ export default {
     copy,
     create,
     combine,
-    event
+    event,
+    shout
 };
