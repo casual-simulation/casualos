@@ -237,6 +237,10 @@ export function shout(name: string) {
     event(name, null);
 }
 
+export function goToContext(simulationId: string, context: string) {
+    window.location.pathname = `${simulationId}/${context}`;
+}
+
 export default {
     sum,
     avg,
@@ -252,5 +256,6 @@ export default {
     create,
     combine,
     event,
-    shout
+    shout,
+    goToContext
 };
