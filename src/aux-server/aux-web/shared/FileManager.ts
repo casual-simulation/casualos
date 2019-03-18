@@ -287,7 +287,7 @@ export class FileManager {
     console.log('[FileManager] Run event:', eventName, 'on files:', sender, receiver);
 
     // Calculate the events on a single client and then run them in a transaction to make sure the order is right.
-    const actionData = action(sender.id, receiver.id, eventName);
+    const actionData = action(eventName, [sender.id, receiver.id]);
     const result = calculateActionEvents(this._aux.tree.value, actionData);
 
     this._aux.tree.addEvents(result.events);
