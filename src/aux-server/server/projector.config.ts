@@ -9,6 +9,7 @@ const config: ClientConfig = {
         'projector.filesimulator.com',
         'projector.*.filesimulator.com',
         'projector.localhost',
+        'auxbuilder.com',
         'localhost'
     ]
 };

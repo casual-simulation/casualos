@@ -1,5 +1,11 @@
 # AUX Server Changelog
 
+## V0.3.8
+### Date: 3/18/2019
+
+### Changes:
+- Changed configurations to allow auxplayer.com and auxbuilder.com
+
 ## V0.3.7
 ### Date: 3/17/2019
 

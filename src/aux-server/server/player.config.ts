@@ -7,7 +7,8 @@ const config: ClientConfig = {
     domains: [
         'player.filesimulator.com',
         'player.*.filesimulator.com',
-        'player.localhost'
+        'auxplayer.com',
+        'player.localhost',
     ]
 };
 
