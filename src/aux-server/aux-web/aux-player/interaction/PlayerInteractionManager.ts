@@ -7,6 +7,8 @@ import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import GameView from '../GameView/GameView';
 import { GameObject } from '../../shared/scene/GameObject';
+import { AuxFile3D } from '../../shared/scene/AuxFile3D';
+import { appManager } from '../../shared/AppManager';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
 
@@ -18,6 +20,11 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     }
 
     createGameObjectClickOperation(gameObject: GameObject, hit: Intersection): IOperation {
+
+        if (gameObject instanceof AuxFile3D) {
+            appManager.fileManager.action('onClick', [gameObject.file]);
+        }
+
         return null;
     }
 

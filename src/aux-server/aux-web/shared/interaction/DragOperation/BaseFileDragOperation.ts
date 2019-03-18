@@ -85,7 +85,7 @@ export abstract class BaseFileDragOperation implements IOperation {
     protected _disposeCore() {
         // Combine files.
         if (this._combine && this._other) {
-            appManager.fileManager.action(this._file, this._other, '+');
+            appManager.fileManager.action('+', [this._file, this._other]);
         }
     }
 
