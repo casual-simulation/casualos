@@ -121,7 +121,7 @@ export class AppManager {
         const state: StoredCausalTree<AuxOp> = JSON.parse(json);
         if (state.site && state.knownSites && state.weave) {
             console.log('[AppManager] Importing Weave.');
-            const results = this.fileManager.aux.tree.importWeave(state.weave);
+            const results = this.fileManager.aux.tree.importWeave(state.weave, false);
             console.log(`[AppManager] Added ${results.length} atoms.`);
         } else {
             console.log('[AppManager] Old file detected, adding state.');
