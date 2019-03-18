@@ -46,7 +46,7 @@ describe('FilesChannel', () => {
 
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
-            const fileAction = action('thisFile', 'thatFile', '+');
+            const fileAction = action('+', ['thisFile', 'thatFile']);
             const result = calculateActionEvents(state, fileAction);
 
             expect(result.hasUserDefinedEvents).toBe(true);
@@ -101,7 +101,7 @@ describe('FilesChannel', () => {
 
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
-            const fileAction = action('thisFile', 'thatFile', '+');
+            const fileAction = action('+', ['thisFile', 'thatFile']);
             const result = calculateActionEvents(state, fileAction);
 
             expect(result.hasUserDefinedEvents).toBe(true);

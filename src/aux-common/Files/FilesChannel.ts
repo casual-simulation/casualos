@@ -1,4 +1,4 @@
-import {filter, values, union, keys, isEqual, transform, set, mergeWith, unset, get, sortBy} from 'lodash';
+import {filter, values, union, keys, isEqual, transform, set, mergeWith, unset, get, sortBy, flatMap} from 'lodash';
 import {
     map as rxMap,
     flatMap as rxFlatMap,
@@ -37,29 +37,30 @@ export interface DiffOptions {
  */
 export function calculateActionEvents(state: FilesState, action: Action) {
     const objects = getActiveObjects(state);
-    const sender = <Object>state[action.senderFileId];
-    const receiver = <Object>state[action.receiverFileId];
+    const files = !!action.fileIds ? action.fileIds.map(id => state[id]) : objects;
     const context = createCalculationContext(objects);
-    const firstEvents = eventActions(state, objects, context, sender, receiver, action.eventName);
-    const secondEvents = eventActions(state, objects, context, receiver, sender, action.eventName);
-    const events = [
-        ...firstEvents,
-        ...secondEvents,
-        fileUpdated(sender.id, {
-            tags: {
-                _destroyed: true
-            }
-        }),
-        fileUpdated(receiver.id, {
-            tags: {
-                _destroyed: true
-            }
-        })
-    ];
+    const fileEvents = flatMap(files, (f, index) => eventActions(
+        state, 
+        objects, 
+        context, 
+        f, 
+        (files.length > 1 && index === 0) ? files[1] : files[0], 
+        action.eventName));
+    const events = fileEvents;
+    
+    if (action.eventName === '+') {
+        events.push(
+            ...files.map(f => fileUpdated(f.id, {
+                tags: {
+                    _destroyed: true
+                }
+            }))
+        );
+    }
 
     return {
         events,
-        hasUserDefinedEvents: firstEvents.length > 0 || secondEvents.length > 0
+        hasUserDefinedEvents: fileEvents.length > 0
     };
 }
 
@@ -151,15 +152,10 @@ export interface Action {
     type: 'action';
 
     /**
-     * The file that is "sending" the event.
-     * 
+     * The IDs of the files that the event is being sent to.
+     * If null, then the action is sent to every file.
      */
-    senderFileId: string;
-
-    /**
-     * The file that is "receiving" the event.
-     */
-    receiverFileId: string;
+    fileIds: string[] | null;
 
     /**
      * The name of the event.
@@ -197,11 +193,10 @@ export function transaction(events: FileEvent[]): FileTransactionEvent {
     };
 }
 
-export function action(senderFileId: string, receiverFileId: string, eventName: string): Action {
+export function action(eventName: string, fileIds: string[] = null): Action {
     return {
         type: 'action',
-        senderFileId,
-        receiverFileId,
+        fileIds,
         eventName,
     };
 }
