@@ -48,15 +48,6 @@ export function calculateActionEvents(state: FilesState, action: Action) {
         action.eventName));
     const events = fileEvents;
     
-    if (action.eventName === '+') {
-        events.push(
-            ...files.map(f => fileUpdated(f.id, {
-                tags: {
-                    _destroyed: true
-                }
-            }))
-        );
-    }
 
     return {
         events,

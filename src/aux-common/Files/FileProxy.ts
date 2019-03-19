@@ -98,11 +98,15 @@ function _createProxyHandler(calc: FileCalculationContext, tags: any, setValue: 
             
             if (val) {
                 if (target.tags && typeof val === 'string') {
-                    val = calculateFileValue(calc, target, nextProps);
+                    val = calculateFileValue(calc, target, nextProps || property.toString());
                 }
 
                 nextProps = null;
                 nextTags = val;
+            }
+
+            if (fullProps === 'id') {
+                return val;
             }
 
             if (typeof val === 'boolean') {
