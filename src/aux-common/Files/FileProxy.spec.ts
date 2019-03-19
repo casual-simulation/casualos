@@ -1,6 +1,7 @@
 import { createFile, createCalculationContext } from "./FileCalculations";
 import { createFileProxy, isProxy, proxyObject } from './FileProxy';
 import { keys } from 'lodash';
+import { FileEvent } from ".";
 
 describe('FileProxy', () => {
     describe('createFileProxy()', () => {
@@ -167,6 +168,48 @@ describe('FileProxy', () => {
                 'id',
                 'abc',
                 'def'
+            ]);
+        });
+
+        it('should support the in operator', () => {
+            const file = createFile('testId');
+            file.tags.abc = 1;
+            
+            const context = createCalculationContext([file]);
+            const proxy = createFileProxy(context, file);
+            expect('abc' in proxy).toBe(true);
+            expect('zed' in proxy).toBe(false);
+        });
+
+        it('should call a function when a value was set', () => {
+            const file = createFile('testId');
+            file.tags.abc = 1;
+            
+            let tags: string[] = [];
+            let vals: string[] = [];
+
+            const context = createCalculationContext([file]);
+            const proxy = createFileProxy(context, file, (tag, e) => {
+                tags.push(tag);
+                vals.push(e);
+            });
+
+            proxy.abc = 2;
+            proxy.cool.stuff = 'hi';
+            proxy.pretty.neat.ability = {
+                test: 'hello'
+            };
+
+            expect(tags).toEqual([
+                'abc',
+                'cool.stuff',
+                'pretty.neat.ability'
+            ]);
+
+            expect(vals).toEqual([
+                2,
+                'hi',
+                { test: 'hello' }
             ]);
         });
     });
