@@ -292,7 +292,7 @@ export class AppManager {
                 this._user.channelId = channelId;
                 await this._fileManager.init(channelId);
                 this._userSubject.next(this._user);
-                this._saveUser();
+                await this._saveUser();
                 return true;
             } else {
                 Sentry.addBreadcrumb({
