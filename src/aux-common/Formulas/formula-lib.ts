@@ -1,6 +1,7 @@
 import { File, FileUpdatedEvent, FileEvent, FileAddedEvent, action, FilesState, calculateActionEvents } from "../Files";
 import uuid from 'uuid/v4';
 import { every } from "lodash";
+import { isProxy, proxyObject } from "../Files/FileProxy";
 
 let actions: FileEvent[] = [];
 let state: FilesState = null;
@@ -190,7 +191,7 @@ export function copy(...files: any[]) {
     let id = uuid();
 
     let originals = files.map(f => {
-        return (f && f._converted && f._original) ? f._original.tags : f;
+        return (f && f[isProxy]) ? f[proxyObject].tags : f;
     });
 
     let newFile = {

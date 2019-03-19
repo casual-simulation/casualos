@@ -12,13 +12,15 @@ describe('FileProxy', () => {
             expect(proxy).not.toBe(file);
         });
 
-        it('should be able to return the original file', () => {
+        it('should be able to return the original data', () => {
             const file = createFile('testId');
+            file.tags.test = 'hello';
+
             const context = createCalculationContext([file]);
             const proxy = createFileProxy(context, file);
 
-            
             expect(proxy[proxyObject]).toBe(file);
+            expect(proxy.test[proxyObject]).toBe('hello');
         });
 
         it('should support Symbol.toPrimitive', () => {
@@ -33,9 +35,7 @@ describe('FileProxy', () => {
             expect(pVal[Symbol.toPrimitive]('default')).toBe(100);
             
             const val = pVal[proxyObject];
-            expect(val instanceof Number).toBe(true);
-            expect(val).not.toBe(100);
-            expect(val == 100).toBe(true);
+            expect(val).toBe(100);
         });
 
         it('should support valueOf() on primitives', () => {

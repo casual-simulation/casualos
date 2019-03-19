@@ -39,7 +39,15 @@ function _createProxyHandler(calc: FileCalculationContext, tags: any, props?: st
                 if (property === isProxy) {
                     return true;
                 } else if (property === proxyObject) {
-                    return target;
+                    if (target instanceof Number) {
+                        return target.valueOf();
+                    } else if (target instanceof Boolean) {
+                        return target.valueOf();
+                    } else if (target instanceof String) {
+                        return target.valueOf();
+                    } else {
+                        return target;
+                    }
                 } else if (property === Symbol.toPrimitive) {
                     return function (hint: string) {
                         if (target instanceof Number) {

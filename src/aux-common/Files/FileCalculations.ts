@@ -16,6 +16,7 @@ import {
     cloneDeep
 } from 'lodash';
 import { Sandbox, SandboxLibrary } from '../Formulas/Sandbox';
+import { isProxy, createFileProxy, proxyObject } from './FileProxy';
 
 /// <reference path="../typings/global.d.ts" />
 import formulaLib from '../Formulas/formula-lib';
@@ -235,7 +236,7 @@ export function isNumber(value: string): boolean {
 }
 
 export function isFormulaObject(object: any) {
-    return !!object._converted;
+    return object[isProxy];
 }
 
 /**
@@ -608,30 +609,11 @@ export function calculateStateDiff(prev: FilesState, current: FilesState, events
  * Creates a new object that contains the tags that the given object has
  * and is usable in a formula.
  */
-export function convertToFormulaObject(context: FileCalculationContext, object: any) {
+export function convertToFormulaObject(context: FileCalculationContext, object: File) {
     if (isFormulaObject(object)) {
         return object;
     }
-    let converted: {
-        [tag: string]: any
-    } = {
-        _converted: true,
-        _original: object,
-        id: object.id
-    };
-    for(let key in object.tags) {
-        if (typeof converted[key] === 'undefined') {
-            const val = object.tags[key];
-            if(containsFormula(val)) {
-                Object.defineProperty(converted, key, {
-                    get: () => _calculateValue(context, object, key, val)
-                });
-            } else {
-                converted[key] = _calculateValue(context, object, key, val);
-            }
-        }
-    }
-    return converted;
+    return createFileProxy(context, object);
 }
 
 /**
@@ -1104,11 +1086,21 @@ function _calculateValue(context: FileCalculationContext, object: any, tag: stri
 }
 
 function _calculateFormulaValue(context: FileCalculationContext, object: any, tag: string, formula: string) {
-    return context.sandbox.run(formula, {
+    const result = context.sandbox.run(formula, {
         formula,
         tag,
         context
     }, convertToFormulaObject(context, object));
+
+    // Unwrap the proxy object
+    if (result.success && result.result && result.result[isProxy]) {
+        return {
+            ...result,
+            result: result.result[proxyObject]
+        };
+    }
+
+    return result;
 }
 
 function _singleOrArray<T>(values: T[]) {
