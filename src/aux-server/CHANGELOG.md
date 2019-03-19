@@ -4,13 +4,14 @@
 ### Date: 3/19/2019
 
 ### Changes:
-- Bugs
+- Bug Fixes
     - Fixed dragging worksurfaces while in files mode.
     - Fixed an issue in Aux Player that caused a file to still be visible even if it was destroyed.
     - Fixed a login issue that would cause the user to get stuck in a redirect loop.
     - Fixed shouts.
     - Fixed AUX File upload to overwrite existing state instead of trying to merge the two trees.
         - This allows us to keep better consistency across multiple devices.
+    - Fixed user labels.
 - Formula Improvements
     - Improved formulas allow using normal dot syntax for tags with dots in them.
         - This means you can now do `this.aux.color` instead of `this['aux.color']`
