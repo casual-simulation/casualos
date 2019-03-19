@@ -239,7 +239,23 @@ export function shout(name: string) {
     event(name, null);
 }
 
-export function goToContext(simulationId: string, context: string) {
+/**
+ * Redirects the user to a context in the given simulation and context.
+ * @param simulationId The ID of the simulation to go to.
+ * @param context The context to go to. If not provided then the simulation ID will be used as the context.
+ */
+export function goToContext(simulationId: string, context?: string) {
+    if (!context) {
+        // Go to context in same simulation
+        context = simulationId;
+        
+        // Grab the simulation ID from the current URL.
+        // pathname always starts with a '/' so the first part is actually the second
+        // element.
+        simulationId = window.location.pathname.split('/')[1];
+    }
+
+    // Go to context and simulation
     window.location.pathname = `${simulationId}/${context}`;
 }
 
