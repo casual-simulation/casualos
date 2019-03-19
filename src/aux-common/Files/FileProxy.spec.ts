@@ -186,7 +186,7 @@ describe('FileProxy', () => {
             file.tags.abc = 1;
             
             let tags: string[] = [];
-            let vals: string[] = [];
+            let vals: any[] = [];
 
             const context = createCalculationContext([file]);
             const proxy = createFileProxy(context, file, (tag, e) => {
@@ -210,6 +210,63 @@ describe('FileProxy', () => {
                 2,
                 'hi',
                 { test: 'hello' }
+            ]);
+        });
+
+        it('should set the value on the tags', () => {
+            const file = createFile('testId');
+            file.tags.abc = 1;
+            
+            let tags: string[] = [];
+            let vals: any[] = [];
+
+            const context = createCalculationContext([file]);
+            const proxy = createFileProxy(context, file, (tag, e) => {
+                tags.push(tag);
+                vals.push(e);
+            });
+
+            proxy.abc = 2;
+            proxy.cool.stuff = 'hi';
+            
+            expect(proxy.abc.valueOf()).toBe(2);
+            expect(proxy.cool.stuff.valueOf()).toBe('hi');
+        });
+
+        // TODO: Fix so that only the property
+        // that needs to be set on the final tags object
+        // is sent to the setValue function.
+        // Also make it so that the original tags object is not modified.
+        it.skip('should handle setting values on nested objects', () => {
+            const file = createFile('testId');
+            file.tags['abc.def'] = {
+                ghi: 15,
+                zzz: true
+            };
+            
+            let tags: string[] = [];
+            let vals: any[] = [];
+
+            const context = createCalculationContext([file]);
+            const proxy = createFileProxy(context, file, (tag, e) => {
+                tags.push(tag);
+                vals.push(e);
+            });
+
+            proxy.abc.def.ghi = 2;
+            proxy.abc.def.zzz = 'hi';
+            
+            expect(proxy.abc.def.ghi.valueOf()).toBe(2);
+            expect(proxy.abc.def.zzz.valueOf()).toBe('hi');
+            expect(file.tags['abc.def'].ghi).toBe(15);
+            expect(file.tags['abc.def'].zzz).toBe(true);
+            expect(tags).toEqual([
+                'abc.def',
+                'abc.def'
+            ]);
+            expect(vals).toEqual([
+                2,
+                'hi'
             ]);
         });
     });

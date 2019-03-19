@@ -33,7 +33,7 @@ export function createFileProxy(calc: FileCalculationContext, file: File, setVal
     return <FileProxy>new Proxy(file, _createProxyHandler(calc, file.tags, setValue));
 }
 
-function _createProxyHandler(calc: FileCalculationContext, tags: any, setValue: SetValueHandler, props?: string): ProxyHandler<any> {
+function _createProxyHandler(calc: FileCalculationContext, tags: any, setValue: SetValueHandler, props?: string, fullProps?: string): ProxyHandler<any> {
     return {
         ownKeys: function(target) {
             let props: (string | number | symbol)[] = ['id'];
@@ -44,7 +44,7 @@ function _createProxyHandler(calc: FileCalculationContext, tags: any, setValue: 
             return {
                 enumerable: true,
                 configurable: true,
-                writable: setValue !== null
+                writable: true,
             };
         },
         has: function(target, prop) {
@@ -84,30 +84,31 @@ function _createProxyHandler(calc: FileCalculationContext, tags: any, setValue: 
                 return target[property];
             }
 
-            let fullProp: string = null;
+            let nextProps: string = null;
+            let fullProps = props ? `${props}.${property}` : property.toString();
             let val = target[property];
             if (typeof val === 'undefined') {
-                fullProp = props ? `${props}.${property}` : property.toString();
-                val = target[fullProp];
+                nextProps = props ? `${props}.${property}` : property.toString();
+                val = target[nextProps];
                 if (typeof val === 'undefined') {
-                    val = tags[fullProp];
+                    val = tags[nextProps];
                 }
             }
-
+            
             if (val) {
-                fullProp = null;
+                nextProps = null;
                 nextTags = val;
             }
 
             if (typeof val === 'boolean') {
-                return new Proxy(new Boolean(val), _createProxyHandler(calc, nextTags, setValue, fullProp));
+                return new Proxy(new Boolean(val), _createProxyHandler(calc, nextTags, setValue, nextProps, fullProps));
             } else if (typeof val === 'number') {
-                return new Proxy(new Number(val), _createProxyHandler(calc, nextTags, setValue, fullProp));
+                return new Proxy(new Number(val), _createProxyHandler(calc, nextTags, setValue, nextProps, fullProps));
             } else if (typeof val === 'string') {
-                return new Proxy(new String(val), _createProxyHandler(calc, nextTags, setValue, fullProp));
+                return new Proxy(new String(val), _createProxyHandler(calc, nextTags, setValue, nextProps, fullProps));
             }
 
-            return new Proxy(val || new String(''), _createProxyHandler(calc, nextTags, setValue, fullProp));
+            return new Proxy(val || new String(''), _createProxyHandler(calc, nextTags, setValue, nextProps, fullProps));
         },
         set: function(target, property, value, receiver) {
             if (!setValue) {
@@ -117,10 +118,11 @@ function _createProxyHandler(calc: FileCalculationContext, tags: any, setValue: 
                 return;
             }
             
-            let fullProp: string = props ? `${props}.${property}` : property.toString();
+            let fullProp: string = fullProps ? `${fullProps}.${property}` : property.toString();
+            let actualProp: string = props ? `${props}.${property}` : property.toString();
             setValue(fullProp, value);
 
-            return Reflect.set(tags, property, value, receiver);
+            return Reflect.set(target, actualProp, value, tags);
         },
         apply: function(target: Function, thisArg, args) {
             if (thisArg[isProxy]) {
