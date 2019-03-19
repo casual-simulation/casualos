@@ -280,8 +280,8 @@ describe('FileProxy', () => {
                 'abc.def'
             ]);
             expect(vals).toEqual([
-                2,
-                'hi'
+                { ghi: 2, zzz: true },
+                { ghi: 2, zzz: 'hi' },
             ]);
         });
     });

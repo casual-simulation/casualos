@@ -130,9 +130,16 @@ function _createProxyHandler(calc: FileCalculationContext, tags: any, setValue: 
             
             let actualProp: string = props ? `${props}.${property}` : property.toString();
             let fullProp: string = fullProps ? `${fullProps.join('.')}` : actualProp;
-            setValue(fullProp, value);
 
-            return Reflect.set(target, actualProp, value, tags);
+            const ret = Reflect.set(target, actualProp, value, tags);
+
+            if (fullProp !== actualProp) {
+                setValue(fullProp, Object.assign({}, target));
+            } else {
+                setValue(fullProp, value);
+            }
+
+            return ret;
         },
         apply: function(target: Function, thisArg, args) {
             if (thisArg[isProxy]) {
