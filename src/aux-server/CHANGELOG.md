@@ -22,6 +22,9 @@
         - This means instead of doing `copy(this, { "aux.color": "red" })` you can now do `this.aux.color = "red"`.
         - Additionally, we no longer destroy files by default.
         - This means that the destroy/recreate pattern is basically deprecated. This pattern worked in simple scenarios, but for more complex scenarios it could easily cause race conditions where duplicate files are created because users clicked the same file at the same time.
+- Other Improvements
+    - Improved the `goToContext()` formula function to be able to accept a single parameter that indicates the context to go to.
+        - The function will infer the current simulation ID from the URL.
 
 ## V0.3.10
 ### Date: 3/18/2019
