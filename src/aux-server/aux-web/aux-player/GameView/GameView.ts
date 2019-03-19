@@ -399,11 +399,11 @@ export default class GameView extends Vue implements IGameView {
         let calc = this.fileManager.createContext();
         if (this._contextGroup) {
             // TODO: Implement Tag Updates
-            this._contextGroup.fileUpdated(file, [], calc);
+            await this._contextGroup.fileUpdated(file, [], calc);
         }
 
         if (this.inventoryContext) {
-            this.inventoryContext.fileUpdated(file, [], calc);
+            await this.inventoryContext.fileUpdated(file, [], calc);
         }
 
         if (file.tags._destroyed) {

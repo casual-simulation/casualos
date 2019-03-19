@@ -9,8 +9,9 @@ import { flatMap, map, scan } from 'rxjs/operators';
 import { downloadAuxState, readFileJson } from '../aux-projector/download';
 import { CausalTreeManager } from './causal-trees/CausalTreeManager';
 import { StoredCausalTree } from '@yeti-cgi/aux-common/causal-trees';
-import { AuxOp, FilesState } from '@yeti-cgi/aux-common';
+import { AuxOp, FilesState, AuxCausalTree } from '@yeti-cgi/aux-common';
 import localForage from 'localforage';
+import { difference } from 'lodash';
 
 export interface User {
     email: string;
@@ -119,15 +120,21 @@ export class AppManager {
     async uploadState(file: File): Promise<void> {
         const json = await readFileJson(file);
         const state: StoredCausalTree<AuxOp> = JSON.parse(json);
+        let value: FilesState;
         if (state.site && state.knownSites && state.weave) {
             console.log('[AppManager] Importing Weave.');
-            const results = this.fileManager.aux.tree.importWeave(state.weave, false);
-            console.log(`[AppManager] Added ${results.length} atoms.`);
+            
+            // Don't try to import the tree because it's like trying to
+            // import an unrelated Git repo. Git handles this by allowing
+            // multiple root nodes but we dont allow multiple roots.
+            const tree = <AuxCausalTree>this._treeManager.factory.create('aux', state);
+            value = tree.value;
         } else {
             console.log('[AppManager] Old file detected, adding state.');
-            this.fileManager.addState(<FilesState><unknown>state);
+            value = <FilesState><unknown>state;
         }
-        // this.fileManager.addState(state);
+        
+        this.fileManager.addState(value);
     }
 
     /**
@@ -292,7 +299,7 @@ export class AppManager {
                 this._user.channelId = channelId;
                 await this._fileManager.init(channelId);
                 this._userSubject.next(this._user);
-                this._saveUser();
+                await this._saveUser();
                 return true;
             } else {
                 Sentry.addBreadcrumb({

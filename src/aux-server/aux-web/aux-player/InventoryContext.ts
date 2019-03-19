@@ -31,7 +31,7 @@ export class InventoryContext {
      * @param file The file.
      * @param calc The calculation context that should be used.
      */
-    fileAdded(file: AuxFile, calc: FileCalculationContext) {
+    async fileAdded(file: AuxFile, calc: FileCalculationContext) {
         const isInContext = this.files.indexOf(file) >= 0;
         const shouldBeInContext = this._shouldBeInContext(file, calc);
         if (!isInContext && shouldBeInContext) {
@@ -45,7 +45,7 @@ export class InventoryContext {
      * @param updates The changes made to the file.
      * @param calc The calculation context that should be used.
      */
-    fileUpdated(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
+    async fileUpdated(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
         const isInContext = this.files.indexOf(file) >= 0;
         const shouldBeInContext = this._shouldBeInContext(file, calc);
 

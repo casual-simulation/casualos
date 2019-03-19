@@ -2,7 +2,7 @@ import { Vector2, Vector3, Intersection, Raycaster, Object3D } from 'three';
 import { ContextMenuEvent, ContextMenuAction } from './ContextMenuEvent';
 import { 
     Object,
-    tagsMatchingFilter,
+    filtersMatchingArguments,
     AuxFile,
     FileCalculationContext,
 } from '@yeti-cgi/aux-common';
@@ -209,7 +209,7 @@ export abstract class BaseInteractionManager {
         // TODO: Make this work even if the file is a "workspace"
         if (file && other && !file.tags['aux.builder.context'] && !other.tags['aux.builder.context'] && file.id !== other.id) {
             const context = appManager.fileManager.createContext();
-            const tags = union(tagsMatchingFilter(file, other, '+', context), tagsMatchingFilter(other, file, '+', context));
+            const tags = union(filtersMatchingArguments(context, file, '+', [other]), filtersMatchingArguments(context, other, '+', [file]));
             return tags.length > 0;
         }
         return false;

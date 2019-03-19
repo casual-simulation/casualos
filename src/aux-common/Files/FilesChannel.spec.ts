@@ -30,7 +30,7 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x:0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        '+(#name:"Joe")': 'copy(this)',
+                        '+(#name:"Joe")': 'copy(this);destroy(this);destroy(that);',
                         '+(#name:"Friend")': 'copy(this, { bad: true })',
                     }
                 },
@@ -57,7 +57,7 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x:0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        '+(#name:"Joe")': 'copy(this)',
+                        '+(#name:"Joe")': 'copy(this);destroy(this);destroy(that);',
                         '+(#name:"Friend")': 'copy(this, { bad: true })',
 
                         // the new file is not destroyed
@@ -86,7 +86,7 @@ describe('FilesChannel', () => {
                         _workspace: 'abc',
                         num: 15,
                         formula: '=this.num',
-                        '+(#name:"Friend")': 'copy(this, that, { testFormula: "=this.name" })',
+                        '+(#name:"Friend")': 'copy(this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
                     }
                 },
                 thatFile: {
@@ -114,7 +114,7 @@ describe('FilesChannel', () => {
                         _workspace: 'abc',
                         num: 15,
                         formula: '=this.num',
-                        '+(#name:"Friend")': 'copy(this, that, { testFormula: "=this.name" })',
+                        '+(#name:"Friend")': 'copy(this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
                         name: 'Friend',
                         testFormula: '=this.name'
 
@@ -207,6 +207,64 @@ describe('FilesChannel', () => {
                         _position: { x:0, y: 0, z: 0 },
                         _workspace: 'abc',
                         'abcdef()': 'copy(this)'
+                    }
+                })
+            ]);
+        });
+
+        it('should calculate events from setting property values', () => {
+            const state: FilesState = {
+                thisFile: {
+                    id: 'thisFile',
+                    tags: {
+                        _position: { x:0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        'abcdef()': 'this.val = 10; this.nested.value = true'
+                    }
+                }
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const fileAction = action('abcdef', ['thisFile']);
+            const result = calculateActionEvents(state, fileAction);
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+            
+            expect(result.events).toEqual([
+                fileUpdated('thisFile', {
+                    tags: {
+                        val: 10,
+                        'nested.value': true
+                    }
+                })
+            ]);
+        });
+
+        it('should handle shouts', () => {
+            const state: FilesState = {
+                thisFile: {
+                    id: 'thisFile',
+                    tags: {
+                        _position: { x:0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        'abcdef()': 'shout("sayHello")',
+                        'sayHello()': 'this.hello = true'
+                    }
+                }
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const fileAction = action('abcdef', ['thisFile']);
+            const result = calculateActionEvents(state, fileAction);
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+            
+            expect(result.events).toEqual([
+                fileUpdated('thisFile', {
+                    tags: {
+                        hello: true
                     }
                 })
             ]);

@@ -7,9 +7,10 @@ import {
 } from 'rxjs/operators';
 import { ReducingStateStore, Event, ChannelConnection } from "../channels-core";
 import {File, Object, Workspace, PartialFile} from './File';
-import { tagsMatchingFilter, createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, isDestroyed, getActiveObjects, calculateStateDiff, FilesStateDiff } from './FileCalculations';
+import { createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, isDestroyed, getActiveObjects, calculateStateDiff, FilesStateDiff, filtersMatchingArguments } from './FileCalculations';
 import { merge as mergeObj } from '../utils';
 import { setActions, getActions, setFileState } from '../Formulas/formula-lib';
+import { AnimationActionLoopStyles } from 'three';
 export interface FilesState {
     [id: string]: File;
 }
@@ -41,22 +42,11 @@ export function calculateActionEvents(state: FilesState, action: Action) {
     const context = createCalculationContext(objects);
     const fileEvents = flatMap(files, (f, index) => eventActions(
         state, 
-        objects, 
+        files, 
         context, 
-        f, 
-        (files.length > 1 && index === 0) ? files[1] : files[0], 
+        f,
         action.eventName));
     const events = fileEvents;
-    
-    if (action.eventName === '+') {
-        events.push(
-            ...files.map(f => fileUpdated(f.id, {
-                tags: {
-                    _destroyed: true
-                }
-            }))
-        );
-    }
 
     return {
         events,
@@ -92,21 +82,72 @@ export function cleanFile(file: File): File {
 }
 
 
-function eventActions(state: FilesState, objects: Object[], context: FileCalculationContext, file: Object, other: Object, eventName: string): FileEvent[] {
-    const filters = tagsMatchingFilter(file, other, eventName, context);
-    const scripts = filters.map(f => calculateFileValue(context, other, f));
+function eventActions(state: FilesState, objects: Object[], context: FileCalculationContext, file: Object, eventName: string): FileEvent[] {
+    const otherObjects = objects.filter(o => o !== file);
+    const sortedObjects = sortBy(objects, o => o !== file);
+    const filters = filtersMatchingArguments(context, file, eventName, otherObjects);
+    const scripts = filters.map(f => calculateFileValue(context, file, f.tag));
     let previous = getActions();
     let actions: FileEvent[] = [];
+    let changes: {
+        [key: string]: {
+            changedTags: string[];
+            newValues: string[];
+        }
+    } = {};
+    let vars: {
+        [key: string]: any
+    } = {};
     setActions(actions);
     setFileState(state);
     
-    scripts.forEach(s => context.sandbox.run(s, {}, convertToFormulaObject(context, other), {
-        that: convertToFormulaObject(context, file)
+    sortedObjects.forEach(o => {
+        changes[o.id] = {
+            changedTags: [],
+            newValues: []
+        };
+    });
+
+    const formulaObjects = sortedObjects.map(o => convertToFormulaObject(context, o, (tag, value) => {
+        changes[o.id].changedTags.push(tag);
+        changes[o.id].newValues.push(value);
     }));
+
+    formulaObjects.forEach((obj, index) => {
+        if (index === 1) {
+            vars['that'] = obj;
+        }
+
+        vars[`arg${index}`] = obj;
+    });
+
+    scripts.forEach(s => context.sandbox.run(s, {}, formulaObjects[0], vars));
 
     setActions(previous);
     setFileState(null);
+
+    const updates = sortedObjects.map(o => calculateFileUpdateFromChanges(o.id, changes[o.id].changedTags, changes[o.id].newValues));
+    updates.forEach(u => {
+        if (u) {
+            actions.push(u);
+        }
+    });
+
     return actions;
+}
+
+function calculateFileUpdateFromChanges(id: string, tags: string[], values: any[]): FileUpdatedEvent {
+    if (tags.length === 0) {
+        return null;
+    }
+    let partial: PartialFile = {
+        tags: {}
+    };
+    for(let i = 0; i < tags.length; i++) {
+        partial.tags[tags[i]] = values[i];
+    }
+
+    return fileUpdated(id, partial);
 }
 
 export interface FileAddedEvent extends Event {
