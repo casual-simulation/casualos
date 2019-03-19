@@ -53,6 +53,7 @@ function _createProxyHandler(calc: FileCalculationContext, tags: any, setValue: 
         },
         get: function (target, property) {
             let nextTags = tags;
+            let nextFullProps = fullProps;
             if (typeof property === 'symbol') {
                 if (property === isProxy) {
                     return true;
@@ -100,25 +101,25 @@ function _createProxyHandler(calc: FileCalculationContext, tags: any, setValue: 
                     val = calculateFileValue(calc, target, nextProps || property.toString());
                 }
 
-                fullProps = fullProps ? fullProps.slice() : [];
-                fullProps.push(nextProps || property.toString());
+                nextFullProps = nextFullProps ? nextFullProps.slice() : [];
+                nextFullProps.push(nextProps || property.toString());
                 nextProps = null;
                 nextTags = val;
             }
 
-            if (fullProps && fullProps.length > 0 && fullProps[0] === 'id') {
+            if (nextFullProps && nextFullProps.length > 0 && nextFullProps[0] === 'id') {
                 return val;
             }
 
             if (typeof val === 'boolean') {
-                return new Proxy(new Boolean(val), _createProxyHandler(calc, nextTags, setValue, nextProps, fullProps));
+                return new Proxy(new Boolean(val), _createProxyHandler(calc, nextTags, setValue, nextProps, nextFullProps));
             } else if (typeof val === 'number') {
-                return new Proxy(new Number(val), _createProxyHandler(calc, nextTags, setValue, nextProps, fullProps));
+                return new Proxy(new Number(val), _createProxyHandler(calc, nextTags, setValue, nextProps, nextFullProps));
             } else if (typeof val === 'string') {
-                return new Proxy(new String(val), _createProxyHandler(calc, nextTags, setValue, nextProps, fullProps));
+                return new Proxy(new String(val), _createProxyHandler(calc, nextTags, setValue, nextProps, nextFullProps));
             }
 
-            return new Proxy(val || new String(''), _createProxyHandler(calc, nextTags, setValue, nextProps, fullProps));
+            return new Proxy(val || new String(''), _createProxyHandler(calc, nextTags, setValue, nextProps, nextFullProps));
         },
         set: function(target, property, value, receiver) {
             if (!setValue) {
