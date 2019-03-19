@@ -34,7 +34,7 @@ export function createFileProxy(calc: FileCalculationContext, file: File, setVal
     return <FileProxy>new Proxy(file, _createProxyHandler(calc, cloneDeep(file.tags), setValue));
 }
 
-function _createProxyHandler(calc: FileCalculationContext, tags: any, setValue: SetValueHandler, props?: string, fullProps?: string): ProxyHandler<any> {
+function _createProxyHandler(calc: FileCalculationContext, tags: any, setValue: SetValueHandler, props?: string, fullProps?: string[]): ProxyHandler<any> {
     return {
         ownKeys: function(target) {
             let props: (string | number | symbol)[] = ['id'];
@@ -86,7 +86,6 @@ function _createProxyHandler(calc: FileCalculationContext, tags: any, setValue: 
             }
 
             let nextProps: string = null;
-            let fullProps = props ? `${props}.${property}` : property.toString();
             let val = target[property];
             if (typeof val === 'undefined') {
                 nextProps = props ? `${props}.${property}` : property.toString();
@@ -96,17 +95,18 @@ function _createProxyHandler(calc: FileCalculationContext, tags: any, setValue: 
                 }
             }
             
-            
             if (val) {
                 if (target.tags && typeof val === 'string') {
                     val = calculateFileValue(calc, target, nextProps || property.toString());
                 }
 
+                fullProps = fullProps ? fullProps.slice() : [];
+                fullProps.push(nextProps || property.toString());
                 nextProps = null;
                 nextTags = val;
             }
 
-            if (fullProps === 'id') {
+            if (fullProps && fullProps.length > 0 && fullProps[0] === 'id') {
                 return val;
             }
 
@@ -128,8 +128,8 @@ function _createProxyHandler(calc: FileCalculationContext, tags: any, setValue: 
                 return;
             }
             
-            let fullProp: string = fullProps ? `${fullProps}.${property}` : property.toString();
             let actualProp: string = props ? `${props}.${property}` : property.toString();
+            let fullProp: string = fullProps ? `${fullProps.join('.')}` : actualProp;
             setValue(fullProp, value);
 
             return Reflect.set(target, actualProp, value, tags);

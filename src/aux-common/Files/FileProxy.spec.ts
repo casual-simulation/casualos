@@ -252,7 +252,7 @@ describe('FileProxy', () => {
         // that needs to be set on the final tags object
         // is sent to the setValue function.
         // Also make it so that the original tags object is not modified.
-        it.skip('should handle setting values on nested objects', () => {
+        it('should handle setting values on nested objects', () => {
             const file = createFile('testId');
             file.tags['abc.def'] = {
                 ghi: 15,
