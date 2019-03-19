@@ -11,6 +11,8 @@ import { AuxFile3DDecoratorFactory } from "./decorators/AuxFile3DDecoratorFactor
  */
 export class Context3D extends GameObject {
 
+    static debug: boolean = false;
+
     /**
      * The context that this object represents.
      */
@@ -102,7 +104,9 @@ export class Context3D extends GameObject {
     }
 
     private _addFile(file: AuxFile, calc: FileCalculationContext) {
-        console.log('[Context3D] Add', file.id, 'to context', this.context);
+        if (Context3D.debug) {
+            console.log('[Context3D] Add', file.id, 'to context', this.context);
+        }
         const mesh = new AuxFile3D(file, this.contextGroup, this.context, this.domain, this.colliders, this._decoratorFactory);
         this.files.set(file.id, mesh);
         this.add(mesh);
@@ -111,7 +115,9 @@ export class Context3D extends GameObject {
     }
 
     private _removeFile(id: string) {
-        console.log('[Context3D] Remove', id, 'from context', this.context);
+        if (Context3D.debug) {
+            console.log('[Context3D] Remove', id, 'from context', this.context);
+        }
         const mesh = this.files.get(id);
         if (typeof mesh !== 'undefined') {
             mesh.dispose();

@@ -284,5 +284,31 @@ describe('FileProxy', () => {
                 { ghi: 2, zzz: 'hi' },
             ]);
         });
+
+        it('should support using other properties while setting a value', () => {
+            const file = createFile('testId');
+            file.tags.arr = [0, 1, 2];
+            file.tags.index = 0;
+            
+            let tags: string[] = [];
+            let vals: any[] = [];
+
+            const context = createCalculationContext([file]);
+            const proxy = createFileProxy(context, file, (tag, e) => {
+                tags.push(tag);
+                vals.push(e);
+            });
+
+            proxy.index = proxy.index >= proxy.arr.length - 1 ? 0 : proxy.index + 1;
+            
+            expect(proxy.index.valueOf()).toBe(1);
+            expect(file.tags.index).toBe(0);
+            expect(tags).toEqual([
+                'index',
+            ]);
+            expect(vals).toEqual([
+                1
+            ]);
+        });
     });
 });
