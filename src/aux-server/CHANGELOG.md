@@ -1,5 +1,11 @@
 # AUX Server Changelog
 
+## V0.3.10
+### Date: 3/18/2020
+
+### CHanges:
+- Fixed aux upload.
+
 ## V0.3.9
 ### Date: 3/18/2019
 
