@@ -248,7 +248,7 @@ export class Weave<TOp extends AtomOp> {
      * Returns the list of atoms that were added to the weave.
      * @param atoms The atoms to import into this weave.
      */
-    import(atoms: WeaveReference<TOp>[], checksum: boolean = true): WeaveReference<TOp>[] {
+    import(atoms: WeaveReference<TOp>[]): WeaveReference<TOp>[] {
         
         let newAtoms: WeaveReference<TOp>[] = [];
         let localOffset = 0;
@@ -295,7 +295,7 @@ export class Weave<TOp extends AtomOp> {
                     }
                 }
 
-                let order = this._compareAtoms(a.atom, local.atom, checksum);
+                let order = this._compareAtoms(a.atom, local.atom);
                 if (isNaN(order)) {
                     break;
                 } else if (order === 0) {
@@ -316,7 +316,7 @@ export class Weave<TOp extends AtomOp> {
                         local = this._atoms[i + localOffset];
                     } while(local && a.atom.id.timestamp <= local.atom.cause.timestamp);
                     
-                    order = this._compareAtoms(a.atom, local.atom, checksum);
+                    order = this._compareAtoms(a.atom, local.atom);
                     if (order < 0) {
                         this._atoms.splice(i + localOffset, 0, a);
                         newAtoms.push(a);
@@ -434,11 +434,11 @@ export class Weave<TOp extends AtomOp> {
      * @param first The first atom.
      * @param second The second atom.
      */
-    private _compareAtoms(first: Atom<TOp>, second: Atom<TOp>, checksum: boolean = true): number {
+    private _compareAtoms(first: Atom<TOp>, second: Atom<TOp>): number {
         const cause = this._compareAtomIds(first.cause, second.cause);
         if (cause === 0) {
             let order = this._compareAtomIds(first.id, second.id);
-            if (checksum && order === 0 && first.checksum !== second.checksum) {
+            if (order === 0 && first.checksum !== second.checksum) {
                 return NaN;
             }
             return order;
