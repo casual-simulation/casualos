@@ -10,7 +10,8 @@
     "test": "npm run clean && jest",
     "test:ci": "npm run clean && jest --ci --reporters=default --reporters=jest-junit",
     "clean": "lerna exec -- npm run clean",
-    "debug:server:chrome": "node --inspect src/aux-server/server/dist/main.js"
+    "debug:server:chrome": "node --inspect src/aux-server/server/dist/main.js",
+    "version": "lerna bootstrap --ignore-scripts -- --package-lock-only --no-audit && git add src/*/package-lock.json"
   },
   "devDependencies": {
     "@babel/core": "^7.2.0",
