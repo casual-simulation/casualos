@@ -245,6 +245,7 @@ describe('FileProxy', () => {
             
             expect(proxy.abc.valueOf()).toBe(2);
             expect(proxy.cool.stuff.valueOf()).toBe('hi');
+            expect(file.tags.abc).toBe(1);
         });
 
         // TODO: Fix so that only the property

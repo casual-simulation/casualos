@@ -1,5 +1,6 @@
 import { File, FileTags } from './File';
 import { FileCalculationContext, calculateFileValue } from './FileCalculations';
+import { cloneDeep } from 'lodash';
 
 /**
  * The symbol that can be used to tell if an object represents a proxy.
@@ -30,7 +31,7 @@ export type SetValueHandler = (tag: string, value: any) => any;
  * @param setValue The function that should be called with a file event whenever a value is changed.
  */
 export function createFileProxy(calc: FileCalculationContext, file: File, setValue: SetValueHandler = null): FileProxy {
-    return <FileProxy>new Proxy(file, _createProxyHandler(calc, file.tags, setValue));
+    return <FileProxy>new Proxy(file, _createProxyHandler(calc, cloneDeep(file.tags), setValue));
 }
 
 function _createProxyHandler(calc: FileCalculationContext, tags: any, setValue: SetValueHandler, props?: string, fullProps?: string): ProxyHandler<any> {
