@@ -4,10 +4,9 @@ import {
     Camera,
     PerspectiveCamera,
     CameraHelper,
-    Euler
 } from "three";
 import { Text3D } from "../Text3D";
-import { isFormula, FileCalculationContext, Object, File, AuxObject, AuxFile, getFilePosition, getFileRotation } from '@yeti-cgi/aux-common'
+import { FileCalculationContext, AuxObject } from '@yeti-cgi/aux-common'
 import { appManager } from '../../AppManager';
 import { setLayer, disposeMaterial } from "../SceneUtils";
 import { LayersHelper } from "../LayersHelper";
@@ -77,11 +76,19 @@ export class UserMeshDecorator extends AuxFile3DDecorator {
         this.container = new Object3D();
         this.camera = new PerspectiveCamera(60, 1, 0.1, 0.5);
         this.cameraHelper = new CameraHelper(this.camera);
-        // this.label = new Text3D();
-        // this.cameraHelper.add(this.label);
-        // setLayer(this.label, LayersHelper.Layer_UIWorld);
-        // this.label.setScale(Text3D.defaultScale * 2);
-        // this.label.setRotation(0, 180, 0);
+        this.cameraHelper.updateMatrixWorld(true);
+
+        // Setup label
+        this.label = new Text3D();
+        this.label.setText(this.file3D.file.id);
+        setLayer(this.label, LayersHelper.Layer_UIWorld);
+        this.label.setScale(Text3D.defaultScale * 2);
+        this.label.setWorldPosition(new Vector3(0,0,0));
+        this.label.setRotation(0, 180, 0);
+        this.label.position.add(new Vector3(1.55, 0.25, 0)); // This is hardcoded. To lazy to figure out that math.
+        
+        this.cameraHelper.add(this.label);
+        
         this.container.add(this.cameraHelper);
         this.file3D.display.add(this.camera);
         this.file3D.add(this.container);
@@ -89,7 +96,6 @@ export class UserMeshDecorator extends AuxFile3DDecorator {
 
     fileUpdated(calc: FileCalculationContext): void {
         this._updateCameraMatrix();
-        // this._updateLabel();
         this.cameraHelper.update();
     }
 
@@ -172,22 +178,5 @@ export class UserMeshDecorator extends AuxFile3DDecorator {
         // Three render function does this automatically but there are functions in here that depend
         // on accurate positioning of child objects.
         this.camera.updateMatrixWorld(false);
-    }
-
-    private _updateLabel(): void {
-        let label = this.file3D.file.tags['aux.label'] || this.file3D.file.id;
-
-        if (label) {
-            if (isFormula(label)) {
-                let calculatedValue = appManager.fileManager.calculateFormattedFileValue(this.file3D.file, 'aux.label');
-                this.label.setText(calculatedValue);
-            } else {
-                this.label.setText(<string>label);
-            }
-
-            // this.label.setPositionForObject(this.camera);
-        } else {
-            this.label.setText("");
-        }
     }
 }
