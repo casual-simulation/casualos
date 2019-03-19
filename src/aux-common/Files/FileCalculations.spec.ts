@@ -5,14 +5,14 @@ import {
     updateFile,
     createCalculationContext,
     createFile,
-    tagsMatchingFilter,
+    filtersMatchingArguments,
     calculateFileValue,
     parseFilterTag,
     validateTag,
     fileTags,
     isHiddenTag,
     getActiveObjects,
-    tagMatchesFilter,
+    filterMatchesArguments,
     parseArray,
     duplicateFile,
     doFilesAppearEqual,
@@ -727,37 +727,37 @@ describe('FileCalculations', () => {
         });
     });
 
-    describe('tagsMatchingFilter()', () => {
+    describe('filtersMatchingArguments()', () => {
         it('should return an empty array if no tags match', () => {
             let file = createFile();
             let other = createFile();
             
             const context = createCalculationContext([ file, other ]);
-            const tags = tagsMatchingFilter(file, other, '+', context);
+            const tags = filtersMatchingArguments(context, file, '+', [other]);
 
             expect(tags).toEqual([]);
         });
 
         it('should match based on tag and exact value', () => {
-            let file = createFile();
-            file.tags.name = "Test";
-            file.tags.val = "";
-
             let other = createFile();
-            other.tags['+(#name:"Test")'] = 'abc';
-            other.tags['+(#val:"")'] = 'abc';
-            other.tags['+(#name:"test")'] = 'def';
+            other.tags.name = "Test";
+            other.tags.val = "";
+
+            let file = createFile();
+            file.tags['+(#name:"Test")'] = 'abc';
+            file.tags['+(#val:"")'] = 'abc';
+            file.tags['+(#name:"test")'] = 'def';
             
             const context = createCalculationContext([ file, other ]);
-            const tags = tagsMatchingFilter(file, other, '+', context);
+            const tags = filtersMatchingArguments(context, file, '+', [other]);
 
-            expect(tags).toEqual([
+            expect(tags.map(t => t.tag)).toEqual([
                 '+(#name:"Test")',
                 '+(#val:"")'
             ]);
         });
 
-        it('should only match tags in the "other" file', () => {
+        it('should only match tags in the given file', () => {
             let file = createFile();
             file.tags['+(#name:"Test")'] = 'abc';
 
@@ -765,19 +765,22 @@ describe('FileCalculations', () => {
             other.tags.name = "Test";
             
             const context = createCalculationContext([ file, other ]);
-            const tags = tagsMatchingFilter(file, other, '+', context);
+            const tags = filtersMatchingArguments(context, file, '+', [other]);
 
-            expect(tags).toEqual([]);
+            expect(tags.map(t => t.tag)).toEqual([
+                '+(#name:"Test")'
+            ]);
         });
     });
 
-    describe('tagMatchesFilter()', () => {
+    describe('filterMatchesArguments()', () => {
         it('should match string values', () => {
             let other = createFile();
             other.tags.name = 'test';
 
             const context = createCalculationContext([ other ]);
-            expect(tagMatchesFilter('+(#name:"test")', other, '+', context)).toBe(true);
+            const filter = parseFilterTag('+(#name:"test")');
+            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
         });
 
         it('should match number values', () => {
@@ -785,23 +788,25 @@ describe('FileCalculations', () => {
             other.tags.num = 123456;
 
             const context = createCalculationContext([ other ]);
-
-            expect(tagMatchesFilter('+(#num:"123456")', other, '+', context)).toBe(true);
+            let filter = parseFilterTag('+(#num:"123456")');
+            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
 
             other.tags.num = 3.14159;
-
-            expect(tagMatchesFilter('+(#num:"3.14159")', other, '+', context)).toBe(true);
+            filter = parseFilterTag('+(#num:"3.14159")');
+            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
         });
 
         it('should match boolean values', () => {
             let other = createFile();
             other.tags.bool = true;
             const context = createCalculationContext([ other ]);
-            expect(tagMatchesFilter('+(#bool:"true")', other, '+', context)).toBe(true);
+            let filter = parseFilterTag('+(#bool:"true")');
+            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
 
             other.tags.bool = false;
 
-            expect(tagMatchesFilter('+(#bool:"false")', other, '+', context)).toBe(true);
+            filter = parseFilterTag('+(#bool:"false")');
+            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
         });
 
         it('should match array values', () => {
@@ -809,17 +814,23 @@ describe('FileCalculations', () => {
             other.tags.array = [];
             const context = createCalculationContext([ other ]);
 
-            expect(tagMatchesFilter('+(#array:"[]")', other, '+', context)).toBe(true);
-            expect(tagMatchesFilter('+(#array:"[\"anything\"]")', other, '+', context)).toBe(false);
+            let filter = parseFilterTag('+(#array:"[]")');
+            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
+
+            filter = parseFilterTag('+(#array:"[\"anything\"]")');
+            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(false);
 
             other.tags.array = [1];
-            expect(tagMatchesFilter('+(#array:"[1]")', other, '+', context)).toBe(true);
+            filter = parseFilterTag('+(#array:"[1]")');
+            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
 
             other.tags.array = ['hello', 'world'];
-            expect(tagMatchesFilter('+(#array:"[hello, world]")', other, '+', context)).toBe(true);
+            filter = parseFilterTag('+(#array:"[hello, world]")');
+            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
 
             other.tags.array = ['hello', 'world', 12.34];
-            expect(tagMatchesFilter('+(#array:"[hello, world, 12.34]")', other, '+', context)).toBe(true);
+            filter = parseFilterTag('+(#array:"[hello, world, 12.34]")');
+            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
         });
 
         it('should evaluate the value filters', () => {
@@ -828,18 +839,26 @@ describe('FileCalculations', () => {
             other.tags.cool = "Test";
 
             const context = createCalculationContext([ other, other ]);
-            expect(tagMatchesFilter('+(#name:"Test")', other, '+', context)).toBe(true);
+            let filter = parseFilterTag('+(#name:"Test")');
+            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
             
             other.tags.value = "10.15";
-            expect(tagMatchesFilter("+(#value:10.15)", other, '+', context)).toBe(true);
+            filter = parseFilterTag('+(#value:10.15)');
+            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
 
             other.tags.value = "true";
-            expect(tagMatchesFilter("+(#value:true)", other, '+', context)).toBe(true);
-            expect(tagMatchesFilter("+(#value:false)", other, '+', context)).toBe(false);
+            filter = parseFilterTag('+(#value:true)');
+            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
+
+            filter = parseFilterTag('+(#value:false)');
+            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(false);
 
             other.tags.value = "false";
-            expect(tagMatchesFilter("+(#value:true)", other, '+', context)).toBe(false);
-            expect(tagMatchesFilter("+(#value:false)", other, '+', context)).toBe(true);
+            filter = parseFilterTag('+(#value:true)');
+            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(false);
+
+            filter = parseFilterTag('+(#value:false)');
+            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
 
             let newData: PartialFile = {
                 tags: {
@@ -848,7 +867,8 @@ describe('FileCalculations', () => {
             };
             updateFile(other, 'testId', newData, () => context);
             other.tags.assign = newData.tags.assign;
-            expect(tagMatchesFilter('+(#assign:"Test")', other, '+', context)).toBe(true);
+            filter = parseFilterTag('+(#assign:"Test")');
+            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
         });
     });
 
@@ -1217,7 +1237,7 @@ describe('FileCalculations', () => {
 
         it('should return sucessful if in the formula syntax', () => {
             let result = parseFilterTag('+(#name:"")');
-            expect(result).toEqual({
+            expect(result).toMatchObject({
                 success: true,
                 eventName: '+',
                 filter: {
@@ -1227,7 +1247,7 @@ describe('FileCalculations', () => {
             });
 
             result = parseFilterTag('+(#name:"abc")');
-            expect(result).toEqual({
+            expect(result).toMatchObject({
                 success: true,
                 eventName: '+',
                 filter: {
@@ -1237,7 +1257,7 @@ describe('FileCalculations', () => {
             });
 
             result = parseFilterTag('-(#name:"abc")');
-            expect(result).toEqual({
+            expect(result).toMatchObject({
                 success: true,
                 eventName: '-',
                 filter: {
@@ -1247,7 +1267,7 @@ describe('FileCalculations', () => {
             });
 
             result = parseFilterTag('craziness(#lalalal:"abc")');
-            expect(result).toEqual({
+            expect(result).toMatchObject({
                 success: true,
                 eventName: 'craziness',
                 filter: {
@@ -1257,7 +1277,7 @@ describe('FileCalculations', () => {
             });
 
             result = parseFilterTag('+ ( #lalalal : "abc" )');
-            expect(result).toEqual({
+            expect(result).toMatchObject({
                 success: true,
                 eventName: '+',
                 filter: {
@@ -1267,7 +1287,7 @@ describe('FileCalculations', () => {
             });
             
             result = parseFilterTag('+ ( #lalalal : "abc"');
-            expect(result).toEqual({
+            expect(result).toMatchObject({
                 success: true,
                 eventName: '+',
                 filter: {
@@ -1277,7 +1297,7 @@ describe('FileCalculations', () => {
             });
 
             result = parseFilterTag('+ ( #lalalal : "abc');
-            expect(result).toEqual({
+            expect(result).toMatchObject({
                 success: true,
                 eventName: '+',
                 filter: {
@@ -1287,7 +1307,7 @@ describe('FileCalculations', () => {
             });
 
             result = parseFilterTag('+ ( #lalalal : "abc  ');
-            expect(result).toEqual({
+            expect(result).toMatchObject({
                 success: true,
                 eventName: '+',
                 filter: {
@@ -1297,7 +1317,7 @@ describe('FileCalculations', () => {
             });
 
             result = parseFilterTag('+ ( # lalalal : "abc  ');
-            expect(result).toEqual({
+            expect(result).toMatchObject({
                 success: true,
                 eventName: '+',
                 filter: {
@@ -1307,7 +1327,7 @@ describe('FileCalculations', () => {
             });
 
             result = parseFilterTag('+ ( # lal alal : "abc  ');
-            expect(result).toEqual({
+            expect(result).toMatchObject({
                 success: true,
                 eventName: '+',
                 filter: {
@@ -1317,7 +1337,7 @@ describe('FileCalculations', () => {
             });
 
             result = parseFilterTag('+(#lalalal:abc)');
-            expect(result).toEqual({
+            expect(result).toMatchObject({
                 success: true,
                 eventName: '+',
                 filter: {
@@ -1327,7 +1347,7 @@ describe('FileCalculations', () => {
             });
 
             result = parseFilterTag('+(#lalalal:abc');
-            expect(result).toEqual({
+            expect(result).toMatchObject({
                 success: true,
                 eventName: '+',
                 filter: {
@@ -1337,7 +1357,7 @@ describe('FileCalculations', () => {
             });
 
             result = parseFilterTag('+(#lalalal: abc\t');
-            expect(result).toEqual({
+            expect(result).toMatchObject({
                 success: true,
                 eventName: '+',
                 filter: {
@@ -1351,6 +1371,7 @@ describe('FileCalculations', () => {
             let result = parseFilterTag('event()');
             expect(result).toEqual({
                 success: true,
+                tag: 'event()',
                 eventName: 'event',
                 filter: null
             });
@@ -1358,6 +1379,7 @@ describe('FileCalculations', () => {
             result = parseFilterTag('event( )');
             expect(result).toEqual({
                 success: true,
+                tag: 'event( )',
                 eventName: 'event',
                 filter: null
             });
@@ -1365,6 +1387,7 @@ describe('FileCalculations', () => {
             result = parseFilterTag('event( ab)');
             expect(result).toEqual({
                 success: false,
+                tag: 'event( ab)',
                 eventName: 'event',
                 partialSuccess: true
             });
@@ -1374,6 +1397,7 @@ describe('FileCalculations', () => {
             const result = parseFilterTag('+ (');
             expect(result).toEqual({
                 success: false,
+                tag: '+ (',
                 partialSuccess: true,
                 eventName: '+'
             });
@@ -1384,6 +1408,7 @@ describe('FileCalculations', () => {
             expect(result).toEqual({
                 success: true,
                 eventName: '+',
+                tag: '+(#abc:"123.45")',
                 filter: {
                     tag: 'abc',
                     value: 123.45
@@ -1396,6 +1421,7 @@ describe('FileCalculations', () => {
             expect(result).toEqual({
                 success: true,
                 eventName: '+',
+                tag: '+(#abc:"true")',
                 filter: {
                     tag: 'abc',
                     value: true
@@ -1408,6 +1434,7 @@ describe('FileCalculations', () => {
             expect(result).toEqual({
                 success: true,
                 eventName: '+',
+                tag: '+(#abc:"[hello, world, 12.34]")',
                 filter: {
                     tag: 'abc',
                     value: ['hello', 'world', 12.34]
@@ -1418,6 +1445,7 @@ describe('FileCalculations', () => {
             expect(result).toEqual({
                 success: true,
                 eventName: '+',
+                tag: '+(#abc:"[]")',
                 filter: {
                     tag: 'abc',
                     value: []

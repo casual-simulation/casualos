@@ -1,4 +1,5 @@
-import { File, FileUpdatedEvent, FileEvent, FileAddedEvent, action, FilesState, calculateActionEvents } from "../Files";
+import { File } from '../Files/File';
+import { FileUpdatedEvent, FileEvent, FileAddedEvent, action, FilesState, calculateActionEvents } from "../Files/FilesChannel";
 import uuid from 'uuid/v4';
 import { every } from "lodash";
 import { isProxy, proxyObject } from "../Files/FileProxy";

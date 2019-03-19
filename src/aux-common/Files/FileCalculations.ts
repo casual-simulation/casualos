@@ -59,6 +59,25 @@ export interface FileCalculationContext {
     sandbox: Sandbox;
 }
 
+export type FilterParseResult = FilterParseSuccess | FilterParseFailure;
+
+export interface FilterParseSuccess {
+    success: true;
+    eventName: string;
+    tag: string;
+    filter: {
+        tag: string,
+        value: any
+    };
+}
+
+export interface FilterParseFailure {
+    success: false;
+    partialSuccess: boolean;
+    tag: string;
+    eventName: string;
+}
+
 /**
  * Defines an interface that represents the difference between
  * to FilesState objects.
@@ -376,7 +395,7 @@ export function validateTag(tag: string) {
         errors['tag.required'] = {};
     } else {
         const filter = parseFilterTag(tag);
-        if(!(filter.partialSuccess || filter.success) && tag.indexOf('#') >= 0) {
+        if(!(filter.success || (filter.success === false && filter.partialSuccess)) && tag.indexOf('#') >= 0) {
             errors.valid = false;
             errors['tag.invalidChar'] = { char: '#' };
         }
@@ -631,14 +650,15 @@ export function createCalculationContext(objects: Object[], lib: SandboxLibrary 
 }
 
 /**
- * Gets a list of tags for the given object that match the given event name.
- * @param file The file to test.
- * @param other The other file to test against.
+ * Gets a list of tags from the given object that match the given event name and arguments.
+ * @param file The file to find the tags that match the arguments.
  * @param eventName The event name to test.
+ * @param other The arguments to match against.
  */
-export function tagsMatchingFilter(file: Object, other: Object, eventName: string, context: FileCalculationContext): string[] {
-    const tags = keys(other.tags);
-    return tags.filter(t => tagMatchesFilter(t, file, eventName, context));
+export function filtersMatchingArguments(context: FileCalculationContext, file: Object, eventName: string, args: any[]): FilterParseResult[] {
+    const tags = keys(file.tags);
+    return tags.map(t => parseFilterTag(t))
+        .filter(t => filterMatchesArguments(context, t, eventName, args));
 }
 
 /**
@@ -647,13 +667,18 @@ export function tagsMatchingFilter(file: Object, other: Object, eventName: strin
  * @param file The file to test.
  * @param eventName The event to test for.
  */
-export function tagMatchesFilter(tag: string, file: Object, eventName: string, context: FileCalculationContext): boolean {
-    const parsed = parseFilterTag(tag);
-    if(parsed.success && parsed.eventName === eventName) {
-        if (!!parsed.filter) {
-            const calculatedValue = calculateFileValue(context, file, parsed.filter.tag);
-            return calculatedValue === parsed.filter.value ||
-            (Array.isArray(parsed.filter.value) && isEqual(file.tags[parsed.filter.tag], parsed.filter.value))
+export function filterMatchesArguments(context: FileCalculationContext, filter: FilterParseResult, eventName: string, args: any[]): boolean {
+    if(filter.success && filter.eventName === eventName) {
+        if (!!filter.filter) {
+            const arg = args.length > 0 ? args[0] : null;
+            if (arg) {
+                const calculatedValue = calculateFileValue(context, arg, filter.filter.tag);
+                return calculatedValue === filter.filter.value ||
+                    (Array.isArray(filter.filter.value) && isEqual(arg.tags[filter.filter.tag], filter.filter.value))
+            } else {
+                return false;
+            }
+
         } else {
             return true;
         }
@@ -876,7 +901,7 @@ export function duplicateFile(file: Object, data?: PartialFile): Object {
  * Parses the given tag filter into its components.
  * @param tag 
  */
-export function parseFilterTag(tag: string) {
+export function parseFilterTag(tag: string): FilterParseResult {
     const firstParenIndex = tag.indexOf('(');
     const tagIndex = tag.indexOf('#');
     if (firstParenIndex > 0 && (tagIndex > firstParenIndex || tagIndex < 0)) {
@@ -905,6 +930,7 @@ export function parseFilterTag(tag: string) {
                     return {
                         success: true,
                         eventName: eventName,
+                        tag: tag,
                         filter: {
                             tag: tagName,
                             value: finalValue
@@ -921,6 +947,7 @@ export function parseFilterTag(tag: string) {
                     return {
                         success: true,
                         eventName: eventName,
+                        tag: tag,
                         filter: null
                     };
                 }
@@ -929,12 +956,16 @@ export function parseFilterTag(tag: string) {
             return {
                 success: false,
                 partialSuccess: true,
+                tag: tag,
                 eventName: eventName,
             };
         }
     }
     return {
-        success: false
+        success: false,
+        partialSuccess: false,
+        tag: tag,
+        eventName: null
     };
 }
 
