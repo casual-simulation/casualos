@@ -211,6 +211,35 @@ describe('FilesChannel', () => {
                 })
             ]);
         });
+
+        it('should calculate events from setting property values', () => {
+            const state: FilesState = {
+                thisFile: {
+                    id: 'thisFile',
+                    tags: {
+                        _position: { x:0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        'abcdef()': 'this.val = 10; this.nested.value = true'
+                    }
+                }
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const fileAction = action('abcdef', ['thisFile']);
+            const result = calculateActionEvents(state, fileAction);
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+            
+            expect(result.events).toEqual([
+                fileUpdated('thisFile', {
+                    tags: {
+                        val: 10,
+                        'nested.value': true
+                    }
+                })
+            ]);
+        });
     });
 
 });

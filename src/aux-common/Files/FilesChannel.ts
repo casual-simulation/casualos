@@ -100,13 +100,54 @@ function eventActions(state: FilesState, objects: Object[], context: FileCalcula
     setActions(actions);
     setFileState(state);
     
-    scripts.forEach(s => context.sandbox.run(s, {}, convertToFormulaObject(context, other), {
-        that: convertToFormulaObject(context, file)
+    let thisChangedTags: string[] = [];
+    let thisNewValues: any[] = [];
+
+    const thisFormulaObject = convertToFormulaObject(context, other, (tag, value) => {
+        thisChangedTags.push(tag);
+        thisNewValues.push(value);
+    });
+
+    let thatChangedTags: string[] = [];
+    let thatNewValues: any[] = [];
+
+    const thatFormulaObject = convertToFormulaObject(context, file, (tag, value) => {
+        thatChangedTags.push(tag);
+        thatNewValues.push(value);
+    });
+
+    scripts.forEach(s => context.sandbox.run(s, {}, thisFormulaObject, {
+        that: thatFormulaObject
     }));
 
     setActions(previous);
     setFileState(null);
+
+    const thisUpdate = calculateFileUpdateFromChanges(other.id, thisChangedTags, thisNewValues);
+    const thatUpdate = calculateFileUpdateFromChanges(file.id, thatChangedTags, thatNewValues);
+
+    if (thisUpdate) {
+        actions.push(thisUpdate);
+    }
+    if (thatUpdate) {
+        actions.push(thatUpdate);
+    }
+
     return actions;
+}
+
+function calculateFileUpdateFromChanges(id: string, tags: string[], values: any[]): FileUpdatedEvent {
+    if (tags.length === 0) {
+        return null;
+    }
+    let partial: PartialFile = {
+        tags: {}
+    };
+    for(let i = 0; i < tags.length; i++) {
+        partial.tags[tags[i]] = values[i];
+    }
+
+    return fileUpdated(id, partial);
 }
 
 export interface FileAddedEvent extends Event {

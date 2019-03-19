@@ -16,7 +16,7 @@ import {
     cloneDeep
 } from 'lodash';
 import { Sandbox, SandboxLibrary } from '../Formulas/Sandbox';
-import { isProxy, createFileProxy, proxyObject } from './FileProxy';
+import { isProxy, createFileProxy, proxyObject, SetValueHandler } from './FileProxy';
 
 /// <reference path="../typings/global.d.ts" />
 import formulaLib from '../Formulas/formula-lib';
@@ -609,11 +609,11 @@ export function calculateStateDiff(prev: FilesState, current: FilesState, events
  * Creates a new object that contains the tags that the given object has
  * and is usable in a formula.
  */
-export function convertToFormulaObject(context: FileCalculationContext, object: File) {
+export function convertToFormulaObject(context: FileCalculationContext, object: File, setValue?: SetValueHandler) {
     if (isFormulaObject(object)) {
         return object;
     }
-    return createFileProxy(context, object);
+    return createFileProxy(context, object, setValue);
 }
 
 /**
