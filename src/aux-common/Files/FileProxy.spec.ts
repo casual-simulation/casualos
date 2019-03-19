@@ -181,6 +181,20 @@ describe('FileProxy', () => {
             expect('zed' in proxy).toBe(false);
         });
 
+        it('should calculate formula values', () => {
+            const file1 = createFile('testId');
+            const file2 = createFile('testId');
+            file1.tags.num = 5;
+            file2.tags.num = 5;
+
+            file1.tags.sum = '=sum(#num)';
+            
+            const context = createCalculationContext([file1, file2]);
+            const proxy = createFileProxy(context, file1);
+
+            expect(proxy.sum.valueOf()).toBe(10);
+        });
+
         it('should call a function when a value was set', () => {
             const file = createFile('testId');
             file.tags.abc = 1;

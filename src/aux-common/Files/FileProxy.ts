@@ -1,5 +1,5 @@
 import { File, FileTags } from './File';
-import { FileCalculationContext } from './FileCalculations';
+import { FileCalculationContext, calculateFileValue } from './FileCalculations';
 
 /**
  * The symbol that can be used to tell if an object represents a proxy.
@@ -95,7 +95,12 @@ function _createProxyHandler(calc: FileCalculationContext, tags: any, setValue: 
                 }
             }
             
+            
             if (val) {
+                if (target.tags && typeof val === 'string') {
+                    val = calculateFileValue(calc, target, nextProps);
+                }
+
                 nextProps = null;
                 nextTags = val;
             }
