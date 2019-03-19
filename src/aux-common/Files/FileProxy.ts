@@ -33,6 +33,20 @@ export function createFileProxy(calc: FileCalculationContext, file: File): FileP
 
 function _createProxyHandler(calc: FileCalculationContext, tags: any, props?: string): ProxyHandler<any> {
     return {
+        ownKeys: function(target) {
+            let props: (string | number | symbol)[] = ['id'];
+            props.push(...Reflect.ownKeys(tags));
+            return props;
+        },
+        getOwnPropertyDescriptor: function(target) {
+            return {
+                enumerable: true,
+                configurable: true
+            };
+        },
+        has: function(target, prop) {
+            return true;
+        },
         get: function (target, property) {
             let nextTags = tags;
             if (typeof property === 'symbol') {
@@ -60,6 +74,10 @@ function _createProxyHandler(calc: FileCalculationContext, tags: any, props?: st
                     };
                 }
                 
+                return target[property];
+            }
+
+            if (property === 'constructor') {
                 return target[property];
             }
 

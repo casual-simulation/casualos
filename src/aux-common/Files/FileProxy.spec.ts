@@ -1,5 +1,6 @@
 import { createFile, createCalculationContext } from "./FileCalculations";
 import { createFileProxy, isProxy, proxyObject } from './FileProxy';
+import { keys } from 'lodash';
 
 describe('FileProxy', () => {
     describe('createFileProxy()', () => {
@@ -151,6 +152,22 @@ describe('FileProxy', () => {
             expect(typeof val === 'object').toBe(true);
             expect(val instanceof String).toBe(true);
             expect(val.valueOf()).toBe('');
+        });
+
+        it('should support listing the tags', () => {
+            const file = createFile('testId');
+            file.tags.abc = 1;
+            file.tags.def = 2;
+            
+            const context = createCalculationContext([file]);
+            const proxy = createFileProxy(context, file);
+
+            const tags = Object.keys(proxy);
+            expect(tags).toEqual([
+                'id',
+                'abc',
+                'def'
+            ]);
         });
     });
 });
