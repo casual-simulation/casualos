@@ -22,7 +22,7 @@ import { isProxy, createFileProxy, proxyObject, SetValueHandler } from './FilePr
 import formulaLib from '../Formulas/formula-lib';
 import { FilterFunction, SandboxInterface } from '../Formulas/SandboxInterface';
 import { PartialFile } from '../Files';
-import { FilesState, cleanFile, FileEvent } from './FilesChannel';
+import { FilesState, cleanFile, FileEvent, hasValue } from './FilesChannel';
 import { merge } from '../utils';
 import { WeaveReference, AtomOp } from '../causal-trees';
 import { AuxOp, AuxOpType, AuxFile } from '../aux-format';
@@ -290,7 +290,7 @@ export const WELL_KNOWN_TAGS = [
     /_destroyed$/,
     /\.index$/,
     /_lastEditedBy/,
-    /_lastActiveTime/,
+    /\._lastActiveTime/,
     /^aux\._context_/,
 ];
 
@@ -1021,18 +1021,21 @@ export function calculateBooleanTagValue(context: FileCalculationContext, file: 
 export function isFileInContext(context: FileCalculationContext, file: Object, contextId: string): boolean {
     if (!contextId) return false;
 
-    if (file.tags._user) {
-        const result = calculateFileValue(context, file, '_userContext');
-        return result == contextId;
-    } else {
-        const result = calculateFileValue(context, file, contextId);
+    let result: boolean;
+    const contextValue = calculateFileValue(context, file, contextId);
 
-        if (typeof result === 'string') {
-            return result === 'true';
-        } else {
-            return result === true;
-        }
+    if (typeof contextValue === 'string') {
+        result = (contextValue === 'true');
+    } else {
+        result = (contextValue === true);
     }
+
+    if (!result && hasValue(file.tags._user)) {
+        const userContextValue = calculateFileValue(context, file, '_userContext');
+        result = (userContextValue == contextId);
+    }
+
+    return result;
 }
 
 function _parseFilterValue(value: string): any {
