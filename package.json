@@ -6,8 +6,8 @@
     "bootstrap": "lerna bootstrap --hoist",
     "watch": "lerna exec --parallel -- npm run watch",
     "build": "lerna exec -- npm run build",
-    "test:watch": "npm run clean && jest --watchAll",
-    "test": "npm run clean && jest",
+    "test:watch": "npm run clean && jest --watchAll --silent",
+    "test": "npm run clean && jest --verbose",
     "test:ci": "npm run clean && jest --ci --reporters=default --reporters=jest-junit",
     "clean": "lerna exec -- npm run clean",
     "debug:server:chrome": "node --inspect src/aux-server/server/dist/main.js"
