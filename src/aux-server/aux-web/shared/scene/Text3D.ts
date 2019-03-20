@@ -269,8 +269,10 @@ export class Text3D extends Object3D {
      * @param scale The scale of the text mesh. (default is 0.004)
      */
     public setScale(scale: number) {
-        this.scale.setScalar(scale);
-        this.updateBoundingBox();
+        if (this.scale.x !== scale) {
+            this.scale.setScalar(scale);
+            this.updateBoundingBox();
+        }
     }
 
     public setRotation(x?: number, y?: number, z?: number) {
