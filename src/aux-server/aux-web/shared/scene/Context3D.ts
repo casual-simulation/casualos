@@ -56,9 +56,12 @@ export class Context3D extends GameObject {
      * @param calc The calculation context that should be used.
      */
     fileAdded(file: AuxFile, calc: FileCalculationContext) {
-        const isInContext = typeof this.files.get(file.id) !== 'undefined';
-        const shouldBeInContext = this._shouldBeInContext(file, calc);
-        if (!isInContext && shouldBeInContext) {
+        const isInContext3D = typeof this.files.get(file.id) !== 'undefined';
+        // const isInContext = isFileInContext(calc, file, this.context);
+        const isInContext = this._shouldBeInContext(file, calc);
+        console.log('[Context3D] fileAdded file:', file, '\nisInContext3D:', isInContext3D, '\nisInContext:', isInContext);
+        
+        if (!isInContext3D && isInContext) {
             this._addFile(file, calc);
         }
     }
@@ -70,14 +73,15 @@ export class Context3D extends GameObject {
      * @param calc The calculation context that should be used.
      */
     fileUpdated(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
-        const isInContext = typeof this.files.get(file.id) !== 'undefined';
-        const shouldBeInContext = this._shouldBeInContext(file, calc);
+        const isInContext3D = typeof this.files.get(file.id) !== 'undefined';
+        // const isInContext = isFileInContext(calc, file, this.context);
+        const isInContext = this._shouldBeInContext(file, calc);
 
-        if (!isInContext && shouldBeInContext) {
+        if (!isInContext3D && isInContext) {
             this._addFile(file, calc);
-        } else if (isInContext && !shouldBeInContext) {
+        } else if (isInContext3D && !isInContext) {
             this._removeFile(file.id);
-        } else if(isInContext && shouldBeInContext) {
+        } else if(isInContext3D && isInContext) {
             this._updateFile(file, updates, calc);
         }
     }
@@ -135,5 +139,4 @@ export class Context3D extends GameObject {
     private _shouldBeInContext(file: AuxFile, calc: FileCalculationContext): boolean {
         return calculateFileValue(calc, file, this.context);
     }
-
 }
