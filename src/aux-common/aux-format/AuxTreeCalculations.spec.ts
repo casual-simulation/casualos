@@ -1,5 +1,5 @@
 import { FilesState } from "../Files";
-import { RealtimeCausalTree, RealtimeChannel, WeaveReference, AtomOp, storedTree, site } from "../causal-trees";
+import { RealtimeCausalTree, RealtimeChannel, AtomOp, storedTree, site, Atom } from "../causal-trees";
 import { auxCausalTreeFactory } from "./AuxCausalTreeFactory";
 import { TestCausalTreeStore } from "../causal-trees/test/TestCausalTreeStore";
 import { TestChannelConnection } from "../causal-trees/test/TestChannelConnection";
@@ -17,8 +17,8 @@ describe('AuxTreeCalculations', () => {
 
             tree.root();
             const file = tree.file('test');
-            const test = tree.tag('test', file.atom);
-            const val = tree.val('123', test.atom);
+            const test = tree.tag('test', file);
+            const val = tree.val('123', test);
 
             const result = getAtomFile(tree.weave, val);
 
@@ -30,7 +30,7 @@ describe('AuxTreeCalculations', () => {
 
             const root = tree.root();
             const file = tree.file('test');
-            const del = tree.delete(file.atom);
+            const del = tree.delete(file);
 
             const result = getAtomFile(tree.weave, del);
 
@@ -42,8 +42,8 @@ describe('AuxTreeCalculations', () => {
 
             const root = tree.root();
             const file = tree.file('test');
-            const test = tree.tag('test', file.atom);
-            const val = tree.val('123', test.atom);
+            const test = tree.tag('test', file);
+            const val = tree.val('123', test);
 
             const result = getAtomFile(tree.weave, root);
 
@@ -70,7 +70,7 @@ describe('AuxTreeCalculations', () => {
             const factory = auxCausalTreeFactory();
             const store = new TestCausalTreeStore();
             const connection = new TestChannelConnection();
-            const channel = new RealtimeChannel<WeaveReference<AtomOp>[]>({
+            const channel = new RealtimeChannel<Atom<AtomOp>[]>({
                 id: 'test',
                 type: 'aux'
             }, connection);
@@ -107,7 +107,7 @@ describe('AuxTreeCalculations', () => {
             const factory = auxCausalTreeFactory();
             const store = new TestCausalTreeStore();
             const connection = new TestChannelConnection();
-            const channel = new RealtimeChannel<WeaveReference<AtomOp>[]>({
+            const channel = new RealtimeChannel<Atom<AtomOp>[]>({
                 id: 'test',
                 type: 'aux'
             }, connection); 
@@ -142,7 +142,7 @@ describe('AuxTreeCalculations', () => {
             const factory = auxCausalTreeFactory();
             const store = new TestCausalTreeStore();
             const connection = new TestChannelConnection();
-            const channel = new RealtimeChannel<WeaveReference<AtomOp>[]>({
+            const channel = new RealtimeChannel<Atom<AtomOp>[]>({
                 id: 'test',
                 type: 'aux'
             }, connection); 
@@ -151,8 +151,8 @@ describe('AuxTreeCalculations', () => {
             let stored = new AuxCausalTree(storedTree(site(1)));
             stored.root();
             const file = stored.file('test');
-            const update = stored.tag('abc', file.atom);
-            const deleted = stored.delete(file.atom);
+            const update = stored.tag('abc', file);
+            const deleted = stored.delete(file);
 
             await store.update('test', stored.export());
             await tree.init();
@@ -177,7 +177,7 @@ describe('AuxTreeCalculations', () => {
             const factory = auxCausalTreeFactory();
             const store = new TestCausalTreeStore();
             const connection = new TestChannelConnection();
-            const channel = new RealtimeChannel<WeaveReference<AtomOp>[]>({
+            const channel = new RealtimeChannel<Atom<AtomOp>[]>({
                 id: 'test',
                 type: 'aux'
             }, connection); 
@@ -205,8 +205,7 @@ describe('AuxTreeCalculations', () => {
             fileRemoved.pipe(tap(file => removedFiles.push(file)))
                 .subscribe(null, errorHandler);
 
-            const del = tree.tree.delete(file.atom);
-
+            const del = tree.tree.delete(file);
 
             expect(fileIds).toEqual([
                 'test'

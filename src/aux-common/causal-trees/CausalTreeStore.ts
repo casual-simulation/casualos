@@ -1,4 +1,3 @@
-import { WeaveReference } from "./Weave";
 import { SiteInfo } from "./SiteIdInfo";
 import { AtomOp, Atom } from "./Atom";
 import { StoredCausalTree } from "./StoredCausalTree";

@@ -18,9 +18,8 @@ import {
 import { site } from "../causal-trees/SiteIdInfo";
 import { storedTree } from "../causal-trees/StoredCausalTree";
 import { AuxState } from "./AuxState";
-import { atomId, atom } from "../causal-trees/Atom";
+import { atomId, atom, Atom } from "../causal-trees/Atom";
 import { file, tag, value, del } from "./AuxAtoms";
-import { WeaveReference } from "../causal-trees";
 
 Date.now = jest.fn();
 
@@ -51,11 +50,11 @@ describe('AuxCausalTree', () => {
 
                 tree.root();
                 const file = tree.file('fileId');
-                const size = tree.tag('size', file.atom);
-                const sizeVal = tree.val(4, size.atom);
+                const size = tree.tag('size', file);
+                const sizeVal = tree.val(4, size);
 
-                const extra = tree.tag('extra', file.atom);
-                const extraVal = tree.val({ test: 'abc' }, extra.atom);
+                const extra = tree.tag('extra', file);
+                const extraVal = tree.val({ test: 'abc' }, extra);
 
                 expect(tree.value).toMatchObject({
                     'fileId': {
@@ -73,23 +72,23 @@ describe('AuxCausalTree', () => {
                 let site2 = new AuxCausalTree(storedTree(site(2)));
 
                 const root = site1.root();
-                site2.add(root.atom);
+                site2.add(root);
 
                 const first = site1.file('fileId');
-                const firstTag = site1.tag('test', first.atom);
-                const firstTagValue = site1.val(null, firstTag.atom);
+                const firstTag = site1.tag('test', first);
+                const firstTagValue = site1.val(null, firstTag);
 
-                site2.add(first.atom);
-                site2.add(firstTag.atom);
-                site2.add(firstTagValue.atom);
+                site2.add(first);
+                site2.add(firstTag);
+                site2.add(firstTagValue);
 
                 const second = site2.file('fileId');
-                const secondTag = site2.tag('other', second.atom);
-                const secondTagValue = site2.val(null, secondTag.atom);
+                const secondTag = site2.tag('other', second);
+                const secondTagValue = site2.val(null, secondTag);
 
-                site1.add(second.atom);
-                site1.add(secondTag.atom);
-                site1.add(secondTagValue.atom);
+                site1.add(second);
+                site1.add(secondTag);
+                site1.add(secondTagValue);
                 
                 expect(site1.value).toMatchObject({
                     'fileId': {
@@ -104,19 +103,19 @@ describe('AuxCausalTree', () => {
                 let site2 = new AuxCausalTree(storedTree(site(2)));
 
                 const root = site1.root();
-                site2.add(root.atom);
+                site2.add(root);
 
                 const first = site1.file('fileId');
-                const firstTag = site1.tag('test', first.atom);
-                const firstTagValue = site1.val('abc', firstTag.atom);
+                const firstTag = site1.tag('test', first);
+                const firstTagValue = site1.val('abc', firstTag);
 
-                site2.add(first.atom);
-                site2.add(firstTag.atom);
-                site2.add(firstTagValue.atom);
+                site2.add(first);
+                site2.add(firstTag);
+                site2.add(firstTagValue);
 
-                const deleteFile = site2.delete(first.atom);
+                const deleteFile = site2.delete(first);
                 
-                site1.add(deleteFile.atom);
+                site1.add(deleteFile);
                 
                 expect(site1.value).toEqual({});
             });
@@ -126,7 +125,7 @@ describe('AuxCausalTree', () => {
                 const root = site1.root();
 
                 const first = site1.file('fileId');
-                const sizeTag = site1.tag('size', first.atom);
+                const sizeTag = site1.tag('size', first);
 
                 expect(site1.value['fileId'].tags).toEqual({});
             });
@@ -136,8 +135,8 @@ describe('AuxCausalTree', () => {
                 const root = site1.root();
 
                 const first = site1.file('fileId');
-                const sizeTag = site1.tag('size', first.atom);
-                const sizeVal = site1.val(null, sizeTag.atom);
+                const sizeTag = site1.tag('size', first);
+                const sizeVal = site1.val(null, sizeTag);
 
                 expect(site1.value['fileId'].tags).toEqual({});
             });
@@ -147,8 +146,8 @@ describe('AuxCausalTree', () => {
                 const root = site1.root();
 
                 const first = site1.file('fileId');
-                const sizeTag = site1.tag('size', first.atom);
-                const sizeVal = site1.val(undefined, sizeTag.atom);
+                const sizeTag = site1.tag('size', first);
+                const sizeVal = site1.val(undefined, sizeTag);
 
                 expect(site1.value['fileId'].tags).toEqual({});
             });
@@ -158,8 +157,8 @@ describe('AuxCausalTree', () => {
                 const root = site1.root();
 
                 const first = site1.file('fileId');
-                const sizeTag = site1.tag('size', first.atom);
-                const sizeVal = site1.val('', sizeTag.atom);
+                const sizeTag = site1.tag('size', first);
+                const sizeVal = site1.val('', sizeTag);
 
                 expect(site1.value['fileId'].tags).toEqual({});
             });
@@ -169,8 +168,8 @@ describe('AuxCausalTree', () => {
                 const root = site1.root();
 
                 const first = site1.file('fileId');
-                const sizeTag = site1.tag('size', first.atom);
-                const sizeVal = site1.val('\n', sizeTag.atom);
+                const sizeTag = site1.tag('size', first);
+                const sizeVal = site1.val('\n', sizeTag);
 
                 expect(site1.value).toMatchObject({
                     'fileId': {
@@ -187,21 +186,21 @@ describe('AuxCausalTree', () => {
                 let site2 = new AuxCausalTree(storedTree(site(2)));
 
                 const root = site1.root();
-                site2.add(root.atom);
+                site2.add(root);
 
                 const first = site1.file('fileId');
-                const firstTag = site1.tag('test', first.atom);
-                const firstTagValue = site1.val('abc', firstTag.atom);
+                const firstTag = site1.tag('test', first);
+                const firstTagValue = site1.val('abc', firstTag);
 
-                site2.add(first.atom);
-                site2.add(firstTag.atom);
-                site2.add(firstTagValue.atom);
+                site2.add(first);
+                site2.add(firstTag);
+                site2.add(firstTagValue);
 
-                const secondTag = site2.tag('test', first.atom);
-                const secondTagValue = site2.val('123', secondTag.atom);
+                const secondTag = site2.tag('test', first);
+                const secondTagValue = site2.val('123', secondTag);
 
-                site1.add(secondTag.atom);
-                site1.add(secondTagValue.atom);
+                site1.add(secondTag);
+                site1.add(secondTagValue);
                 
                 expect(site1.value).toMatchObject({
                     'fileId': {
@@ -218,21 +217,21 @@ describe('AuxCausalTree', () => {
                 let site2 = new AuxCausalTree(storedTree(site(2)));
 
                 const root = site1.root();
-                site2.add(root.atom);
+                site2.add(root);
 
                 const first = site1.file('fileId');
-                const firstTag = site1.tag('test', first.atom);
-                const firstTagValue = site1.val('abc', firstTag.atom);
+                const firstTag = site1.tag('test', first);
+                const firstTagValue = site1.val('abc', firstTag);
 
-                site2.add(first.atom);
-                site2.add(firstTag.atom);
-                site2.add(firstTagValue.atom);
+                site2.add(first);
+                site2.add(firstTag);
+                site2.add(firstTagValue);
 
-                const secondTag = site2.tag('other', first.atom);
-                const secondTagValue = site2.val('123', secondTag.atom);
+                const secondTag = site2.tag('other', first);
+                const secondTagValue = site2.val('123', secondTag);
 
-                site1.add(secondTag.atom);
-                site1.add(secondTagValue.atom);
+                site1.add(secondTag);
+                site1.add(secondTagValue);
                 
                 expect(site1.value).toMatchObject({
                     'fileId': {
@@ -254,19 +253,19 @@ describe('AuxCausalTree', () => {
                 let site2 = new AuxCausalTree(storedTree(site(2)));
 
                 const root = site1.root();
-                site2.add(root.atom);
+                site2.add(root);
 
                 const first = site1.file('fileId');
-                const firstTag = site1.tag('test', first.atom);
-                const firstTagValue = site1.val('abc', firstTag.atom);
+                const firstTag = site1.tag('test', first);
+                const firstTagValue = site1.val('abc', firstTag);
 
-                site2.add(first.atom);
-                site2.add(firstTag.atom);
-                site2.add(firstTagValue.atom);
+                site2.add(first);
+                site2.add(firstTag);
+                site2.add(firstTagValue);
 
-                const secondTagValue = site2.val('123', firstTag.atom);
+                const secondTagValue = site2.val('123', firstTag);
 
-                site1.add(secondTagValue.atom);
+                site1.add(secondTagValue);
                 
                 expect(site1.value).toMatchObject({
                     'fileId': {
@@ -288,35 +287,35 @@ describe('AuxCausalTree', () => {
                 let site3 = new AuxCausalTree(storedTree(site(3)));
 
                 const root = site1.root();
-                site2.add(root.atom);
-                site3.add(root.atom);
+                site2.add(root);
+                site3.add(root);
 
                 const first = site1.file('fileId');
-                const firstTag = site1.tag('first', first.atom);
-                const firstTagValue = site1.val('abc', firstTag.atom);
+                const firstTag = site1.tag('first', first);
+                const firstTagValue = site1.val('abc', firstTag);
 
-                site2.add(first.atom);
-                site2.add(firstTag.atom);
-                site2.add(firstTagValue.atom);
-                site3.add(first.atom);
-                site3.add(firstTag.atom);
-                site3.add(firstTagValue.atom);
+                site2.add(first);
+                site2.add(firstTag);
+                site2.add(firstTagValue);
+                site3.add(first);
+                site3.add(firstTag);
+                site3.add(firstTagValue);
 
-                const firstDelete = site1.delete(firstTag.atom, 0, 5);
-                const firstInsert = site1.insert(0, 'reallylong', firstTag.atom);
-                const secondRename = site2.insert(5, '1', firstTag.atom);
-                const thirdRename = site3.insert(0, '99', firstTag.atom);
+                const firstDelete = site1.delete(firstTag, 0, 5);
+                const firstInsert = site1.insert(0, 'reallylong', firstTag);
+                const secondRename = site2.insert(5, '1', firstTag);
+                const thirdRename = site3.insert(0, '99', firstTag);
 
-                site1.add(thirdRename.atom);
-                site1.add(secondRename.atom);
+                site1.add(thirdRename);
+                site1.add(secondRename);
 
-                site2.add(firstDelete.atom);
-                site2.add(firstInsert.atom);
-                site2.add(thirdRename.atom);
+                site2.add(firstDelete);
+                site2.add(firstInsert);
+                site2.add(thirdRename);
 
-                site3.add(firstDelete.atom);
-                site3.add(firstInsert.atom);
-                site3.add(secondRename.atom);
+                site3.add(firstDelete);
+                site3.add(firstInsert);
+                site3.add(secondRename);
 
                 const expected: any = {
                     'fileId': {
@@ -338,32 +337,32 @@ describe('AuxCausalTree', () => {
                 let site3 = new AuxCausalTree(storedTree(site(3)));
 
                 const root = site1.root();
-                site2.add(root.atom);
-                site3.add(root.atom);
+                site2.add(root);
+                site3.add(root);
 
                 const first = site1.file('fileId');
-                const firstTag = site1.tag('first', first.atom);
-                const firstTagValue = site1.val('abc', firstTag.atom);
+                const firstTag = site1.tag('first', first);
+                const firstTagValue = site1.val('abc', firstTag);
 
-                site2.add(first.atom);
-                site2.add(firstTag.atom);
-                site2.add(firstTagValue.atom);
-                site3.add(first.atom);
-                site3.add(firstTag.atom);
-                site3.add(firstTagValue.atom);
+                site2.add(first);
+                site2.add(firstTag);
+                site2.add(firstTagValue);
+                site3.add(first);
+                site3.add(firstTag);
+                site3.add(firstTagValue);
 
-                const secondDelete = site2.delete(firstTag.atom, 1, 5);
-                const secondRename = site2.insert(1, '1', firstTag.atom);
-                const thirdRename = site3.insert(0, '99', firstTag.atom);
+                const secondDelete = site2.delete(firstTag, 1, 5);
+                const secondRename = site2.insert(1, '1', firstTag);
+                const thirdRename = site3.insert(0, '99', firstTag);
 
-                site1.add(secondDelete.atom);
-                site1.add(thirdRename.atom);
-                site1.add(secondRename.atom);
+                site1.add(secondDelete);
+                site1.add(thirdRename);
+                site1.add(secondRename);
 
-                site2.add(thirdRename.atom);
+                site2.add(thirdRename);
 
-                site3.add(secondDelete.atom);
-                site3.add(secondRename.atom);
+                site3.add(secondDelete);
+                site3.add(secondRename);
                 
                 const expected: any = {
                     'fileId': {
@@ -385,8 +384,8 @@ describe('AuxCausalTree', () => {
                 const root = site1.root();
 
                 const first = site1.file('fileId');
-                const firstTag = site1.tag('first', first.atom);
-                site1.delete(firstTag.atom, 0, 5);
+                const firstTag = site1.tag('first', first);
+                site1.delete(firstTag, 0, 5);
                 
                 const expected: AuxState = {
                     'fileId': {
@@ -408,32 +407,32 @@ describe('AuxCausalTree', () => {
                 let site3 = new AuxCausalTree(storedTree(site(3)));
 
                 const root = site1.root();
-                site2.add(root.atom);
-                site3.add(root.atom);
+                site2.add(root);
+                site3.add(root);
 
                 const first = site1.file('fileId');
-                const firstTag = site1.tag('first', first.atom);
-                const firstTagValue = site1.val('abc', firstTag.atom);
+                const firstTag = site1.tag('first', first);
+                const firstTagValue = site1.val('abc', firstTag);
 
-                site2.add(first.atom);
-                site2.add(firstTag.atom);
-                site2.add(firstTagValue.atom);
-                site3.add(first.atom);
-                site3.add(firstTag.atom);
-                site3.add(firstTagValue.atom);
+                site2.add(first);
+                site2.add(firstTag);
+                site2.add(firstTagValue);
+                site3.add(first);
+                site3.add(firstTag);
+                site3.add(firstTagValue);
 
-                const secondDelete = site2.delete(firstTagValue.atom, 1, 3);
-                const secondRename = site2.insert(1, '1', firstTagValue.atom);
-                const thirdRename = site3.insert(0, '99', firstTagValue.atom);
+                const secondDelete = site2.delete(firstTagValue, 1, 3);
+                const secondRename = site2.insert(1, '1', firstTagValue);
+                const thirdRename = site3.insert(0, '99', firstTagValue);
 
-                site1.add(secondDelete.atom);
-                site1.add(thirdRename.atom);
-                site1.add(secondRename.atom);
+                site1.add(secondDelete);
+                site1.add(thirdRename);
+                site1.add(secondRename);
 
-                site2.add(thirdRename.atom);
+                site2.add(thirdRename);
 
-                site3.add(secondDelete.atom);
-                site3.add(secondRename.atom);
+                site3.add(secondDelete);
+                site3.add(secondRename);
                 
                 const expected: any = {
                     'fileId': {
@@ -458,13 +457,13 @@ describe('AuxCausalTree', () => {
 
                 const root = tree.root();
                 const file = tree.file('fileId');
-                const test = tree.tag('test', file.atom);
-                const testVal1 = tree.val(99, test.atom);
-                const testVal2 = tree.val('hello, world', test.atom);
+                const test = tree.tag('test', file);
+                const testVal1 = tree.val(99, test);
+                const testVal2 = tree.val('hello, world', test);
 
-                const test2 = tree.tag('test2', file.atom);
-                const test2Val1 = tree.val(99, test2.atom);
-                const test2Val2 = tree.val('hello, world', test2.atom);
+                const test2 = tree.tag('test2', file);
+                const test2Val1 = tree.val(99, test2);
+                const test2Val2 = tree.val('hello, world', test2);
 
                 expect(tree.weave.atoms).toEqual([
                     root,
@@ -481,7 +480,7 @@ describe('AuxCausalTree', () => {
 
                 tree.garbageCollect = true;
                 
-                let archived: WeaveReference<AuxOp>[] = [];
+                let archived: Atom<AuxOp>[] = [];
                 let error = jest.fn();
                 tree.atomsArchived.subscribe(a => {
                     archived.push(...a);
@@ -489,13 +488,13 @@ describe('AuxCausalTree', () => {
 
                 const root = tree.root();
                 const file = tree.file('fileId');
-                const test = tree.tag('test', file.atom);
-                const testVal1 = tree.val(99, test.atom);
-                const testVal2 = tree.val('hello, world', test.atom);
+                const test = tree.tag('test', file);
+                const testVal1 = tree.val(99, test);
+                const testVal2 = tree.val('hello, world', test);
 
-                const test2 = tree.tag('test2', file.atom);
-                const test2Val1 = tree.val(99, test2.atom);
-                const test2Val2 = tree.val('hello, world', test2.atom);
+                const test2 = tree.tag('test2', file);
+                const test2Val1 = tree.val(99, test2);
+                const test2Val2 = tree.val('hello, world', test2);
 
                 expect(error).not.toBeCalled();
                 expect(archived).toEqual([
@@ -509,7 +508,7 @@ describe('AuxCausalTree', () => {
 
                 tree.garbageCollect = true;
                 
-                let archived: WeaveReference<AuxOp>[] = [];
+                let archived: Atom<AuxOp>[] = [];
                 let error = jest.fn();
                 tree.atomsArchived.subscribe(a => {
                     archived.push(...a);
@@ -517,13 +516,13 @@ describe('AuxCausalTree', () => {
 
                 const root = tree.root();
                 const file = tree.file('fileId');
-                const test = tree.tag('test', file.atom);
+                const test = tree.tag('test', file);
 
-                let testVal1: WeaveReference<AuxOp>;
-                let testVal2: WeaveReference<AuxOp>;
+                let testVal1: Atom<AuxOp>;
+                let testVal2: Atom<AuxOp>;
                 tree.batch(() => {
-                    testVal1 = tree.val(99, test.atom);
-                    testVal2 = tree.val('hello, world', test.atom);
+                    testVal1 = tree.val(99, test);
+                    testVal2 = tree.val('hello, world', test);
                 });
 
                 expect(error).not.toBeCalled();
@@ -539,14 +538,14 @@ describe('AuxCausalTree', () => {
 
                 tree.root();
                 const file = tree.file('fileId');
-                const size = tree.tag('size', file.atom);
-                const sizeVal = tree.val(4, size.atom);
+                const size = tree.tag('size', file);
+                const sizeVal = tree.val(4, size);
 
-                const extra = tree.tag('extra', file.atom);
-                const extraVal = tree.val({ test: 'abc' }, extra.atom);
+                const extra = tree.tag('extra', file);
+                const extraVal = tree.val({ test: 'abc' }, extra);
 
-                const last = tree.tag('last', file.atom);
-                const lastVal = tree.val('123456', last.atom);
+                const last = tree.tag('last', file);
+                const lastVal = tree.val('123456', last);
 
                 expect(tree.value).toMatchObject({
                     'fileId': {
@@ -619,14 +618,14 @@ describe('AuxCausalTree', () => {
 
             tree.root();
             const file = tree.file('testId');
-            const tag = tree.tag('test', file.atom);
-            const val = tree.val('abc', tag.atom);
+            const tag = tree.tag('test', file);
+            const val = tree.val('abc', tag);
 
             const files = tree.value;
 
             const insert = tree.insertIntoTagValue(files['testId'], 'test', '123', 2);
 
-            expect(insert.atom.value).toMatchObject({
+            expect(insert.value).toMatchObject({
                 index: 2,
                 text: '123'
             });
@@ -637,20 +636,20 @@ describe('AuxCausalTree', () => {
 
             tree.root();
             const file = tree.file('testId');
-            const tag = tree.tag('test', file.atom);
-            const val = tree.val('abc', tag.atom);
-            const insert1 = tree.insert(0, 'xyz', val.atom); // xyzabc
-            const delete1 = tree.delete(insert1.atom, 0, 1); // yzabc
-            const insert2 = tree.insert(0, '1', val.atom); //   yz1abc
-            const insert3 = tree.insert(3, '?', val.atom); //   yz1abc?
-            const delete2 = tree.delete(val.atom, 0, 3); //     yz1?
+            const tag = tree.tag('test', file);
+            const val = tree.val('abc', tag);
+            const insert1 = tree.insert(0, 'xyz', val); // xyzabc
+            const delete1 = tree.delete(insert1, 0, 1); // yzabc
+            const insert2 = tree.insert(0, '1', val); //   yz1abc
+            const insert3 = tree.insert(3, '?', val); //   yz1abc?
+            const delete2 = tree.delete(val, 0, 3); //     yz1?
 
             const files = tree.value;
 
             const insert = tree.insertIntoTagValue(files['testId'], 'test', '5555', 2);
 
-            expect(insert.atom.cause).toEqual(insert2.atom.id);
-            expect(insert.atom.value).toMatchObject({
+            expect(insert.cause).toEqual(insert2.id);
+            expect(insert.value).toMatchObject({
                 index: 0,
                 text: '5555'
             });
@@ -661,15 +660,15 @@ describe('AuxCausalTree', () => {
 
             tree.root();
             const file = tree.file('testId');
-            const tag = tree.tag('test', file.atom);
-            const val = tree.val('the quick brown fox jumped over the lazy dog', tag.atom);
+            const tag = tree.tag('test', file);
+            const val = tree.val('the quick brown fox jumped over the lazy dog', tag);
 
             const files = tree.value;
 
             const insert = tree.insertIntoTagValue(files['testId'], 'test', '🦊', 16);
 
-            expect(insert.atom.cause).toEqual(val.atom.id);
-            expect(insert.atom.value).toMatchObject({
+            expect(insert.cause).toEqual(val.id);
+            expect(insert.value).toMatchObject({
                 index: 16,
                 text: '🦊'
             });
@@ -685,15 +684,15 @@ describe('AuxCausalTree', () => {
 
             tree.root();
             const file = tree.file('testId');
-            const tag = tree.tag('test', file.atom);
-            const val = tree.val('abc', tag.atom);
+            const tag = tree.tag('test', file);
+            const val = tree.val('abc', tag);
 
             const files = tree.value;
 
             const deleted = tree.deleteFromTagValue(files['testId'], 'test', 1, 2);
 
             expect(deleted.length).toBe(1);
-            expect(deleted[0].atom.value).toMatchObject({
+            expect(deleted[0].value).toMatchObject({
                 start: 1,
                 end: 3
             });
@@ -704,11 +703,11 @@ describe('AuxCausalTree', () => {
 
             tree.root();
             const file = tree.file('testId');
-            const tag = tree.tag('test', file.atom);
-            const val = tree.val('abc', tag.atom);
-            const insert1 = tree.insert(0, '1', val.atom);
-            const insert2 = tree.insert(0, '2', insert1.atom);
-            const insert3 = tree.insert(2, '3', val.atom);
+            const tag = tree.tag('test', file);
+            const val = tree.val('abc', tag);
+            const insert1 = tree.insert(0, '1', val);
+            const insert2 = tree.insert(0, '2', insert1);
+            const insert3 = tree.insert(2, '3', val);
 
             // "21ab3c"
             const files = tree.value;
@@ -717,32 +716,32 @@ describe('AuxCausalTree', () => {
 
             expect(deleted.length).toBe(5);
             
-            expect(deleted[0].atom.cause).toEqual(insert2.atom.id);
-            expect(deleted[0].atom.value).toMatchObject({
+            expect(deleted[0].cause).toEqual(insert2.id);
+            expect(deleted[0].value).toMatchObject({
                 start: 0,
                 end: 1
             });
             
-            expect(deleted[1].atom.cause).toEqual(insert1.atom.id);
-            expect(deleted[1].atom.value).toMatchObject({
+            expect(deleted[1].cause).toEqual(insert1.id);
+            expect(deleted[1].value).toMatchObject({
                 start: 0,
                 end: 1
             });
             
-            expect(deleted[2].atom.cause).toEqual(val.atom.id);
-            expect(deleted[2].atom.value).toMatchObject({
+            expect(deleted[2].cause).toEqual(val.id);
+            expect(deleted[2].value).toMatchObject({
                 start: 0,
                 end: 2
             });
 
-            expect(deleted[3].atom.cause).toEqual(insert3.atom.id);
-            expect(deleted[3].atom.value).toMatchObject({
+            expect(deleted[3].cause).toEqual(insert3.id);
+            expect(deleted[3].value).toMatchObject({
                 start: 0,
                 end: 1
             });
 
-            expect(deleted[4].atom.cause).toEqual(val.atom.id);
-            expect(deleted[4].atom.value).toMatchObject({
+            expect(deleted[4].cause).toEqual(val.id);
+            expect(deleted[4].value).toMatchObject({
                 start: 2,
                 end: 3
             });
@@ -760,22 +759,22 @@ describe('AuxCausalTree', () => {
             const root = tree.root();
             const result = tree.addFile(newFile);
 
-            const fileAtom = atom(atomId(1, 2), root.atom.id, file('test'));
+            const fileAtom = atom(atomId(1, 2), root.id, file('test'));
             const abcTag = atom(atomId(1, 3), fileAtom.id, tag('abc'));
             const abcTagValue = atom(atomId(1, 4, 1), abcTag.id, value('def'));
 
             const numTag = atom(atomId(1, 5), fileAtom.id, tag('num'));
             const numTagValue = atom(atomId(1, 6, 1), numTag.id, value(5));
 
-            expect(result.map(ref => ref.atom)).toEqual([
+            expect(result.map(ref => ref)).toEqual([
                 fileAtom,
                 abcTag,
                 abcTagValue,
                 numTag,
                 numTagValue
             ]);
-            expect(tree.weave.atoms.map(ref => ref.atom)).toEqual([
-                root.atom,
+            expect(tree.weave.atoms.map(ref => ref)).toEqual([
+                root,
                 fileAtom,
                 numTag,
                 numTagValue,
@@ -796,16 +795,16 @@ describe('AuxCausalTree', () => {
             const root = tree.root();
             const result = tree.addFile(newFile);
 
-            const fileAtom = atom(atomId(1, 2), root.atom.id, file('test'));
+            const fileAtom = atom(atomId(1, 2), root.id, file('test'));
             const positionTag = atom(atomId(1, 3), fileAtom.id, tag('position'));
             const positionTagValue = atom(atomId(1, 4, 1), positionTag.id, value({x: 0, y: 0, z: 0}));
 
-            const resultAtoms = result.map(ref => ref.atom);
+            const resultAtoms = result.map(ref => ref);
             expect(resultAtoms).toContainEqual(fileAtom);
             expect(resultAtoms).toContainEqual(positionTag);
             expect(resultAtoms).toContainEqual(positionTagValue);
 
-            const treeAtoms = tree.weave.atoms.map(ref => ref.atom);
+            const treeAtoms = tree.weave.atoms.map(ref => ref);
             expect(treeAtoms).toContainEqual(fileAtom);
             expect(treeAtoms).toContainEqual(positionTag);
             expect(treeAtoms).toContainEqual(positionTagValue);
@@ -822,21 +821,21 @@ describe('AuxCausalTree', () => {
 
             const root = tree.root();
             
-            let updates: WeaveReference<AuxOp>[][] = [];
+            let updates: Atom<AuxOp>[][] = [];
             tree.atomAdded.subscribe(refs => updates.push(refs));
             const result = tree.addFile(newFile);
 
-            const fileAtom = atom(atomId(1, 2), root.atom.id, file('test'));
+            const fileAtom = atom(atomId(1, 2), root.id, file('test'));
             const positionTag = atom(atomId(1, 3), fileAtom.id, tag('position'));
             const positionTagValue = atom(atomId(1, 4, 1), positionTag.id, value({x: 0, y: 0, z: 0}));
 
             expect(updates.length).toBe(1);
-            const resultAtoms = result.map(ref => ref.atom);
+            const resultAtoms = result.map(ref => ref);
             expect(resultAtoms).toContainEqual(fileAtom);
             expect(resultAtoms).toContainEqual(positionTag);
             expect(resultAtoms).toContainEqual(positionTagValue);
 
-            const treeAtoms = tree.weave.atoms.map(ref => ref.atom);
+            const treeAtoms = tree.weave.atoms.map(ref => ref);
             expect(treeAtoms).toContainEqual(fileAtom);
             expect(treeAtoms).toContainEqual(positionTag);
             expect(treeAtoms).toContainEqual(positionTagValue);
@@ -857,19 +856,19 @@ describe('AuxCausalTree', () => {
                 }
             });
 
-            const positionTag = atom(atomId(1, 2), file.atom.id, tag('_position'));
+            const positionTag = atom(atomId(1, 2), file.id, tag('_position'));
             const positionTagValue = atom(atomId(1, 3, 1), positionTag.id, value({ x: 1, y: 0, z: 0 }));
 
-            const abcTag = atom(atomId(1, 4), file.atom.id, tag('abc'));
+            const abcTag = atom(atomId(1, 4), file.id, tag('abc'));
             const abcTagValue = atom(atomId(1, 5, 1), abcTag.id, value('123'));
 
-            const numTag = atom(atomId(1, 6), file.atom.id, tag('num'));
+            const numTag = atom(atomId(1, 6), file.id, tag('num'));
             const numTagValue = atom(atomId(1, 7, 1), numTag.id, value(99));
 
-            const bTag = atom(atomId(1, 8), file.atom.id, tag('b'));
+            const bTag = atom(atomId(1, 8), file.id, tag('b'));
             const bTagValue = atom(atomId(1, 9, 1), bTag.id, value(true));
 
-            expect(result.map(ref => ref.atom)).toEqual([
+            expect(result.map(ref => ref)).toEqual([
                 positionTag,
                 positionTagValue,
                 abcTag,
@@ -897,10 +896,10 @@ describe('AuxCausalTree', () => {
                 }
             });
 
-            const positionTag = atom(atomId(1, 2), file.atom.id, tag('_position'));
+            const positionTag = atom(atomId(1, 2), file.id, tag('_position'));
             const positionTagValue = atom(atomId(1, 4, 1), positionTag.id, value({ x: 1, y: 0, z: 0 }));
 
-            expect(result.map(ref => ref.atom)).toEqual([
+            expect(result.map(ref => ref)).toEqual([
                 positionTagValue
             ]);
         });
@@ -910,7 +909,7 @@ describe('AuxCausalTree', () => {
 
             const file = tree.file('test');
             
-            let updates: WeaveReference<AuxOp>[][] = [];
+            let updates: Atom<AuxOp>[][] = [];
             tree.atomAdded.subscribe(refs => updates.push(refs));
             
             tree.updateFile(tree.value['test'], {
@@ -925,12 +924,12 @@ describe('AuxCausalTree', () => {
                 }
             });
 
-            const positionTag = atom(atomId(1, 2), file.atom.id, tag('_position'));
+            const positionTag = atom(atomId(1, 2), file.id, tag('_position'));
             const positionTagValue = atom(atomId(1, 4, 1), positionTag.id, value({ x: 1, y: 0, z: 0 }));
 
             
             expect(updates.length).toBe(2);
-            expect(result.map(ref => ref.atom)).toEqual([
+            expect(result.map(ref => ref)).toEqual([
                 positionTagValue
             ]);
         });
@@ -945,7 +944,7 @@ describe('AuxCausalTree', () => {
             });
             tree.addFile(file);
             
-            let updates: WeaveReference<AuxOp>[][] = [];
+            let updates: Atom<AuxOp>[][] = [];
             tree.atomAdded.subscribe(refs => updates.push(refs));
             
             const result = tree.updateFile(tree.value['test'], {
@@ -957,7 +956,7 @@ describe('AuxCausalTree', () => {
             });
 
             expect(updates.length).toBe(0);
-            expect(result.map(ref => ref.atom)).toEqual([]);
+            expect(result.map(ref => ref)).toEqual([]);
         });
 
         it('should allow setting null', () => {
@@ -970,7 +969,7 @@ describe('AuxCausalTree', () => {
             });
             tree.addFile(file);
             
-            let updates: WeaveReference<AuxOp>[][] = [];
+            let updates: Atom<AuxOp>[][] = [];
             tree.atomAdded.subscribe(refs => updates.push(refs));
             
             const result = tree.updateFile(tree.value['test'], {
@@ -980,7 +979,7 @@ describe('AuxCausalTree', () => {
             });
 
             expect(updates.length).toBe(1);
-            expect(result.map(ref => ref.atom)).toEqual([
+            expect(result.map(ref => ref)).toEqual([
                 atom(atomId(1, 8, 1), atomId(1, 6), value(null))
             ]);
         });
@@ -1002,19 +1001,19 @@ describe('AuxCausalTree', () => {
                 })
             ]);
 
-            const positionTag = atom(atomId(1, 2), file.atom.id, tag('_position'));
+            const positionTag = atom(atomId(1, 2), file.id, tag('_position'));
             const positionTagValue = atom(atomId(1, 3, 1), positionTag.id, value({ x: 1, y: 0, z: 0 }));
 
-            const abcTag = atom(atomId(1, 4), file.atom.id, tag('abc'));
+            const abcTag = atom(atomId(1, 4), file.id, tag('abc'));
             const abcTagValue = atom(atomId(1, 5, 1), abcTag.id, value('123'));
 
-            const numTag = atom(atomId(1, 6), file.atom.id, tag('num'));
+            const numTag = atom(atomId(1, 6), file.id, tag('num'));
             const numTagValue = atom(atomId(1, 7, 1), numTag.id, value(99));
 
-            const bTag = atom(atomId(1, 8), file.atom.id, tag('b'));
+            const bTag = atom(atomId(1, 8), file.id, tag('b'));
             const bTagValue = atom(atomId(1, 9, 1), bTag.id, value(true));
 
-            expect(result.map(ref => ref.atom)).toEqual([
+            expect(result.map(ref => ref)).toEqual([
                 positionTag,
                 positionTagValue,
                 abcTag,
@@ -1038,22 +1037,22 @@ describe('AuxCausalTree', () => {
                 fileAdded(newFile)
             ]);
 
-            const fileAtom = atom(atomId(1, 2), root.atom.id, file('test'));
+            const fileAtom = atom(atomId(1, 2), root.id, file('test'));
             const abcTag = atom(atomId(1, 3), fileAtom.id, tag('abc'));
             const abcTagValue = atom(atomId(1, 4, 1), abcTag.id, value('def'));
 
             const numTag = atom(atomId(1, 5), fileAtom.id, tag('num'));
             const numTagValue = atom(atomId(1, 6, 1), numTag.id, value(5));
 
-            expect(result.map(ref => ref.atom)).toEqual([
+            expect(result.map(ref => ref)).toEqual([
                 fileAtom,
                 abcTag,
                 abcTagValue,
                 numTag,
                 numTagValue
             ]);
-            expect(tree.weave.atoms.map(ref => ref.atom)).toEqual([
-                root.atom,
+            expect(tree.weave.atoms.map(ref => ref)).toEqual([
+                root,
                 fileAtom,
                 numTag,
                 numTagValue,
@@ -1072,14 +1071,14 @@ describe('AuxCausalTree', () => {
                 fileRemoved('test')
             ]);
 
-            const deleteFile = atom(atomId(1, 3, 1), file.atom.id, del());
+            const deleteFile = atom(atomId(1, 3, 1), file.id, del());
 
-            expect(result.map(ref => ref.atom)).toEqual([
+            expect(result.map(ref => ref)).toEqual([
                 deleteFile
             ]);
-            expect(tree.weave.atoms.map(ref => ref.atom)).toEqual([
-                root.atom,
-                file.atom,
+            expect(tree.weave.atoms.map(ref => ref)).toEqual([
+                root,
+                file,
                 deleteFile,
             ]);
         });
@@ -1089,13 +1088,13 @@ describe('AuxCausalTree', () => {
 
             tree.root();
             const file = tree.file('testId');
-            const del = tree.delete(file.atom);
+            const del = tree.delete(file);
 
             const result = tree.addEvents([
                 fileRemoved('test')
             ]);
 
-            expect(result.map(ref => ref.atom)).toEqual([]);
+            expect(result.map(ref => ref)).toEqual([]);
         });
 
         it('should handle transaction events', () => {
@@ -1115,16 +1114,16 @@ describe('AuxCausalTree', () => {
                 ])
             ]);
 
-            const deleteFile = atom(atomId(1, 3, 1), newFile.atom.id, del());
+            const deleteFile = atom(atomId(1, 3, 1), newFile.id, del());
 
-            const fileAtom = atom(atomId(1, 4), root.atom.id, file('test'));
+            const fileAtom = atom(atomId(1, 4), root.id, file('test'));
             const abcTag = atom(atomId(1, 5), fileAtom.id, tag('abc'));
             const abcTagValue = atom(atomId(1, 6, 1), abcTag.id, value('def'));
 
             const numTag = atom(atomId(1, 7), fileAtom.id, tag('num'));
             const numTagValue = atom(atomId(1, 8, 1), numTag.id, value(5));
 
-            expect(result.map(ref => ref.atom)).toEqual([
+            expect(result.map(ref => ref)).toEqual([
                 deleteFile,
                 fileAtom,
                 abcTag,
@@ -1132,14 +1131,14 @@ describe('AuxCausalTree', () => {
                 numTag,
                 numTagValue
             ]);
-            expect(tree.weave.atoms.map(ref => ref.atom)).toEqual([
-                root.atom,
+            expect(tree.weave.atoms.map(ref => ref)).toEqual([
+                root,
                 fileAtom,
                 numTag,
                 numTagValue,
                 abcTag,
                 abcTagValue,
-                newFile.atom,
+                newFile,
                 deleteFile,
             ]);
         });
@@ -1159,22 +1158,22 @@ describe('AuxCausalTree', () => {
                 })
             ]);
 
-            const fileAtom = atom(atomId(1, 2), root.atom.id, file('test'));
+            const fileAtom = atom(atomId(1, 2), root.id, file('test'));
             const abcTag = atom(atomId(1, 3), fileAtom.id, tag('abc'));
             const abcTagValue = atom(atomId(1, 4, 1), abcTag.id, value('def'));
 
             const numTag = atom(atomId(1, 5), fileAtom.id, tag('num'));
             const numTagValue = atom(atomId(1, 6, 1), numTag.id, value(5));
 
-            expect(result.map(ref => ref.atom)).toEqual([
+            expect(result.map(ref => ref)).toEqual([
                 fileAtom,
                 abcTag,
                 abcTagValue,
                 numTag,
                 numTagValue
             ]);
-            expect(tree.weave.atoms.map(ref => ref.atom)).toEqual([
-                root.atom,
+            expect(tree.weave.atoms.map(ref => ref)).toEqual([
+                root,
                 fileAtom,
                 numTag,
                 numTagValue,
@@ -1198,22 +1197,22 @@ describe('AuxCausalTree', () => {
                 })
             ]);
 
-            const fileAtom = atom(atomId(1, 2), root.atom.id, file('test'));
+            const fileAtom = atom(atomId(1, 2), root.id, file('test'));
             const abcTag = atom(atomId(1, 3), fileAtom.id, tag('abc'));
             const abcTagValue = atom(atomId(1, 4, 1), abcTag.id, value('def'));
 
             const numTag = atom(atomId(1, 5), fileAtom.id, tag('num'));
             const numTagValue = atom(atomId(1, 6, 1), numTag.id, value(5));
 
-            expect(result.map(ref => ref.atom)).toEqual([
+            expect(result.map(ref => ref)).toEqual([
                 fileAtom,
                 abcTag,
                 abcTagValue,
                 numTag,
                 numTagValue
             ]);
-            expect(tree.weave.atoms.map(ref => ref.atom)).toEqual([
-                root.atom,
+            expect(tree.weave.atoms.map(ref => ref)).toEqual([
+                root,
                 fileAtom,
                 numTag,
                 numTagValue,
@@ -1232,10 +1231,10 @@ describe('AuxCausalTree', () => {
             });
 
             const otherFile = tree.file('other');
-            const otherTag = tree.tag('tag', otherFile.atom);
-            const otherTagValue = tree.val('99', otherTag.atom);
+            const otherTag = tree.tag('tag', otherFile);
+            const otherTagValue = tree.val('99', otherTag);
 
-            let updates: WeaveReference<AuxOp>[][] = [];
+            let updates: Atom<AuxOp>[][] = [];
             tree.atomAdded.subscribe(refs => updates.push(refs));
 
             const result = tree.addEvents([
@@ -1251,17 +1250,17 @@ describe('AuxCausalTree', () => {
                 })
             ]);
 
-            const fileAtom = atom(atomId(1, 5), root.atom.id, file('test'));
+            const fileAtom = atom(atomId(1, 5), root.id, file('test'));
             const abcTag = atom(atomId(1, 6), fileAtom.id, tag('abc'));
             const abcTagValue = atom(atomId(1, 7, 1), abcTag.id, value('def'));
 
             const numTag = atom(atomId(1, 8), fileAtom.id, tag('num'));
             const numTagValue = atom(atomId(1, 9, 1), numTag.id, value(5));
 
-            const newOtherTagValue = atom(atomId(1, 10, 1), otherTag.atom.id, value('hello'));
+            const newOtherTagValue = atom(atomId(1, 10, 1), otherTag.id, value('hello'));
 
             expect(updates.length).toBe(1);
-            expect(result.map(ref => ref.atom)).toEqual([
+            expect(result.map(ref => ref)).toEqual([
                 fileAtom,
                 abcTag,
                 abcTagValue,
@@ -1269,17 +1268,17 @@ describe('AuxCausalTree', () => {
                 numTagValue,
                 newOtherTagValue
             ]);
-            expect(tree.weave.atoms.map(ref => ref.atom)).toEqual([
-                root.atom,
+            expect(tree.weave.atoms.map(ref => ref)).toEqual([
+                root,
                 fileAtom,
                 numTag,
                 numTagValue,
                 abcTag,
                 abcTagValue,
-                otherFile.atom,
-                otherTag.atom,
+                otherFile,
+                otherTag,
                 newOtherTagValue,
-                otherTagValue.atom
+                otherTagValue
             ]);
         });
     });

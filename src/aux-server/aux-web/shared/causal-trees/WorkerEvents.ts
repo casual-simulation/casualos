@@ -1,11 +1,11 @@
-import { AtomOp, RealtimeChannelInfo, WeaveReference } from "@yeti-cgi/aux-common/causal-trees";
+import { AtomOp, RealtimeChannelInfo, Atom } from "@yeti-cgi/aux-common/causal-trees";
 
 export type WorkerEvent = CalculateValue | ValueCalculated;
 
 export interface CalculateValue {
     type: 'calculate';
     id: string;
-    weave: WeaveReference<AtomOp>[];
+    weave: Atom<AtomOp>[];
     treeType: string;
 }
 

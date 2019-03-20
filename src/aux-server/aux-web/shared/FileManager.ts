@@ -253,7 +253,7 @@ export class FileManager {
   async removeFile(file: AuxFile) {
     if (this._aux.tree) {
         console.log('[FileManager] Remove File', file.id);
-        this._aux.tree.delete(file.metadata.ref.atom);
+        this._aux.tree.delete(file.metadata.ref);
     } else {
         console.warn('[FileManager] Tree is not loaded yet. Invalid Operation!');
     }

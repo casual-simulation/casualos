@@ -1,32 +1,7 @@
-import { Atom, AtomId, AtomOp, StorableAtomId, idEquals } from "./Atom";
-import { VirtualArray } from "./VirtualArray";
-import { sortBy, findIndex, keys, find } from "lodash";
-import { WeaveVersion, WeaveSiteVersion, weaveVersion } from "./WeaveVersion";
-import { getHash, getHashBuffer } from './Hash';
-
-/**
- * Creates a weave reference.
- * @param atom 
- * @param index 
- * @param causeIndex 
- */
-export function reference<T extends AtomOp>(atom: Atom<T>): WeaveReference<T> {
-    return {
-        atom
-    };
-}
-
-/**
- * Defines a reference to an atom inside a weave.
- * Once created, this reference will always be valid.
- */
-export interface WeaveReference<TOp extends AtomOp> {
-
-    /**
-     * The atom that this reference refers to.
-     */
-    atom: Atom<TOp>;
-}
+import { Atom, AtomId, AtomOp, idEquals } from "./Atom";
+import { keys } from "lodash";
+import { WeaveVersion, WeaveSiteVersion } from "./WeaveVersion";
+import { getHash } from './Hash';
 
 /**
  * Defines a weave. 
@@ -34,7 +9,7 @@ export interface WeaveReference<TOp extends AtomOp> {
  */
 export class Weave<TOp extends AtomOp> {
     
-    private _atoms: WeaveReference<TOp>[];
+    private _atoms: Atom<TOp>[];
     private _sites: SiteMap<TOp>;
 
     /**
@@ -66,7 +41,7 @@ export class Weave<TOp extends AtomOp> {
      * Gets the list of atoms for a site.
      * @param site The site identifier.
      */
-    getSite(siteId: number): WeaveReference<TOp>[] {
+    getSite(siteId: number): Atom<TOp>[] {
         let site = this._sites[siteId];
         if (typeof site === 'undefined') {
             site = [];
@@ -79,20 +54,19 @@ export class Weave<TOp extends AtomOp> {
      * Inserts the given atom into the weave.
      * @param atom 
      */
-    insert<T extends TOp>(atom: Atom<T>): WeaveReference<T> {
+    insert<T extends TOp>(atom: Atom<T>): Atom<T> {
         const site = this.getSite(atom.id.site);
         if (!atom.cause) {
             // check for an existing root atom
             if (this.atoms.length > 0) {
-                return <WeaveReference<T>>this.atoms[0];
+                return <Atom<T>>this.atoms[0];
             }
 
-            const ref = reference<T>(atom);
             // Add the atom at the root of the weave.
-            this._atoms.splice(0, 0, ref);
-            site[ref.atom.id.timestamp] = ref;
+            this._atoms.splice(0, 0, atom);
+            site[atom.id.timestamp] = atom;
             this._sizeMap.set(atom.id, 1);
-            return ref;
+            return atom;
         } else {
             const causeIndex = this._indexOf(atom.cause);
             if (causeIndex < 0 ) {
@@ -104,17 +78,16 @@ export class Weave<TOp extends AtomOp> {
 
             if (siteIndex >= 0 && siteIndex < site.length) {
                 const existingAtom = site[siteIndex];
-                if (existingAtom && idEquals(existingAtom.atom.id, atom.id)) {
-                    return <WeaveReference<T>>existingAtom;
+                if (existingAtom && idEquals(existingAtom.id, atom.id)) {
+                    return <Atom<T>>existingAtom;
                 }
             }
-            const ref = reference<T>(atom);
-            this._atoms.splice(weaveIndex, 0, ref);
-            site[siteIndex] = ref;
+            this._atoms.splice(weaveIndex, 0, atom);
+            site[siteIndex] = atom;
             
-            this._updateAtomSizes([ref]);
+            this._updateAtomSizes([atom]);
 
-            return ref;
+            return atom;
         }
     }
 
@@ -133,7 +106,7 @@ export class Weave<TOp extends AtomOp> {
      * Returns the references that were removed.
      * @param ref The reference to remove.
      */
-    remove(ref: WeaveReference<TOp>): WeaveReference<TOp>[] {
+    remove(ref: Atom<TOp>): Atom<TOp>[] {
         if (!ref) {
             return [];
         }
@@ -147,16 +120,16 @@ export class Weave<TOp extends AtomOp> {
     /**
      * Removes all of the siblings of the given atom that happened before it.
      * Returns the references that were removed.
-     * @param ref The reference whose older siblings should be removed.
+     * @param atom The reference whose older siblings should be removed.
      */
-    removeBefore(ref: WeaveReference<TOp>): WeaveReference<TOp>[] {
-        if (!ref) {
+    removeBefore(atom: Atom<TOp>): Atom<TOp>[] {
+        if (!atom) {
             return [];
         }
-        if (!ref.atom.cause) {
+        if (!atom.cause) {
             return [];
         }
-        const cause = this.getAtom(ref.atom.cause);
+        const cause = this.getAtom(atom.cause);
         if (!cause) {
             return [];
         }
@@ -164,7 +137,7 @@ export class Weave<TOp extends AtomOp> {
         if (!causeSpan) {
             return [];
         }
-        const refSpan = this._getSpan(ref, causeSpan.index);
+        const refSpan = this._getSpan(atom, causeSpan.index);
         if (!refSpan) {
             return [];
         }
@@ -181,14 +154,14 @@ export class Weave<TOp extends AtomOp> {
 
             const chain = this.referenceChain(r);
             for (let i = 1; i < chain.length; i++) {
-                const id = chain[i].atom.id;
+                const id = chain[i].id;
                 const current = this.getAtomSize(id);
                 this._sizeMap.set(id, current - 1);
             }
 
-            this._sizeMap.delete(r.atom.id);
-            const site = this.getSite(r.atom.id.site);
-            delete site[r.atom.id.timestamp];
+            this._sizeMap.delete(r.id);
+            const site = this.getSite(r.id.site);
+            delete site[r.id.timestamp];
         }
         return removed;
     }
@@ -197,13 +170,13 @@ export class Weave<TOp extends AtomOp> {
      * Gets the atom for the given reference.
      * @param reference The reference.
      */
-    getAtom<T extends TOp>(id: AtomId): WeaveReference<T> {
+    getAtom<T extends TOp>(id: AtomId): Atom<T> {
         if (!id) {
             return null;
         }
         const site = this.getSite(id.site);
         if (id.timestamp >= 0 && id.timestamp < site.length) {
-            return <WeaveReference<T>>site[id.timestamp];
+            return <Atom<T>>site[id.timestamp];
         } else {
             return null;
         }
@@ -253,26 +226,26 @@ export class Weave<TOp extends AtomOp> {
         if (preserveChildren) {
             // travel from leaf nodes to the root node
             for (let i = newWeave.atoms.length - 1; i >= 0; i--) {
-                const ref = newWeave.atoms[i];
-                const id = ref.atom.id;
+                const atom = newWeave.atoms[i];
+                const id = atom.id;
                 const site = id.site;
                 const oldestAllowed = version[site];
                 if (!oldestAllowed || id.timestamp > oldestAllowed) {
                     // When preserving children,
                     // we only remove an atom if it has no children.
                     if (newWeave.getAtomSize(id) === 1) {
-                        newWeave.remove(ref);
+                        newWeave.remove(atom);
                     }
                 }
             }
         } else {
             for (let i = 0; i < newWeave.atoms.length; i++) {
-                const ref = newWeave.atoms[i];
-                const id = ref.atom.id;
+                const atom = newWeave.atoms[i];
+                const id = atom.id;
                 const site = id.site;
                 const oldestAllowed = version[site];
                 if (!oldestAllowed || id.timestamp > oldestAllowed) {
-                    newWeave.remove(ref);
+                    newWeave.remove(atom);
                     i -= 1;
                 }
             }
@@ -302,9 +275,9 @@ export class Weave<TOp extends AtomOp> {
      * Returns the list of atoms that were added to the weave.
      * @param atoms The atoms to import into this weave.
      */
-    import(atoms: WeaveReference<TOp>[]): WeaveReference<TOp>[] {
+    import(atoms: Atom<TOp>[]): Atom<TOp>[] {
         
-        let newAtoms: WeaveReference<TOp>[] = [];
+        let newAtoms: Atom<TOp>[] = [];
         let localOffset = 0;
         for (let i = 0; i < atoms.length; i++) {
             const a = atoms[i];
@@ -317,9 +290,9 @@ export class Weave<TOp extends AtomOp> {
                 const finalAtoms = atoms.slice(i);
 
                 for (let b = 0; b < finalAtoms.length; b++) {
-                    const ref = finalAtoms[b];
-                    if (ref.atom.cause) {
-                        const cause = this.getAtom(ref.atom.cause);
+                    const atom = finalAtoms[b];
+                    if (atom.cause) {
+                        const cause = this.getAtom(atom.cause);
                         if (!cause) {
                             // prevent atoms without parents
                             // if the input is properly sorted,
@@ -329,17 +302,17 @@ export class Weave<TOp extends AtomOp> {
                         }
                     }
                     
-                    this._atoms.push(ref);
-                    newAtoms.push(ref);
-                    const site = this.getSite(ref.atom.id.site);
-                    site[ref.atom.id.timestamp] = ref;
+                    this._atoms.push(atom);
+                    newAtoms.push(atom);
+                    const site = this.getSite(atom.id.site);
+                    site[atom.id.timestamp] = atom;
                 }
                 break;
             } else {
                 // Could either be the same, a new sibling, or a new child of the current subtree
 
-                if (a.atom.cause) {
-                    const cause = this.getAtom(a.atom.cause);
+                if (a.cause) {
+                    const cause = this.getAtom(a.cause);
                     if (!cause) {
                         // prevent atoms without parents
                         // if the input is properly sorted,
@@ -349,7 +322,7 @@ export class Weave<TOp extends AtomOp> {
                     }
                 }
 
-                let order = this._compareAtoms(a.atom, local.atom);
+                let order = this._compareAtoms(a, local);
                 if (isNaN(order)) {
                     break;
                 } else if (order === 0) {
@@ -360,23 +333,23 @@ export class Weave<TOp extends AtomOp> {
                     this._atoms.splice(i + localOffset, 0, a);
                     newAtoms.push(a);
                     
-                    const site = this.getSite(a.atom.id.site);
-                    site[a.atom.id.timestamp] = a;
+                    const site = this.getSite(a.id.site);
+                    site[a.id.timestamp] = a;
                 } else if(order > 0) {
                     // New atom should be after local atom.
                     // Skip local atoms until we find the right place to put the new atom.
                     do {
                         localOffset += 1;
                         local = this._atoms[i + localOffset];
-                    } while(local && a.atom.id.timestamp <= local.atom.cause.timestamp);
+                    } while(local && a.id.timestamp <= local.cause.timestamp);
                     
-                    order = this._compareAtoms(a.atom, local.atom);
+                    order = this._compareAtoms(a, local);
                     if (order < 0) {
                         this._atoms.splice(i + localOffset, 0, a);
                         newAtoms.push(a);
 
-                        const site = this.getSite(a.atom.id.site);
-                        site[a.atom.id.timestamp] = a;
+                        const site = this.getSite(a.id.site);
+                        site[a.id.timestamp] = a;
                     }
                 }
             }
@@ -400,16 +373,16 @@ export class Weave<TOp extends AtomOp> {
      * @param weave The weave that the reference is from.
      * @param ref The reference.
      */
-    referenceChain(ref: WeaveReference<TOp>): WeaveReference<TOp>[] {
+    referenceChain(ref: Atom<TOp>): Atom<TOp>[] {
         let chain = [ref];
 
-        let cause = ref.atom.cause;
+        let cause = ref.cause;
         while(cause) {
             const causeRef = this.getAtom(cause);
             
             chain.push(causeRef);
 
-            cause = causeRef.atom.cause;
+            cause = causeRef.cause;
         }
 
         return chain;
@@ -440,14 +413,14 @@ export class Weave<TOp extends AtomOp> {
 
     /**
      * Updates the sizes of the given references in the map.
-     * @param refs The references to update.
+     * @param atoms The references to update.
      */
-    private _updateAtomSizes(refs: WeaveReference<TOp>[]) {
-        for (let i = 0; i < refs.length; i++) {
-            const ref = refs[i];
-            const chain = this.referenceChain(ref);
+    private _updateAtomSizes(atoms: Atom<TOp>[]) {
+        for (let i = 0; i < atoms.length; i++) {
+            const atom = atoms[i];
+            const chain = this.referenceChain(atom);
             for (let b = 0; b < chain.length; b++) {
-                const id = chain[b].atom.id;
+                const id = chain[b].id;
                 const current = this.getAtomSize(id) || 0;
                 this._sizeMap.set(id, current + 1);
             }
@@ -461,12 +434,12 @@ export class Weave<TOp extends AtomOp> {
      * @param ref The reference.
      * @param start The index to start searching at.
      */
-    private _getSpan(ref: WeaveReference<TOp>, start: number = 0) {
-        const index = this._indexOf(ref.atom.id, start);
+    private _getSpan(ref: Atom<TOp>, start: number = 0) {
+        const index = this._indexOf(ref.id, start);
         if (index < 0) {
             return null;
         }
-        return { index, length: this.getAtomSize(ref.atom.id) };
+        return { index, length: this.getAtomSize(ref.id) };
     }
 
     /**
@@ -478,13 +451,13 @@ export class Weave<TOp extends AtomOp> {
         const cause = this._atoms[causeIndex];
         let index = causeIndex + 1;
         for (; index < this._atoms.length; index++) {
-            const ref = this._atoms[index];
-            const order = this._compareAtomIds(atomId, ref.atom.id);
+            const atom = this._atoms[index];
+            const order = this._compareAtomIds(atomId, atom.id);
             if (order < 0) {
                 break;
             }
             
-            if (!idEquals(ref.atom.cause, cause.atom.id)) {
+            if (!idEquals(atom.cause, cause.id)) {
                 break;
             }
         }
@@ -565,7 +538,7 @@ export class Weave<TOp extends AtomOp> {
      * If the array was obtained from Weave.atoms, then it will be in the correct order. 
      * @param refs The atom references that the new weave should be built from.
      */
-    static buildFromArray<TOp extends AtomOp>(refs: WeaveReference<TOp>[]): Weave<TOp> {
+    static buildFromArray<TOp extends AtomOp>(refs: Atom<TOp>[]): Weave<TOp> {
         let weave = new Weave<TOp>();
         weave.import(refs);
         return weave;
@@ -578,7 +551,7 @@ export class Weave<TOp extends AtomOp> {
  * even though they are stored in the same array.
  */
 export interface SiteMap<TOp extends AtomOp> {
-    [site: number]: WeaveReference<TOp>[];
+    [site: number]: Atom<TOp>[];
 }
 
 /**
@@ -588,10 +561,10 @@ export interface SiteMap<TOp extends AtomOp> {
  * @param id The ID of the atom to find.
  * @param start The optional starting index.
  */
-export function weaveIndexOf<TOp extends AtomOp>(arr: WeaveReference<TOp>[], id: AtomId, start: number = 0): number {
+export function weaveIndexOf<TOp extends AtomOp>(arr: Atom<TOp>[], id: AtomId, start: number = 0): number {
     for (let i = start; i < arr.length; i++) {
-        const ref = arr[i];
-        if (idEquals(ref.atom.id, id)) {
+        const atom = arr[i];
+        if (idEquals(atom.id, id)) {
             return i;
         }
     }

@@ -1,12 +1,12 @@
 import { RealtimeCausalTree } from './RealtimeCausalTree';
-import { AtomOp, atom, atomId } from './Atom';
+import { AtomOp, atom, atomId, Atom } from './Atom';
 import { CausalTreeStore } from './CausalTreeStore';
 import { CausalTreeFactory } from './CausalTreeFactory';
 import { RealtimeChannel } from './RealtimeChannel';
 import { TestCausalTreeStore } from './test/TestCausalTreeStore';
 import { CausalTree } from './CausalTree';
 import { AtomReducer } from './AtomReducer';
-import { Weave, WeaveReference } from './Weave';
+import { Weave } from './Weave';
 import { TestChannelConnection } from './test/TestChannelConnection';
 import { site, SiteInfo } from './SiteIdInfo';
 import { SiteVersionInfo } from './SiteVersionInfo';
@@ -31,16 +31,16 @@ describe('RealtimeCausalTree', () => {
     let realtime: RealtimeCausalTree<Tree>;
     let store: TestCausalTreeStore;
     let factory: CausalTreeFactory;
-    let channel: RealtimeChannel<WeaveReference<Op>[]>;
+    let channel: RealtimeChannel<Atom<Op>[]>;
     let connection: TestChannelConnection;
     let flush = false;
-    let weave: WeaveReference<Op>[];
+    let weave: Atom<Op>[];
     let knownSites: SiteInfo[]; 
     let siteVersion: SiteVersionInfo;
     let allowSiteId: boolean[];
-    let localWeaves: WeaveReference<Op>[][];
+    let localWeaves: Atom<Op>[][];
     let errors: any[] = [];
-    let updated: WeaveReference<Op>[][] = [];
+    let updated: Atom<Op>[][] = [];
     
     beforeEach(() => {
         flush = false;
@@ -62,7 +62,7 @@ describe('RealtimeCausalTree', () => {
             'numbers': (tree) => new Tree(tree, new NumberReducer())
         });
         connection = new TestChannelConnection();
-        channel = new RealtimeChannel<WeaveReference<Op>[]>({
+        channel = new RealtimeChannel<Atom<Op>[]>({
             id: 'abc',
             type: 'numbers'
         }, connection);

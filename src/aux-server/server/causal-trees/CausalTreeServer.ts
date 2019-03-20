@@ -1,5 +1,5 @@
 import { Socket, Server } from 'socket.io';
-import { CausalTreeStore, CausalTreeFactory, CausalTree, AtomOp, RealtimeChannelInfo, storedTree, site, SiteVersionInfo, SiteInfo, ExchangeWeavesResponse, ExchangeWeavesRequest, WeaveReference, ArchivingCausalTreeStore } from '@yeti-cgi/aux-common/causal-trees';
+import { CausalTreeStore, CausalTreeFactory, CausalTree, AtomOp, RealtimeChannelInfo, storedTree, site, SiteVersionInfo, SiteInfo, ExchangeWeavesResponse, ExchangeWeavesRequest, ArchivingCausalTreeStore, Atom } from '@yeti-cgi/aux-common/causal-trees';
 import { AuxOp } from '@yeti-cgi/aux-common/aux-format';
 import { find } from 'lodash';
 import { bufferTime, flatMap, filter } from 'rxjs/operators';
@@ -49,7 +49,7 @@ export class CausalTreeServer {
                         filter(batch => batch.length > 0),
                         flatMap(batch => batch),
                         flatMap(async refs => {
-                            const atoms = refs.map(r => r.atom);
+                            const atoms = refs.map(r => r);
                             await this._treeStore.archiveAtoms(info.id, atoms);
                         })
                     ).subscribe(null, err => console.error(err));
@@ -60,7 +60,7 @@ export class CausalTreeServer {
                     }, 1000);
 
                     const eventName = `event_${info.id}`;
-                    socket.on(eventName, async (refs: WeaveReference<AtomOp>[]) => {
+                    socket.on(eventName, async (refs: Atom<AtomOp>[]) => {
                         const added = tree.addMany(refs);
                         socket.to(info.id).emit(eventName, added);
                     });

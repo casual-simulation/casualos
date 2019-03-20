@@ -1,5 +1,5 @@
-import { AtomOp, AtomId, idEquals } from "./Atom";
-import { Weave, WeaveReference } from "./Weave";
+import { AtomOp, AtomId, idEquals, Atom } from "./Atom";
+import { Weave } from "./Weave";
 
 /**
  * Defines a class that helps with traversing weaves.
@@ -19,13 +19,13 @@ export class WeaveTraverser<TOp extends AtomOp> {
      * Returns null if we're at the end.
      * @param parent The ID of the parent that the next atom should match.
      */
-    peek(parent?: AtomId): WeaveReference<TOp> {
+    peek(parent?: AtomId): Atom<TOp> {
         if (this._index < this._weave.atoms.length) {
             const atom = this._weave.atoms[this._index];
             if (!parent) {
                 return atom;
             }
-            if (idEquals(parent, atom.atom.cause)) {
+            if (idEquals(parent, atom.cause)) {
                 return atom;
             }
         } 
@@ -35,7 +35,7 @@ export class WeaveTraverser<TOp extends AtomOp> {
     /**
      * Consumes and returns the next atom in the tree.
      */
-    next(): WeaveReference<TOp> {
+    next(): Atom<TOp> {
         const atom = this._weave.atoms[this._index];
         this._index += 1;
         return atom;
@@ -44,7 +44,7 @@ export class WeaveTraverser<TOp extends AtomOp> {
     /**
      * Gets the current atom.
      */
-    current(): WeaveReference<TOp> {
+    current(): Atom<TOp> {
         return this._weave.atoms[this._index];
     }
 
@@ -54,15 +54,15 @@ export class WeaveTraverser<TOp extends AtomOp> {
      */
     skip(parent: AtomId) {
         const current = this.current();
-        if (current && idEquals(parent, current.atom.id)) {
+        if (current && idEquals(parent, current.id)) {
             const size = this._weave.getAtomSize(parent);
             this._index += size;
         } else {
             while (this.peek(parent)) {
-                const ref = this.next();
+                const atom = this.next();
                 const nextRef = this.peek();
-                if (nextRef && idEquals(ref.atom.id, nextRef.atom.cause)) {
-                    this.skip(ref.atom.id);
+                if (nextRef && idEquals(atom.id, nextRef.cause)) {
+                    this.skip(atom.id);
                 }
             }
         }

@@ -1,5 +1,4 @@
 import { AtomOp, Atom } from "./Atom";
-import { WeaveReference } from "./Weave";
 
 /**
  * Defines an interface for an operation that was calculated

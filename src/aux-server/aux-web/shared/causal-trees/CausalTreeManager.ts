@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 import { WorkerEvent, ValueCalculated } from './WorkerEvents';
 import { SubscriptionLike, Subject, Observable } from 'rxjs';
 import { first, map, filter, tap } from 'rxjs/operators';
-import { AtomOp, RealtimeChannelInfo, PrecalculatedOp, RealtimeCausalTree, CausalTree, RealtimeChannel, WeaveReference, CausalTreeFactory, CausalTreeStore, ArchivingCausalTreeStore } from '@yeti-cgi/aux-common/causal-trees';
+import { AtomOp, RealtimeChannelInfo, PrecalculatedOp, RealtimeCausalTree, CausalTree, RealtimeChannel, CausalTreeFactory, CausalTreeStore, ArchivingCausalTreeStore, Atom } from '@yeti-cgi/aux-common/causal-trees';
 import { SocketIOConnection } from './SocketIOConnection';
 import { auxCausalTreeFactory } from '@yeti-cgi/aux-common';
 import { BrowserCausalTreeStore } from './BrowserCausalTreeStore';
@@ -62,7 +62,7 @@ export class CausalTreeManager implements SubscriptionLike {
         let realtime = <RealtimeCausalTree<TTree>>this._trees[info.id];
         if (!realtime) {
             let connection = new SocketIOConnection(this._socket);
-            let channel = new RealtimeChannel<WeaveReference<AtomOp>[]>(info, connection);
+            let channel = new RealtimeChannel<Atom<AtomOp>[]>(info, connection);
             realtime = new RealtimeCausalTree<TTree>(this._factory, this._store, channel);
             realtime.storeArchivedAtoms = true;
             this._trees[info.id] = realtime;
@@ -92,7 +92,7 @@ export class CausalTreeManager implements SubscriptionLike {
         await this._store.update(newId, realtime.tree.export());
 
         let connection = new SocketIOConnection(this._socket);
-        let channel = new RealtimeChannel<WeaveReference<AtomOp>[]>(info, connection);
+        let channel = new RealtimeChannel<Atom<AtomOp>[]>(info, connection);
         let newRealtime = new RealtimeCausalTree<TTree>(this._factory, this._store, channel);
         newRealtime.storeArchivedAtoms = true;
         this._trees[info.id] = newRealtime;

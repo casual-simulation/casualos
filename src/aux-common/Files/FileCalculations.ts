@@ -24,7 +24,7 @@ import { FilterFunction, SandboxInterface } from '../Formulas/SandboxInterface';
 import { PartialFile } from '../Files';
 import { FilesState, cleanFile, FileEvent } from './FilesChannel';
 import { merge } from '../utils';
-import { WeaveReference, AtomOp } from '../causal-trees';
+import { AtomOp, Atom } from '../causal-trees';
 import { AuxOp, AuxOpType, AuxFile } from '../aux-format';
 
 export var ShortId_Length: number = 5;
@@ -565,7 +565,7 @@ export function calculateGridScale(calc: FileCalculationContext, workspace: AuxF
  * @param current The current state.
  * @param events If provided, this event will be used to help short-circut the diff calculation to be O(1) whenever the event is a 'file_added', 'file_removed', or 'file_updated' event.
  */
-export function calculateStateDiff(prev: FilesState, current: FilesState, events?: WeaveReference<AuxOp>[]): FilesStateDiff {
+export function calculateStateDiff(prev: FilesState, current: FilesState, events?: Atom<AuxOp>[]): FilesStateDiff {
 
     prev = prev || {};
     current = current || {};
