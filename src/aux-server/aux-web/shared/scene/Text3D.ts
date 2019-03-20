@@ -157,6 +157,27 @@ export class Text3D extends Object3D {
         this.updateBoundingBox();
     }
 
+    public setWorldPosition(worldPos: Vector3) {
+        if (!worldPos)
+            return;
+
+        let myMin = this._boundingBox.min.clone();
+        let myMax = this._boundingBox.max.clone();
+
+        let bottomCenter = new Vector3(
+            ((myMax.x - myMin.x) / 2) + myMin.x,
+            myMin.y,
+            ((myMax.z - myMin.z) / 2) + myMin.z
+        );
+
+        let posOffset = this.position.clone().sub(bottomCenter);
+
+        this.position.set(worldPos.x, worldPos.y, worldPos.z);
+        this.position.add(posOffset);
+
+        this.updateBoundingBox();
+    }
+
     /**
      * Update the bounding box for this text 3d.
      * This is normally run automatically after updating attributes of the text 3d.

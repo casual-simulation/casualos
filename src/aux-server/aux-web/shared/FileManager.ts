@@ -283,12 +283,14 @@ export class FileManager {
     this._aux.tree.addFile(workspace);
   }
 
-  async action(sender: File, receiver: File, eventName: string) {
-    console.log('[FileManager] Run event:', eventName, 'on files:', sender, receiver);
+  async action(eventName: string, files: File[]) {
+    console.log('[FileManager] Run event:', eventName, 'on files:', files);
 
     // Calculate the events on a single client and then run them in a transaction to make sure the order is right.
-    const actionData = action(sender.id, receiver.id, eventName);
+    const fileIds = files.map(f => f.id);
+    const actionData = action(eventName, fileIds);
     const result = calculateActionEvents(this._aux.tree.value, actionData);
+    console.log('  result: ', result);
 
     this._aux.tree.addEvents(result.events);
   }
@@ -463,11 +465,13 @@ export class FileManager {
     this._setStatus('Updating user file...');
     let userFile = this.userFile;
     const userContext = `_user_${appManager.user.username}_${this._aux.tree.site.id}`;
+    const userInventoryContext = `_user_${appManager.user.username}_${this._aux.tree.site.id}_inventory`;
     if (!userFile) {
       await this.createFile(this._appManager.user.username, {
         [userContext]: true,
         ['aux.builder.context']: userContext,
         _user: this._appManager.user.username,
+        _userInventoryContext: userInventoryContext,
         _mode: DEFAULT_USER_MODE,
       });
     }

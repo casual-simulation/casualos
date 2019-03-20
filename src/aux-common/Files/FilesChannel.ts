@@ -1,4 +1,4 @@
-import {filter, values, union, keys, isEqual, transform, set, mergeWith, unset, get, sortBy} from 'lodash';
+import {filter, values, union, keys, isEqual, transform, set, mergeWith, unset, get, sortBy, flatMap} from 'lodash';
 import {
     map as rxMap,
     flatMap as rxFlatMap,
@@ -7,9 +7,10 @@ import {
 } from 'rxjs/operators';
 import { ReducingStateStore, Event, ChannelConnection } from "../channels-core";
 import {File, Object, Workspace, PartialFile} from './File';
-import { tagsMatchingFilter, createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, isDestroyed, getActiveObjects, calculateStateDiff, FilesStateDiff } from './FileCalculations';
+import { createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, isDestroyed, getActiveObjects, calculateStateDiff, FilesStateDiff, filtersMatchingArguments } from './FileCalculations';
 import { merge as mergeObj } from '../utils';
 import { setActions, getActions, setFileState } from '../Formulas/formula-lib';
+import { AnimationActionLoopStyles } from 'three';
 export interface FilesState {
     [id: string]: File;
 }
@@ -37,29 +38,19 @@ export interface DiffOptions {
  */
 export function calculateActionEvents(state: FilesState, action: Action) {
     const objects = getActiveObjects(state);
-    const sender = <Object>state[action.senderFileId];
-    const receiver = <Object>state[action.receiverFileId];
+    const files = !!action.fileIds ? action.fileIds.map(id => state[id]) : objects;
     const context = createCalculationContext(objects);
-    const firstEvents = eventActions(state, objects, context, sender, receiver, action.eventName);
-    const secondEvents = eventActions(state, objects, context, receiver, sender, action.eventName);
-    const events = [
-        ...firstEvents,
-        ...secondEvents,
-        fileUpdated(sender.id, {
-            tags: {
-                _destroyed: true
-            }
-        }),
-        fileUpdated(receiver.id, {
-            tags: {
-                _destroyed: true
-            }
-        })
-    ];
+    const fileEvents = flatMap(files, (f, index) => eventActions(
+        state, 
+        files, 
+        context, 
+        f,
+        action.eventName));
+    const events = fileEvents;
 
     return {
         events,
-        hasUserDefinedEvents: firstEvents.length > 0 || secondEvents.length > 0
+        hasUserDefinedEvents: fileEvents.length > 0
     };
 }
 
@@ -91,21 +82,72 @@ export function cleanFile(file: File): File {
 }
 
 
-function eventActions(state: FilesState, objects: Object[], context: FileCalculationContext, file: Object, other: Object, eventName: string): FileEvent[] {
-    const filters = tagsMatchingFilter(file, other, eventName, context);
-    const scripts = filters.map(f => calculateFileValue(context, other, f));
+function eventActions(state: FilesState, objects: Object[], context: FileCalculationContext, file: Object, eventName: string): FileEvent[] {
+    const otherObjects = objects.filter(o => o !== file);
+    const sortedObjects = sortBy(objects, o => o !== file);
+    const filters = filtersMatchingArguments(context, file, eventName, otherObjects);
+    const scripts = filters.map(f => calculateFileValue(context, file, f.tag));
     let previous = getActions();
     let actions: FileEvent[] = [];
+    let changes: {
+        [key: string]: {
+            changedTags: string[];
+            newValues: string[];
+        }
+    } = {};
+    let vars: {
+        [key: string]: any
+    } = {};
     setActions(actions);
     setFileState(state);
     
-    scripts.forEach(s => context.sandbox.run(s, {}, convertToFormulaObject(context, other), {
-        that: convertToFormulaObject(context, file)
+    sortedObjects.forEach(o => {
+        changes[o.id] = {
+            changedTags: [],
+            newValues: []
+        };
+    });
+
+    const formulaObjects = sortedObjects.map(o => convertToFormulaObject(context, o, (tag, value) => {
+        changes[o.id].changedTags.push(tag);
+        changes[o.id].newValues.push(value);
     }));
+
+    formulaObjects.forEach((obj, index) => {
+        if (index === 1) {
+            vars['that'] = obj;
+        }
+
+        vars[`arg${index}`] = obj;
+    });
+
+    scripts.forEach(s => context.sandbox.run(s, {}, formulaObjects[0], vars));
 
     setActions(previous);
     setFileState(null);
+
+    const updates = sortedObjects.map(o => calculateFileUpdateFromChanges(o.id, changes[o.id].changedTags, changes[o.id].newValues));
+    updates.forEach(u => {
+        if (u) {
+            actions.push(u);
+        }
+    });
+
     return actions;
+}
+
+function calculateFileUpdateFromChanges(id: string, tags: string[], values: any[]): FileUpdatedEvent {
+    if (tags.length === 0) {
+        return null;
+    }
+    let partial: PartialFile = {
+        tags: {}
+    };
+    for(let i = 0; i < tags.length; i++) {
+        partial.tags[tags[i]] = values[i];
+    }
+
+    return fileUpdated(id, partial);
 }
 
 export interface FileAddedEvent extends Event {
@@ -151,15 +193,10 @@ export interface Action {
     type: 'action';
 
     /**
-     * The file that is "sending" the event.
-     * 
+     * The IDs of the files that the event is being sent to.
+     * If null, then the action is sent to every file.
      */
-    senderFileId: string;
-
-    /**
-     * The file that is "receiving" the event.
-     */
-    receiverFileId: string;
+    fileIds: string[] | null;
 
     /**
      * The name of the event.
@@ -197,11 +234,10 @@ export function transaction(events: FileEvent[]): FileTransactionEvent {
     };
 }
 
-export function action(senderFileId: string, receiverFileId: string, eventName: string): Action {
+export function action(eventName: string, fileIds: string[] = null): Action {
     return {
         type: 'action',
-        senderFileId,
-        receiverFileId,
+        fileIds,
         eventName,
     };
 }

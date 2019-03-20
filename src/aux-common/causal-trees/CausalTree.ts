@@ -206,6 +206,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
 
     /**
      * Imports the given list of weave references into the tree.
+     * The references are expected to be sorted as a valid weave and also to match
      * @param refs The references to import.
      */
     importWeave<T extends TOp>(refs: WeaveReference<T>[]): WeaveReference<TOp>[] {

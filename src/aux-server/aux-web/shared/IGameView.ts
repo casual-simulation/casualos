@@ -40,8 +40,6 @@ export interface IGameView extends AuxFile3DFinder, Vue {
     vrDisplay: VRDisplay;
     vrCapable: boolean;
 
-    selectedRecentFile: Object;
-
     /**
      * Gets the list of contexts that this game view contains.
      */

@@ -16,6 +16,7 @@ import {
     cloneDeep
 } from 'lodash';
 import { Sandbox, SandboxLibrary } from '../Formulas/Sandbox';
+import { isProxy, createFileProxy, proxyObject, SetValueHandler } from './FileProxy';
 
 /// <reference path="../typings/global.d.ts" />
 import formulaLib from '../Formulas/formula-lib';
@@ -56,6 +57,25 @@ export interface FileCalculationContext {
      * The sandbox that should be used to run JS.
      */
     sandbox: Sandbox;
+}
+
+export type FilterParseResult = FilterParseSuccess | FilterParseFailure;
+
+export interface FilterParseSuccess {
+    success: true;
+    eventName: string;
+    tag: string;
+    filter: {
+        tag: string,
+        value: any
+    };
+}
+
+export interface FilterParseFailure {
+    success: false;
+    partialSuccess: boolean;
+    tag: string;
+    eventName: string;
 }
 
 /**
@@ -235,7 +255,7 @@ export function isNumber(value: string): boolean {
 }
 
 export function isFormulaObject(object: any) {
-    return !!object._converted;
+    return object[isProxy];
 }
 
 /**
@@ -375,7 +395,7 @@ export function validateTag(tag: string) {
         errors['tag.required'] = {};
     } else {
         const filter = parseFilterTag(tag);
-        if(!(filter.partialSuccess || filter.success) && tag.indexOf('#') >= 0) {
+        if(!(filter.success || (filter.success === false && filter.partialSuccess)) && tag.indexOf('#') >= 0) {
             errors.valid = false;
             errors['tag.invalidChar'] = { char: '#' };
         }
@@ -608,30 +628,11 @@ export function calculateStateDiff(prev: FilesState, current: FilesState, events
  * Creates a new object that contains the tags that the given object has
  * and is usable in a formula.
  */
-export function convertToFormulaObject(context: FileCalculationContext, object: any) {
+export function convertToFormulaObject(context: FileCalculationContext, object: File, setValue?: SetValueHandler) {
     if (isFormulaObject(object)) {
         return object;
     }
-    let converted: {
-        [tag: string]: any
-    } = {
-        _converted: true,
-        _original: object,
-        id: object.id
-    };
-    for(let key in object.tags) {
-        if (typeof converted[key] === 'undefined') {
-            const val = object.tags[key];
-            if(containsFormula(val)) {
-                Object.defineProperty(converted, key, {
-                    get: () => _calculateValue(context, object, key, val)
-                });
-            } else {
-                converted[key] = _calculateValue(context, object, key, val);
-            }
-        }
-    }
-    return converted;
+    return createFileProxy(context, object, setValue);
 }
 
 /**
@@ -649,14 +650,15 @@ export function createCalculationContext(objects: Object[], lib: SandboxLibrary 
 }
 
 /**
- * Gets a list of tags for the given object that match the given event name.
- * @param file The file to test.
- * @param other The other file to test against.
+ * Gets a list of tags from the given object that match the given event name and arguments.
+ * @param file The file to find the tags that match the arguments.
  * @param eventName The event name to test.
+ * @param other The arguments to match against.
  */
-export function tagsMatchingFilter(file: Object, other: Object, eventName: string, context: FileCalculationContext): string[] {
-    const tags = keys(other.tags);
-    return tags.filter(t => tagMatchesFilter(t, file, eventName, context));
+export function filtersMatchingArguments(context: FileCalculationContext, file: Object, eventName: string, args: any[]): FilterParseResult[] {
+    const tags = keys(file.tags);
+    return tags.map(t => parseFilterTag(t))
+        .filter(t => filterMatchesArguments(context, t, eventName, args));
 }
 
 /**
@@ -665,12 +667,21 @@ export function tagsMatchingFilter(file: Object, other: Object, eventName: strin
  * @param file The file to test.
  * @param eventName The event to test for.
  */
-export function tagMatchesFilter(tag: string, file: Object, eventName: string, context: FileCalculationContext): boolean {
-    const parsed = parseFilterTag(tag);
-    if(parsed.success && parsed.eventName === eventName) {
-        const calculatedValue = calculateFileValue(context, file, parsed.filter.tag);
-        return calculatedValue === parsed.filter.value ||
-            (Array.isArray(parsed.filter.value) && isEqual(file.tags[parsed.filter.tag], parsed.filter.value))
+export function filterMatchesArguments(context: FileCalculationContext, filter: FilterParseResult, eventName: string, args: any[]): boolean {
+    if(filter.success && filter.eventName === eventName) {
+        if (!!filter.filter) {
+            const arg = args.length > 0 ? args[0] : null;
+            if (arg) {
+                const calculatedValue = calculateFileValue(context, arg, filter.filter.tag);
+                return calculatedValue === filter.filter.value ||
+                    (Array.isArray(filter.filter.value) && isEqual(arg.tags[filter.filter.tag], filter.filter.value))
+            } else {
+                return false;
+            }
+
+        } else {
+            return true;
+        }
     }
     return false;
 }
@@ -890,7 +901,7 @@ export function duplicateFile(file: Object, data?: PartialFile): Object {
  * Parses the given tag filter into its components.
  * @param tag 
  */
-export function parseFilterTag(tag: string) {
+export function parseFilterTag(tag: string): FilterParseResult {
     const firstParenIndex = tag.indexOf('(');
     const tagIndex = tag.indexOf('#');
     if (firstParenIndex > 0 && (tagIndex > firstParenIndex || tagIndex < 0)) {
@@ -919,6 +930,7 @@ export function parseFilterTag(tag: string) {
                     return {
                         success: true,
                         eventName: eventName,
+                        tag: tag,
                         filter: {
                             tag: tagName,
                             value: finalValue
@@ -926,16 +938,34 @@ export function parseFilterTag(tag: string) {
                     };
                 }
             }
+
+            let lastParen = tag.lastIndexOf(')');
+            if (lastParen > firstParenIndex) {
+                let between = tag.slice(firstParenIndex + 1, lastParen);
+                // Only whitespace is allowed
+                if (/^\s*$/.test(between)) {
+                    return {
+                        success: true,
+                        eventName: eventName,
+                        tag: tag,
+                        filter: null
+                    };
+                }
+            }
                 
             return {
                 success: false,
                 partialSuccess: true,
+                tag: tag,
                 eventName: eventName,
             };
         }
     }
     return {
-        success: false
+        success: false,
+        partialSuccess: false,
+        tag: tag,
+        eventName: null
     };
 }
 
@@ -1087,11 +1117,21 @@ function _calculateValue(context: FileCalculationContext, object: any, tag: stri
 }
 
 function _calculateFormulaValue(context: FileCalculationContext, object: any, tag: string, formula: string) {
-    return context.sandbox.run(formula, {
+    const result = context.sandbox.run(formula, {
         formula,
         tag,
         context
     }, convertToFormulaObject(context, object));
+
+    // Unwrap the proxy object
+    if (result.success && result.result && result.result[isProxy]) {
+        return {
+            ...result,
+            result: result.result[proxyObject]
+        };
+    }
+
+    return result;
 }
 
 function _singleOrArray<T>(values: T[]) {

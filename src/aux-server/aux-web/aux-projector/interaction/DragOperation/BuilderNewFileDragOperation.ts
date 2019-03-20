@@ -73,12 +73,6 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
         }
     }
 
-    protected _combineFiles(eventName: string) {
-        if (this._fileAdded) {
-            appManager.fileManager.action(this._file, this._other, eventName);
-        }
-    }
-
     private _releaseDragMesh(mesh: AuxFile3D): void {
         if (mesh) {
             mesh.dispose();

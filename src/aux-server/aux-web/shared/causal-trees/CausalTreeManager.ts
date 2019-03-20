@@ -21,6 +21,10 @@ export class CausalTreeManager implements SubscriptionLike {
     private _store: ArchivingCausalTreeStore;
     private _initialized: boolean;
 
+    get factory(): CausalTreeFactory {
+        return this._factory;
+    }
+
     /**
      * Creates a new Causal Tree Manager.
      * @param socket The socket.io connection that should be used.

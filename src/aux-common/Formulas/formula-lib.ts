@@ -1,5 +1,8 @@
-import { File, FileUpdatedEvent, FileEvent, FileAddedEvent, action, FilesState, calculateActionEvents } from "../Files";
+import { File } from '../Files/File';
+import { FileUpdatedEvent, FileEvent, FileAddedEvent, action, FilesState, calculateActionEvents } from "../Files/FilesChannel";
 import uuid from 'uuid/v4';
+import { every } from "lodash";
+import { isProxy, proxyObject } from "../Files/FileProxy";
 
 let actions: FileEvent[] = [];
 let state: FilesState = null;
@@ -189,7 +192,7 @@ export function copy(...files: any[]) {
     let id = uuid();
 
     let originals = files.map(f => {
-        return (f && f._converted && f._original) ? f._original.tags : f;
+        return (f && f[isProxy]) ? f[proxyObject].tags : f;
     });
 
     let newFile = {
@@ -217,16 +220,43 @@ export function copy(...files: any[]) {
 }
 
 export function combine(first: File | string, second: File | string) {
-    event('+', first, second);
+    event('+', [first, second]);
 }
 
-export function event(name: string, first: File | string, second: File | string) {
+export function event(name: string, files: (File | string)[]) {
     if (!!state) {
-        let firstId: string = typeof first === 'string' ? first : first.id;
-        let secondId: string = typeof second === 'string' ? second : second.id;
-        let results = calculateActionEvents(state, action(firstId, secondId, name));
+        let ids = !!files ? files.map(f => typeof f === 'string' ? f : f.id) : null;
+        let results = calculateActionEvents(state, action(name, ids));
         actions.push(...results.events);
     }
+}
+
+/**
+ * Shouts the given event to every file.
+ * @param name The event name.
+ */
+export function shout(name: string) {
+    event(name, null);
+}
+
+/**
+ * Redirects the user to a context in the given simulation and context.
+ * @param simulationId The ID of the simulation to go to.
+ * @param context The context to go to. If not provided then the simulation ID will be used as the context.
+ */
+export function goToContext(simulationId: string, context?: string) {
+    if (!context) {
+        // Go to context in same simulation
+        context = simulationId;
+        
+        // Grab the simulation ID from the current URL.
+        // pathname always starts with a '/' so the first part is actually the second
+        // element.
+        simulationId = window.location.pathname.split('/')[1];
+    }
+
+    // Go to context and simulation
+    window.location.pathname = `${simulationId}/${context}`;
 }
 
 export default {
@@ -243,5 +273,7 @@ export default {
     copy,
     create,
     combine,
-    event
+    event,
+    shout,
+    goToContext
 };

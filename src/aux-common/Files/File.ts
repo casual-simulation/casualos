@@ -8,51 +8,54 @@ export type Workspace = File;
 
 export interface File {
     id: string;
-    tags: {
-        _selection?: string;
-        _destroyed?: any;
-        _user?: string;
-        _userContext?: string;
-        _mode?: UserMode;
-        
-        _editingFile?: string;
-        _lastActiveTime?: number;
-        _lastEditedBy?: string;
-        ['aux.scene.color']?: string;
-
-        ['aux.color']?: unknown;
-        ['aux.movable']?: unknown;
-        ['aux.stackable']?: unknown;
-        ['aux.stroke.color']?: unknown;
-        ['aux.stroke.width']?: unknown;
-        ['aux.line.to']?: unknown;
-        ['aux.line.color']?: unknown;
-        ['aux.label']?: unknown;
-        ['aux.label.color']?: unknown;
-        ['aux.label.size']?: unknown;
-        ['aux.label.size.mode']?: 'auto' | null;
-
-        // Builder related tags
-        ['aux.builder.context']?: string | string[];
-        ['aux.builder.context.x']?: number;
-        ['aux.builder.context.y']?: number;
-        ['aux.builder.context.z']?: number;
-        ['aux.builder.context.rotation.x']?: number;
-        ['aux.builder.context.rotation.y']?: number;
-        ['aux.builder.context.rotation.z']?: number;
-        ['aux.builder.context.scale']?: number;
-        ['aux.builder.context.grid']?: {
-            [key: string]: WorkspaceHex;
-        } | null,
-        ['aux.builder.context.grid.scale']?: number;
-        ['aux.builder.context.defaultHeight']?: number;
-        ['aux.builder.context.color']?: string;
-        ['aux.builder.context.size']?: number;
-        ['aux.builder.context.minimized']?: boolean | null;
-
-        [key: string]: any;
-    }
+    tags: FileTags;
 };
+
+export interface FileTags {
+    _selection?: string;
+    _destroyed?: any;
+    _user?: string;
+    _userContext?: string;
+    _userInventoryContext?: string;
+    _mode?: UserMode;
+    
+    _editingFile?: string;
+    _lastActiveTime?: number;
+    _lastEditedBy?: string;
+    ['aux.scene.color']?: string;
+
+    ['aux.color']?: unknown;
+    ['aux.movable']?: unknown;
+    ['aux.stackable']?: unknown;
+    ['aux.stroke.color']?: unknown;
+    ['aux.stroke.width']?: unknown;
+    ['aux.line.to']?: unknown;
+    ['aux.line.color']?: unknown;
+    ['aux.label']?: unknown;
+    ['aux.label.color']?: unknown;
+    ['aux.label.size']?: unknown;
+    ['aux.label.size.mode']?: 'auto' | null;
+
+    // Builder related tags
+    ['aux.builder.context']?: string | string[];
+    ['aux.builder.context.x']?: number;
+    ['aux.builder.context.y']?: number;
+    ['aux.builder.context.z']?: number;
+    ['aux.builder.context.rotation.x']?: number;
+    ['aux.builder.context.rotation.y']?: number;
+    ['aux.builder.context.rotation.z']?: number;
+    ['aux.builder.context.scale']?: number;
+    ['aux.builder.context.grid']?: {
+        [key: string]: WorkspaceHex;
+    } | null,
+    ['aux.builder.context.grid.scale']?: number;
+    ['aux.builder.context.defaultHeight']?: number;
+    ['aux.builder.context.color']?: string;
+    ['aux.builder.context.size']?: number;
+    ['aux.builder.context.minimized']?: boolean | null;
+
+    [key: string]: any;
+}
 
 /**
  * Defines an interface for a hex in a workspace.

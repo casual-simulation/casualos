@@ -1,5 +1,70 @@
 # AUX Server Changelog
 
+
+## V0.3.11
+### Date: 3/19/2019
+
+### Changes:
+- Bug Fixes
+    - Fixed dragging worksurfaces while in files mode.
+    - Fixed an issue in Aux Player that caused a file to still be visible even if it was destroyed.
+    - Fixed a login issue that would cause the user to get stuck in a redirect loop.
+    - Fixed shouts.
+    - Fixed AUX File upload to overwrite existing state instead of trying to merge the two trees.
+        - This allows us to keep better consistency across multiple devices.
+    - Fixed user labels.
+- Formula Improvements
+    - Improved formulas allow using normal dot syntax for tags with dots in them.
+        - This means you can now do `this.aux.color` instead of `this['aux.color']`
+        - As a result of this change, primitive values (number, string, boolean) are converted to objects.
+        - So to do equality comparisions you must use the `==` operator instead of either `!` or `===`.
+        - Numerical operators and other comparision operators still work fine.
+        - You can alternatively use the `valueOf()` function to convert the object back into a primitive value.
+    - Added the ability to change a file value simply by changing it.
+        - This means instead of doing `copy(this, { "aux.color": "red" })` you can now do `this.aux.color = "red"`.
+        - Additionally, we no longer destroy files by default.
+        - This means that the destroy/recreate pattern is basically deprecated. This pattern worked in simple scenarios, but for more complex scenarios it could easily cause race conditions where duplicate files are created because users clicked the same file at the same time.
+- Other Improvements
+    - Improved the `goToContext()` formula function to be able to accept a single parameter that indicates the context to go to.
+        - The function will infer the current simulation ID from the URL.
+
+## V0.3.10
+### Date: 3/18/2019
+
+### Changes:
+- Fixed aux upload.
+
+## V0.3.9
+### Date: 3/18/2019
+
+### Changes:
+- Fixed Aux Player file added event ordering.
+- Reworked actions function to take an arbitrary number of files.
+- Added ability to have tag filters that match everything.
+- Added `shout` formula function.
+    ```
+    shout(eventName)
+    ```
+- Added `goToContext` formula function.
+    ```
+    goToContext(simulationId, contextId)
+    ```
+- Calling `onClick` action on file that gets clicked by the user in Aux Player.
+- Fixed Aux Player showing destroyed files.
+
+## V0.3.8
+### Date: 3/18/2019
+
+### Changes:
+- Changed configurations to allow auxplayer.com and auxbuilder.com
+
+## V0.3.7
+### Date: 3/17/2019
+
+### Changes:
+- Added InventoryContext to hold onto user’s inventory data much in the same way Context3D does (WIP). Ported over some MiniFile stuff from Aux Projector to get inventory display framework up (WIP).
+- Renamed pointOnGrid to pointOnWorkspaceGrid for clarification.
+
 ## V0.3.6
 ### Date: 3/15/2019
 
