@@ -138,19 +138,13 @@ describe('Weave', () => {
         });
 
         it('should only allow a single root atom', () => {
-            let weave = new Weave();
-
-            const a1 = atom(atomId(1, 1), null, new Op());
-            const a2 = atom(atomId(2, 1), null, new Op());
-            const ref1 = weave.insert(a1);
-            const ref2 = weave.insert(a1);
-            const ref3 = weave.insert(a2);
-
-            expect(ref1).toBe(ref2);
-            expect(ref1).toBe(ref3);
-            expect(weave.atoms.map(a => a)).toEqual([
-                a1,
-            ]);
+            expect(() => {
+                let weave = new Weave();
+                const a1 = atom(atomId(1, 1), null, new Op());
+                const a2 = atom(atomId(2, 1), null, new Op());
+                const ref1 = weave.insert(a1);
+                const ref3 = weave.insert(a2);
+            }).toThrowError('Cannot add second root atom.');
         });
 
         it('should handle adding the same atom twice as long as its not the root', () => {

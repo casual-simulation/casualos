@@ -57,9 +57,10 @@ export class Weave<TOp extends AtomOp> {
     insert<T extends TOp>(atom: Atom<T>): Atom<T> {
         const site = this.getSite(atom.id.site);
         if (!atom.cause) {
+
             // check for an existing root atom
             if (this.atoms.length > 0) {
-                return <Atom<T>>this.atoms[0];
+                throw new Error('Cannot add second root atom.');
             }
 
             // Add the atom at the root of the weave.
