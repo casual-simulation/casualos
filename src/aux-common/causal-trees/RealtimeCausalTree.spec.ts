@@ -10,6 +10,7 @@ import { Weave } from './Weave';
 import { TestChannelConnection } from './test/TestChannelConnection';
 import { site, SiteInfo } from './SiteIdInfo';
 import { SiteVersionInfo } from './SiteVersionInfo';
+import { StoredCausalTree } from '.';
 
 jest.useFakeTimers();
 
@@ -102,6 +103,19 @@ describe('RealtimeCausalTree', () => {
 
         it('should load the tree from the store', async () => {
             await store.update('abc', {
+                site: site(2),
+                knownSites: null,
+                weave: null
+            });
+
+            await realtime.init();
+
+            expect(realtime.tree).not.toBe(null);
+        });
+
+        it('should load the version 2 tree from the store', async () => {
+            await store.update('abc', {
+                formatVersion: 2,
                 site: site(2),
                 knownSites: null,
                 weave: null
@@ -205,6 +219,33 @@ describe('RealtimeCausalTree', () => {
 
     describe('connected with existing tree', () => {
 
+        describe('version 1', () => {
+            it('should import the version 1 weave from the store', async () => {
+                let localWeave = new Weave<Op>();
+                localWeave.insert(atom(atomId(1, 0), null, new Op()));
+                localWeave.insert(atom(atomId(2, 3), atomId(1, 0), new Op()));
+                localWeave.insert(atom(atomId(2, 4), atomId(1, 0), new Op()));
+    
+                await store.update('abc', <StoredCausalTree<Op>>{
+                    site: site(2),
+                    knownSites: [
+                        site(1),
+                        site(2)
+                    ],
+                    weave: localWeave.atoms.map(a => ({
+                        atom: a
+                    }))
+                });
+    
+                await realtime.init();
+    
+                expect(realtime.tree).not.toBe(null);
+                expect(realtime.tree.weave.atoms).toEqual(localWeave.atoms);
+                expect(updated.length).toBe(1);
+            });
+        });
+
+
         it('should import the weave from the store', async () => {
             let localWeave = new Weave<Op>();
             localWeave.insert(atom(atomId(1, 0), null, new Op()));
@@ -212,6 +253,7 @@ describe('RealtimeCausalTree', () => {
             localWeave.insert(atom(atomId(2, 4), atomId(1, 0), new Op()));
 
             await store.update('abc', {
+                formatVersion: 2,
                 site: site(2),
                 knownSites: [
                     site(1),
@@ -245,6 +287,7 @@ describe('RealtimeCausalTree', () => {
             
             weave.push(...remoteWeave.atoms);
             await store.update('abc', {
+                formatVersion: 2,
                 site: site(2),
                 knownSites: [
                     site(1),
@@ -270,6 +313,7 @@ describe('RealtimeCausalTree', () => {
             knownSites.push(site(1999));
 
             await store.update('abc', {
+                formatVersion: 2,
                 site: site(2),
                 knownSites: [
                     site(2)
@@ -307,6 +351,7 @@ describe('RealtimeCausalTree', () => {
             
             weave.push(...remoteWeave.atoms);
             await store.update('abc', {
+                formatVersion: 2,
                 site: site(2),
                 knownSites: [
                     site(1),
@@ -351,6 +396,7 @@ describe('RealtimeCausalTree', () => {
             
             weave.push(...remoteWeave.atoms);
             await store.update('abc', {
+                formatVersion: 2,
                 site: site(2),
                 knownSites: [
                     site(1),
@@ -395,6 +441,7 @@ describe('RealtimeCausalTree', () => {
             knownSites.push(site(1999));
 
             await store.update('abc', {
+                formatVersion: 2,
                 site: site(2),
                 knownSites: [
                     site(2)

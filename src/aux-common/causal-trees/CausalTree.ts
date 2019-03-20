@@ -117,7 +117,11 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         this.garbageCollect = false;
 
         if (tree.weave) {
-            this.importWeave(tree.weave);
+            if (tree.formatVersion === 2) {
+                this.importWeave(tree.weave);
+            } else {
+                this.importWeave(tree.weave.map(ref => ref.atom));
+            }
         }
     }
 
@@ -227,6 +231,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      */
     export(): StoredCausalTree<TOp> {
         return {
+            formatVersion: 2,
             site: this._site,
             knownSites: this.knownSites.slice(),
             weave: this.weave.atoms.slice()

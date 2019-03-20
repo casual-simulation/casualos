@@ -101,7 +101,13 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         const stored = await this._store.get(this.id);
         if (stored) {
             this._setTree(<TTree>this._factory.create(this.type, stored));
-            this._updated.next(stored.weave);
+            if (stored.weave) {
+                if (stored.formatVersion === 2) {
+                    this._updated.next(stored.weave);
+                } else {
+                    this._updated.next(stored.weave.map(a => a.atom));
+                }
+            }
         }
 
         this._subs.push(this._channel.connectionStateChanged.pipe(
