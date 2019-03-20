@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 import { WorkerEvent, ValueCalculated } from './WorkerEvents';
 import { SubscriptionLike, Subject, Observable } from 'rxjs';
 import { first, map, filter, tap } from 'rxjs/operators';
-import { AtomOp, RealtimeChannelInfo, PrecalculatedOp, RealtimeCausalTree, CausalTree, RealtimeChannel, CausalTreeFactory, CausalTreeStore, ArchivingCausalTreeStore, Atom } from '@yeti-cgi/aux-common/causal-trees';
+import { AtomOp, RealtimeChannelInfo, PrecalculatedOp, RealtimeCausalTree, CausalTree, RealtimeChannel, CausalTreeFactory, CausalTreeStore, Atom } from '@yeti-cgi/aux-common/causal-trees';
 import { SocketIOConnection } from './SocketIOConnection';
 import { auxCausalTreeFactory } from '@yeti-cgi/aux-common';
 import { BrowserCausalTreeStore } from './BrowserCausalTreeStore';
@@ -18,7 +18,7 @@ export class CausalTreeManager implements SubscriptionLike {
     private _events: Subject<MessageEvent>;
     private _socket: typeof io.Socket;
     private _factory: CausalTreeFactory;
-    private _store: ArchivingCausalTreeStore;
+    private _store: CausalTreeStore;
     private _initialized: boolean;
 
     get factory(): CausalTreeFactory {
@@ -64,7 +64,7 @@ export class CausalTreeManager implements SubscriptionLike {
             let connection = new SocketIOConnection(this._socket);
             let channel = new RealtimeChannel<Atom<AtomOp>[]>(info, connection);
             realtime = new RealtimeCausalTree<TTree>(this._factory, this._store, channel);
-            realtime.storeArchivedAtoms = true;
+            // realtime.storeArchivedAtoms = true;
             this._trees[info.id] = realtime;
         }
         
@@ -89,12 +89,12 @@ export class CausalTreeManager implements SubscriptionLike {
             bare: true
         };
 
-        await this._store.update(newId, realtime.tree.export());
+        await this._store.put(newId, realtime.tree.export());
 
         let connection = new SocketIOConnection(this._socket);
         let channel = new RealtimeChannel<Atom<AtomOp>[]>(info, connection);
         let newRealtime = new RealtimeCausalTree<TTree>(this._factory, this._store, channel);
-        newRealtime.storeArchivedAtoms = true;
+        // newRealtime.storeArchivedAtoms = true;
         this._trees[info.id] = newRealtime;
 
         await newRealtime.init();

@@ -79,7 +79,7 @@ describe('AuxTreeCalculations', () => {
             let stored = new AuxCausalTree(storedTree(site(1)));
             stored.root();
             
-            await store.update('test', stored.export());
+            await store.put('test', stored.export());
             await tree.init();
             await connection.flushPromises();
             
@@ -118,7 +118,7 @@ describe('AuxTreeCalculations', () => {
             stored.file('test');
             stored.file('zdf');
 
-            await store.update('test', stored.export());
+            await store.put('test', stored.export());
             await tree.init();
             await connection.flushPromises();
             scheduler.flush();
@@ -154,7 +154,7 @@ describe('AuxTreeCalculations', () => {
             const update = stored.tag('abc', file);
             const deleted = stored.delete(file);
 
-            await store.update('test', stored.export());
+            await store.put('test', stored.export());
             await tree.init();
             await connection.flushPromises();
             scheduler.flush();
@@ -187,7 +187,7 @@ describe('AuxTreeCalculations', () => {
             stored.root();
             const file = stored.file('test');
 
-            await store.update('test', stored.export());
+            await store.put('test', stored.export());
             await tree.init();
             await connection.flushPromises();
 

@@ -1,5 +1,5 @@
 import { Socket, Server } from 'socket.io';
-import { CausalTreeStore, CausalTreeFactory, CausalTree, AtomOp, RealtimeChannelInfo, storedTree, site, SiteVersionInfo, SiteInfo, ArchivingCausalTreeStore, Atom, StoredCausalTree } from '@yeti-cgi/aux-common/causal-trees';
+import { CausalTreeStore, CausalTreeFactory, CausalTree, AtomOp, RealtimeChannelInfo, storedTree, site, SiteVersionInfo, SiteInfo, Atom, StoredCausalTree } from '@yeti-cgi/aux-common/causal-trees';
 import { AuxOp } from '@yeti-cgi/aux-common/aux-format';
 import { find } from 'lodash';
 import { bufferTime, flatMap, filter } from 'rxjs/operators';
@@ -12,7 +12,7 @@ import { ExecSyncOptionsWithStringEncoding } from 'child_process';
 export class CausalTreeServer {
 
     private _server: Server;
-    private _treeStore: ArchivingCausalTreeStore;
+    private _treeStore: CausalTreeStore;
     private _factory: CausalTreeFactory;
     private _treeList: TreeMap;
 
@@ -22,7 +22,7 @@ export class CausalTreeServer {
      * @param treeStore The Causal Tree store that should be used.
      * @param causalTreeFactory The Causal Tree factory that should be used.
      */
-    constructor(socketServer: Server, treeStore: ArchivingCausalTreeStore, causalTreeFactory: CausalTreeFactory) {
+    constructor(socketServer: Server, treeStore: CausalTreeStore, causalTreeFactory: CausalTreeFactory) {
         this._server = socketServer;
         this._treeStore = treeStore;
         this._factory = causalTreeFactory;
@@ -44,21 +44,18 @@ export class CausalTreeServer {
                     }
 
                     const tree = await this._getTree(info);
+                    
 
-                    const sub = tree.atomsArchived.pipe(
+                    const sub = tree.atomAdded.pipe(
                         bufferTime(1000),
                         filter(batch => batch.length > 0),
                         flatMap(batch => batch),
                         flatMap(async refs => {
                             const atoms = refs.map(r => r);
-                            await this._treeStore.archiveAtoms(info.id, atoms);
+                            await this._treeStore.add(info.id, atoms);
+                            await this._treeStore.put(info.id, tree.export(), false);
                         })
                     ).subscribe(null, err => console.error(err));
-
-                    // TODO: Dispose of timeout when all players leave the channel
-                    const timeout = setTimeout(async () => {
-                        await this._treeStore.update(info.id, tree.export());
-                    }, 1000);
 
                     const eventName = `event_${info.id}`;
                     socket.on(eventName, async (refs: Atom<AtomOp>[]) => {
@@ -73,7 +70,7 @@ export class CausalTreeServer {
                                 tree.registerSite(ks);
                             });
 
-                            await this._treeStore.update(info.id, tree.export());
+                            await this._treeStore.put(info.id, tree.export(), false);
                         }
 
                         const currentVersionInfo: SiteVersionInfo = {
@@ -123,6 +120,9 @@ export class CausalTreeServer {
             const stored = await this._treeStore.get<AtomOp>(info.id);
             if (stored) {
                 tree = this._factory.create(info.type, stored);
+
+                // Update the stored data
+                await this._treeStore.put(info.id, tree.export(), true);
             } else {
                 tree = this._factory.create(info.type, storedTree(site(1)));
                 if (!info.bare) {

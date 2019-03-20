@@ -1,7 +1,7 @@
 import { RealtimeChannel } from "./RealtimeChannel";
 import { AtomOp, Atom } from "./Atom";
 import { CausalTree } from "./CausalTree";
-import { CausalTreeStore, ArchivingCausalTreeStore } from "./CausalTreeStore";
+import { CausalTreeStore } from "./CausalTreeStore";
 import { CausalTreeFactory } from "./CausalTreeFactory";
 import { SiteVersionInfo } from "./SiteVersionInfo";
 import { SiteInfo, site } from "./SiteIdInfo";
@@ -19,17 +19,12 @@ import { WeaveVersion, versionsEqual } from "./WeaveVersion";
 export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
 
     private _tree: TTree;
-    private _store: ArchivingCausalTreeStore;
+    private _store: CausalTreeStore;
     private _channel: RealtimeChannel<Atom<AtomOp>[]>;
     private _factory: CausalTreeFactory;
     private _updated: Subject<Atom<AtomOp>[]>;
     private _errors: Subject<any>;
     private _subs: SubscriptionLike[];
-
-    /**
-     * Gets or sets whether the tree should store archived atoms.
-     */
-    storeArchivedAtoms: boolean = false;
 
     /**
      * Gets the realtime channel that this tree is using.
@@ -80,7 +75,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
      * @param store The store used to persistently store the tree.
      * @param channel The channel used to communicate with other devices.
      */
-    constructor(factory: CausalTreeFactory, store: ArchivingCausalTreeStore, channel: RealtimeChannel<Atom<AtomOp>[]>) {
+    constructor(factory: CausalTreeFactory, store: CausalTreeStore, channel: RealtimeChannel<Atom<AtomOp>[]>) {
         this._factory = factory;
         this._store = store;
         this._channel = channel;
@@ -91,9 +86,9 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
 
         // TODO: Get the causal tree to store the state
         // without tanking performance.
-        // this._subs.push(this._updated.pipe(
-        //     flatMap(async (u) => await this._store.update(this.id, this.tree.export()))
-        // ).subscribe(null, err => this._errors.next(err)));
+        this._subs.push(this._updated.pipe(
+            flatMap(async atoms => await this._store.add(this.id, atoms))
+        ).subscribe(null, err => this._errors.next(err)));
     }
 
     /**
@@ -106,7 +101,9 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
             if (stored.weave) {
                 if (stored.formatVersion === 2) {
                     this._updated.next(stored.weave);
-                } else {
+                } else if (stored.formatVersion === 3) {
+                    this._updated.next(stored.weave);
+                } else if (typeof stored.formatVersion === 'undefined') {
                     this._updated.next(stored.weave.map(a => a.atom));
                 }
             }
@@ -120,6 +117,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
             map(data => <TTree>this._factory.create(this.type, storedTree(data.site, data.version.knownSites))),
             flatMap(tree => this._channel.exchangeWeaves(tree.export()), (tree, imported) => ({tree, imported})),
             map(data => ({...data, added: data.tree.import(data.imported)})),
+            flatMap(data => this._store.put(this.id, data.tree.export(), true), (data) => data),
             tap(data => this._setTree(data.tree)),
             tap(data => this._updated.next(data.added))
         ).subscribe(null, err => this._errors.next(err)));
@@ -133,6 +131,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
             flatMap(versions => this._channel.exchangeWeaves(this.tree.export()), (versions, weave) => ({ versions, weave })),
             map(data => ({...data, weave: this._tree.import(data.weave) })),
             tap(data => this._importKnownSites(data.versions.remote)),
+            flatMap(data => this._store.put(this.id, this._tree.export(), true), (data) => data),
             tap(data => this._updated.next(data.weave))
         ).subscribe(null, err => this._errors.next(err)));
         
@@ -175,12 +174,6 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
             tap(refs => this._channel.emit(refs)),
             tap(ref => this._updated.next(ref))
         ).subscribe(null, error => this._errors.next(error)));
-
-        this._subs.push(this._tree.atomsArchived.pipe(
-            filter(a => this.storeArchivedAtoms),
-            flatMap(refs => this._store.archiveAtoms(this.id, refs.map(r => r)))
-        ).subscribe(null, error => this._errors.next(error)));
-
     }
 
     private _importKnownSites(version: SiteVersionInfo) {

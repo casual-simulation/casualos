@@ -103,7 +103,7 @@ describe('RealtimeCausalTree', () => {
         });
 
         it('should load the tree from the store', async () => {
-            await store.update('abc', {
+            await store.put('abc', {
                 site: site(2),
                 knownSites: null,
                 weave: null
@@ -115,7 +115,7 @@ describe('RealtimeCausalTree', () => {
         });
 
         it('should load the version 2 tree from the store', async () => {
-            await store.update('abc', {
+            await store.put('abc', {
                 formatVersion: 2,
                 site: site(2),
                 knownSites: null,
@@ -216,6 +216,22 @@ describe('RealtimeCausalTree', () => {
             expect(realtime.tree.knownSites).toContainEqual(site(10));
             expect(updated.length).toBe(1);
         });
+
+        it('should save the tree info to the store', async () => {
+            knownSites.push(site(99), site(10));
+
+            await realtime.init();
+            connection.setConnected(true);
+            await connection.flushPromises();
+
+            const stored = await store.get('abc');
+
+            expect(stored).toBeTruthy();
+            expect(stored.knownSites).toEqual([
+                site(100), site(1), site(99), site(10)
+            ]);
+            expect(stored.site).toEqual(site(100));
+        });
     });
 
     describe('connected with existing tree', () => {
@@ -227,7 +243,7 @@ describe('RealtimeCausalTree', () => {
                 localWeave.insert(atom(atomId(2, 3), atomId(1, 0), new Op()));
                 localWeave.insert(atom(atomId(2, 4), atomId(1, 0), new Op()));
     
-                await store.update('abc', <StoredCausalTree<Op>>{
+                await store.put('abc', <StoredCausalTree<Op>>{
                     site: site(2),
                     knownSites: [
                         site(1),
@@ -253,7 +269,7 @@ describe('RealtimeCausalTree', () => {
             localWeave.insert(atom(atomId(2, 3), atomId(1, 0), new Op()));
             localWeave.insert(atom(atomId(2, 4), atomId(1, 0), new Op()));
 
-            await store.update('abc', {
+            await store.put('abc', {
                 formatVersion: 2,
                 site: site(2),
                 knownSites: [
@@ -287,7 +303,7 @@ describe('RealtimeCausalTree', () => {
             finalWeave.import(remoteWeave.atoms);
             
             weave.push(...remoteWeave.atoms);
-            await store.update('abc', {
+            await store.put('abc', {
                 formatVersion: 2,
                 site: site(2),
                 knownSites: [
@@ -313,7 +329,7 @@ describe('RealtimeCausalTree', () => {
             
             knownSites.push(site(1999));
 
-            await store.update('abc', {
+            await store.put('abc', {
                 formatVersion: 2,
                 site: site(2),
                 knownSites: [
@@ -351,7 +367,7 @@ describe('RealtimeCausalTree', () => {
             finalWeave.import(remoteWeave.atoms);
             
             weave.push(...remoteWeave.atoms);
-            await store.update('abc', {
+            await store.put('abc', {
                 formatVersion: 2,
                 site: site(2),
                 knownSites: [
@@ -396,7 +412,7 @@ describe('RealtimeCausalTree', () => {
             finalWeave.import(remoteWeave.atoms);
             
             weave.push(...remoteWeave.atoms);
-            await store.update('abc', {
+            await store.put('abc', {
                 formatVersion: 2,
                 site: site(2),
                 knownSites: [
@@ -441,7 +457,7 @@ describe('RealtimeCausalTree', () => {
             
             knownSites.push(site(1999));
 
-            await store.update('abc', {
+            await store.put('abc', {
                 formatVersion: 2,
                 site: site(2),
                 knownSites: [

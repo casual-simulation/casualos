@@ -158,10 +158,11 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * @param refs The references to add.
      */
     addMany(refs: Atom<TOp>[]): Atom<TOp>[] {
+        const atoms = sortBy(refs, a => a.id.timestamp);
         return this.batch(() => {
             let added: Atom<TOp>[] = [];
-            for (let i = 0; i < refs.length; i++) {
-                let atom = refs[i];
+            for (let i = 0; i < atoms.length; i++) {
+                let atom = atoms[i];
                 if (atom) {
                     let result = this.add(atom);
                     if (result) {
@@ -228,6 +229,12 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         if (tree.weave) {
             if (tree.formatVersion === 2) {
                 return this.importWeave(tree.weave);
+            } else if(tree.formatVersion === 3) {
+                if(tree.ordered) {
+                    return this.importWeave(tree.weave);
+                } else {
+                    return this.addMany(tree.weave);
+                }
             } else if (typeof tree.formatVersion === 'undefined') {
                 return this.importWeave(tree.weave.map(ref => ref.atom));
             } else {
