@@ -60,13 +60,12 @@ export class BrowserCausalTreeStore implements CausalTreeStore {
     }
 
     async add<T extends AtomOp>(id: string, atoms: Atom<T>[]): Promise<void> {
-        const keys = atoms.map(a => atomIdToString(a.id));
         const stored = atoms.map(a => ({
             id: atomIdToString(a.id),
             tree: id,
             atom: a,
         }));
-        await this._db.atoms.bulkAdd(stored, keys);
+        await this._db.atoms.bulkPut(stored);
     }
 }
 

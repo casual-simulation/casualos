@@ -121,14 +121,15 @@ export class CausalTreeServer {
             if (stored) {
                 tree = this._factory.create(info.type, stored);
 
-                // Update the stored data
-                await this._treeStore.put(info.id, tree.export(), true);
             } else {
                 tree = this._factory.create(info.type, storedTree(site(1)));
                 if (!info.bare) {
                     tree.root();
                 }
             }
+            
+            // Update the stored data
+            await this._treeStore.put(info.id, tree.export(), true);
 
             // TODO: Implement the ability to keep old atoms around while
             //       preserving performance provided by garbage collection.

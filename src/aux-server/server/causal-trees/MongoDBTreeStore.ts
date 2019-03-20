@@ -1,6 +1,6 @@
 import { MongoClient, Db, Collection } from 'mongodb';
 import pify from 'pify';
-import { CausalTreeStore, AtomOp, StoredCausalTree, Atom, ArchivedAtom, upgrade, SiteInfo } from '@yeti-cgi/aux-common/causal-trees';
+import { CausalTreeStore, AtomOp, StoredCausalTree, Atom, ArchivedAtom, upgrade, SiteInfo, atomIdToString } from '@yeti-cgi/aux-common/causal-trees';
 
 /**
  * Defines a class that is able to store a causal tree in MongoDB.
@@ -77,9 +77,19 @@ export class MongoDBTreeStore implements CausalTreeStore {
     async add<T extends AtomOp>(id: string, atoms: Atom<T>[]): Promise<void> {
         const wrappers: AtomWrapperVersion1<T>[] = atoms.map(a => ({
             tree: id,
+            id: atomIdToString(a.id),
             atom: a
         }));
-        await this._atoms.insertMany(wrappers);
+        if (wrappers.length === 0) {
+            return;
+        }
+        let op = this._atoms.initializeUnorderedBulkOp();
+        wrappers.forEach(w => {
+            op.find({id: w.id})
+                .upsert()
+                .updateOne(w);
+        });
+        await op.execute();
     }
 }
 
@@ -103,5 +113,6 @@ type AtomWrapper<T extends AtomOp> = AtomWrapperVersion1<T>;
 
 interface AtomWrapperVersion1<T extends AtomOp> {
     tree: string;
+    id: string;
     atom: Atom<T>;
 }
