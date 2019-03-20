@@ -11,6 +11,7 @@ import { TestChannelConnection } from './test/TestChannelConnection';
 import { site, SiteInfo } from './SiteIdInfo';
 import { SiteVersionInfo } from './SiteVersionInfo';
 import { StoredCausalTree } from '.';
+import { storedTree } from './StoredCausalTree';
 
 jest.useFakeTimers();
 
@@ -85,7 +86,7 @@ describe('RealtimeCausalTree', () => {
                 return null;
             } else {
                 localWeaves.push(data.weave);
-                return weave;
+                return storedTree(site(1), [], weave);
             }
         };
     });

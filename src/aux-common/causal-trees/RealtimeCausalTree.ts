@@ -118,10 +118,10 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
             flatMap(c => this._channel.exchangeInfo(this.getVersion())),
             flatMap(version => this._requestSiteId(version), (version, site) => ({ version, site })),
             map(data => <TTree>this._factory.create(this.type, storedTree(data.site, data.version.knownSites))),
-            flatMap(tree => this._channel.exchangeWeaves([], tree.weave.getVersion()), (tree, weave) => ({tree, weave})),
-            map(data => ({...data, weave: data.tree.importWeave(data.weave)})),
+            flatMap(tree => this._channel.exchangeWeaves(tree.export()), (tree, imported) => ({tree, imported})),
+            map(data => ({...data, added: data.tree.import(data.imported)})),
             tap(data => this._setTree(data.tree)),
-            tap(data => this._updated.next(data.weave))
+            tap(data => this._updated.next(data.added))
         ).subscribe(null, err => this._errors.next(err)));
 
         this._subs.push(this._channel.connectionStateChanged.pipe(
@@ -130,8 +130,8 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
             map(c => this.getVersion()),
             flatMap(localVersion => this._channel.exchangeInfo(localVersion), (local, remote) => ({local, remote})),
             filter(versions => !versionsEqual(versions.local.version, versions.remote.version)),
-            flatMap(versions => this._channel.exchangeWeaves(this._tree.weave.atoms, versions.local.version), (versions, weave) => ({ versions, weave })),
-            map(data => ({...data, weave: this._tree.importWeave(data.weave) })),
+            flatMap(versions => this._channel.exchangeWeaves(this.tree.export()), (versions, weave) => ({ versions, weave })),
+            map(data => ({...data, weave: this._tree.import(data.weave) })),
             tap(data => this._importKnownSites(data.versions.remote)),
             tap(data => this._updated.next(data.weave))
         ).subscribe(null, err => this._errors.next(err)));

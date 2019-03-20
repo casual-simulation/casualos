@@ -1,8 +1,9 @@
 import { Socket, Server } from 'socket.io';
-import { CausalTreeStore, CausalTreeFactory, CausalTree, AtomOp, RealtimeChannelInfo, storedTree, site, SiteVersionInfo, SiteInfo, ExchangeWeavesResponse, ExchangeWeavesRequest, ArchivingCausalTreeStore, Atom } from '@yeti-cgi/aux-common/causal-trees';
+import { CausalTreeStore, CausalTreeFactory, CausalTree, AtomOp, RealtimeChannelInfo, storedTree, site, SiteVersionInfo, SiteInfo, ArchivingCausalTreeStore, Atom, StoredCausalTree } from '@yeti-cgi/aux-common/causal-trees';
 import { AuxOp } from '@yeti-cgi/aux-common/aux-format';
 import { find } from 'lodash';
 import { bufferTime, flatMap, filter } from 'rxjs/operators';
+import { ExecSyncOptionsWithStringEncoding } from 'child_process';
 
 /**
  * Defines a class that is able to serve a set causal trees over Socket.io.
@@ -94,15 +95,12 @@ export class CausalTreeServer {
                          }
                     });
 
-                    socket.on(`weave_${info.id}`, (event: ExchangeWeavesRequest<AtomOp>, callback: (resp: ExchangeWeavesResponse<AtomOp>) => void) => {
-
-                        if (event.weave) {
-                            tree.importWeave(event.weave);
-                        }
+                    socket.on(`weave_${info.id}`, (event: StoredCausalTree<AtomOp>, callback: (resp: StoredCausalTree<AtomOp>) => void) => {
+                        tree.import(event);
 
                         // TODO: If a version is provided then we should
                         // return only the atoms that are needed to sync.
-                        callback(tree.weave.atoms);
+                        callback(tree.export());
                     });
 
                     socket.on('disconnect', () => {

@@ -116,13 +116,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         this._batch = [];
         this.garbageCollect = false;
 
-        if (tree.weave) {
-            if (tree.formatVersion === 2) {
-                this.importWeave(tree.weave);
-            } else {
-                this.importWeave(tree.weave.map(ref => ref.atom));
-            }
-        }
+        this.import(tree);
     }
 
     /**
@@ -224,6 +218,23 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         }
         [this._value, this._metadata] = this._calculateValue(newAtoms);
         return newAtoms;
+    }
+
+    /**
+     * Imports the given tree into this one and returns the list of atoms that were imported.
+     * @param tree The tree to import.
+     */
+    import<T extends TOp>(tree: StoredCausalTree<T>): Atom<TOp>[] {
+        if (tree.weave) {
+            if (tree.formatVersion === 2) {
+                return this.importWeave(tree.weave);
+            } else if (typeof tree.formatVersion === 'undefined') {
+                return this.importWeave(tree.weave.map(ref => ref.atom));
+            } else {
+                console.warn("[CausalTree] Don't know how to import tree version:", tree.formatVersion);
+                return [];
+            }
+        }
     }
 
     /**

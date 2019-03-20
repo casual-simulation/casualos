@@ -8,6 +8,7 @@ import { ConnectionEvent } from "./ConnectionEvent";
 import { SiteInfo } from "./SiteIdInfo";
 import { WeaveVersion } from "./WeaveVersion";
 import { AtomOp, Atom } from "./Atom";
+import { WeaveReference, StoredCausalTree } from "./StoredCausalTree";
 
 /**
  * Defines a class for a realtime event channel.
@@ -103,12 +104,8 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
      * @param weave The weave to send to the remote server.
      * @param currentVersion The local weave version.
      */
-    exchangeWeaves<T extends AtomOp>(weave: Atom<T>[], currentVersion: WeaveVersion | null): Promise<ExchangeWeavesResponse<T>> {
-        const request: ExchangeWeavesRequest<T> = {
-            weave: weave,
-            currentVersion: currentVersion
-        };
-        return this._connection.request(this._requestWeaveName, request);
+    exchangeWeaves<T extends AtomOp>(message: StoredCausalTree<T>): Promise<StoredCausalTree<T>> {
+        return this._connection.request(this._requestWeaveName, message);
     }
 
     /**
@@ -148,24 +145,3 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
         this._connection.unsubscribe();
     }
 }
-
-/**
- * Defines an interface for a request to exchange weaves with a remote peer.
- */
-export interface ExchangeWeavesRequest<T extends AtomOp> {
-    /**
-     * The weave from the requester.
-     */
-    weave: Atom<T>[];
-
-    /**
-     * The current version that the requester is on.
-     * If null then the requester does not have a version.
-     */
-    currentVersion: WeaveVersion | null;
-}
-
-/**
- * Defines the type of the response for exchanging weaves with a remote peer.
- */
-export type ExchangeWeavesResponse<T extends AtomOp> = Atom<T>[];

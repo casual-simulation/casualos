@@ -3,7 +3,7 @@ import { Atom, AtomId, AtomOp, atomId, atom } from "./Atom";
 import { AtomReducer } from "./AtomReducer";
 import { Weave } from './Weave';
 import { site } from './SiteIdInfo';
-import { storedTree } from "./StoredCausalTree";
+import { storedTree, StoredCausalTreeVersion1, StoredCausalTree, StoredCausalTreeVersion2 } from "./StoredCausalTree";
 import { precalculatedOp } from "./PrecalculatedOp";
 
 enum OpType {
@@ -143,6 +143,85 @@ describe('CausalTree', () => {
     });
 
     describe('import()', () => {
+        describe('version 1', () => {
+            it('should be able to import', () => {
+                let weave = new Weave<Op>();
+
+                const a1 = weave.insert(atom(atomId(1, 1), null, new Op()));
+                const a2 = weave.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
+                const a3 = weave.insert(atom(atomId(1, 3), atomId(1, 1), new Op()));
+
+                let stored: StoredCausalTreeVersion1<Op> = {
+                    knownSites: [
+                        site(1)
+                    ],
+                    site: site(1),
+                    weave: weave.atoms.map(atom => ({ atom}))
+                };
+
+                let tree = new CausalTree(storedTree(site(2)), new Reducer());
+                const added = tree.import(stored);
+
+                expect(added).toEqual([
+                    a1,
+                    a3,
+                    a2
+                ]);
+            });
+        });
+
+        describe('version 2', () => {
+            it('should be able to import', () => {
+                let weave = new Weave<Op>();
+
+                const a1 = weave.insert(atom(atomId(1, 1), null, new Op()));
+                const a2 = weave.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
+                const a3 = weave.insert(atom(atomId(1, 3), atomId(1, 1), new Op()));
+
+                let stored: StoredCausalTreeVersion2<Op> = {
+                    formatVersion: 2,
+                    knownSites: [
+                        site(1)
+                    ],
+                    site: site(1),
+                    weave: weave.atoms
+                };
+
+                let tree = new CausalTree(storedTree(site(2)), new Reducer());
+                const added = tree.import(stored);
+
+                expect(added).toEqual([
+                    a1,
+                    a3,
+                    a2
+                ]);
+            });
+        });
+
+        it('should ignore unknown versions', () => {
+            let weave = new Weave<Op>();
+
+            const a1 = weave.insert(atom(atomId(1, 1), null, new Op()));
+            const a2 = weave.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
+            const a3 = weave.insert(atom(atomId(1, 3), atomId(1, 1), new Op()));
+
+            let stored: StoredCausalTree<Op> = <any>{
+                formatVersion: 1000,
+                knownSites: [
+                    site(1)
+                ],
+                site: site(1),
+                weave: weave.atoms.map(atom => ({ atom}))
+            };
+
+            let tree = new CausalTree(storedTree(site(2)), new Reducer());
+            const added = tree.import(stored);
+
+            expect(added).toEqual([]);
+        });
+    });
+
+    describe('importWeave()', () => {
         it('should update the current time based on the given references', () => {
             let tree1 = new CausalTree(storedTree(site(1)), new Reducer());
             let tree2 = new CausalTree(storedTree(site(2)), new Reducer());
