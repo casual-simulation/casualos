@@ -23,6 +23,9 @@
     - Made the server respond to the local IP Addresses by default in Development mode.
         - This makes it easier to do development with a mobile device.
         - Use `npm run watch:player` to have it serve the AUX Player by default. Otherwise it will serve the AUX Builder.
+    - Improved formula query expresions to support tags with dots in them.
+        - Before you would have to wrap the tag in a string.
+        - Now you can simply do `@aux.label` or `#aux.label` as long as each part is a valid [JS identifier](https://developer.mozilla.org/en-US/docs/Glossary/Identifier).
 
 ## V0.3.11
 ### Date: 3/19/2019
