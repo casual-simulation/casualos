@@ -35,11 +35,14 @@ export class AtomFactory<TOp extends AtomOp> {
 
     /**
      * Updates the timestamp stored by this factory.
-     * This should only be called upon receiving new never-seen events from a remote source.
-     * @param newTimestamp The latest timestamp seen by the app.
+     * @param atom The atom that is being added to the tree.
      */
-    updateTime(newTimestamp: number) {
-        this._time = Math.max(this._time, newTimestamp) + 1;
+    updateTime<T extends TOp>(atom: Atom<T>) {
+        if (atom.id.site !== this.site) {
+            this._time = Math.max(this._time, atom.id.timestamp) + 1;
+        } else {
+            this._time = Math.max(this._time, atom.id.timestamp);
+        }
     }
 
     /**

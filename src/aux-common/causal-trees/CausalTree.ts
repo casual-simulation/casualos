@@ -131,9 +131,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * @param atom The atom to add to the tree.
      */
     add<T extends TOp>(atom: Atom<T>): Atom<T> {
-        if (atom.id.site !== this.site.id) {
-            this.factory.updateTime(atom.id.timestamp);
-        }
+        this.factory.updateTime(atom);
         const ref = this.weave.insert(atom);
         if (ref) {
             if (this._isBatching) {
@@ -213,9 +211,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         const sortedAtoms = sortBy(newAtoms, a => a.id.timestamp);
         for (let i = 0; i < sortedAtoms.length; i++) {
             const atom = sortedAtoms[i];
-            if (atom.id.site !== this.site.id || atom.id.timestamp >= this.time) {
-                this.factory.updateTime(atom.id.timestamp);
-            }
+            this.factory.updateTime(atom);
         }
         [this._value, this._metadata] = this._calculateValue(newAtoms);
         return newAtoms;
