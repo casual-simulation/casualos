@@ -1,5 +1,25 @@
 # AUX Server Changelog
 
+## V0.3.12
+### Date: TBD
+
+### Changes:
+- Bug Fixes
+    - Fixed issues with slowdowns caused by continually re-saving the entire history.
+    - Fixed several performance issues related to labels and word bubbles.
+    - Changed the branding to AUX Builder from File Simulator.
+    - Fixed several issues with files and contexts in AUX Player.
+        - Files marked as `_destroyed` now no longer display.
+        - Fixed a loading order issue that would occur when a file was its own context.
+        - Fixed an issue that would cause the player to ignore the file removed event for the context file.
+- AUX Player Improvements
+    - Users now show up inside contexts in both AUX Builder and AUX Player.
+    - The `_lastActiveTime` tag is now per-context. (i.e. `context_a._lastActiveTime`)
+- AUX Builder Improvements
+    - Added the ability to fork simulations.
+- Other Improvements
+    - Added the ability to transparently upgrade our storage formats.
+        - Works for both MongoDB and IndexedDB.
 
 ## V0.3.11
 ### Date: 3/19/2019
