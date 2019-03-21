@@ -192,7 +192,7 @@ export function calculateFileValue(context: FileCalculationContext, object: Obje
         return object.id;
     } else if (isFormulaObject(object)) {
         const o: any = object;
-        return _calculateValue(context, object, tag, o[tag]);
+        return o[tag];
     } else {
         return _calculateValue(context, object, tag, object.tags[tag]);
     }
@@ -1127,11 +1127,24 @@ function _calculateFormulaValue(context: FileCalculationContext, object: any, ta
     }, convertToFormulaObject(context, object));
 
     // Unwrap the proxy object
-    if (result.success && result.result && result.result[isProxy]) {
-        return {
-            ...result,
-            result: result.result[proxyObject]
-        };
+    if (result.success && result.result) {
+        if (result.result[isProxy]) {
+            return {
+                ...result,
+                result: result.result[proxyObject]
+            };
+        } else if (Array.isArray(result.result)) {
+            return {
+                ...result,
+                result: result.result.map(v => {
+                    if (v && v[isProxy]) {
+                        return v[proxyObject];
+                    } else {
+                        return v
+                    }
+                })
+            };
+        }
     }
 
     return result;
