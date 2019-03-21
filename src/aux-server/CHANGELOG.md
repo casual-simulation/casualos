@@ -20,6 +20,9 @@
 - Other Improvements
     - Added the ability to transparently upgrade our storage formats.
         - Works for both MongoDB and IndexedDB.
+    - Made the server respond to the local IP Addresses by default in Development mode.
+        - This makes it easier to do development with a mobile device.
+        - Use `npm run watch:player` to have it serve the AUX Player by default. Otherwise it will serve the AUX Builder.
 
 ## V0.3.11
 ### Date: 3/19/2019
