@@ -228,7 +228,7 @@ export class WorkspaceMesh extends GameObject {
      * @param checker The grid checker to use.
      */
     async updateSquareGrids(checker: GridChecker, calc: FileCalculationContext) {
-        if (this.squareGrids) {
+        if (this.squareGrids && this.squareGrids.length > 0) {
             this.container.remove(...this.squareGrids);
         }
 
@@ -238,7 +238,9 @@ export class WorkspaceMesh extends GameObject {
         const levels = results.levels;
         this.squareGrids = levels.map(l => new GridMesh(l));
         this.squareGrids.forEach(grid => grid.visible = false);
-        this.container.add(...this.squareGrids);
+        if (this.squareGrids && this.squareGrids.length > 0) {
+            this.container.add(...this.squareGrids);
+        }
         return results;
     }
 
