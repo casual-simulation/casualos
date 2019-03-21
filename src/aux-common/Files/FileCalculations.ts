@@ -1218,7 +1218,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
         if(typeof filter === 'function') {
           return objs.filter(o => filter(this._calculateValue(o, tag)));
         } else {
-          return objs.filter(o => this._calculateValue(o, tag) === filter);
+          return objs.filter(o => this._calculateValue(o, tag) == filter);
         }
       } else {
         return objs;

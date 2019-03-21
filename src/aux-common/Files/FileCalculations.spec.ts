@@ -756,6 +756,84 @@ describe('FileCalculations', () => {
                         3
                     ]);
                 });
+
+                it('should support tags with dots', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+                    const file3 = createFile('test3');
+                    const file4 = createFile('test4');
+
+                    file1.tags['abc.def'] = 1;
+                    file2.tags['abc.def'] = '=2';
+                    file3.tags['abc.def'] = 3;
+
+                    file3.tags.formula = '=#abc.def';
+                    file3.tags.formula1 = '=#abc.def(num => num >= 2)';
+                    file3.tags.formula2 = '=#abc.def(2)';
+
+                    const context = createCalculationContext([file2, file1, file4, file3]);
+                    let value = calculateFileValue(context, file3, 'formula');
+
+                    expect(value).toEqual([
+                        2,
+                        1,
+                        3
+                    ]);
+
+                    value = calculateFileValue(context, file3, 'formula1');
+
+                    expect(value).toEqual([
+                        2,
+                        3
+                    ]);
+
+                    value = calculateFileValue(context, file3, 'formula2');
+
+                    expect(value).toEqual(2);
+                });
+
+                it('should support tags in strings', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+                    const file3 = createFile('test3');
+                    const file4 = createFile('test4');
+
+                    file1.tags['🎶🎉🦊'] = 1;
+                    file2.tags['🎶🎉🦊'] = '=2';
+                    file3.tags['🎶🎉🦊'] = 3;
+
+                    file3.tags.formula = '=#"🎶🎉🦊"';
+
+                    const context = createCalculationContext([file2, file1, file4, file3]);
+                    let value = calculateFileValue(context, file3, 'formula');
+
+                    expect(value).toEqual([
+                        2,
+                        1,
+                        3
+                    ]);
+                });
+
+                it('should support tags in strings with filters', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+                    const file3 = createFile('test3');
+                    const file4 = createFile('test4');
+
+                    file1.tags['🎶🎉🦊'] = 1;
+                    file2.tags['🎶🎉🦊'] = '=2';
+                    file3.tags['🎶🎉🦊'] = 3;
+
+                    file3.tags.formula = '=#"🎶🎉🦊"(num => num >= 2)';
+
+                    const context = createCalculationContext([file2, file1, file4, file3]);
+                    let value = calculateFileValue(context, file3, 'formula');
+
+                    expect(value).toEqual([
+                        2,
+                        3
+                    ]);
+                });
             });
 
             describe('@ syntax', () => {
@@ -820,6 +898,84 @@ describe('FileCalculations', () => {
                     const value = calculateFileValue(context, file3, 'formula');
 
                     // Order is dependent on the position in the context.
+                    expect(value).toEqual([
+                        file2,
+                        file3
+                    ]);
+                });
+
+                it('should support tags with dots', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+                    const file3 = createFile('test3');
+                    const file4 = createFile('test4');
+
+                    file1.tags['abc.def'] = 1;
+                    file2.tags['abc.def'] = '=2';
+                    file3.tags['abc.def'] = 3;
+
+                    file3.tags.formula = '=@abc.def';
+                    file3.tags.formula1 = '=@abc.def(num => num >= 2)';
+                    file3.tags.formula2 = '=@abc.def(2)';
+
+                    const context = createCalculationContext([file2, file1, file4, file3]);
+                    let value = calculateFileValue(context, file3, 'formula');
+
+                    expect(value).toEqual([
+                        file2,
+                        file1,
+                        file3,
+                    ]);
+
+                    value = calculateFileValue(context, file3, 'formula1');
+
+                    expect(value).toEqual([
+                        file2,
+                        file3,
+                    ]);
+
+                    value = calculateFileValue(context, file3, 'formula2');
+
+                    expect(value).toEqual(file2);
+                });
+
+                it('should support tags in strings', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+                    const file3 = createFile('test3');
+                    const file4 = createFile('test4');
+
+                    file1.tags['🎶🎉🦊'] = 1;
+                    file2.tags['🎶🎉🦊'] = '=2';
+                    file3.tags['🎶🎉🦊'] = 3;
+
+                    file3.tags.formula = '=@"🎶🎉🦊"';
+
+                    const context = createCalculationContext([file2, file1, file4, file3]);
+                    let value = calculateFileValue(context, file3, 'formula');
+
+                    expect(value).toEqual([
+                        file2,
+                        file1,
+                        file3
+                    ]);
+                });
+
+                it('should support tags in strings with filters', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+                    const file3 = createFile('test3');
+                    const file4 = createFile('test4');
+
+                    file1.tags['🎶🎉🦊'] = 1;
+                    file2.tags['🎶🎉🦊'] = '=2';
+                    file3.tags['🎶🎉🦊'] = 3;
+
+                    file3.tags.formula = '=@"🎶🎉🦊"(num => num >= 2)';
+
+                    const context = createCalculationContext([file2, file1, file4, file3]);
+                    let value = calculateFileValue(context, file3, 'formula');
+
                     expect(value).toEqual([
                         file2,
                         file3
