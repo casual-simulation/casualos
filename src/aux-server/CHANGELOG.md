@@ -1,12 +1,13 @@
 # AUX Server Changelog
 
 ## V0.3.13
-### Date: TBD
+### Date: 3/21/2019
 
 ### Changes:
 - Bug Fixes
     - Reduced memory usage of worksurfaces. This makes it easier to create large worksurfaces.
     - Fixed not being able to drag the camera around when tapping/clicking on a worksurface while in files mode.
+    - Added indexes to MongoDB collections so that queries won't be so slow.
 
 
 ## V0.3.12
