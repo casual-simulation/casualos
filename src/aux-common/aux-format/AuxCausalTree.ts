@@ -37,6 +37,9 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
      * @param id The ID of the file.
      */
     file(id: string) {
+        if (this.weave.atoms.length === 0) {
+            throw new Error('Cannot add a file atom without a root atom.');
+        }
         return this.create(file(id), this.weave.atoms[0]);
     }
 
