@@ -12,6 +12,7 @@
         - Files marked as `_destroyed` now no longer display.
         - Fixed a loading order issue that would occur when a file was its own context.
         - Fixed an issue that would cause the player to ignore the file removed event for the context file.
+    - Fixed Word Bubbles so that they scale with labels when `aux.label.size.mode` is set to `auto`.
 - AUX Player Improvements
     - Users now show up inside contexts in both AUX Builder and AUX Player.
     - The `_lastActiveTime` tag is now per-context. (i.e. `context_a._lastActiveTime`)
