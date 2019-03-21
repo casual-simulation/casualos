@@ -7,3 +7,5 @@ bundle_stats.json
 junit.xml
 ecosystem.json
 .npmrc
+
+package-lock.json
