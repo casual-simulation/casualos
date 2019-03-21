@@ -7,6 +7,7 @@
   "module": "index.js",
   "scripts": {
     "watch": "npm run clean && tsc --watch",
+    "watch:player": "npm run watch",
     "clean": "gulp clean",
     "build": "npm run clean && tsc",
     "test": "jest",

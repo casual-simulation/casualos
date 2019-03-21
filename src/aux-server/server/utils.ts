@@ -1,6 +1,7 @@
+import * as os from 'os';
+import * as process from 'process';
 import {Request, Response, Handler} from 'express';
 import { AxiosError } from 'axios';
-import * as os from 'os';
 import { flatMap } from 'lodash';
 
 export const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
@@ -28,4 +29,22 @@ export function getLocalIpAddresses() {
             .filter(iface => !iface.internal)
             .map(iface => iface.address);
     });
+}
+
+/**
+ * Gets the domains that should be added to the given site for development purposes.
+ * @param site 
+ */
+export function getExtraDomainsForSite(site: 'projector' | 'player') {
+    const env = process.env.NODE_ENV;
+    if (env === 'production') {
+    } else {
+        const mode = process.argv[2];
+        console.log(mode);
+        if (mode === site || (typeof mode === 'undefined' && site === 'projector')) {
+            return getLocalIpAddresses();
+        }
+    }
+
+    return [];
 }

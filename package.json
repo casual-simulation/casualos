@@ -5,6 +5,7 @@
   "scripts": {
     "bootstrap": "lerna bootstrap --hoist",
     "watch": "lerna exec --parallel -- npm run watch",
+    "watch:player": "lerna exec --parallel -- npm run watch:player",
     "build": "lerna exec -- npm run build",
     "test:watch": "npm run clean && jest --watchAll --silent",
     "test": "npm run clean && jest --verbose",

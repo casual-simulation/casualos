@@ -6,7 +6,9 @@
   "private": true,
   "scripts": {
     "start": "node server/dist/main.js",
-    "watch": "concurrently \"npm:watch:server\" \"npm:watch:web\" \"nodemon server/dist/main.js\"",
+    "watch": "npm run watch:projector",
+    "watch:projector": "concurrently \"npm:watch:server\" \"npm:watch:web\" \"nodemon server/dist/main.js\"",
+    "watch:player": "concurrently \"npm:watch:server\" \"npm:watch:web\" \"nodemon server/dist/main.js player\"",
     "build": "npm run build:web && npm run build:server",
     "build:web": "webpack --config aux-web/webpack.prod.js",
     "build:web:profile": "webpack --config aux-web/webpack.prod.js --profile --json > bundle_stats.json && webpack-bundle-analyzer bundle_stats.json",

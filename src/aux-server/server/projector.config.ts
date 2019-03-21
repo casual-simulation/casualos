@@ -1,7 +1,8 @@
 import * as path from 'path';
 import * as os from 'os';
+import * as process from 'process';
 import { ClientConfig } from "./config";
-import { getLocalIpAddresses } from './utils';
+import { getLocalIpAddresses, getExtraDomainsForSite } from './utils';
 
 let domains = [
     'filesimulator.com',
@@ -9,20 +10,14 @@ let domains = [
     'projector.*.filesimulator.com',
     'projector.localhost',
     'auxbuilder.com',
-    'localhost'
+    'localhost',
+    ...getExtraDomainsForSite('projector')
 ];
-
-const env = process.env.NODE_ENV;
-if (env === 'production') {
-} else {
-    const ipAddresses = getLocalIpAddresses();
-    domains.push(...ipAddresses);
-}
 
 const config: ClientConfig = {
     dist: path.resolve(__dirname, '..', '..', 'aux-web', 'dist'),
     index: 'projector-index.html',
-    domains: domains
+    domains
 };
 
 export default config;
