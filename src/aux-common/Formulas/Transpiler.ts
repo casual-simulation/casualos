@@ -134,7 +134,7 @@ function exJsParser(parser: typeof Parser) {
 const exJsGenerator = assign({}, baseGenerator, {});
 
 /**
- * Defines a class that is able to compile code from File Simulator's custom JavaScript dialect
+ * Defines a class that is able to compile code from AUX's custom JavaScript dialect
  * into pure ES6 JavaScript. Does not preserve spacing or comments.
  * 
  * See https://docs.google.com/document/d/1WQXQPjdXxyx_lau15WPpwTTYvt66_wPCu3x-08rpLoY/edit?usp=sharing

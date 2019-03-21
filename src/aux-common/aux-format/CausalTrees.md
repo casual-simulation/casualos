@@ -86,13 +86,13 @@ If we sort site IDs in ascending order then the result is `message:"Hello"` but 
 
 So that shows we will be consistent bue the result isn't always what's expected by the user. Site 1's user clearly expects `message:"Hello"` and Site 2's clearly expects `message:"World"`. This is important because it shows that if we want users to have the _most correct_ results we need to have merge conflicts. Some of these scenarios can be tailored to the application but in some scenarios it's only possible to know after asking the user.
 
-## File Sim
+## AUX
 
-So what does this look like in file simulator?
+So what does this look like in AUX?
 
-_Note that we have to be careful with the File Simulator data structure because it is supposed to be shared with other SO4-style applications._
+_Note that we have to be careful with the AUX data structure because it is supposed to be shared with other SO4-style applications._
 
-As it currently stands, File Simulator uses a library we wrote called _Channels_ to do most of the heavy lifting for realtime sync.
+As it currently stands, AUX uses a library we wrote called _Channels_ to do most of the heavy lifting for realtime sync.
 
 Channels is a simple wrapper around Socket.io that allows state to be synced between devices. The idea is that a channel is able to send and receive events and store the current state. Whenever an event is received, it is applied to the current state. Whenever we want to send an event we first apply it to the current state and then send it to the server which then relays it to the other users.
 

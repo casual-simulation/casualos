@@ -8,7 +8,7 @@
                         <md-icon>menu</md-icon>
                     </md-button>
                     <a class="md-title clickable" @click="showQRCode = true">
-                        {{session || "File Simulator"}}
+                        {{session || "AUX Builder"}}
                     </a>
                 </div>
                 <div class="md-toolbar-section-end">
@@ -23,7 +23,7 @@
 
              <md-drawer :md-active.sync="showNavigation">
                 <div class="menu-header">
-                    <span class="md-title">File Simulator</span><br>
+                    <span class="md-title">AUX Builder</span><br>
                     <span class="md-body-1" v-if="getUser() != null">Logged In: {{getUser().name}}</span>
                 </div>
                 <md-list>
