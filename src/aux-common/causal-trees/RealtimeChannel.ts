@@ -1,6 +1,6 @@
 import { RealtimeChannelInfo } from "./RealtimeChannelInfo";
 import { CausalTree } from "./CausalTree";
-import { Observable, SubscriptionLike } from "rxjs";
+import { Observable, SubscriptionLike, Subject, BehaviorSubject } from "rxjs";
 import { RealtimeChannelConnection } from "./RealtimeChannelConnection";
 import { SiteVersionInfo } from "./SiteVersionInfo";
 import { filter, map, tap, first, flatMap } from "rxjs/operators";
@@ -21,10 +21,12 @@ import { WeaveReference, StoredCausalTree } from "./StoredCausalTree";
 export class RealtimeChannel<TEvent> implements SubscriptionLike {
 
     private _connection: RealtimeChannelConnection;
+    private _connectionStateChanged: BehaviorSubject<boolean>;
     private _emitName: string;
     private _infoName: string;
     private _requestSiteIdName: string;
     private _requestWeaveName: string;
+
 
     /**
      * Creates a new realtime channel.
@@ -38,6 +40,7 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
         this._infoName = `info_${info.id}`;
         this._requestSiteIdName = `siteId_${info.id}`;
         this._requestWeaveName = `weave_${info.id}`;
+        this._connectionStateChanged = new BehaviorSubject(false);
         this._connection.init([
             this._emitName,
             this._infoName,
@@ -49,9 +52,15 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
             map(e => e.data)
         );
 
-        this.connectionStateChanged.pipe(
+        this._connection.connectionStateChanged.pipe(
+            filter(connected => !connected),
+            tap(_ => this._connectionStateChanged.next(false))
+        ).subscribe();
+
+        this._connection.connectionStateChanged.pipe(
             filter(connected => connected),
-            flatMap(connected => this._connection.request('join_channel', this.info))
+            flatMap(connected => this._connection.request('join_channel', this.info)),
+            tap(_ => this._connectionStateChanged.next(true))
         ).subscribe();
     }
 
@@ -135,7 +144,7 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
      * Basically this resolves with true whenever we're connected and false whenever we're disconnected.
      */
     get connectionStateChanged() {
-        return this._connection.connectionStateChanged;
+        return this._connectionStateChanged;
     }
 
     /**
