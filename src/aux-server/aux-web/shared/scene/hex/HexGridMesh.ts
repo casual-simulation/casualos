@@ -2,6 +2,7 @@ import { Mesh, Object3D } from 'three';
 import { HexGrid, hexesInRadius } from './HexGrid';
 import { HexMesh } from './HexMesh';
 import { Axial } from './Axial';
+import { disposeMesh } from '../SceneUtils';
 
 /**
  * Defines a mesh that represents a HexGrid containing a bunch of HexMesh meshes.
@@ -74,6 +75,12 @@ export class HexGridMesh extends Object3D {
             this._grid.setDataAt(pos, null);
             this.remove(hex);
         }
+    }
+
+    dispose() {
+        this.hexes.forEach(h => {
+            disposeMesh(h);
+        });
     }
 
     private _fillHexesInRadius() {

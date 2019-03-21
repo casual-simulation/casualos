@@ -20,7 +20,7 @@ import { GridLevel } from './GridLevel';
 import { GridTile } from './GridTile';
 import { calculateTilePoints, calculateGridTileLocalPositions } from './Grid';
 import { WorkspaceMesh } from '../WorkspaceMesh';
-import { createSphere } from '../SceneUtils';
+import { createSphere, disposeMaterial } from '../SceneUtils';
 
 /**
  * Defines a class that can check a HexGridMesh to see which square grid tiles
@@ -220,7 +220,10 @@ export class GridChecker {
         // reset the meshes materials.
         this._grid.hexes.forEach(h => {
             let a: any = h;
+            const mat = h.material;
             h.material = a.__savedMat;
+
+            disposeMaterial(mat);
         });
     }
 

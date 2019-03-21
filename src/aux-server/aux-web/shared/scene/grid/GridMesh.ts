@@ -1,8 +1,8 @@
-import { Mesh, Object3D, Line, Vector3, BufferGeometry, Float32BufferAttribute, LineBasicMaterial, LineSegments } from 'three';
+import { Mesh, Object3D, Line, Vector3, Vector2, BufferGeometry, Float32BufferAttribute, LineBasicMaterial, LineSegments } from 'three';
 import { GridLevel } from './GridLevel';
 import { flatMap, groupBy, minBy, maxBy, values, sortBy, Dictionary } from 'lodash';
 import { GridTile } from './GridTile';
-import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } from 'constants';
+import { disposeMesh } from '../SceneUtils';
 
 export const Y_OFFSET = 0.01;
 
@@ -10,11 +10,17 @@ export const Y_OFFSET = 0.01;
  * Defines a mesh that can draw a grid.
  */
 export class GridMesh extends Object3D {
-    tiles: GridTile[];
+    tiles: {
+        localPosition: Vector3,
+        gridPosition: Vector2
+    }[];
 
     constructor(level: GridLevel) {
         super();
-        this.tiles = level.tiles.filter(t => t.valid);
+        this.tiles = level.tiles.filter(t => t.valid).map(t => ({
+            localPosition: t.localPosition,
+            gridPosition: t.gridPosition
+        }));
         this.add(constructGridLines(level));
     }
 
@@ -33,6 +39,14 @@ export class GridMesh extends Object3D {
         }))
         const closestTile = minBy(mapped, t => t.distance);
         return  closestTile;
+    }
+
+    dispose() {
+        this.children.forEach(c => {
+            if (c instanceof Line) {
+                disposeMesh(c);
+            }
+        });
     }
 }
 

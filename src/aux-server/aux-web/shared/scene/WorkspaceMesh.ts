@@ -23,6 +23,7 @@ import { GridChecker, GridCheckResults } from './grid/GridChecker';
 import { GameObject } from './GameObject';
 import { AuxFile } from '@yeti-cgi/aux-common/aux-format';
 import { idEquals } from '@yeti-cgi/aux-common/causal-trees';
+import { disposeMesh } from './SceneUtils';
 
 /**
  * Defines a mesh that represents a workspace.
@@ -194,6 +195,7 @@ export class WorkspaceMesh extends GameObject {
      */
     public updateHexGrid(calc: FileCalculationContext) {
         if (this.hexGrid) {
+            this.hexGrid.dispose();
             this.container.remove(this.hexGrid);
         }
         
@@ -229,6 +231,7 @@ export class WorkspaceMesh extends GameObject {
      */
     async updateSquareGrids(checker: GridChecker, calc: FileCalculationContext) {
         if (this.squareGrids && this.squareGrids.length > 0) {
+            this.squareGrids.forEach(g => g.dispose());
             this.container.remove(...this.squareGrids);
         }
 
