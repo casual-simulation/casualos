@@ -846,6 +846,7 @@ describe('AuxCausalTree', () => {
         it('should update the object with the given values', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
+            tree.root();
             const file = tree.file('test');
             const result = tree.updateFile(tree.value['test'], {
                 tags: {
@@ -856,17 +857,17 @@ describe('AuxCausalTree', () => {
                 }
             });
 
-            const positionTag = atom(atomId(1, 2), file.id, tag('_position'));
-            const positionTagValue = atom(atomId(1, 3, 1), positionTag.id, value({ x: 1, y: 0, z: 0 }));
+            const positionTag = atom(atomId(1, 3), file.id, tag('_position'));
+            const positionTagValue = atom(atomId(1, 4, 1), positionTag.id, value({ x: 1, y: 0, z: 0 }));
 
-            const abcTag = atom(atomId(1, 4), file.id, tag('abc'));
-            const abcTagValue = atom(atomId(1, 5, 1), abcTag.id, value('123'));
+            const abcTag = atom(atomId(1, 5), file.id, tag('abc'));
+            const abcTagValue = atom(atomId(1, 6, 1), abcTag.id, value('123'));
 
-            const numTag = atom(atomId(1, 6), file.id, tag('num'));
-            const numTagValue = atom(atomId(1, 7, 1), numTag.id, value(99));
+            const numTag = atom(atomId(1, 7), file.id, tag('num'));
+            const numTagValue = atom(atomId(1, 8, 1), numTag.id, value(99));
 
-            const bTag = atom(atomId(1, 8), file.id, tag('b'));
-            const bTagValue = atom(atomId(1, 9, 1), bTag.id, value(true));
+            const bTag = atom(atomId(1, 9), file.id, tag('b'));
+            const bTagValue = atom(atomId(1, 10, 1), bTag.id, value(true));
 
             expect(result.map(ref => ref)).toEqual([
                 positionTag,
@@ -883,6 +884,7 @@ describe('AuxCausalTree', () => {
         it('should handle nested objects', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
+            tree.root();
             const file = tree.file('test');
             tree.updateFile(tree.value['test'], {
                 tags: {
@@ -896,8 +898,8 @@ describe('AuxCausalTree', () => {
                 }
             });
 
-            const positionTag = atom(atomId(1, 2), file.id, tag('_position'));
-            const positionTagValue = atom(atomId(1, 4, 1), positionTag.id, value({ x: 1, y: 0, z: 0 }));
+            const positionTag = atom(atomId(1, 3), file.id, tag('_position'));
+            const positionTagValue = atom(atomId(1, 5, 1), positionTag.id, value({ x: 1, y: 0, z: 0 }));
 
             expect(result.map(ref => ref)).toEqual([
                 positionTagValue
@@ -907,6 +909,7 @@ describe('AuxCausalTree', () => {
         it('should batch the updates together', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
+            tree.root();
             const file = tree.file('test');
             
             let updates: Atom<AuxOp>[][] = [];
@@ -924,8 +927,8 @@ describe('AuxCausalTree', () => {
                 }
             });
 
-            const positionTag = atom(atomId(1, 2), file.id, tag('_position'));
-            const positionTagValue = atom(atomId(1, 4, 1), positionTag.id, value({ x: 1, y: 0, z: 0 }));
+            const positionTag = atom(atomId(1, 3), file.id, tag('_position'));
+            const positionTagValue = atom(atomId(1, 5, 1), positionTag.id, value({ x: 1, y: 0, z: 0 }));
 
             
             expect(updates.length).toBe(2);
@@ -937,6 +940,7 @@ describe('AuxCausalTree', () => {
         it('should not write duplicates', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
+            tree.root();
             const file = createFile('test', {
                 _workspace: null,
                 _position: { x: 0, y: 0, z: 0 },
@@ -962,6 +966,7 @@ describe('AuxCausalTree', () => {
         it('should allow setting null', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
+            tree.root();
             const file = createFile('test', {
                 _workspace: null,
                 _position: { x: 0, y: 0, z: 0 },
@@ -980,7 +985,7 @@ describe('AuxCausalTree', () => {
 
             expect(updates.length).toBe(1);
             expect(result.map(ref => ref)).toEqual([
-                atom(atomId(1, 8, 1), atomId(1, 6), value(null))
+                atom(atomId(1, 9, 1), atomId(1, 7), value(null))
             ]);
         });
     });
@@ -989,6 +994,7 @@ describe('AuxCausalTree', () => {
         it('should handle file update events', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
+            tree.root();
             const file = tree.file('test');
             const result = tree.addEvents([
                 fileUpdated('test', {
@@ -1001,17 +1007,17 @@ describe('AuxCausalTree', () => {
                 })
             ]);
 
-            const positionTag = atom(atomId(1, 2), file.id, tag('_position'));
-            const positionTagValue = atom(atomId(1, 3, 1), positionTag.id, value({ x: 1, y: 0, z: 0 }));
+            const positionTag = atom(atomId(1, 3), file.id, tag('_position'));
+            const positionTagValue = atom(atomId(1, 4, 1), positionTag.id, value({ x: 1, y: 0, z: 0 }));
 
-            const abcTag = atom(atomId(1, 4), file.id, tag('abc'));
-            const abcTagValue = atom(atomId(1, 5, 1), abcTag.id, value('123'));
+            const abcTag = atom(atomId(1, 5), file.id, tag('abc'));
+            const abcTagValue = atom(atomId(1, 6, 1), abcTag.id, value('123'));
 
-            const numTag = atom(atomId(1, 6), file.id, tag('num'));
-            const numTagValue = atom(atomId(1, 7, 1), numTag.id, value(99));
+            const numTag = atom(atomId(1, 7), file.id, tag('num'));
+            const numTagValue = atom(atomId(1, 8, 1), numTag.id, value(99));
 
-            const bTag = atom(atomId(1, 8), file.id, tag('b'));
-            const bTagValue = atom(atomId(1, 9, 1), bTag.id, value(true));
+            const bTag = atom(atomId(1, 9), file.id, tag('b'));
+            const bTagValue = atom(atomId(1, 10, 1), bTag.id, value(true));
 
             expect(result.map(ref => ref)).toEqual([
                 positionTag,
