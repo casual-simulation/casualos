@@ -1,5 +1,8 @@
+import * as os from 'os';
+import * as process from 'process';
 import {Request, Response, Handler} from 'express';
 import { AxiosError } from 'axios';
+import { flatMap } from 'lodash';
 
 export const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
     return (req, res, next) => {
@@ -13,4 +16,35 @@ export const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
                 next(er);
             });
     };
+}
+
+/**
+ * Gets the list of IP Addresses that are assigned to this machine.
+ * Excludes internal IP Addresses. (e.g. 127.0.0.1)
+ */
+export function getLocalIpAddresses() {
+    const ifaces = os.networkInterfaces();
+    return flatMap(Object.keys(ifaces), ifname => {
+        return ifaces[ifname]
+            .filter(iface => !iface.internal)
+            .map(iface => iface.address);
+    });
+}
+
+/**
+ * Gets the domains that should be added to the given site for development purposes.
+ * @param site 
+ */
+export function getExtraDomainsForSite(site: 'projector' | 'player') {
+    const env = process.env.NODE_ENV;
+    if (env === 'production') {
+    } else {
+        const mode = process.argv[2];
+        console.log(mode);
+        if (mode === site || (typeof mode === 'undefined' && site === 'projector')) {
+            return getLocalIpAddresses();
+        }
+    }
+
+    return [];
 }

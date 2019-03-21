@@ -152,4 +152,30 @@ describe('RealtimeChannel', () => {
             });
         });
     });
+
+    describe('connectionStateChanged', () => {
+        it('should be offline by default', () => {
+            let state: boolean = true;
+            channel.connectionStateChanged.subscribe(a => state = a);
+
+            expect(state).toBe(false);
+        });
+
+        it('should only go online once the join_channel request has finished', async () => {
+            let state: boolean = true;
+            channel.connectionStateChanged.subscribe(a => state = a);
+
+            connection.setConnected(true);
+            expect(state).toBe(false);
+            
+            const request = connection.requests[0];
+            expect(request).toBeDefined();
+            expect(request.name).toBe('join_channel');
+            request.resolve({});
+
+            await connection.flushPromises();
+
+            expect(state).toBe(true);
+        });
+    });
 });

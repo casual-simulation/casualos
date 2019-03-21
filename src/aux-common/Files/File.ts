@@ -18,9 +18,7 @@ export interface FileTags {
     _userContext?: string;
     _userInventoryContext?: string;
     _mode?: UserMode;
-    
     _editingFile?: string;
-    _lastActiveTime?: number;
     _lastEditedBy?: string;
     ['aux.scene.color']?: string;
 

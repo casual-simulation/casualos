@@ -667,6 +667,322 @@ describe('FileCalculations', () => {
                 true
             ]);
         });
+
+        describe('formulas', () => {
+            describe('# syntax', () => {
+            
+                it('should get every tag value', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+                    const file3 = createFile('test3');
+                    const file4 = createFile('test4');
+
+                    file1.tags.abc = 'hello';
+                    file2.tags.abc = 'world';
+                    file3.tags.abc = '!';
+
+                    file3.tags.formula = '=#abc';
+
+                    const context = createCalculationContext([file4, file2, file1, file3]);
+                    const value = calculateFileValue(context, file3, 'formula');
+
+                    // Order is dependent on the position in the context.
+                    expect(value).toEqual([
+                        'world',
+                        'hello',
+                        '!'
+                    ]);
+                });
+
+                it('should return all the values that equal the given value', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+                    const file3 = createFile('test3');
+                    const file4 = createFile('test4');
+
+                    file1.tags.abc = 1;
+                    file2.tags.abc = 2;
+                    file3.tags.abc = 2;
+
+                    file3.tags.formula = '=#abc(2)';
+
+                    const context = createCalculationContext([file4, file2, file1, file3]);
+                    const value = calculateFileValue(context, file3, 'formula');
+                    
+                    expect(value).toEqual([
+                        2,
+                        2
+                    ]);
+                });
+
+                it('should use the given filter', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+                    const file3 = createFile('test3');
+                    const file4 = createFile('test4');
+
+                    file1.tags.abc = 1;
+                    file2.tags.abc = 2;
+                    file3.tags.abc = 3;
+
+                    file3.tags.formula = '=#abc(num => num > 1)';
+
+                    const context = createCalculationContext([file2, file4, file1, file3]);
+                    const value = calculateFileValue(context, file3, 'formula');
+
+                    expect(value).toEqual([
+                        2,
+                        3
+                    ]);
+                });
+
+                it('should handle filters on formulas', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+                    const file3 = createFile('test3');
+                    const file4 = createFile('test4');
+
+                    file1.tags.abc = 1;
+                    file2.tags.abc = '=5';
+                    file3.tags.abc = 3;
+
+                    file3.tags.formula = '=#abc(num => num > 1)';
+
+                    const context = createCalculationContext([file2, file4, file1, file3]);
+                    const value = calculateFileValue(context, file3, 'formula');
+
+                    expect(value).toEqual([
+                        5,
+                        3
+                    ]);
+                });
+
+                it('should support tags with dots', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+                    const file3 = createFile('test3');
+                    const file4 = createFile('test4');
+
+                    file1.tags['abc.def'] = 1;
+                    file2.tags['abc.def'] = '=2';
+                    file3.tags['abc.def'] = 3;
+
+                    file3.tags.formula = '=#abc.def';
+                    file3.tags.formula1 = '=#abc.def(num => num >= 2)';
+                    file3.tags.formula2 = '=#abc.def(2)';
+
+                    const context = createCalculationContext([file2, file1, file4, file3]);
+                    let value = calculateFileValue(context, file3, 'formula');
+
+                    expect(value).toEqual([
+                        2,
+                        1,
+                        3
+                    ]);
+
+                    value = calculateFileValue(context, file3, 'formula1');
+
+                    expect(value).toEqual([
+                        2,
+                        3
+                    ]);
+
+                    value = calculateFileValue(context, file3, 'formula2');
+
+                    expect(value).toEqual(2);
+                });
+
+                it('should support tags in strings', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+                    const file3 = createFile('test3');
+                    const file4 = createFile('test4');
+
+                    file1.tags['🎶🎉🦊'] = 1;
+                    file2.tags['🎶🎉🦊'] = '=2';
+                    file3.tags['🎶🎉🦊'] = 3;
+
+                    file3.tags.formula = '=#"🎶🎉🦊"';
+
+                    const context = createCalculationContext([file2, file1, file4, file3]);
+                    let value = calculateFileValue(context, file3, 'formula');
+
+                    expect(value).toEqual([
+                        2,
+                        1,
+                        3
+                    ]);
+                });
+
+                it('should support tags in strings with filters', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+                    const file3 = createFile('test3');
+                    const file4 = createFile('test4');
+
+                    file1.tags['🎶🎉🦊'] = 1;
+                    file2.tags['🎶🎉🦊'] = '=2';
+                    file3.tags['🎶🎉🦊'] = 3;
+
+                    file3.tags.formula = '=#"🎶🎉🦊"(num => num >= 2)';
+
+                    const context = createCalculationContext([file2, file1, file4, file3]);
+                    let value = calculateFileValue(context, file3, 'formula');
+
+                    expect(value).toEqual([
+                        2,
+                        3
+                    ]);
+                });
+            });
+
+            describe('@ syntax', () => {
+                it('should get every file that has the given tag', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+                    const file3 = createFile('test3');
+                    const file4 = createFile('test4');
+
+                    file1.tags.abc = 'hello';
+                    file2.tags.abc = 'world';
+                    file3.tags.abc = '!';
+
+                    file3.tags.formula = '=@abc';
+
+                    const context = createCalculationContext([file2, file1, file4, file3]);
+                    const value = calculateFileValue(context, file3, 'formula');
+
+                    // Order is dependent on the position in the context.
+                    expect(value).toEqual([
+                        file2,
+                        file1,
+                        file3
+                    ]);
+                });
+
+                it('should get every file that has the given tag which matches the filter', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+                    const file3 = createFile('test3');
+                    const file4 = createFile('test4');
+
+                    file1.tags.abc = 1;
+                    file2.tags.abc = 2;
+                    file3.tags.abc = 3;
+
+                    file3.tags.formula = '=@abc(num => num >= 2)';
+
+                    const context = createCalculationContext([file2, file1, file4, file3]);
+                    const value = calculateFileValue(context, file3, 'formula');
+
+                    // Order is dependent on the position in the context.
+                    expect(value).toEqual([
+                        file2,
+                        file3
+                    ]);
+                });
+
+                it('should handle filters on formulas', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+                    const file3 = createFile('test3');
+                    const file4 = createFile('test4');
+
+                    file1.tags.abc = 1;
+                    file2.tags.abc = '=2';
+                    file3.tags.abc = 3;
+
+                    file3.tags.formula = '=@abc(num => num >= 2)';
+
+                    const context = createCalculationContext([file2, file1, file4, file3]);
+                    const value = calculateFileValue(context, file3, 'formula');
+
+                    // Order is dependent on the position in the context.
+                    expect(value).toEqual([
+                        file2,
+                        file3
+                    ]);
+                });
+
+                it('should support tags with dots', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+                    const file3 = createFile('test3');
+                    const file4 = createFile('test4');
+
+                    file1.tags['abc.def'] = 1;
+                    file2.tags['abc.def'] = '=2';
+                    file3.tags['abc.def'] = 3;
+
+                    file3.tags.formula = '=@abc.def';
+                    file3.tags.formula1 = '=@abc.def(num => num >= 2)';
+                    file3.tags.formula2 = '=@abc.def(2)';
+
+                    const context = createCalculationContext([file2, file1, file4, file3]);
+                    let value = calculateFileValue(context, file3, 'formula');
+
+                    expect(value).toEqual([
+                        file2,
+                        file1,
+                        file3,
+                    ]);
+
+                    value = calculateFileValue(context, file3, 'formula1');
+
+                    expect(value).toEqual([
+                        file2,
+                        file3,
+                    ]);
+
+                    value = calculateFileValue(context, file3, 'formula2');
+
+                    expect(value).toEqual(file2);
+                });
+
+                it('should support tags in strings', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+                    const file3 = createFile('test3');
+                    const file4 = createFile('test4');
+
+                    file1.tags['🎶🎉🦊'] = 1;
+                    file2.tags['🎶🎉🦊'] = '=2';
+                    file3.tags['🎶🎉🦊'] = 3;
+
+                    file3.tags.formula = '=@"🎶🎉🦊"';
+
+                    const context = createCalculationContext([file2, file1, file4, file3]);
+                    let value = calculateFileValue(context, file3, 'formula');
+
+                    expect(value).toEqual([
+                        file2,
+                        file1,
+                        file3
+                    ]);
+                });
+
+                it('should support tags in strings with filters', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+                    const file3 = createFile('test3');
+                    const file4 = createFile('test4');
+
+                    file1.tags['🎶🎉🦊'] = 1;
+                    file2.tags['🎶🎉🦊'] = '=2';
+                    file3.tags['🎶🎉🦊'] = 3;
+
+                    file3.tags.formula = '=@"🎶🎉🦊"(num => num >= 2)';
+
+                    const context = createCalculationContext([file2, file1, file4, file3]);
+                    let value = calculateFileValue(context, file3, 'formula');
+
+                    expect(value).toEqual([
+                        file2,
+                        file3
+                    ]);
+                });
+            });
+        });
     });
 
     describe('updateFile()', () => {
@@ -875,10 +1191,10 @@ describe('FileCalculations', () => {
     describe('isTagWellKnown()', () => {
         it('should return true for some builtin tags', () => {
             expect(isTagWellKnown('abc.index')).toBe(true);
-            expect(isTagWellKnown('_hidden')).toBe(true);
+            expect(isTagWellKnown('_hidden')).toBe(true); 
             expect(isTagWellKnown('_destroyed')).toBe(true);
             expect(isTagWellKnown('_lastEditedBy')).toBe(true);
-            expect(isTagWellKnown('_lastActiveTime')).toBe(true);
+            expect(isTagWellKnown('abc._lastActiveTime')).toBe(true);
         });
 
         it('should return true for autogenerated context tags', () => {

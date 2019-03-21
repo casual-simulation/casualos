@@ -10,7 +10,7 @@ import { downloadAuxState, readFileJson } from '../aux-projector/download';
 import { CausalTreeManager } from './causal-trees/CausalTreeManager';
 import { StoredCausalTree } from '@yeti-cgi/aux-common/causal-trees';
 import { AuxOp, FilesState, AuxCausalTree } from '@yeti-cgi/aux-common';
-import localForage from 'localforage';
+import Dexie from 'dexie';
 import { difference } from 'lodash';
 
 export interface User {
@@ -37,15 +37,32 @@ export interface VersionInfo {
     latestTaggedVersion: string;
 }
 
+interface StoredValue<T> {
+    key: string;
+    value: T;
+}
+
+class AppDatabase extends Dexie {
+
+    keyval: Dexie.Table<StoredValue<any>, string>;
+
+    constructor() {
+        super('Aux');
+        this.version(1).stores({
+            'keyval': 'key'
+        });
+    }
+}
+
 export enum AppType {
     Builder = 'builder',
     Player = 'player'
 }
 
-export class AppManager {
-    
+export class AppManager {    
     public appType: AppType;
 
+    private _db: AppDatabase;
     private _userSubject: BehaviorSubject<User>;
     private _updateAvailable: BehaviorSubject<boolean>;
     private _fileManager: FileManager;
@@ -55,9 +72,12 @@ export class AppManager {
     private _user: User;
 
     constructor() {
+        this._initSentry();
+        this._initOffline();
         this._socketManager = new SocketManager();
         this._treeManager = new CausalTreeManager(this._socketManager.socket);
         this._fileManager = new FileManager(this, this._treeManager);
+        this._db = new AppDatabase();
         this._initPromise = this._init();
     }
 
@@ -67,6 +87,10 @@ export class AppManager {
 
     get socketManager() {
         return this._socketManager;
+    }
+
+    get treeManager() {
+        return this._treeManager;
     }
 
     get fileManager() {
@@ -159,12 +183,6 @@ export class AppManager {
     }
 
     private async _init() {
-        this._initSentry();
-        this._initOffline();
-        localForage.config({
-            name: 'aux'
-        });
-        
         await this._initUser();
     }
 
@@ -240,11 +258,10 @@ export class AppManager {
             });
         });
 
-        const userJson = await localForage.getItem<string>('user');
-        const user: User = JSON.parse(userJson);
+        const user: StoredValue<User> = await this._db.keyval.get('user');
 
         if (user) {
-            this._user = user;
+            this._user = user.value;
             await this._fileManager.init(this._user.channelId);
             this._userSubject.next(this._user);
         }
@@ -252,9 +269,9 @@ export class AppManager {
 
     private async _saveUser() {
         if (this.user) {
-            await localForage.setItem("user", JSON.stringify(this.user));
+            await this._db.keyval.put({ key: 'user', value: this.user });
         } else {
-            await localForage.removeItem("user");
+            await this._db.keyval.delete('user');
         }
     }
 

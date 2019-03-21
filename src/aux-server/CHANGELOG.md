@@ -1,5 +1,32 @@
 # AUX Server Changelog
 
+## V0.3.12
+### Date: 3/21/2019
+
+### Changes:
+- Bug Fixes
+    - Fixed issues with slowdowns caused by continually re-saving the entire history.
+    - Fixed several performance issues related to labels and word bubbles.
+    - Changed the branding to AUX Builder from File Simulator.
+    - Fixed several issues with files and contexts in AUX Player.
+        - Files marked as `_destroyed` now no longer display.
+        - Fixed a loading order issue that would occur when a file was its own context.
+        - Fixed an issue that would cause the player to ignore the file removed event for the context file.
+    - Fixed Word Bubbles so that they scale with labels when `aux.label.size.mode` is set to `auto`.
+- AUX Player Improvements
+    - Users now show up inside contexts in both AUX Builder and AUX Player.
+    - The `_lastActiveTime` tag is now per-context. (i.e. `context_a._lastActiveTime`)
+- AUX Builder Improvements
+    - Added the ability to fork simulations.
+- Other Improvements
+    - Added the ability to transparently upgrade our storage formats.
+        - Works for both MongoDB and IndexedDB.
+    - Made the server respond to the local IP Addresses by default in Development mode.
+        - This makes it easier to do development with a mobile device.
+        - Use `npm run watch:player` to have it serve the AUX Player by default. Otherwise it will serve the AUX Builder.
+    - Improved formula query expresions to support tags with dots in them.
+        - Before you would have to wrap the tag in a string.
+        - Now you can simply do `@aux.label` or `#aux.label` as long as each part is a valid [JS identifier](https://developer.mozilla.org/en-US/docs/Glossary/Identifier).
 
 ## V0.3.11
 ### Date: 3/19/2019

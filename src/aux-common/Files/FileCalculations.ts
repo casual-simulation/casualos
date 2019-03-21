@@ -22,9 +22,9 @@ import { isProxy, createFileProxy, proxyObject, SetValueHandler } from './FilePr
 import formulaLib from '../Formulas/formula-lib';
 import { FilterFunction, SandboxInterface } from '../Formulas/SandboxInterface';
 import { PartialFile } from '../Files';
-import { FilesState, cleanFile, FileEvent } from './FilesChannel';
+import { FilesState, cleanFile, FileEvent, hasValue } from './FilesChannel';
 import { merge } from '../utils';
-import { WeaveReference, AtomOp } from '../causal-trees';
+import { AtomOp, Atom } from '../causal-trees';
 import { AuxOp, AuxOpType, AuxFile } from '../aux-format';
 
 export var ShortId_Length: number = 5;
@@ -192,7 +192,7 @@ export function calculateFileValue(context: FileCalculationContext, object: Obje
         return object.id;
     } else if (isFormulaObject(object)) {
         const o: any = object;
-        return _calculateValue(context, object, tag, o[tag]);
+        return o[tag];
     } else {
         return _calculateValue(context, object, tag, object.tags[tag]);
     }
@@ -290,7 +290,7 @@ export const WELL_KNOWN_TAGS = [
     /_destroyed$/,
     /\.index$/,
     /_lastEditedBy/,
-    /_lastActiveTime/,
+    /\._lastActiveTime/,
     /^aux\._context_/,
 ];
 
@@ -565,7 +565,7 @@ export function calculateGridScale(calc: FileCalculationContext, workspace: AuxF
  * @param current The current state.
  * @param events If provided, this event will be used to help short-circut the diff calculation to be O(1) whenever the event is a 'file_added', 'file_removed', or 'file_updated' event.
  */
-export function calculateStateDiff(prev: FilesState, current: FilesState, events?: WeaveReference<AuxOp>[]): FilesStateDiff {
+export function calculateStateDiff(prev: FilesState, current: FilesState, events?: Atom<AuxOp>[]): FilesStateDiff {
 
     prev = prev || {};
     current = current || {};
@@ -1021,18 +1021,21 @@ export function calculateBooleanTagValue(context: FileCalculationContext, file: 
 export function isFileInContext(context: FileCalculationContext, file: Object, contextId: string): boolean {
     if (!contextId) return false;
 
-    if (file.tags._user) {
-        const result = calculateFileValue(context, file, '_userContext');
-        return result == contextId;
-    } else {
-        const result = calculateFileValue(context, file, contextId);
+    let result: boolean;
+    const contextValue = calculateFileValue(context, file, contextId);
 
-        if (typeof result === 'string') {
-            return result === 'true';
-        } else {
-            return result === true;
-        }
+    if (typeof contextValue === 'string') {
+        result = (contextValue === 'true');
+    } else {
+        result = (contextValue === true);
     }
+
+    if (!result && hasValue(file.tags._user)) {
+        const userContextValue = calculateFileValue(context, file, '_userContext');
+        result = (userContextValue == contextId);
+    }
+
+    return result;
 }
 
 function _parseFilterValue(value: string): any {
@@ -1124,11 +1127,24 @@ function _calculateFormulaValue(context: FileCalculationContext, object: any, ta
     }, convertToFormulaObject(context, object));
 
     // Unwrap the proxy object
-    if (result.success && result.result && result.result[isProxy]) {
-        return {
-            ...result,
-            result: result.result[proxyObject]
-        };
+    if (result.success && result.result) {
+        if (result.result[isProxy]) {
+            return {
+                ...result,
+                result: result.result[proxyObject]
+            };
+        } else if (Array.isArray(result.result)) {
+            return {
+                ...result,
+                result: result.result.map(v => {
+                    if (v && v[isProxy]) {
+                        return v[proxyObject];
+                    } else {
+                        return v
+                    }
+                })
+            };
+        }
     }
 
     return result;
@@ -1202,7 +1218,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
         if(typeof filter === 'function') {
           return objs.filter(o => filter(this._calculateValue(o, tag)));
         } else {
-          return objs.filter(o => this._calculateValue(o, tag) === filter);
+          return objs.filter(o => this._calculateValue(o, tag) == filter);
         }
       } else {
         return objs;

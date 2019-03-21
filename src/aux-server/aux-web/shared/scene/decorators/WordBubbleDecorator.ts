@@ -32,9 +32,14 @@ export class WordBubbleDecorator extends AuxFile3DDecorator {
     }
 
     frameUpdate(calc: FileCalculationContext): void {
-        // HACK: This is purely for debugging. 
-        // Make sure to remove this before committing!
-        this._updateWorldBubble();
+        if (this._elements) {
+            for (let i = 0; i < this._elements.length; i++) {
+                if (this._elements[i].shouldUpdateWorldBubbleThisFrame()) {
+                    this._updateWorldBubble();
+                    return;
+                }
+            }
+        }
     }
 
     dispose(): void {

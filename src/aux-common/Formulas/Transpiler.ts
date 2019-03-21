@@ -17,6 +17,7 @@ declare module 'acorn' {
         next(): void;
         parseLiteral(value: string): Node;
         parseIdent(): Node;
+        parseExprSubscripts(): Node;
         unexpected(): void;
         startNodeAt(start: number, startLoc: number): Node;
         readToken(code: number): any;
@@ -100,7 +101,7 @@ function exJsParser(parser: typeof Parser) {
             if(this.type === tokTypes.string) {
                 node.identifier = this.parseLiteral(this.value);
             } else if(this.type === tokTypes.name) {
-                node.identifier = this.parseIdent();
+                node.identifier = this.parseExprSubscripts();
             } else if(this.type === tokTypes.parenL) {
             } else {
                 this.unexpected();
@@ -121,7 +122,7 @@ function exJsParser(parser: typeof Parser) {
             if(this.type === tokTypes.string) {
                 node.identifier = this.parseLiteral(this.value);
             } else if(this.type === tokTypes.name) {
-                node.identifier = this.parseIdent();
+                node.identifier = this.parseExprSubscripts();
             } else if(this.type === tokTypes.parenL) {
             } else {
                 this.unexpected();
@@ -134,7 +135,7 @@ function exJsParser(parser: typeof Parser) {
 const exJsGenerator = assign({}, baseGenerator, {});
 
 /**
- * Defines a class that is able to compile code from File Simulator's custom JavaScript dialect
+ * Defines a class that is able to compile code from AUX's custom JavaScript dialect
  * into pure ES6 JavaScript. Does not preserve spacing or comments.
  * 
  * See https://docs.google.com/document/d/1WQXQPjdXxyx_lau15WPpwTTYvt66_wPCu3x-08rpLoY/edit?usp=sharing
@@ -168,40 +169,48 @@ export class Transpiler {
     private _replace(node: Node): Node {
         return <any>replace(<any>node, {
             enter: <any>((n: any) => {
-                // #tag syntax
-                if (n.type === 'TagValue' && n.identifier) {
-                    // _listTagValues('tag')
-                    return callExpr('_listTagValues', [{
-                        type: 'Literal',
-                        value: (n.identifier.name || n.identifier.value)
-                    }]);
+                // #tag or #tag(filter) syntax
+                // or @tag or @tag(filter) syntax
+                if ((n.type === 'TagValue' || n.type === 'ObjectValue') && n.identifier) {
+                    // _listTagValues('tag', filter)
 
-                    // #tag(filter) syntax
-                } else if(n.type === 'CallExpression' && 
-                          n.callee.type === 'TagValue' &&
-                          n.callee.identifier) {
-                    return callExpr('_listTagValues', [{
-                        type: 'Literal',
-                        value: (n.callee.identifier.name || n.callee.identifier.value)
-                    }, ...n.arguments]);
+                    let identifier: any;
+                    let args: any[] = [];
+                    if (n.identifier.type === 'CallExpression') {
+                        identifier = n.identifier.callee;
+                        args = n.identifier.arguments;
+                    } else {
+                        identifier = n.identifier;
+                    }
 
-                    // @tag syntax
-                } else if(n.type === 'ObjectValue' && n.identifier) {
-                    // _listObjectsWithTag('tag')
-                    return callExpr('_listObjectsWithTag', [{
-                        type: 'Literal',
-                        value: (n.identifier.name || n.identifier.value)
-                    }]);
+                    let tag: string;
+                    if (identifier.type === 'MemberExpression') {
+                        tag = this._toJs(identifier);
+                    } else {
+                        tag = (identifier.name || identifier.value);
+                    }
 
-                    // @tag(filter) syntax
-                } else if(n.type === 'CallExpression' &&
-                          n.callee.type === 'ObjectValue' &&
-                          n.callee.identifier){
-                    // _listObjectsWithTag('tag', filter)
-                    return callExpr('_listObjectsWithTag', [{
+                    const funcName = n.type === 'TagValue' ? '_listTagValues' : '_listObjectsWithTag';
+
+                    return callExpr(funcName, [{
                         type: 'Literal',
-                        value: (n.callee.identifier.name || n.callee.identifier.value)
-                    }, ...n.arguments]);
+                        value: tag
+                    }, ...args]);
+
+                } else if(n.type === 'CallExpression') {
+                    if (n.callee.type === 'TagValue' || n.callee.type === 'ObjectValue') {
+                        if (n.callee.identifier) {
+
+                            let identifier = n.callee.identifier;
+                            let tag: string = (identifier.name || identifier.value);
+
+                            const funcName = n.callee.type === 'TagValue' ? '_listTagValues' : '_listObjectsWithTag';
+                            return callExpr(funcName, [{
+                                type: 'Literal',
+                                value: tag
+                            }, ...n.arguments]);
+                        }
+                    }
                 }
             })
         });

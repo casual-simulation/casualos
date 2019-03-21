@@ -1,13 +1,15 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
-import { FileCalculationContext, AuxFile, calculateFileValue, isFormula, calculateFormattedFileValue, calculateNumericalTagValue } from "@yeti-cgi/aux-common";
+import { FileCalculationContext, AuxFile, calculateFileValue, isFormula, calculateFormattedFileValue, calculateNumericalTagValue, hasValue } from "@yeti-cgi/aux-common";
 import { Text3D } from "../Text3D";
 import { setLayer, findParentScene } from "../SceneUtils";
 import { LayersHelper } from "../LayersHelper";
 import { Color, Camera, Object3D, Mesh, Vector3, Scene, Box3 } from "three";
 import { MeshCubeDecorator } from "./MeshCubeDecorator";
+import { WordBubbleElement } from "../WordBubbleElement";
+import { appManager } from "../../../shared/AppManager";
 
-export class LabelDecorator extends AuxFile3DDecorator {    
+export class LabelDecorator extends AuxFile3DDecorator implements WordBubbleElement {    
 
     /**
      * The optional label for the file.
@@ -82,19 +84,30 @@ export class LabelDecorator extends AuxFile3DDecorator {
         return this.label.boundingBox;
     }
 
+    shouldUpdateWorldBubbleThisFrame(): boolean {
+        // Should update word bubble every frame if the label is in auto size mode.
+        return this._isInAutoSizeMode();
+    }
+
+    private _isInAutoSizeMode(calc?: FileCalculationContext): boolean {
+        if (this.file3D.file.tags['aux.label.size.mode']) {
+            let fileCalc = calc ? calc : appManager.fileManager.createContext();
+            let mode = calculateFileValue(fileCalc, this.file3D.file, 'aux.label.size.mode');
+            return mode === 'auto';
+        }
+        return false;
+    }
+
     private _updateLabelSize(calc: FileCalculationContext) {
         let labelSize = calculateNumericalTagValue(calc, this.file3D.file, 'aux.label.size', 1) * Text3D.defaultScale;
-        if (this.file3D.file.tags['aux.label.size.mode']) {
-            let mode = calculateFileValue(calc, this.file3D.file, 'aux.label.size.mode');
-            if (mode === 'auto') {
-                let labelWorldPos = new Vector3();
-                this.label.getWorldPosition(labelWorldPos);
-                const distanceToCamera = this._camera.position.distanceTo(labelWorldPos);
-                const extraScale = distanceToCamera / Text3D.virtualDistance;
-                const finalScale = labelSize * extraScale;
-                this.label.setScale(finalScale);
-                return;
-            }
+        if (this._isInAutoSizeMode(calc)) {
+            let labelWorldPos = new Vector3();
+            this.label.getWorldPosition(labelWorldPos);
+            const distanceToCamera = this._camera.position.distanceTo(labelWorldPos);
+            const extraScale = distanceToCamera / Text3D.virtualDistance;
+            const finalScale = labelSize * extraScale;
+            this.label.setScale(finalScale);
+            return;
         }
         this.label.setScale(labelSize);
     }

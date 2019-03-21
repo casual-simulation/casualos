@@ -1,4 +1,4 @@
-# File Simulator
+# AUX
 
 A monorepo that contains the AUX (Ambient User Experience) packages.
 

@@ -1,5 +1,5 @@
-import { AtomOp } from "./Atom";
-import { Weave, WeaveReference } from "./Weave";
+import { AtomOp, Atom } from "./Atom";
+import { Weave } from "./Weave";
 
 /**
  * Defines an interface for a reducer that can convert a weave of Atom operations
@@ -16,5 +16,5 @@ export interface AtomReducer<TOp extends AtomOp, TValue, TMetadata> {
      * @param meta The last metadata that was returned from this reducer. If undefined, then this
      *              is the first time the reducer has been called this session.
      */
-    eval(weave: Weave<TOp>, refs?: WeaveReference<TOp>[], value?: TValue, meta?: TMetadata): [TValue, TMetadata];
+    eval(weave: Weave<TOp>, refs?: Atom<TOp>[], value?: TValue, meta?: TMetadata): [TValue, TMetadata];
 }

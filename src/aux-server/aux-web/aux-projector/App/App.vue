@@ -8,7 +8,7 @@
                         <md-icon>menu</md-icon>
                     </md-button>
                     <a class="md-title clickable" @click="showQRCode = true">
-                        {{session || "File Simulator"}}
+                        {{session || "AUX Builder"}}
                     </a>
                 </div>
                 <div class="md-toolbar-section-end">
@@ -23,7 +23,7 @@
 
              <md-drawer :md-active.sync="showNavigation">
                 <div class="menu-header">
-                    <span class="md-title">File Simulator</span><br>
+                    <span class="md-title">AUX Builder</span><br>
                     <span class="md-body-1" v-if="getUser() != null">Logged In: {{getUser().name}}</span>
                 </div>
                 <md-list>
@@ -38,6 +38,10 @@
                     <md-list-item @click="download" v-if="getUser() != null">
                         <md-icon>cloud_download</md-icon>
                         <span class="md-list-item-text">Download AUX</span>
+                    </md-list-item>
+                    <md-list-item @click="fork" v-if="getUser() != null">
+                        <fork-icon class="md-icon md-icon-font md-theme-default"></fork-icon>
+                        <span class="md-list-item-text">Fork AUX</span>
                     </md-list-item>
                     <md-list-item @click="logout" v-if="getUser() != null">
                         <md-icon>exit_to_app</md-icon>
@@ -104,8 +108,24 @@
                     <file-pond allow-multiple="false" @addfile="fileAdded" @removefile="fileRemoved"/>
                 </div>
                 <md-dialog-actions>
-                    <md-button class="md-primary" @click="cancelFileUpload">Close</md-button>
+                    <md-button @click="cancelFileUpload">Close</md-button>
                     <md-button class="md-primary" @click="uploadFiles" :disabled="uploadedFiles.length <= 0">Upload</md-button>
+                </md-dialog-actions>
+            </md-dialog>
+
+            <md-dialog :md-active.sync="showFork" class="fork-dialog">
+                <md-dialog-title>Fork AUX</md-dialog-title>
+                <md-dialog-content>
+                    <div class="fork-container">
+                        <md-field>
+                            <label for="fork-name">Fork Name</label>
+                            <md-input name="fork-name" id="fork-name" v-model="forkName"/>
+                        </md-field>
+                    </div>
+                </md-dialog-content>
+                <md-dialog-actions>
+                    <md-button @click="cancelFork">Cancel</md-button>
+                    <md-button class="md-primary" @click="finishFork" :disabled="!forkName || forkName.length === 0">Fork</md-button>
                 </md-dialog-actions>
             </md-dialog>
 

@@ -1,14 +1,14 @@
 import { RealtimeChannelInfo } from "./RealtimeChannelInfo";
 import { CausalTree } from "./CausalTree";
-import { Observable, SubscriptionLike } from "rxjs";
+import { Observable, SubscriptionLike, Subject, BehaviorSubject } from "rxjs";
 import { RealtimeChannelConnection } from "./RealtimeChannelConnection";
 import { SiteVersionInfo } from "./SiteVersionInfo";
 import { filter, map, tap, first, flatMap } from "rxjs/operators";
 import { ConnectionEvent } from "./ConnectionEvent";
 import { SiteInfo } from "./SiteIdInfo";
 import { WeaveVersion } from "./WeaveVersion";
-import { WeaveReference } from "./Weave";
-import { AtomOp } from "./Atom";
+import { AtomOp, Atom } from "./Atom";
+import { WeaveReference, StoredCausalTree } from "./StoredCausalTree";
 
 /**
  * Defines a class for a realtime event channel.
@@ -21,10 +21,12 @@ import { AtomOp } from "./Atom";
 export class RealtimeChannel<TEvent> implements SubscriptionLike {
 
     private _connection: RealtimeChannelConnection;
+    private _connectionStateChanged: BehaviorSubject<boolean>;
     private _emitName: string;
     private _infoName: string;
     private _requestSiteIdName: string;
     private _requestWeaveName: string;
+
 
     /**
      * Creates a new realtime channel.
@@ -38,6 +40,7 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
         this._infoName = `info_${info.id}`;
         this._requestSiteIdName = `siteId_${info.id}`;
         this._requestWeaveName = `weave_${info.id}`;
+        this._connectionStateChanged = new BehaviorSubject(false);
         this._connection.init([
             this._emitName,
             this._infoName,
@@ -49,9 +52,15 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
             map(e => e.data)
         );
 
-        this.connectionStateChanged.pipe(
+        this._connection.connectionStateChanged.pipe(
+            filter(connected => !connected),
+            tap(_ => this._connectionStateChanged.next(false))
+        ).subscribe();
+
+        this._connection.connectionStateChanged.pipe(
             filter(connected => connected),
-            flatMap(connected => this._connection.request('join_channel', this.info))
+            flatMap(connected => this._connection.request('join_channel', this.info)),
+            tap(_ => this._connectionStateChanged.next(true))
         ).subscribe();
     }
 
@@ -104,12 +113,8 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
      * @param weave The weave to send to the remote server.
      * @param currentVersion The local weave version.
      */
-    exchangeWeaves<T extends AtomOp>(weave: WeaveReference<T>[], currentVersion: WeaveVersion | null): Promise<ExchangeWeavesResponse<T>> {
-        const request: ExchangeWeavesRequest<T> = {
-            weave: weave,
-            currentVersion: currentVersion
-        };
-        return this._connection.request(this._requestWeaveName, request);
+    exchangeWeaves<T extends AtomOp>(message: StoredCausalTree<T>): Promise<StoredCausalTree<T>> {
+        return this._connection.request(this._requestWeaveName, message);
     }
 
     /**
@@ -139,7 +144,7 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
      * Basically this resolves with true whenever we're connected and false whenever we're disconnected.
      */
     get connectionStateChanged() {
-        return this._connection.connectionStateChanged;
+        return this._connectionStateChanged;
     }
 
     /**
@@ -149,24 +154,3 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
         this._connection.unsubscribe();
     }
 }
-
-/**
- * Defines an interface for a request to exchange weaves with a remote peer.
- */
-export interface ExchangeWeavesRequest<T extends AtomOp> {
-    /**
-     * The weave from the requester.
-     */
-    weave: WeaveReference<T>[];
-
-    /**
-     * The current version that the requester is on.
-     * If null then the requester does not have a version.
-     */
-    currentVersion: WeaveVersion | null;
-}
-
-/**
- * Defines the type of the response for exchanging weaves with a remote peer.
- */
-export type ExchangeWeavesResponse<T extends AtomOp> = WeaveReference<T>[];

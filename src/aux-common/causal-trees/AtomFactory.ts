@@ -1,5 +1,4 @@
 import { AtomOp, Atom, AtomId, atom, atomId } from "./Atom";
-import { WeaveReference } from "./Weave";
 import { SiteInfo } from "./SiteIdInfo";
 
 /**
@@ -36,11 +35,14 @@ export class AtomFactory<TOp extends AtomOp> {
 
     /**
      * Updates the timestamp stored by this factory.
-     * This should only be called upon receiving new never-seen events from a remote source.
-     * @param newTimestamp The latest timestamp seen by the app.
+     * @param atom The atom that is being added to the tree.
      */
-    updateTime(newTimestamp: number) {
-        this._time = Math.max(this._time, newTimestamp) + 1;
+    updateTime<T extends TOp>(atom: Atom<T>) {
+        if (atom.id.site !== this.site) {
+            this._time = Math.max(this._time, atom.id.timestamp) + 1;
+        } else {
+            this._time = Math.max(this._time, atom.id.timestamp);
+        }
     }
 
     /**
@@ -48,11 +50,10 @@ export class AtomFactory<TOp extends AtomOp> {
      * @param op The operation to include with the atom.
      * @param cause The parent cause of this atom.
      */
-    create<T extends TOp>(op: T, cause: WeaveReference<TOp> | Atom<TOp> | AtomId, priority?: number): Atom<T> {
+    create<T extends TOp>(op: T, cause: Atom<TOp> | AtomId, priority?: number): Atom<T> {
         let causeId: AtomId = null;
         if (cause) {
-            causeId = <any>(!!(<WeaveReference<TOp>>cause).atom ? (<WeaveReference<TOp>>cause).atom.id : 
-                (<Atom<TOp>>cause).id ? (<Atom<TOp>>cause).id : cause);
+            causeId = <any>(!!(<Atom<TOp>>cause).id ? (<Atom<TOp>>cause).id : cause);
         }
         this._time += 1;
         return atom(atomId(this.site, this._time, priority), causeId, op);

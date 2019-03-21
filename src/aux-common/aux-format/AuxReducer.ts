@@ -1,6 +1,6 @@
 import { AtomReducer } from "../causal-trees/AtomReducer";
 import { AuxOp, AuxOpType, TagOp, FileOp, InsertOp, DeleteOp, ValueOp } from "./AuxOpTypes";
-import { Weave, WeaveReference } from '../causal-trees/Weave';
+import { Weave } from '../causal-trees/Weave';
 import { FilesState, File, Object, hasValue } from "../Files";
 import { createFile, createWorkspace } from "../Files/FileCalculations";
 import { WeaveTraverser } from "../causal-trees/WeaveTraverser";
@@ -9,13 +9,14 @@ import { AtomFactory } from "../causal-trees/AtomFactory";
 import { AuxFile, AuxObject, AuxState, AuxFileMetadata, AuxValueMetadata, AuxRef, AuxSequenceMetadata } from "./AuxState";
 import { flatMap, fill } from 'lodash';
 import { MetaProperty } from "estree";
+import { Atom } from "../causal-trees/Atom";
 
 /**
  * Defines a type for a map from weave references to their calculated values.
  */
 export interface AuxReducerMetadata {
 
-    cache: Map<WeaveReference<AuxOp>, any>;
+    cache: Map<Atom<AuxOp>, any>;
 }
 
 export interface AuxSequence {
@@ -45,7 +46,7 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState, AuxReducerMetada
     //       of this method.
     //       Clearly, this can be improved by simply removing old LWW atoms from the weave
     //       but it would still be nice to improve.
-    eval(weave: Weave<AuxOp>, refs?: WeaveReference<AuxOp>[], old?: AuxState, metadata?: AuxReducerMetadata): [AuxState, AuxReducerMetadata] {
+    eval(weave: Weave<AuxOp>, refs?: Atom<AuxOp>[], old?: AuxState, metadata?: AuxReducerMetadata): [AuxState, AuxReducerMetadata] {
         let value: AuxState = {};
         metadata = (refs && old && metadata) ? metadata : {
             cache: new Map()
@@ -64,15 +65,15 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState, AuxReducerMetada
         while (tree.peek()) {
             const ref = tree.next();
 
-            if (ref.atom.value.type === AuxOpType.file) {
-                const id = ref.atom.value.id;
+            if (ref.value.type === AuxOpType.file) {
+                const id = ref.value.id;
                 if (typeof value[id] === 'undefined') {
                     let file: AuxFile = metadata.cache.get(ref);
                     if (typeof file === 'undefined') {
-                        file = this._evalFile(tree, <WeaveReference<FileOp>>ref, ref.atom.value, metadata);
+                        file = this._evalFile(tree, <Atom<FileOp>>ref, ref.value, metadata);
                         metadata.cache.set(ref, file);
                     } else {
-                        tree.skip(ref.atom.id);
+                        tree.skip(ref.id);
                     }
                     if (file) {
                         value[id] = file;
@@ -84,7 +85,7 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState, AuxReducerMetada
         return [value, metadata];
     }
 
-    private _evalFile(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<FileOp>, file: FileOp, metadata: AuxReducerMetadata): AuxFile {
+    private _evalFile(tree: WeaveTraverser<AuxOp>, parent: Atom<FileOp>, file: FileOp, metadata: AuxReducerMetadata): AuxFile {
         const id = file.id;
         let data: any = {};
         let meta: AuxFileMetadata = {
@@ -92,20 +93,20 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState, AuxReducerMetada
             tags: {}
         };
 
-        while (tree.peek(parent.atom.id)) {
+        while (tree.peek(parent.id)) {
             const ref = tree.next();
-            if (ref.atom.value.type === AuxOpType.delete) {
-                tree.skip(parent.atom.id);
+            if (ref.value.type === AuxOpType.delete) {
+                tree.skip(parent.id);
                 return null;
-            } else if(ref.atom.value.type === AuxOpType.tag) {
+            } else if(ref.value.type === AuxOpType.tag) {
                 let tag: AuxTag = metadata.cache.get(ref);
                 if (typeof tag === 'undefined') {
-                    tag = this._evalTag(tree, <WeaveReference<TagOp>>ref, ref.atom.value, metadata);
+                    tag = this._evalTag(tree, <Atom<TagOp>>ref, ref.value, metadata);
                     if (typeof tag !== 'undefined') {
                         metadata.cache.set(ref, tag);
                     }
                 } else {
-                    tree.skip(ref.atom.id);
+                    tree.skip(ref.id);
                 }
 
                 if (tag && tag.name.value && tag.value.hasValue && typeof meta.tags[tag.name.value] === 'undefined') {
@@ -114,7 +115,7 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState, AuxReducerMetada
                         data[tag.name.value] = tag.value.value;
                     }
                     meta.tags[tag.name.value] = {
-                        ref: <WeaveReference<TagOp>>ref,
+                        ref: <Atom<TagOp>>ref,
                         name: tag.name.meta,
                         value: tag.value.meta
                     };
@@ -131,9 +132,9 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState, AuxReducerMetada
         return auxFile;
     }
 
-    private _evalTag(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<TagOp>, tag: TagOp, metadata: AuxReducerMetadata): AuxTag {
-        let name = this.evalSequence(tree.fork(), parent, parent.atom.value.name, metadata);
-        let value = this._evalTagValue(tree, parent, parent.atom.value, metadata);
+    private _evalTag(tree: WeaveTraverser<AuxOp>, parent: Atom<TagOp>, tag: TagOp, metadata: AuxReducerMetadata): AuxTag {
+        let name = this.evalSequence(tree.fork(), parent, parent.value.name, metadata);
+        let value = this._evalTagValue(tree, parent, parent.value, metadata);
         
         return {
             name,
@@ -141,7 +142,7 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState, AuxReducerMetada
         };
     }
 
-    private _evalTagValue(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<AuxOp>, tag: TagOp, metadata: AuxReducerMetadata): AuxTagValue {
+    private _evalTagValue(tree: WeaveTraverser<AuxOp>, parent: Atom<AuxOp>, tag: TagOp, metadata: AuxReducerMetadata): AuxTagValue {
         let value: any = null;
         let hasValue = false;
         let meta: AuxValueMetadata = {
@@ -149,14 +150,14 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState, AuxReducerMetada
             sequence: null
         };
 
-        while (tree.peek(parent.atom.id)) {
+        while (tree.peek(parent.id)) {
             const ref = tree.next();
             if (hasValue) {
-                tree.skip(parent.atom.id);
-            } else if (ref.atom.value.type === AuxOpType.value) {
+                tree.skip(parent.id);
+            } else if (ref.value.type === AuxOpType.value) {
                 hasValue = true;
-                meta.ref = <WeaveReference<ValueOp>>ref;
-                const { value: val, meta: valMeta } = this.evalSequence(tree, ref, ref.atom.value.value, metadata);
+                meta.ref = <Atom<ValueOp>>ref;
+                const { value: val, meta: valMeta } = this.evalSequence(tree, ref, ref.value.value, metadata);
                 value = val;
                 meta.sequence = valMeta;
             }
@@ -165,27 +166,27 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState, AuxReducerMetada
         return { value, meta, hasValue };
     }
 
-    public evalSequence(tree: WeaveTraverser<AuxOp>, parent: WeaveReference<AuxOp>, value: any, metadata: AuxReducerMetadata): AuxSequence {
+    public evalSequence(tree: WeaveTraverser<AuxOp>, parent: Atom<AuxOp>, value: any, metadata: AuxReducerMetadata): AuxSequence {
 
         // list of number pairs
         let offsets: number[] = [];
         let meta: AuxSequenceMetadata = null;
-        if (parent.atom.value.type === AuxOpType.value || parent.atom.value.type === AuxOpType.tag) {
+        if (parent.value.type === AuxOpType.value || parent.value.type === AuxOpType.tag) {
             if (typeof value === 'string') {
                 meta = createSequenceMeta(parent, value);
             }
-        } else if(parent.atom.value.type === AuxOpType.insert) {
+        } else if(parent.value.type === AuxOpType.insert) {
             meta = createSequenceMeta(parent, value);
         }
-        while (tree.peek(parent.atom.id)) {
+        while (tree.peek(parent.id)) {
             const ref = tree.next();
             if (typeof value !== 'string') {
                 value = value.toString();
                 meta = createSequenceMeta(parent, value);
             }
-            if (ref.atom.value.type === AuxOpType.delete) {
-                const start = Math.max(ref.atom.value.start || 0, 0);
-                const end = ref.atom.value.end || value.length;
+            if (ref.value.type === AuxOpType.delete) {
+                const start = Math.max(ref.value.start || 0, 0);
+                const end = ref.value.end || value.length;
                 const length = end - start;
                 const offset = calculateOffsetForIndex(start, offsets, true);
                 const index = start + offset;
@@ -194,16 +195,16 @@ export class AuxReducer implements AtomReducer<AuxOp, AuxState, AuxReducerMetada
                 meta.refs.splice(index, deleteCount);
                 meta.indexes.splice(index, deleteCount);
                 value = splice(value, index, deleteCount, '');
-            } else if (ref.atom.value.type === AuxOpType.insert) {
+            } else if (ref.value.type === AuxOpType.insert) {
                 let sequence: AuxSequence = metadata.cache.get(ref);
                 if (typeof sequence === 'undefined') {
-                    sequence = this.evalSequence(tree, ref, ref.atom.value.text, metadata);
+                    sequence = this.evalSequence(tree, ref, ref.value.text, metadata);
                     metadata.cache.set(ref, sequence);
                 } else {
-                    tree.skip(ref.atom.id);
+                    tree.skip(ref.id);
                 }
-                const offset = calculateOffsetForIndex(ref.atom.value.index, offsets, false);
-                const index = ref.atom.value.index + offset;
+                const offset = calculateOffsetForIndex(ref.value.index, offsets, false);
+                const index = ref.value.index + offset;
                 offsets.push(index, sequence.value.length);
                 const newMetaRefs = sequence.meta.refs;
                 const newMetaIndices = sequence.meta.indexes;

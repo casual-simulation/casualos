@@ -1,5 +1,5 @@
 
-import { Atom, WeaveReference, AtomOp, PrecalculatedOp, precalculatedOp, RealtimeCausalTree, Weave } from "../causal-trees";
+import { Atom, AtomOp, PrecalculatedOp, precalculatedOp, RealtimeCausalTree, Weave } from "../causal-trees";
 import { AuxFile, AuxTagMetadata, AuxObject, AuxState } from "./AuxState";
 import { InsertOp, DeleteOp, AuxOp, AuxOpType, FileOp } from "./AuxOpTypes";
 import { calculateSequenceRef, calculateSequenceRefs } from "./AuxReducer";
@@ -23,18 +23,18 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
             let addedFiles: AuxFile[] = [];
             let updatedFiles: AuxState = {};
             let deletedFiles: string[] = [];
-            events.forEach((e: WeaveReference<AuxOp>) => {
-                if (e.atom.value.type === AuxOpType.file) {
-                    const id = e.atom.value.id;
+            events.forEach((e: Atom<AuxOp>) => {
+                if (e.value.type === AuxOpType.file) {
+                    const id = e.value.id;
                     const val = tree.tree.value[id];
                     if (val) {
                         addedFiles.push(val);
                     }
                     return;
-                } else if(e.atom.value.type === AuxOpType.delete) {
-                    let cause = tree.tree.weave.getAtom(e.atom.cause);
-                    if (cause.atom.value.type === AuxOpType.file) {
-                        const id = cause.atom.value.id;
+                } else if(e.value.type === AuxOpType.delete) {
+                    let cause = tree.tree.weave.getAtom(e.cause);
+                    if (cause.value.type === AuxOpType.file) {
+                        const id = cause.value.id;
                         deletedFiles.push(id);
                         return;
                     }
@@ -43,7 +43,7 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
                 // Some update happened
                 const file = getAtomFile(tree.tree.weave, e);
                 if (file) {
-                    const id = file.atom.value.id;
+                    const id = file.value.id;
                     const val = tree.tree.value[id];
                     if(!updatedFiles[id] && val) {
                         updatedFiles[id] = val;
@@ -65,8 +65,7 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
     const fileAdded = stateDiffs.pipe(flatMap(diff => {
         // TODO: Work with all domains
         return sortBy(diff.addedFiles, 
-            f => !f.tags['aux.builder.context'], 
-            f => !f.tags['aux.player.context'], 
+            f => !f.tags['aux.builder.context'],
             f => f.id
         );
     }));
@@ -87,14 +86,14 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
 /**
  * Gets the File Atom that the given atom is childed under.
  */
-export function getAtomFile(weave: Weave<AuxOp>, ref: WeaveReference<AuxOp>): WeaveReference<FileOp> {
-    if (ref.atom.value.type === AuxOpType.file) {
-        return <WeaveReference<FileOp>>ref;
+export function getAtomFile(weave: Weave<AuxOp>, ref: Atom<AuxOp>): Atom<FileOp> {
+    if (ref.value.type === AuxOpType.file) {
+        return <Atom<FileOp>>ref;
     }
-    if (!ref.atom.cause) {
+    if (!ref.cause) {
         return null;
     }
-    const cause = weave.getAtom(ref.atom.cause);
+    const cause = weave.getAtom(ref.cause);
     return getAtomFile(weave, cause);
 }
 
@@ -123,7 +122,7 @@ export function insertIntoTagValue(file: AuxFile, tag: string, text: string, ind
     const tagMeta = getTagMetadata(file, tag);
     if (tagMeta) {
         const result = calculateSequenceRef(tagMeta.value.sequence, index);
-        return precalculatedOp(insert(result.index, text), result.ref.atom);
+        return precalculatedOp(insert(result.index, text), result.ref);
     } else {
         return null;
     }
@@ -140,7 +139,7 @@ export function insertIntoTagName(file: AuxFile, tag: string, text: string, inde
     const tagMeta = getTagMetadata(file, tag);
     if (tagMeta) {
         const result = calculateSequenceRef(tagMeta.name, index);
-        return precalculatedOp(insert(result.index, text), result.ref.atom);
+        return precalculatedOp(insert(result.index, text), result.ref);
     } else {
         return null;
     }
@@ -157,7 +156,7 @@ export function deleteFromTagValue(file: AuxFile, tag: string, index: number, le
     const tagMeta = getTagMetadata(file, tag);
     if (tagMeta) {
         const result = calculateSequenceRefs(tagMeta.value.sequence, index, length);
-        return result.map(r => precalculatedOp(del(r.index, r.index + r.length), r.ref.atom, 1));
+        return result.map(r => precalculatedOp(del(r.index, r.index + r.length), r.ref, 1));
     } else {
         return null;
     }
@@ -174,7 +173,7 @@ export function deleteFromTagName(file: AuxFile, tag: string, index: number, len
     const tagMeta = getTagMetadata(file, tag);
     if (tagMeta) {
         const result = calculateSequenceRefs(tagMeta.name, index);
-        return result.map(r =>  precalculatedOp(del(r.index, r.index + r.length), r.ref.atom, 1));
+        return result.map(r =>  precalculatedOp(del(r.index, r.index + r.length), r.ref, 1));
     } else {
         return null;
     }

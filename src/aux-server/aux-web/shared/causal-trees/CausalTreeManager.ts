@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 import { WorkerEvent, ValueCalculated } from './WorkerEvents';
 import { SubscriptionLike, Subject, Observable } from 'rxjs';
 import { first, map, filter, tap } from 'rxjs/operators';
-import { AtomOp, RealtimeChannelInfo, PrecalculatedOp, RealtimeCausalTree, CausalTree, RealtimeChannel, WeaveReference, CausalTreeFactory, CausalTreeStore } from '@yeti-cgi/aux-common/causal-trees';
+import { AtomOp, RealtimeChannelInfo, PrecalculatedOp, RealtimeCausalTree, CausalTree, RealtimeChannel, CausalTreeFactory, CausalTreeStore, Atom } from '@yeti-cgi/aux-common/causal-trees';
 import { SocketIOConnection } from './SocketIOConnection';
 import { auxCausalTreeFactory } from '@yeti-cgi/aux-common';
 import { BrowserCausalTreeStore } from './BrowserCausalTreeStore';
@@ -62,12 +62,45 @@ export class CausalTreeManager implements SubscriptionLike {
         let realtime = <RealtimeCausalTree<TTree>>this._trees[info.id];
         if (!realtime) {
             let connection = new SocketIOConnection(this._socket);
-            let channel = new RealtimeChannel<WeaveReference<AtomOp>[]>(info, connection);
+            let channel = new RealtimeChannel<Atom<AtomOp>[]>(info, connection);
             realtime = new RealtimeCausalTree<TTree>(this._factory, this._store, channel);
+            // realtime.storeArchivedAtoms = true;
             this._trees[info.id] = realtime;
         }
         
         return realtime;
+    }
+
+    /**
+     * Forks the given realtime causal tree into a new channel.
+     * The new channel will contain the exact same tree as the one given but will be served over the given ID.
+     * @param tree The tree to fork.
+     * @param newId The ID of the channel that should be used for the fork.
+     */
+    async forkTree<TTree extends CausalTree<AtomOp, any, any>>(realtime: RealtimeCausalTree<TTree>, newId: string): Promise<RealtimeCausalTree<TTree>> {
+        let oldTree = <RealtimeCausalTree<TTree>>this._trees[newId];
+        if (oldTree) {
+            throw new Error('The given channel ID already exists.');
+        }
+
+        const info: RealtimeChannelInfo = {
+            type: realtime.channel.info.type,
+            id: newId,
+            bare: true
+        };
+
+        await this._store.put(newId, realtime.tree.export());
+
+        let connection = new SocketIOConnection(this._socket);
+        let channel = new RealtimeChannel<Atom<AtomOp>[]>(info, connection);
+        let newRealtime = new RealtimeCausalTree<TTree>(this._factory, this._store, channel);
+        // newRealtime.storeArchivedAtoms = true;
+        this._trees[info.id] = newRealtime;
+
+        await newRealtime.init();
+        await newRealtime.waitToGetTreeFromServer();
+
+        return newRealtime;
     }
 
     /**

@@ -12,6 +12,7 @@ import { copyToClipboard } from '../../shared/SharedUtils';
 import { tap } from 'rxjs/operators';
 import { findIndex } from 'lodash';
 import QRCode from '@chenfengyuan/vue-qrcode';
+import ForkIcon from '../public/icons/repo-forked.svg';
 
 import vueFilePond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
@@ -29,7 +30,8 @@ export interface SidebarItem {
     components: {
         'app': App,
         'qr-code': QRCode,
-        'file-pond': FilePond
+        'file-pond': FilePond,
+        'fork-icon': ForkIcon
     }
 })
 export default class App extends Vue {
@@ -84,9 +86,19 @@ export default class App extends Vue {
     showFileUpload: boolean = false;
 
     /**
+     * Whether to show the fork dialog.
+     */
+    showFork: boolean = false;
+
+    /**
      * The session/
      */
     session: string = '';
+
+    /**
+     * The name of the fork to create.
+     */
+    forkName: string = '';
 
     /**
      * The files that have been uploaded by the user.
@@ -254,6 +266,20 @@ export default class App extends Vue {
 
     upload() {
         this.showFileUpload = true;
+    }
+
+    fork() {
+        this.showFork = true;
+    }
+
+    async finishFork() {
+        await appManager.fileManager.forkAux(this.forkName);
+        this.$router.push({ name: 'home', params: { id: this.forkName }});
+    }
+
+    cancelFork() {
+        this.showFork = false;
+        this.forkName = '';
     }
 
     cancelFileUpload() {

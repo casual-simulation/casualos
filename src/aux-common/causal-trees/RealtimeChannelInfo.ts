@@ -16,4 +16,11 @@ export interface RealtimeChannelInfo {
      * structured names are used for public channels. (like `namespace/room/channel-name`)
      */
     id: string;
+
+    /**
+     * If set to true, specifies that the server should not perform any special
+     * logic to initialize the channel. This can be useful for scenarios where we already
+     * have data we want to import into the channel and don't want the server to make any data automatically.
+     */
+    bare?: boolean;
 }

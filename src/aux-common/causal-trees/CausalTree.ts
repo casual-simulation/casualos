@@ -1,5 +1,5 @@
 import { AtomOp, Atom, AtomId } from "./Atom";
-import { Weave, WeaveReference } from "./Weave";
+import { Weave } from "./Weave";
 import { AtomFactory } from "./AtomFactory";
 import { AtomReducer } from "./AtomReducer";
 import { sortBy, unionBy, find } from "lodash";
@@ -21,9 +21,10 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
     private _metadata: TMetadata;
     private _value: TValue;
     private _knownSites: SiteInfo[];
-    private _atomAdded: Subject<WeaveReference<TOp>[]>;
+    private _atomAdded: Subject<Atom<TOp>[]>;
+    private _atomArchived: Subject<Atom<TOp>[]>;
     private _isBatching: boolean;
-    private _batch: WeaveReference<TOp>[];
+    private _batch: Atom<TOp>[];
 
     /**
      * Gets or sets whether the causal tree should collect garbage.
@@ -88,6 +89,13 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
     }
 
     /**
+     * Gets an observable that resolves whenever one or more atoms are garbage collected and should be archived.
+     */
+    get atomsArchived() {
+        return this._atomArchived;
+    }
+
+    /**
      * Creates a new Causal Tree with the given site ID.
      * @param tree The stored tree that this causal tree should be made from.
      * @param reducer The reducer used to convert a list of operations into a single value.
@@ -102,20 +110,19 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         this._reducer = reducer;
         this._value = undefined;
         this._metadata = undefined;
-        this._atomAdded = new Subject<WeaveReference<TOp>[]>();
+        this._atomAdded = new Subject<Atom<TOp>[]>();
+        this._atomArchived = new Subject<Atom<TOp>[]>();
         this._isBatching = false;
         this._batch = [];
         this.garbageCollect = false;
 
-        if (tree.weave) {
-            this.importWeave(tree.weave);
-        }
+        this.import(tree);
     }
 
     /**
      * Creates a root element on this tree.
      */
-    root(): WeaveReference<TOp> {
+    root(): Atom<TOp> {
         throw new Error('Must be implemented in inheriting class');
     }
 
@@ -123,10 +130,8 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * Adds the given atom to this Causal Tree's history.
      * @param atom The atom to add to the tree.
      */
-    add<T extends TOp>(atom: Atom<T>): WeaveReference<T> {
-        if (atom.id.site !== this.site.id) {
-            this.factory.updateTime(atom.id.timestamp);
-        }
+    add<T extends TOp>(atom: Atom<T>): Atom<T> {
+        this.factory.updateTime(atom);
         const ref = this.weave.insert(atom);
         if (ref) {
             if (this._isBatching) {
@@ -134,7 +139,10 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
             } else {
                 const refs = [ref];
                 if (this.garbageCollect) {
-                    this.collectGarbage(refs);
+                    const removed = this.collectGarbage(refs);
+                    if (removed.length > 0) {
+                        this._atomArchived.next(removed);
+                    }
                 }
                 [this._value, this._metadata] = this._calculateValue(refs);
                 this._atomAdded.next(refs);
@@ -147,13 +155,14 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * Adds the given list of references to this causal tree's history.
      * @param refs The references to add.
      */
-    addMany(refs: WeaveReference<TOp>[]): WeaveReference<TOp>[] {
+    addMany(refs: Atom<TOp>[]): Atom<TOp>[] {
+        const atoms = sortBy(refs, a => a.id.timestamp);
         return this.batch(() => {
-            let added: WeaveReference<TOp>[] = [];
-            for (let i = 0; i < refs.length; i++) {
-                let ref = refs[i];
-                if (ref) {
-                    let result = this.add(ref.atom);
+            let added: Atom<TOp>[] = [];
+            for (let i = 0; i < atoms.length; i++) {
+                let atom = atoms[i];
+                if (atom) {
+                    let result = this.add(atom);
                     if (result) {
                         added.push(result);
                     }
@@ -179,7 +188,10 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         } finally {
             if (this._batch.length > 0) {
                 if (this.garbageCollect) {
-                    this.collectGarbage(this._batch);
+                    const removed = this.collectGarbage(this._batch);
+                    if (removed.length > 0) {
+                        this._atomArchived.next(removed);
+                    }
                 }
                 [this._value, this._metadata] = this._calculateValue(this._batch);
                 this._atomAdded.next(this._batch);
@@ -194,17 +206,38 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * The references are expected to be sorted as a valid weave and also to match
      * @param refs The references to import.
      */
-    importWeave<T extends TOp>(refs: WeaveReference<T>[]): WeaveReference<TOp>[] {
+    importWeave<T extends TOp>(refs: Atom<T>[]): Atom<TOp>[] {
         const newAtoms = this.weave.import(refs);
-        const sortedAtoms = sortBy(newAtoms, a => a.atom.id.timestamp);
+        const sortedAtoms = sortBy(newAtoms, a => a.id.timestamp);
         for (let i = 0; i < sortedAtoms.length; i++) {
-            const ref = sortedAtoms[i];
-            if (ref.atom.id.site !== this.site.id || ref.atom.id.timestamp >= this.time) {
-                this.factory.updateTime(ref.atom.id.timestamp);
-            }
+            const atom = sortedAtoms[i];
+            this.factory.updateTime(atom);
         }
         [this._value, this._metadata] = this._calculateValue(newAtoms);
         return newAtoms;
+    }
+
+    /**
+     * Imports the given tree into this one and returns the list of atoms that were imported.
+     * @param tree The tree to import.
+     */
+    import<T extends TOp>(tree: StoredCausalTree<T>): Atom<TOp>[] {
+        if (tree.weave) {
+            if (tree.formatVersion === 2) {
+                return this.importWeave(tree.weave);
+            } else if(tree.formatVersion === 3) {
+                if(tree.ordered) {
+                    return this.importWeave(tree.weave);
+                } else {
+                    return this.addMany(tree.weave);
+                }
+            } else if (typeof tree.formatVersion === 'undefined') {
+                return this.importWeave(tree.weave.map(ref => ref.atom));
+            } else {
+                console.warn("[CausalTree] Don't know how to import tree version:", tree.formatVersion);
+                return [];
+            }
+        }
     }
 
     /**
@@ -212,6 +245,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      */
     export(): StoredCausalTree<TOp> {
         return {
+            formatVersion: 2,
             site: this._site,
             knownSites: this.knownSites.slice(),
             weave: this.weave.atoms.slice()
@@ -224,7 +258,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * @param parent The parent atom.
      * @param priority The priority.
      */
-    create<T extends TOp>(op: T, parent: WeaveReference<TOp> | Atom<TOp> | AtomId, priority?: number): WeaveReference<T> {
+    create<T extends TOp>(op: T, parent: Atom<TOp> | Atom<TOp> | AtomId, priority?: number): Atom<T> {
         const atom = this.factory.create(op, parent, priority);
         return this.add(atom);
     }
@@ -233,7 +267,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * Creates a new atom from the given precalculated operation and adds it to the tree's history.
      * @param precalc The operation to create and add.
      */
-    createFromPrecalculated<T extends TOp>(precalc: PrecalculatedOp<T>): WeaveReference<T> {
+    createFromPrecalculated<T extends TOp>(precalc: PrecalculatedOp<T>): Atom<T> {
         if (precalc) {
             return this.create<T>(precalc.op, <Atom<TOp>>precalc.cause, precalc.priority);
         } else {
@@ -245,7 +279,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * Creates a new atom from the given precalculated operation and adds it to the tree's history.
      * @param precalc The operation to create and add.
      */
-    createManyFromPrecalculated<T extends TOp>(precalc: PrecalculatedOp<T>[]): WeaveReference<T>[] {
+    createManyFromPrecalculated<T extends TOp>(precalc: PrecalculatedOp<T>[]): Atom<T>[] {
         const nonNull = precalc.filter(pc => !!pc);
         return nonNull.map(pc => this.createFromPrecalculated(pc));
     }
@@ -273,10 +307,26 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
     }
 
     /**
+     * Forks the given causal tree and returns a new tree that contains the same state.
+     * Note that this method does not copy over configuration options such as collectGarbage.
+     * Also note that this method should be overridden in child classes to ensure that the proper type
+     * is being created.
+     * @param type The type of the tree that is being forked.
+     * @param tree The tree to fork.
+     */
+    fork(): CausalTree<TOp, TValue, TMetadata> {
+        const stored = this.export();
+        return new CausalTree<TOp, TValue, TMetadata>(stored, this._reducer);
+    }
+
+    /**
      * Performs garbage collection of the tree's weave after a set of atoms were added to the tree.
+     * Returns the references that were removed from the tree.
      * @param refs The weave references that were added to the tree.
      */
-    protected collectGarbage(refs: WeaveReference<TOp>[]): void {}
+    protected collectGarbage(refs: Atom<TOp>[]): Atom<TOp>[] {
+        return [];
+    }
 
     /**
      * Recalculates the values associated the given references.
@@ -284,10 +334,10 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * tree's value that were affected by the additions.
      * @param refs The references that were added to the tree.
      */
-    protected recalculateValues(refs: WeaveReference<TOp>[]): void {}
+    protected recalculateValues(refs: Atom<TOp>[]): void {}
 
 
-    private _calculateValue(refs: WeaveReference<TOp>[]): [TValue, TMetadata] {
+    private _calculateValue(refs: Atom<TOp>[]): [TValue, TMetadata] {
         return this._reducer.eval(this._weave, refs, this._value, this._metadata);
     }
 }

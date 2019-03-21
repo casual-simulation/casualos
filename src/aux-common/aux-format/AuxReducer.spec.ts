@@ -26,7 +26,7 @@ describe('AuxReducer', () => {
 
         it('should return the initial value if there are no children', () => {
             const root = site1.val('abc', null);
-            const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+            const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
             expect(value).toBe('abc');
             expect(meta).toEqual({
                 indexes: [0, 1, 2],
@@ -44,7 +44,7 @@ describe('AuxReducer', () => {
 
             traverser.next();
 
-            const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+            const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
             expect(value).toBe(obj);
             expect(meta).toEqual(null);
         });
@@ -53,11 +53,11 @@ describe('AuxReducer', () => {
            
             it('should handle single inserts at the beginning of the string', () => {
                 const root = site1.val('abc', null);
-                const insert = site1.insert(0, '123', root.atom);
+                const insert = site1.insert(0, '123', root);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('123abc');
                 expect(meta).toEqual({
                     indexes: [0, 1, 2, 0, 1, 2],
@@ -67,11 +67,11 @@ describe('AuxReducer', () => {
 
             it('should handle single inserts in the middle of the string', () => {
                 const root = site1.val('abc', null);
-                const insert = site1.insert(2, '123', root.atom);
+                const insert = site1.insert(2, '123', root);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('ab123c');
                 expect(meta).toEqual({
                     indexes: [0, 1, 0, 1, 2, 2],
@@ -81,11 +81,11 @@ describe('AuxReducer', () => {
 
             it('should handle single inserts at the end of the string', () => {
                 const root = site1.val('abc', null);
-                const insert = site1.insert(3, '123', root.atom);
+                const insert = site1.insert(3, '123', root);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('abc123');
                 expect(meta).toEqual({
                     indexes: [0, 1, 2, 0, 1, 2],
@@ -95,11 +95,11 @@ describe('AuxReducer', () => {
 
             it('should convert the value a string if something is inserted', () => {
                 const root = site1.val(987, null);
-                const insert = site1.insert(3, '123', root.atom);
+                const insert = site1.insert(3, '123', root);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('987123');
                 expect(meta).toEqual({
                     indexes: [0, 1, 2, 0, 1, 2],
@@ -111,12 +111,12 @@ describe('AuxReducer', () => {
         describe('multiple insertions', () => {
             it('should handle multiple insertions at the beginning', () => {
                 const root = site1.val('abc', null);
-                const insert1 = site1.insert(0, '123', root.atom);
-                const insert2 = site1.insert(0, '456', root.atom);
+                const insert1 = site1.insert(0, '123', root);
+                const insert2 = site1.insert(0, '456', root);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
 
                 // 456 appears after 123 because both insertions are on
                 // the root.
@@ -137,12 +137,12 @@ describe('AuxReducer', () => {
 
             it('should handle multiple insertions at the end', () => {
                 const root = site1.val('abc', null);
-                const insert1 = site1.insert(3, '123', root.atom);
-                const insert2 = site1.insert(3, '456', root.atom);
+                const insert1 = site1.insert(3, '123', root);
+                const insert2 = site1.insert(3, '456', root);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('abc123456');
                 expect(meta).toEqual({
                     indexes: [
@@ -160,12 +160,12 @@ describe('AuxReducer', () => {
 
             it('should handle multiple insertions in the middle', () => {
                 const root = site1.val('abc', null);
-                const insert1 = site1.insert(1, '123', root.atom);
-                const insert2 = site1.insert(1, '456', root.atom);
+                const insert1 = site1.insert(1, '123', root);
+                const insert2 = site1.insert(1, '456', root);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('a123456bc');
                 expect(meta).toEqual({
                     indexes: [
@@ -185,12 +185,12 @@ describe('AuxReducer', () => {
 
             it('should handle chained insertions at the beginning', () => {
                 const root = site1.val('abc', null);
-                const first = site1.insert(0, '123', root.atom);
-                const second = site1.insert(0, '456', first.atom);
+                const first = site1.insert(0, '123', root);
+                const second = site1.insert(0, '456', first);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('456123abc');
                 expect(meta).toEqual({
                     indexes: [
@@ -208,12 +208,12 @@ describe('AuxReducer', () => {
 
             it('should handle chained insertions at the end of the intermediate string', () => {
                 const root = site1.val('abc', null);
-                const first = site1.insert(0, '123', root.atom);
-                const second = site1.insert(3, '456', first.atom);
+                const first = site1.insert(0, '123', root);
+                const second = site1.insert(3, '456', first);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('123456abc');
                 expect(meta).toEqual({
                     indexes: [
@@ -231,12 +231,12 @@ describe('AuxReducer', () => {
 
             it('should handle chained insertions in the middle of the intermediate string', () => {
                 const root = site1.val('abc', null);
-                const first = site1.insert(0, '123', root.atom);
-                const second = site1.insert(2, '456', first.atom);
+                const first = site1.insert(0, '123', root);
+                const second = site1.insert(2, '456', first);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('124563abc');
                 expect(meta).toEqual({
                     indexes: [
@@ -259,11 +259,11 @@ describe('AuxReducer', () => {
  
             it('should handle single deletions for the entire string without indicies', () => {
                 const root = site1.val('abc', null);
-                site1.delete(root.atom);
+                site1.delete(root);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('');
                 expect(meta).toEqual({
                     indexes: [],
@@ -273,11 +273,11 @@ describe('AuxReducer', () => {
 
             it('should handle single deletions for the entire string with indicies', () => {
                 const root = site1.val('abc', null);
-                site1.delete(root.atom, 0, 3);
+                site1.delete(root, 0, 3);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('');
                 expect(meta).toEqual({
                     indexes: [],
@@ -287,11 +287,11 @@ describe('AuxReducer', () => {
 
             it('should handle single deletions for the beginning of the string', () => {
                 const root = site1.val('abc', null);
-                site1.delete(root.atom, 0, 1);
+                site1.delete(root, 0, 1);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('bc');
                 expect(meta).toEqual({
                     indexes: [1, 2],
@@ -301,11 +301,11 @@ describe('AuxReducer', () => {
 
             it('should handle single deletions for the middle of the string', () => {
                 const root = site1.val('abc', null);
-                site1.delete(root.atom, 1, 2);
+                site1.delete(root, 1, 2);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('ac');
                 expect(meta).toEqual({
                     indexes: [0, 2],
@@ -315,11 +315,11 @@ describe('AuxReducer', () => {
 
             it('should handle single deletions for the end of the string', () => {
                 const root = site1.val('abc', null);
-                site1.delete(root.atom, 2, 3);
+                site1.delete(root, 2, 3);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('ab');
                 expect(meta).toEqual({
                     indexes: [0, 1],
@@ -329,11 +329,11 @@ describe('AuxReducer', () => {
 
             it('should handle negative start indicies', () => {
                 const root = site1.val('abc', null);
-                site1.delete(root.atom, -1, 3);
+                site1.delete(root, -1, 3);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('');
                 expect(meta).toEqual({
                     indexes: [],
@@ -343,11 +343,11 @@ describe('AuxReducer', () => {
 
             it('should handle end further than the end of the string', () => {
                 const root = site1.val('abc', null);
-                site1.delete(root.atom, 0, 4);
+                site1.delete(root, 0, 4);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('');
                 expect(meta).toEqual({
                     indexes: [],
@@ -359,12 +359,12 @@ describe('AuxReducer', () => {
         describe('multiple delete', () => {
             it('should combine deletes at the beginning', () => {
                 const root = site1.val('abc', null);
-                site1.delete(root.atom, 0, 1);
-                site1.delete(root.atom, 0, 1);
+                site1.delete(root, 0, 1);
+                site1.delete(root, 0, 1);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('bc');
                 expect(meta).toEqual({
                     indexes: [1, 2],
@@ -374,12 +374,12 @@ describe('AuxReducer', () => {
 
             it('should combine deletes at the end', () => {
                 const root = site1.val('abc', null);
-                site1.delete(root.atom, 2, 3);
-                site1.delete(root.atom, 2, 3);
+                site1.delete(root, 2, 3);
+                site1.delete(root, 2, 3);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('ab');
                 expect(meta).toEqual({
                     indexes: [0, 1],
@@ -389,12 +389,12 @@ describe('AuxReducer', () => {
 
             it('should combine deletes in the middle', () => {
                 const root = site1.val('abc', null);
-                site1.delete(root.atom, 1, 2);
-                site1.delete(root.atom, 1, 2);
+                site1.delete(root, 1, 2);
+                site1.delete(root, 1, 2);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('ac');
                 expect(meta).toEqual({
                     indexes: [0, 2],
@@ -404,12 +404,12 @@ describe('AuxReducer', () => {
 
             it('should preserve overlapping deletes at the beginning', () => {
                 const root = site1.val('abc', null);
-                site1.delete(root.atom, 0, 1);
-                site1.delete(root.atom, 0, 2);
+                site1.delete(root, 0, 1);
+                site1.delete(root, 0, 2);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('c');
                 expect(meta).toEqual({
                     indexes: [2],
@@ -419,12 +419,12 @@ describe('AuxReducer', () => {
 
             it('should preserve overlapping deletes at the end', () => {
                 const root = site1.val('abc', null);
-                site1.delete(root.atom, 2, 3);
-                site1.delete(root.atom, 1, 3);
+                site1.delete(root, 2, 3);
+                site1.delete(root, 1, 3);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('a');
                 expect(meta).toEqual({
                     indexes: [0],
@@ -434,12 +434,12 @@ describe('AuxReducer', () => {
 
             it('should preserve overlapping deletes anywhere', () => {
                 const root = site1.val('abc', null);
-                site1.delete(root.atom, 0, 1);
-                site1.delete(root.atom, 0, 3);
+                site1.delete(root, 0, 1);
+                site1.delete(root, 0, 3);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('');
                 expect(meta).toEqual({
                     indexes: [],
@@ -449,12 +449,12 @@ describe('AuxReducer', () => {
 
             it('should preserve sequential deletes', () => {
                 const root = site1.val('abc', null);
-                site1.delete(root.atom, 0, 1);
-                site1.delete(root.atom, 1, 2);
+                site1.delete(root, 0, 1);
+                site1.delete(root, 1, 2);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('c');
                 expect(meta).toEqual({
                     indexes: [2],
@@ -466,12 +466,12 @@ describe('AuxReducer', () => {
         describe('mixed', () => {
             it('should process deletes before inserts', () => {
                 const root = site1.val('abc', null);
-                const insert = site1.insert(0, '123', root.atom);
-                site1.delete(root.atom, 0, 1);
+                const insert = site1.insert(0, '123', root);
+                site1.delete(root, 0, 1);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('123bc');
                 expect(meta).toEqual({
                     indexes: [
@@ -487,15 +487,15 @@ describe('AuxReducer', () => {
 
             it('should handle chaining deletes onto inserts', () => {
                 const root = site1.val('abc', null);
-                const insert1 = site1.insert(3, '456', root.atom);
-                const insert2 = site1.insert(0, '123', root.atom);
-                site1.delete(root.atom, 1, 2);
-                site1.delete(insert1.atom, 2, 3);
-                site1.delete(insert2.atom, 0, 1);
+                const insert1 = site1.insert(3, '456', root);
+                const insert2 = site1.insert(0, '123', root);
+                site1.delete(root, 1, 2);
+                site1.delete(insert1, 2, 3);
+                site1.delete(insert2, 0, 1);
 
                 traverser.next();
 
-                const { value, meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
                 expect(value).toBe('23ac45');
                 expect(meta).toEqual({
                     indexes: [
@@ -516,7 +516,7 @@ describe('AuxReducer', () => {
             it('should return the root if there are no other inserts', () => {
                 const root = site1.val('abc', null);
                 traverser.next();
-                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
 
                 expect(calculateSequenceRef(meta, 0)).toEqual({ ref: root, index: 0 });
                 expect(calculateSequenceRef(meta, 1)).toEqual({ ref: root, index: 1 });
@@ -527,7 +527,7 @@ describe('AuxReducer', () => {
             it('should return the last valid index if the insert index is after the sequence', () => {
                 const root = site1.val('abc', null);
                 traverser.next();
-                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
 
                 expect(calculateSequenceRef(meta, 4)).toEqual({ ref: root, index: 3 });
             });
@@ -535,16 +535,16 @@ describe('AuxReducer', () => {
             it('should return the first valid index if the insert index is before the sequence', () => {
                 const root = site1.val('abc', null);
                 traverser.next();
-                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
 
                 expect(calculateSequenceRef(meta, -1)).toEqual({ ref: root, index: 0 });
             });
 
             it('should return the first valid index if there is nowhere to place the text', () => {
                 const root = site1.val('abc', null);
-                site1.delete(root.atom);
+                site1.delete(root);
                 traverser.next();
-                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
 
                 expect(calculateSequenceRef(meta, 1)).toEqual({ ref: null, index: 0 });
             });
@@ -552,7 +552,7 @@ describe('AuxReducer', () => {
             it('should return the index if the root does not have an end', () => {
                 const root = site1.val(19, null);
                 traverser.next();
-                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
 
                 expect(calculateSequenceRef(meta, 1)).toEqual({ ref: null, index: 1 });
                 expect(calculateSequenceRef(meta, 100)).toEqual({ ref: null, index: 100 });
@@ -560,15 +560,15 @@ describe('AuxReducer', () => {
 
             it('should return the index within a sequence after another sequence', () => {
                 const root = site1.val('abc', null);
-                const insert1 = site1.insert(3, '456', root.atom);
-                const insert2 = site1.insert(0, '123', root.atom);
-                site1.delete(root.atom, 1, 2);
-                site1.delete(insert1.atom, 2, 3);
-                site1.delete(insert2.atom, 0, 1);
+                const insert1 = site1.insert(3, '456', root);
+                const insert2 = site1.insert(0, '123', root);
+                site1.delete(root, 1, 2);
+                site1.delete(insert1, 2, 3);
+                site1.delete(insert2, 0, 1);
 
                 // text: "23ac45"
                 traverser.next();
-                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
 
                 expect(calculateSequenceRef(meta, 0)).toEqual({ ref: insert2, index: 1 });
                 expect(calculateSequenceRef(meta, 1)).toEqual({ ref: insert2, index: 2 });
@@ -586,7 +586,7 @@ describe('AuxReducer', () => {
 
                 // text: "23ac45"
                 traverser.next();
-                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
 
                 expect(calculateSequenceRefs(meta, 1, 2)).toEqual([
                     { ref: root, index: 1, length: 2 }
@@ -595,15 +595,15 @@ describe('AuxReducer', () => {
 
             it('should return all the refs and indexes that the given span covers', () => {
                 const root = site1.val('abc', null);
-                const insert1 = site1.insert(3, '456', root.atom);
-                const insert2 = site1.insert(0, '123', root.atom);
-                site1.delete(root.atom, 1, 2);
-                site1.delete(insert1.atom, 2, 3);
-                site1.delete(insert2.atom, 0, 1);
+                const insert1 = site1.insert(3, '456', root);
+                const insert2 = site1.insert(0, '123', root);
+                site1.delete(root, 1, 2);
+                site1.delete(insert1, 2, 3);
+                site1.delete(insert2, 0, 1);
 
                 // text: "23ac45"
                 traverser.next();
-                const { meta } = reducer.evalSequence(traverser, root, root.atom.value.value, metadata);
+                const { meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
 
                 expect(calculateSequenceRefs(meta, 0, 0)).toEqual([
                     { ref: insert2, index: 1 }

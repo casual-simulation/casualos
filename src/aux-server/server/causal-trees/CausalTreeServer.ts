@@ -1,7 +1,9 @@
 import { Socket, Server } from 'socket.io';
-import { CausalTreeStore, CausalTreeFactory, CausalTree, AtomOp, RealtimeChannelInfo, storedTree, site, SiteVersionInfo, SiteInfo, ExchangeWeavesResponse, ExchangeWeavesRequest, WeaveReference } from '@yeti-cgi/aux-common/causal-trees';
+import { CausalTreeStore, CausalTreeFactory, CausalTree, AtomOp, RealtimeChannelInfo, storedTree, site, SiteVersionInfo, SiteInfo, Atom, StoredCausalTree } from '@yeti-cgi/aux-common/causal-trees';
 import { AuxOp } from '@yeti-cgi/aux-common/aux-format';
 import { find } from 'lodash';
+import { bufferTime, flatMap, filter } from 'rxjs/operators';
+import { ExecSyncOptionsWithStringEncoding } from 'child_process';
 
 /**
  * Defines a class that is able to serve a set causal trees over Socket.io.
@@ -42,28 +44,40 @@ export class CausalTreeServer {
                     }
 
                     const tree = await this._getTree(info);
+                    
 
-                    // TODO: Dispose of timeout when all players leave the channel
-                    const timeout = setTimeout(async () => {
-                        await this._treeStore.update(info.id, tree.export());
-                    }, 1000);
+                    const sub = tree.atomAdded.pipe(
+                        bufferTime(1000),
+                        filter(batch => batch.length > 0),
+                        flatMap(batch => batch),
+                        flatMap(async refs => {
+                            const atoms = refs.map(r => r);
+                            await this._treeStore.add(info.id, atoms);
+                            await this._treeStore.put(info.id, tree.export(), false);
+                        })
+                    ).subscribe(null, err => console.error(err));
 
                     const eventName = `event_${info.id}`;
-                    socket.on(eventName, async (refs: WeaveReference<AtomOp>[]) => {
+                    socket.on(eventName, async (refs: Atom<AtomOp>[]) => {
                         const added = tree.addMany(refs);
                         socket.to(info.id).emit(eventName, added);
                     });
 
                     socket.on(`info_${info.id}`, async (event: SiteVersionInfo, callback: (resp: SiteVersionInfo) => void) => {
+
+                        console.log('[CausalTreeServer] Getting info for tree:', info.id);
+
                         // import the known sites
                         if (event.knownSites) {
+                            console.log('[CausalTreeServer] Updating known sites...');
                             event.knownSites.forEach(ks => {
                                 tree.registerSite(ks);
                             });
 
-                            await this._treeStore.update(info.id, tree.export());
+                            await this._treeStore.put(info.id, tree.export(), false);
                         }
 
+                        console.log('[CausalTreeServer] Sending current site info...');
                         const currentVersionInfo: SiteVersionInfo = {
                             site: tree.site,
                             version: tree.weave.getVersion(),
@@ -71,27 +85,30 @@ export class CausalTreeServer {
                         };
 
                         callback(currentVersionInfo);
+                        console.log(`[CausalTreeServer] Sent version ${currentVersionInfo.version.hash}`);
                     });
 
                     socket.on(`siteId_${info.id}`, (site: SiteInfo, callback: Function) => {
+                        console.log(`[CausalTreeServer] Checking site ID (${site.id}) for tree (${info.id})`);
+
                          const knownSite = find(tree.knownSites, ks => ks.id === site.id);
                          if (knownSite) {
+                            console.log('[CausalTreeServer] Site ID Already Reserved.');
                              callback(false);
                          } else {
+                            console.log('[CausalTreeServer] Site ID Granted.');
                             tree.registerSite(site);
                             callback(true);
                          }
                     });
 
-                    socket.on(`weave_${info.id}`, (event: ExchangeWeavesRequest<AtomOp>, callback: (resp: ExchangeWeavesResponse<AtomOp>) => void) => {
-
-                        if (event.weave) {
-                            tree.importWeave(event.weave);
-                        }
+                    socket.on(`weave_${info.id}`, (event: StoredCausalTree<AtomOp>, callback: (resp: StoredCausalTree<AtomOp>) => void) => {
+                        console.log(`[CausalTreeServer] Exchanging Weaves for tree (${info.id})`);
+                        tree.import(event);
 
                         // TODO: If a version is provided then we should
                         // return only the atoms that are needed to sync.
-                        callback(tree.weave.atoms);
+                        callback(tree.export());
                     });
 
                     socket.on('disconnect', () => {
@@ -111,18 +128,30 @@ export class CausalTreeServer {
     private async _getTree(info: RealtimeChannelInfo): Promise<CausalTree<AtomOp, any, any>> {
         let tree = this._treeList[info.id];
         if (!tree) {
+            console.log(`[CausalTreeServer] Getting tree (${info.id}) from database...`);
             const stored = await this._treeStore.get<AtomOp>(info.id);
             if (stored) {
+                console.log(`[CausalTreeServer] Building from stored...`);
                 tree = this._factory.create(info.type, stored);
             } else {
+                console.log(`[CausalTreeServer] Creating new...`);
                 tree = this._factory.create(info.type, storedTree(site(1)));
-                tree.root();
+                if (!info.bare) {
+                    tree.root();
+                } else {
+                    console.log(`[CausalTreeServer] Skipping root node because a bare tree was requested.`);
+                }
             }
+            
+            console.log(`[CausalTreeServer] Storing initial tree version...`);
+            // Update the stored data
+            await this._treeStore.put(info.id, tree.export(), true);
 
             // TODO: Implement the ability to keep old atoms around while
             //       preserving performance provided by garbage collection.
             tree.garbageCollect = true;
             this._treeList[info.id] = tree;
+            console.log(`[CausalTreeServer] Done.`);
         }
 
         return tree;

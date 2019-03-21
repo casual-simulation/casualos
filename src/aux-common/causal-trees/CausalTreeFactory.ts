@@ -31,5 +31,4 @@ export class CausalTreeFactory {
             return null;
         }
     }
-
 }

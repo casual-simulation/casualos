@@ -98,6 +98,21 @@ export interface Atom<T extends AtomOp> {
 }
 
 /**
+ * Defines an interface that represents an atom that has been archived.
+ */
+export interface ArchivedAtom {
+    /**
+     * The key that relates this atom to a particular tree/weave.
+     */
+    key: string;
+
+    /**
+     * The atom that was archived.
+     */
+    atom: Atom<any>;
+}
+
+/**
  * Creates a new atom.
  * @param id 
  * @param cause 
@@ -115,4 +130,13 @@ export function atom<T extends AtomOp>(id: AtomId, cause: AtomId, value: T): Ato
         // of up to ~2 billion atoms instead of never.
         checksum: hash.readUInt32BE(0)
     };
+}
+
+/**
+ * Converts the given atom ID into a string that is suitable for
+ * storage.
+ * @param id The ID.
+ */
+export function atomIdToString(id: AtomId): string {
+    return `${id.site}@${id.timestamp}:${id.priority}`;
 }

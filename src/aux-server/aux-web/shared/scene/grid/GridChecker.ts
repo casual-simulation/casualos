@@ -73,6 +73,13 @@ export class GridChecker {
     }
 
     async check(grid: HexGridMesh): Promise<GridCheckResults> {
+        if (grid.hexes.length === 0) {
+            return {
+                levels: [],
+                bounds: new Box3()
+            };
+        }
+
         this._grid = grid;
         this._tileSize = this._grid.hexSize * this.tileRatio;
 
