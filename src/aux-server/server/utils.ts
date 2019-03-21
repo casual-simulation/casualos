@@ -40,7 +40,6 @@ export function getExtraDomainsForSite(site: 'projector' | 'player') {
     if (env === 'production') {
     } else {
         const mode = process.argv[2];
-        console.log(mode);
         if (mode === site || (typeof mode === 'undefined' && site === 'projector')) {
             return getLocalIpAddresses();
         }
