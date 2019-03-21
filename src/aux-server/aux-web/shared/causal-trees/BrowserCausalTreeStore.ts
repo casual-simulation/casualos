@@ -61,7 +61,7 @@ export class BrowserCausalTreeStore implements CausalTreeStore {
 
     async add<T extends AtomOp>(id: string, atoms: Atom<T>[]): Promise<void> {
         const stored = atoms.map(a => ({
-            id: atomIdToString(a.id),
+            id: `${id}:${atomIdToString(a.id)}`,
             tree: id,
             atom: a,
         }));

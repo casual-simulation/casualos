@@ -85,7 +85,7 @@ export class MongoDBTreeStore implements CausalTreeStore {
         }
         let op = this._atoms.initializeUnorderedBulkOp();
         wrappers.forEach(w => {
-            op.find({id: w.id})
+            op.find({ id: w.id, tree: id })
                 .upsert()
                 .updateOne(w);
         });
