@@ -72,6 +72,10 @@ export abstract class BaseFileClickOperation implements IOperation {
 
                     if (this._canDragFile(calc, this._file)) {
                         this._dragOperation = this._createDragOperation(calc);
+                    } else {
+                        // Finish the click operation because we tried dragging but could not
+                        // actually drag anything.
+                        this._finished = true;
                     }
                 }
 
