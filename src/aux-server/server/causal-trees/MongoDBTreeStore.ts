@@ -23,6 +23,9 @@ export class MongoDBTreeStore implements CausalTreeStore {
         this._db = this._client.db(this._dbName);
         this._trees = this._db.collection(this._collectionName);
         this._atoms = this._db.collection(this._atomsName);
+
+        await this._trees.createIndex({ id: 1 });
+        await this._atoms.createIndex({ tree: 1, id: 1 });
     }
 
     async put<T extends AtomOp>(id: string, tree: StoredCausalTree<T>, fullUpdate: boolean = true): Promise<void> {
@@ -35,7 +38,7 @@ export class MongoDBTreeStore implements CausalTreeStore {
             knownSites: upgraded.knownSites,
         };
         
-        await this._trees.updateOne({ channel: id }, {
+        await this._trees.updateOne({ id: id }, {
             $set: wrapper
         }, { upsert: true });
 
