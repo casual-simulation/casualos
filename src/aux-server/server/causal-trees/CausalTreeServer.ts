@@ -85,7 +85,7 @@ export class CausalTreeServer {
                         };
 
                         callback(currentVersionInfo);
-                        console.log('[CausalTreeServer] Done.');
+                        console.log(`[CausalTreeServer] Sent version ${currentVersionInfo.version.hash}`);
                     });
 
                     socket.on(`siteId_${info.id}`, (site: SiteInfo, callback: Function) => {
