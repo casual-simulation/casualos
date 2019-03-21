@@ -64,8 +64,12 @@ export class CausalTreeServer {
                     });
 
                     socket.on(`info_${info.id}`, async (event: SiteVersionInfo, callback: (resp: SiteVersionInfo) => void) => {
+
+                        console.log('[CausalTreeServer] Getting info for tree:', info.id);
+
                         // import the known sites
                         if (event.knownSites) {
+                            console.log('[CausalTreeServer] Updating known sites...');
                             event.knownSites.forEach(ks => {
                                 tree.registerSite(ks);
                             });
@@ -73,6 +77,7 @@ export class CausalTreeServer {
                             await this._treeStore.put(info.id, tree.export(), false);
                         }
 
+                        console.log('[CausalTreeServer] Sending current site info...');
                         const currentVersionInfo: SiteVersionInfo = {
                             site: tree.site,
                             version: tree.weave.getVersion(),
@@ -80,19 +85,25 @@ export class CausalTreeServer {
                         };
 
                         callback(currentVersionInfo);
+                        console.log('[CausalTreeServer] Done.');
                     });
 
                     socket.on(`siteId_${info.id}`, (site: SiteInfo, callback: Function) => {
+                        console.log(`[CausalTreeServer] Checking site ID (${site.id}) for tree (${info.id})`);
+
                          const knownSite = find(tree.knownSites, ks => ks.id === site.id);
                          if (knownSite) {
+                            console.log('[CausalTreeServer] Site ID Already Reserved.');
                              callback(false);
                          } else {
+                            console.log('[CausalTreeServer] Site ID Granted.');
                             tree.registerSite(site);
                             callback(true);
                          }
                     });
 
                     socket.on(`weave_${info.id}`, (event: StoredCausalTree<AtomOp>, callback: (resp: StoredCausalTree<AtomOp>) => void) => {
+                        console.log(`[CausalTreeServer] Exchanging Weaves for tree (${info.id})`);
                         tree.import(event);
 
                         // TODO: If a version is provided then we should
@@ -117,17 +128,22 @@ export class CausalTreeServer {
     private async _getTree(info: RealtimeChannelInfo): Promise<CausalTree<AtomOp, any, any>> {
         let tree = this._treeList[info.id];
         if (!tree) {
+            console.log(`[CausalTreeServer] Getting tree (${info.id}) from database...`);
             const stored = await this._treeStore.get<AtomOp>(info.id);
             if (stored) {
+                console.log(`[CausalTreeServer] Building from stored...`);
                 tree = this._factory.create(info.type, stored);
-
             } else {
+                console.log(`[CausalTreeServer] Creating new...`);
                 tree = this._factory.create(info.type, storedTree(site(1)));
                 if (!info.bare) {
                     tree.root();
+                } else {
+                    console.log(`[CausalTreeServer] Skipping root node because a bare tree was requested.`);
                 }
             }
             
+            console.log(`[CausalTreeServer] Storing initial tree version...`);
             // Update the stored data
             await this._treeStore.put(info.id, tree.export(), true);
 
@@ -135,6 +151,7 @@ export class CausalTreeServer {
             //       preserving performance provided by garbage collection.
             tree.garbageCollect = true;
             this._treeList[info.id] = tree;
+            console.log(`[CausalTreeServer] Done.`);
         }
 
         return tree;
