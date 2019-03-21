@@ -1,7 +1,7 @@
 # AUX Server Changelog
 
 ## V0.3.12
-### Date: TBD
+### Date: 3/21/2019
 
 ### Changes:
 - Bug Fixes
