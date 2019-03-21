@@ -65,8 +65,7 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
     const fileAdded = stateDiffs.pipe(flatMap(diff => {
         // TODO: Work with all domains
         return sortBy(diff.addedFiles, 
-            f => !f.tags['aux.builder.context'], 
-            f => !f.tags['aux.player.context'], 
+            f => !f.tags['aux.builder.context'],
             f => f.id
         );
     }));

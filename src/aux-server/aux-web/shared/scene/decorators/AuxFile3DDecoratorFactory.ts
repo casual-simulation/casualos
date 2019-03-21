@@ -1,6 +1,6 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { IGameView } from "../../../shared/IGameView";
-import { File, file } from "@yeti-cgi/aux-common";
+import { File, file, hasValue } from "@yeti-cgi/aux-common";
 import { ScaleDecorator } from "./ScaleDecorator";
 import { ContextPositionDecorator } from "./ContextPositionDecorator";
 import { MeshCubeDecorator } from "./MeshCubeDecorator";
@@ -20,9 +20,7 @@ export class AuxFile3DDecoratorFactory {
 
     loadDecorators(file3d: AuxFile3D): AuxFile3DDecorator[] {
         let decorators: AuxFile3DDecorator[] = [];
-
-        let regex = /^_user/;
-        let isUser = regex.test(file3d.context);
+        let isUser = !!file3d.file && hasValue(file3d.file.tags._user);
         
         if (isUser) {
             if (!!file3d.file && !!this.gameView) {

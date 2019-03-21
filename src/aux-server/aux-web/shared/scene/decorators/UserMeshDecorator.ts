@@ -157,15 +157,16 @@ export class UserMeshDecorator extends AuxFile3DDecorator {
             this._lastActiveCheckTime = Date.now();
             appManager.fileManager.updateFile(<AuxObject>this.file3D.file, {
                 tags: {
-                    _lastActiveTime: Date.now()
+                    [`${this.file3D.context}._lastActiveTime`]: Date.now()
                 }
             });
         }
     }
 
     private _isActive(): boolean {
-        if (this.file3D.file.tags._lastActiveTime) {
-            const milisecondsFromNow = Date.now() - this.file3D.file.tags._lastActiveTime;
+        const lastActiveTime = this.file3D.file.tags[`${this.file3D.context}._lastActiveTime`];
+        if (lastActiveTime) {
+            const milisecondsFromNow = Date.now() - lastActiveTime;
             return milisecondsFromNow < DEFAULT_USER_INACTIVE_TIME;
         } else {
             return false;

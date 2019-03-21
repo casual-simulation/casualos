@@ -34,7 +34,10 @@ import {
     Object,
     DEFAULT_SCENE_BACKGROUND_COLOR,
     AuxFile,
-    calculateFileValue
+    calculateFileValue,
+    AuxObject,
+    FileCalculationContext,
+    isDestroyed
 } from '@yeti-cgi/aux-common';
 import { ArgEvent } from '@yeti-cgi/aux-common/Events';
 import { Time } from '../../shared/scene/Time';
@@ -42,7 +45,7 @@ import { Input, InputType } from '../../shared/scene/Input';
 import { InputVR } from '../../shared/scene/InputVR';
 import { appManager } from '../../shared/AppManager';
 import { GridChecker } from '../../shared/scene/grid/GridChecker';
-import { find, flatMap } from 'lodash';
+import { find, flatMap, remove } from 'lodash';
 import App from '../App/App';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { IGameView } from '../../shared/IGameView';
@@ -54,6 +57,8 @@ import { AuxFile3DDecoratorFactory } from '../../shared/scene/decorators/AuxFile
 import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
 import InventoryFile from '../InventoryFile/InventoryFile';
 import { InventoryContext } from '../InventoryContext';
+import { doesFileDefinePlayerContext } from '../PlayerUtils';
+import { stringify } from 'querystring';
 
 @Component({
     components: {
@@ -87,6 +92,12 @@ export default class GameView extends Vue implements IGameView {
     public onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
     public onFileUpdated: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
     public onFileRemoved: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
+
+    /**
+     * Keep files in a back buffer so that we can add files to contexts when they come in.
+     * We should not guarantee that contexts will come first so we must have some lazy file adding.
+     */
+    private _fileBackBuffer: Map<string, AuxObject>;
 
     /**
      * The current context group 3d that the AUX Player is rendering.
@@ -156,6 +167,7 @@ export default class GameView extends Vue implements IGameView {
 
         this._time = new Time();
         this._fileSubs = [];
+        this._fileBackBuffer = new Map<string, AuxObject>();
         this._decoratorFactory = new AuxFile3DDecoratorFactory(this);
         this._userContext = new BehaviorSubject(null);
         this._setupScene();
@@ -302,6 +314,9 @@ export default class GameView extends Vue implements IGameView {
             this._fileSubs = [];
         }
 
+        // Clear our file buffer.
+        this._fileBackBuffer = new Map<string, AuxObject>();
+
         // Dispose of the current context group.
         if (this._contextGroup) {
             this._contextGroup.dispose();
@@ -356,34 +371,28 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private async _fileAdded(file: AuxFile) {
+        this._fileBackBuffer.set(file.id, file);
+        
         let calc = this.fileManager.createContext();
 
         if (!this._contextGroup) {
             // We dont have a context group yet. We are in search of a file that defines a player context that matches the user's current context.
-            if (file.tags[`aux.player.context`]) {
-                // This file defines a player context. But does it match the user's current context?
-                const contextValue = calculateFileValue(calc, file, `aux.player.context`);
-                let contexts: string[];
-                if (Array.isArray(contextValue)) {
-                    contexts = contextValue;
-                } else if (typeof contextValue === 'string') {
-                    contexts = [contextValue];
-                }
-
-                // Now that we have an array of defined player context values from the file, check if the user's current context is one of them.
-                const matchesUserContext: boolean = contexts.indexOf(this.userContext) != -1;
-                if (matchesUserContext) {
-                    console.log('[GameView] Aux Player context matches user\'s current context. Context Group created.', file);
-                    // Create ContextGroup3D for this file that we will use to render all files in the context.
-                    this._contextGroup = new ContextGroup3D(file, 'player', this._decoratorFactory);
-                    this._scene.add(this._contextGroup);
-                } else {
-                    console.log('[GameView] Aux Player contexts dont match user\'s current context. skipping.', file);
+            const destroyed = isDestroyed(file);
+            const result = doesFileDefinePlayerContext(file, this.userContext, calc);
+            if (!destroyed && result.matchFound) {
+                // Create ContextGroup3D for this file that we will use to render all files in the context.
+                this._contextGroup = new ContextGroup3D(file, 'player', this._decoratorFactory);
+                this._scene.add(this._contextGroup);
+                await this._contextGroup.fileAdded(file, calc);
+                
+                // Apply back buffer of files to the newly created context group.
+                for (let entry of this._fileBackBuffer) {
+                    if (entry[0] !== file.id) {
+                        await this._contextGroup.fileAdded(entry[1], calc);
+                    }
                 }
             }
-        }
-
-        if (this._contextGroup) {
+        } else {
             await this._contextGroup.fileAdded(file, calc);
         }
         
@@ -396,6 +405,7 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private async _fileUpdated(file: AuxFile, initialUpdate = false) {
+        this._fileBackBuffer.set(file.id, file);
         let calc = this.fileManager.createContext();
         if (this._contextGroup) {
             // TODO: Implement Tag Updates
@@ -417,6 +427,14 @@ export default class GameView extends Vue implements IGameView {
         const calc = this.fileManager.createContext();
         if (this._contextGroup) {
             this._contextGroup.fileRemoved(id, calc);
+
+            if (this._contextGroup.file.id === id) {
+                // File that defined player context has been removed.
+                // Dispose of the context group.
+                this._contextGroup.dispose();
+                this._scene.remove(this._contextGroup);
+                this._contextGroup = null;
+            }
         }
 
         if (this.inventoryContext) {
