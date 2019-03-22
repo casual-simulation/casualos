@@ -1,4 +1,4 @@
-import { Atom, AtomId, AtomOp, idEquals } from "./Atom";
+import { Atom, AtomId, AtomOp, idEquals, atomIdToString } from "./Atom";
 import { keys } from "lodash";
 import { WeaveVersion, WeaveSiteVersion } from "./WeaveVersion";
 import { getHash } from './Hash';
@@ -381,12 +381,57 @@ export class Weave<TOp extends AtomOp> {
         while(cause) {
             const causeRef = this.getAtom(cause);
             
+            if (!causeRef) {
+                throw new Error(`[Weave] Could not find cause for atom ${atomIdToString(cause)}`);
+            }
+
             chain.push(causeRef);
 
             cause = causeRef.cause;
         }
 
         return chain;
+    }
+
+    /**
+     * Determines if this causal tree is valid.
+     */
+    isValid(): boolean {
+        if (this._atoms.length === 0) {
+            return true;
+        }
+
+        let parents = [this._atoms[0]];
+        for (let i = 1; i < this._atoms.length; i++) {
+            const child = this._atoms[i];
+            let parent = parents[0];
+
+            if (idEquals(child.cause, parent.cause)) {
+                // siblings
+                if (child.id.timestamp > parent.id.timestamp) {
+                    console.warn(`[Weave] Invalid tree. ${atomIdToString(child.id)} says it happened before its sibling (${parent.id}) that occurred before it in the tree.`);
+                    return false;
+                }
+            }
+
+            while (!idEquals(child.cause, parent.id)) {
+                parents.shift();
+                if (parents.length === 0) {
+                    console.warn(`[Weave] Invalid tree. ${atomIdToString(child.id)} is either inserted before ${atomIdToString(child.cause)} or the cause is not in the tree.`);
+                    return false;
+                }
+                parent = parents[0];
+            }
+
+            if (child.id.timestamp <= parent.id.timestamp) {
+                console.warn(`[Weave] Invalid tree. ${atomIdToString(child.id)} says it happened before its parent ${atomIdToString(child.cause)}.`);
+                return false;
+            }
+
+            parents.unshift(child);
+        }
+
+        return true;
     }
 
     /**
