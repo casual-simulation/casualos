@@ -43,26 +43,35 @@ export class MongoDBTreeStore implements CausalTreeStore {
         }, { upsert: true });
 
         if (fullUpdate) {
+            console.log('[MongoDBTreeStore] Running full update.');
+            console.log(`[MongoDBTreeStore] Deleting atoms for tree ${id}...`);
             await this._atoms.deleteMany({
                 tree: id
             });
             if (upgraded.weave) {
+                console.log(`[MongoDBTreeStore] Re-Adding ${upgraded.weave.length} atoms for tree ${id}...`);
                 await this.add(id, upgraded.weave);
+            } else {
+                console.log(`[MongoDBTreeStore] Skipping re-adding atoms because it doesn't have a weave.`);
             }
         }
     }
 
     async get<T extends AtomOp>(id: string): Promise<StoredCausalTree<T>> {
+        console.log(`[MongoDBTreeStore] Getting tree for ${id}.`);
         const wrapper: StorageWrapper<T> = await this._trees.findOne({ id: id });
         if (!wrapper) {
+            console.log(`[MongoDBTreeStore] No tree found.`);
             return null;
         }
-        if (wrapper.wrapperVersion === 2) {
 
+        if (wrapper.wrapperVersion === 2) {
+            console.log(`[MongoDBTreeStore] Wrapper version 2 tree found, loading atoms...`);
             const atoms = await this._atoms.find<AtomWrapper<T>>({ tree: id })
                 .map(a => a.atom)
                 .toArray();
 
+            console.log(`[MongoDBTreeStore] Returning ${atoms.length} atoms...`);
             return {
                 formatVersion: 3,
                 knownSites: wrapper.knownSites,
@@ -71,6 +80,7 @@ export class MongoDBTreeStore implements CausalTreeStore {
                 ordered: false
             };
         } else if (typeof wrapper.wrapperVersion === 'undefined') {
+            console.log(`[MongoDBTreeStore] Version 1 tree found, returning tree ${wrapper.tree.weave.length} atoms...`);
             return wrapper.tree;
         } else {
             throw new Error(`[MongoDBTreeStore] Got unrecognized wrapper version: ${wrapper.wrapperVersion}`);

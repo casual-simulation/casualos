@@ -1,5 +1,17 @@
 # AUX Server Changelog
 
+## V0.3.14
+### Date: 3/22/2019
+
+### Changes:
+- Bug Fixes
+    - Fixed CausalTreeServer to save imported atoms.
+    - Fixed CausalTreeServer to not re-store atoms each time it loads the tree from the database.
+    - Make CausalTree export version 3 trees.
+    - Make CausalTree collect garbage after importing.
+- Other Changes
+    - Enable some debug logs.
+
 ## V0.3.13
 ### Date: 3/21/2019
 
