@@ -103,12 +103,16 @@ export class CausalTreeServer {
                     });
 
                     socket.on(`weave_${info.id}`, (event: StoredCausalTree<AtomOp>, callback: (resp: StoredCausalTree<AtomOp>) => void) => {
-                        console.log(`[CausalTreeServer] Exchanging Weaves for tree (${info.id})`);
-                        tree.import(event);
+                        console.log(`[CausalTreeServer] Exchanging Weaves for tree (${info.id}).`);
+                        const imported = tree.import(event);
+                        console.log(`[CausalTreeServer] Imported ${imported.length} atoms.`);
 
                         // TODO: If a version is provided then we should
                         // return only the atoms that are needed to sync.
-                        callback(tree.export());
+                        const exported = tree.export();
+
+                        console.log(`[CausalTreeServer] Sending ${exported.weave.length} atoms.`);
+                        callback(exported);
                     });
 
                     socket.on('disconnect', () => {
@@ -131,8 +135,9 @@ export class CausalTreeServer {
             console.log(`[CausalTreeServer] Getting tree (${info.id}) from database...`);
             const stored = await this._treeStore.get<AtomOp>(info.id);
             if (stored) {
-                console.log(`[CausalTreeServer] Building from stored...`);
+                console.log(`[CausalTreeServer] Building from stored tree (version ${stored.formatVersion})...`);
                 tree = this._factory.create(info.type, stored);
+                console.log(`[CausalTreeServer] ${tree.weave.atoms.length} atoms loaded.`);
             } else {
                 console.log(`[CausalTreeServer] Creating new...`);
                 tree = this._factory.create(info.type, storedTree(site(1)));
