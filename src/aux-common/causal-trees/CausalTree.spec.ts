@@ -3,7 +3,7 @@ import { Atom, AtomId, AtomOp, atomId, atom } from "./Atom";
 import { AtomReducer } from "./AtomReducer";
 import { Weave } from './Weave';
 import { site } from './SiteIdInfo';
-import { storedTree, StoredCausalTreeVersion1, StoredCausalTree, StoredCausalTreeVersion2, StoredCausalTreeVersion3 } from "./StoredCausalTree";
+import { storedTree, StoredCausalTreeVersion1, StoredCausalTree, StoredCausalTreeVersion2, StoredCausalTreeVersion3, currentFormatVersion } from "./StoredCausalTree";
 import { precalculatedOp } from "./PrecalculatedOp";
 
 enum OpType {
@@ -139,6 +139,21 @@ describe('CausalTree', () => {
             tree.create(new Op(OpType.add), root);
 
             expect(tree.value).toBe(1);
+        });
+    });
+
+    describe('export()', () => {
+        it('should export a stored tree with the current version', () => {
+            let tree = new CausalTree(storedTree(site(1)), new Reducer());
+
+            const root =tree.add(tree.factory.create(new Op(), null));
+            tree.add(tree.factory.create(new Op(OpType.add), root));
+            tree.add(tree.factory.create(new Op(OpType.add), root));
+            tree.add(tree.factory.create(new Op(OpType.add), root));
+
+            const exported = tree.export();
+
+            expect(exported.formatVersion).toBe(currentFormatVersion);
         });
     });
 

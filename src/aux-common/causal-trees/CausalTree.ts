@@ -245,8 +245,9 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      */
     export(): StoredCausalTree<TOp> {
         return {
-            formatVersion: 2,
+            formatVersion: 3,
             site: this._site,
+            ordered: true,
             knownSites: this.knownSites.slice(),
             weave: this.weave.atoms.slice()
         };
