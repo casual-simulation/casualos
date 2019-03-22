@@ -1,5 +1,5 @@
 import { Socket, Server } from 'socket.io';
-import { CausalTreeStore, CausalTreeFactory, CausalTree, AtomOp, RealtimeChannelInfo, storedTree, site, SiteVersionInfo, SiteInfo, Atom, StoredCausalTree } from '@yeti-cgi/aux-common/causal-trees';
+import { CausalTreeStore, CausalTreeFactory, CausalTree, AtomOp, RealtimeChannelInfo, storedTree, site, SiteVersionInfo, SiteInfo, Atom, StoredCausalTree, currentFormatVersion } from '@yeti-cgi/aux-common/causal-trees';
 import { AuxOp } from '@yeti-cgi/aux-common/aux-format';
 import { find } from 'lodash';
 import { bufferTime, flatMap, filter } from 'rxjs/operators';
@@ -145,14 +145,18 @@ export class CausalTreeServer {
                 tree = this._factory.create(info.type, storedTree(site(1)));
                 if (!info.bare) {
                     tree.root();
+                    console.log(`[CausalTreeServer] Storing initial tree version...`);
+                    await this._treeStore.put(info.id, tree.export(), true);
                 } else {
                     console.log(`[CausalTreeServer] Skipping root node because a bare tree was requested.`);
                 }
             }
             
-            console.log(`[CausalTreeServer] Storing initial tree version...`);
-            // Update the stored data
-            await this._treeStore.put(info.id, tree.export(), true);
+            if (stored.formatVersion < currentFormatVersion) {
+                // Update the stored data
+                console.log(`[CausalTreeServer] Updating stored atoms from ${stored.formatVersion} to ${currentFormatVersion}...`);
+                await this._treeStore.put(info.id, tree.export(), true);
+            }
 
             // TODO: Implement the ability to keep old atoms around while
             //       preserving performance provided by garbage collection.
