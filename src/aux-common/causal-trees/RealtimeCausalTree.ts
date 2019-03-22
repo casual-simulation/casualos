@@ -1,6 +1,6 @@
 import { RealtimeChannel } from "./RealtimeChannel";
 import { AtomOp, Atom } from "./Atom";
-import { CausalTree } from "./CausalTree";
+import { CausalTree, CausalTreeOptions } from "./CausalTree";
 import { CausalTreeStore } from "./CausalTreeStore";
 import { CausalTreeFactory } from "./CausalTreeFactory";
 import { SiteVersionInfo } from "./SiteVersionInfo";
@@ -25,6 +25,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
     private _updated: Subject<Atom<AtomOp>[]>;
     private _errors: Subject<any>;
     private _subs: SubscriptionLike[];
+    private _options: CausalTreeOptions;
 
     /**
      * Gets the realtime channel that this tree is using.
@@ -74,8 +75,9 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
      * @param factory The factory used to create new trees.
      * @param store The store used to persistently store the tree.
      * @param channel The channel used to communicate with other devices.
+     * @param options The options that should be used for the causal tree.
      */
-    constructor(factory: CausalTreeFactory, store: CausalTreeStore, channel: RealtimeChannel<Atom<AtomOp>[]>) {
+    constructor(factory: CausalTreeFactory, store: CausalTreeStore, channel: RealtimeChannel<Atom<AtomOp>[]>, options?: CausalTreeOptions) {
         this._factory = factory;
         this._store = store;
         this._channel = channel;
@@ -83,6 +85,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         this._errors = new Subject<any>();
         this._tree = null;
         this._subs = [];
+        this._options = options;
 
         // TODO: Get the causal tree to store the state
         // without tanking performance.
@@ -97,7 +100,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
     async init(): Promise<void> {
         const stored = await this._store.get(this.id);
         if (stored) {
-            this._setTree(<TTree>this._factory.create(this.type, stored));
+            this._setTree(<TTree>this._factory.create(this.type, stored, this._options));
             if (stored.weave) {
                 if (stored.formatVersion === 2) {
                     this._updated.next(stored.weave);

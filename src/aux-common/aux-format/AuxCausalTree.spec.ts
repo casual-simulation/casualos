@@ -530,6 +530,35 @@ describe('AuxCausalTree', () => {
                 ]);
             });
 
+            it('should collect garbage during creation', () => {
+                let tree = new AuxCausalTree(storedTree(site(1)));
+                tree.garbageCollect = false;
+
+                const root = tree.root();
+                const file = tree.file('fileId');
+                const test = tree.tag('test', file);
+                const testVal1 = tree.val(99, test);
+                const testVal2 = tree.val('hello, world', test);
+
+                const test2 = tree.tag('test2', file);
+                const test2Val1 = tree.val(99, test2);
+                const test2Val2 = tree.val('hello, world', test2);
+
+                const exported = tree.export();
+                let other = new AuxCausalTree(exported, {
+                    garbageCollect: true
+                });
+
+                expect(other.weave.atoms).toEqual([
+                    root,
+                    file,
+                    test2,
+                    test2Val2,
+                    test,
+                    testVal2
+                ]);
+            });
+
             it('should emit atomsArchived events after GC', () => {
                 let tree = new AuxCausalTree(storedTree(site(1)));
 

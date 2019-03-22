@@ -10,6 +10,17 @@ import { PrecalculatedOp } from './PrecalculatedOp';
 import { Subject } from 'rxjs';
 
 /**
+ * Defines an interface that contains possible options that can be set on a causal tree.
+ */
+export interface CausalTreeOptions {
+    /**
+     * Specifies whether the causal tree should try to remove atoms that no longer affect the tree.
+     * Defaults to false.
+     */
+    garbageCollect?: boolean;
+}
+
+/**
  * Defines a class that represents a Causal Tree.
  * That is, a conflict-free replicated data type. (CRDT)
  */
@@ -28,6 +39,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
 
     /**
      * Gets or sets whether the causal tree should collect garbage.
+     * Defaults to false.
      */
     garbageCollect: boolean;
 
@@ -99,8 +111,9 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * Creates a new Causal Tree with the given site ID.
      * @param tree The stored tree that this causal tree should be made from.
      * @param reducer The reducer used to convert a list of operations into a single value.
+     * @param options The options to use.
      */
-    constructor(tree: StoredCausalTree<TOp>, reducer: AtomReducer<TOp, TValue, TMetadata>) {
+    constructor(tree: StoredCausalTree<TOp>, reducer: AtomReducer<TOp, TValue, TMetadata>, options: CausalTreeOptions = {}) {
         this._site = tree.site;
         this._knownSites = unionBy([
             this.site
@@ -114,7 +127,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         this._atomArchived = new Subject<Atom<TOp>[]>();
         this._isBatching = false;
         this._batch = [];
-        this.garbageCollect = false;
+        this.garbageCollect = options.garbageCollect || false;
 
         this.import(tree);
     }

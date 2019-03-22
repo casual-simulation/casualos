@@ -138,7 +138,7 @@ export class CausalTreeServer {
             const stored = await this._treeStore.get<AtomOp>(info.id);
             if (stored) {
                 console.log(`[CausalTreeServer] Building from stored tree (version ${stored.formatVersion})...`);
-                tree = this._factory.create(info.type, stored);
+                tree = this._factory.create(info.type, stored, { garbageCollect: true });
                 console.log(`[CausalTreeServer] ${tree.weave.atoms.length} atoms loaded.`);
             } else {
                 console.log(`[CausalTreeServer] Creating new...`);
@@ -158,9 +158,6 @@ export class CausalTreeServer {
                 await this._treeStore.put(info.id, tree.export(), true);
             }
 
-            // TODO: Implement the ability to keep old atoms around while
-            //       preserving performance provided by garbage collection.
-            tree.garbageCollect = true;
             this._treeList[info.id] = tree;
             console.log(`[CausalTreeServer] Done.`);
         }
