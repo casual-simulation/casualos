@@ -46,6 +46,10 @@ export function byteToHex(byte: number) {
     return ('0'+byte.toString(16)).slice(-2);
 }
 
+export function getOptionalValue(obj: any, defaultValue: any): any {
+    return (obj !== undefined && obj !== null) ? obj : defaultValue;
+}
+
 export class ColorConvert {
     private _canvas: any;
     private _context: any;
