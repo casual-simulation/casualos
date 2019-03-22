@@ -107,6 +107,8 @@ export class CausalTreeServer {
                         const imported = tree.import(event);
                         console.log(`[CausalTreeServer] Imported ${imported.length} atoms.`);
 
+                        this._treeStore.add(info.id, imported);
+
                         // TODO: If a version is provided then we should
                         // return only the atoms that are needed to sync.
                         const exported = tree.export();
