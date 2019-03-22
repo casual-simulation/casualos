@@ -98,7 +98,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
      * Initializes the realtime causal tree.
      */
     async init(): Promise<void> {
-        const stored = await this._store.get(this.id);
+        const stored = await this._store.get(this.id, false);
         if (stored) {
             this._setTree(<TTree>this._factory.create(this.type, stored, this._options));
             if (stored.weave) {
