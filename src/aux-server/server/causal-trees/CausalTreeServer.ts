@@ -116,11 +116,14 @@ export class CausalTreeServer {
                     });
 
                     socket.on(`weave_${info.id}`, (event: StoredCausalTree<AtomOp>, callback: (resp: StoredCausalTree<AtomOp>) => void) => {
-                        console.log(`[CausalTreeServer] Exchanging Weaves for tree (${info.id}).`);
-                        const imported = tree.import(event);
-                        console.log(`[CausalTreeServer] Imported ${imported.length} atoms.`);
-
-                        this._treeStore.add(info.id, imported);
+                        try {
+                            console.log(`[CausalTreeServer] Exchanging Weaves for tree (${info.id}).`);
+                            const imported = tree.import(event);
+                            console.log(`[CausalTreeServer] Imported ${imported.length} atoms.`);
+                            this._treeStore.add(info.id, imported);
+                        } catch(e) {
+                            console.log('[CausalTreeServer] Could not import atoms from remote.', e);
+                        }
 
                         // TODO: If a version is provided then we should
                         // return only the atoms that are needed to sync.
