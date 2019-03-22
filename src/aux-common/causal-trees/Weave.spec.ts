@@ -206,6 +206,29 @@ describe('Weave', () => {
                 a3
             ]);
         });
+
+        it('should handle inserting atoms with the same ID but different causes', () => {
+            let weave = new Weave();
+
+            const a1 = atom(atomId(1, 1), null, new Op());
+            const ref1 = weave.insert(a1);
+
+            const a2 = atom(atomId(1, 2), atomId(1, 1), new Op());
+            const ref2 = weave.insert(a2);
+
+            const a3 = atom(atomId(1, 10), atomId(1, 2), new Op());
+            const ref3 = weave.insert(a3);
+
+            const a4 = atom(atomId(1, 10), atomId(1, 1), new Op());
+            const ref4 = weave.insert(a4);
+
+            expect(ref4).toBe(ref3);
+            expect(weave.atoms.map(a => a)).toEqual([
+                a1,
+                a2,
+                a3
+            ]);
+        });
     });
 
     describe('remove()', () => {
@@ -866,6 +889,7 @@ describe('Weave', () => {
         });
 
         it('should be able to merge a partial weave into itself', () => {
+
             let first = new Weave<Op>();
 
             const root = atom<Op>(atomId(1, 0), null, new Op());
@@ -947,6 +971,64 @@ describe('Weave', () => {
             expect(atoms[8]).toEqual(child8);
             expect(atoms[9]).toEqual(child3);
             expect(atoms.length).toBe(10);
+        });
+
+        it('should ensure consistency when importing a longer weave that contains broken cause references', () => {
+            const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+            let first = new Weave<Op>();
+
+            const root = atom(atomId(1, 0), null, new Op());
+            const child1 = atom(atomId(1, 1), atomId(1, 0), new Op());
+            const child2 = atom(atomId(1, 2), atomId(1, 0), new Op());
+            const child3 = atom(atomId(1, 3), atomId(1, 1), new Op());
+            const child6 = atom(atomId(1, 6), atomId(1, 2), new Op());
+            const child7 = atom(atomId(1, 7), atomId(1, 6), new Op());
+
+            const child8 = atom(atomId(1, 8), atomId(1, 2), new Op());
+            const diffChild8 = atom(atomId(1, 8), atomId(1, 7), new Op());
+
+            first.insertMany(
+                root,
+                child1,
+                child2,
+                child3,
+                child6,
+                child7,
+
+                child8,
+            );
+
+            let second = new Weave<Op>();
+
+            second.insertMany(
+                root,
+                child1,
+                child2,
+                child3,
+                child6,
+                child7,
+
+                // Different
+                diffChild8,
+            );
+
+            let final = new Weave<Op>();
+            final.import(first.atoms);
+            final.import(second.atoms);
+
+            expect(final.atoms).toEqual([
+                root,
+                child2,
+                child8,
+                child6,
+                child7,
+                child1,
+                child3,
+            ]);
+            expect(final.isValid()).toBe(true);
+
+            spy.mockRestore();
         });
 
         describe('yarn', () => {
@@ -1044,6 +1126,7 @@ describe('Weave', () => {
         });
 
         it('should reject all children when the parent checksum doesnt match', () => {
+            const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
             let first = new Weave<Op>();
 
             const root = atom<Op>(atomId(1, 0), null, new Op());
@@ -1083,6 +1166,8 @@ describe('Weave', () => {
 
             const site2 = newWeave.getSite(2);
             expect(site2.length).toBe(0);
+
+            spy.mockRestore();
         });
     });
 

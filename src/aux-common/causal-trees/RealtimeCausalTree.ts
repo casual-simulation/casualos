@@ -8,7 +8,7 @@ import { SiteInfo, site } from "./SiteIdInfo";
 import { SubscriptionLike, Subject, Observable, ReplaySubject } from 'rxjs';
 import { filter, flatMap, takeWhile, skipWhile, tap, map, first } from 'rxjs/operators';
 import { maxBy } from 'lodash';
-import { storedTree } from "./StoredCausalTree";
+import { storedTree, StoredCausalTree } from "./StoredCausalTree";
 import { WeaveVersion, versionsEqual } from "./WeaveVersion";
 
 /**
@@ -119,7 +119,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
             flatMap(version => this._requestSiteId(version), (version, site) => ({ version, site })),
             map(data => <TTree>this._factory.create(this.type, storedTree(data.site, data.version.knownSites))),
             flatMap(tree => this._channel.exchangeWeaves(tree.export()), (tree, imported) => ({tree, imported})),
-            map(data => ({...data, added: data.tree.import(data.imported)})),
+            map(data => ({...data, added: this._import(data.tree, data.imported) })),
             flatMap(data => this._store.put(this.id, data.tree.export(), true), (data) => data),
             tap(data => this._setTree(data.tree)),
             tap(data => this._updated.next(data.added))
@@ -132,7 +132,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
             flatMap(localVersion => this._channel.exchangeInfo(localVersion), (local, remote) => ({local, remote})),
             filter(versions => !versionsEqual(versions.local.version, versions.remote.version)),
             flatMap(versions => this._channel.exchangeWeaves(this.tree.export()), (versions, weave) => ({ versions, weave })),
-            map(data => ({...data, weave: this._tree.import(data.weave) })),
+            map(data => ({...data, weave: this._import(this.tree, data.weave) })),
             tap(data => this._importKnownSites(data.versions.remote)),
             flatMap(data => this._store.put(this.id, this._tree.export(), true), (data) => data),
             tap(data => this._updated.next(data.weave))
@@ -167,6 +167,13 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
                 version: null
             };
         }
+    }
+
+    private _import(tree: CausalTree<any, any, any>, weave: StoredCausalTree<AtomOp>): Atom<AtomOp>[] {
+        console.log(`[RealtimeCausalTree] Importing ${weave.weave.length} atoms....`);
+        const results = tree.import(weave);
+        console.log(`[RealtimeCausalTree] Imported ${results.length} atoms.`);
+        return results;
     }
 
     private _setTree(tree: TTree) {

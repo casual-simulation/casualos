@@ -1,4 +1,4 @@
-import { Atom, AtomId, AtomOp, idEquals, atomIdToString } from "./Atom";
+import { Atom, AtomId, AtomOp, idEquals, atomIdToString, atomId } from "./Atom";
 import { keys } from "lodash";
 import { WeaveVersion, WeaveSiteVersion } from "./WeaveVersion";
 import { getHash } from './Hash';
@@ -321,6 +321,14 @@ export class Weave<TOp extends AtomOp> {
                         // an atom without a cause.
                         continue;
                     }
+                }
+
+                const exists = this.getAtom(a.id);
+                if (exists && a.checksum !== exists.checksum) {
+                    // Break because the atoms aren't actually the same
+                    // even though they claim to be
+                    console.warn(`[Weave] Atom ${atomIdToString(a.id)} rejected because its checksum didn't match the existing atom (${a.checksum} !== ${exists.checksum})`);
+                    break;
                 }
 
                 let order = this._compareAtoms(a, local);
