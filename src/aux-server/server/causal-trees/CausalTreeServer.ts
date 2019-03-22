@@ -178,6 +178,12 @@ export class CausalTreeServer {
             const loaded = tree.import(stored);
             sub.unsubscribe();
             console.log(`[CausalTreeServer] ${loaded.length} atoms loaded.`);
+
+            if (stored.formatVersion < currentFormatVersion) {
+                // Update the stored data
+                console.log(`[CausalTreeServer] Updating stored atoms from ${stored.formatVersion} to ${currentFormatVersion}...`);
+                await this._treeStore.put(info.id, tree.export(), true);
+            }
         } else {
             console.log(`[CausalTreeServer] Creating new...`);
             tree = this._factory.create(info.type, storedTree(site(1)));
@@ -188,12 +194,6 @@ export class CausalTreeServer {
             } else {
                 console.log(`[CausalTreeServer] Skipping root node because a bare tree was requested.`);
             }
-        }
-        
-        if (stored.formatVersion < currentFormatVersion) {
-            // Update the stored data
-            console.log(`[CausalTreeServer] Updating stored atoms from ${stored.formatVersion} to ${currentFormatVersion}...`);
-            await this._treeStore.put(info.id, tree.export(), true);
         }
 
         this._treeList[info.id] = tree;
