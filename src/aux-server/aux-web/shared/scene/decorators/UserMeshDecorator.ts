@@ -80,7 +80,7 @@ export class UserMeshDecorator extends AuxFile3DDecorator {
 
         // Setup label
         this.label = new Text3D();
-        this.label.setText(this.file3D.file.id);
+        this.label.setText(this.file3D.file.tags._user);
         setLayer(this.label, LayersHelper.Layer_UIWorld);
         this.label.setScale(Text3D.defaultScale * 2);
         this.label.setWorldPosition(new Vector3(0,0,0));
@@ -102,7 +102,7 @@ export class UserMeshDecorator extends AuxFile3DDecorator {
     frameUpdate(calc: FileCalculationContext) {
         let file = <AuxObject>this.file3D.file;
 
-        const isOwnFile = this.file3D.file.tags._user === appManager.user.username;
+        const isOwnFile = this.file3D.file.id === appManager.user.id;
 
         // visible if not destroyed, has a position, and was active in the last minute
         this.container.visible = (!file.tags._destroyed &&

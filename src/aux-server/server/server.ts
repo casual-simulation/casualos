@@ -12,6 +12,7 @@ import { CausalTreeServer } from './causal-trees/CausalTreeServer';
 import { MongoDBTreeStore } from './causal-trees/MongoDBTreeStore';
 import { auxCausalTreeFactory } from '@yeti-cgi/aux-common/aux-format';
 import { AppVersion, apiVersion } from '@yeti-cgi/aux-common';
+import uuid from 'uuid/v4';
 
 
 const connect = pify(MongoClient.connect);
@@ -47,6 +48,7 @@ export class ClientServer {
 
             // TODO: Do something like actual user login
             res.send({
+                id: uuid(),
                 email: json.email,
                 username: username,
                 name: username
