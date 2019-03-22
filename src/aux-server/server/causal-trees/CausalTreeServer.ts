@@ -166,7 +166,7 @@ export class CausalTreeServer {
         let tree: CausalTree<AtomOp, any, any>;
         console.log(`[CausalTreeServer] Getting tree (${info.id}) from database...`);
         const stored = await this._treeStore.get<AtomOp>(info.id, false);
-        if (stored) {
+        if (stored && stored.weave.length > 0) {
             console.log(`[CausalTreeServer] Building from stored tree (version ${stored.formatVersion})...`);
             tree = this._factory.create(info.type, storedTree(site(1)), { garbageCollect: true });
 
@@ -188,8 +188,11 @@ export class CausalTreeServer {
                 await this._treeStore.put(info.id, tree.export(), true);
             }
         } else {
+            if (stored) {
+                console.log(`[CausalTreeServer] Found tree information but it didn't contain any atoms...`);
+            }
             console.log(`[CausalTreeServer] Creating new...`);
-            tree = this._factory.create(info.type, storedTree(site(1)));
+            tree = this._factory.create(info.type, storedTree(site(1)), { garbageCollect: true });
             if (!info.bare) {
                 tree.root();
                 console.log(`[CausalTreeServer] Storing initial tree version...`);
