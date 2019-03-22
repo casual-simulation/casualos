@@ -8,10 +8,12 @@
     - Fixed an issue that prevented users from creating new simulations.
     - Fixed an issue that caused duplicate files to be created in the game view.
     - Fixed issues with logging in as the same user from different devices.
+    - Fixed an issue that would cause newly created trees to have garbage collection disabled.
 - Other Improvements
     - Improved word bubble performance.
     - Improved performance when loading large causal trees.
     - Added additional validations when importing trees to prevent errors down the road.
+    - Improved the server to add a root atom if loading a tree that has no atoms.
 
 ## V0.3.14
 ### Date: 3/22/2019
