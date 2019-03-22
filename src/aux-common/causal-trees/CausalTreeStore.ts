@@ -26,12 +26,15 @@ export interface CausalTreeStore {
      * Adds the given atoms to the tree stored under the given ID.
      * @param id The ID of the tree that the atoms should be added to.
      * @param atoms The atoms to add.
+     * @param archived Whether the given atoms should be marked as archived.
      */
-    add<T extends AtomOp>(id: string, atoms: Atom<T>[]): Promise<void>;
+    add<T extends AtomOp>(id: string, atoms: Atom<T>[], archived?: boolean): Promise<void>;
 
     /**
      * Gets the causal tree that is stored under the given ID.
      * @param id The ID that the tree is stored under.
+     * @param archived Optional parameter to only get archived or unarchived atoms. If not specified, all atoms for the tree
+     *                 will be returned.
      */
-    get<T extends AtomOp>(id: string): Promise<StoredCausalTree<T>>;
+    get<T extends AtomOp>(id: string, archived?: boolean): Promise<StoredCausalTree<T>>;
 }

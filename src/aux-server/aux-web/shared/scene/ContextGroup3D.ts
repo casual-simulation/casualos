@@ -169,13 +169,15 @@ export class ContextGroup3D extends GameObject {
             const currentContexts = this.currentContexts();
             const missingContexts = difference(contexts, currentContexts);
             const removedContexts = difference(currentContexts, contexts);
-            const newContexts = missingContexts.map(c => new Context3D(c, this, this.domain, this._childColliders, this._decoratorFactory));
+            const realNewContexts = missingContexts.map(c => new Context3D(c, this, this.domain, this._childColliders, this._decoratorFactory));
 
-            newContexts.forEach(c => {
+            realNewContexts.forEach(c => {
+                console.log(`[ContextGroup3D] Add context ${c.context} to group ${this.file.id}.`);
                 this.contexts.set(c.context, c);
                 this.display.add(c);
             });
             removedContexts.forEach(c => {
+                console.log(`[ContextGroup3D] Remove context ${c} from group ${this.file.id}.`);
                 const context = this.contexts.get(c);
                 if (typeof context !== 'undefined') {
                     this.contexts.delete(c);

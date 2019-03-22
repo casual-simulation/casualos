@@ -25,7 +25,7 @@ export class MongoDBTreeStore implements CausalTreeStore {
         this._atoms = this._db.collection(this._atomsName);
 
         await this._trees.createIndex({ id: 1 });
-        await this._atoms.createIndex({ tree: 1, id: 1 });
+        await this._atoms.createIndex({ tree: 1, archived: 1, id: 1 });
     }
 
     async put<T extends AtomOp>(id: string, tree: StoredCausalTree<T>, fullUpdate: boolean = true): Promise<void> {
@@ -43,26 +43,38 @@ export class MongoDBTreeStore implements CausalTreeStore {
         }, { upsert: true });
 
         if (fullUpdate) {
-            await this._atoms.deleteMany({
-                tree: id
-            });
+            console.log('[MongoDBTreeStore] Running full update.');
             if (upgraded.weave) {
-                await this.add(id, upgraded.weave);
+                console.log(`[MongoDBTreeStore] Re-Adding ${upgraded.weave.length} atoms for tree ${id}...`);
+                await this.add(id, upgraded.weave, false);
+            } else {
+                console.log(`[MongoDBTreeStore] Skipping re-adding atoms because it doesn't have a weave.`);
             }
         }
     }
 
-    async get<T extends AtomOp>(id: string): Promise<StoredCausalTree<T>> {
+    async get<T extends AtomOp>(id: string, archived?: boolean): Promise<StoredCausalTree<T>> {
+        console.log(`[MongoDBTreeStore] Getting tree for ${id}.`);
         const wrapper: StorageWrapper<T> = await this._trees.findOne({ id: id });
         if (!wrapper) {
+            console.log(`[MongoDBTreeStore] No tree found.`);
             return null;
         }
+
         if (wrapper.wrapperVersion === 2) {
+            console.log(`[MongoDBTreeStore] Wrapper version 2 tree found, loading atoms...`);
+            let atoms: Atom<T>[];
+            if (typeof archived === 'undefined') {
+                atoms = await this._atoms.find<AtomWrapper<T>>({ tree: id })
+                    .map(a => a.atom)
+                    .toArray();
+            } else {
+                atoms = await this._atoms.find<AtomWrapper<T>>({ tree: id, archived: archived })
+                    .map(a => a.atom)
+                    .toArray();
+            }
 
-            const atoms = await this._atoms.find<AtomWrapper<T>>({ tree: id })
-                .map(a => a.atom)
-                .toArray();
-
+            console.log(`[MongoDBTreeStore] Returning ${atoms.length} atoms...`);
             return {
                 formatVersion: 3,
                 knownSites: wrapper.knownSites,
@@ -71,15 +83,18 @@ export class MongoDBTreeStore implements CausalTreeStore {
                 ordered: false
             };
         } else if (typeof wrapper.wrapperVersion === 'undefined') {
+            console.log(`[MongoDBTreeStore] Version 1 tree found, returning tree ${wrapper.tree.weave.length} atoms...`);
             return wrapper.tree;
         } else {
             throw new Error(`[MongoDBTreeStore] Got unrecognized wrapper version: ${wrapper.wrapperVersion}`);
         }
     }
 
-    async add<T extends AtomOp>(id: string, atoms: Atom<T>[]): Promise<void> {
-        const wrappers: AtomWrapperVersion1<T>[] = atoms.map(a => ({
+    async add<T extends AtomOp>(id: string, atoms: Atom<T>[], archived: boolean = false): Promise<void> {
+        const wrappers: AtomWrapperVersion2<T>[] = atoms.map(a => (<AtomWrapperVersion2<T>>{
+            version: 2,
             tree: id,
+            archived: archived,
             id: atomIdToString(a.id),
             atom: a
         }));
@@ -112,10 +127,18 @@ interface StorageWrapperVersion1<T extends AtomOp> {
     tree: StoredCausalTree<T>;
 }
 
-type AtomWrapper<T extends AtomOp> = AtomWrapperVersion1<T>;
+type AtomWrapper<T extends AtomOp> = AtomWrapperVersion1<T> | AtomWrapperVersion2<T>;
 
 interface AtomWrapperVersion1<T extends AtomOp> {
     tree: string;
     id: string;
+    atom: Atom<T>;
+}
+
+interface AtomWrapperVersion2<T extends AtomOp> {
+    version: 2;
+    tree: string;
+    id: string;
+    archived: boolean;
     atom: Atom<T>;
 }

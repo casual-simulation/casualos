@@ -1,6 +1,6 @@
 import { Weave } from '../causal-trees/Weave';
 import { AuxOp, FileOp, TagOp, InsertOp, ValueOp, DeleteOp, AuxOpType } from './AuxOpTypes';
-import { CausalTree } from '../causal-trees/CausalTree';
+import { CausalTree, CausalTreeOptions } from '../causal-trees/CausalTree';
 import { FilesState, FileEvent, PartialFile, Object, File, Workspace, tagsOnFile, getFileTag, hasValue, getTag, cleanFile } from '../Files';
 import { AuxReducer, AuxReducerMetadata } from './AuxReducer';
 import { root, file, tag, value, del, insert } from './AuxAtoms';
@@ -20,9 +20,10 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
     /**
      * Creates a new AUX Causal Tree.
      * @param tree The stored tree that this object should be constructed from.
+     * @param options The options to use.
      */
-    constructor(tree: StoredCausalTree<AuxOp>) {
-        super(tree, new AuxReducer());
+    constructor(tree: StoredCausalTree<AuxOp>, options?: CausalTreeOptions) {
+        super(tree, new AuxReducer(), options);
     }
 
     /**

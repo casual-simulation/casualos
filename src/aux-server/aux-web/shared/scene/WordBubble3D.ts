@@ -23,7 +23,7 @@ import {
     AxesHelper
 } from 'three';
 import { merge } from '@yeti-cgi/aux-common/utils';
-import { setLayerMask, convertToBox2 } from './SceneUtils';
+import { setLayerMask, convertToBox2, disposeMaterial, disposeMesh } from './SceneUtils';
 import { DebugObjectManager } from './DebugObjectManager';
 import { Debug } from '@sentry/core/dist/integrations';
 
@@ -60,13 +60,6 @@ export class WordBubble3D extends Object3D {
     }
 
     public regenerateMesh(box: Box2, arrowPoint: Vector3, opt?: WordBubbleOptions) {
-        if (this._shapeMesh) {
-            this.remove(this._shapeMesh);
-            this._shapeGeometry.dispose();
-            this._shapeMeshMaterial.dispose();
-            this._shapeMesh = null;
-        }
-
         if (opt) {
             // Merge values of provied options into internal options.
             this._options = merge(this._options, opt);
@@ -114,8 +107,6 @@ export class WordBubble3D extends Object3D {
         // Material for word bubble.
         this._shapeMeshMaterial = new MeshBasicMaterial({
             side: DoubleSide,
-            // depthWrite: false,
-            // depthTest: false,
             color: this._options.color
         });
 

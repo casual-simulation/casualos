@@ -29,12 +29,12 @@ export class BrowserCausalTreeStore implements CausalTreeStore {
             await this._db.atoms.where('tree').equals(id).delete();
             
             if (upgraded.weave) {
-                await this.add(id, upgraded.weave);
+                await this.add(id, upgraded.weave, false);
             }
         }
     }
     
-    async get<T extends AtomOp>(id: string): Promise<StoredCausalTree<T>> {
+    async get<T extends AtomOp>(id: string, archived?: boolean): Promise<StoredCausalTree<T>> {
         const value = await this._db.trees.get(id);
 
         if (!value) {
@@ -42,9 +42,17 @@ export class BrowserCausalTreeStore implements CausalTreeStore {
         }
 
         if (typeof value.wrapperVersion === 'undefined') {
-            const stored = await this._db.atoms.where('tree')
-                .equals(id)
-                .toArray();
+            const query = await this._db.atoms.where('tree')
+                .equals(id);
+            let stored: StoredAtom<T>[];
+
+            if (typeof archived !== 'undefined') {
+                stored = await query.filter(a => a.archived === archived)
+                    .toArray();
+            } else {
+                stored = await query.toArray();
+            }
+                
             const atoms = stored.map(a => a.atom);
 
             return {
@@ -59,9 +67,10 @@ export class BrowserCausalTreeStore implements CausalTreeStore {
         }
     }
 
-    async add<T extends AtomOp>(id: string, atoms: Atom<T>[]): Promise<void> {
+    async add<T extends AtomOp>(id: string, atoms: Atom<T>[], archived: boolean = false): Promise<void> {
         const stored = atoms.map(a => ({
             id: `${id}:${atomIdToString(a.id)}`,
+            archived: archived,
             tree: id,
             atom: a,
         }));
@@ -72,6 +81,7 @@ export class BrowserCausalTreeStore implements CausalTreeStore {
 interface StoredAtom<T extends AtomOp> {
     tree: string;
     atom: Atom<T>;
+    archived: boolean;
 }
 
 type StoredTree<T extends AtomOp> = StoredTreeVersion1<T>;
@@ -91,6 +101,12 @@ class CausalTreeDatabase extends Dexie {
 
     constructor() {
         super('AuxCausalTrees');
+
+        this.version(2).stores({
+            'trees': 'id,site.id',
+            'atoms': 'id,tree,atom.id.timestamp,atom.id.site,archived'
+        });
+
         this.version(1).stores({
             'trees': 'id,site.id',
             'atoms': 'id,tree,atom.id.timestamp,atom.id.site'

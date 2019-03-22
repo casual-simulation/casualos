@@ -1,10 +1,10 @@
 import { AtomOp } from "./Atom";
-import { CausalTree } from "./CausalTree";
+import { CausalTree, CausalTreeOptions } from "./CausalTree";
 import { SiteInfo } from "./SiteIdInfo";
 import { StoredCausalTree } from "./StoredCausalTree";
 
 export interface CausalTreeFactoryMap {
-    [type: string]: (tree: StoredCausalTree<AtomOp> | null) => CausalTree<AtomOp, any, any>;
+    [type: string]: (tree: StoredCausalTree<AtomOp> | null, options: CausalTreeOptions) => CausalTree<AtomOp, any, any>;
 }
 
 /**
@@ -23,10 +23,10 @@ export class CausalTreeFactory {
      * @param type The type of tree to create.
      * @param site The info of the site.
      */
-    create(type: string, storedTree?: StoredCausalTree<AtomOp>): CausalTree<AtomOp, any, any> {
+    create(type: string, storedTree?: StoredCausalTree<AtomOp>, options?: CausalTreeOptions): CausalTree<AtomOp, any, any> {
         const factory = this._map[type];
         if (factory) {
-            return factory(storedTree);
+            return factory(storedTree, options);
         } else {
             return null;
         }
