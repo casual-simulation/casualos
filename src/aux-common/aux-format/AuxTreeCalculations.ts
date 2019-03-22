@@ -20,6 +20,7 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
     const stateDiffs = tree.onUpdated.pipe(
         startWith(tree.tree.weave.atoms),
         map(events => {
+            let addedIds: { [key: string]: boolean } = {};
             let addedFiles: AuxFile[] = [];
             let updatedFiles: AuxState = {};
             let deletedFiles: string[] = [];
@@ -27,8 +28,10 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
                 if (e.value.type === AuxOpType.file) {
                     const id = e.value.id;
                     const val = tree.tree.value[id];
-                    if (val) {
+                    const existing = addedIds[id];
+                    if (!existing && val) {
                         addedFiles.push(val);
+                        addedIds[id] = true;
                     }
                     return;
                 } else if(e.value.type === AuxOpType.delete) {
