@@ -102,6 +102,15 @@ class CausalTreeDatabase extends Dexie {
     constructor() {
         super('AuxCausalTrees');
 
+        this.version(3).stores({
+            'trees': 'id,site.id',
+            'atoms': 'id,tree,atom.id.timestamp,atom.id.site,archived'
+        }).upgrade(trans => {
+            return trans.table<StoredAtom<any>, string>('atoms').toCollection().modify(atom => {
+                atom.archived = !!atom.archived;
+            });
+        });
+
         this.version(2).stores({
             'trees': 'id,site.id',
             'atoms': 'id,tree,atom.id.timestamp,atom.id.site,archived'
