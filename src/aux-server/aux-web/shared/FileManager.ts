@@ -134,7 +134,7 @@ export class FileManager {
     if (!this._appManager.user) {
       return;
     }
-    var objs = this.objects.filter(o => o.id === this._appManager.user.username);
+    var objs = this.objects.filter(o => o.id === this._appManager.user.id);
     if (objs.length > 0) {
       return objs[0];
     }
@@ -463,7 +463,7 @@ export class FileManager {
     const userContext = `_user_${appManager.user.username}_${this._aux.tree.site.id}`;
     const userInventoryContext = `_user_${appManager.user.username}_${this._aux.tree.site.id}_inventory`;
     if (!userFile) {
-      await this.createFile(this._appManager.user.username, {
+      await this.createFile(this._appManager.user.id, {
         [userContext]: true,
         ['aux.builder.context']: userContext,
         _user: this._appManager.user.username,

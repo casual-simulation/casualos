@@ -414,6 +414,7 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private async _fileAdded(file: AuxFile) {
+        console.log(`[GameView] File Added`, file.id);
         let context = new BuilderGroup3D(file, this._decoratorFactory);
         context.setGridChecker(this._gridChecker);
         this._contexts.push(context);

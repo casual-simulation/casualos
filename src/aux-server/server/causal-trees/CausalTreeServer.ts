@@ -15,6 +15,7 @@ export class CausalTreeServer {
     private _treeStore: CausalTreeStore;
     private _factory: CausalTreeFactory;
     private _treeList: TreeMap;
+    private _treePromises: TreePromises;
 
     /**
      * Creates a new causal tree factory that uses the given socket server, tree store, and tree factory.
@@ -27,6 +28,7 @@ export class CausalTreeServer {
         this._treeStore = treeStore;
         this._factory = causalTreeFactory;
         this._treeList = {};
+        this._treePromises = {};
 
         this._init();
     }
@@ -45,6 +47,15 @@ export class CausalTreeServer {
 
                     const tree = await this._getTree(info);
                     
+                    const sub2 = tree.atomsArchived.pipe(
+                        bufferTime(1000),
+                        filter(batch => batch.length > 0),
+                        flatMap(batch => batch),
+                        flatMap(async refs => {
+                            const atoms = refs.map(r => r);
+                            await this._treeStore.add(info.id, atoms, true);
+                        })
+                    ).subscribe(null, err => console.error(err));
 
                     const sub = tree.atomAdded.pipe(
                         bufferTime(1000),
@@ -52,8 +63,10 @@ export class CausalTreeServer {
                         flatMap(batch => batch),
                         flatMap(async refs => {
                             const atoms = refs.map(r => r);
-                            await this._treeStore.add(info.id, atoms);
-                            await this._treeStore.put(info.id, tree.export(), false);
+                            await this._treeStore.add(info.id, atoms, false);
+                            let stored = tree.export();
+                            stored.weave = [];
+                            await this._treeStore.put(info.id, stored, false);
                         })
                     ).subscribe(null, err => console.error(err));
 
@@ -103,11 +116,14 @@ export class CausalTreeServer {
                     });
 
                     socket.on(`weave_${info.id}`, (event: StoredCausalTree<AtomOp>, callback: (resp: StoredCausalTree<AtomOp>) => void) => {
-                        console.log(`[CausalTreeServer] Exchanging Weaves for tree (${info.id}).`);
-                        const imported = tree.import(event);
-                        console.log(`[CausalTreeServer] Imported ${imported.length} atoms.`);
-
-                        this._treeStore.add(info.id, imported);
+                        try {
+                            console.log(`[CausalTreeServer] Exchanging Weaves for tree (${info.id}).`);
+                            const imported = tree.import(event);
+                            console.log(`[CausalTreeServer] Imported ${imported.length} atoms.`);
+                            this._treeStore.add(info.id, imported);
+                        } catch(e) {
+                            console.log('[CausalTreeServer] Could not import atoms from remote.', e);
+                        }
 
                         // TODO: If a version is provided then we should
                         // return only the atoms that are needed to sync.
@@ -134,42 +150,70 @@ export class CausalTreeServer {
     private async _getTree(info: RealtimeChannelInfo): Promise<CausalTree<AtomOp, any, any>> {
         let tree = this._treeList[info.id];
         if (!tree) {
-            console.log(`[CausalTreeServer] Getting tree (${info.id}) from database...`);
-            const stored = await this._treeStore.get<AtomOp>(info.id);
-            if (stored) {
-                console.log(`[CausalTreeServer] Building from stored tree (version ${stored.formatVersion})...`);
-                tree = this._factory.create(info.type, stored, { garbageCollect: true });
-                console.log(`[CausalTreeServer] ${tree.weave.atoms.length} atoms loaded.`);
-            } else {
-                console.log(`[CausalTreeServer] Creating new...`);
-                tree = this._factory.create(info.type, storedTree(site(1)));
-                if (!info.bare) {
-                    tree.root();
-                    console.log(`[CausalTreeServer] Storing initial tree version...`);
-                    await this._treeStore.put(info.id, tree.export(), true);
-                } else {
-                    console.log(`[CausalTreeServer] Skipping root node because a bare tree was requested.`);
-                }
-            }
-            
-            if (stored.formatVersion < currentFormatVersion) {
-                // Update the stored data
-                console.log(`[CausalTreeServer] Updating stored atoms from ${stored.formatVersion} to ${currentFormatVersion}...`);
-                await this._treeStore.put(info.id, tree.export(), true);
+            let promise = this._treePromises[info.id];
+            if (!promise) {
+                promise = this._getTreePromise(info);
+                this._treePromises[info.id] = promise;
             }
 
-            this._treeList[info.id] = tree;
-            console.log(`[CausalTreeServer] Done.`);
+            return await promise;
         }
 
         return tree;
     }
 
+    private async _getTreePromise(info: RealtimeChannelInfo): Promise<CausalTree<AtomOp, any, any>> {
+        let tree: CausalTree<AtomOp, any, any>;
+        console.log(`[CausalTreeServer] Getting tree (${info.id}) from database...`);
+        const stored = await this._treeStore.get<AtomOp>(info.id, false);
+        if (stored) {
+            console.log(`[CausalTreeServer] Building from stored tree (version ${stored.formatVersion})...`);
+            tree = this._factory.create(info.type, storedTree(site(1)), { garbageCollect: true });
+
+            const sub = tree.atomsArchived.pipe(
+                flatMap(async refs => {
+                    console.log(`[CausalTreeServer] Archiving ${refs.length} atoms...`);
+                    const atoms = refs.map(r => r);
+                    await this._treeStore.add(info.id, atoms, true);
+                })
+            ).subscribe(null, err => console.error(err));
+
+            const loaded = tree.import(stored);
+            sub.unsubscribe();
+            console.log(`[CausalTreeServer] ${loaded.length} atoms loaded.`);
+
+            if (stored.formatVersion < currentFormatVersion) {
+                // Update the stored data
+                console.log(`[CausalTreeServer] Updating stored atoms from ${stored.formatVersion} to ${currentFormatVersion}...`);
+                await this._treeStore.put(info.id, tree.export(), true);
+            }
+        } else {
+            console.log(`[CausalTreeServer] Creating new...`);
+            tree = this._factory.create(info.type, storedTree(site(1)));
+            if (!info.bare) {
+                tree.root();
+                console.log(`[CausalTreeServer] Storing initial tree version...`);
+                await this._treeStore.put(info.id, tree.export(), true);
+            } else {
+                console.log(`[CausalTreeServer] Skipping root node because a bare tree was requested.`);
+            }
+        }
+
+        this._treeList[info.id] = tree;
+        console.log(`[CausalTreeServer] Done.`);
+        return tree;
+    }
+
 }
+
 
 /**
  * Defines a list of causal trees mapped by their channel IDs.
  */
 export interface TreeMap {
     [key: string]: CausalTree<AtomOp, any, any>;
+}
+
+export interface TreePromises {
+    [key: string]: Promise<CausalTree<AtomOp, any, any>>;
 }

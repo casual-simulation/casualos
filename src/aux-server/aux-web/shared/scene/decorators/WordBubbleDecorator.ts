@@ -21,7 +21,7 @@ export class WordBubbleDecorator extends AuxFile3DDecorator {
         super(file3D);
         this._elements = elements;
 
-        this.wordBubble = new WordBubble3D({cornerRadius: 0});
+        this.wordBubble = new WordBubble3D();
         setLayer(this.wordBubble, LayersHelper.Layer_UIWorld, true);
         this.file3D.add(this.wordBubble);
         this.wordBubble.visible = false;

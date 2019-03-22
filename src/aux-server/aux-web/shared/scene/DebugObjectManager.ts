@@ -3,6 +3,7 @@ import { remove as lodashRemove } from 'lodash';
 import { setLayer } from "./SceneUtils";
 import { LayersHelper } from "./LayersHelper";
 import { Time } from "./Time";
+import { getOptionalValue } from "../SharedUtils";
 
 /**
  * A helper module from drawing THREE objects to the scene that are useful for visual debugging.
@@ -107,10 +108,6 @@ export namespace DebugObjectManager {
         let killTime = getOptionalValue(duration, _time.timeSinceStart);
         let debugObjPosition = new DebugObjectPosition(killTime, _scene, object3d, world, pointSize, pointColor, depth);
         _debugObjects.push(debugObjPosition);
-    }
-
-    function getOptionalValue(obj: any, defaultValue: any): any {
-        return (obj !== undefined && obj !== null) ? obj : defaultValue;
     }
 
     function hasValue(obj: any): boolean {

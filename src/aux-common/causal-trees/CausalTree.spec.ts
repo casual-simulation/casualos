@@ -368,6 +368,22 @@ describe('CausalTree', () => {
             ]);
             expect(tree1.value).toBe(1);
         });
+
+        it('should not import atoms if they are invalid', () => {
+            const reducer = new Reducer();
+            let tree1 = new CausalTree(storedTree(site(1)), reducer);
+
+            const root = tree1.factory.create(new Op(), null);
+            tree1.add(root);
+
+            const add1 = atom(atomId(2, 10), root.id, new Op(OpType.add));
+            const add2 = atom(atomId(2, 11), root.id, new Op(OpType.add));
+            const sub = atom(atomId(2, 12), add2.id, new Op(OpType.subtract));
+
+            expect(() => {
+                tree1.importWeave([root, add1, add2, sub]);
+            }).toThrow(/not valid/i);
+        });
     });
 
     describe('knownSites', () => {

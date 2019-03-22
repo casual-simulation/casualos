@@ -14,6 +14,7 @@ import Dexie from 'dexie';
 import { difference } from 'lodash';
 
 export interface User {
+    id: string;
     email: string;
     username: string;
     name: string;
@@ -261,9 +262,14 @@ export class AppManager {
         const user: StoredValue<User> = await this._db.keyval.get('user');
 
         if (user) {
-            this._user = user.value;
-            await this._fileManager.init(this._user.channelId);
-            this._userSubject.next(this._user);
+            if (user.value.id) {
+                this._user = user.value;
+                await this._fileManager.init(this._user.channelId);
+                this._userSubject.next(this._user);
+            } else {
+                this._user = null;
+                await this._saveUser();
+            }
         }
     }
 

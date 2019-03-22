@@ -208,15 +208,31 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * Imports the given list of weave references into the tree.
      * The references are expected to be sorted as a valid weave and also to match
      * @param refs The references to import.
+     * @param validate Whether to validate the incoming weave.
      */
-    importWeave<T extends TOp>(refs: Atom<T>[]): Atom<TOp>[] {
+    importWeave<T extends TOp>(refs: Atom<T>[], validate: boolean = true): Atom<TOp>[] {
+
+        if (validate) {
+            let weave = new Weave<T>();
+            weave.import(refs);
+            if (!weave.isValid()) {
+                throw new Error('[CausalTree] Imported references are not valid.');
+            }
+        }
+
         const newAtoms = this.weave.import(refs);
         const sortedAtoms = sortBy(newAtoms, a => a.id.timestamp);
         for (let i = 0; i < sortedAtoms.length; i++) {
             const atom = sortedAtoms[i];
             this.factory.updateTime(atom);
         }
+        // if (!this.weave.isValid()) {
+        //     throw new Error('[CausalTree] Tree became invalid after import.');
+        // }
         this.triggerGarbageCollection(newAtoms);
+        // if (!this.weave.isValid()) {
+        //     throw new Error('[CausalTree] Tree became invalid after garbage collection.');
+        // }
         [this._value, this._metadata] = this._calculateValue(newAtoms);
         return newAtoms;
     }

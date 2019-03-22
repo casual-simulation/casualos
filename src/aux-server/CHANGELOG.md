@@ -1,5 +1,18 @@
 # AUX Server Changelog
 
+## V0.3.15
+### Date: 3/22/2019
+
+### Changes:
+- Bug Fixes
+    - Fixed an issue that prevented users from creating new simulations.
+    - Fixed an issue that caused duplicate files to be created in the game view.
+    - Fixed issues with logging in as the same user from different devices.
+- Other Improvements
+    - Improved word bubble performance.
+    - Improved performance when loading large causal trees.
+    - Added additional validations when importing trees to prevent errors down the road.
+
 ## V0.3.14
 ### Date: 3/22/2019
 
