@@ -1,6 +1,6 @@
 {
   "name": "@yeti-cgi/aux-common",
-  "version": "0.3.15",
+  "version": "0.3.16",
   "description": "Common library for AUX projects",
   "main": "index.js",
   "types": "index.d.ts",
