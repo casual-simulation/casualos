@@ -1,5 +1,16 @@
 # AUX Server Changelog
 
+## V0.3.16
+### Date: 3/22/2019
+
+### Changes:
+- Bug Fixes
+    - Fixed an issue that would cause two browser tabs to go to war over which was the real tab for that user.
+    - Fixed an issue that would cause two browser tabs to potentially become inconsistent with each other because they were sharing the same site ID.
+- Other Changes
+    - Added a couple extra logs to MongoDBTreeStore.
+    - Added additional safegards against invalid events.
+
 ## V0.3.15
 ### Date: 3/22/2019
 
