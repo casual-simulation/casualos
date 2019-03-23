@@ -220,11 +220,11 @@ export default class GameView extends Vue implements IGameView {
         this._time.update();
 
         if (this.vrDisplay && this.vrDisplay.isPresenting) {
-            this.vrDisplay.requestAnimationFrame(() => this._frameUpdate(calc));
+            this.vrDisplay.requestAnimationFrame(() => this._frameUpdate());
         } else if (this.xrSession) {
             this.xrSession.requestFrame((nextXRFrame: any) => this._frameUpdate(nextXRFrame));
         } else {
-            requestAnimationFrame(() => this._frameUpdate(calc));
+            requestAnimationFrame(() => this._frameUpdate());
         }
 
     }
