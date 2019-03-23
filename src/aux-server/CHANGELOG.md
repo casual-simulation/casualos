@@ -1,5 +1,12 @@
 # AUX Server Changelog
 
+## V0.3.17
+### Date: 3/22/2019
+
+### Changes:
+- Bug Fixes
+    - Fixed so that updates are only sent every 1/2 second instead of up to every frame.
+
 ## V0.3.16
 ### Date: 3/22/2019
 
