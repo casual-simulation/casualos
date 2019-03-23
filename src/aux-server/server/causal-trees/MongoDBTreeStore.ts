@@ -65,10 +65,12 @@ export class MongoDBTreeStore implements CausalTreeStore {
             console.log(`[MongoDBTreeStore] Wrapper version 2 tree found, loading atoms...`);
             let atoms: Atom<T>[];
             if (typeof archived === 'undefined') {
+                console.log('[MongoDBTreeStore] Loading all atoms...');
                 atoms = await this._atoms.find<AtomWrapper<T>>({ tree: id })
                     .map(a => a.atom)
                     .toArray();
             } else {
+                console.log(`[MongoDBTreeStore] Loading all archived == ${archived} atoms...`);
                 atoms = await this._atoms.find<AtomWrapper<T>>({ tree: id, archived: archived })
                     .map(a => a.atom)
                     .toArray();
