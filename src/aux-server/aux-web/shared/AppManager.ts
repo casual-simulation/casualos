@@ -260,13 +260,28 @@ export class AppManager {
             });
         });
 
-        const user: StoredValue<User> = await this._db.keyval.get('user');
+        let userJson = sessionStorage.getItem('user');
+        let user: User; 
+        let session: boolean = false;
+        if (userJson) {
+            user = JSON.parse(userJson);
+            session = true;
+        } else {
+            const storedUser: StoredValue<User> = await this._db.keyval.get('user');
+            if (storedUser) {
+                user = storedUser.value;
+                session = false;
+            }
+        }
 
         if (user) {
-            if (user.value.id) {
-                this._user = user.value;
-                this._user.id = uuid();
+            if (user.id) {
+                this._user = user;
+                if (!session) {
+                    this._user.id = uuid();
+                }
                 await this._fileManager.init(this._user.channelId);
+                await this._saveUser();
                 this._userSubject.next(this._user);
             } else {
                 this._user = null;
@@ -277,6 +292,7 @@ export class AppManager {
 
     private async _saveUser() {
         if (this.user) {
+            sessionStorage.setItem('user', JSON.stringify(this.user));
             await this._db.keyval.put({ key: 'user', value: this.user });
         } else {
             await this._db.keyval.delete('user');
