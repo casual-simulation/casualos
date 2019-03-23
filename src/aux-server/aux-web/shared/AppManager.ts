@@ -295,6 +295,7 @@ export class AppManager {
             sessionStorage.setItem('user', JSON.stringify(this.user));
             await this._db.keyval.put({ key: 'user', value: this.user });
         } else {
+            sessionStorage.removeItem('user');
             await this._db.keyval.delete('user');
         }
     }
