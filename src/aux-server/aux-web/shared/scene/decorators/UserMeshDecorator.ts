@@ -28,12 +28,22 @@ export const DEFAULT_USER_ACTIVE_CHECK_INTERVAL = 1000 * 10;
 /**
  * The distance that the user needs to move before updating their position.
  */
-export const DEFAULT_USER_MOVEMENT_INCREMENT = 0.1;
+export const DEFAULT_USER_MOVEMENT_INCREMENT = 0.5;
 
 /**
  * The angle that the user needs to rotate before updating their position.
  */
-export const DEFAULT_USER_ROTATION_INCREMENT = 1 * (Math.PI / 180);
+export const DEFAULT_USER_ROTATION_INCREMENT = 2 * (Math.PI / 180);
+
+/**
+ * The number of updates per second that the user mesh is allowed to make.
+ */
+export const MAX_UPDATE_RATE = 2;
+
+/**
+ * The number of miliseconds to wait between updates in order to not violate MAX_UPDATE_RATE.
+ */
+export const TIME_BETWEEN_UPDATES = 1000 / MAX_UPDATE_RATE;
 
 /**
  * Defines a class that represents a mesh for an "user" file.
@@ -41,6 +51,7 @@ export const DEFAULT_USER_ROTATION_INCREMENT = 1 * (Math.PI / 180);
 export class UserMeshDecorator extends AuxFile3DDecorator {
 
     private _lastActiveCheckTime: number;
+    private _lastPositionUpdateTime: number = -1000;
 
     /**
      * The aux file 3d that this decorator is for.
@@ -110,29 +121,33 @@ export class UserMeshDecorator extends AuxFile3DDecorator {
             this._isActive());
 
         if (isOwnFile) {
-            const camPosition = this._mainCamera.position;
-            const camRotation = this._mainCamera.rotation;
-            const camRotationVector = new Vector3(0, 0, 1).applyEuler(camRotation);
-            const currentPosition = this.file3D.display.position;
-            const currentRotation = this.file3D.display.rotation;
+            const time = Date.now();
+            if (time > this._lastPositionUpdateTime + TIME_BETWEEN_UPDATES) {
+                const camPosition = this._mainCamera.position;
+                const camRotation = this._mainCamera.rotation;
+                const camRotationVector = new Vector3(0, 0, 1).applyEuler(camRotation);
+                const currentPosition = this.file3D.display.position;
+                const currentRotation = this.file3D.display.rotation;
 
-            const currentRotationVector = new Vector3(0, 0, 1).applyEuler(currentRotation);
-            const distance = camPosition.distanceTo(new Vector3(currentPosition.x, currentPosition.y, currentPosition.z));
-            const angle = camRotationVector.angleTo(currentRotationVector);
-            if (distance > DEFAULT_USER_MOVEMENT_INCREMENT || angle > DEFAULT_USER_ROTATION_INCREMENT) {
-                appManager.fileManager.updateFile(file, {
-                    tags: {
-                        [`${this.file3D.context}.x`]: camPosition.x,
+                const currentRotationVector = new Vector3(0, 0, 1).applyEuler(currentRotation);
+                const distance = camPosition.distanceTo(new Vector3(currentPosition.x, currentPosition.y, currentPosition.z));
+                const angle = camRotationVector.angleTo(currentRotationVector);
+                if (distance > DEFAULT_USER_MOVEMENT_INCREMENT || angle > DEFAULT_USER_ROTATION_INCREMENT) {
+                    this._lastPositionUpdateTime = time;
+                    appManager.fileManager.updateFile(file, {
+                        tags: {
+                            [`${this.file3D.context}.x`]: camPosition.x,
 
-                        // Mirror the Y coordinate so it works with ContextPositionDecorator
-                        [`${this.file3D.context}.y`]: -camPosition.z,
+                            // Mirror the Y coordinate so it works with ContextPositionDecorator
+                            [`${this.file3D.context}.y`]: -camPosition.z,
 
-                        [`${this.file3D.context}.z`]: camPosition.y,
-                        [`${this.file3D.context}.rotation.x`]: camRotation.x,
-                        [`${this.file3D.context}.rotation.y`]: camRotation.z,
-                        [`${this.file3D.context}.rotation.z`]: camRotation.y,
-                    }
-                });
+                            [`${this.file3D.context}.z`]: camPosition.y,
+                            [`${this.file3D.context}.rotation.x`]: camRotation.x,
+                            [`${this.file3D.context}.rotation.y`]: camRotation.z,
+                            [`${this.file3D.context}.rotation.z`]: camRotation.y,
+                        }
+                    });
+                }
             }
 
             this._checkIsActive();
