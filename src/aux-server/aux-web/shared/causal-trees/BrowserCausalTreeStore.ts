@@ -106,6 +106,7 @@ class CausalTreeDatabase extends Dexie {
             'trees': 'id,site.id',
             'atoms': 'id,tree,atom.id.timestamp,atom.id.site,archived'
         }).upgrade(trans => {
+            console.log('[BrowserCausalTreeStore] Upgrading database to version 3...');
             return trans.table<StoredAtom<any>, string>('atoms').toCollection().modify(atom => {
                 atom.archived = !!atom.archived;
             });
