@@ -1,5 +1,16 @@
 # AUX Server Changelog
 
+## V0.3.18
+### Date: 3/23/2019
+
+### Changes:
+- Bug Fixes
+    - Fixed so that users can actually log out.
+    - Fixed AR mode in AUX Player.
+- Other Improvements
+    - Added a progress spinner to the login pages.
+    - Added lerping to the user meshes so the position updates look more natural.
+
 ## V0.3.17
 ### Date: 3/22/2019
 
