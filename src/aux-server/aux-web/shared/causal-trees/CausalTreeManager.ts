@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 import { WorkerEvent, ValueCalculated } from './WorkerEvents';
 import { SubscriptionLike, Subject, Observable } from 'rxjs';
 import { first, map, filter, tap } from 'rxjs/operators';
-import { AtomOp, RealtimeChannelInfo, PrecalculatedOp, RealtimeCausalTree, CausalTree, RealtimeChannel, CausalTreeFactory, CausalTreeStore, Atom, CausalTreeOptions } from '@yeti-cgi/aux-common/causal-trees';
+import { AtomOp, RealtimeChannelInfo, PrecalculatedOp, RealtimeCausalTree, CausalTree, RealtimeChannel, CausalTreeFactory, CausalTreeStore, Atom, CausalTreeOptions, RealtimeCausalTreeOptions } from '@yeti-cgi/aux-common/causal-trees';
 import { SocketIOConnection } from './SocketIOConnection';
 import { auxCausalTreeFactory } from '@yeti-cgi/aux-common';
 import { BrowserCausalTreeStore } from './BrowserCausalTreeStore';
@@ -59,7 +59,7 @@ export class CausalTreeManager implements SubscriptionLike {
      * @param info The info that identifies the tree that should be retrieved or created.
      * @param options The options that should be used for the tree.
      */
-    async getTree<TTree extends CausalTree<AtomOp, any, any>>(info: RealtimeChannelInfo, options?: CausalTreeOptions): Promise<RealtimeCausalTree<TTree>> {
+    async getTree<TTree extends CausalTree<AtomOp, any, any>>(info: RealtimeChannelInfo, options?: RealtimeCausalTreeOptions): Promise<RealtimeCausalTree<TTree>> {
         let realtime = <RealtimeCausalTree<TTree>>this._trees[info.id];
         if (!realtime) {
             let connection = new SocketIOConnection(this._socket);

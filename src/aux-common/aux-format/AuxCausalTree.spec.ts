@@ -473,6 +473,7 @@ describe('AuxCausalTree', () => {
                     test,
                     testVal2
                 ]);
+                expect(tree.weave.isValid()).toBe(true);
             });
 
             it('should collect garbage after addMany()', () => {
@@ -500,6 +501,7 @@ describe('AuxCausalTree', () => {
                     test,
                     testVal2
                 ]);
+                expect(tree.weave.isValid()).toBe(true);
             });
 
             it('should collect garbage after importWeave()', () => {
@@ -528,6 +530,7 @@ describe('AuxCausalTree', () => {
                     test,
                     testVal2
                 ]);
+                expect(other.weave.isValid()).toBe(true);
             });
 
             it('should collect garbage during creation', () => {
@@ -557,6 +560,7 @@ describe('AuxCausalTree', () => {
                     test,
                     testVal2
                 ]);
+                expect(other.weave.isValid()).toBe(true);
             });
 
             it('should emit atomsArchived events after GC', () => {
@@ -585,6 +589,7 @@ describe('AuxCausalTree', () => {
                     testVal1,
                     test2Val1
                 ]);
+                expect(tree.weave.isValid()).toBe(true);
             });
 
             it('should emit atomsArchived events after batched GC', () => {
@@ -613,7 +618,11 @@ describe('AuxCausalTree', () => {
                 expect(archived).toEqual([
                     testVal1
                 ]);
+
+                expect(tree.weave.isValid()).toBe(true);
             });
+
+            // it('should produce a consistent weave ')
         });
 
         describe('metadata', () => {

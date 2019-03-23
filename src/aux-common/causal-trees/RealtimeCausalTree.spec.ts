@@ -129,6 +129,15 @@ describe('RealtimeCausalTree', () => {
     });
 
     describe('connected without existing tree', () => {
+        let spy: jest.SpyInstance<any>;
+        beforeAll(() => {
+            spy = jest.spyOn(console, 'log').mockImplementation(() => {});
+        });
+
+        afterAll(() => {
+            spy.mockRestore();
+        });
+
         it('should request the next ID if no tree is stored', async () => {
             allowSiteId.push(true);
 
@@ -235,6 +244,14 @@ describe('RealtimeCausalTree', () => {
     });
 
     describe('connected with existing tree', () => {
+        let spy: jest.SpyInstance<any>;
+        beforeAll(() => {
+            spy = jest.spyOn(console, 'log').mockImplementation(() => {});
+        });
+
+        afterAll(() => {
+            spy.mockRestore();
+        });
 
         describe('version 1', () => {
             it('should import the version 1 weave from the store', async () => {
@@ -350,6 +367,15 @@ describe('RealtimeCausalTree', () => {
     });
 
     describe('reconnect', () => {
+        let spy: jest.SpyInstance<any>;
+        beforeAll(() => {
+            spy = jest.spyOn(console, 'log').mockImplementation(() => {});
+        });
+
+        afterAll(() => {
+            spy.mockRestore();
+        });
+
         it('should request and import the remote weave', async () => {
             let localWeave = new Weave<Op>();
             localWeave.insert(atom(atomId(1, 0), null, new Op()));
@@ -484,6 +510,14 @@ describe('RealtimeCausalTree', () => {
     });
 
     describe('events', () => {
+        let spy: jest.SpyInstance<any>;
+        beforeAll(() => {
+            spy = jest.spyOn(console, 'log').mockImplementation(() => {});
+        });
+
+        afterAll(() => {
+            spy.mockRestore();
+        });
         it('should try to insert new atoms into the tree', async () => {
             let weave = new Weave<Op>();
 

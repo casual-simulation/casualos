@@ -1,4 +1,4 @@
-import { Atom, AtomId, AtomOp, idEquals, atomIdToString } from "./Atom";
+import { Atom, AtomId, AtomOp, idEquals, atomIdToString, atomId } from "./Atom";
 import { keys } from "lodash";
 import { WeaveVersion, WeaveSiteVersion } from "./WeaveVersion";
 import { getHash } from './Hash';
@@ -323,6 +323,14 @@ export class Weave<TOp extends AtomOp> {
                     }
                 }
 
+                const exists = this.getAtom(a.id);
+                if (exists && a.checksum !== exists.checksum) {
+                    // Break because the atoms aren't actually the same
+                    // even though they claim to be
+                    console.warn(`[Weave] Atom ${atomIdToString(a.id)} rejected because its checksum didn't match the existing atom (${a.checksum} !== ${exists.checksum})`);
+                    break;
+                }
+
                 let order = this._compareAtoms(a, local);
                 if (isNaN(order)) {
                     break;
@@ -406,9 +414,20 @@ export class Weave<TOp extends AtomOp> {
             const child = this._atoms[i];
             let parent = parents[0];
 
+            const existing = this.getAtom(child.id);
+            if (!existing) {
+                console.warn(`[Weave] Invalid tree. ${atomIdToString(child.id)} was not able to be found by its ID. This means the site cache is out of date.`);
+                return false;
+            } else if (child.checksum !== existing.checksum) {
+                console.warn(`[Weave] Invalid tree. There is a duplicate ${atomIdToString(child.id)} in the tree. Checksums did not match.`);
+                return false;
+            }
+
             if (idEquals(child.cause, parent.cause)) {
+                const order = this._compareAtoms(child, parent);
+
                 // siblings
-                if (child.id.timestamp > parent.id.timestamp) {
+                if (order < 0) {
                     console.warn(`[Weave] Invalid tree. ${atomIdToString(child.id)} says it happened before its sibling (${parent.id}) that occurred before it in the tree.`);
                     return false;
                 }

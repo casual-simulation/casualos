@@ -5,6 +5,7 @@ import { Weave } from './Weave';
 import { site } from './SiteIdInfo';
 import { storedTree, StoredCausalTreeVersion1, StoredCausalTree, StoredCausalTreeVersion2, StoredCausalTreeVersion3, currentFormatVersion } from "./StoredCausalTree";
 import { precalculatedOp } from "./PrecalculatedOp";
+import { jestPreset } from "ts-jest";
 
 enum OpType {
     root = 0,
@@ -126,6 +127,70 @@ describe('CausalTree', () => {
             expect(refs).toEqual([
                 [root, child]
             ]);
+        });
+    });
+
+    describe('addMany()', () => {
+        it('should produce a consistent weave from randomly sorted atoms', () => {
+            let tree1 = new CausalTree(storedTree(site(1)), new Reducer());
+            let atoms: Atom<Op>[] = [];
+            for (let i = 0; i < 1000; i++) {
+                let cause = null;
+                if (i !== 0) {
+                    const random = Math.round(Math.random() * (atoms.length - 1));
+                    cause = atoms[random];
+                    atoms.push(tree1.factory.create(new Op(), cause.id));
+                } else {
+                    atoms.push(tree1.factory.create(new Op(), null));
+                }
+            }
+
+            let tree2 = new CausalTree(storedTree(site(2)), new Reducer());
+
+            for(let i = 0; i < atoms.length; i++) {
+                let random = Math.round(Math.random() * (atoms.length - 1));
+                let temp = atoms[random];
+                atoms[random] = atoms[i];
+                atoms[i] = temp;
+            }
+
+            const added = tree2.addMany(atoms);
+
+            expect(tree2.weave.isValid()).toBe(true);
+            expect(added.length).toBe(atoms.length);
+            for(let i = 0; i < atoms.length; i++) {
+                expect(added).toContainEqual(atoms[i]);
+            }
+        });
+
+        it('should produce a consistent weave even if some atoms get dropped', () => {
+            let tree1 = new CausalTree(storedTree(site(1)), new Reducer());
+            let atoms: Atom<Op>[] = [];
+            for (let i = 0; i < 1000; i++) {
+                let cause = null;
+                if (i !== 0) {
+                    const random = Math.round(Math.random() * (atoms.length - 1));
+                    cause = atoms[random];
+                    atoms.push(tree1.factory.create(new Op(), cause.id));
+                } else {
+                    atoms.push(tree1.factory.create(new Op(), null));
+                }
+            }
+
+            let tree2 = new CausalTree(storedTree(site(2)), new Reducer());
+
+            for(let i = 0; i < atoms.length; i++) {
+                let random = Math.round(Math.random() * (atoms.length - 1));
+                let temp = atoms[random];
+                atoms[random] = atoms[i];
+                atoms[i] = temp;
+            }
+
+            let filtered = atoms.filter(a => (Math.round(Math.random() * 2)) % 2 === 0);
+
+            const added = tree2.addMany(filtered);
+
+            expect(tree2.weave.isValid()).toBe(true);
         });
     });
 
@@ -270,6 +335,7 @@ describe('CausalTree', () => {
         });
 
         it('should ignore unknown versions', () => {
+            const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
             let weave = new Weave<Op>();
 
             const a1 = weave.insert(atom(atomId(1, 1), null, new Op()));
@@ -289,6 +355,8 @@ describe('CausalTree', () => {
             const added = tree.import(stored);
 
             expect(added).toEqual([]);
+
+            spy.mockRestore();
         });
     });
 
@@ -370,6 +438,7 @@ describe('CausalTree', () => {
         });
 
         it('should not import atoms if they are invalid', () => {
+            const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
             const reducer = new Reducer();
             let tree1 = new CausalTree(storedTree(site(1)), reducer);
 
@@ -383,6 +452,8 @@ describe('CausalTree', () => {
             expect(() => {
                 tree1.importWeave([root, add1, add2, sub]);
             }).toThrow(/not valid/i);
+
+            spy.mockRestore();
         });
     });
 
