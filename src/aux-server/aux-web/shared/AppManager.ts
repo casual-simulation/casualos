@@ -12,6 +12,7 @@ import { StoredCausalTree } from '@yeti-cgi/aux-common/causal-trees';
 import { AuxOp, FilesState, AuxCausalTree } from '@yeti-cgi/aux-common';
 import Dexie from 'dexie';
 import { difference } from 'lodash';
+import uuid from 'uuid/v4';
 
 export interface User {
     id: string;
@@ -264,6 +265,7 @@ export class AppManager {
         if (user) {
             if (user.value.id) {
                 this._user = user.value;
+                this._user.id = uuid();
                 await this._fileManager.init(this._user.channelId);
                 this._userSubject.next(this._user);
             } else {
