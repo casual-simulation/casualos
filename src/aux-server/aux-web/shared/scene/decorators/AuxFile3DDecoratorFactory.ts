@@ -36,7 +36,7 @@ export class AuxFile3DDecoratorFactory {
 
         decorators.push(
             new ScaleDecorator(file3d),
-            new ContextPositionDecorator(file3d)
+            new ContextPositionDecorator(file3d, { lerp: isUser })
         );
 
         if (!!this.gameView) {
