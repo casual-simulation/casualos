@@ -303,8 +303,7 @@ export class Weave<TOp extends AtomOp> {
                     }
 
                     const exists = this.getAtom(atom.id);
-                    if (exists && atom.checksum !== exists.checksum) {
-                        console.warn(`[Weave] Atom ${atomIdToString(atom.id)} rejected because its checksum didn't match the existing atom (${atom.checksum} !== ${exists.checksum})`);
+                    if (exists) {
                         continue;
                     }
                     

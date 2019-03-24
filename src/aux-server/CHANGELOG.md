@@ -1,5 +1,12 @@
 # AUX Server Changelog
 
+## V0.3.20
+### Date: 3/23/2019
+
+### Changes:
+- Bug Fixes
+    - Fixed another scenario where duplicate atoms could be added to a weave.
+
 ## V0.3.19
 ### Date: 3/23/2019
 
