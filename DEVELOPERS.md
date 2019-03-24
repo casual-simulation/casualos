@@ -56,6 +56,30 @@ Most of them are NPM scripts, so they're easy to run.
 
 You can find other scripts in the `package.json` file at the root of the repository.
 
+## Deployment Process
+
+Making new releases for AUX is pretty simple. All that needs to happen is for the `master` branch to be updated and pushed to Github. From there a webhook is sent to the CI server which instructs it to make a new build and push it to production.
+
+The version number shown in the app is taken from the most recent git tag. We additionally package the git commit hash just in case `master` is pushed multiple times without updating the git tag.
+
+Additionally, the CI server will publish the `aux-common` NPM package whenever the version number in its `package.json` is updated.
+
+**To make a new release, use this process:**
+
+1. Make sure everything you want to release is ready and merged into `develop`.
+2. Update the [CHANGELOG.md](./src/aux-server/CHANGELOG.md) file with the next version number, date, and changes that were made since the last version.
+3. Commit the updated CHANGELOG to the `develop` branch.
+4. Merge the `develop` branch into the `master` branch.
+    - Don't use [fast-forward](https://ariya.io/2013/09/fast-forward-git-merge). (`--no-ff`)
+    - Don't push yet.
+5. Run `lerna version`.
+    - This will look at the changes made and prompt you for the next version number.
+    - In most cases all you need to do is select **patch**.
+    - After confirmation lerna will update the `package.json` version numbers, add a git tag, and push the branch.
+6. You're done.
+    - Sit back and watch the build.
+
+
 ## Tools we use
 
 Here's a list of the tools and packages that we're using to build AUX.
