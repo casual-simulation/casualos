@@ -23,6 +23,7 @@ export default class Welcome extends Vue {
     }
     
     private async _login(email: string) {
+        this.showProgress = true;
         if (await appManager.loginOrCreateUser(email, this.channelId)) {
             this.$router.push({ name: 'home', params: { id: this.channelId || null } });
         } else {
