@@ -73,7 +73,6 @@ export class Weave<TOp extends AtomOp> {
             if (causeIndex < 0 ) {
                 return null;
             }
-            const cause = this.atoms[causeIndex];
             const weaveIndex = this._weaveIndex(causeIndex, atom.id);
             const siteIndex = atom.id.timestamp;
 
@@ -149,13 +148,13 @@ export class Weave<TOp extends AtomOp> {
     }
 
     private _removeSpan(index: number, length: number) {
-        const removed = this._atoms.splice(index, length);
+        let removed = this._atoms.splice(index, length);
         for (let i = removed.length - 1; i >= 0; i--) {
             const r = removed[i];
 
             const chain = this.referenceChain(r);
-            for (let i = 1; i < chain.length; i++) {
-                const id = chain[i].id;
+            for (let b = 1; b < chain.length; b++) {
+                const id = chain[b].id;
                 const current = this.getAtomSize(id);
                 this._sizeMap.set(id, current - 1);
             }
@@ -301,6 +300,12 @@ export class Weave<TOp extends AtomOp> {
                             // an atom without a cause.
                             continue;
                         }
+                    }
+
+                    const exists = this.getAtom(atom.id);
+                    if (exists && atom.checksum !== exists.checksum) {
+                        console.warn(`[Weave] Atom ${atomIdToString(atom.id)} rejected because its checksum didn't match the existing atom (${atom.checksum} !== ${exists.checksum})`);
+                        continue;
                     }
                     
                     this._atoms.push(atom);

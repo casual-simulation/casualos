@@ -622,7 +622,45 @@ describe('AuxCausalTree', () => {
                 expect(tree.weave.isValid()).toBe(true);
             });
 
-            // it('should produce a consistent weave ')
+            it('should handle archiving multiple atoms at the same time', () => {
+                let tree = new AuxCausalTree(storedTree(site(1)));
+
+                tree.garbageCollect = true;
+                
+                let archived: Atom<AuxOp>[] = [];
+                let error = jest.fn();
+                tree.atomsArchived.subscribe(a => {
+                    archived.push(...a);
+                }, error);
+
+                const root = tree.root();
+                const file = tree.file('fileId');
+
+                const test = tree.factory.create(tag('test'), file);
+                const test2 = tree.factory.create(tag('test2'), file);
+                const test3 = tree.factory.create(tag('test3'), file);
+
+                const val2 = tree.factory.create(value('def'), test2);
+                const val1 = tree.factory.create(value('abc'), test);
+                const val3 = tree.factory.create(value('ghi'), test3);
+
+                let newTree = new AuxCausalTree(storedTree(site(2)));
+                newTree.addMany([
+                    val3,
+                    val2,
+                    test3,
+                    test,
+                    test2,
+                    val1,
+                    root,
+                    file
+                ]);
+
+                expect(error).not.toBeCalled();
+                expect(archived).toEqual([]);
+
+                expect(newTree.weave.isValid()).toBe(true);
+            });
         });
 
         describe('metadata', () => {

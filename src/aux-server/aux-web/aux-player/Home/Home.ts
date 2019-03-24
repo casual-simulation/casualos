@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import { Chrome } from 'vue-color';
 import Component from 'vue-class-component';
-import { Inject, Watch } from 'vue-property-decorator';
+import { Inject, Watch, Prop } from 'vue-property-decorator';
 import { 
     Object,
     File,
@@ -21,6 +21,8 @@ import { tap } from 'rxjs/operators';
     },
 })
 export default class Home extends Vue {
+
+    @Prop() context: string;
 
     debug: boolean = false;
 
