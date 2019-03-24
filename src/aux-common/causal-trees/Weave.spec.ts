@@ -1169,6 +1169,48 @@ describe('Weave', () => {
 
             spy.mockRestore();
         });
+        it('should prevent duplicate children from being imported at the end of the weave', () => {
+            const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+            const root = atom(atomId(1, 0), null, new Op());
+            const child1 = atom(atomId(1, 1), atomId(1, 0), new Op());
+            const child2 = atom(atomId(1, 2), atomId(1, 0), new Op());
+            const child3 = atom(atomId(1, 3), atomId(1, 1), new Op());
+            const child6 = atom(atomId(1, 6), atomId(1, 2), new Op());
+            const child7 = atom(atomId(1, 7), atomId(1, 6), new Op());
+
+            const child8 = atom(atomId(1, 8), atomId(1, 2), new Op());
+            const diffChild8 = atom(atomId(1, 8), atomId(1, 7), new Op());
+
+            let final = new Weave<Op>();
+            const added = final.import([
+                root,
+                child2,
+                child8,
+                child6,
+                child7,
+                diffChild8,
+
+                child1,
+                child3
+            ]);
+
+            const expected = [
+                root,
+                child2,
+                child8,
+                child6,
+                child7,
+
+                child1,
+                child3
+            ];
+
+            expect(added).toEqual(expected)
+            expect(final.atoms).toEqual(expected);
+            expect(final.isValid()).toBe(true);
+
+            spy.mockRestore();
+        });
     });
 
     describe('isValid()', () => {
