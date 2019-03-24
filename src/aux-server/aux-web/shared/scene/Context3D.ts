@@ -11,7 +11,7 @@ import { AuxFile3DDecoratorFactory } from "./decorators/AuxFile3DDecoratorFactor
  */
 export class Context3D extends GameObject {
 
-    static debug: boolean = true;
+    static debug: boolean = false;
 
     /**
      * The context that this object represents.
