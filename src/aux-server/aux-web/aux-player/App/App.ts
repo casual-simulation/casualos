@@ -197,9 +197,10 @@ export default class App extends Vue {
     }
     
     logout() {
+        const context = appManager.fileManager.userFile.tags._userContext;
         appManager.logout();
         this.showNavigation = false;
-        this.$router.push({ name: 'login', query: { id: this.session } });
+        this.$router.push({ name: 'login', query: { id: this.session, context: context } });
     }
 
     snackbarClick(action: SnackbarOptions['action']) {
