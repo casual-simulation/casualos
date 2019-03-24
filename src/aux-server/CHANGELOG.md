@@ -1,5 +1,17 @@
 # AUX Server Changelog
 
+## V0.3.19
+### Date: 3/23/2019
+
+### Changes:
+- Bug Fixes
+    - Fixed Weaves to prevent duplicate atoms from being added in specific scenarios.
+        - This would cause peers to reject changes from each other.
+        - If the issue happened on the server then every client would reject data from the server until the server was restarted.
+        - The restart would cause the server to reload the atoms from the database, eliminating any duplicates.
+    - Fixed signing out and signing back in on AUX Player to put the user back in the context they were previously in.
+    - Fixed an issue that caused users to be invisible the first time they signed into an AUX Player context.
+
 ## V0.3.18
 ### Date: 3/23/2019
 
