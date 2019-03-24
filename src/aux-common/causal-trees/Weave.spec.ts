@@ -394,6 +394,31 @@ describe('Weave', () => {
             ]);
         });
 
+        it('should preserve sibling references that occurred after the given reference', () => {
+            let weave = new Weave();
+
+            const a1 = atom(atomId(1, 1), null, new Op());
+            const ref1 = weave.insert(a1);
+
+            const a2 = atom(atomId(1, 2), atomId(1, 1), new Op());
+            const ref2 = weave.insert(a2);
+            
+            const a3 = atom(atomId(2, 3), atomId(1, 1), new Op());
+            const ref3 = weave.insert(a3);
+
+            const a4 = atom(atomId(2, 4), atomId(1, 1), new Op());
+            const ref4 = weave.insert(a4);
+            
+            expect(weave.removeBefore(ref3)).toEqual([
+                ref2,
+            ]);
+
+            const atoms = weave.atoms.map(a => a);
+            expect(atoms).toEqual([
+                a1, a4, a3
+            ]);
+        });
+
         it('should not remove anything if there are no sibling references', () => {
             let weave = new Weave();
 
@@ -1169,6 +1194,7 @@ describe('Weave', () => {
 
             spy.mockRestore();
         });
+
         it('should prevent duplicate children from being imported at the end of the weave', () => {
             const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
             const root = atom(atomId(1, 0), null, new Op());
@@ -1214,7 +1240,7 @@ describe('Weave', () => {
     });
 
     describe('isValid()', () => {
-        it('should validate that a weave is valid', () => {
+        it('should be invalid when a duplicate atom exists in the tree', () => {
             const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
             const root = atom(atomId(1, 0), null, new Op());
@@ -1228,17 +1254,36 @@ describe('Weave', () => {
             const diffChild8 = atom(atomId(1, 8), atomId(1, 7), new Op());
 
             let final = new Weave<Op>();
-            final.import([
+            final.atoms.push(
                 root,
                 child2,
                 child8,
                 child6,
                 child7,
                 diffChild8,
-
+    
                 child1,
                 child3
-            ]);
+            );
+
+            expect(final.isValid()).toBe(false);
+
+            spy.mockRestore();
+        });
+
+        it('should be invalid when a child atom happens before its cause', () => {
+            const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+            const root = atom(atomId(1, 0), null, new Op());
+            const child1 = atom(atomId(1, 1), atomId(1, 0), new Op());
+            const child2 = atom(atomId(1, 2), atomId(1, 1), new Op());
+
+            let final = new Weave<Op>();
+            final.atoms.push(
+                root,
+                child2,
+                child1
+            );
 
             expect(final.isValid()).toBe(false);
 
