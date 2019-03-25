@@ -1,15 +1,10 @@
-import { SignatureAlgorithmType } from "causal-trees";
+import { SignatureAlgorithmType } from './SignatureAlgorithm';
 
 /**
  * Defines an interface for objects that can sign and verify
  * messages.
  */
 export interface SigningCryptoImpl {
-    /**
-     * Creates a new implementation that uses the given algorithm
-     * to sign and verify messages.
-     */
-    new (algorithm: SignatureAlgorithmType): SigningCryptoImpl;
 
     /**
      * Signs the given data using the given private key and returns a promise
@@ -51,6 +46,11 @@ export interface SigningCryptoImpl {
      * @param key The key to import.
      */
     importPrivateKey(key: string): PrivateCryptoKey;
+
+    /**
+     * Generates a new public/private key pair.
+     */
+    generateKeyPair(): [PublicCryptoKey, PrivateCryptoKey];
 }
 
 /**

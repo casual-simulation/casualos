@@ -1,3 +1,4 @@
+import { SignatureAlgorithmType } from '../crypto';
 
 /**
  * Gets information about a reserved site.
@@ -32,11 +33,6 @@ export interface SiteInfoCrypto {
      */
     publicKey: string;
 }
-
-/**
- * Defines the possible signature algorithm types.
- */
-export type SignatureAlgorithmType = 'ECDSA-SHA256';
 
 /**
  * Creates a new SiteInfo object with the given ID.
