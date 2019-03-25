@@ -1,4 +1,4 @@
-import { Atom, AtomId, AtomOp, idEquals, atomIdToString, atomId } from "./Atom";
+import { Atom, AtomId, AtomOp, idEquals, atomIdToString, atomId, atomMatchesChecksum } from "./Atom";
 import { keys } from "lodash";
 import { WeaveVersion, WeaveSiteVersion } from "./WeaveVersion";
 import { getHash } from './Hash';
@@ -55,6 +55,11 @@ export class Weave<TOp extends AtomOp> {
      * @param atom 
      */
     insert<T extends TOp>(atom: Atom<T>): Atom<T> {
+
+        if (!atomMatchesChecksum(atom)) {
+            return null;
+        }
+
         const site = this.getSite(atom.id.site);
         if (!atom.cause) {
 
@@ -282,6 +287,10 @@ export class Weave<TOp extends AtomOp> {
         for (let i = 0; i < atoms.length; i++) {
             const a = atoms[i];
             let local = this._atoms[i + localOffset];
+
+            if (!atomMatchesChecksum(a)) {
+                break;
+            }
 
             // No more local atoms, so the remote atoms are merely append
             // operations
