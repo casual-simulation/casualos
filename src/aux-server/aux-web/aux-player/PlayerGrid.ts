@@ -30,7 +30,6 @@ export class PlayerGrid {
         let tileY = this._snapToTileCoord(position.z);
 
         tile.tileCoordinate = new Vector2(tileX, tileY);
-        console.log('snapped:', position, 'to:', tile.tileCoordinate);
         return tile;
     }
 
@@ -46,31 +45,30 @@ export class PlayerGrid {
 
         return tile;
     }
-    
+
     private _snapToTileCoord(num: number): number {
         // We need to snap the number to a tile coordinate.
-        let halfWidth = this.tileScale / 2;
-      
-        let remaining = (num % this.tileScale);
-        let whole = num - remaining;
-      
+        let normalized = num / this.tileScale;
+        let remaining = (normalized % 1);
+        let whole = normalized - remaining;
+
         if (remaining >= 0) {
-         // Positive side
-         if (remaining <= halfWidth) {
-          num = whole;
-         } else {
-          num = whole + 1;
-         }
+            // Positive side
+            if (remaining <= 0.5) {
+                num = whole;
+            } else {
+                num = whole + 1;
+            }
         } else {
-          // Negative side
-          if (remaining >= -halfWidth) {
-            num = whole;
-          } else {
-            num = whole - 1;
-          }
+            // Negative side
+            if (remaining >= -0.5) {
+                num = whole;
+            } else {
+                num = whole - 1;
+            }
         }
         return num;
-      }
+    }
 }
 
 export interface GridTile {

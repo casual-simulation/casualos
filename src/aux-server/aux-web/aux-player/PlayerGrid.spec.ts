@@ -92,6 +92,23 @@ describe('PlayerGrid', () => {
             expect(grid.tileScale).toEqual(2);
         });
 
-        // it('should return identical tile for points generated inside the given tile\'s bounds. ')
+        describe('should return given tile for points generated inside the given tile\'s boundries:', () => {
+            it.each(testTable)('scale: %d, tile: (%d, %d)', (scale, x, y) => {
+                let grid = new PlayerGrid(scale);
+                let tile = calculateGridTile(x, y, scale);
+
+                for (let i = 0; i < tile.points.length; i++) {
+
+                    // Pull the tile's corner points in just a little bit so that this test does not conflict with neigboring tiles.
+                    // Real world use we wont care which tile we return if the point is directly between to tiles, but for this test we want to get expected results.
+                    let dir = tile.center.clone().sub(tile.points[i]);
+                    let point = tile.points[i].clone().add(dir.clone().multiplyScalar(.01));
+                    let tileFromPos = grid.getTileFromPosition(point);
+
+                    expect(tileFromPos.tileCoordinate.x).toBe(x);
+                    expect(tileFromPos.tileCoordinate.y).toBe(y);
+                }
+            });
+        });
     });
 });
