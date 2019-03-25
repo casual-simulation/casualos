@@ -259,6 +259,12 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
                 added = [];
             }
         }
+
+        if (tree.knownSites) {
+            tree.knownSites.forEach(s => {
+                this.registerSite(s);
+            });
+        }
         return added;
     }
 
