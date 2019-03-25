@@ -57,6 +57,7 @@ export class Weave<TOp extends AtomOp> {
     insert<T extends TOp>(atom: Atom<T>): Atom<T> {
 
         if (!atomMatchesChecksum(atom)) {
+            console.warn(`[Weave] Atom ${atomIdToString(atom.id)} rejected because its checksum didn't match itself.`);
             return null;
         }
 
@@ -289,6 +290,7 @@ export class Weave<TOp extends AtomOp> {
             let local = this._atoms[i + localOffset];
 
             if (!atomMatchesChecksum(a)) {
+                console.warn(`[Weave] Atom ${atomIdToString(a.id)} rejected because its checksum didn't match itself.`);
                 break;
             }
 

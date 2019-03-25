@@ -231,6 +231,8 @@ describe('Weave', () => {
         });
 
         it('should disallow inserting atoms that dont match their checksums', () => {
+            const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+            
             let weave = new Weave();
 
             const a1 = atom(atomId(1, 1), null, new Op());
@@ -248,6 +250,8 @@ describe('Weave', () => {
             expect(weave.atoms.map(a => a)).toEqual([
                 a1
             ]);
+
+            spy.mockRestore();
         });
     });
 
@@ -1077,6 +1081,7 @@ describe('Weave', () => {
         });
 
         it('should prevent atoms that dont match their own checksum', () => {
+            const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
             let weave = new Weave();
     
             const a1 = atom(atomId(1, 1), null, new Op());
@@ -1100,6 +1105,8 @@ describe('Weave', () => {
             expect(weave.atoms.map(a => a)).toEqual([
                 a1
             ]);
+
+            spy.mockRestore();
         });
 
         describe('yarn', () => {
