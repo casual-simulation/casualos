@@ -229,6 +229,30 @@ describe('Weave', () => {
                 a3
             ]);
         });
+
+        it('should disallow inserting atoms that dont match their checksums', () => {
+            const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+            
+            let weave = new Weave();
+
+            const a1 = atom(atomId(1, 1), null, new Op());
+            const ref1 = weave.insert(a1);
+
+            const a2: Atom<Op> = {
+                id: atomId(1, 2),
+                cause: a1.id,
+                value: new Op(),
+                checksum: 12345
+            };
+            const ref2 = weave.insert(a2);
+
+            expect(ref2).toBe(null);
+            expect(weave.atoms.map(a => a)).toEqual([
+                a1
+            ]);
+
+            spy.mockRestore();
+        });
     });
 
     describe('remove()', () => {
@@ -1052,6 +1076,35 @@ describe('Weave', () => {
                 child3,
             ]);
             expect(final.isValid()).toBe(true);
+
+            spy.mockRestore();
+        });
+
+        it('should prevent atoms that dont match their own checksum', () => {
+            const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+            let weave = new Weave();
+    
+            const a1 = atom(atomId(1, 1), null, new Op());
+            const ref1 = weave.insert(a1);
+
+            const a2: Atom<Op> = {
+                id: atomId(1, 3),
+                cause: a1.id,
+                value: new Op(),
+                checksum: 12345
+            };
+
+            const a3 = atom(atomId(1, 2), a1.id, new Op());
+            const refs = weave.import([
+                a1,
+                a2,
+                a3
+            ]);
+
+            expect(refs).toEqual([]);
+            expect(weave.atoms.map(a => a)).toEqual([
+                a1
+            ]);
 
             spy.mockRestore();
         });

@@ -358,6 +358,23 @@ describe('CausalTree', () => {
 
             spy.mockRestore();
         });
+
+        it('should import known sites', () => {
+            let tree = new CausalTree(storedTree(site(1)), new Reducer());
+            let tree2 = new CausalTree(storedTree(site(2)), new Reducer());
+
+            tree.registerSite(site(3));
+            tree.registerSite(site(2));
+            tree.registerSite(site(6));
+            tree2.import(tree.export());
+
+            expect(tree2.knownSites).toEqual([
+                site(2),
+                site(1),
+                site(3),
+                site(6)
+            ]);
+        });
     });
 
     describe('importWeave()', () => {
