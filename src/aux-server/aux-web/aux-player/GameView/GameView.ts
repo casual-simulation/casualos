@@ -367,7 +367,6 @@ export default class GameView extends Vue implements IGameView {
 
     private async _fileAdded(file: AuxFile) {
         this._fileBackBuffer.set(file.id, file);
-        
         let calc = this.fileManager.createContext();
 
         if (!this._contextGroup) {
@@ -382,7 +381,7 @@ export default class GameView extends Vue implements IGameView {
                 
                 // Apply back buffer of files to the newly created context group.
                 for (let entry of this._fileBackBuffer) {
-                    if (entry[0] !== file.id) {
+                    if (entry[0] !== file.id && !isDestroyed(entry[1])) {
                         await this._contextGroup.fileAdded(entry[1], calc);
                     }
                 }
@@ -411,6 +410,7 @@ export default class GameView extends Vue implements IGameView {
     private async _fileUpdated(file: AuxFile, initialUpdate = false) {
         this._fileBackBuffer.set(file.id, file);
         let calc = this.fileManager.createContext();
+
         if (this._contextGroup) {
             // TODO: Implement Tag Updates
             await this._contextGroup.fileUpdated(file, [], calc);

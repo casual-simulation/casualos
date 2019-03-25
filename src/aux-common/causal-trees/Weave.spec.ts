@@ -1080,6 +1080,89 @@ describe('Weave', () => {
             spy.mockRestore();
         });
 
+        it('should handle importing weaves that contain different orders', () => {
+            const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+            let first = new Weave<Op>();
+
+            const root = atom(atomId(1, 0), null, new Op());
+            const s1t1 = atom(atomId(1, 1), atomId(1, 0), new Op());
+
+            const s2t2 = atom(atomId(2, 2), atomId(1, 1), new Op());
+
+            const s3t3 = atom(atomId(3, 3), atomId(1, 1), new Op());
+
+            first.insertMany(
+                root,
+                s1t1,
+                s2t2
+            );
+
+            let second = new Weave<Op>();
+
+            second.insertMany(
+                root,
+                s1t1,
+                s3t3
+            );
+
+            let final = new Weave<Op>();
+            final.import(second.atoms);
+            final.import(first.atoms);
+
+            expect(final.atoms).toEqual([
+                root,
+                s1t1,
+                s3t3,
+                s2t2
+            ]);
+            expect(final.isValid()).toBe(true);
+
+            spy.mockRestore();
+        });
+
+        it('should handle importing weaves that contain extra atoms in between', () => {
+            const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+            let first = new Weave<Op>();
+
+            const root = atom(atomId(1, 0), null, new Op());
+            const s1t1 = atom(atomId(1, 1), atomId(1, 0), new Op());
+
+            const s2t2 = atom(atomId(2, 2), atomId(1, 1), new Op());
+
+            const s3t3 = atom(atomId(3, 3), atomId(1, 1), new Op());
+
+            first.insertMany(
+                root,
+                s1t1,
+                s2t2
+            );
+
+            let second = new Weave<Op>();
+
+            second.insertMany(
+                root,
+                s1t1,
+                s3t3,
+                s2t2
+            );
+
+            let final = new Weave<Op>();
+            final.import(first.atoms);
+            final.import(second.atoms);
+
+            expect(final.atoms).toEqual([
+                root,
+                s1t1,
+                s3t3,
+                s2t2
+            ]);
+            expect(final.isValid()).toBe(true);
+
+            spy.mockRestore();
+        });
+
         it('should prevent atoms that dont match their own checksum', () => {
             const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
             let weave = new Weave();
