@@ -3,6 +3,7 @@ dist
 temp
 lib
 coverage
+test-report.html
 bundle_stats.json
 junit.xml
 ecosystem.json

@@ -134,7 +134,7 @@ export class FileManager {
     if (!this._appManager.user) {
       return;
     }
-    var objs = this.objects.filter(o => o.id === this._appManager.user.username);
+    var objs = this.objects.filter(o => o.id === this._appManager.user.id);
     if (objs.length > 0) {
       return objs[0];
     }
@@ -413,17 +413,13 @@ export class FileManager {
         this._aux = await this._treeManager.getTree<AuxCausalTree>({
             id: this._id,
             type: 'aux'
-        });
+        }, { garbageCollect: true, alwaysRequestNewSiteId: true });
         this._subscriptions.push(this._aux.onError.subscribe(err => console.error(err)));
 
         await this._aux.init();
         await this._aux.waitToGetTreeFromServer();
 
         console.log('[FileManager] Got Tree:', this._aux.tree.site.id);
-                    
-        // TODO: Implement the ability to keep old atoms around while
-        //       preserving performance provided by garbage collection.
-        this._aux.tree.garbageCollect = true;
 
         await this._initUserFile();
         await this._initGlobalsFile();
@@ -467,7 +463,7 @@ export class FileManager {
     const userContext = `_user_${appManager.user.username}_${this._aux.tree.site.id}`;
     const userInventoryContext = `_user_${appManager.user.username}_${this._aux.tree.site.id}_inventory`;
     if (!userFile) {
-      await this.createFile(this._appManager.user.username, {
+      await this.createFile(this._appManager.user.id, {
         [userContext]: true,
         ['aux.builder.context']: userContext,
         _user: this._appManager.user.username,

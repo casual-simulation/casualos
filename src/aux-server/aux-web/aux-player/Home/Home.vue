@@ -1,7 +1,7 @@
 <!-- App.vue -->
 <template>
   <div>
-      <game-view class="game-view" :debug="debug">
+      <game-view class="game-view" :debug="debug" :context="context">
         <div class="ui-container">
         </div>
       </game-view>

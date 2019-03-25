@@ -6,6 +6,6 @@ import { AuxCausalTree } from "./AuxCausalTree";
  */
 export function auxCausalTreeFactory() {
     return new CausalTreeFactory({
-        'aux': (tree: any) => new AuxCausalTree(tree)
+        'aux': (tree: any, options) => new AuxCausalTree(tree, options)
     });
 }

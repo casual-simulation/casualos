@@ -1,12 +1,96 @@
 # AUX Server Changelog
 
+## V0.3.21
+### Date: 3/24/2019
+
+### Changes:
+- Bug Fixes
+    - Fixed an issue where the server would start handing out old site IDs after a restart.
+    - Added the ability to reject events that become corrupted while in transit.
+
+## V0.3.20
+### Date: 3/23/2019
+
+### Changes:
+- Bug Fixes
+    - Fixed another scenario where duplicate atoms could be added to a weave.
+
+## V0.3.19
+### Date: 3/23/2019
+
+### Changes:
+- Bug Fixes
+    - Fixed Weaves to prevent duplicate atoms from being added in specific scenarios.
+        - This would cause peers to reject changes from each other.
+        - If the issue happened on the server then every client would reject data from the server until the server was restarted.
+        - The restart would cause the server to reload the atoms from the database, eliminating any duplicates.
+    - Fixed signing out and signing back in on AUX Player to put the user back in the context they were previously in.
+    - Fixed an issue that caused users to be invisible the first time they signed into an AUX Player context.
+
+## V0.3.18
+### Date: 3/23/2019
+
+### Changes:
+- Bug Fixes
+    - Fixed so that users can actually log out.
+    - Fixed AR mode in AUX Player.
+- Other Improvements
+    - Added a progress spinner to the login pages.
+    - Added lerping to the user meshes so the position updates look more natural.
+
+## V0.3.17
+### Date: 3/22/2019
+
+### Changes:
+- Bug Fixes
+    - Fixed so that updates are only sent every 1/2 second instead of up to every frame.
+
+## V0.3.16
+### Date: 3/22/2019
+
+### Changes:
+- Bug Fixes
+    - Fixed an issue that would cause two browser tabs to go to war over which was the real tab for that user.
+    - Fixed an issue that would cause two browser tabs to potentially become inconsistent with each other because they were sharing the same site ID.
+- Other Changes
+    - Added a couple extra logs to MongoDBTreeStore.
+    - Added additional safegards against invalid events.
+
+## V0.3.15
+### Date: 3/22/2019
+
+### Changes:
+- Bug Fixes
+    - Fixed an issue that prevented users from creating new simulations.
+    - Fixed an issue that caused duplicate files to be created in the game view.
+    - Fixed issues with logging in as the same user from different devices.
+    - Fixed an issue that would cause newly created trees to have garbage collection disabled.
+- Other Improvements
+    - Improved word bubble performance.
+    - Improved performance when loading large causal trees.
+    - Added additional validations when importing trees to prevent errors down the road.
+    - Improved the server to add a root atom if loading a tree that has no atoms.
+
+## V0.3.14
+### Date: 3/22/2019
+
+### Changes:
+- Bug Fixes
+    - Fixed CausalTreeServer to save imported atoms.
+    - Fixed CausalTreeServer to not re-store atoms each time it loads the tree from the database.
+    - Make CausalTree export version 3 trees.
+    - Make CausalTree collect garbage after importing.
+- Other Changes
+    - Enable some debug logs.
+
 ## V0.3.13
-### Date: TBD
+### Date: 3/21/2019
 
 ### Changes:
 - Bug Fixes
     - Reduced memory usage of worksurfaces. This makes it easier to create large worksurfaces.
     - Fixed not being able to drag the camera around when tapping/clicking on a worksurface while in files mode.
+    - Added indexes to MongoDB collections so that queries won't be so slow.
 
 
 ## V0.3.12

@@ -1,15 +1,33 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
 import { calculateNumericalTagValue, FileCalculationContext, File, calculateGridScale, file, objectsAtContextGridPosition, getFilePosition, getFileIndex, getContextDefaultHeight, getContextGrid, getFileRotation } from "@yeti-cgi/aux-common";
-import { Vector3 } from "three";
+import { Vector3, Quaternion, Euler } from "three";
 import { calculateGridTileLocalCenter } from "../grid/Grid";
 import { sumBy } from "lodash";
 import { ContextGroup3D } from "../ContextGroup3D";
 
+/**
+ * Defines an interface that contains possible options for ContextPositionDecorator objects.
+ */
+export interface ContextPositionDecoratorOptions {
+    /**
+     * Whether to linear interpolate between positions.
+     */
+    lerp?: boolean;
+}
+
+/**
+ * Defines a AuxFile3D decorator that moves the file to its position inside a context.
+ */
 export class ContextPositionDecorator extends AuxFile3DDecorator {
     
-    constructor(file3D: AuxFile3D) {
+    private _lerp: boolean;
+    private _nextPos: Vector3;
+    private _nextRot: { x: number, y: number, z: number };
+
+    constructor(file3D: AuxFile3D, options: ContextPositionDecoratorOptions = {}) {
         super(file3D);
+        this._lerp = !!options.lerp;
     }
 
     fileUpdated(calc: FileCalculationContext): void {
@@ -18,16 +36,17 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
             const grid = getContextGrid(calc, this.file3D.contextGroup.file, this.file3D.domain);
             if (grid) {
                 const scale = calculateGridScale(calc, this.file3D.contextGroup.file, this.file3D.domain);
-                const localPosition = calculateObjectPositionInGrid(calc, this.file3D, scale);
-                this.file3D.display.position.set(localPosition.x, localPosition.y, localPosition.z);
+                this._nextPos = calculateObjectPositionInGrid(calc, this.file3D, scale);
             } else {
                 const scale = 1; // We dont have a grid, just use scale of 1.
-                const localPosition = calculateObjectPositionInGrid(calc, this.file3D, scale);
-                this.file3D.display.position.set(localPosition.x, localPosition.y, localPosition.z);
+                this._nextPos = calculateObjectPositionInGrid(calc, this.file3D, scale);
             }
-
-            const rotation = getFileRotation(calc, this.file3D.file, this.file3D.context);
-            this.file3D.display.rotation.set(rotation.x, rotation.z, rotation.y);
+            
+            this._nextRot = getFileRotation(calc, this.file3D.file, this.file3D.context);
+            if (!this._lerp) {
+                this.file3D.display.position.copy(this._nextPos);
+                this.file3D.display.rotation.set(this._nextRot.x, this._nextRot.z, this._nextRot.y);
+            }
             
             // We must call this function so that child objects get their positions updated too.
             // Three render function does this automatically but there are functions in here that depend
@@ -37,6 +56,12 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
     }
 
     frameUpdate(calc: FileCalculationContext): void {
+        if (this._lerp && this._nextPos && this._nextRot) {
+            this.file3D.display.position.lerp(this._nextPos, 0.1);
+            const euler = new Euler(this._nextRot.x, this._nextRot.z, this._nextRot.y, 'XYZ');
+            const q = new Quaternion().setFromEuler(euler);
+            this.file3D.display.quaternion.slerp(q, 0.1);
+        }
     }
 
     dispose(): void {

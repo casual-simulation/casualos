@@ -133,6 +133,16 @@ export function atom<T extends AtomOp>(id: AtomId, cause: AtomId, value: T): Ato
 }
 
 /**
+ * Verifies that the given atom matches its own checksum.
+ * @param atom The atom to check.
+ */
+export function atomMatchesChecksum<T extends AtomOp>(atom: Atom<T>) {
+    const hash = getHashBuffer([atom.id, atom.cause, atom.value]);
+    const checksum = hash.readUInt32BE(0);
+    return checksum === atom.checksum;
+}
+
+/**
  * Converts the given atom ID into a string that is suitable for
  * storage.
  * @param id The ID.

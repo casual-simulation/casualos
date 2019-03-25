@@ -22,7 +22,7 @@ import * as webvrui from 'webvr-ui';
 
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Inject, Provide } from 'vue-property-decorator';
+import { Inject, Provide, Prop, Watch } from 'vue-property-decorator';
 import {
     SubscriptionLike, BehaviorSubject, Observable,
 } from 'rxjs';
@@ -123,6 +123,7 @@ export default class GameView extends Vue implements IGameView {
 
     @Inject() addSidebarItem: App['addSidebarItem'];
     @Inject() removeSidebarItem: App['removeSidebarItem'];
+    @Prop() context: string;
 
     @Provide() fileRenderer: FileRenderer = new FileRenderer();
 
@@ -141,8 +142,7 @@ export default class GameView extends Vue implements IGameView {
     get groundPlane(): Plane { return this._groundPlane; }
     get gridChecker(): GridChecker { return null; }
     get fileManager() { return appManager.fileManager; }
-    get userContext(): string { return this._userContext.value; }
-    get userContextObservable(): Observable<string> { return this._userContext; }
+    get userContext(): string { return this.context; }
 
     constructor() {
         super();
@@ -220,11 +220,11 @@ export default class GameView extends Vue implements IGameView {
         this._time.update();
 
         if (this.vrDisplay && this.vrDisplay.isPresenting) {
-            this.vrDisplay.requestAnimationFrame(() => this._frameUpdate(calc));
+            this.vrDisplay.requestAnimationFrame(() => this._frameUpdate());
         } else if (this.xrSession) {
             this.xrSession.requestFrame((nextXRFrame: any) => this._frameUpdate(nextXRFrame));
         } else {
-            requestAnimationFrame(() => this._frameUpdate(calc));
+            requestAnimationFrame(() => this._frameUpdate());
         }
 
     }
@@ -333,11 +333,6 @@ export default class GameView extends Vue implements IGameView {
         // Subscribe to file events.
         this._fileSubs.push(this.fileManager.fileChanged(this.fileManager.userFile)
             .pipe(tap(file => {
-                const userContextValue = (<Object>file).tags._userContext;
-                if (this._userContext.value !== userContextValue) {
-                    this._userContext.next(userContextValue);
-                    console.log('[GameView] User changed context to: ', userContextValue);
-                }
 
                 const userInventoryContextValue = (<Object>file).tags._userInventoryContext;
                 if (!this.inventoryContext || (this.inventoryContext.context !== userInventoryContextValue)) {
@@ -372,7 +367,6 @@ export default class GameView extends Vue implements IGameView {
 
     private async _fileAdded(file: AuxFile) {
         this._fileBackBuffer.set(file.id, file);
-        
         let calc = this.fileManager.createContext();
 
         if (!this._contextGroup) {
@@ -387,7 +381,7 @@ export default class GameView extends Vue implements IGameView {
                 
                 // Apply back buffer of files to the newly created context group.
                 for (let entry of this._fileBackBuffer) {
-                    if (entry[0] !== file.id) {
+                    if (entry[0] !== file.id && !isDestroyed(entry[1])) {
                         await this._contextGroup.fileAdded(entry[1], calc);
                     }
                 }
@@ -402,11 +396,21 @@ export default class GameView extends Vue implements IGameView {
 
         await this._fileUpdated(file, true);
         this.onFileAdded.invoke(file);
+
+        // Change the user's context after first adding and updating it
+        // because the callback for file_updated was happening before we
+        // could call fileUpdated from fileAdded.
+        if (file.id === this.fileManager.userFile.id) {
+            const userFile = appManager.fileManager.userFile;
+            console.log('[GameView] Setting user\'s context to: ' + this.context);
+            appManager.fileManager.updateFile(userFile, { tags: { _userContext: this.context }});
+        }
     }
 
     private async _fileUpdated(file: AuxFile, initialUpdate = false) {
         this._fileBackBuffer.set(file.id, file);
         let calc = this.fileManager.createContext();
+
         if (this._contextGroup) {
             // TODO: Implement Tag Updates
             await this._contextGroup.fileUpdated(file, [], calc);

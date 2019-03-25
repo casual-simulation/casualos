@@ -1,10 +1,10 @@
 import { Weave } from '../causal-trees/Weave';
 import { AuxOp, FileOp, TagOp, InsertOp, ValueOp, DeleteOp, AuxOpType } from './AuxOpTypes';
-import { CausalTree } from '../causal-trees/CausalTree';
+import { CausalTree, CausalTreeOptions } from '../causal-trees/CausalTree';
 import { FilesState, FileEvent, PartialFile, Object, File, Workspace, tagsOnFile, getFileTag, hasValue, getTag, cleanFile } from '../Files';
 import { AuxReducer, AuxReducerMetadata } from './AuxReducer';
 import { root, file, tag, value, del, insert } from './AuxAtoms';
-import { AtomId, Atom } from '../causal-trees/Atom';
+import { AtomId, Atom, atomIdToString, atomId } from '../causal-trees/Atom';
 import { SiteInfo } from '../causal-trees/SiteIdInfo';
 import { StoredCausalTree } from '../causal-trees/StoredCausalTree';
 import { AuxState, AuxTagMetadata, AuxValueMetadata, AuxFile } from './AuxState';
@@ -20,9 +20,10 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
     /**
      * Creates a new AUX Causal Tree.
      * @param tree The stored tree that this object should be constructed from.
+     * @param options The options to use.
      */
-    constructor(tree: StoredCausalTree<AuxOp>) {
-        super(tree, new AuxReducer());
+    constructor(tree: StoredCausalTree<AuxOp>, options?: CausalTreeOptions) {
+        super(tree, new AuxReducer(), options);
     }
 
     /**
@@ -257,7 +258,16 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
         for (let i = 0; i < refs.length; i++) {
             const atom = refs[i];
             if (atom.value.type === AuxOpType.value) {
-                removed.push(...this.weave.removeBefore(atom));
+                const newlyRemoved = this.weave.removeBefore(atom);
+                for (let j = 0; j < newlyRemoved.length; j++) {
+                    const r = newlyRemoved[j];
+                    if (r.value.type < AuxOpType.value) {
+                        console.error(`[AuxCausalTree] Removed atom of type: ${r.value.type} (${atomIdToString(r.id)}) incorrectly.`);
+                        console.error(`[AuxCausalTree] This happened while removing ${atomIdToString(atom.id)}`);
+                        debugger;
+                    }
+                }
+                removed.push(...newlyRemoved);
             }
         }
         return removed;

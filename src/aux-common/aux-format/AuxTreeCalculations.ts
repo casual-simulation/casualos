@@ -5,7 +5,7 @@ import { InsertOp, DeleteOp, AuxOp, AuxOpType, FileOp } from "./AuxOpTypes";
 import { calculateSequenceRef, calculateSequenceRefs } from "./AuxReducer";
 import { insert, del } from "./AuxAtoms";
 import { AuxCausalTree } from "./AuxCausalTree";
-import { map, startWith, flatMap } from "rxjs/operators";
+import { map, startWith, flatMap, share } from "rxjs/operators";
 import { flatMap as mapFlat, values } from 'lodash';
 import { sortBy } from "lodash";
 import { File, Object, calculateStateDiff, FilesState, PartialFile, createFile, FilesStateDiff } from "../Files";
@@ -20,6 +20,7 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
     const stateDiffs = tree.onUpdated.pipe(
         startWith(tree.tree.weave.atoms),
         map(events => {
+            let addedIds: { [key: string]: boolean } = {};
             let addedFiles: AuxFile[] = [];
             let updatedFiles: AuxState = {};
             let deletedFiles: string[] = [];
@@ -27,8 +28,10 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
                 if (e.value.type === AuxOpType.file) {
                     const id = e.value.id;
                     const val = tree.tree.value[id];
-                    if (val) {
+                    const existing = addedIds[id];
+                    if (!existing && val) {
                         addedFiles.push(val);
+                        addedIds[id] = true;
                     }
                     return;
                 } else if(e.value.type === AuxOpType.delete) {
@@ -60,6 +63,7 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
 
             return diff;
         }),
+        share()
     );
 
     const fileAdded = stateDiffs.pipe(flatMap(diff => {

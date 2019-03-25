@@ -138,6 +138,39 @@ describe('AuxTreeCalculations', () => {
             expect(errorHandler).not.toBeCalled();
         });
 
+        it('should handle multiple files with the same ID getting added', async () => {
+            const factory = auxCausalTreeFactory();
+            const store = new TestCausalTreeStore();
+            const connection = new TestChannelConnection();
+            const channel = new RealtimeChannel<Atom<AtomOp>[]>({
+                id: 'test',
+                type: 'aux'
+            }, connection); 
+            const tree = new RealtimeCausalTree<AuxCausalTree>(factory, store, channel);
+
+            let stored = new AuxCausalTree(storedTree(site(1)));
+            stored.root();
+            const test1 = stored.file('test');
+            const test2 = stored.file('test');
+
+            await store.put('test', stored.export());
+            await tree.init();
+            await connection.flushPromises();
+            scheduler.flush();
+
+            const fileIds: string[] = [];
+            const { fileAdded } = fileChangeObservables(tree);
+            const errorHandler = jest.fn();
+            fileAdded.subscribe(file => {
+                fileIds.push(file.id);
+            }, errorHandler);
+
+            expect(fileIds).toEqual([
+                'test'
+            ]);
+            expect(errorHandler).not.toBeCalled();
+        });
+
         it('should handle deleted files', async () => {
             const factory = auxCausalTreeFactory();
             const store = new TestCausalTreeStore();

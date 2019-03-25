@@ -473,6 +473,94 @@ describe('AuxCausalTree', () => {
                     test,
                     testVal2
                 ]);
+                expect(tree.weave.isValid()).toBe(true);
+            });
+
+            it('should collect garbage after addMany()', () => {
+                let tree = new AuxCausalTree(storedTree(site(1)));
+
+                tree.garbageCollect = true;
+
+                const root = tree.root();
+                const file = tree.file('fileId');
+                const test = tree.tag('test', file);
+                const testVal1 = tree.factory.create(value(99), test);
+                const testVal2 = tree.factory.create(value('hello, world'), test);
+
+                const test2 = tree.tag('test2', file);
+                const test2Val1 = tree.factory.create(value(99), test2);
+                const test2Val2 = tree.factory.create(value('hello, world'), test2);
+
+                tree.addMany([test2Val2, test2Val1, testVal1, testVal2]);
+
+                expect(tree.weave.atoms).toEqual([
+                    root,
+                    file,
+                    test2,
+                    test2Val2,
+                    test,
+                    testVal2
+                ]);
+                expect(tree.weave.isValid()).toBe(true);
+            });
+
+            it('should collect garbage after importWeave()', () => {
+                let tree = new AuxCausalTree(storedTree(site(1)));
+                tree.garbageCollect = false;
+
+                const root = tree.root();
+                const file = tree.file('fileId');
+                const test = tree.tag('test', file);
+                const testVal1 = tree.val(99, test);
+                const testVal2 = tree.val('hello, world', test);
+
+                const test2 = tree.tag('test2', file);
+                const test2Val1 = tree.val(99, test2);
+                const test2Val2 = tree.val('hello, world', test2);
+
+                let other = new AuxCausalTree(storedTree(site(1)));
+                other.garbageCollect = true;
+                other.importWeave(tree.weave.atoms);
+
+                expect(other.weave.atoms).toEqual([
+                    root,
+                    file,
+                    test2,
+                    test2Val2,
+                    test,
+                    testVal2
+                ]);
+                expect(other.weave.isValid()).toBe(true);
+            });
+
+            it('should collect garbage during creation', () => {
+                let tree = new AuxCausalTree(storedTree(site(1)));
+                tree.garbageCollect = false;
+
+                const root = tree.root();
+                const file = tree.file('fileId');
+                const test = tree.tag('test', file);
+                const testVal1 = tree.val(99, test);
+                const testVal2 = tree.val('hello, world', test);
+
+                const test2 = tree.tag('test2', file);
+                const test2Val1 = tree.val(99, test2);
+                const test2Val2 = tree.val('hello, world', test2);
+
+                const exported = tree.export();
+                let other = new AuxCausalTree(exported, {
+                    garbageCollect: true
+                });
+
+                expect(other.weave.atoms).toEqual([
+                    root,
+                    file,
+                    test2,
+                    test2Val2,
+                    test,
+                    testVal2
+                ]);
+                expect(other.weave.isValid()).toBe(true);
             });
 
             it('should emit atomsArchived events after GC', () => {
@@ -501,6 +589,7 @@ describe('AuxCausalTree', () => {
                     testVal1,
                     test2Val1
                 ]);
+                expect(tree.weave.isValid()).toBe(true);
             });
 
             it('should emit atomsArchived events after batched GC', () => {
@@ -529,6 +618,48 @@ describe('AuxCausalTree', () => {
                 expect(archived).toEqual([
                     testVal1
                 ]);
+
+                expect(tree.weave.isValid()).toBe(true);
+            });
+
+            it('should handle archiving multiple atoms at the same time', () => {
+                let tree = new AuxCausalTree(storedTree(site(1)));
+
+                tree.garbageCollect = true;
+                
+                let archived: Atom<AuxOp>[] = [];
+                let error = jest.fn();
+                tree.atomsArchived.subscribe(a => {
+                    archived.push(...a);
+                }, error);
+
+                const root = tree.root();
+                const file = tree.file('fileId');
+
+                const test = tree.factory.create(tag('test'), file);
+                const test2 = tree.factory.create(tag('test2'), file);
+                const test3 = tree.factory.create(tag('test3'), file);
+
+                const val2 = tree.factory.create(value('def'), test2);
+                const val1 = tree.factory.create(value('abc'), test);
+                const val3 = tree.factory.create(value('ghi'), test3);
+
+                let newTree = new AuxCausalTree(storedTree(site(2)));
+                newTree.addMany([
+                    val3,
+                    val2,
+                    test3,
+                    test,
+                    test2,
+                    val1,
+                    root,
+                    file
+                ]);
+
+                expect(error).not.toBeCalled();
+                expect(archived).toEqual([]);
+
+                expect(newTree.weave.isValid()).toBe(true);
             });
         });
 

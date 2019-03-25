@@ -99,6 +99,9 @@ const routes: RouteConfig[] = [
         path: '/:id?/:context?',
         name: 'home',
         component: Home,
+        props: (route) => ({
+            context: route.params.context
+        })
     }
 ]
 
@@ -133,17 +136,6 @@ router.beforeEach((to, from, next) => {
             }
         }
 
-        if (appManager.user) {
-            const userFile = appManager.fileManager.userFile;
-            if (userFile.tags._userContext != contextId) {
-                // Set the context for the user.
-                console.log('[Router] Setting user\'s context to: ' + contextId);
-                appManager.fileManager.updateFile(userFile, { tags: { _userContext: contextId }}).then(() => {
-                    next();
-                    return;
-                });
-            }
-        }
 
         next();
     }, ex => {

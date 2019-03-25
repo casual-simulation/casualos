@@ -1,4 +1,4 @@
-import { Atom, AtomId, AtomOp, idEquals } from "./Atom";
+import { Atom, AtomId, AtomOp, idEquals, atomIdToString, atomId, atomMatchesChecksum } from "./Atom";
 import { keys } from "lodash";
 import { WeaveVersion, WeaveSiteVersion } from "./WeaveVersion";
 import { getHash } from './Hash';
@@ -55,6 +55,12 @@ export class Weave<TOp extends AtomOp> {
      * @param atom 
      */
     insert<T extends TOp>(atom: Atom<T>): Atom<T> {
+
+        if (!atomMatchesChecksum(atom)) {
+            console.warn(`[Weave] Atom ${atomIdToString(atom.id)} rejected because its checksum didn't match itself.`);
+            return null;
+        }
+
         const site = this.getSite(atom.id.site);
         if (!atom.cause) {
 
@@ -73,7 +79,6 @@ export class Weave<TOp extends AtomOp> {
             if (causeIndex < 0 ) {
                 return null;
             }
-            const cause = this.atoms[causeIndex];
             const weaveIndex = this._weaveIndex(causeIndex, atom.id);
             const siteIndex = atom.id.timestamp;
 
@@ -149,13 +154,13 @@ export class Weave<TOp extends AtomOp> {
     }
 
     private _removeSpan(index: number, length: number) {
-        const removed = this._atoms.splice(index, length);
+        let removed = this._atoms.splice(index, length);
         for (let i = removed.length - 1; i >= 0; i--) {
             const r = removed[i];
 
             const chain = this.referenceChain(r);
-            for (let i = 1; i < chain.length; i++) {
-                const id = chain[i].id;
+            for (let b = 1; b < chain.length; b++) {
+                const id = chain[b].id;
                 const current = this.getAtomSize(id);
                 this._sizeMap.set(id, current - 1);
             }
@@ -284,6 +289,11 @@ export class Weave<TOp extends AtomOp> {
             const a = atoms[i];
             let local = this._atoms[i + localOffset];
 
+            if (!atomMatchesChecksum(a)) {
+                console.warn(`[Weave] Atom ${atomIdToString(a.id)} rejected because its checksum didn't match itself.`);
+                break;
+            }
+
             // No more local atoms, so the remote atoms are merely append
             // operations
             if (!local) {
@@ -301,6 +311,11 @@ export class Weave<TOp extends AtomOp> {
                             // an atom without a cause.
                             continue;
                         }
+                    }
+
+                    const exists = this.getAtom(atom.id);
+                    if (exists) {
+                        continue;
                     }
                     
                     this._atoms.push(atom);
@@ -321,6 +336,14 @@ export class Weave<TOp extends AtomOp> {
                         // an atom without a cause.
                         continue;
                     }
+                }
+
+                const exists = this.getAtom(a.id);
+                if (exists && a.checksum !== exists.checksum) {
+                    // Break because the atoms aren't actually the same
+                    // even though they claim to be
+                    console.warn(`[Weave] Atom ${atomIdToString(a.id)} rejected because its checksum didn't match the existing atom (${a.checksum} !== ${exists.checksum})`);
+                    break;
                 }
 
                 let order = this._compareAtoms(a, local);
@@ -381,12 +404,68 @@ export class Weave<TOp extends AtomOp> {
         while(cause) {
             const causeRef = this.getAtom(cause);
             
+            if (!causeRef) {
+                throw new Error(`[Weave] Could not find cause for atom ${atomIdToString(cause)}`);
+            }
+
             chain.push(causeRef);
 
             cause = causeRef.cause;
         }
 
         return chain;
+    }
+
+    /**
+     * Determines if this causal tree is valid.
+     */
+    isValid(): boolean {
+        if (this._atoms.length === 0) {
+            return true;
+        }
+
+        let parents = [this._atoms[0]];
+        for (let i = 1; i < this._atoms.length; i++) {
+            const child = this._atoms[i];
+            let parent = parents[0];
+
+            const existing = this.getAtom(child.id);
+            if (!existing) {
+                console.warn(`[Weave] Invalid tree. ${atomIdToString(child.id)} was not able to be found by its ID. This means the site cache is out of date.`);
+                return false;
+            } else if (child.checksum !== existing.checksum) {
+                console.warn(`[Weave] Invalid tree. There is a duplicate ${atomIdToString(child.id)} in the tree. Checksums did not match.`);
+                return false;
+            }
+
+            if (idEquals(child.cause, parent.cause)) {
+                const order = this._compareAtoms(child, parent);
+
+                // siblings
+                if (order < 0) {
+                    console.warn(`[Weave] Invalid tree. ${atomIdToString(child.id)} says it happened before its sibling (${parent.id}) that occurred before it in the tree.`);
+                    return false;
+                }
+            }
+
+            while (!idEquals(child.cause, parent.id)) {
+                parents.shift();
+                if (parents.length === 0) {
+                    console.warn(`[Weave] Invalid tree. ${atomIdToString(child.id)} is either inserted before ${atomIdToString(child.cause)} or the cause is not in the tree.`);
+                    return false;
+                }
+                parent = parents[0];
+            }
+
+            if (child.id.timestamp <= parent.id.timestamp) {
+                console.warn(`[Weave] Invalid tree. ${atomIdToString(child.id)} says it happened before its parent ${atomIdToString(child.cause)}.`);
+                return false;
+            }
+
+            parents.unshift(child);
+        }
+
+        return true;
     }
 
     /**

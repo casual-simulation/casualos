@@ -10,6 +10,17 @@ import { PrecalculatedOp } from './PrecalculatedOp';
 import { Subject } from 'rxjs';
 
 /**
+ * Defines an interface that contains possible options that can be set on a causal tree.
+ */
+export interface CausalTreeOptions {
+    /**
+     * Specifies whether the causal tree should try to remove atoms that no longer affect the tree.
+     * Defaults to false.
+     */
+    garbageCollect?: boolean;
+}
+
+/**
  * Defines a class that represents a Causal Tree.
  * That is, a conflict-free replicated data type. (CRDT)
  */
@@ -28,6 +39,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
 
     /**
      * Gets or sets whether the causal tree should collect garbage.
+     * Defaults to false.
      */
     garbageCollect: boolean;
 
@@ -99,8 +111,9 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * Creates a new Causal Tree with the given site ID.
      * @param tree The stored tree that this causal tree should be made from.
      * @param reducer The reducer used to convert a list of operations into a single value.
+     * @param options The options to use.
      */
-    constructor(tree: StoredCausalTree<TOp>, reducer: AtomReducer<TOp, TValue, TMetadata>) {
+    constructor(tree: StoredCausalTree<TOp>, reducer: AtomReducer<TOp, TValue, TMetadata>, options: CausalTreeOptions = {}) {
         this._site = tree.site;
         this._knownSites = unionBy([
             this.site
@@ -114,7 +127,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         this._atomArchived = new Subject<Atom<TOp>[]>();
         this._isBatching = false;
         this._batch = [];
-        this.garbageCollect = false;
+        this.garbageCollect = options.garbageCollect || false;
 
         this.import(tree);
     }
@@ -138,12 +151,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
                 this._batch.push(ref);
             } else {
                 const refs = [ref];
-                if (this.garbageCollect) {
-                    const removed = this.collectGarbage(refs);
-                    if (removed.length > 0) {
-                        this._atomArchived.next(removed);
-                    }
-                }
+                this.triggerGarbageCollection(refs);
                 [this._value, this._metadata] = this._calculateValue(refs);
                 this._atomAdded.next(refs);
             }
@@ -187,12 +195,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
             return func();
         } finally {
             if (this._batch.length > 0) {
-                if (this.garbageCollect) {
-                    const removed = this.collectGarbage(this._batch);
-                    if (removed.length > 0) {
-                        this._atomArchived.next(removed);
-                    }
-                }
+                this.triggerGarbageCollection(this._batch);
                 [this._value, this._metadata] = this._calculateValue(this._batch);
                 this._atomAdded.next(this._batch);
                 this._batch = [];
@@ -205,14 +208,31 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * Imports the given list of weave references into the tree.
      * The references are expected to be sorted as a valid weave and also to match
      * @param refs The references to import.
+     * @param validate Whether to validate the incoming weave.
      */
-    importWeave<T extends TOp>(refs: Atom<T>[]): Atom<TOp>[] {
+    importWeave<T extends TOp>(refs: Atom<T>[], validate: boolean = true): Atom<TOp>[] {
+
+        if (validate) {
+            let weave = new Weave<T>();
+            weave.import(refs);
+            if (!weave.isValid()) {
+                throw new Error('[CausalTree] Imported references are not valid.');
+            }
+        }
+
         const newAtoms = this.weave.import(refs);
         const sortedAtoms = sortBy(newAtoms, a => a.id.timestamp);
         for (let i = 0; i < sortedAtoms.length; i++) {
             const atom = sortedAtoms[i];
             this.factory.updateTime(atom);
         }
+        // if (!this.weave.isValid()) {
+        //     throw new Error('[CausalTree] Tree became invalid after import.');
+        // }
+        this.triggerGarbageCollection(newAtoms);
+        // if (!this.weave.isValid()) {
+        //     throw new Error('[CausalTree] Tree became invalid after garbage collection.');
+        // }
         [this._value, this._metadata] = this._calculateValue(newAtoms);
         return newAtoms;
     }
@@ -222,22 +242,30 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * @param tree The tree to import.
      */
     import<T extends TOp>(tree: StoredCausalTree<T>): Atom<TOp>[] {
+        let added: Atom<TOp>[];
         if (tree.weave) {
             if (tree.formatVersion === 2) {
-                return this.importWeave(tree.weave);
+                added = this.importWeave(tree.weave);
             } else if(tree.formatVersion === 3) {
-                if(tree.ordered) {
-                    return this.importWeave(tree.weave);
+                if (tree.ordered) {
+                    added = this.importWeave(tree.weave);
                 } else {
-                    return this.addMany(tree.weave);
+                    added = this.addMany(tree.weave);
                 }
             } else if (typeof tree.formatVersion === 'undefined') {
-                return this.importWeave(tree.weave.map(ref => ref.atom));
+                added = this.importWeave(tree.weave.map(ref => ref.atom));
             } else {
                 console.warn("[CausalTree] Don't know how to import tree version:", tree.formatVersion);
-                return [];
+                added = [];
             }
         }
+
+        if (tree.knownSites) {
+            tree.knownSites.forEach(s => {
+                this.registerSite(s);
+            });
+        }
+        return added;
     }
 
     /**
@@ -245,8 +273,9 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      */
     export(): StoredCausalTree<TOp> {
         return {
-            formatVersion: 2,
+            formatVersion: 3,
             site: this._site,
+            ordered: true,
             knownSites: this.knownSites.slice(),
             weave: this.weave.atoms.slice()
         };
@@ -325,6 +354,21 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * @param refs The weave references that were added to the tree.
      */
     protected collectGarbage(refs: Atom<TOp>[]): Atom<TOp>[] {
+        return [];
+    }
+
+    /**
+     * Triggers a round of garbage collection on the given atoms.
+     * @param atoms The atoms to garbage collect.
+     */
+    protected triggerGarbageCollection(atoms: Atom<TOp>[]): Atom<TOp>[] {
+        if (this.garbageCollect) {
+            const removed = this.collectGarbage(atoms);
+            if (removed.length > 0) {
+                this._atomArchived.next(removed);
+            }
+            return removed;
+        }
         return [];
     }
 

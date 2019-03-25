@@ -7,6 +7,7 @@ import uuid from 'uuid/v4';
 @Component
 export default class Welcome extends Vue {
     email: string = '';
+    showProgress: boolean = false;
     
     get channelId(): string {
         return <string>(this.$route.query.id || '');
@@ -22,10 +23,12 @@ export default class Welcome extends Vue {
     }
     
     private async _login(email: string) {
+        this.showProgress = true;
         if (await appManager.loginOrCreateUser(email, this.channelId)) {
             this.$router.push({ name: 'home', params: { id: this.channelId || null } });
         } else {
             // TODO: Show an error message
+            this.showProgress = false;
         }
     }
 };
