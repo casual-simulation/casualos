@@ -95,6 +95,13 @@ export interface Atom<T extends AtomOp> {
      * Used to verify that a atom is valid.
      */
     checksum: number;
+
+    /**
+     * The signature that can be used to verify that the atom
+     * was created by the correct site.
+     * If null, then no signature is available.
+     */
+    signature: string | null;
 }
 
 /**
@@ -128,7 +135,9 @@ export function atom<T extends AtomOp>(id: AtomId, cause: AtomId, value: T): Ato
         // Read only 32 bits of the hash.
         // This should be good enough to prevent collisions for weaves 
         // of up to ~2 billion atoms instead of never.
-        checksum: hash.readUInt32BE(0)
+        checksum: hash.readUInt32BE(0),
+
+        signature: null
     };
 }
 

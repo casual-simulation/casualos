@@ -100,8 +100,6 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         this._subs = [];
         this._options = options;
 
-        // TODO: Get the causal tree to store the state
-        // without tanking performance.
         this._subs.push(this._updated.pipe(
             flatMap(async atoms => await this._store.add(this.id, atoms))
         ).subscribe(null, err => this._errors.next(err)));
