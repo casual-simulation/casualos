@@ -1,5 +1,13 @@
 # AUX Server Changelog
 
+## V0.3.21
+### Date: 3/24/2019
+
+### Changes:
+- Bug Fixes
+    - Fixed an issue where the server would start handing out old site IDs after a restart.
+    - Added the ability to reject events that become corrupted while in transit.
+
 ## V0.3.20
 ### Date: 3/23/2019
 
