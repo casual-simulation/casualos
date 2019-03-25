@@ -207,6 +207,34 @@ describe('Weave', () => {
             ]);
         });
 
+        it('should insert atoms that are older than the most recent atom after nested atoms', () => {
+            let weave = new Weave();
+
+            const a1 = atom(atomId(1, 1), null, new Op());
+            const ref1 = weave.insert(a1);
+
+            const a2 = atom(atomId(1, 10), atomId(1, 1), new Op());
+            const ref2 = weave.insert(a2);
+
+            const a3 = atom(atomId(1, 8), atomId(1, 1), new Op());
+            const ref3 = weave.insert(a3);
+
+            const a4 = atom(atomId(1, 9), atomId(1, 8), new Op());
+            const ref4 = weave.insert(a4);
+
+            const a5 = atom(atomId(1, 7), atomId(1, 1), new Op());
+            const ref5 = weave.insert(a5);
+
+            expect(ref5).not.toBe(null);
+            expect(weave.atoms).toEqual([
+                a1,
+                a2,
+                a3,
+                a4,
+                a5
+            ]);
+        });
+
         it('should handle inserting atoms with the same ID but different causes', () => {
             let weave = new Weave();
 
