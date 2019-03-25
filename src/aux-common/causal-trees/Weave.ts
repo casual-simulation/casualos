@@ -545,7 +545,7 @@ export class Weave<TOp extends AtomOp> {
                 break;
             }
             
-            if (!idEquals(atom.cause, cause.id)) {
+            if (atom.cause.timestamp < cause.id.timestamp) {
                 break;
             }
         }
