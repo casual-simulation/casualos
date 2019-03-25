@@ -20,14 +20,16 @@ export class PlayerGrid {
      * @param position The position.
      */
     getTileFromPosition(position: Vector3): GridTile {
-        let tile: GridTile = {
-            position: position.clone(),
-            tileCoordinate: undefined
-        };
-
         // Snap position to a grid center.
         let tileX = this._snapToTileCoord(position.x);
         let tileY = this._snapToTileCoord(position.z);
+        let tilePoints = calculateGridTilePoints(tileX, tileY, this.tileScale);
+
+        let tile: GridTile = {
+            center: tilePoints.center,
+            corners: tilePoints.corners,
+            tileCoordinate: new Vector2(tileX, tileY)
+        };
 
         tile.tileCoordinate = new Vector2(tileX, tileY);
         return tile;
@@ -37,13 +39,14 @@ export class PlayerGrid {
      * Retrieve the grid tile that matches the given coordinate.
      * @param tileCoordinate The tile coordinate.
      */
-    getTileFromCoordinate(tileCoordinate: Vector2): GridTile {
-        let tile: GridTile = {
-            position: undefined,
-            tileCoordinate: tileCoordinate.clone()
-        };
+    getTileFromCoordinate(x: number, y: number): GridTile {
+        let tilePoints = calculateGridTilePoints(x, y, this.tileScale);
 
-        return tile;
+        return {
+            center: tilePoints.center,
+            corners: tilePoints.corners,
+            tileCoordinate: new Vector2(x, y)
+        }
     }
 
     private _snapToTileCoord(num: number): number {
@@ -75,7 +78,13 @@ export interface GridTile {
     /**
      * The center of the tile in 3d coordinates.
      */
-    position: Vector3;
+    center: Vector3;
+
+    /**
+     * The corners of the tile in 3d coordinates.
+     * [0] topLeft [1] topRight [2] bottomRight [3] bottomLeft
+     */
+    corners: Vector3[];
 
     /**
      * The 2d coordinate of the tile on the grid.
@@ -86,6 +95,7 @@ export interface GridTile {
 /**
  * Calculates the corner points for a tile of the given scale.
  * The returned values are in tile-relative coordinates.
+ * [0] topLeft [1] topRight [2] bottomRight [3] bottomLeft
  * @param scale The scale of the grid tile.
  */
 export function calculateTileCornerPoints(scale: number) {
@@ -104,13 +114,13 @@ export function calculateTileCornerPoints(scale: number) {
  * @param y The Y position of the grid tile.
  * @param scale The size of the tiles.
  */
-export function calculateGridTile(x: number, y: number, scale: number) {
-    const points = calculateTileCornerPoints(scale);
+export function calculateGridTilePoints(x: number, y: number, scale: number) {
+    const corners = calculateTileCornerPoints(scale);
     const localCenter = calculateGridTileLocalCenter(x, y, scale);
 
     return {
         center: localCenter,
-        points: points.map(p => {
+        corners: corners.map(p => {
             return new Vector3().copy(p).add(localCenter);
         })
     };

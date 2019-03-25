@@ -1,4 +1,4 @@
-import { PlayerGrid, calculateTileCornerPoints, calculateGridTile, calculateGridTileLocalCenter } from "./PlayerGrid";
+import { PlayerGrid, calculateTileCornerPoints, calculateGridTilePoints, calculateGridTileLocalCenter } from "./PlayerGrid";
 import { Vector3, Vector2 } from "three";
 
 describe('PlayerGrid', () => {
@@ -35,7 +35,7 @@ describe('PlayerGrid', () => {
         }
     }
 
-    describe('helper pure functions', () => {
+    describe('helper functions', () => {
 
         describe('calculateTileCornerPoints() should return expected local points for the given tile scales:', () => {
             it.each(testScales)('scale: %d', (scale) => {
@@ -63,19 +63,19 @@ describe('PlayerGrid', () => {
 
         describe('calculateGridTile() should return expected center position and corner points for give tile scale and coordinates:', () => {
             it.each(testTable)('scale: %d, tile: (%d, %d)', (scale, x, y) => {
-                let tile = calculateGridTile(x, y, scale);
+                let tile = calculateGridTilePoints(x, y, scale);
 
                 expect(tile.center).toEqual(new Vector3(x * scale, 0, y * scale));
                 // Should have 4 points.
-                expect(tile.points.length).toEqual(4);
+                expect(tile.corners.length).toEqual(4);
                 // topLeft (-0.5, 0.5)
-                expect(tile.points[0]).toEqual(new Vector3(tile.center.x + (-0.5 * scale), 0, tile.center.z + (0.5 * scale)));
+                expect(tile.corners[0]).toEqual(new Vector3(tile.center.x + (-0.5 * scale), 0, tile.center.z + (0.5 * scale)));
                 // topRight (0.5, 0.5)
-                expect(tile.points[1]).toEqual(new Vector3(tile.center.x + (0.5 * scale), 0, tile.center.z + (0.5 * scale)));
+                expect(tile.corners[1]).toEqual(new Vector3(tile.center.x + (0.5 * scale), 0, tile.center.z + (0.5 * scale)));
                 // bottomRight (0.5, -0.5)
-                expect(tile.points[2]).toEqual(new Vector3(tile.center.x + (0.5 * scale), 0, tile.center.z + (-0.5 * scale)));
+                expect(tile.corners[2]).toEqual(new Vector3(tile.center.x + (0.5 * scale), 0, tile.center.z + (-0.5 * scale)));
                 // bottomLeft (-0.5, -0.5)
-                expect(tile.points[3]).toEqual(new Vector3(tile.center.x + (-0.5 * scale), 0, tile.center.z + (-0.5 * scale)));
+                expect(tile.corners[3]).toEqual(new Vector3(tile.center.x + (-0.5 * scale), 0, tile.center.z + (-0.5 * scale)));
             });
         });
     });
@@ -92,22 +92,32 @@ describe('PlayerGrid', () => {
             expect(grid.tileScale).toEqual(2);
         });
 
-        describe('should return given tile for points generated inside the given tile\'s boundries:', () => {
+        describe('getTileFromPosition() should return given tile for points generated inside the given tile\'s boundries:', () => {
             it.each(testTable)('scale: %d, tile: (%d, %d)', (scale, x, y) => {
                 let grid = new PlayerGrid(scale);
-                let tile = calculateGridTile(x, y, scale);
+                let tile = calculateGridTilePoints(x, y, scale);
 
-                for (let i = 0; i < tile.points.length; i++) {
+                for (let i = 0; i < tile.corners.length; i++) {
 
                     // Pull the tile's corner points in just a little bit so that this test does not conflict with neigboring tiles.
                     // Real world use we wont care which tile we return if the point is directly between to tiles, but for this test we want to get expected results.
-                    let dir = tile.center.clone().sub(tile.points[i]);
-                    let point = tile.points[i].clone().add(dir.clone().multiplyScalar(.01));
+                    let dir = tile.center.clone().sub(tile.corners[i]);
+                    let point = tile.corners[i].clone().add(dir.clone().multiplyScalar(.01));
                     let tileFromPos = grid.getTileFromPosition(point);
 
                     expect(tileFromPos.tileCoordinate.x).toBe(x);
                     expect(tileFromPos.tileCoordinate.y).toBe(y);
                 }
+            });
+        });
+
+        describe('getTileFromCoordinate() should return expected tile position given the grid scale and tile coordinate:', () => {
+            it.each(testTable)('scale: %d, tile: (%d, %d)', (scale, x, y) => {
+                let grid = new PlayerGrid(scale);
+                let gridTile = grid.getTileFromCoordinate(x, y);
+
+                expect(gridTile.tileCoordinate).toEqual(new Vector2(x, y));
+                expect(gridTile.center).toEqual(new Vector3(x * scale, 0, y * scale));
             });
         });
     });
