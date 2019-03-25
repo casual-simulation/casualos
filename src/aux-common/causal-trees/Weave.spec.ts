@@ -1,5 +1,6 @@
 import { Weave } from "./Weave";
 import { Atom, AtomId, AtomOp, atom, atomId } from "./Atom";
+import { shuffle } from "lodash";
 
 
 describe('Weave', () => {
@@ -232,6 +233,108 @@ describe('Weave', () => {
                 a3,
                 a4,
                 a5
+            ]);
+        });
+
+        it('should insert atoms from other sites that are older than the most recent atom after nested atoms', () => {
+            let weave = new Weave();
+
+            const a1 = atom(atomId(1, 1), null, new Op());
+            const ref1 = weave.insert(a1);
+
+            const a2 = atom(atomId(1, 10), atomId(1, 1), new Op());
+            const ref2 = weave.insert(a2);
+
+            const a3 = atom(atomId(1, 8), atomId(1, 1), new Op());
+            const ref3 = weave.insert(a3);
+
+            const a4 = atom(atomId(1, 9), atomId(1, 8), new Op());
+            const ref4 = weave.insert(a4);
+
+            const a5 = atom(atomId(2, 8), atomId(1, 1), new Op());
+            const ref5 = weave.insert(a5);
+
+            expect(ref5).not.toBe(null);
+            expect(weave.atoms).toEqual([
+                a1,
+                a2,
+                a3,
+                a4,
+                a5
+            ]);
+        });
+
+        it('should be able to insert atoms between nested atoms', () => {
+            let weave = new Weave();
+
+            const a1 = atom(atomId(1, 1), null, new Op());
+            weave.insert(a1);
+
+            const a2 = atom(atomId(1, 10), atomId(1, 1), new Op());
+            weave.insert(a2);
+
+            const a3 = atom(atomId(1, 11), atomId(1, 10), new Op());
+            weave.insert(a3);
+
+            const a4 = atom(atomId(1, 6), atomId(1, 1), new Op());
+            weave.insert(a4);
+
+            const a5 = atom(atomId(1, 7), atomId(1, 6), new Op());
+            weave.insert(a5);
+
+            const a6 = atom(atomId(2, 8), atomId(1, 1), new Op());
+            weave.insert(a6);
+
+            expect(weave.atoms).toEqual([
+                a1,
+                a2,
+                a3,
+                a6,
+                a4,
+                a5
+            ]);
+        });
+
+        it('should be able to insert atoms between deep nested atoms from other sites', () => {
+            let weave = new Weave();
+
+            const s1t1 = atom(atomId(1, 1), null, new Op());
+            weave.insert(s1t1);
+
+            const s1t10 = atom(atomId(1, 10), atomId(1, 1), new Op());
+            weave.insert(s1t10);
+
+            const s1t11 = atom(atomId(1, 11), atomId(1, 10), new Op());
+            weave.insert(s1t11);
+
+            const s1t12 = atom(atomId(1, 12), atomId(1, 10), new Op());
+            weave.insert(s1t12);
+
+            const s1t13 = atom(atomId(1, 13), atomId(1, 11), new Op());
+            weave.insert(s1t13);
+
+            const s1t6 = atom(atomId(1, 6), atomId(1, 1), new Op());
+            weave.insert(s1t6);
+
+            const s1t7 = atom(atomId(1, 7), atomId(1, 6), new Op());
+            weave.insert(s1t7);
+
+            const s1t8 = atom(atomId(1, 8), atomId(1, 6), new Op());
+            weave.insert(s1t8);
+
+            const s2t8 = atom(atomId(2, 8), atomId(1, 1), new Op());
+            weave.insert(s2t8);
+
+            expect(weave.atoms).toEqual([
+                s1t1,
+                s1t10,
+                s1t12,
+                s1t11,
+                s1t13,
+                s2t8,
+                s1t6,
+                s1t8,
+                s1t7
             ]);
         });
 
