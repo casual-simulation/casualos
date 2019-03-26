@@ -6,6 +6,8 @@
 ### Changes:
 - Features
   - Can drag and combine files in AUX Player.
+- Buf Fixes
+  - Can snap hexes together again as long as there is no file on it (currently this includes the builder context file as well).
   
 ## V0.3.22
 ### Date: 3/26/2019
