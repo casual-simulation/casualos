@@ -1,5 +1,15 @@
 # AUX Server Changelog
 
+## V0.3.22
+### Date: 3/26/2019
+
+### Changes:
+- Bug Fixes
+    - Fixed an issue where atoms could be placed in the wrong spot.
+    - Fixed an issue with importing atoms where the tree could become invalid.
+- Other Improvements
+    - Added some core functionality for the infinite mathematical grid in AUX Player.
+
 ## V0.3.21
 ### Date: 3/24/2019
 
