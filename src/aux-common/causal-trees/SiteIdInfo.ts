@@ -38,8 +38,9 @@ export interface SiteInfoCrypto {
  * Creates a new SiteInfo object with the given ID.
  * @param id The ID.
  */
-export function site(id: number): SiteInfo {
+export function site(id: number, crypto?: SiteInfoCrypto): SiteInfo {
     return {
-        id: id
+        id: id,
+        crypto
     };
 }
