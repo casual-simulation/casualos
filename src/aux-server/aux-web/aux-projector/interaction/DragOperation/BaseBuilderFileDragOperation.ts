@@ -34,8 +34,6 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
 
     /**
      * Create a new drag rules.
-     * @param input the input module to interface with.
-     * @param buttonId the button id of the input that this drag operation is being performed with. If desktop this is the mouse button
      */
     constructor(gameView: GameView, interaction: BuilderInteractionManager, files: File[], context: string) {
         super(gameView, interaction, files, context);

@@ -2,7 +2,6 @@ import { WebGLRenderer, Plane, PerspectiveCamera, Scene } from "three";
 import { Time } from "./scene/Time";
 import { Input } from "./scene/Input";
 import { InputVR } from "./scene/InputVR";
-import { GridChecker } from "./scene/grid/GridChecker";
 import { ArgEvent } from "@yeti-cgi/aux-common/Events";
 import { AuxFile } from "@yeti-cgi/aux-common/aux-format";
 import { ContextGroup3D } from "./scene/ContextGroup3D";
@@ -28,7 +27,6 @@ export interface IGameView extends AuxFile3DFinder, Vue {
     readonly filesMode: boolean;
     readonly workspacesMode: boolean
     readonly groundPlane: Plane;
-    readonly gridChecker: GridChecker;
 
     onFileAdded: ArgEvent<AuxFile>;
     onFileUpdated: ArgEvent<AuxFile>;
