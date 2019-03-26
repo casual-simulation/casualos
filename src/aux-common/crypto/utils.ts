@@ -78,6 +78,8 @@ export function parsePublicPEMKey(pem: string): ArrayBuffer {
  * @param footer The footer that we're expecting the file to have.
  */
 export function parsePEM(pem: string, header: string, footer: string): ArrayBuffer {
+    pem = pem.trim();
+    
     // Make sure we remove the newlines
     const contents = pem.substring(header.length + 1, pem.length - (footer.length + 1));
     const buffer = toByteArray(contents);

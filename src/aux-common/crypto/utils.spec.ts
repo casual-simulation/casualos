@@ -27,8 +27,17 @@ describe('crypto', () => {
         });
 
         describe('parsePrivatePEMKey()', () => {
-            it('should include the private key header and footer', () => {
+            it('should parse the basic private key in PEM format', () => {
                 const pem = `-----BEGIN PRIVATE KEY-----\naGVsbG8=\n-----END PRIVATE KEY-----`;
+                const key = parsePrivatePEMKey(pem);
+                const buffer = Buffer.from(key);
+                const val = buffer.toString('utf8');
+
+                expect(val).toBe('hello');
+            });
+
+            it('should parse the private key with extra whitespace', () => {
+                const pem = ` -----BEGIN PRIVATE KEY-----\naGVsbG8=\n-----END PRIVATE KEY-----\n`;
                 const key = parsePrivatePEMKey(pem);
                 const buffer = Buffer.from(key);
                 const val = buffer.toString('utf8');
@@ -38,8 +47,17 @@ describe('crypto', () => {
         });
 
         describe('parsePublicPEMKey()', () => {
-            it('should include the public key header and footer', () => {
+            it('should parse the basic public key in PEM format', () => {
                 const pem = `-----BEGIN PUBLIC KEY-----\naGVsbG8=\n-----END PUBLIC KEY-----`;
+                const key = parsePublicPEMKey(pem);
+                const buffer = Buffer.from(key);
+                const val = buffer.toString('utf8');
+
+                expect(val).toBe('hello');
+            });
+
+            it('should parse the private key with extra whitespace', () => {
+                const pem = ` -----BEGIN PUBLIC KEY-----\naGVsbG8=\n-----END PUBLIC KEY-----\n`;
                 const key = parsePublicPEMKey(pem);
                 const buffer = Buffer.from(key);
                 const val = buffer.toString('utf8');
