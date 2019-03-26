@@ -291,9 +291,9 @@ describe('CausalTree', () => {
             it('should be able to import', async () => {
                 let weave = new Weave<Op>();
 
-                const a1 = weave.insert(atom(atomId(1, 1), null, new Op()));
-                const a2 = weave.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
-                const a3 = weave.insert(atom(atomId(1, 3), atomId(1, 1), new Op()));
+                const [a1] = weave.insert(atom(atomId(1, 1), null, new Op()));
+                const [a2] = weave.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
+                const [a3] = weave.insert(atom(atomId(1, 3), atomId(1, 1), new Op()));
 
                 let stored: StoredCausalTreeVersion1<Op> = {
                     knownSites: [
@@ -318,9 +318,9 @@ describe('CausalTree', () => {
             it('should be able to import', async () => {
                 let weave = new Weave<Op>();
 
-                const a1 = weave.insert(atom(atomId(1, 1), null, new Op()));
-                const a2 = weave.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
-                const a3 = weave.insert(atom(atomId(1, 3), atomId(1, 1), new Op()));
+                const [a1] = weave.insert(atom(atomId(1, 1), null, new Op()));
+                const [a2] = weave.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
+                const [a3] = weave.insert(atom(atomId(1, 3), atomId(1, 1), new Op()));
 
                 let stored: StoredCausalTreeVersion2<Op> = {
                     formatVersion: 2,
@@ -346,9 +346,9 @@ describe('CausalTree', () => {
             it('should be able to import', async () => {
                 let weave = new Weave<Op>();
 
-                const a1 = weave.insert(atom(atomId(1, 1), null, new Op()));
-                const a2 = weave.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
-                const a3 = weave.insert(atom(atomId(1, 3), atomId(1, 1), new Op()));
+                const [a1] = weave.insert(atom(atomId(1, 1), null, new Op()));
+                const [a2] = weave.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
+                const [a3] = weave.insert(atom(atomId(1, 3), atomId(1, 1), new Op()));
 
                 let stored: StoredCausalTreeVersion3<Op> = {
                     formatVersion: 3,
@@ -373,9 +373,9 @@ describe('CausalTree', () => {
             it('should be able to import unordered weaves',async () => {
                 let weave = new Weave<Op>();
 
-                const a1 = weave.insert(atom(atomId(1, 1), null, new Op()));
-                const a2 = weave.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
-                const a3 = weave.insert(atom(atomId(1, 3), atomId(1, 1), new Op()));
+                const [a1] = weave.insert(atom(atomId(1, 1), null, new Op()));
+                const [a2] = weave.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
+                const [a3] = weave.insert(atom(atomId(1, 3), atomId(1, 1), new Op()));
 
                 let stored: StoredCausalTreeVersion3<Op> = {
                     formatVersion: 3,

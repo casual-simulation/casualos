@@ -198,7 +198,7 @@ describe('RealtimeCausalTree', () => {
 
             await realtime.init();
             connection.setConnected(true);
-            
+
             await connection.flushPromises();
 
             expect(realtime.tree).not.toBe(null);
@@ -419,7 +419,7 @@ describe('RealtimeCausalTree', () => {
             connection.setConnected(true);
             await connection.flushPromises();
 
-            const addedRef = remoteWeave.insert(atom(atomId(1, 5), atomId(1, 0), new Op()));
+            const [addedRef] = remoteWeave.insert(atom(atomId(1, 5), atomId(1, 0), new Op()));
             finalWeave.import(remoteWeave.atoms);
             weave.splice(0, weave.length, ...remoteWeave.atoms);
 
@@ -534,8 +534,8 @@ describe('RealtimeCausalTree', () => {
         it('should try to insert new atoms into the tree', async () => {
             let weave = new Weave<Op>();
 
-            const root = weave.insert(atom(atomId(1, 0), null, new Op()));
-            const first = weave.insert(atom(atomId(1, 2), atomId(1, 0), new Op()));
+            const [root] = weave.insert(atom(atomId(1, 0), null, new Op()));
+            const [first] = weave.insert(atom(atomId(1, 2), atomId(1, 0), new Op()));
 
             await realtime.init();
             connection.setConnected(true);
@@ -603,8 +603,8 @@ describe('RealtimeCausalTree', () => {
             
             let weave = new Weave<Op>();
 
-            const root = weave.insert(atom(atomId(1, 0), null, new Op()));
-            const first = weave.insert(atom(atomId(1, 2), atomId(1, 0), new Op()));
+            const [root] = weave.insert(atom(atomId(1, 0), null, new Op()));
+            const [first] = weave.insert(atom(atomId(1, 2), atomId(1, 0), new Op()));
 
             await realtime.init();
             await connection.flushPromises();

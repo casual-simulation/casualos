@@ -10,6 +10,7 @@ import { PrecalculatedOp } from './PrecalculatedOp';
 import { Subject } from 'rxjs';
 import { AtomValidator } from './AtomValidator';
 import { PrivateCryptoKey, PublicCryptoKey } from "../crypto";
+import { RejectedAtom } from "./RejectedAtom";
 
 /**
  * Defines an interface that contains possible options that can be set on a causal tree.
@@ -46,8 +47,10 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
     private _knownSites: SiteInfo[];
     private _atomAdded: Subject<Atom<TOp>[]>;
     private _atomArchived: Subject<Atom<TOp>[]>;
+    private _atomRejected: Subject<RejectedAtom<TOp>[]>;
     private _isBatching: boolean;
     private _batch: Atom<TOp>[];
+    private _rejected: RejectedAtom<TOp>[];
     private _validator: AtomValidator;
     private _keyMap: Map<number, PublicCryptoKey>;
 
@@ -141,8 +144,10 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         this._metadata = undefined;
         this._atomAdded = new Subject<Atom<TOp>[]>();
         this._atomArchived = new Subject<Atom<TOp>[]>();
+        this._atomRejected = new Subject<RejectedAtom<TOp>[]>();
         this._isBatching = false;
         this._batch = [];
+        this._rejected = [];
         this.garbageCollect = options.garbageCollect || false;
 
         if (this._validator && options.signingKey && (!tree.site.crypto || !tree.site.crypto.publicKey)) {
@@ -164,7 +169,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
     async add<T extends TOp>(atom: Atom<T>): Promise<Atom<T>> {
         await this._validate(atom);
         this.factory.updateTime(atom);
-        let ref = this.weave.insert(atom);
+        let [ref, rejected] = this.weave.insert(atom);
         if (ref) {
             if (this._isBatching) {
                 this._batch.push(ref);
@@ -173,6 +178,13 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
                 this.triggerGarbageCollection(refs);
                 [this._value, this._metadata] = this._calculateValue(refs);
                 this._atomAdded.next(refs);
+            }
+        }
+        if (rejected) {
+            if (this._isBatching) {
+                this._rejected.push(rejected);
+            } else {
+                this._atomRejected.next([rejected]);
             }
         }
         return ref;
@@ -219,6 +231,10 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
                 [this._value, this._metadata] = this._calculateValue(this._batch);
                 this._atomAdded.next(this._batch);
                 this._batch = [];
+            }
+            if(this._rejected.length > 0) {
+                this._atomRejected.next(this._rejected);
+                this._rejected = [];
             }
             this._isBatching = false;
         }

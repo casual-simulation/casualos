@@ -2,6 +2,7 @@ import { Atom, AtomId, AtomOp, idEquals, atomIdToString, atomId, atomMatchesChec
 import { keys } from "lodash";
 import { WeaveVersion, WeaveSiteVersion } from "./WeaveVersion";
 import { getHash } from './Hash';
+import { RejectedAtom } from "./RejectedAtom";
 
 /**
  * Defines a weave. 
@@ -51,14 +52,17 @@ export class Weave<TOp extends AtomOp> {
     }
 
     /**
-     * Inserts the given atom into the weave.
-     * @param atom 
+     * Inserts the given atom into the weave and returns it.
+     * @param atom The atom.
      */
-    insert<T extends TOp>(atom: Atom<T>): Atom<T> {
+    insert<T extends TOp>(atom: Atom<T>): [Atom<T> | null, RejectedAtom<T> | null] {
 
         if (!atomMatchesChecksum(atom)) {
             console.warn(`[Weave] Atom ${atomIdToString(atom.id)} rejected because its checksum didn't match itself.`);
-            return null;
+            return [null, {
+                atom: atom,
+                reason: 'checksum_failed'
+            }];
         }
 
         const site = this.getSite(atom.id.site);
@@ -66,18 +70,24 @@ export class Weave<TOp extends AtomOp> {
 
             // check for an existing root atom
             if (this.atoms.length > 0) {
-                throw new Error('Cannot add second root atom.');
+                return [null, {
+                    atom: atom,
+                    reason: 'second_root_not_allowed'
+                }];
             }
 
             // Add the atom at the root of the weave.
             this._atoms.splice(0, 0, atom);
             site[atom.id.timestamp] = atom;
             this._sizeMap.set(atom.id, 1);
-            return atom;
+            return [atom, null];
         } else {
             const causeIndex = this._indexOf(atom.cause);
             if (causeIndex < 0 ) {
-                return null;
+                return [null, {
+                    atom: atom,
+                    reason: 'cause_not_found'
+                }];
             }
             const weaveIndex = this._weaveIndex(causeIndex, atom.id);
             const siteIndex = atom.id.timestamp;
@@ -85,7 +95,7 @@ export class Weave<TOp extends AtomOp> {
             if (siteIndex >= 0 && siteIndex < site.length) {
                 const existingAtom = site[siteIndex];
                 if (existingAtom && idEquals(existingAtom.id, atom.id)) {
-                    return <Atom<T>>existingAtom;
+                    return [<Atom<T>>existingAtom, null];
                 }
             }
             this._atoms.splice(weaveIndex, 0, atom);
@@ -93,7 +103,7 @@ export class Weave<TOp extends AtomOp> {
             
             this._updateAtomSizes([atom]);
 
-            return atom;
+            return [atom, null];
         }
     }
 
