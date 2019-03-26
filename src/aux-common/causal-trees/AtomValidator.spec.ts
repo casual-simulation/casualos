@@ -12,7 +12,7 @@ describe('AtomValidator', () => {
     describe('sign()', () => {
         it('should encode the signature returned from the crypto implementation to base 64', async () => {
 
-            const crypto = new TestCryptoImpl('ECDSA-SHA256');
+            const crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
             const buffer = Buffer.from('abcdef', 'utf8');
             const spy = jest.spyOn(crypto, 'sign').mockResolvedValue(buffer.buffer);
             const [pub, priv] = await crypto.generateKeyPair();
@@ -34,7 +34,7 @@ describe('AtomValidator', () => {
 
     describe('verify()', () => {
         it('should return true if the crypto implementation returns true', async () => {
-            const crypto = new TestCryptoImpl('ECDSA-SHA256');
+            const crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
             const spy = jest.spyOn(crypto, 'verify').mockResolvedValue(true);
             const [pub, priv] = await crypto.generateKeyPair();
             const validator = new AtomValidator(crypto);
@@ -47,7 +47,7 @@ describe('AtomValidator', () => {
         });
 
         it('should return false if the crypto implementation returns false', async () => {
-            const crypto = new TestCryptoImpl('ECDSA-SHA256');
+            const crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
             const spy = jest.spyOn(crypto, 'verify').mockResolvedValue(false);
             const [pub, priv] = await crypto.generateKeyPair();
             const validator = new AtomValidator(crypto);

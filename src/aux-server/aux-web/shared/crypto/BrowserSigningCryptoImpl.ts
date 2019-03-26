@@ -20,11 +20,11 @@ export class BrowserSigningCryptoImpl implements SigningCryptoImpl {
 
     /**
      * Creates a new BrowserSigningCryptoImpl object.
-     * @param algorithm The algorithm to use. Currently only ECDSA-SHA256 is supported.
+     * @param algorithm The algorithm to use. Currently only ECDSA-SHA256-NISTP256 is supported.
      */
     constructor(algorithm: SignatureAlgorithmType) {
-        if (algorithm !== 'ECDSA-SHA256') {
-            throw new Error('[BrowserSigningCryptoImpl] Algorithms other than ECDSA-SHA256 are not supported.');
+        if (algorithm !== 'ECDSA-SHA256-NISTP256') {
+            throw new Error('[BrowserSigningCryptoImpl] Algorithms other than ECDSA-SHA256-NISTP256 are not supported.');
         }
     }
 
