@@ -133,7 +133,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     }
 
     protected _calcWorkspaceDragPosition(calc: FileCalculationContext, gridPosition: Vector2) {
-        return this._calculateFileDragPosition(calc, this._context, gridPosition, ...this._files);
+        return this._calculateFileDragStackPosition(calc, this._context, gridPosition, ...this._files);
     }
 
     protected _showGrid(workspace: BuilderGroup3D): void {

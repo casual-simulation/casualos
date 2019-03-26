@@ -25,13 +25,13 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
         const { good, gridTile } = this._interaction.pointOnGrid(calc, mouseDir);
 
         if (this._files.length > 0 && good) {
-            const result = this._calculateFileDragPosition(calc, this._context, gridTile.tileCoordinate, ...this._files);
+            const result = this._calculateFileDragStackPosition(calc, this._context, gridTile.tileCoordinate, ...this._files);
 
             this._combine = result.combine;
             this._other = result.other;
 
             if (result.stackable || result.index === 0) {
-                this._updateFilesPositions(this._files, gridTile.tileCoordinate, 0, result.index);
+                this._updateFilesPositions(this._files, gridTile.tileCoordinate, gridTile.center.y, result.index);
             }
         }
     }    
