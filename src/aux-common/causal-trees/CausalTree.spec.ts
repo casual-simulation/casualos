@@ -6,6 +6,8 @@ import { site } from './SiteIdInfo';
 import { storedTree, StoredCausalTreeVersion1, StoredCausalTree, StoredCausalTreeVersion2, StoredCausalTreeVersion3, currentFormatVersion } from "./StoredCausalTree";
 import { precalculatedOp } from "./PrecalculatedOp";
 import { jestPreset } from "ts-jest";
+import { AtomValidator } from "./AtomValidator";
+import { TestCryptoImpl } from "../crypto/test/TestCryptoImpl";
 
 enum OpType {
     root = 0,

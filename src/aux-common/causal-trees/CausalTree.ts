@@ -1,4 +1,4 @@
-import { AtomOp, Atom, AtomId } from "./Atom";
+import { AtomOp, Atom, AtomId, atomIdToString, atomId } from "./Atom";
 import { Weave } from "./Weave";
 import { AtomFactory } from "./AtomFactory";
 import { AtomReducer } from "./AtomReducer";
@@ -8,6 +8,8 @@ import { StoredCausalTree } from "./StoredCausalTree";
 import { SiteVersionInfo } from "./SiteVersionInfo";
 import { PrecalculatedOp } from './PrecalculatedOp';
 import { Subject } from 'rxjs';
+import { AtomValidator } from './AtomValidator';
+import { PrivateCryptoKey, PublicCryptoKey } from "../crypto";
 
 /**
  * Defines an interface that contains possible options that can be set on a causal tree.
@@ -145,7 +147,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      */
     add<T extends TOp>(atom: Atom<T>): Atom<T> {
         this.factory.updateTime(atom);
-        const ref = this.weave.insert(atom);
+        let ref = this.weave.insert(atom);
         if (ref) {
             if (this._isBatching) {
                 this._batch.push(ref);

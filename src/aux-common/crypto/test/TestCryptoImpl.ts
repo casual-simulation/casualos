@@ -3,7 +3,7 @@ import { SignatureAlgorithmType } from '../SignatureAlgorithm';
 
 export class TestCryptoImpl implements SigningCryptoImpl {
     valid: boolean = false;
-    signature: ArrayBuffer = new ArrayBuffer(0);
+    signature: ArrayBuffer = null;
     algorithm: SignatureAlgorithmType;
 
     constructor(algorithm: SignatureAlgorithmType) {
@@ -11,7 +11,7 @@ export class TestCryptoImpl implements SigningCryptoImpl {
     }
 
     async sign(key: PrivateCryptoKey, data: ArrayBuffer): Promise<ArrayBuffer> {
-        return this.signature;
+        return this.signature || data;
     }
     
     async verify(key: PublicCryptoKey, signature: ArrayBuffer, data: ArrayBuffer): Promise<boolean> {

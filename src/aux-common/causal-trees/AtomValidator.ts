@@ -10,6 +10,13 @@ export class AtomValidator {
     private _impl: SigningCryptoImpl;
 
     /**
+     * Gets the crypto implementation that this validator is using.
+     */
+    get impl() {
+        return this._impl;
+    }
+
+    /**
      * Creates a new Atom Validator instance that uses the given crypto implementation.
      * @param impl The implementation.
      */
@@ -24,10 +31,8 @@ export class AtomValidator {
      * @param atom The atom to sign.
      */
     async sign<T extends AtomOp>(key: PrivateCryptoKey, atom: Atom<T>): Promise<Atom<T>> {
-        const fields = [atom.id, atom.cause, atom.value];
-        const json = stringify(fields);
-        const buf = Buffer.from(json);
-        const signature = await this._impl.sign(key, buf.buffer);
+        const buffer = this._getData(atom);
+        const signature = await this._impl.sign(key, buffer);
         const ints = new Uint8Array(signature);
         const base64 = fromByteArray(ints);
         return {
@@ -49,7 +54,15 @@ export class AtomValidator {
         }
         const ints = toByteArray(atom.signature);
         const signature = ints.buffer;
-        return await this._impl.verify(key, signature);
+        const buf = this._getData(atom);
+        return await this._impl.verify(key, signature, buf);
+    }
+
+    private _getData<T extends AtomOp>(atom: Atom<T>): ArrayBuffer {
+        const fields = [atom.id, atom.cause, atom.value];
+        const json = stringify(fields);
+        const buffer = Buffer.from(json);
+        return buffer.buffer;
     }
 
 }
