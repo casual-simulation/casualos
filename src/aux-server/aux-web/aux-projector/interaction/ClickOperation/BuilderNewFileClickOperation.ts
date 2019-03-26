@@ -15,8 +15,8 @@ export class BuilderNewFileClickOperation extends BaseFileClickOperation {
     // This overrides the base class IGameView
     protected _gameView: GameView;
 
-    constructor(mode: UserMode, gameView: GameView, interaction: BuilderInteractionManager, file: File) {
-        super(mode, gameView, interaction, file, null);
+    constructor(gameView: GameView, interaction: BuilderInteractionManager, file: File) {
+        super(gameView, interaction, file, null);
     }
     
     protected _performClick(): void {

@@ -9,6 +9,7 @@ import GameView from '../GameView/GameView';
 import { GameObject } from '../../shared/scene/GameObject';
 import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { appManager } from '../../shared/AppManager';
+import { PlayerFileClickOperation } from './ClickOperation/PlayerFileClickOperation';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
 
@@ -16,16 +17,16 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     protected _gameView: GameView;
 
     constructor(gameView: GameView) {
-        super(gameView)
+        super(gameView);
     }
 
     createGameObjectClickOperation(gameObject: GameObject, hit: Intersection): IOperation {
-
         if (gameObject instanceof AuxFile3D) {
-            appManager.fileManager.action('onClick', [gameObject.file]);
+            let fileClickOp = new PlayerFileClickOperation(this._gameView, this, gameObject, hit);
+            return fileClickOp;
+        } else {
+            return null;
         }
-
-        return null;
     }
 
     createEmptyClickOperation(): IOperation {

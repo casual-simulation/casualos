@@ -53,7 +53,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
     createGameObjectClickOperation(gameObject: GameObject, hit: Intersection): IOperation {
         if (gameObject instanceof AuxFile3D || gameObject instanceof ContextGroup3D) {
-            let fileClickOp = new BuilderFileClickOperation(this.mode, this._gameView, this, gameObject, hit);
+            let fileClickOp = new BuilderFileClickOperation(this._gameView, this, gameObject, hit);
             return fileClickOp;
         } else {
             return null;
@@ -69,7 +69,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         const vueElement: any = Input.getVueParent(element);
         if (vueElement.file) {
             const file = <File>vueElement.file;
-            let newFileClickOp = new BuilderNewFileClickOperation(this.mode, this._gameView, this, file);
+            let newFileClickOp = new BuilderNewFileClickOperation(this._gameView, this, file);
             return newFileClickOp;
         }
 
