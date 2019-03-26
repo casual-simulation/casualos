@@ -551,7 +551,11 @@ describe('RealtimeCausalTree', () => {
                 data: [first]
             });
             scheduler.flush();
-            await connection.flushPromise();
+
+            // flush all the promises
+            for (let i = 0; i < 10; i++) {
+                await connection.flushPromise();
+            }
 
             expect(realtime.tree.weave.atoms).toEqual([
                 root,
@@ -565,10 +569,10 @@ describe('RealtimeCausalTree', () => {
             connection.setConnected(true);
             await connection.flushPromises();
 
-            const root = realtime.tree.add(atom(atomId(2, 1), null, new Op()));
-            const child = realtime.tree.add(atom(atomId(2, 2), atomId(2, 1), new Op()));
-            const skipped = realtime.tree.add(atom(atomId(2, 3), atomId(2, 10), new Op()));
-            const alsoSkipped = realtime.tree.add(atom(atomId(3, 4), atomId(2, 1), new Op()));
+            const root = await realtime.tree.add(atom(atomId(2, 1), null, new Op()));
+            const child = await realtime.tree.add(atom(atomId(2, 2), atomId(2, 1), new Op()));
+            const skipped = await realtime.tree.add(atom(atomId(2, 3), atomId(2, 10), new Op()));
+            const alsoSkipped = await realtime.tree.add(atom(atomId(3, 4), atomId(2, 1), new Op()));
 
             expect(connection.emitted).toContainEqual({
                 name: 'event_abc',

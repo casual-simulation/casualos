@@ -103,19 +103,19 @@ describe('AuxCausalTree', () => {
                 let site2 = new AuxCausalTree(storedTree(site(2)));
 
                 const root = await site1.root();
-                site2.add(root);
+                await site2.add(root);
 
                 const first = await site1.file('fileId');
                 const firstTag = await site1.tag('test', first);
                 const firstTagValue = await site1.val('abc', firstTag);
 
-                site2.add(first);
-                site2.add(firstTag);
-                site2.add(firstTagValue);
+                await site2.add(first);
+                await site2.add(firstTag);
+                await site2.add(firstTagValue);
 
                 const deleteFile = await site2.delete(first);
                 
-                site1.add(deleteFile);
+                await site1.add(deleteFile);
                 
                 expect(site1.value).toEqual({});
             });
@@ -186,21 +186,21 @@ describe('AuxCausalTree', () => {
                 let site2 = new AuxCausalTree(storedTree(site(2)));
 
                 const root = await site1.root();
-                site2.add(root);
+                await site2.add(root);
 
                 const first = await site1.file('fileId');
                 const firstTag = await site1.tag('test', first);
                 const firstTagValue = await site1.val('abc', firstTag);
 
-                site2.add(first);
-                site2.add(firstTag);
-                site2.add(firstTagValue);
+                await site2.add(first);
+                await site2.add(firstTag);
+                await site2.add(firstTagValue);
 
                 const secondTag = await site2.tag('test', first);
                 const secondTagValue = await site2.val('123', secondTag);
 
-                site1.add(secondTag);
-                site1.add(secondTagValue);
+                await site1.add(secondTag);
+                await site1.add(secondTagValue);
                 
                 expect(site1.value).toMatchObject({
                     'fileId': {
@@ -217,21 +217,21 @@ describe('AuxCausalTree', () => {
                 let site2 = new AuxCausalTree(storedTree(site(2)));
 
                 const root = await site1.root();
-                site2.add(root);
+                await site2.add(root);
 
                 const first = await site1.file('fileId');
                 const firstTag = await site1.tag('test', first);
                 const firstTagValue = await site1.val('abc', firstTag);
 
-                site2.add(first);
-                site2.add(firstTag);
-                site2.add(firstTagValue);
+                await site2.add(first);
+                await site2.add(firstTag);
+                await site2.add(firstTagValue);
 
                 const secondTag = await site2.tag('other', first);
                 const secondTagValue = await site2.val('123', secondTag);
 
-                site1.add(secondTag);
-                site1.add(secondTagValue);
+                await site1.add(secondTag);
+                await site1.add(secondTagValue);
                 
                 expect(site1.value).toMatchObject({
                     'fileId': {
@@ -253,19 +253,19 @@ describe('AuxCausalTree', () => {
                 let site2 = new AuxCausalTree(storedTree(site(2)));
 
                 const root = await site1.root();
-                site2.add(root);
+                await site2.add(root);
 
                 const first = await site1.file('fileId');
                 const firstTag = await site1.tag('test', first);
                 const firstTagValue = await site1.val('abc', firstTag);
 
-                site2.add(first);
-                site2.add(firstTag);
-                site2.add(firstTagValue);
+                await site2.add(first);
+                await site2.add(firstTag);
+                await site2.add(firstTagValue);
 
                 const secondTagValue = await site2.val('123', firstTag);
 
-                site1.add(secondTagValue);
+                await site1.add(secondTagValue);
                 
                 expect(site1.value).toMatchObject({
                     'fileId': {
@@ -287,35 +287,35 @@ describe('AuxCausalTree', () => {
                 let site3 = new AuxCausalTree(storedTree(site(3)));
 
                 const root = await site1.root();
-                site2.add(root);
-                site3.add(root);
+                await site2.add(root);
+                await site3.add(root);
 
                 const first = await site1.file('fileId');
                 const firstTag = await site1.tag('first', first);
                 const firstTagValue = await site1.val('abc', firstTag);
 
-                site2.add(first);
-                site2.add(firstTag);
-                site2.add(firstTagValue);
-                site3.add(first);
-                site3.add(firstTag);
-                site3.add(firstTagValue);
+                await site2.add(first);
+                await site2.add(firstTag);
+                await site2.add(firstTagValue);
+                await site3.add(first);
+                await site3.add(firstTag);
+                await site3.add(firstTagValue);
 
                 const firstDelete = await site1.delete(firstTag, 0, 5);
                 const firstInsert = await site1.insert(0, 'reallylong', firstTag);
                 const secondRename = await site2.insert(5, '1', firstTag);
                 const thirdRename = await site3.insert(0, '99', firstTag);
 
-                site1.add(thirdRename);
-                site1.add(secondRename);
+                await site1.add(thirdRename);
+                await site1.add(secondRename);
 
-                site2.add(firstDelete);
-                site2.add(firstInsert);
-                site2.add(thirdRename);
+                await site2.add(firstDelete);
+                await site2.add(firstInsert);
+                await site2.add(thirdRename);
 
-                site3.add(firstDelete);
-                site3.add(firstInsert);
-                site3.add(secondRename);
+                await site3.add(firstDelete);
+                await site3.add(firstInsert);
+                await site3.add(secondRename);
 
                 const expected: any = {
                     'fileId': {
@@ -337,32 +337,32 @@ describe('AuxCausalTree', () => {
                 let site3 = new AuxCausalTree(storedTree(site(3)));
 
                 const root = await site1.root();
-                site2.add(root);
-                site3.add(root);
+                await site2.add(root);
+                await site3.add(root);
 
                 const first = await site1.file('fileId');
                 const firstTag = await site1.tag('first', first);
                 const firstTagValue = await site1.val('abc', firstTag);
 
-                site2.add(first);
-                site2.add(firstTag);
-                site2.add(firstTagValue);
-                site3.add(first);
-                site3.add(firstTag);
-                site3.add(firstTagValue);
+                await site2.add(first);
+                await site2.add(firstTag);
+                await site2.add(firstTagValue);
+                await site3.add(first);
+                await site3.add(firstTag);
+                await site3.add(firstTagValue);
 
                 const secondDelete = await site2.delete(firstTag, 1, 5);
                 const secondRename = await site2.insert(1, '1', firstTag);
                 const thirdRename = await site3.insert(0, '99', firstTag);
 
-                site1.add(secondDelete);
-                site1.add(thirdRename);
-                site1.add(secondRename);
+                await site1.add(secondDelete);
+                await site1.add(thirdRename);
+                await site1.add(secondRename);
 
-                site2.add(thirdRename);
+                await site2.add(thirdRename);
 
-                site3.add(secondDelete);
-                site3.add(secondRename);
+                await site3.add(secondDelete);
+                await site3.add(secondRename);
                 
                 const expected: any = {
                     'fileId': {
@@ -407,32 +407,32 @@ describe('AuxCausalTree', () => {
                 let site3 = new AuxCausalTree(storedTree(site(3)));
 
                 const root = await site1.root();
-                site2.add(root);
-                site3.add(root);
+                await site2.add(root);
+                await site3.add(root);
 
                 const first = await site1.file('fileId');
                 const firstTag = await site1.tag('first', first);
                 const firstTagValue = await site1.val('abc', firstTag);
 
-                site2.add(first);
-                site2.add(firstTag);
-                site2.add(firstTagValue);
-                site3.add(first);
-                site3.add(firstTag);
-                site3.add(firstTagValue);
+                await site2.add(first);
+                await site2.add(firstTag);
+                await site2.add(firstTagValue);
+                await site3.add(first);
+                await site3.add(firstTag);
+                await site3.add(firstTagValue);
 
                 const secondDelete = await site2.delete(firstTagValue, 1, 3);
                 const secondRename = await site2.insert(1, '1', firstTagValue);
                 const thirdRename = await site3.insert(0, '99', firstTagValue);
 
-                site1.add(secondDelete);
-                site1.add(thirdRename);
-                site1.add(secondRename);
+                await site1.add(secondDelete);
+                await site1.add(thirdRename);
+                await site1.add(secondRename);
 
-                site2.add(thirdRename);
+                await site2.add(thirdRename);
 
-                site3.add(secondDelete);
-                site3.add(secondRename);
+                await site3.add(secondDelete);
+                await site3.add(secondRename);
                 
                 const expected: any = {
                     'fileId': {

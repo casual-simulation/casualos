@@ -48,6 +48,8 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
     private _atomArchived: Subject<Atom<TOp>[]>;
     private _isBatching: boolean;
     private _batch: Atom<TOp>[];
+    private _validator: AtomValidator;
+    private _keyMap: Map<number, PublicCryptoKey>;
 
     /**
      * Gets or sets whether the causal tree should collect garbage.
@@ -130,8 +132,10 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         this._knownSites = unionBy([
             this.site
         ], tree.knownSites || [], site => site.id);
+        this._validator = options.validator || null;
+        this._keyMap = new Map();
         this._weave = new Weave<TOp>();
-        this._factory = new AtomFactory<TOp>(this._site);
+        this._factory = new AtomFactory<TOp>(this._site, 0, this._validator, options.signingKey);
         this._reducer = reducer;
         this._value = undefined;
         this._metadata = undefined;
@@ -140,6 +144,10 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         this._isBatching = false;
         this._batch = [];
         this.garbageCollect = options.garbageCollect || false;
+
+        if (this._validator && options.signingKey && (!tree.site.crypto || !tree.site.crypto.publicKey)) {
+            console.warn(`[CausalTree] Created a tree with a signing key but no public key. This might cause some remotes to reject atoms because they shouldn't be signed.`);
+        }
 
         this.import(tree);
     }
@@ -155,7 +163,8 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * Adds the given atom to this Causal Tree's history.
      * @param atom The atom to add to the tree.
      */
-    add<T extends TOp>(atom: Atom<T>): Atom<T> {
+    async add<T extends TOp>(atom: Atom<T>): Promise<Atom<T>> {
+        await this._validate(atom);
         this.factory.updateTime(atom);
         let ref = this.weave.insert(atom);
         if (ref) {
@@ -177,12 +186,12 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      */
     addMany(refs: Atom<TOp>[]): Promise<Atom<TOp>[]> {
         const atoms = sortBy(refs, a => a.id.timestamp);
-        return this.batch(() => {
+        return this.batch(async () => {
             let added: Atom<TOp>[] = [];
             for (let i = 0; i < atoms.length; i++) {
                 let atom = atoms[i];
                 if (atom) {
-                    let result = this.add(atom);
+                    let result = await this.add(atom);
                     if (result) {
                         added.push(result);
                     }
@@ -302,7 +311,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      */
     async create<T extends TOp>(op: T, parent: Atom<TOp> | Atom<TOp> | AtomId, priority?: number): Promise<Atom<T>> {
         const atom = await this.factory.create(op, parent, priority);
-        return this.add(atom);
+        return await this.add(atom);
     }
 
     /**
@@ -394,6 +403,41 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      */
     protected recalculateValues(refs: Atom<TOp>[]): void {}
 
+    /**
+     * Ensures that the given atom is valid.
+     * @param atom The atom to validate.
+     */
+    private async _validate<T extends TOp>(atom: Atom<T>): Promise<void> {
+        const key = await this._getPublicKey(atom.id.site);
+        if (key) {
+            const valid = await this._validator.verify(key, atom);
+            if (!valid) {
+                throw new Error(`[CausalTree] Atom (${atomIdToString(atom.id)}) signature is invalid.`);
+            }
+        } else if (!key && !!atom.signature) {
+            throw new Error(`[CausalTree] Atom (${atomIdToString(atom.id)}) has a signature but we don't have the key for the site.`);
+        }
+    }
+
+    /**
+     * Gets the public key for the given site.
+     * If the site does not have a public key, then null is returned.
+     * @param siteId The site that the public key should be retrieved for.
+     */
+    private async _getPublicKey(siteId: number): Promise<PublicCryptoKey> {
+        let key = this._keyMap.get(siteId);
+        if (!key) {
+            const site = find(this.knownSites, s => s.id === siteId);
+            if (site && site.crypto && site.crypto.publicKey) {
+                key = await this._validator.impl.importPublicKey(site.crypto.publicKey);
+            }
+
+            if (key) {
+                this._keyMap.set(siteId, key);
+            }
+        }
+        return key;
+    }
 
     private _calculateValue(refs: Atom<TOp>[]): [TValue, TMetadata] {
         return this._reducer.eval(this._weave, refs, this._value, this._metadata);
