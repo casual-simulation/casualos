@@ -1,5 +1,12 @@
 # AUX Server Changelog
 
+## V0.3.23
+### Date: TBD
+
+### Changes:
+- Features
+  - Can drag and combine files in AUX Player.
+  
 ## V0.3.22
 ### Date: 3/26/2019
 
