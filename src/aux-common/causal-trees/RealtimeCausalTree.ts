@@ -101,6 +101,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         this._options = options;
 
         this._subs.push(this._updated.pipe(
+            filter(a => a.length > 0),
             concatMap(async atoms => await this._store.add(this.id, atoms))
         ).subscribe(null, err => this._errors.next(err)));
     }
@@ -114,7 +115,9 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         if (!this._alwaysRequestNewSiteId) {
             const stored = await this._store.get(this.id, false);
             if (stored) {
-                this._setTree(<TTree>this._factory.create(this.type, stored, this._options));
+                let tree = <TTree>this._factory.create(this.type, stored, this._options);
+                await tree.import(stored);
+                this._setTree(tree);
                 if (stored.weave) {
                     if (stored.formatVersion === 2) {
                         this._updated.next(stored.weave);

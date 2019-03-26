@@ -198,6 +198,7 @@ describe('RealtimeCausalTree', () => {
 
             await realtime.init();
             connection.setConnected(true);
+            
             await connection.flushPromises();
 
             expect(realtime.tree).not.toBe(null);

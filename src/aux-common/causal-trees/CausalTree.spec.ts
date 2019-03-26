@@ -44,7 +44,7 @@ class Reducer implements AtomReducer<Op, number, any> {
 describe('CausalTree', () => {
 
     describe('constructor', () => {
-        it('should import the given weave', async () => {
+        it('should not import the given weave', async () => {
             let tree1 = new CausalTree(storedTree(site(1)), new Reducer());
 
             const root = await tree1.factory.create(new Op(), null); // Time 1
@@ -52,9 +52,7 @@ describe('CausalTree', () => {
 
             let tree2 = new CausalTree(storedTree(site(2), null, tree1.weave.atoms), new Reducer());
 
-            expect(tree2.weave.atoms.map(r => r)).toEqual([
-                root
-            ]);
+            expect(tree2.weave.atoms.map(r => r)).toEqual([]);
         });
 
         it('should add the given known sites to the known sites list', () => {
@@ -456,7 +454,7 @@ describe('CausalTree', () => {
             await tree2.add(await tree2.factory.create(new Op(OpType.add), root)); // Time 4
             await tree2.add(await tree2.factory.create(new Op(OpType.subtract), root)); // Time 5
 
-            tree1.importWeave(tree2.weave.atoms);
+            await tree1.importWeave(tree2.weave.atoms);
 
             expect(tree1.time).toBe(6);
         });
@@ -474,7 +472,7 @@ describe('CausalTree', () => {
             await tree2.add(await tree2.factory.create(new Op(OpType.add), root)); // Time 3
             await tree2.add(await tree2.factory.create(new Op(OpType.subtract), root)); // Time 4
 
-            tree1.importWeave(tree2.weave.atoms);
+            await tree1.importWeave(tree2.weave.atoms);
 
             expect(tree1.time).toBe(4);
         });
@@ -491,8 +489,8 @@ describe('CausalTree', () => {
             await tree2.add(await tree2.factory.create(new Op(OpType.add), root)); // Time 4
             await tree2.add(await tree2.factory.create(new Op(OpType.subtract), root)); // Time 5
 
-            tree1.importWeave(tree2.weave.atoms);
-            tree1.importWeave(tree2.weave.atoms);
+            await tree1.importWeave(tree2.weave.atoms);
+            await tree1.importWeave(tree2.weave.atoms);
 
             expect(tree1.time).toBe(6);
         });
@@ -526,7 +524,7 @@ describe('CausalTree', () => {
             let tree1 = new CausalTree(storedTree(site(1)), reducer);
 
             const root = await tree1.factory.create(new Op(), null);
-            tree1.add(root);
+            await tree1.add(root);
 
             const add1 = atom(atomId(2, 10), root.id, new Op(OpType.add));
             const add2 = atom(atomId(2, 11), root.id, new Op(OpType.add));
@@ -536,6 +534,40 @@ describe('CausalTree', () => {
                 .rejects.toThrow(/not valid/i);
 
             spy.mockRestore();
+        });
+
+        it('should validate incoming atoms', async () => {
+            let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
+            let validator = new AtomValidator(crypto);
+            let [publicKey, privateKey] = await crypto.generateKeyPair();
+
+            let spy = jest.spyOn(validator, 'verify').mockResolvedValue(true);
+
+            let tree = new CausalTree(storedTree(site(1, {
+                signatureAlgorithm: 'ECDSA-SHA256-NISTP256',
+                publicKey: 'test'
+            })), new Reducer(), {
+                validator: validator,
+                signingKey: privateKey
+            });
+            
+            const root = await tree.factory.create(new Op(), null);
+            const add1 = await tree.factory.create(new Op(OpType.add), root.id);
+            const add2 = await tree.factory.create(new Op(OpType.add), root.id);
+            const sub = await tree.factory.create(new Op(OpType.subtract), add2.id);
+
+            await tree.importWeave([
+                root,
+                add2,
+                sub,
+                add1
+            ]);
+
+            expect(spy).toBeCalledTimes(4);
+            expect(spy).toHaveBeenCalledWith(expect.any(TestCryptoKey), root);
+            expect(spy).toHaveBeenCalledWith(expect.any(TestCryptoKey), add2);
+            expect(spy).toHaveBeenCalledWith(expect.any(TestCryptoKey), sub);
+            expect(spy).toHaveBeenCalledWith(expect.any(TestCryptoKey), add1);
         });
     });
 

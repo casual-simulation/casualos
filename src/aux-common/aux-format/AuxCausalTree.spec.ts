@@ -520,7 +520,7 @@ describe('AuxCausalTree', () => {
 
                 let other = new AuxCausalTree(storedTree(site(1)));
                 other.garbageCollect = true;
-                other.importWeave(tree.weave.atoms);
+                await other.importWeave(tree.weave.atoms);
 
                 expect(other.weave.atoms).toEqual([
                     root,
@@ -551,6 +551,7 @@ describe('AuxCausalTree', () => {
                 let other = new AuxCausalTree(exported, {
                     garbageCollect: true
                 });
+                await other.import(exported);
 
                 expect(other.weave.atoms).toEqual([
                     root,

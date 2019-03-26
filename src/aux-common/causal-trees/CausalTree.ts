@@ -148,8 +148,6 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         if (this._validator && options.signingKey && (!tree.site.crypto || !tree.site.crypto.publicKey)) {
             console.warn(`[CausalTree] Created a tree with a signing key but no public key. This might cause some remotes to reject atoms because they shouldn't be signed.`);
         }
-
-        this.import(tree);
     }
 
     /**
@@ -240,6 +238,10 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
             if (!weave.isValid()) {
                 throw new Error('[CausalTree] Imported references are not valid.');
             }
+        }
+
+        for (let i = 0; i < refs.length; i++) {
+            await this._validate(refs[i]);
         }
 
         const newAtoms = this.weave.import(refs);
