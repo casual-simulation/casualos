@@ -597,7 +597,7 @@ describe('RealtimeCausalTree', () => {
 
             // 1 connection + 2 events
             expect(updated.length).toBe(3);
-        }); 
+        });
 
         it('should ignore events if the tree has not been initialized', async () => {
             

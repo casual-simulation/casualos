@@ -1006,9 +1006,9 @@ describe('Weave', () => {
             const refs = weave.atoms;
 
             let newWeave = new Weave<Op>();
-            const newAtoms = newWeave.import(refs);
+            const [newAtoms, rejected] = newWeave.import(refs);
 
-            expect(newWeave.atoms.map(a => a)).toEqual([
+            expect(newWeave.atoms).toEqual([
                 root,
                 child2,
                 child1,
@@ -1022,12 +1022,13 @@ describe('Weave', () => {
             expect(site[2]).toBe(child2);
             expect(site[3]).toBe(child3);
 
-            expect(newAtoms.map(a => a)).toEqual([
+            expect(newAtoms).toEqual([
                 root,
                 child2,
                 child1,
                 child3
             ]);
+            expect(rejected).toEqual([]);
         });
 
         it('should be able to merge another weave into itself', () => {
@@ -1052,8 +1053,8 @@ describe('Weave', () => {
             const secondRefs = second.atoms;
 
             let newWeave = new Weave<Op>();
-            const importedFromFirst = newWeave.import(firstRefs);
-            const importedFromSecond = newWeave.import(secondRefs);
+            const [importedFromFirst, rejectedFromFirst] = newWeave.import(firstRefs);
+            const [importedFromSecond, rejectedFromSecond] = newWeave.import(secondRefs);
 
             const atoms = newWeave.atoms.map(a => a);
             expect(atoms[0]).toEqual(root);
@@ -1077,6 +1078,9 @@ describe('Weave', () => {
                 child4,
                 child5
             ]);
+
+            expect(rejectedFromFirst).toEqual([]);
+            expect(rejectedFromSecond).toEqual([]);
         });
 
         it('should be able to merge a partial weave into itself', () => {
@@ -1206,7 +1210,7 @@ describe('Weave', () => {
 
             let final = new Weave<Op>();
             final.import(first.atoms);
-            final.import(second.atoms);
+            let [, rejected] = final.import(second.atoms);
 
             expect(final.atoms).toEqual([
                 root,
@@ -1216,6 +1220,9 @@ describe('Weave', () => {
                 child7,
                 child1,
                 child3,
+            ]);
+            expect(rejected).toEqual([
+                { atom: diffChild8, reason: 'atom_id_already_exists' }
             ]);
             expect(final.isValid()).toBe(true);
 
@@ -1249,8 +1256,8 @@ describe('Weave', () => {
             );
 
             let final = new Weave<Op>();
-            final.import(second.atoms);
-            final.import(first.atoms);
+            let [, firstRejected] = final.import(second.atoms);
+            let [, secondRejected] = final.import(first.atoms);
 
             expect(final.atoms).toEqual([
                 root,
@@ -1258,6 +1265,8 @@ describe('Weave', () => {
                 s3t3,
                 s2t2
             ]);
+            expect(firstRejected).toEqual([]);
+            expect(secondRejected).toEqual([]);
             expect(final.isValid()).toBe(true);
 
             spy.mockRestore();
@@ -1291,9 +1300,11 @@ describe('Weave', () => {
             );
 
             let final = new Weave<Op>();
-            final.import(first.atoms);
-            final.import(second.atoms);
+            let [, firstRejected] = final.import(first.atoms);
+            let [, secondRejected] = final.import(second.atoms);
 
+            expect(firstRejected).toEqual([]);
+            expect(secondRejected).toEqual([]);
             expect(final.atoms).toEqual([
                 root,
                 s1t1,
@@ -1320,13 +1331,16 @@ describe('Weave', () => {
             };
 
             const a3 = atom(atomId(1, 2), a1.id, new Op());
-            const refs = weave.import([
+            const [refs, rejected] = weave.import([
                 a1,
                 a2,
                 a3
             ]);
 
             expect(refs).toEqual([]);
+            expect(rejected).toEqual([
+                { atom: a2, reason: 'checksum_failed' }
+            ]);
             expect(weave.atoms.map(a => a)).toEqual([
                 a1
             ]);
@@ -1454,7 +1468,7 @@ describe('Weave', () => {
 
             // Note that the partial weave must contain a complete causal chain.
             // That is, every parent node to the leafs
-            newWeave.import(secondRefs);
+            let [, rejected] = newWeave.import(secondRefs);
 
             const atoms = newWeave.atoms.map(a => a);
 
@@ -1469,6 +1483,10 @@ describe('Weave', () => {
 
             const site2 = newWeave.getSite(2);
             expect(site2.length).toBe(0);
+
+            expect(rejected).toEqual([
+                { atom: root2, reason: 'atom_id_already_exists' }
+            ]);
 
             spy.mockRestore();
         });
@@ -1486,7 +1504,7 @@ describe('Weave', () => {
             const diffChild8 = atom(atomId(1, 8), atomId(1, 7), new Op());
 
             let final = new Weave<Op>();
-            const added = final.import([
+            const [added, rejected] = final.import([
                 root,
                 child2,
                 child8, // already exists
@@ -1509,7 +1527,10 @@ describe('Weave', () => {
                 child3
             ];
 
-            expect(added).toEqual(expected)
+            expect(added).toEqual(expected);
+            expect(rejected).toEqual([
+                { atom: diffChild8, reason: 'atom_id_already_exists' }
+            ]);
             expect(final.atoms).toEqual(expected);
             expect(final.isValid()).toBe(true);
 
@@ -1527,7 +1548,7 @@ describe('Weave', () => {
             const child8 = atom(atomId(1, 8), atomId(1, 2), new Op());
 
             let final = new Weave<Op>();
-            const added = final.import([
+            const [added, rejected] = final.import([
                 root,
                 child2,
                 child8, // already exists
@@ -1550,7 +1571,10 @@ describe('Weave', () => {
                 child3
             ];
 
-            expect(added).toEqual(expected)
+            expect(added).toEqual(expected);
+            expect(rejected).toEqual([
+                { atom: child8, reason: 'atom_id_already_exists' }
+            ]);
             expect(final.atoms).toEqual(expected);
             expect(final.isValid()).toBe(true);
         });

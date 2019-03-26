@@ -291,16 +291,20 @@ export class Weave<TOp extends AtomOp> {
      * Returns the list of atoms that were added to the weave.
      * @param atoms The atoms to import into this weave.
      */
-    import(atoms: Atom<TOp>[]): Atom<TOp>[] {
+    import(atoms: Atom<TOp>[]): [Atom<TOp>[], RejectedAtom<TOp>[]] {
         
         let newAtoms: Atom<TOp>[] = [];
+        let rejectedAtoms: RejectedAtom<TOp>[] = [];
         let localOffset = 0;
         for (let i = 0; i < atoms.length; i++) {
             const a = atoms[i];
             let local = this._atoms[i + localOffset];
 
             if (!atomMatchesChecksum(a)) {
-                console.warn(`[Weave] Atom ${atomIdToString(a.id)} rejected because its checksum didn't match itself.`);
+                rejectedAtoms.push({
+                    atom: a,
+                    reason: 'checksum_failed'
+                });
                 break;
             }
 
@@ -325,6 +329,10 @@ export class Weave<TOp extends AtomOp> {
 
                     const exists = this.getAtom(atom.id);
                     if (exists) {
+                        rejectedAtoms.push({
+                            atom: atom,
+                            reason: 'atom_id_already_exists'
+                        });
                         continue;
                     }
                     
@@ -352,7 +360,10 @@ export class Weave<TOp extends AtomOp> {
                 if (exists && a.checksum !== exists.checksum) {
                     // Break because the atoms aren't actually the same
                     // even though they claim to be
-                    console.warn(`[Weave] Atom ${atomIdToString(a.id)} rejected because its checksum didn't match the existing atom (${a.checksum} !== ${exists.checksum})`);
+                    rejectedAtoms.push({
+                        atom: a,
+                        reason: 'atom_id_already_exists'
+                    });
                     break;
                 }
 
@@ -399,7 +410,7 @@ export class Weave<TOp extends AtomOp> {
 
         this._updateAtomSizes(newAtoms);
 
-        return newAtoms;
+        return [newAtoms, rejectedAtoms];
     }
     
     /**

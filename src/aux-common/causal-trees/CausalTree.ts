@@ -260,7 +260,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
             await this._validate(refs[i]);
         }
 
-        const newAtoms = this.weave.import(refs);
+        const [newAtoms, rejected] = this.weave.import(refs);
         const sortedAtoms = sortBy(newAtoms, a => a.id.timestamp);
         for (let i = 0; i < sortedAtoms.length; i++) {
             const atom = sortedAtoms[i];
@@ -274,6 +274,9 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         //     throw new Error('[CausalTree] Tree became invalid after garbage collection.');
         // }
         [this._value, this._metadata] = this._calculateValue(newAtoms);
+        if (rejected) {
+            this._atomRejected.next(rejected);
+        }
         return newAtoms;
     }
 
