@@ -367,13 +367,21 @@ export class Weave<TOp extends AtomOp> {
                         local = this._atoms[i + localOffset];
                     } while(local && a.id.timestamp <= local.cause.timestamp);
                     
-                    order = this._compareAtoms(a, local);
-                    if (order < 0) {
+                    if (!local) {
                         this._atoms.splice(i + localOffset, 0, a);
                         newAtoms.push(a);
-
+                        
                         const site = this.getSite(a.id.site);
                         site[a.id.timestamp] = a;
+                    } else {
+                        order = this._compareAtoms(a, local);
+                        if (order < 0) {
+                            this._atoms.splice(i + localOffset, 0, a);
+                            newAtoms.push(a);
+                            
+                            const site = this.getSite(a.id.site);
+                            site[a.id.timestamp] = a;
+                        }
                     }
                 }
             }
@@ -537,7 +545,7 @@ export class Weave<TOp extends AtomOp> {
                 break;
             }
             
-            if (!idEquals(atom.cause, cause.id)) {
+            if (atom.cause.timestamp < cause.id.timestamp) {
                 break;
             }
         }

@@ -17,7 +17,6 @@ export abstract class BaseFileClickOperation implements IOperation {
 
     protected _gameView: IGameView;
     protected _interaction: BaseInteractionManager;
-    protected _mode: UserMode;
     protected _file: File;
     protected _file3D: AuxFile3D | ContextGroup3D | null;
     protected _finished: boolean;
@@ -26,12 +25,11 @@ export abstract class BaseFileClickOperation implements IOperation {
     protected _startScreenPos: Vector2;
     protected _dragOperation: BaseFileDragOperation;
 
-    constructor(mode: UserMode, gameView: IGameView, interaction: BaseInteractionManager, file: File, file3D: AuxFile3D | ContextGroup3D | null) {
+    constructor(gameView: IGameView, interaction: BaseInteractionManager, file: File, file3D: AuxFile3D | ContextGroup3D | null) {
         this._gameView = gameView;
         this._interaction = interaction;
         this._file = file;
         this._file3D = file3D;
-        this._mode = mode;
         
         // Store the screen position of the input when the click occured.
         this._startScreenPos = this._gameView.input.getMouseScreenPos();
@@ -103,13 +101,10 @@ export abstract class BaseFileClickOperation implements IOperation {
         }
     }
 
-    protected abstract _performClick(calc: FileCalculationContext): void;
-
-    protected _createDragOperation(calc: FileCalculationContext): BaseFileDragOperation {
-        throw new Error('Not implemented.');
-    }
-
     protected _canDragFile(calc: FileCalculationContext, file: File): boolean {
         return isFileMovable(calc, file);
     }
+
+    protected abstract _performClick(calc: FileCalculationContext): void;
+    protected abstract _createDragOperation(calc: FileCalculationContext): BaseFileDragOperation;
 }
