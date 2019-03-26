@@ -804,7 +804,7 @@ export function getContextSize(calc: FileCalculationContext, contextFile: File, 
  * @param contextFile The file that represents the context.
  * @param domain The domain.
  */
-export function getContextGrid(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): File['tags']['aux.builder.context.grid'] {
+export function getBuilderContextGrid(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): File['tags']['aux.builder.context.grid'] {
     return getContextValue(calc, contextFile, domain, 'grid');
 }
 

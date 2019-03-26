@@ -12,7 +12,7 @@ import {
     isMinimized,
     FileCalculationContext,
     getContextMinimized,
-    getContextGrid,
+    getBuilderContextGrid,
     getContextSize,
     getContextScale,
     getContextDefaultHeight,
@@ -204,7 +204,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         const gridPositions = workspaceMeshes.map(mesh => {
             const w = <Workspace>mesh.file;
             const gridPos = this._worldPosToGridPos(calc, mesh, point);
-            const grid = getContextGrid(calc, w, mesh.domain);
+            const grid = getBuilderContextGrid(calc, w, mesh.domain);
             const tilePositions = grid ? keys(grid).map(keyToPos) : [];
             const distToCenter = gridDistance(center, gridPos);
             const size = getContextSize(calc, w, mesh.domain);
@@ -263,7 +263,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             if (gameObject instanceof ContextGroup3D && gameObject.file.tags[`aux.${gameObject.domain}.context`]) {
                 
                 const tile = this._worldPosToGridPos(calc, gameObject, point);
-                const currentGrid = getContextGrid(calc, gameObject.file, gameObject.domain);
+                const currentGrid = getBuilderContextGrid(calc, gameObject.file, gameObject.domain);
                 const currentTile = currentGrid ? currentGrid[posToKey(tile)] : null;
                 const defaultHeight = getContextDefaultHeight(calc, gameObject.file, gameObject.domain);
                 const currentHeight = (!!currentTile ? currentTile.height : defaultHeight) || DEFAULT_WORKSPACE_HEIGHT;
