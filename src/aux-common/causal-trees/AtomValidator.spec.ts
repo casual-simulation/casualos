@@ -1,6 +1,7 @@
 import { atom, atomId, AtomOp } from "./Atom";
 import { AtomValidator } from "./AtomValidator";
 import { TestCryptoImpl } from "../crypto/test/TestCryptoImpl";
+import { toByteArray } from "base64-js";
 
 describe('AtomValidator', () => {
 
@@ -12,7 +13,9 @@ describe('AtomValidator', () => {
         it('should encode the signature returned from the crypto implementation to base 64', async () => {
 
             const crypto = new TestCryptoImpl('ECDSA-SHA256');
-            const [pub, priv] = crypto.generateKeyPair();
+            const buffer = Buffer.from('abcdef', 'utf8');
+            const spy = jest.spyOn(crypto, 'sign').mockResolvedValue(buffer.buffer);
+            const [pub, priv] = await crypto.generateKeyPair();
             const validator = new AtomValidator(crypto);
             
             const a = atom(atomId(1, 1), null, new Op());
@@ -25,14 +28,15 @@ describe('AtomValidator', () => {
             expect(other.checksum).toBe(a.checksum);
             expect(other.signature).not.toBe(null);
             expect(typeof other.signature).toBe('string');
+            spy.mockRestore();
         });
     });
 
     describe('verify()', () => {
         it('should return true if the crypto implementation returns true', async () => {
             const crypto = new TestCryptoImpl('ECDSA-SHA256');
-            crypto.valid = true;
-            const [pub, priv] = crypto.generateKeyPair();
+            const spy = jest.spyOn(crypto, 'verify').mockResolvedValue(true);
+            const [pub, priv] = await crypto.generateKeyPair();
             const validator = new AtomValidator(crypto);
             
             const a = atom(atomId(1, 1), null, new Op());
@@ -44,8 +48,8 @@ describe('AtomValidator', () => {
 
         it('should return false if the crypto implementation returns false', async () => {
             const crypto = new TestCryptoImpl('ECDSA-SHA256');
-            crypto.valid = false;
-            const [pub, priv] = crypto.generateKeyPair();
+            const spy = jest.spyOn(crypto, 'verify').mockResolvedValue(false);
+            const [pub, priv] = await crypto.generateKeyPair();
             const validator = new AtomValidator(crypto);
             
             const a = atom(atomId(1, 1), null, new Op());

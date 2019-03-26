@@ -10,27 +10,27 @@ export class TestCryptoImpl implements SigningCryptoImpl {
         this.algorithm = algorithm;
     }
 
-    async sign(key: PrivateCryptoKey, data: ArrayBuffer | ArrayBufferView): Promise<ArrayBuffer> {
+    async sign(key: PrivateCryptoKey, data: ArrayBuffer): Promise<ArrayBuffer> {
         return this.signature;
     }
     
-    async verify(key: PublicCryptoKey, data: ArrayBuffer | ArrayBufferView): Promise<boolean> {
+    async verify(key: PublicCryptoKey, signature: ArrayBuffer, data: ArrayBuffer): Promise<boolean> {
         return this.valid;
     }
 
-    exportKey(key: SigningCryptoKey): string {
-        return key.type;
+    exportKey(key: SigningCryptoKey): Promise<string> {
+        return Promise.resolve(key.type);
     }
     
-    importPublicKey(key: string): PublicCryptoKey {
-        return <PublicCryptoKey>new TestCryptoKey(key);
+    importPublicKey(key: string): Promise<PublicCryptoKey> {
+        return Promise.resolve(<PublicCryptoKey>new TestCryptoKey(key));
     }
 
-    importPrivateKey(key: string): PrivateCryptoKey {
-        return <PrivateCryptoKey>new TestCryptoKey(key);
+    importPrivateKey(key: string): Promise<PrivateCryptoKey> {
+        return Promise.resolve(<PrivateCryptoKey>new TestCryptoKey(key));
     }
 
-    generateKeyPair(): [PublicCryptoKey, PrivateCryptoKey] {
+    async generateKeyPair(): Promise<[PublicCryptoKey, PrivateCryptoKey]> {
         return [<PublicCryptoKey>new TestCryptoKey('public'), <PrivateCryptoKey>new TestCryptoKey('private')];
     }
 }
