@@ -12,6 +12,8 @@ import { site, SiteInfo } from './SiteIdInfo';
 import { SiteVersionInfo } from './SiteVersionInfo';
 import { StoredCausalTree } from '.';
 import { storedTree } from './StoredCausalTree';
+import { TestScheduler } from 'rxjs/testing';
+import { AsyncScheduler } from "rxjs/internal/scheduler/AsyncScheduler";
 
 jest.useFakeTimers();
 
@@ -43,8 +45,14 @@ describe('RealtimeCausalTree', () => {
     let localWeaves: Atom<Op>[][];
     let errors: any[] = [];
     let updated: Atom<Op>[][] = [];
-    
+    let scheduler: TestScheduler;
+
     beforeEach(() => {
+        scheduler = new TestScheduler((actual, expected) => {
+            expect(actual).toEqual(expected);
+        });
+        AsyncScheduler.delegate = scheduler;
+
         flush = false;
         weave = [];
         localWeaves = [];
@@ -92,6 +100,7 @@ describe('RealtimeCausalTree', () => {
     });
 
     afterEach(() => {
+        AsyncScheduler.delegate = null;
         expect(errors).toEqual([]);
     });
 
@@ -160,6 +169,8 @@ describe('RealtimeCausalTree', () => {
             await realtime.init();
             connection.setConnected(true);
             await connection.flushPromises();
+            scheduler.flush();
+            await connection.flushPromise();
 
             expect(realtime.tree).not.toBe(null);
             expect(realtime.tree.site).toEqual(site(5));
@@ -514,10 +525,11 @@ describe('RealtimeCausalTree', () => {
         beforeAll(() => {
             spy = jest.spyOn(console, 'log').mockImplementation(() => {});
         });
-
+        
         afterAll(() => {
             spy.mockRestore();
         });
+
         it('should try to insert new atoms into the tree', async () => {
             let weave = new Weave<Op>();
 
@@ -538,6 +550,8 @@ describe('RealtimeCausalTree', () => {
                 name: 'event_abc',
                 data: [first]
             });
+            scheduler.flush();
+            await connection.flushPromise();
 
             expect(realtime.tree.weave.atoms).toEqual([
                 root,

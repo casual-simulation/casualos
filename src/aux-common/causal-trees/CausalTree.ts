@@ -20,6 +20,16 @@ export interface CausalTreeOptions {
      * Defaults to false.
      */
     garbageCollect?: boolean;
+
+    /**
+     * The validator that should be used to validate atoms.
+     */
+    validator?: AtomValidator;
+
+    /**
+     * The key that should be used to sign new atoms.
+     */
+    signingKey?: PrivateCryptoKey;
 }
 
 /**
@@ -137,7 +147,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
     /**
      * Creates a root element on this tree.
      */
-    root(): Atom<TOp> {
+    root(): Promise<Atom<TOp>> {
         throw new Error('Must be implemented in inheriting class');
     }
 
@@ -165,7 +175,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * Adds the given list of references to this causal tree's history.
      * @param refs The references to add.
      */
-    addMany(refs: Atom<TOp>[]): Atom<TOp>[] {
+    addMany(refs: Atom<TOp>[]): Promise<Atom<TOp>[]> {
         const atoms = sortBy(refs, a => a.id.timestamp);
         return this.batch(() => {
             let added: Atom<TOp>[] = [];
@@ -188,13 +198,14 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * only a single notification is sent.
      * @param func 
      */
-    batch<T>(func: () => T): T {
+    async batch<T>(func: () => T | Promise<T>): Promise<T> {
         if (this._isBatching) {
-            return func();
+            return await func();
         }
         try {
             this._isBatching = true;
-            return func();
+            const result = await func();
+            return result;
         } finally {
             if (this._batch.length > 0) {
                 this.triggerGarbageCollection(this._batch);
@@ -212,7 +223,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * @param refs The references to import.
      * @param validate Whether to validate the incoming weave.
      */
-    importWeave<T extends TOp>(refs: Atom<T>[], validate: boolean = true): Atom<TOp>[] {
+    async importWeave<T extends TOp>(refs: Atom<T>[], validate: boolean = true): Promise<Atom<TOp>[]> {
 
         if (validate) {
             let weave = new Weave<T>();
@@ -243,19 +254,19 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * Imports the given tree into this one and returns the list of atoms that were imported.
      * @param tree The tree to import.
      */
-    import<T extends TOp>(tree: StoredCausalTree<T>): Atom<TOp>[] {
+    async import<T extends TOp>(tree: StoredCausalTree<T>): Promise<Atom<TOp>[]> {
         let added: Atom<TOp>[];
         if (tree.weave) {
             if (tree.formatVersion === 2) {
-                added = this.importWeave(tree.weave);
+                added = await this.importWeave(tree.weave);
             } else if(tree.formatVersion === 3) {
                 if (tree.ordered) {
-                    added = this.importWeave(tree.weave);
+                    added = await this.importWeave(tree.weave);
                 } else {
-                    added = this.addMany(tree.weave);
+                    added = await this.addMany(tree.weave);
                 }
             } else if (typeof tree.formatVersion === 'undefined') {
-                added = this.importWeave(tree.weave.map(ref => ref.atom));
+                added = await this.importWeave(tree.weave.map(ref => ref.atom));
             } else {
                 console.warn("[CausalTree] Don't know how to import tree version:", tree.formatVersion);
                 added = [];
@@ -289,8 +300,8 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * @param parent The parent atom.
      * @param priority The priority.
      */
-    create<T extends TOp>(op: T, parent: Atom<TOp> | Atom<TOp> | AtomId, priority?: number): Atom<T> {
-        const atom = this.factory.create(op, parent, priority);
+    async create<T extends TOp>(op: T, parent: Atom<TOp> | Atom<TOp> | AtomId, priority?: number): Promise<Atom<T>> {
+        const atom = await this.factory.create(op, parent, priority);
         return this.add(atom);
     }
 
@@ -298,9 +309,9 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * Creates a new atom from the given precalculated operation and adds it to the tree's history.
      * @param precalc The operation to create and add.
      */
-    createFromPrecalculated<T extends TOp>(precalc: PrecalculatedOp<T>): Atom<T> {
+    async createFromPrecalculated<T extends TOp>(precalc: PrecalculatedOp<T>): Promise<Atom<T>> {
         if (precalc) {
-            return this.create<T>(precalc.op, <Atom<TOp>>precalc.cause, precalc.priority);
+            return await this.create<T>(precalc.op, <Atom<TOp>>precalc.cause, precalc.priority);
         } else {
             return null;
         }
@@ -310,9 +321,10 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * Creates a new atom from the given precalculated operation and adds it to the tree's history.
      * @param precalc The operation to create and add.
      */
-    createManyFromPrecalculated<T extends TOp>(precalc: PrecalculatedOp<T>[]): Atom<T>[] {
+    createManyFromPrecalculated<T extends TOp>(precalc: PrecalculatedOp<T>[]): Promise<Atom<T>[]> {
         const nonNull = precalc.filter(pc => !!pc);
-        return nonNull.map(pc => this.createFromPrecalculated(pc));
+        const promises = nonNull.map(pc => this.createFromPrecalculated(pc));
+        return Promise.all(promises);
     }
 
     /**

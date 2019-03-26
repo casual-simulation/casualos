@@ -34,11 +34,11 @@ describe('AtomFactory', () => {
         expect(factory.time).toBe(7);
     });
 
-    it('should increment the time after creating events', () => {
+    it('should increment the time after creating events', async () => {
         const factory = new AtomFactory(site(1), 0);
 
         const op = new Op();
-        const atom = factory.create(op, null);
+        const atom = await factory.create(op, null);
 
         expect(atom.id.site).toBe(1);
         expect(atom.id.timestamp).toBe(1);
@@ -47,14 +47,14 @@ describe('AtomFactory', () => {
         expect(factory.time).toBe(1);
     });
 
-    it('should create atoms with the given cause', () => {
+    it('should create atoms with the given cause', async () => {
         const factory = new AtomFactory(site(1), 0);
 
         const op = new Op();
-        const root = factory.create(op, null);
+        const root = await factory.create(op, null);
 
         const op2 = new Op();
-        const atom = factory.create(op2, root);
+        const atom = await factory.create(op2, root);
 
         expect(atom.id.site).toBe(1);
         expect(atom.id.timestamp).toBe(2);
@@ -64,14 +64,14 @@ describe('AtomFactory', () => {
         expect(factory.time).toBe(2);
     });
 
-    it('should create atoms with the given cause ID', () => {
+    it('should create atoms with the given cause ID', async () => {
         const factory = new AtomFactory(site(1), 0);
 
         const a1 = atom(atomId(2, 1), atomId(1, 0), new Op());
         factory.updateTime(a1);
 
         const op2 = new Op();
-        const a2 = factory.create(op2, atomId(2, 1));
+        const a2 = await factory.create(op2, atomId(2, 1));
 
         expect(a2.id.site).toBe(1);
         expect(a2.id.timestamp).toBe(3);

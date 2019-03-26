@@ -6,7 +6,7 @@ import { CausalTreeFactory } from "./CausalTreeFactory";
 import { SiteVersionInfo } from "./SiteVersionInfo";
 import { SiteInfo, site } from "./SiteIdInfo";
 import { SubscriptionLike, Subject, Observable, ReplaySubject } from 'rxjs';
-import { filter, flatMap, takeWhile, skipWhile, tap, map, first } from 'rxjs/operators';
+import { filter, flatMap, takeWhile, skipWhile, tap, map, first, concatMap } from 'rxjs/operators';
 import { maxBy } from 'lodash';
 import { storedTree, StoredCausalTree } from "./StoredCausalTree";
 import { WeaveVersion, versionsEqual } from "./WeaveVersion";
@@ -101,7 +101,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         this._options = options;
 
         this._subs.push(this._updated.pipe(
-            flatMap(async atoms => await this._store.add(this.id, atoms))
+            concatMap(async atoms => await this._store.add(this.id, atoms))
         ).subscribe(null, err => this._errors.next(err)));
     }
 
@@ -130,12 +130,12 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         this._subs.push(this._channel.connectionStateChanged.pipe(
             filter(connected => connected),
             takeWhile(connected => this.tree === null),
-            flatMap(c => this._channel.exchangeInfo(this.getVersion())),
-            flatMap(version => this._requestSiteId(version), (version, site) => ({ version, site })),
+            concatMap(c => this._channel.exchangeInfo(this.getVersion())),
+            concatMap(version => this._requestSiteId(version), (version, site) => ({ version, site })),
             map(data => <TTree>this._factory.create(this.type, storedTree(data.site, data.version.knownSites))),
-            flatMap(tree => this._channel.exchangeWeaves(tree.export()), (tree, imported) => ({tree, imported})),
-            map(data => ({...data, added: this._import(data.tree, data.imported) })),
-            flatMap(data => this._store.put(this.id, data.tree.export(), true), (data) => data),
+            concatMap(tree => this._channel.exchangeWeaves(tree.export()), (tree, imported) => ({tree, imported})),
+            concatMap(data => this._import(data.tree, data.imported), (data, imported) => ({ ...data, added: imported })),
+            concatMap(data => this._store.put(this.id, data.tree.export(), true), (data) => data),
             tap(data => this._setTree(data.tree)),
             tap(data => this._updated.next(data.added))
         ).subscribe(null, err => this._errors.next(err)));
@@ -144,18 +144,18 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
             filter(connected => connected),
             skipWhile(connected => this.tree === null),
             map(c => this.getVersion()),
-            flatMap(localVersion => this._channel.exchangeInfo(localVersion), (local, remote) => ({local, remote})),
+            concatMap(localVersion => this._channel.exchangeInfo(localVersion), (local, remote) => ({local, remote})),
             filter(versions => !versionsEqual(versions.local.version, versions.remote.version)),
-            flatMap(versions => this._channel.exchangeWeaves(this.tree.export()), (versions, weave) => ({ versions, weave })),
-            map(data => ({...data, weave: this._import(this.tree, data.weave) })),
+            concatMap(versions => this._channel.exchangeWeaves(this.tree.export()), (versions, weave) => ({ versions, weave })),
+            concatMap(data => this._import(this.tree, data.weave), (data, imported) => ({ ...data, added: imported })),
             tap(data => this._importKnownSites(data.versions.remote)),
-            flatMap(data => this._store.put(this.id, this._tree.export(), true), (data) => data),
-            tap(data => this._updated.next(data.weave))
+            concatMap(data => this._store.put(this.id, this._tree.export(), true), (data) => data),
+            tap(data => this._updated.next(data.added))
         ).subscribe(null, err => this._errors.next(err)));
         
         this._subs.push(this._channel.events.pipe(
             filter(e => this.tree !== null),
-            map(e => this.tree.addMany(e)),
+            concatMap(e => this.tree.addMany(e)),
             tap(refs => this._updated.next(refs))
         ).subscribe(null, err => this._errors.next(err)));
     }
@@ -191,9 +191,9 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         return false;
     }
 
-    private _import(tree: CausalTree<any, any, any>, weave: StoredCausalTree<AtomOp>): Atom<AtomOp>[] {
+    private async _import(tree: CausalTree<any, any, any>, weave: StoredCausalTree<AtomOp>): Promise<Atom<AtomOp>[]> {
         console.log(`[RealtimeCausalTree] Importing ${weave.weave.length} atoms....`);
-        const results = tree.import(weave);
+        const results = await tree.import(weave);
         console.log(`[RealtimeCausalTree] Imported ${results.length} atoms.`);
         return results;
     }

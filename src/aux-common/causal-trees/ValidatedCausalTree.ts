@@ -15,6 +15,13 @@ export class ValidatedCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
     private _signingKey: PrivateCryptoKey;
 
     /**
+     * Gets the tree that this object wraps.
+     */
+    get tree() {
+        return this._tree;
+    }
+
+    /**
      * Creates a new validated causal tree using the given tree, atom validator, and signing key.
      * @param tree The tree to validate.
      * @param validator The atom validator to use.

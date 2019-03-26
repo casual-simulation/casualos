@@ -96,5 +96,43 @@ describe('ValidatedCausalTree', () => {
 
             await expect(validated.add(s2t0)).rejects.toBeTruthy();
         });
+
+        it('should allow valid atoms from other sites', async () => {
+            let tree = new CausalTree(storedTree(site(1)), new Reducer());
+
+            tree.registerSite(site(2, {
+                signatureAlgorithm: 'ECDSA-SHA256-NISTP256',
+                publicKey: 'test'
+            }));
+
+            let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
+            crypto.valid = true;
+            let [publicKey, privateKey] = await crypto.generateKeyPair();
+            let validator = new AtomValidator(crypto)
+            let validated = new ValidatedCausalTree(tree, validator, privateKey);
+
+            const s2t0 = atom(atomId(2, 0), null, new Op());
+            s2t0.signature = 'aGVsbG8=';
+            const ref = await validated.add(s2t0);
+
+            expect(ref).toBe(s2t0);
+        });
+
+        it('should reject atoms that have a signature but their site doesnt have a public key', async () => {
+            let tree = new CausalTree(storedTree(site(1)), new Reducer());
+
+            tree.registerSite(site(2));
+
+            let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
+            crypto.valid = true;
+            let [publicKey, privateKey] = await crypto.generateKeyPair();
+            let validator = new AtomValidator(crypto)
+            let validated = new ValidatedCausalTree(tree, validator, privateKey);
+
+            const s2t0 = atom(atomId(2, 0), null, new Op());
+            s2t0.signature = 'aGVsbG8=';
+
+            expect(validated.add(s2t0)).rejects.toBeTruthy();
+        });
     });
 });

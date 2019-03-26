@@ -44,10 +44,10 @@ class Reducer implements AtomReducer<Op, number, any> {
 describe('CausalTree', () => {
 
     describe('constructor', () => {
-        it('should import the given weave', () => {
+        it('should import the given weave', async () => {
             let tree1 = new CausalTree(storedTree(site(1)), new Reducer());
 
-            const root = tree1.factory.create(new Op(), null); // Time 1
+            const root = await tree1.factory.create(new Op(), null); // Time 1
             tree1.add(root);
 
             let tree2 = new CausalTree(storedTree(site(2), null, tree1.weave.atoms), new Reducer());
@@ -107,7 +107,7 @@ describe('CausalTree', () => {
             ]);
         });
 
-        it('should batch multiple updates into one', () => {
+        it('should batch multiple updates into one', async () => {
             let tree = new CausalTree(storedTree(site(1)), new Reducer());
 
             let refs: Atom<Op>[][] = [];
@@ -118,7 +118,7 @@ describe('CausalTree', () => {
             let skipped;
             let root: Atom<Op>;
             let child: Atom<Op>;
-            tree.batch(() => {
+            await tree.batch(() => {
                 // no parent so it's skipped
                 skipped = tree.add(atom(atomId(1, 3), atomId(1, 2), new Op()));
                 
@@ -133,7 +133,7 @@ describe('CausalTree', () => {
     });
 
     describe('addMany()', () => {
-        it('should produce a consistent weave from randomly sorted atoms', () => {
+        it('should produce a consistent weave from randomly sorted atoms', async () => {
             let tree1 = new CausalTree(storedTree(site(1)), new Reducer());
             let atoms: Atom<Op>[] = [];
             for (let i = 0; i < 1000; i++) {
@@ -141,9 +141,9 @@ describe('CausalTree', () => {
                 if (i !== 0) {
                     const random = Math.round(Math.random() * (atoms.length - 1));
                     cause = atoms[random];
-                    atoms.push(tree1.factory.create(new Op(), cause.id));
+                    atoms.push(await tree1.factory.create(new Op(), cause.id));
                 } else {
-                    atoms.push(tree1.factory.create(new Op(), null));
+                    atoms.push(await tree1.factory.create(new Op(), null));
                 }
             }
 
@@ -156,7 +156,7 @@ describe('CausalTree', () => {
                 atoms[i] = temp;
             }
 
-            const added = tree2.addMany(atoms);
+            const added = await tree2.addMany(atoms);
 
             expect(tree2.weave.isValid()).toBe(true);
             expect(added.length).toBe(atoms.length);
@@ -165,7 +165,7 @@ describe('CausalTree', () => {
             }
         });
 
-        it('should produce a consistent weave even if some atoms get dropped', () => {
+        it('should produce a consistent weave even if some atoms get dropped', async () => {
             let tree1 = new CausalTree(storedTree(site(1)), new Reducer());
             let atoms: Atom<Op>[] = [];
             for (let i = 0; i < 1000; i++) {
@@ -173,9 +173,9 @@ describe('CausalTree', () => {
                 if (i !== 0) {
                     const random = Math.round(Math.random() * (atoms.length - 1));
                     cause = atoms[random];
-                    atoms.push(tree1.factory.create(new Op(), cause.id));
+                    atoms.push(await tree1.factory.create(new Op(), cause.id));
                 } else {
-                    atoms.push(tree1.factory.create(new Op(), null));
+                    atoms.push(await tree1.factory.create(new Op(), null));
                 }
             }
 
@@ -197,26 +197,26 @@ describe('CausalTree', () => {
     });
 
     describe('value', () => {
-        it('should calculate the value using the reducer', () => {
+        it('should calculate the value using the reducer', async () => {
             let tree = new CausalTree(storedTree(site(1)), new Reducer());
 
-            const root = tree.add(tree.factory.create(new Op(), null));
-            tree.create(new Op(OpType.add), root);
-            tree.create(new Op(OpType.subtract), root);
-            tree.create(new Op(OpType.add), root);
+            const root = tree.add(await tree.factory.create(new Op(), null));
+            await tree.create(new Op(OpType.add), root);
+            await tree.create(new Op(OpType.subtract), root);
+            await tree.create(new Op(OpType.add), root);
 
             expect(tree.value).toBe(1);
         });
     });
 
     describe('export()', () => {
-        it('should export a stored tree with the current version', () => {
+        it('should export a stored tree with the current version', async () => {
             let tree = new CausalTree(storedTree(site(1)), new Reducer());
 
-            const root =tree.add(tree.factory.create(new Op(), null));
-            tree.add(tree.factory.create(new Op(OpType.add), root));
-            tree.add(tree.factory.create(new Op(OpType.add), root));
-            tree.add(tree.factory.create(new Op(OpType.add), root));
+            const root =tree.add(await tree.factory.create(new Op(), null));
+            tree.add(await tree.factory.create(new Op(OpType.add), root));
+            tree.add(await tree.factory.create(new Op(OpType.add), root));
+            tree.add(await tree.factory.create(new Op(OpType.add), root));
 
             const exported = tree.export();
 
@@ -226,7 +226,7 @@ describe('CausalTree', () => {
 
     describe('import()', () => {
         describe('version 1', () => {
-            it('should be able to import', () => {
+            it('should be able to import', async () => {
                 let weave = new Weave<Op>();
 
                 const a1 = weave.insert(atom(atomId(1, 1), null, new Op()));
@@ -242,7 +242,7 @@ describe('CausalTree', () => {
                 };
 
                 let tree = new CausalTree(storedTree(site(2)), new Reducer());
-                const added = tree.import(stored);
+                const added = await tree.import(stored);
 
                 expect(added).toEqual([
                     a1,
@@ -253,7 +253,7 @@ describe('CausalTree', () => {
         });
 
         describe('version 2', () => {
-            it('should be able to import', () => {
+            it('should be able to import', async () => {
                 let weave = new Weave<Op>();
 
                 const a1 = weave.insert(atom(atomId(1, 1), null, new Op()));
@@ -270,7 +270,7 @@ describe('CausalTree', () => {
                 };
 
                 let tree = new CausalTree(storedTree(site(2)), new Reducer());
-                const added = tree.import(stored);
+                const added = await tree.import(stored);
 
                 expect(added).toEqual([
                     a1,
@@ -281,7 +281,7 @@ describe('CausalTree', () => {
         });
 
         describe('version 3', () => {
-            it('should be able to import', () => {
+            it('should be able to import', async () => {
                 let weave = new Weave<Op>();
 
                 const a1 = weave.insert(atom(atomId(1, 1), null, new Op()));
@@ -299,7 +299,7 @@ describe('CausalTree', () => {
                 };
 
                 let tree = new CausalTree(storedTree(site(2)), new Reducer());
-                const added = tree.import(stored);
+                const added = await tree.import(stored);
 
                 expect(added).toEqual([
                     a1,
@@ -308,7 +308,7 @@ describe('CausalTree', () => {
                 ]);
             });
 
-            it('should be able to import unordered weaves', () => {
+            it('should be able to import unordered weaves',async () => {
                 let weave = new Weave<Op>();
 
                 const a1 = weave.insert(atom(atomId(1, 1), null, new Op()));
@@ -326,7 +326,7 @@ describe('CausalTree', () => {
                 };
 
                 let tree = new CausalTree(storedTree(site(2)), new Reducer());
-                const added = tree.import(stored);
+                const added = await tree.import(stored);
 
                 expect(added).toEqual([
                     a1,
@@ -336,7 +336,7 @@ describe('CausalTree', () => {
             });
         });
 
-        it('should ignore unknown versions', () => {
+        it('should ignore unknown versions', async () => {
             const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
             let weave = new Weave<Op>();
 
@@ -354,21 +354,21 @@ describe('CausalTree', () => {
             };
 
             let tree = new CausalTree(storedTree(site(2)), new Reducer());
-            const added = tree.import(stored);
+            const added = await tree.import(stored);
 
             expect(added).toEqual([]);
 
             spy.mockRestore();
         });
 
-        it('should import known sites', () => {
+        it('should import known sites', async () => {
             let tree = new CausalTree(storedTree(site(1)), new Reducer());
             let tree2 = new CausalTree(storedTree(site(2)), new Reducer());
 
             tree.registerSite(site(3));
             tree.registerSite(site(2));
             tree.registerSite(site(6));
-            tree2.import(tree.export());
+            await tree2.import(tree.export());
 
             expect(tree2.knownSites).toEqual([
                 site(2),
@@ -380,52 +380,52 @@ describe('CausalTree', () => {
     });
 
     describe('importWeave()', () => {
-        it('should update the current time based on the given references', () => {
+        it('should update the current time based on the given references', async () => {
             let tree1 = new CausalTree(storedTree(site(1)), new Reducer());
             let tree2 = new CausalTree(storedTree(site(2)), new Reducer());
 
-            const root = tree1.factory.create(new Op(), null); // Time 1
+            const root = await tree1.factory.create(new Op(), null); // Time 1
             tree1.add(root);
             tree2.add(root); // Time 2
 
-            tree2.add(tree2.factory.create(new Op(OpType.add), root)); // Time 3
-            tree2.add(tree2.factory.create(new Op(OpType.add), root)); // Time 4
-            tree2.add(tree2.factory.create(new Op(OpType.subtract), root)); // Time 5
+            tree2.add(await tree2.factory.create(new Op(OpType.add), root)); // Time 3
+            tree2.add(await tree2.factory.create(new Op(OpType.add), root)); // Time 4
+            tree2.add(await tree2.factory.create(new Op(OpType.subtract), root)); // Time 5
 
             tree1.importWeave(tree2.weave.atoms);
 
             expect(tree1.time).toBe(6);
         });
 
-        it('should update the current time even when importing from the same site', () => {
+        it('should update the current time even when importing from the same site', async () => {
             let tree1 = new CausalTree(storedTree(site(1)), new Reducer());
 
             let tree2 = new CausalTree(storedTree(site(1)), new Reducer());
 
-            const root = tree1.factory.create(new Op(), null); // Time 1
+            const root = await tree1.factory.create(new Op(), null); // Time 1
             tree1.add(root);
             tree2.add(root); // Time 1
 
-            tree2.add(tree2.factory.create(new Op(OpType.add), root)); // Time 2
-            tree2.add(tree2.factory.create(new Op(OpType.add), root)); // Time 3
-            tree2.add(tree2.factory.create(new Op(OpType.subtract), root)); // Time 4
+            tree2.add(await tree2.factory.create(new Op(OpType.add), root)); // Time 2
+            tree2.add(await tree2.factory.create(new Op(OpType.add), root)); // Time 3
+            tree2.add(await tree2.factory.create(new Op(OpType.subtract), root)); // Time 4
 
             tree1.importWeave(tree2.weave.atoms);
 
             expect(tree1.time).toBe(4);
         });
 
-        it('should not update the current time when importing duplicates', () => {
+        it('should not update the current time when importing duplicates', async () => {
             let tree1 = new CausalTree(storedTree(site(1)), new Reducer());
             let tree2 = new CausalTree(storedTree(site(2)), new Reducer());
 
-            const root = tree1.factory.create(new Op(), null); // Time 1
+            const root = await tree1.factory.create(new Op(), null); // Time 1
             tree1.add(root);
             tree2.add(root); // Time 2
 
-            tree2.add(tree2.factory.create(new Op(OpType.add), root)); // Time 3
-            tree2.add(tree2.factory.create(new Op(OpType.add), root)); // Time 4
-            tree2.add(tree2.factory.create(new Op(OpType.subtract), root)); // Time 5
+            tree2.add(await tree2.factory.create(new Op(OpType.add), root)); // Time 3
+            tree2.add(await tree2.factory.create(new Op(OpType.add), root)); // Time 4
+            tree2.add(await tree2.factory.create(new Op(OpType.subtract), root)); // Time 5
 
             tree1.importWeave(tree2.weave.atoms);
             tree1.importWeave(tree2.weave.atoms);
@@ -433,12 +433,12 @@ describe('CausalTree', () => {
             expect(tree1.time).toBe(6);
         });
 
-        it('should only include the atoms that were added to the weave when calculating', () => {
+        it('should only include the atoms that were added to the weave when calculating', async () => {
             const reducer = new Reducer();
             let tree1 = new CausalTree(storedTree(site(1)), reducer);
             let tree2 = new CausalTree(storedTree(site(2)), new Reducer());
 
-            const root = tree1.factory.create(new Op(), null);
+            const root = await tree1.factory.create(new Op(), null);
             tree1.add(root);
             tree2.add(root);
 
@@ -456,21 +456,20 @@ describe('CausalTree', () => {
             expect(tree1.value).toBe(1);
         });
 
-        it('should not import atoms if they are invalid', () => {
+        it('should not import atoms if they are invalid', async () => {
             const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
             const reducer = new Reducer();
             let tree1 = new CausalTree(storedTree(site(1)), reducer);
 
-            const root = tree1.factory.create(new Op(), null);
+            const root = await tree1.factory.create(new Op(), null);
             tree1.add(root);
 
             const add1 = atom(atomId(2, 10), root.id, new Op(OpType.add));
             const add2 = atom(atomId(2, 11), root.id, new Op(OpType.add));
             const sub = atom(atomId(2, 12), add2.id, new Op(OpType.subtract));
 
-            expect(() => {
-                tree1.importWeave([root, add1, add2, sub]);
-            }).toThrow(/not valid/i);
+            expect(tree1.importWeave([root, add1, add2, sub]))
+                .rejects.toThrow(/not valid/i);
 
             spy.mockRestore();
         });
@@ -485,11 +484,11 @@ describe('CausalTree', () => {
             ]);
         });
         
-        it('should not combine with the weaves known sites', () => {
+        it('should not combine with the weaves known sites', async () => {
             let tree1 = new CausalTree(storedTree(site(1)), new Reducer());
             let tree2 = new CausalTree(storedTree(site(2)), new Reducer());
 
-            const root = tree1.factory.create(new Op(), null);
+            const root = await tree1.factory.create(new Op(), null);
             tree1.add(root);
             tree2.add(root);
 
@@ -521,10 +520,10 @@ describe('CausalTree', () => {
     });
 
     describe('createFromPrecalculated()', () => {
-        it('should add the given op to the tree', () => {
+        it('should add the given op to the tree', async () => {
             let tree1 = new CausalTree(storedTree(site(1)), new Reducer());
 
-            tree1.createFromPrecalculated(precalculatedOp(
+            await tree1.createFromPrecalculated(precalculatedOp(
                 new Op(),
             ));
 

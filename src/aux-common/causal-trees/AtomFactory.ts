@@ -1,5 +1,7 @@
 import { AtomOp, Atom, AtomId, atom, atomId } from "./Atom";
 import { SiteInfo } from "./SiteIdInfo";
+import { PrivateCryptoKey } from "../crypto";
+import { AtomValidator } from "./AtomValidator";
 
 /**
  * Defines a class that can create atoms based on a site ID and lamport timestamp.
@@ -8,6 +10,8 @@ export class AtomFactory<TOp extends AtomOp> {
 
     private _site: SiteInfo;
     private _time: number;
+    private _signingKey: PrivateCryptoKey;
+    private _validator: AtomValidator;
 
     /**
      * Gets the site ID for this factory.
@@ -25,12 +29,16 @@ export class AtomFactory<TOp extends AtomOp> {
 
     /**
      * Creates a new atom factory with the given site.
-     * @param site 
-     * @param timestamp 
+     * @param site The site that this factory creates atoms for.
+     * @param timestamp The timestamp that this factory is starting at.
+     * @param validator The atom validator that should be used to sign atoms.
+     * @param signingKey The key that should be used to sign atoms.
      */
-    constructor(site: SiteInfo, timestamp: number = 0) {
+    constructor(site: SiteInfo, timestamp: number = 0, validator: AtomValidator = null, signingKey: PrivateCryptoKey = null) {
         this._site = site;
         this._time = timestamp;
+        this._validator = validator;
+        this._signingKey = signingKey;
     }
 
     /**
@@ -50,12 +58,18 @@ export class AtomFactory<TOp extends AtomOp> {
      * @param op The operation to include with the atom.
      * @param cause The parent cause of this atom.
      */
-    create<T extends TOp>(op: T, cause: Atom<TOp> | AtomId, priority?: number): Atom<T> {
+    async create<T extends TOp>(op: T, cause: Atom<TOp> | AtomId, priority?: number): Promise<Atom<T>> {
         let causeId: AtomId = null;
         if (cause) {
             causeId = <any>(!!(<Atom<TOp>>cause).id ? (<Atom<TOp>>cause).id : cause);
         }
         this._time += 1;
-        return atom(atomId(this.site, this._time, priority), causeId, op);
+        const a = atom(atomId(this.site, this._time, priority), causeId, op);
+        
+        if (this._validator && this._signingKey) {
+            return await this._validator.sign(this._signingKey, a);
+        } else {
+            return a;
+        }
     }
 }
