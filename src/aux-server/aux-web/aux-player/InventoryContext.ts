@@ -1,4 +1,9 @@
-import { AuxFile, calculateFileValue, FileCalculationContext, TagUpdatedEvent } from "@yeti-cgi/aux-common";
+import { AuxFile, calculateFileValue, FileCalculationContext, TagUpdatedEvent, isFileInContext, getContextPosition, getFilePosition, getFileIndex } from "@yeti-cgi/aux-common";
+import { remove } from 'lodash';
+import { getOptionalValue } from "../shared/SharedUtils";
+import { appManager } from "../shared/AppManager";
+
+export const DEFAULT_INVENTORY_COUNT = 5;
 
 /**
  * Inventory is a helper class to assist with managing the user's inventory context.
@@ -11,18 +16,35 @@ export class InventoryContext {
     context: string = null;
 
     /**
-     * The files that are in this context.
-     * These are ordered left to right using the file's context.x position.
+     * All the files that are in this context.
      */
     files: AuxFile[] = [];
+    
+    /**
+     * The files in this contexts mapped into the inventory slots.
+     * Files are ordered left to right based on their x position in the context, starting at 0 and incrementing from there.
+     */
+    slots: AuxFile[] = [];
 
     /**
      * The file that is currently selected by the user.
      */
     selectedFile: AuxFile = null;
 
-    constructor(context: string) {
+    private _slotCount: number;
+    private _slotsDirty: boolean;
+
+    constructor(context: string, slotCount?: number) {
+        if (context == null || context == undefined) {
+            throw new Error('Inventory context cannot be null or undefined.');
+        }
+
+        if (slotCount < 0) {
+            throw new Error('Inventory context cannot have slot count less than 0.');
+        }
+
         this.context = context;
+        this.setSlotCount(getOptionalValue(slotCount, DEFAULT_INVENTORY_COUNT));
         this.files = []
     }
     
@@ -33,7 +55,7 @@ export class InventoryContext {
      */
     async fileAdded(file: AuxFile, calc: FileCalculationContext) {
         const isInContext = this.files.indexOf(file) >= 0;
-        const shouldBeInContext = this._shouldBeInContext(file, calc);
+        const shouldBeInContext = isFileInContext(calc, file, this.context);
         if (!isInContext && shouldBeInContext) {
             this._addFile(file, calc);
         }
@@ -47,7 +69,7 @@ export class InventoryContext {
      */
     async fileUpdated(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
         const isInContext = this.files.indexOf(file) >= 0;
-        const shouldBeInContext = this._shouldBeInContext(file, calc);
+        const shouldBeInContext = isFileInContext(calc, file, this.context);
 
         if (!isInContext && shouldBeInContext) {
             this._addFile(file, calc);
@@ -68,30 +90,65 @@ export class InventoryContext {
     }
 
     frameUpdate(calc: FileCalculationContext): void {
+        if (this._slotsDirty) {
+            this._resortSlots(calc);
+            this._slotsDirty = false;
+        }
     }
 
     selectFile(file: AuxFile): void {
         this.selectedFile = file;
     }
 
+    getSlotCount(): number {
+        return this._slotCount;
+    }
+
+    setSlotCount(count: number): void {
+        if (count == null || count == undefined || count < 0) {
+            throw new Error('Inventory Context cannot set the slot count to a value of:' + JSON.stringify(count));
+        }
+
+        this._slotCount = count;
+        this._slotsDirty = true;
+    }
+
     dispose(): void {
     }
 
     private _addFile(file: AuxFile, calc: FileCalculationContext) {
-        console.log('[InventoryContext] Add', file.id, 'to context', this.context);
+        this.files.push(file);
+        this._slotsDirty = true;
     }
 
     private _removeFile(id: string) {
-        console.log('[InventoryContext] Remove', id, 'from context', this.context);
+        remove(this.files, f => f.id === id );
+        this._slotsDirty = true;
     }
 
     private _updateFile(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
-        // this.files.forEach(mesh => {
-        //     mesh.fileUpdated(file, updates, calc);
-        // });
+        this._slotsDirty = true;
     }
 
-    private _shouldBeInContext(file: AuxFile, calc: FileCalculationContext): boolean {
-        return calculateFileValue(calc, file, this.context);
+    private _resortSlots(calc: FileCalculationContext): void {
+        this.slots = new Array(this._slotCount);
+        const y = 0;
+
+        for (let x = 0; x < this._slotCount; x++) {
+            let file = this.files.find((f) => {
+                let contextPos = getFilePosition(calc, f, this.context);
+                if (contextPos.x === x && contextPos.y === y) {
+                    let index = getFileIndex(calc, f, this.context);
+                    if (index === 0) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+
+            if (file) {
+                this.slots[x] = file;
+            }
+        }
     }
 }
