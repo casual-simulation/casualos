@@ -14,6 +14,8 @@ import { StoredCausalTree } from '.';
 import { storedTree } from './StoredCausalTree';
 import { TestScheduler } from 'rxjs/testing';
 import { AsyncScheduler } from "rxjs/internal/scheduler/AsyncScheduler";
+import { AtomValidator } from './AtomValidator';
+import { TestCryptoImpl } from '../crypto/test/TestCryptoImpl';
 
 jest.useFakeTimers();
 
@@ -69,7 +71,7 @@ describe('RealtimeCausalTree', () => {
         allowSiteId = [];
         store = new TestCausalTreeStore();
         factory = new CausalTreeFactory({
-            'numbers': (tree) => new Tree(tree, new NumberReducer())
+            'numbers': (tree, options) => new Tree(tree, new NumberReducer(), options)
         });
         connection = new TestChannelConnection();
         channel = new RealtimeChannel<Atom<Op>[]>({
@@ -253,6 +255,54 @@ describe('RealtimeCausalTree', () => {
             ]);
             expect(stored.site).toEqual(site(100));
         });
+
+        it('should generate a public key and private key if there are none in the store', async () => {
+            let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
+            let generateSpy = jest.spyOn(crypto, 'generateKeyPair');
+            let validator = new AtomValidator(crypto);
+            let tree = new RealtimeCausalTree(factory, store, channel, {
+                validator: validator
+            });
+
+            await tree.init();
+            connection.setConnected(true);
+            await connection.flushPromises();
+
+            expect(generateSpy).toBeCalled();
+            expect(tree.tree.site.crypto).toBeTruthy();
+            expect(tree.tree.site.crypto.publicKey).toBeTruthy();
+            expect(tree.tree.site.crypto.signatureAlgorithm).toBe('ECDSA-SHA256-NISTP256');
+            expect(tree.tree.factory.signingKey).toBeTruthy();
+
+            const stored = await store.getKeys('abc');
+            expect(stored).toBeTruthy();
+            expect(stored.privateKey).toBeTruthy();
+            expect(stored.publicKey).toBeTruthy();
+        });
+
+        it('should use the stored keys', async () => {
+            let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
+            let generateSpy = jest.spyOn(crypto, 'generateKeyPair');
+            let validator = new AtomValidator(crypto);
+            let tree = new RealtimeCausalTree(factory, store, channel, {
+                validator: validator
+            });
+
+            let privateKey = 'abcdefgh';
+            let publicKey = 'iasfasdfa';
+            await store.putKeys('abc', privateKey, publicKey);
+
+            await tree.init();
+            connection.setConnected(true);
+            await connection.flushPromises();
+
+            expect(generateSpy).not.toBeCalled();
+            expect(tree.tree.site.crypto).toBeTruthy();
+            expect(tree.tree.site.crypto.publicKey).toBe(publicKey);
+            expect(tree.tree.site.crypto.signatureAlgorithm).toBe('ECDSA-SHA256-NISTP256');
+            expect(tree.tree.factory.signingKey).toBeTruthy();
+            expect(tree.tree.factory.signingKey.type).toBe(privateKey);
+        });
     });
 
     describe('connected with existing tree', () => {
@@ -375,6 +425,79 @@ describe('RealtimeCausalTree', () => {
             expect(realtime.tree.knownSites).toContainEqual(site(1));
             expect(realtime.tree.knownSites).toContainEqual(site(1999));
             expect(updated.length).toBe(2);
+        });
+
+        it('should use the stored keys', async () => {
+            let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
+            let generateSpy = jest.spyOn(crypto, 'generateKeyPair');
+            let validator = new AtomValidator(crypto);
+            let tree = new RealtimeCausalTree(factory, store, channel, {
+                validator: validator
+            });
+
+            let localWeave = new Weave<Op>();
+            localWeave.insert(atom(atomId(1, 0), null, new Op()));
+            localWeave.insert(atom(atomId(2, 3), atomId(1, 0), new Op()));
+            localWeave.insert(atom(atomId(2, 4), atomId(1, 0), new Op()));
+            
+            knownSites.push(site(1999));
+
+            await store.put('abc', {
+                formatVersion: 2,
+                site: site(2),
+                knownSites: [
+                    site(2)
+                ],
+                weave: localWeave.atoms
+            });
+
+            let privateKey = 'abcdefgh';
+            let publicKey = 'iasfasdfa';
+            await store.putKeys('abc', privateKey, publicKey);
+
+            await tree.init();
+            await connection.flushPromises();
+
+            expect(generateSpy).not.toBeCalled();
+            expect(tree.tree).toBeTruthy();
+            expect(tree.tree.site.crypto).toBeTruthy();
+            expect(tree.tree.site.crypto.publicKey).toBe(publicKey);
+            expect(tree.tree.site.crypto.signatureAlgorithm).toBe('ECDSA-SHA256-NISTP256');
+            expect(tree.tree.factory.signingKey).toBeTruthy();
+            expect(tree.tree.factory.signingKey.type).toBe(privateKey);
+        });
+
+        it('should not generate new keys if they dont exist', async () => {
+            let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
+            let generateSpy = jest.spyOn(crypto, 'generateKeyPair');
+            let validator = new AtomValidator(crypto);
+            let tree = new RealtimeCausalTree(factory, store, channel, {
+                validator: validator
+            });
+
+            let localWeave = new Weave<Op>();
+            localWeave.insert(atom(atomId(1, 0), null, new Op()));
+            localWeave.insert(atom(atomId(2, 3), atomId(1, 0), new Op()));
+            localWeave.insert(atom(atomId(2, 4), atomId(1, 0), new Op()));
+            
+            knownSites.push(site(1999));
+
+            await store.put('abc', {
+                formatVersion: 2,
+                site: site(2),
+                knownSites: [
+                    site(2)
+                ],
+                weave: localWeave.atoms
+            });
+
+            await tree.init();
+            await connection.flushPromises();
+
+            expect(generateSpy).not.toBeCalled();
+            expect(tree.tree).toBeTruthy();
+            expect(tree.tree.site.crypto).toBeFalsy();
+            expect(tree.tree.factory.signingKey).toBeFalsy();
         });
     });
 

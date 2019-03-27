@@ -153,6 +153,8 @@ class CausalTreeDatabase extends Dexie {
             'atoms': 'id,tree,atom.id.timestamp,atom.id.site'
         });
         this.trees = this.table('trees');
+        this.atoms = this.table('atoms');
+        this.keys = this.table('keys');
     }
 
 }

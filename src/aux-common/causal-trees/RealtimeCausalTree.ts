@@ -4,12 +4,13 @@ import { CausalTree, CausalTreeOptions } from "./CausalTree";
 import { CausalTreeStore } from "./CausalTreeStore";
 import { CausalTreeFactory } from "./CausalTreeFactory";
 import { SiteVersionInfo } from "./SiteVersionInfo";
-import { SiteInfo, site } from "./SiteIdInfo";
+import { SiteInfo, site, SiteInfoCrypto } from "./SiteIdInfo";
 import { SubscriptionLike, Subject, Observable, ReplaySubject } from 'rxjs';
 import { filter, flatMap, takeWhile, skipWhile, tap, map, first, concatMap } from 'rxjs/operators';
 import { maxBy } from 'lodash';
 import { storedTree, StoredCausalTree } from "./StoredCausalTree";
 import { WeaveVersion, versionsEqual } from "./WeaveVersion";
+import { PrivateCryptoKey } from "../crypto";
 
 /**
  * Defines an interface for options that a realtime causal tree can accept.
@@ -98,7 +99,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         this._errors = new Subject<any>();
         this._tree = null;
         this._subs = [];
-        this._options = options;
+        this._options = options || {};
 
         this._subs.push(this._updated.pipe(
             filter(a => a.length > 0),
@@ -115,7 +116,20 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         if (!this._alwaysRequestNewSiteId) {
             const stored = await this._store.get(this.id, false);
             if (stored) {
-                let tree = <TTree>this._factory.create(this.type, stored, this._options);
+                const keys = await this._store.getKeys(this.id);
+                let tree: TTree;
+                if (keys) {
+                    const signingKey = await this._options.validator.impl.importPrivateKey(keys.privateKey);
+                    tree = this._createTree({
+                        site: site(stored.site.id, {
+                            signatureAlgorithm: 'ECDSA-SHA256-NISTP256',
+                            publicKey: keys.publicKey
+                        }),
+                        signingKey: signingKey
+                    }, stored.knownSites);
+                } else {
+                    tree = <TTree>this._factory.create(this.type, stored, this._options);
+                }
                 await tree.import(stored);
                 this._setTree(tree);
                 if (stored.weave) {
@@ -134,8 +148,8 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
             filter(connected => connected),
             takeWhile(connected => this.tree === null),
             concatMap(c => this._channel.exchangeInfo(this.getVersion())),
-            concatMap(version => this._requestSiteId(version), (version, site) => ({ version, site })),
-            map(data => <TTree>this._factory.create(this.type, storedTree(data.site, data.version.knownSites))),
+            concatMap(version => this._requestSiteId(this.id, version), (version, site) => ({ version, site })),
+            map(data => this._createTree(data.site, data.version.knownSites)),
             concatMap(tree => this._channel.exchangeWeaves(tree.export()), (tree, imported) => ({tree, imported})),
             concatMap(data => this._import(data.tree, data.imported), (data, imported) => ({ ...data, added: imported })),
             concatMap(data => this._store.put(this.id, data.tree.export(), true), (data) => data),
@@ -194,6 +208,14 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         return false;
     }
 
+    private _createTree(site: GrantedSite, knownSites: SiteInfo[]) {
+        const tree = <TTree>this._factory.create(this.type, storedTree(site.site, knownSites), {
+            ...this._options,
+            signingKey: site.signingKey
+        });
+        return tree;
+    }
+
     private async _import(tree: CausalTree<any, any, any>, weave: StoredCausalTree<AtomOp>): Promise<Atom<AtomOp>[]> {
         console.log(`[RealtimeCausalTree] Importing ${weave.weave.length} atoms....`);
         const results = await tree.import(weave);
@@ -217,17 +239,50 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         });
     }
 
-    private async _requestSiteId(serverVersion: SiteVersionInfo): Promise<SiteInfo> {
+    private async _requestSiteId(id: string, serverVersion: SiteVersionInfo): Promise<GrantedSite> {
+        let crypto: SiteInfoCrypto;
+        let signingKey: PrivateCryptoKey;
+        if (this._options.validator) {
+            let keys = await this._store.getKeys(id);
+            if (!keys && this._options.validator) {
+                const [pubKey, privKey] = await this._options.validator.impl.generateKeyPair();
+                const publicKey = await this._options.validator.impl.exportKey(pubKey);
+                const privateKey = await this._options.validator.impl.exportKey(privKey);
+                crypto = {
+                    publicKey: publicKey,
+                    signatureAlgorithm: 'ECDSA-SHA256-NISTP256'
+                };
+                signingKey = privKey;
+
+                await this._store.putKeys(id, privateKey, publicKey);
+            } else if(keys) {
+                crypto = {
+                    publicKey: keys.publicKey,
+                    signatureAlgorithm: 'ECDSA-SHA256-NISTP256'
+                };
+
+                signingKey = await this._options.validator.impl.importPrivateKey(keys.privateKey);
+            }
+        }
+
         let newestSite: SiteInfo = maxBy(serverVersion.knownSites, site => site.id);
         let nextSite: number = newestSite ? newestSite.id : 0;
         let mySite: SiteInfo;
         let success = false;
         while (!success) {
             nextSite += 1;
-            mySite = site(nextSite);
+            mySite = site(nextSite, crypto);
             success = await this._channel.requestSiteId(mySite);
         }
 
-        return mySite;
+        return {
+            site: mySite,
+            signingKey: signingKey
+        };
     }
+}
+
+interface GrantedSite {
+    site: SiteInfo;
+    signingKey: PrivateCryptoKey;
 }

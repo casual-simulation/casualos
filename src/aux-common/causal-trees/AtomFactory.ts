@@ -14,6 +14,13 @@ export class AtomFactory<TOp extends AtomOp> {
     private _validator: AtomValidator;
 
     /**
+     * Gets the key that this factory uses to sign atoms.
+     */
+    get signingKey() {
+        return this._signingKey;
+    }
+
+    /**
      * Gets the site ID for this factory.
      */
     get site() {
