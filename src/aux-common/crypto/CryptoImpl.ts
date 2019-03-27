@@ -41,7 +41,7 @@ export interface SigningCryptoImpl {
     verify(key: PublicCryptoKey, signature: ArrayBuffer, data: ArrayBuffer): Promise<boolean>;
 
     /**
-     * Exports the private key in PKCS format encoded as PEM. 
+     * Exports the private key in PKCS #8 format encoded as PEM. 
      * @param key The key to export.
      */
     exportKey(key: PrivateCryptoKey): Promise<string>;

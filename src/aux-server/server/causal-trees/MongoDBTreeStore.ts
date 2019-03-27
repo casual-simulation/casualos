@@ -1,6 +1,6 @@
 import { MongoClient, Db, Collection } from 'mongodb';
 import pify from 'pify';
-import { CausalTreeStore, AtomOp, StoredCausalTree, Atom, ArchivedAtom, upgrade, SiteInfo, atomIdToString } from '@yeti-cgi/aux-common/causal-trees';
+import { CausalTreeStore, AtomOp, StoredCausalTree, Atom, ArchivedAtom, upgrade, SiteInfo, atomIdToString, StoredCryptoKeys } from '@yeti-cgi/aux-common/causal-trees';
 
 /**
  * Defines a class that is able to store a causal tree in MongoDB.
@@ -10,9 +10,11 @@ export class MongoDBTreeStore implements CausalTreeStore {
     private _db: Db;
     private _trees: Collection;
     private _atoms: Collection;
+    private _keys: Collection;
     private _dbName: string;
     private _collectionName: string = 'trees';
     private _atomsName: string = 'atoms';
+    private _keysName: string = 'keys';
 
     constructor(client: MongoClient, dbName: string) {
         this._client = client;
@@ -23,9 +25,11 @@ export class MongoDBTreeStore implements CausalTreeStore {
         this._db = this._client.db(this._dbName);
         this._trees = this._db.collection(this._collectionName);
         this._atoms = this._db.collection(this._atomsName);
+        this._keys = this._db.collection(this._keysName);
 
         await this._trees.createIndex({ id: 1 });
         await this._atoms.createIndex({ tree: 1, archived: 1, id: 1 });
+        await this._keys.createIndex({ tree: 1 });
     }
 
     async put<T extends AtomOp>(id: string, tree: StoredCausalTree<T>, fullUpdate: boolean = true): Promise<void> {
@@ -110,6 +114,21 @@ export class MongoDBTreeStore implements CausalTreeStore {
                 .updateOne(w);
         });
         await op.execute();
+    }
+
+    async putKeys(id: string, privateKey: string, publicKey: string): Promise<void> {
+        const keys: StoredCryptoKeys = {
+            privateKey: privateKey,
+            publicKey: publicKey
+        };
+        await this._keys.update({ tree: id }, {
+            $set: keys
+        }, { upsert: true });
+    }
+
+    async getKeys(id: string): Promise<StoredCryptoKeys> {
+        const keys = await this._keys.findOne({ tree: id });
+        return keys;
     }
 }
 
