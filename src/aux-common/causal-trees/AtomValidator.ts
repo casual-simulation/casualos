@@ -62,7 +62,7 @@ export class AtomValidator {
         const fields = [atom.id, atom.cause, atom.value];
         const json = stringify(fields);
         const buffer = Buffer.from(json);
-        return buffer.buffer;
+        return buffer;
     }
 
 }
