@@ -140,6 +140,13 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             return this.mode === 'files';
         }
     }
+
+    /**
+     * Determines if we're currently in worksurfaces mode.
+     */
+    isInWorksurfacesMode() {
+        return this.mode === 'worksurfaces';
+    }
     
     /**
      * Raises the tile at the given point by the given amount.
