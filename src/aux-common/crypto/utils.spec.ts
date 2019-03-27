@@ -44,6 +44,16 @@ describe('crypto', () => {
 
                 expect(val).toBe('hello');
             });
+
+
+            it('should parse the private key with extra lines in the key', () => {
+                const pem = ` -----BEGIN PRIVATE KEY-----\naGVs\nbG8=\n-----END PRIVATE KEY-----\n`;
+                const key = parsePrivatePEMKey(pem);
+                const buffer = Buffer.from(key);
+                const val = buffer.toString('utf8');
+
+                expect(val).toBe('hello');
+            });
         });
 
         describe('parsePublicPEMKey()', () => {
@@ -56,8 +66,17 @@ describe('crypto', () => {
                 expect(val).toBe('hello');
             });
 
-            it('should parse the private key with extra whitespace', () => {
+            it('should parse the public key with extra whitespace', () => {
                 const pem = ` -----BEGIN PUBLIC KEY-----\naGVsbG8=\n-----END PUBLIC KEY-----\n`;
+                const key = parsePublicPEMKey(pem);
+                const buffer = Buffer.from(key);
+                const val = buffer.toString('utf8');
+
+                expect(val).toBe('hello');
+            });
+
+            it('should parse the public key with extra lines in the key', () => {
+                const pem = ` -----BEGIN PUBLIC KEY-----\naGVs\nbG8=\n-----END PUBLIC KEY-----\n`;
                 const key = parsePublicPEMKey(pem);
                 const buffer = Buffer.from(key);
                 const val = buffer.toString('utf8');

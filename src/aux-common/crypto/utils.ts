@@ -81,7 +81,8 @@ export function parsePEM(pem: string, header: string, footer: string): ArrayBuff
     pem = pem.trim();
     
     // Make sure we remove the newlines
-    const contents = pem.substring(header.length + 1, pem.length - (footer.length + 1));
+    let contents = pem.substring(header.length + 1, pem.length - (footer.length + 1));
+    contents = contents.replace('\n', '');
     const buffer = toByteArray(contents);
     return buffer.buffer;
 }
