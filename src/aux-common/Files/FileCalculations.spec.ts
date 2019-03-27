@@ -22,7 +22,8 @@ import {
     createWorkspace,
     isFileMovable,
     isFileStackable,
-    newSelectionId
+    newSelectionId,
+    objectsAtContextGridPosition
 } from './FileCalculations';
 import {
     cloneDeep
@@ -83,6 +84,58 @@ describe('FileCalculations', () => {
     describe('parseArray()', () => {
         it('should handle empty arrays properly', () => {
             expect(parseArray('[]')).toEqual([]);
+        });
+    });
+    
+
+    describe('objectsAtContextGridPosition()', () => {
+
+        it('should return files at the given position', () => {
+            const file1 = createFile('test1', {
+                context: true,
+                'context.x': -1,
+                'context.y': 1
+            });
+            const file2 = createFile('test2', {
+                context: true,
+                'context.x': -1,
+                'context.y': 1,
+            });
+            const file3 = createFile('test3', {
+                context: true,
+                'context.x': -1,
+                'context.y': 1,
+            });
+
+            const context = createCalculationContext([file1, file2, file3]);
+            const result = objectsAtContextGridPosition(context, 'context', { x: -1, y: 1 });
+
+            expect(result).toEqual([
+                file1,
+                file2,
+                file3
+            ]);
+        });
+
+        it('should ignore user files', () => {
+            const file1 = createFile('test1', {
+                context: true,
+                'context.x': -1,
+                'context.y': 1,
+                _user: 'abc'
+            });
+            const file2 = createFile('test2', {
+                context: true,
+                'context.x': -1,
+                'context.y': 1,
+            });
+
+            const context = createCalculationContext([file1, file2]);
+            const result = objectsAtContextGridPosition(context, 'context', { x: -1, y: 1 });
+
+            expect(result).toEqual([
+                file2
+            ]);
         });
     });
 

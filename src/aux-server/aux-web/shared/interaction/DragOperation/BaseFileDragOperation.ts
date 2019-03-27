@@ -145,7 +145,7 @@ export abstract class BaseFileDragOperation implements IOperation {
      * @param gridPosition The grid position that the file is being dragged to.
      * @param file The file that is being dragged.
      */
-    protected _calculateFileDragPosition(calc: FileCalculationContext, context: string, gridPosition: Vector2, ...files: File[]) {
+    protected _calculateFileDragStackPosition(calc: FileCalculationContext, context: string, gridPosition: Vector2, ...files: File[]) {
         const objs = differenceBy(objectsAtContextGridPosition(calc, context, gridPosition), files, f => f.id);
 
         const canCombine = objs.length === 1 && 

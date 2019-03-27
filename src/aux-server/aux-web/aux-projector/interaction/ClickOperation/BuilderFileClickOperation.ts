@@ -105,7 +105,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
 
     protected _canDragFile(calc: FileCalculationContext, file: File): boolean {
         if (this._interaction.isInCorrectMode(this._file3D)) {
-            if (file.tags['aux.builder.context']) {
+            if (this._interaction.isInWorksurfacesMode() && file.tags['aux.builder.context']) {
                 // Workspaces are always movable.
                 return true;
             } else {

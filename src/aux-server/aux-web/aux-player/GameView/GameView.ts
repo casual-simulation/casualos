@@ -10,7 +10,6 @@ import {
     HemisphereLight,
     Plane,
     Vector3,
-    GridHelper,
     Quaternion,
     Matrix4,
     Texture,
@@ -22,9 +21,9 @@ import * as webvrui from 'webvr-ui';
 
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Inject, Provide, Prop, Watch } from 'vue-property-decorator';
+import { Inject, Provide, Prop } from 'vue-property-decorator';
 import {
-    SubscriptionLike, BehaviorSubject, Observable,
+    SubscriptionLike
 } from 'rxjs';
 import {
     concatMap, tap,
@@ -34,9 +33,7 @@ import {
     Object,
     DEFAULT_SCENE_BACKGROUND_COLOR,
     AuxFile,
-    calculateFileValue,
     AuxObject,
-    FileCalculationContext,
     isDestroyed
 } from '@yeti-cgi/aux-common';
 import { ArgEvent } from '@yeti-cgi/aux-common/Events';
@@ -44,8 +41,7 @@ import { Time } from '../../shared/scene/Time';
 import { Input, InputType } from '../../shared/scene/Input';
 import { InputVR } from '../../shared/scene/InputVR';
 import { appManager } from '../../shared/AppManager';
-import { GridChecker } from '../../shared/scene/grid/GridChecker';
-import { find, flatMap, remove } from 'lodash';
+import { find, flatMap } from 'lodash';
 import App from '../App/App';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { IGameView } from '../../shared/IGameView';
@@ -58,7 +54,6 @@ import { PlayerInteractionManager } from '../interaction/PlayerInteractionManage
 import InventoryFile from '../InventoryFile/InventoryFile';
 import { InventoryContext } from '../InventoryContext';
 import { doesFileDefinePlayerContext } from '../PlayerUtils';
-import { stringify } from 'querystring';
 
 @Component({
     components: {
@@ -80,13 +75,11 @@ export default class GameView extends Vue implements IGameView {
     private _skylight: HemisphereLight;
 
     private _groundPlane: Plane;
-    private _gridMesh: GridHelper;
     private _canvas: HTMLCanvasElement;
     private _time: Time;
     private _input: Input;
     private _inputVR: InputVR;
     private _interaction: PlayerInteractionManager;
-    // private _gridChecker: GridChecker;
     private _originalBackground: Color | Texture;
 
     public onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
@@ -106,11 +99,6 @@ export default class GameView extends Vue implements IGameView {
 
     private _fileSubs: SubscriptionLike[];
     private _decoratorFactory: AuxFile3DDecoratorFactory;
-
-    /**
-     * The current context that we are displaying.
-     */
-    private _userContext: BehaviorSubject<string>;
 
     xrCapable: boolean = false;
     xrDisplay: any = null;
@@ -140,9 +128,7 @@ export default class GameView extends Vue implements IGameView {
     get filesMode(): boolean { console.error("AUX Player does not implement filesMode."); return false; }
     get workspacesMode(): boolean { console.error("AUX Player does not implement workspacesMode."); return false; }
     get groundPlane(): Plane { return this._groundPlane; }
-    get gridChecker(): GridChecker { return null; }
     get fileManager() { return appManager.fileManager; }
-    get userContext(): string { return this.context; }
 
     constructor() {
         super();
@@ -169,7 +155,6 @@ export default class GameView extends Vue implements IGameView {
         this._fileSubs = [];
         this._fileBackBuffer = new Map<string, AuxObject>();
         this._decoratorFactory = new AuxFile3DDecoratorFactory(this);
-        this._userContext = new BehaviorSubject(null);
         this._setupScene();
         DebugObjectManager.init(this._time, this._scene);
         this._input = new Input(this);
@@ -283,7 +268,6 @@ export default class GameView extends Vue implements IGameView {
             this._mainCamera.matrixAutoUpdate = true;
             this._renderCore();
         }
-
     }
 
     private _renderCore(): void {
@@ -372,7 +356,7 @@ export default class GameView extends Vue implements IGameView {
         if (!this._contextGroup) {
             // We dont have a context group yet. We are in search of a file that defines a player context that matches the user's current context.
             const destroyed = isDestroyed(file);
-            const result = doesFileDefinePlayerContext(file, this.userContext, calc);
+            const result = doesFileDefinePlayerContext(file, this.context, calc);
             if (!destroyed && result.matchFound) {
                 // Create ContextGroup3D for this file that we will use to render all files in the context.
                 this._contextGroup = new ContextGroup3D(file, 'player', this._decoratorFactory);
@@ -509,11 +493,6 @@ export default class GameView extends Vue implements IGameView {
 
         // Ground plane.
         this._groundPlane = new Plane(new Vector3(0, 1, 0));
-
-        // Grid plane
-        this._gridMesh = new GridHelper(1000, 300, 0xBBBBBB, 0xBBBBBB);
-        this._gridMesh.visible = true;
-        this._scene.add(this._gridMesh);
     }
 
     private _setupRenderer() {

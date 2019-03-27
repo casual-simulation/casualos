@@ -12,7 +12,7 @@ import {
     getContextSize,
     getContextDefaultHeight,
     getContextScale,
-    getContextGrid,
+    getBuilderContextGrid,
     getContextGridScale,
     isMinimized,
     isContext,
@@ -207,7 +207,7 @@ export class WorkspaceMesh extends GameObject {
             defaultHeight || DEFAULT_WORKSPACE_HEIGHT, 
             scale || DEFAULT_WORKSPACE_SCALE);
         
-        const grid = getContextGrid(calc, this.workspace, this.domain);
+        const grid = getBuilderContextGrid(calc, this.workspace, this.domain);
         const positionsKeys = grid ? keys(grid) : [];
         positionsKeys.forEach(key => {
             const position = keyToPos(key);
@@ -257,8 +257,8 @@ export class WorkspaceMesh extends GameObject {
                 return true;
             } else {
 
-                const currentGrid = getContextGrid(calc, current, this.domain);
-                const previousGrid = getContextGrid(calc, previous, this.domain);
+                const currentGrid = getBuilderContextGrid(calc, current, this.domain);
+                const previousGrid = getBuilderContextGrid(calc, previous, this.domain);
                 
                 return !isEqual(currentGrid, previousGrid);
             }

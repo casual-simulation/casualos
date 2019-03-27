@@ -25,7 +25,7 @@ import { PartialFile } from '../Files';
 import { FilesState, cleanFile, FileEvent, hasValue } from './FilesChannel';
 import { merge } from '../utils';
 import { AtomOp, Atom } from '../causal-trees';
-import { AuxOp, AuxOpType, AuxFile } from '../aux-format';
+import { AuxOp, AuxOpType, AuxFile, file } from '../aux-format';
 
 export var ShortId_Length: number = 5;
 
@@ -804,7 +804,7 @@ export function getContextSize(calc: FileCalculationContext, contextFile: File, 
  * @param contextFile The file that represents the context.
  * @param domain The domain.
  */
-export function getContextGrid(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): File['tags']['aux.builder.context.grid'] {
+export function getBuilderContextGrid(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): File['tags']['aux.builder.context.grid'] {
     return getContextValue(calc, contextFile, domain, 'grid');
 }
 
@@ -849,7 +849,7 @@ export function getContextDefaultHeight(calc: FileCalculationContext, contextFil
 export function objectsAtContextGridPosition(calc: FileCalculationContext, context: string, position: { x: number, y: number }): File[] {
     const objects = calc.objects;
     return <File[]>sortBy(objects.filter(o => {
-        if (isFileInContext(calc, o, context)) {
+        if (!isUserFile(o) && isFileInContext(calc, o, context)) {
             const pos = getFilePosition(calc, o, context);
             return pos && 
                 position.x === pos.x &&
@@ -857,6 +857,13 @@ export function objectsAtContextGridPosition(calc: FileCalculationContext, conte
         }
         return false;
     }), o => getFileIndex(calc, o, context));
+}
+
+/**
+ * Determines if the given file is for a user.
+ */
+export function isUserFile(file: File): boolean {
+    return !!file.tags._user;
 }
 
 /**

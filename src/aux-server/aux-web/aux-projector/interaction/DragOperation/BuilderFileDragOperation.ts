@@ -3,7 +3,7 @@ import { Physics } from '../../../shared/scene/Physics';
 import { File, Workspace, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated } from '@yeti-cgi/aux-common/Files';
 import { keys } from 'lodash';
 import { gridPosToRealPos, Axial, posToKey } from '../../../shared/scene/hex';
-import { FileCalculationContext, getContextMinimized, getContextSize, getContextGrid } from '@yeti-cgi/aux-common/Files/FileCalculations';
+import { FileCalculationContext, getContextMinimized, getContextSize, getBuilderContextGrid } from '@yeti-cgi/aux-common/Files/FileCalculations';
 import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
 import { BuilderGroup3D } from '../../../shared/scene/BuilderGroup3D';
 import { appManager } from '../../../shared/AppManager';
@@ -29,8 +29,6 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
 
     /**
      * Create a new drag rules.
-     * @param input the input module to interface with.
-     * @param buttonId the button id of the input that this drag operation is being performed with. If desktop this is the mouse button
      */
     constructor(gameView: GameView, interaction: BuilderInteractionManager, hit: Intersection, files: File[], workspace: BuilderGroup3D, context: string) {
         super(gameView, interaction, files, context);
@@ -73,7 +71,7 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
             const domain = this._workspace.domain;
             const size = getContextSize(calc, workspace, domain);
             const minimized = getContextMinimized(calc, workspace, domain);
-            const grid = getContextGrid(calc, workspace, domain);
+            const grid = getBuilderContextGrid(calc, workspace, domain);
             const files = this._workspace.getFiles();
             if (size === 1 && !minimized && (!grid || keys(grid).length === 0) && files.length === 0) {
                 // check if it is close to another workspace.

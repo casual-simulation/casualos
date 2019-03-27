@@ -12,7 +12,7 @@ import {
     isMinimized,
     FileCalculationContext,
     getContextMinimized,
-    getContextGrid,
+    getBuilderContextGrid,
     getContextSize,
     getContextScale,
     getContextDefaultHeight,
@@ -140,6 +140,13 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             return this.mode === 'files';
         }
     }
+
+    /**
+     * Determines if we're currently in worksurfaces mode.
+     */
+    isInWorksurfacesMode() {
+        return this.mode === 'worksurfaces';
+    }
     
     /**
      * Raises the tile at the given point by the given amount.
@@ -198,37 +205,42 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      * @param exclude The optional workspace to exclude from the search.
      */
     closestWorkspace(calc: FileCalculationContext, point: Vector3, exclude?: AuxFile3D | ContextGroup3D) {
-        const workspaceMeshes = this._gameView.getContexts().filter(context => context !== exclude && !getContextMinimized(calc, context.file, context.domain));
-        const center = new Axial();
+        const workspaceMeshes = this._gameView.getContexts().filter(context => context !== exclude && !getContextMinimized(calc, context.file, context.domain) && !!getContextSize(calc, context.file, context.domain));
 
-        const gridPositions = workspaceMeshes.map(mesh => {
-            const w = <Workspace>mesh.file;
-            const gridPos = this._worldPosToGridPos(calc, mesh, point);
-            const grid = getContextGrid(calc, w, mesh.domain);
-            const tilePositions = grid ? keys(grid).map(keyToPos) : [];
-            const distToCenter = gridDistance(center, gridPos);
-            const size = getContextSize(calc, w, mesh.domain);
-            const scaledDistance = distToCenter - (size - 1);
-            const distances = [
-                { position: center, distance: scaledDistance },
-                ...tilePositions.map(pos => ({
-                    position: pos,
-                    distance: gridDistance(pos, gridPos) 
-                }))
-            ];
-
-            // never null because distances always has at least one element.
-            const closest = minBy(distances, d => d.distance);
-
-            return {
-                mesh, 
-                gridPosition: gridPos, 
-                distance: closest.distance
-            };
-        });
-
-        const closest = minBy(gridPositions, g => g.distance);
-        return closest;
+        if (!!workspaceMeshes && workspaceMeshes.length > 0) {
+            const center = new Axial();
+    
+            const gridPositions = workspaceMeshes.map(mesh => {
+                const w = <Workspace>mesh.file;
+                const gridPos = this._worldPosToGridPos(calc, mesh, point);
+                const grid = getBuilderContextGrid(calc, w, mesh.domain);
+                const tilePositions = grid ? keys(grid).map(keyToPos) : [];
+                const distToCenter = gridDistance(center, gridPos);
+                const size = getContextSize(calc, w, mesh.domain);
+                const scaledDistance = distToCenter - (size - 1);
+                const distances = [
+                    { position: center, distance: scaledDistance },
+                    ...tilePositions.map(pos => ({
+                        position: pos,
+                        distance: gridDistance(pos, gridPos) 
+                    }))
+                ];
+    
+                // never null because distances always has at least one element.
+                const closest = minBy(distances, d => d.distance);
+    
+                return {
+                    mesh, 
+                    gridPosition: gridPos, 
+                    distance: closest.distance
+                };
+            });
+    
+            const closest = minBy(gridPositions, g => g.distance);
+            return closest;
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -263,7 +275,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             if (gameObject instanceof ContextGroup3D && gameObject.file.tags[`aux.${gameObject.domain}.context`]) {
                 
                 const tile = this._worldPosToGridPos(calc, gameObject, point);
-                const currentGrid = getContextGrid(calc, gameObject.file, gameObject.domain);
+                const currentGrid = getBuilderContextGrid(calc, gameObject.file, gameObject.domain);
                 const currentTile = currentGrid ? currentGrid[posToKey(tile)] : null;
                 const defaultHeight = getContextDefaultHeight(calc, gameObject.file, gameObject.domain);
                 const currentHeight = (!!currentTile ? currentTile.height : defaultHeight) || DEFAULT_WORKSPACE_HEIGHT;
