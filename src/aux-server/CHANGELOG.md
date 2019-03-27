@@ -9,6 +9,7 @@
 - Buf Fixes
   - Can snap hexes together again as long as there is no file on it (currently this includes the builder context file as well).
   - Fixed an issue that allowed files representing worksurfaces to be dragged even if `aux.movable` was set to `false`.
+  - Fixed an issue that allowed files to be stacked on top of invisible files that were representing users.
   
 ## V0.3.22
 ### Date: 3/26/2019
