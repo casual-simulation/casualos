@@ -187,7 +187,6 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     return {
                         good: true,
                         gridPosition: closest.tile.gridPosition,
-                        height: closest.tile.localPosition.y,
                         workspace
                     };
                 }

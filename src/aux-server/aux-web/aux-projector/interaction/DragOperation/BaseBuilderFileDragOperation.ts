@@ -41,11 +41,11 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
 
     protected _onDrag(calc: FileCalculationContext) {
         const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.mainCamera);
-        const { good, gridPosition, height, workspace } = this._interaction.pointOnWorkspaceGrid(calc, mouseDir);
+        const { good, gridPosition, workspace } = this._interaction.pointOnWorkspaceGrid(calc, mouseDir);
 
         if (this._files.length > 0) {
             if (good) {
-                this._dragFilesOnWorkspace(calc, workspace, gridPosition, height);
+                this._dragFilesOnWorkspace(calc, workspace, gridPosition);
             } else {
                 this._dragFilesFree(calc);
             }
@@ -63,7 +63,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         }
     }
 
-    protected _dragFilesOnWorkspace(calc: FileCalculationContext, workspace: BuilderGroup3D, gridPosition: Vector2, height: number): void {
+    protected _dragFilesOnWorkspace(calc: FileCalculationContext, workspace: BuilderGroup3D, gridPosition: Vector2): void {
         if (this._freeDragGroup) {
             this._releaseFreeDragGroup(this._freeDragGroup);
             this._freeDragGroup = null;
@@ -85,7 +85,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         this._other = result.other;
 
         if (result.stackable || result.index === 0) {
-            this._updateFilesPositions(this._files, gridPosition, height, result.index);
+            this._updateFilesPositions(this._files, gridPosition, result.index);
         }
     }
 

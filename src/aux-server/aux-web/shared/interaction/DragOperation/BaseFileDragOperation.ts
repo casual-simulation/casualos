@@ -96,7 +96,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         }
     }
 
-    protected _updateFilesPositions(files: File[], gridPosition: Vector2, height: number, index: number) {
+    protected _updateFilesPositions(files: File[], gridPosition: Vector2, index: number) {
 
         let events: FileEvent[] = [];
         for (let i = 0; i < files.length; i++) {
@@ -105,7 +105,6 @@ export abstract class BaseFileDragOperation implements IOperation {
                     [this._context]: true,
                     [`${this._context}.x`]: gridPosition.x,
                     [`${this._context}.y`]: gridPosition.y,
-                    [`${this._context}.z`]: height,
                     [`${this._context}.index`]: index + i
                 }
             };
