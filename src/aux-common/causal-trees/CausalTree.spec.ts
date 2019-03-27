@@ -296,6 +296,35 @@ describe('CausalTree', () => {
 
             expect(tree2.weave.isValid()).toBe(true);
         });
+
+        it('should emit rejected atoms all together', async () => {
+            let tree1 = new CausalTree(storedTree(site(1)), new Reducer());
+            let atoms: Atom<Op>[] = [];
+            
+            let s1t0 = atom(atomId(1, 0), null, new Op());
+            let s2t0 = atom(atomId(2, 0), null, new Op());
+            let s5t2 = atom(atomId(5, 2), atomId(1, 2), new Op());
+            
+            let rejected: RejectedAtom<Op>[][] = [];
+            tree1.atomRejected.subscribe(atoms => {
+                rejected.push(atoms);
+            });
+
+            const added = await tree1.addMany([
+                s1t0,
+                s2t0,
+                s5t2
+            ]);
+
+            expect(rejected).toEqual([
+                [
+                    { atom: s2t0, reason: 'second_root_not_allowed' },
+                    { atom: s5t2, reason: 'cause_not_found' }
+                ]
+            ]);
+        });
+
+        
     });
 
     describe('value', () => {
