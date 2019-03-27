@@ -16,6 +16,7 @@ import { TestScheduler } from 'rxjs/testing';
 import { AsyncScheduler } from "rxjs/internal/scheduler/AsyncScheduler";
 import { AtomValidator } from './AtomValidator';
 import { TestCryptoImpl } from '../crypto/test/TestCryptoImpl';
+import { RejectedAtom } from './RejectedAtom';
 
 jest.useFakeTimers();
 
@@ -302,6 +303,36 @@ describe('RealtimeCausalTree', () => {
             expect(tree.tree.site.crypto.signatureAlgorithm).toBe('ECDSA-SHA256-NISTP256');
             expect(tree.tree.factory.signingKey).toBeTruthy();
             expect(tree.tree.factory.signingKey.type).toBe(privateKey);
+        });
+
+        it('should send rejected atoms', async () => {
+            let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
+            let spy = jest.spyOn(crypto, 'verify').mockResolvedValue(false);
+            let validator = new AtomValidator(crypto);
+            let tree = new RealtimeCausalTree(factory, store, channel, {
+                validator: validator
+            });
+
+            let w = new Weave<Op>();
+            let [root] = w.insert(atom(atomId(1, 0), null, new Op()));
+            root.signature = 'bad';
+
+            weave.push(...w.atoms);
+
+            let rejected: RejectedAtom<AtomOp>[][] = [];
+            tree.onRejected.subscribe(r => {
+                rejected.push(r);
+            });
+
+            await tree.init();
+            connection.setConnected(true);
+            await connection.flushPromises();
+
+            expect(rejected).toEqual([
+                [
+                    { atom: root, reason: 'no_public_key' },
+                ]
+            ]);
         });
     });
 

@@ -69,7 +69,7 @@ export class BrowserSigningCryptoImpl implements SigningCryptoImpl {
         const cryptoKey = await crypto.subtle.importKey('spki', buffer, {
             name: 'ECDSA',
             namedCurve: BrowserSigningCryptoImpl.NAMED_CURVE
-        }, true, ['sign', 'verify']);
+        }, true, ['verify']);
 
         return new BrowserPublicCryptoKey(cryptoKey);
     }
@@ -79,7 +79,7 @@ export class BrowserSigningCryptoImpl implements SigningCryptoImpl {
         const cryptoKey = await crypto.subtle.importKey('pkcs8', buffer, {
             name: 'ECDSA',
             namedCurve: BrowserSigningCryptoImpl.NAMED_CURVE
-        }, true, ['sign', 'verify']);
+        }, true, ['sign']);
 
         return new BrowserPrivateCryptoKey(cryptoKey);
     }

@@ -266,21 +266,21 @@ export class FileManager {
   async updateFile(file: AuxFile, newData: PartialFile) {
     updateFile(file, this.userFile.id, newData, () => this.createContext());
 
-    this._aux.tree.updateFile(file, newData);
+    await this._aux.tree.updateFile(file, newData);
   }
 
   async createFile(id?: string, tags?: Object['tags']) {
     console.log('[FileManager] Create File');
 
     const file = createFile(id, tags);
-    this._aux.tree.addFile(file);
+    await this._aux.tree.addFile(file);
   }
 
   async createWorkspace() {
     console.log('[FileManager] Create File');
 
     const workspace: Workspace = createWorkspace();
-    this._aux.tree.addFile(workspace);
+    await this._aux.tree.addFile(workspace);
   }
 
   async action(eventName: string, files: File[]) {
@@ -292,19 +292,19 @@ export class FileManager {
     const result = calculateActionEvents(this._aux.tree.value, actionData);
     console.log('  result: ', result);
 
-    this._aux.tree.addEvents(result.events);
+    await this._aux.tree.addEvents(result.events);
   }
 
-  transaction(...events: FileEvent[]) {
-    this._aux.tree.addEvents(events);
+  async transaction(...events: FileEvent[]) {
+    await this._aux.tree.addEvents(events);
   }
 
   /**
    * Adds the given state to the session.
    * @param state The state to add.
    */
-  addState(state: FilesState) {
-      this._aux.tree.addEvents([addState(state)]);
+  async addState(state: FilesState) {
+      await this._aux.tree.addEvents([addState(state)]);
   }
 
   // TODO: This seems like a pretty dangerous function to keep around,
@@ -414,7 +414,13 @@ export class FileManager {
             id: this._id,
             type: 'aux'
         }, { garbageCollect: true, alwaysRequestNewSiteId: true });
+
         this._subscriptions.push(this._aux.onError.subscribe(err => console.error(err)));
+        this._subscriptions.push(this._aux.onRejected.subscribe(rejected => {
+            rejected.forEach(r => {
+                console.warn('[FileManager] Atom Rejected', r);
+            });
+        }));
 
         await this._aux.init();
         await this._aux.waitToGetTreeFromServer();
@@ -456,6 +462,16 @@ export class FileManager {
         console.error(ex);
     }
   }
+
+  /**
+   * Adds the root atom to the tree if it has not been added by the server.
+   */
+  private async _addRootAtom() {
+        if (this._aux.tree.weave.atoms.length === 0) {
+            this._setStatus('Adding root atom...');
+            await this._aux.tree.root();
+        }
+    }
 
   private async _initUserFile() {
     this._setStatus('Updating user file...');

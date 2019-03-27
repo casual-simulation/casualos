@@ -7,6 +7,9 @@ import { AtomOp, RealtimeChannelInfo, PrecalculatedOp, RealtimeCausalTree, Causa
 import { SocketIOConnection } from './SocketIOConnection';
 import { auxCausalTreeFactory } from '@yeti-cgi/aux-common';
 import { BrowserCausalTreeStore } from './BrowserCausalTreeStore';
+import { AtomValidator } from '@yeti-cgi/aux-common/causal-trees/AtomValidator';
+import { SigningCryptoImpl } from '@yeti-cgi/aux-common/crypto';
+import { BrowserSigningCryptoImpl } from '../crypto/BrowserSigningCryptoImpl';
 
 /**
  * Defines a class that is able to help manage interactions with causal trees.
@@ -20,6 +23,7 @@ export class CausalTreeManager implements SubscriptionLike {
     private _factory: CausalTreeFactory;
     private _store: CausalTreeStore;
     private _initialized: boolean;
+    private _crypto: SigningCryptoImpl;
 
     get factory(): CausalTreeFactory {
         return this._factory;
@@ -36,6 +40,7 @@ export class CausalTreeManager implements SubscriptionLike {
         this._factory = auxCausalTreeFactory();
         this._store = new BrowserCausalTreeStore();
         this._events = new Subject<MessageEvent>();
+        this._crypto = new BrowserSigningCryptoImpl('ECDSA-SHA256-NISTP256');
         // this._worker = new CausalTreeWorker();
         // this._worker.onmessage = (msg) => this._onMessage(msg);
         // this._worker.onerror = (err) => this._onError(err);
@@ -59,12 +64,16 @@ export class CausalTreeManager implements SubscriptionLike {
      * @param info The info that identifies the tree that should be retrieved or created.
      * @param options The options that should be used for the tree.
      */
-    async getTree<TTree extends CausalTree<AtomOp, any, any>>(info: RealtimeChannelInfo, options?: RealtimeCausalTreeOptions): Promise<RealtimeCausalTree<TTree>> {
+    async getTree<TTree extends CausalTree<AtomOp, any, any>>(info: RealtimeChannelInfo, options: RealtimeCausalTreeOptions = {}): Promise<RealtimeCausalTree<TTree>> {
         let realtime = <RealtimeCausalTree<TTree>>this._trees[info.id];
         if (!realtime) {
             let connection = new SocketIOConnection(this._socket);
             let channel = new RealtimeChannel<Atom<AtomOp>[]>(info, connection);
-            realtime = new RealtimeCausalTree<TTree>(this._factory, this._store, channel, options);
+            let validator = new AtomValidator(this._crypto)
+            realtime = new RealtimeCausalTree<TTree>(this._factory, this._store, channel, {
+                validator: validator,
+                ...options
+            });
             this._trees[info.id] = realtime;
         }
         

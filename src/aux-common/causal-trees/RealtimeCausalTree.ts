@@ -11,6 +11,7 @@ import { maxBy } from 'lodash';
 import { storedTree, StoredCausalTree } from "./StoredCausalTree";
 import { WeaveVersion, versionsEqual } from "./WeaveVersion";
 import { PrivateCryptoKey } from "../crypto";
+import { RejectedAtom } from "./RejectedAtom";
 
 /**
  * Defines an interface for options that a realtime causal tree can accept.
@@ -37,6 +38,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
     private _channel: RealtimeChannel<Atom<AtomOp>[]>;
     private _factory: CausalTreeFactory;
     private _updated: Subject<Atom<AtomOp>[]>;
+    private _rejected: Subject<RejectedAtom<AtomOp>[]>;
     private _errors: Subject<any>;
     private _subs: SubscriptionLike[];
     private _options: RealtimeCausalTreeOptions;
@@ -84,6 +86,13 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
     }
 
     /**
+     * Gets an observable that resolves whenever an atom is rejected.
+     */
+    get onRejected(): Observable<RejectedAtom<AtomOp>[]> {
+        return this._rejected;
+    }
+
+    /**
      * Creates a new Realtime Causal Tree.
      * @param type The type of the tree.
      * @param factory The factory used to create new trees.
@@ -97,6 +106,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         this._channel = channel;
         this._updated = new Subject<Atom<AtomOp>[]>();
         this._errors = new Subject<any>();
+        this._rejected = new Subject<RejectedAtom<AtomOp>[]>();
         this._tree = null;
         this._subs = [];
         this._options = options || {};
@@ -130,6 +140,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
                 } else {
                     tree = <TTree>this._factory.create(this.type, stored, this._options);
                 }
+                this._listenForRejectedAtoms(tree);
                 await tree.import(stored);
                 this._setTree(tree);
                 if (stored.weave) {
@@ -150,6 +161,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
             concatMap(c => this._channel.exchangeInfo(this.getVersion())),
             concatMap(version => this._requestSiteId(this.id, version), (version, site) => ({ version, site })),
             map(data => this._createTree(data.site, data.version.knownSites)),
+            tap(tree => this._listenForRejectedAtoms(tree)),
             concatMap(tree => this._channel.exchangeWeaves(tree.export()), (tree, imported) => ({tree, imported})),
             concatMap(data => this._import(data.tree, data.imported), (data, imported) => ({ ...data, added: imported })),
             concatMap(data => this._store.put(this.id, data.tree.export(), true), (data) => data),
@@ -231,6 +243,12 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
             tap(refs => this._channel.emit(refs)),
             tap(ref => this._updated.next(ref))
         ).subscribe(null, error => this._errors.next(error)));
+    }
+
+    private _listenForRejectedAtoms(tree: TTree) {
+        this._subs.push(tree.atomRejected.pipe(
+            tap(refs => this._rejected.next(refs))
+        ).subscribe(null, ex => this._errors.next(ex)));
     }
 
     private _importKnownSites(version: SiteVersionInfo) {

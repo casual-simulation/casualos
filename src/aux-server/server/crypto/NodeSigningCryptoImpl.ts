@@ -17,7 +17,7 @@ export class NodeSigningCryptoImpl implements SigningCryptoImpl {
             sign.end();
             
             const signature = sign.sign(key.privateKey);
-            return signature.buffer;
+            return signature;
         }
         throw this._unknownKey();
     }

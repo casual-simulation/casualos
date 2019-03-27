@@ -160,7 +160,7 @@ export class AppManager {
             value = <FilesState><unknown>state;
         }
         
-        this.fileManager.addState(value);
+        await this.fileManager.addState(value);
     }
 
     /**

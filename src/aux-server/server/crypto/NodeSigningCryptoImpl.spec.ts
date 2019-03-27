@@ -4,7 +4,7 @@ describe('NodeSigningCryptoImpl', () => {
     describe('constructor', () => {
         it('should throw if given an unsupported algorithm', () => {
             expect(() => {
-                new NodeSigningCryptoImpl('RSA');
+                new NodeSigningCryptoImpl(<any>'RSA');
             }).toThrow();
         });
     });
