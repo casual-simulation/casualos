@@ -1,7 +1,7 @@
 /**
  * The possible signature algorithm types.
  */
-export type SignatureAlgorithmType = ECDSA_SHA256;
+export type SignatureAlgorithmType = ECDSA_SHA256_NISTP256;
 
 /**
  * Defines a signature algorithm that uses ECDSA Curve P-256 for signing and verification
