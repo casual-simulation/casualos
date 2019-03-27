@@ -7,7 +7,8 @@ export type RejectionReason = CauseNotFound |
     SecondRootNotAllowed |
     AtomIdAlreadyExists |
     ChecksumFailed |
-    SignatureFailed;
+    SignatureFailed |
+    NoPublicKey;
 
 /**
  * Defines that the atom was not added to the weave
@@ -37,6 +38,11 @@ export type ChecksumFailed = 'checksum_failed';
  * or public key.
  */
 export type SignatureFailed = 'signature_failed';
+
+/**
+ * Defines that the atom was rejected because we don't have a public ket to verify the atom's signature with.
+ */
+export type NoPublicKey = 'no_public_key';
 
 /**
  * Defines an interface for an atom that was rejected.

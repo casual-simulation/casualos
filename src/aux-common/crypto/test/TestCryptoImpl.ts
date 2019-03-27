@@ -11,7 +11,7 @@ export class TestCryptoImpl implements SigningCryptoImpl {
     }
 
     async sign(key: PrivateCryptoKey, data: ArrayBuffer): Promise<ArrayBuffer> {
-        return this.signature || data;
+        return this.signature || data.slice(0, 32);
     }
     
     async verify(key: PublicCryptoKey, signature: ArrayBuffer, data: ArrayBuffer): Promise<boolean> {

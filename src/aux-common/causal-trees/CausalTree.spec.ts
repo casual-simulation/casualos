@@ -8,6 +8,7 @@ import { precalculatedOp } from "./PrecalculatedOp";
 import { jestPreset } from "ts-jest";
 import { AtomValidator } from "./AtomValidator";
 import { TestCryptoImpl, TestCryptoKey } from "../crypto/test/TestCryptoImpl";
+import { RejectedAtom } from "./RejectedAtom";
 
 enum OpType {
     root = 0,
@@ -148,6 +149,45 @@ describe('CausalTree', () => {
             const added = await tree.add(a);
             expect(added).toBe(a);
             expect(spy).toBeCalledWith(expect.any(TestCryptoKey), a);
+        });
+
+        it('should reject atoms that have a signature but the tree doesnt have the public key for it', async () => {
+            let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
+            let validator = new AtomValidator(crypto);
+            let spy = jest.spyOn(validator, 'verify').mockResolvedValue(true);
+            let [publicKey, privateKey] = await crypto.generateKeyPair();
+            let tree = new CausalTree(storedTree(site(1, {
+                signatureAlgorithm: 'ECDSA-SHA256-NISTP256',
+                publicKey: 'test'
+            })), new Reducer(), {
+                validator: validator,
+                signingKey: privateKey
+            });
+
+            const root = await tree.create(new Op(), null);
+
+            let [site2Pub, site2Priv] = await crypto.generateKeyPair();
+            let tree2 = new CausalTree(storedTree(site(2, {
+                signatureAlgorithm: 'ECDSA-SHA256-NISTP256',
+                publicKey: 'test2'
+            })), new Reducer(), {
+                validator: validator,
+                signingKey: site2Priv
+            });
+
+            let rejected: RejectedAtom<Op>[] = [];
+            let sub = tree2.atomRejected.subscribe(atoms => {
+                rejected.push(...atoms);
+            });
+
+            const added = await tree2.add(root);
+            
+            expect(added).toBe(null);
+            expect(rejected).toEqual([
+                { atom: root, reason: 'no_public_key' }
+            ]);
+
+            spy.mockRestore();
         });
     });
 
@@ -439,6 +479,47 @@ describe('CausalTree', () => {
                 site(6)
             ]);
         });
+
+        it('should import known sites before importing atoms', async () => {
+            let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
+            let validator = new AtomValidator(crypto);
+            let spy = jest.spyOn(validator, 'verify').mockResolvedValue(true);
+            let [publicKey, privateKey] = await crypto.generateKeyPair();
+            let tree = new CausalTree(storedTree(site(1, {
+                signatureAlgorithm: 'ECDSA-SHA256-NISTP256',
+                publicKey: 'test'
+            })), new Reducer(), {
+                validator: validator,
+                signingKey: privateKey
+            });
+
+            const root = await tree.create(new Op(), null);
+
+            let [site2Pub, site2Priv] = await crypto.generateKeyPair();
+            let tree2 = new CausalTree(storedTree(site(2, {
+                signatureAlgorithm: 'ECDSA-SHA256-NISTP256',
+                publicKey: 'test2'
+            })), new Reducer(), {
+                validator: validator,
+                signingKey: site2Priv
+            });
+
+            let rejected: RejectedAtom<Op>[] = [];
+            let sub = tree2.atomRejected.subscribe(atoms => {
+                rejected.push(...atoms);
+            });
+
+            const exported = tree.export();
+
+            const added = await tree2.import(exported);
+            
+            expect(added).toEqual([
+                root
+            ]);
+            expect(rejected).toEqual([]);
+
+            spy.mockRestore();
+        });
     });
 
     describe('importWeave()', () => {
@@ -568,6 +649,48 @@ describe('CausalTree', () => {
             expect(spy).toHaveBeenCalledWith(expect.any(TestCryptoKey), add2);
             expect(spy).toHaveBeenCalledWith(expect.any(TestCryptoKey), sub);
             expect(spy).toHaveBeenCalledWith(expect.any(TestCryptoKey), add1);
+        });
+
+        it('should reject atoms with invalid signatures', async () => {
+            let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
+            let validator = new AtomValidator(crypto);
+            let [publicKey, privateKey] = await crypto.generateKeyPair();
+
+            let spy = jest.spyOn(validator, 'verify').mockResolvedValueOnce(true);
+
+            let tree = new CausalTree(storedTree(site(1, {
+                signatureAlgorithm: 'ECDSA-SHA256-NISTP256',
+                publicKey: 'test'
+            })), new Reducer(), {
+                validator: validator,
+                signingKey: privateKey
+            });
+            
+            const root = await tree.factory.create(new Op(), null);
+            const add1 = await tree.factory.create(new Op(OpType.add), root.id);
+            const add2 = await tree.factory.create(new Op(OpType.add), root.id);
+            const sub = await tree.factory.create(new Op(OpType.subtract), add2.id);
+
+            const rejected: RejectedAtom<Op>[] = [];
+            tree.atomRejected.subscribe(atoms => {
+                rejected.push(...atoms);
+            });
+
+            const added = await tree.importWeave([
+                root,
+                add2,
+                sub,
+                add1
+            ]);
+
+            expect(added).toEqual([]);
+            expect(rejected).toEqual([
+                { atom: add2, reason: 'signature_failed' },
+                { atom: sub, reason: 'signature_failed' },
+                { atom: add1, reason: 'signature_failed' },
+            ]);
+
+            spy.mockRestore();
         });
     });
 

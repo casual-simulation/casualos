@@ -125,6 +125,13 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
     }
 
     /**
+     * Gets an observable that resolves whenever one or more atoms are rejected.
+     */
+    get atomRejected() {
+        return this._atomRejected;
+    }
+
+    /**
      * Creates a new Causal Tree with the given site ID.
      * @param tree The stored tree that this causal tree should be made from.
      * @param reducer The reducer used to convert a list of operations into a single value.
@@ -167,7 +174,15 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * @param atom The atom to add to the tree.
      */
     async add<T extends TOp>(atom: Atom<T>): Promise<Atom<T>> {
-        await this._validate(atom);
+        const rej = await this._validate(atom);
+        if (rej) {
+            if (this._isBatching) {
+                this._rejected.push(rej);
+            } else {
+                this._atomRejected.next([rej]);
+            }
+            return null;
+        }
         this.factory.updateTime(atom);
         let [ref, rejected] = this.weave.insert(atom);
         if (ref) {
@@ -256,8 +271,16 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
             }
         }
 
+        let bad: RejectedAtom<T>[] = [];
         for (let i = 0; i < refs.length; i++) {
-            await this._validate(refs[i]);
+            const rejected = await this._validate(refs[i]);
+            if (rejected) {
+                bad.push(rejected);
+            }
+        }
+        if (bad.length > 0) {
+            this._atomRejected.next(bad);
+            return [];
         }
 
         const [newAtoms, rejected] = this.weave.import(refs);
@@ -285,6 +308,13 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * @param tree The tree to import.
      */
     async import<T extends TOp>(tree: StoredCausalTree<T>): Promise<Atom<TOp>[]> {
+
+        if (tree.knownSites) {
+            tree.knownSites.forEach(s => {
+                this.registerSite(s);
+            });
+        }
+
         let added: Atom<TOp>[];
         if (tree.weave) {
             if (tree.formatVersion === 2) {
@@ -301,12 +331,6 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
                 console.warn("[CausalTree] Don't know how to import tree version:", tree.formatVersion);
                 added = [];
             }
-        }
-
-        if (tree.knownSites) {
-            tree.knownSites.forEach(s => {
-                this.registerSite(s);
-            });
         }
         return added;
     }
@@ -428,16 +452,23 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * Ensures that the given atom is valid.
      * @param atom The atom to validate.
      */
-    private async _validate<T extends TOp>(atom: Atom<T>): Promise<void> {
+    private async _validate<T extends TOp>(atom: Atom<T>): Promise<RejectedAtom<T>> {
         const key = await this._getPublicKey(atom.id.site);
         if (key) {
             const valid = await this._validator.verify(key, atom);
             if (!valid) {
-                throw new Error(`[CausalTree] Atom (${atomIdToString(atom.id)}) signature is invalid.`);
+                return {
+                    atom: atom,
+                    reason: 'signature_failed'
+                };
             }
         } else if (!key && !!atom.signature) {
-            throw new Error(`[CausalTree] Atom (${atomIdToString(atom.id)}) has a signature but we don't have the key for the site.`);
+            return {
+                atom: atom,
+                reason: 'no_public_key'
+            };
         }
+        return null;
     }
 
     /**
