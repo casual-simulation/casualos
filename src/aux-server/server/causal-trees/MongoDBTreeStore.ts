@@ -121,7 +121,7 @@ export class MongoDBTreeStore implements CausalTreeStore {
             privateKey: privateKey,
             publicKey: publicKey
         };
-        await this._keys.update({ tree: id }, {
+        await this._keys.updateOne({ tree: id }, {
             $set: keys
         }, { upsert: true });
     }
