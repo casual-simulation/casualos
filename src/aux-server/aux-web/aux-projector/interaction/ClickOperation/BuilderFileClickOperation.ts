@@ -28,11 +28,11 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
     protected _interaction: BuilderInteractionManager;
     // This overrides the base class IGameView
     protected _gameView: GameView;
-
+    
     private _hit: Intersection;
 
-    constructor(mode: UserMode, gameView: GameView, interaction: BuilderInteractionManager, file: AuxFile3D | ContextGroup3D, hit: Intersection) {
-        super(mode, gameView, interaction, file.file, file);
+    constructor(gameView: GameView, interaction: BuilderInteractionManager, file: AuxFile3D | ContextGroup3D, hit: Intersection) {
+        super(gameView, interaction, file.file, file);
         this._hit = hit;
     }
 
@@ -105,7 +105,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
 
     protected _canDragFile(calc: FileCalculationContext, file: File): boolean {
         if (this._interaction.isInCorrectMode(this._file3D)) {
-            if (file.tags['aux.builder.context']) {
+            if (this._interaction.isInWorksurfacesMode() && file.tags['aux.builder.context']) {
                 // Workspaces are always movable.
                 return true;
             } else {

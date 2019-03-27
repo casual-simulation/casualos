@@ -1,6 +1,6 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
-import { calculateNumericalTagValue, FileCalculationContext, File, calculateGridScale, file, objectsAtContextGridPosition, getFilePosition, getFileIndex, getContextDefaultHeight, getContextGrid, getFileRotation } from "@yeti-cgi/aux-common";
+import { calculateNumericalTagValue, FileCalculationContext, File, calculateGridScale, file, objectsAtContextGridPosition, getFilePosition, getFileIndex, getContextDefaultHeight, getBuilderContextGrid, getFileRotation } from "@yeti-cgi/aux-common";
 import { Vector3, Quaternion, Euler } from "three";
 import { calculateGridTileLocalCenter } from "../grid/Grid";
 import { sumBy } from "lodash";
@@ -33,7 +33,7 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
     fileUpdated(calc: FileCalculationContext): void {
         const userContext = this.file3D.context;
         if (userContext) {
-            const grid = getContextGrid(calc, this.file3D.contextGroup.file, this.file3D.domain);
+            const grid = getBuilderContextGrid(calc, this.file3D.contextGroup.file, this.file3D.domain);
             if (grid) {
                 const scale = calculateGridScale(calc, this.file3D.contextGroup.file, this.file3D.domain);
                 this._nextPos = calculateObjectPositionInGrid(calc, this.file3D, scale);
