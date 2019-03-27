@@ -8,6 +8,7 @@
   - Can drag and combine files in AUX Player.
 - Buf Fixes
   - Can snap hexes together again as long as there is no file on it (currently this includes the builder context file as well).
+  - Fixed an issue that allowed files representing worksurfaces to be dragged even if `aux.movable` was set to `false`.
   
 ## V0.3.22
 ### Date: 3/26/2019
