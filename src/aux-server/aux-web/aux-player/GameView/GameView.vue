@@ -9,7 +9,7 @@
 
           <div ref="inventory">
             <div v-if="!vrDisplay && inventoryContext" class="toolbar-layout">
-              <inventory-file v-for="(file, index) in inventoryContext.files" :key="index" 
+              <inventory-file v-for="(file, index) in inventoryContext.slots" :key="index" 
                 :file="file" 
                 :selected="inventoryContext.selectedFile === file"
                 @click="inventoryContext.selectFile(file)"></inventory-file>
