@@ -92,9 +92,16 @@ export interface Atom<T extends AtomOp> {
 
     /**
      * The checksum for this atom.
-     * Used to verify that a atom is valid.
+     * Used to verify that a atom is valid if a signature is not provided.
      */
     checksum: number;
+
+    /**
+     * The base 64 encoded signature that can be used to verify that the atom
+     * was created by the correct site.
+     * If null, then no signature is available.
+     */
+    signature?: string;
 }
 
 /**

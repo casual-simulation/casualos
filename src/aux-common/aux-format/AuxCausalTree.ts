@@ -11,6 +11,9 @@ import { AuxState, AuxTagMetadata, AuxValueMetadata, AuxFile } from './AuxState'
 import { getTagMetadata, insertIntoTagValue, insertIntoTagName, deleteFromTagValue, deleteFromTagName } from './AuxTreeCalculations';
 import { flatMap, keys, isEqual } from 'lodash';
 import { merge } from '../utils';
+import { RejectedAtom } from '../causal-trees/RejectedAtom';
+import { AtomBatch } from '../causal-trees/AtomBatch';
+import { AddResult, mergeIntoBatch } from '../causal-trees/AddResult';
 
 /**
  * Defines a Causal Tree for aux files.
@@ -89,7 +92,7 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
      * @param text The text that should be inserted. 
      * @param index The index that the text should be inserted at.
      */
-    insertIntoTagValue(file: AuxFile, tag: string, text: string, index: number): Atom<InsertOp> {
+    insertIntoTagValue(file: AuxFile, tag: string, text: string, index: number): Promise<AddResult<InsertOp>> {
         const precalc = insertIntoTagValue(file, tag, text, index);
         return this.createFromPrecalculated(precalc);
     }
@@ -101,7 +104,7 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
      * @param text The text to insert into the tag name.
      * @param index The index that the text should be inserted at.
      */
-    insertIntoTagName(file: AuxFile, tag: string, text: string, index: number): Atom<InsertOp> {
+    insertIntoTagName(file: AuxFile, tag: string, text: string, index: number): Promise<AddResult<InsertOp>> {
         const precalc = insertIntoTagName(file, tag, text, index);
         return this.createFromPrecalculated(precalc);
     }
@@ -113,7 +116,7 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
      * @param index The index that the text should be deleted at.
      * @param length The number of characters to delete.
      */
-    deleteFromTagValue(file: AuxFile, tag: string, index: number, length: number): Atom<DeleteOp>[] {
+    deleteFromTagValue(file: AuxFile, tag: string, index: number, length: number): Promise<AtomBatch<DeleteOp>> {
         const precalc = deleteFromTagValue(file, tag, index, length);
         return this.createManyFromPrecalculated(precalc);
     }
@@ -125,7 +128,7 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
      * @param index The index that the characters should be deleted from.
      * @param length The number of characters to delete. 
      */
-    deleteFromTagName(file: AuxFile, tag: string, index: number, length: number): Atom<DeleteOp>[] {
+    deleteFromTagName(file: AuxFile, tag: string, index: number, length: number): Promise<AtomBatch<DeleteOp>> {
         const precalc = deleteFromTagName(file, tag, index, length);
         return this.createManyFromPrecalculated(precalc);
     }
@@ -135,11 +138,11 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
      * @param events The events to add to the tree.
      * @param value The optional precalculated value to use for resolving tree references.
      */
-    addEvents(events: FileEvent[], value?: AuxState): Atom<AuxOp>[] {
-        return this.batch(() => {
+    async addEvents(events: FileEvent[], value?: AuxState): Promise<AtomBatch<AuxOp>> {
+        return await this.batch(async () => {
             value = value || this.value;
-            const results = flatMap(events, e => {
-                    if (e.type === 'file_updated') {
+            const promises = events.map(e => {
+                if (e.type === 'file_updated') {
                     const file = value[e.id];
                     return this.updateFile(file, e.update);
                 } else if(e.type === 'file_added') {
@@ -153,7 +156,13 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
                     return this.applyState(e.state, value);
                 }
             });
-            return results;
+            const vals = await Promise.all(promises);
+            let added = flatMap(vals, b => b.added);
+            let rejected = flatMap(vals, b => b.rejected);
+            return {
+                added,
+                rejected
+            };
         });
     }
     
@@ -161,31 +170,53 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
      * Removes the given file from the state by marking it as deleted.
      * @param file The file to remove.
      */
-    removeFile(file: AuxFile): Atom<AuxOp>[] {
+    async removeFile(file: AuxFile): Promise<AtomBatch<DeleteOp>> {
         if (!file) {
-            return [];
+            return {
+                added: [],
+                rejected: []
+            };
         }
-        return [this.delete(file.metadata.ref)];
+        const result = await this.delete(file.metadata.ref);
+        if (result.added) {
+            return {
+                added: [result.added],
+                rejected: []
+            };
+        } else {
+            return {
+                added: [],
+                rejected: [result.rejected]
+            };
+        }
     }
     
     /**
      * Adds the given file to the tree.
      * @param file The file to add to the tree.
      */
-    addFile(file: File): Atom<AuxOp>[] {
-        return this.batch(() => {
-            const f = this.file(file.id);
+    async addFile(file: File): Promise<AtomBatch<AuxOp>> {
+        return await this.batch(async () => {
+            const f = await this.file(file.id);
+            if (f.rejected) {
+                return {
+                    added: [],
+                    rejected: [f.rejected]
+                };
+            }
             let tags = tagsOnFile(file);
-            let refs = flatMap(tags, t => {
-                const tag = this.tag(t, f);
-                const val = this.val(file.tags[t], tag);
+            let promises = tags.map(async t => {
+                const tag = await this.tag(t, f.added);
+                if (tag.rejected) {
+                    return [tag];
+                }
+                const val = await this.val(file.tags[t], tag.added);
                 return [tag, val];
             });
-
-            return [
-                f,
-                ...refs
-            ];
+            
+            const results = await Promise.all(promises);
+            const refs = flatMap(results);
+            return mergeIntoBatch<AuxOp>([f, ...refs]);
         });
     }
 
@@ -194,10 +225,10 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
      * @param file The file to update.
      * @param newData The new data to include in the file.
      */
-    updateFile(file: AuxFile, newData: PartialFile): Atom<AuxOp>[] {
-        return this.batch(() => {
+    async updateFile(file: AuxFile, newData: PartialFile): Promise<AtomBatch<AuxOp>> {
+        return await this.batch(async () => {
             let tags = tagsOnFile(newData);
-            let refs = flatMap(tags, t => {
+            let promises = tags.map(async t => {
                 const tagMeta = file.metadata.tags[t];
                 let newVal = getTag(newData, t);
                 if (tagMeta) {
@@ -210,19 +241,30 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
                     const hasNew = hasValue(newVal);
                     if (!isEqual(oldVal, newVal) && (hasOld || hasNew)) {
                         // tag is on the file
-                        const val = this.val(newVal, tagMeta.ref);
+                        const val = await this.val(newVal, tagMeta.ref);
                         return [val];
                     } else {
                         return [];
                     }
                 } else {
-                    const tag = this.tag(t, file.metadata.ref);
-                    const val = this.val(newVal, tag);
+                    const tag = await this.tag(t, file.metadata.ref);
+                    if (tag.rejected) {
+                        return [tag];
+                    }
+                    const val = await this.val(newVal, tag.added);
                     return [tag, val];
                 }
             });
+            let results = await Promise.all(promises);
+            let refs = flatMap(results);
 
-            return refs;
+            let added = refs.map(r => r.added).filter(a => a);
+            let rejected = refs.map(r => r.rejected).filter(a => a);
+
+            return {
+                added,
+                rejected
+            };
         });
     }
 
@@ -232,10 +274,10 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
      * @param state The state to add/update in the tree.
      * @param value The optional precalculated value to use for resolving tree references.
      */
-    applyState(state: FilesState, value?: AuxState): Atom<AuxOp>[] {
+    async applyState(state: FilesState, value?: AuxState): Promise<AtomBatch<AuxOp>> {
         value = value || this.value;
         const files = keys(state);
-        let refs = flatMap(files, id => {
+        const promises = files.map(id => {
             const existing = value[id];
             const newFile = state[id];
             if (existing) {
@@ -244,8 +286,14 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
                 return this.addFile(newFile);
             }
         });
+        const results = await Promise.all(promises);
+        let added = flatMap(results, r => r.added);
+        let rejected = flatMap(results, r => r.rejected);
 
-        return refs;
+        return {
+            added,
+            rejected
+        };
     }
 
     fork(): AuxCausalTree {

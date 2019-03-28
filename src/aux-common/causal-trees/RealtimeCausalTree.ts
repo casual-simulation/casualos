@@ -4,12 +4,14 @@ import { CausalTree, CausalTreeOptions } from "./CausalTree";
 import { CausalTreeStore } from "./CausalTreeStore";
 import { CausalTreeFactory } from "./CausalTreeFactory";
 import { SiteVersionInfo } from "./SiteVersionInfo";
-import { SiteInfo, site } from "./SiteIdInfo";
+import { SiteInfo, site, SiteInfoCrypto } from "./SiteIdInfo";
 import { SubscriptionLike, Subject, Observable, ReplaySubject } from 'rxjs';
-import { filter, flatMap, takeWhile, skipWhile, tap, map, first } from 'rxjs/operators';
+import { filter, flatMap, takeWhile, skipWhile, tap, map, first, concatMap } from 'rxjs/operators';
 import { maxBy } from 'lodash';
 import { storedTree, StoredCausalTree } from "./StoredCausalTree";
 import { WeaveVersion, versionsEqual } from "./WeaveVersion";
+import { PrivateCryptoKey } from "../crypto";
+import { RejectedAtom } from "./RejectedAtom";
 
 /**
  * Defines an interface for options that a realtime causal tree can accept.
@@ -36,6 +38,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
     private _channel: RealtimeChannel<Atom<AtomOp>[]>;
     private _factory: CausalTreeFactory;
     private _updated: Subject<Atom<AtomOp>[]>;
+    private _rejected: Subject<RejectedAtom<AtomOp>[]>;
     private _errors: Subject<any>;
     private _subs: SubscriptionLike[];
     private _options: RealtimeCausalTreeOptions;
@@ -83,6 +86,13 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
     }
 
     /**
+     * Gets an observable that resolves whenever an atom is rejected.
+     */
+    get onRejected(): Observable<RejectedAtom<AtomOp>[]> {
+        return this._rejected;
+    }
+
+    /**
      * Creates a new Realtime Causal Tree.
      * @param type The type of the tree.
      * @param factory The factory used to create new trees.
@@ -96,14 +106,14 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         this._channel = channel;
         this._updated = new Subject<Atom<AtomOp>[]>();
         this._errors = new Subject<any>();
+        this._rejected = new Subject<RejectedAtom<AtomOp>[]>();
         this._tree = null;
         this._subs = [];
-        this._options = options;
+        this._options = options || {};
 
-        // TODO: Get the causal tree to store the state
-        // without tanking performance.
         this._subs.push(this._updated.pipe(
-            flatMap(async atoms => await this._store.add(this.id, atoms))
+            filter(a => a.length > 0),
+            concatMap(async atoms => await this._store.add(this.id, atoms))
         ).subscribe(null, err => this._errors.next(err)));
     }
 
@@ -116,7 +126,23 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         if (!this._alwaysRequestNewSiteId) {
             const stored = await this._store.get(this.id, false);
             if (stored) {
-                this._setTree(<TTree>this._factory.create(this.type, stored, this._options));
+                const keys = await this._store.getKeys(this.id);
+                let tree: TTree;
+                if (keys) {
+                    const signingKey = await this._options.validator.impl.importPrivateKey(keys.privateKey);
+                    tree = this._createTree({
+                        site: site(stored.site.id, {
+                            signatureAlgorithm: 'ECDSA-SHA256-NISTP256',
+                            publicKey: keys.publicKey
+                        }),
+                        signingKey: signingKey
+                    }, stored.knownSites);
+                } else {
+                    tree = <TTree>this._factory.create(this.type, stored, this._options);
+                }
+                this._listenForRejectedAtoms(tree);
+                await tree.import(stored);
+                this._setTree(tree);
                 if (stored.weave) {
                     if (stored.formatVersion === 2) {
                         this._updated.next(stored.weave);
@@ -132,12 +158,13 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         this._subs.push(this._channel.connectionStateChanged.pipe(
             filter(connected => connected),
             takeWhile(connected => this.tree === null),
-            flatMap(c => this._channel.exchangeInfo(this.getVersion())),
-            flatMap(version => this._requestSiteId(version), (version, site) => ({ version, site })),
-            map(data => <TTree>this._factory.create(this.type, storedTree(data.site, data.version.knownSites))),
-            flatMap(tree => this._channel.exchangeWeaves(tree.export()), (tree, imported) => ({tree, imported})),
-            map(data => ({...data, added: this._import(data.tree, data.imported) })),
-            flatMap(data => this._store.put(this.id, data.tree.export(), true), (data) => data),
+            concatMap(c => this._channel.exchangeInfo(this.getVersion())),
+            concatMap(version => this._requestSiteId(this.id, version), (version, site) => ({ version, site })),
+            map(data => this._createTree(data.site, data.version.knownSites)),
+            tap(tree => this._listenForRejectedAtoms(tree)),
+            concatMap(tree => this._channel.exchangeWeaves(tree.export()), (tree, imported) => ({tree, imported})),
+            concatMap(data => this._import(data.tree, data.imported), (data, imported) => ({ ...data, added: imported })),
+            concatMap(data => this._store.put(this.id, data.tree.export(), true), (data) => data),
             tap(data => this._setTree(data.tree)),
             tap(data => this._updated.next(data.added))
         ).subscribe(null, err => this._errors.next(err)));
@@ -146,19 +173,27 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
             filter(connected => connected),
             skipWhile(connected => this.tree === null),
             map(c => this.getVersion()),
-            flatMap(localVersion => this._channel.exchangeInfo(localVersion), (local, remote) => ({local, remote})),
+            concatMap(localVersion => this._channel.exchangeInfo(localVersion), (local, remote) => ({local, remote})),
             filter(versions => !versionsEqual(versions.local.version, versions.remote.version)),
-            flatMap(versions => this._channel.exchangeWeaves(this.tree.export()), (versions, weave) => ({ versions, weave })),
-            map(data => ({...data, weave: this._import(this.tree, data.weave) })),
+            concatMap(versions => this._channel.exchangeWeaves(this.tree.export()), (versions, weave) => ({ versions, weave })),
+            concatMap(data => this._import(this.tree, data.weave), (data, imported) => ({ ...data, added: imported })),
             tap(data => this._importKnownSites(data.versions.remote)),
-            flatMap(data => this._store.put(this.id, this._tree.export(), true), (data) => data),
-            tap(data => this._updated.next(data.weave))
+            concatMap(data => this._store.put(this.id, this._tree.export(), true), (data) => data),
+            tap(data => this._updated.next(data.added))
         ).subscribe(null, err => this._errors.next(err)));
         
         this._subs.push(this._channel.events.pipe(
             filter(e => this.tree !== null),
-            map(e => this.tree.addMany(e)),
-            tap(refs => this._updated.next(refs))
+            concatMap(e => this.tree.addMany(e)),
+            tap(refs => this._updated.next(refs.added))
+        ).subscribe(null, err => this._errors.next(err)));
+
+        this._subs.push(this._channel.sites.pipe(
+            filter(e => this.tree !== null),
+            tap(site => {
+                console.log(`[RealtimeCausalTree] ${this.id}: Discovered new site from server:`, site);
+                this.tree.registerSite(site)
+            })
         ).subscribe(null, err => this._errors.next(err)));
     }
 
@@ -193,10 +228,18 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         return false;
     }
 
-    private _import(tree: CausalTree<any, any, any>, weave: StoredCausalTree<AtomOp>): Atom<AtomOp>[] {
-        console.log(`[RealtimeCausalTree] Importing ${weave.weave.length} atoms....`);
-        const results = tree.import(weave);
-        console.log(`[RealtimeCausalTree] Imported ${results.length} atoms.`);
+    private _createTree(site: GrantedSite, knownSites: SiteInfo[]) {
+        const tree = <TTree>this._factory.create(this.type, storedTree(site.site, knownSites), {
+            ...this._options,
+            signingKey: site.signingKey
+        });
+        return tree;
+    }
+
+    private async _import(tree: CausalTree<any, any, any>, weave: StoredCausalTree<AtomOp>): Promise<Atom<AtomOp>[]> {
+        console.log(`[RealtimeCausalTree] ${this.id}: Importing ${weave.weave.length} atoms....`);
+        const { added: results } = await tree.import(weave);
+        console.log(`[RealtimeCausalTree] ${this.id}: Imported ${results.length} atoms.`);
         return results;
     }
 
@@ -210,23 +253,67 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         ).subscribe(null, error => this._errors.next(error)));
     }
 
+    private _listenForRejectedAtoms(tree: TTree) {
+        this._subs.push(tree.atomRejected.pipe(
+            tap(refs => this._rejected.next(refs))
+        ).subscribe(null, ex => this._errors.next(ex)));
+    }
+
     private _importKnownSites(version: SiteVersionInfo) {
         version.knownSites.forEach(site => {
             this._tree.registerSite(site);
         });
     }
 
-    private async _requestSiteId(serverVersion: SiteVersionInfo): Promise<SiteInfo> {
+    private async _requestSiteId(id: string, serverVersion: SiteVersionInfo): Promise<GrantedSite> {
+        let crypto: SiteInfoCrypto;
+        let signingKey: PrivateCryptoKey;
+        if (this._options.validator && this._options.validator.impl.supported()) {
+            let keys = await this._store.getKeys(id);
+            if (!keys && this._options.validator) {
+                console.log(`[RealtimeCausalTree] ${id}: Generating crypto keys...`);
+                const [pubKey, privKey] = await this._options.validator.impl.generateKeyPair();
+                const publicKey = await this._options.validator.impl.exportKey(pubKey);
+                const privateKey = await this._options.validator.impl.exportKey(privKey);
+                crypto = {
+                    publicKey: publicKey,
+                    signatureAlgorithm: 'ECDSA-SHA256-NISTP256'
+                };
+                signingKey = privKey;
+
+                await this._store.putKeys(id, privateKey, publicKey);
+            } else if(keys) {
+                console.log(`[RealtimeCausalTree] ${id}: Using existing keys...`);
+                crypto = {
+                    publicKey: keys.publicKey,
+                    signatureAlgorithm: 'ECDSA-SHA256-NISTP256'
+                };
+
+                signingKey = await this._options.validator.impl.importPrivateKey(keys.privateKey);
+            }
+        }
+        if (!crypto) {
+            console.log(`[RealtimeCausalTree] ${id}: Not using crypto.`);
+        }
+
         let newestSite: SiteInfo = maxBy(serverVersion.knownSites, site => site.id);
         let nextSite: number = newestSite ? newestSite.id : 0;
         let mySite: SiteInfo;
         let success = false;
         while (!success) {
             nextSite += 1;
-            mySite = site(nextSite);
+            mySite = site(nextSite, crypto);
             success = await this._channel.requestSiteId(mySite);
         }
 
-        return mySite;
+        return {
+            site: mySite,
+            signingKey: signingKey
+        };
     }
+}
+
+interface GrantedSite {
+    site: SiteInfo;
+    signingKey: PrivateCryptoKey;
 }

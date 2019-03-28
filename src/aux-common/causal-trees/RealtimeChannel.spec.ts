@@ -1,7 +1,7 @@
 import { TestChannelConnection } from './test/TestChannelConnection';
 import { RealtimeChannelConnection } from "./RealtimeChannelConnection";
 import { RealtimeChannel } from "./RealtimeChannel";
-import { site } from './SiteIdInfo';
+import { site, SiteInfo } from './SiteIdInfo';
 import { SiteVersionInfo } from './SiteVersionInfo';
 
 describe('RealtimeChannel', () => {
@@ -66,6 +66,29 @@ describe('RealtimeChannel', () => {
                 { name: 'event_abc', data: 201 },
                 { name: 'event_abc', data: 99 },
                 { name: 'event_abc', data: -12 }
+            ]);
+        });
+    });
+
+    describe('sites', () => {
+        it('should resolve with site info events from the connection', () => {
+
+            let sites: SiteInfo[] = [];
+            channel.sites.subscribe(s => sites.push(s));
+
+            connection.events.next({
+                name: 'site_abc',
+                data: { id: 1000 }
+            });
+
+            connection.events.next({
+                name: 'site_abc',
+                data: { id: 99 }
+            });
+
+            expect(sites).toEqual([
+                { id: 1000 },
+                { id: 99 }
             ]);
         });
     });

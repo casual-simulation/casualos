@@ -18,13 +18,13 @@ describe('Weave', () => {
             let weave = new Weave();
 
             const a1 = atom(atomId(1, 1), null, new Op());
-            const ref1 = weave.insert(a1);
+            const [ref1] = weave.insert(a1);
 
             const a2 = atom(atomId(1, 2), atomId(1, 1), new Op());
-            const ref2 = weave.insert(a2);
+            const [ref2] = weave.insert(a2);
             
             const a3 = atom(atomId(2, 3), atomId(1, 1), new Op());
-            const ref3 = weave.insert(a3);
+            const [ref3] = weave.insert(a3);
             
             expect(ref1.id.site).toBe(1);
             expect(ref2.id.site).toBe(1);
@@ -40,15 +40,15 @@ describe('Weave', () => {
             let weave = new Weave();
 
             const a1 = atom(atomId(1, 1), null, new Op());
-            const ref1 = weave.insert(a1);
+            const [ref1] = weave.insert(a1);
 
             const a3 = atom(atomId(2, 3), atomId(1, 1), new Op());
-            const ref3 = weave.insert(a3);
+            const [ref3] = weave.insert(a3);
             
             // Later atoms should be sorted before earlier ones
             // Therefore when adding an atom with time 2 it should be sorted after atom at time 3.
             const a2 = atom(atomId(1, 2), atomId(1, 1), new Op());
-            const ref2 = weave.insert(a2);
+            const [ref2] = weave.insert(a2);
             
             expect(ref1.id.site).toBe(1);
             expect(ref2.id.site).toBe(1);
@@ -63,15 +63,14 @@ describe('Weave', () => {
             let weave = new Weave();
 
             const a1 = atom(atomId(1, 1), null, new Op());
-            const ref1 = weave.insert(a1);
+            const [ref1] = weave.insert(a1);
 
-            
             const a3 = atom(atomId(2, 2), atomId(1, 1), new Op());
-            const ref3 = weave.insert(a3);
+            const [ref3] = weave.insert(a3);
             
             // Lower Site IDs should be sorted before higher ones
             const a2 = atom(atomId(1, 2), atomId(1, 1), new Op());
-            const ref2 = weave.insert(a2);
+            const [ref2] = weave.insert(a2);
             
             expect(ref1.id.site).toBe(1);
             expect(ref2.id.site).toBe(1);
@@ -86,16 +85,16 @@ describe('Weave', () => {
             let weave = new Weave();
 
             const a1 = atom(atomId(1, 1), null, new Op());
-            const ref1 = weave.insert(a1);
+            const [ref1] = weave.insert(a1);
 
             const a3 = atom(atomId(2, 4), atomId(1, 1), new Op());
-            const ref3 = weave.insert(a3);
+            const [ref3] = weave.insert(a3);
 
             const a4 = atom(atomId(3, 2, 1), atomId(1, 1), new Op());
-            const ref4 = weave.insert(a4);
+            const [ref4] = weave.insert(a4);
 
             const a2 = atom(atomId(1, 3), atomId(1, 1), new Op());
-            const ref2 = weave.insert(a2);
+            const [ref2] = weave.insert(a2);
 
             expect(ref1.id.site).toBe(1);
             expect(ref2.id.site).toBe(1);
@@ -111,19 +110,19 @@ describe('Weave', () => {
             let weave = new Weave();
 
             const a1 = atom(atomId(1, 1), null, new Op());
-            const ref1 = weave.insert(a1);
+            const [ref1] = weave.insert(a1);
 
             const a2 = atom(atomId(2, 2), atomId(1, 1), new Op());
-            const ref2 = weave.insert(a2);
+            const [ref2] = weave.insert(a2);
 
             const a3 = atom(atomId(2, 3), atomId(2, 2), new Op());
-            const ref3 = weave.insert(a3);
+            const [ref3] = weave.insert(a3);
 
             const a4 = atom(atomId(1, 4), atomId(2, 3), new Op());
-            const ref4 = weave.insert(a4);
+            const [ref4] = weave.insert(a4);
 
             const a5 = atom(atomId(1, 5), atomId(1, 1), new Op());
-            const ref5 = weave.insert(a5);
+            const [ref5] = weave.insert(a5);
 
             expect(ref1.id.site).toBe(1);
             expect(ref2.id.site).toBe(2);
@@ -139,13 +138,17 @@ describe('Weave', () => {
         });
 
         it('should only allow a single root atom', () => {
-            expect(() => {
-                let weave = new Weave();
-                const a1 = atom(atomId(1, 1), null, new Op());
-                const a2 = atom(atomId(2, 1), null, new Op());
-                const ref1 = weave.insert(a1);
-                const ref3 = weave.insert(a2);
-            }).toThrowError('Cannot add second root atom.');
+            let weave = new Weave();
+            const a1 = atom(atomId(1, 1), null, new Op());
+            const a2 = atom(atomId(2, 1), null, new Op());
+            const [ref1] = weave.insert(a1);
+            const [ref3, rejected] = weave.insert(a2);
+
+            expect(ref3).toBe(null);
+            expect(rejected).toEqual({
+                atom: a2,
+                reason: 'second_root_not_allowed'
+            })
         });
 
         it('should handle adding the same atom twice as long as its not the root', () => {
@@ -153,9 +156,9 @@ describe('Weave', () => {
 
             const a1 = atom(atomId(1, 1), null, new Op());
             const a2 = atom(atomId(1, 2), atomId(1, 1), new Op());
-            const ref1 = weave.insert(a1);
-            const ref2 = weave.insert(a2);
-            const ref3 = weave.insert(a2);
+            const [ref1] = weave.insert(a1);
+            const [ref2] = weave.insert(a2);
+            const [ref3] = weave.insert(a2);
 
             expect(ref2).toBe(ref3);
             expect(weave.atoms.map(a => a)).toEqual([
@@ -169,10 +172,14 @@ describe('Weave', () => {
 
             const a1 = atom(atomId(1, 1), null, new Op());
             const a2 = atom(atomId(1, 2), atomId(2, 10), new Op());
-            const ref1 = weave.insert(a1);
-            const ref2 = weave.insert(a2);
+            const [ref1] = weave.insert(a1);
+            const [ref2, rejected] = weave.insert(a2);
 
             expect(ref2).toBe(null);
+            expect(rejected).toEqual({
+                atom: a2,
+                reason: 'cause_not_found'
+            });
             expect(weave.atoms.map(a => a)).toEqual([
                 a1,
             ]);
@@ -182,7 +189,7 @@ describe('Weave', () => {
             let weave = new Weave();
 
             const a1 = atom(atomId(1, 1), atomId(1, 2), new Op());
-            const ref1 = weave.insert(a1);
+            const [ref1] = weave.insert(a1);
 
             expect(ref1).toBe(null);
             expect(weave.atoms.map(a => a)).toEqual([]);
@@ -192,13 +199,13 @@ describe('Weave', () => {
             let weave = new Weave();
 
             const a1 = atom(atomId(1, 1), null, new Op());
-            const ref1 = weave.insert(a1);
+            const [ref1] = weave.insert(a1);
 
             const a2 = atom(atomId(1, 10), atomId(1, 1), new Op());
-            const ref2 = weave.insert(a2);
+            const [ref2] = weave.insert(a2);
 
             const a3 = atom(atomId(1, 8), atomId(1, 1), new Op());
-            const ref3 = weave.insert(a3);
+            const [ref3] = weave.insert(a3);
 
             expect(ref3).not.toBe(null);
             expect(weave.atoms.map(a => a)).toEqual([
@@ -212,19 +219,19 @@ describe('Weave', () => {
             let weave = new Weave();
 
             const a1 = atom(atomId(1, 1), null, new Op());
-            const ref1 = weave.insert(a1);
+            const [ref1] = weave.insert(a1);
 
             const a2 = atom(atomId(1, 10), atomId(1, 1), new Op());
-            const ref2 = weave.insert(a2);
+            const [ref2] = weave.insert(a2);
 
             const a3 = atom(atomId(1, 8), atomId(1, 1), new Op());
-            const ref3 = weave.insert(a3);
+            const [ref3] = weave.insert(a3);
 
             const a4 = atom(atomId(1, 9), atomId(1, 8), new Op());
-            const ref4 = weave.insert(a4);
+            const [ref4] = weave.insert(a4);
 
             const a5 = atom(atomId(1, 7), atomId(1, 1), new Op());
-            const ref5 = weave.insert(a5);
+            const [ref5] = weave.insert(a5);
 
             expect(ref5).not.toBe(null);
             expect(weave.atoms).toEqual([
@@ -240,19 +247,19 @@ describe('Weave', () => {
             let weave = new Weave();
 
             const a1 = atom(atomId(1, 1), null, new Op());
-            const ref1 = weave.insert(a1);
+            const [ref1] = weave.insert(a1);
 
             const a2 = atom(atomId(1, 10), atomId(1, 1), new Op());
-            const ref2 = weave.insert(a2);
+            const [ref2] = weave.insert(a2);
 
             const a3 = atom(atomId(1, 8), atomId(1, 1), new Op());
-            const ref3 = weave.insert(a3);
+            const [ref3] = weave.insert(a3);
 
             const a4 = atom(atomId(1, 9), atomId(1, 8), new Op());
-            const ref4 = weave.insert(a4);
+            const [ref4] = weave.insert(a4);
 
             const a5 = atom(atomId(2, 8), atomId(1, 1), new Op());
-            const ref5 = weave.insert(a5);
+            const [ref5] = weave.insert(a5);
 
             expect(ref5).not.toBe(null);
             expect(weave.atoms).toEqual([
@@ -342,16 +349,16 @@ describe('Weave', () => {
             let weave = new Weave();
 
             const a1 = atom(atomId(1, 1), null, new Op());
-            const ref1 = weave.insert(a1);
+            const [ref1] = weave.insert(a1);
 
             const a2 = atom(atomId(1, 2), atomId(1, 1), new Op());
-            const ref2 = weave.insert(a2);
+            const [ref2] = weave.insert(a2);
 
             const a3 = atom(atomId(1, 10), atomId(1, 2), new Op());
-            const ref3 = weave.insert(a3);
+            const [ref3] = weave.insert(a3);
 
             const a4 = atom(atomId(1, 10), atomId(1, 1), new Op());
-            const ref4 = weave.insert(a4);
+            const [ref4] = weave.insert(a4);
 
             expect(ref4).toBe(ref3);
             expect(weave.atoms.map(a => a)).toEqual([
@@ -367,7 +374,7 @@ describe('Weave', () => {
             let weave = new Weave();
 
             const a1 = atom(atomId(1, 1), null, new Op());
-            const ref1 = weave.insert(a1);
+            const [ref1] = weave.insert(a1);
 
             const a2: Atom<Op> = {
                 id: atomId(1, 2),
@@ -375,9 +382,13 @@ describe('Weave', () => {
                 value: new Op(),
                 checksum: 12345
             };
-            const ref2 = weave.insert(a2);
+            const [ref2, rejected] = weave.insert(a2);
 
             expect(ref2).toBe(null);
+            expect(rejected).toEqual({
+                atom: a2,
+                reason: 'checksum_failed'
+            });
             expect(weave.atoms.map(a => a)).toEqual([
                 a1
             ]);
@@ -396,10 +407,10 @@ describe('Weave', () => {
             let weave = new Weave();
 
             const a1 = atom(atomId(1, 1), null, new Op());
-            const ref1 = weave.insert(a1);
+            const [ref1] = weave.insert(a1);
 
             const a2 = atom(atomId(1, 2), atomId(1, 1), new Op());
-            const ref2 = weave.insert(a2);
+            const [ref2] = weave.insert(a2);
             
             const a3 = atom(atomId(2, 3), atomId(1, 1), new Op());
             const ref3 = a3;
@@ -411,13 +422,13 @@ describe('Weave', () => {
             let weave = new Weave();
 
             const a1 = atom(atomId(1, 1), null, new Op());
-            const ref1 = weave.insert(a1);
+            const [ref1] = weave.insert(a1);
 
             const a2 = atom(atomId(1, 2), atomId(1, 1), new Op());
-            const ref2 = weave.insert(a2);
+            const [ref2] = weave.insert(a2);
             
             const a3 = atom(atomId(2, 3), atomId(1, 1), new Op());
-            const ref3 = weave.insert(a3);
+            const [ref3] = weave.insert(a3);
             
             expect(weave.remove(ref3)).toEqual([
                 ref3
@@ -433,13 +444,13 @@ describe('Weave', () => {
             let weave = new Weave();
 
             const a1 = atom(atomId(1, 1), null, new Op());
-            const ref1 = weave.insert(a1);
+            const [ref1] = weave.insert(a1);
 
             const a2 = atom(atomId(1, 2), atomId(1, 1), new Op());
-            const ref2 = weave.insert(a2);
+            const [ref2] = weave.insert(a2);
             
             const a3 = atom(atomId(2, 3), atomId(1, 1), new Op());
-            const ref3 = weave.insert(a3);
+            const [ref3] = weave.insert(a3);
             
             expect(weave.remove(ref1)).toEqual([
                 ref1,
@@ -460,19 +471,19 @@ describe('Weave', () => {
             let weave = new Weave();
 
             const a1 = atom(atomId(1, 1), null, new Op());
-            const ref1 = weave.insert(a1);
+            const [ref1] = weave.insert(a1);
 
             const a2 = atom(atomId(1, 2), atomId(1, 1), new Op());
-            const ref2 = weave.insert(a2);
+            const [ref2] = weave.insert(a2);
             
             const a3 = atom(atomId(2, 3), atomId(1, 2), new Op());
-            const ref3 = weave.insert(a3);
+            const [ref3] = weave.insert(a3);
 
             const a4 = atom(atomId(2, 4), atomId(1, 2), new Op());
-            const ref4 = weave.insert(a4);
+            const [ref4] = weave.insert(a4);
 
             const a5 = atom(atomId(2, 5), atomId(1, 1), new Op());
-            const ref5 = weave.insert(a5);
+            const [ref5] = weave.insert(a5);
             
             expect(weave.remove(ref2)).toEqual([
                 ref2,
@@ -509,13 +520,13 @@ describe('Weave', () => {
             let weave = new Weave();
 
             const a1 = atom(atomId(1, 1), null, new Op());
-            const ref1 = weave.insert(a1);
+            const [ref1] = weave.insert(a1);
 
             const a2 = atom(atomId(1, 2), atomId(1, 1), new Op());
-            const ref2 = weave.insert(a2);
+            const [ref2] = weave.insert(a2);
             
             const a3 = atom(atomId(2, 3), atomId(1, 1), new Op());
-            const ref3 = weave.insert(a3);
+            const [ref3] = weave.insert(a3);
 
             const a4 = atom(atomId(2, 4), atomId(1, 1), new Op());
             const ref4 = a4;
@@ -527,16 +538,16 @@ describe('Weave', () => {
             let weave = new Weave();
 
             const a1 = atom(atomId(1, 1), null, new Op());
-            const ref1 = weave.insert(a1);
+            const [ref1] = weave.insert(a1);
 
             const a2 = atom(atomId(1, 2), atomId(1, 1), new Op());
-            const ref2 = weave.insert(a2);
+            const [ref2] = weave.insert(a2);
             
             const a3 = atom(atomId(2, 3), atomId(1, 1), new Op());
-            const ref3 = weave.insert(a3);
+            const [ref3] = weave.insert(a3);
 
             const a4 = atom(atomId(2, 4), atomId(1, 1), new Op());
-            const ref4 = weave.insert(a4);
+            const [ref4] = weave.insert(a4);
             
             expect(weave.removeBefore(ref4)).toEqual([
                 ref3,
@@ -553,16 +564,16 @@ describe('Weave', () => {
             let weave = new Weave();
 
             const a1 = atom(atomId(1, 1), null, new Op());
-            const ref1 = weave.insert(a1);
+            const [ref1] = weave.insert(a1);
 
             const a2 = atom(atomId(1, 2), atomId(1, 1), new Op());
-            const ref2 = weave.insert(a2);
+            const [ref2] = weave.insert(a2);
             
             const a3 = atom(atomId(2, 3), atomId(1, 1), new Op());
-            const ref3 = weave.insert(a3);
+            const [ref3] = weave.insert(a3);
 
             const a4 = atom(atomId(2, 4), atomId(1, 1), new Op());
-            const ref4 = weave.insert(a4);
+            const [ref4] = weave.insert(a4);
             
             expect(weave.removeBefore(ref3)).toEqual([
                 ref2,
@@ -578,13 +589,13 @@ describe('Weave', () => {
             let weave = new Weave();
 
             const a1 = atom(atomId(1, 1), null, new Op());
-            const ref1 = weave.insert(a1);
+            const [ref1] = weave.insert(a1);
 
             const a2 = atom(atomId(1, 2), atomId(1, 1), new Op());
-            const ref2 = weave.insert(a2);
+            const [ref2] = weave.insert(a2);
 
             const a3 = atom(atomId(1, 3), atomId(1, 2), new Op());
-            const ref3 = weave.insert(a3);
+            const [ref3] = weave.insert(a3);
             
             expect(weave.removeBefore(ref2)).toEqual([]);
 
@@ -598,19 +609,19 @@ describe('Weave', () => {
             let weave = new Weave();
 
             const a1 = atom(atomId(1, 1), null, new Op());
-            const ref1 = weave.insert(a1);
+            const [ref1] = weave.insert(a1);
 
             const a2 = atom(atomId(1, 2), atomId(1, 1), new Op());
-            const ref2 = weave.insert(a2);
+            const [ref2] = weave.insert(a2);
 
             const a3 = atom(atomId(1, 3), atomId(1, 2), new Op());
-            const ref3 = weave.insert(a3);
+            const [ref3] = weave.insert(a3);
 
             const a4 = atom(atomId(1, 4), atomId(1, 1), new Op());
-            const ref4 = weave.insert(a4);
+            const [ref4] = weave.insert(a4);
 
             const a5 = atom(atomId(1, 5), atomId(1, 4), new Op());
-            const ref5 = weave.insert(a5);
+            const [ref5] = weave.insert(a5);
             
             expect(weave.removeBefore(ref4)).toEqual([
                 ref2,
@@ -627,31 +638,31 @@ describe('Weave', () => {
             let weave = new Weave();
 
             const a1 = atom(atomId(1, 1), null, new Op());
-            const ref1 = weave.insert(a1);
+            const [ref1] = weave.insert(a1);
 
             const a2 = atom(atomId(1, 2), atomId(1, 1), new Op());
-            const ref2 = weave.insert(a2);
+            const [ref2] = weave.insert(a2);
 
             const a3 = atom(atomId(1, 3), atomId(1, 2), new Op());
-            const ref3 = weave.insert(a3);
+            const [ref3] = weave.insert(a3);
 
             const a4 = atom(atomId(1, 4), atomId(1, 3), new Op());
-            const ref4 = weave.insert(a4);
+            const [ref4] = weave.insert(a4);
 
             const a5 = atom(atomId(1, 5), atomId(1, 4), new Op());
-            const ref5 = weave.insert(a5);
+            const [ref5] = weave.insert(a5);
 
             const a6 = atom(atomId(1, 6), atomId(1, 4), new Op());
-            const ref6 = weave.insert(a6);
+            const [ref6] = weave.insert(a6);
 
             const a7 = atom(atomId(1, 7), atomId(1, 3), new Op());
-            const ref7 = weave.insert(a7);
+            const [ref7] = weave.insert(a7);
             
             const a8 = atom(atomId(1, 8), atomId(1, 2), new Op());
-            const ref8 = weave.insert(a8);
+            const [ref8] = weave.insert(a8);
 
             const a9 = atom(atomId(1, 9), atomId(1, 1), new Op());
-            const ref9 = weave.insert(a9);
+            const [ref9] = weave.insert(a9);
 
             expect(weave.removeBefore(ref7)).toEqual([
                 ref4,
@@ -677,12 +688,12 @@ describe('Weave', () => {
 
             let weave = new Weave();
 
-            const a1Ref = weave.insert(a1);
-            const a3Ref = weave.insert(a3);
-            const a2Ref = weave.insert(a2);
-            const a4Ref = weave.insert(a4);
-            const a5Ref = weave.insert(a5);
-            const a6Ref = weave.insert(a6);
+            const [a1Ref] = weave.insert(a1);
+            const [a3Ref] = weave.insert(a3);
+            const [a2Ref] = weave.insert(a2);
+            const [a4Ref] = weave.insert(a4);
+            const [a5Ref] = weave.insert(a5);
+            const [a6Ref] = weave.insert(a6);
 
             const site1 = weave.getSite(1);
             const site2 = weave.getSite(2);
@@ -714,7 +725,7 @@ describe('Weave', () => {
         it('should return 1 when the reference has no children', () => {
             let weave = new Weave();
 
-            const a1 = weave.insert(atom(atomId(1, 1), null, new Op()));
+            const [a1] = weave.insert(atom(atomId(1, 1), null, new Op()));
 
             expect(weave.getAtomSize(a1.id)).toBe(1);
         });
@@ -722,8 +733,8 @@ describe('Weave', () => {
         it('should return 2 when the reference has a single child', () => {
             let weave = new Weave();
 
-            const a1 = weave.insert(atom(atomId(1, 1), null, new Op()));
-            const a2 = weave.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
+            const [a1] = weave.insert(atom(atomId(1, 1), null, new Op()));
+            const [a2] = weave.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
 
             expect(weave.getAtomSize(a1.id)).toBe(2);
             expect(weave.getAtomSize(a2.id)).toBe(1);
@@ -732,11 +743,11 @@ describe('Weave', () => {
         it('should return the total width that the reference has', () => {
             let weave = new Weave();
 
-            const a1 = weave.insert(atom(atomId(1, 1), null, new Op()));
-            const a2 = weave.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
-            const a3 = weave.insert(atom(atomId(1, 3), atomId(1, 1), new Op()));
-            const a4 = weave.insert(atom(atomId(1, 4), atomId(1, 2), new Op()));
-            const a5 = weave.insert(atom(atomId(1, 5), atomId(1, 2), new Op()));
+            const [a1] = weave.insert(atom(atomId(1, 1), null, new Op()));
+            const [a2] = weave.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
+            const [a3] = weave.insert(atom(atomId(1, 3), atomId(1, 1), new Op()));
+            const [a4] = weave.insert(atom(atomId(1, 4), atomId(1, 2), new Op()));
+            const [a5] = weave.insert(atom(atomId(1, 5), atomId(1, 2), new Op()));
 
             expect(weave.getAtomSize(a1.id)).toBe(5);
             expect(weave.getAtomSize(a2.id)).toBe(3);
@@ -748,8 +759,8 @@ describe('Weave', () => {
         it('should update after deletes', () => {
             let weave = new Weave();
 
-            const a1 = weave.insert(atom(atomId(1, 1), null, new Op()));
-            const a2 = weave.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
+            const [a1] = weave.insert(atom(atomId(1, 1), null, new Op()));
+            const [a2] = weave.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
 
             weave.remove(a2);
 
@@ -760,11 +771,11 @@ describe('Weave', () => {
         it('should update after imports', () => {
             let original = new Weave();
 
-            const a1 = original.insert(atom(atomId(1, 1), null, new Op()));
-            const a2 = original.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
-            const a3 = original.insert(atom(atomId(1, 3), atomId(1, 1), new Op()));
-            const a4 = original.insert(atom(atomId(1, 4), atomId(1, 2), new Op()));
-            const a5 = original.insert(atom(atomId(1, 5), atomId(1, 2), new Op()));
+            const [a1] = original.insert(atom(atomId(1, 1), null, new Op()));
+            const [a2] = original.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
+            const [a3] = original.insert(atom(atomId(1, 3), atomId(1, 1), new Op()));
+            const [a4] = original.insert(atom(atomId(1, 4), atomId(1, 2), new Op()));
+            const [a5] = original.insert(atom(atomId(1, 5), atomId(1, 2), new Op()));
 
             let weave = new Weave();
             weave.import(original.atoms);
@@ -995,9 +1006,9 @@ describe('Weave', () => {
             const refs = weave.atoms;
 
             let newWeave = new Weave<Op>();
-            const newAtoms = newWeave.import(refs);
+            const [newAtoms, rejected] = newWeave.import(refs);
 
-            expect(newWeave.atoms.map(a => a)).toEqual([
+            expect(newWeave.atoms).toEqual([
                 root,
                 child2,
                 child1,
@@ -1011,12 +1022,13 @@ describe('Weave', () => {
             expect(site[2]).toBe(child2);
             expect(site[3]).toBe(child3);
 
-            expect(newAtoms.map(a => a)).toEqual([
+            expect(newAtoms).toEqual([
                 root,
                 child2,
                 child1,
                 child3
             ]);
+            expect(rejected).toEqual([]);
         });
 
         it('should be able to merge another weave into itself', () => {
@@ -1041,8 +1053,8 @@ describe('Weave', () => {
             const secondRefs = second.atoms;
 
             let newWeave = new Weave<Op>();
-            const importedFromFirst = newWeave.import(firstRefs);
-            const importedFromSecond = newWeave.import(secondRefs);
+            const [importedFromFirst, rejectedFromFirst] = newWeave.import(firstRefs);
+            const [importedFromSecond, rejectedFromSecond] = newWeave.import(secondRefs);
 
             const atoms = newWeave.atoms.map(a => a);
             expect(atoms[0]).toEqual(root);
@@ -1066,6 +1078,9 @@ describe('Weave', () => {
                 child4,
                 child5
             ]);
+
+            expect(rejectedFromFirst).toEqual([]);
+            expect(rejectedFromSecond).toEqual([]);
         });
 
         it('should be able to merge a partial weave into itself', () => {
@@ -1195,7 +1210,7 @@ describe('Weave', () => {
 
             let final = new Weave<Op>();
             final.import(first.atoms);
-            final.import(second.atoms);
+            let [, rejected] = final.import(second.atoms);
 
             expect(final.atoms).toEqual([
                 root,
@@ -1205,6 +1220,9 @@ describe('Weave', () => {
                 child7,
                 child1,
                 child3,
+            ]);
+            expect(rejected).toEqual([
+                { atom: diffChild8, reason: 'atom_id_already_exists' }
             ]);
             expect(final.isValid()).toBe(true);
 
@@ -1238,8 +1256,8 @@ describe('Weave', () => {
             );
 
             let final = new Weave<Op>();
-            final.import(second.atoms);
-            final.import(first.atoms);
+            let [, firstRejected] = final.import(second.atoms);
+            let [, secondRejected] = final.import(first.atoms);
 
             expect(final.atoms).toEqual([
                 root,
@@ -1247,6 +1265,8 @@ describe('Weave', () => {
                 s3t3,
                 s2t2
             ]);
+            expect(firstRejected).toEqual([]);
+            expect(secondRejected).toEqual([]);
             expect(final.isValid()).toBe(true);
 
             spy.mockRestore();
@@ -1280,9 +1300,11 @@ describe('Weave', () => {
             );
 
             let final = new Weave<Op>();
-            final.import(first.atoms);
-            final.import(second.atoms);
+            let [, firstRejected] = final.import(first.atoms);
+            let [, secondRejected] = final.import(second.atoms);
 
+            expect(firstRejected).toEqual([]);
+            expect(secondRejected).toEqual([]);
             expect(final.atoms).toEqual([
                 root,
                 s1t1,
@@ -1309,13 +1331,16 @@ describe('Weave', () => {
             };
 
             const a3 = atom(atomId(1, 2), a1.id, new Op());
-            const refs = weave.import([
+            const [refs, rejected] = weave.import([
                 a1,
                 a2,
                 a3
             ]);
 
             expect(refs).toEqual([]);
+            expect(rejected).toEqual([
+                { atom: a2, reason: 'checksum_failed' }
+            ]);
             expect(weave.atoms.map(a => a)).toEqual([
                 a1
             ]);
@@ -1443,7 +1468,7 @@ describe('Weave', () => {
 
             // Note that the partial weave must contain a complete causal chain.
             // That is, every parent node to the leafs
-            newWeave.import(secondRefs);
+            let [, rejected] = newWeave.import(secondRefs);
 
             const atoms = newWeave.atoms.map(a => a);
 
@@ -1458,6 +1483,10 @@ describe('Weave', () => {
 
             const site2 = newWeave.getSite(2);
             expect(site2.length).toBe(0);
+
+            expect(rejected).toEqual([
+                { atom: root2, reason: 'atom_id_already_exists' }
+            ]);
 
             spy.mockRestore();
         });
@@ -1475,7 +1504,7 @@ describe('Weave', () => {
             const diffChild8 = atom(atomId(1, 8), atomId(1, 7), new Op());
 
             let final = new Weave<Op>();
-            const added = final.import([
+            const [added, rejected] = final.import([
                 root,
                 child2,
                 child8, // already exists
@@ -1498,7 +1527,10 @@ describe('Weave', () => {
                 child3
             ];
 
-            expect(added).toEqual(expected)
+            expect(added).toEqual(expected);
+            expect(rejected).toEqual([
+                { atom: diffChild8, reason: 'atom_id_already_exists' }
+            ]);
             expect(final.atoms).toEqual(expected);
             expect(final.isValid()).toBe(true);
 
@@ -1516,7 +1548,7 @@ describe('Weave', () => {
             const child8 = atom(atomId(1, 8), atomId(1, 2), new Op());
 
             let final = new Weave<Op>();
-            const added = final.import([
+            const [added, rejected] = final.import([
                 root,
                 child2,
                 child8, // already exists
@@ -1539,7 +1571,10 @@ describe('Weave', () => {
                 child3
             ];
 
-            expect(added).toEqual(expected)
+            expect(added).toEqual(expected);
+            expect(rejected).toEqual([
+                { atom: child8, reason: 'atom_id_already_exists' }
+            ]);
             expect(final.atoms).toEqual(expected);
             expect(final.isValid()).toBe(true);
         });
@@ -1601,7 +1636,7 @@ describe('Weave', () => {
         it('should the given reference if it is the root', () => {
             let weave = new Weave<Op>();
 
-            const root = weave.insert(atom(atomId(1, 0), null, new Op()));
+            const [root] = weave.insert(atom(atomId(1, 0), null, new Op()));
             const chain = weave.referenceChain(root);
 
             expect(chain).toEqual([
@@ -1611,13 +1646,13 @@ describe('Weave', () => {
         it('should return all the ancestors of the given reference', () => {
             let weave = new Weave<Op>();
 
-            const root = weave.insert(atom(atomId(1, 0), null, new Op()));
-            const child = weave.insert(atom(atomId(1, 1), atomId(1, 0), new Op()));
-            const sibling = weave.insert(atom(atomId(1, 4), atomId(1, 0), new Op()));
-            const grandChild = weave.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
-            const grandSibling = weave.insert(atom(atomId(1, 5), atomId(1, 1), new Op()));
-            const greatGrandChild = weave.insert(atom(atomId(1, 3), atomId(1, 2), new Op()));
-            const greatGrandSibling = weave.insert(atom(atomId(1, 6), atomId(1, 2), new Op()));
+            const [root] = weave.insert(atom(atomId(1, 0), null, new Op()));
+            const [child] = weave.insert(atom(atomId(1, 1), atomId(1, 0), new Op()));
+            const [sibling] = weave.insert(atom(atomId(1, 4), atomId(1, 0), new Op()));
+            const [grandChild] = weave.insert(atom(atomId(1, 2), atomId(1, 1), new Op()));
+            const [grandSibling] = weave.insert(atom(atomId(1, 5), atomId(1, 1), new Op()));
+            const [greatGrandChild] = weave.insert(atom(atomId(1, 3), atomId(1, 2), new Op()));
+            const [greatGrandSibling] = weave.insert(atom(atomId(1, 6), atomId(1, 2), new Op()));
 
             const chain = weave.referenceChain(greatGrandChild);
 

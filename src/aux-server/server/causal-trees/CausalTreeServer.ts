@@ -1,9 +1,12 @@
 import { Socket, Server } from 'socket.io';
-import { CausalTreeStore, CausalTreeFactory, CausalTree, AtomOp, RealtimeChannelInfo, storedTree, site, SiteVersionInfo, SiteInfo, Atom, StoredCausalTree, currentFormatVersion } from '@yeti-cgi/aux-common/causal-trees';
+import { CausalTreeStore, CausalTreeFactory, CausalTree, AtomOp, RealtimeChannelInfo, storedTree, site, SiteVersionInfo, SiteInfo, Atom, StoredCausalTree, currentFormatVersion, atomIdToString } from '@yeti-cgi/aux-common/causal-trees';
 import { AuxOp } from '@yeti-cgi/aux-common/aux-format';
 import { find } from 'lodash';
-import { bufferTime, flatMap, filter } from 'rxjs/operators';
+import { bufferTime, flatMap, filter, concatMap, tap } from 'rxjs/operators';
 import { ExecSyncOptionsWithStringEncoding } from 'child_process';
+import { PrivateCryptoKey, PublicCryptoKey, SigningCryptoImpl } from '@yeti-cgi/aux-common/crypto';
+import { NodeSigningCryptoImpl } from '../crypto/NodeSigningCryptoImpl';
+import { AtomValidator } from '@yeti-cgi/aux-common/causal-trees/AtomValidator';
 
 /**
  * Defines a class that is able to serve a set causal trees over Socket.io.
@@ -16,6 +19,7 @@ export class CausalTreeServer {
     private _factory: CausalTreeFactory;
     private _treeList: TreeMap;
     private _treePromises: TreePromises;
+    private _crypto: SigningCryptoImpl;
 
     /**
      * Creates a new causal tree factory that uses the given socket server, tree store, and tree factory.
@@ -29,6 +33,7 @@ export class CausalTreeServer {
         this._factory = causalTreeFactory;
         this._treeList = {};
         this._treePromises = {};
+        this._crypto = new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256');
 
         this._init();
     }
@@ -51,7 +56,7 @@ export class CausalTreeServer {
                         bufferTime(1000),
                         filter(batch => batch.length > 0),
                         flatMap(batch => batch),
-                        flatMap(async refs => {
+                        concatMap(async refs => {
                             const atoms = refs.map(r => r);
                             await this._treeStore.add(info.id, atoms, true);
                         })
@@ -61,7 +66,7 @@ export class CausalTreeServer {
                         bufferTime(1000),
                         filter(batch => batch.length > 0),
                         flatMap(batch => batch),
-                        flatMap(async refs => {
+                        concatMap(async refs => {
                             const atoms = refs.map(r => r);
                             await this._treeStore.add(info.id, atoms, false);
                             let stored = tree.export();
@@ -70,9 +75,19 @@ export class CausalTreeServer {
                         })
                     ).subscribe(null, err => console.error(err));
 
+                    const sub3 = tree.atomRejected.pipe(
+                        bufferTime(1000),
+                        filter(batch => batch.length > 0),
+                        flatMap(batch => batch),
+                        flatMap(batch => batch),
+                        tap(ref => {
+                            console.warn(`[CausalTreeSever] ${info.id}: Atom (${atomIdToString(ref.atom.id)}) rejected: ${ref.reason}`);
+                        })
+                    ).subscribe(null, err => console.error(err));
+
                     const eventName = `event_${info.id}`;
                     socket.on(eventName, async (refs: Atom<AtomOp>[]) => {
-                        const added = tree.addMany(refs);
+                        const { added } = await tree.addMany(refs);
                         socket.to(info.id).emit(eventName, added);
                     });
 
@@ -111,14 +126,15 @@ export class CausalTreeServer {
                          } else {
                             console.log('[CausalTreeServer] Site ID Granted.');
                             tree.registerSite(site);
+                            socket.to(info.id).emit(`site_${info.id}`, site);
                             callback(true);
                          }
                     });
 
-                    socket.on(`weave_${info.id}`, (event: StoredCausalTree<AtomOp>, callback: (resp: StoredCausalTree<AtomOp>) => void) => {
+                    socket.on(`weave_${info.id}`, async (event: StoredCausalTree<AtomOp>, callback: (resp: StoredCausalTree<AtomOp>) => void) => {
                         try {
                             console.log(`[CausalTreeServer] Exchanging Weaves for tree (${info.id}).`);
-                            const imported = tree.import(event);
+                            const { added: imported } = await tree.import(event);
                             console.log(`[CausalTreeServer] Imported ${imported.length} atoms.`);
                             this._treeStore.add(info.id, imported);
                         } catch(e) {
@@ -168,7 +184,11 @@ export class CausalTreeServer {
         const stored = await this._treeStore.get<AtomOp>(info.id, false);
         if (stored && stored.weave.length > 0) {
             console.log(`[CausalTreeServer] Building from stored tree (version ${stored.formatVersion})...`);
-            tree = this._factory.create(info.type, storedTree(site(1)), { garbageCollect: true });
+
+            // Dont generate keys for existing trees because
+            // that would suddenly cause atoms created by the server to
+            // be rejected by the remotes.
+            tree = await this._createTree(info.id, info.type, false);
 
             const sub = tree.atomsArchived.pipe(
                 flatMap(async refs => {
@@ -178,7 +198,7 @@ export class CausalTreeServer {
                 })
             ).subscribe(null, err => console.error(err));
 
-            const loaded = tree.import(stored);
+            const { added: loaded } = await tree.import(stored);
             sub.unsubscribe();
             console.log(`[CausalTreeServer] ${loaded.length} atoms loaded.`);
 
@@ -192,9 +212,9 @@ export class CausalTreeServer {
                 console.log(`[CausalTreeServer] Found tree information but it didn't contain any atoms...`);
             }
             console.log(`[CausalTreeServer] Creating new...`);
-            tree = this._factory.create(info.type, storedTree(site(1)), { garbageCollect: true });
+            tree = await this._createTree(info.id, info.type, true);
             if (!info.bare) {
-                tree.root();
+                await tree.root();
                 console.log(`[CausalTreeServer] Storing initial tree version...`);
                 await this._treeStore.put(info.id, tree.export(), true);
             } else {
@@ -205,6 +225,46 @@ export class CausalTreeServer {
         this._treeList[info.id] = tree;
         console.log(`[CausalTreeServer] Done.`);
         return tree;
+    }
+
+    private async _createTree(id: string, type: string, generateKeys: boolean) {
+        let keys = await this._treeStore.getKeys(id);
+        let signingKey: PrivateCryptoKey = null;
+        let treeWithCrypto: StoredCausalTree<AtomOp>;
+        if (keys && this._crypto.supported()) {
+            // Use the existing keys because we've already created them.
+            console.log('[CausalTreeServer] Using existing keys...');
+
+            treeWithCrypto = storedTree(site(1, {
+                // TODO: Allow storing the crypto algorithm with the keys
+                signatureAlgorithm: 'ECDSA-SHA256-NISTP256',
+                publicKey: keys.publicKey
+            }));
+            signingKey = await this._crypto.importPrivateKey(keys.privateKey);
+            console.log('[CausalTreeServer] Keys imported.');
+
+        } else if (generateKeys && this._crypto.supported()) {
+            // Create new keys because we haven't stored any under this ID
+            console.log('[CausalTreeServer] Creating new keys...');
+            let [ pubKey, privKey ] = await this._crypto.generateKeyPair();
+            signingKey = privKey;
+
+            let publicKey = await this._crypto.exportKey(pubKey);
+            let privateKey = await this._crypto.exportKey(privKey);
+            await this._treeStore.putKeys(id, privateKey, publicKey);
+            treeWithCrypto = storedTree(site(1, {
+                // TODO: Allow storing the crypto algorithm with the keys
+                signatureAlgorithm: 'ECDSA-SHA256-NISTP256',
+                publicKey: publicKey
+            }));
+            console.log('[CausalTreeServer] Keys created.');
+        } else {
+            console.log('[CausalTreeServer] Not generating keys.');
+            treeWithCrypto = storedTree(site(1));
+        }
+        let validator = new AtomValidator(this._crypto);
+
+        return this._factory.create(type, treeWithCrypto, { garbageCollect: true, validator: validator, signingKey: signingKey });
     }
 
 }

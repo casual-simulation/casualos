@@ -90,5 +90,9 @@ export class TestChannelConnection implements RealtimeChannelConnection {
         while (this.flush) {
             await this.flushPromise();
         }
+
+        for (let i = 0; i < 5; i++) {
+            await this.flushPromise();
+        }
     }
 }
