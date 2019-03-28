@@ -283,9 +283,6 @@ export function isFilterTag(tag: string) {
 }
 
 export const WELL_KNOWN_TAGS = [
-    /\.x$/,
-    /\.y$/,
-    /\.z$/,
     /_hidden$/,
     /_destroyed$/,
     /\.index$/,
