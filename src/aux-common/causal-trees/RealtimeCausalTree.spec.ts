@@ -140,6 +140,26 @@ describe('RealtimeCausalTree', () => {
         });
     });
 
+    describe('new site', () => {
+        it('should add the new site to the tree', async () => {
+            let spy = jest.spyOn(console, 'log').mockImplementation(() => {});
+            await realtime.init();
+            connection.setConnected(true);
+            await connection.flushPromises();
+
+            connection.events.next({
+                name: 'site_abc',
+                data: { id: 1000 }
+            });
+
+            expect(realtime.tree.knownSites).toContainEqual({
+                id: 1000
+            });
+
+            spy.mockRestore();
+        });
+    });
+
     describe('connected without existing tree', () => {
         let spy: jest.SpyInstance<any>;
         beforeAll(() => {

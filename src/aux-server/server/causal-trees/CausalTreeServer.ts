@@ -126,6 +126,7 @@ export class CausalTreeServer {
                          } else {
                             console.log('[CausalTreeServer] Site ID Granted.');
                             tree.registerSite(site);
+                            socket.to(info.id).emit(`site_${info.id}`, site);
                             callback(true);
                          }
                     });

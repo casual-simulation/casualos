@@ -187,6 +187,14 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
             concatMap(e => this.tree.addMany(e)),
             tap(refs => this._updated.next(refs))
         ).subscribe(null, err => this._errors.next(err)));
+
+        this._subs.push(this._channel.sites.pipe(
+            filter(e => this.tree !== null),
+            tap(site => {
+                console.log(`[RealtimeCausalTree] Discovered new site from server:`, site);
+                this.tree.registerSite(site)
+            })
+        ).subscribe(null, err => this._errors.next(err)));
     }
 
     /**
