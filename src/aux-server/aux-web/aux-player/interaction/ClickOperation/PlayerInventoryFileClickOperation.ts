@@ -4,6 +4,7 @@ import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperati
 import GameView from '../../GameView/GameView';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import { PlayerInventoryFileDragOperation } from '../DragOperation/PlayerInventoryFileDragOperation';
+import { appManager } from '../../../shared/AppManager';
 
 /**
  * New File Click Operation handles clicking of files that are in the file queue.
@@ -24,7 +25,7 @@ export class PlayerInventoryFileClickOperation extends BaseFileClickOperation {
     }
     
     protected _performClick(): void {
-        // Do nothing by default.
+        appManager.fileManager.action('onClick', [this._file]);
     }
 
     protected _createDragOperation(): BaseFileDragOperation {
