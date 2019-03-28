@@ -368,9 +368,7 @@ export class Weave<TOp extends AtomOp> {
                 }
 
                 let order = this._compareAtoms(a, local);
-                if (isNaN(order)) {
-                    break;
-                } else if (order === 0) {
+                if (order === 0) {
                     // Atoms are equal, no action needed.
                 } else if(order < 0) {
                     // New atom should be before local atom.
@@ -383,18 +381,23 @@ export class Weave<TOp extends AtomOp> {
                 } else if(order > 0) {
                     // New atom should be after local atom.
                     // Skip local atoms until we find the right place to put the new atom.
+                    // Basically we're skipping until we are after the current local atom's children
+                    // or until we find a sibling that we should be inserted before.
                     do {
                         localOffset += 1;
                         local = this._atoms[i + localOffset];
-                    } while(local && a.id.timestamp <= local.cause.timestamp);
+                    } while (local && (this._isInCausalGroup(a, local) || 
+                        (this._areSiblings(a, local) && this._compareAtomIds(a.id, local.id) > 0)));
                     
                     if (!local) {
+                        // We reached the end of the weave
                         this._atoms.splice(i + localOffset, 0, a);
                         newAtoms.push(a);
                         
                         const site = this.getSite(a.id.site);
                         site[a.id.timestamp] = a;
                     } else {
+                        // We found a spot to place the atom at.
                         order = this._compareAtoms(a, local);
                         if (order < 0) {
                             this._atoms.splice(i + localOffset, 0, a);
@@ -402,6 +405,8 @@ export class Weave<TOp extends AtomOp> {
                             
                             const site = this.getSite(a.id.site);
                             site[a.id.timestamp] = a;
+                        } else if(order > 0) {
+                            throw new Error(`[Weave] Atom (${atomIdToString(a.id)}) is supposed to be placed before (${atomIdToString(local.id)}) but the IDs say otherwise.`);
                         }
                     }
                 }
@@ -472,7 +477,7 @@ export class Weave<TOp extends AtomOp> {
 
                 // siblings
                 if (order < 0) {
-                    console.warn(`[Weave] Invalid tree. ${atomIdToString(child.id)} says it happened before its sibling (${parent.id}) that occurred before it in the tree.`);
+                    console.warn(`[Weave] Invalid tree. ${atomIdToString(child.id)} says it happened before its sibling (${atomIdToString(parent.id)}) that occurred before it in the tree.`);
                     return false;
                 }
             }
@@ -586,6 +591,26 @@ export class Weave<TOp extends AtomOp> {
     }
 
     /**
+     * Determines if the first atom is in the same causal group as the second
+     * atom.
+     * @param first The atom to check.
+     * @param second The atom to check against.
+     */
+    private _isInCausalGroup(first: Atom<TOp>, second: Atom<TOp>) {
+        return first.id.timestamp <= second.cause.timestamp;
+    }
+
+    /**
+     * Determines if the two given atoms are siblings. That is, if they share the same parent.
+     * @param first The first atom.
+     * @param second The second atom.
+     */
+    private _areSiblings(first: Atom<TOp>, second: Atom<TOp>) {
+        return this._compareAtomIds(first.cause, second.cause) === 0;
+    }
+
+
+    /**
      * Compares the two atoms to see which should be sorted in front of the other.
      * Returns -1 if the first should be before the second.
      * Returns 0 if they are equal.
@@ -596,11 +621,7 @@ export class Weave<TOp extends AtomOp> {
     private _compareAtoms(first: Atom<TOp>, second: Atom<TOp>): number {
         const cause = this._compareAtomIds(first.cause, second.cause);
         if (cause === 0) {
-            let order = this._compareAtomIds(first.id, second.id);
-            if (order === 0 && first.checksum !== second.checksum) {
-                return NaN;
-            }
-            return order;
+            return this._compareAtomIds(first.id, second.id);
         }
         return cause;
     }

@@ -516,6 +516,28 @@ describe('Weave', () => {
             expect(weave.removeBefore(undefined)).toEqual([]);
         });
 
+        it('should return empty if given an atom that doesnt have a cause', () => {
+            let weave = new Weave();
+
+            const a1 = atom(atomId(1, 1), null, new Op());
+            const [ref1] = weave.insert(a1);
+            
+            expect(weave.removeBefore(ref1)).toEqual([]);
+        });
+
+        it('should return empty if given an atom whose cause isnt in the weave', () => {
+            let weave = new Weave();
+
+            const a1 = atom(atomId(1, 1), null, new Op());
+            const [ref1] = weave.insert(a1);
+            
+            
+            const a2 = atom(atomId(1, 2), atomId(5, 12), new Op());
+            const [ref2] = weave.insert(a2);
+
+            expect(weave.removeBefore(ref2)).toEqual([]);
+        });
+
         it('should return empty if given an atom that is not in the weave', () => {
             let weave = new Weave();
 
@@ -788,6 +810,16 @@ describe('Weave', () => {
         });
     });
 
+    describe('getAtom()', () => {
+        it('should return null if the given id is null', () => {
+            let weave = new Weave<Op>();
+
+            const a = weave.getAtom(null);
+
+            expect(a).toBe(null);
+        });
+    });
+
     describe('getWeft()', () => {
         it('should return a new weave without atoms from excluded sites', () => {
             const a1 = atom(atomId(1, 1), null, new Op());
@@ -993,6 +1025,100 @@ describe('Weave', () => {
             expect(newWeave.atoms).toEqual(weave.atoms);
         });
 
+        it('should prevent importing atoms that dont have causes in the middle of the weave', () => {
+            
+            const root = atom<Op>(atomId(1, 0), null, new Op());
+            const child1 = atom<Op>(atomId(1, 1), root.id, new Op());
+            const child3 = atom<Op>(atomId(1, 3), child1.id, new Op());
+            
+            const child2 = atom<Op>(atomId(2, 2), atomId(2, 196), new Op());
+
+            let weave = new Weave<Op>();
+            weave.insertMany(root, child1, child3);
+
+            weave.import([
+                root,
+                child1,
+                child2,
+                child3,
+            ]);
+
+            expect(weave.atoms).toEqual([
+                root,
+                child1,
+                child3
+            ]);
+        });
+
+        it('should allow importing atoms after another atoms local group', () => {
+            
+            const root = atom(atomId(1, 0), null, new Op());
+            const child1 = atom(atomId(1, 3), root.id, new Op());
+            const child3 = atom(atomId(1, 5), root.id, new Op());
+            const child4 = atom(atomId(1, 10), child3.id, new Op());
+            
+            const child2 = atom(atomId(1, 4), root.id, new Op());
+
+            let weave = new Weave<Op>();
+            weave.insertMany(root, child1, child3, child4);
+
+            const [added, rejected] = weave.import([
+                root,
+                child2,
+                child1
+            ]);
+
+            expect(added).toEqual([
+                child2
+            ]);
+            expect(weave.atoms).toEqual([
+                root,
+                child3,
+                child4,
+                child2,
+                child1
+            ]);
+
+            expect(weave.getAtomSize(root.id)).toBe(5);
+            expect(weave.getAtomSize(child3.id)).toBe(2);
+            expect(weave.getAtomSize(child4.id)).toBe(1);
+            expect(weave.getAtomSize(child2.id)).toBe(1);
+            expect(weave.getAtomSize(child1.id)).toBe(1);
+        });
+
+        it('should handle importing weaves with siblings that should be sorted properly', () => {
+            let localWeave = new Weave<Op>();
+            const [root] = localWeave.insert(atom(atomId(1, 0), null, new Op()));
+            const [s2t3] = localWeave.insert(atom(atomId(2, 3), atomId(1, 0), new Op()));
+            const [s2t4] = localWeave.insert(atom(atomId(2, 4), atomId(1, 0), new Op()));
+
+            let remoteWeave = new Weave<Op>();
+            remoteWeave.insert(root);
+            const [s1t1] = remoteWeave.insert(atom(atomId(1, 1), atomId(1, 0), new Op()));
+            const [s1t2] = remoteWeave.insert(atom(atomId(1, 2), atomId(1, 0), new Op()));
+
+            let finalWeave = new Weave<Op>();
+            const [ localAdded ] = finalWeave.import(localWeave.atoms);
+            const [ remoteAdded ] = finalWeave.import(remoteWeave.atoms);
+
+            expect(localAdded).toEqual([
+                root, 
+                s2t3,
+                s2t4
+            ]);
+            expect(remoteAdded).toEqual([
+                s1t1,
+                s1t2
+            ]);
+            expect(finalWeave.atoms).toEqual([
+                root,
+                s2t4,
+                s2t3,
+                s1t2,
+                s1t1
+            ]);
+        });
+
         it('should add the given list of atoms to the list verbatim', () => {
             let weave = new Weave<Op>();
 
@@ -1113,14 +1239,15 @@ describe('Weave', () => {
             newWeave.import(secondRefs);
 
             const atoms = newWeave.atoms.map(a => a);
-            expect(atoms[0]).toEqual(root);
-            expect(atoms[1]).toEqual(child4);
-            expect(atoms[2]).toEqual(child2);
-            expect(atoms[3]).toEqual(child6);
-            expect(atoms[4]).toEqual(child1);
-            expect(atoms[5]).toEqual(child5);
-            expect(atoms[6]).toEqual(child3);
-            expect(atoms.length).toBe(7);
+            expect(atoms).toEqual([
+                root,
+                child4,
+                child2,
+                child6,
+                child1,
+                child5,
+                child3
+            ]);
         });
 
         it('should be able to merge a deep weave into itself', () => {
@@ -1578,6 +1705,8 @@ describe('Weave', () => {
             expect(final.atoms).toEqual(expected);
             expect(final.isValid()).toBe(true);
         });
+        
+        // it('should ')
     });
 
     describe('isValid()', () => {
