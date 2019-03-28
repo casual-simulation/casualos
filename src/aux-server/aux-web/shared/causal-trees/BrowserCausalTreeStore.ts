@@ -1,8 +1,7 @@
-import { CausalTreeStore, AtomOp, StoredCausalTree, Atom, atomIdToString, StoredCausalTreeVersion3, upgrade, SiteInfo } from "@yeti-cgi/aux-common/causal-trees";
+import { CausalTreeStore, AtomOp, StoredCausalTree, Atom, atomIdToString, StoredCausalTreeVersion3, upgrade, SiteInfo, StoredCryptoKeys } from "@yeti-cgi/aux-common/causal-trees";
 import Dexie from 'dexie';
 
 export class BrowserCausalTreeStore implements CausalTreeStore {
-    
     
     private _db: CausalTreeDatabase;
 
@@ -76,6 +75,26 @@ export class BrowserCausalTreeStore implements CausalTreeStore {
         }));
         await this._db.atoms.bulkPut(stored);
     }
+
+    async putKeys(id: string, privateKey: string, publicKey: string): Promise<void> {
+        const stored: CryptoKeys = {
+            id: id,
+            keys: {
+                privateKey: privateKey,
+                publicKey: publicKey
+            }
+        };
+        await this._db.keys.put(stored);
+    }
+
+    async getKeys(id: string): Promise<StoredCryptoKeys> {
+        const item = await this._db.keys.get(id);
+        if (item) {
+            return item.keys;
+        } else {
+            return null;
+        }
+    }
 }
 
 interface StoredAtom<T extends AtomOp> {
@@ -94,13 +113,25 @@ interface StoredTreeVersion1<T extends AtomOp> {
     knownSites: SiteInfo[];
 }
 
+interface CryptoKeys {
+    id: string;
+    keys: StoredCryptoKeys;
+}
+
 class CausalTreeDatabase extends Dexie {
 
     trees: Dexie.Table<StoredTree<any>, string>;
     atoms: Dexie.Table<StoredAtom<any>, number>;
+    keys: Dexie.Table<CryptoKeys, string>
 
     constructor() {
         super('AuxCausalTrees');
+
+        this.version(4).stores({
+            'trees': 'id,site.id',
+            'atoms': 'id,tree,atom.id.timestamp,atom.id.site,archived',
+            'keys': 'id'
+        }).upgrade(trans => {});
 
         this.version(3).stores({
             'trees': 'id,site.id',
@@ -122,6 +153,8 @@ class CausalTreeDatabase extends Dexie {
             'atoms': 'id,tree,atom.id.timestamp,atom.id.site'
         });
         this.trees = this.table('trees');
+        this.atoms = this.table('atoms');
+        this.keys = this.table('keys');
     }
 
 }

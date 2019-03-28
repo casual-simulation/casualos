@@ -12,6 +12,11 @@ import { site, SiteInfo } from './SiteIdInfo';
 import { SiteVersionInfo } from './SiteVersionInfo';
 import { StoredCausalTree } from '.';
 import { storedTree } from './StoredCausalTree';
+import { TestScheduler } from 'rxjs/testing';
+import { AsyncScheduler } from "rxjs/internal/scheduler/AsyncScheduler";
+import { AtomValidator } from './AtomValidator';
+import { TestCryptoImpl } from '../crypto/test/TestCryptoImpl';
+import { RejectedAtom } from './RejectedAtom';
 
 jest.useFakeTimers();
 
@@ -43,8 +48,14 @@ describe('RealtimeCausalTree', () => {
     let localWeaves: Atom<Op>[][];
     let errors: any[] = [];
     let updated: Atom<Op>[][] = [];
-    
+    let scheduler: TestScheduler;
+
     beforeEach(() => {
+        scheduler = new TestScheduler((actual, expected) => {
+            expect(actual).toEqual(expected);
+        });
+        AsyncScheduler.delegate = scheduler;
+
         flush = false;
         weave = [];
         localWeaves = [];
@@ -61,7 +72,7 @@ describe('RealtimeCausalTree', () => {
         allowSiteId = [];
         store = new TestCausalTreeStore();
         factory = new CausalTreeFactory({
-            'numbers': (tree) => new Tree(tree, new NumberReducer())
+            'numbers': (tree, options) => new Tree(tree, new NumberReducer(), options)
         });
         connection = new TestChannelConnection();
         channel = new RealtimeChannel<Atom<Op>[]>({
@@ -92,6 +103,7 @@ describe('RealtimeCausalTree', () => {
     });
 
     afterEach(() => {
+        AsyncScheduler.delegate = null;
         expect(errors).toEqual([]);
     });
 
@@ -128,6 +140,26 @@ describe('RealtimeCausalTree', () => {
         });
     });
 
+    describe('new site', () => {
+        it('should add the new site to the tree', async () => {
+            let spy = jest.spyOn(console, 'log').mockImplementation(() => {});
+            await realtime.init();
+            connection.setConnected(true);
+            await connection.flushPromises();
+
+            connection.events.next({
+                name: 'site_abc',
+                data: { id: 1000 }
+            });
+
+            expect(realtime.tree.knownSites).toContainEqual({
+                id: 1000
+            });
+
+            spy.mockRestore();
+        });
+    });
+
     describe('connected without existing tree', () => {
         let spy: jest.SpyInstance<any>;
         beforeAll(() => {
@@ -160,6 +192,8 @@ describe('RealtimeCausalTree', () => {
             await realtime.init();
             connection.setConnected(true);
             await connection.flushPromises();
+            scheduler.flush();
+            await connection.flushPromise();
 
             expect(realtime.tree).not.toBe(null);
             expect(realtime.tree.site).toEqual(site(5));
@@ -187,6 +221,7 @@ describe('RealtimeCausalTree', () => {
 
             await realtime.init();
             connection.setConnected(true);
+
             await connection.flushPromises();
 
             expect(realtime.tree).not.toBe(null);
@@ -240,6 +275,84 @@ describe('RealtimeCausalTree', () => {
                 site(100), site(1), site(99), site(10)
             ]);
             expect(stored.site).toEqual(site(100));
+        });
+
+        it('should generate a public key and private key if there are none in the store', async () => {
+            let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
+            let generateSpy = jest.spyOn(crypto, 'generateKeyPair');
+            let validator = new AtomValidator(crypto);
+            let tree = new RealtimeCausalTree(factory, store, channel, {
+                validator: validator
+            });
+
+            await tree.init();
+            connection.setConnected(true);
+            await connection.flushPromises();
+
+            expect(generateSpy).toBeCalled();
+            expect(tree.tree.site.crypto).toBeTruthy();
+            expect(tree.tree.site.crypto.publicKey).toBeTruthy();
+            expect(tree.tree.site.crypto.signatureAlgorithm).toBe('ECDSA-SHA256-NISTP256');
+            expect(tree.tree.factory.signingKey).toBeTruthy();
+
+            const stored = await store.getKeys('abc');
+            expect(stored).toBeTruthy();
+            expect(stored.privateKey).toBeTruthy();
+            expect(stored.publicKey).toBeTruthy();
+        });
+
+        it('should use the stored keys', async () => {
+            let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
+            let generateSpy = jest.spyOn(crypto, 'generateKeyPair');
+            let validator = new AtomValidator(crypto);
+            let tree = new RealtimeCausalTree(factory, store, channel, {
+                validator: validator
+            });
+
+            let privateKey = 'abcdefgh';
+            let publicKey = 'iasfasdfa';
+            await store.putKeys('abc', privateKey, publicKey);
+
+            await tree.init();
+            connection.setConnected(true);
+            await connection.flushPromises();
+
+            expect(generateSpy).not.toBeCalled();
+            expect(tree.tree.site.crypto).toBeTruthy();
+            expect(tree.tree.site.crypto.publicKey).toBe(publicKey);
+            expect(tree.tree.site.crypto.signatureAlgorithm).toBe('ECDSA-SHA256-NISTP256');
+            expect(tree.tree.factory.signingKey).toBeTruthy();
+            expect(tree.tree.factory.signingKey.type).toBe(privateKey);
+        });
+
+        it('should send rejected atoms', async () => {
+            let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
+            let spy = jest.spyOn(crypto, 'verify').mockResolvedValue(false);
+            let validator = new AtomValidator(crypto);
+            let tree = new RealtimeCausalTree(factory, store, channel, {
+                validator: validator
+            });
+
+            let w = new Weave<Op>();
+            let [root] = w.insert(atom(atomId(1, 0), null, new Op()));
+            root.signature = 'bad';
+
+            weave.push(...w.atoms);
+
+            let rejected: RejectedAtom<AtomOp>[][] = [];
+            tree.onRejected.subscribe(r => {
+                rejected.push(r);
+            });
+
+            await tree.init();
+            connection.setConnected(true);
+            await connection.flushPromises();
+
+            expect(rejected).toEqual([
+                [
+                    { atom: root, reason: 'no_public_key' },
+                ]
+            ]);
         });
     });
 
@@ -364,6 +477,79 @@ describe('RealtimeCausalTree', () => {
             expect(realtime.tree.knownSites).toContainEqual(site(1999));
             expect(updated.length).toBe(2);
         });
+
+        it('should use the stored keys', async () => {
+            let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
+            let generateSpy = jest.spyOn(crypto, 'generateKeyPair');
+            let validator = new AtomValidator(crypto);
+            let tree = new RealtimeCausalTree(factory, store, channel, {
+                validator: validator
+            });
+
+            let localWeave = new Weave<Op>();
+            localWeave.insert(atom(atomId(1, 0), null, new Op()));
+            localWeave.insert(atom(atomId(2, 3), atomId(1, 0), new Op()));
+            localWeave.insert(atom(atomId(2, 4), atomId(1, 0), new Op()));
+            
+            knownSites.push(site(1999));
+
+            await store.put('abc', {
+                formatVersion: 2,
+                site: site(2),
+                knownSites: [
+                    site(2)
+                ],
+                weave: localWeave.atoms
+            });
+
+            let privateKey = 'abcdefgh';
+            let publicKey = 'iasfasdfa';
+            await store.putKeys('abc', privateKey, publicKey);
+
+            await tree.init();
+            await connection.flushPromises();
+
+            expect(generateSpy).not.toBeCalled();
+            expect(tree.tree).toBeTruthy();
+            expect(tree.tree.site.crypto).toBeTruthy();
+            expect(tree.tree.site.crypto.publicKey).toBe(publicKey);
+            expect(tree.tree.site.crypto.signatureAlgorithm).toBe('ECDSA-SHA256-NISTP256');
+            expect(tree.tree.factory.signingKey).toBeTruthy();
+            expect(tree.tree.factory.signingKey.type).toBe(privateKey);
+        });
+
+        it('should not generate new keys if they dont exist', async () => {
+            let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
+            let generateSpy = jest.spyOn(crypto, 'generateKeyPair');
+            let validator = new AtomValidator(crypto);
+            let tree = new RealtimeCausalTree(factory, store, channel, {
+                validator: validator
+            });
+
+            let localWeave = new Weave<Op>();
+            localWeave.insert(atom(atomId(1, 0), null, new Op()));
+            localWeave.insert(atom(atomId(2, 3), atomId(1, 0), new Op()));
+            localWeave.insert(atom(atomId(2, 4), atomId(1, 0), new Op()));
+            
+            knownSites.push(site(1999));
+
+            await store.put('abc', {
+                formatVersion: 2,
+                site: site(2),
+                knownSites: [
+                    site(2)
+                ],
+                weave: localWeave.atoms
+            });
+
+            await tree.init();
+            await connection.flushPromises();
+
+            expect(generateSpy).not.toBeCalled();
+            expect(tree.tree).toBeTruthy();
+            expect(tree.tree.site.crypto).toBeFalsy();
+            expect(tree.tree.factory.signingKey).toBeFalsy();
+        });
     });
 
     describe('reconnect', () => {
@@ -407,7 +593,7 @@ describe('RealtimeCausalTree', () => {
             connection.setConnected(true);
             await connection.flushPromises();
 
-            const addedRef = remoteWeave.insert(atom(atomId(1, 5), atomId(1, 0), new Op()));
+            const [addedRef] = remoteWeave.insert(atom(atomId(1, 5), atomId(1, 0), new Op()));
             finalWeave.import(remoteWeave.atoms);
             weave.splice(0, weave.length, ...remoteWeave.atoms);
 
@@ -514,15 +700,16 @@ describe('RealtimeCausalTree', () => {
         beforeAll(() => {
             spy = jest.spyOn(console, 'log').mockImplementation(() => {});
         });
-
+        
         afterAll(() => {
             spy.mockRestore();
         });
+
         it('should try to insert new atoms into the tree', async () => {
             let weave = new Weave<Op>();
 
-            const root = weave.insert(atom(atomId(1, 0), null, new Op()));
-            const first = weave.insert(atom(atomId(1, 2), atomId(1, 0), new Op()));
+            const [root] = weave.insert(atom(atomId(1, 0), null, new Op()));
+            const [first] = weave.insert(atom(atomId(1, 2), atomId(1, 0), new Op()));
 
             await realtime.init();
             connection.setConnected(true);
@@ -538,6 +725,12 @@ describe('RealtimeCausalTree', () => {
                 name: 'event_abc',
                 data: [first]
             });
+            scheduler.flush();
+
+            // flush all the promises
+            for (let i = 0; i < 10; i++) {
+                await connection.flushPromise();
+            }
 
             expect(realtime.tree.weave.atoms).toEqual([
                 root,
@@ -551,10 +744,10 @@ describe('RealtimeCausalTree', () => {
             connection.setConnected(true);
             await connection.flushPromises();
 
-            const root = realtime.tree.add(atom(atomId(2, 1), null, new Op()));
-            const child = realtime.tree.add(atom(atomId(2, 2), atomId(2, 1), new Op()));
-            const skipped = realtime.tree.add(atom(atomId(2, 3), atomId(2, 10), new Op()));
-            const alsoSkipped = realtime.tree.add(atom(atomId(3, 4), atomId(2, 1), new Op()));
+            const { added: root } = await realtime.tree.add(atom(atomId(2, 1), null, new Op()));
+            const { added: child } = await realtime.tree.add(atom(atomId(2, 2), atomId(2, 1), new Op()));
+            const { added: skipped } = await realtime.tree.add(atom(atomId(2, 3), atomId(2, 10), new Op()));
+            const { added: alsoSkipped } = await realtime.tree.add(atom(atomId(3, 4), atomId(2, 1), new Op()));
 
             expect(connection.emitted).toContainEqual({
                 name: 'event_abc',
@@ -578,14 +771,14 @@ describe('RealtimeCausalTree', () => {
 
             // 1 connection + 2 events
             expect(updated.length).toBe(3);
-        }); 
+        });
 
         it('should ignore events if the tree has not been initialized', async () => {
             
             let weave = new Weave<Op>();
 
-            const root = weave.insert(atom(atomId(1, 0), null, new Op()));
-            const first = weave.insert(atom(atomId(1, 2), atomId(1, 0), new Op()));
+            const [root] = weave.insert(atom(atomId(1, 0), null, new Op()));
+            const [first] = weave.insert(atom(atomId(1, 2), atomId(1, 0), new Op()));
 
             await realtime.init();
             await connection.flushPromises();

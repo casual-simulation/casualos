@@ -24,9 +24,9 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
     private _connectionStateChanged: BehaviorSubject<boolean>;
     private _emitName: string;
     private _infoName: string;
+    private _siteName: string;
     private _requestSiteIdName: string;
     private _requestWeaveName: string;
-
 
     /**
      * Creates a new realtime channel.
@@ -40,15 +40,22 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
         this._infoName = `info_${info.id}`;
         this._requestSiteIdName = `siteId_${info.id}`;
         this._requestWeaveName = `weave_${info.id}`;
+        this._siteName = `site_${info.id}`;
         this._connectionStateChanged = new BehaviorSubject(false);
         this._connection.init([
             this._emitName,
+            this._siteName,
             this._infoName,
             this._requestSiteIdName
         ]);
 
         this.events = this._connection.events.pipe(
             filter(e => e.name === this._emitName),
+            map(e => e.data)
+        );
+
+        this.sites = this._connection.events.pipe(
+            filter(e => e.name === this._siteName),
             map(e => e.data)
         );
 
@@ -73,6 +80,11 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
      * The events from the remote peer.
      */
     events: Observable<TEvent>;
+
+    /**
+     * The sites from the remote peer.
+     */
+    sites: Observable<SiteInfo>;
 
     /**
      * Whether this channel has been disposed.

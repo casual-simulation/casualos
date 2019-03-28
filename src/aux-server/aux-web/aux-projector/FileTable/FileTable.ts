@@ -103,8 +103,8 @@ export default class FileTable extends Vue {
         this.isMakingNewAction = false;
     }
 
-    clearSelection() {
-        this.fileManager.clearSelection();
+    async clearSelection() {
+        await this.fileManager.clearSelection();
     }
 
     onTagChanged(tag: string) {
