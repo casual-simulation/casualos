@@ -214,15 +214,15 @@ export class FileManager {
    * Selects the given file for the current user.
    * @param file The file to select.
    */
-  selectFile(file: AuxObject) {
-    this._selectFileForUser(file, this.userFile);
+  async selectFile(file: AuxObject) {
+    await this._selectFileForUser(file, this.userFile);
   }
 
   /**
    * Clears the selection for the current user.
    */
-  clearSelection() {
-    this._clearSelectionForUser(this.userFile);
+  async clearSelection() {
+    await this._clearSelectionForUser(this.userFile);
   }
 
   /**
@@ -253,7 +253,7 @@ export class FileManager {
   async removeFile(file: AuxFile) {
     if (this._aux.tree) {
         console.log('[FileManager] Remove File', file.id);
-        this._aux.tree.delete(file.metadata.ref);
+        await this._aux.tree.delete(file.metadata.ref);
     } else {
         console.warn('[FileManager] Tree is not loaded yet. Invalid Operation!');
     }
@@ -309,14 +309,14 @@ export class FileManager {
 
   // TODO: This seems like a pretty dangerous function to keep around,
   // but we'll add a config option to prevent this from happening on real sites.
-  deleteEverything() {
+  async deleteEverything() {
     console.warn('[FileManager] Delete Everything!');
     const state = this.filesState;
     const fileIds = keys(state);
     const files = fileIds.map(id => state[id]);
     const nonUserOrGlobalFiles = files.filter(f => !f.tags._user && f.id !== 'globals');
     const deleteOps = nonUserOrGlobalFiles.map(f => fileRemoved(f.id));
-    this.transaction(...deleteOps);
+    await this.transaction(...deleteOps);
     
     // setTimeout(() => {
     //   appManager.logout();
@@ -339,23 +339,23 @@ export class FileManager {
    * Clears the selection that the given user has.
    * @param user The file for the user to clear the selection of.
    */
-  private _clearSelectionForUser(user: AuxObject) {
+  private async _clearSelectionForUser(user: AuxObject) {
     console.log('[FileManager] Clear selection for', user.id);
     const update = updateUserSelection(null, null);
-    this.updateFile(user, update);
+    await this.updateFile(user, update);
   }
 
-  private _selectFileForUser(file: AuxObject, user: AuxObject) {
+  private async _selectFileForUser(file: AuxObject, user: AuxObject) {
     console.log('[FileManager] Select File:', file.id);
     
     const {id, newId} = selectionIdForUser(user);
     if (newId) {
       const update = updateUserSelection(newId, file.id);
-      this.updateFile(user, update);
+      await this.updateFile(user, update);
     }
     if (id) {
       const update = toggleFileSelection(file, id, user.id);
-      this.updateFile(file, update);
+      await this.updateFile(file, update);
     }
   }
 

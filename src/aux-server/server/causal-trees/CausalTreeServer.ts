@@ -87,7 +87,7 @@ export class CausalTreeServer {
 
                     const eventName = `event_${info.id}`;
                     socket.on(eventName, async (refs: Atom<AtomOp>[]) => {
-                        const added = await tree.addMany(refs);
+                        const { added } = await tree.addMany(refs);
                         socket.to(info.id).emit(eventName, added);
                     });
 
@@ -134,7 +134,7 @@ export class CausalTreeServer {
                     socket.on(`weave_${info.id}`, async (event: StoredCausalTree<AtomOp>, callback: (resp: StoredCausalTree<AtomOp>) => void) => {
                         try {
                             console.log(`[CausalTreeServer] Exchanging Weaves for tree (${info.id}).`);
-                            const imported = await tree.import(event);
+                            const { added: imported } = await tree.import(event);
                             console.log(`[CausalTreeServer] Imported ${imported.length} atoms.`);
                             this._treeStore.add(info.id, imported);
                         } catch(e) {
@@ -198,7 +198,7 @@ export class CausalTreeServer {
                 })
             ).subscribe(null, err => console.error(err));
 
-            const loaded = await tree.import(stored);
+            const { added: loaded } = await tree.import(stored);
             sub.unsubscribe();
             console.log(`[CausalTreeServer] ${loaded.length} atoms loaded.`);
 

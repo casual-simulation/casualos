@@ -333,8 +333,8 @@ export default class App extends Vue {
             options.okText = 'Delete';
             options.cancelText = 'Keep';
             
-            EventBus.$once(options.okEvent, () => {
-                appManager.fileManager.deleteEverything();
+            EventBus.$once(options.okEvent, async () => {
+                await appManager.fileManager.deleteEverything();
                 EventBus.$off(options.cancelEvent);
             });
             EventBus.$once(options.cancelEvent, () => {

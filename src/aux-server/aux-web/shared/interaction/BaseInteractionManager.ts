@@ -176,8 +176,8 @@ export abstract class BaseInteractionManager {
         }
     }
 
-    selectFile(file: AuxFile3D) {
-        appManager.fileManager.selectFile(<AuxFile>file.file);
+    async selectFile(file: AuxFile3D) {
+        await appManager.fileManager.selectFile(<AuxFile>file.file);
     }
 
     getDraggableObjects() {
