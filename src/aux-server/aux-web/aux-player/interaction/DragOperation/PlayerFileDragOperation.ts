@@ -2,8 +2,10 @@ import { BaseFileDragOperation } from "../../../shared/interaction/DragOperation
 import { File, FileCalculationContext } from "@yeti-cgi/aux-common";
 import { PlayerInteractionManager } from "../PlayerInteractionManager";
 import GameView from "../../GameView/GameView";
-import { Intersection } from "three";
+import { Intersection, Vector2 } from "three";
 import { Physics } from "../../../shared/scene/Physics";
+import { Input } from "../../../shared/scene/Input";
+import InventoryFile from "../../InventoryFile/InventoryFile";
 
 export class PlayerFileDragOperation extends BaseFileDragOperation {
 
@@ -21,17 +23,42 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
     }
 
     protected _onDrag(calc: FileCalculationContext): void {
-        const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.mainCamera);
-        const { good, gridTile } = this._interaction.pointOnGrid(calc, mouseDir);
+        const targetData = this._gameView.input.getTargetData();
+        const vueElement = Input.getVueParent(targetData.inputOver);
 
-        if (this._files.length > 0 && good) {
-            const result = this._calculateFileDragStackPosition(calc, this._context, gridTile.tileCoordinate, ...this._files);
+        if (vueElement) {
+            if (vueElement instanceof InventoryFile) {
+                if (!vueElement.file) {
+                    // Over empty slot, update the files context and context position to match the slot's index.
+                    if (this._context !== vueElement.context) {
+                        this._previousContext = this._context;
+                        this._context = vueElement.context;
+                    }
 
-            this._combine = result.combine;
-            this._other = result.other;
+                    const x = vueElement.slotIndex;
+                    const y = 0;
 
-            if (result.stackable || result.index === 0) {
-                this._updateFilesPositions(this._files, gridTile.tileCoordinate, result.index);
+                    this._updateFilesPositions(this._files, new Vector2(x, y), 0);
+                }
+            } else {
+                if (this._context !== this._gameView.context) {
+                    this._previousContext = this._context;
+                    this._context = this._gameView.context;
+                }
+
+                const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.mainCamera);
+                const { good, gridTile } = this._interaction.pointOnGrid(calc, mouseDir);
+                
+                if (good) {
+                    const result = this._calculateFileDragStackPosition(calc, this._context, gridTile.tileCoordinate, ...this._files);
+
+                    this._combine = result.combine;
+                    this._other = result.other;
+    
+                    if (result.stackable || result.index === 0) {
+                        this._updateFilesPositions(this._files, gridTile.tileCoordinate, result.index);
+                    }
+                }
             }
         }
     }    

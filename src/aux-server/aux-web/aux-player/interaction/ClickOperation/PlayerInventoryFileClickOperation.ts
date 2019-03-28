@@ -3,8 +3,8 @@ import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation
 import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperation/BaseFileClickOperation';
 import GameView from '../../GameView/GameView';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
-import { PlayerInventoryFileDragOperation } from '../DragOperation/PlayerInventoryFileDragOperation';
 import { appManager } from '../../../shared/AppManager';
+import { PlayerFileDragOperation } from '../DragOperation/PlayerFileDragOperation';
 
 /**
  * New File Click Operation handles clicking of files that are in the file queue.
@@ -29,7 +29,7 @@ export class PlayerInventoryFileClickOperation extends BaseFileClickOperation {
     }
 
     protected _createDragOperation(): BaseFileDragOperation {
-        return new PlayerInventoryFileDragOperation(this._gameView, this._interaction, this._file, this._context);
+        return new PlayerFileDragOperation(this._gameView, this._interaction, [this._file], this._context);
     }
 
     protected _canDragFile(calc: FileCalculationContext, file: File) {
