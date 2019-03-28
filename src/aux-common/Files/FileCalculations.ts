@@ -513,7 +513,10 @@ export function createWorkspace(id = uuid(), builderContextId: string = `aux._co
             [builderContextId]: true,
             [`${builderContextId}.x`]: 0,
             [`${builderContextId}.y`]: 0,
-            [`${builderContextId}.z`]: DEFAULT_WORKSPACE_HEIGHT
+            [`${builderContextId}.z`]: 0,
+            'aux.color': 'clear',
+            'aux.movable': false,
+            'scale.z': 0.01
         }
     };
 }
