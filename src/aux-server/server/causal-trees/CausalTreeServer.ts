@@ -1,5 +1,5 @@
 import { Socket, Server } from 'socket.io';
-import { CausalTreeStore, CausalTreeFactory, CausalTree, AtomOp, RealtimeChannelInfo, storedTree, site, SiteVersionInfo, SiteInfo, Atom, StoredCausalTree, currentFormatVersion, atomIdToString } from '@yeti-cgi/aux-common/causal-trees';
+import { CausalTreeStore, CausalTreeFactory, CausalTree, AtomOp, RealtimeChannelInfo, storedTree, site, SiteVersionInfo, SiteInfo, Atom, StoredCausalTree, currentFormatVersion, atomIdToString, atomId } from '@yeti-cgi/aux-common/causal-trees';
 import { AuxOp } from '@yeti-cgi/aux-common/aux-format';
 import { find } from 'lodash';
 import { bufferTime, flatMap, filter, concatMap, tap } from 'rxjs/operators';
@@ -87,7 +87,13 @@ export class CausalTreeServer {
 
                     const eventName = `event_${info.id}`;
                     socket.on(eventName, async (refs: Atom<AtomOp>[]) => {
-                        const { added } = await tree.addMany(refs);
+                        const { added, rejected } = await tree.addMany(refs);
+                        if (rejected.length > 0) {
+                            console.warn(`[CausalTreeServer] ${info.id} Rejected ${rejected.length} atoms:`);
+                            rejected.forEach(r => {
+                                console.warn(`[CausalTreeServer] ${atomIdToString(r.atom.id)}: ${r.reason}`);
+                            });
+                        }
                         socket.to(info.id).emit(eventName, added);
                     });
 
@@ -134,8 +140,15 @@ export class CausalTreeServer {
                     socket.on(`weave_${info.id}`, async (event: StoredCausalTree<AtomOp>, callback: (resp: StoredCausalTree<AtomOp>) => void) => {
                         try {
                             console.log(`[CausalTreeServer] Exchanging Weaves for tree (${info.id}).`);
-                            const { added: imported } = await tree.import(event);
+                            const { added: imported, rejected } = await tree.import(event);
                             console.log(`[CausalTreeServer] Imported ${imported.length} atoms.`);
+
+                            if (rejected.length > 0) {
+                                console.warn(`[CausalTreeServer] Rejected ${rejected.length} atoms:`);
+                                rejected.forEach(r => {
+                                    console.warn(`[CausalTreeServer] ${atomIdToString(r.atom.id)}: ${r.reason}`);
+                                });
+                            }
                             this._treeStore.add(info.id, imported);
                         } catch(e) {
                             console.log('[CausalTreeServer] Could not import atoms from remote.', e);

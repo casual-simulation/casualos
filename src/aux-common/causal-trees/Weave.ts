@@ -405,7 +405,7 @@ export class Weave<TOp extends AtomOp> {
                             
                             const site = this.getSite(a.id.site);
                             site[a.id.timestamp] = a;
-                        } else if(order > 0) {
+                        } else if (order > 0) {
                             throw new Error(`[Weave] Atom (${atomIdToString(a.id)}) is supposed to be placed before (${atomIdToString(local.id)}) but the IDs say otherwise.`);
                         }
                     }
