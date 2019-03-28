@@ -1,5 +1,13 @@
 # AUX Server Changelog
 
+## V0.3.25
+### Date: TBD
+
+### Changes:
+- Bug Fixes
+  - Fixed HTML Element targets not being captured as intended when using touch.
+    - This fixes inventory dragging for mobile.
+
 ## V0.3.24
 ### Date: 3/28/2019
 
