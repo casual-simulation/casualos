@@ -1,8 +1,8 @@
 import { Socket, Server } from 'socket.io';
-import { CausalTreeStore, CausalTreeFactory, CausalTree, AtomOp, RealtimeChannelInfo, storedTree, site, SiteVersionInfo, SiteInfo, Atom, StoredCausalTree, currentFormatVersion } from '@yeti-cgi/aux-common/causal-trees';
+import { CausalTreeStore, CausalTreeFactory, CausalTree, AtomOp, RealtimeChannelInfo, storedTree, site, SiteVersionInfo, SiteInfo, Atom, StoredCausalTree, currentFormatVersion, atomIdToString } from '@yeti-cgi/aux-common/causal-trees';
 import { AuxOp } from '@yeti-cgi/aux-common/aux-format';
 import { find } from 'lodash';
-import { bufferTime, flatMap, filter } from 'rxjs/operators';
+import { bufferTime, flatMap, filter, concatMap, tap } from 'rxjs/operators';
 import { ExecSyncOptionsWithStringEncoding } from 'child_process';
 import { PrivateCryptoKey, PublicCryptoKey, SigningCryptoImpl } from '@yeti-cgi/aux-common/crypto';
 import { NodeSigningCryptoImpl } from '../crypto/NodeSigningCryptoImpl';
@@ -56,7 +56,7 @@ export class CausalTreeServer {
                         bufferTime(1000),
                         filter(batch => batch.length > 0),
                         flatMap(batch => batch),
-                        flatMap(async refs => {
+                        concatMap(async refs => {
                             const atoms = refs.map(r => r);
                             await this._treeStore.add(info.id, atoms, true);
                         })
@@ -66,12 +66,22 @@ export class CausalTreeServer {
                         bufferTime(1000),
                         filter(batch => batch.length > 0),
                         flatMap(batch => batch),
-                        flatMap(async refs => {
+                        concatMap(async refs => {
                             const atoms = refs.map(r => r);
                             await this._treeStore.add(info.id, atoms, false);
                             let stored = tree.export();
                             stored.weave = [];
                             await this._treeStore.put(info.id, stored, false);
+                        })
+                    ).subscribe(null, err => console.error(err));
+
+                    const sub3 = tree.atomRejected.pipe(
+                        bufferTime(1000),
+                        filter(batch => batch.length > 0),
+                        flatMap(batch => batch),
+                        flatMap(batch => batch),
+                        tap(ref => {
+                            console.warn(`[CausalTreeSever] ${info.id}: Atom (${atomIdToString(ref.atom.id)}) rejected: ${ref.reason}`);
                         })
                     ).subscribe(null, err => console.error(err));
 
@@ -249,6 +259,7 @@ export class CausalTreeServer {
             console.log('[CausalTreeServer] Keys created.');
         } else {
             console.log('[CausalTreeServer] Not generating keys.');
+            treeWithCrypto = storedTree(site(1));
         }
         let validator = new AtomValidator(this._crypto);
 
