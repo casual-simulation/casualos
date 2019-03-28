@@ -172,6 +172,7 @@ export class AppManager {
     whileLoggedIn(setup: (user: User, fileManager: FileManager) => SubscriptionLike[]): SubscriptionLike {
         return this.userObservable.pipe(
             scan((subs: SubscriptionLike[], user: User, index) => {
+                console.log('user', user, index);
                 if (subs) {
                     subs.forEach(s => s.unsubscribe());
                 }
@@ -339,7 +340,7 @@ export class AppManager {
 
                 this._user = result.data;
                 this._user.channelId = channelId;
-                await this._fileManager.init(channelId);
+                await this._fileManager.init(channelId, true);
                 this._userSubject.next(this._user);
                 await this._saveUser();
                 return true;

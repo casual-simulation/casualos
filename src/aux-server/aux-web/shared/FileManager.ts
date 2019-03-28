@@ -194,8 +194,8 @@ export class FileManager {
    * Initializes the file manager to connect to the session with the given ID.
    * @param id The ID of the session to connect to.
    */
-  init(id: string): Promise<string> {
-    if (this._initPromise) {
+  init(id: string, force: boolean = false): Promise<string> {
+    if (this._initPromise && !force) {
       return this._initPromise;
     } else {
       return this._initPromise = this._init(id);
@@ -257,7 +257,6 @@ export class FileManager {
     } else {
         console.warn('[FileManager] Tree is not loaded yet. Invalid Operation!');
     }
-    // this._files.emit(fileRemoved(file.id));
   }
 
   /**
