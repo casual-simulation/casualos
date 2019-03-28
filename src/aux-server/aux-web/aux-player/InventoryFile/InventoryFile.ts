@@ -12,6 +12,7 @@ import { appManager } from '../../shared/AppManager';
 export default class InventoryFile extends Vue {
 
     @Prop() file: AuxFile;
+    @Prop() slotIndex: number;
     @Prop({ default: false }) selected: boolean;
 
     image: string = '';

@@ -1,5 +1,5 @@
 import { InventoryContext, DEFAULT_INVENTORY_COUNT } from "./InventoryContext";
-import { File, createFile, createCalculationContext, AuxObject } from "@yeti-cgi/aux-common";
+import { File, createFile, createCalculationContext, AuxObject, updateFile } from "@yeti-cgi/aux-common";
 
 describe('InventoryContext', () => {
     it('should construct for specific context', () => {
@@ -200,6 +200,56 @@ describe('InventoryContext', () => {
         expect(inventory.slots[2]).toBeUndefined();
         expect(inventory.slots[3].id).toEqual('testId_1');
         expect(inventory.slots[4].id).toEqual('testId_0');
+    });
+
+    it('should update slots as expected after file is added and then moved to another slot.', () => {
+        let context = 'my_inventory';
+        let slotCount = 5;
+        let inventory = new InventoryContext(context, slotCount);
+        let files: File[] = [
+            createFile('testId_0', { [context]: true, [`${context}.x`]: 0}),
+            createFile('testId_1', { [context]: true, [`${context}.x`]: 1}),
+        ];
+
+        let calc = createCalculationContext(files);
+
+        for (let i = 0; i < files.length; i++) {
+            inventory.fileAdded(<AuxObject>files[i], calc);
+        }
+
+        // Expected files in context.
+        expect(inventory.files).toHaveLength(2);
+        expect(inventory.files[0].id).toEqual('testId_0');
+        expect(inventory.files[1].id).toEqual('testId_1');
+
+        inventory.frameUpdate(calc);
+
+        // Slots should be be in initial state.
+        expect(inventory.slots[0].id).toEqual('testId_0');
+        expect(inventory.slots[1].id).toEqual('testId_1');
+        expect(inventory.slots[2]).toBeUndefined();
+        expect(inventory.slots[3]).toBeUndefined();
+        expect(inventory.slots[4]).toBeUndefined();
+
+        // Now lets move testId_1 to the fourth slot.
+        let file = files[1];
+        file.tags[`${context}.x`] = 3;
+        
+        calc = createCalculationContext(files);
+        inventory.fileUpdated(<AuxObject>file, null, calc);
+        inventory.frameUpdate(calc);
+
+        // Files should still be in original state.
+        expect(inventory.files).toHaveLength(2);
+        expect(inventory.files[0].id).toEqual('testId_0');
+        expect(inventory.files[1].id).toEqual('testId_1');
+
+        // Slots should have updated accordingly.
+        expect(inventory.slots[0].id).toEqual('testId_0');
+        expect(inventory.slots[1]).toBeUndefined();
+        expect(inventory.slots[2]).toBeUndefined();
+        expect(inventory.slots[3].id).toEqual('testId_1');
+        expect(inventory.slots[4]).toBeUndefined();
     });
 
 
