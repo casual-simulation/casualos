@@ -53,9 +53,8 @@ export class AtomValidator {
             return false;
         }
         const ints = toByteArray(atom.signature);
-        const signature = ints.buffer;
         const buf = this._getData(atom);
-        return await this._impl.verify(key, signature, buf);
+        return await this._impl.verify(key, ints, buf);
     }
 
     private _getData<T extends AtomOp>(atom: Atom<T>): ArrayBuffer {
