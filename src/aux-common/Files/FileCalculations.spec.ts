@@ -610,6 +610,9 @@ describe('FileCalculations', () => {
                 'testContext.x',
                 'testContext.y',
                 'testContext.z',
+                'aux.color',
+                'aux.movable',
+                'scale.z'
             ]);
         });
     });

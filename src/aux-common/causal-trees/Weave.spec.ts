@@ -1103,12 +1103,12 @@ describe('Weave', () => {
 
             expect(localAdded).toEqual([
                 root, 
-                s2t3,
-                s2t4
+                s2t4,
+                s2t3
             ]);
             expect(remoteAdded).toEqual([
-                s1t1,
-                s1t2
+                s1t2,
+                s1t1
             ]);
             expect(finalWeave.atoms).toEqual([
                 root,
