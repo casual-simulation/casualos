@@ -31,7 +31,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
             this._other = result.other;
 
             if (result.stackable || result.index === 0) {
-                this._updateFilesPositions(this._files, gridTile.tileCoordinate, gridTile.center.y, result.index);
+                this._updateFilesPositions(this._files, gridTile.tileCoordinate, result.index);
             }
         }
     }    

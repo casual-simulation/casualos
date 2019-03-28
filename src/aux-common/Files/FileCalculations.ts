@@ -808,6 +808,24 @@ export function getBuilderContextGrid(calc: FileCalculationContext, contextFile:
     return getContextValue(calc, contextFile, domain, 'grid');
 }
 
+/**
+ * Gets the height of the specified grid on the context.
+ * @param calc The calculation context to use.
+ * @param contextFile The file that represents the context.
+ * @param domain The domain.
+ * @param key The key for the grid position to lookup in the context grid.
+ */
+export function getContextGridHeight(calc: FileCalculationContext, contextFile: File, domain: AuxDomain, key: string): number {
+    let contextGrid = getContextValue(calc, contextFile, domain, 'grid');
+    if (contextGrid && contextGrid[key]) {
+        if (contextGrid[key].height) {
+            return contextGrid[key].height;
+        }
+    }
+
+    return DEFAULT_WORKSPACE_HEIGHT;
+}
+
 
 /**
  * Gets the grid scale of the context.
