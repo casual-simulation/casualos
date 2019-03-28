@@ -27,8 +27,8 @@ export default class FileRow extends Vue {
         super();
     }
 
-    toggleFile(file: AuxObject) {
-        this.fileManager.selectFile(file);
+    async toggleFile(file: AuxObject) {
+        await this.fileManager.selectFile(file);
     }
 
     onTagChanged(tag: string) {
