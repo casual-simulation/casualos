@@ -185,8 +185,9 @@ export function calculateScale(context: FileCalculationContext, obj: File, multi
     const scaleX = calculateNumericalTagValue(context, obj, `${prefix}scale.x`, defaultScale);
     const scaleY = calculateNumericalTagValue(context, obj, `${prefix}scale.y`, defaultScale);
     const scaleZ = calculateNumericalTagValue(context, obj, `${prefix}scale.z`, defaultScale);
+    const uniformScale = calculateNumericalTagValue(context, obj, `${prefix}scale`, 1);
 
-    return new Vector3(scaleX * multiplier, scaleZ * multiplier, scaleY * multiplier);
+    return new Vector3(scaleX * multiplier * uniformScale, scaleZ * multiplier * uniformScale, scaleY * multiplier * uniformScale);
 }
 
 

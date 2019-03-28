@@ -8,6 +8,7 @@
   - Can drag files to and from user's inventory in AUX Player.
   - Added support for cryptograhpically signing and verifiying events.
   - Renamed `scale.x`, `scale.y`, and `scale.z` to `aux.scale.x`, `aux.scale.y`, and `aux.scale.z`.
+  - Added the ability to use `aux.scale` to uniformly scale the file.
 - Bug Fixes
   - Use context.z position has an offset from the calculated display z position in Aux Builder.
     - Making context.z act as an offset allows context.z value of 0 to place the file on the “ground” regardless of tile height in Aux Builder and always place the file on the ground in Aux Builder.
