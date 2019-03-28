@@ -231,7 +231,7 @@ export class CausalTreeServer {
         let keys = await this._treeStore.getKeys(id);
         let signingKey: PrivateCryptoKey = null;
         let treeWithCrypto: StoredCausalTree<AtomOp>;
-        if (keys) {
+        if (keys && this._crypto.supported()) {
             // Use the existing keys because we've already created them.
             console.log('[CausalTreeServer] Using existing keys...');
 
@@ -243,7 +243,7 @@ export class CausalTreeServer {
             signingKey = await this._crypto.importPrivateKey(keys.privateKey);
             console.log('[CausalTreeServer] Keys imported.');
 
-        } else if (generateKeys) {
+        } else if (generateKeys && this._crypto.supported()) {
             // Create new keys because we haven't stored any under this ID
             console.log('[CausalTreeServer] Creating new keys...');
             let [ pubKey, privKey ] = await this._crypto.generateKeyPair();

@@ -28,6 +28,10 @@ export class BrowserSigningCryptoImpl implements SigningCryptoImpl {
         }
     }
 
+    supported() {
+        return (typeof window.crypto.subtle !== 'undefined');
+    }
+
     async sign(key: PrivateCryptoKey, data: ArrayBuffer): Promise<ArrayBuffer> {
         if (key instanceof BrowserPrivateCryptoKey) {
             return await crypto.subtle.sign({

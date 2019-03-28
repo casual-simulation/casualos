@@ -268,9 +268,10 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
     private async _requestSiteId(id: string, serverVersion: SiteVersionInfo): Promise<GrantedSite> {
         let crypto: SiteInfoCrypto;
         let signingKey: PrivateCryptoKey;
-        if (this._options.validator) {
+        if (this._options.validator && this._options.validator.impl.supported()) {
             let keys = await this._store.getKeys(id);
             if (!keys && this._options.validator) {
+                console.log(`[RealtimeCausalTree] ${id}: Generating crypto keys...`);
                 const [pubKey, privKey] = await this._options.validator.impl.generateKeyPair();
                 const publicKey = await this._options.validator.impl.exportKey(pubKey);
                 const privateKey = await this._options.validator.impl.exportKey(privKey);
@@ -282,6 +283,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
 
                 await this._store.putKeys(id, privateKey, publicKey);
             } else if(keys) {
+                console.log(`[RealtimeCausalTree] ${id}: Using existing keys...`);
                 crypto = {
                     publicKey: keys.publicKey,
                     signatureAlgorithm: 'ECDSA-SHA256-NISTP256'
@@ -289,6 +291,9 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
 
                 signingKey = await this._options.validator.impl.importPrivateKey(keys.privateKey);
             }
+        }
+        if (!crypto) {
+            console.log(`[RealtimeCausalTree] ${id}: Not using crypto.`);
         }
 
         let newestSite: SiteInfo = maxBy(serverVersion.knownSites, site => site.id);

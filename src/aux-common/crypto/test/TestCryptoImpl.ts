@@ -10,6 +10,10 @@ export class TestCryptoImpl implements SigningCryptoImpl {
         this.algorithm = algorithm;
     }
 
+    supported() {
+        return true;
+    }
+
     async sign(key: PrivateCryptoKey, data: ArrayBuffer): Promise<ArrayBuffer> {
         return this.signature || data.slice(0, 32);
     }

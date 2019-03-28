@@ -10,6 +10,10 @@ export class NodeSigningCryptoImpl implements SigningCryptoImpl {
         }
     }
 
+    supported() {
+        return true;
+    }
+
     async sign(key: PrivateCryptoKey, data: ArrayBuffer): Promise<ArrayBuffer> {
         if (key instanceof NodePrivateCryptoKey) {
             const sign = createSign('SHA256');

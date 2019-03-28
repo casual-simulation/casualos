@@ -484,7 +484,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
                     reason: 'signature_failed'
                 };
             }
-        } else if (!key && !!atom.signature) {
+        } else if (!key && !!atom.signature && this._validator && this._validator.impl.supported()) {
             return {
                 atom: atom,
                 reason: 'no_public_key'
@@ -502,7 +502,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         let key = this._keyMap.get(siteId);
         if (!key) {
             const site = find(this.knownSites, s => s.id === siteId);
-            if (site && site.crypto && site.crypto.publicKey && this._validator) {
+            if (site && site.crypto && site.crypto.publicKey && this._validator && this._validator.impl.supported()) {
                 key = await this._validator.impl.importPublicKey(site.crypto.publicKey);
             }
 

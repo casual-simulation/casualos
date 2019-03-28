@@ -10,6 +10,11 @@ import { SignatureAlgorithmType } from './SignatureAlgorithm';
 export interface SigningCryptoImpl {
 
     /**
+     * Gets whether this crypto implementation is supported on this platform.
+     */
+    supported(): boolean;
+
+    /**
      * Signs the given data using the given private key and returns a promise
      * that contains the signed data.
      * 
