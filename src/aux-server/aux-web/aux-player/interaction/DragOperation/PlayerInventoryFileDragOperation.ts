@@ -34,7 +34,6 @@ export class PlayerInventoryFileDragOperation extends BaseFileDragOperation {
 
         if (vueElement) {
             if (vueElement instanceof InventoryFile) {
-                // console.log('over inventory slot', vueElement.slotIndex);
                 if (!vueElement.file) {
                     // Over empty slot, update the files context and context position to match the slot's index.
                     if (this._context !== vueElement.context) {
@@ -48,19 +47,28 @@ export class PlayerInventoryFileDragOperation extends BaseFileDragOperation {
                     this._updateFilesPositions(this._files, new Vector2(x, y), 0);
                 }
             } else {
-                // console.log('over world');
+                if (this._context !== this._gameView.context) {
+                    this._previousContext = this._context;
+                    this._context = this._gameView.context;
+                }
+
+                const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.mainCamera);
+                const { good, gridTile } = this._interaction.pointOnGrid(calc, mouseDir);
+                
+                if (good) {
+                    const result = this._calculateFileDragStackPosition(calc, this._context, gridTile.tileCoordinate, ...this._files);
+
+                    this._combine = result.combine;
+                    this._other = result.other;
+    
+                    if (result.stackable || result.index === 0) {
+                        this._updateFilesPositions(this._files, gridTile.tileCoordinate, result.index);
+                    }
+                }
+
+
             }
         }
-        // const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.mainCamera);
-        // const { good, gridPosition, workspace } = this._interaction.pointOnWorkspaceGrid(calc, mouseDir);
-
-        // if (this._files.length > 0) {
-        //     if (good) {
-        //         this._dragFilesOnWorkspace(calc, workspace, gridPosition);
-        //     } else {
-        //         this._dragFilesFree(calc);
-        //     }
-        // }
     }
 
     protected _updateFile(file: File, data: PartialFile): FileEvent {
