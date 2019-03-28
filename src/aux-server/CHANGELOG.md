@@ -4,10 +4,16 @@
 ### Date: TBD
 
 ### Changes:
+- Features:
+  - Can drag files to and from user's inventory in AUX Player.
 - Bug Fixes
   - Use context.z position has an offset from the calculated display z position in Aux Builder.
     - Making context.z act as an offset allows context.z value of 0 to place the file on the “ground” regardless of tile height in Aux Builder and always place the file on the ground in Aux Builder.
     - No more file clipping issues due to grid planes being at different heights between Aux Builder and Aux Player.
+- Other Improvements
+  - Builder context file now defaults to flat, clear, and not movable.
+
+
 ## V0.3.23
 ### Date: 3/26/2019
 
