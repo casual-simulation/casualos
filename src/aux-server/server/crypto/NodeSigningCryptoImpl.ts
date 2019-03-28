@@ -1,4 +1,5 @@
 import { SigningCryptoImpl, PrivateCryptoKey, PublicCryptoKey, SigningCryptoKey, SignatureAlgorithmType } from "@yeti-cgi/aux-common/crypto";
+import { nodeSignatureToWebSignature, webSignatureToNodeSignature } from './SubtleCryptoCompat';
 import { createSign, createVerify, generateKeyPairSync } from 'crypto';
 
 export class NodeSigningCryptoImpl implements SigningCryptoImpl {
@@ -17,7 +18,7 @@ export class NodeSigningCryptoImpl implements SigningCryptoImpl {
             sign.end();
             
             const signature = sign.sign(key.privateKey);
-            return signature;
+            return nodeSignatureToWebSignature(signature);
         }
         throw this._unknownKey();
     }
@@ -29,7 +30,7 @@ export class NodeSigningCryptoImpl implements SigningCryptoImpl {
             verify.update(buffer);
             verify.end();
 
-            const sig = Buffer.from(signature);
+            const sig = webSignatureToNodeSignature(Buffer.from(signature));
             return verify.verify(key.publicKey, sig);
         }
         throw this._unknownKey();
