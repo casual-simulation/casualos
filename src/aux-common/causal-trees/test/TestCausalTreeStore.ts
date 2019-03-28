@@ -1,8 +1,9 @@
-import { CausalTreeStore } from "../CausalTreeStore";
+import { CausalTreeStore, StoredCryptoKeys } from "../CausalTreeStore";
 import { AtomOp, Atom } from "../Atom";
 import { StoredCausalTree, WeaveReference, upgrade } from "../StoredCausalTree";
 
 export class TestCausalTreeStore implements CausalTreeStore {
+    
     
     private _store: {
         [key: string]: StoredCausalTree<any>;
@@ -10,6 +11,10 @@ export class TestCausalTreeStore implements CausalTreeStore {
 
     private _atoms: {
         [key: string]: Atom<any>[]
+    } = {};
+
+    private _keys: {
+        [key: string]: StoredCryptoKeys
     } = {};
 
     init(): Promise<void> {
@@ -56,5 +61,17 @@ export class TestCausalTreeStore implements CausalTreeStore {
                 resolve(undefined);
             }
         });
+    }
+
+    async putKeys(id: string, privateKey: string, publicKey: string): Promise<void> {
+        const keys: StoredCryptoKeys = {
+            privateKey: privateKey,
+            publicKey: publicKey
+        };
+        this._keys[id] = keys;
+    }
+
+    async getKeys(id: string): Promise<StoredCryptoKeys> {
+        return this._keys[id] || null;
     }
 }

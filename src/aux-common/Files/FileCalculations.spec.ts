@@ -610,6 +610,9 @@ describe('FileCalculations', () => {
                 'testContext.x',
                 'testContext.y',
                 'testContext.z',
+                'aux.color',
+                'aux.movable',
+                'scale.z'
             ]);
         });
     });
@@ -1274,6 +1277,10 @@ describe('FileCalculations', () => {
             expect(isTagWellKnown('aux.color')).toBe(false);
             expect(isTagWellKnown('aux.label.color')).toBe(false);
             expect(isTagWellKnown('aux.line')).toBe(false);
+            expect(isTagWellKnown('aux.scale.x')).toBe(false);
+            expect(isTagWellKnown('aux.scale.y')).toBe(false);
+            expect(isTagWellKnown('aux.scale.z')).toBe(false);
+            expect(isTagWellKnown('aux.scale')).toBe(false);
             expect(isTagWellKnown('+(#tag:"value")')).toBe(false);
             expect(isTagWellKnown('_context_test')).toBe(false);
             expect(isTagWellKnown('_context_ something else')).toBe(false);
@@ -1357,8 +1364,8 @@ describe('FileCalculations', () => {
             let first = createFile();
             let second = createFile();
 
-            first.tags['_context_A.x'] = 1;
-            second.tags['_context_B.x'] = 0;
+            first.tags['aux._context_A.x'] = 1;
+            second.tags['aux._context_B.x'] = 0;
 
             const result = doFilesAppearEqual(first, second);
 

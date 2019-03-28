@@ -179,14 +179,15 @@ export function debugLayersToString(obj: Object3D): string {
  * @param obj The object.
  * @param multiplier The value that scale values should be multiplied by.
  * @param defaultScale The default value.
- * @param prefix The optional prefix for the tags.
+ * @param prefix The optional prefix for the tags. Defaults to `aux.`
  */
-export function calculateScale(context: FileCalculationContext, obj: File, multiplier: number = 1, defaultScale: number = 1, prefix: string = ''): Vector3 {
+export function calculateScale(context: FileCalculationContext, obj: File, multiplier: number = 1, defaultScale: number = 1, prefix: string = 'aux.'): Vector3 {
     const scaleX = calculateNumericalTagValue(context, obj, `${prefix}scale.x`, defaultScale);
     const scaleY = calculateNumericalTagValue(context, obj, `${prefix}scale.y`, defaultScale);
     const scaleZ = calculateNumericalTagValue(context, obj, `${prefix}scale.z`, defaultScale);
+    const uniformScale = calculateNumericalTagValue(context, obj, `${prefix}scale`, 1);
 
-    return new Vector3(scaleX * multiplier, scaleZ * multiplier, scaleY * multiplier);
+    return new Vector3(scaleX * multiplier * uniformScale, scaleZ * multiplier * uniformScale, scaleY * multiplier * uniformScale);
 }
 
 

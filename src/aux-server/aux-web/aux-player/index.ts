@@ -120,8 +120,9 @@ router.beforeEach((to, from, next) => {
                 return;
             } else {
                 if (appManager.user.channelId != channelId) {
+                    console.log(`[Router] Changing channels: ${channelId}`);
                     return appManager.loginOrCreateUser(appManager.user.email, channelId).then(() => {
-                        location.reload();
+                        console.log(`[Router] Logged In!`);
                         next();
                     }, ex => {
                         console.error(ex);

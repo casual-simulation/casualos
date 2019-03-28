@@ -1,5 +1,24 @@
 # AUX Server Changelog
 
+## V0.3.24
+### Date: 3/28/2019
+
+### Changes:
+- Features:
+  - Can drag files to and from user's inventory in AUX Player.
+  - Added support for cryptograhpically signing and verifiying events.
+  - Renamed `scale.x`, `scale.y`, and `scale.z` to `aux.scale.x`, `aux.scale.y`, and `aux.scale.z`.
+  - Added the ability to use `aux.scale` to uniformly scale the file.
+- Bug Fixes
+  - Use context.z position has an offset from the calculated display z position in Aux Builder.
+    - Making context.z act as an offset allows context.z value of 0 to place the file on the “ground” regardless of tile height in Aux Builder and always place the file on the ground in Aux Builder.
+    - No more file clipping issues due to grid planes being at different heights between Aux Builder and Aux Player.
+  - Don't clear out tags that end with `.x`, `.y`, or `.z` when dragging new files from the recent files list.
+  - Fixed an issue with trees that could cause sibling atoms to be ignored or ordered improperly.
+- Other Improvements
+  - Builder context file now defaults to flat, clear, and not movable.
+
+
 ## V0.3.23
 ### Date: 3/26/2019
 

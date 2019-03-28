@@ -2,6 +2,7 @@ import { Atom, AtomId, AtomOp, idEquals, atomIdToString, atomId, atomMatchesChec
 import { keys } from "lodash";
 import { WeaveVersion, WeaveSiteVersion } from "./WeaveVersion";
 import { getHash } from './Hash';
+import { RejectedAtom } from "./RejectedAtom";
 
 /**
  * Defines a weave. 
@@ -51,14 +52,17 @@ export class Weave<TOp extends AtomOp> {
     }
 
     /**
-     * Inserts the given atom into the weave.
-     * @param atom 
+     * Inserts the given atom into the weave and returns it.
+     * @param atom The atom.
      */
-    insert<T extends TOp>(atom: Atom<T>): Atom<T> {
+    insert<T extends TOp>(atom: Atom<T>): [Atom<T> | null, RejectedAtom<T> | null] {
 
         if (!atomMatchesChecksum(atom)) {
             console.warn(`[Weave] Atom ${atomIdToString(atom.id)} rejected because its checksum didn't match itself.`);
-            return null;
+            return [null, {
+                atom: atom,
+                reason: 'checksum_failed'
+            }];
         }
 
         const site = this.getSite(atom.id.site);
@@ -66,18 +70,24 @@ export class Weave<TOp extends AtomOp> {
 
             // check for an existing root atom
             if (this.atoms.length > 0) {
-                throw new Error('Cannot add second root atom.');
+                return [null, {
+                    atom: atom,
+                    reason: 'second_root_not_allowed'
+                }];
             }
 
             // Add the atom at the root of the weave.
             this._atoms.splice(0, 0, atom);
             site[atom.id.timestamp] = atom;
             this._sizeMap.set(atom.id, 1);
-            return atom;
+            return [atom, null];
         } else {
             const causeIndex = this._indexOf(atom.cause);
             if (causeIndex < 0 ) {
-                return null;
+                return [null, {
+                    atom: atom,
+                    reason: 'cause_not_found'
+                }];
             }
             const weaveIndex = this._weaveIndex(causeIndex, atom.id);
             const siteIndex = atom.id.timestamp;
@@ -85,7 +95,7 @@ export class Weave<TOp extends AtomOp> {
             if (siteIndex >= 0 && siteIndex < site.length) {
                 const existingAtom = site[siteIndex];
                 if (existingAtom && idEquals(existingAtom.id, atom.id)) {
-                    return <Atom<T>>existingAtom;
+                    return [<Atom<T>>existingAtom, null];
                 }
             }
             this._atoms.splice(weaveIndex, 0, atom);
@@ -93,7 +103,7 @@ export class Weave<TOp extends AtomOp> {
             
             this._updateAtomSizes([atom]);
 
-            return atom;
+            return [atom, null];
         }
     }
 
@@ -281,16 +291,20 @@ export class Weave<TOp extends AtomOp> {
      * Returns the list of atoms that were added to the weave.
      * @param atoms The atoms to import into this weave.
      */
-    import(atoms: Atom<TOp>[]): Atom<TOp>[] {
+    import(atoms: Atom<TOp>[]): [Atom<TOp>[], RejectedAtom<TOp>[]] {
         
         let newAtoms: Atom<TOp>[] = [];
+        let rejectedAtoms: RejectedAtom<TOp>[] = [];
         let localOffset = 0;
         for (let i = 0; i < atoms.length; i++) {
             const a = atoms[i];
             let local = this._atoms[i + localOffset];
 
             if (!atomMatchesChecksum(a)) {
-                console.warn(`[Weave] Atom ${atomIdToString(a.id)} rejected because its checksum didn't match itself.`);
+                rejectedAtoms.push({
+                    atom: a,
+                    reason: 'checksum_failed'
+                });
                 break;
             }
 
@@ -315,6 +329,10 @@ export class Weave<TOp extends AtomOp> {
 
                     const exists = this.getAtom(atom.id);
                     if (exists) {
+                        rejectedAtoms.push({
+                            atom: atom,
+                            reason: 'atom_id_already_exists'
+                        });
                         continue;
                     }
                     
@@ -342,14 +360,15 @@ export class Weave<TOp extends AtomOp> {
                 if (exists && a.checksum !== exists.checksum) {
                     // Break because the atoms aren't actually the same
                     // even though they claim to be
-                    console.warn(`[Weave] Atom ${atomIdToString(a.id)} rejected because its checksum didn't match the existing atom (${a.checksum} !== ${exists.checksum})`);
+                    rejectedAtoms.push({
+                        atom: a,
+                        reason: 'atom_id_already_exists'
+                    });
                     break;
                 }
 
                 let order = this._compareAtoms(a, local);
-                if (isNaN(order)) {
-                    break;
-                } else if (order === 0) {
+                if (order === 0) {
                     // Atoms are equal, no action needed.
                 } else if(order < 0) {
                     // New atom should be before local atom.
@@ -362,18 +381,23 @@ export class Weave<TOp extends AtomOp> {
                 } else if(order > 0) {
                     // New atom should be after local atom.
                     // Skip local atoms until we find the right place to put the new atom.
+                    // Basically we're skipping until we are after the current local atom's children
+                    // or until we find a sibling that we should be inserted before.
                     do {
                         localOffset += 1;
                         local = this._atoms[i + localOffset];
-                    } while(local && a.id.timestamp <= local.cause.timestamp);
+                    } while (local && (this._isInCausalGroup(a, local) || 
+                        (this._areSiblings(a, local) && this._compareAtomIds(a.id, local.id) > 0)));
                     
                     if (!local) {
+                        // We reached the end of the weave
                         this._atoms.splice(i + localOffset, 0, a);
                         newAtoms.push(a);
                         
                         const site = this.getSite(a.id.site);
                         site[a.id.timestamp] = a;
                     } else {
+                        // We found a spot to place the atom at.
                         order = this._compareAtoms(a, local);
                         if (order < 0) {
                             this._atoms.splice(i + localOffset, 0, a);
@@ -381,6 +405,8 @@ export class Weave<TOp extends AtomOp> {
                             
                             const site = this.getSite(a.id.site);
                             site[a.id.timestamp] = a;
+                        } else if (order > 0) {
+                            throw new Error(`[Weave] Atom (${atomIdToString(a.id)}) is supposed to be placed before (${atomIdToString(local.id)}) but the IDs say otherwise.`);
                         }
                     }
                 }
@@ -389,7 +415,7 @@ export class Weave<TOp extends AtomOp> {
 
         this._updateAtomSizes(newAtoms);
 
-        return newAtoms;
+        return [newAtoms, rejectedAtoms];
     }
     
     /**
@@ -451,7 +477,7 @@ export class Weave<TOp extends AtomOp> {
 
                 // siblings
                 if (order < 0) {
-                    console.warn(`[Weave] Invalid tree. ${atomIdToString(child.id)} says it happened before its sibling (${parent.id}) that occurred before it in the tree.`);
+                    console.warn(`[Weave] Invalid tree. ${atomIdToString(child.id)} says it happened before its sibling (${atomIdToString(parent.id)}) that occurred before it in the tree.`);
                     return false;
                 }
             }
@@ -565,6 +591,26 @@ export class Weave<TOp extends AtomOp> {
     }
 
     /**
+     * Determines if the first atom is in the same causal group as the second
+     * atom.
+     * @param first The atom to check.
+     * @param second The atom to check against.
+     */
+    private _isInCausalGroup(first: Atom<TOp>, second: Atom<TOp>) {
+        return first.id.timestamp <= second.cause.timestamp;
+    }
+
+    /**
+     * Determines if the two given atoms are siblings. That is, if they share the same parent.
+     * @param first The first atom.
+     * @param second The second atom.
+     */
+    private _areSiblings(first: Atom<TOp>, second: Atom<TOp>) {
+        return this._compareAtomIds(first.cause, second.cause) === 0;
+    }
+
+
+    /**
      * Compares the two atoms to see which should be sorted in front of the other.
      * Returns -1 if the first should be before the second.
      * Returns 0 if they are equal.
@@ -575,11 +621,7 @@ export class Weave<TOp extends AtomOp> {
     private _compareAtoms(first: Atom<TOp>, second: Atom<TOp>): number {
         const cause = this._compareAtomIds(first.cause, second.cause);
         if (cause === 0) {
-            let order = this._compareAtomIds(first.id, second.id);
-            if (order === 0 && first.checksum !== second.checksum) {
-                return NaN;
-            }
-            return order;
+            return this._compareAtomIds(first.id, second.id);
         }
         return cause;
     }

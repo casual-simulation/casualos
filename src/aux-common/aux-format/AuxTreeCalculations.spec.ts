@@ -12,38 +12,38 @@ import { tap } from "rxjs/operators";
 describe('AuxTreeCalculations', () => {
 
     describe('getAtomFile()', () => {
-        it('should get the file that the given tag is under', () => {
+        it('should get the file that the given tag is under', async () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
-            tree.root();
-            const file = tree.file('test');
-            const test = tree.tag('test', file);
-            const val = tree.val('123', test);
+            await tree.root();
+            const { added: file } = await tree.file('test');
+            const { added: test } = await tree.tag('test', file);
+            const { added: val } = await tree.val('123', test);
 
             const result = getAtomFile(tree.weave, val);
 
             expect(result).toBe(file);
         });
 
-        it('should handle file deletions', () => {
+        it('should handle file deletions', async () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
-            const root = tree.root();
-            const file = tree.file('test');
-            const del = tree.delete(file);
+            const { added: root } = await tree.root();
+            const { added: file } = await tree.file('test');
+            const { added: del } = await tree.delete(file);
 
             const result = getAtomFile(tree.weave, del);
 
             expect(result).toBe(file);
         });
 
-        it('should return null if it is not childed to a file', () => {
+        it('should return null if it is not childed to a file', async () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
-            const root = tree.root();
-            const file = tree.file('test');
-            const test = tree.tag('test', file);
-            const val = tree.val('123', test);
+            const { added: root } = await tree.root();
+            const { added: file } = await tree.file('test');
+            const { added: test } = await tree.tag('test', file);
+            const { added: val } = await tree.val('123', test);
 
             const result = getAtomFile(tree.weave, root);
 
@@ -77,7 +77,7 @@ describe('AuxTreeCalculations', () => {
             const tree = new RealtimeCausalTree<AuxCausalTree>(factory, store, channel);
             
             let stored = new AuxCausalTree(storedTree(site(1)));
-            stored.root();
+            await stored.root();
             
             await store.put('test', stored.export());
             await tree.init();
@@ -91,8 +91,8 @@ describe('AuxTreeCalculations', () => {
                 fileIds.push(file.id);
             }, errorHandler);
 
-            tree.tree.file('abc');
-            tree.tree.file('def');
+            await tree.tree.file('abc');
+            await tree.tree.file('def');
 
             scheduler.flush();
 
@@ -114,9 +114,9 @@ describe('AuxTreeCalculations', () => {
             const tree = new RealtimeCausalTree<AuxCausalTree>(factory, store, channel);
 
             let stored = new AuxCausalTree(storedTree(site(1)));
-            stored.root();
-            stored.file('test');
-            stored.file('zdf');
+            await stored.root();
+            await stored.file('test');
+            await stored.file('zdf');
 
             await store.put('test', stored.export());
             await tree.init();
@@ -149,9 +149,9 @@ describe('AuxTreeCalculations', () => {
             const tree = new RealtimeCausalTree<AuxCausalTree>(factory, store, channel);
 
             let stored = new AuxCausalTree(storedTree(site(1)));
-            stored.root();
-            const test1 = stored.file('test');
-            const test2 = stored.file('test');
+            await stored.root();
+            const test1 = await stored.file('test');
+            const test2 = await stored.file('test');
 
             await store.put('test', stored.export());
             await tree.init();
@@ -182,10 +182,10 @@ describe('AuxTreeCalculations', () => {
             const tree = new RealtimeCausalTree<AuxCausalTree>(factory, store, channel);
 
             let stored = new AuxCausalTree(storedTree(site(1)));
-            stored.root();
-            const file = stored.file('test');
-            const update = stored.tag('abc', file);
-            const deleted = stored.delete(file);
+            await stored.root();
+            const { added: file } = await stored.file('test');
+            const { added: update } = await stored.tag('abc', file);
+            const { added: deleted } = await stored.delete(file);
 
             await store.put('test', stored.export());
             await tree.init();
@@ -217,8 +217,8 @@ describe('AuxTreeCalculations', () => {
             const tree = new RealtimeCausalTree<AuxCausalTree>(factory, store, channel);
 
             let stored = new AuxCausalTree(storedTree(site(1)));
-            stored.root();
-            const file = stored.file('test');
+            await stored.root();
+            const { added: file } = await stored.file('test');
 
             await store.put('test', stored.export());
             await tree.init();
@@ -238,7 +238,7 @@ describe('AuxTreeCalculations', () => {
             fileRemoved.pipe(tap(file => removedFiles.push(file)))
                 .subscribe(null, errorHandler);
 
-            const del = tree.tree.delete(file);
+            const del = await tree.tree.delete(file);
 
             expect(fileIds).toEqual([
                 'test'

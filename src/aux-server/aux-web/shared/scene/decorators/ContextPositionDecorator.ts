@@ -1,10 +1,13 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
-import { calculateNumericalTagValue, FileCalculationContext, File, calculateGridScale, file, objectsAtContextGridPosition, getFilePosition, getFileIndex, getContextDefaultHeight, getBuilderContextGrid, getFileRotation } from "@yeti-cgi/aux-common";
-import { Vector3, Quaternion, Euler } from "three";
+import { calculateNumericalTagValue, FileCalculationContext, File, calculateGridScale, file, objectsAtContextGridPosition, getFilePosition, getFileIndex, getContextDefaultHeight, getBuilderContextGrid, getFileRotation, getContextScale, isUserFile, getContextGridHeight } from "@yeti-cgi/aux-common";
+import { Vector3, Quaternion, Euler, Vector2 } from "three";
 import { calculateGridTileLocalCenter } from "../grid/Grid";
 import { sumBy } from "lodash";
 import { ContextGroup3D } from "../ContextGroup3D";
+import { realPosToGridPos, Axial, posToKey } from "../hex";
+import { BuilderGroup3D } from "../BuilderGroup3D";
+import { calculateScale } from "../SceneUtils";
 
 /**
  * Defines an interface that contains possible options for ContextPositionDecorator objects.
@@ -72,23 +75,50 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
  * 
  * @param context The file calculation context to use to calculate forumula values.
  * @param file The file to calculate position for.
+ * @param gridScale The scale of the grid.
  * @param contextId The id of the context we want to get positional data for the given file.
  */
-export function calculateObjectPositionInGrid(context: FileCalculationContext, file: AuxFile3D, scale: number): Vector3 {
+export function calculateObjectPositionInGrid(context: FileCalculationContext, file: AuxFile3D, gridScale: number): Vector3 {
     const position = getFilePosition(context, file.file, file.context);
     const objectsAtPosition = objectsAtContextGridPosition(context, file.context, position);
-    
-    const index = getFileIndex(context, file.file, file.context);
-    const objectsBelowThis = objectsAtPosition.slice(0, index);
-    const totalScales = sumBy(objectsBelowThis, obj => calculateNumericalTagValue(context, obj, 'scale.z', 1));
-    const indexOffset = new Vector3(0, totalScales * scale, 0);
     
     let localPosition = calculateGridTileLocalCenter(
         position.x,
         position.y,
         position.z,
-        scale);
-
+        gridScale);
+        
+    // Offset local position using index of file.
+    const index = getFileIndex(context, file.file, file.context);
+    const objectsBelowThis = objectsAtPosition.slice(0, index);
+    const totalScales = sumBy(objectsBelowThis, obj => calculateVerticalHeight(context, obj, file.context, gridScale));
+    const indexOffset = new Vector3(0, totalScales, 0);
     localPosition.add(indexOffset);
+
+    if (file.contextGroup instanceof BuilderGroup3D) {
+        if (!isUserFile(file.file)) {
+            // Offset local position with hex grid height.
+            let hexScale = getContextScale(context, file.contextGroup.file, file.contextGroup.domain);
+            let axial = realPosToGridPos(new Vector2(localPosition.x, localPosition.z), hexScale);
+            let key = posToKey(axial);
+            let height = getContextGridHeight(context, file.contextGroup.file, file.contextGroup.domain, key);
+            localPosition.add(new Vector3(0, height, 0));
+        }
+    }
+    
     return localPosition;
+}
+
+/**
+ * Calculates the total vertical height of the given file.
+ * @param calc The calculation context to use.
+ * @param file The file to use.
+ * @param context The context that the file's height should be evalulated in.
+ * @param gridScale The scale of the grid.
+ */
+export function calculateVerticalHeight(calc: FileCalculationContext, file: File, context: string, gridScale: number) {
+    const height = calculateScale(calc, file, gridScale).y;
+    const offset = getFilePosition(calc, file, context);
+
+    return height + offset.z;
 }

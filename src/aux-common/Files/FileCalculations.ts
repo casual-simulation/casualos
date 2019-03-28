@@ -283,9 +283,6 @@ export function isFilterTag(tag: string) {
 }
 
 export const WELL_KNOWN_TAGS = [
-    /\.x$/,
-    /\.y$/,
-    /\.z$/,
     /_hidden$/,
     /_destroyed$/,
     /\.index$/,
@@ -513,7 +510,10 @@ export function createWorkspace(id = uuid(), builderContextId: string = `aux._co
             [builderContextId]: true,
             [`${builderContextId}.x`]: 0,
             [`${builderContextId}.y`]: 0,
-            [`${builderContextId}.z`]: DEFAULT_WORKSPACE_HEIGHT
+            [`${builderContextId}.z`]: 0,
+            'aux.color': 'clear',
+            'aux.movable': false,
+            'scale.z': 0.01
         }
     };
 }
@@ -806,6 +806,24 @@ export function getContextSize(calc: FileCalculationContext, contextFile: File, 
  */
 export function getBuilderContextGrid(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): File['tags']['aux.builder.context.grid'] {
     return getContextValue(calc, contextFile, domain, 'grid');
+}
+
+/**
+ * Gets the height of the specified grid on the context.
+ * @param calc The calculation context to use.
+ * @param contextFile The file that represents the context.
+ * @param domain The domain.
+ * @param key The key for the grid position to lookup in the context grid.
+ */
+export function getContextGridHeight(calc: FileCalculationContext, contextFile: File, domain: AuxDomain, key: string): number {
+    let contextGrid = getContextValue(calc, contextFile, domain, 'grid');
+    if (contextGrid && contextGrid[key]) {
+        if (contextGrid[key].height) {
+            return contextGrid[key].height;
+        }
+    }
+
+    return DEFAULT_WORKSPACE_HEIGHT;
 }
 
 

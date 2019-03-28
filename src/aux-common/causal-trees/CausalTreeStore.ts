@@ -37,4 +37,34 @@ export interface CausalTreeStore {
      *                 will be returned.
      */
     get<T extends AtomOp>(id: string, archived?: boolean): Promise<StoredCausalTree<T>>;
+
+    /**
+     * Updates the keys stored for the given ID.
+     * @param id The ID that the keys are for.
+     * @param privateKey The private key to store in PEM format. May or may not already be encrypted.
+     * @param publicKey The public key to store in PEM format. May or may not already be encrypted.
+     */
+    putKeys(id: string, privateKey: string, publicKey: string): Promise<void>;
+
+    /**
+     * Gets the keys stored under the given ID.
+     * Returns a promise that resolves with the stored keys or null if there are none.
+     * @param id The ID that the keys are under.
+     */
+    getKeys(id: string): Promise<StoredCryptoKeys>;
+}
+
+/**
+ * Defines an interface for a pair of keys that have been stored.
+ */
+export interface StoredCryptoKeys {
+    /**
+     * The PKCS #8 private key in PEM format.
+     */
+    privateKey: string;
+
+    /**
+     * The SPKI public key in PEM format.
+     */
+    publicKey: string;
 }
