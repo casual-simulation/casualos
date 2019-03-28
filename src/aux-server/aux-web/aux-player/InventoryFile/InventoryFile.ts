@@ -14,6 +14,7 @@ export default class InventoryFile extends Vue {
     @Prop() file: AuxFile;
     @Prop() slotIndex: number;
     @Prop({ default: false }) selected: boolean;
+    @Prop() context: string;
 
     image: string = '';
     label: string = '';

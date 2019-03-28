@@ -1,7 +1,7 @@
 import { Vector2, Vector3, Intersection, Ray, Raycaster } from 'three';
 import { ContextMenuAction } from '../../shared/interaction/ContextMenuEvent';
 import {
-    FileCalculationContext,
+    File, FileCalculationContext,
 } from '@yeti-cgi/aux-common';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
@@ -11,6 +11,9 @@ import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { PlayerFileClickOperation } from './ClickOperation/PlayerFileClickOperation';
 import { PlayerGrid } from '../PlayerGrid';
 import { Physics } from '../../shared/scene/Physics';
+import { Input } from '../../shared/scene/Input';
+import InventoryFile from '../InventoryFile/InventoryFile';
+import { PlayerInventoryFileClickOperation } from './ClickOperation/PlayerInventoryFileClickOperation';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
 
@@ -38,6 +41,15 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     }
 
     createHtmlElementClickOperation(element: HTMLElement): IOperation {
+        const vueElement: any = Input.getVueParent(element);
+        if (vueElement instanceof InventoryFile) {
+            if (vueElement.file) {
+                let inventoryClickOperation = new PlayerInventoryFileClickOperation(this._gameView, this, vueElement.file, vueElement.context);
+                return inventoryClickOperation;
+                
+            }
+        }
+
         return null;
     }
 
