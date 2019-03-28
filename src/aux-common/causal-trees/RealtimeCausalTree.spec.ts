@@ -744,10 +744,10 @@ describe('RealtimeCausalTree', () => {
             connection.setConnected(true);
             await connection.flushPromises();
 
-            const root = await realtime.tree.add(atom(atomId(2, 1), null, new Op()));
-            const child = await realtime.tree.add(atom(atomId(2, 2), atomId(2, 1), new Op()));
-            const skipped = await realtime.tree.add(atom(atomId(2, 3), atomId(2, 10), new Op()));
-            const alsoSkipped = await realtime.tree.add(atom(atomId(3, 4), atomId(2, 1), new Op()));
+            const { added: root } = await realtime.tree.add(atom(atomId(2, 1), null, new Op()));
+            const { added: child } = await realtime.tree.add(atom(atomId(2, 2), atomId(2, 1), new Op()));
+            const { added: skipped } = await realtime.tree.add(atom(atomId(2, 3), atomId(2, 10), new Op()));
+            const { added: alsoSkipped } = await realtime.tree.add(atom(atomId(3, 4), atomId(2, 1), new Op()));
 
             expect(connection.emitted).toContainEqual({
                 name: 'event_abc',

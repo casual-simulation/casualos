@@ -9,6 +9,7 @@ import { jestPreset } from "ts-jest";
 import { AtomValidator } from "./AtomValidator";
 import { TestCryptoImpl, TestCryptoKey } from "../crypto/test/TestCryptoImpl";
 import { RejectedAtom } from "./RejectedAtom";
+import { AddResult } from "./AddResult";
 
 enum OpType {
     root = 0,
@@ -95,10 +96,10 @@ describe('CausalTree', () => {
             });
 
             // no parent so it's skipped
-            const skipped = await tree.add(atom(atomId(1, 3), atomId(1, 2), new Op()));
+            const { added: skipped } = await tree.add(atom(atomId(1, 3), atomId(1, 2), new Op()));
 
-            const root = await tree.add(atom(atomId(1, 3), null, new Op()));
-            const child = await tree.add(atom(atomId(1, 4), atomId(1, 3), new Op()));
+            const { added: root } = await tree.add(atom(atomId(1, 3), null, new Op()));
+            const { added: child } = await tree.add(atom(atomId(1, 4), atomId(1, 3), new Op()));
 
             expect(refs).toEqual([
                 [root],
@@ -114,15 +115,15 @@ describe('CausalTree', () => {
                 refs.push(ref);
             });
 
-            let skipped;
+            let skipped: AddResult<Op>;
             let root: Atom<Op>;
             let child: Atom<Op>;
             await tree.batch(async () => {
                 // no parent so it's skipped
                 skipped = await tree.add(atom(atomId(1, 3), atomId(1, 2), new Op()));
                 
-                root = await tree.add(atom(atomId(1, 3), null, new Op()));
-                child = await tree.add(atom(atomId(1, 4), atomId(1, 3), new Op()));
+                ({ added: root } = await tree.add(atom(atomId(1, 3), null, new Op())));
+                ({ added: child } = await tree.add(atom(atomId(1, 4), atomId(1, 3), new Op())));
             });
 
             expect(refs).toEqual([
@@ -146,7 +147,7 @@ describe('CausalTree', () => {
             let a = atom(atomId(1, 0), null, new Op());
             a.signature = 'test';
 
-            const added = await tree.add(a);
+            const { added } = await tree.add(a);
             expect(added).toBe(a);
             expect(spy).toBeCalledWith(expect.any(TestCryptoKey), a);
         });
@@ -164,7 +165,7 @@ describe('CausalTree', () => {
                 signingKey: privateKey
             });
 
-            const root = await tree.create(new Op(), null);
+            const { added: root } = await tree.create(new Op(), null);
 
             let [site2Pub, site2Priv] = await crypto.generateKeyPair();
             let tree2 = new CausalTree(storedTree(site(2, {
@@ -180,9 +181,13 @@ describe('CausalTree', () => {
                 rejected.push(...atoms);
             });
 
-            const added = await tree2.add(root);
+            const { added, rejected: rej } = await tree2.add(root);
             
             expect(added).toBe(null);
+            expect(rej).toEqual({ 
+                atom: root,
+                reason: 'no_public_key' 
+            });
             expect(rejected).toEqual([
                 { atom: root, reason: 'no_public_key' }
             ]);
@@ -205,14 +210,14 @@ describe('CausalTree', () => {
             });
             crypto.valid = true;
 
-            const atom = await tree.create(new Op(), null);
+            const { added: atom } = await tree.create(new Op(), null);
             expect(atom.signature).toBeTruthy();
         });
 
         it('should not sign new atoms if a validator and signing key are not provided', async () => {
             let tree = new CausalTree(storedTree(site(1)), new Reducer(), {});
 
-            const atom = await tree.create(new Op(), null);
+            const { added: atom } = await tree.create(new Op(), null);
             expect(atom.signature).toBeFalsy();
         });
 
@@ -251,7 +256,7 @@ describe('CausalTree', () => {
 
             let tree2 = new CausalTree(storedTree(site(2)), new Reducer());
 
-            for(let i = 0; i < atoms.length; i++) {
+            for (let i = 0; i < atoms.length; i++) {
                 let random = Math.round(Math.random() * (atoms.length - 1));
                 let temp = atoms[random];
                 atoms[random] = atoms[i];
@@ -261,9 +266,9 @@ describe('CausalTree', () => {
             const added = await tree2.addMany(atoms);
 
             expect(tree2.weave.isValid()).toBe(true);
-            expect(added.length).toBe(atoms.length);
-            for(let i = 0; i < atoms.length; i++) {
-                expect(added).toContainEqual(atoms[i]);
+            expect(added.added.length).toBe(atoms.length);
+            for (let i = 0; i < atoms.length; i++) {
+                expect(added.added).toContainEqual(atoms[i]);
             }
         });
 
@@ -331,7 +336,7 @@ describe('CausalTree', () => {
         it('should calculate the value using the reducer', async () => {
             let tree = new CausalTree(storedTree(site(1)), new Reducer());
 
-            const root = await tree.add(await tree.factory.create(new Op(), null));
+            const { added: root } = await tree.add(await tree.factory.create(new Op(), null));
             await tree.create(new Op(OpType.add), root);
             await tree.create(new Op(OpType.subtract), root);
             await tree.create(new Op(OpType.add), root);
@@ -344,7 +349,7 @@ describe('CausalTree', () => {
         it('should export a stored tree with the current version', async () => {
             let tree = new CausalTree(storedTree(site(1)), new Reducer());
 
-            const root = await tree.add(await tree.factory.create(new Op(), null));
+            const { added: root } = await tree.add(await tree.factory.create(new Op(), null));
             await tree.add(await tree.factory.create(new Op(OpType.add), root));
             await tree.add(await tree.factory.create(new Op(OpType.add), root));
             await tree.add(await tree.factory.create(new Op(OpType.add), root));
@@ -375,7 +380,7 @@ describe('CausalTree', () => {
                 let tree = new CausalTree(storedTree(site(2)), new Reducer());
                 const added = await tree.import(stored);
 
-                expect(added).toEqual([
+                expect(added.added).toEqual([
                     a1,
                     a3,
                     a2
@@ -403,7 +408,7 @@ describe('CausalTree', () => {
                 let tree = new CausalTree(storedTree(site(2)), new Reducer());
                 const added = await tree.import(stored);
 
-                expect(added).toEqual([
+                expect(added.added).toEqual([
                     a1,
                     a3,
                     a2
@@ -432,7 +437,7 @@ describe('CausalTree', () => {
                 let tree = new CausalTree(storedTree(site(2)), new Reducer());
                 const added = await tree.import(stored);
 
-                expect(added).toEqual([
+                expect(added.added).toEqual([
                     a1,
                     a3,
                     a2
@@ -459,7 +464,7 @@ describe('CausalTree', () => {
                 let tree = new CausalTree(storedTree(site(2)), new Reducer());
                 const added = await tree.import(stored);
 
-                expect(added).toEqual([
+                expect(added.added).toEqual([
                     a1,
                     a2,
                     a3
@@ -487,7 +492,7 @@ describe('CausalTree', () => {
             let tree = new CausalTree(storedTree(site(2)), new Reducer());
             const added = await tree.import(stored);
 
-            expect(added).toEqual([]);
+            expect(added.added).toEqual([]);
 
             spy.mockRestore();
         });
@@ -522,7 +527,7 @@ describe('CausalTree', () => {
                 signingKey: privateKey
             });
 
-            const root = await tree.create(new Op(), null);
+            const { added: root } = await tree.create(new Op(), null);
 
             let [site2Pub, site2Priv] = await crypto.generateKeyPair();
             let tree2 = new CausalTree(storedTree(site(2, {
@@ -542,9 +547,10 @@ describe('CausalTree', () => {
 
             const added = await tree2.import(exported);
             
-            expect(added).toEqual([
+            expect(added.added).toEqual([
                 root
             ]);
+            expect(added.rejected).toEqual([]);
             expect(rejected).toEqual([]);
 
             spy.mockRestore();
@@ -614,9 +620,9 @@ describe('CausalTree', () => {
             await tree1.add(root);
             await tree2.add(root);
 
-            const add1 = await tree2.add(atom(atomId(2, 10), root.id, new Op(OpType.add)));
-            const add2 = await tree2.add(atom(atomId(2, 11), root.id, new Op(OpType.add)));
-            const sub = await tree2.add(atom(atomId(2, 12), add2.id, new Op(OpType.subtract)));
+            const { added: add1 } = await tree2.add(atom(atomId(2, 10), root.id, new Op(OpType.add)));
+            const { added: add2 } = await tree2.add(atom(atomId(2, 11), root.id, new Op(OpType.add)));
+            const { added: sub } = await tree2.add(atom(atomId(2, 12), add2.id, new Op(OpType.subtract)));
 
             tree2.weave.remove(add2);
 
@@ -712,7 +718,12 @@ describe('CausalTree', () => {
                 add1
             ]);
 
-            expect(added).toEqual([]);
+            expect(added.added).toEqual([]);
+            expect(added.rejected).toEqual([
+                { atom: add2, reason: 'signature_failed' },
+                { atom: sub, reason: 'signature_failed' },
+                { atom: add1, reason: 'signature_failed' },
+            ]);
             expect(rejected).toEqual([
                 { atom: add2, reason: 'signature_failed' },
                 { atom: sub, reason: 'signature_failed' },

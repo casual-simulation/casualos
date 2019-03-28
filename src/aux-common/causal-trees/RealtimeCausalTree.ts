@@ -185,7 +185,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         this._subs.push(this._channel.events.pipe(
             filter(e => this.tree !== null),
             concatMap(e => this.tree.addMany(e)),
-            tap(refs => this._updated.next(refs))
+            tap(refs => this._updated.next(refs.added))
         ).subscribe(null, err => this._errors.next(err)));
 
         this._subs.push(this._channel.sites.pipe(
@@ -238,7 +238,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
 
     private async _import(tree: CausalTree<any, any, any>, weave: StoredCausalTree<AtomOp>): Promise<Atom<AtomOp>[]> {
         console.log(`[RealtimeCausalTree] ${this.id}: Importing ${weave.weave.length} atoms....`);
-        const results = await tree.import(weave);
+        const { added: results } = await tree.import(weave);
         console.log(`[RealtimeCausalTree] ${this.id}: Imported ${results.length} atoms.`);
         return results;
     }

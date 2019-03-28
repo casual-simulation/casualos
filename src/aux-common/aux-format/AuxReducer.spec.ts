@@ -25,7 +25,7 @@ describe('AuxReducer', () => {
         });
 
         it('should return the initial value if there are no children', async () => {
-            const root = await site1.val('abc', null);
+            const { added: root } = await site1.val('abc', null);
             const { value, meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
             expect(value).toBe('abc');
             expect(meta).toEqual({
@@ -40,7 +40,7 @@ describe('AuxReducer', () => {
                 b: true,
                 str: 'abc'
             }
-            const root = await site1.val(obj, null);
+            const { added: root } = await site1.val(obj, null);
 
             traverser.next();
 
@@ -52,8 +52,8 @@ describe('AuxReducer', () => {
         describe('single insert', () => {
            
             it('should handle single inserts at the beginning of the string', async () => {
-                const root = await site1.val('abc', null);
-                const insert = await site1.insert(0, '123', root);
+                const { added: root } = await site1.val('abc', null);
+                const { added: insert } = await site1.insert(0, '123', root);
 
                 traverser.next();
 
@@ -66,8 +66,8 @@ describe('AuxReducer', () => {
             });
 
             it('should handle single inserts in the middle of the string', async () => {
-                const root = await site1.val('abc', null);
-                const insert = await site1.insert(2, '123', root);
+                const { added: root } = await site1.val('abc', null);
+                const { added: insert } = await site1.insert(2, '123', root);
 
                 traverser.next();
 
@@ -80,8 +80,8 @@ describe('AuxReducer', () => {
             });
 
             it('should handle single inserts at the end of the string', async () => {
-                const root = await site1.val('abc', null);
-                const insert = await site1.insert(3, '123', root);
+                const { added: root } = await site1.val('abc', null);
+                const { added: insert } = await site1.insert(3, '123', root);
 
                 traverser.next();
 
@@ -94,8 +94,8 @@ describe('AuxReducer', () => {
             });
 
             it('should convert the value a string if something is inserted', async () => {
-                const root = await site1.val(987, null);
-                const insert = await site1.insert(3, '123', root);
+                const { added: root } = await site1.val(987, null);
+                const { added: insert } = await site1.insert(3, '123', root);
 
                 traverser.next();
 
@@ -110,9 +110,9 @@ describe('AuxReducer', () => {
         
         describe('multiple insertions', () => {
             it('should handle multiple insertions at the beginning', async () => {
-                const root = await site1.val('abc', null);
-                const insert1 = await site1.insert(0, '123', root);
-                const insert2 = await site1.insert(0, '456', root);
+                const { added: root } = await site1.val('abc', null);
+                const { added: insert1 } = await site1.insert(0, '123', root);
+                const { added: insert2 } = await site1.insert(0, '456', root);
 
                 traverser.next();
 
@@ -136,9 +136,9 @@ describe('AuxReducer', () => {
             });
 
             it('should handle multiple insertions at the end', async () => {
-                const root = await site1.val('abc', null);
-                const insert1 = await site1.insert(3, '123', root);
-                const insert2 = await site1.insert(3, '456', root);
+                const { added: root } = await site1.val('abc', null);
+                const { added: insert1 } = await site1.insert(3, '123', root);
+                const { added: insert2 } = await site1.insert(3, '456', root);
 
                 traverser.next();
 
@@ -159,9 +159,9 @@ describe('AuxReducer', () => {
             });
 
             it('should handle multiple insertions in the middle', async () => {
-                const root = await site1.val('abc', null);
-                const insert1 = await site1.insert(1, '123', root);
-                const insert2 = await site1.insert(1, '456', root);
+                const { added: root } = await site1.val('abc', null);
+                const { added: insert1 } = await site1.insert(1, '123', root);
+                const { added: insert2 } = await site1.insert(1, '456', root);
 
                 traverser.next();
 
@@ -184,9 +184,9 @@ describe('AuxReducer', () => {
             });
 
             it('should handle chained insertions at the beginning', async () => {
-                const root = await site1.val('abc', null);
-                const first = await site1.insert(0, '123', root);
-                const second = await site1.insert(0, '456', first);
+                const { added: root } = await site1.val('abc', null);
+                const { added: first } = await site1.insert(0, '123', root);
+                const { added: second } = await site1.insert(0, '456', first);
 
                 traverser.next();
 
@@ -207,9 +207,9 @@ describe('AuxReducer', () => {
             });
 
             it('should handle chained insertions at the end of the intermediate string', async () => {
-                const root = await site1.val('abc', null);
-                const first = await site1.insert(0, '123', root);
-                const second = await site1.insert(3, '456', first);
+                const { added: root } = await site1.val('abc', null);
+                const { added: first } = await site1.insert(0, '123', root);
+                const { added: second } = await site1.insert(3, '456', first);
 
                 traverser.next();
 
@@ -230,9 +230,9 @@ describe('AuxReducer', () => {
             });
 
             it('should handle chained insertions in the middle of the intermediate string', async () => {
-                const root = await site1.val('abc', null);
-                const first = await site1.insert(0, '123', root);
-                const second = await site1.insert(2, '456', first);
+                const { added: root } = await site1.val('abc', null);
+                const { added: first } = await site1.insert(0, '123', root);
+                const { added: second } = await site1.insert(2, '456', first);
 
                 traverser.next();
 
@@ -258,7 +258,7 @@ describe('AuxReducer', () => {
         describe('single delete', () => {
  
             it('should handle single deletions for the entire string without indicies', async () => {
-                const root = await site1.val('abc', null);
+                const { added: root } = await site1.val('abc', null);
                 await site1.delete(root);
 
                 traverser.next();
@@ -272,7 +272,7 @@ describe('AuxReducer', () => {
             });
 
             it('should handle single deletions for the entire string with indicies', async () => {
-                const root = await site1.val('abc', null);
+                const { added: root } = await site1.val('abc', null);
                 await site1.delete(root, 0, 3);
 
                 traverser.next();
@@ -286,7 +286,7 @@ describe('AuxReducer', () => {
             });
 
             it('should handle single deletions for the beginning of the string', async () => {
-                const root = await site1.val('abc', null);
+                const { added: root } = await site1.val('abc', null);
                 await site1.delete(root, 0, 1);
 
                 traverser.next();
@@ -300,7 +300,7 @@ describe('AuxReducer', () => {
             });
 
             it('should handle single deletions for the middle of the string', async () => {
-                const root = await site1.val('abc', null);
+                const { added: root } = await site1.val('abc', null);
                 await site1.delete(root, 1, 2);
 
                 traverser.next();
@@ -314,7 +314,7 @@ describe('AuxReducer', () => {
             });
 
             it('should handle single deletions for the end of the string', async () => {
-                const root = await site1.val('abc', null);
+                const { added: root } = await site1.val('abc', null);
                 await site1.delete(root, 2, 3);
 
                 traverser.next();
@@ -328,7 +328,7 @@ describe('AuxReducer', () => {
             });
 
             it('should handle negative start indicies', async () => {
-                const root = await site1.val('abc', null);
+                const { added: root } = await site1.val('abc', null);
                 await site1.delete(root, -1, 3);
 
                 traverser.next();
@@ -342,7 +342,7 @@ describe('AuxReducer', () => {
             });
 
             it('should handle end further than the end of the string', async () => {
-                const root = await site1.val('abc', null);
+                const { added: root } = await site1.val('abc', null);
                 await site1.delete(root, 0, 4);
 
                 traverser.next();
@@ -358,7 +358,7 @@ describe('AuxReducer', () => {
 
         describe('multiple delete', () => {
             it('should combine deletes at the beginning', async () => {
-                const root = await site1.val('abc', null);
+                const { added: root } = await site1.val('abc', null);
                 await site1.delete(root, 0, 1);
                 await site1.delete(root, 0, 1);
 
@@ -373,7 +373,7 @@ describe('AuxReducer', () => {
             });
 
             it('should combine deletes at the end', async () => {
-                const root = await site1.val('abc', null);
+                const { added: root } = await site1.val('abc', null);
                 await site1.delete(root, 2, 3);
                 await site1.delete(root, 2, 3);
 
@@ -388,7 +388,7 @@ describe('AuxReducer', () => {
             });
 
             it('should combine deletes in the middle', async () => {
-                const root = await site1.val('abc', null);
+                const { added: root } = await site1.val('abc', null);
                 await site1.delete(root, 1, 2);
                 await site1.delete(root, 1, 2);
 
@@ -403,7 +403,7 @@ describe('AuxReducer', () => {
             });
 
             it('should preserve overlapping deletes at the beginning', async () => {
-                const root = await site1.val('abc', null);
+                const { added: root } = await site1.val('abc', null);
                 await site1.delete(root, 0, 1);
                 await site1.delete(root, 0, 2);
 
@@ -418,7 +418,7 @@ describe('AuxReducer', () => {
             });
 
             it('should preserve overlapping deletes at the end', async () => {
-                const root = await site1.val('abc', null);
+                const { added: root } = await site1.val('abc', null);
                 await site1.delete(root, 2, 3);
                 await site1.delete(root, 1, 3);
 
@@ -433,7 +433,7 @@ describe('AuxReducer', () => {
             });
 
             it('should preserve overlapping deletes anywhere', async () => {
-                const root = await site1.val('abc', null);
+                const { added: root } = await site1.val('abc', null);
                 await site1.delete(root, 0, 1);
                 await site1.delete(root, 0, 3);
 
@@ -448,7 +448,7 @@ describe('AuxReducer', () => {
             });
 
             it('should preserve sequential deletes', async () => {
-                const root = await site1.val('abc', null);
+                const { added: root } = await site1.val('abc', null);
                 await site1.delete(root, 0, 1);
                 await site1.delete(root, 1, 2);
 
@@ -465,8 +465,8 @@ describe('AuxReducer', () => {
 
         describe('mixed', () => {
             it('should process deletes before inserts', async () => {
-                const root = await site1.val('abc', null);
-                const insert = await site1.insert(0, '123', root);
+                const { added: root } = await site1.val('abc', null);
+                const { added: insert } = await site1.insert(0, '123', root);
                 await site1.delete(root, 0, 1);
 
                 traverser.next();
@@ -486,9 +486,9 @@ describe('AuxReducer', () => {
             });
 
             it('should handle chaining deletes onto inserts', async () => {
-                const root = await site1.val('abc', null);
-                const insert1 = await site1.insert(3, '456', root);
-                const insert2 = await site1.insert(0, '123', root);
+                const { added: root } = await site1.val('abc', null);
+                const { added: insert1 } = await site1.insert(3, '456', root);
+                const { added: insert2 } = await site1.insert(0, '123', root);
                 await site1.delete(root, 1, 2);
                 await site1.delete(insert1, 2, 3);
                 await site1.delete(insert2, 0, 1);
@@ -514,7 +514,7 @@ describe('AuxReducer', () => {
 
         describe('calculateSequenceRef()', () => {
             it('should return the root if there are no other inserts', async () => {
-                const root = await site1.val('abc', null);
+                const { added: root } = await site1.val('abc', null);
                 traverser.next();
                 const { meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
 
@@ -525,7 +525,7 @@ describe('AuxReducer', () => {
             });
 
             it('should return the last valid index if the insert index is after the sequence', async () => {
-                const root = await  site1.val('abc', null);
+                const { added: root } = await  site1.val('abc', null);
                 traverser.next();
                 const { meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
 
@@ -533,7 +533,7 @@ describe('AuxReducer', () => {
             });
 
             it('should return the first valid index if the insert index is before the sequence', async () => {
-                const root = await site1.val('abc', null);
+                const { added: root } = await site1.val('abc', null);
                 traverser.next();
                 const { meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
 
@@ -541,7 +541,7 @@ describe('AuxReducer', () => {
             });
 
             it('should return the first valid index if there is nowhere to place the text', async () => {
-                const root = await site1.val('abc', null);
+                const { added: root } = await site1.val('abc', null);
                 await site1.delete(root);
                 traverser.next();
                 const { meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
@@ -550,7 +550,7 @@ describe('AuxReducer', () => {
             });
 
             it('should return the index if the root does not have an end', async () => {
-                const root = await site1.val(19, null);
+                const { added: root } = await site1.val(19, null);
                 traverser.next();
                 const { meta } = reducer.evalSequence(traverser, root, root.value.value, metadata);
 
@@ -559,9 +559,9 @@ describe('AuxReducer', () => {
             });
 
             it('should return the index within a sequence after another sequence', async () => {
-                const root = await site1.val('abc', null);
-                const insert1 = await site1.insert(3, '456', root);
-                const insert2 = await site1.insert(0, '123', root);
+                const { added: root } = await site1.val('abc', null);
+                const { added: insert1 } = await site1.insert(3, '456', root);
+                const { added: insert2 } = await site1.insert(0, '123', root);
                 await site1.delete(root, 1, 2);
                 await site1.delete(insert1, 2, 3);
                 await site1.delete(insert2, 0, 1);
@@ -582,7 +582,7 @@ describe('AuxReducer', () => {
 
         describe('calculateSequenceRefs()', () => {
             it('should return the proper deletion length', async () => {
-                const root = await site1.val('abc', null);
+                const { added: root } = await site1.val('abc', null);
 
                 // text: "23ac45"
                 traverser.next();
@@ -594,9 +594,9 @@ describe('AuxReducer', () => {
             });
 
             it('should return all the refs and indexes that the given span covers', async () => {
-                const root = await site1.val('abc', null);
-                const insert1 = await site1.insert(3, '456', root);
-                const insert2 = await site1.insert(0, '123', root);
+                const { added: root } = await site1.val('abc', null);
+                const { added: insert1 } = await site1.insert(3, '456', root);
+                const { added: insert2 } = await site1.insert(0, '123', root);
                 await site1.delete(root, 1, 2);
                 await site1.delete(insert1, 2, 3);
                 await site1.delete(insert2, 0, 1);

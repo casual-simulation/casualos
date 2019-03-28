@@ -16,9 +16,9 @@ describe('AuxTreeCalculations', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
-            const file = await tree.file('test');
-            const test = await tree.tag('test', file);
-            const val = await tree.val('123', test);
+            const { added: file } = await tree.file('test');
+            const { added: test } = await tree.tag('test', file);
+            const { added: val } = await tree.val('123', test);
 
             const result = getAtomFile(tree.weave, val);
 
@@ -28,9 +28,9 @@ describe('AuxTreeCalculations', () => {
         it('should handle file deletions', async () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
-            const root = await tree.root();
-            const file = await tree.file('test');
-            const del = await tree.delete(file);
+            const { added: root } = await tree.root();
+            const { added: file } = await tree.file('test');
+            const { added: del } = await tree.delete(file);
 
             const result = getAtomFile(tree.weave, del);
 
@@ -40,10 +40,10 @@ describe('AuxTreeCalculations', () => {
         it('should return null if it is not childed to a file', async () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
-            const root = await tree.root();
-            const file = await tree.file('test');
-            const test = await tree.tag('test', file);
-            const val = await tree.val('123', test);
+            const { added: root } = await tree.root();
+            const { added: file } = await tree.file('test');
+            const { added: test } = await tree.tag('test', file);
+            const { added: val } = await tree.val('123', test);
 
             const result = getAtomFile(tree.weave, root);
 
@@ -183,9 +183,9 @@ describe('AuxTreeCalculations', () => {
 
             let stored = new AuxCausalTree(storedTree(site(1)));
             await stored.root();
-            const file = await stored.file('test');
-            const update = await stored.tag('abc', file);
-            const deleted = await stored.delete(file);
+            const { added: file } = await stored.file('test');
+            const { added: update } = await stored.tag('abc', file);
+            const { added: deleted } = await stored.delete(file);
 
             await store.put('test', stored.export());
             await tree.init();
@@ -218,7 +218,7 @@ describe('AuxTreeCalculations', () => {
 
             let stored = new AuxCausalTree(storedTree(site(1)));
             await stored.root();
-            const file = await stored.file('test');
+            const { added: file } = await stored.file('test');
 
             await store.put('test', stored.export());
             await tree.init();
