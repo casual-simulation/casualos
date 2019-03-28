@@ -29,7 +29,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
 
     createGameObjectClickOperation(gameObject: GameObject, hit: Intersection): IOperation {
         if (gameObject instanceof AuxFile3D) {
-            let fileClickOp = new PlayerFileClickOperation(this._gameView, this, gameObject, hit);
+            let fileClickOp = new PlayerFileClickOperation(this._gameView, this, gameObject);
             return fileClickOp;
         } else {
             return null;

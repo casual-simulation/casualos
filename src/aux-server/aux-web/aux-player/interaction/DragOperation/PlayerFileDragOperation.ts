@@ -16,7 +16,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
     /**
      * Create a new drag rules.
      */
-    constructor(gameView: GameView, interaction: PlayerInteractionManager, hit: Intersection, files: File[], context: string) {
+    constructor(gameView: GameView, interaction: PlayerInteractionManager, files: File[], context: string) {
         super(gameView, interaction, files, context);
     }
 

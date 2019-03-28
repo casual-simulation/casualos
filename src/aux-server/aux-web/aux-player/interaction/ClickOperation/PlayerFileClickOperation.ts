@@ -15,11 +15,8 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
     // This overrides the base class IGameView
     protected _gameView: GameView;
 
-    private _hit: Intersection;
-
-    constructor(gameView: GameView, interaction: PlayerInteractionManager, file: AuxFile3D, hit: Intersection) {
+    constructor(gameView: GameView, interaction: PlayerInteractionManager, file: AuxFile3D) {
         super(gameView, interaction, file.file, file);
-        this._hit = hit;
     }
 
     protected _performClick(calc: FileCalculationContext): void {
@@ -40,7 +37,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
             const file = this._file;
             const index = getFileIndex(calc, file, file3D.context);
             const draggedObjects = objects.filter(o => getFileIndex(calc, o, context) >= index).map(o => o);
-            return new PlayerFileDragOperation(this._gameView, this._interaction, this._hit, draggedObjects, file3D.context);
+            return new PlayerFileDragOperation(this._gameView, this._interaction, draggedObjects, file3D.context);
         }
 
         return null;
