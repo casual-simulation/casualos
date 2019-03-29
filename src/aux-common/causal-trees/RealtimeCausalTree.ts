@@ -125,7 +125,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         this._tree = null;
         this._subs = [];
         this._options = options || {};
-        this._storeAtoms = typeof options.storeAtoms === 'undefined' ? true : options.storeAtoms;
+        this._storeAtoms = typeof this._options.storeAtoms === 'undefined' ? true : this._options.storeAtoms;
         
         if (this._storeAtoms) {
             this._subs.push(this._updated.pipe(

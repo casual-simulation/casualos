@@ -7,7 +7,7 @@ import { fileChangeObservables, getAtomFile, insertIntoTagName } from "./AuxTree
 import { AuxCausalTree } from "./AuxCausalTree";
 import { TestScheduler } from 'rxjs/testing';
 import { AsyncScheduler } from "rxjs/internal/scheduler/AsyncScheduler";
-import { tap } from "rxjs/operators";
+import { tap, flatMap } from "rxjs/operators";
 
 describe('AuxTreeCalculations', () => {
 
@@ -83,12 +83,12 @@ describe('AuxTreeCalculations', () => {
             await tree.init();
             await connection.flushPromises();
             
-            const { fileAdded } = fileChangeObservables(tree);
+            const { filesAdded } = fileChangeObservables(tree);
             
             const fileIds: string[] = [];
             const errorHandler = jest.fn();
-            fileAdded.subscribe(file => {
-                fileIds.push(file.id);
+            filesAdded.subscribe(files => {
+                files.forEach(file => fileIds.push(file.id));
             }, errorHandler);
 
             await tree.tree.file('abc');
@@ -124,10 +124,10 @@ describe('AuxTreeCalculations', () => {
             scheduler.flush();
 
             const fileIds: string[] = [];
-            const { fileAdded } = fileChangeObservables(tree);
+            const { filesAdded } = fileChangeObservables(tree);
             const errorHandler = jest.fn();
-            fileAdded.subscribe(file => {
-                fileIds.push(file.id);
+            filesAdded.subscribe(files => {
+                files.forEach(file => fileIds.push(file.id));
             }, errorHandler);
 
 
@@ -159,10 +159,10 @@ describe('AuxTreeCalculations', () => {
             scheduler.flush();
 
             const fileIds: string[] = [];
-            const { fileAdded } = fileChangeObservables(tree);
+            const { filesAdded } = fileChangeObservables(tree);
             const errorHandler = jest.fn();
-            fileAdded.subscribe(file => {
-                fileIds.push(file.id);
+            filesAdded.subscribe(files => {
+                files.forEach(file => fileIds.push(file.id));
             }, errorHandler);
 
             expect(fileIds).toEqual([
@@ -194,11 +194,11 @@ describe('AuxTreeCalculations', () => {
 
             const fileIds: string[] = [];
             const updatedFiles: string[] = [];
-            const { fileAdded, fileUpdated } = fileChangeObservables(tree);
+            const { filesAdded, filesUpdated } = fileChangeObservables(tree);
             const errorHandler = jest.fn();
-            fileAdded.pipe(tap(file => fileIds.push(file.id)))
+            filesAdded.pipe(flatMap(files => files), tap(file => fileIds.push(file.id)))
                 .subscribe(null, errorHandler);
-            fileUpdated.pipe(tap(file => updatedFiles.push(file.id)))
+            filesUpdated.pipe(flatMap(files => files), tap(file => updatedFiles.push(file.id)))
                 .subscribe(null, errorHandler);
 
             expect(fileIds).toEqual([]);
@@ -229,13 +229,13 @@ describe('AuxTreeCalculations', () => {
             const fileIds: string[] = [];
             const updatedFiles: string[] = [];
             const removedFiles: string[] = [];
-            const { fileAdded, fileUpdated, fileRemoved } = fileChangeObservables(tree);
+            const { filesAdded, filesUpdated, filesRemoved } = fileChangeObservables(tree);
             const errorHandler = jest.fn();
-            fileAdded.pipe(tap(file => fileIds.push(file.id)))
+            filesAdded.pipe(flatMap(files => files), tap(file => fileIds.push(file.id)))
                 .subscribe(null, errorHandler);
-            fileUpdated.pipe(tap(file => updatedFiles.push(file.id)))
+            filesUpdated.pipe(flatMap(files => files), tap(file => updatedFiles.push(file.id)))
                 .subscribe(null, errorHandler);
-            fileRemoved.pipe(tap(file => removedFiles.push(file)))
+            filesRemoved.pipe(flatMap(files => files), tap(file => removedFiles.push(file)))
                 .subscribe(null, errorHandler);
 
             const del = await tree.tree.delete(file);

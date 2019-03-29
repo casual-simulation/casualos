@@ -27,6 +27,7 @@ import {
 } from 'rxjs';
 import {
     concatMap, tap,
+    flatMap as rxFlatMap
 } from 'rxjs/operators';
 
 import {
@@ -338,14 +339,14 @@ export default class GameView extends Vue implements IGameView {
             }))
             .subscribe());
 
-        this._fileSubs.push(this.fileManager.fileDiscovered
-            .pipe(concatMap(file => this._fileAdded(file)))
+        this._fileSubs.push(this.fileManager.filesDiscovered
+            .pipe(rxFlatMap(files => files), concatMap(files => this._fileAdded(files)))
             .subscribe());
-        this._fileSubs.push(this.fileManager.fileRemoved
-            .pipe(tap(file => this._fileRemoved(file)))
+        this._fileSubs.push(this.fileManager.filesRemoved
+            .pipe(rxFlatMap(files => files), tap(file => this._fileRemoved(file)))
             .subscribe());
-        this._fileSubs.push(this.fileManager.fileUpdated
-            .pipe(concatMap(file => this._fileUpdated(file)))
+        this._fileSubs.push(this.fileManager.filesUpdated
+            .pipe(rxFlatMap(files => files), concatMap(file => this._fileUpdated(file)))
             .subscribe());
     }
 

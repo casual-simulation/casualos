@@ -39,9 +39,9 @@ export default class AuxDebug extends Vue {
         this.auxJson = this.fileManager.filesState;
 
         this._subs = [];
-        this._subs.push(this.fileManager.fileDiscovered.subscribe((file) => { this.refreshAuxJson()}));
-        this._subs.push(this.fileManager.fileRemoved.subscribe((file) => { this.refreshAuxJson()}));
-        this._subs.push(this.fileManager.fileUpdated.subscribe((file) => { this.refreshAuxJson()}));
+        this._subs.push(this.fileManager.filesDiscovered.subscribe((file) => { this.refreshAuxJson()}));
+        this._subs.push(this.fileManager.filesRemoved.subscribe((file) => { this.refreshAuxJson()}));
+        this._subs.push(this.fileManager.filesUpdated.subscribe((file) => { this.refreshAuxJson()}));
     }
 
     download() {
