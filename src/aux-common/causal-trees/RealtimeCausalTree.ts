@@ -24,6 +24,15 @@ export interface RealtimeCausalTreeOptions extends CausalTreeOptions {
      * For now, this is a useful way to ensure that clients always get new IDs.
      */
     alwaysRequestNewSiteId?: boolean;
+
+    /**
+     * Specifies whether the realtime causal tree should validate the signatures of all the atoms
+     * that are added to the tree. If false, then only atoms added via realtime.tree.add() will be verified.
+     * If true, then atoms that are imported from the remote will be verified.
+     * 
+     * Defaults to false.
+     */
+    verifyAllSignatures?: boolean;
 }
 
 /**
@@ -238,7 +247,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
 
     private async _import(tree: CausalTree<any, any, any>, weave: StoredCausalTree<AtomOp>): Promise<Atom<AtomOp>[]> {
         console.log(`[RealtimeCausalTree] ${this.id}: Importing ${weave.weave.length} atoms....`);
-        const { added: results } = await tree.import(weave);
+        const { added: results } = await tree.import(weave, this._options.verifyAllSignatures || false);
         console.log(`[RealtimeCausalTree] ${this.id}: Imported ${results.length} atoms.`);
         return results;
     }
@@ -255,6 +264,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
 
     private _listenForRejectedAtoms(tree: TTree) {
         this._subs.push(tree.atomRejected.pipe(
+            filter(refs => refs.length > 0),
             tap(refs => this._rejected.next(refs))
         ).subscribe(null, ex => this._errors.next(ex)));
     }

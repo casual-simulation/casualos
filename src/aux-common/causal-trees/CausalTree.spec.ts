@@ -135,7 +135,7 @@ describe('CausalTree', () => {
             let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
             let validator = new AtomValidator(crypto);
             let [publicKey, privateKey] = await crypto.generateKeyPair();
-            let spy = jest.spyOn(validator, 'verify').mockResolvedValue(true);
+            let spy = jest.spyOn(validator, 'verifyBatch').mockResolvedValue([true]);
             let tree = new CausalTree(storedTree(site(1, {
                 signatureAlgorithm: 'ECDSA-SHA256-NISTP256',
                 publicKey: 'test'
@@ -149,13 +149,13 @@ describe('CausalTree', () => {
 
             const { added } = await tree.add(a);
             expect(added).toBe(a);
-            expect(spy).toBeCalledWith(expect.any(TestCryptoKey), a);
+            expect(spy).toBeCalledWith(expect.any(TestCryptoKey), expect.objectContaining([a]));
         });
 
         it('should reject atoms that have a signature but the tree doesnt have the public key for it', async () => {
             let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
             let validator = new AtomValidator(crypto);
-            let spy = jest.spyOn(validator, 'verify').mockResolvedValue(true);
+            let spy = jest.spyOn(validator, 'verifyBatch').mockResolvedValue([true]);
             let [publicKey, privateKey] = await crypto.generateKeyPair();
             let tree = new CausalTree(storedTree(site(1, {
                 signatureAlgorithm: 'ECDSA-SHA256-NISTP256',
@@ -517,7 +517,7 @@ describe('CausalTree', () => {
         it('should import known sites before importing atoms', async () => {
             let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
             let validator = new AtomValidator(crypto);
-            let spy = jest.spyOn(validator, 'verify').mockResolvedValue(true);
+            let spy = jest.spyOn(validator, 'verifyBatch').mockResolvedValue([true]);
             let [publicKey, privateKey] = await crypto.generateKeyPair();
             let tree = new CausalTree(storedTree(site(1, {
                 signatureAlgorithm: 'ECDSA-SHA256-NISTP256',
@@ -527,7 +527,9 @@ describe('CausalTree', () => {
                 signingKey: privateKey
             });
 
-            const { added: root } = await tree.create(new Op(), null);
+            const { added: root, rejected: rej } = await tree.create(new Op(), null);
+
+            expect(rej).toBe(null);
 
             let [site2Pub, site2Priv] = await crypto.generateKeyPair();
             let tree2 = new CausalTree(storedTree(site(2, {
@@ -652,12 +654,12 @@ describe('CausalTree', () => {
             spy.mockRestore();
         });
 
-        it('should validate incoming atoms', async () => {
+        it('should validate incoming atoms signatures if specified', async () => {
             let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
             let validator = new AtomValidator(crypto);
             let [publicKey, privateKey] = await crypto.generateKeyPair();
 
-            let spy = jest.spyOn(validator, 'verify').mockResolvedValue(true);
+            let spy = jest.spyOn(validator, 'verifyBatch').mockResolvedValue([true]);
 
             let tree = new CausalTree(storedTree(site(1, {
                 signatureAlgorithm: 'ECDSA-SHA256-NISTP256',
@@ -677,13 +679,10 @@ describe('CausalTree', () => {
                 add2,
                 sub,
                 add1
-            ]);
+            ], true, true);
 
-            expect(spy).toBeCalledTimes(4);
-            expect(spy).toHaveBeenCalledWith(expect.any(TestCryptoKey), root);
-            expect(spy).toHaveBeenCalledWith(expect.any(TestCryptoKey), add2);
-            expect(spy).toHaveBeenCalledWith(expect.any(TestCryptoKey), sub);
-            expect(spy).toHaveBeenCalledWith(expect.any(TestCryptoKey), add1);
+            expect(spy).toBeCalledTimes(1);
+            expect(spy).toHaveBeenCalledWith(expect.any(TestCryptoKey), expect.arrayContaining([root, add2, sub, add1]));
         });
 
         it('should reject atoms with invalid signatures', async () => {
@@ -691,7 +690,7 @@ describe('CausalTree', () => {
             let validator = new AtomValidator(crypto);
             let [publicKey, privateKey] = await crypto.generateKeyPair();
 
-            let spy = jest.spyOn(validator, 'verify').mockResolvedValueOnce(true);
+            let spy = jest.spyOn(validator, 'verifyBatch').mockResolvedValueOnce([true, false, false, false]);
 
             let tree = new CausalTree(storedTree(site(1, {
                 signatureAlgorithm: 'ECDSA-SHA256-NISTP256',
@@ -716,7 +715,7 @@ describe('CausalTree', () => {
                 add2,
                 sub,
                 add1
-            ]);
+            ], true, true);
 
             expect(added.added).toEqual([]);
             expect(added.rejected).toEqual([

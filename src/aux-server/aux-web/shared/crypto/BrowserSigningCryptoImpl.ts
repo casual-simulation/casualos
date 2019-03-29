@@ -56,6 +56,26 @@ export class BrowserSigningCryptoImpl implements SigningCryptoImpl {
         throw this._unknownKey();
     }
 
+    verifyBatch(key: PublicCryptoKey, signatures: ArrayBuffer[], datas: ArrayBuffer[]): Promise<boolean[]> {
+        if (key instanceof BrowserPublicCryptoKey) {
+            let pub = key.publicKey;
+            let promises = new Array<PromiseLike<boolean>>(datas.length);
+            let options = {
+                name: 'ECDSA',
+                hash: {
+                    name: 'SHA-256'
+                }
+            };
+            
+            for (let i = 0; i < promises.length; i++) {
+                promises[i] = crypto.subtle.verify(options, pub, signatures[i], datas[i]);
+            }
+
+            return Promise.all(promises);
+        }
+        throw this._unknownKey();
+    }
+
     async exportKey(key: SigningCryptoKey): Promise<string> {
         let buffer: ArrayBuffer;
         if (key instanceof BrowserPublicCryptoKey) {
