@@ -5,7 +5,7 @@ import { Prop, Watch } from 'vue-property-decorator';
 import App from '../App/App';
 import { SubscriptionLike } from 'rxjs';
 import { TreeView } from 'vue-json-tree-view';
-import { FilesState } from '@yeti-cgi/aux-common';
+import { calculateFormulaValue } from '@yeti-cgi/aux-common';
 
 @Component({
     components: {
@@ -14,7 +14,9 @@ import { FilesState } from '@yeti-cgi/aux-common';
 })
 export default class AuxDebug extends Vue {
 
-    auxJson: FilesState = null;
+    auxJson: any = null;
+    search: string = '';
+    error: string;
     
     private _subs: SubscriptionLike[];
 
@@ -29,6 +31,8 @@ export default class AuxDebug extends Vue {
     constructor() {
         super();
         this.auxJson = null;
+        this.search = '';
+        this.error = null;
     }
 
     created() {
@@ -49,7 +53,16 @@ export default class AuxDebug extends Vue {
     }
 
     refreshAuxJson() {
-        this.auxJson = this.fileManager.filesState;
+        if (this.search) {
+            this.auxJson = this._search();
+        } else {
+            this.auxJson = this.fileManager.filesState;
+        }
+    }
+
+    @Watch('search')
+    searchChanged(val: string) {
+        this.refreshAuxJson();
     }
 
     beforeDestroy() {
@@ -57,5 +70,22 @@ export default class AuxDebug extends Vue {
         this._subs.forEach(sub => sub.unsubscribe());
         this._subs = [];
       }
+    }
+
+    private _search() {
+        const context = this.fileManager.createContext();
+        const value = calculateFormulaValue(context, this.search);
+        return value;
+        // if (result.error) {
+        //     this.error = result.error.message;
+        // } else {
+        //     this.error = null;
+        // }
+
+        // if (result.success) {
+        //     return result.result;
+        // } else {
+        //     return this.fileManager.filesState;
+        // }
     }
 }
