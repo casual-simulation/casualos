@@ -68,6 +68,7 @@ function memberExpr(object: any, property: any) {
     return {
         type: 'MemberExpression',
         object: object,
+        computed: property.type !== 'Identifier',
         property: property
     };
 }
@@ -76,6 +77,13 @@ function ident(name: string) {
     return {
         type: 'Identifier',
         name: name
+    };
+}
+
+function literal(raw: string) {
+    return {
+        type: 'Literal',
+        raw: raw
     };
 }
 
@@ -189,10 +197,10 @@ export class Transpiler {
                 if ((n.type === 'TagValue' || n.type === 'ObjectValue') && n.identifier) {
                     // _listTagValues('tag', filter)
 
-                    let properties: any[] = [];
                     let currentNode = n.identifier;
                     let identifier: any;
                     let args: any[] = [];
+                    let nodes: any[] = [];
 
                     while(currentNode.type === 'MemberExpression') {
                         currentNode = currentNode.object;
@@ -204,13 +212,10 @@ export class Transpiler {
 
                         currentNode = n.identifier;
 
-                        let nodes: any[] = [];
                         while (currentNode.type === 'MemberExpression') {
                             nodes.unshift(currentNode);
                             currentNode = currentNode.object;
                         }
-
-                        properties.push(...nodes.map(n => n.property.name));
                     } else {
                         identifier = n.identifier;
                     }
@@ -229,11 +234,12 @@ export class Transpiler {
                         value: tag
                     }, ...args]);
 
-                    if (properties.length === 0) {
+                    if (nodes.length === 0) {
                         return call;
                     } else {
-                        return properties.reduce((prev, curr) => {
-                            return memberExpr(prev, ident(curr));
+                        return nodes.reduce((prev, curr) => {
+                            let prop = curr.property;
+                            return memberExpr(prev, prop);
                         }, call);
                     }
 

@@ -1105,6 +1105,36 @@ describe('FileCalculations', () => {
 
                     expect(value).toBe(1);
                 });
+
+                it('should be able to use indexer expressions after the filter args', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+
+                    file1.tags['num.a'] = 1;
+                    file1.tags.name = 'test';
+                    file2.tags.name = 'test';
+
+                    file1.tags.formula = '=@name("test")[0].num.a';
+                    const context = createCalculationContext([file1, file2]);
+                    let value = calculateFileValue(context, file1, 'formula');
+
+                    expect(value).toBe(1);
+                });
+
+                it('should be able to use expressions in indexers after filter args', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+
+                    file1.tags['num.a'] = 1;
+                    file1.tags.name = 'test';
+                    file2.tags.name = 'test';
+
+                    file1.tags.formula = '=@name("test")[( (1 + 1 - 2) * 10 + 1 - 1)].num.a';
+                    const context = createCalculationContext([file1, file2]);
+                    let value = calculateFileValue(context, file1, 'formula');
+
+                    expect(value).toBe(1);
+                });
             });
         });
     });
