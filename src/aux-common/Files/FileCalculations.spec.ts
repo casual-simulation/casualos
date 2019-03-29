@@ -23,7 +23,8 @@ import {
     isFileMovable,
     isFileStackable,
     newSelectionId,
-    objectsAtContextGridPosition
+    objectsAtContextGridPosition,
+    calculateFormulaValue
 } from './FileCalculations';
 import {
     cloneDeep
@@ -684,6 +685,31 @@ describe('FileCalculations', () => {
         });
     });
 
+    describe('calculateFormulaValue()', () => {
+        it('should return the formula result', () => {
+            const formula = '123.4567';
+            const context = createCalculationContext([]);
+            const result = calculateFormulaValue(context, formula);
+
+            expect(result.success).toBe(true);
+            expect(result.result).toBeCloseTo(123.4567);
+        });
+
+        it('should unwrap proxy values', () => {
+            const obj1 = createFile('test1', {
+                name: 'test',
+                num: 123
+            });
+            const context = createCalculationContext([obj1]);
+            
+            const formula = '=@name("test").num';
+            const result = calculateFormulaValue(context, formula);
+
+            expect(result.success).toBe(true);
+            expect(result.result).toBeCloseTo(123);
+        });
+    });
+
     describe('calculateFileValue()', () => {
         it('should convert to a number if it is a number', () => {
             const file = createFile();
@@ -890,6 +916,20 @@ describe('FileCalculations', () => {
                         3
                     ]);
                 });
+
+                it('should work with dots after the filter args', () => {
+                    const file1 = createFile('test1');
+
+                    file1.tags.num = {
+                        a: 1
+                    };
+
+                    file1.tags.formula = '=#num(() => true).a';
+                    const context = createCalculationContext([file1]);
+                    let value = calculateFileValue(context, file1, 'formula');
+
+                    expect(value).toBe(1);
+                });
             });
 
             describe('@ syntax', () => {
@@ -1036,6 +1076,34 @@ describe('FileCalculations', () => {
                         file2,
                         file3
                     ]);
+                });
+
+                it('should work with dots after the filter args', () => {
+                    const file1 = createFile('test1');
+
+                    file1.tags.num = {
+                        a: 1
+                    };
+                    file1.tags.name = 'test';
+
+                    file1.tags.formula = '=@name("test").num.a';
+                    const context = createCalculationContext([file1]);
+                    let value = calculateFileValue(context, file1, 'formula');
+
+                    expect(value).toBe(1);
+                });
+
+                it('should be able to use proxy magic after the filter args', () => {
+                    const file1 = createFile('test1');
+
+                    file1.tags['num.a'] = 1;
+                    file1.tags.name = 'test';
+
+                    file1.tags.formula = '=@name("test").num.a';
+                    const context = createCalculationContext([file1]);
+                    let value = calculateFileValue(context, file1, 'formula');
+
+                    expect(value).toBe(1);
                 });
             });
         });

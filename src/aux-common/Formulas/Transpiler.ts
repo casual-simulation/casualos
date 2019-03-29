@@ -64,6 +64,21 @@ function callExpr(name: string, args: any[]) {
     };
 }
 
+function memberExpr(object: any, property: any) {
+    return {
+        type: 'MemberExpression',
+        object: object,
+        property: property
+    };
+}
+
+function ident(name: string) {
+    return {
+        type: 'Identifier',
+        name: name
+    };
+}
+
 function exJsParser(parser: typeof Parser) {
     return class ExJsParser extends parser {
         readToken(code: number) {
@@ -174,11 +189,28 @@ export class Transpiler {
                 if ((n.type === 'TagValue' || n.type === 'ObjectValue') && n.identifier) {
                     // _listTagValues('tag', filter)
 
+                    let properties: any[] = [];
+                    let currentNode = n.identifier;
                     let identifier: any;
                     let args: any[] = [];
-                    if (n.identifier.type === 'CallExpression') {
-                        identifier = n.identifier.callee;
-                        args = n.identifier.arguments;
+
+                    while(currentNode.type === 'MemberExpression') {
+                        currentNode = currentNode.object;
+                    }
+
+                    if (currentNode.type === 'CallExpression') {
+                        identifier = currentNode.callee;
+                        args = currentNode.arguments;
+
+                        currentNode = n.identifier;
+
+                        let nodes: any[] = [];
+                        while (currentNode.type === 'MemberExpression') {
+                            nodes.unshift(currentNode);
+                            currentNode = currentNode.object;
+                        }
+
+                        properties.push(...nodes.map(n => n.property.name));
                     } else {
                         identifier = n.identifier;
                     }
@@ -192,10 +224,18 @@ export class Transpiler {
 
                     const funcName = n.type === 'TagValue' ? '_listTagValues' : '_listObjectsWithTag';
 
-                    return callExpr(funcName, [{
+                    const call = callExpr(funcName, [{
                         type: 'Literal',
                         value: tag
                     }, ...args]);
+
+                    if (properties.length === 0) {
+                        return call;
+                    } else {
+                        return properties.reduce((prev, curr) => {
+                            return memberExpr(prev, ident(curr));
+                        }, call);
+                    }
 
                 } else if(n.type === 'CallExpression') {
                     if (n.callee.type === 'TagValue' || n.callee.type === 'ObjectValue') {
