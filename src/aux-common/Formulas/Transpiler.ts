@@ -18,6 +18,7 @@ declare module 'acorn' {
         parseLiteral(value: string): Node;
         parseIdent(): Node;
         parseExprSubscripts(): Node;
+        parseSubscript(base: Node, startPos: number, startLoc: number): Node;
         unexpected(): void;
         startNodeAt(start: number, startLoc: number): Node;
         readToken(code: number): any;
@@ -124,7 +125,15 @@ function exJsParser(parser: typeof Parser) {
             if(this.type === tokTypes.string) {
                 node.identifier = this.parseLiteral(this.value);
             } else if(this.type === tokTypes.name) {
-                node.identifier = this.parseExprSubscripts();
+                const expr = this.parseExprAtom(null);
+                let base = expr;
+                let element;
+                while (true) {
+                    element = super.parseSubscript(base, startPos, startLoc);
+                    if(element === base || element.type === 'CallExpression') break;
+                    base = element;
+                }
+                node.identifier = element;
             } else if(this.type === tokTypes.parenL) {
             } else {
                 this.unexpected();
@@ -145,7 +154,15 @@ function exJsParser(parser: typeof Parser) {
             if(this.type === tokTypes.string) {
                 node.identifier = this.parseLiteral(this.value);
             } else if(this.type === tokTypes.name) {
-                node.identifier = this.parseExprSubscripts();
+                const expr = this.parseExprAtom(null);
+                let base = expr;
+                let element;
+                while (true) {
+                    element = super.parseSubscript(base, startPos, startLoc);
+                    if (element === base || element.type === 'CallExpression') break;
+                    base = element;
+                }
+                node.identifier = element;
             } else if(this.type === tokTypes.parenL) {
             } else {
                 this.unexpected();

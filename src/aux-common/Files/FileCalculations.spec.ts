@@ -1135,6 +1135,25 @@ describe('FileCalculations', () => {
 
                     expect(value).toBe(1);
                 });
+
+                it('should be able to use functions on returned lists', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+
+                    file1.tags.num = 1;
+                    file2.tags.num = 3;
+                    file1.tags.name = 'test';
+                    file2.tags.name = 'test';
+
+                    file1.tags.formula = '=@name("test").map(a => a.num)';
+                    const context = createCalculationContext([file1, file2]);
+                    let value = calculateFileValue(context, file1, 'formula');
+
+                    expect(value).toEqual([
+                        1,
+                        3
+                    ]);
+                });
             });
         });
     });
