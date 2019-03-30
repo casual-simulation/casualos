@@ -87,7 +87,7 @@ export class CausalTreeServer {
 
                     const eventName = `event_${info.id}`;
                     socket.on(eventName, async (refs: Atom<AtomOp>[]) => {
-                        const { added, rejected } = await tree.addMany(refs);
+                        const { added, rejected } = await tree.addMany(refs, true);
                         if (rejected.length > 0) {
                             console.warn(`[CausalTreeServer] ${info.id} Rejected ${rejected.length} atoms:`);
                             rejected.forEach(r => {
