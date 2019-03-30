@@ -5,7 +5,8 @@ import { Prop, Watch } from 'vue-property-decorator';
 import App from '../App/App';
 import { SubscriptionLike } from 'rxjs';
 import { TreeView } from 'vue-json-tree-view';
-import { calculateFormulaValue } from '@yeti-cgi/aux-common';
+import { calculateFormulaValue, createCalculationContext } from '@yeti-cgi/aux-common';
+import { values } from 'lodash';
 
 @Component({
     components: {
@@ -15,6 +16,7 @@ import { calculateFormulaValue } from '@yeti-cgi/aux-common';
 export default class AuxDebug extends Vue {
 
     auxJson: any = null;
+    includeDestroyed: boolean = false;
     search: string = '';
     error: string;
     
@@ -33,6 +35,7 @@ export default class AuxDebug extends Vue {
         this.auxJson = null;
         this.search = '';
         this.error = null;
+        this.includeDestroyed = false;
     }
 
     created() {
@@ -65,6 +68,11 @@ export default class AuxDebug extends Vue {
         this.refreshAuxJson();
     }
 
+    @Watch('includeDestroyed')
+    includeDestroyedChanged() {
+        this.refreshAuxJson();
+    }
+
     beforeDestroy() {
       if (this._subs) {
         this._subs.forEach(sub => sub.unsubscribe());
@@ -73,7 +81,7 @@ export default class AuxDebug extends Vue {
     }
 
     private _search() {
-        const context = this.fileManager.createContext();
+        const context = this.includeDestroyed ? createCalculationContext(values(this.fileManager.filesState)) : this.fileManager.createContext();
         const value = calculateFormulaValue(context, this.search);
         return value;
         // if (result.error) {

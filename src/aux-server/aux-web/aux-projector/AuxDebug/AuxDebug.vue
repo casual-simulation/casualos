@@ -15,6 +15,7 @@
                 <label>Search...</label>
                 <md-input v-model="search"></md-input>
             </md-field>
+            <md-switch v-model="includeDestroyed">Include Destroyed</md-switch>
         </div>
         <div class="json-content">
             <tree-view :data="auxJson" :options="{ limitRenderDepth: true, maxDepth: 2 }"></tree-view>
