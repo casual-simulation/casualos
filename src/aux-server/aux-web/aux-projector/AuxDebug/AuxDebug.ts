@@ -84,16 +84,5 @@ export default class AuxDebug extends Vue {
         const context = this.includeDestroyed ? createCalculationContext(values(this.fileManager.filesState)) : this.fileManager.createContext();
         const value = calculateFormulaValue(context, this.search);
         return value;
-        // if (result.error) {
-        //     this.error = result.error.message;
-        // } else {
-        //     this.error = null;
-        // }
-
-        // if (result.success) {
-        //     return result.result;
-        // } else {
-        //     return this.fileManager.filesState;
-        // }
     }
 }
