@@ -48,6 +48,7 @@
     "axios": "^0.18.0",
     "bn.js": "^4.11.8",
     "concurrently": "^4.0.1",
+    "d3": "^5.9.2",
     "dexie": "^2.0.4",
     "downloadjs": "^1.4.7",
     "es6-promise": "^4.2.5",
