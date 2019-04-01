@@ -35,13 +35,16 @@ export function getLocalIpAddresses() {
  * Gets the domains that should be added to the given site for development purposes.
  * @param site 
  */
-export function getExtraDomainsForSite(site: 'projector' | 'player') {
+export function getExtraDomainsForSite(site: 'projector' | 'player'): string[] {
     const env = process.env.NODE_ENV;
     if (env === 'production') {
+        if (site === 'projector') {
+            return ['localhost'];
+        }
     } else {
         const mode = process.argv[2];
         if (mode === site || (typeof mode === 'undefined' && site === 'projector')) {
-            return getLocalIpAddresses();
+            return ['localhost', ...getLocalIpAddresses()];
         }
     }
 

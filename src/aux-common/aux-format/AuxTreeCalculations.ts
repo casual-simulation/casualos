@@ -66,7 +66,7 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
         share()
     );
 
-    const fileAdded = stateDiffs.pipe(flatMap(diff => {
+    const filesAdded = stateDiffs.pipe(map(diff => {
         // TODO: Work with all domains
         return sortBy(diff.addedFiles, 
             f => !f.tags['aux.builder.context'],
@@ -74,16 +74,16 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
         );
     }));
 
-    const fileRemoved = stateDiffs.pipe(
-      flatMap(diff => diff.removedFiles)
+    const filesRemoved = stateDiffs.pipe(
+      map(diff => diff.removedFiles)
     );
 
-    const fileUpdated = stateDiffs.pipe(flatMap(diff => diff.updatedFiles));
+    const filesUpdated = stateDiffs.pipe(map(diff => diff.updatedFiles));
 
     return {
-        fileAdded,
-        fileRemoved,
-        fileUpdated
+        filesAdded,
+        filesRemoved,
+        filesUpdated
     };
 }
 

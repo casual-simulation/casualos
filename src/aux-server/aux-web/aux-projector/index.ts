@@ -97,7 +97,7 @@ const routes: RouteConfig[] = [
         component: Welcome,
     },
     {
-        path: '/aux-debug/:id?',
+        path: '/:id?/aux-debug',
         name: 'aux-debug',
         component: AuxDebug
     },

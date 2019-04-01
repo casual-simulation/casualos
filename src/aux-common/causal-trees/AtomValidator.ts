@@ -57,6 +57,23 @@ export class AtomValidator {
         return await this._impl.verify(key, ints, buf);
     }
 
+    /**
+     * Verifies that the given atoms were signed with the private key associated with the given public key.
+     * Returns an array of booleans that represent whether the atom at the corresponding index is valid or not.
+     * @param key The key to use.
+     * @param atoms The atoms to verify.
+     */
+    verifyBatch<T extends AtomOp>(key: PublicCryptoKey, atoms: Atom<T>[]): Promise<boolean[]> {
+        let signatures = new Array<Uint8Array>(atoms.length);
+        let buffers = new Array<ArrayBuffer>(atoms.length);
+        for (let i = 0; i < atoms.length; i++) {
+            const a = atoms[i];
+            signatures[i] = toByteArray(a.signature);
+            buffers[i] = this._getData(a);
+        }
+        return this._impl.verifyBatch(key, signatures, buffers);
+    }
+
     private _getData<T extends AtomOp>(atom: Atom<T>): ArrayBuffer {
         const fields = [atom.id, atom.cause, atom.value];
         const json = stringify(fields);

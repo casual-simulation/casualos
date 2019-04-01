@@ -6,7 +6,7 @@ import { CausalTreeFactory } from "./CausalTreeFactory";
 import { SiteVersionInfo } from "./SiteVersionInfo";
 import { SiteInfo, site, SiteInfoCrypto } from "./SiteIdInfo";
 import { SubscriptionLike, Subject, Observable, ReplaySubject } from 'rxjs';
-import { filter, flatMap, takeWhile, skipWhile, tap, map, first, concatMap } from 'rxjs/operators';
+import { filter, flatMap, takeWhile, skipWhile, tap, map, first, concatMap, bufferTime } from 'rxjs/operators';
 import { maxBy } from 'lodash';
 import { storedTree, StoredCausalTree } from "./StoredCausalTree";
 import { WeaveVersion, versionsEqual } from "./WeaveVersion";
@@ -22,8 +22,30 @@ export interface RealtimeCausalTreeOptions extends CausalTreeOptions {
      * Specifies that the tree should not use the locally stored causal tree
      * and instead should always request a new one from the server.
      * For now, this is a useful way to ensure that clients always get new IDs.
+     * Defaults to false.
      */
     alwaysRequestNewSiteId?: boolean;
+
+    /**
+     * Specifies whether the realtime causal tree should validate the signatures of all the atoms
+     * that are added to the tree. If false, then only atoms added via realtime.tree.add() will be verified.
+     * If true, then atoms that are imported from the remote will be verified.
+     * 
+     * Defaults to false.
+     */
+    verifyAllSignatures?: boolean;
+
+    /**
+     * Whether the realtime causal tree should save atoms in the store.
+     * Defaults to true.
+     */
+    storeAtoms?: boolean;
+
+    /**
+     * The number of miliseconds that new atoms should be buffered for before saving them.
+     * Defaults to 1000.
+     */
+    bufferTimeSpan?: number;
 }
 
 /**
@@ -42,6 +64,8 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
     private _errors: Subject<any>;
     private _subs: SubscriptionLike[];
     private _options: RealtimeCausalTreeOptions;
+    private _storeAtoms: boolean;
+    private _bufferTime: number;
 
     /**
      * Gets the realtime channel that this tree is using.
@@ -110,11 +134,17 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         this._tree = null;
         this._subs = [];
         this._options = options || {};
-
-        this._subs.push(this._updated.pipe(
-            filter(a => a.length > 0),
-            concatMap(async atoms => await this._store.add(this.id, atoms))
-        ).subscribe(null, err => this._errors.next(err)));
+        this._storeAtoms = typeof this._options.storeAtoms === 'undefined' ? true : this._options.storeAtoms;
+        this._bufferTime = typeof this._options.bufferTimeSpan === 'undefined' ? 1000 : this._options.bufferTimeSpan;
+        
+        if (this._storeAtoms) {
+            this._subs.push(this._updated.pipe(
+                filter(a => a.length > 0),
+                bufferTime(1000),
+                concatMap(atoms => atoms),
+                concatMap(async atoms => await this._store.add(this.id, atoms))
+            ).subscribe(null, err => this._errors.next(err)));
+        }
     }
 
     /**
@@ -143,15 +173,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
                 this._listenForRejectedAtoms(tree);
                 await tree.import(stored);
                 this._setTree(tree);
-                if (stored.weave) {
-                    if (stored.formatVersion === 2) {
-                        this._updated.next(stored.weave);
-                    } else if (stored.formatVersion === 3) {
-                        this._updated.next(stored.weave);
-                    } else if (typeof stored.formatVersion === 'undefined') {
-                        this._updated.next(stored.weave.map(a => a.atom));
-                    }
-                }
+                await this._putTree(tree, true);
             }
         }
 
@@ -164,7 +186,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
             tap(tree => this._listenForRejectedAtoms(tree)),
             concatMap(tree => this._channel.exchangeWeaves(tree.export()), (tree, imported) => ({tree, imported})),
             concatMap(data => this._import(data.tree, data.imported), (data, imported) => ({ ...data, added: imported })),
-            concatMap(data => this._store.put(this.id, data.tree.export(), true), (data) => data),
+            concatMap(data => this._putTree(data.tree, false), (data) => data),
             tap(data => this._setTree(data.tree)),
             tap(data => this._updated.next(data.added))
         ).subscribe(null, err => this._errors.next(err)));
@@ -178,7 +200,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
             concatMap(versions => this._channel.exchangeWeaves(this.tree.export()), (versions, weave) => ({ versions, weave })),
             concatMap(data => this._import(this.tree, data.weave), (data, imported) => ({ ...data, added: imported })),
             tap(data => this._importKnownSites(data.versions.remote)),
-            concatMap(data => this._store.put(this.id, this._tree.export(), true), (data) => data),
+            concatMap(data => this._putTree(this._tree, true), (data) => data),
             tap(data => this._updated.next(data.added))
         ).subscribe(null, err => this._errors.next(err)));
         
@@ -221,6 +243,12 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         }
     }
 
+    async _putTree(tree: TTree, fullUpdate: boolean) {
+        if (this._storeAtoms) {
+            await this._store.put(this.id, tree.export(), fullUpdate);
+        }
+    }
+
     private get _alwaysRequestNewSiteId(): boolean {
         if (this._options) {
             return this._options.alwaysRequestNewSiteId || false;
@@ -238,7 +266,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
 
     private async _import(tree: CausalTree<any, any, any>, weave: StoredCausalTree<AtomOp>): Promise<Atom<AtomOp>[]> {
         console.log(`[RealtimeCausalTree] ${this.id}: Importing ${weave.weave.length} atoms....`);
-        const { added: results } = await tree.import(weave);
+        const { added: results } = await tree.import(weave, this._options.verifyAllSignatures || false);
         console.log(`[RealtimeCausalTree] ${this.id}: Imported ${results.length} atoms.`);
         return results;
     }
@@ -255,6 +283,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
 
     private _listenForRejectedAtoms(tree: TTree) {
         this._subs.push(tree.atomRejected.pipe(
+            filter(refs => refs.length > 0),
             tap(refs => this._rejected.next(refs))
         ).subscribe(null, ex => this._errors.next(ex)));
     }

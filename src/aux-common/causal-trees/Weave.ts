@@ -149,6 +149,18 @@ export class Weave<TOp extends AtomOp> {
         if (!cause) {
             return [];
         }
+        const causeSize = this.getAtomSize(cause.id);
+        const atomSize = this.getAtomSize(atom.id);
+        const diff = causeSize - atomSize;
+        if (diff === 1) {
+            // There's nothing to remove because the atom is the only child
+            // of the cause.
+            return [];
+        }
+        
+        // TODO: Find a way to make _getSpan faster.
+        //       The biggest slowdown with it is that it calls _indexOf()
+        //       which triggers a scan of the entire atom list.
         const causeSpan = this._getSpan(cause);
         if (!causeSpan) {
             return [];

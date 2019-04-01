@@ -28,6 +28,7 @@ import {
 } from 'rxjs';
 import {
     concatMap, tap,
+    flatMap as rxFlatMap
 } from 'rxjs/operators';
 
 import {
@@ -223,14 +224,14 @@ export default class GameView extends Vue implements IGameView {
         this._gridChecker = new GridChecker(DEFAULT_WORKSPACE_HEIGHT_INCREMENT);
 
         // Subscriptions to file events.
-        this._subs.push(this.fileManager.fileDiscovered
-            .pipe(concatMap(file => this._fileAdded(file)))
+        this._subs.push(this.fileManager.filesDiscovered
+            .pipe(rxFlatMap(files => files), concatMap(file => this._fileAdded(file)))
             .subscribe());
-        this._subs.push(this.fileManager.fileRemoved
-            .pipe(tap(file => this._fileRemoved(file)))
+        this._subs.push(this.fileManager.filesRemoved
+            .pipe(rxFlatMap(files => files), tap(file => this._fileRemoved(file)))
             .subscribe());
-        this._subs.push(this.fileManager.fileUpdated
-            .pipe(concatMap(file => this._fileUpdated(file)))
+        this._subs.push(this.fileManager.filesUpdated
+            .pipe(rxFlatMap(files => files), concatMap(file => this._fileUpdated(file)))
             .subscribe());
 
         this._subs.push(this.fileManager.fileChanged(this.fileManager.userFile)
@@ -414,7 +415,11 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private async _fileAdded(file: AuxFile) {
-        console.log(`[GameView] File Added`, file.id);
+        if (file.tags._destroyed) {
+            return;
+        }
+        // console.log(`[GameView] File Added`, file.id);
+
         let context = new BuilderGroup3D(file, this._decoratorFactory);
         context.setGridChecker(this._gridChecker);
         this._contexts.push(context);

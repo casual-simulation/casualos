@@ -160,6 +160,39 @@ describe('RealtimeCausalTree', () => {
         });
     });
 
+    it('should send rejected atoms', async () => {
+        let spyConsole = jest.spyOn(console, 'log').mockImplementation(() => {});
+        let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
+        let spy = jest.spyOn(crypto, 'verifyBatch').mockResolvedValue([false]);
+        let validator = new AtomValidator(crypto);
+        let tree = new RealtimeCausalTree(factory, store, channel, {
+            validator: validator
+        });
+
+        let root = atom(atomId(1, 0), null, new Op());
+        root.signature = 'bad';
+
+        let rejected: RejectedAtom<AtomOp>[][] = [];
+        tree.onRejected.subscribe(r => {
+            rejected.push(r);
+        });
+
+        await tree.init();
+        connection.setConnected(true);
+        await connection.flushPromises();
+
+        await tree.tree.add(root);
+
+        expect(rejected).toEqual([
+            [
+                { atom: root, reason: 'no_public_key' },
+            ]
+        ]);
+
+        spy.mockRestore();
+        spyConsole.mockRestore();
+    });
+
     describe('connected without existing tree', () => {
         let spy: jest.SpyInstance<any>;
         beforeAll(() => {
@@ -324,36 +357,6 @@ describe('RealtimeCausalTree', () => {
             expect(tree.tree.factory.signingKey).toBeTruthy();
             expect(tree.tree.factory.signingKey.type).toBe(privateKey);
         });
-
-        it('should send rejected atoms', async () => {
-            let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
-            let spy = jest.spyOn(crypto, 'verify').mockResolvedValue(false);
-            let validator = new AtomValidator(crypto);
-            let tree = new RealtimeCausalTree(factory, store, channel, {
-                validator: validator
-            });
-
-            let w = new Weave<Op>();
-            let [root] = w.insert(atom(atomId(1, 0), null, new Op()));
-            root.signature = 'bad';
-
-            weave.push(...w.atoms);
-
-            let rejected: RejectedAtom<AtomOp>[][] = [];
-            tree.onRejected.subscribe(r => {
-                rejected.push(r);
-            });
-
-            await tree.init();
-            connection.setConnected(true);
-            await connection.flushPromises();
-
-            expect(rejected).toEqual([
-                [
-                    { atom: root, reason: 'no_public_key' },
-                ]
-            ]);
-        });
     });
 
     describe('connected with existing tree', () => {
@@ -388,7 +391,7 @@ describe('RealtimeCausalTree', () => {
     
                 expect(realtime.tree).not.toBe(null);
                 expect(realtime.tree.weave.atoms).toEqual(localWeave.atoms);
-                expect(updated.length).toBe(1);
+                expect(updated.length).toBe(0);
             });
         });
 
@@ -413,7 +416,7 @@ describe('RealtimeCausalTree', () => {
 
             expect(realtime.tree).not.toBe(null);
             expect(realtime.tree.weave.atoms).toEqual(localWeave.atoms);
-            expect(updated.length).toBe(1);
+            expect(updated.length).toBe(0);
         });
 
         it('should import the remote weave atoms', async () => {
@@ -448,7 +451,7 @@ describe('RealtimeCausalTree', () => {
             await connection.flushPromises();
 
             expect(realtime.tree.weave.atoms).toEqual(finalWeave.atoms);
-            expect(updated.length).toBe(2);
+            expect(updated.length).toBe(1);
         });
 
         it('should import the remote known sites', async () => {
@@ -475,7 +478,7 @@ describe('RealtimeCausalTree', () => {
             expect(realtime.tree.knownSites).toContainEqual(site(2));
             expect(realtime.tree.knownSites).toContainEqual(site(1));
             expect(realtime.tree.knownSites).toContainEqual(site(1999));
-            expect(updated.length).toBe(2);
+            expect(updated.length).toBe(1);
         });
 
         it('should use the stored keys', async () => {
@@ -550,6 +553,37 @@ describe('RealtimeCausalTree', () => {
             expect(tree.tree.site.crypto).toBeFalsy();
             expect(tree.tree.factory.signingKey).toBeFalsy();
         });
+
+        it('should reject atoms from the remote when specified', async () => {
+            let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
+            let spy = jest.spyOn(crypto, 'verifyBatch').mockResolvedValue([false]);
+            let validator = new AtomValidator(crypto);
+            let tree = new RealtimeCausalTree(factory, store, channel, {
+                validator: validator,
+                verifyAllSignatures: true // Validate everything including atoms from the remote
+            });
+    
+            let w = new Weave<Op>();
+            let [root] = w.insert(atom(atomId(1, 0), null, new Op()));
+            root.signature = 'bad';
+
+            weave.push(...w.atoms);
+    
+            let rejected: RejectedAtom<AtomOp>[][] = [];
+            tree.onRejected.subscribe(r => {
+                rejected.push(r);
+            });
+    
+            await tree.init();
+            connection.setConnected(true);
+            await connection.flushPromises();
+    
+            expect(rejected).toEqual([
+                [
+                    { atom: root, reason: 'no_public_key' },
+                ]
+            ]);
+        });
     });
 
     describe('reconnect', () => {
@@ -602,10 +636,10 @@ describe('RealtimeCausalTree', () => {
             await connection.flushPromises();
 
             expect(realtime.tree.weave.atoms).toEqual(finalWeave.atoms);
-            expect(updated[2]).toEqual([
+            expect(updated[1]).toEqual([
                 addedRef
             ]);
-            expect(updated.length).toBe(3);
+            expect(updated.length).toBe(2);
         });
 
         it('should not request if the versions are the same', async () => {
@@ -658,7 +692,7 @@ describe('RealtimeCausalTree', () => {
 
             // 1 connection + 1 load from store
             // second is skipped because no atoms were imported
-            expect(updated.length).toBe(2);
+            expect(updated.length).toBe(1);
         });
 
         it('should import the remote known sites', async () => {
@@ -691,7 +725,7 @@ describe('RealtimeCausalTree', () => {
 
             expect(realtime.tree.knownSites).toContainEqual(site(15));
             expect(realtime.tree.knownSites).toContainEqual(site(23));
-            expect(updated.length).toBe(3);
+            expect(updated.length).toBe(2);
         });
     });
 
