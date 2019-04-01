@@ -14,6 +14,7 @@ export class BrowserCausalTreeStore implements CausalTreeStore {
     }
 
     async put<T extends AtomOp>(id: string, tree: StoredCausalTree<T>, fullUpdate: boolean = true): Promise<void> {
+        console.log('[BrowserCausalTreeStore] Updating tree', id);
         const upgraded = upgrade(tree);
         const stored: StoredTreeVersion1<T> = {
             id: id,
@@ -25,7 +26,9 @@ export class BrowserCausalTreeStore implements CausalTreeStore {
         await this._db.trees.put(stored);
 
         if (fullUpdate) {
-            await this._db.atoms.where('tree').equals(id).delete();
+            console.log('[BrowserCausalTreeStore] Deleting old atoms...');
+            const num = await this._db.atoms.where('tree').equals(id).delete();
+            console.log('[BrowserCausalTreeStore] Deleted', num, 'atoms.');
             
             if (upgraded.weave) {
                 await this.add(id, upgraded.weave, false);
@@ -41,6 +44,7 @@ export class BrowserCausalTreeStore implements CausalTreeStore {
         }
 
         if (typeof value.wrapperVersion === 'undefined') {
+            console.log('[BrowserCausalTreeStore] Getting tree', id);
             const query = await this._db.atoms.where('tree')
                 .equals(id);
             let stored: StoredAtomArray<T>[];
@@ -56,7 +60,7 @@ export class BrowserCausalTreeStore implements CausalTreeStore {
 
             for (let i = 0; i < stored.length; i++) {
                 const arr = stored[i].atoms;
-                for (let b = 0; b < arr.length; i++) {
+                for (let b = 0; b < arr.length; b++) {
                     const a = arr[b];
                     atoms.set(atomIdToString(a.id), a);
                 }
@@ -64,6 +68,7 @@ export class BrowserCausalTreeStore implements CausalTreeStore {
 
             let vals = new Array(...atoms.values());
 
+            console.log('[BrowserCausalTreeStore] Returning', vals.length, 'atoms');
             return {
                 formatVersion: 3,
                 knownSites: value.knownSites,
@@ -77,6 +82,7 @@ export class BrowserCausalTreeStore implements CausalTreeStore {
     }
 
     async add<T extends AtomOp>(id: string, atoms: Atom<T>[], archived: boolean = false): Promise<void> {
+        console.log('[BrowserCausalTreeStore] Adding', atoms.length, 'atoms...');
         const stored: StoredAtomArray<T> = {
             tree: id,
             atoms: atoms,
