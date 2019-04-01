@@ -7,6 +7,22 @@
 - Bug Fixes
   - Fixed HTML Element targets not being captured as intended when using touch.
     - This fixes inventory dragging for mobile.
+  - Fixed the ability to use indexer expressions in filters after @ or # queries.
+    - `=@nums()[0]` gets the first file with the `nums` tag on it.
+  - Fixed the ability to call functions in filters after @ or # queries.
+    - `=#nums().map(num => num + 10)` now works and produces a list of numbers where each number has 10 added to it.
+  - Fixed the ability to upload AUX files.
+  - Improved garbage collection so that it avoids expensive operations when there is nothing to remove.
+- Other improvements
+  - Formulas now support using dots after @ or # queries. For example `=@name('bob').name` now works.
+  -  Debug Page
+    - The debug page for AUX Builder has been moved to be after the simulation ID. So to access the debug page for `test` you would go to `https://auxbuilder.com/test/aux-debug`.
+    - The debug page now has a search bar that allows entering a formula to search through the file state.
+    - Added the ability for the debug page to search through destroyed files.
+  - Atom signatures are now only checked when adding individual atoms. This greatly improves loading performance.
+  - Refactored some of the logic around propagating file updates so that they can be more performant in the future.
+  - Destroying files by dragging them off of a worksurface or using the `destroy()` function in an action now uses the causal tree instead of setting the `_destroyed` tag to `true`. (Allows better garbage collection in the future)
+  - Improved first load performance by reducing the amount of work the browser needs to do to store a tree in IndexedDB.
 
 ## V0.3.24
 ### Date: 3/28/2019
