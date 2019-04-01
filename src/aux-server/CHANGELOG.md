@@ -1,5 +1,14 @@
 # AUX Server Changelog
 
+## V0.3.26
+### Date: 4/01/2019
+
+### Changes:
+- Bug Fixes
+  - Fixed worksurfaces to update when their `aux.builder.context` tag is updated.
+- Other improvements
+  - Improved the server to cleanup trees from memory that aren't in active memory.
+
 ## V0.3.25
 ### Date: 4/01/2019
 
