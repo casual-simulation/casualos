@@ -391,7 +391,7 @@ describe('RealtimeCausalTree', () => {
     
                 expect(realtime.tree).not.toBe(null);
                 expect(realtime.tree.weave.atoms).toEqual(localWeave.atoms);
-                expect(updated.length).toBe(1);
+                expect(updated.length).toBe(0);
             });
         });
 
@@ -416,7 +416,7 @@ describe('RealtimeCausalTree', () => {
 
             expect(realtime.tree).not.toBe(null);
             expect(realtime.tree.weave.atoms).toEqual(localWeave.atoms);
-            expect(updated.length).toBe(1);
+            expect(updated.length).toBe(0);
         });
 
         it('should import the remote weave atoms', async () => {
@@ -451,7 +451,7 @@ describe('RealtimeCausalTree', () => {
             await connection.flushPromises();
 
             expect(realtime.tree.weave.atoms).toEqual(finalWeave.atoms);
-            expect(updated.length).toBe(2);
+            expect(updated.length).toBe(1);
         });
 
         it('should import the remote known sites', async () => {
@@ -478,7 +478,7 @@ describe('RealtimeCausalTree', () => {
             expect(realtime.tree.knownSites).toContainEqual(site(2));
             expect(realtime.tree.knownSites).toContainEqual(site(1));
             expect(realtime.tree.knownSites).toContainEqual(site(1999));
-            expect(updated.length).toBe(2);
+            expect(updated.length).toBe(1);
         });
 
         it('should use the stored keys', async () => {
@@ -636,10 +636,10 @@ describe('RealtimeCausalTree', () => {
             await connection.flushPromises();
 
             expect(realtime.tree.weave.atoms).toEqual(finalWeave.atoms);
-            expect(updated[2]).toEqual([
+            expect(updated[1]).toEqual([
                 addedRef
             ]);
-            expect(updated.length).toBe(3);
+            expect(updated.length).toBe(2);
         });
 
         it('should not request if the versions are the same', async () => {
@@ -692,7 +692,7 @@ describe('RealtimeCausalTree', () => {
 
             // 1 connection + 1 load from store
             // second is skipped because no atoms were imported
-            expect(updated.length).toBe(2);
+            expect(updated.length).toBe(1);
         });
 
         it('should import the remote known sites', async () => {
@@ -725,7 +725,7 @@ describe('RealtimeCausalTree', () => {
 
             expect(realtime.tree.knownSites).toContainEqual(site(15));
             expect(realtime.tree.knownSites).toContainEqual(site(23));
-            expect(updated.length).toBe(3);
+            expect(updated.length).toBe(2);
         });
     });
 

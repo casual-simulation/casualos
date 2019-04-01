@@ -173,15 +173,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
                 this._listenForRejectedAtoms(tree);
                 await tree.import(stored);
                 this._setTree(tree);
-                if (stored.weave) {
-                    if (stored.formatVersion === 2) {
-                        this._updated.next(stored.weave);
-                    } else if (stored.formatVersion === 3) {
-                        this._updated.next(stored.weave);
-                    } else if (typeof stored.formatVersion === 'undefined') {
-                        this._updated.next(stored.weave.map(a => a.atom));
-                    }
-                }
+                await this._putTree(tree, true);
             }
         }
 
@@ -194,7 +186,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
             tap(tree => this._listenForRejectedAtoms(tree)),
             concatMap(tree => this._channel.exchangeWeaves(tree.export()), (tree, imported) => ({tree, imported})),
             concatMap(data => this._import(data.tree, data.imported), (data, imported) => ({ ...data, added: imported })),
-            concatMap(data => this._putTree(data.tree), (data) => data),
+            concatMap(data => this._putTree(data.tree, false), (data) => data),
             tap(data => this._setTree(data.tree)),
             tap(data => this._updated.next(data.added))
         ).subscribe(null, err => this._errors.next(err)));
@@ -208,7 +200,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
             concatMap(versions => this._channel.exchangeWeaves(this.tree.export()), (versions, weave) => ({ versions, weave })),
             concatMap(data => this._import(this.tree, data.weave), (data, imported) => ({ ...data, added: imported })),
             tap(data => this._importKnownSites(data.versions.remote)),
-            concatMap(data => this._putTree(this._tree), (data) => data),
+            concatMap(data => this._putTree(this._tree, true), (data) => data),
             tap(data => this._updated.next(data.added))
         ).subscribe(null, err => this._errors.next(err)));
         
@@ -251,9 +243,9 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         }
     }
 
-    async _putTree(tree: TTree) {
+    async _putTree(tree: TTree, fullUpdate: boolean) {
         if (this._storeAtoms) {
-            await this._store.put(this.id, tree.export(), true);
+            await this._store.put(this.id, tree.export(), fullUpdate);
         }
     }
 
