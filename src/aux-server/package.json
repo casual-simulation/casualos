@@ -1,6 +1,6 @@
 {
   "name": "@yeti-cgi/aux-server",
-  "version": "0.3.25",
+  "version": "0.3.26",
   "description": "The repository for the AUX server project.",
   "main": "server/dist/main.js",
   "private": true,
@@ -41,7 +41,7 @@
   "dependencies": {
     "@chenfengyuan/vue-qrcode": "^1.0.0",
     "@sentry/browser": "^4.4.2",
-    "@yeti-cgi/aux-common": "^0.3.25",
+    "@yeti-cgi/aux-common": "^0.3.26",
     "acorn": "^6.1.1",
     "asn1.js": "^5.0.1",
     "astring": "^1.3.1",
