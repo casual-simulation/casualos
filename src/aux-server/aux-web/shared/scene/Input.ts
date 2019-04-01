@@ -624,8 +624,7 @@ export class Input {
                 console.log("touch finger " + data.fingerIndex + " start. fireInputOnFrame: " + this._gameView.time.frameCount);
             }
 
-            this._targetData.inputDown = <HTMLElement>touch.target;
-            this._targetData.inputOver = <HTMLElement>event.target;
+            this._targetData.inputDown = this._targetData.inputOver = <HTMLElement>touch.target;
             this._touchData.push(data);
         }
     }
@@ -649,7 +648,8 @@ export class Input {
             existingTouch.clientPos = new Vector2(touch.clientX, touch.clientY);
             existingTouch.pagePos = new Vector2(touch.pageX, touch.pageY);
             existingTouch.screenPos = this._calculateScreenPos(touch.pageX, touch.pageY);
-            this._targetData.inputOver = <HTMLElement>event.target;
+            // Must use elementFromPoint because touch event target never changes after initial contact.
+            this._targetData.inputOver = <HTMLElement>document.elementFromPoint(touch.clientX, touch.clientY);
 
             if (existingTouch.fingerIndex === 0) {
                 this._copyToPrimaryTouchData(existingTouch);
@@ -676,8 +676,8 @@ export class Input {
         for (let i = 0; i < changed.length; i++) {
             let touch = changed.item(i);
 
-            this._targetData.inputUp = <HTMLElement>touch.target;
-            this._targetData.inputOver = <HTMLElement>event.target;
+            // Must use elementFromPoint because touch event target never changes after initial contact.
+            this._targetData.inputUp = this._targetData.inputOver = <HTMLElement>document.elementFromPoint(touch.clientX, touch.clientY);
 
             let existingTouch = find(this._touchData, (d) => { return d.identifier === touch.identifier; });
             existingTouch.state.setUpFrame(this._gameView.time.frameCount);

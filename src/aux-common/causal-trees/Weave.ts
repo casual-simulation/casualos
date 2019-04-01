@@ -82,7 +82,14 @@ export class Weave<TOp extends AtomOp> {
             this._sizeMap.set(atom.id, 1);
             return [atom, null];
         } else {
-            const causeIndex = this._indexOf(atom.cause);
+            const cause = this.getAtom(atom.cause);
+            if (!cause) {
+                return [null, {
+                    atom: atom,
+                    reason: 'cause_not_found'
+                }];
+            }
+            const causeIndex = this._atomIndexOf(cause);
             if (causeIndex < 0 ) {
                 return [null, {
                     atom: atom,
@@ -149,6 +156,18 @@ export class Weave<TOp extends AtomOp> {
         if (!cause) {
             return [];
         }
+        const causeSize = this.getAtomSize(cause.id);
+        const atomSize = this.getAtomSize(atom.id);
+        const diff = causeSize - atomSize;
+        if (diff === 1) {
+            // There's nothing to remove because the atom is the only child
+            // of the cause.
+            return [];
+        }
+        
+        // TODO: Find a way to make _getSpan faster.
+        //       The biggest slowdown with it is that it calls _indexOf()
+        //       which triggers a scan of the entire atom list.
         const causeSpan = this._getSpan(cause);
         if (!causeSpan) {
             return [];
@@ -549,7 +568,7 @@ export class Weave<TOp extends AtomOp> {
      * @param start The index to start searching at.
      */
     private _getSpan(ref: Atom<TOp>, start: number = 0) {
-        const index = this._indexOf(ref.id, start);
+        const index = this._atomIndexOf(ref);
         if (index < 0) {
             return null;
         }
@@ -580,14 +599,35 @@ export class Weave<TOp extends AtomOp> {
     }
 
     /**
-     * Finds the index that the atom with the given ID is in the atoms array.
-     * TODO: Improve performance. This function is ~90% of the cost of inserting atoms.
-     *       It's kinda tricky to do because the weave can't use traditional algorithms like
-     *       binary search because its not sorted in a regular manner.
-     * @param atom The atom ID to search for.
+     * Finds the index that the given atom is at in the atoms array.
+     * @param atom The atom to find the index of.
      */
-    private _indexOf(id: AtomId, start: number = 0): number {
-        return weaveIndexOf(this._atoms, id, start);
+    private _atomIndexOf(atom: Atom<TOp>): number {
+        // Lookup the reference chain for the atom.
+        const chain = this.referenceChain(atom);
+        let index = 0;
+
+        // Starting with the rootmost atom,
+        // find the index of the parent so we only have to evaluate the number of siblings
+        // that each level has instead of the entire weave.
+        for (let i = chain.length - 1; i >= 0; i--) {
+            const level = chain[i];
+            while (index < this._atoms.length) {
+                const atom = this._atoms[index];
+                if (idEquals(atom.id, level.id)) {
+                    index += 1;
+                    break;
+                } else {
+                    index += this.getAtomSize(atom.id);
+                }
+            }
+        }
+
+        if (index <= this._atoms.length) {
+            return index - 1;
+        } else {
+            return -1;
+        }
     }
 
     /**

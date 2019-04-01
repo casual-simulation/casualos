@@ -5,6 +5,7 @@ import {
     File,
     FileEvent,
     FileCalculationContext,
+    fileRemoved,
 } from '@yeti-cgi/aux-common';
 
 import { setParent } from '../../../shared/scene/SceneUtils';
@@ -122,11 +123,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         let events: FileEvent[] = [];
         // Mark the files as destroyed.
         for (let i = 0; i < files.length; i++) {
-            events.push(this._updateFile(files[i], {
-                tags: {
-                    _destroyed: true
-                }
-            }));
+            events.push(fileRemoved(files[i].id));
         }
 
         appManager.fileManager.transaction(...events);

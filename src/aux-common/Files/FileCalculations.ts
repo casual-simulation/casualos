@@ -15,7 +15,7 @@ import {
     difference,
     cloneDeep
 } from 'lodash';
-import { Sandbox, SandboxLibrary } from '../Formulas/Sandbox';
+import { Sandbox, SandboxLibrary, SandboxResult } from '../Formulas/Sandbox';
 import { isProxy, createFileProxy, proxyObject, SetValueHandler } from './FileProxy';
 
 /// <reference path="../typings/global.d.ts" />
@@ -513,7 +513,7 @@ export function createWorkspace(id = uuid(), builderContextId: string = `aux._co
             [`${builderContextId}.z`]: 0,
             'aux.color': 'clear',
             'aux.movable': false,
-            'scale.z': 0.01
+            'aux.scale.z': 0.01
         }
     };
 }
@@ -1063,6 +1063,18 @@ export function isFileInContext(context: FileCalculationContext, file: Object, c
     return result;
 }
 
+/**
+ * Calculates the given formula and returns the result.
+ * @param context The file calculation context to run formulas with.
+ * @param formula The formula to use.
+ * @param extras The extra data to include in callbacks to the interface implementation.
+ * @param thisObj The object that should be used for the this keyword in the formula.
+ */
+export function calculateFormulaValue(context: FileCalculationContext, formula: string, extras: any = {}, thisObj: any = null) {
+    const result = context.sandbox.run(formula, extras, context);
+    return _unwrapProxy(result);
+}
+
 function _parseFilterValue(value: string): any {
     if (isArray(value)) {
         const split = parseArray(value);
@@ -1151,6 +1163,11 @@ function _calculateFormulaValue(context: FileCalculationContext, object: any, ta
         context
     }, convertToFormulaObject(context, object));
 
+    // Unwrap the proxy object
+    return _unwrapProxy(result);
+}
+
+function _unwrapProxy<T>(result: SandboxResult<T>): SandboxResult<T> {
     // Unwrap the proxy object
     if (result.success && result.result) {
         if (result.result[isProxy]) {

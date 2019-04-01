@@ -1,5 +1,5 @@
 import { File } from '../Files/File';
-import { FileUpdatedEvent, FileEvent, FileAddedEvent, action, FilesState, calculateActionEvents } from "../Files/FilesChannel";
+import { FileUpdatedEvent, FileEvent, FileAddedEvent, action, FilesState, calculateActionEvents, FileRemovedEvent, fileRemoved, fileAdded } from "../Files/FilesChannel";
 import uuid from 'uuid/v4';
 import { every } from "lodash";
 import { isProxy, proxyObject } from "../Files/FileProxy";
@@ -157,33 +157,34 @@ export function join(values: any, separator: string = ','): string {
     }
 }
 
-export function destroy(file: any) {
-    actions.push(<FileUpdatedEvent>{
-        type: 'file_updated',
-        id: (typeof file === 'object' ? file.id : file),
-        update: {
-            tags: {
-                _destroyed: true
-            }
-        }
-    });
+/**
+ * Removes the given file or file ID from the simulation.
+ * @param file The file or file ID to remove from the simulation.
+ */
+export function destroy(file: File | string) {
+    let id: string;
+    if (typeof file === 'object') {
+        id = file.id;
+    } else if (typeof file === 'string') {
+        id = file;
+    }
+
+    if (id) {
+        actions.push(fileRemoved(id));
+    }
 }
 
 export function create(data: any) {
     var id = uuid();
 
-    let event: FileAddedEvent = {
-        type: 'file_added',
+    let event: FileAddedEvent = fileAdded({
         id: id,
-        file: {
-            id: id,
-            tags: {
-                _position: {x:0, y:0, z:0},
-                _workspace: null,
-                ...data
-            }
+        tags: {
+            _position: {x:0, y:0, z:0},
+            _workspace: null,
+            ...data
         }
-    };
+    });
 
     actions.push(event);
 }
@@ -210,11 +211,7 @@ export function copy(...files: any[]) {
     delete newFile.tags._original;
     delete newFile.tags.id;
 
-    let event: FileAddedEvent = {
-        type: 'file_added',
-        id: id,
-        file: newFile
-    }
+    let event: FileAddedEvent = fileAdded(newFile);
 
     actions.push(event);
 }

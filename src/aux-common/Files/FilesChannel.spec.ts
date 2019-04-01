@@ -63,16 +63,8 @@ describe('FilesChannel', () => {
                         // the new file is not destroyed
                     }
                 }),
-                fileUpdated('thisFile', {
-                    tags: {
-                        _destroyed: true
-                    }
-                }),
-                fileUpdated('thatFile', {
-                    tags: {
-                        _destroyed: true
-                    }
-                })
+                fileRemoved('thisFile'),
+                fileRemoved('thatFile')
             ]);
         });
 
@@ -121,16 +113,8 @@ describe('FilesChannel', () => {
                         // the new file is not destroyed
                     }
                 }),
-                fileUpdated('thisFile', {
-                    tags: {
-                        _destroyed: true
-                    }
-                }),
-                fileUpdated('thatFile', {
-                    tags: {
-                        _destroyed: true
-                    }
-                })
+                fileRemoved('thisFile'),
+                fileRemoved('thatFile')
             ]);
         });
 

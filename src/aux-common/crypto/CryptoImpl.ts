@@ -46,6 +46,15 @@ export interface SigningCryptoImpl {
     verify(key: PublicCryptoKey, signature: ArrayBuffer, data: ArrayBuffer): Promise<boolean>;
 
     /**
+     * Verifies that the given signatures were created by the private key corresponding to the given public key
+     * and that it was used for the given datas.
+     * @param key The key to use to verify the data.
+     * @param signatures The signatures to verify.
+     * @param datas The data to verify.
+     */
+    verifyBatch(key: PublicCryptoKey, signatures: ArrayBuffer[], datas: ArrayBuffer[]): Promise<boolean[]>;
+
+    /**
      * Exports the private key in PKCS #8 format encoded as PEM. 
      * @param key The key to export.
      */

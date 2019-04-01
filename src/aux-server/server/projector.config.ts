@@ -10,7 +10,6 @@ let domains = [
     'projector.*.filesimulator.com',
     'projector.localhost',
     'auxbuilder.com',
-    'localhost',
     ...getExtraDomainsForSite('projector')
 ];
 

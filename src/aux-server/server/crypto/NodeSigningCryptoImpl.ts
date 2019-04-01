@@ -1,6 +1,6 @@
 import { SigningCryptoImpl, PrivateCryptoKey, PublicCryptoKey, SigningCryptoKey, SignatureAlgorithmType } from "@yeti-cgi/aux-common/crypto";
 import { nodeSignatureToWebSignature, webSignatureToNodeSignature } from './SubtleCryptoCompat';
-import { createSign, createVerify, generateKeyPairSync } from 'crypto';
+import { createSign, createVerify, generateKeyPairSync, Verify } from 'crypto';
 
 export class NodeSigningCryptoImpl implements SigningCryptoImpl {
 
@@ -36,6 +36,32 @@ export class NodeSigningCryptoImpl implements SigningCryptoImpl {
 
             const sig = webSignatureToNodeSignature(Buffer.from(signature));
             return verify.verify(key.publicKey, sig);
+        }
+        throw this._unknownKey();
+    }
+
+    async verifyBatch(key: PublicCryptoKey, signatures: ArrayBuffer[], datas: ArrayBuffer[]): Promise<boolean[]> {
+        if (key instanceof NodePublicCryptoKey) {
+            let nodeSignatures: Buffer[] = new Array<Buffer>(signatures.length);
+            for (let i = 0; i < nodeSignatures.length; i++) {
+                nodeSignatures[i] = webSignatureToNodeSignature(Buffer.from(signatures[i]));
+            }
+
+            let verifies = new Array<Verify>(nodeSignatures.length);
+            for (let i = 0; i < verifies.length; i++) {
+                const verify = createVerify('SHA256');
+                const buffer = Buffer.from(datas[i]);
+                verify.update(buffer);
+                verify.end();
+                verifies[i] = verify;
+            }
+
+            let results = new Array<boolean>(datas.length);
+            let pub = key.publicKey;
+            for (let i = 0; i < results.length; i++) {
+                results[i] = verifies[i].verify(pub, nodeSignatures[i]);
+            }
+            return results;
         }
         throw this._unknownKey();
     }

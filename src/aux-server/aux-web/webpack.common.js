@@ -137,9 +137,18 @@ module.exports = {
       ServiceWorker: {
         events: true
       },
+      rewrites: function(asset) {
+        if (asset.endsWith('projector-index.html')) {
+            return '/';
+        } else if (asset.endsWith('player-index.html')) {
+            return '/';
+        }
+    
+        return asset;
+      },
       externals: [
         'https://fonts.googleapis.com/css?family=Roboto:400,500,700,400italic|Material+Icons'
-      ]
+      ],
     }),
     // new OfflinePlugin({
     //   chunks: ['projector'],
