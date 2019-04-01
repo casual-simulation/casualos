@@ -24,6 +24,7 @@
   - Refactored some of the logic around propagating file updates so that they can be more performant in the future.
   - Destroying files by dragging them off of a worksurface or using the `destroy()` function in an action now uses the causal tree instead of setting the `_destroyed` tag to `true`. (Allows better garbage collection in the future)
   - Improved first load performance by reducing the amount of work the browser needs to do to store a tree in IndexedDB.
+  - Improved performance for inserting atoms into the weave.
 
 ## V0.3.24
 ### Date: 3/28/2019
