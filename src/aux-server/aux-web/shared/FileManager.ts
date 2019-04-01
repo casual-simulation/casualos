@@ -196,11 +196,14 @@ export class FileManager {
    * @param id The ID of the session to connect to.
    */
   init(id: string, force: boolean = false): Promise<string> {
-    if (this._initPromise && !force) {
-      return this._initPromise;
-    } else {
-      return this._initPromise = this._init(id);
-    }
+      if (this._initPromise && !force) {
+          return this._initPromise;
+      } else {
+          if (this._initPromise) {
+              this.dispose();
+          }
+          return this._initPromise = this._init(id);
+      }
   }
 
   /**
@@ -416,6 +419,7 @@ export class FileManager {
             type: 'aux'
         }, { garbageCollect: true, alwaysRequestNewSiteId: false });
 
+        this._subscriptions.push(this._aux);
         this._subscriptions.push(this._aux.onError.subscribe(err => console.error(err)));
         this._subscriptions.push(this._aux.onRejected.subscribe(rejected => {
             rejected.forEach(r => {

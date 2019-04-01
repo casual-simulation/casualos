@@ -7,6 +7,7 @@ import { ExecSyncOptionsWithStringEncoding } from 'child_process';
 import { PrivateCryptoKey, PublicCryptoKey, SigningCryptoImpl } from '@yeti-cgi/aux-common/crypto';
 import { NodeSigningCryptoImpl } from '../crypto/NodeSigningCryptoImpl';
 import { AtomValidator } from '@yeti-cgi/aux-common/causal-trees/AtomValidator';
+import { SubscriptionLike } from 'rxjs';
 
 /**
  * Defines a class that is able to serve a set causal trees over Socket.io.
@@ -20,6 +21,7 @@ export class CausalTreeServer {
     private _treeList: TreeMap;
     private _treePromises: TreePromises;
     private _crypto: SigningCryptoImpl;
+    private _cleanupTimeout: number;
 
     /**
      * Creates a new causal tree factory that uses the given socket server, tree store, and tree factory.
@@ -33,6 +35,7 @@ export class CausalTreeServer {
         this._factory = causalTreeFactory;
         this._treeList = {};
         this._treePromises = {};
+        this._cleanupTimeout = 10_000;
         this._crypto = new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256');
 
         this._init();
@@ -43,48 +46,24 @@ export class CausalTreeServer {
 
             // V2 channels
             socket.on('join_channel', (info: RealtimeChannelInfo, callback: Function) => {
+                let connected = false;
                 socket.join(info.id, async err => {
                     if (err) {
                         console.log(err);
                         callback(err);
                         return;
                     }
+                    connected = true;
 
-                    const tree = await this._getTree(info);
-                    
-                    const sub2 = tree.atomsArchived.pipe(
-                        bufferTime(1000),
-                        filter(batch => batch.length > 0),
-                        flatMap(batch => batch),
-                        concatMap(async refs => {
-                            const atoms = refs.map(r => r);
-                            await this._treeStore.add(info.id, atoms, true);
-                        })
-                    ).subscribe(null, err => console.error(err));
-
-                    const sub = tree.atomAdded.pipe(
-                        bufferTime(1000),
-                        filter(batch => batch.length > 0),
-                        flatMap(batch => batch),
-                        concatMap(async refs => {
-                            const atoms = refs.map(r => r);
-                            await this._treeStore.add(info.id, atoms, false);
-                            let stored = tree.export();
-                            stored.weave = [];
-                            await this._treeStore.put(info.id, stored, false);
-                        })
-                    ).subscribe(null, err => console.error(err));
-
-                    const sub3 = tree.atomRejected.pipe(
-                        bufferTime(1000),
-                        filter(batch => batch.length > 0),
-                        flatMap(batch => batch),
-                        flatMap(batch => batch),
-                        tap(ref => {
-                            console.warn(`[CausalTreeSever] ${info.id}: Atom (${atomIdToString(ref.atom.id)}) rejected: ${ref.reason}`);
-                        })
-                    ).subscribe(null, err => console.error(err));
-
+                    const data = await this._getTree(info);
+                    data.connectedUsers += 1;
+                    console.log(`[CausalTreeServer] User joined ${info.id}. ${data.connectedUsers} remaining.`);
+                    if (data.timeoutId) {
+                        console.log(`[CausalTreeServer] Clearing timeout for cleanup on ${info.id}...`);
+                        clearTimeout(data.timeoutId);
+                        data.timeoutId = null;
+                    }
+                    const tree = data.tree;
                     const eventName = `event_${info.id}`;
                     socket.on(eventName, async (refs: Atom<AtomOp>[]) => {
                         const { added, rejected } = await tree.addMany(refs, true);
@@ -162,8 +141,19 @@ export class CausalTreeServer {
                         callback(exported);
                     });
 
+                    socket.on(`leave_${info.id}`, () => {
+                        socket.leave(info.id);
+                        if (connected) {
+                            this._trackUserLeft(data, info);
+                        }
+                        connected = false;
+                    });
+
                     socket.on('disconnect', () => {
-                        // TODO: Implement events for disconnecting
+                        if (connected) {
+                            this._trackUserLeft(data, info);
+                        }
+                        connected = false;
                     });
 
                     callback(null);
@@ -176,7 +166,29 @@ export class CausalTreeServer {
         });
     }
 
-    private async _getTree(info: RealtimeChannelInfo): Promise<CausalTree<AtomOp, any, any>> {
+    private _trackUserLeft(data: TreeData, info: RealtimeChannelInfo) {
+        if (!data.inactive) {
+            data.connectedUsers -= 1;
+            console.log(`[CausalTreeServer] User left ${info.id}. ${data.connectedUsers} remaining.`);
+            this._tryCleanupTreeData(data, info);
+        }
+    }
+
+    private _tryCleanupTreeData(data: TreeData, info: RealtimeChannelInfo) {
+        if (data.connectedUsers <= 0 && this._treePromises[info.id] && !data.inactive && !data.timeoutId) {
+            console.log(`[CausalTreeServer] Starting timeout for cleanup on ${info.id}...`);
+            data.timeoutId = setTimeout(() => {
+                console.log(`[CausalTreeServer] Cleaning up ${info.id} because no more users are connected...`);
+                this._treePromises[info.id] = null;
+                data.inactive = true;
+                data.subs.forEach(s => {
+                    s.unsubscribe();
+                });
+            }, this._cleanupTimeout);
+        }
+    }
+
+    private async _getTree(info: RealtimeChannelInfo): Promise<TreeData> {
         let tree = this._treeList[info.id];
         if (!tree) {
             let promise = this._treePromises[info.id];
@@ -191,7 +203,7 @@ export class CausalTreeServer {
         return tree;
     }
 
-    private async _getTreePromise(info: RealtimeChannelInfo): Promise<CausalTree<AtomOp, any, any>> {
+    private async _getTreePromise(info: RealtimeChannelInfo): Promise<TreeData> {
         let tree: CausalTree<AtomOp, any, any>;
         console.log(`[CausalTreeServer] Getting tree (${info.id}) from database...`);
         const stored = await this._treeStore.get<AtomOp>(info.id, false);
@@ -235,9 +247,50 @@ export class CausalTreeServer {
             }
         }
 
-        this._treeList[info.id] = tree;
+        let subs = this._registerSubs(info, tree);
+
+        let data = { tree, subs, connectedUsers: 0 };
+        this._treeList[info.id] = data;
         console.log(`[CausalTreeServer] Done.`);
-        return tree;
+        return data;
+    }
+
+    private _registerSubs(info: RealtimeChannelInfo, tree: CausalTree<AtomOp, any, any>): SubscriptionLike[] {
+        let subs: SubscriptionLike[] = [];
+        subs.push(tree.atomsArchived.pipe(
+            bufferTime(1000),
+            filter(batch => batch.length > 0),
+            flatMap(batch => batch),
+            concatMap(async refs => {
+                const atoms = refs.map(r => r);
+                await this._treeStore.add(info.id, atoms, true);
+            })
+        ).subscribe(null, err => console.error(err)));
+
+        subs.push(tree.atomAdded.pipe(
+            bufferTime(1000),
+            filter(batch => batch.length > 0),
+            flatMap(batch => batch),
+            concatMap(async refs => {
+                const atoms = refs.map(r => r);
+                await this._treeStore.add(info.id, atoms, false);
+                let stored = tree.export();
+                stored.weave = [];
+                await this._treeStore.put(info.id, stored, false);
+            })
+        ).subscribe(null, err => console.error(err)));
+
+        subs.push(tree.atomRejected.pipe(
+            bufferTime(1000),
+            filter(batch => batch.length > 0),
+            flatMap(batch => batch),
+            flatMap(batch => batch),
+            tap(ref => {
+                console.warn(`[CausalTreeSever] ${info.id}: Atom (${atomIdToString(ref.atom.id)}) rejected: ${ref.reason}`);
+            })
+        ).subscribe(null, err => console.error(err)));
+
+        return subs;
     }
 
     private async _createTree(id: string, type: string, generateKeys: boolean) {
@@ -287,9 +340,17 @@ export class CausalTreeServer {
  * Defines a list of causal trees mapped by their channel IDs.
  */
 export interface TreeMap {
-    [key: string]: CausalTree<AtomOp, any, any>;
+    [key: string]: TreeData;
 }
 
 export interface TreePromises {
-    [key: string]: Promise<CausalTree<AtomOp, any, any>>;
+    [key: string]: Promise<TreeData>;
+}
+
+export interface TreeData {
+    tree: CausalTree<AtomOp, any, any>;
+    subs: SubscriptionLike[];
+    connectedUsers: number;
+    timeoutId?: any;
+    inactive?: boolean;
 }

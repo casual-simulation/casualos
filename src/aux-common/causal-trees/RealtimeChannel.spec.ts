@@ -176,6 +176,23 @@ describe('RealtimeChannel', () => {
         });
     });
 
+    describe('unsubscribe', () => {
+        it('should emit the leave event', () => {
+            connection.setConnected(true);
+            
+            channel.unsubscribe();
+
+            expect(connection.requests.length).toBe(1);
+            expect(connection.requests[0].name).toEqual('join_channel');
+            expect(connection.requests[0].data).toEqual({
+                id: 'abc',
+                type: 'numbers'
+            });
+            expect(connection.emitted.length).toBe(1);
+            expect(connection.emitted[0].name).toEqual('leave_abc');
+        });
+    });
+
     describe('connectionStateChanged', () => {
         it('should be offline by default', () => {
             let state: boolean = true;

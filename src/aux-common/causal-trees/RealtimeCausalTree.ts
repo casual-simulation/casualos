@@ -53,7 +53,9 @@ export interface RealtimeCausalTreeOptions extends CausalTreeOptions {
  * That is, an object that is able to keep a causal tree updated
  * based on events from a realtime channel.
  */
-export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
+export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> implements SubscriptionLike {
+    
+    closed: boolean = false;
 
     private _tree: TTree;
     private _store: CausalTreeStore;
@@ -339,6 +341,12 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
             site: mySite,
             signingKey: signingKey
         };
+    }
+
+    unsubscribe(): void {
+        this._channel.unsubscribe();
+        this._subs.forEach(s => s.unsubscribe());
+        this.closed = true;
     }
 }
 

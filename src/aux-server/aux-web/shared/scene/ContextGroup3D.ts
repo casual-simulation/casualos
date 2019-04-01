@@ -175,11 +175,16 @@ export class ContextGroup3D extends GameObject {
                 console.log(`[ContextGroup3D] Add context ${c.context} to group ${this.file.id}.`);
                 this.contexts.set(c.context, c);
                 this.display.add(c);
+
+                calc.objects.forEach(o => {
+                    c.fileAdded(<AuxFile>o, calc);
+                });
             });
             removedContexts.forEach(c => {
                 console.log(`[ContextGroup3D] Remove context ${c} from group ${this.file.id}.`);
                 const context = this.contexts.get(c);
                 if (typeof context !== 'undefined') {
+                    context.dispose();
                     this.contexts.delete(c);
                     this.display.remove(context);
                 }
