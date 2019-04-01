@@ -31,6 +31,7 @@ export class BrowserCausalTreeStore implements CausalTreeStore {
             console.log('[BrowserCausalTreeStore] Deleted', num, 'atoms.');
             
             if (upgraded.weave) {
+                console.log('[BrowserCausalTreeStore] Adding', upgraded.weave.length, 'atoms...');
                 await this.add(id, upgraded.weave, false);
             }
         }
@@ -82,7 +83,6 @@ export class BrowserCausalTreeStore implements CausalTreeStore {
     }
 
     async add<T extends AtomOp>(id: string, atoms: Atom<T>[], archived: boolean = false): Promise<void> {
-        console.log('[BrowserCausalTreeStore] Adding', atoms.length, 'atoms...');
         const stored: StoredAtomArray<T> = {
             tree: id,
             atoms: atoms,
