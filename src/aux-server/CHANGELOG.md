@@ -13,6 +13,7 @@
     - `=#nums().map(num => num + 10)` now works and produces a list of numbers where each number has 10 added to it.
   - Fixed the ability to upload AUX files.
   - Improved garbage collection so that it avoids expensive operations when there is nothing to remove.
+  - Fixed offline mode to work offline(!).
 - Other improvements
   - Formulas now support using dots after @ or # queries. For example `=@name('bob').name` now works.
   -  Debug Page
