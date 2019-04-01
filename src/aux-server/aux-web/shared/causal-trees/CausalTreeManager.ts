@@ -72,7 +72,7 @@ export class CausalTreeManager implements SubscriptionLike {
             let validator = new AtomValidator(this._crypto)
             realtime = new RealtimeCausalTree<TTree>(this._factory, this._store, channel, {
                 validator: validator,
-                storeAtoms: false,
+                storeAtoms: true,
                 ...options
             });
             this._trees[info.id] = realtime;

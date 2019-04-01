@@ -6,7 +6,7 @@ import { CausalTreeFactory } from "./CausalTreeFactory";
 import { SiteVersionInfo } from "./SiteVersionInfo";
 import { SiteInfo, site, SiteInfoCrypto } from "./SiteIdInfo";
 import { SubscriptionLike, Subject, Observable, ReplaySubject } from 'rxjs';
-import { filter, flatMap, takeWhile, skipWhile, tap, map, first, concatMap } from 'rxjs/operators';
+import { filter, flatMap, takeWhile, skipWhile, tap, map, first, concatMap, bufferTime } from 'rxjs/operators';
 import { maxBy } from 'lodash';
 import { storedTree, StoredCausalTree } from "./StoredCausalTree";
 import { WeaveVersion, versionsEqual } from "./WeaveVersion";
@@ -22,6 +22,7 @@ export interface RealtimeCausalTreeOptions extends CausalTreeOptions {
      * Specifies that the tree should not use the locally stored causal tree
      * and instead should always request a new one from the server.
      * For now, this is a useful way to ensure that clients always get new IDs.
+     * Defaults to false.
      */
     alwaysRequestNewSiteId?: boolean;
 
@@ -36,8 +37,15 @@ export interface RealtimeCausalTreeOptions extends CausalTreeOptions {
 
     /**
      * Whether the realtime causal tree should save atoms in the store.
+     * Defaults to true.
      */
     storeAtoms?: boolean;
+
+    /**
+     * The number of miliseconds that new atoms should be buffered for before saving them.
+     * Defaults to 1000.
+     */
+    bufferTimeSpan?: number;
 }
 
 /**
@@ -57,6 +65,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
     private _subs: SubscriptionLike[];
     private _options: RealtimeCausalTreeOptions;
     private _storeAtoms: boolean;
+    private _bufferTime: number;
 
     /**
      * Gets the realtime channel that this tree is using.
@@ -126,10 +135,13 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>> {
         this._subs = [];
         this._options = options || {};
         this._storeAtoms = typeof this._options.storeAtoms === 'undefined' ? true : this._options.storeAtoms;
+        this._bufferTime = typeof this._options.bufferTimeSpan === 'undefined' ? 1000 : this._options.bufferTimeSpan;
         
         if (this._storeAtoms) {
             this._subs.push(this._updated.pipe(
                 filter(a => a.length > 0),
+                bufferTime(1000),
+                concatMap(atoms => atoms),
                 concatMap(async atoms => await this._store.add(this.id, atoms))
             ).subscribe(null, err => this._errors.next(err)));
         }
