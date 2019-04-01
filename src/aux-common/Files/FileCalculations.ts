@@ -513,7 +513,7 @@ export function createWorkspace(id = uuid(), builderContextId: string = `aux._co
             [`${builderContextId}.z`]: 0,
             'aux.color': 'clear',
             'aux.movable': false,
-            'scale.z': 0.01
+            'aux.scale.z': 0.01
         }
     };
 }

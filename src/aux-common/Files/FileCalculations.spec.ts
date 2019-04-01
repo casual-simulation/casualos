@@ -613,7 +613,7 @@ describe('FileCalculations', () => {
                 'testContext.z',
                 'aux.color',
                 'aux.movable',
-                'scale.z'
+                'aux.scale.z'
             ]);
         });
     });
