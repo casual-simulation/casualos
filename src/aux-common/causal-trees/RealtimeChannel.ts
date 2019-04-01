@@ -25,6 +25,7 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
     private _emitName: string;
     private _infoName: string;
     private _siteName: string;
+    private _leaveName: string;
     private _requestSiteIdName: string;
     private _requestWeaveName: string;
 
@@ -41,6 +42,7 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
         this._requestSiteIdName = `siteId_${info.id}`;
         this._requestWeaveName = `weave_${info.id}`;
         this._siteName = `site_${info.id}`;
+        this._leaveName = `leave_${info.id}`;
         this._connectionStateChanged = new BehaviorSubject(false);
         this._connection.init([
             this._emitName,
@@ -163,6 +165,10 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
      * Disposes of this channel.
      */
     unsubscribe(): void {
+        this._connection.emit({
+            name: this._leaveName,
+            data: null
+        });
         this._connection.unsubscribe();
     }
 }
