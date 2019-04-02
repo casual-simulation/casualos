@@ -1,5 +1,7 @@
 import { createFile, createCalculationContext } from "./FileCalculations";
 import { createFileProxy, isProxy, proxyObject } from './FileProxy';
+import formulaLib from '../Formulas/formula-lib';
+import { File } from './File';
 import { keys } from 'lodash';
 import { FileEvent } from ".";
 
@@ -283,6 +285,85 @@ describe('FileProxy', () => {
                 { ghi: 2, zzz: true },
                 { ghi: 2, zzz: 'hi' },
             ]);
+        });
+
+        it('should handle setting values on other proxy objects', () => {
+            const file = createFile('testId');
+            const second = createFile('lalala');
+            file.tags['abc.def'] = {
+                ghi: 15,
+                zzz: true
+            };
+            file.tags.second = '=@name("other")';
+            second.tags.name = 'other';
+            
+            let files: File[] = [];
+            let tags: string[] = [];
+            let vals: any[] = [];
+
+            const factory = (o: File) => {
+                return (tag: string, value: any) => {
+                    files.push(o);
+                    tags.push(tag);
+                    vals.push(value);
+                };
+            };
+            const context = createCalculationContext([file, second], formulaLib, factory);
+            const proxy = createFileProxy(context, file, factory(file));
+
+            proxy.second.def = 2;
+            proxy.second.hello = 'abc';
+            
+            expect(file.tags.second).toBe('=@name("other")');
+            expect(second).toEqual({
+                id: 'lalala',
+                tags: {
+                    name: 'other'
+                }
+            });
+            expect(files).toEqual([
+                second,
+                second
+            ]);
+            expect(tags).toEqual([
+                'def',
+                'hello',
+            ]);
+            expect(vals).toEqual([
+                2,
+                'abc',
+            ]);
+        });
+
+        it('should return the same proxy objects from formulas', () => {
+            const file = createFile('testId');
+            const second = createFile('lalala');
+            file.tags['abc.def'] = {
+                ghi: 15,
+                zzz: true
+            };
+            file.tags.second = '=@name("other")';
+            second.tags.name = 'other';
+            
+            let files: File[] = [];
+            let tags: string[] = [];
+            let vals: any[] = [];
+
+            const factory = (o: File) => {
+                return (tag: string, value: any) => {
+                    files.push(o);
+                    tags.push(tag);
+                    vals.push(value);
+                };
+            };
+            const context = createCalculationContext([file, second], formulaLib, factory);
+            const proxy = createFileProxy(context, file, factory(file));
+
+            proxy.second.def = 2;
+            proxy.second.hello = 'abc';
+            
+            expect(proxy.second.def.valueOf()).toBe(2);
+            expect(proxy.second.hello.valueOf()).toBe('abc');
         });
 
         it('should support using other properties while setting a value', () => {

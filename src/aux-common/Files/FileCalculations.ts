@@ -16,7 +16,7 @@ import {
     cloneDeep
 } from 'lodash';
 import { Sandbox, SandboxLibrary, SandboxResult } from '../Formulas/Sandbox';
-import { isProxy, createFileProxy, proxyObject, SetValueHandler } from './FileProxy';
+import { isProxy, createFileProxy, proxyObject, SetValueHandler, FileProxy } from './FileProxy';
 
 /// <reference path="../typings/global.d.ts" />
 import formulaLib from '../Formulas/formula-lib';
@@ -187,14 +187,14 @@ export function isHiddenTag(tag: string): boolean {
     return (/^_/.test(tag) || /(\w+)\._/.test(tag));
 }
 
-export function calculateFileValue(context: FileCalculationContext, object: Object, tag: string) {
+export function calculateFileValue(context: FileCalculationContext, object: Object, tag: string, unwrapProxy?: boolean) {
     if (tag === 'id') {
         return object.id;
     } else if (isFormulaObject(object)) {
         const o: any = object;
         return o[tag];
     } else {
-        return _calculateValue(context, object, tag, object.tags[tag]);
+        return _calculateValue(context, object, tag, object.tags[tag], unwrapProxy);
     }
 }
 
@@ -254,7 +254,7 @@ export function isNumber(value: string): boolean {
     return (/^-?\d+\.?\d*$/).test(value) || (typeof value === 'string' && 'infinity' === value.toLowerCase());
 }
 
-export function isFormulaObject(object: any) {
+export function isFormulaObject(object: any): object is FileProxy {
     return object[isProxy];
 }
 
@@ -640,12 +640,12 @@ export function convertToFormulaObject(context: FileCalculationContext, object: 
  * @param objects The objects that should be included in the context.
  * @param lib The library JavaScript that should be used.
  */
-export function createCalculationContext(objects: Object[], lib: SandboxLibrary = formulaLib): FileCalculationContext {
+export function createCalculationContext(objects: Object[], lib: SandboxLibrary = formulaLib, setValueHandlerFactory?: (file: File) => SetValueHandler): FileCalculationContext {
     const context = {
         sandbox: new Sandbox(lib),
         objects: objects
     };
-    context.sandbox.interface = new SandboxInterfaceImpl(context);
+    context.sandbox.interface = new SandboxInterfaceImpl(context, setValueHandlerFactory);
     return context;
 }
 
@@ -1069,10 +1069,16 @@ export function isFileInContext(context: FileCalculationContext, file: Object, c
  * @param formula The formula to use.
  * @param extras The extra data to include in callbacks to the interface implementation.
  * @param thisObj The object that should be used for the this keyword in the formula.
+ * @param unwrapProxy Whether the proxy objects should be unwrapped before being returned. (plumbing command, only use if you know what you're doing)
  */
-export function calculateFormulaValue(context: FileCalculationContext, formula: string, extras: any = {}, thisObj: any = null) {
+export function calculateFormulaValue(context: FileCalculationContext, formula: string, extras: any = {}, thisObj: any = null, unwrapProxy: boolean = true) {
     const result = context.sandbox.run(formula, extras, context);
-    return _unwrapProxy(result);
+
+    if (unwrapProxy) {
+        return _unwrapProxy(result);
+    } else {
+        return result;
+    }
 }
 
 function _parseFilterValue(value: string): any {
@@ -1131,9 +1137,9 @@ function _formatValue(value: any): string {
     }
 }
 
-function _calculateValue(context: FileCalculationContext, object: any, tag: string, formula: string): any {
+function _calculateValue(context: FileCalculationContext, object: any, tag: string, formula: string, unwrapProxy?: boolean): any {
     if (isFormula(formula)) {
-        const result = _calculateFormulaValue(context, object, tag, formula);
+        const result = _calculateFormulaValue(context, object, tag, formula, unwrapProxy);
         if (result.success) {
         return result.result;
         } else {
@@ -1144,7 +1150,7 @@ function _calculateValue(context: FileCalculationContext, object: any, tag: stri
         return obj.value;
     } else if(isArray(formula)) {
         const split = parseArray(formula);
-        return split.map(s => _calculateValue(context, object, tag, s.trim()));
+        return split.map(s => _calculateValue(context, object, tag, s.trim(), unwrapProxy));
     } else if(isNumber(formula)) {
         return parseFloat(formula);
     } else if(formula === 'true') {
@@ -1156,15 +1162,19 @@ function _calculateValue(context: FileCalculationContext, object: any, tag: stri
     }
 }
 
-function _calculateFormulaValue(context: FileCalculationContext, object: any, tag: string, formula: string) {
+function _calculateFormulaValue(context: FileCalculationContext, object: any, tag: string, formula: string, unwrapProxy: boolean = true) {
     const result = context.sandbox.run(formula, {
         formula,
         tag,
         context
     }, convertToFormulaObject(context, object));
 
-    // Unwrap the proxy object
-    return _unwrapProxy(result);
+    if (unwrapProxy) {
+        // Unwrap the proxy object
+        return _unwrapProxy(result);
+    } else {
+        return result;
+    }
 }
 
 function _unwrapProxy<T>(result: SandboxResult<T>): SandboxResult<T> {
@@ -1205,10 +1215,14 @@ class SandboxInterfaceImpl implements SandboxInterface {
   
     objects: Object[];
     context: FileCalculationContext;
+    setValueHandlerFactory: (file: File) => SetValueHandler;
+    proxies: Map<string, FileProxy>;
 
-    constructor(context: FileCalculationContext) {
+    constructor(context: FileCalculationContext, setValueHandlerFactory?: (file: File) => SetValueHandler) {
       this.objects = context.objects;
       this.context = context;
+      this.proxies = new Map();
+      this.setValueHandlerFactory = setValueHandlerFactory
     }
   
     listTagValues(tag: string, filter?: FilterFunction, extras?: any) {
@@ -1219,7 +1233,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
   
     listObjectsWithTag(tag: string, filter?: FilterFunction, extras?: any) {
       const objs = this.objects.filter(o => this._calculateValue(o, tag))
-        .map(o => convertToFormulaObject(this.context, o));
+        .map(o => this._convertToFormulaObject(o));
       const filtered = this._filterObjects(objs, filter, tag);
       return _singleOrArray(filtered);
     }
@@ -1269,5 +1283,18 @@ class SandboxInterfaceImpl implements SandboxInterface {
   
     private _calculateValue(object: any, tag: string) {
       return calculateFileValue(this.context, object, tag);
+    }
+
+    private _convertToFormulaObject(file: File) {
+        let proxy = this.proxies.get(file.id);
+        if (!proxy) {
+            if (this.setValueHandlerFactory) {
+                proxy = convertToFormulaObject(this.context, file, this.setValueHandlerFactory(file));
+            } else {
+                proxy = convertToFormulaObject(this.context, file);
+            }
+            this.proxies.set(file.id, proxy);
+        }
+        return proxy;
     }
   }

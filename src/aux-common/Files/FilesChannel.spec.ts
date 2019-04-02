@@ -225,6 +225,102 @@ describe('FilesChannel', () => {
             ]);
         });
 
+        it('should be able to set property values on files returned from queries', () => {
+            const state: FilesState = {
+                thisFile: {
+                    id: 'thisFile',
+                    tags: {
+                        'abcdef()': '@name("test").abc = "def"'
+                    }
+                },
+                editFile: {
+                    id: 'editFile',
+                    tags: {
+                        name: 'test'
+                    }
+                }
+            };
+
+            // specify the UUID to use next
+            const fileAction = action('abcdef', ['thisFile']);
+            const result = calculateActionEvents(state, fileAction);
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+            
+            expect(result.events).toEqual([
+                fileUpdated('editFile', {
+                    tags: {
+                        abc: 'def'
+                    }
+                })
+            ]);
+        });
+
+        it('should be able to set property values on files returned from other formulas', () => {
+            const state: FilesState = {
+                thisFile: {
+                    id: 'thisFile',
+                    tags: {
+                        'formula': '=@name("test")', 
+                        'abcdef()': 'this.formula.abc = "def"'
+                    }
+                },
+                editFile: {
+                    id: 'editFile',
+                    tags: {
+                        name: 'test'
+                    }
+                }
+            };
+
+            // specify the UUID to use next
+            const fileAction = action('abcdef', ['thisFile']);
+            const result = calculateActionEvents(state, fileAction);
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+            
+            expect(result.events).toEqual([
+                fileUpdated('editFile', {
+                    tags: {
+                        abc: 'def'
+                    }
+                })
+            ]);
+        });
+
+        it('should be able to increment values on files returned from other formulas', () => {
+            const state: FilesState = {
+                thisFile: {
+                    id: 'thisFile',
+                    tags: {
+                        'formula': '=@name("test")', 
+                        'abcdef()': 'this.formula.num += 1; this.formula.num += 1'
+                    }
+                },
+                editFile: {
+                    id: 'editFile',
+                    tags: {
+                        name: 'test',
+                        num: 1
+                    }
+                }
+            };
+
+            // specify the UUID to use next
+            const fileAction = action('abcdef', ['thisFile']);
+            const result = calculateActionEvents(state, fileAction);
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+            
+            expect(result.events).toEqual([
+                fileUpdated('editFile', {
+                    tags: {
+                        num: 3
+                    }
+                })
+            ]);
+        });
+
         it('should handle shouts', () => {
             const state: FilesState = {
                 thisFile: {
