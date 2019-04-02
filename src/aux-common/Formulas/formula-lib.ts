@@ -174,6 +174,10 @@ export function destroy(file: File | string) {
     }
 }
 
+/**
+ * Creates a new file that contains the given tags.
+ * @param data The object that specifies what tags to set on the file.
+ */
 export function create(data: any) {
     var id = uuid();
 
@@ -189,7 +193,11 @@ export function create(data: any) {
     actions.push(event);
 }
 
-export function copy(...files: any[]) {
+/**
+ * Creates a new file that contains tags from the given files or objects.
+ * @param files The files or objects to use for the new file's tags.
+ */
+export function clone(...files: any[]) {
     let id = uuid();
 
     let originals = files.map(f => {
@@ -216,10 +224,20 @@ export function copy(...files: any[]) {
     actions.push(event);
 }
 
+/**
+ * Combines the two given files.
+ * @param first The first file.
+ * @param second The second file.
+ */
 export function combine(first: File | string, second: File | string) {
     event('+', [first, second]);
 }
 
+/**
+ * Runs an event on the given files.
+ * @param name The name of the event to run.
+ * @param files The files that the event should be executed on. If null, then the event will be run on every file.
+ */
 export function event(name: string, files: (File | string)[]) {
     if (!!state) {
         let ids = !!files ? files.map(f => typeof f === 'string' ? f : f.id) : null;
@@ -267,7 +285,7 @@ export default {
     random,
     join,
     destroy,
-    copy,
+    clone,
     create,
     combine,
     event,
