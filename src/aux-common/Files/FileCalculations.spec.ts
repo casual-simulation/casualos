@@ -23,7 +23,8 @@ import {
     isFileMovable,
     isFileStackable,
     newSelectionId,
-    objectsAtContextGridPosition
+    objectsAtContextGridPosition,
+    calculateFormulaValue
 } from './FileCalculations';
 import {
     cloneDeep
@@ -612,7 +613,7 @@ describe('FileCalculations', () => {
                 'testContext.z',
                 'aux.color',
                 'aux.movable',
-                'scale.z'
+                'aux.scale.z'
             ]);
         });
     });
@@ -681,6 +682,31 @@ describe('FileCalculations', () => {
             expect(objects).toEqual([
                 state['second']
             ]);
+        });
+    });
+
+    describe('calculateFormulaValue()', () => {
+        it('should return the formula result', () => {
+            const formula = '123.4567';
+            const context = createCalculationContext([]);
+            const result = calculateFormulaValue(context, formula);
+
+            expect(result.success).toBe(true);
+            expect(result.result).toBeCloseTo(123.4567);
+        });
+
+        it('should unwrap proxy values', () => {
+            const obj1 = createFile('test1', {
+                name: 'test',
+                num: 123
+            });
+            const context = createCalculationContext([obj1]);
+            
+            const formula = '=@name("test").num';
+            const result = calculateFormulaValue(context, formula);
+
+            expect(result.success).toBe(true);
+            expect(result.result).toBeCloseTo(123);
         });
     });
 
@@ -890,6 +916,20 @@ describe('FileCalculations', () => {
                         3
                     ]);
                 });
+
+                it('should work with dots after the filter args', () => {
+                    const file1 = createFile('test1');
+
+                    file1.tags.num = {
+                        a: 1
+                    };
+
+                    file1.tags.formula = '=#num(() => true).a';
+                    const context = createCalculationContext([file1]);
+                    let value = calculateFileValue(context, file1, 'formula');
+
+                    expect(value).toBe(1);
+                });
             });
 
             describe('@ syntax', () => {
@@ -1035,6 +1075,83 @@ describe('FileCalculations', () => {
                     expect(value).toEqual([
                         file2,
                         file3
+                    ]);
+                });
+
+                it('should work with dots after the filter args', () => {
+                    const file1 = createFile('test1');
+
+                    file1.tags.num = {
+                        a: 1
+                    };
+                    file1.tags.name = 'test';
+
+                    file1.tags.formula = '=@name("test").num.a';
+                    const context = createCalculationContext([file1]);
+                    let value = calculateFileValue(context, file1, 'formula');
+
+                    expect(value).toBe(1);
+                });
+
+                it('should be able to use proxy magic after the filter args', () => {
+                    const file1 = createFile('test1');
+
+                    file1.tags['num.a'] = 1;
+                    file1.tags.name = 'test';
+
+                    file1.tags.formula = '=@name("test").num.a';
+                    const context = createCalculationContext([file1]);
+                    let value = calculateFileValue(context, file1, 'formula');
+
+                    expect(value).toBe(1);
+                });
+
+                it('should be able to use indexer expressions after the filter args', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+
+                    file1.tags['num.a'] = 1;
+                    file1.tags.name = 'test';
+                    file2.tags.name = 'test';
+
+                    file1.tags.formula = '=@name("test")[0].num.a';
+                    const context = createCalculationContext([file1, file2]);
+                    let value = calculateFileValue(context, file1, 'formula');
+
+                    expect(value).toBe(1);
+                });
+
+                it('should be able to use expressions in indexers after filter args', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+
+                    file1.tags['num.a'] = 1;
+                    file1.tags.name = 'test';
+                    file2.tags.name = 'test';
+
+                    file1.tags.formula = '=@name("test")[( (1 + 1 - 2) * 10 + 1 - 1)].num.a';
+                    const context = createCalculationContext([file1, file2]);
+                    let value = calculateFileValue(context, file1, 'formula');
+
+                    expect(value).toBe(1);
+                });
+
+                it('should be able to use functions on returned lists', () => {
+                    const file1 = createFile('test1');
+                    const file2 = createFile('test2');
+
+                    file1.tags.num = 1;
+                    file2.tags.num = 3;
+                    file1.tags.name = 'test';
+                    file2.tags.name = 'test';
+
+                    file1.tags.formula = '=@name("test").map(a => a.num)';
+                    const context = createCalculationContext([file1, file2]);
+                    let value = calculateFileValue(context, file1, 'formula');
+
+                    expect(value).toEqual([
+                        1,
+                        3
                     ]);
                 });
             });

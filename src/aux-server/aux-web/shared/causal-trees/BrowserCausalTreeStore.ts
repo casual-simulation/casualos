@@ -1,4 +1,4 @@
-import { CausalTreeStore, AtomOp, StoredCausalTree, Atom, atomIdToString, StoredCausalTreeVersion3, upgrade, SiteInfo, StoredCryptoKeys } from "@yeti-cgi/aux-common/causal-trees";
+import { CausalTreeStore, AtomOp, StoredCausalTree, Atom, atomIdToString, StoredCausalTreeVersion3, upgrade, SiteInfo, StoredCryptoKeys, atomId } from "@yeti-cgi/aux-common/causal-trees";
 import Dexie from 'dexie';
 
 export class BrowserCausalTreeStore implements CausalTreeStore {
@@ -14,6 +14,7 @@ export class BrowserCausalTreeStore implements CausalTreeStore {
     }
 
     async put<T extends AtomOp>(id: string, tree: StoredCausalTree<T>, fullUpdate: boolean = true): Promise<void> {
+        console.log('[BrowserCausalTreeStore] Updating tree', id);
         const upgraded = upgrade(tree);
         const stored: StoredTreeVersion1<T> = {
             id: id,
@@ -25,9 +26,12 @@ export class BrowserCausalTreeStore implements CausalTreeStore {
         await this._db.trees.put(stored);
 
         if (fullUpdate) {
-            await this._db.atoms.where('tree').equals(id).delete();
+            console.log('[BrowserCausalTreeStore] Deleting old atoms...');
+            const num = await this._db.atoms.where('tree').equals(id).delete();
+            console.log('[BrowserCausalTreeStore] Deleted', num, 'atoms.');
             
             if (upgraded.weave) {
+                console.log('[BrowserCausalTreeStore] Adding', upgraded.weave.length, 'atoms...');
                 await this.add(id, upgraded.weave, false);
             }
         }
@@ -41,9 +45,10 @@ export class BrowserCausalTreeStore implements CausalTreeStore {
         }
 
         if (typeof value.wrapperVersion === 'undefined') {
+            console.log('[BrowserCausalTreeStore] Getting tree', id);
             const query = await this._db.atoms.where('tree')
                 .equals(id);
-            let stored: StoredAtom<T>[];
+            let stored: StoredAtomArray<T>[];
 
             if (typeof archived !== 'undefined') {
                 stored = await query.filter(a => a.archived === archived)
@@ -51,14 +56,25 @@ export class BrowserCausalTreeStore implements CausalTreeStore {
             } else {
                 stored = await query.toArray();
             }
-                
-            const atoms = stored.map(a => a.atom);
 
+            let atoms: Map<string, Atom<T>> = new Map();
+
+            for (let i = 0; i < stored.length; i++) {
+                const arr = stored[i].atoms;
+                for (let b = 0; b < arr.length; b++) {
+                    const a = arr[b];
+                    atoms.set(atomIdToString(a.id), a);
+                }
+            }
+
+            let vals = new Array(...atoms.values());
+
+            console.log('[BrowserCausalTreeStore] Returning', vals.length, 'atoms');
             return {
                 formatVersion: 3,
                 knownSites: value.knownSites,
                 site: value.site,
-                weave: atoms,
+                weave: vals,
                 ordered: false
             };
         } else {
@@ -67,13 +83,12 @@ export class BrowserCausalTreeStore implements CausalTreeStore {
     }
 
     async add<T extends AtomOp>(id: string, atoms: Atom<T>[], archived: boolean = false): Promise<void> {
-        const stored = atoms.map(a => ({
-            id: `${id}:${atomIdToString(a.id)}`,
-            archived: archived,
+        const stored: StoredAtomArray<T> = {
             tree: id,
-            atom: a,
-        }));
-        await this._db.atoms.bulkPut(stored);
+            atoms: atoms,
+            archived: archived
+        };
+        await this._db.atoms.add(stored);
     }
 
     async putKeys(id: string, privateKey: string, publicKey: string): Promise<void> {
@@ -95,6 +110,27 @@ export class BrowserCausalTreeStore implements CausalTreeStore {
             return null;
         }
     }
+}
+
+/**
+ * Defines an interface for an array of atoms that are stored in the tree.
+ */
+interface StoredAtomArray<T extends AtomOp> {
+
+    /**
+     * The tree that the atoms are stored for.
+     */
+    tree: string;
+
+    /**
+     * The atoms to store.
+     */
+    atoms: Atom<T>[];
+
+    /**
+     * The whether the atoms are archived.
+     */
+    archived: boolean;
 }
 
 interface StoredAtom<T extends AtomOp> {
@@ -121,11 +157,21 @@ interface CryptoKeys {
 class CausalTreeDatabase extends Dexie {
 
     trees: Dexie.Table<StoredTree<any>, string>;
-    atoms: Dexie.Table<StoredAtom<any>, number>;
+    atoms: Dexie.Table<StoredAtomArray<any>, number>;
     keys: Dexie.Table<CryptoKeys, string>
 
     constructor() {
         super('AuxCausalTrees');
+
+        this.version(5).stores({
+            'trees': 'id,site.id',
+            'atoms': '++,tree,archived',
+            'keys': 'id'
+        }).upgrade(async trans => {
+            console.log('[BrowserCausalTreeStore] Upgrading database to version 4...');
+            await trans.table<StoredAtom<any>, string>('atoms').toCollection().delete();
+            console.log('[BrowserCausalTreeStore] Upgraded database.');
+        });
 
         this.version(4).stores({
             'trees': 'id,site.id',

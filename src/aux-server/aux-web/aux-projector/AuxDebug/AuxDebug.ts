@@ -5,7 +5,8 @@ import { Prop, Watch } from 'vue-property-decorator';
 import App from '../App/App';
 import { SubscriptionLike } from 'rxjs';
 import { TreeView } from 'vue-json-tree-view';
-import { FilesState } from '@yeti-cgi/aux-common';
+import { calculateFormulaValue, createCalculationContext } from '@yeti-cgi/aux-common';
+import { values } from 'lodash';
 
 @Component({
     components: {
@@ -14,7 +15,10 @@ import { FilesState } from '@yeti-cgi/aux-common';
 })
 export default class AuxDebug extends Vue {
 
-    auxJson: FilesState = null;
+    auxJson: any = null;
+    includeDestroyed: boolean = false;
+    search: string = '';
+    error: string;
     
     private _subs: SubscriptionLike[];
 
@@ -29,15 +33,18 @@ export default class AuxDebug extends Vue {
     constructor() {
         super();
         this.auxJson = null;
+        this.search = '';
+        this.error = null;
+        this.includeDestroyed = false;
     }
 
     created() {
         this.auxJson = this.fileManager.filesState;
 
         this._subs = [];
-        this._subs.push(this.fileManager.fileDiscovered.subscribe((file) => { this.refreshAuxJson()}));
-        this._subs.push(this.fileManager.fileRemoved.subscribe((file) => { this.refreshAuxJson()}));
-        this._subs.push(this.fileManager.fileUpdated.subscribe((file) => { this.refreshAuxJson()}));
+        this._subs.push(this.fileManager.filesDiscovered.subscribe((file) => { this.refreshAuxJson()}));
+        this._subs.push(this.fileManager.filesRemoved.subscribe((file) => { this.refreshAuxJson()}));
+        this._subs.push(this.fileManager.filesUpdated.subscribe((file) => { this.refreshAuxJson()}));
     }
 
     download() {
@@ -49,7 +56,21 @@ export default class AuxDebug extends Vue {
     }
 
     refreshAuxJson() {
-        this.auxJson = this.fileManager.filesState;
+        if (this.search) {
+            this.auxJson = this._search();
+        } else {
+            this.auxJson = this.fileManager.filesState;
+        }
+    }
+
+    @Watch('search')
+    searchChanged(val: string) {
+        this.refreshAuxJson();
+    }
+
+    @Watch('includeDestroyed')
+    includeDestroyedChanged() {
+        this.refreshAuxJson();
     }
 
     beforeDestroy() {
@@ -57,5 +78,11 @@ export default class AuxDebug extends Vue {
         this._subs.forEach(sub => sub.unsubscribe());
         this._subs = [];
       }
+    }
+
+    private _search() {
+        const context = this.includeDestroyed ? createCalculationContext(values(this.fileManager.filesState)) : this.fileManager.createContext();
+        const value = calculateFormulaValue(context, this.search);
+        return value;
     }
 }

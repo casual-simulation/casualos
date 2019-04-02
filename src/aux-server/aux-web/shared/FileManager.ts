@@ -45,7 +45,8 @@ import {
   filter, 
   map, 
   startWith,
-  first as rxFirst
+  first as rxFirst,
+  flatMap
 } from 'rxjs/operators';
 
 import {AppManager, appManager} from './AppManager';
@@ -68,9 +69,9 @@ export class FileManager {
   private _subscriptions: SubscriptionLike[];
   private _status: string;
   private _initPromise: Promise<string>;
-  private _fileDiscoveredObservable: ReplaySubject<AuxFile>;
-  private _fileRemovedObservable: ReplaySubject<string>;
-  private _fileUpdatedObservable: Subject<AuxFile>;
+  private _filesDiscoveredObservable: ReplaySubject<AuxFile[]>;
+  private _filesRemovedObservable: ReplaySubject<string[]>;
+  private _filesUpdatedObservable: Subject<AuxFile[]>;
   private _selectedFilesUpdated: BehaviorSubject<SelectedFilesUpdatedEvent>;
   private _id: string;
   private _aux: RealtimeCausalTree<AuxCausalTree>;
@@ -102,8 +103,8 @@ export class FileManager {
    * Gets an observable that resolves whenever a new file is discovered.
    * That is, it was created or added by another user.
    */
-  get fileDiscovered(): Observable<AuxFile> {
-    return this._fileDiscoveredObservable;
+  get filesDiscovered(): Observable<AuxFile[]> {
+    return this._filesDiscoveredObservable;
   }
 
   /**
@@ -111,15 +112,15 @@ export class FileManager {
    * That is, it was deleted from the working directory either by checking out a
    * branch that does not contain the file or by deleting it.
    */
-  get fileRemoved(): Observable<string> {
-    return this._fileRemovedObservable;
+  get filesRemoved(): Observable<string[]> {
+    return this._filesRemovedObservable;
   }
 
   /**
    * Gets an observable that resolves whenever a file is updated.
    */
-  get fileUpdated(): Observable<AuxFile> {
-    return this._fileUpdatedObservable;
+  get filesUpdated(): Observable<AuxFile[]> {
+    return this._filesUpdatedObservable;
   }
 
   get selectedFilesUpdated(): Observable<SelectedFilesUpdatedEvent> {
@@ -195,11 +196,14 @@ export class FileManager {
    * @param id The ID of the session to connect to.
    */
   init(id: string, force: boolean = false): Promise<string> {
-    if (this._initPromise && !force) {
-      return this._initPromise;
-    } else {
-      return this._initPromise = this._init(id);
-    }
+      if (this._initPromise && !force) {
+          return this._initPromise;
+      } else {
+          if (this._initPromise) {
+              this.dispose();
+          }
+          return this._initPromise = this._init(id);
+      }
   }
 
   /**
@@ -328,7 +332,8 @@ export class FileManager {
    * @param file The file to watch.
    */
   fileChanged(file: File): Observable<File> {
-    return this.fileUpdated.pipe(
+    return this.filesUpdated.pipe(
+      flatMap(files => files),
       filter(f => f.id === file.id),
       startWith(file)
     );
@@ -401,9 +406,9 @@ export class FileManager {
         this._id = this._getTreeName(id);
 
         this._subscriptions = [];
-        this._fileDiscoveredObservable = new ReplaySubject<AuxFile>();
-        this._fileRemovedObservable = new ReplaySubject<string>();
-        this._fileUpdatedObservable = new Subject<AuxFile>();
+        this._filesDiscoveredObservable = new ReplaySubject<AuxFile[]>();
+        this._filesRemovedObservable = new ReplaySubject<string[]>();
+        this._filesUpdatedObservable = new Subject<AuxFile[]>();
         this._selectedFilesUpdated =
             new BehaviorSubject<SelectedFilesUpdatedEvent>({files: []});
         
@@ -412,8 +417,9 @@ export class FileManager {
         this._aux = await this._treeManager.getTree<AuxCausalTree>({
             id: this._id,
             type: 'aux'
-        }, { garbageCollect: true, alwaysRequestNewSiteId: true });
+        }, { garbageCollect: true, alwaysRequestNewSiteId: false });
 
+        this._subscriptions.push(this._aux);
         this._subscriptions.push(this._aux.onError.subscribe(err => console.error(err)));
         this._subscriptions.push(this._aux.onRejected.subscribe(rejected => {
             rejected.forEach(r => {
@@ -429,11 +435,11 @@ export class FileManager {
         await this._initUserFile();
         await this._initGlobalsFile();
 
-        const { fileAdded, fileRemoved, fileUpdated } = fileChangeObservables(this._aux);
+        const { filesAdded, filesRemoved, filesUpdated } = fileChangeObservables(this._aux);
 
-        this._subscriptions.push(fileAdded.subscribe(this._fileDiscoveredObservable));
-        this._subscriptions.push(fileRemoved.subscribe(this._fileRemovedObservable));
-        this._subscriptions.push(fileUpdated.subscribe(this._fileUpdatedObservable));
+        this._subscriptions.push(filesAdded.subscribe(this._filesDiscoveredObservable));
+        this._subscriptions.push(filesRemoved.subscribe(this._filesRemovedObservable));
+        this._subscriptions.push(filesUpdated.subscribe(this._filesUpdatedObservable));
         const alreadySelected = this.selectedObjects;
         const alreadySelectedObservable = from(alreadySelected);
 
@@ -441,9 +447,9 @@ export class FileManager {
 
         const allFilesSelectedUpdatedAddedAndRemoved = mergeObservables(
             allFilesSelected, 
-            fileAdded.pipe(map(f => f.id)),
-            fileUpdated.pipe(map(f => f.id)), 
-            fileRemoved);
+            filesAdded.pipe(flatMap(files => files), map(f => f.id)),
+            filesUpdated.pipe(flatMap(files => files), map(f => f.id)), 
+            filesRemoved);
 
         const allSelectedFilesUpdated =
             allFilesSelectedUpdatedAddedAndRemoved.pipe(map(() => {

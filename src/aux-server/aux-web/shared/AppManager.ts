@@ -154,6 +154,7 @@ export class AppManager {
             // import an unrelated Git repo. Git handles this by allowing
             // multiple root nodes but we dont allow multiple roots.
             const tree = <AuxCausalTree>this._treeManager.factory.create('aux', state);
+            await tree.import(state);
             value = tree.value;
         } else {
             console.log('[AppManager] Old file detected, adding state.');

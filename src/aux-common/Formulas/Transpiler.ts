@@ -18,6 +18,7 @@ declare module 'acorn' {
         parseLiteral(value: string): Node;
         parseIdent(): Node;
         parseExprSubscripts(): Node;
+        parseSubscript(base: Node, startPos: number, startLoc: number): Node;
         unexpected(): void;
         startNodeAt(start: number, startLoc: number): Node;
         readToken(code: number): any;
@@ -64,6 +65,29 @@ function callExpr(name: string, args: any[]) {
     };
 }
 
+function memberExpr(object: any, property: any) {
+    return {
+        type: 'MemberExpression',
+        object: object,
+        computed: property.type !== 'Identifier',
+        property: property
+    };
+}
+
+function ident(name: string) {
+    return {
+        type: 'Identifier',
+        name: name
+    };
+}
+
+function literal(raw: string) {
+    return {
+        type: 'Literal',
+        raw: raw
+    };
+}
+
 function exJsParser(parser: typeof Parser) {
     return class ExJsParser extends parser {
         readToken(code: number) {
@@ -101,7 +125,15 @@ function exJsParser(parser: typeof Parser) {
             if(this.type === tokTypes.string) {
                 node.identifier = this.parseLiteral(this.value);
             } else if(this.type === tokTypes.name) {
-                node.identifier = this.parseExprSubscripts();
+                const expr = this.parseExprAtom(null);
+                let base = expr;
+                let element;
+                while (true) {
+                    element = super.parseSubscript(base, startPos, startLoc);
+                    if(element === base || element.type === 'CallExpression') break;
+                    base = element;
+                }
+                node.identifier = element;
             } else if(this.type === tokTypes.parenL) {
             } else {
                 this.unexpected();
@@ -122,7 +154,15 @@ function exJsParser(parser: typeof Parser) {
             if(this.type === tokTypes.string) {
                 node.identifier = this.parseLiteral(this.value);
             } else if(this.type === tokTypes.name) {
-                node.identifier = this.parseExprSubscripts();
+                const expr = this.parseExprAtom(null);
+                let base = expr;
+                let element;
+                while (true) {
+                    element = super.parseSubscript(base, startPos, startLoc);
+                    if (element === base || element.type === 'CallExpression') break;
+                    base = element;
+                }
+                node.identifier = element;
             } else if(this.type === tokTypes.parenL) {
             } else {
                 this.unexpected();
@@ -174,11 +214,25 @@ export class Transpiler {
                 if ((n.type === 'TagValue' || n.type === 'ObjectValue') && n.identifier) {
                     // _listTagValues('tag', filter)
 
+                    let currentNode = n.identifier;
                     let identifier: any;
                     let args: any[] = [];
-                    if (n.identifier.type === 'CallExpression') {
-                        identifier = n.identifier.callee;
-                        args = n.identifier.arguments;
+                    let nodes: any[] = [];
+
+                    while(currentNode.type === 'MemberExpression') {
+                        currentNode = currentNode.object;
+                    }
+
+                    if (currentNode.type === 'CallExpression') {
+                        identifier = currentNode.callee;
+                        args = currentNode.arguments;
+
+                        currentNode = n.identifier;
+
+                        while (currentNode.type === 'MemberExpression') {
+                            nodes.unshift(currentNode);
+                            currentNode = currentNode.object;
+                        }
                     } else {
                         identifier = n.identifier;
                     }
@@ -192,10 +246,19 @@ export class Transpiler {
 
                     const funcName = n.type === 'TagValue' ? '_listTagValues' : '_listObjectsWithTag';
 
-                    return callExpr(funcName, [{
+                    const call = callExpr(funcName, [{
                         type: 'Literal',
                         value: tag
                     }, ...args]);
+
+                    if (nodes.length === 0) {
+                        return call;
+                    } else {
+                        return nodes.reduce((prev, curr) => {
+                            let prop = curr.property;
+                            return memberExpr(prev, prop);
+                        }, call);
+                    }
 
                 } else if(n.type === 'CallExpression') {
                     if (n.callee.type === 'TagValue' || n.callee.type === 'ObjectValue') {

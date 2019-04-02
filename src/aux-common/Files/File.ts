@@ -33,6 +33,7 @@ export interface FileTags {
     ['aux.label.color']?: unknown;
     ['aux.label.size']?: unknown;
     ['aux.label.size.mode']?: 'auto' | null;
+    ['aux._parent']?: string;
 
     // Builder related tags
     ['aux.builder.context']?: string | string[];

@@ -22,6 +22,10 @@ export class TestCryptoImpl implements SigningCryptoImpl {
         return this.valid;
     }
 
+    async verifyBatch(key: PublicCryptoKey, signatures: ArrayBuffer[], datas: ArrayBuffer[]): Promise<boolean[]> {
+        return signatures.map(s => this.valid);
+    }
+
     exportKey(key: SigningCryptoKey): Promise<string> {
         return Promise.resolve(key.type);
     }

@@ -2,7 +2,7 @@ import { AtomOp, Atom, AtomId, atomIdToString, atomId } from "./Atom";
 import { Weave } from "./Weave";
 import { AtomFactory } from "./AtomFactory";
 import { AtomReducer } from "./AtomReducer";
-import { sortBy, unionBy, find } from "lodash";
+import { sortBy, unionBy, find, groupBy } from "lodash";
 import { SiteInfo } from "./SiteIdInfo";
 import { StoredCausalTree } from "./StoredCausalTree";
 import { SiteVersionInfo } from "./SiteVersionInfo";
@@ -174,19 +174,22 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
     /**
      * Adds the given atom to this Causal Tree's history.
      * @param atom The atom to add to the tree.
+     * @param verifySignature Whether to verify the signature on the given atom. (Default true)
      */
-    async add<T extends TOp>(atom: Atom<T>): Promise<AddResult<T>> {
-        const rej = await this._validate(atom);
-        if (rej) {
-            if (this._isBatching) {
-                this._rejected.push(rej);
-            } else {
-                this._atomRejected.next([rej]);
+    async add<T extends TOp>(atom: Atom<T>, verifySignature: boolean = true): Promise<AddResult<T>> {
+        if (verifySignature) {
+            const [rej] = await this._validate([atom]);
+            if (rej) {
+                if (this._isBatching) {
+                    this._rejected.push(rej);
+                } else {
+                    this._atomRejected.next([rej]);
+                }
+                return {
+                    added: null,
+                    rejected: rej
+                };
             }
-            return {
-                added: null,
-                rejected: rej
-            };
         }
         this.factory.updateTime(atom);
         let [ref, rejected] = this.weave.insert(atom);
@@ -216,16 +219,26 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
     /**
      * Adds the given list of references to this causal tree's history.
      * @param refs The references to add.
+     * @param verifySignatures Whether to verify that the signatures on the atoms are valid. (Default false)
      */
-    addMany(refs: Atom<TOp>[]): Promise<AtomBatch<TOp>> {
+    async addMany(refs: Atom<TOp>[], verifySignatures: boolean = false): Promise<AtomBatch<TOp>> {
+        if (verifySignatures) {
+            const invalid = await this._validate(refs);
+            if (invalid.length > 0) {
+                return {
+                    added: [],
+                    rejected: invalid
+                };
+            }
+        }
         const atoms = sortBy(refs, a => a.id.timestamp);
-        return this.batch(async () => {
+        return await this.batch(async () => {
             let added: Atom<TOp>[] = [];
             let rejected: RejectedAtom<TOp>[] = [];
             for (let i = 0; i < atoms.length; i++) {
                 let atom = atoms[i];
                 if (atom) {
-                    let { added: result, rejected: rej } = await this.add(atom);
+                    let { added: result, rejected: rej } = await this.add(atom, verifySignatures);
                     if (result) {
                         added.push(result);
                     } 
@@ -272,8 +285,9 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * The references are expected to be sorted as a valid weave and also to match
      * @param refs The references to import.
      * @param validate Whether to validate the incoming weave.
+     * @param verifySignatures Whether to verify the signatures of the incoming atoms. (Default false)
      */
-    async importWeave<T extends TOp>(refs: Atom<T>[], validate: boolean = true): Promise<AtomBatch<TOp>> {
+    async importWeave<T extends TOp>(refs: Atom<T>[], validate: boolean = true, verifySignatures: boolean = false): Promise<AtomBatch<TOp>> {
 
         if (validate) {
             let weave = new Weave<T>();
@@ -283,19 +297,15 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
             }
         }
 
-        let bad: RejectedAtom<T>[] = [];
-        for (let i = 0; i < refs.length; i++) {
-            const rejected = await this._validate(refs[i]);
-            if (rejected) {
-                bad.push(rejected);
+        if (verifySignatures) {
+            const bad = await this._validate(refs);
+            if (bad.length > 0) {
+                this._atomRejected.next(bad);
+                return {
+                    added: [],
+                    rejected: bad
+                };
             }
-        }
-        if (bad.length > 0) {
-            this._atomRejected.next(bad);
-            return {
-                added: [],
-                rejected: bad
-            };
         }
 
         const [newAtoms, rejected] = this.weave.import(refs);
@@ -324,8 +334,9 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
     /**
      * Imports the given tree into this one and returns the list of atoms that were imported.
      * @param tree The tree to import.
+     * @param verifySignatures Whether to verify the signatures of the incoming atoms. (Default false)
      */
-    async import<T extends TOp>(tree: StoredCausalTree<T>): Promise<AtomBatch<TOp>> {
+    async import<T extends TOp>(tree: StoredCausalTree<T>, verifySignatures: boolean = false): Promise<AtomBatch<TOp>> {
 
         if (tree.knownSites) {
             tree.knownSites.forEach(s => {
@@ -336,15 +347,15 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         let added: AtomBatch<TOp>;
         if (tree.weave) {
             if (tree.formatVersion === 2) {
-                added = await this.importWeave(tree.weave);
+                added = await this.importWeave(tree.weave, true, verifySignatures);
             } else if(tree.formatVersion === 3) {
                 if (tree.ordered) {
-                    added = await this.importWeave(tree.weave);
+                    added = await this.importWeave(tree.weave, true, verifySignatures);
                 } else {
-                    added = await this.addMany(tree.weave);
+                    added = await this.addMany(tree.weave, verifySignatures);
                 }
             } else if (typeof tree.formatVersion === 'undefined') {
-                added = await this.importWeave(tree.weave.map(ref => ref.atom));
+                added = await this.importWeave(tree.weave.map(ref => ref.atom), true, verifySignatures);
             } else {
                 console.warn("[CausalTree] Don't know how to import tree version:", tree.formatVersion);
                 added = {
@@ -474,23 +485,51 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * Ensures that the given atom is valid.
      * @param atom The atom to validate.
      */
-    private async _validate<T extends TOp>(atom: Atom<T>): Promise<RejectedAtom<T>> {
-        const key = await this._getPublicKey(atom.id.site);
-        if (key) {
-            const valid = await this._validator.verify(key, atom);
-            if (!valid) {
-                return {
-                    atom: atom,
-                    reason: 'signature_failed'
-                };
+    private async _validate<T extends TOp>(atoms: Atom<T>[]): Promise<RejectedAtom<T>[]> {
+        const grouped = groupBy(atoms, a => a.id.site);
+        const sites = Object.keys(grouped);
+        let rejected: RejectedAtom<T>[] = [];
+        for (let i = 0; i < sites.length; i++) {
+            const site = sites[i];
+            const siteAtoms = grouped[site];
+            const key = await this._getPublicKey(parseInt(site));
+            const first = siteAtoms[0];
+            if (key) {
+                const valid = await this._validator.verifyBatch(key, siteAtoms);
+                const rej: RejectedAtom<T>[] = valid.map((v, i) => {
+                    if (!v) {
+                        return <RejectedAtom<T>>{
+                            atom: siteAtoms[i],
+                            reason: 'signature_failed'
+                        };
+                    }
+                    return null;
+                }).filter(a => a);
+                rejected.push(...rej);
+            } else if (!key && !!first.signature && this._validator && this._validator.impl.supported()) {
+                rejected.push({
+                    atom: first,
+                    reason: 'no_public_key'
+                });
             }
-        } else if (!key && !!atom.signature && this._validator && this._validator.impl.supported()) {
-            return {
-                atom: atom,
-                reason: 'no_public_key'
-            };
         }
-        return null;
+        return rejected;
+        
+        // if (key) {
+        //     const valid = await this._validator.verify(key, atom);
+        //     if (!valid) {
+        //         return {
+        //             atom: atom,
+        //             reason: 'signature_failed'
+        //         };
+        //     }
+        // } else if (!key && !!atom.signature && this._validator && this._validator.impl.supported()) {
+        //     return {
+        //         atom: atom,
+        //         reason: 'no_public_key'
+        //     };
+        // }
+        // return null;
     }
 
     /**
