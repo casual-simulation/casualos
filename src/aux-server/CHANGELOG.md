@@ -1,5 +1,12 @@
 # AUX Server Changelog
 
+## V0.4.0
+### Date: TBD
+
+### Changes:
+- Other improvements
+  - Inventory bar adjusts to mobile screen resolutions.
+  
 ## V0.3.26
 ### Date: 4/01/2019
 
