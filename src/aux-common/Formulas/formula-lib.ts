@@ -255,6 +255,17 @@ export function clone(...files: any[]) {
 }
 
 /**
+ * Creates a new file that contains tags from and is parented under the given file.
+ * @param file The file that the clone should be a child of.
+ * @param data The files or objects to use for the new file's tags.
+ */
+export function cloneFrom(file: File, ...data: any[]) {
+    return clone(file, ...data, {
+        'aux._parent': file.id
+    });
+}
+
+/**
  * Creates a new file that is a child of the given file.
  * @param parent The file that should be the parent of the new file.
  * @param data The object that specifies the new file's tag values.
@@ -334,6 +345,7 @@ export default {
     join,
     destroy,
     clone,
+    cloneFrom,
     create,
     createFrom,
     combine,

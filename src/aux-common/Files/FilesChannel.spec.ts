@@ -312,6 +312,37 @@ describe('FilesChannel', () => {
             });
         });
 
+        describe('cloneFrom()', () => {
+            it('should create a new file with aux._parent set to the given files ID', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'cloneFrom(this, { abc: "def" })',
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            abc: 'def',
+                            'test()': 'cloneFrom(this, { abc: "def" })',
+                            'aux._parent': 'thisFile'
+                        }
+                    })
+                ]);
+            });
+        });
+
         describe('destroy()', () => {
             it('should destroy and files that have aux._parent set to the file ID', () => {
                 const state: FilesState = {
