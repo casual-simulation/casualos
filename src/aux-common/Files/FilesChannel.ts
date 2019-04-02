@@ -9,7 +9,7 @@ import { ReducingStateStore, Event, ChannelConnection } from "../channels-core";
 import {File, Object, Workspace, PartialFile} from './File';
 import { createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, isDestroyed, getActiveObjects, calculateStateDiff, FilesStateDiff, filtersMatchingArguments } from './FileCalculations';
 import { merge as mergeObj } from '../utils';
-import { setActions, getActions, setFileState } from '../Formulas/formula-lib';
+import { setActions, getActions, setFileState, setCalculationContext, getCalculationContext } from '../Formulas/formula-lib';
 import { AnimationActionLoopStyles } from 'three';
 export interface FilesState {
     [id: string]: File;
@@ -88,6 +88,7 @@ function eventActions(state: FilesState, objects: Object[], context: FileCalcula
     const filters = filtersMatchingArguments(context, file, eventName, otherObjects);
     const scripts = filters.map(f => calculateFileValue(context, file, f.tag));
     let previous = getActions();
+    let prevContext = getCalculationContext();
     let actions: FileEvent[] = [];
     let changes: {
         [key: string]: {
@@ -100,6 +101,7 @@ function eventActions(state: FilesState, objects: Object[], context: FileCalcula
     } = {};
     setActions(actions);
     setFileState(state);
+    setCalculationContext(context);
     
     sortedObjects.forEach(o => {
         changes[o.id] = {
@@ -125,6 +127,7 @@ function eventActions(state: FilesState, objects: Object[], context: FileCalcula
 
     setActions(previous);
     setFileState(null);
+    setCalculationContext(prevContext);
 
     const updates = sortedObjects.map(o => calculateFileUpdateFromChanges(o.id, changes[o.id].changedTags, changes[o.id].newValues));
     updates.forEach(u => {

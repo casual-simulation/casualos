@@ -253,6 +253,141 @@ describe('FilesChannel', () => {
                 })
             ]);
         });
+
+        describe('createFrom()', () => {
+            it('should create a new file with aux._parent set to the original id', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'createFrom(this, { abc: "def" })',
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            abc: 'def',
+                            'aux._parent': 'thisFile'
+                        }
+                    })
+                ]);
+            });
+
+            it('should create a new file with aux._parent set to the given id', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'createFrom("thisFile", { abc: "def" })',
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            abc: 'def',
+                            'aux._parent': 'thisFile'
+                        }
+                    })
+                ]);
+            });
+        });
+
+        describe('destroy()', () => {
+            it('should destroy and files that have aux._parent set to the file ID', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'destroy(this)',
+                        }
+                    },
+                    childFile: {
+                        id: 'childFile',
+                        tags: {
+                            'aux._parent': 'thisFile'
+                        }
+                    }
+                };
+
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileRemoved('thisFile'),
+                    fileRemoved('childFile'),
+                ]);
+            });
+
+            it('should recursively destroy files that have aux._parent set to the file ID', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'destroy(this)',
+                        }
+                    },
+                    childFile: {
+                        id: 'childFile',
+                        tags: {
+                            'aux._parent': 'thisFile'
+                        }
+                    },
+                    childChildFile: {
+                        id: 'childChildFile',
+                        tags: {
+                            'aux._parent': 'childFile'
+                        }
+                    },
+                    otherChildFile: {
+                        id: 'otherChildFile',
+                        tags: {
+                            'aux._parent': 'thisFile'
+                        }
+                    },
+                    otherChildChildFile: {
+                        id: 'otherChildChildFile',
+                        tags: {
+                            'aux._parent': 'otherChildFile'
+                        }
+                    }
+                };
+
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileRemoved('thisFile'),
+                    fileRemoved('childFile'),
+                    fileRemoved('childChildFile'),
+                    fileRemoved('otherChildFile'),
+                    fileRemoved('otherChildChildFile'),
+                ]);
+            });
+        });
     });
 
 });

@@ -1,11 +1,13 @@
 import { File } from '../Files/File';
 import { FileUpdatedEvent, FileEvent, FileAddedEvent, action, FilesState, calculateActionEvents, FileRemovedEvent, fileRemoved, fileAdded } from "../Files/FilesChannel";
 import uuid from 'uuid/v4';
-import { every } from "lodash";
-import { isProxy, proxyObject } from "../Files/FileProxy";
+import { every, find } from "lodash";
+import { isProxy, proxyObject, FileProxy } from "../Files/FileProxy";
+import { FileCalculationContext, calculateFormulaValue } from '../Files/FileCalculations';
 
 let actions: FileEvent[] = [];
 let state: FilesState = null;
+let calc: FileCalculationContext = null;
 
 export function setActions(value: FileEvent[]) {
     actions = value;
@@ -21,6 +23,14 @@ export function setFileState(value: FilesState) {
 
 export function getFileState(): FilesState {
     return state;
+}
+
+export function setCalculationContext(context: FileCalculationContext) {
+    calc = context;
+}
+
+export function getCalculationContext(): FileCalculationContext {
+    return calc;
 }
 
 // declare const lib: string;
@@ -172,6 +182,28 @@ export function destroy(file: File | string) {
     if (id) {
         actions.push(fileRemoved(id));
     }
+
+    destroyChildren(id);
+}
+
+function destroyChildren(id: string) {
+    const result = calculateFormulaValue(calc, `@aux._parent("${id}")`);
+    if (result.success) {
+        const children = result.result;
+        let all: File[] = [];
+        if (children) {
+            if (Array.isArray(children)) {
+                all = children;
+            } else {
+                all = [children];
+            }
+        }
+
+        all.forEach(child => {
+            actions.push(fileRemoved(child.id));
+            destroyChildren(child.id);
+        });
+    }
 }
 
 /**
@@ -179,13 +211,11 @@ export function destroy(file: File | string) {
  * @param data The object that specifies what tags to set on the file.
  */
 export function create(data: any) {
-    var id = uuid();
+    let id = uuid();
 
     let event: FileAddedEvent = fileAdded({
         id: id,
         tags: {
-            _position: {x:0, y:0, z:0},
-            _workspace: null,
             ...data
         }
     });
@@ -222,6 +252,24 @@ export function clone(...files: any[]) {
     let event: FileAddedEvent = fileAdded(newFile);
 
     actions.push(event);
+}
+
+/**
+ * Creates a new file that is a child of the given file.
+ * @param parent The file that should be the parent of the new file.
+ * @param data The object that specifies the new file's tag values.
+ */
+export function createFrom(parent: File | string, data: any) {
+    let parentId: string;
+    if (typeof parent === 'string') {
+        parentId = parent;
+    } else {
+        parentId = parent.id;
+    }
+    return create({
+        ...data,
+        'aux._parent': parentId
+    });
 }
 
 /**
@@ -287,6 +335,7 @@ export default {
     destroy,
     clone,
     create,
+    createFrom,
     combine,
     event,
     shout,
