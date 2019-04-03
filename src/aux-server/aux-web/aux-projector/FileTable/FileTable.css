@@ -1,4 +1,11 @@
 
+.file-table-grid {
+    display: inline-grid;
+    grid-auto-flow: column;
+    grid-auto-columns: fit-content(250px);
+    grid-column-gap: 8px;
+}
+
 .file-table {
     border-collapse: collapse;
     border-spacing: 0;
@@ -9,14 +16,14 @@
     text-transform: none;
 }
 
-.file-table th {
+/* .file-table th {
     border-left: 1px solid rgba(0,0,0,.2);
 }
 
 .file-table th {
     border-top: 1px solid rgba(0,0,0,.2);
     background-color: rgba(0,0,0,.05);
-}
+} */
 
 .remove-tag.md-button {
     width: 24px;

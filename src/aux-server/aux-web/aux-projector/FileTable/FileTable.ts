@@ -77,6 +77,10 @@ export default class FileTable extends Vue {
         }
     }
 
+    async toggleFile(file: AuxObject) {
+        await this.fileManager.selectFile(file);
+    }
+
     addTag(isAction: boolean = false) {
         if (this.isMakingNewTag) {
 
