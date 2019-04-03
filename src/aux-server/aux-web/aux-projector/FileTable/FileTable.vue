@@ -39,11 +39,13 @@
       </div>
     </div>
     <div v-if="focusedTag" class="multi-line-tag-value-wrapper">
-      <file-tag :tag="focusedTag"></file-tag>
-      <textarea v-model="multilineValue"
-          class="multi-line-tag-value-editor"
-          :class="[{ formula: isFocusedTagFormula }]">
-      </textarea>
+      <md-field>
+        <label><file-tag :tag="focusedTag"></file-tag></label>
+        <md-textarea v-model="multilineValue"
+            class="multi-line-tag-value-editor"
+            :class="[{ formula: isFocusedTagFormula }]">
+        </md-textarea>
+      </md-field>
     </div>
     <div v-if="hasFiles" class="file-table-wrapper">
       <table class="file-table" ref="table">
