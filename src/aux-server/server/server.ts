@@ -55,6 +55,10 @@ export class ClientServer {
             });
         }));
 
+        this._app.get('/api/config', (req, res) => {
+            res.send(this._config.web);
+        });
+
         this._app.use(express.static(this._config.dist));
 
         this._app.use('*', (req, res) => {
