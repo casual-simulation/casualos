@@ -94,3 +94,18 @@ th:last-child {
     width: 100%;
     overflow-x: auto;
 }
+
+.multi-line-tag-value-editor {
+    width: 100%;
+    max-height: 400px;
+    font-family: inherit;
+}
+
+.multi-line-tag-value-editor.formula {
+    font-family: Consolas, "Courier New", monospace;
+    letter-spacing: 0;
+}
+
+.multi-line-tag-value-wrapper {
+    padding: 5px;
+}

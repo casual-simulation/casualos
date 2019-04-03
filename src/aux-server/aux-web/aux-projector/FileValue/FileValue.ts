@@ -26,6 +26,7 @@ export default class FileRow extends Vue {
     @Prop() tag: string;
     @Prop() readOnly: boolean;
     @Prop() updateTime: number;
+    @Prop({ default: true }) showFormulaWhenFocused: boolean;
 
     value: string = '';
     isFocused: boolean = false;
@@ -40,7 +41,7 @@ export default class FileRow extends Vue {
     }
 
     valueChanged(file: AuxFile, tag: string, value: string) {
-        this.$emit('tagChanged', tag);
+        this.$emit('tagChanged', tag, value);
         this.fileManager.updateFile(file, {
             tags: {
                 [tag]: value,
@@ -69,7 +70,7 @@ export default class FileRow extends Vue {
 
     private _updateValue() {
         this.isFormula = isFormula(this.file.tags[this.tag]);
-        if (!this.isFocused) {
+        if (!this.isFocused || !this.showFormulaWhenFocused) {
             this.value = this.fileManager.calculateFormattedFileValue(this.file, this.tag);
         } else {
             const val = this.file.tags[this.tag];

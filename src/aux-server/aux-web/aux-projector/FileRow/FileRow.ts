@@ -16,6 +16,7 @@ export default class FileRow extends Vue {
     @Prop() tags: string[];
     @Prop({ default: false }) readOnly: boolean;
     @Prop({}) updateTime: number;
+    @Prop({ default: true }) showFormulasWhenFocused: boolean;
 
     get fileManager() {
         return appManager.fileManager;
@@ -31,8 +32,8 @@ export default class FileRow extends Vue {
         await this.fileManager.selectFile(file);
     }
 
-    onTagChanged(tag: string) {
-        this.$emit('tagChanged', tag);
+    onTagChanged(tag: string, value: string) {
+        this.$emit('tagChanged', this.file, tag, value);
     }
 
     getShortId(file: Object) {
