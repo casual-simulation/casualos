@@ -2,7 +2,7 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Provide, Prop, Inject, Watch} from 'vue-property-decorator';
 import { some, union } from 'lodash';
-import {File, Object, fileTags, isHiddenTag, AuxObject, hasValue} from '@yeti-cgi/aux-common';
+import {File, Object, fileTags, isHiddenTag, AuxObject, hasValue, isFormula} from '@yeti-cgi/aux-common';
 import { EventBus } from '../../shared/EventBus';
 import { appManager } from '../../shared/AppManager';
 
@@ -34,6 +34,10 @@ export default class FileTable extends Vue {
     tags: string[] = [];
     addedTags: string[] = [];
     lastEditedTag: string = null;
+    focusedFile: AuxObject = null;
+    focusedTag: string = null;
+    isFocusedTagFormula: boolean = false;
+    multilineValue: string = "";
     isMakingNewTag: boolean = false;
     isMakingNewAction: boolean = false;
     newTag: string = 'myNewTag';
@@ -60,6 +64,17 @@ export default class FileTable extends Vue {
     filesChanged() {
         this._updateTags();
         this.numFilesSelected = this.files.length;
+    }
+
+    @Watch('multilineValue')
+    multilineValueChanged() {
+        if (this.focusedFile && this.focusedTag) {
+            this.fileManager.updateFile(this.focusedFile, {
+                tags: {
+                    [this.focusedTag]: this.multilineValue
+                }
+            });
+        }
     }
 
     addTag(isAction: boolean = false) {
@@ -107,11 +122,24 @@ export default class FileTable extends Vue {
         await this.fileManager.clearSelection();
     }
 
-    onTagChanged(tag: string) {
-        this.lastEditedTag = tag;
+    onTagChanged(file: AuxObject, tag: string, value: string) {
+        this.lastEditedTag = this.focusedTag = tag;
+        this.focusedFile = file;
+        this.multilineValue = value;
+        this.isFocusedTagFormula = isFormula(value);
     }
 
-    onTagFocusChanged(event: { file: Object, tag: string, focused: boolean }) {
+    onTagFocusChanged(event: { file: AuxObject, tag: string, focused: boolean }) {
+        if (event.focused) {
+            this.focusedFile = event.file;
+            this.focusedTag = event.tag;
+            this.multilineValue = this.focusedFile.tags[this.focusedTag];
+            this.isFocusedTagFormula = isFormula(this.multilineValue);
+            
+            this.$nextTick(() => {
+                (<any>this.$refs.multiLineEditor).applyStyles();
+            });
+        }
         this.$emit('tagFocusChanged', event);
     }
 

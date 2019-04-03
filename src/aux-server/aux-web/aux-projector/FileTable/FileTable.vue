@@ -38,6 +38,16 @@
         </div>
       </div>
     </div>
+    <div v-if="focusedTag" class="multi-line-tag-value-wrapper">
+      <md-field>
+        <label><file-tag :tag="focusedTag"></file-tag></label>
+        <md-textarea ref="multiLineEditor" v-model="multilineValue"
+            md-autogrow
+            class="multi-line-tag-value-editor"
+            :class="[{ formula: isFocusedTagFormula }]">
+        </md-textarea>
+      </md-field>
+    </div>
     <div v-if="hasFiles" class="file-table-wrapper">
       <table class="file-table" ref="table">
         <thead>
@@ -74,6 +84,7 @@
             :tags="tags"
             :readOnly="readOnly"
             :updateTime="updateTime"
+            :showFormulasWhenFocused="false"
             @tagChanged="onTagChanged"
             @tagFocusChanged="onTagFocusChanged"
           ></file-row>
