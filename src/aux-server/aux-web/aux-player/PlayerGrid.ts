@@ -1,5 +1,7 @@
-import { Vector3, Vector2 } from 'three';
+import { Vector3, Vector2, Color } from 'three';
 import { getOptionalValue } from '../shared/SharedUtils';
+import { DEFAULT_WORKSPACE_GRID_SCALE } from '@yeti-cgi/aux-common';
+import { DebugObjectManager } from '../shared/scene/DebugObjectManager';
 /**
  * A grid for Aux Player to help position objects in a context.
  */
@@ -13,6 +15,8 @@ export class PlayerGrid {
      */
     constructor(tileScale?: number) {
         this.tileScale = getOptionalValue(tileScale, 1);
+
+        // this.debugDrawTiles(-10, 10, -10, 10, Number.MAX_VALUE);
     }
 
     /**
@@ -46,6 +50,23 @@ export class PlayerGrid {
             center: tilePoints.center,
             corners: tilePoints.corners,
             tileCoordinate: new Vector2(x, y)
+        }
+    }
+
+    /**
+     * Draw corners for tiles in given coordinate range for duration.
+     */
+    debugDrawTiles(xStart: number, xEnd: number, yStart: number, yEnd: number, duration: number) {
+        // Debug all tile corner points.
+        for (let x = xStart; x <= xEnd; x++) {
+            for (let y = yStart; y <= yEnd; y++) {
+                let tile = this.getTileFromCoordinate(x, y);
+                DebugObjectManager.debugPoint(tile.corners[0], null, 0.05, false, new Color("green"), duration);
+                DebugObjectManager.debugPoint(tile.corners[1], null, 0.05, false, new Color("green"), duration);
+                DebugObjectManager.debugPoint(tile.corners[2], null, 0.05, false, new Color("green"), duration);
+                DebugObjectManager.debugPoint(tile.corners[3], null, 0.05, false, new Color("green"), duration);
+                DebugObjectManager.debugPoint(tile.center, null, 0.05, false, new Color("yellow"), duration);
+            }
         }
     }
 
