@@ -41,7 +41,8 @@
     <div v-if="focusedTag" class="multi-line-tag-value-wrapper">
       <md-field>
         <label><file-tag :tag="focusedTag"></file-tag></label>
-        <md-textarea v-model="multilineValue"
+        <md-textarea ref="multiLineEditor" v-model="multilineValue"
+            md-autogrow
             class="multi-line-tag-value-editor"
             :class="[{ formula: isFocusedTagFormula }]">
         </md-textarea>
