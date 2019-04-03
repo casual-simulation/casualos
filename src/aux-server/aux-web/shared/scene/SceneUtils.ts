@@ -227,3 +227,28 @@ export function disposeMesh(mesh: { geometry: Geometry | BufferGeometry, materia
         disposeMaterial(mesh.material);
     }
 }
+
+export function disposeObject3D(object3d: Object3D, disposeGeometry: boolean = true, disposeMaterial: boolean = true) {
+    if (!object3d) return;
+
+    if (disposeGeometry) {
+        let geometry = (<any>object3d).geometry;
+        if (geometry) {
+            geometry.dispose();
+        }
+    }
+
+    if (disposeMaterial) {
+        let material = (<any>object3d).material;
+        if (material) {
+            if (Array.isArray(material)) {
+                for (let i = 0; i < material.length; i++) {
+                    material[i].dispose();
+                }
+            } else {
+                material.dispose();
+            }
+        }
+    }
+    
+}
