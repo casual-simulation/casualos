@@ -96,13 +96,24 @@ const routes: RouteConfig[] = [
         component: Welcome,
     },
     {
-        path: '/:id?/:context?',
+        path: '/:id/:context',
         name: 'home',
         component: Home,
         props: (route) => ({
             context: route.params.context
         })
-    }
+    },
+    {
+        path: '/:id?',
+        name: 'aux-builder',
+        redirect: to => {
+            if (appManager.config) {
+                window.location.href = `${appManager.config.projectorBaseUrl}/${to.params.id}`;
+            }
+            
+            return `/${to.params.id}/default`;
+        }
+    },
 ]
 
 const router = new VueRouter({
@@ -145,7 +156,12 @@ router.beforeEach((to, from, next) => {
     });
 });
 
-const app = new Vue({
-    router,
-    render: createEle => createEle(App)
-}).$mount('#app');
+async function start() {
+    await appManager.initPromise;
+    const app = new Vue({
+        router,
+        render: createEle => createEle(App)
+    }).$mount('#app');
+}
+
+start();
