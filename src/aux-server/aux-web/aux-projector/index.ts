@@ -102,6 +102,17 @@ const routes: RouteConfig[] = [
         component: AuxDebug
     },
     {
+        path: '/:id/:context',
+        name: 'aux-player',
+        redirect: to => {
+            if (appManager.config) {
+                window.location.href = `${appManager.config.playerBaseUrl}/${to.params.id}/${to.params.context}`;
+            }
+            
+            return `/${to.params.id}`;
+        }
+    },
+    {
         path: '/:id?',
         name: 'home',
         component: Home,
@@ -146,7 +157,12 @@ router.beforeEach((to, from, next) => {
     });
 });
 
-const app = new Vue({
-    router,
-    render: createEle => createEle(App)
-}).$mount('#app');
+async function start() {
+    await appManager.initPromise;
+    const app = new Vue({
+        router,
+        render: createEle => createEle(App)
+    }).$mount('#app');
+}
+
+start();

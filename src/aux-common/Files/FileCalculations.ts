@@ -194,7 +194,7 @@ export function calculateFileValue(context: FileCalculationContext, object: Obje
         const o: any = object;
         return o[tag];
     } else {
-        return _calculateValue(context, object, tag, object.tags[tag], unwrapProxy);
+        return calculateValue(context, object, tag, object.tags[tag], unwrapProxy);
     }
 }
 
@@ -1137,20 +1137,28 @@ function _formatValue(value: any): string {
     }
 }
 
-function _calculateValue(context: FileCalculationContext, object: any, tag: string, formula: string, unwrapProxy?: boolean): any {
+/**
+ * Calculates the value of the given formula as if it was on the given file (object) and tag.
+ * @param context The calculation context to use.
+ * @param object The file that the formula was from.
+ * @param tag The tag that the formula was from.
+ * @param formula The formula.
+ * @param unwrapProxy (Optional) Whether to unwrap proxies. Defaults to true.
+ */
+export function calculateValue(context: FileCalculationContext, object: any, tag: string, formula: string, unwrapProxy?: boolean): any {
     if (isFormula(formula)) {
         const result = _calculateFormulaValue(context, object, tag, formula, unwrapProxy);
         if (result.success) {
-        return result.result;
+            return result.result;
         } else {
-        return result.extras.formula;
+            return result.extras.formula;
         }
     } else if (isAssignment(formula)) {
         const obj: Assignment = <any>formula;
         return obj.value;
     } else if(isArray(formula)) {
         const split = parseArray(formula);
-        return split.map(s => _calculateValue(context, object, tag, s.trim(), unwrapProxy));
+        return split.map(s => calculateValue(context, object, tag, s.trim(), unwrapProxy));
     } else if(isNumber(formula)) {
         return parseFloat(formula);
     } else if(formula === 'true') {

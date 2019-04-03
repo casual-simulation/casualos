@@ -1,5 +1,5 @@
 import { File, FileTags } from './File';
-import { FileCalculationContext, calculateFileValue, isFormula, calculateFormulaValue } from './FileCalculations';
+import { FileCalculationContext, calculateFileValue, isFormula, calculateFormulaValue, calculateValue } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 
 /**
@@ -89,17 +89,19 @@ function _createProxyHandler(calc: FileCalculationContext, tags: any, setValue: 
             let nextProps: string = null;
             let val = target[property];
             let isFile = false;
+            let fromTag = false;
             if (typeof val === 'undefined') {
                 nextProps = props ? `${props}.${property}` : property.toString();
                 val = target[nextProps];
                 if (typeof val === 'undefined') {
+                    fromTag = true;
                     val = tags[nextProps];
                 }
             }
             
             if (val) {
-                if (target.tags && isFormula(val)) {
-                    val = calculateFileValue(calc, target, nextProps || property.toString(), false);
+                if (target.tags && fromTag) {
+                    val = calculateValue(calc, target, nextProps || property.toString(), val, false);
                     if (val[isProxy]) {
                         return val;
                     }

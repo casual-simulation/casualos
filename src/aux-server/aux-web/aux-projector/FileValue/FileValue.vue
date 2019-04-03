@@ -6,7 +6,7 @@
         :value="value" 
         class="value-input" 
         :disabled="readOnly"
-        :class="[{ focused: isFocused, formula: isFormula }, tag]"
+        :class="[{ focused: (isFocused), formula: (isFormula && showFormulaWhenFocused) }, tag]"
         autocapitalize="none"
         autocorrect="off">
 </template>
