@@ -75,7 +75,7 @@ export class UserMeshDecorator extends AuxFile3DDecorator {
     }
 
     fileUpdated(calc: FileCalculationContext): void {
-        this._updateCameraMatrix();
+        this.camera.updateMatrixWorld(true);
         this.cameraHelper.update();
     }
 
@@ -106,13 +106,5 @@ export class UserMeshDecorator extends AuxFile3DDecorator {
         } else {
             return false;
         }
-    }
-
-
-    private _updateCameraMatrix(): void {
-        // We must call this function so that child objects get their positions updated too.
-        // Three render function does this automatically but there are functions in here that depend
-        // on accurate positioning of child objects.
-        this.camera.updateMatrixWorld(false);
     }
 }
