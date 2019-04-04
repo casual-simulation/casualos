@@ -141,6 +141,7 @@ export default class FileTable extends Vue {
 
     async clearSelection() {
         await this.fileManager.selection.clearSelection();
+        this.$emit('selectionCleared');
     }
 
     onTagChanged(file: AuxObject, tag: string, value: string) {

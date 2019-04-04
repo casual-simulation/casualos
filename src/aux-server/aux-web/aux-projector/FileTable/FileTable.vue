@@ -46,9 +46,8 @@
 
                 <!-- Remove all button -->
                 <div class="file-cell remove-item">
-                    <md-button class="md-icon-button md-dense" @click="clearSelection()">
-                        <md-icon>remove</md-icon>
-                        <md-tooltip md-delay="1000" md-direction="top">Unselect All</md-tooltip>
+                    <md-button class="md-dense" @click="clearSelection()">
+                        Unselect All
                     </md-button>
                 </div>
 
