@@ -417,7 +417,13 @@ export class FileManager {
         this._aux = await this._treeManager.getTree<AuxCausalTree>({
             id: this._id,
             type: 'aux'
-        }, { garbageCollect: true, alwaysRequestNewSiteId: false });
+        }, { 
+            garbageCollect: true,
+
+            // TODO: Allow reusing site IDs without causing multiple tabs to try and
+            //       be the same site.
+            alwaysRequestNewSiteId: true
+        });
 
         this._subscriptions.push(this._aux);
         this._subscriptions.push(this._aux.onError.subscribe(err => console.error(err)));

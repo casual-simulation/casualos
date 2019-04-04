@@ -1,9 +1,7 @@
 import { Socket, Server } from 'socket.io';
-import { CausalTreeStore, CausalTreeFactory, CausalTree, AtomOp, RealtimeChannelInfo, storedTree, site, SiteVersionInfo, SiteInfo, Atom, StoredCausalTree, currentFormatVersion, atomIdToString, atomId } from '@yeti-cgi/aux-common/causal-trees';
-import { AuxOp } from '@yeti-cgi/aux-common/aux-format';
+import { CausalTreeStore, CausalTreeFactory, CausalTree, AtomOp, RealtimeChannelInfo, storedTree, site, SiteVersionInfo, SiteInfo, Atom, StoredCausalTree, currentFormatVersion, atomIdToString, atomId, upgrade } from '@yeti-cgi/aux-common/causal-trees';
 import { find } from 'lodash';
 import { bufferTime, flatMap, filter, concatMap, tap } from 'rxjs/operators';
-import { ExecSyncOptionsWithStringEncoding } from 'child_process';
 import { PrivateCryptoKey, PublicCryptoKey, SigningCryptoImpl } from '@yeti-cgi/aux-common/crypto';
 import { NodeSigningCryptoImpl } from '../crypto/NodeSigningCryptoImpl';
 import { AtomValidator } from '@yeti-cgi/aux-common/causal-trees/AtomValidator';
@@ -46,18 +44,17 @@ export class CausalTreeServer {
 
             // V2 channels
             socket.on('join_channel', (info: RealtimeChannelInfo, callback: Function) => {
-                let connected = false;
+                
                 socket.join(info.id, async err => {
                     if (err) {
                         console.log(err);
                         callback(err);
                         return;
                     }
-                    connected = true;
 
                     const data = await this._getTree(info);
-                    data.connectedUsers += 1;
-                    console.log(`[CausalTreeServer] User joined ${info.id}. ${data.connectedUsers} remaining.`);
+                    data.users.set(socket.id, socket);
+                    console.log(`[CausalTreeServer] User joined ${info.id}. ${data.users.size} remaining.`);
                     if (data.timeoutId) {
                         console.log(`[CausalTreeServer] Clearing timeout for cleanup on ${info.id}...`);
                         clearTimeout(data.timeoutId);
@@ -143,17 +140,11 @@ export class CausalTreeServer {
 
                     socket.on(`leave_${info.id}`, () => {
                         socket.leave(info.id);
-                        if (connected) {
-                            this._trackUserLeft(data, info);
-                        }
-                        connected = false;
+                        this._trackUserLeft(data, info, socket);
                     });
 
                     socket.on('disconnect', () => {
-                        if (connected) {
-                            this._trackUserLeft(data, info);
-                        }
-                        connected = false;
+                        this._trackUserLeft(data, info, socket);
                     });
 
                     callback(null);
@@ -166,16 +157,17 @@ export class CausalTreeServer {
         });
     }
 
-    private _trackUserLeft(data: TreeData, info: RealtimeChannelInfo) {
+    private _trackUserLeft(data: TreeData, info: RealtimeChannelInfo, socket: Socket) {
         if (!data.inactive) {
-            data.connectedUsers -= 1;
-            console.log(`[CausalTreeServer] User left ${info.id}. ${data.connectedUsers} remaining.`);
-            this._tryCleanupTreeData(data, info);
+            if (data.users.delete(socket.id)) {
+                console.log(`[CausalTreeServer] User left ${info.id}. ${data.users.size} remaining.`);
+                this._tryCleanupTreeData(data, info);
+            }
         }
     }
 
     private _tryCleanupTreeData(data: TreeData, info: RealtimeChannelInfo) {
-        if (data.connectedUsers <= 0 && this._treePromises[info.id] && !data.inactive && !data.timeoutId) {
+        if (data.users.size <= 0 && this._treePromises[info.id] && !data.inactive && !data.timeoutId) {
             console.log(`[CausalTreeServer] Starting timeout for cleanup on ${info.id}...`);
             data.timeoutId = setTimeout(() => {
                 console.log(`[CausalTreeServer] Cleaning up ${info.id} because no more users are connected...`);
@@ -208,12 +200,30 @@ export class CausalTreeServer {
         console.log(`[CausalTreeServer] Getting tree (${info.id}) from database...`);
         const stored = await this._treeStore.get<AtomOp>(info.id, false);
         if (stored && stored.weave.length > 0) {
-            console.log(`[CausalTreeServer] Building from stored tree (version ${stored.formatVersion})...`);
+            tree = await this._createFromExisting(info, stored);
+        } else {
+            if (stored) {
+                console.log(`[CausalTreeServer] Found tree information but it didn't contain any atoms...`);
+            }
+            tree = await this._createNewTree(info);
+        }
 
+        let subs = this._registerSubs(info, tree);
+
+        let data = { tree, subs, users: new Map() };
+        this._treeList[info.id] = data;
+        console.log(`[CausalTreeServer] Done.`);
+        return data;
+    }
+
+    private async _createFromExisting(info: RealtimeChannelInfo, stored: StoredCausalTree<AtomOp>) {
+        console.log(`[CausalTreeServer] Building from stored tree (version ${stored.formatVersion})...`);
+
+        try {
             // Dont generate keys for existing trees because
             // that would suddenly cause atoms created by the server to
             // be rejected by the remotes.
-            tree = await this._createTree(info.id, info.type, false);
+            const tree = await this._createTree(info.id, info.type, false);
 
             const sub = tree.atomsArchived.pipe(
                 flatMap(async refs => {
@@ -228,31 +238,35 @@ export class CausalTreeServer {
             console.log(`[CausalTreeServer] ${loaded.length} atoms loaded.`);
 
             if (stored.formatVersion < currentFormatVersion) {
-                // Update the stored data
+                // Update the stored data but don't delete archived atoms
                 console.log(`[CausalTreeServer] Updating stored atoms from ${stored.formatVersion} to ${currentFormatVersion}...`);
-                await this._treeStore.put(info.id, tree.export(), true);
+                const exported = tree.export();
+                await this._treeStore.put(info.id, exported, false);
+
+                const upgraded = upgrade(exported);
+                await this._treeStore.add(info.id, upgraded.weave, false);
             }
-        } else {
-            if (stored) {
-                console.log(`[CausalTreeServer] Found tree information but it didn't contain any atoms...`);
-            }
-            console.log(`[CausalTreeServer] Creating new...`);
-            tree = await this._createTree(info.id, info.type, true);
-            if (!info.bare) {
-                await tree.root();
-                console.log(`[CausalTreeServer] Storing initial tree version...`);
-                await this._treeStore.put(info.id, tree.export(), true);
-            } else {
-                console.log(`[CausalTreeServer] Skipping root node because a bare tree was requested.`);
-            }
+
+            return tree;
+        } catch (ex) {
+            // TODO: Improve to be able to issue an error to the client
+            // saying that the data became corrupted somehow.
+            console.warn('[CausalTreeServer] Unable to load tree', info.id, ex);
+            return await this._createNewTree(info);
         }
+    }
 
-        let subs = this._registerSubs(info, tree);
-
-        let data = { tree, subs, connectedUsers: 0 };
-        this._treeList[info.id] = data;
-        console.log(`[CausalTreeServer] Done.`);
-        return data;
+    private async _createNewTree(info: RealtimeChannelInfo) {
+        console.log(`[CausalTreeServer] Creating new...`);
+        const tree = await this._createTree(info.id, info.type, true);
+        if (!info.bare) {
+            await tree.root();
+            console.log(`[CausalTreeServer] Storing initial tree version...`);
+            await this._treeStore.put(info.id, tree.export(), true);
+        } else {
+            console.log(`[CausalTreeServer] Skipping root node because a bare tree was requested.`);
+        }
+        return tree;
     }
 
     private _registerSubs(info: RealtimeChannelInfo, tree: CausalTree<AtomOp, any, any>): SubscriptionLike[] {
@@ -350,7 +364,7 @@ export interface TreePromises {
 export interface TreeData {
     tree: CausalTree<AtomOp, any, any>;
     subs: SubscriptionLike[];
-    connectedUsers: number;
+    users: Map<string, Socket>;
     timeoutId?: any;
     inactive?: boolean;
 }
