@@ -1,4 +1,26 @@
 
+:root {
+    --disabled-cell-color: #EFEFEF;
+    --file-cell-border-color: #CCC;
+    --file-cell-border: 1px solid var(--file-cell-border-color);
+}
+
+.file-table-grid {
+    display: inline-grid;
+    grid-gap: 1px;
+    background-color: var(--file-cell-border-color);
+    border: var(--file-cell-border);
+}
+
+.file-table-grid.columns {
+    grid-auto-flow: column;
+    grid-auto-columns: fit-content(250px);
+}
+
+.file-table-grid.rows {
+    grid-auto-flow: row;
+}
+
 .file-table {
     border-collapse: collapse;
     border-spacing: 0;
@@ -9,14 +31,56 @@
     text-transform: none;
 }
 
-.file-table th {
+.file-cell.header {
+    background-color: var(--disabled-cell-color);
+    padding: 4px;
+    /* border-top: var(--file-cell-border); */
+}
+
+/* .file-cell.last-file {
+    border-right: var(--file-cell-border);
+}
+
+.file-cell.last-tag {
+    border-bottom: var(--file-cell-border);
+} */
+/* 
+.file-cell.focused {
+    outline-width: 1px;
+    outline-color: #448aff;
+    outline-style: auto;
+} */
+
+/* .file-cell input:focus {
+    outline: none;
+} */
+
+.file-cell.id {
+    font-weight: 700;
+    overflow-x: hidden;
+    white-space: nowrap;
+}
+
+.file-cell.remove-item {
+    text-align: center;
+    background-color: var(--disabled-cell-color);
+}
+
+.file-cell input {
+    width: 100%;
+    height: 100%;
+    padding: 2px;
+    border: none;
+}
+
+/* .file-table th {
     border-left: 1px solid rgba(0,0,0,.2);
 }
 
 .file-table th {
     border-top: 1px solid rgba(0,0,0,.2);
     background-color: rgba(0,0,0,.05);
-}
+} */
 
 .remove-tag.md-button {
     width: 24px;
@@ -92,7 +156,8 @@ th:last-child {
 
 .file-table-wrapper {
     width: 100%;
-    overflow-x: auto;
+    max-height: 354px;
+    overflow: auto;
 }
 
 .multi-line-tag-value-editor {
