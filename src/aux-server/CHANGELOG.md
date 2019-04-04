@@ -33,6 +33,20 @@
     - This gives us the capability to dynamically switch between row and column modes.
     - Also gives us more control over sizing of elements and responsiveness.
   - Inventory bar adjusts to mobile screen resolutions.
+  - Scripting Improvements
+    - Added the ability to set tag values on files that are returned from `@` queries.
+      - For example, `@name('bob').name = 'joe'` changes the name of `bob` to `joe`.
+      - Caveats:
+        - Setting individual array values is not supported.
+        - So doing `this.colors[1] = 'blue'` would not change the second element of the `colors` tag to `blue`.
+    - Added the `aux._parent` tag that contains the ID of the file that a file is childed to.
+    - When `destroy(file)` is called all files that have `aux._parent` matching `file.id` will also be destroyed. This happens recursively.
+    - Added a new function `cloneFrom(file, ...newData)`.
+      - Similar to `clone(file, ...newData)` but sets `aux._parent` on the new file to `file.id`.
+      - The new file will have tags copied from `file` and the given list of objects.
+    - Added a new function `createFrom(file, data)`.
+      - Similar to `create(data)` but sets `aux._parent` on the new file to `file.id`.
+      - The new file will have tags from the given `data` parameter.
   
 ## V0.3.26
 ### Date: 4/01/2019
