@@ -133,7 +133,12 @@ export default class Home extends Vue {
         this._subs.push(this.fileManager.fileChanged(this.fileManager.userFile)
             .pipe(tap(file => {
                 this.mode = getUserMode(file);
+
+                let previousSelectionMode = this.selectionMode;
                 this.selectionMode = getSelectionMode(file);
+                if (previousSelectionMode !== this.selectionMode && this.selectionMode === 'multi') {
+                    this.isOpen = true;
+                }
             }))
             .subscribe());
 
