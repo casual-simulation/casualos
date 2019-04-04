@@ -4,6 +4,7 @@ import { find, some } from 'lodash';
 import { IGameView } from '../IGameView';
 
 export class Input {
+    
     /**
      * Debug level for Input class.
      * 0: Disabled, 1: Down/Up events, 2: Move events
@@ -13,6 +14,7 @@ export class Input {
     // Internal pointer data.
     private _mouseData: MouseData;
     private _touchData: TouchData[];
+    private _keyData: Map<string, KeyData>;
     private _wheelData: WheelData;
     private _targetData: TargetData;
 
@@ -93,6 +95,7 @@ export class Input {
             inputOver: null
         };
         this._touchData = [];
+        this._keyData = new Map();
         this._wheelData = new WheelData();
         this._lastPrimaryTouchData = { 
             fingerIndex: 0,
@@ -112,6 +115,8 @@ export class Input {
         this._handleTouchEnd = this._handleTouchEnd.bind(this);
         this._handleTouchCancel = this._handleTouchCancel.bind(this);
         this._handleContextMenu = this._handleContextMenu.bind(this);
+        this._handleKeyDown = this._handleKeyDown.bind(this);
+        this._handleKeyUp = this._handleKeyUp.bind(this);
 
         let element = document.getElementById('app');
         element.addEventListener('mousedown', this._handleMouseDown);
@@ -122,6 +127,8 @@ export class Input {
         element.addEventListener('touchmove', this._handleTouchMove);
         element.addEventListener('touchend', this._handleTouchEnd);
         element.addEventListener('touchcancel', this._handleTouchCancel);
+        document.addEventListener('keydown', this._handleKeyDown);
+        document.addEventListener('keyup', this._handleKeyUp);
         
         // Context menu is only important on the game view
         this._gameView.gameView.addEventListener('contextmenu', this._handleContextMenu);
@@ -140,6 +147,8 @@ export class Input {
         element.removeEventListener('touchmove', this._handleTouchMove);
         element.removeEventListener('touchend', this._handleTouchEnd);
         element.removeEventListener('touchcancel', this._handleTouchCancel);
+        document.removeEventListener('keydown', this._handleKeyDown);
+        document.removeEventListener('keyup', this._handleKeyUp);
         
         // Context menu is only important on the game view
         this._gameView.gameView.removeEventListener('contextmenu', this._handleContextMenu);
@@ -248,6 +257,19 @@ export class Input {
     }
 
     /**
+     * Returns true on the frame that the key was pressed.
+     * @param key The key. See https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key
+     */
+    public getKeyDown(key: string): boolean {
+        let keyData = this.getKeyData(key);
+        if (keyData) {
+            return keyData.state.isDownOnFrame(this._gameView.time.frameCount);
+        }
+
+        return false;
+    }
+
+    /**
      * Returns true the frame that the button was released.
      * If on mobile device and requresing Left Button, will return for the first finger touching the screen.
      */
@@ -272,6 +294,19 @@ export class Input {
         let touchData = this.getTouchData(fingerIndex);
         if (touchData) {
             return touchData.state.isUpOnFrame(this._gameView.time.frameCount);
+        }
+        
+        return false;
+    }
+
+    /**
+     * Returns true on the frame that the key was released.
+     * @param key The key. See https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key
+     */
+    public getKeyUp(key: string): boolean {
+        let keyData = this.getKeyData(key);
+        if (keyData) {
+            return keyData.state.isUpOnFrame(this._gameView.time.frameCount);
         }
 
         return false;
@@ -304,6 +339,18 @@ export class Input {
             return touchData.state.isHeldOnFrame(this._gameView.time.frameCount);
         }
 
+        return false;
+    }
+
+    /**
+     * Returns true every frame that the given key is held down.
+     * @param key The key. See https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key
+     */
+    public getKeyHeld(key: string): boolean {
+        let keyData = this.getKeyData(key);
+        if (keyData) {
+            return keyData.state.isHeldOnFrame(this._gameView.time.frameCount);
+        }
         return false;
     }
 
@@ -426,6 +473,15 @@ export class Input {
             }
         }
         return null;
+    }
+
+    /**
+     * Returns the matching key data for the provided key value.
+     * @param key The key that the data should be found for.
+     *            See https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key
+     */
+    public getKeyData(key: string): KeyData {
+        return this._keyData.get(key);
     }
 
     /**
@@ -568,6 +624,38 @@ export class Input {
             console.log("  screenPos: " + JSON.stringify(this._mouseData.screenPos));
             console.log("  pagePos: " + JSON.stringify(this._mouseData.pagePos));
             console.log("  clientPos: " + JSON.stringify(this._mouseData.clientPos));
+        }
+    }
+
+    private _getKeyState(key: string) {
+        return this._keyData.get(key);
+    }
+
+    private _handleKeyUp(event: KeyboardEvent) {
+        let keyState = this._getKeyState(event.key);
+        if (keyState) {
+            keyState.state.setUpFrame(this._gameView.time.frameCount);
+        }
+        
+        if (this.debugLevel >= 1) {
+            console.log('key ' + event.key + ' up. fireInputOnFrame: ' + this._gameView.time.frameCount);
+        }
+    }
+    
+    private _handleKeyDown(event: KeyboardEvent) {
+        let keyData = this._getKeyState(event.key);
+        if (!keyData) {
+            keyData = {
+                key: event.key,
+                state: new InputState()
+            };
+            this._keyData.set(keyData.key, keyData);
+        }
+    
+        keyData.state.setDownFrame(this._gameView.time.frameCount);
+
+        if (this.debugLevel >= 1) {
+            console.log('key ' + event.key + ' down. fireInputOnFrame: ' + this._gameView.time.frameCount);
         }
     }
 
@@ -909,6 +997,21 @@ interface MouseData {
      * Client position of mouse.
      */
     clientPos: Vector2;
+}
+
+/**
+ * Interface for data about a key.
+ */
+interface KeyData {
+    /**
+     * The key that the data is for.
+     */
+    key: string;
+
+    /**
+     * The state of the key.
+     */
+    state: InputState;
 }
 
 class WheelData {
