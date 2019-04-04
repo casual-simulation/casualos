@@ -26,7 +26,10 @@ import {
   AuxCausalTree,
   AuxFile,
   AuxObject,
-  fileRemoved
+  fileRemoved,
+  UserMode,
+  SelectionMode,
+  getSelectionMode
 } from '@yeti-cgi/aux-common';
 import {
   keys, 
@@ -207,6 +210,34 @@ export class FileManager {
   }
 
   /**
+   * Sets the file mode that the user should be in.
+   * @param mode The mode that the user should use.
+   */
+  setUserMode(mode: UserMode) {
+    return this.updateFile(this.userFile, {
+        tags: {
+            _mode: mode
+        }
+    });
+  }
+
+  /**
+   * Sets the selection mode that the user should be in.
+   * @param mode The mode that the user should be using.
+   */
+  async setSelectionMode(mode: SelectionMode) {
+    const currentMode = getSelectionMode(this.userFile);
+    if (currentMode !== mode) {
+        return this.updateFile(this.userFile, {
+            tags: {
+                'aux._selectionMode': mode,
+                _selection: null
+            }
+        });
+    }
+  }
+
+  /**
    * Gets a list of files that the given user has selected.
    * @param user The file of the user.
    */
@@ -352,14 +383,23 @@ export class FileManager {
   private async _selectFileForUser(file: AuxObject, user: AuxObject) {
     console.log('[FileManager] Select File:', file.id);
     
-    const {id, newId} = selectionIdForUser(user);
-    if (newId) {
-      const update = updateUserSelection(newId, file.id);
-      await this.updateFile(user, update);
-    }
-    if (id) {
-      const update = toggleFileSelection(file, id, user.id);
-      await this.updateFile(file, update);
+    const mode = getSelectionMode(user);
+    if (mode === 'multi') {
+        const {id, newId} = selectionIdForUser(user);
+        if (newId) {
+            const update = updateUserSelection(newId, file.id);
+            await this.updateFile(user, update);
+        }
+        if (id) {
+            const update = toggleFileSelection(file, id, user.id);
+            await this.updateFile(file, update);
+        }
+    } else {
+        await this.updateFile(user, {
+            tags: {
+                _selection: file.id
+            }
+        });
     }
   }
 

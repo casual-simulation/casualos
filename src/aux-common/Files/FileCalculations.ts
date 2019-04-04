@@ -1,4 +1,18 @@
-import { Object, File, Workspace, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_GRID_SCALE, DEFAULT_USER_MODE, DEFAULT_WORKSPACE_COLOR, UserMode, AuxDomain } from './File';
+import { 
+    Object, 
+    File, 
+    Workspace, 
+    DEFAULT_WORKSPACE_SCALE, 
+    DEFAULT_WORKSPACE_HEIGHT, 
+    DEFAULT_WORKSPACE_GRID_SCALE, 
+    DEFAULT_USER_MODE, 
+    DEFAULT_WORKSPACE_COLOR, 
+    UserMode,
+    SelectionMode,
+    AuxDomain, 
+    DEFAULT_SELECTION_MODE
+} from './File';
+
 import uuid from 'uuid/v4';
 import {
     flatMap,
@@ -111,6 +125,9 @@ export function isContext(calc: FileCalculationContext, contextFile: File, domai
 export function filterFilesBySelection(files: Object[], selectionId: string) {
     return files.filter(
         f => {
+            if (f.id === selectionId) {
+                return true;
+            }
             for(let prop in f.tags) {
                 const val = f.tags[prop];
                 if (prop === selectionId && val) {
@@ -403,7 +420,7 @@ export function validateTag(tag: string) {
 
 /**
  * Gets the ID of the selection that the user is using.
- * If the user doesn't have a selection, returns null.
+ * If the user doesn't have a selection, returns a new selection ID.
  * @param user The user's file.
  */
 export function selectionIdForUser(user: Object) {
@@ -1000,6 +1017,14 @@ export function parseFilterTag(tag: string): FilterParseResult {
  */
 export function getUserMode(object: Object): UserMode {
     return object.tags._mode || DEFAULT_USER_MODE;
+}
+
+/**
+ * Gets the user selection mode value from the given file.
+ * @param file The file.
+ */
+export function getSelectionMode(file: File): SelectionMode {
+    return file.tags['aux._selectionMode'] || DEFAULT_SELECTION_MODE;
 }
 
 /**

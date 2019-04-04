@@ -24,7 +24,8 @@ import {
     isFileStackable,
     newSelectionId,
     objectsAtContextGridPosition,
-    calculateFormulaValue
+    calculateFormulaValue,
+    filterFilesBySelection
 } from './FileCalculations';
 import {
     cloneDeep
@@ -748,6 +749,48 @@ describe('FileCalculations', () => {
                 1.23,
                 true
             ]);
+        });
+
+        describe('filterFilesBySelection()', () => {
+            it('should return the files that have the given selection ID set to a truthy value', () => {
+                const selectionId = 'abcdefg1234';
+                const file1 = createFile('test1');
+                const file2 = createFile('test2');
+                const file3 = createFile('test3');
+                const file4 = createFile('test4');
+                const file5 = createFile('test5');
+                const file6 = createFile('test6');
+
+                file1.tags[selectionId] = true;
+                file2.tags[selectionId] = 1;
+                file3.tags[selectionId] = -1;
+                file4.tags[selectionId] = 'hello';
+                file5.tags[selectionId] = false;
+
+                const selected = filterFilesBySelection([file1, file2, file3, file4, file5, file6], selectionId);
+
+                expect(selected).toEqual([
+                    file1,
+                    file2,
+                    file3,
+                    file4
+                ]);
+            });
+
+            it('should return files that have the same ID as the selection', () => {
+                const selectionId = 'abcdefg1234';
+                const file1 = createFile('test1');
+                const file2 = createFile('abcdefg1234');
+
+                file1.tags[selectionId] = true;
+
+                const selected = filterFilesBySelection([file1, file2], selectionId);
+
+                expect(selected).toEqual([
+                    file1,
+                    file2
+                ]);
+            });
         });
 
         describe('formulas', () => {
