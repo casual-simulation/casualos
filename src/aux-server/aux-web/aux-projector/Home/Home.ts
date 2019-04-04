@@ -88,7 +88,7 @@ export default class Home extends Vue {
         });
     }
 
-    tagFocusChanged({ file, tag, focused }: { file: AuxObject, tag: string, focused: boolean }) {
+    tagFocusChanged(file: AuxObject, tag: string, focused: boolean) {
         this.fileManager.setEditedFile(file);
     }
 
