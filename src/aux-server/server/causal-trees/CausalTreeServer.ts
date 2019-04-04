@@ -44,18 +44,17 @@ export class CausalTreeServer {
 
             // V2 channels
             socket.on('join_channel', (info: RealtimeChannelInfo, callback: Function) => {
-                let connected = false;
+                
                 socket.join(info.id, async err => {
                     if (err) {
                         console.log(err);
                         callback(err);
                         return;
                     }
-                    connected = true;
 
                     const data = await this._getTree(info);
-                    data.connectedUsers += 1;
-                    console.log(`[CausalTreeServer] User joined ${info.id}. ${data.connectedUsers} remaining.`);
+                    data.users.set(socket.id, socket);
+                    console.log(`[CausalTreeServer] User joined ${info.id}. ${data.users.size} remaining.`);
                     if (data.timeoutId) {
                         console.log(`[CausalTreeServer] Clearing timeout for cleanup on ${info.id}...`);
                         clearTimeout(data.timeoutId);
@@ -141,17 +140,11 @@ export class CausalTreeServer {
 
                     socket.on(`leave_${info.id}`, () => {
                         socket.leave(info.id);
-                        if (connected) {
-                            this._trackUserLeft(data, info);
-                        }
-                        connected = false;
+                        this._trackUserLeft(data, info, socket);
                     });
 
                     socket.on('disconnect', () => {
-                        if (connected) {
-                            this._trackUserLeft(data, info);
-                        }
-                        connected = false;
+                        this._trackUserLeft(data, info, socket);
                     });
 
                     callback(null);
@@ -164,16 +157,17 @@ export class CausalTreeServer {
         });
     }
 
-    private _trackUserLeft(data: TreeData, info: RealtimeChannelInfo) {
+    private _trackUserLeft(data: TreeData, info: RealtimeChannelInfo, socket: Socket) {
         if (!data.inactive) {
-            data.connectedUsers -= 1;
-            console.log(`[CausalTreeServer] User left ${info.id}. ${data.connectedUsers} remaining.`);
-            this._tryCleanupTreeData(data, info);
+            if (data.users.delete(socket.id)) {
+                console.log(`[CausalTreeServer] User left ${info.id}. ${data.users.size} remaining.`);
+                this._tryCleanupTreeData(data, info);
+            }
         }
     }
 
     private _tryCleanupTreeData(data: TreeData, info: RealtimeChannelInfo) {
-        if (data.connectedUsers <= 0 && this._treePromises[info.id] && !data.inactive && !data.timeoutId) {
+        if (data.users.size <= 0 && this._treePromises[info.id] && !data.inactive && !data.timeoutId) {
             console.log(`[CausalTreeServer] Starting timeout for cleanup on ${info.id}...`);
             data.timeoutId = setTimeout(() => {
                 console.log(`[CausalTreeServer] Cleaning up ${info.id} because no more users are connected...`);
@@ -216,7 +210,7 @@ export class CausalTreeServer {
 
         let subs = this._registerSubs(info, tree);
 
-        let data = { tree, subs, connectedUsers: 0 };
+        let data = { tree, subs, users: new Map() };
         this._treeList[info.id] = data;
         console.log(`[CausalTreeServer] Done.`);
         return data;
@@ -370,7 +364,7 @@ export interface TreePromises {
 export interface TreeData {
     tree: CausalTree<AtomOp, any, any>;
     subs: SubscriptionLike[];
-    connectedUsers: number;
+    users: Map<string, Socket>;
     timeoutId?: any;
     inactive?: boolean;
 }
