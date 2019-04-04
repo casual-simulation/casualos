@@ -13,6 +13,7 @@ import { AuxOp, FilesState, AuxCausalTree } from '@yeti-cgi/aux-common';
 import Dexie from 'dexie';
 import { difference } from 'lodash';
 import uuid from 'uuid/v4';
+import { WebConfig } from '../../shared/WebConfig';
 
 export interface User {
     id: string;
@@ -50,6 +51,7 @@ class AppDatabase extends Dexie {
 
     constructor() {
         super('Aux');
+
         this.version(1).stores({
             'keyval': 'key'
         });
@@ -72,6 +74,7 @@ export class AppManager {
     private _treeManager: CausalTreeManager;
     private _initPromise: Promise<void>;
     private _user: User;
+    private _config: WebConfig;
 
     constructor() {
         this._initSentry();
@@ -79,6 +82,7 @@ export class AppManager {
         this._socketManager = new SocketManager();
         this._treeManager = new CausalTreeManager(this._socketManager.socket);
         this._fileManager = new FileManager(this, this._treeManager);
+        this._userSubject = new BehaviorSubject<User>(null);
         this._db = new AppDatabase();
         this._initPromise = this._init();
     }
@@ -107,6 +111,10 @@ export class AppManager {
 
     get user(): User {
         return this._user;
+    }
+
+    get config(): WebConfig {
+        return this._config;
     }
 
     get version(): VersionInfo {
@@ -187,7 +195,17 @@ export class AppManager {
     }
 
     private async _init() {
+        await this._initConfig();
         await this._initUser();
+    }
+
+    private async _initConfig() {
+        console.log('[AppManager] Fetching config...');
+        this._config = await this._getConfig();
+        await this._saveConfig();
+        if (!this._config) {
+            console.warn('[AppManager] Config not able to be fetched from the server or local storage.');
+        }
     }
 
     private _initSentry() {
@@ -251,7 +269,6 @@ export class AppManager {
 
     private async _initUser() {
         this._user = null;
-        this._userSubject = new BehaviorSubject<User>(null);
         this._userSubject.subscribe(user => {
             Sentry.configureScope(scope => {
                 if (user) {
@@ -359,6 +376,41 @@ export class AppManager {
             Sentry.captureException(ex);
             console.error(ex);
             return false;
+        }
+    }
+
+    private async _getConfig(): Promise<WebConfig> {
+        const serverConfig = await this._fetchConfigFromServer();
+        if (serverConfig) {
+            return serverConfig;
+        } else {
+            return await this._fetchConfigFromLocalStorage();
+        }
+    }
+
+    private async _fetchConfigFromServer(): Promise<WebConfig> {
+        const result = await Axios.get<WebConfig>('/api/config');
+        if (result.status === 200) {
+            return result.data;
+        } else {
+            return null;
+        }
+    }
+
+    private async _saveConfig() {
+        if (this.config) {
+            await this._db.keyval.put({ key: 'config', value: this.config });
+        } else {
+            await this._db.keyval.delete('config');
+        }
+    }
+
+    private async _fetchConfigFromLocalStorage(): Promise<WebConfig> {
+        const val = await this._db.keyval.get('config');
+        if (val) {
+            return val.value;
+        } else {
+            return null;
         }
     }
 }

@@ -1,6 +1,6 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
-import { FileCalculationContext, calculateGridScale, getBuilderContextGrid } from "@yeti-cgi/aux-common";
+import { FileCalculationContext, calculateGridScale, getBuilderContextGrid, DEFAULT_WORKSPACE_GRID_SCALE } from "@yeti-cgi/aux-common";
 import { Text3D } from "../Text3D";
 import { calculateScale } from "../SceneUtils";
 
@@ -12,8 +12,7 @@ export class ScaleDecorator extends AuxFile3DDecorator {
     }
 
     fileUpdated(calc: FileCalculationContext): void {
-        const grid = this.file3D.contextGroup ? getBuilderContextGrid(calc, this.file3D.contextGroup.file, this.file3D.domain) : null;
-        const gridScale = !!grid ? calculateGridScale(calc, this.file3D.contextGroup.file, this.file3D.domain) : 1;
+        const gridScale = calculateGridScale(calc, this.file3D.contextGroup ? this.file3D.contextGroup.file : null, this.file3D.domain);
         const scale = calculateScale(calc, this.file3D.file, gridScale);
         this.file3D.display.scale.set(scale.x, scale.y, scale.z);
     }

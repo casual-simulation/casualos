@@ -48,6 +48,10 @@ export class MongoDBTreeStore implements CausalTreeStore {
 
         if (fullUpdate) {
             console.log('[MongoDBTreeStore] Running full update.');
+
+            const deleted = await this._atoms.deleteMany({ tree: id });
+            console.log(`[MongoDBTreeStore] Deleted ${deleted} atoms.`);
+
             if (upgraded.weave) {
                 console.log(`[MongoDBTreeStore] Re-Adding ${upgraded.weave.length} atoms for tree ${id}...`);
                 await this.add(id, upgraded.weave, false);

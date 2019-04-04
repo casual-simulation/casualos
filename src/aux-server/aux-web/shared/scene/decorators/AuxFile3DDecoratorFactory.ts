@@ -9,6 +9,8 @@ import { UserMeshDecorator } from "./UserMeshDecorator";
 import { AuxFile3D } from "../AuxFile3D";
 import { LineToDecorator } from "./LineToDecorator";
 import { WordBubbleDecorator } from "./WordBubbleDecorator";
+import { appManager } from "../../../shared/AppManager";
+import { UserControlsDecorator } from "./UserControlsDecorator";
 
 export class AuxFile3DDecoratorFactory { 
 
@@ -20,13 +22,16 @@ export class AuxFile3DDecoratorFactory {
 
     loadDecorators(file3d: AuxFile3D): AuxFile3DDecorator[] {
         let decorators: AuxFile3DDecorator[] = [];
-        let isUser = !!file3d.file && hasValue(file3d.file.tags._user);
+        const isUser = !!file3d.file && hasValue(file3d.file.tags._user);
+        const isLocalUser = isUser && (file3d.file.id === appManager.user.id)
         
         if (isUser) {
-            if (!!file3d.file && !!this.gameView) {
-                decorators.push(
-                    new UserMeshDecorator(file3d, this.gameView.mainCamera)
-                );
+            if (isLocalUser) {
+                // Local user gets controls for changing their user position in contexts.
+                decorators.push(new UserControlsDecorator(file3d, this.gameView.mainCamera));
+            } else {
+                // Remote user gets mesh to visualize where it is in contexts.
+                decorators.push(new UserMeshDecorator(file3d));
             }
         } else {
             decorators.push(

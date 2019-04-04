@@ -1,11 +1,13 @@
 import { File } from '../Files/File';
 import { FileUpdatedEvent, FileEvent, FileAddedEvent, action, FilesState, calculateActionEvents, FileRemovedEvent, fileRemoved, fileAdded } from "../Files/FilesChannel";
 import uuid from 'uuid/v4';
-import { every } from "lodash";
-import { isProxy, proxyObject } from "../Files/FileProxy";
+import { every, find } from "lodash";
+import { isProxy, proxyObject, FileProxy } from "../Files/FileProxy";
+import { FileCalculationContext, calculateFormulaValue } from '../Files/FileCalculations';
 
 let actions: FileEvent[] = [];
 let state: FilesState = null;
+let calc: FileCalculationContext = null;
 
 export function setActions(value: FileEvent[]) {
     actions = value;
@@ -21,6 +23,14 @@ export function setFileState(value: FilesState) {
 
 export function getFileState(): FilesState {
     return state;
+}
+
+export function setCalculationContext(context: FileCalculationContext) {
+    calc = context;
+}
+
+export function getCalculationContext(): FileCalculationContext {
+    return calc;
 }
 
 // declare const lib: string;
@@ -172,16 +182,40 @@ export function destroy(file: File | string) {
     if (id) {
         actions.push(fileRemoved(id));
     }
+
+    destroyChildren(id);
 }
 
+function destroyChildren(id: string) {
+    const result = calculateFormulaValue(calc, `@aux._parent("${id}")`);
+    if (result.success) {
+        const children = result.result;
+        let all: File[] = [];
+        if (children) {
+            if (Array.isArray(children)) {
+                all = children;
+            } else {
+                all = [children];
+            }
+        }
+
+        all.forEach(child => {
+            actions.push(fileRemoved(child.id));
+            destroyChildren(child.id);
+        });
+    }
+}
+
+/**
+ * Creates a new file that contains the given tags.
+ * @param data The object that specifies what tags to set on the file.
+ */
 export function create(data: any) {
-    var id = uuid();
+    let id = uuid();
 
     let event: FileAddedEvent = fileAdded({
         id: id,
         tags: {
-            _position: {x:0, y:0, z:0},
-            _workspace: null,
             ...data
         }
     });
@@ -189,7 +223,11 @@ export function create(data: any) {
     actions.push(event);
 }
 
-export function copy(...files: any[]) {
+/**
+ * Creates a new file that contains tags from the given files or objects.
+ * @param files The files or objects to use for the new file's tags.
+ */
+export function clone(...files: any[]) {
     let id = uuid();
 
     let originals = files.map(f => {
@@ -216,10 +254,49 @@ export function copy(...files: any[]) {
     actions.push(event);
 }
 
+/**
+ * Creates a new file that contains tags from and is parented under the given file.
+ * @param file The file that the clone should be a child of.
+ * @param data The files or objects to use for the new file's tags.
+ */
+export function cloneFrom(file: File, ...data: any[]) {
+    return clone(file, ...data, {
+        'aux._parent': file.id
+    });
+}
+
+/**
+ * Creates a new file that is a child of the given file.
+ * @param parent The file that should be the parent of the new file.
+ * @param data The object that specifies the new file's tag values.
+ */
+export function createFrom(parent: File | string, data: any) {
+    let parentId: string;
+    if (typeof parent === 'string') {
+        parentId = parent;
+    } else {
+        parentId = parent.id;
+    }
+    return create({
+        ...data,
+        'aux._parent': parentId
+    });
+}
+
+/**
+ * Combines the two given files.
+ * @param first The first file.
+ * @param second The second file.
+ */
 export function combine(first: File | string, second: File | string) {
     event('+', [first, second]);
 }
 
+/**
+ * Runs an event on the given files.
+ * @param name The name of the event to run.
+ * @param files The files that the event should be executed on. If null, then the event will be run on every file.
+ */
 export function event(name: string, files: (File | string)[]) {
     if (!!state) {
         let ids = !!files ? files.map(f => typeof f === 'string' ? f : f.id) : null;
@@ -267,8 +344,10 @@ export default {
     random,
     join,
     destroy,
-    copy,
+    clone,
+    cloneFrom,
     create,
+    createFrom,
     combine,
     event,
     shout,

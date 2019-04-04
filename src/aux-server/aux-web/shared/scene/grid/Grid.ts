@@ -44,5 +44,6 @@ export function calculateGridTileLocalPositions(x: number, y: number, z: number,
 export function calculateGridTileLocalCenter(gridX: number, gridY: number, z: number, scale: number) {
     const x = (gridX * scale);
     const y = (gridY * -scale); // for some reason the Y coordinate needs mirroring
+    z = (z * scale);
     return new Vector3(x, z, y)
 }

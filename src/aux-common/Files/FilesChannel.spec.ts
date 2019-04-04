@@ -30,8 +30,8 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x:0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        '+(#name:"Joe")': 'copy(this);destroy(this);destroy(that);',
-                        '+(#name:"Friend")': 'copy(this, { bad: true })',
+                        '+(#name:"Joe")': 'clone(this);destroy(this);destroy(that);',
+                        '+(#name:"Friend")': 'clone(this, { bad: true })',
                     }
                 },
                 thatFile: {
@@ -57,8 +57,8 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x:0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        '+(#name:"Joe")': 'copy(this);destroy(this);destroy(that);',
-                        '+(#name:"Friend")': 'copy(this, { bad: true })',
+                        '+(#name:"Joe")': 'clone(this);destroy(this);destroy(that);',
+                        '+(#name:"Friend")': 'clone(this, { bad: true })',
 
                         // the new file is not destroyed
                     }
@@ -78,7 +78,7 @@ describe('FilesChannel', () => {
                         _workspace: 'abc',
                         num: 15,
                         formula: '=this.num',
-                        '+(#name:"Friend")': 'copy(this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
+                        '+(#name:"Friend")': 'clone(this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
                     }
                 },
                 thatFile: {
@@ -106,7 +106,7 @@ describe('FilesChannel', () => {
                         _workspace: 'abc',
                         num: 15,
                         formula: '=this.num',
-                        '+(#name:"Friend")': 'copy(this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
+                        '+(#name:"Friend")': 'clone(this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
                         name: 'Friend',
                         testFormula: '=this.name'
 
@@ -125,7 +125,7 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x:0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef(#name:"Joe")': 'copy(this)'
+                        'abcdef(#name:"Joe")': 'clone(this)'
                     }
                 },
                 thatFile: {
@@ -151,7 +151,7 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x:0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef(#name:"Joe")': 'copy(this)'
+                        'abcdef(#name:"Joe")': 'clone(this)'
                     }
                 })
             ]);
@@ -164,7 +164,7 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x:0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef()': 'copy(this)'
+                        'abcdef()': 'clone(this)'
                     }
                 },
                 thatFile: {
@@ -190,7 +190,7 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x:0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef()': 'copy(this)'
+                        'abcdef()': 'clone(this)'
                     }
                 })
             ]);
@@ -225,6 +225,102 @@ describe('FilesChannel', () => {
             ]);
         });
 
+        it('should be able to set property values on files returned from queries', () => {
+            const state: FilesState = {
+                thisFile: {
+                    id: 'thisFile',
+                    tags: {
+                        'abcdef()': '@name("test").abc = "def"'
+                    }
+                },
+                editFile: {
+                    id: 'editFile',
+                    tags: {
+                        name: 'test'
+                    }
+                }
+            };
+
+            // specify the UUID to use next
+            const fileAction = action('abcdef', ['thisFile']);
+            const result = calculateActionEvents(state, fileAction);
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+            
+            expect(result.events).toEqual([
+                fileUpdated('editFile', {
+                    tags: {
+                        abc: 'def'
+                    }
+                })
+            ]);
+        });
+
+        it('should be able to set property values on files returned from other formulas', () => {
+            const state: FilesState = {
+                thisFile: {
+                    id: 'thisFile',
+                    tags: {
+                        'formula': '=@name("test")', 
+                        'abcdef()': 'this.formula.abc = "def"'
+                    }
+                },
+                editFile: {
+                    id: 'editFile',
+                    tags: {
+                        name: 'test'
+                    }
+                }
+            };
+
+            // specify the UUID to use next
+            const fileAction = action('abcdef', ['thisFile']);
+            const result = calculateActionEvents(state, fileAction);
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+            
+            expect(result.events).toEqual([
+                fileUpdated('editFile', {
+                    tags: {
+                        abc: 'def'
+                    }
+                })
+            ]);
+        });
+
+        it('should be able to increment values on files returned from other formulas', () => {
+            const state: FilesState = {
+                thisFile: {
+                    id: 'thisFile',
+                    tags: {
+                        'formula': '=@name("test")', 
+                        'abcdef()': 'this.formula.num += 1; this.formula.num += 1'
+                    }
+                },
+                editFile: {
+                    id: 'editFile',
+                    tags: {
+                        name: 'test',
+                        num: 1
+                    }
+                }
+            };
+
+            // specify the UUID to use next
+            const fileAction = action('abcdef', ['thisFile']);
+            const result = calculateActionEvents(state, fileAction);
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+            
+            expect(result.events).toEqual([
+                fileUpdated('editFile', {
+                    tags: {
+                        num: 3
+                    }
+                })
+            ]);
+        });
+
         it('should handle shouts', () => {
             const state: FilesState = {
                 thisFile: {
@@ -252,6 +348,172 @@ describe('FilesChannel', () => {
                     }
                 })
             ]);
+        });
+
+        describe('createFrom()', () => {
+            it('should create a new file with aux._parent set to the original id', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'createFrom(this, { abc: "def" })',
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            abc: 'def',
+                            'aux._parent': 'thisFile'
+                        }
+                    })
+                ]);
+            });
+
+            it('should create a new file with aux._parent set to the given id', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'createFrom("thisFile", { abc: "def" })',
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            abc: 'def',
+                            'aux._parent': 'thisFile'
+                        }
+                    })
+                ]);
+            });
+        });
+
+        describe('cloneFrom()', () => {
+            it('should create a new file with aux._parent set to the given files ID', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'cloneFrom(this, { abc: "def" })',
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            abc: 'def',
+                            'test()': 'cloneFrom(this, { abc: "def" })',
+                            'aux._parent': 'thisFile'
+                        }
+                    })
+                ]);
+            });
+        });
+
+        describe('destroy()', () => {
+            it('should destroy and files that have aux._parent set to the file ID', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'destroy(this)',
+                        }
+                    },
+                    childFile: {
+                        id: 'childFile',
+                        tags: {
+                            'aux._parent': 'thisFile'
+                        }
+                    }
+                };
+
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileRemoved('thisFile'),
+                    fileRemoved('childFile'),
+                ]);
+            });
+
+            it('should recursively destroy files that have aux._parent set to the file ID', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'destroy(this)',
+                        }
+                    },
+                    childFile: {
+                        id: 'childFile',
+                        tags: {
+                            'aux._parent': 'thisFile'
+                        }
+                    },
+                    childChildFile: {
+                        id: 'childChildFile',
+                        tags: {
+                            'aux._parent': 'childFile'
+                        }
+                    },
+                    otherChildFile: {
+                        id: 'otherChildFile',
+                        tags: {
+                            'aux._parent': 'thisFile'
+                        }
+                    },
+                    otherChildChildFile: {
+                        id: 'otherChildChildFile',
+                        tags: {
+                            'aux._parent': 'otherChildFile'
+                        }
+                    }
+                };
+
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileRemoved('thisFile'),
+                    fileRemoved('childFile'),
+                    fileRemoved('childChildFile'),
+                    fileRemoved('otherChildFile'),
+                    fileRemoved('otherChildChildFile'),
+                ]);
+            });
         });
     });
 

@@ -155,7 +155,15 @@ export class GridChecker {
                 const offsetY = y - (actualHeight / 2);
                 const gridX = Math.ceil(offsetX);
                 const gridY = Math.ceil(offsetY);
-                const tilePoints = calculateGridTileLocalPositions(gridX, gridY, height, this._tileSize, points);
+                const tilePoints = calculateGridTileLocalPositions(
+                    gridX, 
+                    gridY, 
+                    
+                    // Divide by tileSize so that when height gets multiplied by tileSize it equals 1
+                    // This makes the output Z match height exactly and not get scaled by tileSize.
+                    height / this._tileSize,
+                    this._tileSize, 
+                    points);
                 tiles.push({
                     valid,
                     gridPosition: new Vector2(gridX, gridY),

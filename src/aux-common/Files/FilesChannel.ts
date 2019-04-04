@@ -9,8 +9,9 @@ import { ReducingStateStore, Event, ChannelConnection } from "../channels-core";
 import {File, Object, Workspace, PartialFile} from './File';
 import { createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, isDestroyed, getActiveObjects, calculateStateDiff, FilesStateDiff, filtersMatchingArguments } from './FileCalculations';
 import { merge as mergeObj } from '../utils';
-import { setActions, getActions, setFileState } from '../Formulas/formula-lib';
+import formulaLib, { setActions, getActions, setFileState, setCalculationContext, getCalculationContext } from '../Formulas/formula-lib';
 import { AnimationActionLoopStyles } from 'three';
+import { SetValueHandler } from './FileProxy';
 export interface FilesState {
     [id: string]: File;
 }
@@ -39,14 +40,43 @@ export interface DiffOptions {
 export function calculateActionEvents(state: FilesState, action: Action) {
     const objects = getActiveObjects(state);
     const files = !!action.fileIds ? action.fileIds.map(id => state[id]) : objects;
-    const context = createCalculationContext(objects);
+    const factory = (o: File) => {
+        return (tag: string, value: any) => {
+            changes[o.id].changedTags.push(tag);
+            changes[o.id].newValues.push(value);
+        };
+    };
+    const context = createCalculationContext(objects, formulaLib, factory);
+
+    let changes: {
+        [key: string]: {
+            changedTags: string[];
+            newValues: string[];
+        }
+    } = {};
+
+    objects.forEach(o => {
+        changes[o.id] = {
+            changedTags: [],
+            newValues: []
+        };
+    });
+
     const fileEvents = flatMap(files, (f, index) => eventActions(
         state, 
         files, 
         context, 
         f,
-        action.eventName));
-    const events = fileEvents;
+        action.eventName,
+        factory));
+    let events = fileEvents;
+
+    const updates = objects.map(o => calculateFileUpdateFromChanges(o.id, changes[o.id].changedTags, changes[o.id].newValues));
+    updates.forEach(u => {
+        if (u) {
+            events.push(u);
+        }
+    });
 
     return {
         events,
@@ -82,36 +112,28 @@ export function cleanFile(file: File): File {
 }
 
 
-function eventActions(state: FilesState, objects: Object[], context: FileCalculationContext, file: Object, eventName: string): FileEvent[] {
+function eventActions(state: FilesState, 
+    objects: Object[], 
+    context: FileCalculationContext, 
+    file: Object, 
+    eventName: string,
+    setValueHandlerFactory: (file: File) => SetValueHandler): FileEvent[] {
     const otherObjects = objects.filter(o => o !== file);
     const sortedObjects = sortBy(objects, o => o !== file);
     const filters = filtersMatchingArguments(context, file, eventName, otherObjects);
     const scripts = filters.map(f => calculateFileValue(context, file, f.tag));
     let previous = getActions();
+    let prevContext = getCalculationContext();
     let actions: FileEvent[] = [];
-    let changes: {
-        [key: string]: {
-            changedTags: string[];
-            newValues: string[];
-        }
-    } = {};
+    
     let vars: {
         [key: string]: any
     } = {};
     setActions(actions);
     setFileState(state);
+    setCalculationContext(context);
     
-    sortedObjects.forEach(o => {
-        changes[o.id] = {
-            changedTags: [],
-            newValues: []
-        };
-    });
-
-    const formulaObjects = sortedObjects.map(o => convertToFormulaObject(context, o, (tag, value) => {
-        changes[o.id].changedTags.push(tag);
-        changes[o.id].newValues.push(value);
-    }));
+    let formulaObjects = sortedObjects.map(o => convertToFormulaObject(context, o, setValueHandlerFactory(o)));
 
     formulaObjects.forEach((obj, index) => {
         if (index === 1) {
@@ -125,13 +147,7 @@ function eventActions(state: FilesState, objects: Object[], context: FileCalcula
 
     setActions(previous);
     setFileState(null);
-
-    const updates = sortedObjects.map(o => calculateFileUpdateFromChanges(o.id, changes[o.id].changedTags, changes[o.id].newValues));
-    updates.forEach(u => {
-        if (u) {
-            actions.push(u);
-        }
-    });
+    setCalculationContext(prevContext);
 
     return actions;
 }

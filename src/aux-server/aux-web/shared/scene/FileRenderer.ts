@@ -124,7 +124,7 @@ export class FileRenderer {
     private _updateScene() {
         this._group.position.copy(this._worldPosition);
 
-        this._camera.position.set(this._worldPosition.x - 1, this._worldPosition.y + 1.5, this._worldPosition.z - 1);
+        this._camera.position.set(this._worldPosition.x - 1, this._worldPosition.y + 1.25, this._worldPosition.z - 1);
         this._camera.updateMatrixWorld(true);
     }
 

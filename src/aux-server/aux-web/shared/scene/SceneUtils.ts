@@ -1,10 +1,7 @@
-import { Vector3, MeshBasicMaterial, SphereBufferGeometry, Mesh, Object3D, Scene, Matrix4, Box2, Vector2, Box3, Layers, BoxBufferGeometry, MeshStandardMaterial, BufferGeometry, BufferAttribute, Material, Geometry } from 'three';
-import { Text3D } from './Text3D';
-import { IGameView } from '../IGameView';
-import { flatMap, sortBy } from 'lodash';
-import { calculateNumericalTagValue, FileCalculationContext, File, getFilePosition, getFileIndex } from '@yeti-cgi/aux-common';
-import { ContextGroup3D } from './ContextGroup3D';
-import { AuxFile3D } from './AuxFile3D';
+import { Vector3, MeshBasicMaterial, SphereBufferGeometry, Mesh, Object3D, Scene, Matrix4, Box2, Vector2, Box3, Layers, BoxBufferGeometry, MeshStandardMaterial, BufferGeometry, BufferAttribute, Material, Geometry, ConeGeometry, DoubleSide } from 'three';
+import { flatMap } from 'lodash';
+import { calculateNumericalTagValue, FileCalculationContext, File } from '@yeti-cgi/aux-common';
+import { getOptionalValue } from '../SharedUtils';
 
 export function createSphere(position: Vector3, color: number, size: number = 0.1) {
     const sphereMaterial = new MeshBasicMaterial({
@@ -14,6 +11,25 @@ export function createSphere(position: Vector3, color: number, size: number = 0.
     const sphere = new Mesh(sphereGeometry, sphereMaterial);
     sphere.position.copy(position);
     return sphere;
+}
+
+export function createUserCone(radius?: number, height?: number): Mesh {
+    radius = getOptionalValue(radius, 0.5);
+    height = getOptionalValue(height, 0.7);
+    let geometry = new ConeGeometry(radius, height, 4, 1, true);
+    let material = new MeshStandardMaterial({
+        color: "green",
+        metalness: .1,
+        roughness: 0.6,
+        transparent: true,
+        opacity: 0.4,
+        side: DoubleSide,
+        flatShading: true
+    });
+    const mesh = new Mesh(geometry, material);
+    mesh.castShadow = true;
+    mesh.receiveShadow = false;
+    return mesh;
 }
 
 export function createCube(size: number): Mesh {
@@ -226,4 +242,29 @@ export function disposeMesh(mesh: { geometry: Geometry | BufferGeometry, materia
     if (disposeMat) {
         disposeMaterial(mesh.material);
     }
+}
+
+export function disposeObject3D(object3d: Object3D, disposeGeometry: boolean = true, disposeMaterial: boolean = true) {
+    if (!object3d) return;
+
+    if (disposeGeometry) {
+        let geometry = (<any>object3d).geometry;
+        if (geometry) {
+            geometry.dispose();
+        }
+    }
+
+    if (disposeMaterial) {
+        let material = (<any>object3d).material;
+        if (material) {
+            if (Array.isArray(material)) {
+                for (let i = 0; i < material.length; i++) {
+                    material[i].dispose();
+                }
+            } else {
+                material.dispose();
+            }
+        }
+    }
+    
 }
