@@ -57,6 +57,7 @@ import {SocketManager} from './SocketManager';
 import { CausalTreeManager } from './causal-trees/CausalTreeManager';
 import { RealtimeCausalTree } from '@yeti-cgi/aux-common/causal-trees';
 import { FileHelper } from './FileHelper';
+import { SelectionManager } from './SelectionManager';
 
 export interface SelectedFilesUpdatedEvent { 
     files: AuxObject[];
@@ -70,6 +71,7 @@ export class FileManager {
   private _appManager: AppManager;
   private _treeManager: CausalTreeManager;
   private _helper: FileHelper;
+  private _selection: SelectionManager;
 
   private _subscriptions: SubscriptionLike[];
   private _status: string;
@@ -101,7 +103,7 @@ export class FileManager {
    * Gets all the selected files that represent an object.
    */
   get selectedObjects(): File[] {
-    return this.selectedFilesForUser(this.userFile);
+    return this.selection.getSelectedFilesForUser(this.userFile);
   }
 
   /**
@@ -193,6 +195,14 @@ export class FileManager {
   get helper() {
       return this._helper;
   }
+
+  /**
+   * Gets the selection manager.
+   */
+  get selection() {
+      return this._selection;
+  }
+
   constructor(app: AppManager, treeManager: CausalTreeManager) {
     this._appManager = app;
     this._treeManager = treeManager;
@@ -223,45 +233,6 @@ export class FileManager {
             _mode: mode
         }
     });
-  }
-
-  /**
-   * Sets the selection mode that the user should be in.
-   * @param mode The mode that the user should be using.
-   */
-  async setSelectionMode(mode: SelectionMode) {
-    const currentMode = getSelectionMode(this.userFile);
-    if (currentMode !== mode) {
-        return this.updateFile(this.userFile, {
-            tags: {
-                'aux._selectionMode': mode,
-                _selection: null
-            }
-        });
-    }
-  }
-
-  /**
-   * Gets a list of files that the given user has selected.
-   * @param user The file of the user.
-   */
-  selectedFilesForUser(user: AuxObject) {
-    return filterFilesBySelection(this.objects, user.tags._selection);
-  }
-
-  /**
-   * Selects the given file for the current user.
-   * @param file The file to select.
-   */
-  async selectFile(file: AuxObject) {
-    await this._selectFileForUser(file, this.userFile);
-  }
-
-  /**
-   * Clears the selection for the current user.
-   */
-  async clearSelection() {
-    await this._clearSelectionForUser(this.userFile);
   }
 
   /**
@@ -358,39 +329,6 @@ export class FileManager {
     );
   }
 
-  /**
-   * Clears the selection that the given user has.
-   * @param user The file for the user to clear the selection of.
-   */
-  private async _clearSelectionForUser(user: AuxObject) {
-    console.log('[FileManager] Clear selection for', user.id);
-    const update = updateUserSelection(null, null);
-    await this.updateFile(user, update);
-  }
-
-  private async _selectFileForUser(file: AuxObject, user: AuxObject) {
-    console.log('[FileManager] Select File:', file.id);
-    
-    const mode = getSelectionMode(user);
-    if (mode === 'multi') {
-        const {id, newId} = selectionIdForUser(user);
-        if (newId) {
-            const update = updateUserSelection(newId, file.id);
-            await this.updateFile(user, update);
-        }
-        if (id) {
-            const update = toggleFileSelection(file, id, user.id);
-            await this.updateFile(file, update);
-        }
-    } else {
-        await this.updateFile(user, {
-            tags: {
-                _selection: file.id
-            }
-        });
-    }
-  }
-
   private _setEditedFileForUser(file: AuxObject, user: AuxObject) {
     if (file.id !== user.tags._editingFile) {
       console.log('[FileManager] Edit File:', file.id);
@@ -467,6 +405,8 @@ export class FileManager {
         console.log('[FileManager] Got Tree:', this._aux.tree.site.id);
 
         this._helper = new FileHelper(this._aux.tree, appManager.user.id);
+        this._selection = new SelectionManager(this._helper);
+
         await this._initUserFile();
         await this._initGlobalsFile();
 

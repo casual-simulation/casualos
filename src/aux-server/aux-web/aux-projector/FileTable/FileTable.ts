@@ -95,7 +95,7 @@ export default class FileTable extends Vue {
     }
 
     async toggleFile(file: AuxObject) {
-        await this.fileManager.selectFile(file);
+        await this.fileManager.selection.selectFile(file);
     }
 
     addTag(isAction: boolean = false) {
@@ -140,7 +140,7 @@ export default class FileTable extends Vue {
     }
 
     async clearSelection() {
-        await this.fileManager.clearSelection();
+        await this.fileManager.selection.clearSelection();
     }
 
     onTagChanged(file: AuxObject, tag: string, value: string) {
