@@ -1,9 +1,19 @@
 
+:root {
+    --disabled-cell-color: rgba(0,0,0,.05);
+}
+
 .file-table-grid {
     display: inline-grid;
+}
+
+.file-table-grid.columns {
     grid-auto-flow: column;
     grid-auto-columns: fit-content(250px);
-    grid-column-gap: 8px;
+}
+
+.file-table-grid.rows {
+    grid-auto-flow: row;
 }
 
 .file-table {
@@ -14,6 +24,37 @@
 .file-table .new-tag-button {
     margin: 0;
     text-transform: none;
+}
+
+.file-cell.header {
+    background-color: var(--disabled-cell-color);
+    padding: 4px;
+}
+
+.file-cell {
+    border: 1px solid rgba(0,0,0,.2);
+}
+
+.file-cell.id {
+    font-weight: 700;
+    overflow-x: hidden;
+    white-space: nowrap;
+}
+
+.file-cell.remove-item {
+    text-align: center;
+    background-color: var(--disabled-cell-color);
+}
+
+.file-cell input {
+    width: 100%;
+    height: 100%;
+    padding: 2px;
+    border: none;
+}
+
+.file-cell > input:hover {
+    background-color: transparent;
 }
 
 /* .file-table th {
@@ -99,7 +140,8 @@ th:last-child {
 
 .file-table-wrapper {
     width: 100%;
-    overflow-x: auto;
+    max-height: 354px;
+    overflow: auto;
 }
 
 .multi-line-tag-value-editor {

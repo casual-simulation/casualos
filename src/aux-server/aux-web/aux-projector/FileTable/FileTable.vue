@@ -3,6 +3,7 @@
     <div class="top-part md-layout">
       <div class="md-layout-item md-size-20">
         <file-table-toggle :files="files" @click="closeWindow()"></file-table-toggle>
+        <!-- <md-button @click="flipTable()">Flip</md-button> -->
       </div>
       <div class="md-layout-item md-size-80 file-table-actions">
         <div v-if="!isMakingNewTag">
@@ -38,21 +39,12 @@
         </div>
       </div>
     </div>
-    <div v-if="focusedTag" class="multi-line-tag-value-wrapper">
-      <md-field>
-        <label><file-tag :tag="focusedTag"></file-tag></label>
-        <md-textarea ref="multiLineEditor" v-model="multilineValue"
-            md-autogrow
-            class="multi-line-tag-value-editor"
-            :class="[{ formula: isFocusedTagFormula }]">
-        </md-textarea>
-      </md-field>
-    </div>
     <div v-if="hasFiles" class="file-table-wrapper">
-      <div class="file-table-grid" ref="table" :style="{ 'grid-template-rows': `25px 20px repeat(${tags.length}, 20px)` }">
+        <!--   -->
+      <div class="file-table-grid" :class="[viewMode]" ref="table" :style="fileTableGridStyle">
 
         <!-- Remove all button -->
-        <div class="file-cell">
+        <div class="file-cell remove-item">
           <md-button class="md-icon-button md-dense" @click="clearSelection()">
             <md-icon>remove</md-icon>
             <md-tooltip md-delay="1000" md-direction="top">Unselect All</md-tooltip>
@@ -60,12 +52,14 @@
         </div>
 
         <!-- ID tag -->
-        <div class="file-cell">
+        <div class="file-cell header">
           <file-tag tag="id"></file-tag>
         </div>
 
         <!-- Other tags -->
-        <div v-for="(tag, index) in tags" :key="index" class="file-cell">
+        <div v-for="(tag, index) in tags" :key="index" class="file-cell header">
+          <file-tag :tag="tag"></file-tag>
+
           <!-- Show X button for tags that don't have values or tags that are hidden -->
           <md-button
             class="remove-tag md-icon-button md-dense"
@@ -75,30 +69,46 @@
             <md-tooltip md-delay="1000" md-direction="top">Remove #{{tag}}</md-tooltip>
           </md-button>
 
-          <file-tag :tag="tag"></file-tag>
         </div>
 
         <!-- Files -->
         <template v-for="file in files">
 
           <!-- deselect button -->
-          <md-button :key="`${file.id}-remove`" class="md-icon-button md-dense" @click="toggleFile(file)">
-            <md-icon>remove</md-icon>
-            <md-tooltip md-delay="1000" md-direction="top">Unselect Item</md-tooltip>
-          </md-button>
+          <div :key="`${file.id}-remove`" class="file-cell remove-item">
+            <md-button class="md-icon-button md-dense" @click="toggleFile(file)">
+                <md-icon>remove</md-icon>
+                <md-tooltip md-delay="1000" md-direction="top">Unselect Item</md-tooltip>
+            </md-button>
+          </div>
 
           <!-- File ID -->
-          <div :key="file.id" class="file-cell">
-            {{file.id}}
-          </div>
+          <div :key="file.id" class="file-cell id header">{{getShortId(file)}}</div>
 
           <!-- File Tags -->
           <div v-for="(tag, index) in tags" :key="`${file.id}-${index}`" class="file-cell">
-            <input :value="file.tags[tag]">
+              <file-value 
+                :readOnly="readOnly"
+                :file="file" 
+                :tag="tag" 
+                :updateTime="updateTime"
+                :showFormulaWhenFocused="false"
+                @tagChanged="onTagChanged"
+                @focusChanged="onTagFocusChanged(file, tag, $event)"></file-value>
           </div>
         </template>
       </div>
       
+    </div>
+    <div v-if="focusedTag" class="multi-line-tag-value-wrapper">
+      <md-field>
+        <label><file-tag :tag="focusedTag"></file-tag></label>
+        <md-textarea ref="multiLineEditor" v-model="multilineValue"
+            md-autogrow
+            class="multi-line-tag-value-editor"
+            :class="[{ formula: isFocusedTagFormula }]">
+        </md-textarea>
+      </md-field>
     </div>
   </div>
 </template>
