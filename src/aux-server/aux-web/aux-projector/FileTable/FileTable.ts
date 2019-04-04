@@ -195,17 +195,10 @@ export default class FileTable extends Vue {
     getShortId(file: Object) {
         return getShortId(file);
     }
-
-    getFileCellClass(index: number) {
-        return { 
-            'last-file': (index >= this.files.length - 1) 
-        };
-    }
-
-    getTagCellClass(fileIndex: number, tagIndex: number) {
-        return { 
-            'last-file': (fileIndex >= this.files.length - 1),
-            'last-tag': (tagIndex >= this.tags.length - 1)
+    
+    getTagCellClass(file: AuxObject, tag: string) {
+        return {
+            'focused': (file === this.focusedFile && tag === this.focusedTag)
         };
     }
 
