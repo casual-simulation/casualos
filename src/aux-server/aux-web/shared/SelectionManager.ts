@@ -16,6 +16,13 @@ export class SelectionManager {
     }
 
     /**
+     * Gets the selection mode that the current user is in.
+     */
+    get mode() {
+        return getSelectionMode(this._helper.userFile);
+    }
+
+    /**
      * Selects the given file for the current user.
      * @param file The file to select.
      */

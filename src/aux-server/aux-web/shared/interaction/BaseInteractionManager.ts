@@ -180,6 +180,10 @@ export abstract class BaseInteractionManager {
         await appManager.fileManager.selection.selectFile(<AuxFile>file.file);
     }
 
+    async clearSelection() {
+        await appManager.fileManager.selection.clearSelection();
+    }
+
     getDraggableObjects() {
         if (this._draggableObjectsDirty) {
             const contexts = this._gameView.getContexts();
