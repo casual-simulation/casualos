@@ -33,6 +33,7 @@
     - This gives us the capability to dynamically switch between row and column modes.
     - Also gives us more control over sizing of elements and responsiveness.
   - Inventory bar adjusts to mobile screen resolutions.
+  - Users are now represented as a semi-transparent square cone mesh.
   - Scripting Improvements
     - Added the ability to set tag values on files that are returned from `@` queries.
       - For example, `@name('bob').name = 'joe'` changes the name of `bob` to `joe`.
