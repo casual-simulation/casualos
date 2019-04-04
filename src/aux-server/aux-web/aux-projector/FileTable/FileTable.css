@@ -44,12 +44,16 @@
 .file-cell.last-tag {
     border-bottom: var(--file-cell-border);
 } */
-
+/* 
 .file-cell.focused {
     outline-width: 1px;
     outline-color: #448aff;
     outline-style: auto;
-}
+} */
+
+/* .file-cell input:focus {
+    outline: none;
+} */
 
 .file-cell.id {
     font-weight: 700;
@@ -67,10 +71,6 @@
     height: 100%;
     padding: 2px;
     border: none;
-}
-
-.file-cell input:focus {
-    outline: none;
 }
 
 /* .file-table th {

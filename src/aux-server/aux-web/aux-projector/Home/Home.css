@@ -7,15 +7,15 @@
     position: relative;
 }
 
-
-/* @media(min-width: 1024px) {
+@media(min-width: 1024px) {
     .info-card {
-        max-width: 66%;
+        max-width: 45% !important;
+        width: fit-content;
     }
-} */
+}
 
 .info-card {
-    /* margin: -16px; */
+    max-width: 100%;
 }
 
 /* .info-card .md-card-content .file-table {

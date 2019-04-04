@@ -39,8 +39,8 @@
         </div>
       </div>
     </div>
-    <div class="md-layout">
-        <div v-if="hasFiles" class="file-table-wrapper md-layout-item md-xsmall-size-100 md-medium-size-60 md-large-size-80">
+    <div>
+        <div v-if="hasFiles" class="file-table-wrapper">
             <!--   -->
             <div class="file-table-grid" :class="[viewMode]" ref="table" :style="fileTableGridStyle">
 
@@ -100,7 +100,7 @@
                 </template>
             </div>
         </div>
-        <div v-if="focusedTag" class="multi-line-tag-value-wrapper md-layout-item md-xsmall-size-100 md-medium-size-40 md-large-size-20">
+        <div v-if="focusedTag" class="multi-line-tag-value-wrapper">
             <md-field>
                 <label><file-tag :tag="focusedTag"></file-tag></label>
                 <md-textarea ref="multiLineEditor" v-model="multilineValue"
