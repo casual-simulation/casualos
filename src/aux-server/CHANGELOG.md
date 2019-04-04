@@ -4,7 +4,34 @@
 ### Date: TBD
 
 ### Changes:
+- Bug Fixes:
+  - Fixed an issue with having multiple tabs open that caused the tabs to send events as each other.
+    - This was previously fixed but was re-broken as part of a bit of rework around storing atoms.
+    - The issue is that storage is shared between tabs so we need to make sure we're storing the data separately per tab.
+    - So the signatures were valid because they were sharing the same keys.
+    - Maybe something like a copy-on-write mechanism or splitting trees based on the site IDs could fix this in a way that preserves offline capabilities.
+    - Upon reload we would check local storage for currently used site IDs and pick one of the local site IDs that is not in use.
+  - Fixed an issue with scaling and user positions. The user positions were not being scaled to match the context that they were in.
+  - Made the server clear and re-create trees that get corrupted after a reload.
+    - This is a dangerous operation, we'll need to spend some dev time coming up with an acceptible solution to corrupted trees so that data doesn't get lost.
+    - Basically the issue is that we currently don't have a way to communicate these issues to users and make informed decisions on it.
+    - Also because of the issue with multiple tabs, we're always trying to load the tree from the server so we can't have the client send its state to recover.
+    - So, in the meantime, this is potentially an acceptible tradeoff to prevent people from getting locked out of simulations.
 - Other improvements
+  - Redirects
+    - Added the ability to redirect to `https://auxplayer.com` when accessing a context in a simulation.
+    - Added the ability to redirect to `https://auxbuilder.com` when accessing a simulation without a context.
+  - Dynamic client configuration
+    - The client now requests a configuration from the server on startup.
+    - This lets us handle some configuration tasks for the client at runtime from the server.
+    - Will be useful for managing URLs and other functionality for deployments to Raspberry PIs.
+  - Multi-line Editor
+    - Added the ability to show a multi-line text editor for tag values.
+    - This makes editing things like actions and formulas much easier.
+  - File Sheet Axis
+    - Improved the File Sheet to use CSS Grids instead of table elements.
+    - This gives us the capability to dynamically switch between row and column modes.
+    - Also gives us more control over sizing of elements and responsiveness.
   - Inventory bar adjusts to mobile screen resolutions.
   
 ## V0.3.26
