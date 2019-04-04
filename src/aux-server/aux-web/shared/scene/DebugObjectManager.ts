@@ -1,9 +1,12 @@
-import { Box3, Object3D, BoxHelper, Scene, Vector3, Box3Helper, Color, Matrix4, AxesHelper, Points, LineBasicMaterial, LinearMipMapLinearFilter, Line, LineSegments, NoColors } from "three";
-import { remove as lodashRemove } from 'lodash';
+import { Box3, Object3D, Scene, Vector3, Box3Helper, Color, AxesHelper, LineBasicMaterial, LineSegments, NoColors } from "three";
 import { setLayer } from "./SceneUtils";
 import { LayersHelper } from "./LayersHelper";
 import { Time } from "./Time";
 import { getOptionalValue } from "../SharedUtils";
+import { Object3DPool } from "./Object3DPool";
+
+const BOX3HELPER_POOL_ID = 'box3helper_pool';
+const AXESHELPER_POOL_ID = 'axeshelper_pool';
 
 /**
  * A helper module from drawing THREE objects to the scene that are useful for visual debugging.
@@ -15,6 +18,8 @@ export namespace DebugObjectManager {
     var _scene: Scene;
     var _debugObjects: DebugObject[];
 
+    var _objectPools: Map<string, Object3DPool>;
+
     /**
      * Initalize the Debug Object Manager.
      * @param time The Time module the debug object manager will use to create timestamps and decide when debug objects have passed their expiration time.
@@ -24,6 +29,17 @@ export namespace DebugObjectManager {
         _time = time;
         _scene = scene;
         _debugObjects = [];
+        _objectPools = new Map<string, Object3DPool>();
+
+        // Setup object pools.
+        const startSize = 3;
+        let sourceObject: Object3D = null;
+
+        sourceObject = new Box3Helper(new Box3(), new Color("green"));
+        _objectPools.set(BOX3HELPER_POOL_ID, new Object3DPool(sourceObject, startSize, BOX3HELPER_POOL_ID));
+
+        sourceObject = new AxesHelper(1);
+        _objectPools.set(AXESHELPER_POOL_ID, new Object3DPool(sourceObject, startSize, AXESHELPER_POOL_ID));
     }
 
     /**
@@ -31,7 +47,8 @@ export namespace DebugObjectManager {
      */
     export function removeAll(): void {
         _debugObjects.forEach((o) => {
-            o.dispose();
+            let pool = _objectPools.get(o.poolId);
+            pool.restore(o.object);
         })
         _debugObjects = [];
     }
@@ -41,7 +58,8 @@ export namespace DebugObjectManager {
         // Dispose of elements that should not be alive anymore.
         _debugObjects = _debugObjects.filter(o => {
             if (o.killTime <= _time.timeSinceStart) {
-                o.dispose();
+                let pool = _objectPools.get(o.poolId);
+                pool.restore(o.object);
                 return false;
             } else {
                 return true;
@@ -64,7 +82,8 @@ export namespace DebugObjectManager {
         let boxColor = getOptionalValue(color, new Color(0, 1, 0));
         let depth = getOptionalValue(depthTest, false);
         let killTime = getOptionalValue(duration, _time.timeSinceStart);
-        let debugBox3 = new DebugBox3(killTime, parentObj, box3, boxColor, depth);
+        let object = _objectPools.get(BOX3HELPER_POOL_ID).retrieve();
+        let debugBox3 = new DebugBox3(object, BOX3HELPER_POOL_ID, killTime, parentObj, box3, boxColor, depth);
         _debugObjects.push(debugBox3);
     }
 
@@ -85,7 +104,8 @@ export namespace DebugObjectManager {
         let pointColor = getOptionalValue(color, null);
         let depth = getOptionalValue(depthTest, false);
         let killTime = getOptionalValue(duration, _time.timeSinceStart);
-        let debugPoint = new DebugPoint(killTime, parentObj, point, pointSize, pointColor, depth)
+        let object = _objectPools.get(AXESHELPER_POOL_ID).retrieve();
+        let debugPoint = new DebugPoint(<AxesHelper>object, AXESHELPER_POOL_ID, killTime, parentObj, point, pointSize, pointColor, depth)
         _debugObjects.push(debugPoint);
     }
 
@@ -106,7 +126,8 @@ export namespace DebugObjectManager {
         let world = getOptionalValue(worldspace, false);
         let depth = getOptionalValue(depthTest, false);
         let killTime = getOptionalValue(duration, _time.timeSinceStart);
-        let debugObjPosition = new DebugObjectPosition(killTime, _scene, object3d, world, pointSize, pointColor, depth);
+        let object = _objectPools.get(AXESHELPER_POOL_ID).retrieve();
+        let debugObjPosition = new DebugObjectPosition(<AxesHelper>object, AXESHELPER_POOL_ID, killTime, _scene, object3d, world, pointSize, pointColor, depth);
         _debugObjects.push(debugObjPosition);
     }
 
@@ -120,33 +141,39 @@ export namespace DebugObjectManager {
     // Internal Helper Classes
     //
     abstract class DebugObject {
+        poolId: string;
+        object: Object3D;
         parent: Object3D;
         killTime: number;
 
-        constructor(killTime: number, parent: Object3D) {
+        constructor(object: Object3D, poolId: string, parent: Object3D, killTime: number) {
+            this.object = object;
+            this.poolId = poolId;
             this.killTime = killTime;
             this.parent = parent;
         }
-
-        abstract dispose(): void;
     }
     
     class DebugBox3 extends DebugObject {
         killTime: number;
         box3Helper: Box3Helper;
     
-        constructor(killTime: number, parent: Object3D, box3: Box3, color: Color, depthTest: boolean) {
-            super(killTime, parent);
-            this.box3Helper = new Box3Helper(box3, color);
+        constructor(box3Helper: Box3Helper, poolId: string, killTime: number, parent: Object3D, box3: Box3, color: Color, depthTest: boolean) {
+            super(box3Helper, poolId, parent, killTime);
+            this.box3Helper = box3Helper;
+
+            let lineMaterial = <LineBasicMaterial>(<LineSegments>this.box3Helper).material;
+            lineMaterial.vertexColors = NoColors;
+            lineMaterial.color = color;
 
             if (!depthTest) {
-                let lineMaterial = <LineBasicMaterial>(<LineSegments>this.box3Helper).material;
-                if (lineMaterial) {
-                    lineMaterial.depthTest = false;
-                    lineMaterial.depthWrite = false;
-                }
-
+                lineMaterial.depthTest = false;
+                lineMaterial.depthWrite = false;
                 setLayer(this.box3Helper, LayersHelper.Layer_UIWorld, true);
+            } else {
+                lineMaterial.depthTest = true;
+                lineMaterial.depthWrite = true;
+                setLayer(this.box3Helper, LayersHelper.Layer_Default, true);
             }
 
             this.parent.add(this.box3Helper);
@@ -155,35 +182,29 @@ export namespace DebugObjectManager {
             (<any>this.box3Helper).box.copy(box3);
             this.box3Helper.updateMatrixWorld(true);
         }
-
-        dispose(): void {
-            this.parent.remove(this.box3Helper);
-        }
     }
     
     class DebugPoint extends DebugObject {
         axesHelper: AxesHelper;
     
-        constructor(killTime: number, parent: Object3D, point: Vector3, size: number, color: Color, depthTest: boolean) {
-            super(killTime, parent);
-            this.axesHelper = new AxesHelper(size);
+        constructor(axesHelper: AxesHelper, poolId: string, killTime: number, parent: Object3D, point: Vector3, size: number, color: Color, depthTest: boolean) {
+            super(axesHelper, poolId, parent, killTime);
+            this.axesHelper = axesHelper;
+
+            this.axesHelper.scale.setScalar(size);
+
+            let lineMaterial = <LineBasicMaterial>this.axesHelper.material;
+            lineMaterial.vertexColors = NoColors;
+            lineMaterial.color = color;
 
             if (!depthTest) {
-                let lineMaterial = <LineBasicMaterial>this.axesHelper.material;
-                if (lineMaterial) {
-                    lineMaterial.depthTest = false;
-                    lineMaterial.depthWrite = false;
-                }
-
+                lineMaterial.depthTest = false;
+                lineMaterial.depthWrite = false;
                 setLayer(this.axesHelper, LayersHelper.Layer_UIWorld, true);
-            }
-
-            if (color) {
-                let lineMaterial = <LineBasicMaterial>this.axesHelper.material;
-                if (lineMaterial) {
-                    lineMaterial.vertexColors = NoColors;
-                    lineMaterial.color = color;
-                }
+            } else {
+                lineMaterial.depthTest = true;
+                lineMaterial.depthWrite = true;
+                setLayer(this.axesHelper, LayersHelper.Layer_Default, true);
             }
 
             this.parent.add(this.axesHelper);
@@ -192,10 +213,6 @@ export namespace DebugObjectManager {
             this.axesHelper.position.copy(point);
             this.axesHelper.updateMatrixWorld(true);
         }
-
-        dispose(): void {
-            this.parent.remove(this.axesHelper);
-        }
     }
 
     class DebugObjectPosition extends DebugObject {
@@ -203,28 +220,26 @@ export namespace DebugObjectManager {
         worldspace: boolean;
         axesHelper: AxesHelper;
     
-        constructor(killTime: number, scene: Scene, object3d: Object3D, worldspace: boolean, size: number, color: Color, depthTest: boolean) {
-            super(killTime, scene);
+        constructor(axesHelper: AxesHelper, poolId: string, killTime: number, scene: Scene, object3d: Object3D, worldspace: boolean, size: number, color: Color, depthTest: boolean) {
+            super(axesHelper, poolId, scene, killTime);
             this.object3d = object3d;
             this.worldspace = worldspace;
-            this.axesHelper = new AxesHelper(size);
+            this.axesHelper = this.axesHelper;
+            
+            this.axesHelper.scale.setScalar(size);
+
+            let lineMaterial = <LineBasicMaterial>this.axesHelper.material;
+            lineMaterial.vertexColors = NoColors;
+            lineMaterial.color = color;
 
             if (!depthTest) {
-                let lineMaterial = <LineBasicMaterial>this.axesHelper.material;
-                if (lineMaterial) {
-                    lineMaterial.depthTest = false;
-                    lineMaterial.depthWrite = false;
-                }
-
+                lineMaterial.depthTest = false;
+                lineMaterial.depthWrite = false;
                 setLayer(this.axesHelper, LayersHelper.Layer_UIWorld, true);
-            }
-
-            if (color) {
-                let lineMaterial = <LineBasicMaterial>this.axesHelper.material;
-                if (lineMaterial) {
-                    lineMaterial.vertexColors = NoColors;
-                    lineMaterial.color = color;
-                }
+            } else {
+                lineMaterial.depthTest = true;
+                lineMaterial.depthWrite = true;
+                setLayer(this.axesHelper, LayersHelper.Layer_Default, true);
             }
 
             if (worldspace) {
@@ -237,16 +252,6 @@ export namespace DebugObjectManager {
                 this.axesHelper.updateMatrixWorld(true);
             } else {
                 this.object3d.add(this.axesHelper);
-            }
-        }
-
-        dispose(): void {
-            if (this.worldspace) {
-                this.parent.remove(this.axesHelper);
-            } else {
-                if (this.object3d) {
-                    this.object3d.remove(this.axesHelper);
-                }
             }
         }
     }

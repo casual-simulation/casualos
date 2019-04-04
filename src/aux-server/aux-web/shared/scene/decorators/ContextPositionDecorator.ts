@@ -1,6 +1,6 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
-import { calculateNumericalTagValue, FileCalculationContext, File, calculateGridScale, file, objectsAtContextGridPosition, getFilePosition, getFileIndex, getContextDefaultHeight, getBuilderContextGrid, getFileRotation, getContextScale, isUserFile, getContextGridHeight } from "@yeti-cgi/aux-common";
+import { calculateNumericalTagValue, FileCalculationContext, File, calculateGridScale, file, objectsAtContextGridPosition, getFilePosition, getFileIndex, getContextDefaultHeight, getBuilderContextGrid, getFileRotation, getContextScale, isUserFile, getContextGridHeight, DEFAULT_WORKSPACE_GRID_SCALE } from "@yeti-cgi/aux-common";
 import { Vector3, Quaternion, Euler, Vector2 } from "three";
 import { calculateGridTileLocalCenter } from "../grid/Grid";
 import { sumBy } from "lodash";
@@ -36,16 +36,10 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
     fileUpdated(calc: FileCalculationContext): void {
         const userContext = this.file3D.context;
         if (userContext) {
-            const grid = getBuilderContextGrid(calc, this.file3D.contextGroup.file, this.file3D.domain);
-            if (grid) {
-                const scale = calculateGridScale(calc, this.file3D.contextGroup.file, this.file3D.domain);
-                this._nextPos = calculateObjectPositionInGrid(calc, this.file3D, scale);
-            } else {
-                const scale = 1; // We dont have a grid, just use scale of 1.
-                this._nextPos = calculateObjectPositionInGrid(calc, this.file3D, scale);
-            }
-            
+            const scale = calculateGridScale(calc, this.file3D.contextGroup.file, this.file3D.domain);
+            this._nextPos = calculateObjectPositionInGrid(calc, this.file3D, scale);
             this._nextRot = getFileRotation(calc, this.file3D.file, this.file3D.context);
+            
             if (!this._lerp) {
                 this.file3D.display.position.copy(this._nextPos);
                 this.file3D.display.rotation.set(this._nextRot.x, this._nextRot.z, this._nextRot.y);

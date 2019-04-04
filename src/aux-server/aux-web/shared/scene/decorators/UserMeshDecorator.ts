@@ -7,7 +7,6 @@ import {
 } from "three";
 import { Text3D } from "../Text3D";
 import { FileCalculationContext, AuxObject } from '@yeti-cgi/aux-common'
-import { appManager } from '../../AppManager';
 import { setLayer, disposeMaterial } from "../SceneUtils";
 import { LayersHelper } from "../LayersHelper";
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
@@ -21,37 +20,9 @@ import { AuxFile3D } from "../AuxFile3D";
 export const DEFAULT_USER_INACTIVE_TIME = 1000 * 60;
 
 /**
- * The amount of time between checking a user's mouse for activity.
- */
-export const DEFAULT_USER_ACTIVE_CHECK_INTERVAL = 1000 * 10;
-
-/**
- * The distance that the user needs to move before updating their position.
- */
-export const DEFAULT_USER_MOVEMENT_INCREMENT = 0.5;
-
-/**
- * The angle that the user needs to rotate before updating their position.
- */
-export const DEFAULT_USER_ROTATION_INCREMENT = 2 * (Math.PI / 180);
-
-/**
- * The number of updates per second that the user mesh is allowed to make.
- */
-export const MAX_UPDATE_RATE = 2;
-
-/**
- * The number of miliseconds to wait between updates in order to not violate MAX_UPDATE_RATE.
- */
-export const TIME_BETWEEN_UPDATES = 1000 / MAX_UPDATE_RATE;
-
-/**
  * Defines a class that represents a mesh for an "user" file.
  */
 export class UserMeshDecorator extends AuxFile3DDecorator {
-
-    private _lastActiveCheckTime: number;
-    private _lastPositionUpdateTime: number = -1000;
 
     /**
      * The aux file 3d that this decorator is for.
@@ -59,7 +30,7 @@ export class UserMeshDecorator extends AuxFile3DDecorator {
     file3D: AuxFile3D;
 
     /**
-     * The cube that acts as the visual representation of the file.
+     * The object that acts as the visual representation of the file.
      */
     cameraHelper: CameraHelper;
 
@@ -78,11 +49,9 @@ export class UserMeshDecorator extends AuxFile3DDecorator {
      */
     label: Text3D;
 
-    private _mainCamera: Camera;
 
-    constructor(file3D: AuxFile3D, mainCamera?: Camera) {
+    constructor(file3D: AuxFile3D) {
         super(file3D);
-        this._mainCamera = mainCamera;
 
         this.container = new Object3D();
         this.camera = new PerspectiveCamera(60, 1, 0.1, 0.5);
@@ -113,45 +82,8 @@ export class UserMeshDecorator extends AuxFile3DDecorator {
     frameUpdate(calc: FileCalculationContext) {
         let file = <AuxObject>this.file3D.file;
 
-        const isOwnFile = this.file3D.file.id === appManager.user.id;
-
-        // visible if not destroyed, has a position, and was active in the last minute
-        this.container.visible = (!file.tags._destroyed &&
-            !isOwnFile &&
-            this._isActive());
-
-        if (isOwnFile) {
-            const time = Date.now();
-            if (time > this._lastPositionUpdateTime + TIME_BETWEEN_UPDATES) {
-                const camPosition = this._mainCamera.position;
-                const camRotation = this._mainCamera.rotation;
-                const camRotationVector = new Vector3(0, 0, 1).applyEuler(camRotation);
-                const currentPosition = this.file3D.display.position;
-                const currentRotation = this.file3D.display.rotation;
-
-                const currentRotationVector = new Vector3(0, 0, 1).applyEuler(currentRotation);
-                const distance = camPosition.distanceTo(new Vector3(currentPosition.x, currentPosition.y, currentPosition.z));
-                const angle = camRotationVector.angleTo(currentRotationVector);
-                if (distance > DEFAULT_USER_MOVEMENT_INCREMENT || angle > DEFAULT_USER_ROTATION_INCREMENT) {
-                    this._lastPositionUpdateTime = time;
-                    appManager.fileManager.updateFile(file, {
-                        tags: {
-                            [`${this.file3D.context}.x`]: camPosition.x,
-
-                            // Mirror the Y coordinate so it works with ContextPositionDecorator
-                            [`${this.file3D.context}.y`]: -camPosition.z,
-
-                            [`${this.file3D.context}.z`]: camPosition.y,
-                            [`${this.file3D.context}.rotation.x`]: camRotation.x,
-                            [`${this.file3D.context}.rotation.y`]: camRotation.z,
-                            [`${this.file3D.context}.rotation.z`]: camRotation.y,
-                        }
-                    });
-                }
-            }
-
-            this._checkIsActive();
-        }
+        // visible if not destroyed, and was active in the last minute
+        this.container.visible = (!file.tags._destroyed && this._isActive());
     }
 
     dispose() {
@@ -164,18 +96,6 @@ export class UserMeshDecorator extends AuxFile3DDecorator {
         this.camera = null;
         this.cameraHelper = null;
         this.container = null;
-    }
-
-    private _checkIsActive() {
-        const timeBetweenChecks = Date.now() - this._lastActiveCheckTime;
-        if (!this._lastActiveCheckTime || timeBetweenChecks > DEFAULT_USER_ACTIVE_CHECK_INTERVAL) {
-            this._lastActiveCheckTime = Date.now();
-            appManager.fileManager.updateFile(<AuxObject>this.file3D.file, {
-                tags: {
-                    [`${this.file3D.context}._lastActiveTime`]: Date.now()
-                }
-            });
-        }
     }
 
     private _isActive(): boolean {
