@@ -58,7 +58,7 @@
                 </div>
 
                 <!-- Other tags -->
-                <div v-for="(tag, index) in tags" :key="index" class="file-cell header">
+                <div v-for="(tag, index) in tags" :key="index" class="file-cell header" :class="getTagCellClass(0, index)">
                     <file-tag :tag="tag"></file-tag>
 
                     <!-- Show X button for tags that don't have values or tags that are hidden -->
@@ -73,10 +73,10 @@
                 </div>
 
                 <!-- Files -->
-                <template v-for="file in files">
+                <template v-for="(file, index) in files">
 
                 <!-- deselect button -->
-                    <div :key="`${file.id}-remove`" class="file-cell remove-item">
+                    <div :key="`${file.id}-remove`" class="file-cell remove-item" :class="getFileCellClass(index)">
                         <md-button class="md-icon-button md-dense" @click="toggleFile(file)">
                             <md-icon>remove</md-icon>
                             <md-tooltip md-delay="1000" md-direction="top">Unselect Item</md-tooltip>
@@ -84,10 +84,10 @@
                     </div>
 
                     <!-- File ID -->
-                    <div :key="file.id" class="file-cell id header">{{getShortId(file)}}</div>
+                    <div :key="file.id" class="file-cell id header" :class="getFileCellClass(index)">{{getShortId(file)}}</div>
 
                     <!-- File Tags -->
-                    <div v-for="(tag, index) in tags" :key="`${file.id}-${index}`" class="file-cell">
+                    <div v-for="(tag, tagIndex) in tags" :key="`${file.id}-${tagIndex}`" class="file-cell" :class="getTagCellClass(index, tagIndex)">
                         <file-value 
                             :readOnly="readOnly"
                             :file="file" 

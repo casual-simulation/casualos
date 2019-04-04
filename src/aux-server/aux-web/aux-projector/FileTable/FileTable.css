@@ -1,6 +1,7 @@
 
 :root {
     --disabled-cell-color: rgba(0,0,0,.05);
+    --file-cell-border: 1px solid rgba(0,0,0,.2);
 }
 
 .file-table-grid {
@@ -29,10 +30,20 @@
 .file-cell.header {
     background-color: var(--disabled-cell-color);
     padding: 4px;
+    border-top: var(--file-cell-border);
+}
+
+.file-cell.last-file {
+    border-right: var(--file-cell-border);
+}
+
+.file-cell.last-tag {
+    border-bottom: var(--file-cell-border);
 }
 
 .file-cell {
-    border: 1px solid rgba(0,0,0,.2);
+    border-top: var(--file-cell-border);
+    border-left: var(--file-cell-border);
 }
 
 .file-cell.id {
