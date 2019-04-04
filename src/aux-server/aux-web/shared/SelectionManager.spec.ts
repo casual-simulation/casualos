@@ -59,6 +59,28 @@ describe('SelectionManager', () => {
 
                 expect(helper.userFile.tags._selection).toBeFalsy();
             });
+
+            it('should kick the user into multi select mode if specified', async () => {
+                let user = tree.value['user'];
+                await tree.updateFile(user, {
+                    tags: {
+                        _selection: 'file1'
+                    }
+                });
+                await tree.addFile(createFile('file2'));
+
+                const file = tree.value['file2'];
+                await manager.selectFile(file, true);
+
+                const file1 = tree.value['file1'];
+                const file2 = tree.value['file2'];
+                const selection = helper.userFile.tags._selection;
+                expect(selection).toBeTruthy();
+                expect(selection).not.toBe('file1');
+                expect(helper.userFile.tags['aux._selectionMode']).toBe('multi');
+                expect(file1.tags[selection]).toBe(true);
+                expect(file2.tags[selection]).toBe(true);
+            });
         });
 
         describe('multi select', () => {
@@ -126,6 +148,20 @@ describe('SelectionManager', () => {
             await manager.clearSelection();
 
             expect(helper.userFile.tags._selection).toBeFalsy();
+        });
+
+        it('should set the aux._selectionMode tag to single', async () => {
+            await tree.updateFile(helper.userFile, {
+                tags: {
+                    _selection: 'abc',
+                    'aux._selectionMode': 'multi'
+                }
+            });
+
+            await manager.clearSelection();
+
+            expect(helper.userFile.tags._selection).toBeFalsy();
+            expect(helper.userFile.tags['aux._selectionMode']).toBe('single');
         });
     });
 

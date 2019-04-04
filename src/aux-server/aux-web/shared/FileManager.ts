@@ -11,25 +11,12 @@ import {
   calculateActionEvents,
   addState,
   DEFAULT_USER_MODE,
-  filterFilesBySelection, 
-  createWorkspace, 
   FileCalculationContext,
-  selectionIdForUser,
-  updateFile,
-  createCalculationContext,
-  updateUserSelection,
-  toggleFileSelection,
-  calculateFormattedFileValue,
-  calculateFileValue,
-  createFile,
-  getActiveObjects,
   AuxCausalTree,
   AuxFile,
   AuxObject,
   fileRemoved,
-  UserMode,
-  SelectionMode,
-  getSelectionMode
+  UserMode
 } from '@yeti-cgi/aux-common';
 import {
   keys, 

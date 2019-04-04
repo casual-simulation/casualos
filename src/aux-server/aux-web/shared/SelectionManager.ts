@@ -1,5 +1,5 @@
 import { FileHelper } from "./FileHelper";
-import { AuxObject, getSelectionMode, selectionIdForUser, updateUserSelection, toggleFileSelection, filterFilesBySelection, SelectionMode } from "@yeti-cgi/aux-common";
+import { AuxObject, getSelectionMode, selectionIdForUser, updateUserSelection, toggleFileSelection, filterFilesBySelection, SelectionMode, newSelectionId } from "@yeti-cgi/aux-common";
 
 /**
  * Defines a class that is able to manage selections for users.
@@ -25,9 +25,10 @@ export class SelectionManager {
     /**
      * Selects the given file for the current user.
      * @param file The file to select.
+     * @param multiSelect Whether to put the user into multi-select mode. (Default false)
      */
-    async selectFile(file: AuxObject) {
-        await this._selectFileForUser(file, this._helper.userFile);
+    async selectFile(file: AuxObject, multiSelect: boolean = false) {
+        await this._selectFileForUser(file, this._helper.userFile, multiSelect);
     }
 
     /**
@@ -67,10 +68,15 @@ export class SelectionManager {
     private async _clearSelectionForUser(user: AuxObject) {
         console.log('[SelectionManager] Clear selection for', user.id);
         const update = updateUserSelection(null, null);
-        await this._helper.updateFile(user, update);
+        await this._helper.updateFile(user, {
+            tags: {
+                ...update.tags,
+                "aux._selectionMode": 'single'
+            }
+        });
     }
 
-    private async _selectFileForUser(file: AuxObject, user: AuxObject) {
+    private async _selectFileForUser(file: AuxObject, user: AuxObject, multiSelect: boolean) {
         console.log('[SelectionManager] Select File:', file.id);
 
         const mode = getSelectionMode(user);
@@ -85,12 +91,38 @@ export class SelectionManager {
                 await this._helper.updateFile(file, update);
             }
         } else {
-            const selection = user.tags._selection === file.id ? null : file.id;
-            await this._helper.updateFile(user, {
-                tags: {
-                    _selection: selection
+            if (multiSelect) {
+                const newId = newSelectionId();
+                const current = user.tags._selection;
+                const update = updateUserSelection(newId, file.id);
+                await this._helper.updateFile(user, {
+                    tags: {
+                        ...update.tags,
+                        ['aux._selectionMode']: 'multi'
+                    }
+                });
+
+                if (current) {
+                    const currentFile = this._helper.filesState[current];
+                    if (currentFile) {
+                        await this._helper.updateFile(currentFile, {
+                            tags: {
+                                [newId]: true
+                            }
+                        });
+                    }
                 }
-            });
+
+                await this._helper.updateFile(file, {
+                    tags: {
+                        [newId]: true
+                    }
+                });
+            } else {
+                const selection = user.tags._selection === file.id ? null : file.id;
+                const update = updateUserSelection(selection, file.id);
+                await this._helper.updateFile(user, update);
+            }
         }
     }
 }
