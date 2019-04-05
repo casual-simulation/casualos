@@ -1,6 +1,6 @@
 
 :root {
-    --disabled-cell-color: #EFEFEF;
+    --disabled-cell-color: #F2F2F2;
     --file-cell-border-color: #CCC;
     --file-cell-border: 1px solid var(--file-cell-border-color);
 }
@@ -37,24 +37,6 @@
     /* border-top: var(--file-cell-border); */
 }
 
-/* .file-cell.last-file {
-    border-right: var(--file-cell-border);
-}
-
-.file-cell.last-tag {
-    border-bottom: var(--file-cell-border);
-} */
-/* 
-.file-cell.focused {
-    outline-width: 1px;
-    outline-color: #448aff;
-    outline-style: auto;
-} */
-
-/* .file-cell input:focus {
-    outline: none;
-} */
-
 .file-cell.id {
     font-weight: 700;
     overflow-x: hidden;
@@ -76,15 +58,6 @@
     padding: 2px;
     border: none;
 }
-
-/* .file-table th {
-    border-left: 1px solid rgba(0,0,0,.2);
-}
-
-.file-table th {
-    border-top: 1px solid rgba(0,0,0,.2);
-    background-color: rgba(0,0,0,.05);
-} */
 
 .remove-tag.md-button {
     width: 24px;
@@ -180,4 +153,8 @@ th:last-child {
 
 .multi-line-tag-value-wrapper > .md-field {
     margin-bottom: 0;
+}
+
+.no-search-results-message {
+    text-align: center;
 }

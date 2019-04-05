@@ -6,15 +6,15 @@
         <!-- <md-button @click="flipTable()">Flip</md-button> -->
       </div>
       <div class="md-layout-item md-size-80 file-table-actions">
-        <div v-if="!isMakingNewTag">
+        <div v-if="!isMakingNewTag && !isSearching">
           <md-button
             class="new-tag-button"
             @click="addTag()">+tag</md-button>
-          <md-button
-            class="new-tag-button"
-            @click="addTag(true)">+action</md-button>
+          <md-button class="search-button md-icon-button" @click="toggleSearch()">
+            <md-icon>search</md-icon>
+          </md-button>
         </div>
-        <div v-else>
+        <div v-else-if="isMakingNewTag">
             <form class="file-table-form" @submit.prevent="addTag()">
                 <div class="finish-tag-button-wrapper">
                     <md-button
@@ -37,10 +37,37 @@
                     @valid="newTagValidityUpdated"></tag-editor>
             </form>
         </div>
+        <div v-else-if="isSearching">
+            <form class="file-table-form">
+                <div class="finish-tag-button-wrapper">
+                    <md-button
+                        class="md-icon-button finish-tag-button"
+                        @click="toggleSearch()">
+                        <md-icon class="cancel">cancel</md-icon>
+                    </md-button>
+                </div>
+                <md-field>
+                    <md-icon>search</md-icon>
+                    <label>Search...</label>
+                    <md-input v-model="search"></md-input>
+                </md-field>
+            </form>
+        </div>
       </div>
     </div>
     <div>
-        <div v-if="hasFiles" class="file-table-wrapper">
+        <div v-if="isSearching">
+            <p v-if="!search" class="no-search-results-message">
+                Enter a search
+            </p>
+            <p v-else-if="!hasSearchResults()" class="no-search-results-message">
+                No files found
+            </p>
+            <div v-else>
+                Found!
+            </div>
+        </div>
+        <div v-else-if="hasFiles" class="file-table-wrapper">
             <!--   -->
             <div class="file-table-grid" :class="[viewMode]" ref="table" :style="fileTableGridStyle">
 

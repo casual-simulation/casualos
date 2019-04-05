@@ -653,6 +653,16 @@ export function convertToFormulaObject(context: FileCalculationContext, object: 
 }
 
 /**
+ * Creates a new file calculation context from the given files state.
+ * @param state The state to use.
+ * @param includeDestroyed Whether to include destroyed files in the context.
+ */
+export function createCalculationContextFromState(state: FilesState, includeDestroyed: boolean = false) {
+    const objects = includeDestroyed ? values(state) : getActiveObjects(state);
+    return createCalculationContext(objects);
+}
+
+/**
  * Creates a new file calculation context.
  * @param objects The objects that should be included in the context.
  * @param lib The library JavaScript that should be used.
@@ -1085,6 +1095,19 @@ export function isFileInContext(context: FileCalculationContext, file: Object, c
         result = (userContextValue == contextId);
     }
 
+    return result;
+}
+
+/**
+ * Executes the given formula on the given file state and returns the results.
+ * @param formula The formula to run.
+ * @param state The file state to use.
+ * @param options The options.
+ */
+export function searchFileState(formula: string, state: FilesState, { includeDestroyed }: { includeDestroyed?: boolean } = {}) {
+    includeDestroyed = includeDestroyed || false;
+    const context = createCalculationContextFromState(state, includeDestroyed);
+    const result = calculateFormulaValue(context, formula);
     return result;
 }
 

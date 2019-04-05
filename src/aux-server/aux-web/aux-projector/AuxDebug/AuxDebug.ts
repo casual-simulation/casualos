@@ -5,7 +5,7 @@ import { Prop, Watch } from 'vue-property-decorator';
 import App from '../App/App';
 import { SubscriptionLike } from 'rxjs';
 import { TreeView } from 'vue-json-tree-view';
-import { calculateFormulaValue, createCalculationContext } from '@yeti-cgi/aux-common';
+import { calculateFormulaValue, createCalculationContext, searchFileState } from '@yeti-cgi/aux-common';
 import { values } from 'lodash';
 
 @Component({
@@ -81,8 +81,7 @@ export default class AuxDebug extends Vue {
     }
 
     private _search() {
-        const context = this.includeDestroyed ? createCalculationContext(values(this.fileManager.filesState)) : this.fileManager.createContext();
-        const value = calculateFormulaValue(context, this.search);
+        const value = searchFileState(this.search, this.fileManager.filesState, { includeDestroyed: this.includeDestroyed });
         return value;
     }
 }

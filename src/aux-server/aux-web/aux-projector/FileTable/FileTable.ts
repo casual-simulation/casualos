@@ -2,7 +2,7 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Provide, Prop, Inject, Watch} from 'vue-property-decorator';
 import { some, union } from 'lodash';
-import {File, Object, fileTags, isHiddenTag, AuxObject, hasValue, isFormula, getShortId} from '@yeti-cgi/aux-common';
+import {File, Object, fileTags, isHiddenTag, AuxObject, hasValue, isFormula, getShortId, searchFileState, SandboxResult} from '@yeti-cgi/aux-common';
 import { EventBus } from '../../shared/EventBus';
 import { appManager } from '../../shared/AppManager';
 
@@ -44,6 +44,9 @@ export default class FileTable extends Vue {
     newTag: string = 'myNewTag';
     newTagValid: boolean = true;
     numFilesSelected: number = 0;
+    isSearching: boolean = false;
+    search: string = '';
+    searchResults: SandboxResult<any> = null;
     viewMode: 'rows' | 'columns' = 'columns';
     
     get fileTableGridStyle() {
@@ -96,6 +99,10 @@ export default class FileTable extends Vue {
 
     async toggleFile(file: AuxObject) {
         await this.fileManager.selection.selectFile(file);
+    }
+
+    toggleSearch() {
+        this.isSearching = !this.isSearching;
     }
 
     addTag(isAction: boolean = false) {
@@ -163,6 +170,26 @@ export default class FileTable extends Vue {
             });
         }
         this.$emit('tagFocusChanged', file, tag, focused);
+    }
+
+    @Watch('search')
+    onSearchChanged() {
+        this.searchResults = searchFileState(this.search, this.fileManager.filesState);
+    }
+
+    hasSearchResults() {
+        if (!this.searchResults || !this.searchResults.success) {
+            return false;
+        } else {
+            const result = this.searchResults.result;
+            if (Array.isArray(result)) {
+                return result.length > 0;
+            } else if (typeof result === 'object') {
+                return !!result;
+            } else {
+                return true;
+            }
+        }
     }
 
     removeTag(tag: string) {
