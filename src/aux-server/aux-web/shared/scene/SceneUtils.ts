@@ -7,7 +7,7 @@ export function createSphere(position: Vector3, color: number, size: number = 0.
     const sphereMaterial = new MeshBasicMaterial({
         color
     });
-    const sphereGeometry = new SphereBufferGeometry(size);
+    const sphereGeometry = new SphereBufferGeometry(size, 16, 14);
     const sphere = new Mesh(sphereGeometry, sphereMaterial);
     sphere.position.copy(position);
     return sphere;

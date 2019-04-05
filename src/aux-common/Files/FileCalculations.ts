@@ -10,7 +10,9 @@ import {
     UserMode,
     SelectionMode,
     AuxDomain, 
-    DEFAULT_SELECTION_MODE
+    DEFAULT_SELECTION_MODE,
+    FileShape,
+    DEFAULT_FILE_SHAPE
 } from './File';
 
 import uuid from 'uuid/v4';
@@ -758,6 +760,19 @@ export function getFileRotation(calc: FileCalculationContext, file: File, contex
         y: calculateNumericalTagValue(calc, file, `${context}.rotation.y`, 0),
         z: calculateNumericalTagValue(calc, file, `${context}.rotation.z`, 0)
     };
+}
+
+/**
+ * Gets the shape of the file.
+ * @param calc The calculation context to use.
+ * @param file The file.
+ */
+export function getFileShape(calc: FileCalculationContext, file: File): FileShape {
+    const shape: FileShape = calculateFileValue(calc, file, 'aux.shape');
+    if (shape === 'cube' || shape === 'sphere') {
+        return shape;
+    }
+    return DEFAULT_FILE_SHAPE;
 }
 
 /**
