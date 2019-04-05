@@ -126,7 +126,7 @@
                 </template>
             </div>
         </div>
-        <div v-else-if="hasSearchResults()">
+        <div v-else-if="hasSearchResults()" class="search-results-wrapper">
             <tree-view :data="getSearchResultData()" :options="{ limitRenderDepth: true, maxDepth: 1 }"></tree-view>
         </div>
         <div v-if="focusedTag && !isSearching" class="multi-line-tag-value-wrapper">
