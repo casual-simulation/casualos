@@ -14,6 +14,7 @@ export default class MiniFile extends Vue {
     @Prop() file: AuxFile;
     @Prop({ default: false }) large: boolean;
     @Prop({ default: false }) selected: boolean;
+    @Prop({ default: false }) diffball: boolean;
 
     image: string = '';
     label: string = '';
@@ -23,7 +24,7 @@ export default class MiniFile extends Vue {
 
     @Watch('file')
     private async _fileChanged(file: AuxFile) {
-        this.image = await this.fileRenderer.render(file);
+        this.image = await this.fileRenderer.render(file, this.diffball);
         let label = file.tags['aux.label'];
         if (label) {
             this.label = appManager.fileManager.calculateFormattedFileValue(file, 'aux.label');
