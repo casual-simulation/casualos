@@ -193,6 +193,7 @@ export default class FileTable extends Vue {
         if (this.search) {
             this.searchResults = searchFileState(this.search, this.fileManager.filesState);
         }
+        this._updateTags();
     }
 
     /**
@@ -290,7 +291,7 @@ export default class FileTable extends Vue {
         const editingTags = this.lastEditedTag ? [this.lastEditedTag] : [];
         const allExtraTags = union(this.extraTags, this.addedTags, editingTags);
         this.tags = fileTags(
-            this.files, 
+            this.displayedFiles, 
             this.tags, 
             allExtraTags);
     }
