@@ -39,7 +39,7 @@ import { PartialFile } from '../Files';
 import { FilesState, cleanFile, FileEvent, hasValue } from './FilesChannel';
 import { merge } from '../utils';
 import { AtomOp, Atom } from '../causal-trees';
-import { AuxOp, AuxOpType, AuxFile, file } from '../aux-format';
+import { AuxOp, AuxOpType, AuxFile, file, AuxObject } from '../aux-format';
 
 export var ShortId_Length: number = 5;
 
@@ -279,7 +279,7 @@ export function isFormulaObject(object: any): object is FileProxy {
  * Determines if the given object is a file.
  * @param object The object to check.
  */
-export function isFile(object: any): object is File {
+export function isFile(object: any): object is AuxObject {
     return !!object && !!object.id && !!object.tags;
 }
 

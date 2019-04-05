@@ -20,12 +20,12 @@
                     <md-button
                         class="md-icon-button finish-tag-button"
                         type="submit">
-                    <md-icon class="done">check</md-icon>
+                        <md-icon class="done">check</md-icon>
                     </md-button>
                     <md-button
                         class="md-icon-button finish-tag-button"
                         @click="cancelNewTag()">
-                    <md-icon class="cancel">cancel</md-icon>
+                        <md-icon class="cancel">cancel</md-icon>
                     </md-button>
                 </div>
                 <tag-editor 
@@ -38,15 +38,20 @@
             </form>
         </div>
         <div v-else-if="isSearching">
-            <form class="file-table-form">
+            <form class="file-table-form" @submit.prevent="addSearch()">
                 <div class="finish-tag-button-wrapper">
+                    <md-button
+                        class="md-icon-button finish-tag-button"
+                        type="submit">
+                        <md-icon class="done">check</md-icon>
+                    </md-button>
                     <md-button
                         class="md-icon-button finish-tag-button"
                         @click="cancelSearch()">
                         <md-icon class="cancel">cancel</md-icon>
                     </md-button>
                 </div>
-                <md-field>
+                <md-field class="search-field">
                     <md-icon>search</md-icon>
                     <label>Search...</label>
                     <md-input v-model="search"></md-input>

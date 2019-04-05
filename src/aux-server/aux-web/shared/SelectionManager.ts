@@ -1,5 +1,5 @@
 import { FileHelper } from "./FileHelper";
-import { AuxObject, getSelectionMode, selectionIdForUser, updateUserSelection, toggleFileSelection, filterFilesBySelection, SelectionMode, newSelectionId } from "@yeti-cgi/aux-common";
+import { AuxObject, getSelectionMode, selectionIdForUser, updateUserSelection, toggleFileSelection, filterFilesBySelection, SelectionMode, newSelectionId, FileEvent, updateFile, fileUpdated } from "@yeti-cgi/aux-common";
 
 /**
  * Defines a class that is able to manage selections for users.
@@ -29,6 +29,28 @@ export class SelectionManager {
      */
     async selectFile(file: AuxObject, multiSelect: boolean = false) {
         await this._selectFileForUser(file, this._helper.userFile, multiSelect);
+    }
+
+    /**
+     * Sets the list of files that the user should have selected.
+     * @param files The files that should be selected.
+     */
+    async setSelectedFiles(files: AuxObject[]) {
+        const newId = newSelectionId();
+
+        await this._helper.transaction(
+            fileUpdated(this._helper.userFile.id, {
+                tags: {
+                    _selection: newId,
+                    ['aux._selectionMode']: 'multi'
+                }
+            }),
+            ...files.map(f => fileUpdated(f.id, {
+                tags: {
+                    [newId]: true
+                }
+            }))
+        );
     }
 
     /**

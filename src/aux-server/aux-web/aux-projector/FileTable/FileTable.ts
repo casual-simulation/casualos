@@ -121,6 +121,14 @@ export default class FileTable extends Vue {
         this.searchResults = null;
     }
 
+    async addSearch() {
+        let files = this.getFileSearchResults();
+        if (files && files.length > 0) {
+            await this.fileManager.selection.setSelectedFiles(files);
+        }
+        this.cancelSearch();
+    }
+
     addTag(isAction: boolean = false) {
         if (this.isMakingNewTag) {
 
@@ -214,7 +222,7 @@ export default class FileTable extends Vue {
         }
     }
 
-    getFileSearchResults(): File[] {
+    getFileSearchResults(): AuxObject[] {
         const result = this.searchResults.result;
         if (result) {
             if (Array.isArray(result)) {

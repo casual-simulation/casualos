@@ -158,3 +158,8 @@ th:last-child {
 .no-search-results-message {
     text-align: center;
 }
+
+.search-field {
+    margin-top: 0;
+    margin-left: 8px;
+}

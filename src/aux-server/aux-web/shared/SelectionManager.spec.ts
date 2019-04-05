@@ -1,4 +1,4 @@
-import { createFile, File, AuxObject, AuxCausalTree } from "@yeti-cgi/aux-common";
+import { createFile, File, AuxObject, AuxCausalTree, getSelectionMode } from "@yeti-cgi/aux-common";
 import { SelectionManager } from "./SelectionManager";
 import { FileHelper } from "./FileHelper";
 import { storedTree, site } from "@yeti-cgi/aux-common/causal-trees";
@@ -123,6 +123,37 @@ describe('SelectionManager', () => {
                 expect(file.tags[selection]).toBe(true);
                 expect(file2.tags[selection]).toBe(true);
             });
+        });
+    });
+
+    describe('setSelectedFiles()', () => {
+        it('should make a new selection tag, set it to true, put it on the user, and set the mode to multi-select', async () => {
+            await tree.addFile(createFile('file0'));
+
+            let file0 = tree.value['file0'];
+            await manager.selectFile(file0);
+
+            let oldSelection = helper.userFile.tags._selection;
+
+            await tree.addFile(createFile('file1'));
+            await tree.addFile(createFile('file2'));
+
+            let file1 = tree.value['file1'];
+            let file2 = tree.value['file2'];
+
+            await manager.setSelectedFiles([file1, file2, file0]);
+
+            file0 = tree.value['file0'];
+            file1 = tree.value['file1'];
+            file2 = tree.value['file2'];
+
+            let newSelection = helper.userFile.tags._selection;
+            expect(newSelection).not.toEqual(oldSelection);
+            expect(newSelection).toBeTruthy();
+            expect(getSelectionMode(helper.userFile)).toBe('multi');
+            expect(file0.tags[newSelection]).toBe(true);
+            expect(file1.tags[newSelection]).toBe(true);
+            expect(file2.tags[newSelection]).toBe(true);
         });
     });
 
