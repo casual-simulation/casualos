@@ -7,9 +7,12 @@ import {
     File,
     getUserMode,
     UserMode,
+    SelectionMode,
     DEFAULT_USER_MODE,
     Workspace,
-    AuxObject
+    AuxObject,
+    DEFAULT_SELECTION_MODE,
+    getSelectionMode
 } from '@yeti-cgi/aux-common';
 import GameView from '../GameView/GameView';
 import { appManager } from '../../shared/AppManager';
@@ -39,7 +42,6 @@ export default class Home extends Vue {
         top: '0px'
     };
     
-    isOpen: boolean = false;
     contextMenuVisible: boolean = false;
     contextMenuEvent: ContextMenuEvent = null;
     status: string = '';
@@ -47,7 +49,8 @@ export default class Home extends Vue {
     tags: string[] = [];
     updateTime: number = -1;
     mode: UserMode = DEFAULT_USER_MODE;
-
+    selectionMode: SelectionMode = DEFAULT_SELECTION_MODE;
+    isOpen: boolean = false;
     isLoading: boolean = false;
     progress: number = 0;
     progressMode: "indeterminate" | "determinate" = "determinate";
@@ -68,10 +71,33 @@ export default class Home extends Vue {
 
     get filesMode() { return this.mode === 'files'; }
     get workspacesMode() { return this.mode === 'worksurfaces'; }
+    get singleSelection() { 
+        return this.selectionMode === 'single' && this.files.length > 0;
+    }
 
+    async toggleOpen() {
+        if (this.singleSelection) {
+            await this.fileManager.selection.clearSelection();
+            this.isOpen = false;
+        } else {
+            this.isOpen = !this.isOpen;
+            if (this.isOpen) {
+                await this.fileManager.selection.setMode('multi');
+            } else if (this.files.length === 0) {
+                await this.fileManager.selection.setMode('single');
+            }
+        }
+    }
 
-    toggleOpen() {
-        this.isOpen = !this.isOpen;
+    startSearch() {
+        this.isOpen = true;
+        this.$nextTick(() => {
+            (<any>this.$refs.table).startSearch();
+        });
+    }
+
+    onSelectionCleared() {
+        this.isOpen = false;
     }
 
     handleContextMenu(event: ContextMenuEvent) {
@@ -98,7 +124,6 @@ export default class Home extends Vue {
 
     async created() {
         this.isLoading = true;
-
         this.isOpen = false;
 
         this._subs = [];
@@ -114,7 +139,13 @@ export default class Home extends Vue {
 
         this._subs.push(this.fileManager.fileChanged(this.fileManager.userFile)
             .pipe(tap(file => {
-                this.mode = getUserMode(<Object>file);
+                this.mode = getUserMode(file);
+
+                let previousSelectionMode = this.selectionMode;
+                this.selectionMode = getSelectionMode(file);
+                if (previousSelectionMode !== this.selectionMode && this.selectionMode === 'multi') {
+                    this.isOpen = true;
+                }
             }))
             .subscribe());
 

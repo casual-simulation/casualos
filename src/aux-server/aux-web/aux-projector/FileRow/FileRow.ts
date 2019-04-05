@@ -29,7 +29,7 @@ export default class FileRow extends Vue {
     }
 
     async toggleFile(file: AuxObject) {
-        await this.fileManager.selectFile(file);
+        await this.fileManager.selection.selectFile(file);
     }
 
     onTagChanged(tag: string, value: string) {

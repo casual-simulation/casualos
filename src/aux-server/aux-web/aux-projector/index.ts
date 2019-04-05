@@ -49,6 +49,7 @@ import {
 } from 'vue-material/dist/components';
 import 'vue-material/dist/vue-material.min.css';
 import 'vue-material/dist/theme/default.css';
+import VueShortkey from 'vue-shortkey';
 
 import '../shared/public/fonts/MaterialIcons/MaterialIcons.css';
 import '../shared/public/fonts/Roboto/Roboto.css';
@@ -89,6 +90,7 @@ Vue.use(MdTooltip);
 Vue.use(MdSnackbar);
 Vue.use(MdSwitch);
 Vue.use(MdBadge);
+Vue.use(VueShortkey);
 
 const routes: RouteConfig[] = [
     {

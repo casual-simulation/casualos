@@ -46,6 +46,10 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
     mode: UserMode = DEFAULT_USER_MODE;
 
+    get selectionMode() {
+        return this._gameView.fileManager.selection.mode;
+    }
+
     constructor(gameView: GameView) {
         super(gameView)
         this._surfaceObjectsDirty = true;

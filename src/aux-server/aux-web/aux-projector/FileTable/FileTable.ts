@@ -2,7 +2,7 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Provide, Prop, Inject, Watch} from 'vue-property-decorator';
 import { some, union } from 'lodash';
-import {File, Object, fileTags, isHiddenTag, AuxObject, hasValue, isFormula, getShortId} from '@yeti-cgi/aux-common';
+import {File, Object, fileTags, isHiddenTag, AuxObject, hasValue, isFormula, getShortId, searchFileState, SandboxResult, isFile} from '@yeti-cgi/aux-common';
 import { EventBus } from '../../shared/EventBus';
 import { appManager } from '../../shared/AppManager';
 
@@ -11,6 +11,7 @@ import TagEditor from '../TagEditor/TagEditor';
 import AlertDialogOptions from '../../shared/AlertDialogOptions'
 import FileTag from '../FileTag/FileTag';
 import FileTableToggle from '../FileTableToggle/FileTableToggle';
+import { TreeView } from 'vue-json-tree-view';
 import { tickStep } from 'd3';
 
 @Component({
@@ -18,7 +19,8 @@ import { tickStep } from 'd3';
         'file-value': FileValue,
         'file-tag': FileTag,
         'tag-editor': TagEditor,
-        'file-table-toggle': FileTableToggle
+        'file-table-toggle': FileTableToggle,
+        'tree-view': TreeView
     },
     
 })
@@ -44,6 +46,9 @@ export default class FileTable extends Vue {
     newTag: string = 'myNewTag';
     newTagValid: boolean = true;
     numFilesSelected: number = 0;
+    isSearching: boolean = false;
+    search: string = '';
+    searchResults: SandboxResult<any> = null;
     viewMode: 'rows' | 'columns' = 'columns';
     
     get fileTableGridStyle() {
@@ -62,11 +67,19 @@ export default class FileTable extends Vue {
     }
 
     get hasFiles() {
-        return this.files.length > 0;
+        return this.displayedFiles.length > 0;
     }
 
     get newTagExists() {
         return this.tagExists(this.newTag);
+    }
+
+    get displayedFiles(): File[] {
+        if (this.hasSearchResults()) {
+            return this.getFileSearchResults();
+        } else {
+            return this.files;
+        }
     }
 
     @Watch('files')
@@ -95,7 +108,28 @@ export default class FileTable extends Vue {
     }
 
     async toggleFile(file: AuxObject) {
-        await this.fileManager.selectFile(file);
+        await this.fileManager.selection.selectFile(file);
+    }
+
+    startSearch() {
+        this.isSearching = true;
+        this.$nextTick(() => {
+            (<any>this.$refs.searchField).$el.focus();
+        });
+    }
+
+    cancelSearch() {
+        this.isSearching = false;
+        this.search = '';
+        this.searchResults = null;
+    }
+
+    async addSearch() {
+        let files = this.getFileSearchResults();
+        if (files && files.length > 0) {
+            await this.fileManager.selection.setSelectedFiles(files);
+        }
+        this.cancelSearch();
     }
 
     addTag(isAction: boolean = false) {
@@ -140,7 +174,8 @@ export default class FileTable extends Vue {
     }
 
     async clearSelection() {
-        await this.fileManager.clearSelection();
+        await this.fileManager.selection.clearSelection();
+        this.$emit('selectionCleared');
     }
 
     onTagChanged(file: AuxObject, tag: string, value: string) {
@@ -162,6 +197,61 @@ export default class FileTable extends Vue {
             });
         }
         this.$emit('tagFocusChanged', file, tag, focused);
+    }
+
+    @Watch('search')
+    onSearchChanged() {
+        if (this.search) {
+            this.searchResults = searchFileState(this.search, this.fileManager.filesState);
+        }
+        this._updateTags();
+    }
+
+    /**
+     * Determines if we have any valid search results.
+     */
+    hasSearchResults() {
+        if (!this.searchResults || !this.searchResults.success) {
+            return false;
+        } else {
+            const result = this.searchResults.result;
+            if (Array.isArray(result)) {
+                return result.length > 0;
+            } else if (typeof result === 'object') {
+                return !!result;
+            } else {
+                return true;
+            }
+        }
+    }
+
+    getFileSearchResults(): AuxObject[] {
+        if (!this.searchResults) {
+            return [];
+        }
+        const result = this.searchResults.result;
+        if (result) {
+            if (Array.isArray(result)) {
+                return result;
+            } else if (isFile(result)) {
+                return [result];
+            }
+        }
+        return [];
+    }
+
+    getSearchResultData(): any {
+        const result = this.searchResults.result;
+        if (result) {
+            if(typeof result === 'object') {
+                return result;
+            } else {
+                return {
+                    result: result
+                };
+            }
+        }
+        return {};
     }
 
     removeTag(tag: string) {
@@ -215,7 +305,7 @@ export default class FileTable extends Vue {
         const editingTags = this.lastEditedTag ? [this.lastEditedTag] : [];
         const allExtraTags = union(this.extraTags, this.addedTags, editingTags);
         this.tags = fileTags(
-            this.files, 
+            this.displayedFiles, 
             this.tags, 
             allExtraTags);
     }

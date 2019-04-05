@@ -1,4 +1,18 @@
-import { Object, File, Workspace, DEFAULT_WORKSPACE_SCALE, DEFAULT_WORKSPACE_HEIGHT, DEFAULT_WORKSPACE_GRID_SCALE, DEFAULT_USER_MODE, DEFAULT_WORKSPACE_COLOR, UserMode, AuxDomain } from './File';
+import { 
+    Object, 
+    File, 
+    Workspace, 
+    DEFAULT_WORKSPACE_SCALE, 
+    DEFAULT_WORKSPACE_HEIGHT, 
+    DEFAULT_WORKSPACE_GRID_SCALE, 
+    DEFAULT_USER_MODE, 
+    DEFAULT_WORKSPACE_COLOR, 
+    UserMode,
+    SelectionMode,
+    AuxDomain, 
+    DEFAULT_SELECTION_MODE
+} from './File';
+
 import uuid from 'uuid/v4';
 import {
     flatMap,
@@ -25,7 +39,7 @@ import { PartialFile } from '../Files';
 import { FilesState, cleanFile, FileEvent, hasValue } from './FilesChannel';
 import { merge } from '../utils';
 import { AtomOp, Atom } from '../causal-trees';
-import { AuxOp, AuxOpType, AuxFile, file } from '../aux-format';
+import { AuxOp, AuxOpType, AuxFile, file, AuxObject } from '../aux-format';
 
 export var ShortId_Length: number = 5;
 
@@ -111,6 +125,9 @@ export function isContext(calc: FileCalculationContext, contextFile: File, domai
 export function filterFilesBySelection(files: Object[], selectionId: string) {
     return files.filter(
         f => {
+            if (f.id === selectionId) {
+                return true;
+            }
             for(let prop in f.tags) {
                 const val = f.tags[prop];
                 if (prop === selectionId && val) {
@@ -259,6 +276,14 @@ export function isFormulaObject(object: any): object is FileProxy {
 }
 
 /**
+ * Determines if the given object is a file.
+ * @param object The object to check.
+ */
+export function isFile(object: any): object is AuxObject {
+    return !!object && !!object.id && !!object.tags;
+}
+
+/**
  * Determines if the given object has been destroyed.
  * @param object Whether the object is destroyed.
  */
@@ -403,7 +428,7 @@ export function validateTag(tag: string) {
 
 /**
  * Gets the ID of the selection that the user is using.
- * If the user doesn't have a selection, returns null.
+ * If the user doesn't have a selection, returns a new selection ID.
  * @param user The user's file.
  */
 export function selectionIdForUser(user: Object) {
@@ -633,6 +658,16 @@ export function convertToFormulaObject(context: FileCalculationContext, object: 
         return object;
     }
     return createFileProxy(context, object, setValue);
+}
+
+/**
+ * Creates a new file calculation context from the given files state.
+ * @param state The state to use.
+ * @param includeDestroyed Whether to include destroyed files in the context.
+ */
+export function createCalculationContextFromState(state: FilesState, includeDestroyed: boolean = false) {
+    const objects = includeDestroyed ? values(state) : getActiveObjects(state);
+    return createCalculationContext(objects);
 }
 
 /**
@@ -1003,6 +1038,14 @@ export function getUserMode(object: Object): UserMode {
 }
 
 /**
+ * Gets the user selection mode value from the given file.
+ * @param file The file.
+ */
+export function getSelectionMode(file: File): SelectionMode {
+    return file.tags['aux._selectionMode'] || DEFAULT_SELECTION_MODE;
+}
+
+/**
  * Calculates the value of the given tag on the given file. If the result is not a number, then the given default value
  * is returned.
  * @param fileManager The file manager.
@@ -1060,6 +1103,19 @@ export function isFileInContext(context: FileCalculationContext, file: Object, c
         result = (userContextValue == contextId);
     }
 
+    return result;
+}
+
+/**
+ * Executes the given formula on the given file state and returns the results.
+ * @param formula The formula to run.
+ * @param state The file state to use.
+ * @param options The options.
+ */
+export function searchFileState(formula: string, state: FilesState, { includeDestroyed }: { includeDestroyed?: boolean } = {}) {
+    includeDestroyed = includeDestroyed || false;
+    const context = createCalculationContextFromState(state, includeDestroyed);
+    const result = calculateFormulaValue(context, formula);
     return result;
 }
 
