@@ -1,49 +1,50 @@
-import {Parser, Node, TokenType, TokContext, tokTypes} from 'acorn';
+import * as Acorn from 'acorn';
 import {generate, baseGenerator} from 'astring';
 import {replace} from 'estraverse';
 import {assign} from 'lodash';
 import LRU from 'lru-cache';
 
 declare module 'acorn' {
+
     /**
      * Extends the acorn parser interface.
      */
     interface Parser {
-        type: TokenType;
+        type: Acorn.TokenType;
         start: number;
         startLoc: number;
         value: string;
         pos: number;
         next(): void;
-        parseLiteral(value: string): Node;
-        parseIdent(): Node;
-        parseExprSubscripts(): Node;
-        parseSubscript(base: Node, startPos: number, startLoc: number): Node;
+        parseLiteral(value: string): Acorn.Node;
+        parseIdent(): Acorn.Node;
+        parseExprSubscripts(): Acorn.Node;
+        parseSubscript(base: Acorn.Node, startPos: number, startLoc: number): Acorn.Node;
         unexpected(): void;
-        startNodeAt(start: number, startLoc: number): Node;
+        startNodeAt(start: number, startLoc: number): Acorn.Node;
         readToken(code: number): any;
-        finishToken(token: TokenType): any;
-        finishNode(node: Node, type: string): Node;
-        parseExprAtom(refShortHandDefaultPos: any): Node;
-        parseParenAndDistinguishExpression(canBeArrow: boolean): Node;
+        finishToken(token: Acorn.TokenType): any;
+        finishNode(node: Acorn.Node, type: string): Acorn.Node;
+        parseExprAtom(refShortHandDefaultPos: any): Acorn.Node;
+        parseParenAndDistinguishExpression(canBeArrow: boolean): Acorn.Node;
     }
 }
 
 export type ExJsNode = TokenValueNode | ObjectValueNode;
 
-export interface TokenValueNode extends Node {
+export interface TokenValueNode extends Acorn.Node {
     type: 'TokenValue';
-    identifier: Node;
+    identifier: Acorn.Node;
 }
 
-export interface ObjectValueNode extends Node {
+export interface ObjectValueNode extends Acorn.Node {
     type: 'ObjectValue';
-    identifier: Node;
+    identifier: Acorn.Node;
 }
 
 const tok = {
-    tag: new TokenType('tag'),
-    objRef: new TokenType('objRef')
+    tag: new Acorn.TokenType('tag'),
+    objRef: new Acorn.TokenType('objRef')
 };
 
 function isTagStart(char: number) {
@@ -88,7 +89,7 @@ function literal(raw: string) {
     };
 }
 
-function exJsParser(parser: typeof Parser) {
+function exJsParser(parser: typeof Acorn.Parser) {
     return class ExJsParser extends parser {
         readToken(code: number) {
             if (isTagStart(code)) {
@@ -103,7 +104,7 @@ function exJsParser(parser: typeof Parser) {
             return super.readToken(code);
         }
 
-        parseExprAtom(refShortHandDefaultPos: any): Node {
+        parseExprAtom(refShortHandDefaultPos: any): Acorn.Node {
             if(this.type === tok.tag) {
                 return this.parseTag();
             } else if(this.type === tok.objRef) {
@@ -112,19 +113,19 @@ function exJsParser(parser: typeof Parser) {
             return super.parseExprAtom(refShortHandDefaultPos);
         }
 
-        parseTag(): Node {
+        parseTag(): Acorn.Node {
             const startPos = this.start;
             const startLoc = this.startLoc;
             this.next();
             return this.parseTagAt(startPos, startLoc);
         }
 
-        parseTagAt(startPos: number, startLoc: number): Node {
+        parseTagAt(startPos: number, startLoc: number): Acorn.Node {
             let node: ExJsNode = <any>this.startNodeAt(startPos, startLoc);
             node.identifier = null;
-            if(this.type === tokTypes.string) {
+            if(this.type === Acorn.tokTypes.string) {
                 node.identifier = this.parseLiteral(this.value);
-            } else if(this.type === tokTypes.name) {
+            } else if(this.type === Acorn.tokTypes.name) {
                 const expr = this.parseExprAtom(null);
                 let base = expr;
                 let element;
@@ -134,26 +135,26 @@ function exJsParser(parser: typeof Parser) {
                     base = element;
                 }
                 node.identifier = element;
-            } else if(this.type === tokTypes.parenL) {
+            } else if(this.type === Acorn.tokTypes.parenL) {
             } else {
                 this.unexpected();
             }
             return this.finishNode(node, 'TagValue');
         }
 
-        parseObjRef(): Node {
+        parseObjRef(): Acorn.Node {
             const startPos = this.start;
             const startLoc = this.startLoc;
             this.next();
             return this.parseObjRefAt(startPos, startLoc);
         }
 
-        parseObjRefAt(startPos: number, startLoc: number): Node {
+        parseObjRefAt(startPos: number, startLoc: number): Acorn.Node {
             let node: ExJsNode = <any>this.startNodeAt(startPos, startLoc);
             node.identifier = null;
-            if(this.type === tokTypes.string) {
+            if(this.type === Acorn.tokTypes.string) {
                 node.identifier = this.parseLiteral(this.value);
-            } else if(this.type === tokTypes.name) {
+            } else if(this.type === Acorn.tokTypes.name) {
                 const expr = this.parseExprAtom(null);
                 let base = expr;
                 let element;
@@ -163,7 +164,7 @@ function exJsParser(parser: typeof Parser) {
                     base = element;
                 }
                 node.identifier = element;
-            } else if(this.type === tokTypes.parenL) {
+            } else if(this.type === Acorn.tokTypes.parenL) {
             } else {
                 this.unexpected();
             }
@@ -181,14 +182,14 @@ const exJsGenerator = assign({}, baseGenerator, {});
  * See https://docs.google.com/document/d/1WQXQPjdXxyx_lau15WPpwTTYvt66_wPCu3x-08rpLoY/edit?usp=sharing
  */
 export class Transpiler {
-    private _parser: typeof Parser;
+    private _parser: typeof Acorn.Parser;
     private _cache: LRU.Cache<string, string>;
 
     constructor() {
         this._cache = new LRU<string, string>({
             max: 1000,
         });
-        this._parser = Parser.extend(<any>exJsParser);
+        this._parser = Acorn.Parser.extend(<any>exJsParser);
     }
 
     /**
@@ -206,7 +207,7 @@ export class Transpiler {
         return final;
     }
 
-    private _replace(node: Node): Node {
+    private _replace(node: Acorn.Node): Acorn.Node {
         return <any>replace(<any>node, {
             enter: <any>((n: any) => {
                 // #tag or #tag(filter) syntax
@@ -279,7 +280,7 @@ export class Transpiler {
         });
     }
 
-    private _toJs(node: Node): string {
+    private _toJs(node: Acorn.Node): string {
         return generate(<any>node, {
             generator: exJsGenerator
         });

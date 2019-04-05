@@ -12,16 +12,13 @@ export interface File {
 };
 
 export interface FileTags {
-    _selection?: string;
     _destroyed?: any;
-    _user?: string;
-    _userContext?: string;
-    _userInventoryContext?: string;
-    _mode?: UserMode;
-    _editingFile?: string;
-    _lastEditedBy?: string;
+    
+
+    // Global file tags
     ['aux.scene.color']?: string;
 
+    // Normal file tags
     ['aux.color']?: unknown;
     ['aux.movable']?: unknown;
     ['aux.stackable']?: unknown;
@@ -34,6 +31,16 @@ export interface FileTags {
     ['aux.label.size']?: unknown;
     ['aux.label.size.mode']?: 'auto' | null;
     ['aux._parent']?: string;
+
+    // User tags
+    _selection?: string;
+    _user?: string;
+    _userContext?: string;
+    _userInventoryContext?: string;
+    _mode?: UserMode;
+    _editingFile?: string;
+    _lastEditedBy?: string;
+    ['aux._selectionMode']?: SelectionMode;
 
     // Builder related tags
     ['aux.builder.context']?: string | string[];
@@ -69,9 +76,19 @@ export interface WorkspaceHex {
 export type UserMode = 'files' | 'worksurfaces';
 
 /**
+ * Defines the possible selection modes a user can be in.
+ */
+export type SelectionMode = 'single' | 'multi';
+
+/**
  * The default user mode.
  */
 export const DEFAULT_USER_MODE: UserMode = 'files';
+
+/**
+ * The default selection mode.
+ */
+export const DEFAULT_SELECTION_MODE: SelectionMode = 'single';
 
 /**
  * The default height for workspaces.

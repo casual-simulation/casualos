@@ -2,14 +2,15 @@
 <template>
   <div>
       <game-view class="game-view" @onContextMenu="handleContextMenu" :debug="debug">
-        <div class="ui-container">
-          <md-card class="info-card" v-if="isOpen && filesMode">
+        <div class="ui-container" v-shortkey.once="['ctrl', 'f']" @shortkey="startSearch()">
+          <md-card class="info-card" v-if="(isOpen || singleSelection) && filesMode">
             <md-card-content>
               <div>
                 <file-table ref="table" 
                   class="files-table" 
                   @closeWindow="toggleOpen()"
                   @tagFocusChanged="tagFocusChanged"
+                  @selectionCleared="onSelectionCleared"
                   :files="files" 
                   :updateTime="updateTime"
                   :showAddTagButton="false"></file-table>

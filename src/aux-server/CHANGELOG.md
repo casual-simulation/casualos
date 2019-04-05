@@ -1,7 +1,34 @@
 # AUX Server Changelog
 
 ## V0.4.0
-### Date: TBD
+### Date: 4/05/2019
+
+### Changes:
+- Improvements
+  - File Selection
+    - There are now two file selection modes:
+    - Single select
+      - Users in single select mode are able to click files to automatically show the sheet for the selected file.
+      - Clicking in empty space will clear the selection.
+      - Holding control and selecting another file will add the clicked file to the user's selection and switch to multi-select mode.
+      - Closing the sheet or clicking "Unselect All" will cause the user's selection to be cleared.
+    - Multi select
+      - Works like the old way.
+      - Opening the sheet causes multi-select mode to be enabled.
+      - Alternatively, selecting a file while holding the control key will also cause multi-select mode to be enabled.
+      - While in multi select mode the sheet can be closed just like normal.
+      - Clicking "Unselect All" will cause the selection to be cleared and will switch back to single select mode.
+  - File Sheet
+    - Search
+      - The file sheet now includes a search icon that can be used to show a search bar.
+      - The search bar allows the user to type in formulas and see the results in realtime.
+      - Any files returned from the search are editable in the table.
+      - Other results (like numbers) are shown in a list.
+      - Using the `Ctrl+F` (`Cmd` is difficult to intercept) keyboard shortcut will open the sheet and automatically focus the search bar.
+      - Pressing `Enter` or the green checkmark next to the search bar will finish the search and automatically select any files returned from the search.
+
+## V0.4.0
+### Date: 4/04/2019
 
 ### Changes:
 - Bug Fixes:
