@@ -25,7 +25,8 @@ import {
     newSelectionId,
     objectsAtContextGridPosition,
     calculateFormulaValue,
-    filterFilesBySelection
+    filterFilesBySelection,
+    isFile
 } from './FileCalculations';
 import {
     cloneDeep
@@ -86,6 +87,30 @@ describe('FileCalculations', () => {
     describe('parseArray()', () => {
         it('should handle empty arrays properly', () => {
             expect(parseArray('[]')).toEqual([]);
+        });
+    });
+
+    describe('isFile()', () => {
+        it('should return true if the object has an ID and tags', () => {
+            expect(isFile({
+                id: 'test',
+                tags: {}
+            })).toBe(true);
+
+            expect(isFile({
+                id: 'false',
+                tags: {
+                    test: 'abc'
+                }
+            })).toBe(true);
+
+            expect(isFile({
+                id: '',
+                tags: {}
+            })).toBe(false);
+
+            expect(isFile(null)).toBe(false);
+            expect(isFile({})).toBe(false);
         });
     });
     

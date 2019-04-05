@@ -42,7 +42,7 @@
                 <div class="finish-tag-button-wrapper">
                     <md-button
                         class="md-icon-button finish-tag-button"
-                        @click="toggleSearch()">
+                        @click="cancelSearch()">
                         <md-icon class="cancel">cancel</md-icon>
                     </md-button>
                 </div>
@@ -56,17 +56,12 @@
       </div>
     </div>
     <div>
-        <div v-if="isSearching">
-            <p v-if="!search" class="no-search-results-message">
-                Enter a search
-            </p>
-            <p v-else-if="!hasSearchResults()" class="no-search-results-message">
-                No files found
-            </p>
-            <div v-else>
-                Found!
-            </div>
-        </div>
+        <p v-if="isSearching && !search" class="no-search-results-message">
+            Enter a search
+        </p>
+        <p v-else-if="isSearching && !hasSearchResults()" class="no-search-results-message">
+            No files found
+        </p>
         <div v-else-if="hasFiles" class="file-table-wrapper">
             <!--   -->
             <div class="file-table-grid" :class="[viewMode]" ref="table" :style="fileTableGridStyle">
@@ -99,7 +94,7 @@
                 </div>
 
                 <!-- Files -->
-                <template v-for="(file) in files">
+                <template v-for="(file) in displayedFiles">
 
                 <!-- deselect button -->
                     <div :key="`${file.id}-remove`" class="file-cell remove-item">
@@ -126,7 +121,10 @@
                 </template>
             </div>
         </div>
-        <div v-if="focusedTag" class="multi-line-tag-value-wrapper">
+        <div v-else-if="hasSearchResults()">
+            <tree-view :data="getSearchResultData()" :options="{ limitRenderDepth: true, maxDepth: 1 }"></tree-view>
+        </div>
+        <div v-if="focusedTag && !isSearching" class="multi-line-tag-value-wrapper">
             <md-field>
                 <label><file-tag :tag="focusedTag"></file-tag></label>
                 <md-textarea ref="multiLineEditor" v-model="multilineValue"

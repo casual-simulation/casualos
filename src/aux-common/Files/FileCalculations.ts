@@ -276,6 +276,14 @@ export function isFormulaObject(object: any): object is FileProxy {
 }
 
 /**
+ * Determines if the given object is a file.
+ * @param object The object to check.
+ */
+export function isFile(object: any): object is File {
+    return !!object && !!object.id && !!object.tags;
+}
+
+/**
  * Determines if the given object has been destroyed.
  * @param object Whether the object is destroyed.
  */
