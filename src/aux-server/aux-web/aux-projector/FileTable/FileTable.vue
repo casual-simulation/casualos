@@ -10,7 +10,11 @@
           <md-button
             class="new-tag-button"
             @click="addTag()">+tag</md-button>
-          <md-button class="search-button md-icon-button" @click="toggleSearch()">
+          <md-button 
+            class="search-button md-icon-button"
+            @click="startSearch()"
+            v-shortkey.once="['ctrl', 'f']"
+            @shortkey="startSearch()">
             <md-icon>search</md-icon>
           </md-button>
         </div>
@@ -54,7 +58,10 @@
                 <md-field class="search-field">
                     <md-icon>search</md-icon>
                     <label>Search...</label>
-                    <md-input v-model="search"></md-input>
+                    <md-input 
+                        ref="searchField"
+                        v-model="search" 
+                        @keyup.esc="cancelSearch()"></md-input>
                 </md-field>
             </form>
         </div>

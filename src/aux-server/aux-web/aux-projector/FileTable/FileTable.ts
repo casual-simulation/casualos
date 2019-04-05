@@ -111,8 +111,11 @@ export default class FileTable extends Vue {
         await this.fileManager.selection.selectFile(file);
     }
 
-    toggleSearch() {
-        this.isSearching = !this.isSearching;
+    startSearch() {
+        this.isSearching = true;
+        this.$nextTick(() => {
+            (<any>this.$refs.searchField).$el.focus();
+        });
     }
 
     cancelSearch() {
@@ -223,6 +226,9 @@ export default class FileTable extends Vue {
     }
 
     getFileSearchResults(): AuxObject[] {
+        if (!this.searchResults) {
+            return [];
+        }
         const result = this.searchResults.result;
         if (result) {
             if (Array.isArray(result)) {

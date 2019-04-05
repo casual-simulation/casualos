@@ -1,4 +1,5 @@
 declare module 'vue-material';
+declare module 'vue-shortkey';
 declare module 'vue-material/dist/components';
 declare module '@chenfengyuan/vue-qrcode';
 declare module 'vue-filepond';

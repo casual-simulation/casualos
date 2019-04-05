@@ -2,7 +2,7 @@
 <template>
   <div>
       <game-view class="game-view" @onContextMenu="handleContextMenu" :debug="debug">
-        <div class="ui-container">
+        <div class="ui-container" v-shortkey.once="['ctrl', 'f']" @shortkey="startSearch()">
           <md-card class="info-card" v-if="(isOpen || singleSelection) && filesMode">
             <md-card-content>
               <div>

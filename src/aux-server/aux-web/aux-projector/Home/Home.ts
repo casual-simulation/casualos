@@ -89,6 +89,13 @@ export default class Home extends Vue {
         }
     }
 
+    startSearch() {
+        this.isOpen = true;
+        this.$nextTick(() => {
+            (<any>this.$refs.table).startSearch();
+        });
+    }
+
     onSelectionCleared() {
         this.isOpen = false;
     }
