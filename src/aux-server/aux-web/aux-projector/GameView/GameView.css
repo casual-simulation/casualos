@@ -28,8 +28,9 @@ html.ar-app .webxr-sessions canvas {
 
 .toolbar {
     position: absolute;
-    bottom: 16px;
-    left: 16px;
+    bottom: 8px;
+    left: 8px;
+    max-width: calc(100vw - 16px);
 }
 
 .toolbar-layout {
