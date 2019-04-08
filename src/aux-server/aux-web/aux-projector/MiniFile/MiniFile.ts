@@ -32,7 +32,6 @@ export default class MiniFile extends Vue {
             const labelColor = file.tags['aux.label.color'];
             if (labelColor) {
                 this.labelColor = appManager.fileManager.calculateFormattedFileValue(file, 'aux.label.color');
-
             } else {
                 this.labelColor = '#000';
             }
