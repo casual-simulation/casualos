@@ -48,7 +48,6 @@ export class RecentFilesManager {
             id: fileId,
             tags: {
                 [tag]: value,
-                'aux.shape': 'sphere',
                 'aux._diff': true,
                 'aux._diffTags': [tag]
             }

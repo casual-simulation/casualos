@@ -4,6 +4,7 @@ import { FileCalculationContext, calculateFileValue, getFileShape, FileShape } f
 import { Mesh, MeshStandardMaterial, Color, LineSegments, BufferGeometry, BufferAttribute, LineBasicMaterial, Group, Vector3 } from "three";
 import { createCube, createCubeStrokeGeometry, isTransparent, disposeMaterial, disposeMesh, createSphere } from "../SceneUtils";
 import { flatMap } from "lodash";
+import { getColorForTags } from "../ColorUtils";
 
 export class MeshCubeDecorator extends AuxFile3DDecorator {
 
@@ -61,20 +62,6 @@ export class MeshCubeDecorator extends AuxFile3DDecorator {
         }
     }
 
-    private _updateColor(calc: FileCalculationContext) {
-        const shapeMat = <MeshStandardMaterial>this.shape.material;
-        if (this.file3D.file.tags['aux.color']) {
-            const color = calculateFileValue(calc, this.file3D.file, 'aux.color');
-            shapeMat.visible = !isTransparent(color);
-            if (shapeMat.visible) {
-                shapeMat.color = new Color(color);
-            }
-        } else {
-            shapeMat.visible = true;
-            shapeMat.color = new Color(0xFFFFFF);
-        }
-    }
-
     frameUpdate(calc: FileCalculationContext): void {
     }
 
@@ -91,6 +78,30 @@ export class MeshCubeDecorator extends AuxFile3DDecorator {
         this.shape = null;
         this.container = null;
         this.stroke = null;
+    }
+
+    private _updateColor(calc: FileCalculationContext) {
+        let color: any = null;
+        if (this.file3D.file.tags['aux.color']) {
+            color = calculateFileValue(calc, this.file3D.file, 'aux.color');
+        } else if (this.file3D.file.tags['aux._diff'] && this.file3D.file.tags['aux._diffTags']) {
+            color = getColorForTags(this.file3D.file.tags['aux._diffTags']);
+        }
+
+        this._setColor(color);
+    }
+    
+    private _setColor(color: any) {
+        const shapeMat = <MeshStandardMaterial>this.shape.material;
+        if (color) {
+            shapeMat.visible = !isTransparent(color);
+            if (shapeMat.visible) {
+                shapeMat.color = new Color(color);
+            }
+        } else {
+            shapeMat.visible = true;
+            shapeMat.color = new Color(0xFFFFFF);
+        }
     }
 
     private _rebuildShape(shape: FileShape) {

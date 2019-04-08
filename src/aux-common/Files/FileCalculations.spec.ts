@@ -26,7 +26,8 @@ import {
     objectsAtContextGridPosition,
     calculateFormulaValue,
     filterFilesBySelection,
-    isFile
+    isFile,
+    getFileShape
 } from './FileCalculations';
 import {
     cloneDeep
@@ -641,6 +642,38 @@ describe('FileCalculations', () => {
                 'aux.movable',
                 'aux.scale.z'
             ]);
+        });
+    });
+
+    describe('getFileShape()', () => {
+        it('should default to cube', () => {
+            const file = createFile();
+
+            const calc = createCalculationContext([file]);
+            const shape = getFileShape(calc, file);
+
+            expect(shape).toBe('cube');
+        });
+
+        it('should return the shape from aux.shape', () => {
+            let file = createFile();
+            file.tags['aux.shape'] = 'sphere';
+
+            const calc = createCalculationContext([file]);
+            const shape = getFileShape(calc, file);
+
+            expect(shape).toBe('sphere');
+        });
+
+        it('should return sphere when aux._diff is true', () => {
+            let file = createFile();
+            file.tags['aux._diff'] = true;
+            file.tags['aux.shape'] = 'cube';
+
+            const calc = createCalculationContext([file]);
+            const shape = getFileShape(calc, file);
+
+            expect(shape).toBe('sphere');
         });
     });
 
@@ -1661,6 +1694,17 @@ describe('FileCalculations', () => {
             const second = duplicateFile(first);
 
             expect(first.tags._destroyed).toBe(true);
+        });
+
+        it('should clear aux._diff', () => {
+            let first: Object = createFile();
+            first.tags['aux._diff'] = true;
+            first.tags['aux._diffTags'] = ['abvc'];
+
+            const second = duplicateFile(first);
+ 
+            expect(second.tags['aux._diff']).toBeUndefined();
+            expect(second.tags['aux._diffTags']).toBeUndefined();
         });
     });
 

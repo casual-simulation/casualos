@@ -768,6 +768,10 @@ export function getFileRotation(calc: FileCalculationContext, file: File, contex
  * @param file The file.
  */
 export function getFileShape(calc: FileCalculationContext, file: File): FileShape {
+    const diff = calculateBooleanTagValue(calc, file, 'aux._diff', false);
+    if (diff) {
+        return 'sphere';
+    }
     const shape: FileShape = calculateFileValue(calc, file, 'aux.shape');
     if (shape === 'cube' || shape === 'sphere') {
         return shape;
@@ -964,7 +968,9 @@ export function duplicateFile(file: Object, data?: PartialFile): Object {
 
     let newFile = merge(copy, data || {}, {
         tags: {
-            _destroyed: null
+            _destroyed: null,
+            ['aux._diff']: null,
+            ['aux._diffTags']: null
         }
     });
     newFile.id = uuid();

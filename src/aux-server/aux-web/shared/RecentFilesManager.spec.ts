@@ -26,7 +26,6 @@ describe('RecentFilesManager', () => {
                     id: 'testFileId',
                     tags: {
                         testTag: 'newValue',
-                        'aux.shape': 'sphere',
                         'aux._diff': true,
                         'aux._diffTags': ['testTag']
                     }
@@ -50,7 +49,6 @@ describe('RecentFilesManager', () => {
                     id: 'testFileId6',
                     tags: {
                         testTag6: 'newValue',
-                        'aux.shape': 'sphere',
                         'aux._diff': true,
                         'aux._diffTags': ['testTag6']
                     }
@@ -59,7 +57,6 @@ describe('RecentFilesManager', () => {
                     id: 'testFileId5',
                     tags: {
                         testTag5: 'newValue',
-                        'aux.shape': 'sphere',
                         'aux._diff': true,
                         'aux._diffTags': ['testTag5']
                     }
@@ -68,7 +65,6 @@ describe('RecentFilesManager', () => {
                     id: 'testFileId4',
                     tags: {
                         testTag4: 'newValue',
-                        'aux.shape': 'sphere',
                         'aux._diff': true,
                         'aux._diffTags': ['testTag4']
                     }
@@ -77,7 +73,6 @@ describe('RecentFilesManager', () => {
                     id: 'testFileId3',
                     tags: {
                         testTag3: 'newValue',
-                        'aux.shape': 'sphere',
                         'aux._diff': true,
                         'aux._diffTags': ['testTag3']
                     }
@@ -86,7 +81,6 @@ describe('RecentFilesManager', () => {
                     id: 'testFileId2',
                     tags: {
                         testTag2: 'newValue',
-                        'aux.shape': 'sphere',
                         'aux._diff': true,
                         'aux._diffTags': ['testTag2']
                     }
@@ -118,7 +112,6 @@ describe('RecentFilesManager', () => {
                     id: 'testFileId1',
                     tags: {
                         testTag4: 'newValue4',
-                        'aux.shape': 'sphere',
                         'aux._diff': true,
                         'aux._diffTags': ['testTag4']
                     }
@@ -127,7 +120,6 @@ describe('RecentFilesManager', () => {
                     id: 'testFileId3',
                     tags: {
                         testTag3: 'newValue3',
-                        'aux.shape': 'sphere',
                         'aux._diff': true,
                         'aux._diffTags': ['testTag3']
                     }
@@ -136,7 +128,6 @@ describe('RecentFilesManager', () => {
                     id: 'testFileId2',
                     tags: {
                         testTag2: 'newValue2',
-                        'aux.shape': 'sphere',
                         'aux._diff': true,
                         'aux._diffTags': ['testTag2']
                     }
