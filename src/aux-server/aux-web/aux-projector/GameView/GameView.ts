@@ -165,6 +165,10 @@ export default class GameView extends Vue implements IGameView {
         }
     }
 
+    public clearRecentFiles() {
+        this.fileManager.recent.clear();
+    }
+
     /**
      * Adds the given file to the recent files list.
      * If it already exists in the list then it will be moved to the front.
@@ -210,7 +214,7 @@ export default class GameView extends Vue implements IGameView {
         window.addEventListener('vrdisplaypresentchange', this._handleResize);
 
         this._time = new Time();
-        this.recentFiles = [];
+        this.recentFiles = this.fileManager.recent.files;
         this._contexts = [];
         this._subs = [];
         this._decoratorFactory = new AuxFile3DDecoratorFactory(this);

@@ -77,3 +77,7 @@ html.ar-app .webxr-sessions canvas {
 .md-button.md-theme-default.md-fab:not([disabled]).add-button .md-icon-font {
     color: var(--md-theme-default-text-primary-on-background-variant, #777);
 }
+
+.clear-file-queue-button {
+    align-self: center;
+}
