@@ -1,5 +1,5 @@
 import { FileHelper } from "./FileHelper";
-import { File, doFilesAppearEqual } from '@yeti-cgi/aux-common';
+import { File, doFilesAppearEqual, createFile } from '@yeti-cgi/aux-common';
 import { Subject, Observable } from 'rxjs';
 
 /**
@@ -33,7 +33,9 @@ export class RecentFilesManager {
     constructor(helper: FileHelper) {
         this._helper = helper;
         this._onUpdated = new Subject<void>();
-        this.files = [];
+        this.files = [
+            createFile('empty')
+        ];
     }
 
     /**
@@ -50,7 +52,7 @@ export class RecentFilesManager {
                 [tag]: value,
                 'aux._diff': true,
                 'aux._diffTags': [tag]
-            }
+            } 
         });
         this._trimList();
         this._onUpdated.next();
@@ -71,7 +73,9 @@ export class RecentFilesManager {
      * Clears the files list.
      */
     clear() {
-        this.files = [];
+        this.files = [
+            createFile('empty')
+        ];
         this._onUpdated.next();
     }
 

@@ -13,11 +13,18 @@ describe('RecentFilesManager', () => {
         helper = new FileHelper(tree, 'user');
         recent = new RecentFilesManager(helper);
     });
+
+    it('should start with an empty file', () => {
+        expect(recent.files).toEqual([
+            {
+                id: 'empty',
+                tags: {}
+            }
+        ]);
+    });
     
     describe('addTagDiff()', () => {
         it('should add a recent file for editing a tag', () => {
-
-            expect(recent.files).toEqual([]);
 
             recent.addTagDiff('testFileId', 'testTag', 'newValue');
 
@@ -25,17 +32,19 @@ describe('RecentFilesManager', () => {
                 {
                     id: 'testFileId',
                     tags: {
-                        testTag: 'newValue',
+                        testTag: 'newValue', 
                         'aux._diff': true,
                         'aux._diffTags': ['testTag']
                     }
+                },
+                {
+                    id: 'empty',
+                    tags: {}
                 }
             ]);
         });
 
         it('should limit files to 5 files', () => {
-
-            expect(recent.files).toEqual([]);
 
             recent.addTagDiff('testFileId1', 'testTag1', 'newValue');
             recent.addTagDiff('testFileId2', 'testTag2', 'newValue');
@@ -100,7 +109,6 @@ describe('RecentFilesManager', () => {
         });
 
         it('should move reused IDs to the front of the list with the new value', () => {
-            expect(recent.files).toEqual([]);
 
             recent.addTagDiff('testFileId1', 'testTag1', 'newValue1');
             recent.addTagDiff('testFileId2', 'testTag2', 'newValue2');
@@ -131,6 +139,10 @@ describe('RecentFilesManager', () => {
                         'aux._diff': true,
                         'aux._diffTags': ['testTag2']
                     }
+                },
+                {
+                    id: 'empty',
+                    tags: {}
                 }
             ]);
         });
@@ -145,7 +157,11 @@ describe('RecentFilesManager', () => {
             recent.addFileDiff(file);
 
             expect(recent.files).toEqual([
-                file
+                file,
+                {
+                    id: 'empty',
+                    tags: {}
+                }
             ]);
         });
 
@@ -233,7 +249,11 @@ describe('RecentFilesManager', () => {
             expect(recent.files).toEqual([
                 file1_2,
                 file3,
-                file2
+                file2,
+                {
+                    id: 'empty',
+                    tags: {}
+                }
             ]);
         });
 
@@ -263,7 +283,11 @@ describe('RecentFilesManager', () => {
             expect(recent.files).toEqual([
                 file4,
                 file3,
-                file2
+                file2,
+                {
+                    id: 'empty',
+                    tags: {}
+                }
             ]);
         });
     });
@@ -272,7 +296,12 @@ describe('RecentFilesManager', () => {
         it('should clear the recent list', () => {
             recent.addTagDiff('fileId', 'tag', 'value');
             recent.clear();
-            expect(recent.files).toEqual([]);
+            expect(recent.files).toEqual([
+                {
+                    id: 'empty',
+                    tags: {}
+                }
+            ]);
         });
 
         it('should send an update event', () => {

@@ -96,6 +96,15 @@ export abstract class BaseFileDragOperation implements IOperation {
             );
         } else if (this._combine && this._other) {
             appManager.fileManager.action('+', [this._file, this._other]);
+        } else if (isDiff(this._file)) {
+            appManager.fileManager.transaction(
+                fileUpdated(this._file.id, {
+                    tags: {
+                        'aux._diff': null,
+                        'aux._diffTags': null
+                    }
+                })
+            );
         }
     }
 
