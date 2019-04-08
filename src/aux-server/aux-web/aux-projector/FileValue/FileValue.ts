@@ -4,6 +4,7 @@ import {Prop, Inject} from 'vue-property-decorator';
 import { Object, File, Assignment, isFormula, isAssignment, AuxObject, AuxFile } from '@yeti-cgi/aux-common';
 import {assign} from 'lodash';
 import { appManager } from '../../shared/AppManager';
+import uuid from 'uuid/v4';
 
 @Component({
     watch: {
@@ -32,6 +33,8 @@ export default class FileRow extends Vue {
     isFocused: boolean = false;
     isFormula: boolean = false;
 
+    private _editorId: string;
+
     get fileManager() {
         return appManager.fileManager;
     }
@@ -42,6 +45,7 @@ export default class FileRow extends Vue {
 
     valueChanged(file: AuxFile, tag: string, value: string) {
         this.$emit('tagChanged', file, tag, value);
+        this.fileManager.recent.addTagDiff(`${file.id}_${this._editorId}`, tag, value);
         this.fileManager.updateFile(file, {
             tags: {
                 [tag]: value,
@@ -65,6 +69,7 @@ export default class FileRow extends Vue {
     }
 
     created() {
+        this._editorId = uuid();
         this._updateValue();
     }
 

@@ -18,7 +18,6 @@
                 :file="file" 
                 :selected="selectedRecentFile === file" 
                 :large="index === 0"
-                :diffball="true"
                 @click="selectRecentFile(file)"></mini-file>
             </div>
           </div>

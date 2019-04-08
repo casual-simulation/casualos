@@ -1,5 +1,5 @@
 import { FileHelper } from "./FileHelper";
-import { File } from '@yeti-cgi/aux-common';
+import { File, doFilesAppearEqual } from '@yeti-cgi/aux-common';
 import { Subject, Observable } from 'rxjs';
 
 /**
@@ -47,7 +47,10 @@ export class RecentFilesManager {
         this.files.unshift({
             id: fileId,
             tags: {
-                [tag]: value
+                [tag]: value,
+                'aux.shape': 'sphere',
+                'aux._diff': true,
+                'aux._diffTags': [tag]
             }
         });
         this._trimList();
@@ -59,7 +62,7 @@ export class RecentFilesManager {
      * @param file 
      */
     addFileDiff(file: File) {
-        this._cleanFiles(file.id);
+        this._cleanFiles(file.id, file);
         this.files.unshift(file);
         this._trimList();
         this._onUpdated.next();
@@ -73,10 +76,11 @@ export class RecentFilesManager {
         this._onUpdated.next();
     }
 
-    private _cleanFiles(fileId: string) {
+    private _cleanFiles(fileId: string, file?: File) {
         for (let i = this.files.length - 1; i >= 0; i--) {
-            let file = this.files[i];
-            if (file.id === fileId) {
+            let f = this.files[i];
+
+            if (f.id === fileId || (file && doFilesAppearEqual(file, f))) {
                 this.files.splice(i, 1);
             }
         }

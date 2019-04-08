@@ -132,6 +132,7 @@ export abstract class BaseFileDragOperation implements IOperation {
     }
 
     protected _updateFile(file: File, data: PartialFile): FileEvent {
+        appManager.fileManager.recent.addFileDiff(file);
         updateFile(file, appManager.fileManager.userFile.id, data, () => appManager.fileManager.createContext());
         return fileUpdated(file.id, data);
     }

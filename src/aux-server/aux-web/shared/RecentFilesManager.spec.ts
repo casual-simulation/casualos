@@ -25,7 +25,10 @@ describe('RecentFilesManager', () => {
                 {
                     id: 'testFileId',
                     tags: {
-                        testTag: 'newValue'
+                        testTag: 'newValue',
+                        'aux.shape': 'sphere',
+                        'aux._diff': true,
+                        'aux._diffTags': ['testTag']
                     }
                 }
             ]);
@@ -46,31 +49,46 @@ describe('RecentFilesManager', () => {
                 {
                     id: 'testFileId6',
                     tags: {
-                        testTag6: 'newValue'
+                        testTag6: 'newValue',
+                        'aux.shape': 'sphere',
+                        'aux._diff': true,
+                        'aux._diffTags': ['testTag6']
                     }
                 },
                 {
                     id: 'testFileId5',
                     tags: {
-                        testTag5: 'newValue'
+                        testTag5: 'newValue',
+                        'aux.shape': 'sphere',
+                        'aux._diff': true,
+                        'aux._diffTags': ['testTag5']
                     }
                 },
                 {
                     id: 'testFileId4',
                     tags: {
-                        testTag4: 'newValue'
+                        testTag4: 'newValue',
+                        'aux.shape': 'sphere',
+                        'aux._diff': true,
+                        'aux._diffTags': ['testTag4']
                     }
                 },
                 {
                     id: 'testFileId3',
                     tags: {
-                        testTag3: 'newValue'
+                        testTag3: 'newValue',
+                        'aux.shape': 'sphere',
+                        'aux._diff': true,
+                        'aux._diffTags': ['testTag3']
                     }
                 },
                 {
                     id: 'testFileId2',
                     tags: {
-                        testTag2: 'newValue'
+                        testTag2: 'newValue',
+                        'aux.shape': 'sphere',
+                        'aux._diff': true,
+                        'aux._diffTags': ['testTag2']
                     }
                 }
             ]);
@@ -99,19 +117,28 @@ describe('RecentFilesManager', () => {
                 {
                     id: 'testFileId1',
                     tags: {
-                        testTag4: 'newValue4'
+                        testTag4: 'newValue4',
+                        'aux.shape': 'sphere',
+                        'aux._diff': true,
+                        'aux._diffTags': ['testTag4']
                     }
                 },
                 {
                     id: 'testFileId3',
                     tags: {
-                        testTag3: 'newValue3'
+                        testTag3: 'newValue3',
+                        'aux.shape': 'sphere',
+                        'aux._diff': true,
+                        'aux._diffTags': ['testTag3']
                     }
                 },
                 {
                     id: 'testFileId2',
                     tags: {
-                        testTag2: 'newValue2'
+                        testTag2: 'newValue2',
+                        'aux.shape': 'sphere',
+                        'aux._diff': true,
+                        'aux._diffTags': ['testTag2']
                     }
                 }
             ]);
@@ -214,6 +241,36 @@ describe('RecentFilesManager', () => {
 
             expect(recent.files).toEqual([
                 file1_2,
+                file3,
+                file2
+            ]);
+        });
+
+        it('should move files that appear equal to the front of the list', () => {
+            let file1 = createFile('testId1', {
+                test: 'abc',
+                "aux.color": 'red'
+            });
+            let file2 = createFile('testId2', {
+                test: 'abc',
+                "aux.color": 'green'
+            });
+            let file3 = createFile('testId3', {
+                test: 'abc',
+                "aux.color": 'blue'
+            });
+            let file4 = createFile('testId4', {
+                test: 'abc',
+                "aux.color": 'red'
+            });
+            
+            recent.addFileDiff(file1);
+            recent.addFileDiff(file2);
+            recent.addFileDiff(file3);
+            recent.addFileDiff(file4);
+
+            expect(recent.files).toEqual([
+                file4,
                 file3,
                 file2
             ]);

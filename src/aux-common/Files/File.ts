@@ -32,6 +32,8 @@ export interface FileTags {
     ['aux.label.size.mode']?: 'auto' | null;
     ['aux.shape']?: FileShape;
     ['aux._parent']?: string;
+    ['aux._diff']?: boolean;
+    ['aux._diffTags']?: string[];
 
     // User tags
     _selection?: string;

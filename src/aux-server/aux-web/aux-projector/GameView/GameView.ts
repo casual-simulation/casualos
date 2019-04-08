@@ -131,7 +131,7 @@ export default class GameView extends Vue implements IGameView {
 
     constructor() {
         super();
-        this.addToRecentFilesList = debounce(this.addToRecentFilesList.bind(this), 100);
+        // this.addToRecentFilesList = debounce(this.addToRecentFilesList.bind(this), 100);
         this.onFileAdded = new ArgEvent<AuxFile>();
         this.onFileUpdated = new ArgEvent<AuxFile>();
         this.onFileRemoved = new ArgEvent<AuxFile>();
@@ -159,7 +159,7 @@ export default class GameView extends Vue implements IGameView {
     public selectRecentFile(file: Object) {
         if (!this.selectedRecentFile || this.selectedRecentFile.id !== file.id) {
             this.selectedRecentFile = file;
-            this.addToRecentFilesList(file, true);
+            this.fileManager.recent.addFileDiff(file);
         } else {
             this.selectedRecentFile = null;
         }
@@ -171,31 +171,31 @@ export default class GameView extends Vue implements IGameView {
      * @param file The file to add to the list.
      * @param updateList Whether the list should be reordered.
      */
-    public addToRecentFilesList(file: Object, reorderList: boolean = false) {
-        const index = findIndex(this.recentFiles, f => doFilesAppearEqual(file, f));
-        // if file is already in the list
-        if (index >= 0) {
+    // public addToRecentFilesList(file: Object, reorderList: boolean = false) {
+    //     const index = findIndex(this.recentFiles, f => doFilesAppearEqual(file, f));
+    //     // if file is already in the list
+    //     if (index >= 0) {
 
-            // If we shouldn't reorder the list
-            if (!reorderList) {
-                const existing = this.recentFiles[index];
+    //         // If we shouldn't reorder the list
+    //         if (!reorderList) {
+    //             const existing = this.recentFiles[index];
 
-                // If the file is in the list and the selection hasn't changed
-                if (doFilesAppearEqual(existing, file, { ignoreSelectionTags: false, ignoreId: true })) {
-                    // Then just update the current entry with the updated values
-                    this.recentFiles.splice(index, 1, file);
-                    return;
-                }
-                // Otherwise move the file to the beginning of the list.
-            }
-            this.recentFiles.splice(index, 1);
-        }
-        this.recentFiles.unshift(file);
-        if (this.recentFiles.length > 3) {
-            this.recentFiles.splice(3, this.recentFiles.length - 2);
-            // this.recentFiles.length = 3;
-        }
-    }
+    //             // If the file is in the list and the selection hasn't changed
+    //             if (doFilesAppearEqual(existing, file, { ignoreSelectionTags: false, ignoreId: true })) {
+    //                 // Then just update the current entry with the updated values
+    //                 this.recentFiles.splice(index, 1, file);
+    //                 return;
+    //             }
+    //             // Otherwise move the file to the beginning of the list.
+    //         }
+    //         this.recentFiles.splice(index, 1);
+    //     }
+    //     this.recentFiles.unshift(file);
+    //     if (this.recentFiles.length > 3) {
+    //         this.recentFiles.splice(3, this.recentFiles.length - 2);
+    //         // this.recentFiles.length = 3;
+    //     }
+    // }
 
     public addNewWorkspace(): void {
         // TODO: Make the user have to drag a workspace onto the world
@@ -210,9 +210,7 @@ export default class GameView extends Vue implements IGameView {
         window.addEventListener('vrdisplaypresentchange', this._handleResize);
 
         this._time = new Time();
-        this.recentFiles = [
-            createFile()
-        ];
+        this.recentFiles = [];
         this._contexts = [];
         this._subs = [];
         this._decoratorFactory = new AuxFile3DDecoratorFactory(this);
@@ -236,10 +234,8 @@ export default class GameView extends Vue implements IGameView {
 
         this._subs.push(this.fileManager.fileChanged(this.fileManager.userFile)
             .pipe(tap(file => {
-
                 this.mode = this._interaction.mode = getUserMode(<Object>file);
                 this._gridMesh.visible = this.workspacesMode;
-
             }))
             .subscribe());
 
@@ -252,6 +248,12 @@ export default class GameView extends Vue implements IGameView {
                     this._scene.background = new Color(sceneBackgroundColor);;
                 }
 
+            }))
+            .subscribe());
+
+        this._subs.push(this.fileManager.recent.onUpdated
+            .pipe(tap(_ => {
+                this.recentFiles = this.fileManager.recent.files;
             }))
             .subscribe());
 
@@ -391,7 +393,7 @@ export default class GameView extends Vue implements IGameView {
                     } else {
                         this.selectedRecentFile = null;
                     }
-                    this.addToRecentFilesList(file);
+                    // this.addToRecentFilesList(file);
                 }
             }
 
