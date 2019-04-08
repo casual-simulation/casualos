@@ -968,14 +968,50 @@ export function duplicateFile(file: Object, data?: PartialFile): Object {
 
     let newFile = merge(copy, data || {}, {
         tags: {
-            _destroyed: null,
-            ['aux._diff']: null,
-            ['aux._diffTags']: null
+            _destroyed: null
         }
     });
     newFile.id = uuid();
 
     return <Object>cleanFile(newFile);
+}
+
+/**
+ * Determines if the given file represents a diff.
+ * @param file The file to check.
+ */
+export function isDiff(file: File): boolean {
+    return !!file && !!file.tags['aux._diff'] && !!file.tags['aux._diffTags'];
+}
+
+/**
+ * Gets a partial file that can be used to apply the diff that the given file represents.
+ * A diff file is any file that has `aux._diff` set to `true` and `aux._diffTags` set to a list of tag names.
+ * @param file The file that represents the diff.
+ */
+export function getDiffUpdate(file: File): PartialFile {
+    if (isDiff(file)) {
+        let update: PartialFile = {
+            tags: {}
+        };
+
+        let tags = tagsOnFile(file);
+        let diffTags = file.tags['aux._diffTags'];
+        for (let i = 0; i < tags.length; i++) {
+            let tag = tags[i];
+            if (tag === 'aux._diff' || tag === 'aux._diffTags' || diffTags.indexOf(tag) < 0) {
+                continue;
+            }
+
+            let val = file.tags[tag];
+            if (hasValue(val)) {
+                update.tags[tag] = val;
+            }
+        }
+
+        return update;
+    }
+    return null;
 }
 
 /**
