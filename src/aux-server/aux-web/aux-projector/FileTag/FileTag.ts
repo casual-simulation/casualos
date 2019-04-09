@@ -4,10 +4,12 @@ import {Prop, Inject} from 'vue-property-decorator';
 import { isFilterTag, parseFilterTag } from '@yeti-cgi/aux-common';
 import CombineIcon from '../public/icons/combine_icon.svg';
 import { getColorForTags } from '../../shared/scene/ColorUtils';
+import TagColor from '../TagColor/TagColor';
 
 @Component({
     components: {
-        'combine-icon': CombineIcon
+        'combine-icon': CombineIcon,
+        'tag-color': TagColor
     }
 })
 export default class FileTag extends Vue {
@@ -30,15 +32,6 @@ export default class FileTag extends Vue {
         }
     }
 
-    get tagColor() {
-        return getColorForTags([this.tag]);
-    }
-
-    get tagStyle() {
-        return {
-            'background-color': this.tagColor
-        };
-    }
 
     constructor() {
         super();

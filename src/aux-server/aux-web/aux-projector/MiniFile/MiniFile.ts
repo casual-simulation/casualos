@@ -1,12 +1,15 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Inject, Watch, Prop } from 'vue-property-decorator';
-import { Object, AuxFile } from '@yeti-cgi/aux-common';
+import { Object, AuxFile, tagsOnFile, isTagWellKnown, fileTags } from '@yeti-cgi/aux-common';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { appManager } from '../../shared/AppManager';
+import TagColor from '../TagColor/TagColor';
+import { sort } from '@yeti-cgi/aux-common/Formulas/formula-lib';
 
 @Component({
     components: {
+        'tag-color': TagColor
     },
 })
 export default class MiniFile extends Vue {
@@ -21,6 +24,12 @@ export default class MiniFile extends Vue {
     labelColor: string = '#000';
 
     @Inject() fileRenderer: FileRenderer;
+
+    get tags() {
+        let tags = fileTags([this.file], [], []);
+        tags = sort(tags);
+        return ['id', ...tags];
+    }
 
     @Watch('file')
     private async _fileChanged(file: AuxFile) {

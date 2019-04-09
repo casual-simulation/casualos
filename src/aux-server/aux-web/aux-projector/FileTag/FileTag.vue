@@ -1,6 +1,6 @@
 <template>
   <span class="tag">
-    <span class="tag-color" :style="tagStyle"></span>
+    <tag-color :tag="tag"></tag-color>
     <span v-if="!isFilter">
       <span class="hashtag">#</span><span class="tag-name">{{tag}}</span>
     </span>

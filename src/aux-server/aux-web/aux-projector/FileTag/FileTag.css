@@ -2,13 +2,6 @@
     color: #2F8DFE;
 }
 
-.tag-color {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 4px;
-}
-
 .tag-name {
     font-weight: 700;
 }
