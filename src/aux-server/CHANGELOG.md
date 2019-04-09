@@ -5,8 +5,7 @@
 
 ### Changes:
 - Improvements
-  - Added basic loading screen.
-    - This is currently very high level loading messages. We will continue to drill down into the casual tree process to get more micro loading progress updates.
+  - Added top-level loading screen to Aux Builder.
   
 ## V0.4.1
 ### Date: 4/05/2019
