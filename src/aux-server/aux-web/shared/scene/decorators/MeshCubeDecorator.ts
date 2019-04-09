@@ -84,8 +84,6 @@ export class MeshCubeDecorator extends AuxFile3DDecorator {
         let color: any = null;
         if (this.file3D.file.tags['aux.color']) {
             color = calculateFileValue(calc, this.file3D.file, 'aux.color');
-        } else if (this.file3D.file.tags['aux._diff'] && this.file3D.file.tags['aux._diffTags']) {
-            color = getColorForTags(this.file3D.file.tags['aux._diffTags']);
         }
 
         this._setColor(color);
