@@ -5,6 +5,7 @@ import { appManager, User } from '../../shared/AppManager';
 import { EventBus } from '../../shared/EventBus';
 import ConfirmDialogOptions from '../../shared/ConfirmDialogOptions';
 import AlertDialogOptions from '../../shared/AlertDialogOptions';
+import { LoadingProgress } from '@yeti-cgi/aux-common/LoadingProgress';
 import { SubscriptionLike, Subscription } from 'rxjs';
 import { UserMode, Object, getUserMode } from '@yeti-cgi/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
@@ -12,6 +13,7 @@ import { copyToClipboard } from '../../shared/SharedUtils';
 import { tap } from 'rxjs/operators';
 import { findIndex } from 'lodash';
 import QRCode from '@chenfengyuan/vue-qrcode';
+import Loading from '../../shared/vue-components/Loading/Loading';
 import ForkIcon from '../public/icons/repo-forked.svg';
 
 import vueFilePond from 'vue-filepond';
@@ -31,11 +33,13 @@ export interface SidebarItem {
         'app': App,
         'qr-code': QRCode,
         'file-pond': FilePond,
-        'fork-icon': ForkIcon
+        'fork-icon': ForkIcon,
+        'loading': Loading
     }
 })
 export default class App extends Vue {
 
+    loadingProgress: LoadingProgress = null;
     showNavigation:boolean = false;
     showConfirmDialog: boolean = false;
     showAlertDialog: boolean = false;
@@ -183,6 +187,8 @@ export default class App extends Vue {
     }
 
     created() {
+        appManager.loadingProgress.onChanged.addListener(this.onLoadingProgressChanged);
+
         this._subs = [];
         this._subs.push(appManager.updateAvailableObservable.subscribe(updateAvailable => {
             if (updateAvailable) {
@@ -251,6 +257,7 @@ export default class App extends Vue {
     }
 
     beforeDestroy() {
+        appManager.loadingProgress.onChanged.removeListener(this.onLoadingProgressChanged);
         this._subs.forEach(s => s.unsubscribe());
     }
     
@@ -456,6 +463,10 @@ export default class App extends Vue {
         this.alertDialogOptions = options;
         this.showAlertDialog = true;
         console.log('[App] handleShowAlertDialog ' + this.showAlertDialog + ' ' + JSON.stringify(this.alertDialogOptions));
+    }
+    
+    private onLoadingProgressChanged(progress: LoadingProgress) {
+        this.loadingProgress = progress.clone();
     }
 
     /**

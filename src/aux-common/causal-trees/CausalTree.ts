@@ -13,6 +13,7 @@ import { PrivateCryptoKey, PublicCryptoKey } from "../crypto";
 import { RejectedAtom } from "./RejectedAtom";
 import { AddResult, mergeIntoBatch } from './AddResult';
 import { AtomBatch } from './AtomBatch';
+import { LoadingProgress } from "../LoadingProgress";
 
 /**
  * Defines an interface that contains possible options that can be set on a causal tree.
@@ -336,7 +337,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * @param tree The tree to import.
      * @param verifySignatures Whether to verify the signatures of the incoming atoms. (Default false)
      */
-    async import<T extends TOp>(tree: StoredCausalTree<T>, verifySignatures: boolean = false): Promise<AtomBatch<TOp>> {
+    async import<T extends TOp>(tree: StoredCausalTree<T>, verifySignatures: boolean = false, loadingProgress?: LoadingProgress): Promise<AtomBatch<TOp>> {
 
         if (tree.knownSites) {
             tree.knownSites.forEach(s => {

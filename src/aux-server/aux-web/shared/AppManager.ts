@@ -14,6 +14,8 @@ import Dexie from 'dexie';
 import { difference } from 'lodash';
 import uuid from 'uuid/v4';
 import { WebConfig } from '../../shared/WebConfig';
+import { LoadingProgress, LoadingProgressCallback } from '@yeti-cgi/aux-common/LoadingProgress';
+import { lerp } from './SharedUtils';
 
 export interface User {
     id: string;
@@ -63,8 +65,14 @@ export enum AppType {
     Player = 'player'
 }
 
-export class AppManager {    
+export class AppManager {
     public appType: AppType;
+
+    /**
+     * This is the app level loading progress object.
+     * Change the values of this objects in order to trigger and modify the contents of the app's loading screen.
+     */
+    public loadingProgress: LoadingProgress = null;
 
     private _db: AppDatabase;
     private _userSubject: BehaviorSubject<User>;
@@ -77,6 +85,7 @@ export class AppManager {
     private _config: WebConfig;
 
     constructor() {
+        this.loadingProgress = new LoadingProgress();
         this._initSentry();
         this._initOffline();
         this._socketManager = new SocketManager();
@@ -337,12 +346,20 @@ export class AppManager {
     }
 
     async loginOrCreateUser(email: string, channelId?: string): Promise<boolean> {
+        
+        this.loadingProgress.show = true;
+        this.loadingProgress.set(0, 'Checking current user...', null);
+        
         if (this.user && this.user.channelId === channelId)
+        {
+            this.loadingProgress.set(100, 'Complete!', null);
             return true;
+        }
 
         channelId = channelId ? channelId.trim() : null;
 
         try {
+            this.loadingProgress.set(10, 'Getting user from server...', null);
             const result = await Axios.post('/api/users', {
                 email: email
             });
@@ -354,13 +371,27 @@ export class AppManager {
                     level: Sentry.Severity.Info,
                     type: 'default'
                 });
+                this.loadingProgress.set(20, 'Recieved user from server.', null);
                 console.log('[AppManager] Login Success!', result);
 
                 this._user = result.data;
                 this._user.channelId = channelId;
-                await this._fileManager.init(channelId, true);
+
+                this.loadingProgress.set(40, 'Loading Files...', null);
+
+                const onFileManagerInitProgress: LoadingProgressCallback = (progress: LoadingProgress) => {
+                    this.loadingProgress.set(lerp(40, 95, progress.progress / 100), progress.status, progress.error);
+                    console.log('onFileManagerInitProgress:', JSON.stringify(progress), 'overall:', JSON.stringify(this.loadingProgress));
+                }
+                await this._fileManager.init(channelId, true, onFileManagerInitProgress);
+
                 this._userSubject.next(this._user);
+                this.loadingProgress.set(95, 'Saving user...', null);
                 await this._saveUser();
+
+                this.loadingProgress.set(100, 'Complete!', null);
+                this.loadingProgress.show = false;
+
                 return true;
             } else {
                 Sentry.addBreadcrumb({
@@ -370,11 +401,15 @@ export class AppManager {
                     type: 'error'
                 });
                 console.error(result);
+
+                this.loadingProgress.set(0, 'Error occured while logging in.', result.statusText);
                 return false;
             }
         } catch (ex) {
             Sentry.captureException(ex);
             console.error(ex);
+
+            this.loadingProgress.set(0, 'Exception occured while logging in.', ex.message);
             return false;
         }
     }
