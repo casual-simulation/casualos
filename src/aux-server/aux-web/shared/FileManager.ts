@@ -202,6 +202,7 @@ export class FileManager {
    * @param id The ID of the session to connect to.
    */
   init(id: string, force?: boolean, loadingCallback?: LoadingProgressCallback): Promise<string> {
+      console.log('[FileManager] init id:', id, 'force:', force);
       force = getOptionalValue(force, false);
       if (this._initPromise && !force) {
           return this._initPromise;
@@ -395,10 +396,10 @@ export class FileManager {
         }));
 
         loadingProgress.set(20, 'Loading tree from server...', null);
-        // const treeloadingCallback: loadingCallback = (progress: number, status: string, error: string) => {
-            // loadingProgress.set(lerp(20, 70, progress / 100), status, error); }
-        // }
-        await this._aux.init();
+        const onTreeInitProgress: LoadingProgressCallback = (treeProgress: LoadingProgress) => {
+            loadingProgress.set(lerp(20, 70, treeProgress.progress / 100), treeProgress.status, treeProgress.error);
+        };
+        await this._aux.init(onTreeInitProgress);
         await this._aux.waitToGetTreeFromServer();
 
         console.log('[FileManager] Got Tree:', this._aux.tree.site.id);
