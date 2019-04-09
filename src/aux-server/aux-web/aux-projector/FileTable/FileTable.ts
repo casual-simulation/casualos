@@ -55,8 +55,13 @@ export default class FileTable extends Vue {
     
     get fileTableGridStyle() {
         const sizeType = this.viewMode === 'rows' ? 'columns' : 'rows';
+        if (this.tags.length === 0) {
+            return { 
+                [`grid-template-${sizeType}`]: `auto auto`
+            };
+        }
         return { 
-            [`grid-template-${sizeType}`]: `auto auto repeat(${this.tags.length}, auto)` 
+            [`grid-template-${sizeType}`]: `auto auto repeat(${this.tags.length}, auto)`
         };
     }
     
@@ -70,6 +75,10 @@ export default class FileTable extends Vue {
 
     get hasFiles() {
         return this.displayedFiles.length > 0;
+    }
+
+    get hasTags() {
+        return this.tags.length > 0;
     }
 
     get newTagExists() {
