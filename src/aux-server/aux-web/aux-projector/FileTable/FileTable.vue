@@ -87,6 +87,9 @@
                     <md-button v-if="selectionMode === 'multi'" class="md-dense" @click="clearSelection()">
                         Unselect All
                     </md-button>
+                    <md-button v-else-if="diffSelected" class="md-dense" @click="clearDiff()">
+                        Clear Diff
+                    </md-button>
                     <md-button v-else class="md-dense" @click="multiSelect()">
                         Select Multiple
                     </md-button>

@@ -30,6 +30,7 @@ export default class FileTable extends Vue {
     @Prop({ default: (() => <any>[]) }) extraTags: string[];
     @Prop({ default: false }) readOnly: boolean;
     @Prop({ default: 'single' }) selectionMode: string;
+    @Prop({ default: false }) diffSelected: boolean;
 
     /**
      * A property that can be set to indicate to the table that its values should be updated.
@@ -295,6 +296,11 @@ export default class FileTable extends Vue {
         return {
             'focused': (file === this.focusedFile && tag === this.focusedTag)
         };
+    }
+
+    async clearDiff() {
+        await this.fileManager.recent.clear();
+        this.fileManager.recent.selectedRecentFile = this.fileManager.recent.files[0];
     }
 
     constructor() {

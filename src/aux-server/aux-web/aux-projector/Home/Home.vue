@@ -14,6 +14,7 @@
                   :files="selectedFiles" 
                   :updateTime="updateTime"
                   :selectionMode="selectionMode"
+                  :diffSelected="!!selectedRecentFile"
                   :showAddTagButton="false"></file-table>
 
                 <p class="no-files-message" v-if="!hasFiles">
