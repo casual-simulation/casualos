@@ -1,11 +1,10 @@
 # AUX Server Changelog
 
 ## V0.4.2
-### Date: TBD
+### Date: 04/09/2019
 
 ### Changes:
-- Improvements
-  - Added top-level loading screen to Aux Builder and Aux Player.
+- Added loading screen to Aux Builder and Aux Player.
   
 ## V0.4.1
 ### Date: 4/05/2019
