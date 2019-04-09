@@ -3,7 +3,7 @@
     <div>
         <md-dialog v-if="loadingProgress"
                 :md-fullscreen="false"
-                :md-click-outside-to-clode="false"
+                :md-click-outside-to-close="false"
                 :md-close-on-esc="false"
                 :md-backdrop="true"
                 :md-active.sync="loadingProgress.show">
