@@ -204,8 +204,13 @@ export class AppManager {
     }
 
     private async _init() {
+        console.log('[AppManager] Starting init...');
+        this.loadingProgress.show = true;
+        this.loadingProgress.set(0, 'Fetching configuration...', null);
         await this._initConfig();
+        this.loadingProgress.status = 'Initializing user...';
         await this._initUser();
+        this.loadingProgress.show = false;
     }
 
     private async _initConfig() {
@@ -308,10 +313,17 @@ export class AppManager {
                 if (!session) {
                     this._user.id = uuid();
                 }
-                await this._fileManager.init(this._user.channelId);
+
+                const onFileManagerInitProgress: LoadingProgressCallback = (progress: LoadingProgress) => {
+                    const start = this.loadingProgress.progress;
+                    this.loadingProgress.set(lerp(start, 95, progress.progress / 100), progress.status, progress.error);
+                };
+                await this._fileManager.init(this._user.channelId, false, onFileManagerInitProgress);
+                this.loadingProgress.status = 'Saving user...';
                 await this._saveUser();
                 this._userSubject.next(this._user);
             } else {
+                this.loadingProgress.status = 'Saving user...';
                 this._user = null;
                 await this._saveUser();
             }
@@ -346,7 +358,6 @@ export class AppManager {
     }
 
     async loginOrCreateUser(email: string, channelId?: string): Promise<boolean> {
-        
         this.loadingProgress.show = true;
         this.loadingProgress.set(0, 'Checking current user...', null);
         

@@ -33,8 +33,7 @@ export interface SidebarItem {
         'app': App,
         'qr-code': QRCode,
         'file-pond': FilePond,
-        'fork-icon': ForkIcon,
-        'loading': Loading
+        'fork-icon': ForkIcon
     }
 })
 export default class App extends Vue {

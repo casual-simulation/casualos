@@ -129,7 +129,7 @@
                 </md-dialog-actions>
             </md-dialog>
 
-            <loading></loading>
+            <!-- <loading></loading> -->
 
             <md-dialog-confirm
             :md-active.sync="showConfirmDialog"
