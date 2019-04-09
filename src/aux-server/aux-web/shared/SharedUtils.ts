@@ -26,7 +26,3 @@ export function copyToClipboard(text: string) {
 export function getOptionalValue(obj: any, defaultValue: any): any {
     return (obj !== undefined && obj !== null) ? obj : defaultValue;
 }
-
-export function lerp(start: number, end: number, t: number) {
-    return (1.0 - t) * start + t * end;
-};

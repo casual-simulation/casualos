@@ -43,3 +43,7 @@ function decide(...vals: any[]) {
 export function splice(str: string, index: number, deleteCount: number, text: string) {
     return str.slice(0, index) + text + str.slice(index + deleteCount);
 }
+
+export function lerp(start: number, end: number, t: number) {
+    return (1.0 - t) * start + t * end;
+};

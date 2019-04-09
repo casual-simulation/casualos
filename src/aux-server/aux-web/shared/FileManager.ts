@@ -16,7 +16,8 @@ import {
   AuxFile,
   AuxObject,
   fileRemoved,
-  UserMode
+  UserMode,
+  lerp
 } from '@yeti-cgi/aux-common';
 import {
   keys, 
@@ -43,7 +44,7 @@ import {AppManager, appManager} from './AppManager';
 import {SocketManager} from './SocketManager';
 import { CausalTreeManager } from './causal-trees/CausalTreeManager';
 import { RealtimeCausalTree } from '@yeti-cgi/aux-common/causal-trees';
-import { getOptionalValue, lerp } from './SharedUtils';
+import { getOptionalValue } from './SharedUtils';
 import { LoadingProgress, LoadingProgressCallback } from '@yeti-cgi/aux-common/LoadingProgress';
 import { FileHelper } from './FileHelper';
 import { SelectionManager } from './SelectionManager';

@@ -9,13 +9,12 @@ import { flatMap, map, scan } from 'rxjs/operators';
 import { downloadAuxState, readFileJson } from '../aux-projector/download';
 import { CausalTreeManager } from './causal-trees/CausalTreeManager';
 import { StoredCausalTree } from '@yeti-cgi/aux-common/causal-trees';
-import { AuxOp, FilesState, AuxCausalTree } from '@yeti-cgi/aux-common';
+import { AuxOp, FilesState, AuxCausalTree, lerp } from '@yeti-cgi/aux-common';
 import Dexie from 'dexie';
 import { difference } from 'lodash';
 import uuid from 'uuid/v4';
 import { WebConfig } from '../../shared/WebConfig';
 import { LoadingProgress, LoadingProgressCallback } from '@yeti-cgi/aux-common/LoadingProgress';
-import { lerp } from './SharedUtils';
 
 export interface User {
     id: string;
