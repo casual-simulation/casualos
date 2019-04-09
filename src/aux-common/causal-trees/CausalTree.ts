@@ -13,6 +13,8 @@ import { PrivateCryptoKey, PublicCryptoKey } from "../crypto";
 import { RejectedAtom } from "./RejectedAtom";
 import { AddResult, mergeIntoBatch } from './AddResult';
 import { AtomBatch } from './AtomBatch';
+import { LoadingProgress, LoadingProgressCallback } from "../LoadingProgress";
+import { lerp } from "../utils";
 
 /**
  * Defines an interface that contains possible options that can be set on a causal tree.
@@ -221,17 +223,24 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * @param refs The references to add.
      * @param verifySignatures Whether to verify that the signatures on the atoms are valid. (Default false)
      */
-    async addMany(refs: Atom<TOp>[], verifySignatures: boolean = false): Promise<AtomBatch<TOp>> {
+    async addMany(refs: Atom<TOp>[], verifySignatures: boolean = false, loadingCallback?: LoadingProgressCallback): Promise<AtomBatch<TOp>> {
+        const loadingProgress = new LoadingProgress();
+        if (loadingCallback) { loadingProgress.onChanged.addListener(() => loadingCallback(loadingProgress)) };
+
         if (verifySignatures) {
+            loadingProgress.status = `Validating ${refs.length} atoms...`;
             const invalid = await this._validate(refs);
             if (invalid.length > 0) {
+                loadingProgress.onChanged.removeAllListeners();
                 return {
                     added: [],
                     rejected: invalid
                 };
             }
         }
+        loadingProgress.status = `Sorting ${refs.length} atoms...`;
         const atoms = sortBy(refs, a => a.id.timestamp);
+        loadingProgress.status = `Adding ${refs.length} atoms...`;
         return await this.batch(async () => {
             let added: Atom<TOp>[] = [];
             let rejected: RejectedAtom<TOp>[] = [];
@@ -287,20 +296,26 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * @param validate Whether to validate the incoming weave.
      * @param verifySignatures Whether to verify the signatures of the incoming atoms. (Default false)
      */
-    async importWeave<T extends TOp>(refs: Atom<T>[], validate: boolean = true, verifySignatures: boolean = false): Promise<AtomBatch<TOp>> {
+    async importWeave<T extends TOp>(refs: Atom<T>[], validate: boolean = true, verifySignatures: boolean = false, loadingCallback?: LoadingProgressCallback): Promise<AtomBatch<TOp>> {
+        const loadingProgress = new LoadingProgress();
+        if (loadingCallback) { loadingProgress.onChanged.addListener(() => loadingCallback(loadingProgress)) };
 
         if (validate) {
             let weave = new Weave<T>();
+            loadingProgress.status = `Importing ${refs.length} atoms...`;
             weave.import(refs);
             if (!weave.isValid()) {
+                loadingProgress.error = 'Imported references are not valid.';
                 throw new Error('[CausalTree] Imported references are not valid.');
             }
         }
 
         if (verifySignatures) {
+            loadingProgress.status = `Verifying ${refs.length} atoms...`;
             const bad = await this._validate(refs);
             if (bad.length > 0) {
                 this._atomRejected.next(bad);
+                loadingProgress.onChanged.removeAllListeners();
                 return {
                     added: [],
                     rejected: bad
@@ -308,6 +323,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
             }
         }
 
+        loadingProgress.status = 'Updating atom factory time...';
         const [newAtoms, rejected] = this.weave.import(refs);
         const sortedAtoms = sortBy(newAtoms, a => a.id.timestamp);
         for (let i = 0; i < sortedAtoms.length; i++) {
@@ -317,6 +333,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         // if (!this.weave.isValid()) {
         //     throw new Error('[CausalTree] Tree became invalid after import.');
         // }
+        loadingProgress.status = 'Running atom garbage collection...';
         this.triggerGarbageCollection(newAtoms);
         // if (!this.weave.isValid()) {
         //     throw new Error('[CausalTree] Tree became invalid after garbage collection.');
@@ -325,6 +342,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         if (rejected) {
             this._atomRejected.next(rejected);
         }
+        loadingProgress.onChanged.removeAllListeners();
         return {
             added: newAtoms,
             rejected: rejected
@@ -336,7 +354,15 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * @param tree The tree to import.
      * @param verifySignatures Whether to verify the signatures of the incoming atoms. (Default false)
      */
-    async import<T extends TOp>(tree: StoredCausalTree<T>, verifySignatures: boolean = false): Promise<AtomBatch<TOp>> {
+    async import<T extends TOp>(tree: StoredCausalTree<T>, verifySignatures: boolean = false, loadingCallback?: LoadingProgressCallback): Promise<AtomBatch<TOp>> {
+
+        const loadingProgress = new LoadingProgress();
+        if (loadingCallback) { loadingProgress.onChanged.addListener(() => loadingCallback(loadingProgress)) };
+
+        const onImportProgress: LoadingProgressCallback = (importProgress: LoadingProgress) => {
+            const start = loadingProgress.progress;
+            loadingProgress.set(lerp(start, 100, importProgress.progress / 100), importProgress.status, importProgress.error);
+        }
 
         if (tree.knownSites) {
             tree.knownSites.forEach(s => {
@@ -347,15 +373,15 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         let added: AtomBatch<TOp>;
         if (tree.weave) {
             if (tree.formatVersion === 2) {
-                added = await this.importWeave(tree.weave, true, verifySignatures);
+                added = await this.importWeave(tree.weave, true, verifySignatures, onImportProgress);
             } else if(tree.formatVersion === 3) {
                 if (tree.ordered) {
-                    added = await this.importWeave(tree.weave, true, verifySignatures);
+                    added = await this.importWeave(tree.weave, true, verifySignatures, onImportProgress);
                 } else {
-                    added = await this.addMany(tree.weave, verifySignatures);
+                    added = await this.addMany(tree.weave, verifySignatures, onImportProgress);
                 }
             } else if (typeof tree.formatVersion === 'undefined') {
-                added = await this.importWeave(tree.weave.map(ref => ref.atom), true, verifySignatures);
+                added = await this.importWeave(tree.weave.map(ref => ref.atom), true, verifySignatures, onImportProgress);
             } else {
                 console.warn("[CausalTree] Don't know how to import tree version:", tree.formatVersion);
                 added = {
@@ -364,6 +390,8 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
                 };
             }
         }
+        
+        loadingProgress.onChanged.removeAllListeners();
         return added;
     }
 

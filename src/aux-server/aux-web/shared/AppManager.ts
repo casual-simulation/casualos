@@ -9,11 +9,12 @@ import { flatMap, map, scan } from 'rxjs/operators';
 import { downloadAuxState, readFileJson } from '../aux-projector/download';
 import { CausalTreeManager } from './causal-trees/CausalTreeManager';
 import { StoredCausalTree } from '@yeti-cgi/aux-common/causal-trees';
-import { AuxOp, FilesState, AuxCausalTree } from '@yeti-cgi/aux-common';
+import { AuxOp, FilesState, AuxCausalTree, lerp } from '@yeti-cgi/aux-common';
 import Dexie from 'dexie';
 import { difference } from 'lodash';
 import uuid from 'uuid/v4';
 import { WebConfig } from '../../shared/WebConfig';
+import { LoadingProgress, LoadingProgressCallback } from '@yeti-cgi/aux-common/LoadingProgress';
 
 export interface User {
     id: string;
@@ -63,8 +64,14 @@ export enum AppType {
     Player = 'player'
 }
 
-export class AppManager {    
+export class AppManager {
     public appType: AppType;
+
+    /**
+     * This is the app level loading progress object.
+     * Change the values of this objects in order to trigger and modify the contents of the app's loading screen.
+     */
+    public loadingProgress: LoadingProgress = null;
 
     private _db: AppDatabase;
     private _userSubject: BehaviorSubject<User>;
@@ -77,6 +84,7 @@ export class AppManager {
     private _config: WebConfig;
 
     constructor() {
+        this.loadingProgress = new LoadingProgress();
         this._initSentry();
         this._initOffline();
         this._socketManager = new SocketManager();
@@ -195,8 +203,13 @@ export class AppManager {
     }
 
     private async _init() {
+        console.log('[AppManager] Starting init...');
+        this.loadingProgress.show = true;
+        this.loadingProgress.set(0, 'Fetching configuration...', null);
         await this._initConfig();
+        this.loadingProgress.status = 'Initializing user...';
         await this._initUser();
+        this.loadingProgress.show = false;
     }
 
     private async _initConfig() {
@@ -299,10 +312,17 @@ export class AppManager {
                 if (!session) {
                     this._user.id = uuid();
                 }
-                await this._fileManager.init(this._user.channelId);
+
+                const onFileManagerInitProgress: LoadingProgressCallback = (progress: LoadingProgress) => {
+                    const start = this.loadingProgress.progress;
+                    this.loadingProgress.set(lerp(start, 95, progress.progress / 100), progress.status, progress.error);
+                };
+                await this._fileManager.init(this._user.channelId, false, onFileManagerInitProgress);
+                this.loadingProgress.status = 'Saving user...';
                 await this._saveUser();
                 this._userSubject.next(this._user);
             } else {
+                this.loadingProgress.status = 'Saving user...';
                 this._user = null;
                 await this._saveUser();
             }
@@ -337,12 +357,19 @@ export class AppManager {
     }
 
     async loginOrCreateUser(email: string, channelId?: string): Promise<boolean> {
+        this.loadingProgress.show = true;
+        this.loadingProgress.set(0, 'Checking current user...', null);
+        
         if (this.user && this.user.channelId === channelId)
+        {
+            this.loadingProgress.set(100, 'Complete!', null);
             return true;
+        }
 
         channelId = channelId ? channelId.trim() : null;
 
         try {
+            this.loadingProgress.set(10, 'Getting user from server...', null);
             const result = await Axios.post('/api/users', {
                 email: email
             });
@@ -354,13 +381,26 @@ export class AppManager {
                     level: Sentry.Severity.Info,
                     type: 'default'
                 });
+                this.loadingProgress.set(20, 'Recieved user from server.', null);
                 console.log('[AppManager] Login Success!', result);
 
                 this._user = result.data;
                 this._user.channelId = channelId;
-                await this._fileManager.init(channelId, true);
+
+                this.loadingProgress.set(40, 'Loading Files...', null);
+
+                const onFileManagerInitProgress: LoadingProgressCallback = (progress: LoadingProgress) => {
+                    this.loadingProgress.set(lerp(40, 95, progress.progress / 100), progress.status, progress.error);
+                }
+                await this._fileManager.init(channelId, true, onFileManagerInitProgress);
+
                 this._userSubject.next(this._user);
+                this.loadingProgress.set(95, 'Saving user...', null);
                 await this._saveUser();
+
+                this.loadingProgress.set(100, 'Complete!', null);
+                this.loadingProgress.show = false;
+
                 return true;
             } else {
                 Sentry.addBreadcrumb({
@@ -370,11 +410,15 @@ export class AppManager {
                     type: 'error'
                 });
                 console.error(result);
+
+                this.loadingProgress.set(0, 'Error occured while logging in.', result.statusText);
                 return false;
             }
         } catch (ex) {
             Sentry.captureException(ex);
             console.error(ex);
+
+            this.loadingProgress.set(0, 'Exception occured while logging in.', ex.message);
             return false;
         }
     }

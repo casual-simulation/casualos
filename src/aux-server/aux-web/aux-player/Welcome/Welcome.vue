@@ -11,8 +11,8 @@
             <div v-if="!showProgress">
                 <div>
                     <md-field>
-                    <label for="name">Name</label>
-                    <md-input name="name" id="name" autocomplete="name" v-model="email"/>
+                        <label for="name">Name</label>
+                        <md-input name="name" id="name" autocomplete="name" v-model="email"/>
                     </md-field>
                 </div>
                 <div class="continue-as-guest-section">

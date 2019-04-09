@@ -16,7 +16,8 @@ import {
   AuxFile,
   AuxObject,
   fileRemoved,
-  UserMode
+  UserMode,
+  lerp
 } from '@yeti-cgi/aux-common';
 import {
   keys, 
@@ -43,6 +44,8 @@ import {AppManager, appManager} from './AppManager';
 import {SocketManager} from './SocketManager';
 import { CausalTreeManager } from './causal-trees/CausalTreeManager';
 import { RealtimeCausalTree } from '@yeti-cgi/aux-common/causal-trees';
+import { getOptionalValue } from './SharedUtils';
+import { LoadingProgress, LoadingProgressCallback } from '@yeti-cgi/aux-common/LoadingProgress';
 import { FileHelper } from './FileHelper';
 import { SelectionManager } from './SelectionManager';
 import { RecentFilesManager } from './RecentFilesManager';
@@ -208,14 +211,16 @@ export class FileManager {
    * Initializes the file manager to connect to the session with the given ID.
    * @param id The ID of the session to connect to.
    */
-  init(id: string, force: boolean = false): Promise<string> {
+  init(id: string, force?: boolean, loadingCallback?: LoadingProgressCallback): Promise<string> {
+      console.log('[FileManager] init id:', id, 'force:', force);
+      force = getOptionalValue(force, false);
       if (this._initPromise && !force) {
           return this._initPromise;
       } else {
           if (this._initPromise) {
               this.dispose();
           }
-          return this._initPromise = this._init(id);
+          return this._initPromise = this._init(id, loadingCallback);
       }
   }
 
@@ -358,8 +363,13 @@ export class FileManager {
     return id ? `aux-${id}` : 'aux-default';
   }
 
-  private async _init(id: string) {
+  private async _init(id: string, loadingCallback?: LoadingProgressCallback) {
+    const loadingProgress = new LoadingProgress();
+    if (loadingCallback) { loadingProgress.onChanged.addListener(() => { loadingCallback(loadingProgress); }); }
+
     if(this._errored) {
+        loadingProgress.set(0, 'File manager failed to initalize.', 'File manager failed to initialize');
+        if (loadingCallback) { loadingProgress.onChanged.removeAllListeners(); }
         return;
     }
     try {
@@ -371,9 +381,9 @@ export class FileManager {
         this._filesDiscoveredObservable = new ReplaySubject<AuxFile[]>();
         this._filesRemovedObservable = new ReplaySubject<string[]>();
         this._filesUpdatedObservable = new Subject<AuxFile[]>();
-        this._selectedFilesUpdated =
-            new BehaviorSubject<SelectedFilesUpdatedEvent>({files: []});
+        this._selectedFilesUpdated = new BehaviorSubject<SelectedFilesUpdatedEvent>({files: []});
         
+        loadingProgress.set(10, 'Initializing causal tree manager..', null);
         await this._treeManager.init();
 
         this._aux = await this._treeManager.getTree<AuxCausalTree>({
@@ -395,7 +405,11 @@ export class FileManager {
             });
         }));
 
-        await this._aux.init();
+        loadingProgress.set(20, 'Loading tree from server...', null);
+        const onTreeInitProgress: LoadingProgressCallback = (treeProgress: LoadingProgress) => {
+            loadingProgress.set(lerp(20, 70, treeProgress.progress / 100), treeProgress.status, treeProgress.error);
+        };
+        await this._aux.init(onTreeInitProgress);
         await this._aux.waitToGetTreeFromServer();
 
         console.log('[FileManager] Got Tree:', this._aux.tree.site.id);
@@ -404,7 +418,9 @@ export class FileManager {
         this._selection = new SelectionManager(this._helper);
         this._recent = new RecentFilesManager(this._helper);
 
+        loadingProgress.set(70, 'Initalize user file...', null);
         await this._initUserFile();
+        loadingProgress.set(80, 'Initalize globals file...', null);
         await this._initGlobalsFile();
 
         const { filesAdded, filesRemoved, filesUpdated } = fileChangeObservables(this._aux);
@@ -432,11 +448,15 @@ export class FileManager {
         this._subscriptions.push(allSelectedFilesUpdated.subscribe(this._selectedFilesUpdated));
 
         this._setStatus('Initialized.');
+        loadingProgress.set(100, 'File manager initialized.', null);
+        if (loadingCallback) { loadingProgress.onChanged.removeAllListeners(); }
 
         return this._id;
     } catch(ex) {
         this._errored = true;
         console.error(ex);
+        loadingProgress.set(0, 'Error occured while initializing file manager.', ex.message);
+        if (loadingCallback) { loadingProgress.onChanged.removeAllListeners(); }
     }
   }
 
