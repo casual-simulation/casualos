@@ -36,15 +36,11 @@ describe('RecentFilesManager', () => {
                         'aux._diff': true,
                         'aux._diffTags': ['testTag']
                     }
-                },
-                {
-                    id: 'empty',
-                    tags: {}
                 }
             ]);
         });
 
-        it('should limit files to 5 files', () => {
+        it('should limit files to 1 file', () => {
 
             recent.addTagDiff('testFileId1', 'testTag1', 'newValue');
             recent.addTagDiff('testFileId2', 'testTag2', 'newValue');
@@ -60,38 +56,6 @@ describe('RecentFilesManager', () => {
                         testTag6: 'newValue',
                         'aux._diff': true,
                         'aux._diffTags': ['testTag6']
-                    }
-                },
-                {
-                    id: 'testFileId5',
-                    tags: {
-                        testTag5: 'newValue',
-                        'aux._diff': true,
-                        'aux._diffTags': ['testTag5']
-                    }
-                },
-                {
-                    id: 'testFileId4',
-                    tags: {
-                        testTag4: 'newValue',
-                        'aux._diff': true,
-                        'aux._diffTags': ['testTag4']
-                    }
-                },
-                {
-                    id: 'testFileId3',
-                    tags: {
-                        testTag3: 'newValue',
-                        'aux._diff': true,
-                        'aux._diffTags': ['testTag3']
-                    }
-                },
-                {
-                    id: 'testFileId2',
-                    tags: {
-                        testTag2: 'newValue',
-                        'aux._diff': true,
-                        'aux._diffTags': ['testTag2']
                     }
                 }
             ]);
@@ -123,26 +87,6 @@ describe('RecentFilesManager', () => {
                         'aux._diff': true,
                         'aux._diffTags': ['testTag4']
                     }
-                },
-                {
-                    id: 'testFileId3',
-                    tags: {
-                        testTag3: 'newValue3',
-                        'aux._diff': true,
-                        'aux._diffTags': ['testTag3']
-                    }
-                },
-                {
-                    id: 'testFileId2',
-                    tags: {
-                        testTag2: 'newValue2',
-                        'aux._diff': true,
-                        'aux._diffTags': ['testTag2']
-                    }
-                },
-                {
-                    id: 'empty',
-                    tags: {}
                 }
             ]);
         });
@@ -157,11 +101,7 @@ describe('RecentFilesManager', () => {
             recent.addFileDiff(file);
 
             expect(recent.files).toEqual([
-                file,
-                {
-                    id: 'empty',
-                    tags: {}
-                }
+                file
             ]);
         });
 
@@ -215,11 +155,7 @@ describe('RecentFilesManager', () => {
             recent.addFileDiff(file6);
 
             expect(recent.files).toEqual([
-                file6,
-                file5,
-                file4,
-                file3,
-                file2
+                file6
             ]);
         });
 
@@ -247,13 +183,7 @@ describe('RecentFilesManager', () => {
             recent.addFileDiff(file1_2);
 
             expect(recent.files).toEqual([
-                file1_2,
-                file3,
-                file2,
-                {
-                    id: 'empty',
-                    tags: {}
-                }
+                file1_2
             ]);
         });
 
@@ -281,13 +211,7 @@ describe('RecentFilesManager', () => {
             recent.addFileDiff(file4);
 
             expect(recent.files).toEqual([
-                file4,
-                file3,
-                file2,
-                {
-                    id: 'empty',
-                    tags: {}
-                }
+                file4
             ]);
         });
     });

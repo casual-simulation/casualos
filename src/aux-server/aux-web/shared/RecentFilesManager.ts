@@ -17,7 +17,7 @@ export class RecentFilesManager {
     /**
      * The maximum number of files that the recents list can contain.
      */
-    maxNumberOfFiles: number = 5;
+    maxNumberOfFiles: number = 1; 
 
     /**
      * Gets an observable that resolves whenever the files list has been updated.
