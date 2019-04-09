@@ -157,11 +157,11 @@ export default class GameView extends Vue implements IGameView {
     }
 
     public selectRecentFile(file: Object) {
-        if (!this.selectedRecentFile || this.selectedRecentFile.id !== file.id) {
-            this.selectedRecentFile = file;
-            this.fileManager.recent.addFileDiff(file);
+        if (!this.fileManager.recent.selectedRecentFile || this.fileManager.recent.selectedRecentFile.id !== file.id) {
+            this.fileManager.recent.selectedRecentFile = file;
+            this.fileManager.selection.clearSelection();
         } else {
-            this.selectedRecentFile = null;
+            this.fileManager.recent.selectedRecentFile = null;
         }
     }
 
@@ -258,6 +258,7 @@ export default class GameView extends Vue implements IGameView {
         this._subs.push(this.fileManager.recent.onUpdated
             .pipe(tap(_ => {
                 this.recentFiles = this.fileManager.recent.files;
+                this.selectedRecentFile = this.fileManager.recent.selectedRecentFile;
             }))
             .subscribe());
 
@@ -392,10 +393,10 @@ export default class GameView extends Vue implements IGameView {
         if (!file.tags['aux.builder.context']) {
             if (!initialUpdate) {
                 if (!file.tags._user && file.tags._lastEditedBy === this.fileManager.userFile.id) {
-                    if (this.selectedRecentFile && file.id === this.selectedRecentFile.id) {
-                        this.selectedRecentFile = file;
+                    if (this.fileManager.recent.selectedRecentFile && file.id === this.fileManager.recent.selectedRecentFile.id) {
+                        this.fileManager.recent.selectedRecentFile = file;
                     } else {
-                        this.selectedRecentFile = null;
+                        this.fileManager.recent.selectedRecentFile = null;
                     }
                     // this.addToRecentFilesList(file);
                 }

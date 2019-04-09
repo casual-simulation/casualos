@@ -54,6 +54,7 @@ export default class Home extends Vue {
     isLoading: boolean = false;
     progress: number = 0;
     progressMode: "indeterminate" | "determinate" = "determinate";
+    selectedRecentFile: File = null;
 
     private _subs: SubscriptionLike[] = [];
 
@@ -69,10 +70,18 @@ export default class Home extends Vue {
         return appManager.fileManager;
     }
 
+    get selectedFiles() {
+        if (this.selectedRecentFile) {
+            return [this.selectedRecentFile];
+        } else {
+            return this.files;
+        }
+    }
+
     get filesMode() { return this.mode === 'files'; }
     get workspacesMode() { return this.mode === 'worksurfaces'; }
     get singleSelection() { 
-        return this.selectionMode === 'single' && this.files.length > 0;
+        return this.selectionMode === 'single' && this.selectedFiles.length > 0;
     }
 
     async toggleOpen() {
@@ -129,6 +138,7 @@ export default class Home extends Vue {
         this._subs = [];
         this.files = [];
         this.tags = [];
+        this.selectedRecentFile = null;
         this.updateTime = -1;
 
         this._subs.push(this.fileManager.selectedFilesUpdated.subscribe(event => {
@@ -148,6 +158,10 @@ export default class Home extends Vue {
                 }
             }))
             .subscribe());
+
+        this._subs.push(this.fileManager.recent.onUpdated.subscribe(_ => {
+            this.selectedRecentFile = this.fileManager.recent.selectedRecentFile;
+        }));
 
         this.isLoading = false;
         

@@ -11,7 +11,7 @@
                   @closeWindow="toggleOpen()"
                   @tagFocusChanged="tagFocusChanged"
                   @selectionCleared="onSelectionCleared"
-                  :files="files" 
+                  :files="selectedFiles" 
                   :updateTime="updateTime"
                   :showAddTagButton="false"></file-table>
 
@@ -22,7 +22,7 @@
             </md-card-content>
           </md-card>
           <div  v-else-if="filesMode" class="outside-toggle">
-            <file-table-toggle :files="files" :raised="true" @click="toggleOpen()"></file-table-toggle>
+            <file-table-toggle :files="selectedFiles" :raised="true" @click="toggleOpen()"></file-table-toggle>
           </div>
         </div>
       </game-view>

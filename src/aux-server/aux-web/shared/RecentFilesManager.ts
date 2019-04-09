@@ -1,6 +1,7 @@
 import { FileHelper } from "./FileHelper";
-import { File, doFilesAppearEqual, createFile } from '@yeti-cgi/aux-common';
+import { File, doFilesAppearEqual, createFile, merge, tagsOnFile, isDiff, isTagWellKnown } from '@yeti-cgi/aux-common';
 import { Subject, Observable } from 'rxjs';
+import { keys } from "d3";
 
 /**
  * Defines a class that helps manage recent files.
@@ -8,6 +9,7 @@ import { Subject, Observable } from 'rxjs';
 export class RecentFilesManager {
     private _helper: FileHelper;
     private _onUpdated: Subject<void>;
+    private _selectedRecentFile: File = null;
     
     /**
      * The files that have been stored in the recent files manager.
@@ -17,13 +19,28 @@ export class RecentFilesManager {
     /**
      * The maximum number of files that the recents list can contain.
      */
-    maxNumberOfFiles: number = 1; 
+    maxNumberOfFiles: number = 1;
 
     /**
      * Gets an observable that resolves whenever the files list has been updated.
      */
     get onUpdated(): Observable<void> {
         return this._onUpdated;
+    }
+
+    /**
+     * Gets the file that was selected from the recents list.
+     */
+    get selectedRecentFile() {
+        return this._selectedRecentFile;
+    }
+
+    /**
+     * Sets the file that was selected from the recents list.
+     */
+    set selectedRecentFile(file: File) {
+        this._selectedRecentFile = file;
+        this._onUpdated.next();
     }
 
     /**
@@ -55,18 +72,47 @@ export class RecentFilesManager {
             } 
         });
         this._trimList();
+        this._updateSelectedRecentFile();
         this._onUpdated.next();
     }
 
     /**
      * Adds the given file to the recents list.
-     * @param file 
+     * @param file The file to add.
+     * @param updateTags Whether to update the diff tags.
      */
-    addFileDiff(file: File) {
-        this._cleanFiles(file.id, file);
-        this.files.unshift(file);
+    addFileDiff(file: File, updateTags: boolean = false) {
+        let id: string;
+        if (isDiff(file)) {
+            id = file.id;
+        } else {
+            id = `diff-${file.id}`;
+        }
+        this._cleanFiles(id, file);
+        let {
+            'aux._diff': diff,
+            'aux._diffTags': t,
+            ...others
+        } = file.tags;
+
+        const f = merge(file, {
+            id: id,
+            tags: {
+                'aux._diff': true,
+                'aux._diffTags': (updateTags || !t) ? keys(others).filter(t => !isTagWellKnown(t)) : t
+            }
+        });
+        this.files.unshift(f);
         this._trimList();
+        this._updateSelectedRecentFile();
         this._onUpdated.next();
+    }
+
+    private _updateSelectedRecentFile() {
+        if (this.selectedRecentFile) {
+            let file = this.files.find(f => f.id === this.selectedRecentFile.id);
+            this.selectedRecentFile = file || null;
+        }
     }
 
     /**

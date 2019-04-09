@@ -1,7 +1,7 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Prop, Inject} from 'vue-property-decorator';
-import { Object, File, Assignment, isFormula, isAssignment, AuxObject, AuxFile } from '@yeti-cgi/aux-common';
+import { Object, File, Assignment, isFormula, isAssignment, AuxObject, AuxFile, isDiff, merge } from '@yeti-cgi/aux-common';
 import {assign} from 'lodash';
 import { appManager } from '../../shared/AppManager';
 import uuid from 'uuid/v4';
@@ -45,12 +45,21 @@ export default class FileRow extends Vue {
 
     valueChanged(file: AuxFile, tag: string, value: string) {
         this.$emit('tagChanged', file, tag, value);
-        this.fileManager.recent.addTagDiff(`${file.id}_${this._editorId}`, tag, value);
-        this.fileManager.updateFile(file, {
-            tags: {
-                [tag]: value,
-            }
-        });
+        if (!isDiff(file)) {
+            this.fileManager.recent.addTagDiff(`${file.id}_${this._editorId}`, tag, value);
+            this.fileManager.updateFile(file, {
+                tags: {
+                    [tag]: value,
+                }
+            });
+        } else {
+            const updated = merge(file, {
+                tags: {
+                    [tag]: value
+                }
+            });
+            this.fileManager.recent.addFileDiff(updated, true);
+        }
     }
 
     focus() {

@@ -90,6 +90,33 @@ describe('RecentFilesManager', () => {
                 }
             ]);
         });
+
+        it('should unselect the selected recent file', () => {
+
+            recent.addTagDiff('abc', 'deg', 'ghi');
+            recent.selectedRecentFile = recent.files[0];
+
+            recent.addTagDiff('xyz', 'deg', 'ghi');
+
+            expect(recent.selectedRecentFile).toBe(null);
+        });
+
+        it('should preserve the selected recent file if the ID is the same', () => {
+
+            recent.addTagDiff('abc', 'deg', 'ghi');
+            recent.selectedRecentFile = recent.files[0];
+
+            recent.addTagDiff('abc', 'deg', 'zzz');
+
+            expect(recent.selectedRecentFile).toEqual({
+                id: 'abc',
+                tags: {
+                    'deg': 'zzz',
+                    'aux._diff': true,
+                    'aux._diffTags': [ 'deg' ]
+                }
+            });
+        });
     });
 
     describe('addFileDiff()', () => {
@@ -101,8 +128,114 @@ describe('RecentFilesManager', () => {
             recent.addFileDiff(file);
 
             expect(recent.files).toEqual([
-                file
+                {
+                    id: 'diff-testId',
+                    tags: {
+                        ...file.tags,
+                        'aux._diff': true,
+                        'aux._diffTags': [ 'test', 'aux.color' ]
+                    }
+                }
             ]);
+        });
+
+        it('should unselect the selected recent file', () => {
+            let file1 = createFile('testId1', {
+                test: 'abc',
+                "aux.color": 'red'
+            });
+            let file2 = createFile('testId2', {
+                test: 'abc',
+                "aux.color": 'green'
+            });
+
+            recent.addFileDiff(file1);
+            recent.selectedRecentFile = recent.files[0];
+
+            recent.addFileDiff(file2);
+
+            expect(recent.selectedRecentFile).toBe(null);
+        });
+
+        
+        it('should preserve the selected recent file if the ID is the same', () => {
+            let file1 = createFile('testId1', {
+                test: 'abc',
+                "aux.color": 'red'
+            });
+
+            recent.addFileDiff(file1);
+            recent.selectedRecentFile = recent.files[0];
+
+            let file2 = createFile('diff-testId1', {
+                test1: 'abc',
+                "aux.color": 'red',
+                'aux._diff': true,
+                'aux._diffTags': ['test1', 'aux.color']
+            });
+
+            recent.addFileDiff(file2);
+
+            expect(recent.selectedRecentFile).toEqual({
+                id: 'diff-testId1',
+                tags: {
+                    test1: 'abc',
+                    'aux.color': 'red',
+                    'aux._diff': true,
+                    'aux._diffTags': [ 'test1', 'aux.color' ]
+                }
+            });
+        });
+
+        it('should ignore well known tags', () => {
+            let file1 = createFile('testId1', {
+                test: 'abc',
+                _destroyed: true
+            });
+
+            recent.addFileDiff(file1);
+            recent.selectedRecentFile = recent.files[0];
+
+            expect(recent.files).toEqual([
+                {
+                    id: 'diff-testId1',
+                    tags: {
+                        test: 'abc',
+                        _destroyed: true,
+                        'aux._diff': true,
+                        'aux._diffTags': [ 'test' ]
+                    }
+                }
+            ]);
+        });
+
+        it('should update the diff tags', () => {
+            let file1 = createFile('testId1', {
+                test: 'abc',
+                "aux.color": 'red'
+            });
+
+            recent.addFileDiff(file1);
+            recent.selectedRecentFile = recent.files[0];
+
+            let file2 = createFile('diff-testId1', {
+                test1: 'abc',
+                "aux.color": 'red',
+                'aux._diff': true,
+                'aux._diffTags': ['test1', 'aux.color']
+            });
+
+            recent.addFileDiff(file2, true);
+
+            expect(recent.selectedRecentFile).toEqual({
+                id: 'diff-testId1',
+                tags: {
+                    test1: 'abc',
+                    'aux.color': 'red',
+                    'aux._diff': true,
+                    'aux._diffTags': [ 'test1', 'aux.color' ]
+                }
+            });
         });
 
         it('should send updates', () => {
@@ -155,7 +288,14 @@ describe('RecentFilesManager', () => {
             recent.addFileDiff(file6);
 
             expect(recent.files).toEqual([
-                file6
+                {
+                    id: 'diff-testId6',
+                    tags: {
+                        ...file6.tags,
+                        'aux._diff': true,
+                        'aux._diffTags': [ 'test', 'aux.color' ]
+                    }
+                }
             ]);
         });
 
@@ -183,7 +323,14 @@ describe('RecentFilesManager', () => {
             recent.addFileDiff(file1_2);
 
             expect(recent.files).toEqual([
-                file1_2
+                {
+                    id: 'diff-testId1',
+                    tags: {
+                        ...file1_2.tags,
+                        'aux._diff': true,
+                        'aux._diffTags': [ 'test1', 'aux.color' ]
+                    }
+                }
             ]);
         });
 
@@ -211,7 +358,14 @@ describe('RecentFilesManager', () => {
             recent.addFileDiff(file4);
 
             expect(recent.files).toEqual([
-                file4
+                {
+                    id: 'diff-testId4',
+                    tags: {
+                        ...file4.tags,
+                        'aux._diff': true,
+                        'aux._diffTags': [ 'test', 'aux.color' ]
+                    }
+                }
             ]);
         });
     });

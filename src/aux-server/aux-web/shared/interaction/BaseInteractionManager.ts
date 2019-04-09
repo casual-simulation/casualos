@@ -179,6 +179,7 @@ export abstract class BaseInteractionManager {
     async selectFile(file: AuxFile3D) {
         const shouldMultiSelect = this._gameView.input.getKeyHeld('Control');
         appManager.fileManager.recent.addFileDiff(file.file);
+        appManager.fileManager.recent.selectedRecentFile = null;
         await appManager.fileManager.selection.selectFile(<AuxFile>file.file, shouldMultiSelect);
     }
 
