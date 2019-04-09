@@ -63,7 +63,7 @@ export default class Home extends Vue {
     }
 
     get hasFiles() {
-        return this.files.length > 0;
+        return this.selectedFiles.length > 0;
     }
 
     get fileManager() {
