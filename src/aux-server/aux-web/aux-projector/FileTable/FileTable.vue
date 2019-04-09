@@ -2,7 +2,11 @@
   <div class="file-table">
     <div class="top-part md-layout">
       <div class="md-layout-item md-size-20">
-        <file-table-toggle :files="files" @click="closeWindow()"></file-table-toggle>
+        <file-table-toggle 
+            :files="files"
+            :showNumFiles="selectionMode !== 'single'"
+            @click="closeWindow()">
+        </file-table-toggle>
         <!-- <md-button @click="flipTable()">Flip</md-button> -->
       </div>
       <div class="md-layout-item md-size-80 file-table-actions">
@@ -80,8 +84,11 @@
 
                 <!-- Remove all button -->
                 <div class="file-cell remove-item">
-                    <md-button class="md-dense" @click="clearSelection()">
+                    <md-button v-if="selectionMode === 'multi'" class="md-dense" @click="clearSelection()">
                         Unselect All
+                    </md-button>
+                    <md-button v-else class="md-dense" @click="multiSelect()">
+                        Select Multiple
                     </md-button>
                 </div>
 

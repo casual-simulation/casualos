@@ -84,18 +84,27 @@ export default class Home extends Vue {
         return this.selectionMode === 'single' && this.selectedFiles.length > 0;
     }
 
-    async toggleOpen() {
-        if (this.singleSelection) {
-            await this.fileManager.selection.clearSelection();
-            this.isOpen = false;
-        } else {
-            this.isOpen = !this.isOpen;
-            if (this.isOpen) {
-                await this.fileManager.selection.setMode('multi');
-            } else if (this.files.length === 0) {
-                await this.fileManager.selection.setMode('single');
+    @Watch('singleSelection')
+    onSingleSelectionChanged(selected: boolean, old: boolean) {
+        if (this.selectionMode === 'single') {
+            // If we went from not having a file selected
+            // to selecting a file
+            if (!old && selected) {
+                // open the sheet
+                this.isOpen = true;
+
+                // if we went from having a file selected to not
+                // having a file selected
+            } else if (!selected && old) {
+
+                // close the sheet
+                this.isOpen = false;
             }
         }
+    }
+
+    async toggleOpen() {
+        this.isOpen = !this.isOpen;
     }
 
     startSearch() {

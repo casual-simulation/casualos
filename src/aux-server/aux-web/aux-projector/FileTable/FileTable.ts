@@ -29,6 +29,7 @@ export default class FileTable extends Vue {
     @Prop() files: AuxObject[];
     @Prop({ default: (() => <any>[]) }) extraTags: string[];
     @Prop({ default: false }) readOnly: boolean;
+    @Prop({ default: 'single' }) selectionMode: string;
 
     /**
      * A property that can be set to indicate to the table that its values should be updated.
@@ -176,6 +177,10 @@ export default class FileTable extends Vue {
     async clearSelection() {
         await this.fileManager.selection.clearSelection();
         this.$emit('selectionCleared');
+    }
+
+    async multiSelect() {
+        await this.fileManager.selection.setSelectedFiles(this.files);
     }
 
     onTagChanged(file: AuxObject, tag: string, value: string) {
