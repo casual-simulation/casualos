@@ -172,7 +172,7 @@ export class ContextGroup3D extends GameObject {
             const realNewContexts = missingContexts.map(c => new Context3D(c, this, this.domain, this._childColliders, this._decoratorFactory));
 
             realNewContexts.forEach(c => {
-                console.log(`[ContextGroup3D] Add context ${c.context} to group ${this.file.id}.`);
+                // console.log(`[ContextGroup3D] Add context ${c.context} to group ${this.file.id}.`);
                 this.contexts.set(c.context, c);
                 this.display.add(c);
 
@@ -181,7 +181,7 @@ export class ContextGroup3D extends GameObject {
                 });
             });
             removedContexts.forEach(c => {
-                console.log(`[ContextGroup3D] Remove context ${c} from group ${this.file.id}.`);
+                // console.log(`[ContextGroup3D] Remove context ${c} from group ${this.file.id}.`);
                 const context = this.contexts.get(c);
                 if (typeof context !== 'undefined') {
                     context.dispose();
