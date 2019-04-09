@@ -768,10 +768,6 @@ export function getFileRotation(calc: FileCalculationContext, file: File, contex
  * @param file The file.
  */
 export function getFileShape(calc: FileCalculationContext, file: File): FileShape {
-    const diff = calculateBooleanTagValue(calc, file, 'aux._diff', false);
-    if (diff) {
-        return 'sphere';
-    }
     const shape: FileShape = calculateFileValue(calc, file, 'aux.shape');
     if (shape === 'cube' || shape === 'sphere') {
         return shape;

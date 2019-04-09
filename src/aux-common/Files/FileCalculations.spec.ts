@@ -667,7 +667,7 @@ describe('FileCalculations', () => {
             expect(shape).toBe('sphere');
         });
 
-        it('should return sphere when aux._diff is true', () => {
+        it('should return value when aux._diff is true', () => {
             let file = createFile();
             file.tags['aux._diff'] = true;
             file.tags['aux.shape'] = 'cube';
@@ -675,7 +675,7 @@ describe('FileCalculations', () => {
             const calc = createCalculationContext([file]);
             const shape = getFileShape(calc, file);
 
-            expect(shape).toBe('sphere');
+            expect(shape).toBe('cube');
         });
     });
 

@@ -19,10 +19,6 @@
                 :selected="selectedRecentFile === file" 
                 :large="index === 0"
                 @click="selectRecentFile(file)"></mini-file>
-
-              <md-button class="clear-file-queue-button md-icon-button" @click="clearRecentFiles()">
-                  <md-icon>clear</md-icon>
-              </md-button>
             </div>
           </div>
         </div>
