@@ -61,6 +61,7 @@ import { DebugObjectManager } from '../../shared/scene/DebugObjectManager';
 import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { BuilderInteractionManager } from '../interaction/BuilderInteractionManager';
+import Home from '../Home/Home';
 
 @Component({
     components: {
@@ -111,9 +112,17 @@ export default class GameView extends Vue implements IGameView {
 
     @Inject() addSidebarItem: App['addSidebarItem'];
     @Inject() removeSidebarItem: App['removeSidebarItem'];
+
+    // TODO: Find a better way to refactor this
+    @Inject() home: Home;
     @Provide() fileRenderer: FileRenderer = new FileRenderer();
 
-    get uiHtmlElements(): HTMLElement[] { return [<HTMLElement>this.$refs.fileQueue]; }
+    getUIHtmlElements(): HTMLElement[] {
+        return [
+            ...this.home.getUIHtmlElements(),
+            <HTMLElement>this.$refs.fileQueue
+        ];
+    }
     get gameView(): HTMLElement { return <HTMLElement>this.$refs.gameView; }
     get canvas() { return this._canvas; }
     get time(): Time { return this._time; }

@@ -116,7 +116,7 @@ export abstract class BaseInteractionManager {
                         }
                         this._cameraControls.enabled = true;
                     }
-                } else if(input.isMouseButtonDownOnAny(this._gameView.uiHtmlElements)) {
+                } else if(input.isMouseButtonDownOnAny(this._gameView.getUIHtmlElements())) {
 
                     const element = input.getTargetData().inputDown;
                     

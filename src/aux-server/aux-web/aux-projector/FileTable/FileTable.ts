@@ -2,7 +2,7 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Provide, Prop, Inject, Watch} from 'vue-property-decorator';
 import { some, union } from 'lodash';
-import {File, Object, fileTags, isHiddenTag, AuxObject, hasValue, isFormula, getShortId, searchFileState, SandboxResult, isFile, isDiff, merge} from '@yeti-cgi/aux-common';
+import {File, Object, fileTags, isHiddenTag, AuxObject, hasValue, isFormula, getShortId, searchFileState, SandboxResult, isFile, isDiff, merge, SelectionMode} from '@yeti-cgi/aux-common';
 import { EventBus } from '../../shared/EventBus';
 import { appManager } from '../../shared/AppManager';
 
@@ -29,7 +29,7 @@ export default class FileTable extends Vue {
     @Prop() files: AuxObject[];
     @Prop({ default: (() => <any>[]) }) extraTags: string[];
     @Prop({ default: false }) readOnly: boolean;
-    @Prop({ default: 'single' }) selectionMode: string;
+    @Prop({ default: 'single' }) selectionMode: SelectionMode;
     @Prop({ default: false }) diffSelected: boolean;
 
     /**
@@ -52,6 +52,10 @@ export default class FileTable extends Vue {
     search: string = '';
     searchResults: SandboxResult<any> = null;
     viewMode: 'rows' | 'columns' = 'columns';
+
+    get wrapper(): HTMLElement {
+        return <HTMLElement>this.$refs.wrapper;
+    }
     
     get fileTableGridStyle() {
         const sizeType = this.viewMode === 'rows' ? 'columns' : 'rows';

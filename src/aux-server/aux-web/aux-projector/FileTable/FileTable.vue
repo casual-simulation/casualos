@@ -1,5 +1,5 @@
 <template>
-  <div class="file-table">
+  <div class="file-table" ref="wrapper">
     <div class="top-part md-layout">
       <div class="md-layout-item md-size-20">
         <file-table-toggle 
@@ -91,18 +91,18 @@
                         Clear Diff
                     </md-button>
                     <md-button v-else class="md-dense" @click="multiSelect()">
-                        Select Multiple
+                        Multi Select
                     </md-button>
                 </div>
 
                 <!-- ID tag -->
                 <div class="file-cell header">
-                    <file-tag tag="id"></file-tag>
+                    <file-tag tag="id" :allowCloning="false" ></file-tag>
                 </div>
 
                 <!-- Other tags -->
                 <div v-for="(tag, index) in tags" :key="index" class="file-cell header">
-                    <file-tag :tag="tag"></file-tag>
+                    <file-tag :tag="tag" :allowCloning="displayedFiles.length === 1"></file-tag>
 
                     <!-- Show X button for tags that don't have values or tags that are hidden -->
                     <md-button

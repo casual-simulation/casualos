@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import { Chrome } from 'vue-color';
 import Component from 'vue-class-component';
-import { Inject, Watch } from 'vue-property-decorator';
+import { Inject, Watch, Provide } from 'vue-property-decorator';
 import { 
     Object,
     File,
@@ -35,6 +35,8 @@ import FileTableToggle from '../FileTableToggle/FileTableToggle';
 })
 export default class Home extends Vue {
 
+    @Provide() home = this;
+
     debug: boolean = false;
 
     contextMenuStyle: any = {
@@ -60,6 +62,14 @@ export default class Home extends Vue {
 
     get user() {
         return appManager.user;
+    }
+
+    getUIHtmlElements(): HTMLElement[] { 
+        const table = <FileTable>this.$refs.table;
+        if (table) {
+            return [table.wrapper];
+        }
+        return []; 
     }
 
     get hasFiles() {

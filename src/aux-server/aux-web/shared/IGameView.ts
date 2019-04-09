@@ -14,7 +14,6 @@ import Vue from "vue";
  */
 export interface IGameView extends AuxFile3DFinder, Vue {
     
-    readonly uiHtmlElements: HTMLElement[];
     readonly gameView: HTMLElement;
     readonly canvas: HTMLCanvasElement;
     readonly time: Time;
@@ -47,4 +46,9 @@ export interface IGameView extends AuxFile3DFinder, Vue {
      * Sets the visibility of the file grids.
      */
     setGridsVisible(visible: boolean): void;
+
+    /**
+     * Gets the HTML elements that the interaction manager should be able to handle events for.
+     */
+    getUIHtmlElements(): HTMLElement[];
 }
