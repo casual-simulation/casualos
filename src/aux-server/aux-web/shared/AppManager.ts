@@ -381,7 +381,6 @@ export class AppManager {
 
                 const onFileManagerInitProgress: LoadingProgressCallback = (progress: LoadingProgress) => {
                     this.loadingProgress.set(lerp(40, 95, progress.progress / 100), progress.status, progress.error);
-                    console.log('onFileManagerInitProgress:', JSON.stringify(progress), 'overall:', JSON.stringify(this.loadingProgress));
                 }
                 await this._fileManager.init(channelId, true, onFileManagerInitProgress);
 
