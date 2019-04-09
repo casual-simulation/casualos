@@ -61,6 +61,7 @@ import { appManager, AppType } from '../shared/AppManager';
 import App from './App/App';
 import Welcome from './Welcome/Welcome';
 import Home from './Home/Home';
+import Loading from '../shared/vue-components/Loading/Loading';
 
 // Import the WebXR Polyfill
 import 'webxr-polyfill';
@@ -157,7 +158,12 @@ router.beforeEach((to, from, next) => {
 });
 
 async function start() {
+    const loading = new Vue({
+        render: createEle => createEle(Loading)
+    }).$mount('#loading');
+    
     await appManager.initPromise;
+    
     const app = new Vue({
         router,
         render: createEle => createEle(App)
