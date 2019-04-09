@@ -146,7 +146,7 @@
         <div v-else-if="hasSearchResults()" class="search-results-wrapper">
             <tree-view :data="getSearchResultData()" :options="{ limitRenderDepth: true, maxDepth: 1 }"></tree-view>
         </div>
-        <div v-if="focusedTag && !isSearching" class="multi-line-tag-value-wrapper">
+        <div v-if="focusedFile && focusedTag && !isSearching" class="multi-line-tag-value-wrapper">
             <md-field>
                 <label><file-tag :tag="focusedTag"></file-tag></label>
                 <md-textarea ref="multiLineEditor" v-model="multilineValue"

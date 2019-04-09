@@ -2,7 +2,7 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Provide, Prop, Inject, Watch} from 'vue-property-decorator';
 import { some, union } from 'lodash';
-import {File, Object, fileTags, isHiddenTag, AuxObject, hasValue, isFormula, getShortId, searchFileState, SandboxResult, isFile, isDiff} from '@yeti-cgi/aux-common';
+import {File, Object, fileTags, isHiddenTag, AuxObject, hasValue, isFormula, getShortId, searchFileState, SandboxResult, isFile, isDiff, merge} from '@yeti-cgi/aux-common';
 import { EventBus } from '../../shared/EventBus';
 import { appManager } from '../../shared/AppManager';
 
@@ -97,16 +97,29 @@ export default class FileTable extends Vue {
     filesChanged() {
         this._updateTags();
         this.numFilesSelected = this.files.length;
+        if (this.focusedFile) {
+            this.focusedFile = this.files.find(f => f.id === this.focusedFile.id) || null;
+        }
     }
 
     @Watch('multilineValue')
     multilineValueChanged() {
-        if (this.focusedFile && this.focusedTag && !isDiff(this.focusedFile)) {
-            this.fileManager.updateFile(this.focusedFile, {
-                tags: {
-                    [this.focusedTag]: this.multilineValue
-                }
-            });
+        if (this.focusedFile && this.focusedTag) {
+            if (isDiff(this.focusedFile)) {
+                const updated = merge(this.focusedFile, {
+                    tags: {
+                        [this.focusedTag]: this.multilineValue
+                    }
+                });
+                this.fileManager.recent.addFileDiff(updated, true);
+            } else {
+                this.fileManager.recent.addTagDiff(`${this.focusedFile.id}_${this.focusedTag}`, this.focusedTag, this.multilineValue);
+                this.fileManager.updateFile(this.focusedFile, {
+                    tags: {
+                        [this.focusedTag]: this.multilineValue
+                    }
+                });
+            }
         }
     }
 
