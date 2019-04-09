@@ -33,6 +33,7 @@ describe('Object3DPool', () => {
     });
 
     it('should not allow restoration of objects that did not originate from it', () => {
+        let spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
         let pool = new Object3DPool(sourceObject, 3);
         let obj = pool.retrieve();
 
@@ -43,5 +44,7 @@ describe('Object3DPool', () => {
         expect(restored).toEqual(false);
         expect(pool.poolSize).toEqual(2);
         pool.dispose();
+
+        spy.mockRestore();
     });
 });

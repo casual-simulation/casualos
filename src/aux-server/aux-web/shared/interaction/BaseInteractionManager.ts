@@ -177,7 +177,12 @@ export abstract class BaseInteractionManager {
     }
 
     async selectFile(file: AuxFile3D) {
-        await appManager.fileManager.selectFile(<AuxFile>file.file);
+        const shouldMultiSelect = this._gameView.input.getKeyHeld('Control');
+        await appManager.fileManager.selection.selectFile(<AuxFile>file.file, shouldMultiSelect);
+    }
+
+    async clearSelection() {
+        await appManager.fileManager.selection.clearSelection();
     }
 
     getDraggableObjects() {

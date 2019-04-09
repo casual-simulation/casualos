@@ -6,26 +6,30 @@
         <!-- <md-button @click="flipTable()">Flip</md-button> -->
       </div>
       <div class="md-layout-item md-size-80 file-table-actions">
-        <div v-if="!isMakingNewTag">
+        <div v-if="!isMakingNewTag && !isSearching">
           <md-button
             class="new-tag-button"
             @click="addTag()">+tag</md-button>
-          <md-button
-            class="new-tag-button"
-            @click="addTag(true)">+action</md-button>
+          <md-button 
+            class="search-button md-icon-button"
+            @click="startSearch()"
+            v-shortkey.once="['ctrl', 'f']"
+            @shortkey="startSearch()">
+            <md-icon>search</md-icon>
+          </md-button>
         </div>
-        <div v-else>
+        <div v-else-if="isMakingNewTag">
             <form class="file-table-form" @submit.prevent="addTag()">
                 <div class="finish-tag-button-wrapper">
                     <md-button
                         class="md-icon-button finish-tag-button"
                         type="submit">
-                    <md-icon class="done">check</md-icon>
+                        <md-icon class="done">check</md-icon>
                     </md-button>
                     <md-button
                         class="md-icon-button finish-tag-button"
                         @click="cancelNewTag()">
-                    <md-icon class="cancel">cancel</md-icon>
+                        <md-icon class="cancel">cancel</md-icon>
                     </md-button>
                 </div>
                 <tag-editor 
@@ -37,18 +41,47 @@
                     @valid="newTagValidityUpdated"></tag-editor>
             </form>
         </div>
+        <div v-else-if="isSearching">
+            <form class="file-table-form" @submit.prevent="addSearch()">
+                <div class="finish-tag-button-wrapper">
+                    <md-button
+                        class="md-icon-button finish-tag-button"
+                        type="submit">
+                        <md-icon class="done">check</md-icon>
+                    </md-button>
+                    <md-button
+                        class="md-icon-button finish-tag-button"
+                        @click="cancelSearch()">
+                        <md-icon class="cancel">cancel</md-icon>
+                    </md-button>
+                </div>
+                <md-field class="search-field">
+                    <md-icon>search</md-icon>
+                    <label>Search...</label>
+                    <md-input 
+                        ref="searchField"
+                        v-model="search" 
+                        @keyup.esc="cancelSearch()"></md-input>
+                </md-field>
+            </form>
+        </div>
       </div>
     </div>
     <div>
-        <div v-if="hasFiles" class="file-table-wrapper">
+        <p v-if="isSearching && !search" class="no-search-results-message">
+            Enter a search
+        </p>
+        <p v-else-if="isSearching && !hasSearchResults()" class="no-search-results-message">
+            No files found
+        </p>
+        <div v-else-if="hasFiles" class="file-table-wrapper">
             <!--   -->
             <div class="file-table-grid" :class="[viewMode]" ref="table" :style="fileTableGridStyle">
 
                 <!-- Remove all button -->
                 <div class="file-cell remove-item">
-                    <md-button class="md-icon-button md-dense" @click="clearSelection()">
-                        <md-icon>remove</md-icon>
-                        <md-tooltip md-delay="1000" md-direction="top">Unselect All</md-tooltip>
+                    <md-button class="md-dense" @click="clearSelection()">
+                        Unselect All
                     </md-button>
                 </div>
 
@@ -73,7 +106,7 @@
                 </div>
 
                 <!-- Files -->
-                <template v-for="(file) in files">
+                <template v-for="(file) in displayedFiles">
 
                 <!-- deselect button -->
                     <div :key="`${file.id}-remove`" class="file-cell remove-item">
@@ -100,7 +133,10 @@
                 </template>
             </div>
         </div>
-        <div v-if="focusedTag" class="multi-line-tag-value-wrapper">
+        <div v-else-if="hasSearchResults()" class="search-results-wrapper">
+            <tree-view :data="getSearchResultData()" :options="{ limitRenderDepth: true, maxDepth: 1 }"></tree-view>
+        </div>
+        <div v-if="focusedTag && !isSearching" class="multi-line-tag-value-wrapper">
             <md-field>
                 <label><file-tag :tag="focusedTag"></file-tag></label>
                 <md-textarea ref="multiLineEditor" v-model="multilineValue"

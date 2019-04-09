@@ -119,14 +119,10 @@ export default class App extends Vue {
      */
     get dev() { return !PRODUCTION; }
 
-    toggleUserMode() {
+    async toggleUserMode() {
         this.userMode = !this.userMode;
         const mode: UserMode = this.userMode ? 'files' : 'worksurfaces';
-        appManager.fileManager.updateFile(appManager.fileManager.userFile, {
-            tags: {
-                _mode: mode
-            }
-        });
+        await appManager.fileManager.setUserMode(mode);
     }
 
     private _calculateUserMode(file: Object): boolean {

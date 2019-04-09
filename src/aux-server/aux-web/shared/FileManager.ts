@@ -11,22 +11,12 @@ import {
   calculateActionEvents,
   addState,
   DEFAULT_USER_MODE,
-  filterFilesBySelection, 
-  createWorkspace, 
   FileCalculationContext,
-  selectionIdForUser,
-  updateFile,
-  createCalculationContext,
-  updateUserSelection,
-  toggleFileSelection,
-  calculateFormattedFileValue,
-  calculateFileValue,
-  createFile,
-  getActiveObjects,
   AuxCausalTree,
   AuxFile,
   AuxObject,
-  fileRemoved
+  fileRemoved,
+  UserMode
 } from '@yeti-cgi/aux-common';
 import {
   keys, 
@@ -55,6 +45,8 @@ import { CausalTreeManager } from './causal-trees/CausalTreeManager';
 import { RealtimeCausalTree } from '@yeti-cgi/aux-common/causal-trees';
 import { getOptionalValue, lerp } from './SharedUtils';
 import { LoadingProgress, LoadingProgressCallback } from '@yeti-cgi/aux-common/LoadingProgress';
+import { FileHelper } from './FileHelper';
+import { SelectionManager } from './SelectionManager';
 
 export interface SelectedFilesUpdatedEvent { 
     files: AuxObject[];
@@ -67,6 +59,8 @@ export interface SelectedFilesUpdatedEvent {
 export class FileManager {
   private _appManager: AppManager;
   private _treeManager: CausalTreeManager;
+  private _helper: FileHelper;
+  private _selection: SelectionManager;
 
   private _subscriptions: SubscriptionLike[];
   private _status: string;
@@ -84,7 +78,7 @@ export class FileManager {
    * Gets all the files that represent an object.
    */
   get objects(): AuxObject[] {
-    return <AuxObject[]>getActiveObjects(this.filesState);
+    return this._helper.objects;
   }
 
   /**
@@ -98,7 +92,7 @@ export class FileManager {
    * Gets all the selected files that represent an object.
    */
   get selectedObjects(): File[] {
-    return this.selectedFilesForUser(this.userFile);
+    return this.selection.getSelectedFilesForUser(this.userFile);
   }
 
   /**
@@ -137,11 +131,7 @@ export class FileManager {
     if (!this._appManager.user) {
       return;
     }
-    var objs = this.objects.filter(o => o.id === this._appManager.user.id);
-    if (objs.length > 0) {
-      return objs[0];
-    }
-    return null;
+    return this._helper.userFile;
   }
 
   get globalsFile(): AuxObject {
@@ -188,6 +178,20 @@ export class FileManager {
     return this._aux;
   }
 
+  /**
+   * Gets the file helper.
+   */
+  get helper() {
+      return this._helper;
+  }
+
+  /**
+   * Gets the selection manager.
+   */
+  get selection() {
+      return this._selection;
+  }
+
   constructor(app: AppManager, treeManager: CausalTreeManager) {
     this._appManager = app;
     this._treeManager = treeManager;
@@ -210,26 +214,15 @@ export class FileManager {
   }
 
   /**
-   * Gets a list of files that the given user has selected.
-   * @param user The file of the user.
+   * Sets the file mode that the user should be in.
+   * @param mode The mode that the user should use.
    */
-  selectedFilesForUser(user: AuxObject) {
-    return filterFilesBySelection(this.objects, user.tags._selection);
-  }
-
-  /**
-   * Selects the given file for the current user.
-   * @param file The file to select.
-   */
-  async selectFile(file: AuxObject) {
-    await this._selectFileForUser(file, this.userFile);
-  }
-
-  /**
-   * Clears the selection for the current user.
-   */
-  async clearSelection() {
-    await this._clearSelectionForUser(this.userFile);
+  setUserMode(mode: UserMode) {
+    return this.updateFile(this.userFile, {
+        tags: {
+            _mode: mode
+        }
+    });
   }
 
   /**
@@ -246,11 +239,11 @@ export class FileManager {
    * @param tag The tag to calculate the value for.
    */
   calculateFormattedFileValue(file: Object, tag: string): string {
-    return calculateFormattedFileValue(this.createContext(), file, tag);
+    return this._helper.calculateFormattedFileValue(file, tag);
   }
 
   calculateFileValue(file: Object, tag: string) {
-    return calculateFileValue(this.createContext(), file, tag);
+    return this._helper.calculateFileValue(file, tag);
   }
 
   /**
@@ -269,48 +262,32 @@ export class FileManager {
   /**
    * Updates the given file with the given data.
    */
-  async updateFile(file: AuxFile, newData: PartialFile) {
-    updateFile(file, this.userFile.id, newData, () => this.createContext());
-
-    await this._aux.tree.updateFile(file, newData);
+  updateFile(file: AuxFile, newData: PartialFile) {
+    return this._helper.updateFile(file, newData);
   }
 
-  async createFile(id?: string, tags?: Object['tags']) {
-    console.log('[FileManager] Create File');
-
-    const file = createFile(id, tags);
-    await this._aux.tree.addFile(file);
+  createFile(id?: string, tags?: Object['tags']) {
+    return this._helper.createFile(id, tags);
   }
 
-  async createWorkspace() {
-    console.log('[FileManager] Create File');
-
-    const workspace: Workspace = createWorkspace();
-    await this._aux.tree.addFile(workspace);
+  createWorkspace() {
+    return this._helper.createWorkspace();
   }
 
-  async action(eventName: string, files: File[]) {
-    console.log('[FileManager] Run event:', eventName, 'on files:', files);
-
-    // Calculate the events on a single client and then run them in a transaction to make sure the order is right.
-    const fileIds = files.map(f => f.id);
-    const actionData = action(eventName, fileIds);
-    const result = calculateActionEvents(this._aux.tree.value, actionData);
-    console.log('  result: ', result);
-
-    await this._aux.tree.addEvents(result.events);
+  action(eventName: string, files: File[]) {
+    return this._helper.action(eventName, files);
   }
 
-  async transaction(...events: FileEvent[]) {
-    await this._aux.tree.addEvents(events);
+  transaction(...events: FileEvent[]) {
+    return this._helper.transaction(...events);
   }
 
   /**
    * Adds the given state to the session.
    * @param state The state to add.
    */
-  async addState(state: FilesState) {
-      await this._aux.tree.addEvents([addState(state)]);
+  addState(state: FilesState) {
+    return this._helper.addState(state);
   }
 
   // TODO: This seems like a pretty dangerous function to keep around,
@@ -342,30 +319,6 @@ export class FileManager {
     );
   }
 
-  /**
-   * Clears the selection that the given user has.
-   * @param user The file for the user to clear the selection of.
-   */
-  private async _clearSelectionForUser(user: AuxObject) {
-    console.log('[FileManager] Clear selection for', user.id);
-    const update = updateUserSelection(null, null);
-    await this.updateFile(user, update);
-  }
-
-  private async _selectFileForUser(file: AuxObject, user: AuxObject) {
-    console.log('[FileManager] Select File:', file.id);
-    
-    const {id, newId} = selectionIdForUser(user);
-    if (newId) {
-      const update = updateUserSelection(newId, file.id);
-      await this.updateFile(user, update);
-    }
-    if (id) {
-      const update = toggleFileSelection(file, id, user.id);
-      await this.updateFile(file, update);
-    }
-  }
-
   private _setEditedFileForUser(file: AuxObject, user: AuxObject) {
     if (file.id !== user.tags._editingFile) {
       console.log('[FileManager] Edit File:', file.id);
@@ -382,7 +335,7 @@ export class FileManager {
    * Creates a new FileCalculationContext from the current state.
    */
   createContext(): FileCalculationContext {
-    return createCalculationContext(this.objects);
+    return this._helper.createContext();
   }
 
   /**
@@ -449,6 +402,9 @@ export class FileManager {
         await this._aux.waitToGetTreeFromServer();
 
         console.log('[FileManager] Got Tree:', this._aux.tree.site.id);
+
+        this._helper = new FileHelper(this._aux.tree, appManager.user.id);
+        this._selection = new SelectionManager(this._helper);
 
         loadingProgress.set(70, 'Initalize user file...', null);
         await this._initUserFile();
