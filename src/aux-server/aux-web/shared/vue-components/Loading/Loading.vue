@@ -1,21 +1,28 @@
 <!-- App.vue -->
 <template>
     <div>
-        <md-dialog v-if="loadingProgress"
+        <md-dialog
                 :md-fullscreen="false"
                 :md-click-outside-to-close="false"
                 :md-close-on-esc="false"
                 :md-backdrop="true"
-                :md-active.sync="loadingProgress.show">
-            <div class="loading-dialog">
+                :md-active="show">
+            <div v-if="!hasError" class="loading-dialog">
                 <div class="loading-text-content">
                     <div class="loading-title">
                         <h1>Loading...</h1>
                         <md-progress-spinner md-mode="indeterminate" :md-diameter="20" :md-stroke="2"></md-progress-spinner>
                     </div>
-                    <p>{{loadingProgress.status}}</p>
+                    <p>{{status}}</p>
                 </div>
-                <md-progress-bar md-mode="determinate" :md-value="loadingProgress.progress" ></md-progress-bar>
+                <md-progress-bar md-mode="determinate" :md-value="progress" ></md-progress-bar>
+            </div>
+            <div v-else class="loading-error">
+                <div class="loading-text-content error-text-content">
+                    <h1>An error has occured.</h1>
+                    <p>{{error}}</p>
+                </div>
+                <md-button @click="onErrorDismiss">Dismiss</md-button>
             </div>
         </md-dialog>
     </div>

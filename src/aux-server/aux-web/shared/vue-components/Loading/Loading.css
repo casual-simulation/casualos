@@ -9,13 +9,10 @@
     text-align: center;
 }
 
-.loading-title h1 {
-    float: left;
-}
-
-.loading-title .md-progress-spinner {
-    margin-block-start: 0.8em;
-    margin-left: 0.67em;
+.error-text-content {
+    align-items: normal;
+    text-align: left;
+    padding: 0.5em 1.8em 0em;
 }
 
 .loading-text-content h1 {
@@ -27,6 +24,23 @@
 
 .loading-text-content p {
     margin-block-start: 0.67em;
-    font-size: 12px;
+    font-size: 14px;
     color: darkgray;
+}
+
+.loading-title h1 {
+    float: left;
+}
+
+.loading-title .md-progress-spinner {
+    margin-block-start: 0.8em;
+    margin-left: 0.67em;
+}
+
+.loading-error h1 {
+    color: rgb(210, 97, 97);
+}
+
+.loading-error p {
+    color: rgb(189, 76, 76);
 }
