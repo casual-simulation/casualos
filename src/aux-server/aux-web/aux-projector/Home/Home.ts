@@ -67,7 +67,7 @@ export default class Home extends Vue {
     getUIHtmlElements(): HTMLElement[] { 
         const table = <FileTable>this.$refs.table;
         if (table) {
-            return [table.wrapper];
+            return table.uiHtmlElements();
         }
         return []; 
     }

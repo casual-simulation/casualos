@@ -102,7 +102,7 @@
 
                 <!-- Other tags -->
                 <div v-for="(tag, index) in tags" :key="index" class="file-cell header">
-                    <file-tag :tag="tag" :allowCloning="displayedFiles.length === 1"></file-tag>
+                    <file-tag ref="tags" :tag="tag" :allowCloning="displayedFiles.length === 1"></file-tag>
 
                     <!-- Show X button for tags that don't have values or tags that are hidden -->
                     <md-button
