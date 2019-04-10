@@ -515,6 +515,38 @@ describe('FilesChannel', () => {
                 ]);
             });
         });
+
+        describe('getUser()', () => {
+            it.skip('should get the current users file', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'getUser().name = "Test"',
+                        }
+                    },
+                    userFile: {
+                        id: 'userFile',
+                        tags: {}
+                    }
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile', 'userFile'], 'userFile');
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('userFile', {
+                        tags: {
+                            name: 'Test'
+                        }
+                    })
+                ]);
+            });
+        });
     });
 
 });

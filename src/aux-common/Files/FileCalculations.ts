@@ -484,6 +484,52 @@ export function newSelectionId() {
 }
 
 /**
+ * Gets the menu ID that is used for the given user.
+ * @param userFile The file for the user.
+ */
+export function getUserMenuId(userFile: File) {
+    return userFile.tags._userMenuContext;
+}
+
+/**
+ * Gets the list of files that are in the user's menu.
+ * @param calc The file calculation context.
+ * @param userFile The user file to use.
+ */
+export function getFilesInMenu(calc: FileCalculationContext, userFile: File): File[] {
+    const context = getUserMenuId(userFile);
+    return filesInContext(calc, context);
+}
+
+/**
+ * Gets the list of files that are in the given context.
+ * @param calc The file calculation context.
+ * @param context The context to search for files in.
+ */
+export function filesInContext(calc: FileCalculationContext, context: string): File[] {
+    const files = calc.objects.filter(f => isFileInContext(calc, f, context));
+    return sortBy(files, f => fileContextSortOrder(calc, f, context));
+}
+
+/**
+ * Gets the file update needed to add the given file to the given user's menu.
+ * @param calc The calculation context.
+ * @param userFile The file of the user.
+ * @param file The file that should be added to the user's menu.
+ * @param index The index that the file should be added to. Positive infinity means add at the end. 0 means add at the beginning.
+ */
+export function addFileToMenu(calc: FileCalculationContext, userFile: File, file: File, index: number = Infinity): PartialFile {
+    const context = getUserMenuId(userFile);
+    const files = getFilesInMenu(calc, userFile);
+    const idx = isFinite(index) ? index : files.length;
+    return {
+        tags: {
+            [context]: idx
+        }
+    };
+}
+
+/**
  * Gets the list of tags that are on the given file.
  * @param file 
  */
@@ -1153,6 +1199,8 @@ export function isFileInContext(context: FileCalculationContext, file: Object, c
 
     if (typeof contextValue === 'string') {
         result = (contextValue === 'true');
+    } else if (typeof contextValue === 'number') {
+        result = true;
     } else {
         result = (contextValue === true);
     }
@@ -1163,6 +1211,25 @@ export function isFileInContext(context: FileCalculationContext, file: Object, c
     }
 
     return result;
+}
+
+/**
+ * Gets the sort order that the given file should appear in the given context.
+ * @param context The file calculation context.
+ * @param file The file.
+ * @param contextId The ID of the context that we're getting the sort order for.
+ */
+export function fileContextSortOrder(context: FileCalculationContext, file: File, contextId: string): number | string {
+    if (!contextId) return NaN;
+
+    const contextValue = calculateFileValue(context, file, contextId);
+    if (typeof contextValue === 'string') {
+        return contextValue;
+    } else if(typeof contextValue === 'number') {
+        return contextValue;
+    } else {
+        return 0;
+    }
 }
 
 /**

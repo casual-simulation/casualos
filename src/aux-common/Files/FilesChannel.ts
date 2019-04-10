@@ -215,6 +215,11 @@ export interface Action {
     fileIds: string[] | null;
 
     /**
+     * The File ID of the user.
+     */
+    userId: string | null;
+
+    /**
      * The name of the event.
      */
     eventName: string;
@@ -250,11 +255,12 @@ export function transaction(events: FileEvent[]): FileTransactionEvent {
     };
 }
 
-export function action(eventName: string, fileIds: string[] = null): Action {
+export function action(eventName: string, fileIds: string[] = null, userId: string = null): Action {
     return {
         type: 'action',
         fileIds,
         eventName,
+        userId
     };
 }
 

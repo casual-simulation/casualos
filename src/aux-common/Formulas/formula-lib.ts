@@ -8,6 +8,7 @@ import { FileCalculationContext, calculateFormulaValue, COMBINE_ACTION_NAME } fr
 let actions: FileEvent[] = [];
 let state: FilesState = null;
 let calc: FileCalculationContext = null;
+let userFileId: string = null;
 
 export function setActions(value: FileEvent[]) {
     actions = value;

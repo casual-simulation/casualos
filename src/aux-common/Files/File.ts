@@ -40,6 +40,7 @@ export interface FileTags {
     _user?: string;
     _userContext?: string;
     _userInventoryContext?: string;
+    _userMenuContext?: string;
     _mode?: UserMode;
     _editingFile?: string;
     _lastEditedBy?: string;
