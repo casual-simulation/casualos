@@ -3,6 +3,7 @@
     padding: 5px;
     border-bottom: 1px solid transparent;
     text-align: center;
+    user-select: none;
 }
 
 .mini-file:hover {

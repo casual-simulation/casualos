@@ -10,7 +10,10 @@ import {
     FileCalculationContext,
     objectsAtContextGridPosition,
     isFileStackable,
-    getFileIndex
+    getFileIndex,
+    isDiff,
+    getDiffUpdate,
+    fileRemoved
 } from '@yeti-cgi/aux-common';
 
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
@@ -30,6 +33,7 @@ export abstract class BaseFileDragOperation implements IOperation {
     protected _finished: boolean;
     protected _lastScreenPos: Vector2;
     protected _combine: boolean;
+    protected _merge: boolean;
     protected _other: File;
     protected _context: string;
     protected _previousContext: string;
@@ -84,8 +88,23 @@ export abstract class BaseFileDragOperation implements IOperation {
 
     protected _disposeCore() {
         // Combine files.
-        if (this._combine && this._other) {
+        if (this._merge && this._other) {
+            const update = getDiffUpdate(this._file);
+            appManager.fileManager.transaction(
+                fileUpdated(this._other.id, update),
+                fileRemoved(this._file.id)
+            );
+        } else if (this._combine && this._other) {
             appManager.fileManager.action('+', [this._file, this._other]);
+        } else if (isDiff(this._file)) {
+            appManager.fileManager.transaction(
+                fileUpdated(this._file.id, {
+                    tags: {
+                        'aux._diff': null,
+                        'aux._diffTags': null
+                    }
+                })
+            );
         }
     }
 
@@ -132,6 +151,7 @@ export abstract class BaseFileDragOperation implements IOperation {
     }
 
     protected _updateFile(file: File, data: PartialFile): FileEvent {
+        appManager.fileManager.recent.addFileDiff(file);
         updateFile(file, appManager.fileManager.userFile.id, data, () => appManager.fileManager.createContext());
         return fileUpdated(file.id, data);
     }
@@ -147,7 +167,12 @@ export abstract class BaseFileDragOperation implements IOperation {
     protected _calculateFileDragStackPosition(calc: FileCalculationContext, context: string, gridPosition: Vector2, ...files: File[]) {
         const objs = differenceBy(objectsAtContextGridPosition(calc, context, gridPosition), files, f => f.id);
 
-        const canCombine = objs.length === 1 && 
+        const canMerge = objs.length >= 1 &&
+            files.length === 1 &&
+            isDiff(files[0]);
+
+        const canCombine = !canMerge && 
+            objs.length === 1 && 
             files.length === 1 &&
             this._interaction.canCombineFiles(files[0], objs[0]);
 
@@ -162,8 +187,11 @@ export abstract class BaseFileDragOperation implements IOperation {
 
         return {
             combine: canCombine,
+            merge: canMerge,
             stackable: canStack,
-            other: canCombine ? objs[0] : null,
+            other: canCombine ? objs[0] : 
+                canMerge ? objs[0] :
+                null,
             index: index
         };
     }

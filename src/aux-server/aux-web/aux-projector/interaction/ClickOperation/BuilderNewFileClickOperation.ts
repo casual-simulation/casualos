@@ -25,7 +25,7 @@ export class BuilderNewFileClickOperation extends BaseFileClickOperation {
 
     protected _createDragOperation(): BaseFileDragOperation {
         let duplicatedFile = duplicateFile(<Object>this._file);
-        return new BuilderNewFileDragOperation(this._gameView, this._interaction, duplicatedFile);
+        return new BuilderNewFileDragOperation(this._gameView, this._interaction, duplicatedFile, this._file);
     }
 
     protected _canDragFile(calc: FileCalculationContext, file: File) {

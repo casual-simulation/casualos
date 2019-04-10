@@ -48,8 +48,9 @@ import { getOptionalValue } from './SharedUtils';
 import { LoadingProgress, LoadingProgressCallback } from '@yeti-cgi/aux-common/LoadingProgress';
 import { FileHelper } from './FileHelper';
 import { SelectionManager } from './SelectionManager';
+import { RecentFilesManager } from './RecentFilesManager';
 
-export interface SelectedFilesUpdatedEvent { 
+export interface SelectedFilesUpdatedEvent {
     files: AuxObject[];
 }
 
@@ -62,6 +63,7 @@ export class FileManager {
   private _treeManager: CausalTreeManager;
   private _helper: FileHelper;
   private _selection: SelectionManager;
+  private _recent: RecentFilesManager;
 
   private _subscriptions: SubscriptionLike[];
   private _status: string;
@@ -191,6 +193,13 @@ export class FileManager {
    */
   get selection() {
       return this._selection;
+  }
+
+  /**
+   * Gets the recent files manager.
+   */
+  get recent() {
+      return this._recent;
   }
 
   constructor(app: AppManager, treeManager: CausalTreeManager) {
@@ -407,6 +416,7 @@ export class FileManager {
 
         this._helper = new FileHelper(this._aux.tree, appManager.user.id);
         this._selection = new SelectionManager(this._helper);
+        this._recent = new RecentFilesManager(this._helper);
 
         loadingProgress.set(70, 'Initalize user file...', null);
         await this._initUserFile();

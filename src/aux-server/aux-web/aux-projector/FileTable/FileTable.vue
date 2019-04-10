@@ -1,8 +1,12 @@
 <template>
-  <div class="file-table">
+  <div class="file-table" ref="wrapper">
     <div class="top-part md-layout">
       <div class="md-layout-item md-size-20">
-        <file-table-toggle :files="files" @click="closeWindow()"></file-table-toggle>
+        <file-table-toggle 
+            :files="files"
+            :showNumFiles="selectionMode !== 'single'"
+            @click="closeWindow()">
+        </file-table-toggle>
         <!-- <md-button @click="flipTable()">Flip</md-button> -->
       </div>
       <div class="md-layout-item md-size-80 file-table-actions">
@@ -80,19 +84,25 @@
 
                 <!-- Remove all button -->
                 <div class="file-cell remove-item">
-                    <md-button class="md-dense" @click="clearSelection()">
+                    <md-button v-if="selectionMode === 'multi'" class="md-dense" @click="clearSelection()">
                         Unselect All
+                    </md-button>
+                    <md-button v-else-if="diffSelected" class="md-dense" @click="clearDiff()">
+                        Clear Diff
+                    </md-button>
+                    <md-button v-else class="md-dense" @click="multiSelect()">
+                        Multi Select
                     </md-button>
                 </div>
 
                 <!-- ID tag -->
                 <div class="file-cell header">
-                    <file-tag tag="id"></file-tag>
+                    <file-tag tag="id" :allowCloning="false" ></file-tag>
                 </div>
 
                 <!-- Other tags -->
                 <div v-for="(tag, index) in tags" :key="index" class="file-cell header">
-                    <file-tag :tag="tag"></file-tag>
+                    <file-tag ref="tags" :tag="tag" :allowCloning="displayedFiles.length === 1"></file-tag>
 
                     <!-- Show X button for tags that don't have values or tags that are hidden -->
                     <md-button
@@ -136,7 +146,7 @@
         <div v-else-if="hasSearchResults()" class="search-results-wrapper">
             <tree-view :data="getSearchResultData()" :options="{ limitRenderDepth: true, maxDepth: 1 }"></tree-view>
         </div>
-        <div v-if="focusedTag && !isSearching" class="multi-line-tag-value-wrapper">
+        <div v-if="focusedFile && focusedTag && !isSearching" class="multi-line-tag-value-wrapper">
             <md-field>
                 <label><file-tag :tag="focusedTag"></file-tag></label>
                 <md-textarea ref="multiLineEditor" v-model="multilineValue"

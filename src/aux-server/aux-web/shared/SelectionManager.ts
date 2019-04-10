@@ -144,6 +144,7 @@ export class SelectionManager {
                 const selection = user.tags._selection === file.id ? null : file.id;
                 const update = updateUserSelection(selection, file.id);
                 await this._helper.updateFile(user, update);
+                await this._helper.updateFile(file, { tags: {} });
             }
         }
     }

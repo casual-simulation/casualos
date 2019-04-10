@@ -61,6 +61,7 @@ import { DebugObjectManager } from '../../shared/scene/DebugObjectManager';
 import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { BuilderInteractionManager } from '../interaction/BuilderInteractionManager';
+import Home from '../Home/Home';
 
 @Component({
     components: {
@@ -111,9 +112,17 @@ export default class GameView extends Vue implements IGameView {
 
     @Inject() addSidebarItem: App['addSidebarItem'];
     @Inject() removeSidebarItem: App['removeSidebarItem'];
+
+    // TODO: Find a better way to refactor this
+    @Inject() home: Home;
     @Provide() fileRenderer: FileRenderer = new FileRenderer();
 
-    get uiHtmlElements(): HTMLElement[] { return [<HTMLElement>this.$refs.fileQueue]; }
+    getUIHtmlElements(): HTMLElement[] {
+        return [
+            ...this.home.getUIHtmlElements(),
+            <HTMLElement>this.$refs.fileQueue
+        ];
+    }
     get gameView(): HTMLElement { return <HTMLElement>this.$refs.gameView; }
     get canvas() { return this._canvas; }
     get time(): Time { return this._time; }
@@ -131,7 +140,7 @@ export default class GameView extends Vue implements IGameView {
 
     constructor() {
         super();
-        this.addToRecentFilesList = debounce(this.addToRecentFilesList.bind(this), 100);
+        // this.addToRecentFilesList = debounce(this.addToRecentFilesList.bind(this), 100);
         this.onFileAdded = new ArgEvent<AuxFile>();
         this.onFileUpdated = new ArgEvent<AuxFile>();
         this.onFileRemoved = new ArgEvent<AuxFile>();
@@ -157,44 +166,16 @@ export default class GameView extends Vue implements IGameView {
     }
 
     public selectRecentFile(file: Object) {
-        if (!this.selectedRecentFile || this.selectedRecentFile.id !== file.id) {
-            this.selectedRecentFile = file;
-            this.addToRecentFilesList(file, true);
+        if (!this.fileManager.recent.selectedRecentFile || this.fileManager.recent.selectedRecentFile.id !== file.id) {
+            this.fileManager.recent.selectedRecentFile = file;
+            this.fileManager.selection.clearSelection();
         } else {
-            this.selectedRecentFile = null;
+            this.fileManager.recent.selectedRecentFile = null;
         }
     }
 
-    /**
-     * Adds the given file to the recent files list.
-     * If it already exists in the list then it will be moved to the front.
-     * @param file The file to add to the list.
-     * @param updateList Whether the list should be reordered.
-     */
-    public addToRecentFilesList(file: Object, reorderList: boolean = false) {
-        const index = findIndex(this.recentFiles, f => doFilesAppearEqual(file, f));
-        // if file is already in the list
-        if (index >= 0) {
-
-            // If we shouldn't reorder the list
-            if (!reorderList) {
-                const existing = this.recentFiles[index];
-
-                // If the file is in the list and the selection hasn't changed
-                if (doFilesAppearEqual(existing, file, { ignoreSelectionTags: false, ignoreId: true })) {
-                    // Then just update the current entry with the updated values
-                    this.recentFiles.splice(index, 1, file);
-                    return;
-                }
-                // Otherwise move the file to the beginning of the list.
-            }
-            this.recentFiles.splice(index, 1);
-        }
-        this.recentFiles.unshift(file);
-        if (this.recentFiles.length > 3) {
-            this.recentFiles.splice(3, this.recentFiles.length - 2);
-            // this.recentFiles.length = 3;
-        }
+    public clearRecentFiles() {
+        this.fileManager.recent.clear();
     }
 
     public addNewWorkspace(): void {
@@ -210,9 +191,7 @@ export default class GameView extends Vue implements IGameView {
         window.addEventListener('vrdisplaypresentchange', this._handleResize);
 
         this._time = new Time();
-        this.recentFiles = [
-            createFile()
-        ];
+        this.recentFiles = this.fileManager.recent.files;
         this._contexts = [];
         this._subs = [];
         this._decoratorFactory = new AuxFile3DDecoratorFactory(this);
@@ -236,10 +215,8 @@ export default class GameView extends Vue implements IGameView {
 
         this._subs.push(this.fileManager.fileChanged(this.fileManager.userFile)
             .pipe(tap(file => {
-
                 this.mode = this._interaction.mode = getUserMode(<Object>file);
                 this._gridMesh.visible = this.workspacesMode;
-
             }))
             .subscribe());
 
@@ -252,6 +229,13 @@ export default class GameView extends Vue implements IGameView {
                     this._scene.background = new Color(sceneBackgroundColor);;
                 }
 
+            }))
+            .subscribe());
+
+        this._subs.push(this.fileManager.recent.onUpdated
+            .pipe(tap(_ => {
+                this.recentFiles = this.fileManager.recent.files;
+                this.selectedRecentFile = this.fileManager.recent.selectedRecentFile;
             }))
             .subscribe());
 
@@ -386,12 +370,12 @@ export default class GameView extends Vue implements IGameView {
         if (!file.tags['aux.builder.context']) {
             if (!initialUpdate) {
                 if (!file.tags._user && file.tags._lastEditedBy === this.fileManager.userFile.id) {
-                    if (this.selectedRecentFile && file.id === this.selectedRecentFile.id) {
-                        this.selectedRecentFile = file;
+                    if (this.fileManager.recent.selectedRecentFile && file.id === this.fileManager.recent.selectedRecentFile.id) {
+                        this.fileManager.recent.selectedRecentFile = file;
                     } else {
-                        this.selectedRecentFile = null;
+                        this.fileManager.recent.selectedRecentFile = null;
                     }
-                    this.addToRecentFilesList(file);
+                    // this.addToRecentFilesList(file);
                 }
             }
 

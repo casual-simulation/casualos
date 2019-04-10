@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import { Chrome } from 'vue-color';
 import Component from 'vue-class-component';
-import { Inject, Watch } from 'vue-property-decorator';
+import { Inject, Watch, Provide } from 'vue-property-decorator';
 import { 
     Object,
     File,
@@ -35,6 +35,8 @@ import FileTableToggle from '../FileTableToggle/FileTableToggle';
 })
 export default class Home extends Vue {
 
+    @Provide() home = this;
+
     debug: boolean = false;
 
     contextMenuStyle: any = {
@@ -54,6 +56,7 @@ export default class Home extends Vue {
     isLoading: boolean = false;
     progress: number = 0;
     progressMode: "indeterminate" | "determinate" = "determinate";
+    selectedRecentFile: File = null;
 
     private _subs: SubscriptionLike[] = [];
 
@@ -61,32 +64,57 @@ export default class Home extends Vue {
         return appManager.user;
     }
 
+    getUIHtmlElements(): HTMLElement[] { 
+        const table = <FileTable>this.$refs.table;
+        if (table) {
+            return table.uiHtmlElements();
+        }
+        return []; 
+    }
+
     get hasFiles() {
-        return this.files.length > 0;
+        return this.selectedFiles.length > 0;
     }
 
     get fileManager() {
         return appManager.fileManager;
     }
 
+    get selectedFiles() {
+        if (this.selectedRecentFile) {
+            return [this.selectedRecentFile];
+        } else {
+            return this.files;
+        }
+    }
+
     get filesMode() { return this.mode === 'files'; }
     get workspacesMode() { return this.mode === 'worksurfaces'; }
     get singleSelection() { 
-        return this.selectionMode === 'single' && this.files.length > 0;
+        return this.selectionMode === 'single' && this.selectedFiles.length > 0;
+    }
+
+    @Watch('singleSelection')
+    onSingleSelectionChanged(selected: boolean, old: boolean) {
+        if (this.selectionMode === 'single') {
+            // If we went from not having a file selected
+            // to selecting a file
+            if (!old && selected) {
+                // open the sheet
+                this.isOpen = true;
+
+                // if we went from having a file selected to not
+                // having a file selected
+            } else if (!selected && old) {
+
+                // close the sheet
+                this.isOpen = false;
+            }
+        }
     }
 
     async toggleOpen() {
-        if (this.singleSelection) {
-            await this.fileManager.selection.clearSelection();
-            this.isOpen = false;
-        } else {
-            this.isOpen = !this.isOpen;
-            if (this.isOpen) {
-                await this.fileManager.selection.setMode('multi');
-            } else if (this.files.length === 0) {
-                await this.fileManager.selection.setMode('single');
-            }
-        }
+        this.isOpen = !this.isOpen;
     }
 
     startSearch() {
@@ -129,6 +157,7 @@ export default class Home extends Vue {
         this._subs = [];
         this.files = [];
         this.tags = [];
+        this.selectedRecentFile = null;
         this.updateTime = -1;
 
         this._subs.push(this.fileManager.selectedFilesUpdated.subscribe(event => {
@@ -148,6 +177,10 @@ export default class Home extends Vue {
                 }
             }))
             .subscribe());
+
+        this._subs.push(this.fileManager.recent.onUpdated.subscribe(_ => {
+            this.selectedRecentFile = this.fileManager.recent.selectedRecentFile;
+        }));
 
         this.isLoading = false;
         

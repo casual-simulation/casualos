@@ -3,7 +3,7 @@
   <div>
       <game-view class="game-view" @onContextMenu="handleContextMenu" :debug="debug">
         <div class="ui-container" v-shortkey.once="['ctrl', 'f']" @shortkey="startSearch()">
-          <md-card class="info-card" v-if="(isOpen || singleSelection) && filesMode">
+          <md-card class="info-card" v-if="isOpen && filesMode">
             <md-card-content>
               <div>
                 <file-table ref="table" 
@@ -11,8 +11,10 @@
                   @closeWindow="toggleOpen()"
                   @tagFocusChanged="tagFocusChanged"
                   @selectionCleared="onSelectionCleared"
-                  :files="files" 
+                  :files="selectedFiles" 
                   :updateTime="updateTime"
+                  :selectionMode="selectionMode"
+                  :diffSelected="!!selectedRecentFile"
                   :showAddTagButton="false"></file-table>
 
                 <p class="no-files-message" v-if="!hasFiles">
@@ -22,7 +24,12 @@
             </md-card-content>
           </md-card>
           <div  v-else-if="filesMode" class="outside-toggle">
-            <file-table-toggle :files="files" :raised="true" @click="toggleOpen()"></file-table-toggle>
+            <file-table-toggle 
+                :files="selectedFiles" 
+                :raised="true"
+                :showNumFiles="selectionMode !== 'single'"
+                @click="toggleOpen()">
+            </file-table-toggle>
           </div>
         </div>
       </game-view>

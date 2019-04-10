@@ -116,7 +116,7 @@ export abstract class BaseInteractionManager {
                         }
                         this._cameraControls.enabled = true;
                     }
-                } else if(input.isMouseButtonDownOnAny(this._gameView.uiHtmlElements)) {
+                } else if(input.isMouseButtonDownOnAny(this._gameView.getUIHtmlElements())) {
 
                     const element = input.getTargetData().inputDown;
                     
@@ -178,6 +178,8 @@ export abstract class BaseInteractionManager {
 
     async selectFile(file: AuxFile3D) {
         const shouldMultiSelect = this._gameView.input.getKeyHeld('Control');
+        appManager.fileManager.recent.addFileDiff(file.file);
+        appManager.fileManager.recent.selectedRecentFile = null;
         await appManager.fileManager.selection.selectFile(<AuxFile>file.file, shouldMultiSelect);
     }
 

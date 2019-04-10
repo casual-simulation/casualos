@@ -1,5 +1,28 @@
 # AUX Server Changelog
 
+## V0.4.5
+### Date: 04/10/2019
+
+### Changes:
+- Bug Fixes
+  - Fixed scrolling in the file panel.
+
+## V0.4.4
+### Date: 04/10/2019
+
+### Changes:
+- Improvements:
+  - Diffballs
+    - The recent files list is now a "brush" that takes properties from the last file or tag that was modified.
+    - This means that you can now drag out a file on top of another file to paint the brush's tags onto another file.
+    - The effect is that you can copy and paste tags onto other files.
+  - File Selection
+    - The file panel now only shows the number of selected files when in multi-select mode.
+    - When in single select mode the "Unselect All" button is now a "Multi Select" button to transition to multi select mode.
+    - Hiding or showing the file panel no longer changes the file selection mode.
+    - Selecting the file brush at the bottom of the screen now opens the file panel to show the tags on the brush.
+    - When the brush is selected, the "Muti Select" button becomes a "Clear Diff" button which resets the brush to an empty file.
+
 ## V0.4.3
 ### Date: 04/09/2019
 

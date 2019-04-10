@@ -28,8 +28,9 @@ html.ar-app .webxr-sessions canvas {
 
 .toolbar {
     position: absolute;
-    bottom: 16px;
-    left: 16px;
+    bottom: 8px;
+    left: 8px;
+    max-width: calc(100vw - 16px);
 }
 
 .toolbar-layout {
@@ -76,4 +77,8 @@ html.ar-app .webxr-sessions canvas {
 
 .md-button.md-theme-default.md-fab:not([disabled]).add-button .md-icon-font {
     color: var(--md-theme-default-text-primary-on-background-variant, #777);
+}
+
+.clear-file-queue-button {
+    align-self: center;
 }

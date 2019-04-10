@@ -30,7 +30,10 @@ export interface FileTags {
     ['aux.label.color']?: unknown;
     ['aux.label.size']?: unknown;
     ['aux.label.size.mode']?: 'auto' | null;
+    ['aux.shape']?: FileShape;
     ['aux._parent']?: string;
+    ['aux._diff']?: boolean;
+    ['aux._diffTags']?: string[];
 
     // User tags
     _selection?: string;
@@ -81,6 +84,11 @@ export type UserMode = 'files' | 'worksurfaces';
 export type SelectionMode = 'single' | 'multi';
 
 /**
+ * Defines the possible shapes that a file can appear as.
+ */
+export type FileShape = 'cube' | 'sphere';
+
+/**
  * The default user mode.
  */
 export const DEFAULT_USER_MODE: UserMode = 'files';
@@ -89,6 +97,11 @@ export const DEFAULT_USER_MODE: UserMode = 'files';
  * The default selection mode.
  */
 export const DEFAULT_SELECTION_MODE: SelectionMode = 'single';
+
+/**
+ * The default file shape.
+ */
+export const DEFAULT_FILE_SHAPE: FileShape = 'cube';
 
 /**
  * The default height for workspaces.

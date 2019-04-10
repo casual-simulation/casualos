@@ -82,12 +82,16 @@ export class FileRenderer {
         this._scene.add(this._group);
     }
 
-    async render(file: AuxObject): Promise<string> {
+    async render(file: AuxObject, diffball: boolean = false): Promise<string> {
         file = merge(file, {
             tags: {
                 _destroyed: false
             }
-        });
+        }, diffball ? {
+            tags: {
+                ['aux.shape']: 'sphere'
+            }
+        } : {});
         
         const calc = createCalculationContext([file], formulaLib);
         this._file.file = file;

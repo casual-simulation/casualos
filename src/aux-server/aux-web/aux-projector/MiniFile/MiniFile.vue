@@ -4,6 +4,9 @@
       <div class="mini-file-cube" :class="{ 'large': large }">
         <div class="mini-file-text" v-show="label" :style="{ 'color': labelColor }">{{label}}</div>
         <img class="mini-file-img" :src="image" draggable="false" />
+        <div class="mini-file-tags">
+            <tag-color v-for="tag in tags" :key="tag" :tag="tag"></tag-color>
+        </div>
       </div>
   </div>
   
