@@ -1,5 +1,5 @@
 import { IOperation } from "./IOperation";
-import { PerspectiveCamera, Vector3, Spherical, Vector2, Quaternion, Matrix4, Math as ThreeMath, InterpolationEndingModes } from "three";
+import { PerspectiveCamera, Vector3, Spherical, Vector2, Quaternion, Matrix4, Math as ThreeMath, InterpolationEndingModes, OrthographicCamera } from "three";
 import { BaseInteractionManager } from "./BaseInteractionManager";
 import { InputType, MouseButtonId } from "../../shared/scene/Input";
 import { IGameView } from "../../shared/IGameView";
@@ -61,7 +61,7 @@ export class CameraControls {
     public position0: Vector3;
     public zoom0: number;
 
-    private _camera: PerspectiveCamera;
+    private _camera: PerspectiveCamera | OrthographicCamera;
     private _gameView: IGameView;
     private _enabled = true;
 
@@ -128,7 +128,7 @@ export class CameraControls {
     }
 
 
-    constructor(camera: PerspectiveCamera, gameView: IGameView) {
+    constructor(camera: PerspectiveCamera | OrthographicCamera, gameView: IGameView) {
         this._camera = camera;
         this._gameView = gameView;
 
@@ -196,26 +196,47 @@ export class CameraControls {
         let offset = new Vector3();
         let element = this._gameView.gameView;
 
-        // perspective
-        let position = this._camera.position;
-        offset.copy(position).sub(this.target);
-        let targetDistance = offset.length();
-
-        // half of the fov is center to top of screen
-        targetDistance *= Math.tan((this._camera.fov / 2) * Math.PI / 180.0);
-
-        // we use only clientHeight here so aspect ratio does not distort speed
-        this.panLeft(2 * deltaX * targetDistance / element.clientHeight, this._camera.matrix);
-        this.panUp(2 * deltaY * targetDistance / element.clientHeight, this._camera.matrix);
+        if (this._camera instanceof PerspectiveCamera) {
+            // perspective
+            let position = this._camera.position;
+            offset.copy(position).sub(this.target);
+            let targetDistance = offset.length();
+    
+            // half of the fov is center to top of screen
+            targetDistance *= Math.tan((this._camera.fov / 2) * Math.PI / 180.0);
+    
+            // we use only clientHeight here so aspect ratio does not distort speed
+            this.panLeft(2 * deltaX * targetDistance / element.clientHeight, this._camera.matrix);
+            this.panUp(2 * deltaY * targetDistance / element.clientHeight, this._camera.matrix);
+        } else {
+            this.panLeft(deltaX * (this._camera.right - this._camera.left) / this._camera.zoom / element.clientWidth, this._camera.matrix);
+            this.panUp(deltaY * (this._camera.top - this._camera.bottom) / this._camera.zoom / element.clientHeight, this._camera.matrix);
+        }
 
     }
 
     public dollyIn(dollyScale: number) {
-        this.scale /= dollyScale;
+
+        if (this._camera instanceof PerspectiveCamera) {
+            this.scale /= dollyScale;
+        } else {
+            this._camera.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, this._camera.zoom * dollyScale));
+            this._camera.updateProjectionMatrix();
+            this.zoomChanged = true;
+        }
+
     }
 
     public dollyOut(dollyScale: number) {
-        this.scale *= dollyScale;
+
+        if (this._camera instanceof PerspectiveCamera) {
+            this.scale *= dollyScale;
+        } else {
+            this._camera.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, this._camera.zoom / dollyScale));
+            this._camera.updateProjectionMatrix();
+            this.zoomChanged = true;
+        }
+
     }
 
     public saveState() {

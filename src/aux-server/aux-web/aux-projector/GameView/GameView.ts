@@ -2,6 +2,7 @@ import {
     Scene,
     Color,
     PerspectiveCamera,
+    OrthographicCamera,
     WebGLRenderer,
     AmbientLight,
     DirectionalLight,
@@ -63,15 +64,20 @@ import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { BuilderInteractionManager } from '../interaction/BuilderInteractionManager';
 import Home from '../Home/Home';
 
+const Orthographic_FrustrumSize: number = 100;
+const Orthographic_DefaultZoom: number = 8;
+
 @Component({
     components: {
         'mini-file': MiniFile
     }
 })
 export default class GameView extends Vue implements IGameView {
+    static UseOrthographicCamera: boolean = true;
+
     private _scene: Scene;
-    private _mainCamera: PerspectiveCamera;
-    private _uiWorldCamera: PerspectiveCamera;
+    private _mainCamera: OrthographicCamera | PerspectiveCamera;
+    private _uiWorldCamera: OrthographicCamera | PerspectiveCamera;
     private _renderer: WebGLRenderer;
 
     private _enterVr: any;
@@ -128,7 +134,7 @@ export default class GameView extends Vue implements IGameView {
     get time(): Time { return this._time; }
     get input(): Input { return this._input; }
     get inputVR(): InputVR { return this._inputVR; }
-    get mainCamera(): PerspectiveCamera { return this._mainCamera; }
+    get mainCamera(): PerspectiveCamera | OrthographicCamera { return this._mainCamera; }
     get scene(): Scene { return this._scene; }
     get renderer() { return this._renderer; }
     get dev() { return !PRODUCTION; }
@@ -261,8 +267,7 @@ export default class GameView extends Vue implements IGameView {
 
     private _frameUpdate(xrFrame?: any) {
 
-        DebugObjectManager.update()
-            ;
+        DebugObjectManager.update();
         let calc = this.fileManager.createContext();
 
         this._input.update();
@@ -273,7 +278,7 @@ export default class GameView extends Vue implements IGameView {
             context.frameUpdate(calc);
         });
 
-
+        this._cameraUpdate();
         this._renderUpdate(xrFrame);
         this._time.update();
 
@@ -289,6 +294,14 @@ export default class GameView extends Vue implements IGameView {
 
             requestAnimationFrame(() => this._frameUpdate());
 
+        }
+    }
+
+    private _cameraUpdate() {
+        // Keep camera zoom levels in sync.
+        if (this._uiWorldCamera.zoom !== this._mainCamera.zoom) {
+            this._uiWorldCamera.zoom = this._mainCamera.zoom;
+            this._uiWorldCamera.updateProjectionMatrix();
         }
     }
 
@@ -486,15 +499,25 @@ export default class GameView extends Vue implements IGameView {
         }
 
         // Main camera
-        this._mainCamera = new PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 20000);
-        this._mainCamera.position.z = 5;
-        this._mainCamera.position.y = 3;
-        this._mainCamera.rotation.x = ThreeMath.degToRad(-30);
+        if (GameView.UseOrthographicCamera) {
+            this._mainCamera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 20000);
+            this._mainCamera.position.set(Orthographic_FrustrumSize, Orthographic_FrustrumSize, Orthographic_FrustrumSize);
+            this._mainCamera.zoom = Orthographic_DefaultZoom;
+        } else {
+            this._mainCamera = new PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 20000);
+            this._mainCamera.position.set(5, 5, 5);
+        }
+
+        this._mainCamera.lookAt(new Vector3(0,0,0));
         this._mainCamera.layers.enable(LayersHelper.Layer_Default);
 
         // UI World camera.
         // This camera is parented to the main camera.
-        this._uiWorldCamera = new PerspectiveCamera(this._mainCamera.fov, this._mainCamera.aspect, this._mainCamera.near, this._mainCamera.far);
+        if (this._mainCamera instanceof OrthographicCamera) {
+            this._uiWorldCamera = new OrthographicCamera(this._mainCamera.left, this._mainCamera.right, this._mainCamera.top, this._mainCamera.bottom, this._mainCamera.near, this._mainCamera.far);
+        } else {
+            this._uiWorldCamera = new PerspectiveCamera(this._mainCamera.fov, this._mainCamera.aspect, this._mainCamera.near, this._mainCamera.far);
+        }
         this._mainCamera.add(this._uiWorldCamera);
         this._uiWorldCamera.position.set(0, 0, 0);
         this._uiWorldCamera.rotation.set(0, 0, 0);
@@ -768,7 +791,7 @@ export default class GameView extends Vue implements IGameView {
 
     private _resizeRenderer() {
         // TODO: Call each time the screen size changes
-        const { width, height } = this._calculateSize();
+        const { width, height } = this._calculateCameraSize();
         this._renderer.setPixelRatio(window.devicePixelRatio || 1);
         this._renderer.setSize(width, height);
         this._container.style.height = this.gameView.style.height = this._renderer.domElement.style.height;
@@ -776,11 +799,28 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _resizeCamera() {
-        const { width, height } = this._calculateSize();
-        this._mainCamera.aspect = width / height;
+        const { width, height } = this._calculateCameraSize();
+        let aspect = width / height;
+
+        if (this._mainCamera instanceof OrthographicCamera) {
+            this._mainCamera.left = -Orthographic_FrustrumSize * aspect / 2;
+            this._mainCamera.right = Orthographic_FrustrumSize * aspect / 2;
+            this._mainCamera.top = Orthographic_FrustrumSize / 2;
+            this._mainCamera.bottom = -Orthographic_FrustrumSize / 2;
+        } else {
+            this._mainCamera.aspect = aspect;
+        }
         this._mainCamera.updateProjectionMatrix();
 
-        this._uiWorldCamera.aspect = this._mainCamera.aspect;
+        if (this._uiWorldCamera instanceof OrthographicCamera) {
+            let mainOrtho = <OrthographicCamera>this._mainCamera;
+            this._uiWorldCamera.left = mainOrtho.left;
+            this._uiWorldCamera.right = mainOrtho.right;
+            this._uiWorldCamera.top = mainOrtho.top;
+            this._uiWorldCamera.bottom = mainOrtho.bottom;
+        } else {
+            this._uiWorldCamera.aspect = aspect;
+        }
         this._uiWorldCamera.updateProjectionMatrix();
     }
 
@@ -792,7 +832,7 @@ export default class GameView extends Vue implements IGameView {
         this._vrEffect.setSize(width, height);
     }
 
-    private _calculateSize() {
+    private _calculateCameraSize() {
         const width = window.innerWidth;
         const height = window.innerHeight - this._container.getBoundingClientRect().top;
         return { width, height };

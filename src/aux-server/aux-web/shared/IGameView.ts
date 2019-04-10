@@ -1,4 +1,4 @@
-import { WebGLRenderer, Plane, PerspectiveCamera, Scene } from "three";
+import { WebGLRenderer, Plane, PerspectiveCamera, Scene, Camera, OrthographicCamera } from "three";
 import { Time } from "./scene/Time";
 import { Input } from "./scene/Input";
 import { InputVR } from "./scene/InputVR";
@@ -19,7 +19,7 @@ export interface IGameView extends AuxFile3DFinder, Vue {
     readonly time: Time;
     readonly input: Input;
     readonly inputVR: InputVR;
-    readonly mainCamera: PerspectiveCamera;
+    readonly mainCamera: PerspectiveCamera | OrthographicCamera;
     readonly scene: Scene;
     readonly renderer: WebGLRenderer; 
     readonly dev: boolean;
