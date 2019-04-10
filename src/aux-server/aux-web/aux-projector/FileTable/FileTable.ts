@@ -2,7 +2,7 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Provide, Prop, Inject, Watch} from 'vue-property-decorator';
 import { some, union } from 'lodash';
-import {File, Object, fileTags, isHiddenTag, AuxObject, hasValue, isFormula, getShortId, searchFileState, SandboxResult, isFile} from '@yeti-cgi/aux-common';
+import {File, Object, fileTags, isHiddenTag, AuxObject, hasValue, isFormula, getShortId, searchFileState, SandboxResult, isFile, isDiff, merge, SelectionMode} from '@yeti-cgi/aux-common';
 import { EventBus } from '../../shared/EventBus';
 import { appManager } from '../../shared/AppManager';
 
@@ -29,6 +29,8 @@ export default class FileTable extends Vue {
     @Prop() files: AuxObject[];
     @Prop({ default: (() => <any>[]) }) extraTags: string[];
     @Prop({ default: false }) readOnly: boolean;
+    @Prop({ default: 'single' }) selectionMode: SelectionMode;
+    @Prop({ default: false }) diffSelected: boolean;
 
     /**
      * A property that can be set to indicate to the table that its values should be updated.
@@ -50,11 +52,20 @@ export default class FileTable extends Vue {
     search: string = '';
     searchResults: SandboxResult<any> = null;
     viewMode: 'rows' | 'columns' = 'columns';
+
+    get wrapper(): HTMLElement {
+        return <HTMLElement>this.$refs.wrapper;
+    }
     
     get fileTableGridStyle() {
         const sizeType = this.viewMode === 'rows' ? 'columns' : 'rows';
+        if (this.tags.length === 0) {
+            return { 
+                [`grid-template-${sizeType}`]: `auto auto`
+            };
+        }
         return { 
-            [`grid-template-${sizeType}`]: `auto auto repeat(${this.tags.length}, auto)` 
+            [`grid-template-${sizeType}`]: `auto auto repeat(${this.tags.length}, auto)`
         };
     }
     
@@ -68,6 +79,10 @@ export default class FileTable extends Vue {
 
     get hasFiles() {
         return this.displayedFiles.length > 0;
+    }
+
+    get hasTags() {
+        return this.tags.length > 0;
     }
 
     get newTagExists() {
@@ -86,16 +101,29 @@ export default class FileTable extends Vue {
     filesChanged() {
         this._updateTags();
         this.numFilesSelected = this.files.length;
+        if (this.focusedFile) {
+            this.focusedFile = this.files.find(f => f.id === this.focusedFile.id) || null;
+        }
     }
 
     @Watch('multilineValue')
     multilineValueChanged() {
         if (this.focusedFile && this.focusedTag) {
-            this.fileManager.updateFile(this.focusedFile, {
-                tags: {
-                    [this.focusedTag]: this.multilineValue
-                }
-            });
+            if (isDiff(this.focusedFile)) {
+                const updated = merge(this.focusedFile, {
+                    tags: {
+                        [this.focusedTag]: this.multilineValue
+                    }
+                });
+                this.fileManager.recent.addFileDiff(updated, true);
+            } else {
+                this.fileManager.recent.addTagDiff(`${this.focusedFile.id}_${this.focusedTag}`, this.focusedTag, this.multilineValue);
+                this.fileManager.updateFile(this.focusedFile, {
+                    tags: {
+                        [this.focusedTag]: this.multilineValue
+                    }
+                });
+            }
         }
     }
 
@@ -176,6 +204,10 @@ export default class FileTable extends Vue {
     async clearSelection() {
         await this.fileManager.selection.clearSelection();
         this.$emit('selectionCleared');
+    }
+
+    async multiSelect() {
+        await this.fileManager.selection.setSelectedFiles(this.files);
     }
 
     onTagChanged(file: AuxObject, tag: string, value: string) {
@@ -290,6 +322,11 @@ export default class FileTable extends Vue {
         return {
             'focused': (file === this.focusedFile && tag === this.focusedTag)
         };
+    }
+
+    async clearDiff() {
+        await this.fileManager.recent.clear();
+        this.fileManager.recent.selectedRecentFile = this.fileManager.recent.files[0];
     }
 
     constructor() {

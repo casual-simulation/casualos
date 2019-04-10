@@ -10,7 +10,9 @@ import {
     UserMode,
     SelectionMode,
     AuxDomain, 
-    DEFAULT_SELECTION_MODE
+    DEFAULT_SELECTION_MODE,
+    FileShape,
+    DEFAULT_FILE_SHAPE
 } from './File';
 
 import uuid from 'uuid/v4';
@@ -761,6 +763,19 @@ export function getFileRotation(calc: FileCalculationContext, file: File, contex
 }
 
 /**
+ * Gets the shape of the file.
+ * @param calc The calculation context to use.
+ * @param file The file.
+ */
+export function getFileShape(calc: FileCalculationContext, file: File): FileShape {
+    const shape: FileShape = calculateFileValue(calc, file, 'aux.shape');
+    if (shape === 'cube' || shape === 'sphere') {
+        return shape;
+    }
+    return DEFAULT_FILE_SHAPE;
+}
+
+/**
  * Gets a value from the given context file related to the given domain.
  * @param calc The calculation context.
  * @param contextFile The file that represents the context.
@@ -955,6 +970,44 @@ export function duplicateFile(file: Object, data?: PartialFile): Object {
     newFile.id = uuid();
 
     return <Object>cleanFile(newFile);
+}
+
+/**
+ * Determines if the given file represents a diff.
+ * @param file The file to check.
+ */
+export function isDiff(file: File): boolean {
+    return !!file && !!file.tags['aux._diff'] && !!file.tags['aux._diffTags'];
+}
+
+/**
+ * Gets a partial file that can be used to apply the diff that the given file represents.
+ * A diff file is any file that has `aux._diff` set to `true` and `aux._diffTags` set to a list of tag names.
+ * @param file The file that represents the diff.
+ */
+export function getDiffUpdate(file: File): PartialFile {
+    if (isDiff(file)) {
+        let update: PartialFile = {
+            tags: {}
+        };
+
+        let tags = tagsOnFile(file);
+        let diffTags = file.tags['aux._diffTags'];
+        for (let i = 0; i < tags.length; i++) {
+            let tag = tags[i];
+            if (tag === 'aux._diff' || tag === 'aux._diffTags' || diffTags.indexOf(tag) < 0) {
+                continue;
+            }
+
+            let val = file.tags[tag];
+            if (hasValue(val)) {
+                update.tags[tag] = val;
+            }
+        }
+
+        return update;
+    }
+    return null;
 }
 
 /**

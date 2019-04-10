@@ -52,8 +52,11 @@ export class BuilderEmptyClickOperation implements IOperation {
                         }
 
                     }
-                } else if (this._interaction.mode === 'files' && this._interaction.selectionMode === 'single') {
-                    this._interaction.clearSelection();
+                } else if (this._interaction.mode === 'files') {
+                    if (this._interaction.selectionMode === 'single') {
+                        this._interaction.clearSelection();
+                    }
+                    appManager.fileManager.recent.selectedRecentFile = null;
                 }
             }
 

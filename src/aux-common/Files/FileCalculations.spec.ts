@@ -26,13 +26,16 @@ import {
     objectsAtContextGridPosition,
     calculateFormulaValue,
     filterFilesBySelection,
-    isFile
+    isFile,
+    getFileShape,
+    getDiffUpdate
 } from './FileCalculations';
 import {
     cloneDeep
 } from 'lodash';
 import { File, Object, PartialFile } from './File';
 import { FilesState, cleanFile } from './FilesChannel';
+import { file } from '../aux-format';
 
 describe('FileCalculations', () => {
     describe('isFormula()', () => {
@@ -641,6 +644,38 @@ describe('FileCalculations', () => {
                 'aux.movable',
                 'aux.scale.z'
             ]);
+        });
+    });
+
+    describe('getFileShape()', () => {
+        it('should default to cube', () => {
+            const file = createFile();
+
+            const calc = createCalculationContext([file]);
+            const shape = getFileShape(calc, file);
+
+            expect(shape).toBe('cube');
+        });
+
+        it('should return the shape from aux.shape', () => {
+            let file = createFile();
+            file.tags['aux.shape'] = 'sphere';
+
+            const calc = createCalculationContext([file]);
+            const shape = getFileShape(calc, file);
+
+            expect(shape).toBe('sphere');
+        });
+
+        it('should return value when aux._diff is true', () => {
+            let file = createFile();
+            file.tags['aux._diff'] = true;
+            file.tags['aux.shape'] = 'cube';
+
+            const calc = createCalculationContext([file]);
+            const shape = getFileShape(calc, file);
+
+            expect(shape).toBe('cube');
         });
     });
 
@@ -1284,6 +1319,53 @@ describe('FileCalculations', () => {
         });
     });
 
+    describe('getDiffUpdate()', () => {
+        it('should return null if the file is not a diff', () => {
+            const file1 = createFile();
+            const update1 = getDiffUpdate(file1);
+
+            // not a diff because it doesn't have any tags
+            const file2 = createFile(undefined, { tags: { 'aux._diff': true } });
+            const update2 = getDiffUpdate(file2);
+
+            expect(update1).toBe(null);
+            expect(update2).toBe(null);
+        });
+
+        it('should return a partial file that contains the specified tags', () => {
+            let file1 = createFile();
+            file1.tags['aux._diff'] = true;
+            file1.tags['aux._diffTags'] = [
+                'aux.label',
+                'name',
+                'zero',
+                'false',
+                'gone',
+                'empty',
+                'null'
+            ];
+
+            file1.tags.name = 'test';
+            file1.tags['aux.label'] = 'label';
+            file1.tags['zero'] = 0;
+            file1.tags['false'] = false;
+            file1.tags['empty'] = '';
+            file1.tags['null'] = null;
+            file1.tags['other'] = 'heheh';
+
+            const update = getDiffUpdate(file1);
+
+            expect(update).toEqual({
+                tags: {
+                    'aux.label': 'label',
+                    'name': 'test',
+                    'zero': 0,
+                    'false': false
+                }
+            });
+        });
+    });
+
     describe('filtersMatchingArguments()', () => {
         it('should return an empty array if no tags match', () => {
             let file = createFile();
@@ -1661,6 +1743,17 @@ describe('FileCalculations', () => {
             const second = duplicateFile(first);
 
             expect(first.tags._destroyed).toBe(true);
+        });
+
+        it('should not clear aux._diff', () => {
+            let first: Object = createFile();
+            first.tags['aux._diff'] = true;
+            first.tags['aux._diffTags'] = ['abvc'];
+
+            const second = duplicateFile(first);
+ 
+            expect(second.tags['aux._diff']).toBe(true);
+            expect(second.tags['aux._diffTags']).toEqual(['abvc']);
         });
     });
 

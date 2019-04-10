@@ -1,6 +1,6 @@
 import { Physics } from '../../../shared/scene/Physics';
 import { File, PartialFile, fileAdded, FileEvent } from '@yeti-cgi/aux-common/Files';
-import { createFile, FileCalculationContext } from '@yeti-cgi/aux-common/Files/FileCalculations';
+import { createFile, FileCalculationContext, getDiffUpdate, isDiff } from '@yeti-cgi/aux-common/Files/FileCalculations';
 import { appManager } from '../../../shared/AppManager';
 import { merge } from '@yeti-cgi/aux-common/utils';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
@@ -21,7 +21,7 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
     /**
      * Create a new drag rules.
      */
-    constructor(gameView: GameView, interaction: BuilderInteractionManager, duplicatedFile: File) {
+    constructor(gameView: GameView, interaction: BuilderInteractionManager, duplicatedFile: File, originalFile: File) {
         super(gameView, interaction, [duplicatedFile], null);
     }
 
@@ -35,7 +35,7 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
 
             // Add the duplicated file.
             this._file = merge(this._file, data || {});
-            this._file = createFile(this._file.id, this._file.tags);
+            this._file = createFile(undefined, this._file.tags);
             this._files = [this._file];
             this._fileAdded = true;
 
