@@ -582,7 +582,8 @@ describe('FilesChannel', () => {
                     fileUpdated('menuFile', {
                         tags: {
                             'context.id': 'uuid-0',
-                            'context': 0
+                            'context.index': 0,
+                            'context': true
                         }
                     })
                 ]);
@@ -625,6 +626,7 @@ describe('FilesChannel', () => {
                     fileUpdated('menuFile', {
                         tags: {
                             'context.id': null,
+                            'context.index': null,
                             'context': null
                         }
                     })
@@ -664,7 +666,8 @@ describe('FilesChannel', () => {
                             'aux.label': 'label',
                             'onClick()': 'action',
                             'context.id': 'id',
-                            'context': 0
+                            'context.index': 0,
+                            'context': true
                         }
                     })
                 ]);

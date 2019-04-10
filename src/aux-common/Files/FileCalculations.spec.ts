@@ -2476,13 +2476,16 @@ describe('FileCalculations', () => {
                 _userMenuContext: 'context'
             });
             const file1 = createFile('file1', {
-                context: 0
+                context: true,
+                'context.index': 0
             });
             const file2 = createFile('file2', {
-                context: 1
+                context: true,
+                'context.index': 1
             });
             const file3 = createFile('file3', {
-                context: 2
+                context: true,
+                'context.index': 2
             });
 
             const calc = createCalculationContext([user, file2, file1, file3]);
@@ -2508,7 +2511,8 @@ describe('FileCalculations', () => {
 
             expect(update).toEqual({
                 tags: {
-                    'context': 0,
+                    'context': true,
+                    'context.index': 0,
                     'context.id': 'item'
                 }
             });
@@ -2525,7 +2529,8 @@ describe('FileCalculations', () => {
 
             expect(update).toEqual({
                 tags: {
-                    'context': 5,
+                    'context': true,
+                    'context.index': 5,
                     'context.id': 'item'
                 }
             });
@@ -2545,7 +2550,8 @@ describe('FileCalculations', () => {
 
             expect(update).toEqual({
                 tags: {
-                    'context': 1,
+                    'context': true,
+                    'context.index': 1,
                     'context.id': 'abc'
                 }
             });
@@ -2565,6 +2571,7 @@ describe('FileCalculations', () => {
             expect(update).toEqual({
                 tags: {
                     'context': null,
+                    'context.index': null,
                     'context.id': null
                 }
             });

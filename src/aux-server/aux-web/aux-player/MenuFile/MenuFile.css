@@ -1,0 +1,17 @@
+
+.menu-file {
+    padding: 5px;
+    border-bottom: 1px solid transparent;
+    background-color: whitesmoke;
+    border-radius: 15px;
+    display: flex;
+    flex: 1 1 0;
+}
+
+.menu-file:hover {
+    cursor: pointer;
+}
+
+.menu-file.active {
+    border-bottom: 5px solid lightslategray;
+}

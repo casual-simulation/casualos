@@ -475,14 +475,31 @@ export class FileManager {
     let userFile = this.userFile;
     const userContext = `_user_${appManager.user.username}_${this._aux.tree.site.id}`;
     const userInventoryContext = `_user_${appManager.user.username}_${this._aux.tree.site.id}_inventory`;
+    const userMenuContext = `_user_${appManager.user.username}_${this._aux.tree.site.id}_menu`;
     if (!userFile) {
       await this.createFile(this._appManager.user.id, {
         [userContext]: true,
         ['aux.builder.context']: userContext,
         _user: this._appManager.user.username,
         _userInventoryContext: userInventoryContext,
+        _userMenuContext: userMenuContext,
         _mode: DEFAULT_USER_MODE,
       });
+    } else {
+        if (!userFile.tags._userMenuContext) {
+            await this.updateFile(userFile, {
+                tags: {
+                    _userMenuContext: userMenuContext,
+                }
+            });
+        }
+        if (!userFile.tags._userInventoryContext) {
+            await this.updateFile(userFile, {
+                tags: {
+                    _userInventoryContext: userInventoryContext,
+                }
+            });
+        }
     }
   }
 

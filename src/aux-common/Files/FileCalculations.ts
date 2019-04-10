@@ -525,7 +525,8 @@ export function addFileToMenu(calc: FileCalculationContext, userFile: File, id: 
     return {
         tags: {
             [`${context}.id`]: id,
-            [context]: idx
+            [`${context}.index`]: idx,
+            [context]: true
         }
     };
 }
@@ -540,7 +541,8 @@ export function removeFileFromMenu(calc: FileCalculationContext, userFile: File)
     return {
         tags: {
             [context]: null,
-            [`${context}.id`]: null 
+            [`${context}.id`]: null,
+            [`${context}.index`]: null
         }
     };
 }
@@ -1238,7 +1240,7 @@ export function isFileInContext(context: FileCalculationContext, file: Object, c
 export function fileContextSortOrder(context: FileCalculationContext, file: File, contextId: string): number | string {
     if (!contextId) return NaN;
 
-    const contextValue = calculateFileValue(context, file, contextId);
+    const contextValue = calculateFileValue(context, file, `${contextId}.index`);
     if (typeof contextValue === 'string') {
         return contextValue;
     } else if(typeof contextValue === 'number') {

@@ -53,12 +53,15 @@ import { DebugObjectManager } from '../../shared/scene/DebugObjectManager';
 import { AuxFile3DDecoratorFactory } from '../../shared/scene/decorators/AuxFile3DDecoratorFactory';
 import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
 import InventoryFile from '../InventoryFile/InventoryFile';
+import MenuFile from '../MenuFile/MenuFile';
 import { InventoryContext } from '../InventoryContext';
 import { doesFileDefinePlayerContext } from '../PlayerUtils';
+import { MenuContext } from '../MenuContext';
 
 @Component({
     components: {
-        'inventory-file': InventoryFile
+        'inventory-file': InventoryFile,
+        'menu-file': MenuFile
     }
 })
 export default class GameView extends Vue implements IGameView {
@@ -109,6 +112,7 @@ export default class GameView extends Vue implements IGameView {
     vrCapable: boolean = false;
 
     inventoryContext: InventoryContext = null;
+    menuContext: MenuContext = null;
 
     @Inject() addSidebarItem: App['addSidebarItem'];
     @Inject() removeSidebarItem: App['removeSidebarItem'];
@@ -145,6 +149,10 @@ export default class GameView extends Vue implements IGameView {
 
     public setGridsVisible(visible: boolean) {
         // This currently does nothing for AUX Player, we dont really show any grids right now.
+    }
+
+    public async clickMenuItem(item: AuxFile) {
+        await this.fileManager.action('onClick', [item]);
     }
 
     public async mounted() {
@@ -200,6 +208,10 @@ export default class GameView extends Vue implements IGameView {
 
         if (this.inventoryContext) {
             this.inventoryContext.frameUpdate(calc);
+        }
+
+        if (this.menuContext) {
+            this.menuContext.frameUpdate(calc);
         }
 
         this._renderUpdate(xrFrame);
@@ -315,6 +327,12 @@ export default class GameView extends Vue implements IGameView {
             this.inventoryContext = null;
         }
 
+        // Dispose of the current inventory context.
+        if (this.menuContext) {
+            this.menuContext.dispose();
+            this.menuContext = null;
+        }
+
         // Subscribe to file events.
         this._fileSubs.push(this.fileManager.fileChanged(this.fileManager.userFile)
             .pipe(tap(file => {
@@ -323,6 +341,12 @@ export default class GameView extends Vue implements IGameView {
                 if (!this.inventoryContext || (this.inventoryContext.context !== userInventoryContextValue)) {
                     this.inventoryContext = new InventoryContext(userInventoryContextValue);
                     console.log('[GameView] User changed inventory context to: ', userInventoryContextValue);
+                }
+
+                const userMenuContextValue = file.tags._userMenuContext;
+                if (!this.menuContext || (this.menuContext.context !== userMenuContextValue)) {
+                    this.menuContext = new MenuContext(userMenuContextValue);
+                    console.log('[GameView] User changed menu context to: ', userMenuContextValue);
                 }
             }))
             .subscribe());
@@ -379,6 +403,10 @@ export default class GameView extends Vue implements IGameView {
             await this.inventoryContext.fileAdded(file, calc);
         }
 
+        if (this.menuContext) {
+            await this.menuContext.fileAdded(file, calc);
+        }
+
         await this._fileUpdated(file, true);
         this.onFileAdded.invoke(file);
 
@@ -405,6 +433,10 @@ export default class GameView extends Vue implements IGameView {
             await this.inventoryContext.fileUpdated(file, [], calc);
         }
 
+        if (this.menuContext) {
+            await this.menuContext.fileUpdated(file, [], calc);
+        }
+
         if (file.tags._destroyed) {
             this._fileRemoved(file.id);
         }
@@ -428,6 +460,10 @@ export default class GameView extends Vue implements IGameView {
 
         if (this.inventoryContext) {
             this.inventoryContext.fileRemoved(id, calc);
+        }
+
+        if (this.menuContext) {
+            this.menuContext.fileRemoved(id, calc);
         }
         
         this.onFileRemoved.invoke(null);
