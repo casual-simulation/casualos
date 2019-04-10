@@ -1,4 +1,4 @@
-import { Vector2, Vector3, Intersection, Raycaster, Object3D, Ray } from 'three';
+import { Vector2, Vector3, Intersection, Raycaster, Object3D, Ray, Camera } from 'three';
 import { ContextMenuEvent, ContextMenuAction } from '../../shared/interaction/ContextMenuEvent';
 import { 
     File, 
@@ -197,8 +197,9 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      * Calculates the grid location and workspace that the given ray intersects with.
      * @param ray The ray to test.
      */
-    pointOnWorkspaceGrid(calc: FileCalculationContext, ray: Ray) {
-        const raycaster = new Raycaster(ray.origin, ray.direction, 0, Number.POSITIVE_INFINITY);
+    pointOnWorkspaceGrid(calc: FileCalculationContext, screenPos: Vector2, camera: Camera) {
+        let raycaster = new Raycaster();
+        raycaster.setFromCamera(screenPos, camera);
         const workspaces = this.getSurfaceObjects();
         const hits = raycaster.intersectObjects(workspaces, true);
         const hit = hits[0];

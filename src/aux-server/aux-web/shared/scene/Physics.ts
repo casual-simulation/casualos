@@ -26,14 +26,9 @@ export namespace Physics {
      * @camera The camera that the ray should point from.
      */
     export function screenPosToRay(pos: Vector2, camera: Camera) {
-        const v3d = new Vector3(pos.x, pos.y, 0.5);
-
-        v3d.unproject(camera);
-
-        v3d.sub(camera.position);
-        v3d.normalize();
-
-        return new Ray(camera.position, v3d);
+        let raycaster = new Raycaster();
+        raycaster.setFromCamera(pos, camera);
+        return raycaster.ray;
     }
 
     /**

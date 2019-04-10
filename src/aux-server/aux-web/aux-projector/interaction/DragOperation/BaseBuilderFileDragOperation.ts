@@ -41,8 +41,8 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     }
 
     protected _onDrag(calc: FileCalculationContext) {
-        const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.mainCamera);
-        const { good, gridPosition, workspace } = this._interaction.pointOnWorkspaceGrid(calc, mouseDir);
+        const mouseScreenPos = this._gameView.input.getMouseScreenPos();
+        const { good, gridPosition, workspace } = this._interaction.pointOnWorkspaceGrid(calc, mouseScreenPos, this._gameView.mainCamera);
 
         if (this._files.length > 0) {
             if (good) {
