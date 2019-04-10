@@ -32,7 +32,8 @@ import {
     COMBINE_ACTION_NAME,
     getUserMenuId,
     getFilesInMenu,
-    addFileToMenu
+    addFileToMenu,
+    removeFileFromMenu
 } from './FileCalculations';
 import {
     cloneDeep
@@ -2542,6 +2543,24 @@ describe('FileCalculations', () => {
             expect(update).toEqual({
                 tags: {
                     'context': 1
+                }
+            });
+        });
+    });
+
+    describe('removeFileFromMenu()', () => {
+        it('should return the update needed to remove the given file from the users menu', () => {
+            const user = createFile('user', {
+                _userMenuContext: 'context'
+            });
+            const file = createFile('file');
+
+            const calc = createCalculationContext([user, file]);
+            const update = removeFileFromMenu(calc, user);
+
+            expect(update).toEqual({
+                tags: {
+                    'context': null
                 }
             });
         });

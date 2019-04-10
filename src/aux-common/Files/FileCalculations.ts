@@ -530,6 +530,20 @@ export function addFileToMenu(calc: FileCalculationContext, userFile: File, file
 }
 
 /**
+ * Gets the file update needed to remove a file from the given user's menu.
+ * @param calc The file calculation context.
+ * @param userFile The file of the user.
+ */
+export function removeFileFromMenu(calc: FileCalculationContext, userFile: File): PartialFile {
+    const context = getUserMenuId(userFile);
+    return {
+        tags: {
+            [context]: null
+        }
+    };
+}
+
+/**
  * Gets the list of tags that are on the given file.
  * @param file 
  */
