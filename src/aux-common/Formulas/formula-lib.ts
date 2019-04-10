@@ -3,7 +3,7 @@ import { FileUpdatedEvent, FileEvent, FileAddedEvent, action, FilesState, calcul
 import uuid from 'uuid/v4';
 import { every, find } from "lodash";
 import { isProxy, proxyObject, FileProxy } from "../Files/FileProxy";
-import { FileCalculationContext, calculateFormulaValue } from '../Files/FileCalculations';
+import { FileCalculationContext, calculateFormulaValue, COMBINE_ACTION_NAME } from '../Files/FileCalculations';
 
 let actions: FileEvent[] = [];
 let state: FilesState = null;
@@ -289,7 +289,7 @@ export function createFrom(parent: File | string, data: any) {
  * @param second The second file.
  */
 export function combine(first: File | string, second: File | string) {
-    event('+', [first, second]);
+    event(COMBINE_ACTION_NAME, [first, second]);
 }
 
 /**

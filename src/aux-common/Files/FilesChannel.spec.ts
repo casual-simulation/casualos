@@ -10,7 +10,7 @@ import {
 import { Workspace, Object, File } from './File';
 import { values, assign, merge } from 'lodash';
 import uuid from 'uuid/v4';
-import { objectsAtContextGridPosition, calculateStateDiff } from './FileCalculations';
+import { objectsAtContextGridPosition, calculateStateDiff, COMBINE_ACTION_NAME } from './FileCalculations';
 import { TestConnector } from '../channels-core/test/TestConnector';
 import { Subject } from 'rxjs';
 import { ChannelClient, StoreFactory, ReducingStateStore } from '../channels-core';
@@ -30,8 +30,8 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x:0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        '+(#name:"Joe")': 'clone(this);destroy(this);destroy(that);',
-                        '+(#name:"Friend")': 'clone(this, { bad: true })',
+                        'onCombine(#name:"Joe")': 'clone(this);destroy(this);destroy(that);',
+                        'onCombine(#name:"Friend")': 'clone(this, { bad: true })',
                     }
                 },
                 thatFile: {
@@ -46,7 +46,7 @@ describe('FilesChannel', () => {
 
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
-            const fileAction = action('+', ['thisFile', 'thatFile']);
+            const fileAction = action(COMBINE_ACTION_NAME, ['thisFile', 'thatFile']);
             const result = calculateActionEvents(state, fileAction);
 
             expect(result.hasUserDefinedEvents).toBe(true);
@@ -57,8 +57,8 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x:0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        '+(#name:"Joe")': 'clone(this);destroy(this);destroy(that);',
-                        '+(#name:"Friend")': 'clone(this, { bad: true })',
+                        'onCombine(#name:"Joe")': 'clone(this);destroy(this);destroy(that);',
+                        'onCombine(#name:"Friend")': 'clone(this, { bad: true })',
 
                         // the new file is not destroyed
                     }
@@ -78,7 +78,7 @@ describe('FilesChannel', () => {
                         _workspace: 'abc',
                         num: 15,
                         formula: '=this.num',
-                        '+(#name:"Friend")': 'clone(this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
+                        'onCombine(#name:"Friend")': 'clone(this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
                     }
                 },
                 thatFile: {
@@ -93,7 +93,7 @@ describe('FilesChannel', () => {
 
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
-            const fileAction = action('+', ['thisFile', 'thatFile']);
+            const fileAction = action(COMBINE_ACTION_NAME, ['thisFile', 'thatFile']);
             const result = calculateActionEvents(state, fileAction);
 
             expect(result.hasUserDefinedEvents).toBe(true);
@@ -106,7 +106,7 @@ describe('FilesChannel', () => {
                         _workspace: 'abc',
                         num: 15,
                         formula: '=this.num',
-                        '+(#name:"Friend")': 'clone(this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
+                        'onCombine(#name:"Friend")': 'clone(this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
                         name: 'Friend',
                         testFormula: '=this.name'
 

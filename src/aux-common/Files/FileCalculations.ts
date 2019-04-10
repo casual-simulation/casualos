@@ -46,6 +46,11 @@ import { AuxOp, AuxOpType, AuxFile, file, AuxObject } from '../aux-format';
 export var ShortId_Length: number = 5;
 
 /**
+ * The name of the event that represents two files getting combined.
+ */
+export const COMBINE_ACTION_NAME: string = 'onCombine';
+
+/**
  * Defines an interface for objects that represent assignment formula expressions.
  * Assignment formula expressions are formulas that are only evaluated once.
  * Internally we store them as objects in the tag and display the calculated result.

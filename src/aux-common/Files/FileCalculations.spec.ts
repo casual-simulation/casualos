@@ -28,7 +28,8 @@ import {
     filterFilesBySelection,
     isFile,
     getFileShape,
-    getDiffUpdate
+    getDiffUpdate,
+    COMBINE_ACTION_NAME
 } from './FileCalculations';
 import {
     cloneDeep
@@ -1372,7 +1373,7 @@ describe('FileCalculations', () => {
             let other = createFile();
             
             const context = createCalculationContext([ file, other ]);
-            const tags = filtersMatchingArguments(context, file, '+', [other]);
+            const tags = filtersMatchingArguments(context, file, COMBINE_ACTION_NAME, [other]);
 
             expect(tags).toEqual([]);
         });
@@ -1383,31 +1384,31 @@ describe('FileCalculations', () => {
             other.tags.val = "";
 
             let file = createFile();
-            file.tags['+(#name:"Test")'] = 'abc';
-            file.tags['+(#val:"")'] = 'abc';
-            file.tags['+(#name:"test")'] = 'def';
+            file.tags['onCombine(#name:"Test")'] = 'abc';
+            file.tags['onCombine(#val:"")'] = 'abc';
+            file.tags['onCombine(#name:"test")'] = 'def';
             
             const context = createCalculationContext([ file, other ]);
-            const tags = filtersMatchingArguments(context, file, '+', [other]);
+            const tags = filtersMatchingArguments(context, file, COMBINE_ACTION_NAME, [other]);
 
             expect(tags.map(t => t.tag)).toEqual([
-                '+(#name:"Test")',
-                '+(#val:"")'
+                'onCombine(#name:"Test")',
+                'onCombine(#val:"")'
             ]);
         });
 
         it('should only match tags in the given file', () => {
             let file = createFile();
-            file.tags['+(#name:"Test")'] = 'abc';
+            file.tags['onCombine(#name:"Test")'] = 'abc';
 
             let other = createFile();
             other.tags.name = "Test";
             
             const context = createCalculationContext([ file, other ]);
-            const tags = filtersMatchingArguments(context, file, '+', [other]);
+            const tags = filtersMatchingArguments(context, file, COMBINE_ACTION_NAME, [other]);
 
             expect(tags.map(t => t.tag)).toEqual([
-                '+(#name:"Test")'
+                'onCombine(#name:"Test")'
             ]);
         });
     });
@@ -1418,8 +1419,8 @@ describe('FileCalculations', () => {
             other.tags.name = 'test';
 
             const context = createCalculationContext([ other ]);
-            const filter = parseFilterTag('+(#name:"test")');
-            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
+            const filter = parseFilterTag('onCombine(#name:"test")');
+            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
         });
 
         it('should match number values', () => {
@@ -1427,25 +1428,25 @@ describe('FileCalculations', () => {
             other.tags.num = 123456;
 
             const context = createCalculationContext([ other ]);
-            let filter = parseFilterTag('+(#num:"123456")');
-            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
+            let filter = parseFilterTag('onCombine(#num:"123456")');
+            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
 
             other.tags.num = 3.14159;
-            filter = parseFilterTag('+(#num:"3.14159")');
-            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
+            filter = parseFilterTag('onCombine(#num:"3.14159")');
+            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
         });
 
         it('should match boolean values', () => {
             let other = createFile();
             other.tags.bool = true;
             const context = createCalculationContext([ other ]);
-            let filter = parseFilterTag('+(#bool:"true")');
-            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
+            let filter = parseFilterTag('onCombine(#bool:"true")');
+            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
 
             other.tags.bool = false;
 
-            filter = parseFilterTag('+(#bool:"false")');
-            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
+            filter = parseFilterTag('onCombine(#bool:"false")');
+            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
         });
 
         it('should match array values', () => {
@@ -1453,23 +1454,23 @@ describe('FileCalculations', () => {
             other.tags.array = [];
             const context = createCalculationContext([ other ]);
 
-            let filter = parseFilterTag('+(#array:"[]")');
-            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
+            let filter = parseFilterTag('onCombine(#array:"[]")');
+            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
 
-            filter = parseFilterTag('+(#array:"[\"anything\"]")');
-            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(false);
+            filter = parseFilterTag('onCombine(#array:"[\"anything\"]")');
+            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(false);
 
             other.tags.array = [1];
-            filter = parseFilterTag('+(#array:"[1]")');
-            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
+            filter = parseFilterTag('onCombine(#array:"[1]")');
+            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
 
             other.tags.array = ['hello', 'world'];
-            filter = parseFilterTag('+(#array:"[hello, world]")');
-            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
+            filter = parseFilterTag('onCombine(#array:"[hello, world]")');
+            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
 
             other.tags.array = ['hello', 'world', 12.34];
-            filter = parseFilterTag('+(#array:"[hello, world, 12.34]")');
-            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
+            filter = parseFilterTag('onCombine(#array:"[hello, world, 12.34]")');
+            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
         });
 
         it('should evaluate the value filters', () => {
@@ -1478,26 +1479,26 @@ describe('FileCalculations', () => {
             other.tags.cool = "Test";
 
             const context = createCalculationContext([ other, other ]);
-            let filter = parseFilterTag('+(#name:"Test")');
-            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
+            let filter = parseFilterTag('onCombine(#name:"Test")');
+            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
             
             other.tags.value = "10.15";
-            filter = parseFilterTag('+(#value:10.15)');
-            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
+            filter = parseFilterTag('onCombine(#value:10.15)');
+            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
 
             other.tags.value = "true";
-            filter = parseFilterTag('+(#value:true)');
-            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
+            filter = parseFilterTag('onCombine(#value:true)');
+            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
 
-            filter = parseFilterTag('+(#value:false)');
-            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(false);
+            filter = parseFilterTag('onCombine(#value:false)');
+            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(false);
 
             other.tags.value = "false";
-            filter = parseFilterTag('+(#value:true)');
-            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(false);
+            filter = parseFilterTag('onCombine(#value:true)');
+            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(false);
 
-            filter = parseFilterTag('+(#value:false)');
-            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
+            filter = parseFilterTag('onCombine(#value:false)');
+            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
 
             let newData: PartialFile = {
                 tags: {
@@ -1506,8 +1507,8 @@ describe('FileCalculations', () => {
             };
             updateFile(other, 'testId', newData, () => context);
             other.tags.assign = newData.tags.assign;
-            filter = parseFilterTag('+(#assign:"Test")');
-            expect(filterMatchesArguments(context, filter, '+', [other])).toBe(true);
+            filter = parseFilterTag('onCombine(#assign:"Test")');
+            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
         });
     });
 
@@ -1549,6 +1550,7 @@ describe('FileCalculations', () => {
             expect(isTagWellKnown('aux.scale.z')).toBe(false);
             expect(isTagWellKnown('aux.scale')).toBe(false);
             expect(isTagWellKnown('+(#tag:"value")')).toBe(false);
+            expect(isTagWellKnown('onCombine(#tag:"value")')).toBe(false);
             expect(isTagWellKnown('_context_test')).toBe(false);
             expect(isTagWellKnown('_context_ something else')).toBe(false);
             expect(isTagWellKnown('_context_ 😊😜😢')).toBe(false);
@@ -1876,13 +1878,13 @@ describe('FileCalculations', () => {
             let result = parseFilterTag('myTag');
             expect(result.success).toBe(false);
 
-            result = parseFilterTag('+myTag');
+            result = parseFilterTag('onCombinemyTag');
             expect(result.success).toBe(false);
             
-            result = parseFilterTag('+(myTag)');
+            result = parseFilterTag('onCombine(myTag)');
             expect(result.success).toBe(false);
 
-            result = parseFilterTag('+(myTag:"")');
+            result = parseFilterTag('onCombine(myTag:"")');
             expect(result.success).toBe(false);
 
             result = parseFilterTag('#myTag');
@@ -1890,20 +1892,20 @@ describe('FileCalculations', () => {
         });
 
         it('should return sucessful if in the formula syntax', () => {
-            let result = parseFilterTag('+(#name:"")');
+            let result = parseFilterTag('onCombine(#name:"")');
             expect(result).toMatchObject({
                 success: true,
-                eventName: '+',
+                eventName: COMBINE_ACTION_NAME,
                 filter: {
                     tag: 'name',
                     value: ''
                 }
             });
 
-            result = parseFilterTag('+(#name:"abc")');
+            result = parseFilterTag('onCombine(#name:"abc")');
             expect(result).toMatchObject({
                 success: true,
-                eventName: '+',
+                eventName: COMBINE_ACTION_NAME,
                 filter: {
                     tag: 'name',
                     value: 'abc'
@@ -1930,90 +1932,90 @@ describe('FileCalculations', () => {
                 }
             });
 
-            result = parseFilterTag('+ ( #lalalal : "abc" )');
+            result = parseFilterTag('onCombine ( #lalalal : "abc" )');
             expect(result).toMatchObject({
                 success: true,
-                eventName: '+',
+                eventName: COMBINE_ACTION_NAME,
                 filter: {
                     tag: 'lalalal',
                     value: 'abc'
                 }
             });
             
-            result = parseFilterTag('+ ( #lalalal : "abc"');
+            result = parseFilterTag('onCombine ( #lalalal : "abc"');
             expect(result).toMatchObject({
                 success: true,
-                eventName: '+',
+                eventName: COMBINE_ACTION_NAME,
                 filter: {
                     tag: 'lalalal',
                     value: 'abc'
                 }
             });
 
-            result = parseFilterTag('+ ( #lalalal : "abc');
+            result = parseFilterTag('onCombine ( #lalalal : "abc');
             expect(result).toMatchObject({
                 success: true,
-                eventName: '+',
+                eventName: COMBINE_ACTION_NAME,
                 filter: {
                     tag: 'lalalal',
                     value: 'abc'
                 }
             });
 
-            result = parseFilterTag('+ ( #lalalal : "abc  ');
+            result = parseFilterTag('onCombine ( #lalalal : "abc  ');
             expect(result).toMatchObject({
                 success: true,
-                eventName: '+',
+                eventName: COMBINE_ACTION_NAME,
                 filter: {
                     tag: 'lalalal',
                     value: 'abc  '
                 }
             });
 
-            result = parseFilterTag('+ ( # lalalal : "abc  ');
+            result = parseFilterTag('onCombine ( # lalalal : "abc  ');
             expect(result).toMatchObject({
                 success: true,
-                eventName: '+',
+                eventName: COMBINE_ACTION_NAME,
                 filter: {
                     tag: 'lalalal',
                     value: 'abc  '
                 }
             });
 
-            result = parseFilterTag('+ ( # lal alal : "abc  ');
+            result = parseFilterTag('onCombine ( # lal alal : "abc  ');
             expect(result).toMatchObject({
                 success: true,
-                eventName: '+',
+                eventName: COMBINE_ACTION_NAME,
                 filter: {
                     tag: 'lal alal',
                     value: 'abc  '
                 }
             });
 
-            result = parseFilterTag('+(#lalalal:abc)');
+            result = parseFilterTag('onCombine(#lalalal:abc)');
             expect(result).toMatchObject({
                 success: true,
-                eventName: '+',
+                eventName: COMBINE_ACTION_NAME,
                 filter: {
                     tag: 'lalalal',
                     value: 'abc'
                 }
             });
 
-            result = parseFilterTag('+(#lalalal:abc');
+            result = parseFilterTag('onCombine(#lalalal:abc');
             expect(result).toMatchObject({
                 success: true,
-                eventName: '+',
+                eventName: COMBINE_ACTION_NAME,
                 filter: {
                     tag: 'lalalal',
                     value: 'abc'
                 }
             });
 
-            result = parseFilterTag('+(#lalalal: abc\t');
+            result = parseFilterTag('onCombine(#lalalal: abc\t');
             expect(result).toMatchObject({
                 success: true,
-                eventName: '+',
+                eventName: COMBINE_ACTION_NAME,
                 filter: {
                     tag: 'lalalal',
                     value: ' abc\t'
@@ -2048,21 +2050,21 @@ describe('FileCalculations', () => {
         })
 
         it('should return partial success if it was able to parse the event name', () => {
-            const result = parseFilterTag('+ (');
+            const result = parseFilterTag('onCombine (');
             expect(result).toEqual({
                 success: false,
-                tag: '+ (',
+                tag: 'onCombine (',
                 partialSuccess: true,
-                eventName: '+'
+                eventName: COMBINE_ACTION_NAME
             });
         });
 
         it('should parse numbers', () => {
-            let result = parseFilterTag('+(#abc:"123.45")');
+            let result = parseFilterTag('onCombine(#abc:"123.45")');
             expect(result).toEqual({
                 success: true,
-                eventName: '+',
-                tag: '+(#abc:"123.45")',
+                eventName: COMBINE_ACTION_NAME,
+                tag: 'onCombine(#abc:"123.45")',
                 filter: {
                     tag: 'abc',
                     value: 123.45
@@ -2071,11 +2073,11 @@ describe('FileCalculations', () => {
         });
 
         it('should parse booleans', () => {
-            let result = parseFilterTag('+(#abc:"true")');
+            let result = parseFilterTag('onCombine(#abc:"true")');
             expect(result).toEqual({
                 success: true,
-                eventName: '+',
-                tag: '+(#abc:"true")',
+                eventName: COMBINE_ACTION_NAME,
+                tag: 'onCombine(#abc:"true")',
                 filter: {
                     tag: 'abc',
                     value: true
@@ -2084,22 +2086,22 @@ describe('FileCalculations', () => {
         });
 
         it('should parse arrays', () => {
-            let result = parseFilterTag('+(#abc:"[hello, world, 12.34]")');
+            let result = parseFilterTag('onCombine(#abc:"[hello, world, 12.34]")');
             expect(result).toEqual({
                 success: true,
-                eventName: '+',
-                tag: '+(#abc:"[hello, world, 12.34]")',
+                eventName: COMBINE_ACTION_NAME,
+                tag: 'onCombine(#abc:"[hello, world, 12.34]")',
                 filter: {
                     tag: 'abc',
                     value: ['hello', 'world', 12.34]
                 }
             });
 
-            result = parseFilterTag('+(#abc:"[]")');
+            result = parseFilterTag('onCombine(#abc:"[]")');
             expect(result).toEqual({
                 success: true,
-                eventName: '+',
-                tag: '+(#abc:"[]")',
+                eventName: COMBINE_ACTION_NAME,
+                tag: 'onCombine(#abc:"[]")',
                 filter: {
                     tag: 'abc',
                     value: []
@@ -2150,27 +2152,27 @@ describe('FileCalculations', () => {
         });
 
         it('should allow # when it is a filter', () => {
-            let errors = validateTag('+');
+            let errors = validateTag(COMBINE_ACTION_NAME);
             expect(errors).toEqual({
                 valid: true
             });
 
-            errors = validateTag('+(');
+            errors = validateTag('onCombine(');
             expect(errors).toEqual({
                 valid: true
             });
 
-            errors = validateTag('+(#');
+            errors = validateTag('onCombine(#');
             expect(errors).toEqual({
                 valid: true
             });
 
-            errors = validateTag('+(#tag:"###test');
+            errors = validateTag('onCombine(#tag:"###test');
             expect(errors).toEqual({
                 valid: true
             });
 
-            errors = validateTag('+(#tag:"###test")');
+            errors = validateTag('onCombine(#tag:"###test")');
             expect(errors).toEqual({
                 valid: true
             });

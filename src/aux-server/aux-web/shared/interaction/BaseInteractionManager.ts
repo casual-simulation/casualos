@@ -5,6 +5,7 @@ import {
     filtersMatchingArguments,
     AuxFile,
     FileCalculationContext,
+    COMBINE_ACTION_NAME,
 } from '@yeti-cgi/aux-common';
 import { Physics } from '../scene/Physics';
 import { flatMap, union } from 'lodash';
@@ -216,7 +217,7 @@ export abstract class BaseInteractionManager {
         // TODO: Make this work even if the file is a "workspace"
         if (file && other && !file.tags['aux.builder.context'] && !other.tags['aux.builder.context'] && file.id !== other.id) {
             const context = appManager.fileManager.createContext();
-            const tags = union(filtersMatchingArguments(context, file, '+', [other]), filtersMatchingArguments(context, other, '+', [file]));
+            const tags = union(filtersMatchingArguments(context, file, COMBINE_ACTION_NAME, [other]), filtersMatchingArguments(context, other, COMBINE_ACTION_NAME, [file]));
             return tags.length > 0;
         }
         return false;

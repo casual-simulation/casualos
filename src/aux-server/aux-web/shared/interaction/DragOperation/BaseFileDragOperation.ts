@@ -13,7 +13,8 @@ import {
     getFileIndex,
     isDiff,
     getDiffUpdate,
-    fileRemoved
+    fileRemoved,
+    COMBINE_ACTION_NAME
 } from '@yeti-cgi/aux-common';
 
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
@@ -95,7 +96,7 @@ export abstract class BaseFileDragOperation implements IOperation {
                 fileRemoved(this._file.id)
             );
         } else if (this._combine && this._other) {
-            appManager.fileManager.action('+', [this._file, this._other]);
+            appManager.fileManager.action(COMBINE_ACTION_NAME, [this._file, this._other]);
         } else if (isDiff(this._file)) {
             appManager.fileManager.transaction(
                 fileUpdated(this._file.id, {
