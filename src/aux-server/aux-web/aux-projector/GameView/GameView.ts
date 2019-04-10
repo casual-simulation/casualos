@@ -178,38 +178,6 @@ export default class GameView extends Vue implements IGameView {
         this.fileManager.recent.clear();
     }
 
-    /**
-     * Adds the given file to the recent files list.
-     * If it already exists in the list then it will be moved to the front.
-     * @param file The file to add to the list.
-     * @param updateList Whether the list should be reordered.
-     */
-    // public addToRecentFilesList(file: Object, reorderList: boolean = false) {
-    //     const index = findIndex(this.recentFiles, f => doFilesAppearEqual(file, f));
-    //     // if file is already in the list
-    //     if (index >= 0) {
-
-    //         // If we shouldn't reorder the list
-    //         if (!reorderList) {
-    //             const existing = this.recentFiles[index];
-
-    //             // If the file is in the list and the selection hasn't changed
-    //             if (doFilesAppearEqual(existing, file, { ignoreSelectionTags: false, ignoreId: true })) {
-    //                 // Then just update the current entry with the updated values
-    //                 this.recentFiles.splice(index, 1, file);
-    //                 return;
-    //             }
-    //             // Otherwise move the file to the beginning of the list.
-    //         }
-    //         this.recentFiles.splice(index, 1);
-    //     }
-    //     this.recentFiles.unshift(file);
-    //     if (this.recentFiles.length > 3) {
-    //         this.recentFiles.splice(3, this.recentFiles.length - 2);
-    //         // this.recentFiles.length = 3;
-    //     }
-    // }
-
     public addNewWorkspace(): void {
         // TODO: Make the user have to drag a workspace onto the world
         // instead of just clicking a button and a workspace being placed somewhere.

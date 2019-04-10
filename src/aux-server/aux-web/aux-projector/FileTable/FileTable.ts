@@ -53,8 +53,14 @@ export default class FileTable extends Vue {
     searchResults: SandboxResult<any> = null;
     viewMode: 'rows' | 'columns' = 'columns';
 
-    get wrapper(): HTMLElement {
-        return <HTMLElement>this.$refs.wrapper;
+    uiHtmlElements(): HTMLElement[] {
+        if (this.$refs.tags) {
+            return (<FileTag[]>this.$refs.tags)
+                .filter(t => t.allowCloning)
+                .map(t => t.$el);
+        } else {
+            return [];
+        }
     }
     
     get fileTableGridStyle() {
