@@ -3,7 +3,7 @@ import { FileUpdatedEvent, FileEvent, FileAddedEvent, action, FilesState, calcul
 import uuid from 'uuid/v4';
 import { every, find } from "lodash";
 import { isProxy, proxyObject, FileProxy } from "../Files/FileProxy";
-import { FileCalculationContext, calculateFormulaValue, COMBINE_ACTION_NAME, addFileToMenu, getUserMenuId, filesInContext, calculateFileValue, removeFileFromMenu } from '../Files/FileCalculations';
+import { FileCalculationContext, calculateFormulaValue, COMBINE_ACTION_NAME, addFileToMenu, getUserMenuId, filesInContext, calculateFileValue, removeFileFromMenu, getFilesInMenu } from '../Files/FileCalculations';
 
 let actions: FileEvent[] = [];
 let state: FilesState = null;
@@ -424,6 +424,18 @@ export function destroyMenuItem(id: string) {
     });
 }
 
+/**
+ * Deletes all the menu items from the current user's menu.
+ */
+export function destroyAllMenuItems() {
+    const user = getUser();
+    const files = getFilesInMenu(calc, user);
+
+    files.forEach(f => {
+        destroy(f);
+    });
+}
+
 export default {
     sum,
     avg,
@@ -447,6 +459,7 @@ export default {
 
     createMenuItem,
     destroyMenuItem,
+    destroyAllMenuItems,
     addToMenu,
-    removeFromMenu 
+    removeFromMenu
 };

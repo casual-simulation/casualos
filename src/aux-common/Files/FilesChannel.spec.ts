@@ -712,4 +712,48 @@ describe('FilesChannel', () => {
         });
     });
 
+    describe('destroyAllMenuItems()', () => {
+        it('should delete all files with the given context.id', () => {
+            const state: FilesState = {
+                thisFile: {
+                    id: 'thisFile',
+                    tags: {
+                        'removeItem()': 'destroyAllMenuItems()',
+                    }
+                },
+                userFile: {
+                    id: 'userFile',
+                    tags: {
+                        _userMenuContext: 'context'
+                    }
+                },
+                menuItem: {
+                    id: 'menuItem',
+                    tags: {
+                        context: true,
+                        'context.id': 'test',
+                    }
+                },
+                menuItem2: {
+                    id: 'menuItem2',
+                    tags: {
+                        context: true,
+                        'context.id': 'test',
+                    }
+                }
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const fileAction = action('removeItem', ['thisFile', 'userFile', 'menuItem', 'menuItem2'], 'userFile');
+            const result = calculateActionEvents(state, fileAction);
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+            
+            expect(result.events).toEqual([
+                fileRemoved('menuItem'),
+                fileRemoved('menuItem2')
+            ]);
+        });
+    });
 });
