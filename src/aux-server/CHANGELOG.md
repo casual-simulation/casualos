@@ -1,5 +1,12 @@
 # AUX Server Changelog
 
+## V0.4.5
+### Date: 04/10/2019
+
+### Changes:
+- Bug Fixes
+  - Fixed scrolling in the file panel.
+
 ## V0.4.4
 ### Date: 04/10/2019
 
