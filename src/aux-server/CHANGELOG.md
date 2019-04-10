@@ -1,5 +1,13 @@
 # AUX Server Changelog
 
+## V0.4.3
+### Date: 04/09/2019
+
+### Changes:
+- Improvements:
+  - Loading screen will show error if one occurs during load.
+  - Can close loading screen if error occurs by pressing the `DISMISS` button.
+  
 ## V0.4.2
 ### Date: 04/09/2019
 
