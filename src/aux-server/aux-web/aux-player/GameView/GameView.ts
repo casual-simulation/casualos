@@ -116,7 +116,7 @@ export default class GameView extends Vue implements IGameView {
 
     @Provide() fileRenderer: FileRenderer = new FileRenderer();
 
-    get uiHtmlElements(): HTMLElement[] { return [<HTMLElement>this.$refs.inventory]; }
+    getUIHtmlElements(): HTMLElement[] { return [<HTMLElement>this.$refs.inventory]; }
     get gameView(): HTMLElement { return <HTMLElement>this.$refs.gameView; }
     get canvas() { return this._canvas; }
     get time(): Time { return this._time; }

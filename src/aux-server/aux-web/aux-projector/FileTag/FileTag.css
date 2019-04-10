@@ -1,3 +1,9 @@
+
+.file-tag.clonable {
+    cursor: pointer;
+    user-select: none;
+}
+
 .hashtag {
     color: #2F8DFE;
 }

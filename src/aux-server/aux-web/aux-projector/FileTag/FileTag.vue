@@ -1,5 +1,6 @@
 <template>
-  <span class="tag">
+  <span class="tag file-tag" :class="{ clonable: allowCloning }">
+    <tag-color :tag="tag"></tag-color>
     <span v-if="!isFilter">
       <span class="hashtag">#</span><span class="tag-name">{{tag}}</span>
     </span>

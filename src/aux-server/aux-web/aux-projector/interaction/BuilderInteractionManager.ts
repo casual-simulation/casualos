@@ -16,7 +16,8 @@ import {
     getContextSize,
     getContextScale,
     getContextDefaultHeight,
-    getContextColor
+    getContextColor,
+    createFile
 } from '@yeti-cgi/aux-common';
 import { BuilderFileClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderFileClickOperation';
 import { Physics } from '../../shared/scene/Physics';
@@ -35,6 +36,9 @@ import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import GameView from '../GameView/GameView';
 import { GameObject } from '../../shared/scene/GameObject';
+import MiniFile from '../MiniFile/MiniFile';
+import FileTag from '../FileTag/FileTag';
+import FileTable from '../FileTable/FileTable';
 
 export class BuilderInteractionManager extends BaseInteractionManager {
 
@@ -71,10 +75,28 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
     createHtmlElementClickOperation(element: HTMLElement): IOperation {
         const vueElement: any = Input.getVueParent(element);
-        if (vueElement.file) {
+        if (vueElement instanceof MiniFile) {
             const file = <File>vueElement.file;
             let newFileClickOp = new BuilderNewFileClickOperation(this._gameView, this, file);
             return newFileClickOp;
+        } else if (vueElement instanceof FileTag && vueElement.allowCloning) {
+            const tag = vueElement.tag;
+            const table = vueElement.$parent;
+            if (table instanceof FileTable) {
+                if (table.selectionMode === 'single' && table.files.length === 1) {
+                    const file = table.files[0];
+                    const newFile = createFile(file.id, {
+                        [tag]: file.tags[tag],
+                        'aux._diff': true,
+                        'aux._diffTags': [tag]
+                    });
+                    return new BuilderNewFileClickOperation(this._gameView, this, newFile);
+                } else {
+                    console.log('not valid');
+                }
+            } else {
+                console.log('Not table');
+            }
         }
 
         return null;

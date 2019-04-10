@@ -83,6 +83,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         const result = this._calcWorkspaceDragPosition(calc, gridPosition);
 
         this._combine = result.combine;
+        this._merge = result.merge;
         this._other = result.other;
 
         if (result.stackable || result.index === 0) {
