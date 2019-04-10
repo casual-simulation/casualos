@@ -98,6 +98,7 @@ th:last-child {
 
 .file-table-actions {
     text-align: right;
+    flex: 1;
 }
 
 .file-table-actions .new-tag-button {
@@ -111,6 +112,14 @@ th:last-child {
 
 .finish-tag-button-wrapper {
     display: inline-block;
+}
+
+.top-part {
+    display: flex;
+}
+
+.file-table-toggle-buttons {
+    flex: 1;
 }
 
 .file-table-actions .tag-editor .md-field {

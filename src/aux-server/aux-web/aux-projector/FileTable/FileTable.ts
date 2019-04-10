@@ -52,6 +52,7 @@ export default class FileTable extends Vue {
     search: string = '';
     searchResults: SandboxResult<any> = null;
     viewMode: 'rows' | 'columns' = 'columns';
+    showHidden: boolean = false;
 
     uiHtmlElements(): HTMLElement[] {
         if (this.$refs.tags) {
@@ -245,6 +246,11 @@ export default class FileTable extends Vue {
         this._updateTags();
     }
 
+    toggleHidden() {
+        this.showHidden = !this.showHidden;
+        this._updateTags();
+    }
+
     /**
      * Determines if we have any valid search results.
      */
@@ -350,6 +356,7 @@ export default class FileTable extends Vue {
         this.tags = fileTags(
             this.displayedFiles, 
             this.tags, 
-            allExtraTags);
+            allExtraTags,
+            this.showHidden);
     }
 };

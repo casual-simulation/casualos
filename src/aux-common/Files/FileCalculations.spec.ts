@@ -2409,5 +2409,50 @@ describe('FileCalculations', () => {
                 'other'
             ]);
         });
+
+        it('should include hidden tags if specified', () => {
+            const files: File[] = [
+                {
+                    id: 'test',
+                    tags: {
+                        _hiddenTag1: 'abc',
+                    }
+                },
+                {
+                    id: 'test2',
+                    tags: {
+                        _hiddenTag2: 'abc',
+                        tag: 'hello'
+                    }
+                },
+                {
+                    id: 'test3',
+                    tags: {
+                        _hiddenTag3: 'abc',
+                        tag: 'again'
+                    }
+                },
+                {
+                    id: 'test4',
+                    tags: {
+                        _hiddenTag4: 'abc',
+                        other: 'tag'
+                    }
+                }
+            ];
+
+            const tags = fileTags(files, [
+                'notIncluded'
+            ], [], true);
+
+            expect(tags).toEqual([
+                '_hiddenTag1',
+                '_hiddenTag2',
+                'tag',
+                '_hiddenTag3',
+                '_hiddenTag4',
+                'other'
+            ]);
+        });
     });
 });

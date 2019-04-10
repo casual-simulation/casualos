@@ -1,15 +1,21 @@
 <template>
   <div class="file-table" ref="wrapper">
-    <div class="top-part md-layout">
-      <div class="md-layout-item md-size-20">
+    <div class="top-part">
+      <div v-show="!isMakingNewTag && !isSearching" class="file-table-toggle-buttons">
         <file-table-toggle 
             :files="files"
             :showNumFiles="selectionMode !== 'single'"
             @click="closeWindow()">
         </file-table-toggle>
+        <md-button v-if="hasFiles" class="md-icon-button" @click="toggleHidden()">
+            <md-icon v-if="showHidden">visibility</md-icon>
+            <md-icon v-else>visibility_off</md-icon>
+            <md-tooltip v-if="showHidden">Hide Hidden Tags</md-tooltip>
+            <md-tooltip v-else>Show Hidden Tags</md-tooltip>
+        </md-button>
         <!-- <md-button @click="flipTable()">Flip</md-button> -->
       </div>
-      <div class="md-layout-item md-size-80 file-table-actions">
+      <div class="file-table-actions">
         <div v-if="!isMakingNewTag && !isSearching">
           <md-button
             class="new-tag-button"

@@ -155,11 +155,12 @@ export function filterFilesBySelection(files: Object[], selectionId: string) {
    * in this list.
    * @param extraTags The list of tags that should not be removed from the
    * output list.
+   * @param includeHidden Whether the hidden tags should be included in the output.
    */
-export function fileTags(files: File[], currentTags: string[], extraTags: string[]) {
+export function fileTags(files: File[], currentTags: string[], extraTags: string[], includeHidden: boolean = false) {
     const fileTags = flatMap(files, f => keys(f.tags));
     // Only keep tags that don't start with an underscore (_)
-    const nonHiddenTags = fileTags.filter(t => !isHiddenTag(t));
+    const nonHiddenTags = fileTags.filter(t => includeHidden || !isHiddenTag(t));
     const tagsToKeep = union(nonHiddenTags, extraTags);
     const allTags = union(currentTags, tagsToKeep);
 
