@@ -23,12 +23,6 @@
                         :context="menuContext.context"
                         @click="clickMenuItem(file)">
                     </menu-file>
-                    <!-- <inventory-file v-for="(file, index) in menuContext.slots" :key="index" 
-                        :file="file"
-                        :slotIndex="index"
-                        :context="menuContext.context"
-                        :selected="file && menuContext.selectedFile === file"
-                        @click="menuContext.selectFile(file)"></inventory-file> -->
                 </div>
             </div>
             <span v-show="vrDisplay" id="vr-button-container" class="vr-button-container"></span>

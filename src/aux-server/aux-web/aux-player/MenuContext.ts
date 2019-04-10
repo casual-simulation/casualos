@@ -3,7 +3,7 @@ import { remove, sortBy } from 'lodash';
 import { getOptionalValue } from "../shared/SharedUtils";
 
 /**
- * Inventory is a helper class to assist with managing the user's inventory context.
+ * MenuContext is a helper class to assist with managing the user's menu context.
  */
 export class MenuContext {
 
@@ -73,7 +73,6 @@ export class MenuContext {
      * @param calc The calculation context.
      */
     fileRemoved(id: string, calc: FileCalculationContext) {
-        // console.log('[InventoryContext] fileRemoved:', id);
         this._removeFile(id);
     }
 
