@@ -150,7 +150,6 @@
             <md-field>
                 <label><file-tag :tag="focusedTag"></file-tag></label>
                 <md-textarea ref="multiLineEditor" v-model="multilineValue"
-                    md-autogrow
                     class="multi-line-tag-value-editor"
                     :class="[{ formula: isFocusedTagFormula }]">
                 </md-textarea>
