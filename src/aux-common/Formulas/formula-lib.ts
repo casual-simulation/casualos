@@ -1,9 +1,9 @@
 import { File } from '../Files/File';
-import { FileUpdatedEvent, FileEvent, FileAddedEvent, action, FilesState, calculateActionEvents, FileRemovedEvent, fileRemoved, fileAdded } from "../Files/FilesChannel";
+import { FileUpdatedEvent, FileEvent, FileAddedEvent, action, FilesState, calculateActionEvents, FileRemovedEvent, fileRemoved, fileAdded, fileUpdated } from "../Files/FilesChannel";
 import uuid from 'uuid/v4';
 import { every, find } from "lodash";
 import { isProxy, proxyObject, FileProxy } from "../Files/FileProxy";
-import { FileCalculationContext, calculateFormulaValue, COMBINE_ACTION_NAME } from '../Files/FileCalculations';
+import { FileCalculationContext, calculateFormulaValue, COMBINE_ACTION_NAME, addFileToMenu, getUserMenuId, filesInContext, calculateFileValue, removeFileFromMenu } from '../Files/FileCalculations';
 
 let actions: FileEvent[] = [];
 let state: FilesState = null;
@@ -32,6 +32,14 @@ export function setCalculationContext(context: FileCalculationContext) {
 
 export function getCalculationContext(): FileCalculationContext {
     return calc;
+}
+
+export function getUserId(): string {
+    return userFileId;
+}
+
+export function setUserId(id: string) {
+    userFileId = id;
 }
 
 // declare const lib: string;
@@ -334,6 +342,88 @@ export function goToContext(simulationId: string, context?: string) {
     window.location.pathname = `${simulationId}/${context}`;
 }
 
+/**
+ * Gets the current user's file.
+ */
+export function getUser() {
+    if (!userFileId) {
+        return null;
+    }
+    const user = calc.sandbox.interface.listObjectsWithTag('id', userFileId);
+    if (Array.isArray(user)) {
+        if (user.length === 1) {
+            return user[0];
+        } else {
+            return null;
+        }
+    }
+    return user || null;
+}
+
+/**
+ * Gets the name of the context that is used for the current user's menu.
+ */
+export function getUserMenuContext(): string {
+    const user = getUser();
+    if (user) {
+        return user._userMenuContext;
+    } else {
+        return null;
+    }
+}
+
+/**
+ * Adds a new menu item to the current user's menu.
+ * @param id The ID of the menu item.
+ * @param label The label that the menu item should show.
+ * @param action The script that should be run when the item is clicked.
+ */
+export function createMenuItem(id: string, label: string, action: string) {
+    const user = getUser();
+    const update = addFileToMenu(calc, user, id);
+    createFrom(user, {
+        ...update.tags,
+        'aux.label': label,
+        'onClick()': action
+    });
+}
+
+/**
+ * Adds the given file to the current user's menu.
+ * @param file The file or file ID to add to the menu.
+ */
+export function addToMenu(file: string | File) {
+    const fileId = typeof file === 'string' ? file : file.id;
+    const id = uuid();
+    const update = addFileToMenu(calc, getUser(), id);
+    actions.push(fileUpdated(fileId, update)); 
+}
+
+/**
+ * Removes the given file from the current user's menu.
+ * @param file The file or file ID to remove from the menu.
+ */
+export function removeFromMenu(file: string | File) {
+    const fileId = typeof file === 'string' ? file : file.id;
+    const update = removeFileFromMenu(calc, getUser());
+    actions.push(fileUpdated(fileId, update));
+}
+
+/**
+ * Deletes the menu item with the given ID from the current user's menu.
+ * @param id The ID of the menu item.
+ */
+export function destroyMenuItem(id: string) {
+    const user = getUser();
+    const context = getUserMenuId(calc, user);
+    const files = filesInContext(calc, context);
+    const match = files.filter(f => calculateFileValue(calc, f, `${context}.id`) === id);
+
+    match.forEach(f => {
+        destroy(f);
+    });
+}
+
 export default {
     sum,
     avg,
@@ -352,5 +442,11 @@ export default {
     combine,
     event,
     shout,
-    goToContext
+    goToContext,
+    getUser,
+
+    createMenuItem,
+    destroyMenuItem,
+    addToMenu,
+    removeFromMenu 
 };

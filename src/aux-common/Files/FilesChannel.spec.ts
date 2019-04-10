@@ -517,7 +517,7 @@ describe('FilesChannel', () => {
         });
 
         describe('getUser()', () => {
-            it.skip('should get the current users file', () => {
+            it('should get the current users file', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -544,6 +544,166 @@ describe('FilesChannel', () => {
                             name: 'Test'
                         }
                     })
+                ]);
+            });
+        });
+
+        describe('addToMenu()', () => {
+            it('should add the given file to the users menu', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'addItem()': 'addToMenu(@name("bob"))',
+                        }
+                    },
+                    userFile: {
+                        id: 'userFile',
+                        tags: {
+                            _userMenuContext: 'context'
+                        }
+                    },
+                    menuFile: {
+                        id: 'menuFile',
+                        tags: {
+                            name: 'bob'
+                        }
+                    }
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('addItem', ['thisFile', 'userFile', 'menuFile'], 'userFile');
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('menuFile', {
+                        tags: {
+                            'context.id': 'uuid-0',
+                            'context': 0
+                        }
+                    })
+                ]);
+            });
+        });
+
+        describe('removeFromMenu()', () => {
+            it('should add the given file to the users menu', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'removeItem()': 'removeFromMenu(@name("bob"))', 
+                        }
+                    },
+                    userFile: {
+                        id: 'userFile',
+                        tags: {
+                            _userMenuContext: 'context'
+                        }
+                    },
+                    menuFile: {
+                        id: 'menuFile',
+                        tags: {
+                            name: 'bob',
+                            'context': 0,
+                            'context.id': 'abcdef'
+                        }
+                    }
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('removeItem', ['thisFile', 'userFile', 'menuFile'], 'userFile');
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('menuFile', {
+                        tags: {
+                            'context.id': null,
+                            'context': null
+                        }
+                    })
+                ]);
+            });
+        });
+
+        describe('createMenuItem()', () => {
+            it('should add a new file that is in the current users context', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'addItem()': 'createMenuItem("id", "label", "action")',
+                        }
+                    },
+                    userFile: {
+                        id: 'userFile',
+                        tags: {
+                            _userMenuContext: 'context'
+                        }
+                    }
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('addItem', ['thisFile', 'userFile'], 'userFile');
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            'aux._parent': 'userFile',
+                            'aux.label': 'label',
+                            'onClick()': 'action',
+                            'context.id': 'id',
+                            'context': 0
+                        }
+                    })
+                ]);
+            });
+        });
+
+        describe('destroyMenuItem()', () => {
+            it('should delete the file with the given context.id', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'removeItem()': 'destroyMenuItem("test")',
+                        }
+                    },
+                    userFile: {
+                        id: 'userFile',
+                        tags: {
+                            _userMenuContext: 'context'
+                        }
+                    },
+                    menuItem: {
+                        id: 'menuItem',
+                        tags: {
+                            context: 0,
+                            'context.id': 'test',
+                        }
+                    }
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('removeItem', ['thisFile', 'userFile', 'menuItem'], 'userFile');
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileRemoved('menuItem')
                 ]);
             });
         });

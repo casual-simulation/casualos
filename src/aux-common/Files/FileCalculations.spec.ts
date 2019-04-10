@@ -2464,7 +2464,8 @@ describe('FileCalculations', () => {
                 _userMenuContext: 'context'
             });
 
-            const id = getUserMenuId(user);
+            const calc = createCalculationContext([user]);
+            const id = getUserMenuId(calc, user);
             expect(id).toBe('context');
         });
     });
@@ -2503,11 +2504,12 @@ describe('FileCalculations', () => {
             const file = createFile('file');
 
             const calc = createCalculationContext([user, file]);
-            const update = addFileToMenu(calc, user, file);
+            const update = addFileToMenu(calc, user, 'item');
 
             expect(update).toEqual({
                 tags: {
-                    'context': 0
+                    'context': 0,
+                    'context.id': 'item'
                 }
             });
         });
@@ -2519,11 +2521,12 @@ describe('FileCalculations', () => {
             const file = createFile('file');
 
             const calc = createCalculationContext([user, file]);
-            const update = addFileToMenu(calc, user, file, 5);
+            const update = addFileToMenu(calc, user, 'item', 5);
 
             expect(update).toEqual({
                 tags: {
-                    'context': 5
+                    'context': 5,
+                    'context.id': 'item'
                 }
             });
         });
@@ -2538,11 +2541,12 @@ describe('FileCalculations', () => {
             });
 
             const calc = createCalculationContext([user, file, file2]);
-            const update = addFileToMenu(calc, user, file);
+            const update = addFileToMenu(calc, user, 'abc');
 
             expect(update).toEqual({
                 tags: {
-                    'context': 1
+                    'context': 1,
+                    'context.id': 'abc'
                 }
             });
         });
@@ -2560,7 +2564,8 @@ describe('FileCalculations', () => {
 
             expect(update).toEqual({
                 tags: {
-                    'context': null
+                    'context': null,
+                    'context.id': null
                 }
             });
         });

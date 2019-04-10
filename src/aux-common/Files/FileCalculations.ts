@@ -487,8 +487,8 @@ export function newSelectionId() {
  * Gets the menu ID that is used for the given user.
  * @param userFile The file for the user.
  */
-export function getUserMenuId(userFile: File) {
-    return userFile.tags._userMenuContext;
+export function getUserMenuId(calc: FileCalculationContext, userFile: File) {
+    return calculateFileValue(calc, userFile, '_userMenuContext');
 }
 
 /**
@@ -497,7 +497,7 @@ export function getUserMenuId(userFile: File) {
  * @param userFile The user file to use.
  */
 export function getFilesInMenu(calc: FileCalculationContext, userFile: File): File[] {
-    const context = getUserMenuId(userFile);
+    const context = getUserMenuId(calc, userFile);
     return filesInContext(calc, context);
 }
 
@@ -515,15 +515,16 @@ export function filesInContext(calc: FileCalculationContext, context: string): F
  * Gets the file update needed to add the given file to the given user's menu.
  * @param calc The calculation context.
  * @param userFile The file of the user.
- * @param file The file that should be added to the user's menu.
+ * @param id The ID that should be used for the menu item. This is separate from file ID.
  * @param index The index that the file should be added to. Positive infinity means add at the end. 0 means add at the beginning.
  */
-export function addFileToMenu(calc: FileCalculationContext, userFile: File, file: File, index: number = Infinity): PartialFile {
-    const context = getUserMenuId(userFile);
+export function addFileToMenu(calc: FileCalculationContext, userFile: File, id: string, index: number = Infinity): PartialFile {
+    const context = getUserMenuId(calc, userFile);
     const files = getFilesInMenu(calc, userFile);
     const idx = isFinite(index) ? index : files.length;
     return {
         tags: {
+            [`${context}.id`]: id,
             [context]: idx
         }
     };
@@ -535,10 +536,11 @@ export function addFileToMenu(calc: FileCalculationContext, userFile: File, file
  * @param userFile The file of the user.
  */
 export function removeFileFromMenu(calc: FileCalculationContext, userFile: File): PartialFile {
-    const context = getUserMenuId(userFile);
+    const context = getUserMenuId(calc, userFile);
     return {
         tags: {
-            [context]: null
+            [context]: null,
+            [`${context}.id`]: null 
         }
     };
 }
