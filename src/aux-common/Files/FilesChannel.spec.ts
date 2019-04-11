@@ -672,6 +672,91 @@ describe('FilesChannel', () => {
                     })
                 ]);
             });
+
+            it('should use the given data', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'addItem()': 'createMenuItem("id", "label", "action", { "aux.color": "blue" })',
+                        }
+                    },
+                    userFile: {
+                        id: 'userFile',
+                        tags: {
+                            _userMenuContext: 'context'
+                        }
+                    }
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('addItem', ['thisFile', 'userFile'], 'userFile');
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            'aux._parent': 'userFile',
+                            'aux.label': 'label',
+                            'onClick()': 'action',
+                            'context.id': 'id',
+                            'context.index': 0,
+                            'context': true,
+                            'aux.color': 'blue'
+                        }
+                    })
+                ]);
+            });
+        });
+
+        describe('createMenuItemFrom()', () => {
+            it('should add a new file that is in the current users context', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'addItem()': 'createMenuItemFrom(@name("test"),"id", "label", "action")',
+                        }
+                    },
+                    userFile: {
+                        id: 'userFile',
+                        tags: {
+                            _userMenuContext: 'context'
+                        }
+                    },
+                    otherFile: {
+                        id: 'otherFile',
+                        tags: {
+                            name: 'test'
+                        }
+                    }
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('addItem', ['thisFile', 'userFile'], 'userFile');
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            'aux._parent': 'otherFile',
+                            'aux.label': 'label',
+                            'onClick()': 'action',
+                            'context.id': 'id',
+                            'context.index': 0,
+                            'context': true
+                        }
+                    })
+                ]);
+            });
         });
 
         describe('destroyMenuItem()', () => {

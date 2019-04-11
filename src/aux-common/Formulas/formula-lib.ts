@@ -373,18 +373,34 @@ export function getUserMenuContext(): string {
 }
 
 /**
- * Adds a new menu item to the current user's menu.
+ * Creates a new file and adds it to the current user's menu.
+ * The new file will be parented to the user's file.
  * @param id The ID of the menu item.
  * @param label The label that the menu item should show.
  * @param action The script that should be run when the item is clicked.
  */
-export function createMenuItem(id: string, label: string, action: string) {
+export function createMenuItem(id: string, label: string, action: string, data?: any) {
+    const user = getUser();
+    createMenuItemFrom(user, id, label, action, data);
+}
+
+/**
+ * Creates a new file and adds it to the current user's menu.
+ * The new file will be parented to the given file.
+ * @param file The parent of the new file.
+ * @param id The ID of the menu item.
+ * @param label The label that the menu item should show.
+ * @param action The script that should be run when the item is clicked.
+ */
+export function createMenuItemFrom(file: File, id: string, label: string, action: string, data?: any) {
     const user = getUser();
     const update = addFileToMenu(calc, user, id);
-    createFrom(user, {
+    data = data || {};
+    createFrom(file, {
         ...update.tags,
         'aux.label': label,
-        'onClick()': action
+        'onClick()': action,
+        ...data
     });
 }
 
@@ -458,6 +474,7 @@ export default {
     getUser,
 
     createMenuItem,
+    createMenuItemFrom,
     destroyMenuItem,
     destroyAllMenuItems,
     addToMenu,
