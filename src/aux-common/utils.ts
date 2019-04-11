@@ -44,6 +44,20 @@ export function splice(str: string, index: number, deleteCount: number, text: st
     return str.slice(0, index) + text + str.slice(index + deleteCount);
 }
 
-export function lerp(start: number, end: number, t: number) {
+export function lerp(start: number, end: number, t: number): number {
     return (1.0 - t) * start + t * end;
-};
+}
+
+export function clamp(value: number, min: number, max:number): number {
+    return Math.max(min, Math.min(max, value));
+}
+
+export function normalize(value: number, min: number, max: number): number {
+    value = clamp(value, min, max);
+    return (value - min) / (max - min);
+}
+
+export function unnormalize(normal: number, min: number, max: number): number {
+    normal = clamp(normal, 0.0, 1.0);
+    return normal * (max - min) + min;
+}

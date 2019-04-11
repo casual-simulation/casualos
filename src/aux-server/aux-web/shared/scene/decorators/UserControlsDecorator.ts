@@ -1,13 +1,16 @@
 import {
     Vector3,
     Euler,
+    PerspectiveCamera,
+    OrthographicCamera,
 } from "three";
-import { FileCalculationContext, AuxObject, calculateGridScale, getFileRotation, getFilePosition } from '@yeti-cgi/aux-common'
+import { FileCalculationContext, AuxObject, calculateGridScale, getFileRotation, getFilePosition, normalize, lerp } from '@yeti-cgi/aux-common'
 import { appManager } from '../../AppManager';
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
 import { calculateScale } from "../SceneUtils";
 import { IGameView } from "aux-web/shared/IGameView";
+import { Orthographic_DefaultZoom, Orthographic_MinZoom, Orthographic_MaxZoom } from "../CameraRigFactory";
 
 /**
  * The amount of time between checking a user's mouse for activity.
@@ -63,8 +66,12 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
         const time = Date.now();
 
         if (time > this._lastPositionUpdateTime + TIME_BETWEEN_UPDATES) {
-            let mainCamera = this._gameView.getMainCamera();
-            let camPosition = mainCamera.position.clone();
+            const mainCamera = this._gameView.getMainCamera();
+            const camRotation = mainCamera.rotation.clone();
+            const camRotationVector = new Vector3(0, 0, 1).applyEuler(camRotation);
+
+            // Handle camera position differently based on the type camera it is.
+            let camPosition: Vector3 = mainCamera.position.clone();
 
             // Scale camera's local position so that it maps to the context positioning.
             const gridScale = calculateGridScale(calc, this.file3D.contextGroup.file, this.file3D.domain);
@@ -72,16 +79,41 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
             camPosition.x /= scale.x;
             camPosition.y /= scale.y;
             camPosition.z /= scale.z;
-            
-            const camRotation = mainCamera.rotation.clone();
-            const camRotationVector = new Vector3(0, 0, 1).applyEuler(camRotation);
+
+            if (mainCamera instanceof OrthographicCamera) {
+                // Use orthographic camera's rotation and zoom level to 'move' the camera position
+                // to mimic what perspective camera positioning looks like.
+
+                const orthoDollyRange = {
+                    max: 425,
+                    base: 415,
+                    min: 360,
+                };
+
+                let dollyDist: number;
+
+                if (mainCamera.zoom >= Orthographic_DefaultZoom) {
+                    let t = normalize(mainCamera.zoom, Orthographic_DefaultZoom, Orthographic_MaxZoom);
+                    dollyDist = lerp(orthoDollyRange.base, orthoDollyRange.max, t);
+                } else {
+                    let t = normalize(mainCamera.zoom, Orthographic_MinZoom, Orthographic_DefaultZoom);
+                    dollyDist = lerp(orthoDollyRange.min, orthoDollyRange.base, t);
+                }
+
+                let newCamPos = new Vector3();
+                let direction = camRotationVector.clone().normalize().multiplyScalar(-1);
+                newCamPos.addVectors(camPosition, direction.multiplyScalar(dollyDist));
+                // console.log(`zoom: ${mainCamera.zoom},\ndollyDist: ${dollyDist}\nnewCamPos: (${newCamPos.x}, ${newCamPos.y}, ${newCamPos.z})`);
+
+                camPosition = newCamPos.clone();
+            }
 
             const filePosition = getFilePosition(calc, file, this.file3D.context);
             const fileRotation = getFileRotation(calc, file, this.file3D.context);
 
-            const currentRotationVector = new Vector3(0, 0, 1).applyEuler(new Euler(fileRotation.x, fileRotation.z, fileRotation.y));
+            const fileRotationVector = new Vector3(0, 0, 1).applyEuler(new Euler(fileRotation.x, fileRotation.z, fileRotation.y));
             const distance = camPosition.distanceTo(new Vector3(filePosition.x, filePosition.z, -filePosition.y));
-            const angle = camRotationVector.angleTo(currentRotationVector);
+            const angle = camRotationVector.angleTo(fileRotationVector);
             if (distance > DEFAULT_USER_MOVEMENT_INCREMENT || angle > DEFAULT_USER_ROTATION_INCREMENT) {
                 this._lastPositionUpdateTime = time;
                 

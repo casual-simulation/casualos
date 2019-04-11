@@ -45,13 +45,13 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
         }
     }
 
-    protected _onDragReleased(): void {
+    protected _onDragReleased(calc: FileCalculationContext): void {
         if (this._initialDragMesh) {
             this._releaseDragMesh(this._initialDragMesh);
             this._initialDragMesh = null;
         }
 
-        super._onDragReleased();
+        super._onDragReleased(calc);
     }
 
     protected _dragFilesFree(calc: FileCalculationContext): void {

@@ -16,6 +16,7 @@ import { IOperation } from './IOperation';
 import { AuxFile3D } from '../scene/AuxFile3D';
 import { IGameView } from '../IGameView';
 import { GameObject } from '../scene/GameObject';
+import { Orthographic_MinZoom, Orthographic_MaxZoom } from '../scene/CameraRigFactory';
 
 export abstract class BaseInteractionManager {
 
@@ -30,6 +31,8 @@ export abstract class BaseInteractionManager {
         this._draggableObjectsDirty = true;
         this._gameView = gameView;
         this._cameraControls = new CameraControls(this._gameView.getMainCamera(), this._gameView);
+        this._cameraControls.minZoom = Orthographic_MinZoom;
+        this._cameraControls.maxZoom = Orthographic_MaxZoom;
         this._operations = [];
 
         // Bind event handlers to this instance of the class.
@@ -250,6 +253,8 @@ export abstract class BaseInteractionManager {
 
     protected _handleCameraTypeChanged(mainCamera: PerspectiveCamera | OrthographicCamera): void {
         this._cameraControls = new CameraControls(mainCamera, this._gameView);
+        this._cameraControls.minZoom = Orthographic_MinZoom;
+        this._cameraControls.maxZoom = Orthographic_MaxZoom;
     }
 
     protected _markDirty() {

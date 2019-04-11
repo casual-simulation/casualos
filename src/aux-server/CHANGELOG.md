@@ -1,5 +1,14 @@
 # AUX Server Changelog
 
+## V0.4.9
+### Date: 04/11/2019
+
+### Changes:
+- Bug Fixes
+  - Fixed a build error.
+- Other improvements
+  - Fudging orthographic camera user context position based on its zoom level. This is not a perfect implementation but does provide a better sense of “where” ortho are when using zoom.
+
 ## V0.4.8
 ### Date: 04/11/2019
 
