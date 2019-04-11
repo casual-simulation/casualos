@@ -1,6 +1,6 @@
 import { File, FileTags } from './File';
 import { FileCalculationContext, calculateFileValue, isFormula, isFile as isObjFile, calculateFormulaValue, calculateValue } from './FileCalculations';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, uniq } from 'lodash';
 
 /**
  * The symbol that can be used to tell if an object represents a proxy.
@@ -37,11 +37,18 @@ export function createFileProxy(calc: FileCalculationContext, file: File, setVal
 function _createProxyHandler(calc: FileCalculationContext, file: File, tags: any, setValue: SetValueHandler, isFile: boolean, props?: string, fullProps?: string[]): ProxyHandler<any> {
     return {
         ownKeys: function(target) {
-            let props: (string | number | symbol)[] = ['id'];
-            props.push(...Reflect.ownKeys(tags));
-            return props;
+            let props: (string | number | symbol)[] = isFile ? ['id'] : [];
+            props.push(...Reflect.ownKeys(target));
+            if (isFile) {
+                props.push(...Reflect.ownKeys(tags));
+            }
+            return uniq(props);
         },
         getOwnPropertyDescriptor: function(target, prop) {
+            let descriptor = Reflect.getOwnPropertyDescriptor(target, prop);
+            if (descriptor) {
+                return descriptor;
+            }
             return {
                 enumerable: true,
                 configurable: true,
@@ -52,6 +59,11 @@ function _createProxyHandler(calc: FileCalculationContext, file: File, tags: any
             return prop in tags;
         },
         get: function (target, property, receiver) {
+            let descriptor = Reflect.getOwnPropertyDescriptor(target, property);
+            if (descriptor && !descriptor.configurable) {
+                return Reflect.get(target, property);
+            }
+
             let nextTags = tags;
             let nextFullProps = fullProps;
             if (typeof property === 'symbol') {
@@ -77,6 +89,16 @@ function _createProxyHandler(calc: FileCalculationContext, file: File, tags: any
                             return target.valueOf();
                         }
                     };
+                } else if (property === Symbol.toStringTag) {
+                    if (target instanceof Number) {
+                        return 'Number';
+                    } else if (target instanceof Boolean) {
+                        return 'Boolean';
+                    } else if (target instanceof String) {
+                        return 'String';
+                    } else if (Array.isArray(target)) {
+                        return 'Array';
+                    }
                 }
                 
                 return target[property];
