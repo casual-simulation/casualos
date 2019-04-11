@@ -934,7 +934,7 @@ export function getContextColor(calc: FileCalculationContext, contextFile: File,
  * @param domain The domain.
  */
 export function getContextSize(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): number {
-    return calculateNumericalTagValue(calc, contextFile, `aux.${domain}.context.size`, 1);
+    return calculateNumericalTagValue(calc, contextFile, `aux.${domain}.context.size`, isUserFile(contextFile)? 0 : 1);
 }
 
 /**
