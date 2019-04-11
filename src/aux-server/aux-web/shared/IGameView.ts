@@ -18,7 +18,7 @@ export interface IGameView extends AuxFile3DFinder, Vue {
     readonly canvas: HTMLCanvasElement;
     readonly dev: boolean;
     readonly filesMode: boolean;
-    readonly workspacesMode: boolean
+    readonly workspacesMode: boolean;
 
     onFileAdded: ArgEvent<AuxFile>;
     onFileUpdated: ArgEvent<AuxFile>;

@@ -7,6 +7,7 @@ import { appManager } from '../../AppManager';
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
 import { calculateScale } from "../SceneUtils";
+import { IGameView } from "aux-web/shared/IGameView";
 
 /**
  * The amount of time between checking a user's mouse for activity.
@@ -46,11 +47,11 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
      */
     file3D: AuxFile3D;
 
-    private _mainCamera: Camera;
+    private _gameView: IGameView;
 
-    constructor(file3D: AuxFile3D, mainCamera: Camera) {
+    constructor(file3D: AuxFile3D, gameView: IGameView) {
         super(file3D);
-        this._mainCamera = mainCamera;
+        this._gameView = gameView;
     }
 
     fileUpdated(calc: FileCalculationContext): void {
@@ -62,7 +63,8 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
         const time = Date.now();
 
         if (time > this._lastPositionUpdateTime + TIME_BETWEEN_UPDATES) {
-            let camPosition = this._mainCamera.position.clone();
+            let mainCamera = this._gameView.getMainCamera();
+            let camPosition = mainCamera.position.clone();
 
             // Scale camera's local position so that it maps to the context positioning.
             const gridScale = calculateGridScale(calc, this.file3D.contextGroup.file, this.file3D.domain);
@@ -72,7 +74,7 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
             camPosition.y /= scale.y;
             camPosition.z /= scale.z;
             
-            const camRotation = this._mainCamera.rotation.clone();
+            const camRotation = mainCamera.rotation.clone();
             const camRotationVector = new Vector3(0, 0, 1).applyEuler(camRotation);
             const currentPosition = this.file3D.display.position;
             const currentRotation = this.file3D.display.rotation;

@@ -8,6 +8,7 @@ import { Color, Camera, Object3D, Mesh, Vector3, Scene, Box3 } from "three";
 import { MeshCubeDecorator } from "./MeshCubeDecorator";
 import { WordBubbleElement } from "../WordBubbleElement";
 import { appManager } from "../../../shared/AppManager";
+import { IGameView } from "aux-web/shared/IGameView";
 
 export class LabelDecorator extends AuxFile3DDecorator implements WordBubbleElement {    
 
@@ -16,11 +17,11 @@ export class LabelDecorator extends AuxFile3DDecorator implements WordBubbleElem
      */
     label: Text3D | null;
 
-    private _camera: Camera;
+    private _gameView: IGameView;
 
-    constructor(file3D: AuxFile3D, camera: Camera) {
+    constructor(file3D: AuxFile3D, gameView: IGameView) {
         super(file3D);
-        this._camera = camera;
+        this._gameView = gameView;
 
         this.label = new Text3D();
         setLayer(this.label, LayersHelper.Layer_UIWorld, true);
@@ -103,7 +104,8 @@ export class LabelDecorator extends AuxFile3DDecorator implements WordBubbleElem
         if (this._isInAutoSizeMode(calc)) {
             let labelWorldPos = new Vector3();
             this.label.getWorldPosition(labelWorldPos);
-            const distanceToCamera = this._camera.position.distanceTo(labelWorldPos);
+            const mainCamera = this._gameView.getMainCamera();
+            const distanceToCamera = mainCamera.position.distanceTo(labelWorldPos);
             const extraScale = distanceToCamera / Text3D.virtualDistance;
             const finalScale = labelSize * extraScale;
             this.label.setScale(finalScale);
