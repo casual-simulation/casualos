@@ -1,5 +1,13 @@
 # AUX Server Changelog
 
+## V0.4.6
+### Date: TBD
+
+### Changes:
+- Improvements
+  - Camera is now orthographic by default for both AUX Builder and AUX Player.
+    - There is a toggle button in the menu for builder and player that lets you toggle a perspective camera on/off.
+  
 ## V0.4.5
 ### Date: 04/10/2019
 
