@@ -56,8 +56,7 @@ import { PlayerInteractionManager } from '../interaction/PlayerInteractionManage
 import InventoryFile from '../InventoryFile/InventoryFile';
 import { InventoryContext } from '../InventoryContext';
 import { doesFileDefinePlayerContext } from '../PlayerUtils';
-import { CameraType, resizeCameraRig, createCameraRig } from '../../shared/scene/CameraFactory';
-
+import { CameraType, resizeCameraRig, createCameraRig } from '../../shared/scene/CameraRigFactory';
 
 @Component({
     components: {

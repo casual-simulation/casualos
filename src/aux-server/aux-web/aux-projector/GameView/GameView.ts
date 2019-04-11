@@ -63,10 +63,7 @@ import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { BuilderInteractionManager } from '../interaction/BuilderInteractionManager';
 import Home from '../Home/Home';
-import { CameraType, resizeCameraRig, createCameraRig } from '../../shared/scene/CameraFactory';
-
-const Orthographic_FrustrumSize: number = 100;
-const Orthographic_DefaultZoom: number = 8;
+import { CameraType, resizeCameraRig, createCameraRig } from '../../shared/scene/CameraRigFactory';
 
 @Component({
     components: {
