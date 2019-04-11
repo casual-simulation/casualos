@@ -61,7 +61,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
      * @param ray The ray to test.
      */
     pointOnGrid(calc: FileCalculationContext, ray: Ray) {
-        let planeHit = Physics.pointOnPlane(ray, this._gameView.groundPlane);
+        let planeHit = Physics.pointOnPlane(ray, this._gameView.getGroundPlane());
         // We need to flip the sign of the z coordinate here.
         planeHit.z = -planeHit.z;
 

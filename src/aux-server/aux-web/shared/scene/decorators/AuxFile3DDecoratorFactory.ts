@@ -28,7 +28,7 @@ export class AuxFile3DDecoratorFactory {
         if (isUser) {
             if (isLocalUser) {
                 // Local user gets controls for changing their user position in contexts.
-                decorators.push(new UserControlsDecorator(file3d, this.gameView.mainCamera));
+                decorators.push(new UserControlsDecorator(file3d, this.gameView.getMainCamera()));
             } else {
                 // Remote user gets mesh to visualize where it is in contexts.
                 decorators.push(new UserMeshDecorator(file3d));
@@ -46,7 +46,7 @@ export class AuxFile3DDecoratorFactory {
 
         if (!!this.gameView) {
 
-            let labelDecorator = new LabelDecorator(file3d, this.gameView.mainCamera); 
+            let labelDecorator = new LabelDecorator(file3d, this.gameView.getMainCamera()); 
             let wordBubbleDecorator = new WordBubbleDecorator(file3d, labelDecorator);
 
             decorators.push(

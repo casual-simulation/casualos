@@ -13,6 +13,7 @@ import {
     Quaternion,
     Matrix4,
     Texture,
+    OrthographicCamera,
 } from 'three';
 
 import VRControlsModule from 'three-vrcontrols-module';
@@ -55,6 +56,10 @@ import { PlayerInteractionManager } from '../interaction/PlayerInteractionManage
 import InventoryFile from '../InventoryFile/InventoryFile';
 import { InventoryContext } from '../InventoryContext';
 import { doesFileDefinePlayerContext } from '../PlayerUtils';
+import { CameraType } from '../../shared/scene/CameraType';
+
+const Orthographic_FrustrumSize: number = 100;
+const Orthographic_DefaultZoom: number = 8;
 
 @Component({
     components: {
@@ -62,9 +67,10 @@ import { doesFileDefinePlayerContext } from '../PlayerUtils';
     }
 })
 export default class GameView extends Vue implements IGameView {
+
     private _scene: Scene;
-    private _mainCamera: PerspectiveCamera;
-    private _uiWorldCamera: PerspectiveCamera;
+    private _mainCamera: OrthographicCamera | PerspectiveCamera;
+    private _uiWorldCamera: OrthographicCamera | PerspectiveCamera;
     private _renderer: WebGLRenderer;
 
     private _enterVr: any;
@@ -82,10 +88,12 @@ export default class GameView extends Vue implements IGameView {
     private _inputVR: InputVR;
     private _interaction: PlayerInteractionManager;
     private _originalBackground: Color | Texture;
+    private _cameraType: CameraType;
 
     public onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
     public onFileUpdated: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
     public onFileRemoved: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
+    public onCameraTypeChanged: ArgEvent<PerspectiveCamera | OrthographicCamera> = new ArgEvent<PerspectiveCamera | OrthographicCamera>();
 
     /**
      * Keep files in a back buffer so that we can add files to contexts when they come in.
@@ -116,19 +124,11 @@ export default class GameView extends Vue implements IGameView {
 
     @Provide() fileRenderer: FileRenderer = new FileRenderer();
 
-    getUIHtmlElements(): HTMLElement[] { return [<HTMLElement>this.$refs.inventory]; }
     get gameView(): HTMLElement { return <HTMLElement>this.$refs.gameView; }
     get canvas() { return this._canvas; }
-    get time(): Time { return this._time; }
-    get input(): Input { return this._input; }
-    get inputVR(): InputVR { return this._inputVR; }
-    get mainCamera(): PerspectiveCamera { return this._mainCamera; }
-    get scene(): Scene { return this._scene; }
-    get renderer(): WebGLRenderer { return this._renderer; }
     get dev(): boolean { return !PRODUCTION; }
     get filesMode(): boolean { console.error("AUX Player does not implement filesMode."); return false; }
     get workspacesMode(): boolean { console.error("AUX Player does not implement workspacesMode."); return false; }
-    get groundPlane(): Plane { return this._groundPlane; }
     get fileManager() { return appManager.fileManager; }
 
     constructor() {
@@ -139,12 +139,73 @@ export default class GameView extends Vue implements IGameView {
         return flatMap(this._contextGroup.getFiles().filter(f => f.file.id === id));
     }
 
-    public getContexts(): ContextGroup3D[] {
-        return [this._contextGroup];
-    }
+    public getTime() { return this._time; }
+    public getInput() { return this._input; }
+    public getInputVR() { return this._inputVR; }
+    public getScene() { return this._scene; }
+    public getRenderer() { return this._renderer; }
+    public getGroundPlane() { return this._groundPlane; }
+    public getMainCamera(): PerspectiveCamera | OrthographicCamera { return this._mainCamera; }
+    public getContexts(): ContextGroup3D[] { return [this._contextGroup]; }
+    public getUIHtmlElements(): HTMLElement[] { return [<HTMLElement>this.$refs.inventory]; }
 
     public setGridsVisible(visible: boolean) {
         // This currently does nothing for AUX Player, we dont really show any grids right now.
+    }
+
+    public setCameraType(type: CameraType) {
+        if (this._cameraType === type) return;
+
+        // Clean up current cameras if they exists.
+        if (this._mainCamera) {
+            this._scene.remove(this._mainCamera);
+            this._mainCamera = null;
+            this._uiWorldCamera = null;
+        }
+
+        this._cameraType = type;
+
+        // Setup main camera
+        if (this._cameraType === 'orthographic') {
+            this._mainCamera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 20000);
+            this._mainCamera.position.set(Orthographic_FrustrumSize, Orthographic_FrustrumSize, Orthographic_FrustrumSize);
+            this._mainCamera.zoom = Orthographic_DefaultZoom;
+        } else {
+            this._mainCamera = new PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 20000);
+            this._mainCamera.position.set(5, 5, 5);
+        }
+
+        this._mainCamera.lookAt(new Vector3(0,0,0));
+        this._mainCamera.layers.enable(LayersHelper.Layer_Default);
+        this._scene.add(this._mainCamera);
+
+        // Setup UI World camera.
+        // This camera is parented to the main camera.
+        if (this._mainCamera instanceof OrthographicCamera) {
+            this._uiWorldCamera = new OrthographicCamera(this._mainCamera.left, this._mainCamera.right, this._mainCamera.top, this._mainCamera.bottom, this._mainCamera.near, this._mainCamera.far);
+        } else {
+            this._uiWorldCamera = new PerspectiveCamera(this._mainCamera.fov, this._mainCamera.aspect, this._mainCamera.near, this._mainCamera.far);
+        }
+        this._mainCamera.add(this._uiWorldCamera);
+        this._uiWorldCamera.position.set(0, 0, 0);
+        this._uiWorldCamera.rotation.set(0, 0, 0);
+
+        // Ui World camera only draws objects on the 'UI World Layer'.
+        this._uiWorldCamera.layers.set(LayersHelper.Layer_UIWorld);
+
+        this._mainCamera.updateMatrixWorld(true);
+
+        this._resizeCamera();
+
+        // Update side bar item.
+        this.removeSidebarItem('toggle_camera_type');
+        if (this._cameraType === 'orthographic') {
+            this.addSidebarItem('toggle_camera_type', 'Enable Perspective Camera', () => { this.setCameraType('perspective'); }, 'videocam');
+        } else {
+            this.addSidebarItem('toggle_camera_type', 'Disable Perspective Camera', () => { this.setCameraType('orthographic'); }, 'videocam_off');
+        }
+
+        this.onCameraTypeChanged.invoke(this._mainCamera);
     }
 
     public async mounted() {
@@ -202,6 +263,7 @@ export default class GameView extends Vue implements IGameView {
             this.inventoryContext.frameUpdate(calc);
         }
 
+        this._cameraUpdate();
         this._renderUpdate(xrFrame);
         this._time.update();
 
@@ -212,7 +274,14 @@ export default class GameView extends Vue implements IGameView {
         } else {
             requestAnimationFrame(() => this._frameUpdate());
         }
+    }
 
+    private _cameraUpdate() {
+        // Keep camera zoom levels in sync.
+        if (this._uiWorldCamera.zoom !== this._mainCamera.zoom) {
+            this._uiWorldCamera.zoom = this._mainCamera.zoom;
+            this._uiWorldCamera.updateProjectionMatrix();
+        }
     }
 
     private _renderUpdate(xrFrame?: any) {
@@ -444,27 +513,8 @@ export default class GameView extends Vue implements IGameView {
         } else {
             this._scene.background = new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
         }
-
-        // Main camera
-        this._mainCamera = new PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 20000);
-        this._mainCamera.position.z = 5;
-        this._mainCamera.position.y = 3;
-        this._mainCamera.rotation.x = ThreeMath.degToRad(-30);
-        this._mainCamera.layers.enable(LayersHelper.Layer_Default);
-
-        // UI World camera.
-        // This camera is parented to the main camera.
-        this._uiWorldCamera = new PerspectiveCamera(this._mainCamera.fov, this._mainCamera.aspect, this._mainCamera.near, this._mainCamera.far);
-        this._mainCamera.add(this._uiWorldCamera);
-        this._uiWorldCamera.position.set(0, 0, 0);
-        this._uiWorldCamera.rotation.set(0, 0, 0);
-
-        // Ui World camera only draws objects on the 'UI World Layer'.
-        this._uiWorldCamera.layers.set(LayersHelper.Layer_UIWorld);
-
-        this._mainCamera.updateMatrixWorld(true);
-
-        this._resizeCamera();
+        
+        this.setCameraType('orthographic');
         this._setupRenderer();
 
         // Ambient light.
@@ -676,7 +726,7 @@ export default class GameView extends Vue implements IGameView {
 
         // When being used on a vr headset, force the normal input module to use touch instead of mouse.
         // Touch seems to work better for 2d browsers on vr headsets (like the Oculus Go).
-        this.input.currentInputType = InputType.Touch;
+        this._input.currentInputType = InputType.Touch;
     }
 
     private _handleEnterVR(display: any) {
@@ -722,7 +772,7 @@ export default class GameView extends Vue implements IGameView {
 
     private _resizeRenderer() {
         // TODO: Call each time the screen size changes
-        const { width, height } = this._calculateSize();
+        const { width, height } = this._calculateCameraSize();
         this._renderer.setPixelRatio(window.devicePixelRatio || 1);
         this._renderer.setSize(width, height);
         this._container.style.height = this.gameView.style.height = this._renderer.domElement.style.height;
@@ -730,11 +780,28 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _resizeCamera() {
-        const { width, height } = this._calculateSize();
-        this._mainCamera.aspect = width / height;
+        const { width, height } = this._calculateCameraSize();
+        let aspect = width / height;
+
+        if (this._mainCamera instanceof OrthographicCamera) {
+            this._mainCamera.left = -Orthographic_FrustrumSize * aspect / 2;
+            this._mainCamera.right = Orthographic_FrustrumSize * aspect / 2;
+            this._mainCamera.top = Orthographic_FrustrumSize / 2;
+            this._mainCamera.bottom = -Orthographic_FrustrumSize / 2;
+        } else {
+            this._mainCamera.aspect = aspect;
+        }
         this._mainCamera.updateProjectionMatrix();
 
-        this._uiWorldCamera.aspect = this._mainCamera.aspect;
+        if (this._uiWorldCamera instanceof OrthographicCamera) {
+            let mainOrtho = <OrthographicCamera>this._mainCamera;
+            this._uiWorldCamera.left = mainOrtho.left;
+            this._uiWorldCamera.right = mainOrtho.right;
+            this._uiWorldCamera.top = mainOrtho.top;
+            this._uiWorldCamera.bottom = mainOrtho.bottom;
+        } else {
+            this._uiWorldCamera.aspect = aspect;
+        }
         this._uiWorldCamera.updateProjectionMatrix();
     }
 
@@ -746,7 +813,7 @@ export default class GameView extends Vue implements IGameView {
         this._vrEffect.setSize(width, height);
     }
 
-    private _calculateSize() {
+    private _calculateCameraSize() {
         const width = window.innerWidth;
         const height = window.innerHeight - this._container.getBoundingClientRect().top;
         return { width, height };

@@ -35,7 +35,7 @@ export class InputVR {
         VRController.update();
 
         this._controllerMeshes.forEach((mesh) => {
-            mesh.update(this._gameView.time.frameCount);
+            mesh.update(this._gameView.getTime().frameCount);
         });
 
     }
@@ -56,7 +56,7 @@ export class InputVR {
     getButtonDown(controllerIndex: number, buttonIndex: number): boolean {
         let buttonState = this._getButtonState(controllerIndex, buttonIndex);
         if (buttonState) {
-            return buttonState.isDownOnFrame(this._gameView.time.frameCount);
+            return buttonState.isDownOnFrame(this._gameView.getTime().frameCount);
         }
 
         return false;
@@ -68,7 +68,7 @@ export class InputVR {
     getButtonHeld(controllerIndex: number, buttonIndex: number): boolean {
         let buttonState = this._getButtonState(controllerIndex, buttonIndex);
         if (buttonState) {
-            return buttonState.isHeldOnFrame(this._gameView.time.frameCount);
+            return buttonState.isHeldOnFrame(this._gameView.getTime().frameCount);
         }
         
         return false;
@@ -80,7 +80,7 @@ export class InputVR {
     getButtonUp(controllerIndex: number, buttonIndex: number): boolean {
         let buttonState = this._getButtonState(controllerIndex, buttonIndex);
         if (buttonState) {
-            return buttonState.isUpOnFrame(this._gameView.time.frameCount);
+            return buttonState.isUpOnFrame(this._gameView.getTime().frameCount);
         }
         
         return false;
@@ -134,8 +134,8 @@ export class InputVR {
         console.log(event);
 
         let controller = event.detail;
-        controller.standingMatrix = (<any>this._gameView.renderer.vr).getStandingMatrix();
-        controller.head = this._gameView.mainCamera;
+        controller.standingMatrix = (<any>this._gameView.getRenderer().vr).getStandingMatrix();
+        controller.head = this._gameView.getMainCamera();
         
         let controllerMesh = new ControllerMesh(controller, this);
         this._controllerMeshes.push(controllerMesh);
@@ -144,7 +144,7 @@ export class InputVR {
         controller.add(controllerMesh);
 
         // Add controller to the scene.
-        this._gameView.scene.add(controller);
+        this._gameView.getScene().add(controller);
 
         controller.addEventListener('disconnected', this._handleVRControllerDisconnected);
 
@@ -166,7 +166,7 @@ export class InputVR {
         }
         
 
-        this._gameView.scene.remove(controller);
+        this._gameView.getScene().remove(controller);
 
     }
 }

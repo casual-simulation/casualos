@@ -32,7 +32,7 @@ export abstract class BaseFileClickOperation implements IOperation {
         this._file3D = file3D;
         
         // Store the screen position of the input when the click occured.
-        this._startScreenPos = this._gameView.input.getMouseScreenPos();
+        this._startScreenPos = this._gameView.getInput().getMouseScreenPos();
     }
 
     public update(calc: FileCalculationContext): void {
@@ -50,18 +50,18 @@ export abstract class BaseFileClickOperation implements IOperation {
 
         // If using touch, need to make sure we are only ever using one finger at a time. 
         // If a second finger is detected then we cancel this click operation.
-        if (this._gameView.input.currentInputType === InputType.Touch) {
-            if (this._gameView.input.getTouchCount() >= 2) {
+        if (this._gameView.getInput().currentInputType === InputType.Touch) {
+            if (this._gameView.getInput().getTouchCount() >= 2) {
                 this._finished = true;
                 return;
             }
         }
 
-        if (this._gameView.input.getMouseButtonHeld(0)) {
+        if (this._gameView.getInput().getMouseButtonHeld(0)) {
             
             if (!this._dragOperation) {
                 
-                const curScreenPos = this._gameView.input.getMouseScreenPos();
+                const curScreenPos = this._gameView.getInput().getMouseScreenPos();
                 const distance = curScreenPos.distanceTo(this._startScreenPos);
 
                 if (distance >= BaseFileClickOperation.DragThreshold) {

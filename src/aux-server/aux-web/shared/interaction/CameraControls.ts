@@ -276,7 +276,7 @@ export class CameraControls {
 
     private updateInput() {
 
-        const input = this._gameView.input;
+        const input = this._gameView.getInput();
 
         if (input.currentInputType === InputType.Mouse) {
 

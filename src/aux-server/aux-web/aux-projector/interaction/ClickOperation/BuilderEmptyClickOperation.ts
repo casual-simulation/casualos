@@ -27,15 +27,15 @@ export class BuilderEmptyClickOperation implements IOperation {
         this._interaction = interaction;
 
         // Store the screen position of the input when the click occured.
-        this._startScreenPos = this._gameView.input.getMouseScreenPos();
+        this._startScreenPos = this._gameView.getInput().getMouseScreenPos();
     }
 
     public update(): void {
         if (this._finished) return;
 
-        if (!this._gameView.input.getMouseButtonHeld(0)) {
+        if (!this._gameView.getInput().getMouseButtonHeld(0)) {
             
-            const curScreenPos = this._gameView.input.getMouseScreenPos();
+            const curScreenPos = this._gameView.getInput().getMouseScreenPos();
             const distance = curScreenPos.distanceTo(this._startScreenPos);
 
             if (distance < BuilderEmptyClickOperation.DragThreshold) {
@@ -43,12 +43,12 @@ export class BuilderEmptyClickOperation implements IOperation {
                 if (this._interaction.mode === 'worksurfaces') {
 
                     // When we release the empty click, make sure we are still over nothing.
-                    const screenPos = this._gameView.input.getMouseScreenPos();
+                    const screenPos = this._gameView.getInput().getMouseScreenPos();
                     if (this._interaction.isEmptySpace(screenPos)) {
 
                         // Still not clicking on anything.
                         if (BuilderEmptyClickOperation.CanOpenColorPicker && !this._gameView.xrSession) {
-                            this.sceneBackgroundColorPicker(this._gameView.input.getMousePagePos());
+                            this.sceneBackgroundColorPicker(this._gameView.getInput().getMousePagePos());
                         }
 
                     }

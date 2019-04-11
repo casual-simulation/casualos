@@ -61,7 +61,7 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
                 this._initialDragMesh = this._createDragMesh(calc, this._file);
             }
 
-            const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.mainCamera);
+            const mouseDir = Physics.screenPosToRay(this._gameView.getInput().getMouseScreenPos(), this._gameView.getMainCamera());
             let worldPos = Physics.pointOnRay(mouseDir, BuilderNewFileDragOperation.FreeDragDistance);
             this._initialDragMesh.position.copy(worldPos);
             this._initialDragMesh.updateMatrixWorld(true);
@@ -74,7 +74,7 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
     private _releaseDragMesh(mesh: AuxFile3D): void {
         if (mesh) {
             mesh.dispose();
-            this._gameView.scene.remove(mesh);
+            this._gameView.getScene().remove(mesh);
         }
     }
 }

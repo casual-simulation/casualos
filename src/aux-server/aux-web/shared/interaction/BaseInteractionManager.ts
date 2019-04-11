@@ -1,4 +1,4 @@
-import { Vector2, Vector3, Intersection, Raycaster, Object3D } from 'three';
+import { Vector2, Vector3, Intersection, Raycaster, Object3D, PerspectiveCamera, OrthographicCamera } from 'three';
 import { ContextMenuEvent, ContextMenuAction } from './ContextMenuEvent';
 import { 
     Object,
@@ -20,7 +20,6 @@ import { GameObject } from '../scene/GameObject';
 export abstract class BaseInteractionManager {
 
     protected _gameView: IGameView;
-    protected _raycaster: Raycaster;
     protected _draggableColliders: Object3D[];
     protected _draggableObjectsDirty: boolean;
     protected _cameraControls: CameraControls;
@@ -30,19 +29,20 @@ export abstract class BaseInteractionManager {
     constructor(gameView: IGameView) {
         this._draggableObjectsDirty = true;
         this._gameView = gameView;
-        this._raycaster = new Raycaster();
-        this._cameraControls = new CameraControls(this._gameView.mainCamera, this._gameView);
+        this._cameraControls = new CameraControls(this._gameView.getMainCamera(), this._gameView);
         this._operations = [];
 
         // Bind event handlers to this instance of the class.
         this._handleFileAdded = this._handleFileAdded.bind(this);
         this._handleFileUpdated = this._handleFileUpdated.bind(this);
         this._handleFileRemoved = this._handleFileRemoved.bind(this);
+        this._handleCameraTypeChanged = this._handleCameraTypeChanged.bind(this);
 
         // Listen to file events from game view.
         this._gameView.onFileAdded.addListener(this._handleFileAdded);
         this._gameView.onFileUpdated.addListener(this._handleFileUpdated);
         this._gameView.onFileRemoved.addListener(this._handleFileRemoved);
+        this._gameView.onCameraTypeChanged.addListener(this._handleCameraTypeChanged);
     }
 
     update(): void {
@@ -62,20 +62,20 @@ export abstract class BaseInteractionManager {
 
         if (this._gameView.vrDisplay && this._gameView.vrDisplay.isPresenting) {
             
-            const inputVR = this._gameView.inputVR;
+            const inputVR = this._gameView.getInputVR();
 
             // VR Mode interaction.
             for (let i = 0; i < 5; i++) {
                 if (inputVR.getButtonDown(0, i)) {
-                    console.log('[InteractionManager] VR button ' + i + ' down. frame: ' + this._gameView.time.frameCount);
+                    console.log('[InteractionManager] VR button ' + i + ' down. frame: ' + this._gameView.getTime().frameCount);
                 }
 
                 if (inputVR.getButtonHeld(0, i)) {
-                    console.log('[InteractionManager] VR button ' + i + ' held. frame: ' + this._gameView.time.frameCount);
+                    console.log('[InteractionManager] VR button ' + i + ' held. frame: ' + this._gameView.getTime().frameCount);
                 }
 
                 if (inputVR.getButtonUp(0, i)) {
-                    console.log('[InteractionManager] VR button ' + i + ' up. frame: ' + this._gameView.time.frameCount);
+                    console.log('[InteractionManager] VR button ' + i + ' up. frame: ' + this._gameView.getTime().frameCount);
                 }
             }
 
@@ -89,14 +89,14 @@ export abstract class BaseInteractionManager {
             }
             
             this._cameraControls.update();
-            const input = this._gameView.input;
+            const input = this._gameView.getInput();
 
             // Detect left click.
             if (input.getMouseButtonDown(MouseButtonId.Left)) {
 
                 if (input.isMouseButtonDownOn(this._gameView.gameView)){
                     const screenPos = input.getMouseScreenPos();
-                    const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this.getDraggableObjects(), this._gameView.mainCamera);
+                    const raycastResult = Physics.raycastAtScreenPos(screenPos, new Raycaster(), this.getDraggableObjects(), this._gameView.getMainCamera());
                     const hit = Physics.firstRaycastHit(raycastResult);
 
                     if (hit) {
@@ -140,10 +140,10 @@ export abstract class BaseInteractionManager {
     }
 
     showContextMenu(calc: FileCalculationContext) {
-        const input = this._gameView.input;
+        const input = this._gameView.getInput();
         const pagePos = input.getMousePagePos();
         const screenPos = input.getMouseScreenPos();
-        const raycastResult = Physics.raycastAtScreenPos(screenPos, this._raycaster, this.getDraggableObjects(), this._gameView.mainCamera);
+        const raycastResult = Physics.raycastAtScreenPos(screenPos, new Raycaster(), this.getDraggableObjects(), this._gameView.getMainCamera());
         const hit = Physics.firstRaycastHit(raycastResult);
 
         this._cameraControls.enabled = false;
@@ -178,7 +178,7 @@ export abstract class BaseInteractionManager {
     }
 
     async selectFile(file: AuxFile3D) {
-        const shouldMultiSelect = this._gameView.input.getKeyHeld('Control');
+        const shouldMultiSelect = this._gameView.getInput().getKeyHeld('Control');
         appManager.fileManager.recent.addFileDiff(file.file);
         appManager.fileManager.recent.selectedRecentFile = null;
         await appManager.fileManager.selection.selectFile(<AuxFile>file.file, shouldMultiSelect);
@@ -202,7 +202,7 @@ export abstract class BaseInteractionManager {
     }
 
     isEmptySpace(screenPos: Vector2): boolean {
-        const raycastResult = Physics.raycastAtScreenPos(screenPos, new Raycaster(), this.getDraggableObjects(), this._gameView.mainCamera);
+        const raycastResult = Physics.raycastAtScreenPos(screenPos, new Raycaster(), this.getDraggableObjects(), this._gameView.getMainCamera());
         const clickedObject = Physics.firstRaycastHit(raycastResult);
 
         return clickedObject === undefined || clickedObject === null;
@@ -246,6 +246,10 @@ export abstract class BaseInteractionManager {
 
     protected _handleFileRemoved(file: AuxFile): void {
         this._markDirty();
+    }
+
+    protected _handleCameraTypeChanged(mainCamera: PerspectiveCamera | OrthographicCamera): void {
+        this._cameraControls = new CameraControls(mainCamera, this._gameView);
     }
 
     protected _markDirty() {

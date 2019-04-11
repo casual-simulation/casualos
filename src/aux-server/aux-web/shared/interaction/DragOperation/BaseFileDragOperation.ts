@@ -48,7 +48,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         this._gameView = gameView;
         this._interaction = interaction;
         this._setFiles(files);
-        this._lastScreenPos = this._gameView.input.getMouseScreenPos();
+        this._lastScreenPos = this._gameView.getInput().getMouseScreenPos();
         this._context = context;
         this._previousContext = null;
     }
@@ -56,8 +56,8 @@ export abstract class BaseFileDragOperation implements IOperation {
     update(calc: FileCalculationContext): void {
         if (this._finished) return;
 
-        if (this._gameView.input.getMouseButtonHeld(0)) {
-            const curScreenPos = this._gameView.input.getMouseScreenPos();
+        if (this._gameView.getInput().getMouseButtonHeld(0)) {
+            const curScreenPos = this._gameView.getInput().getMouseScreenPos();
 
             if (!curScreenPos.equals(this._lastScreenPos)) {
 

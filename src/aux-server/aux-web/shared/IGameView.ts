@@ -16,20 +16,14 @@ export interface IGameView extends AuxFile3DFinder, Vue {
     
     readonly gameView: HTMLElement;
     readonly canvas: HTMLCanvasElement;
-    readonly time: Time;
-    readonly input: Input;
-    readonly inputVR: InputVR;
-    readonly mainCamera: PerspectiveCamera | OrthographicCamera;
-    readonly scene: Scene;
-    readonly renderer: WebGLRenderer; 
     readonly dev: boolean;
     readonly filesMode: boolean;
     readonly workspacesMode: boolean
-    readonly groundPlane: Plane;
 
     onFileAdded: ArgEvent<AuxFile>;
     onFileUpdated: ArgEvent<AuxFile>;
     onFileRemoved: ArgEvent<AuxFile>;
+    onCameraTypeChanged: ArgEvent<PerspectiveCamera | OrthographicCamera>;
     
     xrCapable: boolean;
     xrDisplay: any;
@@ -37,18 +31,26 @@ export interface IGameView extends AuxFile3DFinder, Vue {
     vrDisplay: VRDisplay;
     vrCapable: boolean;
 
+    getTime(): Time;
+    getInput(): Input;
+    getInputVR(): InputVR;
+    getScene(): Scene;
+    getRenderer(): WebGLRenderer;
+    getGroundPlane(): Plane;
+    getMainCamera(): PerspectiveCamera | OrthographicCamera;
+
     /**
      * Gets the list of contexts that this game view contains.
      */
     getContexts(): ContextGroup3D[];
 
     /**
-     * Sets the visibility of the file grids.
-     */
-    setGridsVisible(visible: boolean): void;
-
-    /**
      * Gets the HTML elements that the interaction manager should be able to handle events for.
      */
     getUIHtmlElements(): HTMLElement[];
+
+    /**
+     * Sets the visibility of the file grids.
+     */
+    setGridsVisible(visible: boolean): void;
 }

@@ -23,7 +23,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
     }
 
     protected _onDrag(calc: FileCalculationContext): void {
-        const targetData = this._gameView.input.getTargetData();
+        const targetData = this._gameView.getInput().getTargetData();
         const vueElement = Input.getVueParent(targetData.inputOver);
 
         if (vueElement) {
@@ -46,7 +46,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
                     this._context = this._gameView.context;
                 }
 
-                const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.mainCamera);
+                const mouseDir = Physics.screenPosToRay(this._gameView.getInput().getMouseScreenPos(), this._gameView.getMainCamera());
                 const { good, gridTile } = this._interaction.pointOnGrid(calc, mouseDir);
                 
                 if (good) {

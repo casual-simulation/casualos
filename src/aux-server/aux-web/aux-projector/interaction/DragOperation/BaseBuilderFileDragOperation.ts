@@ -41,8 +41,8 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     }
 
     protected _onDrag(calc: FileCalculationContext) {
-        const mouseScreenPos = this._gameView.input.getMouseScreenPos();
-        const { good, gridPosition, workspace } = this._interaction.pointOnWorkspaceGrid(calc, mouseScreenPos, this._gameView.mainCamera);
+        const mouseScreenPos = this._gameView.getInput().getMouseScreenPos();
+        const { good, gridPosition, workspace } = this._interaction.pointOnWorkspaceGrid(calc, mouseScreenPos, this._gameView.getMainCamera());
 
         if (this._files.length > 0) {
             if (good) {
@@ -92,7 +92,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     }
 
     protected _dragFilesFree(calc: FileCalculationContext): void {
-        const mouseDir = Physics.screenPosToRay(this._gameView.input.getMouseScreenPos(), this._gameView.mainCamera);
+        const mouseDir = Physics.screenPosToRay(this._gameView.getInput().getMouseScreenPos(), this._gameView.getMainCamera());
         const firstFileExists = true;
         
         if (firstFileExists) {
@@ -105,7 +105,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
 
                 // Calculate the distance to perform free drag at.
                 const fileWorldPos = this._freeDragMeshes[0].getWorldPosition(new Vector3());
-                const cameraWorldPos = this._gameView.mainCamera.getWorldPosition(new Vector3());
+                const cameraWorldPos = this._gameView.getMainCamera().getWorldPosition(new Vector3());
                 this._freeDragDistance = cameraWorldPos.distanceTo(fileWorldPos);
             }
 
@@ -157,11 +157,11 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
 
         // Parent all the files to the group.
         for (let i = 0; i < fileMeshes.length; i++) {
-            setParent(fileMeshes[i], group, this._gameView.scene);
+            setParent(fileMeshes[i], group, this._gameView.getScene());
         }
 
         // Add the group the scene.
-        this._gameView.scene.add(group);
+        this._gameView.getScene().add(group);
 
         return group;
     }
@@ -174,7 +174,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
             m.dispose();
         });
         // Remove the group object from the scene.
-        this._gameView.scene.remove(group);
+        this._gameView.getScene().remove(group);
     }
 
     /**
@@ -189,11 +189,11 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         mesh.fileUpdated(file, [], calc);
 
         if (!mesh.parent) {
-            this._gameView.scene.add(mesh);
+            this._gameView.getScene().add(mesh);
         } else {
             // KLUDGE: FileMesh will reparent the object to a workspace if the the file has a workspace assigned.
             // Setting the parent here will force the FileMesh to be in world space again.
-            setParent(mesh, this._gameView.scene, this._gameView.scene);
+            setParent(mesh, this._gameView.getScene(), this._gameView.getScene());
         }
 
         return mesh;

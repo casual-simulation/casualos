@@ -63,6 +63,7 @@ import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { BuilderInteractionManager } from '../interaction/BuilderInteractionManager';
 import Home from '../Home/Home';
+import { CameraType } from '../../shared/scene/CameraType';
 
 const Orthographic_FrustrumSize: number = 100;
 const Orthographic_DefaultZoom: number = 8;
@@ -73,7 +74,6 @@ const Orthographic_DefaultZoom: number = 8;
     }
 })
 export default class GameView extends Vue implements IGameView {
-    static UseOrthographicCamera: boolean = true;
 
     private _scene: Scene;
     private _mainCamera: OrthographicCamera | PerspectiveCamera;
@@ -97,10 +97,12 @@ export default class GameView extends Vue implements IGameView {
     private _interaction: BuilderInteractionManager;
     private _gridChecker: GridChecker;
     private _originalBackground: Color | Texture;
+    private _cameraType: CameraType;
 
     public onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
     public onFileUpdated: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
     public onFileRemoved: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
+    public onCameraTypeChanged: ArgEvent<PerspectiveCamera | OrthographicCamera> = new ArgEvent<PerspectiveCamera | OrthographicCamera>();
 
     private _contexts: BuilderGroup3D[];
     private _subs: SubscriptionLike[];
@@ -123,44 +125,36 @@ export default class GameView extends Vue implements IGameView {
     @Inject() home: Home;
     @Provide() fileRenderer: FileRenderer = new FileRenderer();
 
-    getUIHtmlElements(): HTMLElement[] {
-        return [
-            ...this.home.getUIHtmlElements(),
-            <HTMLElement>this.$refs.fileQueue
-        ];
-    }
     get gameView(): HTMLElement { return <HTMLElement>this.$refs.gameView; }
     get canvas() { return this._canvas; }
-    get time(): Time { return this._time; }
-    get input(): Input { return this._input; }
-    get inputVR(): InputVR { return this._inputVR; }
-    get mainCamera(): PerspectiveCamera | OrthographicCamera { return this._mainCamera; }
-    get scene(): Scene { return this._scene; }
-    get renderer() { return this._renderer; }
     get dev() { return !PRODUCTION; }
     get filesMode() { return this.mode === 'files'; }
     get workspacesMode() { return this.mode === 'worksurfaces'; }
-    get groundPlane() { return this._groundPlane; }
-    get gridChecker() { return this._gridChecker; }
     get fileManager() { return appManager.fileManager; }
 
     constructor() {
         super();
-        // this.addToRecentFilesList = debounce(this.addToRecentFilesList.bind(this), 100);
-        this.onFileAdded = new ArgEvent<AuxFile>();
-        this.onFileUpdated = new ArgEvent<AuxFile>();
-        this.onFileRemoved = new ArgEvent<AuxFile>();
     }
 
     public findFilesById(id: string): AuxFile3D[] {
         return flatMap(this._contexts.map(c => c.getFiles().filter(f => f.file.id === id)));
     }
 
-    /**
-     * Gets the list of contexts that this game view contains.
-     */
-    public getContexts() {
-        return this._contexts.filter(c => c.contexts.size > 0);
+    public getTime() { return this._time; }
+    public getInput() { return this._input; }
+    public getInputVR() { return this._inputVR; }
+    public getScene() { return this._scene; }
+    public getRenderer() { return this._renderer; }
+    public getGroundPlane() { return this._groundPlane; }
+    public getGridChecker() { return this._gridChecker; }
+    public getMainCamera(): PerspectiveCamera | OrthographicCamera { return this._mainCamera; }
+    public getContexts() {return this._contexts.filter(c => c.contexts.size > 0);}
+
+    public getUIHtmlElements(): HTMLElement[] {
+        return [
+            ...this.home.getUIHtmlElements(),
+            <HTMLElement>this.$refs.fileQueue
+        ];
     }
 
     public setGridsVisible(visible: boolean) {
@@ -188,6 +182,61 @@ export default class GameView extends Vue implements IGameView {
         // TODO: Make the user have to drag a workspace onto the world
         // instead of just clicking a button and a workspace being placed somewhere.
         this.fileManager.createWorkspace();
+    }
+
+    public setCameraType(type: CameraType) {
+        if (this._cameraType === type) return;
+
+        // Clean up current cameras if they exists.
+        if (this._mainCamera) {
+            this._scene.remove(this._mainCamera);
+            this._mainCamera = null;
+            this._uiWorldCamera = null;
+        }
+
+        this._cameraType = type;
+
+        // Setup main camera
+        if (this._cameraType === 'orthographic') {
+            this._mainCamera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 20000);
+            this._mainCamera.position.set(Orthographic_FrustrumSize, Orthographic_FrustrumSize, Orthographic_FrustrumSize);
+            this._mainCamera.zoom = Orthographic_DefaultZoom;
+        } else {
+            this._mainCamera = new PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 20000);
+            this._mainCamera.position.set(5, 5, 5);
+        }
+
+        this._mainCamera.lookAt(new Vector3(0,0,0));
+        this._mainCamera.layers.enable(LayersHelper.Layer_Default);
+        this._scene.add(this._mainCamera);
+
+        // Setup UI World camera.
+        // This camera is parented to the main camera.
+        if (this._mainCamera instanceof OrthographicCamera) {
+            this._uiWorldCamera = new OrthographicCamera(this._mainCamera.left, this._mainCamera.right, this._mainCamera.top, this._mainCamera.bottom, this._mainCamera.near, this._mainCamera.far);
+        } else {
+            this._uiWorldCamera = new PerspectiveCamera(this._mainCamera.fov, this._mainCamera.aspect, this._mainCamera.near, this._mainCamera.far);
+        }
+        this._mainCamera.add(this._uiWorldCamera);
+        this._uiWorldCamera.position.set(0, 0, 0);
+        this._uiWorldCamera.rotation.set(0, 0, 0);
+
+        // Ui World camera only draws objects on the 'UI World Layer'.
+        this._uiWorldCamera.layers.set(LayersHelper.Layer_UIWorld);
+
+        this._mainCamera.updateMatrixWorld(true);
+
+        this._resizeCamera();
+
+        // Update side bar item.
+        this.removeSidebarItem('toggle_camera_type');
+        if (this._cameraType === 'orthographic') {
+            this.addSidebarItem('toggle_camera_type', 'Enable Perspective Camera', () => { this.setCameraType('perspective'); }, 'videocam');
+        } else {
+            this.addSidebarItem('toggle_camera_type', 'Disable Perspective Camera', () => { this.setCameraType('orthographic'); }, 'videocam_off');
+        }
+
+        this.onCameraTypeChanged.invoke(this._mainCamera);
     }
 
 
@@ -420,7 +469,7 @@ export default class GameView extends Vue implements IGameView {
         let context = new BuilderGroup3D(file, this._decoratorFactory);
         context.setGridChecker(this._gridChecker);
         this._contexts.push(context);
-        this.scene.add(context);
+        this._scene.add(context);
 
         let calc = this.fileManager.createContext();
         await Promise.all([...this._contexts.values()].map(c => c.fileAdded(file, calc)));
@@ -451,7 +500,7 @@ export default class GameView extends Vue implements IGameView {
 
         if (removedIndex >= 0) {
             const context = this._contexts[removedIndex];
-            this.scene.remove(context);
+            this._scene.remove(context);
             this._contexts.splice(removedIndex, 1);
         }
 
@@ -493,41 +542,12 @@ export default class GameView extends Vue implements IGameView {
         let globalsFile = this.fileManager.globalsFile;
 
         if (globalsFile && globalsFile.tags['aux.scene.color']) {
-            this.scene.background = new Color(globalsFile.tags['aux.scene.color']);
+            this._scene.background = new Color(globalsFile.tags['aux.scene.color']);
         } else {
-            this.scene.background = new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
+            this._scene.background = new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
         }
 
-        // Main camera
-        if (GameView.UseOrthographicCamera) {
-            this._mainCamera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 20000);
-            this._mainCamera.position.set(Orthographic_FrustrumSize, Orthographic_FrustrumSize, Orthographic_FrustrumSize);
-            this._mainCamera.zoom = Orthographic_DefaultZoom;
-        } else {
-            this._mainCamera = new PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 20000);
-            this._mainCamera.position.set(5, 5, 5);
-        }
-
-        this._mainCamera.lookAt(new Vector3(0,0,0));
-        this._mainCamera.layers.enable(LayersHelper.Layer_Default);
-
-        // UI World camera.
-        // This camera is parented to the main camera.
-        if (this._mainCamera instanceof OrthographicCamera) {
-            this._uiWorldCamera = new OrthographicCamera(this._mainCamera.left, this._mainCamera.right, this._mainCamera.top, this._mainCamera.bottom, this._mainCamera.near, this._mainCamera.far);
-        } else {
-            this._uiWorldCamera = new PerspectiveCamera(this._mainCamera.fov, this._mainCamera.aspect, this._mainCamera.near, this._mainCamera.far);
-        }
-        this._mainCamera.add(this._uiWorldCamera);
-        this._uiWorldCamera.position.set(0, 0, 0);
-        this._uiWorldCamera.rotation.set(0, 0, 0);
-
-        // Ui World camera only draws objects on the 'UI World Layer'.
-        this._uiWorldCamera.layers.set(LayersHelper.Layer_UIWorld);
-
-        this._mainCamera.updateMatrixWorld(true);
-
-        this._resizeCamera();
+        this.setCameraType('orthographic');
         this._setupRenderer();
 
         // Ambient light.
@@ -745,7 +765,7 @@ export default class GameView extends Vue implements IGameView {
 
         // When being used on a vr headset, force the normal input module to use touch instead of mouse.
         // Touch seems to work better for 2d browsers on vr headsets (like the Oculus Go).
-        this.input.currentInputType = InputType.Touch;
+        this._input.currentInputType = InputType.Touch;
     }
 
     private _handleEnterVR(display: any) {
