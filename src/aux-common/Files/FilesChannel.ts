@@ -7,7 +7,7 @@ import {
 } from 'rxjs/operators';
 import { ReducingStateStore, Event, ChannelConnection } from "../channels-core";
 import {File, Object, Workspace, PartialFile} from './File';
-import { createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, isDestroyed, getActiveObjects, calculateStateDiff, FilesStateDiff, filtersMatchingArguments } from './FileCalculations';
+import { createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, isDestroyed, getActiveObjects, calculateStateDiff, FilesStateDiff, filtersMatchingArguments, calculateFormulaValue } from './FileCalculations';
 import { merge as mergeObj } from '../utils';
 import formulaLib, { setActions, getActions, setFileState, setCalculationContext, getCalculationContext, setUserId, getUserId } from '../Formulas/formula-lib';
 import { AnimationActionLoopStyles } from 'three';
@@ -83,6 +83,50 @@ export function calculateActionEvents(state: FilesState, action: Action) {
         events,
         hasUserDefinedEvents: fileEvents.length > 0
     };
+}
+
+
+/**
+ * Calculates the list of events needed to destroy the given file and all of its decendents.
+ * @param calc The file calculation context.
+ * @param file The file to destroy.
+ */
+export function calculateDestroyFileEvents(calc: FileCalculationContext, file: File): FileEvent[] {
+    let events: FileEvent[] = [];
+    let id: string;
+    if (typeof file === 'object') {
+        id = file.id;
+    } else if (typeof file === 'string') {
+        id = file;
+    }
+
+    if (id) {
+        events.push(fileRemoved(id));
+    }
+
+    destroyChildren(calc, events, id);
+
+    return events;
+}
+
+function destroyChildren(calc: FileCalculationContext, events: FileEvent[], id: string) {
+    const result = calculateFormulaValue(calc, `@aux._parent("${id}")`);
+    if (result.success) {
+        const children = result.result;
+        let all: File[] = [];
+        if (children) {
+            if (Array.isArray(children)) {
+                all = children;
+            } else {
+                all = [children];
+            }
+        }
+
+        all.forEach(child => {
+            events.push(fileRemoved(child.id));
+            destroyChildren(calc, events, child.id);
+        });
+    }
 }
 
 /**

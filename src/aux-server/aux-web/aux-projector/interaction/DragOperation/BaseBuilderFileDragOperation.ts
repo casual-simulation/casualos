@@ -6,6 +6,7 @@ import {
     FileEvent,
     FileCalculationContext,
     fileRemoved,
+    calculateDestroyFileEvents,
 } from '@yeti-cgi/aux-common';
 
 import { setParent } from '../../../shared/scene/SceneUtils';
@@ -53,14 +54,14 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         }
     }
 
-    protected _onDragReleased(): void {
+    protected _onDragReleased(calc: FileCalculationContext): void {
         // Button has been released.
         if (this._freeDragGroup) {
             this._releaseFreeDragGroup(this._freeDragGroup);
             this._freeDragGroup = null;
             
             // Destroy files if free dragging them (trash can)!
-            this._destroyFiles(this._files);
+            this._destroyFiles(calc, this._files);
         }
     }
 
@@ -120,11 +121,11 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         }
     }
 
-    protected _destroyFiles(files: File[]) {
+    protected _destroyFiles(calc: FileCalculationContext, files: File[]) {
         let events: FileEvent[] = [];
         // Mark the files as destroyed.
         for (let i = 0; i < files.length; i++) {
-            events.push(fileRemoved(files[i].id));
+            events.push(...calculateDestroyFileEvents(calc, files[i]));
         }
 
         appManager.fileManager.transaction(...events);

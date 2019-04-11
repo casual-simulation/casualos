@@ -68,7 +68,7 @@ export abstract class BaseFileDragOperation implements IOperation {
 
         } else {
 
-            this._onDragReleased();
+            this._onDragReleased(calc);
 
             // This drag operation is finished.
             this._finished = true;
@@ -237,5 +237,5 @@ export abstract class BaseFileDragOperation implements IOperation {
     //
 
     protected abstract _onDrag(calc:FileCalculationContext): void;
-    protected abstract _onDragReleased(): void;
+    protected abstract _onDragReleased(calc: FileCalculationContext): void;
 }

@@ -6,11 +6,12 @@ import {
     calculateActionEvents,
     transaction,
     fileUpdated,
+    calculateDestroyFileEvents,
 } from './FilesChannel';
 import { Workspace, Object, File } from './File';
 import { values, assign, merge } from 'lodash';
 import uuid from 'uuid/v4';
-import { objectsAtContextGridPosition, calculateStateDiff, COMBINE_ACTION_NAME } from './FileCalculations';
+import { objectsAtContextGridPosition, calculateStateDiff, COMBINE_ACTION_NAME, createFile, createCalculationContext } from './FileCalculations';
 import { TestConnector } from '../channels-core/test/TestConnector';
 import { Subject } from 'rxjs';
 import { ChannelClient, StoreFactory, ReducingStateStore } from '../channels-core';
@@ -719,7 +720,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'addItem()': 'createMenuItemFrom(@name("test"),"id", "label", "action")',
+                            'addItem()': 'createMenuItemFrom(@name("test"), "id", "label", "action")',
                         }
                     },
                     userFile: {
@@ -838,6 +839,32 @@ describe('FilesChannel', () => {
             expect(result.events).toEqual([
                 fileRemoved('menuItem'),
                 fileRemoved('menuItem2')
+            ]);
+        });
+    });
+    
+    describe('calculateDestroyFileEvents()', () => {
+        it('should return a list of events needed to destroy the given file', () => {
+            const file1 = createFile('file1');
+            const file2 = createFile('file2', {
+                'aux._parent': 'file1'
+            });
+            const file3 = createFile('file3', {
+                'aux._parent': 'file2'
+            });
+            const file4 = createFile('file4', {
+                'aux._parent': 'file1'
+            });
+            const file5 = createFile('file5');
+
+            const calc = createCalculationContext([file1, file2, file3, file4, file5]);
+            const events = calculateDestroyFileEvents(calc, file1);
+
+            expect(events).toEqual([
+                fileRemoved('file1'),
+                fileRemoved('file2'),
+                fileRemoved('file3'),
+                fileRemoved('file4')
             ]);
         });
     });

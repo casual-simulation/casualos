@@ -39,7 +39,7 @@ import {
     cloneDeep
 } from 'lodash';
 import { File, Object, PartialFile } from './File';
-import { FilesState, cleanFile } from './FilesChannel';
+import { FilesState, cleanFile, fileRemoved } from './FilesChannel';
 import { file } from '../aux-format';
 
 describe('FileCalculations', () => {
@@ -2577,4 +2577,5 @@ describe('FileCalculations', () => {
             });
         });
     });
+
 });

@@ -38,7 +38,7 @@ import { isProxy, createFileProxy, proxyObject, SetValueHandler, FileProxy } fro
 import formulaLib from '../Formulas/formula-lib';
 import { FilterFunction, SandboxInterface } from '../Formulas/SandboxInterface';
 import { PartialFile } from '../Files';
-import { FilesState, cleanFile, FileEvent, hasValue } from './FilesChannel';
+import { FilesState, cleanFile, hasValue } from './FilesChannel';
 import { merge } from '../utils';
 import { AtomOp, Atom } from '../causal-trees';
 import { AuxOp, AuxOpType, AuxFile, file, AuxObject } from '../aux-format';
@@ -546,6 +546,7 @@ export function removeFileFromMenu(calc: FileCalculationContext, userFile: File)
         }
     };
 }
+
 
 /**
  * Gets the list of tags that are on the given file.
