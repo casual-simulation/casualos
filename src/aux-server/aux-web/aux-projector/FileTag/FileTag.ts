@@ -1,7 +1,7 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Prop, Inject} from 'vue-property-decorator';
-import { isFilterTag, parseFilterTag } from '@yeti-cgi/aux-common';
+import { isFilterTag, parseFilterTag, COMBINE_ACTION_NAME } from '@yeti-cgi/aux-common';
 import CombineIcon from '../public/icons/combine_icon.svg';
 import { getColorForTags } from '../../shared/scene/ColorUtils';
 import TagColor from '../TagColor/TagColor';
@@ -31,7 +31,7 @@ export default class FileTag extends Vue {
     get isCombine() {
         if (this.isFilter) {
             const data = this.filterData;
-            return data.eventName === '+';
+            return data.eventName === COMBINE_ACTION_NAME;
         } else {
             return false;
         }

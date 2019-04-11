@@ -86,7 +86,7 @@ export class FileHelper {
 
         // Calculate the events on a single client and then run them in a transaction to make sure the order is right.
         const fileIds = files.map(f => f.id);
-        const actionData = action(eventName, fileIds);
+        const actionData = action(eventName, fileIds, this._userId);
         const result = calculateActionEvents(this._tree.value, actionData);
         console.log('  result: ', result);
 
