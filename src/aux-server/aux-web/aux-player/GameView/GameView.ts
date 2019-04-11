@@ -56,10 +56,8 @@ import { PlayerInteractionManager } from '../interaction/PlayerInteractionManage
 import InventoryFile from '../InventoryFile/InventoryFile';
 import { InventoryContext } from '../InventoryContext';
 import { doesFileDefinePlayerContext } from '../PlayerUtils';
-import { CameraType } from '../../shared/scene/CameraType';
+import { CameraType, resizeCameraRig, createCameraRig } from '../../shared/scene/CameraFactory';
 
-const Orthographic_FrustrumSize: number = 100;
-const Orthographic_DefaultZoom: number = 8;
 
 @Component({
     components: {
@@ -165,37 +163,11 @@ export default class GameView extends Vue implements IGameView {
 
         this._cameraType = type;
 
-        // Setup main camera
-        if (this._cameraType === 'orthographic') {
-            this._mainCamera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 20000);
-            this._mainCamera.position.set(Orthographic_FrustrumSize, Orthographic_FrustrumSize, Orthographic_FrustrumSize);
-            this._mainCamera.zoom = Orthographic_DefaultZoom;
-        } else {
-            this._mainCamera = new PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 20000);
-            this._mainCamera.position.set(5, 5, 5);
-        }
+        const { width, height } = this._calculateCameraSize();
+        const rig = createCameraRig(this._cameraType, this._scene, width, height);
 
-        this._mainCamera.lookAt(new Vector3(0,0,0));
-        this._mainCamera.layers.enable(LayersHelper.Layer_Default);
-        this._scene.add(this._mainCamera);
-
-        // Setup UI World camera.
-        // This camera is parented to the main camera.
-        if (this._mainCamera instanceof OrthographicCamera) {
-            this._uiWorldCamera = new OrthographicCamera(this._mainCamera.left, this._mainCamera.right, this._mainCamera.top, this._mainCamera.bottom, this._mainCamera.near, this._mainCamera.far);
-        } else {
-            this._uiWorldCamera = new PerspectiveCamera(this._mainCamera.fov, this._mainCamera.aspect, this._mainCamera.near, this._mainCamera.far);
-        }
-        this._mainCamera.add(this._uiWorldCamera);
-        this._uiWorldCamera.position.set(0, 0, 0);
-        this._uiWorldCamera.rotation.set(0, 0, 0);
-
-        // Ui World camera only draws objects on the 'UI World Layer'.
-        this._uiWorldCamera.layers.set(LayersHelper.Layer_UIWorld);
-
-        this._mainCamera.updateMatrixWorld(true);
-
-        this._resizeCamera();
+        this._mainCamera = rig.mainCamera;
+        this._uiWorldCamera = rig.uiWorldCamera;
 
         // Update side bar item.
         this.removeSidebarItem('toggle_camera_type');
@@ -765,7 +737,9 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _handleResize() {
-        this._resizeCamera();
+        const { width, height } = this._calculateCameraSize();
+        resizeCameraRig({ mainCamera: this._mainCamera, uiWorldCamera: this._uiWorldCamera }, width, height);
+        
         this._resizeRenderer();
         this._resizeVR();
     }
@@ -777,32 +751,6 @@ export default class GameView extends Vue implements IGameView {
         this._renderer.setSize(width, height);
         this._container.style.height = this.gameView.style.height = this._renderer.domElement.style.height;
         this._container.style.width = this.gameView.style.width = this._renderer.domElement.style.width;
-    }
-
-    private _resizeCamera() {
-        const { width, height } = this._calculateCameraSize();
-        let aspect = width / height;
-
-        if (this._mainCamera instanceof OrthographicCamera) {
-            this._mainCamera.left = -Orthographic_FrustrumSize * aspect / 2;
-            this._mainCamera.right = Orthographic_FrustrumSize * aspect / 2;
-            this._mainCamera.top = Orthographic_FrustrumSize / 2;
-            this._mainCamera.bottom = -Orthographic_FrustrumSize / 2;
-        } else {
-            this._mainCamera.aspect = aspect;
-        }
-        this._mainCamera.updateProjectionMatrix();
-
-        if (this._uiWorldCamera instanceof OrthographicCamera) {
-            let mainOrtho = <OrthographicCamera>this._mainCamera;
-            this._uiWorldCamera.left = mainOrtho.left;
-            this._uiWorldCamera.right = mainOrtho.right;
-            this._uiWorldCamera.top = mainOrtho.top;
-            this._uiWorldCamera.bottom = mainOrtho.bottom;
-        } else {
-            this._uiWorldCamera.aspect = aspect;
-        }
-        this._uiWorldCamera.updateProjectionMatrix();
     }
 
     private _resizeVR() {
