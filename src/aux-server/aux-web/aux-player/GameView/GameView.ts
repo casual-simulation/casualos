@@ -153,10 +153,6 @@ export default class GameView extends Vue implements IGameView {
         // This currently does nothing for AUX Player, we dont really show any grids right now.
     }
 
-    public async clickMenuItem(item: AuxFile) {
-        await this.fileManager.action('onClick', [item]);
-    }
-
     public async mounted() {
         this._handleResize = this._handleResize.bind(this);
         window.addEventListener('resize', this._handleResize);

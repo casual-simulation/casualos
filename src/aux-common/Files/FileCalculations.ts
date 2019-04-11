@@ -834,6 +834,24 @@ export function getFileRotation(calc: FileCalculationContext, file: File, contex
 }
 
 /**
+ * Gets the file that the given file is using as the input target.
+ * @param calc The file calculation context.
+ * @param file The file.
+ */
+export function getFileInputTarget(calc: FileCalculationContext, file: AuxFile): AuxFile {
+    return calculateFileValueAsFile(calc, file, 'aux.input.target', file);
+}
+
+/**
+ * Gets the placeholder to use for a file's input box.
+ * @param calc The file calculation context.
+ * @param file The file.
+ */
+export function getFileInputPlaceholder(calc: FileCalculationContext, file: AuxFile): string {
+    return calculateFormattedFileValue(calc, file, 'aux.input.placeholder');
+}
+
+/**
  * Gets the shape of the file.
  * @param calc The calculation context to use.
  * @param file The file.
@@ -1167,6 +1185,24 @@ export function getUserMode(object: Object): UserMode {
  */
 export function getSelectionMode(file: File): SelectionMode {
     return file.tags['aux._selectionMode'] || DEFAULT_SELECTION_MODE;
+}
+
+/**
+ * Calculates the value of the given tag on the given file. If the result is not a file, then the given default value
+ * is returned.
+ * @param context The context.
+ * @param file The file.
+ * @param tag The tag.
+ * @param defaultValue The default value to use if the tag doesn't exist or the result is not a file.
+ */
+export function calculateFileValueAsFile(context: FileCalculationContext, file: File, tag: string, defaultValue: AuxFile): AuxFile {
+    if(file.tags[tag]) {
+        const result = calculateFileValue(context, file, tag);
+        if (isFile(result)) {
+            return result;
+        }
+    }
+    return defaultValue;
 }
 
 /**

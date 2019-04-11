@@ -27,8 +27,7 @@
                                     <menu-file v-for="(file, index) in menuContext.items" :key="file.id"
                                         :file="file"
                                         :index="index"
-                                        :context="menuContext.context"
-                                        @click="clickMenuItem(file)">
+                                        :context="menuContext.context">
                                     </menu-file>
                                 </md-list>
                             </md-content>
