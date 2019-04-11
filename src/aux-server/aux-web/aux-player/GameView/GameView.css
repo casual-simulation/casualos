@@ -52,3 +52,8 @@ html.ar-app .webxr-sessions canvas {
 .menu-layout {
     margin-top: 8px;
 }
+
+.menu-items {
+    max-height: 250px;
+    overflow-y: auto;
+}
