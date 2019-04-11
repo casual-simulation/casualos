@@ -21,14 +21,17 @@
                         <md-list-item md-expand :md-expanded.sync="menuExpanded">
                             <md-icon>menu</md-icon>
                             <span class="md-list-item-text">Menu</span>
-                            <md-list slot="md-expand" class="md-dense">
-                                <menu-file v-for="(file, index) in menuContext.items" :key="file.id"
-                                    :file="file"
-                                    :index="index"
-                                    :context="menuContext.context"
-                                    @click="clickMenuItem(file)">
-                                </menu-file>
-                            </md-list>
+                            <md-badge class="md-primary" :md-content="menuContext.items.length" />
+                            <md-content slot="md-expand" class="menu-items md-scrollbar">
+                                <md-list class="md-dense">
+                                    <menu-file v-for="(file, index) in menuContext.items" :key="file.id"
+                                        :file="file"
+                                        :index="index"
+                                        :context="menuContext.context"
+                                        @click="clickMenuItem(file)">
+                                    </menu-file>
+                                </md-list>
+                            </md-content>
                         </md-list-item>
                     </md-list>
                 </md-card>
