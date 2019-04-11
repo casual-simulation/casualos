@@ -18,27 +18,17 @@ export default class MenuFile extends Vue {
 
     label: string = '';
     labelColor: string = '#000';
+    backgroundColor: string = '#FFF';
 
     @Watch('file')
     private async _fileChanged(file: AuxFile) {
         if (file) {
-            let label = file.tags['aux.label'];
-            if (label) {
-                this.label = appManager.fileManager.calculateFormattedFileValue(file, 'aux.label');
-    
-                const labelColor = file.tags['aux.label.color'];
-                if (labelColor) {
-                    this.labelColor = appManager.fileManager.calculateFormattedFileValue(file, 'aux.label.color');
-    
-                } else {
-                    this.labelColor = '#000';
-                }
-            } else {
-                this.label = '';
-            }
+            this._updateLabel(file);
+            this._updateColor(file);
         } else {
             this.label = '';
             this.labelColor = '#000';
+            this.backgroundColor = '#FFF';
         }
     }
 
@@ -52,5 +42,28 @@ export default class MenuFile extends Vue {
 
     click() {
         this.$emit('click');
+    }
+
+    _updateColor(file: AuxFile) {
+        if (file.tags['aux.color']) {
+            this.backgroundColor = appManager.fileManager.calculateFileValue(file, 'aux.color');
+        } else {
+            this.backgroundColor = '#FFF';
+        }
+    }
+
+    private _updateLabel(file: AuxFile) {
+        let label = file.tags['aux.label'];
+        if (label) {
+            this.label = appManager.fileManager.calculateFormattedFileValue(file, 'aux.label');
+            const labelColor = file.tags['aux.label.color'];
+            if (labelColor) {
+                this.labelColor = appManager.fileManager.calculateFormattedFileValue(file, 'aux.label.color');
+            } else {
+                this.labelColor = '#000';
+            }
+        } else {
+            this.label = '';
+        }
     }
 };
