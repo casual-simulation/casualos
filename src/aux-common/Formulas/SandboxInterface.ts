@@ -1,4 +1,4 @@
-export type FilterFunction = (value: any) => boolean;
+export type FilterFunction = ((value: any) => boolean) | any;
 
 /**
  * Defines an interface for objects that can allow the sandbox to communicate with the outside world.

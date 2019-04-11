@@ -38,7 +38,7 @@ import { isProxy, createFileProxy, proxyObject, SetValueHandler, FileProxy } fro
 import formulaLib from '../Formulas/formula-lib';
 import { FilterFunction, SandboxInterface } from '../Formulas/SandboxInterface';
 import { PartialFile } from '../Files';
-import { FilesState, cleanFile, FileEvent, hasValue } from './FilesChannel';
+import { FilesState, cleanFile, hasValue } from './FilesChannel';
 import { merge } from '../utils';
 import { AtomOp, Atom } from '../causal-trees';
 import { AuxOp, AuxOpType, AuxFile, file, AuxObject } from '../aux-format';
@@ -484,6 +484,71 @@ export function newSelectionId() {
 }
 
 /**
+ * Gets the menu ID that is used for the given user.
+ * @param userFile The file for the user.
+ */
+export function getUserMenuId(calc: FileCalculationContext, userFile: File) {
+    return calculateFileValue(calc, userFile, '_userMenuContext');
+}
+
+/**
+ * Gets the list of files that are in the user's menu.
+ * @param calc The file calculation context.
+ * @param userFile The user file to use.
+ */
+export function getFilesInMenu(calc: FileCalculationContext, userFile: File): File[] {
+    const context = getUserMenuId(calc, userFile);
+    return filesInContext(calc, context);
+}
+
+/**
+ * Gets the list of files that are in the given context.
+ * @param calc The file calculation context.
+ * @param context The context to search for files in.
+ */
+export function filesInContext(calc: FileCalculationContext, context: string): File[] {
+    const files = calc.objects.filter(f => isFileInContext(calc, f, context));
+    return sortBy(files, f => fileContextSortOrder(calc, f, context));
+}
+
+/**
+ * Gets the file update needed to add the given file to the given user's menu.
+ * @param calc The calculation context.
+ * @param userFile The file of the user.
+ * @param id The ID that should be used for the menu item. This is separate from file ID.
+ * @param index The index that the file should be added to. Positive infinity means add at the end. 0 means add at the beginning.
+ */
+export function addFileToMenu(calc: FileCalculationContext, userFile: File, id: string, index: number = Infinity): PartialFile {
+    const context = getUserMenuId(calc, userFile);
+    const files = getFilesInMenu(calc, userFile);
+    const idx = isFinite(index) ? index : files.length;
+    return {
+        tags: {
+            [`${context}.id`]: id,
+            [`${context}.index`]: idx,
+            [context]: true
+        }
+    };
+}
+
+/**
+ * Gets the file update needed to remove a file from the given user's menu.
+ * @param calc The file calculation context.
+ * @param userFile The file of the user.
+ */
+export function removeFileFromMenu(calc: FileCalculationContext, userFile: File): PartialFile {
+    const context = getUserMenuId(calc, userFile);
+    return {
+        tags: {
+            [context]: null,
+            [`${context}.id`]: null,
+            [`${context}.index`]: null
+        }
+    };
+}
+
+
+/**
  * Gets the list of tags that are on the given file.
  * @param file 
  */
@@ -769,6 +834,24 @@ export function getFileRotation(calc: FileCalculationContext, file: File, contex
 }
 
 /**
+ * Gets the file that the given file is using as the input target.
+ * @param calc The file calculation context.
+ * @param file The file.
+ */
+export function getFileInputTarget(calc: FileCalculationContext, file: AuxFile): AuxFile {
+    return calculateFileValueAsFile(calc, file, 'aux.input.target', file);
+}
+
+/**
+ * Gets the placeholder to use for a file's input box.
+ * @param calc The file calculation context.
+ * @param file The file.
+ */
+export function getFileInputPlaceholder(calc: FileCalculationContext, file: AuxFile): string {
+    return calculateFormattedFileValue(calc, file, 'aux.input.placeholder');
+}
+
+/**
  * Gets the shape of the file.
  * @param calc The calculation context to use.
  * @param file The file.
@@ -851,7 +934,7 @@ export function getContextColor(calc: FileCalculationContext, contextFile: File,
  * @param domain The domain.
  */
 export function getContextSize(calc: FileCalculationContext, contextFile: File, domain: AuxDomain): number {
-    return getContextValue(calc, contextFile, domain, 'size');
+    return calculateNumericalTagValue(calc, contextFile, `aux.${domain}.context.size`, 1);
 }
 
 /**
@@ -1105,6 +1188,24 @@ export function getSelectionMode(file: File): SelectionMode {
 }
 
 /**
+ * Calculates the value of the given tag on the given file. If the result is not a file, then the given default value
+ * is returned.
+ * @param context The context.
+ * @param file The file.
+ * @param tag The tag.
+ * @param defaultValue The default value to use if the tag doesn't exist or the result is not a file.
+ */
+export function calculateFileValueAsFile(context: FileCalculationContext, file: File, tag: string, defaultValue: AuxFile): AuxFile {
+    if(file.tags[tag]) {
+        const result = calculateFileValue(context, file, tag);
+        if (isFile(result)) {
+            return result;
+        }
+    }
+    return defaultValue;
+}
+
+/**
  * Calculates the value of the given tag on the given file. If the result is not a number, then the given default value
  * is returned.
  * @param fileManager The file manager.
@@ -1153,6 +1254,8 @@ export function isFileInContext(context: FileCalculationContext, file: Object, c
 
     if (typeof contextValue === 'string') {
         result = (contextValue === 'true');
+    } else if (typeof contextValue === 'number') {
+        result = true;
     } else {
         result = (contextValue === true);
     }
@@ -1163,6 +1266,25 @@ export function isFileInContext(context: FileCalculationContext, file: Object, c
     }
 
     return result;
+}
+
+/**
+ * Gets the sort order that the given file should appear in the given context.
+ * @param context The file calculation context.
+ * @param file The file.
+ * @param contextId The ID of the context that we're getting the sort order for.
+ */
+export function fileContextSortOrder(context: FileCalculationContext, file: File, contextId: string): number | string {
+    if (!contextId) return NaN;
+
+    const contextValue = calculateFileValue(context, file, `${contextId}.index`);
+    if (typeof contextValue === 'string') {
+        return contextValue;
+    } else if(typeof contextValue === 'number') {
+        return contextValue;
+    } else {
+        return 0;
+    }
 }
 
 /**

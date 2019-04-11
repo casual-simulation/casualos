@@ -48,3 +48,12 @@ html.ar-app .webxr-sessions canvas {
 .vr-button-container {
     margin-left: 16px;
 }
+
+.menu-layout {
+    margin-top: 8px;
+}
+
+.menu-items {
+    max-height: 250px;
+    overflow-y: auto;
+}

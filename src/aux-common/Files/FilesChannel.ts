@@ -7,9 +7,9 @@ import {
 } from 'rxjs/operators';
 import { ReducingStateStore, Event, ChannelConnection } from "../channels-core";
 import {File, Object, Workspace, PartialFile} from './File';
-import { createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, isDestroyed, getActiveObjects, calculateStateDiff, FilesStateDiff, filtersMatchingArguments } from './FileCalculations';
+import { createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, isDestroyed, getActiveObjects, calculateStateDiff, FilesStateDiff, filtersMatchingArguments, calculateFormulaValue } from './FileCalculations';
 import { merge as mergeObj } from '../utils';
-import formulaLib, { setActions, getActions, setFileState, setCalculationContext, getCalculationContext } from '../Formulas/formula-lib';
+import formulaLib, { setActions, getActions, setFileState, setCalculationContext, getCalculationContext, setUserId, getUserId } from '../Formulas/formula-lib';
 import { AnimationActionLoopStyles } from 'three';
 import { SetValueHandler } from './FileProxy';
 export interface FilesState {
@@ -68,7 +68,8 @@ export function calculateActionEvents(state: FilesState, action: Action) {
         context, 
         f,
         action.eventName,
-        factory));
+        factory,
+        action.userId));
     let events = fileEvents;
 
     const updates = objects.map(o => calculateFileUpdateFromChanges(o.id, changes[o.id].changedTags, changes[o.id].newValues));
@@ -82,6 +83,50 @@ export function calculateActionEvents(state: FilesState, action: Action) {
         events,
         hasUserDefinedEvents: fileEvents.length > 0
     };
+}
+
+
+/**
+ * Calculates the list of events needed to destroy the given file and all of its decendents.
+ * @param calc The file calculation context.
+ * @param file The file to destroy.
+ */
+export function calculateDestroyFileEvents(calc: FileCalculationContext, file: File): FileEvent[] {
+    let events: FileEvent[] = [];
+    let id: string;
+    if (typeof file === 'object') {
+        id = file.id;
+    } else if (typeof file === 'string') {
+        id = file;
+    }
+
+    if (id) {
+        events.push(fileRemoved(id));
+    }
+
+    destroyChildren(calc, events, id);
+
+    return events;
+}
+
+function destroyChildren(calc: FileCalculationContext, events: FileEvent[], id: string) {
+    const result = calculateFormulaValue(calc, `@aux._parent("${id}")`);
+    if (result.success) {
+        const children = result.result;
+        let all: File[] = [];
+        if (children) {
+            if (Array.isArray(children)) {
+                all = children;
+            } else {
+                all = [children];
+            }
+        }
+
+        all.forEach(child => {
+            events.push(fileRemoved(child.id));
+            destroyChildren(calc, events, child.id);
+        });
+    }
 }
 
 /**
@@ -117,13 +162,15 @@ function eventActions(state: FilesState,
     context: FileCalculationContext, 
     file: Object, 
     eventName: string,
-    setValueHandlerFactory: (file: File) => SetValueHandler): FileEvent[] {
+    setValueHandlerFactory: (file: File) => SetValueHandler,
+    userId: string | null): FileEvent[] {
     const otherObjects = objects.filter(o => o !== file);
     const sortedObjects = sortBy(objects, o => o !== file);
     const filters = filtersMatchingArguments(context, file, eventName, otherObjects);
     const scripts = filters.map(f => calculateFileValue(context, file, f.tag));
     let previous = getActions();
     let prevContext = getCalculationContext();
+    let prevUserId = getUserId();
     let actions: FileEvent[] = [];
     
     let vars: {
@@ -132,6 +179,7 @@ function eventActions(state: FilesState,
     setActions(actions);
     setFileState(state);
     setCalculationContext(context);
+    setUserId(userId);
     
     let formulaObjects = sortedObjects.map(o => convertToFormulaObject(context, o, setValueHandlerFactory(o)));
 
@@ -148,6 +196,7 @@ function eventActions(state: FilesState,
     setActions(previous);
     setFileState(null);
     setCalculationContext(prevContext);
+    setUserId(prevUserId);
 
     return actions;
 }
@@ -215,6 +264,11 @@ export interface Action {
     fileIds: string[] | null;
 
     /**
+     * The File ID of the user.
+     */
+    userId: string | null;
+
+    /**
      * The name of the event.
      */
     eventName: string;
@@ -250,11 +304,12 @@ export function transaction(events: FileEvent[]): FileTransactionEvent {
     };
 }
 
-export function action(eventName: string, fileIds: string[] = null): Action {
+export function action(eventName: string, fileIds: string[] = null, userId: string = null): Action {
     return {
         type: 'action',
         fileIds,
         eventName,
+        userId
     };
 }
 

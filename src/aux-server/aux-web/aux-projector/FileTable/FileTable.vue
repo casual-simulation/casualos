@@ -142,7 +142,6 @@
                             :file="file" 
                             :tag="tag" 
                             :updateTime="updateTime"
-                            :showFormulaWhenFocused="false"
                             @tagChanged="onTagChanged"
                             @focusChanged="onTagFocusChanged(file, tag, $event)"></file-value>
                     </div>

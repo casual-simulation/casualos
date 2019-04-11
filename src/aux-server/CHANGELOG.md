@@ -1,5 +1,34 @@
 # AUX Server Changelog
 
+## V0.4.7
+### Date: 04/11/2019
+
+### Changes:
+- Bug fixes
+  - Typing `=` into a cell should no longer cause issues.
+- Improvements
+  - Menus
+    - Files can now be added to the user's menu.
+    - The items will only show up in AUX Player.
+    - Several functions have been added to help with adding and creating menu items:
+      - `createMenuItem(category, label, actionScript, data (optional))` will create a new file and add it to the current user's menu.
+      - `destroyMenuItem(category)` will destroy any files in the current user's menu with the given category.
+      - `destroyAllMenuItems()` will destroy all files in the current user's menu.
+      - `addToMenu(file)` will add the given file to the current user's menu.
+      - `removeFromMenu(file)` will remove the given file from the current user's menu.
+    - In addition, the following tags control various properties on menu items.
+      - `aux.label` controls the text on the menu item.
+      - `aux.label.color` controls the text color of the menu item.
+      - `aux.color` controls the background color of the menu item.
+      - `onClick()` is called when the menu item is clicked.
+      - `aux.input` turns the menu item into an input that allows modification of the given tag name.
+        - Clicking on the menu item will show a dialog with an input box.
+      - `aux.input.target` indicates the file that the input tag should be set on.
+        - for example, setting `aux.input.target` to `=@name("joe")` will cause the input to change the tag on the file that has the `name` tag set to `joe`.
+      - `aux.input.placeholder` sets the placeholder text to use for the input box.
+      - `onSave()` is called after the user chooses to save their changes.
+      - `onClose()` is called after the dialog has been closed, regardless of whether the changes were saved or not.
+
 ## V0.4.6
 ### Date: 04/11/2019
 

@@ -450,5 +450,19 @@ describe('FileProxy', () => {
             expect(_2[isProxy]).toBe(true);
             expect(_2.valueOf()).toBe(2);
         });
+
+        it('should support nested non object values', () => {
+            const file = createFile('testId');
+            file.tags['aux.input'] = 'abc';
+            file.tags['aux.input.target'] = '=123';
+
+            const context = createCalculationContext([file]);
+            const proxy = createFileProxy(context, file);
+
+            const target = proxy.aux.input.target;
+            
+            expect(target[isProxy]).toBe(true);
+            expect(target[proxyObject]).toEqual(123);
+        });
     });
 });
