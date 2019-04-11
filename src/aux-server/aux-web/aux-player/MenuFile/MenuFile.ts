@@ -58,7 +58,7 @@ export default class MenuFile extends Vue {
 
     async closeDialog() {
         if (this.showDialog) {
-            await appManager.fileManager.action('onCancel', [this.file]);
+            await appManager.fileManager.action('onClose', [this.file]);
             this.showDialog = false;
         }
     }
@@ -71,7 +71,7 @@ export default class MenuFile extends Vue {
                 }
             });
             await appManager.fileManager.action('onSave', [this.file]);
-            this.showDialog = false;
+            await this.closeDialog();
         }
     }
 
