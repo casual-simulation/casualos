@@ -33,7 +33,8 @@ import {
     getUserMenuId,
     getFilesInMenu,
     addFileToMenu,
-    removeFileFromMenu
+    removeFileFromMenu,
+    getContextSize
 } from './FileCalculations';
 import {
     cloneDeep
@@ -2575,6 +2576,17 @@ describe('FileCalculations', () => {
                     'context.id': null
                 }
             });
+        });
+    });
+
+    describe('getContextSize()', () => {
+        it('should return the default size if none exists', () => {
+            const file = createFile('file');
+
+            const calc = createCalculationContext([file]);
+            const size = getContextSize(calc, file, 'builder');
+
+            expect(size).toBe(1);
         });
     });
 
