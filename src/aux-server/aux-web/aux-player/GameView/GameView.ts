@@ -114,6 +114,8 @@ export default class GameView extends Vue implements IGameView {
     inventoryContext: InventoryContext = null;
     menuContext: MenuContext = null;
 
+    menuExpanded: boolean = true;
+
     @Inject() addSidebarItem: App['addSidebarItem'];
     @Inject() removeSidebarItem: App['removeSidebarItem'];
     @Prop() context: string;
