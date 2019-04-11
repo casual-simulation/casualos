@@ -2588,6 +2588,29 @@ describe('FileCalculations', () => {
 
             expect(size).toBe(1);
         });
+
+        it('should default to 0 if the file is a user file', () => {
+            const file = createFile('file', {
+                _user: 'user'
+            });
+
+            const calc = createCalculationContext([file]);
+            const size = getContextSize(calc, file, 'builder');
+
+            expect(size).toBe(0);
+        });
+
+        it('should still return the user files context size', () => {
+            const file = createFile('file', {
+                _user: 'user',
+                'aux.builder.context.size': 10
+            });
+
+            const calc = createCalculationContext([file]);
+            const size = getContextSize(calc, file, 'builder');
+
+            expect(size).toBe(10);
+        });
     });
 
 });

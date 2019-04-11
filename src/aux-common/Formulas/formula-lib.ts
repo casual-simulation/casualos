@@ -309,7 +309,7 @@ export function combine(first: File | string, second: File | string) {
 export function event(name: string, files: (File | string)[]) {
     if (!!state) {
         let ids = !!files ? files.map(f => typeof f === 'string' ? f : f.id) : null;
-        let results = calculateActionEvents(state, action(name, ids));
+        let results = calculateActionEvents(state, action(name, ids, userFileId));
         actions.push(...results.events);
     }
 }

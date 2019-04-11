@@ -1,5 +1,13 @@
 # AUX Server Changelog
 
+## V0.4.10
+### Date: 04/11/2019
+
+### Changes:
+- Bug Fixes
+  - Fixed an issue that prevented shouts from adding menu items to the user's menu.
+  - Fixed an issue that caused all users to have hexes.
+
 ## V0.4.9
 ### Date: 04/11/2019
 

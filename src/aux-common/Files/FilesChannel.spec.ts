@@ -351,6 +351,37 @@ describe('FilesChannel', () => {
             ]);
         });
 
+        it('should preserve the user ID in shouts', () => {
+            const state: FilesState = {
+                userFile: {
+                    id: 'userFile',
+                    tags: {}
+                },
+                thisFile: {
+                    id: 'thisFile',
+                    tags: {
+                        'abcdef()': 'shout("sayHello")',
+                        'sayHello()': 'this.userId = getUser().id'
+                    }
+                }
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const fileAction = action('abcdef', ['thisFile'], 'userFile');
+            const result = calculateActionEvents(state, fileAction);
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+            
+            expect(result.events).toEqual([
+                fileUpdated('thisFile', {
+                    tags: {
+                        userId: 'userFile'
+                    }
+                })
+            ]);
+        });
+
         describe('createFrom()', () => {
             it('should create a new file with aux._parent set to the original id', () => {
                 const state: FilesState = {

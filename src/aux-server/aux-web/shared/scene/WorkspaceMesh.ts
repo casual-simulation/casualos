@@ -16,7 +16,8 @@ import {
     getContextGridScale,
     isMinimized,
     isContext,
-    getContextColor
+    getContextColor,
+    isUserFile
 } from '@yeti-cgi/aux-common/Files';
 import { keys, minBy, isEqual } from 'lodash';
 import { GridChecker, GridCheckResults } from './grid/GridChecker';
