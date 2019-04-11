@@ -1,5 +1,12 @@
 # AUX Server Changelog
 
+## V0.4.8
+### Date: 04/11/2019
+
+### Changes:
+- Bug Fixes
+  - Fixed some broken tests.
+
 ## V0.4.7
 ### Date: 04/11/2019
 
