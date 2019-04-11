@@ -5,6 +5,8 @@ export const Orthographic_FrustrumSize: number = 100;
 export const Orthographic_DefaultZoom: number = 8;
 export const Orthographic_NearClip: number = 0.1;
 export const Orthographic_FarClip: number = 20000;
+export const Orthographic_MinZoom: number = 0.4; 
+export const Orthographic_MaxZoom: number = 80;
 
 export const Perspective_FOV: number = 60;
 export const Perspective_NearClip: number = 0.1;
