@@ -1,8 +1,8 @@
 import {
     Vector3,
-    Camera,
+    Euler,
 } from "three";
-import { FileCalculationContext, AuxObject, calculateGridScale } from '@yeti-cgi/aux-common'
+import { FileCalculationContext, AuxObject, calculateGridScale, getFileRotation, getFilePosition } from '@yeti-cgi/aux-common'
 import { appManager } from '../../AppManager';
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
@@ -69,18 +69,18 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
             // Scale camera's local position so that it maps to the context positioning.
             const gridScale = calculateGridScale(calc, this.file3D.contextGroup.file, this.file3D.domain);
             const scale = calculateScale(calc, this.file3D.file, gridScale);
-
             camPosition.x /= scale.x;
             camPosition.y /= scale.y;
             camPosition.z /= scale.z;
             
             const camRotation = mainCamera.rotation.clone();
             const camRotationVector = new Vector3(0, 0, 1).applyEuler(camRotation);
-            const currentPosition = this.file3D.display.position;
-            const currentRotation = this.file3D.display.rotation;
 
-            const currentRotationVector = new Vector3(0, 0, 1).applyEuler(currentRotation);
-            const distance = camPosition.distanceTo(new Vector3(currentPosition.x, currentPosition.y, currentPosition.z));
+            const filePosition = getFilePosition(calc, file, this.file3D.context);
+            const fileRotation = getFileRotation(calc, file, this.file3D.context);
+
+            const currentRotationVector = new Vector3(0, 0, 1).applyEuler(new Euler(fileRotation.x, fileRotation.z, fileRotation.y));
+            const distance = camPosition.distanceTo(new Vector3(filePosition.x, filePosition.z, -filePosition.y));
             const angle = camRotationVector.angleTo(currentRotationVector);
             if (distance > DEFAULT_USER_MOVEMENT_INCREMENT || angle > DEFAULT_USER_ROTATION_INCREMENT) {
                 this._lastPositionUpdateTime = time;
