@@ -30,6 +30,9 @@ export interface FileTags {
     ['aux.label.color']?: unknown;
     ['aux.label.size']?: unknown;
     ['aux.label.size.mode']?: 'auto' | null;
+    ['aux.input']?: string;
+    ['aux.input.target']?: string;
+    ['aux.input.placeholder']?: string;
     ['aux.shape']?: FileShape;
     ['aux._parent']?: string;
     ['aux._diff']?: boolean;
@@ -40,6 +43,7 @@ export interface FileTags {
     _user?: string;
     _userContext?: string;
     _userInventoryContext?: string;
+    _userMenuContext?: string;
     _mode?: UserMode;
     _editingFile?: string;
     _lastEditedBy?: string;

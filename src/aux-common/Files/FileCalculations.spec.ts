@@ -29,13 +29,18 @@ import {
     isFile,
     getFileShape,
     getDiffUpdate,
-    COMBINE_ACTION_NAME
+    COMBINE_ACTION_NAME,
+    getUserMenuId,
+    getFilesInMenu,
+    addFileToMenu,
+    removeFileFromMenu,
+    getContextSize
 } from './FileCalculations';
 import {
     cloneDeep
 } from 'lodash';
 import { File, Object, PartialFile } from './File';
-import { FilesState, cleanFile } from './FilesChannel';
+import { FilesState, cleanFile, fileRemoved } from './FilesChannel';
 import { file } from '../aux-format';
 
 describe('FileCalculations', () => {
@@ -118,7 +123,6 @@ describe('FileCalculations', () => {
         });
     });
     
-
     describe('objectsAtContextGridPosition()', () => {
 
         it('should return files at the given position', () => {
@@ -169,7 +173,6 @@ describe('FileCalculations', () => {
             ]);
         });
     });
-
     
     describe('calculateStateDiff()', () => {
 
@@ -2455,4 +2458,136 @@ describe('FileCalculations', () => {
             ]);
         });
     });
+
+    describe('getUserMenuId()', () => {
+        it('should return the value from _userMenuContext', () => {
+            const user = createFile('user', {
+                _userMenuContext: 'context'
+            });
+
+            const calc = createCalculationContext([user]);
+            const id = getUserMenuId(calc, user);
+            expect(id).toBe('context');
+        });
+    });
+
+    describe('getFilesInMenu()', () => {
+        it('should return the list of files in the users menu', () => {
+            const user = createFile('user', {
+                _userMenuContext: 'context'
+            });
+            const file1 = createFile('file1', {
+                context: true,
+                'context.index': 0
+            });
+            const file2 = createFile('file2', {
+                context: true,
+                'context.index': 1
+            });
+            const file3 = createFile('file3', {
+                context: true,
+                'context.index': 2
+            });
+
+            const calc = createCalculationContext([user, file2, file1, file3]);
+            const files = getFilesInMenu(calc, user);
+
+            expect(files).toEqual([
+                file1,
+                file2,
+                file3
+            ]);
+        });
+    });
+
+    describe('addFileToMenu()', () => {
+        it('should return the update needed to add the given file ID to the given users menu', () => {
+            const user = createFile('user', {
+                _userMenuContext: 'context'
+            });
+            const file = createFile('file');
+
+            const calc = createCalculationContext([user, file]);
+            const update = addFileToMenu(calc, user, 'item');
+
+            expect(update).toEqual({
+                tags: {
+                    'context': true,
+                    'context.index': 0,
+                    'context.id': 'item'
+                }
+            });
+        });
+
+        it('should return the given index', () => {
+            const user = createFile('user', {
+                _userMenuContext: 'context'
+            });
+            const file = createFile('file');
+
+            const calc = createCalculationContext([user, file]);
+            const update = addFileToMenu(calc, user, 'item', 5);
+
+            expect(update).toEqual({
+                tags: {
+                    'context': true,
+                    'context.index': 5,
+                    'context.id': 'item'
+                }
+            });
+        });
+
+        it('should return index needed to place the file at the end of the list', () => {
+            const user = createFile('user', {
+                _userMenuContext: 'context'
+            });
+            const file = createFile('file');
+            const file2 = createFile('file2', {
+                context: 0
+            });
+
+            const calc = createCalculationContext([user, file, file2]);
+            const update = addFileToMenu(calc, user, 'abc');
+
+            expect(update).toEqual({
+                tags: {
+                    'context': true,
+                    'context.index': 1,
+                    'context.id': 'abc'
+                }
+            });
+        });
+    });
+
+    describe('removeFileFromMenu()', () => {
+        it('should return the update needed to remove the given file from the users menu', () => {
+            const user = createFile('user', {
+                _userMenuContext: 'context'
+            });
+            const file = createFile('file');
+
+            const calc = createCalculationContext([user, file]);
+            const update = removeFileFromMenu(calc, user);
+
+            expect(update).toEqual({
+                tags: {
+                    'context': null,
+                    'context.index': null,
+                    'context.id': null
+                }
+            });
+        });
+    });
+
+    describe('getContextSize()', () => {
+        it('should return the default size if none exists', () => {
+            const file = createFile('file');
+
+            const calc = createCalculationContext([file]);
+            const size = getContextSize(calc, file, 'builder');
+
+            expect(size).toBe(1);
+        });
+    });
+
 });
