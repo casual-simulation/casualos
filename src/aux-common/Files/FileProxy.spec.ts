@@ -168,6 +168,7 @@ describe('FileProxy', () => {
             const tags = Object.keys(proxy);
             expect(tags).toEqual([
                 'id',
+                'tags',
                 'abc',
                 'def'
             ]);
@@ -463,6 +464,25 @@ describe('FileProxy', () => {
             
             expect(target[isProxy]).toBe(true);
             expect(target[proxyObject]).toEqual(123);
+        });
+
+        it('should support Symbol.toStringTag', () => {
+            const file = createFile('testId');
+            file.tags.num = 1;
+            file.tags.str = 'abc';
+            file.tags.bol = true;
+            file.tags.arr = [9, 8, 7];
+            file.tags.obj = {};
+
+            const context = createCalculationContext([file]);
+            const proxy = createFileProxy(context, file);
+
+            expect(proxy.num[Symbol.toStringTag]).toBe('Number');
+            expect(proxy.str[Symbol.toStringTag]).toBe('String');
+            expect(proxy.bol[Symbol.toStringTag]).toBe('Boolean');
+            expect(proxy.arr[Symbol.toStringTag]).toBe('Array');
+            expect(proxy.obj[Symbol.toStringTag]).toBeUndefined();
+
         });
     });
 });
