@@ -1,7 +1,7 @@
 # AUX Server Changelog
 
 ## V0.4.6
-### Date: TBD
+### Date: 04/11/2019
 
 ### Changes:
 - Improvements
