@@ -4,6 +4,8 @@
 ### Date: 04/11/2019
 
 ### Changes:
+- Bug fixes
+  - Typing `=` into a cell should no longer cause issues.
 - Improvements
   - Menus
     - Files can now be added to the user's menu.
