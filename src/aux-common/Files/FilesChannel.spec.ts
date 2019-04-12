@@ -505,6 +505,136 @@ describe('FilesChannel', () => {
                     })
                 ]);
             });
+
+            it('should return the created file', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'this.newFileId = create(null, { abc: "def" }).id',
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            abc: 'def'
+                        }
+                    }),
+                    fileUpdated('thisFile', {
+                        tags: {
+                            newFileId: 'uuid-0'
+                        }
+                    })
+                ]);
+            });
+
+            it('should support modifying the returned file', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'let newFile = create(null, { abc: "def" }); newFile.fun = true; newFile.num = 123;',
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            abc: 'def'
+                        }
+                    }),
+                    fileUpdated('uuid-0', {
+                        tags: {
+                            fun: true,
+                            num: 123
+                        }
+                    })
+                ]);
+            });
+
+            it('should add the new file to the formulas', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'create(null, { name: "bob" }); this.fileId = @name("bob").id',
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            name: 'bob'
+                        }
+                    }),
+                    fileUpdated('thisFile', {
+                        tags: {
+                            fileId: 'uuid-0'
+                        }
+                    })
+                ]);
+            });
+
+            it('should support formulas on the new file', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'let newFile = create(null, { formula: "=this.num", num: 100 }); this.result = newFile.formula;',
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            formula: '=this.num',
+                            num: 100
+                        }
+                    }),
+                    fileUpdated('thisFile', {
+                        tags: {
+                            result: 100
+                        }
+                    })
+                ]);
+            });
         });
 
         describe('clone()', () => {
@@ -532,6 +662,140 @@ describe('FilesChannel', () => {
                             abc: 'def',
                             'test()': 'clone(this, { abc: "def" })',
                             'aux._parent': 'thisFile'
+                        }
+                    })
+                ]);
+            });
+
+            it('should return the created file', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'this.newFileId = clone(null, this, { abc: "def" }).id',
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            'test()': 'this.newFileId = clone(null, this, { abc: "def" }).id',
+                            abc: 'def'
+                        }
+                    }),
+                    fileUpdated('thisFile', {
+                        tags: {
+                            newFileId: 'uuid-0'
+                        }
+                    })
+                ]);
+            });
+
+            it('should support modifying the returned file', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'let newFile = clone(null, this, { abc: "def" }); newFile.fun = true; newFile.num = 123;',
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            'test()': 'let newFile = clone(null, this, { abc: "def" }); newFile.fun = true; newFile.num = 123;',
+                            abc: 'def'
+                        }
+                    }),
+                    fileUpdated('uuid-0', {
+                        tags: {
+                            fun: true,
+                            num: 123
+                        }
+                    })
+                ]);
+            });
+
+            it('should add the new file to formulas', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'clone(null, this, { name: "bob" }); this.fileId = @name("bob").id',
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            'test()': 'clone(null, this, { name: "bob" }); this.fileId = @name("bob").id',
+                            name: 'bob'
+                        }
+                    }),
+                    fileUpdated('thisFile', {
+                        tags: {
+                            fileId: 'uuid-0'
+                        }
+                    })
+                ]);
+            });
+
+            it('should support formulas on the new file', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'let newFile = clone(null, this, { formula: "=this.num", num: 100 }); this.result = newFile.formula;',
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            'test()': 'let newFile = clone(null, this, { formula: "=this.num", num: 100 }); this.result = newFile.formula;',
+                            num: 100,
+                            formula: '=this.num'
+                        }
+                    }),
+                    fileUpdated('thisFile', {
+                        tags: {
+                            result: 100
                         }
                     })
                 ]);

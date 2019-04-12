@@ -42,6 +42,12 @@ export function calculateActionEvents(state: FilesState, action: Action) {
     const files = !!action.fileIds ? action.fileIds.map(id => state[id]) : objects;
     const factory = (o: File) => {
         return (tag: string, value: any) => {
+            if (!changes[o.id]) {
+                changes[o.id] = {
+                    changedTags: [],
+                    newValues: []
+                };
+            }
             changes[o.id].changedTags.push(tag);
             changes[o.id].newValues.push(value);
         };
@@ -72,7 +78,7 @@ export function calculateActionEvents(state: FilesState, action: Action) {
         action.userId));
     let events = fileEvents;
 
-    const updates = objects.map(o => calculateFileUpdateFromChanges(o.id, changes[o.id].changedTags, changes[o.id].newValues));
+    const updates = objects.map(o => calculateFileUpdateFromChanges(o.id, changes[o.id]));
     updates.forEach(u => {
         if (u) {
             events.push(u);
@@ -201,15 +207,18 @@ function eventActions(state: FilesState,
     return actions;
 }
 
-function calculateFileUpdateFromChanges(id: string, tags: string[], values: any[]): FileUpdatedEvent {
-    if (tags.length === 0) {
+function calculateFileUpdateFromChanges(id: string, changes: { changedTags: string[], newValues: any[] }): FileUpdatedEvent {
+    if (!changes) {
+        return null;
+    }
+    if (changes.changedTags.length === 0) {
         return null;
     }
     let partial: PartialFile = {
         tags: {}
     };
-    for(let i = 0; i < tags.length; i++) {
-        partial.tags[tags[i]] = values[i];
+    for(let i = 0; i < changes.changedTags.length; i++) {
+        partial.tags[changes.changedTags[i]] = changes.newValues[i];
     }
 
     return fileUpdated(id, partial);

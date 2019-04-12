@@ -37,7 +37,7 @@ import { isProxy, createFileProxy, proxyObject, SetValueHandler, FileProxy } fro
 
 /// <reference path="../typings/global.d.ts" />
 import formulaLib from '../Formulas/formula-lib';
-import { FilterFunction, SandboxInterface } from '../Formulas/SandboxInterface';
+import SandboxInterface, { FilterFunction } from '../Formulas/SandboxInterface';
 import { PartialFile } from '../Files';
 import { FilesState, cleanFile, hasValue, FileUpdatedEvent, fileUpdated } from './FilesChannel';
 import { merge } from '../utils';
@@ -1523,6 +1523,19 @@ class SandboxInterfaceImpl implements SandboxInterface {
       this.context = context;
       this.proxies = new Map();
       this.setValueHandlerFactory = setValueHandlerFactory
+    }
+
+    /**
+     * Adds the given file to the calculation context and returns a proxy for it.
+     * @param file The file to add.
+     */
+    addFile(file: File): FileProxy {
+        if (this.proxies.has(file.id)) {
+            return this.proxies.get(file.id);
+        } else {
+            this.objects.push(file);
+            return this._convertToFormulaObject(file);
+        }
     }
   
     listTagValues(tag: string, filter?: FilterFunction, extras?: any) {
