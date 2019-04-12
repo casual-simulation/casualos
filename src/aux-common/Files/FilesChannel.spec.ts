@@ -1145,33 +1145,114 @@ describe('FilesChannel', () => {
                     })
                 ]);
             });
+
+            it('should always return a list', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'abc': true,
+                            'test()': 'this.length = getFilesInContext("abc").length',
+                        }
+                    }
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            'length': 1
+                        }
+                    })
+                ]);
+            });
         });
 
-        it('should always return a list', () => {
-            const state: FilesState = {
-                thisFile: {
-                    id: 'thisFile',
-                    tags: {
-                        'abc': true,
-                        'test()': 'this.length = getFilesInContext("abc").length',
+        describe('setPositionDiff()', () => {
+            it('should return a diff that sets the file position in a context when applied', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'applyDiff(this, setPositionDiff("abc", 1, 2))',
+                        }
                     }
-                }
-            };
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            "abc.x": 1,
+                            "abc.y": 2
+                        }
+                    })
+                ]);
+            });
 
-            // specify the UUID to use next
-            uuidMock.mockReturnValue('uuid-0');
-            const fileAction = action('test', ['thisFile']);
-            const result = calculateActionEvents(state, fileAction);
-
-            expect(result.hasUserDefinedEvents).toBe(true);
-            
-            expect(result.events).toEqual([
-                fileUpdated('thisFile', {
-                    tags: {
-                        'length': 1
+            it('should ignore components that are not defined', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'applyDiff(this, setPositionDiff("abc", undefined, 2))',
+                        }
                     }
-                })
-            ]);
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            "abc.y": 2
+                        }
+                    })
+                ]);
+            });
+
+            it('should be able to set the index', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'applyDiff(this, setPositionDiff("abc", undefined, undefined, 2))',
+                        }
+                    }
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            "abc.index": 2
+                        }
+                    })
+                ]);
+            });
         });
     });
 

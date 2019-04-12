@@ -526,9 +526,7 @@ export function addToContextDiff(calc: FileCalculationContext, context: string, 
     const files = objectsAtContextGridPosition(calc, context, { x, y });
     return {
         [context]: true,
-        [`${context}.x`]: x,
-        [`${context}.y`]: y,
-        [`${context}.index`]: typeof index === 'undefined' ? files.length : index,
+        ...setPositionDiff(calc, context, x, y, typeof index === 'undefined' ? files.length : index)
     };
 }
 
@@ -544,6 +542,28 @@ export function removeFromContextDiff(calc: FileCalculationContext, context: str
         [`${context}.y`]: null,
         [`${context}.index`]: null
     };
+}
+
+/**
+ * Gets a diff that sets a file's position in the given context.
+ * @param calc The file calculation context.
+ * @param context The context.
+ * @param x The X position.
+ * @param y The Y position.
+ * @param index The index.
+ */
+export function setPositionDiff(calc: FileCalculationContext, context: string, x?: number, y?: number, index?: number): FileTags {
+    let tags: FileTags = {};
+    if (typeof x === 'number') {
+        tags[`${context}.x`] = x;
+    }
+    if (typeof y === 'number') {
+        tags[`${context}.y`] = y;
+    }
+    if (typeof index === 'number') {
+        tags[`${context}.index`] = index;
+    }
+    return tags;
 }
 
 /**

@@ -477,6 +477,17 @@ export function removeFromContext(file: FileProxy, context: string) {
 }
 
 /**
+ * Gets a diff that sets the position of a file in the given context when applied.
+ * @param context The context.
+ * @param x The X position.
+ * @param y The Y position.
+ * @param index The index.
+ */
+export function setPositionDiff(context: string, x?: number, y?: number, index?: number) {
+    return calcSetPositionDiff(calc, context, x, y, index); 
+}
+
+/**
  * Creates a new file and adds it to the current user's menu.
  * The new file will be parented to the user's file.
  * @param id The ID of the menu item.
@@ -582,6 +593,7 @@ export default {
     applyDiff,
     addToContextDiff,
     removeFromContextDiff,
+    setPositionDiff,
     addToContext,
     removeFromContext,
 
