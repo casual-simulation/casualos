@@ -6,6 +6,20 @@
 ### Changes:
 - Improvements
   - Updated mesh materials and scene lighting to provide a cleaner look and more accurate color representation.
+  - Dragging files off of worksurfaces no longer deletes them but simply removes them from the context.
+  - Functions:
+    - The `clone()` and `copy()` functions have been changed to accept the first parameter as the creator. This means instead of `clone(this)` you would do `clone(null, this)`. Because of this change, `cloneFrom()` and `copyFrom()` are redundant and have been removed.
+    - The `clone()` and `copy()` functions now return the file that was created.
+    - New Functions:
+      - `addToContextDiff(context, x (optional), y (optional), index (optional))` returns an object that can be used with `create()`, `clone()`, or `applyDiff()` to create or add a file to the given context.
+      - `removeFromContextDiff(context)` returns an object that can be used with `create()`, `clone()`, or `applyDiff()` to remove a file from the given context.
+      - `addToContext(file, context)` adds the given file to the given context.
+      - `removeFromContext(file, context)` removes the given file from the given context.
+      - `setPositionDiff(context, x (optional), y (optional), index (optional))` returns a diff that sets the position of a file in the given context.
+      - `addToMenuDiff()` returns a diff that adds a file to the user's menu.
+      - `removeFromMenuDiff()` returns a diff that removes a file from the user's menu.
+    - Other changes
+      - `create()`, `clone()`, and `createMenuItem()` all support using files as diffs.
 
 ## V0.4.10
 ### Date: 04/11/2019
