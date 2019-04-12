@@ -34,7 +34,9 @@ import {
     getFilesInMenu,
     addFileToMenu,
     removeFileFromMenu,
-    getContextSize
+    getContextSize,
+    addToContextDiff,
+    removeFromContextDiff
 } from './FileCalculations';
 import {
     cloneDeep
@@ -2613,4 +2615,73 @@ describe('FileCalculations', () => {
         });
     });
 
+    describe('addToContextDiff()', () => {
+        it('should return the tags needed to add a file to a context', () => {
+            const file = createFile('file', {});
+
+            const calc = createCalculationContext([file]);
+            const tags = addToContextDiff(calc, 'test');
+
+            expect(tags).toEqual({
+                'test': true,
+                'test.x': 0,
+                'test.y': 0,
+                'test.index': 0
+            });
+        });
+
+        it('should calculate the index', () => {
+            const file = createFile('file', {});
+            const file2 = createFile('file2', {
+                'test': true,
+                'test.index': 0
+            });
+
+            const calc = createCalculationContext([file, file2]);
+            const tags = addToContextDiff(calc, 'test');
+
+            expect(tags).toEqual({
+                'test': true,
+                'test.x': 0,
+                'test.y': 0,
+                'test.index': 1
+            });
+        });
+
+        it('should calculate the index based on the given position', () => {
+            const file = createFile('file', {});
+            const file2 = createFile('file2', {
+                'test': true,
+                'test.index': 0,
+                'test.x': 0,
+                'test.y': 0,
+            });
+
+            const calc = createCalculationContext([file, file2]);
+            const tags = addToContextDiff(calc, 'test', 1, 2);
+
+            expect(tags).toEqual({
+                'test': true,
+                'test.x': 1,
+                'test.y': 2,
+                'test.index': 0
+            });
+        });
+    });
+
+    
+    describe('addToContextDiff()', () => {
+        it('should return the tags needed to add a file to a context', () => {
+
+            const calc = createCalculationContext([]);
+            const tags = removeFromContextDiff(calc, 'test');
+
+            expect(tags).toEqual({
+                'test': null,
+                'test.x': null,
+                'test.y': null,
+                'test.index': null
+            });
+        });
+    });
 });

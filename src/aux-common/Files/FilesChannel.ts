@@ -81,7 +81,7 @@ export function calculateActionEvents(state: FilesState, action: Action) {
 
     return {
         events,
-        hasUserDefinedEvents: fileEvents.length > 0
+        hasUserDefinedEvents: events.length > 0
     };
 }
 

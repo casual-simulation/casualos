@@ -31,8 +31,8 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x:0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'onCombine(#name:"Joe")': 'clone(this);destroy(this);destroy(that);',
-                        'onCombine(#name:"Friend")': 'clone(this, { bad: true })',
+                        'onCombine(#name:"Joe")': 'clone(null, this);destroy(this);destroy(that);',
+                        'onCombine(#name:"Friend")': 'clone(null, this, { bad: true })',
                     }
                 },
                 thatFile: {
@@ -58,8 +58,8 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x:0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'onCombine(#name:"Joe")': 'clone(this);destroy(this);destroy(that);',
-                        'onCombine(#name:"Friend")': 'clone(this, { bad: true })',
+                        'onCombine(#name:"Joe")': 'clone(null, this);destroy(this);destroy(that);',
+                        'onCombine(#name:"Friend")': 'clone(null, this, { bad: true })',
 
                         // the new file is not destroyed
                     }
@@ -79,7 +79,7 @@ describe('FilesChannel', () => {
                         _workspace: 'abc',
                         num: 15,
                         formula: '=this.num',
-                        'onCombine(#name:"Friend")': 'clone(this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
+                        'onCombine(#name:"Friend")': 'clone(null, this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
                     }
                 },
                 thatFile: {
@@ -107,7 +107,7 @@ describe('FilesChannel', () => {
                         _workspace: 'abc',
                         num: 15,
                         formula: '=this.num',
-                        'onCombine(#name:"Friend")': 'clone(this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
+                        'onCombine(#name:"Friend")': 'clone(null, this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
                         name: 'Friend',
                         testFormula: '=this.name'
 
@@ -126,7 +126,7 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x:0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef(#name:"Joe")': 'clone(this)'
+                        'abcdef(#name:"Joe")': 'clone(null, this)'
                     }
                 },
                 thatFile: {
@@ -152,7 +152,7 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x:0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef(#name:"Joe")': 'clone(this)'
+                        'abcdef(#name:"Joe")': 'clone(null, this)'
                     }
                 })
             ]);
@@ -165,7 +165,7 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x:0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef()': 'clone(this)'
+                        'abcdef()': 'clone(null, this)'
                     }
                 },
                 thatFile: {
@@ -191,7 +191,7 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x:0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef()': 'clone(this)'
+                        'abcdef()': 'clone(null, this)'
                     }
                 })
             ]);
@@ -382,13 +382,13 @@ describe('FilesChannel', () => {
             ]);
         });
 
-        describe('createFrom()', () => {
+        describe('create()', () => {
             it('should create a new file with aux._parent set to the original id', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'createFrom(this, { abc: "def" })',
+                            'test()': 'create(this, { abc: "def" })',
                         }
                     }
                 };
@@ -416,7 +416,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'createFrom("thisFile", { abc: "def" })',
+                            'test()': 'create("thisFile", { abc: "def" })',
                         }
                     }
                 };
@@ -438,15 +438,13 @@ describe('FilesChannel', () => {
                     })
                 ]);
             });
-        });
 
-        describe('cloneFrom()', () => {
-            it('should create a new file with aux._parent set to the given files ID', () => {
+            it('should support multiple arguments', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'cloneFrom(this, { abc: "def" })',
+                            'test()': 'create("thisFile", { abc: "def" }, { ghi: 123 })',
                         }
                     }
                 };
@@ -463,7 +461,76 @@ describe('FilesChannel', () => {
                         id: 'uuid-0',
                         tags: {
                             abc: 'def',
-                            'test()': 'cloneFrom(this, { abc: "def" })',
+                            ghi: 123,
+                            'aux._parent': 'thisFile'
+                        }
+                    })
+                ]);
+            });
+
+            it('should support files as arguments', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'create("thisFile", @name("that"))',
+                        }
+                    },
+                    thatFile: {
+                        id: 'thatFile',
+                        tags: {
+                            name: 'that',
+                            abc: 'def',
+                            formula: '=this.abc'
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            abc: 'def',
+                            name: 'that',
+                            formula: '=this.abc',
+                            'aux._parent': 'thisFile'
+                        }
+                    })
+                ]);
+            });
+        });
+
+        describe('clone()', () => {
+            it('should create a new file with aux._parent set to the given files ID', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'clone(this, { abc: "def" })',
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            abc: 'def',
+                            'test()': 'clone(this, { abc: "def" })',
                             'aux._parent': 'thisFile'
                         }
                     })
@@ -615,7 +682,53 @@ describe('FilesChannel', () => {
                         tags: {
                             'context.id': 'uuid-0',
                             'context.index': 0,
-                            'context': true
+                            'context': true,
+                            'context.x': 0,
+                            'context.y': 0
+                        }
+                    })
+                ]);
+            });
+        });
+
+        describe('addToMenuDiff()', () => {
+            it('should add the given file to the users menu', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'addItem()': 'applyDiff(@name("bob"), addToMenuDiff())',
+                        }
+                    },
+                    userFile: {
+                        id: 'userFile',
+                        tags: {
+                            _userMenuContext: 'context'
+                        }
+                    },
+                    menuFile: {
+                        id: 'menuFile',
+                        tags: {
+                            name: 'bob'
+                        }
+                    }
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('addItem', ['thisFile', 'userFile', 'menuFile'], 'userFile');
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('menuFile', {
+                        tags: {
+                            'context.id': 'uuid-0',
+                            'context.index': 0,
+                            'context': true,
+                            'context.x': 0,
+                            'context.y': 0
                         }
                     })
                 ]);
@@ -659,7 +772,55 @@ describe('FilesChannel', () => {
                         tags: {
                             'context.id': null,
                             'context.index': null,
-                            'context': null
+                            'context': null,
+                            'context.x': null,
+                            'context.y': null
+                        }
+                    })
+                ]);
+            });
+        });
+
+        describe('removeFromMenuDiff()', () => {
+            it('should remove the given file from the users menu', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'addItem()': 'applyDiff(@name("bob"), removeFromMenuDiff())',
+                        }
+                    },
+                    userFile: {
+                        id: 'userFile',
+                        tags: {
+                            _userMenuContext: 'context'
+                        }
+                    },
+                    menuFile: {
+                        id: 'menuFile',
+                        tags: {
+                            name: 'bob',
+                            'context': 0,
+                            'context.id': 'abcdef'
+                        }
+                    }
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('addItem', ['thisFile', 'userFile', 'menuFile'], 'userFile');
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('menuFile', {
+                        tags: {
+                            'context.id': null,
+                            'context.index': null,
+                            'context': null,
+                            'context.x': null,
+                            'context.y': null
                         }
                     })
                 ]);
@@ -824,6 +985,396 @@ describe('FilesChannel', () => {
                 
                 expect(result.events).toEqual([
                     fileRemoved('menuItem')
+                ]);
+            });
+        });
+
+        describe('applyDiff()', () => {
+            it('should update the given file with the given diff', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'applyDiff(this, { abc: "def", ghi: true, num: 1 })',
+                        }
+                    },
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            abc: "def",
+                            ghi: true,
+                            num: 1
+                        }
+                    })
+                ]);
+            });
+
+            it('should support multiple', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'applyDiff(this, { abc: "def", ghi: true, num: 1 }, { abc: "xyz" });',
+                        }
+                    },
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            abc: "xyz",
+                            ghi: true,
+                            num: 1
+                        }
+                    })
+                ]);
+            });
+
+            it('should apply the values to the file', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'abc': 123,
+                            'test()': 'applyDiff(this, { abc: "def", ghi: true, num: 1 }); applyDiff(this, { "abc": this.abc })',
+                        }
+                    },
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            abc: "def",
+                            ghi: true,
+                            num: 1
+                        }
+                    })
+                ]);
+            });
+        });
+
+        describe('addToContext()', () => {
+            it('should add the file to the given context', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'addToContext(this, "abc")',
+                        }
+                    },
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            'abc': true,
+                            'abc.x': 0,
+                            'abc.y': 0,
+                            'abc.index': 0
+                        }
+                    })
+                ]);
+            });
+        });
+
+        describe('removeFromContext()', () => {
+            it('should add the file to the given context', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'abc': true,
+                            'test()': 'removeFromContext(this, "abc")',
+                        }
+                    },
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            'abc': null,
+                            'abc.x': null,
+                            'abc.y': null,
+                            'abc.index': null
+                        }
+                    })
+                ]);
+            });
+        });
+
+        describe('addToContextDiff()', () => {
+            it('should add the file to the given context', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'applyDiff(this, addToContextDiff("abc"))',
+                        }
+                    },
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            'abc': true,
+                            'abc.x': 0,
+                            'abc.y': 0,
+                            'abc.index': 0
+                        }
+                    })
+                ]);
+            });
+        });
+
+        describe('removeFromContextDiff()', () => {
+            it('should remove the file from the given context', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'abc': true,
+                            'test()': 'applyDiff(this, removeFromContextDiff("abc"))',
+                        }
+                    },
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            'abc': null,
+                            'abc.x': null,
+                            'abc.y': null,
+                            'abc.index': null
+                        }
+                    })
+                ]);
+            });
+        });
+
+        describe('getFilesInContext()', () => {
+            it('should return the list of files that are in the given context', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'abc': true,
+                            'test()': 'this.length = getFilesInContext("abc").length',
+                        }
+                    },
+                    thatFile: {
+                        id: 'thatFile',
+                        tags: {
+                            'abc': true
+                        }
+                    },
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile', 'thatFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            'length': 2
+                        }
+                    })
+                ]);
+            });
+
+            it('should always return a list', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'abc': true,
+                            'test()': 'this.length = getFilesInContext("abc").length',
+                        }
+                    }
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            'length': 1
+                        }
+                    })
+                ]);
+            });
+        });
+
+        describe('setPositionDiff()', () => {
+            it('should return a diff that sets the file position in a context when applied', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'applyDiff(this, setPositionDiff("abc", 1, 2))',
+                        }
+                    }
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            "abc.x": 1,
+                            "abc.y": 2
+                        }
+                    })
+                ]);
+            });
+
+            it('should ignore components that are not defined', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'applyDiff(this, setPositionDiff("abc", undefined, 2))',
+                        }
+                    }
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            "abc.y": 2
+                        }
+                    })
+                ]);
+            });
+
+            it('should be able to set the index', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'applyDiff(this, setPositionDiff("abc", undefined, undefined, 2))',
+                        }
+                    }
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            "abc.index": 2
+                        }
+                    })
+                ]);
+            });
+        });
+
+        describe('getUserMenuContext()', () => {
+            it('should return the _userMenuContext tag from the user file', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'this.context = getUserMenuContext()',
+                        }
+                    },
+                    userFile: {
+                        id: 'userFile',
+                        tags: {
+                            _userMenuContext: 'abc'
+                        }
+                    }
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile', 'userFile'], 'userFile');
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            context: 'abc'
+                        }
+                    })
                 ]);
             });
         });
