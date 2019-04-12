@@ -1,10 +1,8 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
 import { FileCalculationContext, calculateFileValue, getFileShape, FileShape } from "@yeti-cgi/aux-common";
-import { Mesh, MeshStandardMaterial, Color, LineSegments, BufferGeometry, BufferAttribute, LineBasicMaterial, Group, Vector3 } from "three";
-import { createCube, createCubeStrokeGeometry, isTransparent, disposeMaterial, disposeMesh, createSphere } from "../SceneUtils";
-import { flatMap } from "lodash";
-import { getColorForTags } from "../ColorUtils";
+import { Mesh, MeshStandardMaterial, Color, LineSegments, LineBasicMaterial, Group, Vector3, MeshToonMaterial } from "three";
+import { createCube, createCubeStrokeGeometry, isTransparent, disposeMesh, createSphere } from "../SceneUtils";
 
 export class MeshCubeDecorator extends AuxFile3DDecorator {
 
@@ -90,7 +88,7 @@ export class MeshCubeDecorator extends AuxFile3DDecorator {
     }
     
     private _setColor(color: any) {
-        const shapeMat = <MeshStandardMaterial>this.shape.material;
+        const shapeMat = <MeshStandardMaterial | MeshToonMaterial>this.shape.material;
         if (color) {
             shapeMat.visible = !isTransparent(color);
             if (shapeMat.visible) {
@@ -126,7 +124,7 @@ export class MeshCubeDecorator extends AuxFile3DDecorator {
             // Stroke
             const geo = createCubeStrokeGeometry();
             const material = new LineBasicMaterial({
-                color: 0x000000
+                color: 0x000000,
             });
             
             this.stroke = new LineSegments(geo, material);

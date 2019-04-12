@@ -1,14 +1,65 @@
-import { Vector3, MeshBasicMaterial, SphereBufferGeometry, Mesh, Object3D, Scene, Matrix4, Box2, Vector2, Box3, Layers, BoxBufferGeometry, MeshStandardMaterial, BufferGeometry, BufferAttribute, Material, Geometry, ConeGeometry, DoubleSide } from 'three';
+import { 
+    Vector3,
+    MeshBasicMaterial,
+    SphereBufferGeometry,
+    Mesh,
+    Object3D,
+    Scene,
+    Matrix4,
+    Box2,
+    Vector2,
+    Box3,
+    Layers,
+    BoxBufferGeometry,
+    MeshStandardMaterial,
+    BufferGeometry,
+    BufferAttribute,
+    Material,
+    Geometry,
+    ConeGeometry,
+    DoubleSide,
+    MeshToonMaterial,
+    AmbientLight,
+    DirectionalLight,
+    Math as ThreeMath, 
+    DirectionalLightHelper} from 'three';
 import { flatMap } from 'lodash';
 import { calculateNumericalTagValue, FileCalculationContext, File } from '@yeti-cgi/aux-common';
 import { getOptionalValue } from '../SharedUtils';
+/**
+ * Create copy of material that most meshes in Aux Builder/Player use.
+ */
+export function baseAuxMeshMaterial() {
+    return new MeshToonMaterial({
+        color: 0x00ff00,
+        reflectivity: 1.0,
+        shininess: 30
+    });
+}
+
+/**
+ * Create copy of ambient light that is common to all aux scenes.
+ */
+export function baseAuxAmbientLight() {
+    return new AmbientLight(0x222222);
+}
+
+/**
+ * Create copy of directional light that is common to all aux scenes.
+ */
+export function baseAuxDirectionalLight() {
+    let dirLight =  new DirectionalLight(0xffffff, 1);
+    dirLight.position.set(0.25, 3.0, 2.4);
+    // let helper = new DirectionalLightHelper(dirLight);
+    // dirLight.add(helper);
+    return dirLight;
+}
 
 export function createSphere(position: Vector3, color: number, size: number = 0.1) {
-    const sphereMaterial = new MeshBasicMaterial({
-        color
-    });
-    const sphereGeometry = new SphereBufferGeometry(size, 16, 14);
-    const sphere = new Mesh(sphereGeometry, sphereMaterial);
+    const geometry = new SphereBufferGeometry(size, 16, 14);
+    let material = baseAuxMeshMaterial();
+
+    const sphere = new Mesh(geometry, material.clone());
     sphere.position.copy(position);
     return sphere;
 }
@@ -16,7 +67,7 @@ export function createSphere(position: Vector3, color: number, size: number = 0.
 export function createUserCone(radius?: number, height?: number): Mesh {
     radius = getOptionalValue(radius, 0.5);
     height = getOptionalValue(height, 0.7);
-    let geometry = new ConeGeometry(radius, height, 4, 1, true);
+    const geometry = new ConeGeometry(radius, height, 4, 1, true);
     let material = new MeshStandardMaterial({
         color: "green",
         metalness: .1,
@@ -33,12 +84,9 @@ export function createUserCone(radius?: number, height?: number): Mesh {
 }
 
 export function createCube(size: number): Mesh {
-    let geometry = new BoxBufferGeometry(size, size, size);
-    let material = new MeshStandardMaterial({
-        color: 0x00ff00,
-        metalness: .1,
-        roughness: 0.6
-    });
+    const geometry = new BoxBufferGeometry(size, size, size);
+    let material = baseAuxMeshMaterial();
+
     const cube = new Mesh(geometry, material);
     cube.castShadow = true;
     cube.receiveShadow = false;

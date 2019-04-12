@@ -3,7 +3,6 @@ import Vue from "vue";
 import { LoadingProgress } from "@yeti-cgi/aux-common/LoadingProgress";
 import { appManager } from "../../../shared/AppManager";
 import { hasValue } from "@yeti-cgi/aux-common";
-import { FirstPersonControls } from "three";
 
 @Component({})
 export default class Loading extends Vue {

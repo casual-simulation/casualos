@@ -59,6 +59,7 @@ import { InventoryContext } from '../InventoryContext';
 import { doesFileDefinePlayerContext } from '../PlayerUtils';
 import { MenuContext } from '../MenuContext';
 import { CameraType, resizeCameraRig, createCameraRig } from '../../shared/scene/CameraRigFactory';
+import { baseAuxAmbientLight, baseAuxDirectionalLight } from '../../shared/scene/SceneUtils';
 
 @Component({
     components: {
@@ -77,9 +78,8 @@ export default class GameView extends Vue implements IGameView {
     private _vrControls: any;
     private _vrEffect: any;
 
-    private _sun: DirectionalLight;
+    private _directional: DirectionalLight;
     private _ambient: AmbientLight;
-    private _skylight: HemisphereLight;
 
     private _groundPlane: Plane;
     private _canvas: HTMLCanvasElement;
@@ -524,29 +524,12 @@ export default class GameView extends Vue implements IGameView {
         this._setupRenderer();
 
         // Ambient light.
-        this._ambient = new AmbientLight(0xffffff, 0.7);
+        this._ambient = baseAuxAmbientLight();
         this._scene.add(this._ambient);
 
-        // Sky light.
-        this._skylight = new HemisphereLight(0xc1e0fd, 0xffffff, .6);
-        this._scene.add(this._skylight);
-
-        // Sun light.
-        this._sun = new DirectionalLight(0xffffff, .6);
-        this._sun.position.set(5, 5, 5);
-        this._sun.position.multiplyScalar(50);
-        this._sun.name = "sun";
-        this._sun.castShadow = true;
-        this._sun.shadowMapWidth = this._sun.shadowMapHeight = 1024 * 2;
-
-        var d = 30;
-        this._sun.shadow.camera.left = -d;
-        this._sun.shadow.camera.right = d;
-        this._sun.shadow.camera.top = d;
-        this._sun.shadow.camera.bottom = -d;
-        this._sun.shadow.camera.far = 3500;
-
-        this._scene.add(this._sun);
+        // Directional light.
+        this._directional = baseAuxDirectionalLight();
+        this._scene.add(this._directional);
 
         // Ground plane.
         this._groundPlane = new Plane(new Vector3(0, 1, 0));

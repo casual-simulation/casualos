@@ -1,7 +1,8 @@
 import { hex } from './Hex';
-import { Mesh, BufferGeometry, ExtrudeBufferGeometry, Shape, Material, MeshStandardMaterial, Matrix4, Vector3, MeshBasicMaterial, Color, Box3, Sphere } from 'three';
+import { Mesh, BufferGeometry, ExtrudeBufferGeometry, Shape, Material, MeshStandardMaterial, Matrix4, Vector3, MeshBasicMaterial, Color, Box3, Sphere, MeshToonMaterial } from 'three';
 import { Axial } from './Axial';
 import { gridPosToRealPos } from './HexGrid';
+import { baseAuxMeshMaterial } from '../SceneUtils';
 
 /**
  * Defines a class that represents a 3D Hex.
@@ -44,13 +45,13 @@ export class HexMesh extends Mesh {
     }
 
     get color(): Color {
-        let material = <MeshStandardMaterial>this.material;
+        let material = <MeshStandardMaterial | MeshToonMaterial>this.material;
         return material.color;
     }
 
     set color(val: Color) {
         if (!val) return;
-        let material = <MeshStandardMaterial>this.material;
+        let material = <MeshStandardMaterial | MeshToonMaterial>this.material;
         material.color = val;
     }
     
@@ -92,10 +93,11 @@ export function createDefaultHexMaterial(mat: Material): Material {
     if (mat) {
         return mat;
     }
-    return new MeshStandardMaterial({
-        color: 0x999999,
-        roughness: .7,
-    });
+
+    let defaultMat = baseAuxMeshMaterial();
+    defaultMat.color.set(0x99999);
+
+    return defaultMat;
 }
 
 /**

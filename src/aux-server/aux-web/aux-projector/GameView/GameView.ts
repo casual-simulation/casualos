@@ -64,6 +64,7 @@ import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { BuilderInteractionManager } from '../interaction/BuilderInteractionManager';
 import Home from '../Home/Home';
 import { CameraType, resizeCameraRig, createCameraRig } from '../../shared/scene/CameraRigFactory';
+import { baseAuxAmbientLight, baseAuxDirectionalLight } from '../../shared/scene/SceneUtils';
 
 @Component({
     components: {
@@ -81,9 +82,8 @@ export default class GameView extends Vue implements IGameView {
     private _vrControls: any;
     private _vrEffect: any;
 
-    private _sun: DirectionalLight;
+    private _directional: DirectionalLight;
     private _ambient: AmbientLight;
-    private _skylight: HemisphereLight;
 
     private _groundPlane: Plane;
     private _gridMesh: GridHelper;
@@ -252,7 +252,7 @@ export default class GameView extends Vue implements IGameView {
                 // Update the scene background color.
                 let sceneBackgroundColor = (<Object>file).tags['aux.scene.color'];
                 if (sceneBackgroundColor) {
-                    this._scene.background = new Color(sceneBackgroundColor);;
+                    this._scene.background = new Color(sceneBackgroundColor);
                 }
 
             }))
@@ -301,6 +301,37 @@ export default class GameView extends Vue implements IGameView {
         this._cameraUpdate();
         this._renderUpdate(xrFrame);
         this._time.update();
+
+        // Debug direction light postion with arrow keys + control
+        // const speed = 1;
+        // const dt = this._time.deltaTime;
+        // let dirWorldPos = new Vector3();
+        // this._directional.getWorldPosition(dirWorldPos);
+        // if (this._input.getKeyHeld('ArrowUp')) {
+        //     if (this._input.getKeyHeld('Alt')) {
+        //         dirWorldPos.y += speed * dt;
+        //     } else {
+        //         dirWorldPos.z += speed * dt;
+        //     }
+        //     console.log('direction world position:', dirWorldPos);
+        // }
+        // if (this._input.getKeyHeld('ArrowDown')) {
+        //     if (this._input.getKeyHeld('Alt')) {
+        //         dirWorldPos.y += -speed * dt;
+        //     } else {
+        //         dirWorldPos.z += -speed * dt;
+        //     }
+        //     console.log('direction world position:', dirWorldPos);
+        // }
+        // if (this._input.getKeyHeld('ArrowLeft')) {
+        //     dirWorldPos.x += speed * dt;
+        //     console.log('direction world position:', dirWorldPos);
+        // }
+        // if (this._input.getKeyHeld('ArrowRight')) {
+        //     dirWorldPos.x += -speed * dt;
+        //     console.log('direction world position:', dirWorldPos);
+        // }
+        // this._directional.position.copy(dirWorldPos);
 
         if (this.vrDisplay && this.vrDisplay.isPresenting) {
 
@@ -392,8 +423,8 @@ export default class GameView extends Vue implements IGameView {
         }
 
         this._scene.background = null;
-        this._renderer.clearDepth(); // Clear depth buffer so that ui objects dont 
-        this._renderer.render(this._scene, this._uiWorldCamera);
+        // this._renderer.clearDepth(); // Clear depth buffer so that ui objects dont 
+        // this._renderer.render(this._scene, this._uiWorldCamera);
         this._scene.background = this._originalBackground;
     }
 
@@ -486,26 +517,6 @@ export default class GameView extends Vue implements IGameView {
         // }
     }
 
-    /**
-     * Returns wether or not the given file should be displayed in 3d.
-     * @param file The file
-     */
-    private _shouldDisplayFile(file: File): boolean {
-        // Don't display files without a defined type.
-        // if (!file.type) {
-        //     return false;
-        // }
-
-        if (!file.tags._user) {
-            // Dont display normal files that are hidden or destroyed.
-            if (file.tags._destroyed) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     private _setupScene() {
 
         this._scene = new Scene();
@@ -522,29 +533,12 @@ export default class GameView extends Vue implements IGameView {
         this._setupRenderer();
 
         // Ambient light.
-        this._ambient = new AmbientLight(0xffffff, 0.7);
+        this._ambient = baseAuxAmbientLight();
         this._scene.add(this._ambient);
 
-        // Sky light.
-        this._skylight = new HemisphereLight(0xc1e0fd, 0xffffff, .6);
-        this._scene.add(this._skylight);
-
-        // Sun light.
-        this._sun = new DirectionalLight(0xffffff, .6);
-        this._sun.position.set(5, 5, 5);
-        this._sun.position.multiplyScalar(50);
-        this._sun.name = "sun";
-        this._sun.castShadow = true;
-        this._sun.shadowMapWidth = this._sun.shadowMapHeight = 1024 * 2;
-
-        var d = 30;
-        this._sun.shadow.camera.left = -d;
-        this._sun.shadow.camera.right = d;
-        this._sun.shadow.camera.top = d;
-        this._sun.shadow.camera.bottom = -d;
-        this._sun.shadow.camera.far = 3500;
-
-        this._scene.add(this._sun);
+        // Directional light.
+        this._directional = baseAuxDirectionalLight();
+        this._scene.add(this._directional);
 
         // Ground plane.
         this._groundPlane = new Plane(new Vector3(0, 1, 0));
@@ -562,8 +556,6 @@ export default class GameView extends Vue implements IGameView {
             alpha: true
         });
         webGlRenderer.autoClear = false;
-        webGlRenderer.shadowMap.enabled = false;
-        webGlRenderer.shadowMap.type = PCFSoftShadowMap;
 
         this._resizeRenderer();
         this._canvas = this._renderer.domElement;
