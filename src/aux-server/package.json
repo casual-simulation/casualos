@@ -65,7 +65,7 @@
     "rxjs": "^6.4.0",
     "socket.io": "^2.2.0",
     "socket.io-client": "^2.2.0",
-    "three": "^0.98.0",
+    "three": "^0.103.0",
     "three-bmfont-text": "^2.3.0",
     "three-vrcontroller-module": "^1.0.3",
     "three-vrcontrols-module": "^2.2.1",

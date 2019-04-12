@@ -423,8 +423,8 @@ export default class GameView extends Vue implements IGameView {
         }
 
         this._scene.background = null;
-        // this._renderer.clearDepth(); // Clear depth buffer so that ui objects dont 
-        // this._renderer.render(this._scene, this._uiWorldCamera);
+        this._renderer.clearDepth(); // Clear depth buffer so that ui objects dont 
+        this._renderer.render(this._scene, this._uiWorldCamera);
         this._scene.background = this._originalBackground;
     }
 
