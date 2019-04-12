@@ -31,8 +31,8 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x:0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'onCombine(#name:"Joe")': 'clone(this);destroy(this);destroy(that);',
-                        'onCombine(#name:"Friend")': 'clone(this, { bad: true })',
+                        'onCombine(#name:"Joe")': 'clone(null, this);destroy(this);destroy(that);',
+                        'onCombine(#name:"Friend")': 'clone(null, this, { bad: true })',
                     }
                 },
                 thatFile: {
@@ -58,8 +58,8 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x:0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'onCombine(#name:"Joe")': 'clone(this);destroy(this);destroy(that);',
-                        'onCombine(#name:"Friend")': 'clone(this, { bad: true })',
+                        'onCombine(#name:"Joe")': 'clone(null, this);destroy(this);destroy(that);',
+                        'onCombine(#name:"Friend")': 'clone(null, this, { bad: true })',
 
                         // the new file is not destroyed
                     }
@@ -79,7 +79,7 @@ describe('FilesChannel', () => {
                         _workspace: 'abc',
                         num: 15,
                         formula: '=this.num',
-                        'onCombine(#name:"Friend")': 'clone(this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
+                        'onCombine(#name:"Friend")': 'clone(null, this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
                     }
                 },
                 thatFile: {
@@ -107,7 +107,7 @@ describe('FilesChannel', () => {
                         _workspace: 'abc',
                         num: 15,
                         formula: '=this.num',
-                        'onCombine(#name:"Friend")': 'clone(this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
+                        'onCombine(#name:"Friend")': 'clone(null, this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
                         name: 'Friend',
                         testFormula: '=this.name'
 
@@ -126,7 +126,7 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x:0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef(#name:"Joe")': 'clone(this)'
+                        'abcdef(#name:"Joe")': 'clone(null, this)'
                     }
                 },
                 thatFile: {
@@ -152,7 +152,7 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x:0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef(#name:"Joe")': 'clone(this)'
+                        'abcdef(#name:"Joe")': 'clone(null, this)'
                     }
                 })
             ]);
@@ -165,7 +165,7 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x:0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef()': 'clone(this)'
+                        'abcdef()': 'clone(null, this)'
                     }
                 },
                 thatFile: {
@@ -191,7 +191,7 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x:0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef()': 'clone(this)'
+                        'abcdef()': 'clone(null, this)'
                     }
                 })
             ]);
@@ -382,13 +382,13 @@ describe('FilesChannel', () => {
             ]);
         });
 
-        describe('createFrom()', () => {
+        describe('create()', () => {
             it('should create a new file with aux._parent set to the original id', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'createFrom(this, { abc: "def" })',
+                            'test()': 'create(this, { abc: "def" })',
                         }
                     }
                 };
@@ -416,7 +416,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'createFrom("thisFile", { abc: "def" })',
+                            'test()': 'create("thisFile", { abc: "def" })',
                         }
                     }
                 };
@@ -444,7 +444,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'createFrom("thisFile", { abc: "def" }, { ghi: 123 })',
+                            'test()': 'create("thisFile", { abc: "def" }, { ghi: 123 })',
                         }
                     }
                 };
@@ -473,7 +473,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'createFrom("thisFile", @name("that"))',
+                            'test()': 'create("thisFile", @name("that"))',
                         }
                     },
                     thatFile: {
@@ -507,13 +507,13 @@ describe('FilesChannel', () => {
             });
         });
 
-        describe('cloneFrom()', () => {
+        describe('clone()', () => {
             it('should create a new file with aux._parent set to the given files ID', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'cloneFrom(this, { abc: "def" })',
+                            'test()': 'clone(this, { abc: "def" })',
                         }
                     }
                 };
@@ -530,7 +530,7 @@ describe('FilesChannel', () => {
                         id: 'uuid-0',
                         tags: {
                             abc: 'def',
-                            'test()': 'cloneFrom(this, { abc: "def" })',
+                            'test()': 'clone(this, { abc: "def" })',
                             'aux._parent': 'thisFile'
                         }
                     })

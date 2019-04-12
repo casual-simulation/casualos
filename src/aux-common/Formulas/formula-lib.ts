@@ -296,9 +296,10 @@ export function clone(...files: any[]) {
  * @param data The files or objects to use for the new file's tags.
  */
 export function cloneFrom(file: File, ...data: any[]) {
-    return clone(file, ...data, {
+    let parent = file ? {
         'aux._parent': file.id
-    });
+    } : {};
+    return clone(file, parent, ...data);
 }
 
 /**
@@ -306,16 +307,17 @@ export function cloneFrom(file: File, ...data: any[]) {
  * @param parent The file that should be the parent of the new file.
  * @param data The object that specifies the new file's tag values.
  */
-export function createFrom(parent: File | string, ...datas: FileTags[]) {
+export function createFrom(parent: File, ...datas: FileTags[]) {
     let parentId: string;
     if (typeof parent === 'string') {
         parentId = parent;
-    } else {
+    } else if(parent) {
         parentId = parent.id;
     }
-    return create({
+    let parentDiff = parentId ? {
         'aux._parent': parentId
-    }, ...datas);
+    } : {};
+    return create(parentDiff, ...datas);
 }
 
 /**
@@ -595,10 +597,8 @@ export default {
     random,
     join,
     destroy,
-    clone,
-    cloneFrom,
-    create,
-    createFrom,
+    clone: cloneFrom,
+    create: createFrom,
     combine,
     event,
     shout,
