@@ -57,6 +57,8 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
     private _rejected: RejectedAtom<TOp>[];
     private _validator: AtomValidator;
     private _keyMap: Map<number, PublicCryptoKey>;
+    private _pendingRefs: Atom<TOp>[];
+    private _dirty: boolean;
 
     /**
      * Gets or sets whether the causal tree should collect garbage.
@@ -97,6 +99,9 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * Gets the currently stored value in the tree.
      */
     get value() {
+        if (this._dirty) {
+            [this._value, this._metadata] = this._calculateValue(this._batch);
+        }
         return this._value;
     }
 
@@ -153,6 +158,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         this._reducer = reducer;
         this._value = undefined;
         this._metadata = undefined;
+        this._dirty = false;
         this._atomAdded = new Subject<Atom<TOp>[]>();
         this._atomArchived = new Subject<Atom<TOp>[]>();
         this._atomRejected = new Subject<RejectedAtom<TOp>[]>();
@@ -198,6 +204,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         if (ref) {
             if (this._isBatching) {
                 this._batch.push(ref);
+                this._dirty = true;
             } else {
                 const refs = [ref];
                 this.triggerGarbageCollection(refs);
@@ -542,22 +549,6 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
             }
         }
         return rejected;
-        
-        // if (key) {
-        //     const valid = await this._validator.verify(key, atom);
-        //     if (!valid) {
-        //         return {
-        //             atom: atom,
-        //             reason: 'signature_failed'
-        //         };
-        //     }
-        // } else if (!key && !!atom.signature && this._validator && this._validator.impl.supported()) {
-        //     return {
-        //         atom: atom,
-        //         reason: 'no_public_key'
-        //     };
-        // }
-        // return null;
     }
 
     /**
@@ -581,6 +572,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
     }
 
     private _calculateValue(refs: Atom<TOp>[]): [TValue, TMetadata] {
+        this._dirty = false;
         return this._reducer.eval(this._weave, refs, this._value, this._metadata);
     }
 }

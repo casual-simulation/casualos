@@ -138,27 +138,34 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
      * @param events The events to add to the tree.
      * @param value The optional precalculated value to use for resolving tree references.
      */
-    async addEvents(events: FileEvent[], value?: AuxState): Promise<AtomBatch<AuxOp>> {
+    async addEvents(events: FileEvent[]): Promise<AtomBatch<AuxOp>> {
         return await this.batch(async () => {
-            value = value || this.value;
-            const promises = events.map(e => {
+            let added: Atom<AuxOp>[] = [];
+            let rejected: RejectedAtom<AuxOp>[] = [];
+
+            for (let i = 0; i < events.length; i++) {
+                let e = events[i];
+                let batch: AtomBatch<AuxOp>;
                 if (e.type === 'file_updated') {
-                    const file = value[e.id];
-                    return this.updateFile(file, e.update);
+                    const file = this.value[e.id];
+                    batch = await this.updateFile(file, e.update);
                 } else if(e.type === 'file_added') {
-                    return this.addFile(e.file);
+                    batch = await this.addFile(e.file);
                 } else if(e.type === 'file_removed') {
-                    const file = value[e.id];
-                    return this.removeFile(file);
+                    const file = this.value[e.id];
+                    batch = await this.removeFile(file);
                 } else if(e.type === 'transaction') {
-                    return this.addEvents(e.events, value);
+                    batch = await this.addEvents(e.events);
                 } else if(e.type === 'apply_state') {
-                    return this.applyState(e.state, value);
+                    batch = await this.applyState(e.state, this.value);
                 }
-            });
-            const vals = await Promise.all(promises);
-            let added = flatMap(vals, b => b.added);
-            let rejected = flatMap(vals, b => b.rejected);
+
+                if (batch) {
+                    added.push(...batch.added);
+                    rejected.push(...batch.rejected);
+                }
+            }
+
             return {
                 added,
                 rejected
