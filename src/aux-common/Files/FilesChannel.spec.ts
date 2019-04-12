@@ -827,6 +827,219 @@ describe('FilesChannel', () => {
                 ]);
             });
         });
+
+        describe('applyDiff()', () => {
+            it('should update the given file with the given diff', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'applyDiff(this, { abc: "def", ghi: true, num: 1 })',
+                        }
+                    },
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            abc: "def",
+                            ghi: true,
+                            num: 1
+                        }
+                    })
+                ]);
+            });
+
+            it('should support multiple', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'applyDiff(this, { abc: "def", ghi: true, num: 1 }, { abc: "xyz" });',
+                        }
+                    },
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            abc: "xyz",
+                            ghi: true,
+                            num: 1
+                        }
+                    })
+                ]);
+            });
+
+            it('should apply the values to the file', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'abc': 123,
+                            'test()': 'applyDiff(this, { abc: "def", ghi: true, num: 1 }); applyDiff(this, { "abc": this.abc })',
+                        }
+                    },
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            abc: "def",
+                            ghi: true,
+                            num: 1
+                        }
+                    })
+                ]);
+            });
+        });
+
+        describe('addToContext()', () => {
+            it('should add the file to the given context', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'addToContext(this, "abc")',
+                        }
+                    },
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            'abc': true,
+                            'abc.x': 0,
+                            'abc.y': 0,
+                            'abc.index': 0
+                        }
+                    })
+                ]);
+            });
+        });
+
+        describe('removeFromContext()', () => {
+            it('should add the file to the given context', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'abc': true,
+                            'test()': 'removeFromContext(this, "abc")',
+                        }
+                    },
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            'abc': null,
+                            'abc.x': null,
+                            'abc.y': null,
+                            'abc.index': null
+                        }
+                    })
+                ]);
+            });
+        });
+
+        describe('addToContextDiff()', () => {
+            it('should add the file to the given context', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'applyDiff(this, addToContextDiff("abc"))',
+                        }
+                    },
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            'abc': true,
+                            'abc.x': 0,
+                            'abc.y': 0,
+                            'abc.index': 0
+                        }
+                    })
+                ]);
+            });
+        });
+
+        describe('removeFromContextDiff()', () => {
+            it('should remove the file from the given context', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'abc': true,
+                            'test()': 'applyDiff(this, removeFromContextDiff("abc"))',
+                        }
+                    },
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            'abc': null,
+                            'abc.x': null,
+                            'abc.y': null,
+                            'abc.index': null
+                        }
+                    })
+                ]);
+            });
+        });
     });
 
     describe('destroyAllMenuItems()', () => {

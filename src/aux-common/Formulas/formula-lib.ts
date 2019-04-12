@@ -1,9 +1,21 @@
-import { File } from '../Files/File';
+import { File, FileTags } from '../Files/File';
 import { FileUpdatedEvent, FileEvent, FileAddedEvent, action, FilesState, calculateActionEvents, FileRemovedEvent, fileRemoved, fileAdded, fileUpdated } from "../Files/FilesChannel";
 import uuid from 'uuid/v4';
 import { every, find } from "lodash";
 import { isProxy, proxyObject, FileProxy } from "../Files/FileProxy";
-import { FileCalculationContext, calculateFormulaValue, COMBINE_ACTION_NAME, addFileToMenu, getUserMenuId, filesInContext, calculateFileValue, removeFileFromMenu, getFilesInMenu } from '../Files/FileCalculations';
+import { 
+    FileCalculationContext, 
+    calculateFormulaValue, 
+    COMBINE_ACTION_NAME, 
+    addFileToMenu, 
+    getUserMenuId, 
+    filesInContext, 
+    calculateFileValue, 
+    removeFileFromMenu, 
+    getFilesInMenu,
+    addToContextDiff as calcAddToContextDiff,
+    removeFromContextDiff as calcRemoveFromContextDiff
+} from '../Files/FileCalculations';
 
 let actions: FileEvent[] = [];
 let state: FilesState = null;
@@ -373,6 +385,71 @@ export function getUserMenuContext(): string {
 }
 
 /**
+ * Gets the name of the context that is used for the current user's inventory.
+ */
+export function getUserInventoryContext(): string {
+    const user = getUser();
+    if (user) {
+        return user._userInventoryContext;
+    } else {
+        return null;
+    }
+}
+
+/**
+ * Applies the given diff to the given file.
+ * @param file The file.
+ * @param diff The diff to apply.
+ */
+export function applyDiff(file: FileProxy, ...diffs: FileTags[]) {
+    diffs.forEach(diff => {
+        for (let key in diff) {
+            file[key] = diff[key];
+        }
+    });
+}
+
+/**
+ * Gets a diff that adds a file to the given context.
+ * @param context The context.
+ * @param x The X position that the file should be added at.
+ * @param y The Y position that the file should be added at.
+ * @param index The index that the file should be added at.
+ */
+export function addToContextDiff(context: string, x: number = 0, y: number = 0, index?: number) {
+    return calcAddToContextDiff(calc, context, x, y, index);
+}
+
+/**
+ * Gets a diff that removes a file from the given context.
+ * @param context The context.
+ */
+export function removeFromContextDiff(context: string) {
+    return calcRemoveFromContextDiff(calc, context);
+}
+
+/**
+ * Adds the given file to the given context.
+ * @param file The file.
+ * @param context The context.
+ * @param x The X position that the file should be added at.
+ * @param y The Y position that the file should be added at.
+ * @param index The index that the file should be added at.
+ */
+export function addToContext(file: FileProxy, context: string, x: number = 0, y: number = 0, index?: number) {
+    applyDiff(file, addToContextDiff(context, x, y, index));
+}
+
+/**
+ * Removes the given file from the given context.
+ * @param file The file.
+ * @param context The context.
+ */
+export function removeFromContext(file: FileProxy, context: string) {
+    applyDiff(file, removeFromContextDiff(context));
+}
+
+/**
  * Creates a new file and adds it to the current user's menu.
  * The new file will be parented to the user's file.
  * @param id The ID of the menu item.
@@ -472,6 +549,12 @@ export default {
     shout,
     goToContext,
     getUser,
+
+    applyDiff,
+    addToContextDiff,
+    removeFromContextDiff,
+    addToContext,
+    removeFromContext,
 
     createMenuItem,
     createMenuItemFrom,

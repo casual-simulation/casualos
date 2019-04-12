@@ -12,7 +12,8 @@ import {
     AuxDomain, 
     DEFAULT_SELECTION_MODE,
     FileShape,
-    DEFAULT_FILE_SHAPE
+    DEFAULT_FILE_SHAPE,
+    FileTags
 } from './File';
 
 import uuid from 'uuid/v4';
@@ -38,7 +39,7 @@ import { isProxy, createFileProxy, proxyObject, SetValueHandler, FileProxy } fro
 import formulaLib from '../Formulas/formula-lib';
 import { FilterFunction, SandboxInterface } from '../Formulas/SandboxInterface';
 import { PartialFile } from '../Files';
-import { FilesState, cleanFile, hasValue } from './FilesChannel';
+import { FilesState, cleanFile, hasValue, FileUpdatedEvent, fileUpdated } from './FilesChannel';
 import { merge } from '../utils';
 import { AtomOp, Atom } from '../causal-trees';
 import { AuxOp, AuxOpType, AuxFile, file, AuxObject } from '../aux-format';
@@ -509,6 +510,40 @@ export function getFilesInMenu(calc: FileCalculationContext, userFile: File): Fi
 export function filesInContext(calc: FileCalculationContext, context: string): File[] {
     const files = calc.objects.filter(f => isFileInContext(calc, f, context));
     return sortBy(files, f => fileContextSortOrder(calc, f, context));
+}
+
+/**
+ * Gets a diff that adds a file to the given context.
+ * If the file is already in the context, then nothing happens.
+ * If other files are already at the given position, then the file will be placed at the topmost index.
+ * @param calc The file calculation context.
+ * @param context The context that the file should be added to.
+ * @param x The x position that the file should be placed at.
+ * @param y The x position in the context that the file should be placed at.
+ * @param index The index that the file should be placed at.
+ */
+export function addToContextDiff(calc: FileCalculationContext, context: string, x: number = 0, y: number = 0, index?: number): FileTags {
+    const files = objectsAtContextGridPosition(calc, context, { x, y });
+    return {
+        [context]: true,
+        [`${context}.x`]: x,
+        [`${context}.y`]: y,
+        [`${context}.index`]: typeof index === 'undefined' ? files.length : index,
+    };
+}
+
+/**
+ * Gets a diff that removes a file from the given context.
+ * @param calc The file calculation context.
+ * @param context The context that the file should be removed from.
+ */
+export function removeFromContextDiff(calc: FileCalculationContext, context: string): FileTags {
+    return {
+        [context]: null,
+        [`${context}.x`]: null,
+        [`${context}.y`]: null,
+        [`${context}.index`]: null
+    };
 }
 
 /**
