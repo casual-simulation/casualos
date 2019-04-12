@@ -68,15 +68,12 @@ export function createUserCone(radius?: number, height?: number): Mesh {
     radius = getOptionalValue(radius, 0.5);
     height = getOptionalValue(height, 0.7);
     const geometry = new ConeGeometry(radius, height, 4, 1, true);
-    let material = new MeshStandardMaterial({
-        color: "green",
-        metalness: .1,
-        roughness: 0.6,
-        transparent: true,
-        opacity: 0.4,
-        side: DoubleSide,
-        flatShading: true
-    });
+    let material = baseAuxMeshMaterial();
+    material.color.set(0x00d000);
+    material.side = DoubleSide;
+    material.flatShading = true;
+    material.transparent = true;
+    material.opacity = 0.4;
     const mesh = new Mesh(geometry, material);
     mesh.castShadow = true;
     mesh.receiveShadow = false;
