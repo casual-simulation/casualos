@@ -1,5 +1,12 @@
 # AUX Server Changelog
 
+## V0.4.11
+### Date: TBD
+
+### Changes:
+- Improvements
+  - Updated mesh materials and scene lighting to provide a cleaner look and more accurate color representation.
+
 ## V0.4.10
 ### Date: 04/11/2019
 
