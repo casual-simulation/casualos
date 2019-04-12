@@ -520,14 +520,33 @@ export function createMenuItemFrom(file: File, id: string, label: string, action
 }
 
 /**
+ * Gets a diff that adds a file to the current user's menu.
+ */
+export function addToMenuDiff(): FileTags {
+    const context = getUserMenuContext();
+    return { 
+        ...addToContextDiff(context),
+        [`${context}.id`]: uuid()
+    };
+}
+
+/**
  * Adds the given file to the current user's menu.
  * @param file The file to add to the menu.
  */
 export function addToMenu(file: FileProxy) {
+    applyDiff(file, addToMenuDiff());
+}
+
+/**
+ * Gets a diff that removes a file from the current user's menu.
+ */
+export function removeFromMenuDiff(): FileTags {
     const context = getUserMenuContext();
-    applyDiff(file,
-        addToContextDiff(getUserMenuContext()),
-        { [`${context}.id`]: uuid() });
+    return { 
+        ...removeFromContextDiff(context),
+        [`${context}.id`]: null
+    };
 }
 
 /**
@@ -535,10 +554,7 @@ export function addToMenu(file: FileProxy) {
  * @param file The file to remove from the menu.
  */
 export function removeFromMenu(file: FileProxy) {
-    const context = getUserMenuContext();
-    applyDiff(file, 
-        removeFromContextDiff(context), 
-        { [`${context}.id`]: null });
+    applyDiff(file, removeFromMenuDiff());
 }
 
 /**
@@ -588,11 +604,15 @@ export default {
     shout,
     goToContext,
     getUser,
+    getUserMenuContext,
+    getUserInventoryContext,
 
     getFilesInContext,
     applyDiff,
     addToContextDiff,
     removeFromContextDiff,
+    addToMenuDiff,
+    removeFromMenuDiff,
     setPositionDiff,
     addToContext,
     removeFromContext,
