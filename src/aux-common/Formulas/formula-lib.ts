@@ -251,12 +251,15 @@ export function create(...datas: FileTags[]) {
         }
     });
 
-    let event: FileAddedEvent = fileAdded({
+    let file: File = {
         id: id,
         tags: tags
-    });
+    };
+
+    let event: FileAddedEvent = fileAdded(file);
 
     actions.push(event);
+    return calc.sandbox.interface.addFile(file);
 }
 
 /**
@@ -270,9 +273,9 @@ export function clone(...files: any[]) {
         return (f && f[isProxy]) ? f[proxyObject].tags : f;
     });
 
-    let newFile = {
+    let newFile: File = {
         id: id,
-        tags: <any>{},
+        tags: {},
     };
 
     originals.forEach(o => {
@@ -288,6 +291,7 @@ export function clone(...files: any[]) {
     let event: FileAddedEvent = fileAdded(newFile);
 
     actions.push(event);
+    return calc.sandbox.interface.addFile(newFile);
 }
 
 /**

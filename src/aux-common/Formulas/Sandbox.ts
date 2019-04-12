@@ -1,5 +1,5 @@
 import {Transpiler} from './Transpiler';
-import {SandboxInterface} from './SandboxInterface';
+import SandboxInterface from './SandboxInterface';
 import {keys} from 'lodash';
 import { merge } from '../utils';
 

@@ -1,10 +1,13 @@
+import { File } from '../Files/File';
+import { FileProxy } from '../Files/FileProxy';
+
 export type FilterFunction = ((value: any) => boolean) | any;
 
 /**
  * Defines an interface for objects that can allow the sandbox to communicate with the outside world.
  * In particular, this interface allows the sandbox to request tag values and tag objects.
  */
-export interface SandboxInterface {
+export default interface SandboxInterface {
     /**
      * Calculates the list of tag values for the given tag.
      * @param tag The tag.
@@ -31,4 +34,10 @@ export interface SandboxInterface {
      * Calculates a new UUID.
      */
     uuid(): string;
+
+    /**
+     * Adds the given file to the interface.
+     * @param file 
+     */
+    addFile(file: File): FileProxy;
 }
