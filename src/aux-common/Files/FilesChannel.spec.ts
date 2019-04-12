@@ -438,6 +438,35 @@ describe('FilesChannel', () => {
                     })
                 ]);
             });
+
+            it('should support multiple arguments', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'createFrom("thisFile", { abc: "def" }, { ghi: 123 })',
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            abc: 'def',
+                            ghi: 123,
+                            'aux._parent': 'thisFile'
+                        }
+                    })
+                ]);
+            });
         });
 
         describe('cloneFrom()', () => {
@@ -615,7 +644,9 @@ describe('FilesChannel', () => {
                         tags: {
                             'context.id': 'uuid-0',
                             'context.index': 0,
-                            'context': true
+                            'context': true,
+                            'context.x': 0,
+                            'context.y': 0
                         }
                     })
                 ]);
@@ -659,7 +690,9 @@ describe('FilesChannel', () => {
                         tags: {
                             'context.id': null,
                             'context.index': null,
-                            'context': null
+                            'context': null,
+                            'context.x': null,
+                            'context.y': null
                         }
                     })
                 ]);
@@ -1039,6 +1072,68 @@ describe('FilesChannel', () => {
                     })
                 ]);
             });
+        });
+
+        describe('getFilesInContext()', () => {
+            it('should return the list of files that are in the given context', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'abc': true,
+                            'test()': 'this.length = getFilesInContext("abc").length',
+                        }
+                    },
+                    thatFile: {
+                        id: 'thatFile',
+                        tags: {
+                            'abc': true
+                        }
+                    },
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile', 'thatFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            'length': 2
+                        }
+                    })
+                ]);
+            });
+        });
+
+        it('should always return a list', () => {
+            const state: FilesState = {
+                thisFile: {
+                    id: 'thisFile',
+                    tags: {
+                        'abc': true,
+                        'test()': 'this.length = getFilesInContext("abc").length',
+                    }
+                }
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const fileAction = action('test', ['thisFile']);
+            const result = calculateActionEvents(state, fileAction);
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+            
+            expect(result.events).toEqual([
+                fileUpdated('thisFile', {
+                    tags: {
+                        'length': 1
+                    }
+                })
+            ]);
         });
     });
 

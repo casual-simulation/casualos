@@ -229,16 +229,21 @@ function destroyChildren(id: string) {
 
 /**
  * Creates a new file that contains the given tags.
- * @param data The object that specifies what tags to set on the file.
+ * @param datas The objects that specifies what tags to set on the file.
  */
-export function create(data: any) {
+export function create(...datas: FileTags[]) {
     let id = uuid();
+
+    let tags: FileTags = {};
+    datas.forEach(d => {
+        for(let key in d) {
+            tags[key] = d[key];
+        }
+    });
 
     let event: FileAddedEvent = fileAdded({
         id: id,
-        tags: {
-            ...data
-        }
+        tags: tags
     });
 
     actions.push(event);
@@ -291,7 +296,7 @@ export function cloneFrom(file: File, ...data: any[]) {
  * @param parent The file that should be the parent of the new file.
  * @param data The object that specifies the new file's tag values.
  */
-export function createFrom(parent: File | string, data: any) {
+export function createFrom(parent: File | string, ...datas: FileTags[]) {
     let parentId: string;
     if (typeof parent === 'string') {
         parentId = parent;
@@ -299,9 +304,8 @@ export function createFrom(parent: File | string, data: any) {
         parentId = parent.id;
     }
     return create({
-        ...data,
         'aux._parent': parentId
-    });
+    }, ...datas);
 }
 
 /**
@@ -397,6 +401,19 @@ export function getUserInventoryContext(): string {
 }
 
 /**
+ * Gets the list of files that are in the given context.
+ * @param context The context.
+ */
+export function getFilesInContext(context: string): FileProxy[] {
+    const result = calc.sandbox.interface.listObjectsWithTag(context, true);
+    if (Array.isArray(result)) {
+        return result;
+    } else {
+        return [result];
+    }
+}
+
+/**
  * Applies the given diff to the given file.
  * @param file The file.
  * @param diff The diff to apply.
@@ -455,10 +472,11 @@ export function removeFromContext(file: FileProxy, context: string) {
  * @param id The ID of the menu item.
  * @param label The label that the menu item should show.
  * @param action The script that should be run when the item is clicked.
+ * @param diffs The extra diffs to apply to to the new file.
  */
-export function createMenuItem(id: string, label: string, action: string, data?: any) {
+export function createMenuItem(id: string, label: string, action: string, ...diffs: FileTags[]) {
     const user = getUser();
-    createMenuItemFrom(user, id, label, action, data);
+    createMenuItemFrom(user, id, label, action, ...diffs);
 }
 
 /**
@@ -468,38 +486,38 @@ export function createMenuItem(id: string, label: string, action: string, data?:
  * @param id The ID of the menu item.
  * @param label The label that the menu item should show.
  * @param action The script that should be run when the item is clicked.
+ * @param diffs The extra diffs to apply to the new file.
  */
-export function createMenuItemFrom(file: File, id: string, label: string, action: string, data?: any) {
+export function createMenuItemFrom(file: File, id: string, label: string, action: string, ...diffs: FileTags[]) {
     const user = getUser();
     const update = addFileToMenu(calc, user, id);
-    data = data || {};
     createFrom(file, {
         ...update.tags,
         'aux.label': label,
-        'onClick()': action,
-        ...data
-    });
+        'onClick()': action
+    }, ...diffs);
 }
 
 /**
  * Adds the given file to the current user's menu.
- * @param file The file or file ID to add to the menu.
+ * @param file The file to add to the menu.
  */
-export function addToMenu(file: string | File) {
-    const fileId = typeof file === 'string' ? file : file.id;
-    const id = uuid();
-    const update = addFileToMenu(calc, getUser(), id);
-    actions.push(fileUpdated(fileId, update)); 
+export function addToMenu(file: FileProxy) {
+    const context = getUserMenuContext();
+    applyDiff(file,
+        addToContextDiff(getUserMenuContext()),
+        { [`${context}.id`]: uuid() });
 }
 
 /**
  * Removes the given file from the current user's menu.
- * @param file The file or file ID to remove from the menu.
+ * @param file The file to remove from the menu.
  */
-export function removeFromMenu(file: string | File) {
-    const fileId = typeof file === 'string' ? file : file.id;
-    const update = removeFileFromMenu(calc, getUser());
-    actions.push(fileUpdated(fileId, update));
+export function removeFromMenu(file: FileProxy) {
+    const context = getUserMenuContext();
+    applyDiff(file, 
+        removeFromContextDiff(context), 
+        { [`${context}.id`]: null });
 }
 
 /**
@@ -550,6 +568,7 @@ export default {
     goToContext,
     getUser,
 
+    getFilesInContext,
     applyDiff,
     addToContextDiff,
     removeFromContextDiff,
