@@ -467,6 +467,44 @@ describe('FilesChannel', () => {
                     })
                 ]);
             });
+
+            it('should support files as arguments', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'createFrom("thisFile", @name("that"))',
+                        }
+                    },
+                    thatFile: {
+                        id: 'thatFile',
+                        tags: {
+                            name: 'that',
+                            abc: 'def',
+                            formula: '=this.abc'
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            abc: 'def',
+                            name: 'that',
+                            formula: '=this.abc',
+                            'aux._parent': 'thisFile'
+                        }
+                    })
+                ]);
+            });
         });
 
         describe('cloneFrom()', () => {

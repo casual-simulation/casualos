@@ -14,7 +14,9 @@ import {
     removeFileFromMenu, 
     getFilesInMenu,
     addToContextDiff as calcAddToContextDiff,
-    removeFromContextDiff as calcRemoveFromContextDiff
+    removeFromContextDiff as calcRemoveFromContextDiff,
+    setPositionDiff as calcSetPositionDiff,
+    isFile
 } from '../Files/FileCalculations';
 
 let actions: FileEvent[] = [];
@@ -235,7 +237,15 @@ export function create(...datas: FileTags[]) {
     let id = uuid();
 
     let tags: FileTags = {};
-    datas.forEach(d => {
+    datas.forEach((d: any) => {
+        if (d[isProxy]) {
+            let val = d[proxyObject];
+            if (isFile(val)) {
+                d = val.tags;
+            } else {
+                d = val;
+            }
+        }
         for(let key in d) {
             tags[key] = d[key];
         }
