@@ -293,6 +293,9 @@ export function isFormulaObject(object: any): object is FileProxy {
  * @param object The object to unwrap.
  */
 export function unwrapProxy(object: any): any {
+    if (typeof object === 'undefined' || object === null) {
+        return object;
+    }
     if (isFormulaObject(object)) {
         return object[proxyObject];
     } else {

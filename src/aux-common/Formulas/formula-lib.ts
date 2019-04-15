@@ -202,7 +202,7 @@ export function join(values: any, separator: string = ','): string {
  * Removes the given file or file ID from the simulation.
  * @param file The file or file ID to remove from the simulation.
  */
-export function destroy(file: File | string) {
+export function destroyFile(file: FileProxy | string) {
     let id: string;
     if (typeof file === 'object') {
         id = file.id;
@@ -215,6 +215,18 @@ export function destroy(file: File | string) {
     }
 
     destroyChildren(id);
+}
+
+/**
+ * Destroys the given file, file ID, or list of files.
+ * @param file The file, file ID, or list of files to destroy.
+ */
+export function destroy(file: FileProxy | string | FileProxy[]) {
+    if (typeof file === 'object' && Array.isArray(file)) {
+        file.forEach(f => destroyFile(f));
+    } else {
+        destroyFile(file);
+    }
 }
 
 function destroyChildren(id: string) {
@@ -239,32 +251,17 @@ function destroyChildren(id: string) {
 
 /**
  * Creates a new file that contains the given tags.
- * @param datas The objects that specifies what tags to set on the file.
+ * @param diffs The diffs that specify what tags to set on the file.
  */
-export function create(...datas: FileDiff[]) {
+export function create(...diffs: FileDiff[]) {
     let id = uuid();
-
-    let tags: FileTags = {};
-    datas.forEach((d: any) => {
-        d = unwrapProxy(d);
-        if (isFile(d)) {
-            d = d.tags;
-        }
-        for (let key in d) {
-            let val = d[key];
-            if (val[isProxy]) {
-                tags[key] = val[proxyObject];
-            } else {
-                tags[key] = val;
-            }
-        }
-    });
 
     let file: File = {
         id: id,
-        tags: tags
+        tags: {}
     };
 
+    applyDiff(file.tags, ...diffs);
     let event: FileAddedEvent = fileAdded(file);
 
     actions.push(event);
@@ -273,35 +270,17 @@ export function create(...datas: FileDiff[]) {
 
 /**
  * Creates a new file that contains tags from the given files or objects.
- * @param files The files or objects to use for the new file's tags.
+ * @param diffs The diffs to use for the new file's tags.
  */
-export function clone(...files: FileDiff[]) {
+export function cloneFile(...diffs: FileDiff[]) {
     let id = uuid();
-
-    let originals = files.map(f => {
-        return (f && isFormulaObject(f)) ? f[proxyObject].tags : f;
-    });
 
     let newFile: File = {
         id: id,
         tags: {},
     };
 
-    originals.forEach(o => {
-        for (let key in o) {
-            let val = o[key];
-            if (val[isProxy]) {
-                newFile.tags[key] = val[proxyObject];
-            } else {
-                newFile.tags[key] = val;
-            }
-        }
-    });
-
-    delete newFile.tags._converted;
-    delete newFile.tags._original;
-    delete newFile.tags.id;
-
+    applyDiff(newFile.tags, ...diffs);
     let event: FileAddedEvent = fileAdded(newFile);
 
     actions.push(event);
@@ -314,17 +293,23 @@ export function clone(...files: FileDiff[]) {
  * @param data The files or objects to use for the new file's tags.
  */
 export function cloneFrom(file: FileProxy, ...data: FileDiff[]) {
-    let parentId: string;
-    if (typeof file === 'string') {
-        parentId = file;
-    } else if (file) {
-        let original = isFormulaObject(file) ? file[proxyObject] : file;
-        parentId = original.id;
-    }
     let parent = file ? {
-        'aux._creator': parentId
+        'aux._creator': file.id
     } : {};
-    return clone(file, parent, ...data);
+    return cloneFile(file, parent, ...data);
+}
+
+/**
+ * Clones the given file or set of files and applies the given set of file diffs to them.
+ * @param file The file or files to clone.
+ * @param diffs The diffs to apply to the cloned files.
+ */
+export function clone(file: FileProxy | FileProxy[], ...diffs: FileDiff[]) {
+    if (Array.isArray(file)) {
+        return file.map(f => cloneFrom(f, ...diffs));
+    } else {
+        return cloneFrom(file, ...diffs);
+    }
 }
 
 /**
@@ -456,10 +441,18 @@ export function getFilesInContext(context: string): FileProxy[] {
  * @param file The file.
  * @param diff The diff to apply.
  */
-export function applyDiff(file: FileProxy, ...diffs: FileDiff[]) {
+export function applyDiff(file: any, ...diffs: FileDiff[]) {
     diffs.forEach(diff => {
+        if (!diff) {
+            return;
+        }
+        if (isFormulaObject(diff)) {
+            diff = unwrapProxy(diff).tags;
+        } else {
+            diff = unwrapProxy(diff);
+        }
         for (let key in diff) {
-            file[key] = diff[key];
+            file[key] = unwrapProxy(diff[key]);
         }
     });
 }
@@ -575,7 +568,7 @@ export default {
     random,
     join,
     destroy,
-    clone: cloneFrom,
+    clone,
     create: createFrom,
     combine,
     event,

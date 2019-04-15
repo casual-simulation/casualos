@@ -904,6 +904,62 @@ describe('FilesChannel', () => {
                 expect(parent[isProxy]).toBeFalsy();
                 expect(abc[isProxy]).toBeFalsy();
             });
+
+            it('should support an array of files to clone', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'let newFile = clone(@clone, { abc: "def" });',
+                        }
+                    },
+                    file1: {
+                        id: 'file1',
+                        tags: {
+                            clone: true,
+                            test1: true
+                        }
+                    },
+                    file2: {
+                        id: 'file2',
+                        tags: {
+                            clone: true,
+                            test2: true
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                let id = 0;
+                uuidMock.mockImplementation(() => {
+                    return `uuid-${id++}`;
+                });
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            'aux._creator': 'file1',
+                            clone: true,
+                            test1: true,
+                            abc: "def"
+                        }
+                    }),
+                    fileAdded({
+                        id: 'uuid-1',
+                        tags: {
+                            'aux._creator': 'file2',
+                            clone: true,
+                            test2: true,
+                            abc: "def"
+                        }
+                    })
+                ]);
+            });
         });
 
         describe('destroy()', () => {
@@ -979,6 +1035,42 @@ describe('FilesChannel', () => {
                     fileRemoved('childChildFile'),
                     fileRemoved('otherChildFile'),
                     fileRemoved('otherChildChildFile'),
+                ]);
+            });
+
+            it('should support an array of files to destroy', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'destroy(@clone);',
+                        }
+                    },
+                    file1: {
+                        id: 'file1',
+                        tags: {
+                            clone: true,
+                            test1: true
+                        }
+                    },
+                    file2: {
+                        id: 'file2',
+                        tags: {
+                            clone: true,
+                            test2: true
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileRemoved('file1'),
+                    fileRemoved('file2')
                 ]);
             });
         });
@@ -1104,7 +1196,7 @@ describe('FilesChannel', () => {
         });
 
         describe('removeFromMenu()', () => {
-            it('should add the given file to the users menu', () => {
+            it('should remove the given file from the users menu', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
