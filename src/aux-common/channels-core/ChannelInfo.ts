@@ -1,6 +1,7 @@
 
 /**
  * Generic information about a channel.
+ * @deprecated
  */
 export interface ChannelInfo {
     /**

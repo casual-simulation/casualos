@@ -385,7 +385,7 @@ describe('FilesChannel', () => {
         });
 
         describe('create()', () => {
-            it('should create a new file with aux._parent set to the original id', () => {
+            it('should create a new file with aux._creator set to the original id', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -407,13 +407,13 @@ describe('FilesChannel', () => {
                         id: 'uuid-0',
                         tags: {
                             abc: 'def',
-                            'aux._parent': 'thisFile'
+                            'aux._creator': 'thisFile'
                         }
                     })
                 ]);
             });
 
-            it('should create a new file with aux._parent set to the given id', () => {
+            it('should create a new file with aux._creator set to the given id', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -435,7 +435,7 @@ describe('FilesChannel', () => {
                         id: 'uuid-0',
                         tags: {
                             abc: 'def',
-                            'aux._parent': 'thisFile'
+                            'aux._creator': 'thisFile'
                         }
                     })
                 ]);
@@ -464,7 +464,7 @@ describe('FilesChannel', () => {
                         tags: {
                             abc: 'def',
                             ghi: 123,
-                            'aux._parent': 'thisFile'
+                            'aux._creator': 'thisFile'
                         }
                     })
                 ]);
@@ -502,7 +502,7 @@ describe('FilesChannel', () => {
                             abc: 'def',
                             name: 'that',
                             formula: '=this.abc',
-                            'aux._parent': 'thisFile'
+                            'aux._creator': 'thisFile'
                         }
                     })
                 ]);
@@ -660,14 +660,14 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-0',
                         tags: {
-                            'aux._parent': 'thisFile',
+                            'aux._creator': 'thisFile',
                             abc: 100
                         }
                     })
                 ]);
 
                 const event = result.events[0] as FileAddedEvent;
-                const parent = event.file.tags['aux._parent'] as any;
+                const parent = event.file.tags['aux._creator'] as any;
                 const abc = event.file.tags['abc'] as any;
                 expect(parent[isProxy]).toBeFalsy();
                 expect(abc[isProxy]).toBeFalsy();
@@ -675,7 +675,7 @@ describe('FilesChannel', () => {
         });
 
         describe('clone()', () => {
-            it('should create a new file with aux._parent set to the given files ID', () => {
+            it('should create a new file with aux._creator set to the given files ID', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -698,7 +698,7 @@ describe('FilesChannel', () => {
                         tags: {
                             abc: 'def',
                             'test()': 'clone(this, { abc: "def" })',
-                            'aux._parent': 'thisFile'
+                            'aux._creator': 'thisFile'
                         }
                     })
                 ]);
@@ -859,7 +859,7 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-0',
                         tags: {
-                            'aux._parent': 'thisFile',
+                            'aux._creator': 'thisFile',
                             'test()': 'let newFile = clone(this, this, { formula: "=this.num", num: 100 });',
                             num: 100,
                             formula: '=this.num'
@@ -890,7 +890,7 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-0',
                         tags: {
-                            'aux._parent': 'thisFile',
+                            'aux._creator': 'thisFile',
                             'test()': 'let newFile = clone(this, this, { abc: this.num });',
                             abc: 100,
                             num: 100
@@ -899,15 +899,71 @@ describe('FilesChannel', () => {
                 ]);
 
                 const event = result.events[0] as FileAddedEvent;
-                const parent = event.file.tags['aux._parent'] as any;
+                const parent = event.file.tags['aux._creator'] as any;
                 const abc = event.file.tags['abc'] as any;
                 expect(parent[isProxy]).toBeFalsy();
                 expect(abc[isProxy]).toBeFalsy();
             });
+
+            it('should support an array of files to clone', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'let newFile = clone(@clone, { abc: "def" });',
+                        }
+                    },
+                    file1: {
+                        id: 'file1',
+                        tags: {
+                            clone: true,
+                            test1: true
+                        }
+                    },
+                    file2: {
+                        id: 'file2',
+                        tags: {
+                            clone: true,
+                            test2: true
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                let id = 0;
+                uuidMock.mockImplementation(() => {
+                    return `uuid-${id++}`;
+                });
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            'aux._creator': 'file1',
+                            clone: true,
+                            test1: true,
+                            abc: "def"
+                        }
+                    }),
+                    fileAdded({
+                        id: 'uuid-1',
+                        tags: {
+                            'aux._creator': 'file2',
+                            clone: true,
+                            test2: true,
+                            abc: "def"
+                        }
+                    })
+                ]);
+            });
         });
 
         describe('destroy()', () => {
-            it('should destroy and files that have aux._parent set to the file ID', () => {
+            it('should destroy and files that have aux._creator set to the file ID', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -918,7 +974,7 @@ describe('FilesChannel', () => {
                     childFile: {
                         id: 'childFile',
                         tags: {
-                            'aux._parent': 'thisFile'
+                            'aux._creator': 'thisFile'
                         }
                     }
                 };
@@ -934,7 +990,7 @@ describe('FilesChannel', () => {
                 ]);
             });
 
-            it('should recursively destroy files that have aux._parent set to the file ID', () => {
+            it('should recursively destroy files that have aux._creator set to the file ID', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -945,25 +1001,25 @@ describe('FilesChannel', () => {
                     childFile: {
                         id: 'childFile',
                         tags: {
-                            'aux._parent': 'thisFile'
+                            'aux._creator': 'thisFile'
                         }
                     },
                     childChildFile: {
                         id: 'childChildFile',
                         tags: {
-                            'aux._parent': 'childFile'
+                            'aux._creator': 'childFile'
                         }
                     },
                     otherChildFile: {
                         id: 'otherChildFile',
                         tags: {
-                            'aux._parent': 'thisFile'
+                            'aux._creator': 'thisFile'
                         }
                     },
                     otherChildChildFile: {
                         id: 'otherChildChildFile',
                         tags: {
-                            'aux._parent': 'otherChildFile'
+                            'aux._creator': 'otherChildFile'
                         }
                     }
                 };
@@ -979,6 +1035,42 @@ describe('FilesChannel', () => {
                     fileRemoved('childChildFile'),
                     fileRemoved('otherChildFile'),
                     fileRemoved('otherChildChildFile'),
+                ]);
+            });
+
+            it('should support an array of files to destroy', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'destroy(@clone);',
+                        }
+                    },
+                    file1: {
+                        id: 'file1',
+                        tags: {
+                            clone: true,
+                            test1: true
+                        }
+                    },
+                    file2: {
+                        id: 'file2',
+                        tags: {
+                            clone: true,
+                            test2: true
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileRemoved('file1'),
+                    fileRemoved('file2')
                 ]);
             });
         });
@@ -1065,7 +1157,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'addItem()': 'applyDiff(@name("bob"), addToMenuDiff())',
+                            'addItem()': 'applyDiff(@name("bob"), makeDiff.addToMenu())',
                         }
                     },
                     userFile: {
@@ -1104,7 +1196,7 @@ describe('FilesChannel', () => {
         });
 
         describe('removeFromMenu()', () => {
-            it('should add the given file to the users menu', () => {
+            it('should remove the given file from the users menu', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -1155,7 +1247,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'addItem()': 'applyDiff(@name("bob"), removeFromMenuDiff())',
+                            'addItem()': 'applyDiff(@name("bob"), makeDiff.removeFromMenu())',
                         }
                     },
                     userFile: {
@@ -1191,168 +1283,6 @@ describe('FilesChannel', () => {
                             'context.y': null
                         }
                     })
-                ]);
-            });
-        });
-
-        describe('createMenuItem()', () => {
-            it('should add a new file that is in the current users context', () => {
-                const state: FilesState = {
-                    thisFile: {
-                        id: 'thisFile',
-                        tags: {
-                            'addItem()': 'createMenuItem("id", "label", "action")',
-                        }
-                    },
-                    userFile: {
-                        id: 'userFile',
-                        tags: {
-                            _userMenuContext: 'context'
-                        }
-                    }
-                };
-    
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('addItem', ['thisFile', 'userFile'], 'userFile');
-                const result = calculateActionEvents(state, fileAction);
-    
-                expect(result.hasUserDefinedEvents).toBe(true);
-                
-                expect(result.events).toEqual([
-                    fileAdded({
-                        id: 'uuid-0',
-                        tags: {
-                            'aux._parent': 'userFile',
-                            'aux.label': 'label',
-                            'onClick()': 'action',
-                            'context.id': 'id',
-                            'context.index': 0,
-                            'context': true
-                        }
-                    })
-                ]);
-            });
-
-            it('should use the given data', () => {
-                const state: FilesState = {
-                    thisFile: {
-                        id: 'thisFile',
-                        tags: {
-                            'addItem()': 'createMenuItem("id", "label", "action", { "aux.color": "blue" })',
-                        }
-                    },
-                    userFile: {
-                        id: 'userFile',
-                        tags: {
-                            _userMenuContext: 'context'
-                        }
-                    }
-                };
-    
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('addItem', ['thisFile', 'userFile'], 'userFile');
-                const result = calculateActionEvents(state, fileAction);
-    
-                expect(result.hasUserDefinedEvents).toBe(true);
-                
-                expect(result.events).toEqual([
-                    fileAdded({
-                        id: 'uuid-0',
-                        tags: {
-                            'aux._parent': 'userFile',
-                            'aux.label': 'label',
-                            'onClick()': 'action',
-                            'context.id': 'id',
-                            'context.index': 0,
-                            'context': true,
-                            'aux.color': 'blue'
-                        }
-                    })
-                ]);
-            });
-        });
-
-        describe('createMenuItemFrom()', () => {
-            it('should add a new file that is in the current users context', () => {
-                const state: FilesState = {
-                    thisFile: {
-                        id: 'thisFile',
-                        tags: {
-                            'addItem()': 'createMenuItemFrom(@name("test"), "id", "label", "action")',
-                        }
-                    },
-                    userFile: {
-                        id: 'userFile',
-                        tags: {
-                            _userMenuContext: 'context'
-                        }
-                    },
-                    otherFile: {
-                        id: 'otherFile',
-                        tags: {
-                            name: 'test'
-                        }
-                    }
-                };
-    
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('addItem', ['thisFile', 'userFile'], 'userFile');
-                const result = calculateActionEvents(state, fileAction);
-    
-                expect(result.hasUserDefinedEvents).toBe(true);
-                
-                expect(result.events).toEqual([
-                    fileAdded({
-                        id: 'uuid-0',
-                        tags: {
-                            'aux._parent': 'otherFile',
-                            'aux.label': 'label',
-                            'onClick()': 'action',
-                            'context.id': 'id',
-                            'context.index': 0,
-                            'context': true
-                        }
-                    })
-                ]);
-            });
-        });
-
-        describe('destroyMenuItem()', () => {
-            it('should delete the file with the given context.id', () => {
-                const state: FilesState = {
-                    thisFile: {
-                        id: 'thisFile',
-                        tags: {
-                            'removeItem()': 'destroyMenuItem("test")',
-                        }
-                    },
-                    userFile: {
-                        id: 'userFile',
-                        tags: {
-                            _userMenuContext: 'context'
-                        }
-                    },
-                    menuItem: {
-                        id: 'menuItem',
-                        tags: {
-                            context: 0,
-                            'context.id': 'test',
-                        }
-                    }
-                };
-    
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('removeItem', ['thisFile', 'userFile', 'menuItem'], 'userFile');
-                const result = calculateActionEvents(state, fileAction);
-    
-                expect(result.hasUserDefinedEvents).toBe(true);
-                
-                expect(result.events).toEqual([
-                    fileRemoved('menuItem')
                 ]);
             });
         });
@@ -1513,7 +1443,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'applyDiff(this, addToContextDiff("abc"))',
+                            'test()': 'applyDiff(this, makeDiff.addToContext("abc"))',
                         }
                     },
                 };
@@ -1545,7 +1475,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'abc': true,
-                            'test()': 'applyDiff(this, removeFromContextDiff("abc"))',
+                            'test()': 'applyDiff(this, makeDiff.removeFromContext("abc"))',
                         }
                     },
                 };
@@ -1638,7 +1568,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'applyDiff(this, setPositionDiff("abc", 1, 2))',
+                            'test()': 'applyDiff(this, makeDiff.setPosition("abc", 1, 2))',
                         }
                     }
                 };
@@ -1665,7 +1595,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'applyDiff(this, setPositionDiff("abc", undefined, 2))',
+                            'test()': 'applyDiff(this, makeDiff.setPosition("abc", undefined, 2))',
                         }
                     }
                 };
@@ -1691,7 +1621,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'applyDiff(this, setPositionDiff("abc", undefined, undefined, 2))',
+                            'test()': 'applyDiff(this, makeDiff.setPosition("abc", undefined, undefined, 2))',
                         }
                     }
                 };
@@ -1747,63 +1677,18 @@ describe('FilesChannel', () => {
             });
         });
     });
-
-    describe('destroyAllMenuItems()', () => {
-        it('should delete all files with the given context.id', () => {
-            const state: FilesState = {
-                thisFile: {
-                    id: 'thisFile',
-                    tags: {
-                        'removeItem()': 'destroyAllMenuItems()',
-                    }
-                },
-                userFile: {
-                    id: 'userFile',
-                    tags: {
-                        _userMenuContext: 'context'
-                    }
-                },
-                menuItem: {
-                    id: 'menuItem',
-                    tags: {
-                        context: true,
-                        'context.id': 'test',
-                    }
-                },
-                menuItem2: {
-                    id: 'menuItem2',
-                    tags: {
-                        context: true,
-                        'context.id': 'test',
-                    }
-                }
-            };
-
-            // specify the UUID to use next
-            uuidMock.mockReturnValue('uuid-0');
-            const fileAction = action('removeItem', ['thisFile', 'userFile', 'menuItem', 'menuItem2'], 'userFile');
-            const result = calculateActionEvents(state, fileAction);
-
-            expect(result.hasUserDefinedEvents).toBe(true);
-            
-            expect(result.events).toEqual([
-                fileRemoved('menuItem'),
-                fileRemoved('menuItem2')
-            ]);
-        });
-    });
     
     describe('calculateDestroyFileEvents()', () => {
         it('should return a list of events needed to destroy the given file', () => {
             const file1 = createFile('file1');
             const file2 = createFile('file2', {
-                'aux._parent': 'file1'
+                'aux._creator': 'file1'
             });
             const file3 = createFile('file3', {
-                'aux._parent': 'file2'
+                'aux._creator': 'file2'
             });
-            const file4 = createFile('file4', {
-                'aux._parent': 'file1'
+            const file4 = createFile('file4', { 
+                'aux._creator': 'file1'
             });
             const file5 = createFile('file5');
 

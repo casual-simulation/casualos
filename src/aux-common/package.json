@@ -10,6 +10,7 @@
     "watch:player": "npm run watch",
     "clean": "gulp clean",
     "build": "npm run clean && tsc",
+    "build:docs": "typedoc --mode file --excludeNotExported --out ../../docs/aux-common .",
     "test": "jest",
     "test:watch": "jest --watchAll"
   },

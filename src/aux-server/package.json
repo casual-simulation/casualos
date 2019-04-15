@@ -14,6 +14,7 @@
     "build:web:profile": "webpack --config aux-web/webpack.prod.js --profile --json > bundle_stats.json && webpack-bundle-analyzer bundle_stats.json",
     "build:server:profile": "webpack --config server/webpack.config.js --profile --json > server/dist/bundle_stats.json && webpack-bundle-analyzer server/dist/bundle_stats.json",
     "build:server": "webpack --config server/webpack.config.js",
+    "build:docs": "echo \"Nothing to build...\"",
     "watch:server": "webpack --config server/webpack.config.js --watch",
     "watch:web": "webpack --config aux-web/webpack.dev.js --watch",
     "test": "jest",

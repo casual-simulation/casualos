@@ -2,6 +2,7 @@ node_modules
 dist
 temp
 lib
+docs
 coverage
 test-report.html
 bundle_stats.json

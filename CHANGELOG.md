@@ -1,5 +1,18 @@
 # AUX Changelog
 
+## V0.4.12
+### Date: TBD
+
+### Changes:
+- Bug Fixes
+  - Fixed an issue that would prevent some files from showing up in Aux Builder due to being created with incorrect data.
+- Other changes
+  - Renamed `aux._parent` to `aux._creator`.
+  - Added the ability to pass an array of files to `clone()` and `destroy()`.
+  - Moved functions that create file diffs to their own namespace.
+    - `xyzDiff()` is now `makeDiff.xyz()`
+    - so `addToContextDiff()` is now `makeDiff.addToContext()`
+
 ## V0.4.11
 ### Date: 04/12/2019
 

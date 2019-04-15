@@ -4,6 +4,7 @@ import { ChannelInfo } from "./ChannelInfo";
 
 /**
  * Defines an interface for objects that manage states and how events affect those states.
+ * @deprecated
  */
 export interface StateStore<T> {
 
@@ -27,6 +28,7 @@ export interface StateStore<T> {
 
 /**
  * Defines an interface for objects that can create state stores for particular channels.
+ * @deprecated
  */
 export interface StateStoreFactory {
 
@@ -40,6 +42,7 @@ export interface StateStoreFactory {
 /**
  * Defines a state store that uses a special function called a reducer to incorporate
  * new events into the state.
+ * @deprecated
  */
 export class ReducingStateStore<T> implements StateStore<T> {
     private _state: T;

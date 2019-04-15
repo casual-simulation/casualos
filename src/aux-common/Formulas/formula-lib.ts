@@ -16,7 +16,9 @@ import {
     addToContextDiff as calcAddToContextDiff,
     removeFromContextDiff as calcRemoveFromContextDiff,
     setPositionDiff as calcSetPositionDiff,
-    isFile
+    isFile,
+    isFormulaObject,
+    unwrapProxy
 } from '../Files/FileCalculations';
 
 let actions: FileEvent[] = [];
@@ -58,6 +60,12 @@ export function setUserId(id: string) {
 
 // declare const lib: string;
 // export default lib;
+
+/**
+ * Defines a type that represents a file diff.
+ * That is, a set of tags that can be applied to another file.
+ */
+export type FileDiff = FileTags | FileProxy;
 
 /**
  * Sums the given array of numbers and returns the result.
@@ -194,7 +202,7 @@ export function join(values: any, separator: string = ','): string {
  * Removes the given file or file ID from the simulation.
  * @param file The file or file ID to remove from the simulation.
  */
-export function destroy(file: File | string) {
+export function destroyFile(file: FileProxy | string) {
     let id: string;
     if (typeof file === 'object') {
         id = file.id;
@@ -209,8 +217,20 @@ export function destroy(file: File | string) {
     destroyChildren(id);
 }
 
+/**
+ * Destroys the given file, file ID, or list of files.
+ * @param file The file, file ID, or list of files to destroy.
+ */
+export function destroy(file: FileProxy | string | FileProxy[]) {
+    if (typeof file === 'object' && Array.isArray(file)) {
+        file.forEach(f => destroyFile(f));
+    } else {
+        destroyFile(file);
+    }
+}
+
 function destroyChildren(id: string) {
-    const result = calculateFormulaValue(calc, `@aux._parent("${id}")`);
+    const result = calculateFormulaValue(calc, `@aux._creator("${id}")`);
     if (result.success) {
         const children = result.result;
         let all: File[] = [];
@@ -231,36 +251,17 @@ function destroyChildren(id: string) {
 
 /**
  * Creates a new file that contains the given tags.
- * @param datas The objects that specifies what tags to set on the file.
+ * @param diffs The diffs that specify what tags to set on the file.
  */
-export function create(...datas: FileTags[]) {
+export function create(...diffs: FileDiff[]) {
     let id = uuid();
-
-    let tags: FileTags = {};
-    datas.forEach((d: any) => {
-        if (d[isProxy]) {
-            let val = d[proxyObject];
-            if (isFile(val)) {
-                d = val.tags;
-            } else {
-                d = val;
-            }
-        }
-        for (let key in d) {
-            let val = d[key];
-            if (val[isProxy]) {
-                tags[key] = val[proxyObject];
-            } else {
-                tags[key] = val;
-            }
-        }
-    });
 
     let file: File = {
         id: id,
-        tags: tags
+        tags: {}
     };
 
+    applyDiff(file.tags, ...diffs);
     let event: FileAddedEvent = fileAdded(file);
 
     actions.push(event);
@@ -269,35 +270,17 @@ export function create(...datas: FileTags[]) {
 
 /**
  * Creates a new file that contains tags from the given files or objects.
- * @param files The files or objects to use for the new file's tags.
+ * @param diffs The diffs to use for the new file's tags.
  */
-export function clone(...files: any[]) {
+export function cloneFile(...diffs: FileDiff[]) {
     let id = uuid();
-
-    let originals = files.map(f => {
-        return (f && f[isProxy]) ? f[proxyObject].tags : f;
-    });
 
     let newFile: File = {
         id: id,
         tags: {},
     };
 
-    originals.forEach(o => {
-        for (let key in o) {
-            let val = o[key];
-            if (val[isProxy]) {
-                newFile.tags[key] = val[proxyObject];
-            } else {
-                newFile.tags[key] = val;
-            }
-        }
-    });
-
-    delete newFile.tags._converted;
-    delete newFile.tags._original;
-    delete newFile.tags.id;
-
+    applyDiff(newFile.tags, ...diffs);
     let event: FileAddedEvent = fileAdded(newFile);
 
     actions.push(event);
@@ -309,18 +292,24 @@ export function clone(...files: any[]) {
  * @param file The file that the clone should be a child of.
  * @param data The files or objects to use for the new file's tags.
  */
-export function cloneFrom(file: FileProxy | string, ...data: any[]) {
-    let parentId: string;
-    if (typeof file === 'string') {
-        parentId = file;
-    } else if (file) {
-        let original = file[isProxy] ? file[proxyObject] : file;
-        parentId = original.id;
-    }
+export function cloneFrom(file: FileProxy, ...data: FileDiff[]) {
     let parent = file ? {
-        'aux._parent': parentId
+        'aux._creator': file.id
     } : {};
-    return clone(file, parent, ...data);
+    return cloneFile(file, parent, ...data);
+}
+
+/**
+ * Clones the given file or set of files and applies the given set of file diffs to them.
+ * @param file The file or files to clone.
+ * @param diffs The diffs to apply to the cloned files.
+ */
+export function clone(file: FileProxy | FileProxy[], ...diffs: FileDiff[]) {
+    if (Array.isArray(file)) {
+        return file.map(f => cloneFrom(f, ...diffs));
+    } else {
+        return cloneFrom(file, ...diffs);
+    }
 }
 
 /**
@@ -328,7 +317,7 @@ export function cloneFrom(file: FileProxy | string, ...data: any[]) {
  * @param parent The file that should be the parent of the new file.
  * @param data The object that specifies the new file's tag values.
  */
-export function createFrom(parent: FileProxy | string, ...datas: FileTags[]) {
+export function createFrom(parent: FileProxy | string, ...datas: FileDiff[]) {
     let parentId: string;
     if (typeof parent === 'string') {
         parentId = parent;
@@ -337,8 +326,8 @@ export function createFrom(parent: FileProxy | string, ...datas: FileTags[]) {
         parentId = original.id;
     }
     let parentDiff = parentId ? {
-        'aux._parent': parentId
-    } : {};
+        'aux._creator': parentId
+    } : {}; 
     return create(parentDiff, ...datas);
 }
 
@@ -452,10 +441,18 @@ export function getFilesInContext(context: string): FileProxy[] {
  * @param file The file.
  * @param diff The diff to apply.
  */
-export function applyDiff(file: FileProxy, ...diffs: FileTags[]) {
+export function applyDiff(file: any, ...diffs: FileDiff[]) {
     diffs.forEach(diff => {
+        if (!diff) {
+            return;
+        }
+        if (isFormulaObject(diff)) {
+            diff = unwrapProxy(diff).tags;
+        } else {
+            diff = unwrapProxy(diff);
+        }
         for (let key in diff) {
-            file[key] = diff[key];
+            file[key] = unwrapProxy(diff[key]);
         }
     });
 }
@@ -512,38 +509,6 @@ export function setPositionDiff(context: string, x?: number, y?: number, index?:
 }
 
 /**
- * Creates a new file and adds it to the current user's menu.
- * The new file will be parented to the user's file.
- * @param id The ID of the menu item.
- * @param label The label that the menu item should show.
- * @param action The script that should be run when the item is clicked.
- * @param diffs The extra diffs to apply to to the new file.
- */
-export function createMenuItem(id: string, label: string, action: string, ...diffs: FileTags[]) {
-    const user = getUser();
-    createMenuItemFrom(user, id, label, action, ...diffs);
-}
-
-/**
- * Creates a new file and adds it to the current user's menu.
- * The new file will be parented to the given file.
- * @param file The parent of the new file.
- * @param id The ID of the menu item.
- * @param label The label that the menu item should show.
- * @param action The script that should be run when the item is clicked.
- * @param diffs The extra diffs to apply to the new file.
- */
-export function createMenuItemFrom(file: FileProxy | string, id: string, label: string, action: string, ...diffs: FileTags[]) {
-    const user = getUser();
-    const update = addFileToMenu(calc, user, id);
-    createFrom(file, {
-        ...update.tags,
-        'aux.label': label,
-        'onClick()': action
-    }, ...diffs);
-}
-
-/**
  * Gets a diff that adds a file to the current user's menu.
  */
 export function addToMenuDiff(): FileTags {
@@ -582,31 +547,15 @@ export function removeFromMenu(file: FileProxy) {
 }
 
 /**
- * Deletes the menu item with the given ID from the current user's menu.
- * @param id The ID of the menu item.
+ * Defines a set of functions that are able to make File Diffs.
  */
-export function destroyMenuItem(id: string) {
-    const user = getUser();
-    const context = getUserMenuId(calc, user);
-    const files = filesInContext(calc, context);
-    const match = files.filter(f => calculateFileValue(calc, f, `${context}.id`) === id);
-
-    match.forEach(f => {
-        destroy(f);
-    });
-}
-
-/**
- * Deletes all the menu items from the current user's menu.
- */
-export function destroyAllMenuItems() {
-    const user = getUser();
-    const files = getFilesInMenu(calc, user);
-
-    files.forEach(f => {
-        destroy(f);
-    });
-}
+export const makeDiff = {
+    addToContext: addToContextDiff,
+    removeFromContext: removeFromContextDiff,
+    addToMenu: addToMenuDiff,
+    removeFromMenu: removeFromMenuDiff,
+    setPosition: setPositionDiff
+};
 
 export default {
     sum,
@@ -619,7 +568,7 @@ export default {
     random,
     join,
     destroy,
-    clone: cloneFrom,
+    clone,
     create: createFrom,
     combine,
     event,
@@ -630,19 +579,11 @@ export default {
     getUserInventoryContext,
 
     getFilesInContext,
+    makeDiff,
     applyDiff,
-    addToContextDiff,
-    removeFromContextDiff,
-    addToMenuDiff,
-    removeFromMenuDiff,
-    setPositionDiff,
     addToContext,
     removeFromContext,
 
-    createMenuItem,
-    createMenuItemFrom,
-    destroyMenuItem,
-    destroyAllMenuItems,
     addToMenu,
     removeFromMenu
 };

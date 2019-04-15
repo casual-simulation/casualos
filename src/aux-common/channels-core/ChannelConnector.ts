@@ -5,6 +5,9 @@ import { StateStore } from "./StateStore";
 
 export type ChannelConnectionMode = 'online' | 'offline' | 'online-disconnected';
 
+/**
+ * @deprecated
+ */
 export interface ChannelConnectionState<T> {
     /**
      * The current connection mode.
@@ -19,6 +22,7 @@ export interface ChannelConnectionState<T> {
 
 /**
  * An interface for parameters that can be included in a connection request.
+ * @deprecated
  */
 export interface ChannelConnectionRequest<T> {
     /**
@@ -35,6 +39,7 @@ export interface ChannelConnectionRequest<T> {
 
 /**
  * An interface for a response from a channel connection request.
+ * @deprecated
  */
 export interface ChannelConnection<T> {
 
@@ -84,6 +89,7 @@ export interface ChannelConnection<T> {
 
 /**
  * Defines an interface which acts as an abstract connection interface for channels.
+ * @deprecated
  */
 export interface ChannelConnector {
 

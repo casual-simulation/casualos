@@ -2,6 +2,7 @@
 /**
  * Defines an interface that represents an event.
  * That is, a time-ordered action in a channel.
+ * @deprecated
  */
 export interface Event {
     /**
