@@ -684,6 +684,7 @@ export function createWorkspace(id = uuid(), builderContextId: string = `aux._co
             [`${builderContextId}.y`]: 0,
             [`${builderContextId}.z`]: 0,
             'aux.color': 'clear',
+            'aux.stroke.color': '#777',
             'aux.movable': false,
             'aux.scale.z': 0.01
         }
