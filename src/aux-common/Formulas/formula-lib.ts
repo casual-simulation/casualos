@@ -246,8 +246,13 @@ export function create(...datas: FileTags[]) {
                 d = val;
             }
         }
-        for(let key in d) {
-            tags[key] = d[key];
+        for (let key in d) {
+            let val = d[key];
+            if (val[isProxy]) {
+                tags[key] = val[proxyObject];
+            } else {
+                tags[key] = val;
+            }
         }
     });
 
@@ -280,7 +285,12 @@ export function clone(...files: any[]) {
 
     originals.forEach(o => {
         for (let key in o) {
-            newFile.tags[key] = o[key];
+            let val = o[key];
+            if (val[isProxy]) {
+                newFile.tags[key] = val[proxyObject];
+            } else {
+                newFile.tags[key] = val;
+            }
         }
     });
 
@@ -299,9 +309,16 @@ export function clone(...files: any[]) {
  * @param file The file that the clone should be a child of.
  * @param data The files or objects to use for the new file's tags.
  */
-export function cloneFrom(file: File, ...data: any[]) {
+export function cloneFrom(file: FileProxy | string, ...data: any[]) {
+    let parentId: string;
+    if (typeof file === 'string') {
+        parentId = file;
+    } else if (file) {
+        let original = file[isProxy] ? file[proxyObject] : file;
+        parentId = original.id;
+    }
     let parent = file ? {
-        'aux._parent': file.id
+        'aux._parent': parentId
     } : {};
     return clone(file, parent, ...data);
 }
@@ -311,12 +328,13 @@ export function cloneFrom(file: File, ...data: any[]) {
  * @param parent The file that should be the parent of the new file.
  * @param data The object that specifies the new file's tag values.
  */
-export function createFrom(parent: File, ...datas: FileTags[]) {
+export function createFrom(parent: FileProxy | string, ...datas: FileTags[]) {
     let parentId: string;
     if (typeof parent === 'string') {
         parentId = parent;
     } else if(parent) {
-        parentId = parent.id;
+        let original = parent[isProxy] ? parent[proxyObject] : parent;
+        parentId = original.id;
     }
     let parentDiff = parentId ? {
         'aux._parent': parentId
@@ -515,7 +533,7 @@ export function createMenuItem(id: string, label: string, action: string, ...dif
  * @param action The script that should be run when the item is clicked.
  * @param diffs The extra diffs to apply to the new file.
  */
-export function createMenuItemFrom(file: File, id: string, label: string, action: string, ...diffs: FileTags[]) {
+export function createMenuItemFrom(file: FileProxy | string, id: string, label: string, action: string, ...diffs: FileTags[]) {
     const user = getUser();
     const update = addFileToMenu(calc, user, id);
     createFrom(file, {

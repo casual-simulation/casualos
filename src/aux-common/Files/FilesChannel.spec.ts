@@ -7,6 +7,7 @@ import {
     transaction,
     fileUpdated,
     calculateDestroyFileEvents,
+    FileAddedEvent,
 } from './FilesChannel';
 import { Workspace, Object, File } from './File';
 import { values, assign, merge } from 'lodash';
@@ -15,6 +16,7 @@ import { objectsAtContextGridPosition, calculateStateDiff, COMBINE_ACTION_NAME, 
 import { TestConnector } from '../channels-core/test/TestConnector';
 import { Subject } from 'rxjs';
 import { ChannelClient, StoreFactory, ReducingStateStore } from '../channels-core';
+import { isProxy } from './FileProxy';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -635,6 +637,41 @@ describe('FilesChannel', () => {
                     })
                 ]);
             });
+
+            it('should clean proxy objects', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            num: 100,
+                            'test()': 'let newFile = create(this, { abc: this.num });',
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            'aux._parent': 'thisFile',
+                            abc: 100
+                        }
+                    })
+                ]);
+
+                const event = result.events[0] as FileAddedEvent;
+                const parent = event.file.tags['aux._parent'] as any;
+                const abc = event.file.tags['abc'] as any;
+                expect(parent[isProxy]).toBeFalsy();
+                expect(abc[isProxy]).toBeFalsy();
+            });
         });
 
         describe('clone()', () => {
@@ -799,6 +836,73 @@ describe('FilesChannel', () => {
                         }
                     })
                 ]);
+            });
+
+            it('should support using files for the creator', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'let newFile = clone(this, this, { formula: "=this.num", num: 100 });',
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            'aux._parent': 'thisFile',
+                            'test()': 'let newFile = clone(this, this, { formula: "=this.num", num: 100 });',
+                            num: 100,
+                            formula: '=this.num'
+                        }
+                    })
+                ]);
+            });
+
+            it('should clean proxy objects', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            num: 100,
+                            'test()': 'let newFile = clone(this, this, { abc: this.num });',
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            'aux._parent': 'thisFile',
+                            'test()': 'let newFile = clone(this, this, { abc: this.num });',
+                            abc: 100,
+                            num: 100
+                        }
+                    })
+                ]);
+
+                const event = result.events[0] as FileAddedEvent;
+                const parent = event.file.tags['aux._parent'] as any;
+                const abc = event.file.tags['abc'] as any;
+                expect(parent[isProxy]).toBeFalsy();
+                expect(abc[isProxy]).toBeFalsy();
             });
         });
 
