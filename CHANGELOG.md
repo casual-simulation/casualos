@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.4.12
+### Date: TBD
+
+### Changes:
+- Bug Fixes
+  - Fixed an issue that would prevent some files from showing up in Aux Builder due to being created with incorrect data.
+- Other changes
+  - Renamed `aux._parent` to `aux._creator`.
+
 ## V0.4.11
 ### Date: 04/12/2019
 
