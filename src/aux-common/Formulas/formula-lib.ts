@@ -210,7 +210,7 @@ export function destroy(file: File | string) {
 }
 
 function destroyChildren(id: string) {
-    const result = calculateFormulaValue(calc, `@aux._parent("${id}")`);
+    const result = calculateFormulaValue(calc, `@aux._creator("${id}")`);
     if (result.success) {
         const children = result.result;
         let all: File[] = [];
@@ -318,7 +318,7 @@ export function cloneFrom(file: FileProxy | string, ...data: any[]) {
         parentId = original.id;
     }
     let parent = file ? {
-        'aux._parent': parentId
+        'aux._creator': parentId
     } : {};
     return clone(file, parent, ...data);
 }
@@ -337,8 +337,8 @@ export function createFrom(parent: FileProxy | string, ...datas: FileTags[]) {
         parentId = original.id;
     }
     let parentDiff = parentId ? {
-        'aux._parent': parentId
-    } : {};
+        'aux._creator': parentId
+    } : {}; 
     return create(parentDiff, ...datas);
 }
 

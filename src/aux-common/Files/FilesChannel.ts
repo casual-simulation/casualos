@@ -116,7 +116,7 @@ export function calculateDestroyFileEvents(calc: FileCalculationContext, file: F
 }
 
 function destroyChildren(calc: FileCalculationContext, events: FileEvent[], id: string) {
-    const result = calculateFormulaValue(calc, `@aux._parent("${id}")`);
+    const result = calculateFormulaValue(calc, `@aux._creator("${id}")`); 
     if (result.success) {
         const children = result.result;
         let all: File[] = [];

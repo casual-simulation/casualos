@@ -385,7 +385,7 @@ describe('FilesChannel', () => {
         });
 
         describe('create()', () => {
-            it('should create a new file with aux._parent set to the original id', () => {
+            it('should create a new file with aux._creator set to the original id', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -407,13 +407,13 @@ describe('FilesChannel', () => {
                         id: 'uuid-0',
                         tags: {
                             abc: 'def',
-                            'aux._parent': 'thisFile'
+                            'aux._creator': 'thisFile'
                         }
                     })
                 ]);
             });
 
-            it('should create a new file with aux._parent set to the given id', () => {
+            it('should create a new file with aux._creator set to the given id', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -435,7 +435,7 @@ describe('FilesChannel', () => {
                         id: 'uuid-0',
                         tags: {
                             abc: 'def',
-                            'aux._parent': 'thisFile'
+                            'aux._creator': 'thisFile'
                         }
                     })
                 ]);
@@ -464,7 +464,7 @@ describe('FilesChannel', () => {
                         tags: {
                             abc: 'def',
                             ghi: 123,
-                            'aux._parent': 'thisFile'
+                            'aux._creator': 'thisFile'
                         }
                     })
                 ]);
@@ -502,7 +502,7 @@ describe('FilesChannel', () => {
                             abc: 'def',
                             name: 'that',
                             formula: '=this.abc',
-                            'aux._parent': 'thisFile'
+                            'aux._creator': 'thisFile'
                         }
                     })
                 ]);
@@ -660,14 +660,14 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-0',
                         tags: {
-                            'aux._parent': 'thisFile',
+                            'aux._creator': 'thisFile',
                             abc: 100
                         }
                     })
                 ]);
 
                 const event = result.events[0] as FileAddedEvent;
-                const parent = event.file.tags['aux._parent'] as any;
+                const parent = event.file.tags['aux._creator'] as any;
                 const abc = event.file.tags['abc'] as any;
                 expect(parent[isProxy]).toBeFalsy();
                 expect(abc[isProxy]).toBeFalsy();
@@ -675,7 +675,7 @@ describe('FilesChannel', () => {
         });
 
         describe('clone()', () => {
-            it('should create a new file with aux._parent set to the given files ID', () => {
+            it('should create a new file with aux._creator set to the given files ID', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -698,7 +698,7 @@ describe('FilesChannel', () => {
                         tags: {
                             abc: 'def',
                             'test()': 'clone(this, { abc: "def" })',
-                            'aux._parent': 'thisFile'
+                            'aux._creator': 'thisFile'
                         }
                     })
                 ]);
@@ -859,7 +859,7 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-0',
                         tags: {
-                            'aux._parent': 'thisFile',
+                            'aux._creator': 'thisFile',
                             'test()': 'let newFile = clone(this, this, { formula: "=this.num", num: 100 });',
                             num: 100,
                             formula: '=this.num'
@@ -890,7 +890,7 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-0',
                         tags: {
-                            'aux._parent': 'thisFile',
+                            'aux._creator': 'thisFile',
                             'test()': 'let newFile = clone(this, this, { abc: this.num });',
                             abc: 100,
                             num: 100
@@ -899,7 +899,7 @@ describe('FilesChannel', () => {
                 ]);
 
                 const event = result.events[0] as FileAddedEvent;
-                const parent = event.file.tags['aux._parent'] as any;
+                const parent = event.file.tags['aux._creator'] as any;
                 const abc = event.file.tags['abc'] as any;
                 expect(parent[isProxy]).toBeFalsy();
                 expect(abc[isProxy]).toBeFalsy();
@@ -907,7 +907,7 @@ describe('FilesChannel', () => {
         });
 
         describe('destroy()', () => {
-            it('should destroy and files that have aux._parent set to the file ID', () => {
+            it('should destroy and files that have aux._creator set to the file ID', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -918,7 +918,7 @@ describe('FilesChannel', () => {
                     childFile: {
                         id: 'childFile',
                         tags: {
-                            'aux._parent': 'thisFile'
+                            'aux._creator': 'thisFile'
                         }
                     }
                 };
@@ -934,7 +934,7 @@ describe('FilesChannel', () => {
                 ]);
             });
 
-            it('should recursively destroy files that have aux._parent set to the file ID', () => {
+            it('should recursively destroy files that have aux._creator set to the file ID', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -945,25 +945,25 @@ describe('FilesChannel', () => {
                     childFile: {
                         id: 'childFile',
                         tags: {
-                            'aux._parent': 'thisFile'
+                            'aux._creator': 'thisFile'
                         }
                     },
                     childChildFile: {
                         id: 'childChildFile',
                         tags: {
-                            'aux._parent': 'childFile'
+                            'aux._creator': 'childFile'
                         }
                     },
                     otherChildFile: {
                         id: 'otherChildFile',
                         tags: {
-                            'aux._parent': 'thisFile'
+                            'aux._creator': 'thisFile'
                         }
                     },
                     otherChildChildFile: {
                         id: 'otherChildChildFile',
                         tags: {
-                            'aux._parent': 'otherChildFile'
+                            'aux._creator': 'otherChildFile'
                         }
                     }
                 };
@@ -1223,7 +1223,7 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-0',
                         tags: {
-                            'aux._parent': 'userFile',
+                            'aux._creator': 'userFile',
                             'aux.label': 'label',
                             'onClick()': 'action',
                             'context.id': 'id',
@@ -1261,7 +1261,7 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-0',
                         tags: {
-                            'aux._parent': 'userFile',
+                            'aux._creator': 'userFile',
                             'aux.label': 'label',
                             'onClick()': 'action',
                             'context.id': 'id',
@@ -1308,7 +1308,7 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-0',
                         tags: {
-                            'aux._parent': 'otherFile',
+                            'aux._creator': 'otherFile',
                             'aux.label': 'label',
                             'onClick()': 'action',
                             'context.id': 'id',
@@ -1797,13 +1797,13 @@ describe('FilesChannel', () => {
         it('should return a list of events needed to destroy the given file', () => {
             const file1 = createFile('file1');
             const file2 = createFile('file2', {
-                'aux._parent': 'file1'
+                'aux._creator': 'file1'
             });
             const file3 = createFile('file3', {
-                'aux._parent': 'file2'
+                'aux._creator': 'file2'
             });
-            const file4 = createFile('file4', {
-                'aux._parent': 'file1'
+            const file4 = createFile('file4', { 
+                'aux._creator': 'file1'
             });
             const file5 = createFile('file5');
 
