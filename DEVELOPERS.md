@@ -67,7 +67,7 @@ Additionally, the CI server will publish the `aux-common` NPM package whenever t
 **To make a new release, use this process:**
 
 1. Make sure everything you want to release is ready and merged into `develop`.
-2. Update the [CHANGELOG.md](./src/aux-server/CHANGELOG.md) file with the next version number, date, and changes that were made since the last version.
+2. Update the [CHANGELOG.md](./CHANGELOG.md) file with the next version number, date, and changes that were made since the last version.
 3. Commit the updated CHANGELOG to the `develop` branch.
 4. Merge the `develop` branch into the `master` branch.
     - Don't use [fast-forward](https://ariya.io/2013/09/fast-forward-git-merge). (`--no-ff`)
