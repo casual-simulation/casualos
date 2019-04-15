@@ -13,12 +13,28 @@ export const isProxy = Symbol('isProxy');
 export const proxyObject = Symbol('proxyObject');
 
 /**
+ * Defines an interface for a proxy object that is returned from FileProxy.
+ */
+export interface ProxyObject<T> {
+    /**
+     * Gets whether this object represents a proxy.
+     */
+    [isProxy]: boolean;
+
+    /**
+     * Gets the object that the proxy wraps.
+     */
+    [proxyObject]: T;
+}
+
+/**
  * Defines an interface for a file that is being proxied so that
  * formulas are transparently calculated and deep values can be handled transparently.
  */
-export interface FileProxy extends FileTags {
-    [isProxy]: boolean;
-    [proxyObject]: File;
+export interface FileProxy extends ProxyObject<File>, FileTags  {
+    /**
+     * Gets the ID of the file.
+     */
     id: File['id'];
 }
 

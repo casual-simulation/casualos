@@ -280,8 +280,24 @@ export function isNumber(value: string): boolean {
     return (/^-?\d+\.?\d*$/).test(value) || (typeof value === 'string' && 'infinity' === value.toLowerCase());
 }
 
+/**
+ * Determines whether the given object is a proxy object.
+ * @param object The object.
+ */
 export function isFormulaObject(object: any): object is FileProxy {
     return object[isProxy];
+}
+
+/**
+ * Unwraps the given object if it is in a proxy.
+ * @param object The object to unwrap.
+ */
+export function unwrapProxy(object: any): any {
+    if (isFormulaObject(object)) {
+        return object[proxyObject];
+    } else {
+        return object;
+    }
 }
 
 /**

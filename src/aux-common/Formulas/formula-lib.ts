@@ -16,7 +16,9 @@ import {
     addToContextDiff as calcAddToContextDiff,
     removeFromContextDiff as calcRemoveFromContextDiff,
     setPositionDiff as calcSetPositionDiff,
-    isFile
+    isFile,
+    isFormulaObject,
+    unwrapProxy
 } from '../Files/FileCalculations';
 
 let actions: FileEvent[] = [];
@@ -63,7 +65,7 @@ export function setUserId(id: string) {
  * Defines a type that represents a file diff.
  * That is, a set of tags that can be applied to another file.
  */
-export type FileDiff = FileTags;
+export type FileDiff = FileTags | FileProxy;
 
 /**
  * Sums the given array of numbers and returns the result.
@@ -239,18 +241,14 @@ function destroyChildren(id: string) {
  * Creates a new file that contains the given tags.
  * @param datas The objects that specifies what tags to set on the file.
  */
-export function create(...datas: FileTags[]) {
+export function create(...datas: FileDiff[]) {
     let id = uuid();
 
     let tags: FileTags = {};
     datas.forEach((d: any) => {
-        if (d[isProxy]) {
-            let val = d[proxyObject];
-            if (isFile(val)) {
-                d = val.tags;
-            } else {
-                d = val;
-            }
+        d = unwrapProxy(d);
+        if (isFile(d)) {
+            d = d.tags;
         }
         for (let key in d) {
             let val = d[key];
@@ -277,11 +275,11 @@ export function create(...datas: FileTags[]) {
  * Creates a new file that contains tags from the given files or objects.
  * @param files The files or objects to use for the new file's tags.
  */
-export function clone(...files: any[]) {
+export function clone(...files: FileDiff[]) {
     let id = uuid();
 
     let originals = files.map(f => {
-        return (f && f[isProxy]) ? f[proxyObject].tags : f;
+        return (f && isFormulaObject(f)) ? f[proxyObject].tags : f;
     });
 
     let newFile: File = {
@@ -315,12 +313,12 @@ export function clone(...files: any[]) {
  * @param file The file that the clone should be a child of.
  * @param data The files or objects to use for the new file's tags.
  */
-export function cloneFrom(file: FileProxy | string, ...data: any[]) {
+export function cloneFrom(file: FileProxy, ...data: FileDiff[]) {
     let parentId: string;
     if (typeof file === 'string') {
         parentId = file;
     } else if (file) {
-        let original = file[isProxy] ? file[proxyObject] : file;
+        let original = isFormulaObject(file) ? file[proxyObject] : file;
         parentId = original.id;
     }
     let parent = file ? {
@@ -334,7 +332,7 @@ export function cloneFrom(file: FileProxy | string, ...data: any[]) {
  * @param parent The file that should be the parent of the new file.
  * @param data The object that specifies the new file's tag values.
  */
-export function createFrom(parent: FileProxy | string, ...datas: FileTags[]) {
+export function createFrom(parent: FileProxy | string, ...datas: FileDiff[]) {
     let parentId: string;
     if (typeof parent === 'string') {
         parentId = parent;
@@ -458,7 +456,7 @@ export function getFilesInContext(context: string): FileProxy[] {
  * @param file The file.
  * @param diff The diff to apply.
  */
-export function applyDiff(file: FileProxy, ...diffs: FileTags[]) {
+export function applyDiff(file: FileProxy, ...diffs: FileDiff[]) {
     diffs.forEach(diff => {
         for (let key in diff) {
             file[key] = diff[key];
