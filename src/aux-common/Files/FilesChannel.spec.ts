@@ -9,13 +9,9 @@ import {
     calculateDestroyFileEvents,
     FileAddedEvent,
 } from './FilesChannel';
-import { Workspace, Object, File } from './File';
-import { values, assign, merge } from 'lodash';
+import { File } from './File';
 import uuid from 'uuid/v4';
-import { objectsAtContextGridPosition, calculateStateDiff, COMBINE_ACTION_NAME, createFile, createCalculationContext } from './FileCalculations';
-import { TestConnector } from '../channels-core/test/TestConnector';
-import { Subject } from 'rxjs';
-import { ChannelClient, StoreFactory, ReducingStateStore } from '../channels-core';
+import { COMBINE_ACTION_NAME, createFile, createCalculationContext } from './FileCalculations';
 import { isProxy } from './FileProxy';
 
 const uuidMock: jest.Mock = <any>uuid;

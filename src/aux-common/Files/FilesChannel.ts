@@ -1,28 +1,35 @@
-import {filter, values, union, keys, isEqual, transform, set, mergeWith, unset, get, sortBy, flatMap} from 'lodash';
-import {
-    map as rxMap,
-    flatMap as rxFlatMap,
-    pairwise as rxPairwise,
-    startWith
-} from 'rxjs/operators';
-import { ReducingStateStore, Event, ChannelConnection } from "../channels-core";
-import {File, Object, Workspace, PartialFile} from './File';
+import { sortBy, flatMap} from 'lodash';
+import { File, Object, PartialFile} from './File';
 import { createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, isDestroyed, getActiveObjects, calculateStateDiff, FilesStateDiff, filtersMatchingArguments, calculateFormulaValue } from './FileCalculations';
 import { merge as mergeObj } from '../utils';
 import formulaLib, { setActions, getActions, setFileState, setCalculationContext, getCalculationContext, setUserId, getUserId } from '../Formulas/formula-lib';
-import { AnimationActionLoopStyles } from 'three';
 import { SetValueHandler } from './FileProxy';
 export interface FilesState {
     [id: string]: File;
 }
 
+/**
+ * Defines an interface that represents an event.
+ * That is, a time-ordered action in a channel.
+ * @deprecated
+ */
+export interface Event {
+    /**
+     * The type of the event. 
+     * This helps determine how the event should be applied to the state.
+     */
+    type: string;
+}
+
+/**
+ * Defines a union type for all the possible events that can be emitted from a files channel.
+ */
 export type FileEvent = 
     FileAddedEvent | 
     FileRemovedEvent | 
     FileUpdatedEvent |
     FileTransactionEvent |
     ApplyStateEvent;
-
 
 export interface DiffOptions {
     /**
