@@ -17,7 +17,9 @@ import {
     isMinimized,
     isContext,
     getContextColor,
-    isUserFile
+    isUserFile,
+    DEFAULT_WORKSPACE_COLOR,
+    hasValue
 } from '@yeti-cgi/aux-common/Files';
 import { keys, minBy, isEqual } from 'lodash';
 import { GridChecker, GridCheckResults } from './grid/GridChecker';
@@ -166,13 +168,12 @@ export class WorkspaceMesh extends GameObject {
             }
         }
 
+        // Hex color.
         const colorValue = getContextColor(calc, this.workspace, this.domain);
-        if (colorValue) {
-            let color = new Color(colorValue);
-            let hexes = this.hexGrid.hexes;
-            hexes.forEach((h) => { h.color = color; });
-            this.miniHex.color = color;
-        }
+        const color: Color = hasValue(colorValue) ? new Color(colorValue) : new Color(DEFAULT_WORKSPACE_COLOR);
+        const hexes = this.hexGrid.hexes;
+        hexes.forEach((h) => { h.color = color; });
+        this.miniHex.color = color;
 
         this.updateMatrixWorld(false);
 
