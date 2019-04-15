@@ -43,6 +43,7 @@ import {
     createFile,
     doFilesAppearEqual,
     AuxFile,
+    hasValue,
 } from '@yeti-cgi/aux-common';
 import { ArgEvent } from '@yeti-cgi/aux-common/Events';
 import { Time } from '../../shared/scene/Time';
@@ -250,10 +251,8 @@ export default class GameView extends Vue implements IGameView {
             .pipe(tap(file => {
 
                 // Update the scene background color.
-                let sceneBackgroundColor = (<Object>file).tags['aux.scene.color'];
-                if (sceneBackgroundColor) {
-                    this._scene.background = new Color(sceneBackgroundColor);
-                }
+                let sceneBackgroundColor = file.tags['aux.scene.color'];
+                this._scene.background = hasValue(sceneBackgroundColor) ? new Color(sceneBackgroundColor) : new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
 
             }))
             .subscribe());
@@ -523,11 +522,9 @@ export default class GameView extends Vue implements IGameView {
 
         let globalsFile = this.fileManager.globalsFile;
 
-        if (globalsFile && globalsFile.tags['aux.scene.color']) {
-            this._scene.background = new Color(globalsFile.tags['aux.scene.color']);
-        } else {
-            this._scene.background = new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
-        }
+        // Scene background color.
+        let sceneBackgroundColor = globalsFile.tags['aux.scene.color'];
+        this._scene.background = hasValue(sceneBackgroundColor) ? new Color(sceneBackgroundColor) : new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
 
         this.setCameraType('orthographic');
         this._setupRenderer();
