@@ -6,6 +6,7 @@ import { StateStoreFactory, StateStore } from './StateStore';
 
 /**
  * Defines an interface for objects which are able to interface with channel servers.
+ * @deprecated
  */
 export interface IChannelClient {
 
@@ -24,6 +25,7 @@ export interface IChannelClient {
 
 /**
  * Defines a default implementation of a channel client.
+ * @deprecated
  */
 export class ChannelClient implements IChannelClient {
 

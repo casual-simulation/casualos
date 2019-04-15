@@ -6,6 +6,7 @@ import { ChannelInfo } from ".";
 /**
  * Defines an interface that represents an interface.
  * That is, an asynchronous stream of events.
+ * @deprecated
  */
 export interface IChannel<T> {
 
@@ -29,6 +30,7 @@ export interface IChannel<T> {
 
 /**
  * Default implementation of IChannel.
+ * @deprecated
  */
 export class Channel<T> implements IChannel<T> {
 
