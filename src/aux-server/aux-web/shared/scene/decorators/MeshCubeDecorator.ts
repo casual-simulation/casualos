@@ -50,8 +50,7 @@ export class MeshCubeDecorator extends AuxFile3DDecorator {
                 strokeMat.color = new Color(strokeColorValue);
             }
         } else {
-            strokeMat.visible = true;
-            strokeMat.color = new Color(0x999999);
+            strokeMat.visible = false;
         }
         if (typeof strokeWidth !== 'undefined') {
             strokeMat.linewidth = strokeWidth;
