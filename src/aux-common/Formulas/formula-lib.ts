@@ -512,38 +512,6 @@ export function setPositionDiff(context: string, x?: number, y?: number, index?:
 }
 
 /**
- * Creates a new file and adds it to the current user's menu.
- * The new file will be parented to the user's file.
- * @param id The ID of the menu item.
- * @param label The label that the menu item should show.
- * @param action The script that should be run when the item is clicked.
- * @param diffs The extra diffs to apply to to the new file.
- */
-export function createMenuItem(id: string, label: string, action: string, ...diffs: FileTags[]) {
-    const user = getUser();
-    createMenuItemFrom(user, id, label, action, ...diffs);
-}
-
-/**
- * Creates a new file and adds it to the current user's menu.
- * The new file will be parented to the given file.
- * @param file The parent of the new file.
- * @param id The ID of the menu item.
- * @param label The label that the menu item should show.
- * @param action The script that should be run when the item is clicked.
- * @param diffs The extra diffs to apply to the new file.
- */
-export function createMenuItemFrom(file: FileProxy | string, id: string, label: string, action: string, ...diffs: FileTags[]) {
-    const user = getUser();
-    const update = addFileToMenu(calc, user, id);
-    createFrom(file, {
-        ...update.tags,
-        'aux.label': label,
-        'onClick()': action
-    }, ...diffs);
-}
-
-/**
  * Gets a diff that adds a file to the current user's menu.
  */
 export function addToMenuDiff(): FileTags {
@@ -581,33 +549,6 @@ export function removeFromMenu(file: FileProxy) {
     applyDiff(file, removeFromMenuDiff());
 }
 
-/**
- * Deletes the menu item with the given ID from the current user's menu.
- * @param id The ID of the menu item.
- */
-export function destroyMenuItem(id: string) {
-    const user = getUser();
-    const context = getUserMenuId(calc, user);
-    const files = filesInContext(calc, context);
-    const match = files.filter(f => calculateFileValue(calc, f, `${context}.id`) === id);
-
-    match.forEach(f => {
-        destroy(f);
-    });
-}
-
-/**
- * Deletes all the menu items from the current user's menu.
- */
-export function destroyAllMenuItems() {
-    const user = getUser();
-    const files = getFilesInMenu(calc, user);
-
-    files.forEach(f => {
-        destroy(f);
-    });
-}
-
 export default {
     sum,
     avg,
@@ -639,10 +580,6 @@ export default {
     addToContext,
     removeFromContext,
 
-    createMenuItem,
-    createMenuItemFrom,
-    destroyMenuItem,
-    destroyAllMenuItems,
     addToMenu,
     removeFromMenu
 };
