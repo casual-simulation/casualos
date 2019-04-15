@@ -1065,7 +1065,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'addItem()': 'applyDiff(@name("bob"), addToMenuDiff())',
+                            'addItem()': 'applyDiff(@name("bob"), makeDiff.addToMenu())',
                         }
                     },
                     userFile: {
@@ -1155,7 +1155,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'addItem()': 'applyDiff(@name("bob"), removeFromMenuDiff())',
+                            'addItem()': 'applyDiff(@name("bob"), makeDiff.removeFromMenu())',
                         }
                     },
                     userFile: {
@@ -1351,7 +1351,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'applyDiff(this, addToContextDiff("abc"))',
+                            'test()': 'applyDiff(this, makeDiff.addToContext("abc"))',
                         }
                     },
                 };
@@ -1383,7 +1383,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'abc': true,
-                            'test()': 'applyDiff(this, removeFromContextDiff("abc"))',
+                            'test()': 'applyDiff(this, makeDiff.removeFromContext("abc"))',
                         }
                     },
                 };
@@ -1476,7 +1476,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'applyDiff(this, setPositionDiff("abc", 1, 2))',
+                            'test()': 'applyDiff(this, makeDiff.setPosition("abc", 1, 2))',
                         }
                     }
                 };
@@ -1503,7 +1503,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'applyDiff(this, setPositionDiff("abc", undefined, 2))',
+                            'test()': 'applyDiff(this, makeDiff.setPosition("abc", undefined, 2))',
                         }
                     }
                 };
@@ -1529,7 +1529,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'applyDiff(this, setPositionDiff("abc", undefined, undefined, 2))',
+                            'test()': 'applyDiff(this, makeDiff.setPosition("abc", undefined, undefined, 2))',
                         }
                     }
                 };

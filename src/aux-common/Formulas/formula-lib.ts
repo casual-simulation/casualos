@@ -60,6 +60,12 @@ export function setUserId(id: string) {
 // export default lib;
 
 /**
+ * Defines a type that represents a file diff.
+ * That is, a set of tags that can be applied to another file.
+ */
+export type FileDiff = FileTags;
+
+/**
  * Sums the given array of numbers and returns the result.
  * If any value in the list is not a number, it will be converted to one.
  * If the given value is not an array, then it will be converted to a number and returned.
@@ -549,6 +555,17 @@ export function removeFromMenu(file: FileProxy) {
     applyDiff(file, removeFromMenuDiff());
 }
 
+/**
+ * Defines a set of functions that are able to make File Diffs.
+ */
+export const makeDiff = {
+    addToContext: addToContextDiff,
+    removeFromContext: removeFromContextDiff,
+    addToMenu: addToMenuDiff,
+    removeFromMenu: removeFromMenuDiff,
+    setPosition: setPositionDiff
+};
+
 export default {
     sum,
     avg,
@@ -571,12 +588,8 @@ export default {
     getUserInventoryContext,
 
     getFilesInContext,
+    makeDiff,
     applyDiff,
-    addToContextDiff,
-    removeFromContextDiff,
-    addToMenuDiff,
-    removeFromMenuDiff,
-    setPositionDiff,
     addToContext,
     removeFromContext,
 
