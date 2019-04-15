@@ -1,4 +1,4 @@
-# AUX Server Changelog
+# AUX Changelog
 
 ## V0.4.11
 ### Date: 04/12/2019
