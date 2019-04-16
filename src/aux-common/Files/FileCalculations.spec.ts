@@ -39,7 +39,8 @@ import {
     removeFromContextDiff,
     isConfigTag,
     getConfigTagContext,
-    getFileConfigContexts
+    getFileConfigContexts,
+    isContext
 } from './FileCalculations';
 import {
     cloneDeep
@@ -47,6 +48,7 @@ import {
 import { File, Object, PartialFile } from './File';
 import { FilesState, cleanFile, fileRemoved } from './FilesChannel';
 import { file } from '../aux-format';
+
 
 describe('FileCalculations', () => {
     describe('isFormula()', () => {
@@ -2686,6 +2688,26 @@ describe('FileCalculations', () => {
                 'test.y': null,
                 'test.index': null
             });
+        });
+    });
+
+    describe('isContext()', () => {
+        it('should return true when the given file has a config tag set to true', () => {
+            const file = createFile('test', {
+                'test.config': true
+            });
+
+            const calc = createCalculationContext([file]);
+            expect(isContext(calc, file)).toBe(true);
+        });
+
+        it('should return false when the given file does not have a config tag set to true', () => {
+            const file = createFile('test', {
+                'test.config': false
+            });
+
+            const calc = createCalculationContext([file]);
+            expect(isContext(calc, file)).toBe(false);
         });
     });
 

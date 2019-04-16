@@ -2,7 +2,7 @@ import { ContextGroup3D } from "./ContextGroup3D";
 import { WorkspaceMesh } from "./WorkspaceMesh";
 import { GridChecker } from "./grid/GridChecker";
 import { AuxFile3DDecoratorFactory } from "./decorators/AuxFile3DDecoratorFactory";
-import { AuxFile, getContextPosition, TagUpdatedEvent, FileCalculationContext } from "@yeti-cgi/aux-common";
+import { AuxFile, getContextPosition, TagUpdatedEvent, FileCalculationContext, getFileConfigContexts, isContext } from "@yeti-cgi/aux-common";
 import { Object3D } from "three";
 
 /**
@@ -54,7 +54,7 @@ export class BuilderGroup3D extends ContextGroup3D {
      * @param calc 
      */
     private async _updateWorkspace(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
-        if (file.tags[`aux.${this.domain}.context`]) {
+        if (isContext(calc, file)) {
             if (!this.surface) {
                 this.surface = new WorkspaceMesh(this.domain);
                 this.surface.gridGhecker = this._checker;

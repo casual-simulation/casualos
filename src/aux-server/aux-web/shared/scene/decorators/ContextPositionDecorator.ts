@@ -66,7 +66,7 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
 }
 
 /**
- * 
+ * Calculates the position of the given file.
  * @param context The file calculation context to use to calculate forumula values.
  * @param file The file to calculate position for.
  * @param gridScale The scale of the grid.

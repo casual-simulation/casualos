@@ -17,7 +17,8 @@ import {
     getContextScale,
     getContextDefaultHeight,
     getContextColor,
-    createFile
+    createFile,
+    isContext
 } from '@yeti-cgi/aux-common';
 import { BuilderFileClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderFileClickOperation';
 import { Physics } from '../../shared/scene/Physics';
@@ -200,13 +201,13 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     pointOnWorkspaceGrid(calc: FileCalculationContext, screenPos: Vector2, camera: Camera) {
         let raycaster = new Raycaster();
         raycaster.setFromCamera(screenPos, camera);
-        const workspaces = this.getSurfaceObjects();
+        const workspaces = this.getSurfaceObjects(calc);
         const hits = raycaster.intersectObjects(workspaces, true);
         const hit = hits[0];
         if (hit) {
             const point = hit.point;
             const workspace = this.findWorkspaceForIntersection(hit);
-            if (workspace && workspace.file.tags[`aux.${workspace.domain}.context`] && !getContextMinimized(calc, workspace.file, workspace.domain)) {
+            if (workspace && isContext(calc, workspace.file) && !getContextMinimized(calc, workspace.file, workspace.domain)) {
                 const workspaceMesh = workspace.surface;
                 const closest = workspaceMesh.closestTileToPoint(point);
 
@@ -284,9 +285,9 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         return this.findWorkspaceForIntersection(hit) === null;
     }
 
-    getSurfaceObjects() {
+    getSurfaceObjects(calc: FileCalculationContext) {
         if (this._surfaceObjectsDirty) {
-            this._surfaceColliders = flatMap((<GameView>this._gameView).getContexts().filter(f => f.file.tags[`aux.${f.domain}.context`]), f => f.surface.colliders);
+            this._surfaceColliders = flatMap((<GameView>this._gameView).getContexts().filter(f => isContext(calc, f.file)), f => f.surface.colliders);
             this._surfaceObjectsDirty = false;
         }
         return this._surfaceColliders;
@@ -298,7 +299,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
         if (gameObject) {
 
-            if (gameObject instanceof ContextGroup3D && gameObject.file.tags[`aux.${gameObject.domain}.context`]) {
+            if (gameObject instanceof ContextGroup3D && isContext(calc, gameObject.file)) {
                 
                 const tile = this._worldPosToGridPos(calc, gameObject, point);
                 const currentGrid = getBuilderContextGrid(calc, gameObject.file, gameObject.domain);
@@ -351,7 +352,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     }
 
     private _shrinkWorkspace(calc: FileCalculationContext, file: ContextGroup3D) {
-        if (file && file.file.tags[`aux.${file.domain}.context`]) {
+        if (file && isContext(calc, file.file)) {
             const size = getContextSize(calc, file.file, file.domain);
             appManager.fileManager.updateFile(file.file, {
                 tags: {
@@ -366,7 +367,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      * @param file 
      */
     private _toggleWorkspace(calc: FileCalculationContext, file: ContextGroup3D) {
-        if (file && file.file.tags[`aux.${file.domain}.context`]) {
+        if (file && isContext(calc, file.file)) {
             const minimized = !isMinimized(calc, file.file, file.domain);
             appManager.fileManager.updateFile(file.file, {
                 tags: {

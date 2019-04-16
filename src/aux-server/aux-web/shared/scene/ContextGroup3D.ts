@@ -149,7 +149,6 @@ export class ContextGroup3D extends GameObject {
      */
     private _updateContexts(file: AuxFile, calc: FileCalculationContext) {
         const contexts = getFileConfigContexts(calc, file);
-        // const contexts = calculateFileValue(calc, file, `aux.${this.domain}.context`);
         // TODO: Handle scenarios where builder.context is empty or null
         if (contexts) {
             this._addContexts(file, contexts, calc);

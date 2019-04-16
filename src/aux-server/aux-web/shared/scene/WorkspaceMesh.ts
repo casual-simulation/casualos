@@ -146,7 +146,7 @@ export class WorkspaceMesh extends GameObject {
         const prev = this.workspace;
         this.workspace = (workspace) || prev;
 
-        this.visible = isContext(calc, this.workspace, this.domain);
+        this.visible = isContext(calc, this.workspace);
         this.container.visible = !isMinimized(calc, this.workspace, this.domain);
         this.miniHex.visible = !this.container.visible;
 
