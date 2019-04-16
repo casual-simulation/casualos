@@ -1,4 +1,4 @@
-import { FilesState } from "../Files";
+import { FilesState, createFile, fileAdded } from "../Files";
 import { RealtimeCausalTree, RealtimeChannel, AtomOp, storedTree, site, Atom } from "../causal-trees";
 import { auxCausalTreeFactory } from "./AuxCausalTreeFactory";
 import { TestCausalTreeStore } from "../causal-trees/test/TestCausalTreeStore";
@@ -66,7 +66,6 @@ describe('AuxTreeCalculations', () => {
         });
 
         it('should sort added files so workspaces are first', async () => {
-            
             const factory = auxCausalTreeFactory();
             const store = new TestCausalTreeStore();
             const connection = new TestChannelConnection();
@@ -91,14 +90,20 @@ describe('AuxTreeCalculations', () => {
                 files.forEach(file => fileIds.push(file.id));
             }, errorHandler);
 
-            await tree.tree.file('abc');
-            await tree.tree.file('def');
+            await tree.tree.addEvents([
+                fileAdded(createFile('abc', {})),
+                fileAdded(createFile('def', {
+                    'context.config': true
+                })),
+                fileAdded(createFile('111', {})),
+            ]);
 
             scheduler.flush();
 
             expect(fileIds).toEqual([
+                'def',
+                '111',
                 'abc',
-                'def'
             ]);
             expect(errorHandler).not.toBeCalled();
         });

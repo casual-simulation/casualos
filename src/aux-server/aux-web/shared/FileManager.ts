@@ -211,7 +211,7 @@ export class FileManager {
    * Initializes the file manager to connect to the session with the given ID.
    * @param id The ID of the session to connect to.
    */
-  init(id: string, force?: boolean, loadingCallback?: LoadingProgressCallback): Promise<string> {
+  init(id: string, force: boolean, loadingCallback: LoadingProgressCallback, config: { isBuilder: boolean, isPlayer: boolean }): Promise<string> {
       console.log('[FileManager] init id:', id, 'force:', force);
       force = getOptionalValue(force, false);
       if (this._initPromise && !force) {
@@ -220,7 +220,7 @@ export class FileManager {
           if (this._initPromise) {
               this.dispose();
           }
-          return this._initPromise = this._init(id, loadingCallback);
+          return this._initPromise = this._init(id, loadingCallback, config);
       }
   }
 
@@ -363,7 +363,7 @@ export class FileManager {
     return id ? `aux-${id}` : 'aux-default';
   }
 
-  private async _init(id: string, loadingCallback?: LoadingProgressCallback) {
+  private async _init(id: string, loadingCallback: LoadingProgressCallback, config: { isBuilder: boolean, isPlayer: boolean }) {
     const loadingProgress = new LoadingProgress();
     if (loadingCallback) { loadingProgress.onChanged.addListener(() => { loadingCallback(loadingProgress); }); }
 
@@ -414,7 +414,7 @@ export class FileManager {
 
         console.log('[FileManager] Got Tree:', this._aux.tree.site.id);
 
-        this._helper = new FileHelper(this._aux.tree, appManager.user.id);
+        this._helper = new FileHelper(this._aux.tree, appManager.user.id, config);
         this._selection = new SelectionManager(this._helper);
         this._recent = new RecentFilesManager(this._helper);
 
@@ -479,7 +479,7 @@ export class FileManager {
     if (!userFile) {
       await this.createFile(this._appManager.user.id, {
         [userContext]: true,
-        ['aux.builder.context']: userContext,
+        [`${userContext}.config`]: true,
         _user: this._appManager.user.username,
         _userInventoryContext: userInventoryContext,
         _userMenuContext: userMenuContext,

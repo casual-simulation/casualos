@@ -12,4 +12,14 @@ export interface WebConfig {
      * Gets the base URL of the player.
      */
     playerBaseUrl: string;
+
+    /**
+     * Whether the client currently represents an AUX Builder.
+     */
+    isBuilder: boolean;
+
+    /**
+     * Whether the client currently represents an AUX Player.
+     */
+    isPlayer: boolean;
 }

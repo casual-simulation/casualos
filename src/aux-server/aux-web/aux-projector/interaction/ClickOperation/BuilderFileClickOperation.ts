@@ -8,7 +8,8 @@ import {
     getFileIndex,
     getFilePosition,
     objectsAtContextGridPosition,
-    isFileMovable
+    isFileMovable,
+    getFileConfigContexts
 } from '@yeti-cgi/aux-common';
 import { appManager } from '../../../shared/AppManager';
 import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperation/BaseFileClickOperation';
@@ -105,12 +106,14 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
 
     protected _canDragFile(calc: FileCalculationContext, file: File): boolean {
         if (this._interaction.isInCorrectMode(this._file3D)) {
-            if (this._interaction.isInWorksurfacesMode() && file.tags['aux.builder.context']) {
-                // Workspaces are always movable.
-                return true;
-            } else {
-                return isFileMovable(calc, file);
+            if (this._interaction.isInWorksurfacesMode()) {
+                let tags = getFileConfigContexts(calc, file);
+                if (tags.length > 0) {
+                    // Workspaces are always movable.
+                    return true;
+                }
             }
+            return isFileMovable(calc, file);
         }
         return false;
     }

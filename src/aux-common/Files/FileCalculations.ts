@@ -669,7 +669,6 @@ export function createWorkspace(id = uuid(), builderContextId: string = `aux._co
     return {
         id: id,
         tags: {
-            'aux.builder.context': builderContextId,
             'aux.builder.context.x': 0,
             'aux.builder.context.y': 0,
             'aux.builder.context.z': 0,
@@ -680,6 +679,7 @@ export function createWorkspace(id = uuid(), builderContextId: string = `aux._co
             'aux.builder.context.grid.scale': DEFAULT_WORKSPACE_GRID_SCALE,
             'aux.builder.context.color': DEFAULT_WORKSPACE_COLOR,
             [builderContextId]: true,
+            [`${builderContextId}.config`]: '=isBuilder',
             [`${builderContextId}.x`]: 0,
             [`${builderContextId}.y`]: 0,
             [`${builderContextId}.z`]: 0,
@@ -937,6 +937,41 @@ export function getFileShape(calc: FileCalculationContext, file: File): FileShap
         return shape;
     }
     return DEFAULT_FILE_SHAPE;
+}
+
+/**
+ * Determines if the given tag represents a context config.
+ * @param tag The tag to check.
+ */
+export function isConfigTag(tag: string): boolean {
+    if (tag.length <= '.config'.length) {
+        return false;
+    }
+    return /\.config$/g.test(tag);
+}
+
+/**
+ * Gets the name of the context that this tag is the config for.
+ * If the tag is not a config tag, then returns null.
+ * @param tag The tag to check.
+ */
+export function getConfigTagContext(tag: string): string {
+    if (isConfigTag(tag)) {
+        return tag.substr(0, tag.length - '.config'.length);
+    }
+    return null;
+}
+
+/**
+ * Gets the list of contexts that the given file is a config file for.
+ * @param calc The calculation context.
+ * @param file The file that represents the context.
+ */
+export function getFileConfigContexts(calc: FileCalculationContext, file: File): string[] {
+    const tags = tagsOnFile(file);
+    return tags.filter(t => {
+        return isConfigTag(t) && calculateBooleanTagValue(calc, file, t, false);
+    }).map(t => getConfigTagContext(t));
 }
 
 /**

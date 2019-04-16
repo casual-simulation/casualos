@@ -50,7 +50,6 @@ export interface FileTags {
     ['aux._selectionMode']?: SelectionMode;
 
     // Builder related tags
-    ['aux.builder.context']?: string | string[];
     ['aux.builder.context.x']?: number;
     ['aux.builder.context.y']?: number;
     ['aux.builder.context.z']?: number;

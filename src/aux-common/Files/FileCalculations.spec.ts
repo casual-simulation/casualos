@@ -36,7 +36,10 @@ import {
     removeFileFromMenu,
     getContextSize,
     addToContextDiff,
-    removeFromContextDiff
+    removeFromContextDiff,
+    isConfigTag,
+    getConfigTagContext,
+    getFileConfigContexts
 } from './FileCalculations';
 import {
     cloneDeep
@@ -632,7 +635,6 @@ describe('FileCalculations', () => {
 
         it('should return the property names that are on workspaces', () => {
             expect(tagsOnFile(createWorkspace('test', 'testContext'))).toEqual([
-                'aux.builder.context',
                 'aux.builder.context.x',
                 'aux.builder.context.y',
                 'aux.builder.context.z',
@@ -643,10 +645,12 @@ describe('FileCalculations', () => {
                 'aux.builder.context.grid.scale',
                 'aux.builder.context.color',
                 'testContext',
+                'testContext.config', 
                 'testContext.x',
                 'testContext.y',
                 'testContext.z',
                 'aux.color',
+                "aux.stroke.color",
                 'aux.movable',
                 'aux.scale.z'
             ]);
@@ -2682,6 +2686,67 @@ describe('FileCalculations', () => {
                 'test.y': null,
                 'test.index': null
             });
+        });
+    });
+
+    describe('isConfigTag()', () => {
+        let tags: [string, boolean][] = [
+            ['.config', false],
+            ['a.config', true],
+            ['ab.config', true],
+            ['a.config.config', true],
+            ['😁🦊🎶🎉.config', true],
+            ['😁🦊🎶🎉.config.abc', false],
+        ];
+        it.each(tags)('%s returns %s', (tag, expected) => {
+            expect(isConfigTag(tag)).toBe(expected);
+        });
+    });
+
+    describe('getConfigTagContext()', () => {
+        let tags: [string, string][] = [
+            ['.config', null],
+            ['a.config', 'a'],
+            ['ab.config', 'ab'],
+            ['a.config.config', 'a.config'],
+            ['😁🦊🎶🎉.config', '😁🦊🎶🎉'],
+            ['😁🦊🎶🎉.config.abc', null],
+        ];
+        it.each(tags)('converts %s to %s', (tag, expected) => {
+            expect(getConfigTagContext(tag)).toBe(expected);
+        });
+    });
+
+    describe('getFileConfigContexts()', () => {
+        it('should return every context that the file has a .config tag for', () => {
+            const file = createFile('test', {
+                'abc': true,
+                'abc.config': true,
+                'abc.config.config': true
+            });
+
+            const calc = createCalculationContext([file]);
+            const tags = getFileConfigContexts(calc, file);
+
+            expect(tags).toEqual([
+                'abc',
+                'abc.config'
+            ]);
+        });
+
+        it('should evalulate formulas', () => {
+            const file = createFile('test', {
+                'abc.config': '=false',
+                'abc.config.config': '=true'
+            });
+
+            const calc = createCalculationContext([file]);
+            const tags = getFileConfigContexts(calc, file);
+
+            expect(tags).toEqual([
+                // file is config for abc.config context.
+                'abc.config'
+            ]);
         });
     });
 });
