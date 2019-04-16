@@ -60,7 +60,7 @@ export class BuilderGroup3D extends ContextGroup3D {
                 this.surface.gridGhecker = this._checker;
                 this.add(this.surface);
             }
-            const position = getContextPosition(calc, this.file, this.domain);
+            const position = getContextPosition(calc, this.file);
 
             this.position.x = position.x;
             this.position.y = position.z;

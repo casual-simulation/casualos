@@ -104,9 +104,9 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
 
             appManager.fileManager.updateFile(this._workspace.file, {
                 tags: {
-                    [`aux.${this._workspace.domain}.context.x`]: final.x,
-                    [`aux.${this._workspace.domain}.context.y`]: final.z,
-                    [`aux.${this._workspace.domain}.context.z`]: final.y
+                    [`aux.context.x`]: final.x,
+                    [`aux.context.y`]: final.z,
+                    [`aux.context.z`]: final.y
                 }
             });
         }
@@ -120,7 +120,7 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
             fileRemoved(this._workspace.file.id),
             fileUpdated(this._attachWorkspace.file.id, {
                 tags: {
-                    [`aux.${this._workspace.domain}.context.grid`]: {
+                    [`aux.context.grid`]: {
                         [posToKey(this._attachPoint)]: {
                             height: height
                         }

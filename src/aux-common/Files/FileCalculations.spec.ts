@@ -637,15 +637,15 @@ describe('FileCalculations', () => {
 
         it('should return the property names that are on workspaces', () => {
             expect(tagsOnFile(createWorkspace('test', 'testContext'))).toEqual([
-                'aux.builder.context.x',
-                'aux.builder.context.y',
-                'aux.builder.context.z',
-                'aux.builder.context.size',
-                'aux.builder.context.grid',
-                'aux.builder.context.scale',
-                'aux.builder.context.defaultHeight',
-                'aux.builder.context.grid.scale',
-                'aux.builder.context.color',
+                'aux.context.x',
+                'aux.context.y',
+                'aux.context.z',
+                'aux.context.size',
+                'aux.context.grid',
+                'aux.context.scale',
+                'aux.context.defaultHeight',
+                'aux.context.grid.scale',
+                'aux.context.color',
                 'testContext',
                 'testContext.config', 
                 'testContext.x',
@@ -2592,7 +2592,7 @@ describe('FileCalculations', () => {
             const file = createFile('file');
 
             const calc = createCalculationContext([file]);
-            const size = getContextSize(calc, file, 'builder');
+            const size = getContextSize(calc, file);
 
             expect(size).toBe(1);
         });
@@ -2603,7 +2603,7 @@ describe('FileCalculations', () => {
             });
 
             const calc = createCalculationContext([file]);
-            const size = getContextSize(calc, file, 'builder');
+            const size = getContextSize(calc, file);
 
             expect(size).toBe(0);
         });
@@ -2611,11 +2611,11 @@ describe('FileCalculations', () => {
         it('should still return the user files context size', () => {
             const file = createFile('file', {
                 _user: 'user',
-                'aux.builder.context.size': 10
+                'aux.context.size': 10
             });
 
             const calc = createCalculationContext([file]);
-            const size = getContextSize(calc, file, 'builder');
+            const size = getContextSize(calc, file);
 
             expect(size).toBe(10);
         });
