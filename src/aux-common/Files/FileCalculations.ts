@@ -1171,6 +1171,14 @@ export function isDiff(file: File): boolean {
 }
 
 /**
+ * Determines if the given file allows for merging.
+ * @param file The file to check.
+ */
+export function isMergeable(calc: FileCalculationContext, file: File): boolean {
+    return !!file && calculateBooleanTagValue(calc, file, 'aux.mergeable', true);
+}
+
+/**
  * Gets a partial file that can be used to apply the diff that the given file represents.
  * A diff file is any file that has `aux._diff` set to `true` and `aux._diffTags` set to a list of tag names.
  * @param file The file that represents the diff.

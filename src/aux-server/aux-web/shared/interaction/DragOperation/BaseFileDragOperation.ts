@@ -15,6 +15,8 @@ import {
     getDiffUpdate,
     fileRemoved,
     COMBINE_ACTION_NAME
+    COMBINE_ACTION_NAME,
+    isMergeable
 } from '@casual-simulation/aux-common';
 
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
@@ -170,7 +172,9 @@ export abstract class BaseFileDragOperation implements IOperation {
 
         const canMerge = objs.length >= 1 &&
             files.length === 1 &&
-            isDiff(files[0]);
+            isDiff(files[0]) && 
+            isMergeable(calc, files[0]) && 
+            isMergeable(calc, objs[0]);
 
         const canCombine = !canMerge && 
             objs.length === 1 && 

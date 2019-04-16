@@ -41,7 +41,8 @@ import {
     getConfigTagContext,
     getFileConfigContexts,
     isContext,
-    createContextId
+    createContextId,
+    isMergeable
 } from './FileCalculations';
 import {
     cloneDeep
@@ -1328,6 +1329,26 @@ describe('FileCalculations', () => {
             expect(newData.tags.sum.formula).toBe(':=this.num + 5');
         });
     });
+
+
+    describe('isMergeable()', () => {
+        it('should return true if the file is mergeable', () => {
+            const file1 = createFile(undefined, { 'aux.mergeable': true } );
+            const update1 = isMergeable(createCalculationContext([file1]), file1);
+
+            expect(update1).toBe(true);
+        });
+
+        it('should return false if the file is not mergeable', () => {
+            const file1 = createFile(undefined, { 'aux.mergeable': false } );
+            const update1 = isMergeable(createCalculationContext([file1]), file1);
+
+            expect(update1).toBe(false); 
+        }); 
+    });
+
+
+
 
     describe('getDiffUpdate()', () => {
         it('should return null if the file is not a diff', () => {
