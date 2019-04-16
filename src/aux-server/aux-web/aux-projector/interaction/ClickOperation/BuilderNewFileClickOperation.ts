@@ -1,4 +1,4 @@
-import { UserMode, File, Object, duplicateFile, FileCalculationContext } from '@yeti-cgi/aux-common';
+import { UserMode, File, Object, duplicateFile, FileCalculationContext } from '@casual-simulation/aux-common';
 import { BuilderNewFileDragOperation } from '../DragOperation/BuilderNewFileDragOperation';
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
 import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperation/BaseFileClickOperation';

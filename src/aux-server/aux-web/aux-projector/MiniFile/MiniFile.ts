@@ -1,11 +1,11 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Inject, Watch, Prop } from 'vue-property-decorator';
-import { Object, AuxFile, tagsOnFile, isTagWellKnown, fileTags } from '@yeti-cgi/aux-common';
+import { Object, AuxFile, tagsOnFile, isTagWellKnown, fileTags } from '@casual-simulation/aux-common';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { appManager } from '../../shared/AppManager';
 import TagColor from '../TagColor/TagColor';
-import { sort } from '@yeti-cgi/aux-common/Formulas/formula-lib';
+import { sort } from '@casual-simulation/aux-common/Formulas/formula-lib';
 
 @Component({
     components: {

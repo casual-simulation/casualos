@@ -2,7 +2,7 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Prop, Inject} from 'vue-property-decorator';
 import { SubscriptionLike } from 'rxjs';
-import { Object, File, getShortId, AuxObject } from '@yeti-cgi/aux-common';
+import { Object, File, getShortId, AuxObject } from '@casual-simulation/aux-common';
 import FileValue from '../FileValue/FileValue';
 import { appManager } from '../../shared/AppManager';
 

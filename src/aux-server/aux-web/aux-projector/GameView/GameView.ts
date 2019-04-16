@@ -44,8 +44,8 @@ import {
     doFilesAppearEqual,
     AuxFile,
     hasValue,
-} from '@yeti-cgi/aux-common';
-import { ArgEvent } from '@yeti-cgi/aux-common/Events';
+} from '@casual-simulation/aux-common';
+import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { Time } from '../../shared/scene/Time';
 import { Input, InputType } from '../../shared/scene/Input';
 import { InputVR } from '../../shared/scene/InputVR';

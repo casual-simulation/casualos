@@ -1,6 +1,6 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
-import { FileCalculationContext, AuxFile, isFormula, calculateFormattedFileValue, calculateFileValue, isArray, parseArray } from "@yeti-cgi/aux-common";
+import { FileCalculationContext, AuxFile, isFormula, calculateFormattedFileValue, calculateFileValue, isArray, parseArray } from "@casual-simulation/aux-common";
 import { Arrow3D } from "../Arrow3D";
 import { Color } from "three";
 import { AuxFile3DFinder } from "../../../shared/AuxFile3DFinder";

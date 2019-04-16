@@ -1,5 +1,5 @@
 import { MenuContext } from "./MenuContext";
-import { File, createFile, createCalculationContext, AuxObject, updateFile } from "@yeti-cgi/aux-common";
+import { File, createFile, createCalculationContext, AuxObject, updateFile } from "@casual-simulation/aux-common";
 
 describe('MenuContext', () => {
     it('should construct for specific context', () => {

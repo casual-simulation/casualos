@@ -1,5 +1,5 @@
 import { BaseFileDragOperation } from "../../../shared/interaction/DragOperation/BaseFileDragOperation";
-import { File, FileCalculationContext } from "@yeti-cgi/aux-common";
+import { File, FileCalculationContext } from "@casual-simulation/aux-common";
 import { PlayerInteractionManager } from "../PlayerInteractionManager";
 import GameView from "../../GameView/GameView";
 import { Intersection, Vector2 } from "three";

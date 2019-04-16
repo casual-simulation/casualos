@@ -1,5 +1,5 @@
 import { FileHelper } from "./FileHelper";
-import { AuxObject, getSelectionMode, selectionIdForUser, updateUserSelection, toggleFileSelection, filterFilesBySelection, SelectionMode, newSelectionId, FileEvent, updateFile, fileUpdated } from "@yeti-cgi/aux-common";
+import { AuxObject, getSelectionMode, selectionIdForUser, updateUserSelection, toggleFileSelection, filterFilesBySelection, SelectionMode, newSelectionId, FileEvent, updateFile, fileUpdated } from "@casual-simulation/aux-common";
 
 /**
  * Defines a class that is able to manage selections for users.

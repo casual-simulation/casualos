@@ -8,13 +8,13 @@ import { SocketManager } from './SocketManager';
 import { flatMap, map, scan } from 'rxjs/operators';
 import { downloadAuxState, readFileJson } from '../aux-projector/download';
 import { CausalTreeManager } from './causal-trees/CausalTreeManager';
-import { StoredCausalTree } from '@yeti-cgi/aux-common/causal-trees';
-import { AuxOp, FilesState, AuxCausalTree, lerp } from '@yeti-cgi/aux-common';
+import { StoredCausalTree } from '@casual-simulation/aux-common/causal-trees';
+import { AuxOp, FilesState, AuxCausalTree, lerp } from '@casual-simulation/aux-common';
 import Dexie from 'dexie';
 import { difference } from 'lodash';
 import uuid from 'uuid/v4';
 import { WebConfig } from '../../shared/WebConfig';
-import { LoadingProgress, LoadingProgressCallback } from '@yeti-cgi/aux-common/LoadingProgress';
+import { LoadingProgress, LoadingProgressCallback } from '@casual-simulation/aux-common/LoadingProgress';
 
 export interface User {
     id: string;

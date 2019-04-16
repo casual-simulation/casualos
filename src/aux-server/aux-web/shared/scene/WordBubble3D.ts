@@ -22,7 +22,7 @@ import {
     Box3Helper,
     AxesHelper
 } from 'three';
-import { merge } from '@yeti-cgi/aux-common/utils';
+import { merge } from '@casual-simulation/aux-common/utils';
 import { setLayerMask, convertToBox2 } from './SceneUtils';
 import { DebugObjectManager } from './DebugObjectManager';
 import { Debug } from '@sentry/core/dist/integrations';

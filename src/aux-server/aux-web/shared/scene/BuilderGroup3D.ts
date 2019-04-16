@@ -2,7 +2,7 @@ import { ContextGroup3D } from "./ContextGroup3D";
 import { WorkspaceMesh } from "./WorkspaceMesh";
 import { GridChecker } from "./grid/GridChecker";
 import { AuxFile3DDecoratorFactory } from "./decorators/AuxFile3DDecoratorFactory";
-import { AuxFile, getContextPosition, TagUpdatedEvent, FileCalculationContext } from "@yeti-cgi/aux-common";
+import { AuxFile, getContextPosition, TagUpdatedEvent, FileCalculationContext } from "@casual-simulation/aux-common";
 import { Object3D } from "three";
 
 /**

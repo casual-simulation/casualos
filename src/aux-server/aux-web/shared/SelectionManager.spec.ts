@@ -1,7 +1,7 @@
-import { createFile, File, AuxObject, AuxCausalTree, getSelectionMode } from "@yeti-cgi/aux-common";
+import { createFile, File, AuxObject, AuxCausalTree, getSelectionMode } from "@casual-simulation/aux-common";
 import { SelectionManager } from "./SelectionManager";
 import { FileHelper } from "./FileHelper";
-import { storedTree, site } from "@yeti-cgi/aux-common/causal-trees";
+import { storedTree, site } from "@casual-simulation/aux-common/causal-trees";
 
 describe('SelectionManager', () => {
 

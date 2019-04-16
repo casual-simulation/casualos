@@ -1,6 +1,6 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
-import { calculateNumericalTagValue, FileCalculationContext, File, calculateGridScale, file, objectsAtContextGridPosition, getFilePosition, getFileIndex, getContextDefaultHeight, getBuilderContextGrid, getFileRotation, getContextScale, isUserFile, getContextGridHeight, DEFAULT_WORKSPACE_GRID_SCALE } from "@yeti-cgi/aux-common";
+import { calculateNumericalTagValue, FileCalculationContext, File, calculateGridScale, file, objectsAtContextGridPosition, getFilePosition, getFileIndex, getContextDefaultHeight, getBuilderContextGrid, getFileRotation, getContextScale, isUserFile, getContextGridHeight, DEFAULT_WORKSPACE_GRID_SCALE } from "@casual-simulation/aux-common";
 import { Vector3, Quaternion, Euler, Vector2 } from "three";
 import { calculateGridTileLocalCenter } from "../grid/Grid";
 import { sumBy } from "lodash";

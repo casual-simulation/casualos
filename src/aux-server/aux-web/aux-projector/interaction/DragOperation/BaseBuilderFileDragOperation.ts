@@ -9,7 +9,7 @@ import {
     calculateDestroyFileEvents,
     removeFromContextDiff,
     fileUpdated,
-} from '@yeti-cgi/aux-common';
+} from '@casual-simulation/aux-common';
 
 import { setParent } from '../../../shared/scene/SceneUtils';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';

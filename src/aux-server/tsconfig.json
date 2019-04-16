@@ -9,7 +9,7 @@
   },
   "include": [
     "./**/*",
-    // "./node_modules/@yeti-cgi/aux-common/**/*"
+    // "./node_modules/@casual-simulation/aux-common/**/*"
   ],
   "exclude": [
     "node_modules"

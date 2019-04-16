@@ -1,6 +1,6 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
-import { FileCalculationContext, AuxFile, calculateFileValue, isFormula, calculateFormattedFileValue, calculateNumericalTagValue, hasValue } from "@yeti-cgi/aux-common";
+import { FileCalculationContext, AuxFile, calculateFileValue, isFormula, calculateFormattedFileValue, calculateNumericalTagValue, hasValue } from "@casual-simulation/aux-common";
 import { Text3D } from "../Text3D";
 import { setLayer, findParentScene } from "../SceneUtils";
 import { LayersHelper } from "../LayersHelper";

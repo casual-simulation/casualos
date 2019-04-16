@@ -1,5 +1,5 @@
 import { InventoryContext, DEFAULT_INVENTORY_COUNT } from "./InventoryContext";
-import { File, createFile, createCalculationContext, AuxObject, updateFile } from "@yeti-cgi/aux-common";
+import { File, createFile, createCalculationContext, AuxObject, updateFile } from "@casual-simulation/aux-common";
 
 describe('InventoryContext', () => {
     it('should construct for specific context', () => {

@@ -3,7 +3,7 @@ import {
     AuxFile,
     FileCalculationContext,
     calculateFileValue
-} from '@yeti-cgi/aux-common';
+} from '@casual-simulation/aux-common';
 
 interface PlayerContextSearchResult {
     /**

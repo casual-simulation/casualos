@@ -1,7 +1,7 @@
 import { GameObject } from "./GameObject";
-import { AuxFile } from "@yeti-cgi/aux-common/aux-format";
+import { AuxFile } from "@casual-simulation/aux-common/aux-format";
 import { Object3D, Mesh, SceneUtils, Box3, Sphere, Group, Vector3, Box3Helper, Color } from "three";
-import { File, TagUpdatedEvent, FileCalculationContext, AuxDomain, isFileInContext, getBuilderContextGrid, calculateGridScale } from "@yeti-cgi/aux-common";
+import { File, TagUpdatedEvent, FileCalculationContext, AuxDomain, isFileInContext, getBuilderContextGrid, calculateGridScale } from "@casual-simulation/aux-common";
 import { createCube, calculateScale, findParentScene } from "./SceneUtils";
 import { AuxFile3DDecorator } from "./AuxFile3DDecorator";
 import { ContextPositionDecorator } from "./decorators/ContextPositionDecorator";

@@ -1,5 +1,5 @@
 import { AuxFile3D } from "./AuxFile3D";
-import { FileCalculationContext } from "@yeti-cgi/aux-common";
+import { FileCalculationContext } from "@casual-simulation/aux-common";
 
 export abstract class AuxFile3DDecorator {
 

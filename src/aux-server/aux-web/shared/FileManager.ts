@@ -18,7 +18,7 @@ import {
   fileRemoved,
   UserMode,
   lerp
-} from '@yeti-cgi/aux-common';
+} from '@casual-simulation/aux-common';
 import {
   keys, 
   union, 
@@ -43,9 +43,9 @@ import {
 import {AppManager, appManager} from './AppManager';
 import {SocketManager} from './SocketManager';
 import { CausalTreeManager } from './causal-trees/CausalTreeManager';
-import { RealtimeCausalTree } from '@yeti-cgi/aux-common/causal-trees';
+import { RealtimeCausalTree } from '@casual-simulation/aux-common/causal-trees';
 import { getOptionalValue } from './SharedUtils';
-import { LoadingProgress, LoadingProgressCallback } from '@yeti-cgi/aux-common/LoadingProgress';
+import { LoadingProgress, LoadingProgressCallback } from '@casual-simulation/aux-common/LoadingProgress';
 import { FileHelper } from './FileHelper';
 import { SelectionManager } from './SelectionManager';
 import { RecentFilesManager } from './RecentFilesManager';

@@ -1,6 +1,6 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
-import { FileCalculationContext, calculateGridScale, getBuilderContextGrid, DEFAULT_WORKSPACE_GRID_SCALE } from "@yeti-cgi/aux-common";
+import { FileCalculationContext, calculateGridScale, getBuilderContextGrid, DEFAULT_WORKSPACE_GRID_SCALE } from "@casual-simulation/aux-common";
 import { Text3D } from "../Text3D";
 import { calculateScale } from "../SceneUtils";
 

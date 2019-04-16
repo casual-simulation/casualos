@@ -1,4 +1,4 @@
-import { AuxFile, calculateFileValue, FileCalculationContext, TagUpdatedEvent, isFileInContext, getContextPosition, getFilePosition, getFileIndex } from "@yeti-cgi/aux-common";
+import { AuxFile, calculateFileValue, FileCalculationContext, TagUpdatedEvent, isFileInContext, getContextPosition, getFilePosition, getFileIndex } from "@casual-simulation/aux-common";
 import { remove } from 'lodash';
 import { getOptionalValue } from "../shared/SharedUtils";
 import { appManager } from "../shared/AppManager";
