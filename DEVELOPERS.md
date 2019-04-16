@@ -9,9 +9,10 @@ Make sure you have all the prerequisite tools installed:
     - Once NVM is installed, you can install the correct version of Node by running `nvm install 10.13.0` in your favorite terminal.
 - Docker ([Mac][docker-for-mac], [Windows][docker-for-windows])
     - Used to make development with MongoDB easy.
-    - Once installed, make sure the `/data` directory is shared with docker.
+    - Once installed, make sure the `/data/db` directory is shared with docker.
+        - If the `/data/db` directory doesn't exist, then create it.
         - On Mac you can get to this via:
-        - Docker Menu (On top bar) -> Preferences... -> File Sharing and add the `/data` directory.
+        - Docker Menu (On top bar) -> Preferences... -> File Sharing and add the `/data/db` directory.
 
 ## First Time Setup
 

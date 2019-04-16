@@ -69,9 +69,9 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
             // if the workspace is only 1 tile large and not minimized
             const workspace = <Workspace>this._workspace.file;
             const domain = this._workspace.domain;
-            const size = getContextSize(calc, workspace, domain);
-            const minimized = getContextMinimized(calc, workspace, domain);
-            const grid = getBuilderContextGrid(calc, workspace, domain);
+            const size = getContextSize(calc, workspace);
+            const minimized = getContextMinimized(calc, workspace);
+            const grid = getBuilderContextGrid(calc, workspace);
             const files = this._workspace.getFiles();
             if (size === 1 && !minimized && (!grid || keys(grid).length === 0) && files.length === 0) {
                 // check if it is close to another workspace.
