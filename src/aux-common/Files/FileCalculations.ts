@@ -650,6 +650,13 @@ export function getFileTag(file: File, tag: string) {
 }
 
 /**
+ * Creates a new context ID.
+ */
+export function createContextId() {
+    return `context_${uuid().substr(0, 8)}`;
+}
+
+/**
  * Creates a file with a new ID and the given tags.
  * @param id 
  * @param tags 
@@ -665,7 +672,7 @@ export function createFile(id = uuid(), tags: Object['tags'] = {}) {
  * @param id The ID of the new workspace.
  * @param builderContextId The tag that should be used for contexts stored on this workspace.
  */
-export function createWorkspace(id = uuid(), builderContextId: string = `aux._context_${uuid()}`): Workspace {
+export function createWorkspace(id = uuid(), builderContextId: string = createContextId()): Workspace {
     return {
         id: id,
         tags: {

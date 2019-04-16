@@ -40,7 +40,8 @@ import {
     isConfigTag,
     getConfigTagContext,
     getFileConfigContexts,
-    isContext
+    isContext,
+    createContextId
 } from './FileCalculations';
 import {
     cloneDeep
@@ -48,7 +49,10 @@ import {
 import { File, Object, PartialFile } from './File';
 import { FilesState, cleanFile, fileRemoved } from './FilesChannel';
 import { file } from '../aux-format';
+import uuid from 'uuid/v4';
 
+const uuidMock: jest.Mock = <any>uuid;
+jest.mock('uuid/v4');
 
 describe('FileCalculations', () => {
     describe('isFormula()', () => {
@@ -1577,8 +1581,8 @@ describe('FileCalculations', () => {
         });
 
         it('should ignore IDs if theyre not the same', () => {
-            let first = createFile();
-            let second = createFile();
+            let first = createFile('id1');
+            let second = createFile('id2');
 
             const result = doFilesAppearEqual(first, second);
 
@@ -1586,8 +1590,8 @@ describe('FileCalculations', () => {
         });
 
         it('should ignore selection tags by default', () => {
-            let first = createFile();
-            let second = createFile();
+            let first = createFile('id1');
+            let second = createFile('id2');
 
             first.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] = 'a';
             second.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] = 'b';
@@ -1598,8 +1602,8 @@ describe('FileCalculations', () => {
         });
 
         it('should ignore context tags', () => {
-            let first = createFile();
-            let second = createFile();
+            let first = createFile('id1');
+            let second = createFile('id2');
 
             first.tags['aux._context_83e80481-13a1-439e-94e6-f3b73942288f'] = 'a';
             second.tags['aux._context_83e80481-13a1-439e-94e6-f3b73942288f'] = 'b';
@@ -1610,8 +1614,8 @@ describe('FileCalculations', () => {
         });
 
         it('should use selection tags if specified', () => {
-            let first = createFile();
-            let second = createFile();
+            let first = createFile('id1');
+            let second = createFile('id2');
 
             first.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] = 'a';
             second.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] = 'b';
@@ -1635,8 +1639,8 @@ describe('FileCalculations', () => {
         });
 
         it('should should ignore default hidden tags', () => {
-            let first = createFile();
-            let second = createFile();
+            let first = createFile('id1');
+            let second = createFile('id2');
 
             first.tags['aux._context_A.x'] = 1;
             second.tags['aux._context_B.x'] = 0;
@@ -1654,20 +1658,26 @@ describe('FileCalculations', () => {
     });
 
     describe('duplicateFile()', () => {
+        beforeAll(() => {
+            uuidMock.mockReturnValue('test');
+        });
+
         it('should return a copy with a different ID', () => {
-            const first: Object = createFile();
+            const first: Object = createFile('id');
             first.tags._workspace = 'abc';
             const second = duplicateFile(first);
 
             expect(second.id).not.toEqual(first.id);
+            expect(second.id).toBe('test');
             expect(second.tags).toEqual(first.tags);
         });
 
         it('should not be destroyed', () => {
-            let first: Object = createFile();
+            let first: Object = createFile('id');
             first.tags._destroyed = true;
             first.tags._workspace = 'abc';
-
+            
+            uuidMock.mockReturnValue('test');
             const second = duplicateFile(first);
 
             expect(second.id).not.toEqual(first.id);
@@ -1675,7 +1685,7 @@ describe('FileCalculations', () => {
         });
 
         it('should not have any auto-generated contexts or selections', () => {
-            let first: Object = createFile();
+            let first: Object = createFile('id');
             first.tags[`aux.other`] = 100;
             first.tags[`myTag`] = 'Hello';
             first.tags[`aux._context_abcdefg`] = true;
@@ -1705,7 +1715,7 @@ describe('FileCalculations', () => {
         });
 
         it('should keep the tags that the new data contains', () => {
-            let first: Object = createFile();
+            let first: Object = createFile('id');
             first.tags[`aux.other`] = 100;
             first.tags[`myTag`] = 'Hello';
 
@@ -1726,7 +1736,7 @@ describe('FileCalculations', () => {
         });
 
         it('should merge in the additional changes', () => {
-            let first: Object = createFile('test', {
+            let first: Object = createFile('id', {
                 testTag: 'abcdefg',
                 name: 'ken'
             });
@@ -1744,7 +1754,7 @@ describe('FileCalculations', () => {
         });
 
         it('should not modify the original file', () => {
-            let first: Object = createFile();
+            let first: Object = createFile('id');
             first.tags._destroyed = true;
 
             const second = duplicateFile(first);
@@ -1753,7 +1763,7 @@ describe('FileCalculations', () => {
         });
 
         it('should not clear aux._diff', () => {
-            let first: Object = createFile();
+            let first: Object = createFile('id');
             first.tags['aux._diff'] = true;
             first.tags['aux._diffTags'] = ['abvc'];
 
@@ -2763,6 +2773,17 @@ describe('FileCalculations', () => {
                 // file is config for abc.config context.
                 'abc.config'
             ]);
+        });
+    });
+
+    describe('createContextId()', () => {
+
+        const cases = [
+            ['abcdefghi', 'context_abcdefgh']
+        ];
+        it.each(cases)('should convert %s to %s', (uuid, id) => {
+            uuidMock.mockReturnValue(uuid);
+            expect(createContextId()).toBe(id);
         });
     });
 });
