@@ -14,7 +14,6 @@ import {
     isDiff,
     getDiffUpdate,
     fileRemoved,
-    COMBINE_ACTION_NAME
     COMBINE_ACTION_NAME,
     isMergeable
 } from '@casual-simulation/aux-common';
