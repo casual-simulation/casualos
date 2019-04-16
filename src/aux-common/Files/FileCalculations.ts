@@ -12,7 +12,8 @@ import {
     DEFAULT_SELECTION_MODE,
     FileShape,
     DEFAULT_FILE_SHAPE,
-    FileTags
+    FileTags,
+    DEFAULT_WORKSPACE_SIZE
 } from './File';
 
 import uuid from 'uuid/v4';
@@ -671,12 +672,6 @@ export function createWorkspace(id = uuid(), builderContextId: string = `aux._co
             'aux.context.x': 0,
             'aux.context.y': 0,
             'aux.context.z': 0,
-            'aux.context.size': 1,
-            'aux.context.grid': {},
-            'aux.context.scale': DEFAULT_WORKSPACE_SCALE,
-            'aux.context.defaultHeight': DEFAULT_WORKSPACE_HEIGHT,
-            'aux.context.grid.scale': DEFAULT_WORKSPACE_GRID_SCALE,
-            'aux.context.color': DEFAULT_WORKSPACE_COLOR,
             [builderContextId]: true,
             [`${builderContextId}.config`]: '=isBuilder',
             [`${builderContextId}.x`]: 0,
@@ -1038,7 +1033,7 @@ export function getContextColor(calc: FileCalculationContext, contextFile: File)
  * @param contextFile The file that represents the context.
  */
 export function getContextSize(calc: FileCalculationContext, contextFile: File): number {
-    return calculateNumericalTagValue(calc, contextFile, `aux.context.size`, isUserFile(contextFile)? 0 : 1);
+    return calculateNumericalTagValue(calc, contextFile, `aux.context.size`, isUserFile(contextFile) ? 0 : DEFAULT_WORKSPACE_SIZE);
 }
 
 /**

@@ -112,6 +112,11 @@ export const DEFAULT_FILE_SHAPE: FileShape = 'cube';
 export const DEFAULT_WORKSPACE_HEIGHT = .1;
 
 /**
+ * The default size for workspaces.
+ */
+export const DEFAULT_WORKSPACE_SIZE = 1;
+
+/**
  * The default scale for workspaces.
  */
 export const DEFAULT_WORKSPACE_SCALE = 2;
