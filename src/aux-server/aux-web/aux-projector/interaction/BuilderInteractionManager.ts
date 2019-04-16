@@ -185,7 +185,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         const key = posToKey(position);
         appManager.fileManager.updateFile(file.file, {
             tags: {
-                [`aux.${file.domain}.context.grid`]: {
+                [`aux.context.grid`]: {
                     [key]: {
                         height: height
                     }
@@ -329,7 +329,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                         let colorUpdated = (hexColor: string) => {
                             appManager.fileManager.updateFile(gameObject.file, { 
                                 tags: { 
-                                    [`aux.${gameObject.domain}.context.color`]: hexColor 
+                                    [`aux.context.color`]: hexColor 
                                 }
                             });
                         };
@@ -356,7 +356,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             const size = getContextSize(calc, file.file);
             appManager.fileManager.updateFile(file.file, {
                 tags: {
-                    [`aux.${file.domain}.context.size`]: (size || 0) - 1
+                    [`aux.context.size`]: (size || 0) - 1
                 }
             });
         }
@@ -371,7 +371,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             const minimized = !isMinimized(calc, file.file);
             appManager.fileManager.updateFile(file.file, {
                 tags: {
-                    [`aux.${file.domain}.context.minimized`]: minimized
+                    [`aux.context.minimized`]: minimized
                 }
             });
         }
@@ -382,7 +382,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             const size = getContextSize(calc, file.file);
             appManager.fileManager.updateFile(file.file, {
                 tags: {
-                    [`aux.${file.domain}.context.size`]: (size || 0) + 1
+                    [`aux.context.size`]: (size || 0) + 1
                 }
             });
         }
