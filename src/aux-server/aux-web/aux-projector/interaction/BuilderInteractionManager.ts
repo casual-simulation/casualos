@@ -139,9 +139,13 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         }
     }
  
-    canShrinkWorkspace(file: ContextGroup3D) {
-        if (file && file.file.tags.size >= 1) {
-            if (file.file.tags.size === 1) {
+    canShrinkWorkspace(calc: FileCalculationContext, file: ContextGroup3D) {
+        if (!file) {
+            return false;
+        }
+        const size = getContextSize(calc, file.file);
+        if (size > 1) {
+            if (size === 1) {
                 // Can only shrink to zero size if there are no objects on the workspace.
                 const allObjects = this._gameView.getContexts().map((o) => { return o.file });
                 const workspaceObjects = objectsAtWorkspace(allObjects, file.file.id);
@@ -151,6 +155,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             }
             return true;
         }
+
+        return false;
     }
 
     /**
@@ -318,7 +324,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                         }
                         
                         actions.push({ label: 'Expand', onClick: () => this._expandWorkspace(calc, gameObject) });
-                        if (this.canShrinkWorkspace(gameObject)) {
+                        if (this.canShrinkWorkspace(calc, gameObject)) {
                             actions.push({ label: 'Shrink', onClick: () => this._shrinkWorkspace(calc, gameObject) });
                         }
                     }
