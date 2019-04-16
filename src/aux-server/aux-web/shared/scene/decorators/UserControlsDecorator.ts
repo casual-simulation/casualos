@@ -4,7 +4,7 @@ import {
     PerspectiveCamera,
     OrthographicCamera,
 } from "three";
-import { FileCalculationContext, AuxObject, calculateGridScale, getFileRotation, getFilePosition, normalize, lerp } from '@yeti-cgi/aux-common'
+import { FileCalculationContext, AuxObject, calculateGridScale, getFileRotation, getFilePosition, normalize, lerp } from '@casual-simulation/aux-common'
 import { appManager } from '../../AppManager';
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";

@@ -1,4 +1,4 @@
-import { getHashBuffer } from '@yeti-cgi/aux-common/causal-trees/Hash';
+import { getHashBuffer } from '@casual-simulation/aux-common/causal-trees/Hash';
 
 /**
  * Converts colors from the Hue, Saturation, and Value color space to the Red, Green, Blue color space.

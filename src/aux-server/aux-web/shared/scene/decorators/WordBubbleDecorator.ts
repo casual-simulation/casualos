@@ -1,6 +1,6 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
-import { FileCalculationContext } from "@yeti-cgi/aux-common";
+import { FileCalculationContext } from "@casual-simulation/aux-common";
 import { WordBubble3D } from "../WordBubble3D";
 import { WordBubbleElement } from "../WordBubbleElement";
 import { setLayer, convertToBox2 } from "../SceneUtils";

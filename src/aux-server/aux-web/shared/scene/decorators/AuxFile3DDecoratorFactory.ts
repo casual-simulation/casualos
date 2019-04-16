@@ -1,6 +1,6 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { IGameView } from "../../../shared/IGameView";
-import { File, file, hasValue } from "@yeti-cgi/aux-common";
+import { File, file, hasValue } from "@casual-simulation/aux-common";
 import { ScaleDecorator } from "./ScaleDecorator";
 import { ContextPositionDecorator } from "./ContextPositionDecorator";
 import { MeshCubeDecorator } from "./MeshCubeDecorator";

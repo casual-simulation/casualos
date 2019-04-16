@@ -2,7 +2,7 @@ import { Input, InputType, MouseButtonId } from '../../../shared/scene/Input';
 import { Vector2, Vector3, Intersection } from 'three';
 import { IOperation } from '../IOperation';
 import { BaseInteractionManager } from '../BaseInteractionManager';
-import { UserMode, File, FileCalculationContext, AuxFile, isFileMovable } from '@yeti-cgi/aux-common';
+import { UserMode, File, FileCalculationContext, AuxFile, isFileMovable } from '@casual-simulation/aux-common';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
 import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';

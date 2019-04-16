@@ -1,5 +1,5 @@
 import { FileHelper } from "./FileHelper";
-import { File, doFilesAppearEqual, createFile, merge, tagsOnFile, isDiff, isTagWellKnown } from '@yeti-cgi/aux-common';
+import { File, doFilesAppearEqual, createFile, merge, tagsOnFile, isDiff, isTagWellKnown } from '@casual-simulation/aux-common';
 import { Subject, Observable } from 'rxjs';
 import { keys } from "d3";
 

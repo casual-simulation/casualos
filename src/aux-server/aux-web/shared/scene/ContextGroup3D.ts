@@ -1,7 +1,15 @@
-import { AuxFile } from "@yeti-cgi/aux-common/aux-format";
+import { AuxFile } from "@casual-simulation/aux-common/aux-format";
 import { WorkspaceMesh } from "./WorkspaceMesh";
 import { GameObject } from "./GameObject";
-import { FileCalculationContext, TagUpdatedEvent, hasValue, calculateFileValue, AuxDomain, getContextPosition, getFileConfigContexts } from "@yeti-cgi/aux-common";
+import { 
+    FileCalculationContext,
+    TagUpdatedEvent,
+    hasValue,
+    calculateFileValue,
+    AuxDomain,
+    getContextPosition,
+    getFileConfigContexts
+} from "@casual-simulation/aux-common";
 import { difference, flatMap } from "lodash";
 import { Context3D } from "./Context3D";
 import { GridChecker } from "./grid/GridChecker";

@@ -1,6 +1,6 @@
 import { WorkerEvent, CalculateValue, ValueCalculated } from './WorkerEvents';
-import { AuxReducer } from '@yeti-cgi/aux-common';
-import { AtomOp, AtomReducer, Weave } from '@yeti-cgi/aux-common/causal-trees';
+import { AuxReducer } from '@casual-simulation/aux-common';
+import { AtomOp, AtomReducer, Weave } from '@casual-simulation/aux-common/causal-trees';
 
 const ctx: Worker = self as any;
 let reducers: {

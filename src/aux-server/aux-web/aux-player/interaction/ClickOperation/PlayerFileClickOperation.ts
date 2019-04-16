@@ -3,7 +3,7 @@ import GameView from "../../GameView/GameView";
 import { AuxFile3D } from "../../../shared/scene/AuxFile3D";
 import { Intersection } from "three";
 import { PlayerInteractionManager } from "../PlayerInteractionManager";
-import { FileCalculationContext, getFilePosition, objectsAtContextGridPosition, getFileIndex } from "@yeti-cgi/aux-common";
+import { FileCalculationContext, getFilePosition, objectsAtContextGridPosition, getFileIndex } from "@casual-simulation/aux-common";
 import { appManager } from "../../../shared/AppManager";
 import { BaseFileDragOperation } from "../../../shared/interaction/DragOperation/BaseFileDragOperation";
 import { PlayerFileDragOperation } from "../DragOperation/PlayerFileDragOperation";

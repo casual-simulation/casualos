@@ -10,8 +10,8 @@ import { asyncMiddleware } from './utils';
 import { Config, ClientConfig } from './config';
 import { CausalTreeServer } from './causal-trees/CausalTreeServer';
 import { MongoDBTreeStore } from './causal-trees/MongoDBTreeStore';
-import { auxCausalTreeFactory } from '@yeti-cgi/aux-common/aux-format';
-import { AppVersion, apiVersion } from '@yeti-cgi/aux-common';
+import { auxCausalTreeFactory } from '@casual-simulation/aux-common/aux-format';
+import { AppVersion, apiVersion } from '@casual-simulation/aux-common';
 import uuid from 'uuid/v4';
 
 

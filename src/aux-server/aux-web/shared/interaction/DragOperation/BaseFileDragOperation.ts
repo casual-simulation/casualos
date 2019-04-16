@@ -15,7 +15,7 @@ import {
     getDiffUpdate,
     fileRemoved,
     COMBINE_ACTION_NAME
-} from '@yeti-cgi/aux-common';
+} from '@casual-simulation/aux-common';
 
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
 import { IGameView } from '../../../shared/IGameView';

@@ -20,12 +20,12 @@ import {
     isUserFile,
     DEFAULT_WORKSPACE_COLOR,
     hasValue
-} from '@yeti-cgi/aux-common/Files';
+} from '@casual-simulation/aux-common/Files';
 import { keys, minBy, isEqual } from 'lodash';
 import { GridChecker, GridCheckResults } from './grid/GridChecker';
 import { GameObject } from './GameObject';
-import { AuxFile } from '@yeti-cgi/aux-common/aux-format';
-import { idEquals } from '@yeti-cgi/aux-common/causal-trees';
+import { AuxFile } from '@casual-simulation/aux-common/aux-format';
+import { idEquals } from '@casual-simulation/aux-common/causal-trees';
 import { disposeMesh } from './SceneUtils';
 
 /**

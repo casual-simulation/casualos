@@ -17,7 +17,7 @@ import {
     Vector2
 } from 'three';
 
-import { Object, Workspace, isMinimized, FileCalculationContext } from '@yeti-cgi/aux-common';
+import { Object, Workspace, isMinimized, FileCalculationContext } from '@casual-simulation/aux-common';
 import { WorkspaceMesh } from './WorkspaceMesh';
 import { IGameView } from '../IGameView';
 import { AuxFile3D } from './AuxFile3D';

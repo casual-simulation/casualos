@@ -9,7 +9,7 @@ import {
     UserMode,
     DEFAULT_USER_MODE,
     Workspace
-} from '@yeti-cgi/aux-common';
+} from '@casual-simulation/aux-common';
 import GameView from '../GameView/GameView';
 import { appManager } from '../../shared/AppManager';
 import { SubscriptionLike } from 'rxjs';

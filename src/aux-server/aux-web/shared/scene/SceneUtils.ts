@@ -24,7 +24,7 @@ import {
     Math as ThreeMath, 
     DirectionalLightHelper} from 'three';
 import { flatMap } from 'lodash';
-import { calculateNumericalTagValue, FileCalculationContext, File } from '@yeti-cgi/aux-common';
+import { calculateNumericalTagValue, FileCalculationContext, File } from '@casual-simulation/aux-common';
 import { getOptionalValue } from '../SharedUtils';
 /**
  * Create copy of material that most meshes in Aux Builder/Player use.

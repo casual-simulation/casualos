@@ -2,7 +2,7 @@ import { Vector2, Vector3, Intersection, Ray, Raycaster } from 'three';
 import { ContextMenuAction } from '../../shared/interaction/ContextMenuEvent';
 import {
     File, FileCalculationContext, calculateGridScale,
-} from '@yeti-cgi/aux-common';
+} from '@casual-simulation/aux-common';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import GameView from '../GameView/GameView';

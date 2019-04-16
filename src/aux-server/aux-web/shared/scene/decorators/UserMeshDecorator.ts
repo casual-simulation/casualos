@@ -5,7 +5,7 @@ import {
     Math as ThreeMath
 } from "three";
 import { Text3D } from "../Text3D";
-import { FileCalculationContext, AuxObject } from '@yeti-cgi/aux-common'
+import { FileCalculationContext, AuxObject } from '@casual-simulation/aux-common'
 import { setLayer, disposeMesh, createUserCone } from "../SceneUtils";
 import { LayersHelper } from "../LayersHelper";
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";

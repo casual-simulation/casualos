@@ -1,7 +1,7 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Prop, Inject} from 'vue-property-decorator';
-import { isFilterTag, parseFilterTag, COMBINE_ACTION_NAME } from '@yeti-cgi/aux-common';
+import { isFilterTag, parseFilterTag, COMBINE_ACTION_NAME } from '@casual-simulation/aux-common';
 import CombineIcon from '../public/icons/combine_icon.svg';
 import { getColorForTags } from '../../shared/scene/ColorUtils';
 import TagColor from '../TagColor/TagColor';

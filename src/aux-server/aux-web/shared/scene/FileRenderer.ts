@@ -16,9 +16,9 @@ import {
     AmbientLight,
     DirectionalLight
 } from 'three';
-import { Object, fileRemoved, merge, AuxObject, createCalculationContext } from '@yeti-cgi/aux-common';
+import { Object, fileRemoved, merge, AuxObject, createCalculationContext } from '@casual-simulation/aux-common';
 import { AuxFile3D } from './AuxFile3D';
-import formulaLib from '@yeti-cgi/aux-common/Formulas/formula-lib';
+import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
 import { baseAuxAmbientLight, baseAuxDirectionalLight } from './SceneUtils';
 

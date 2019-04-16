@@ -1,6 +1,6 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
-import { FileCalculationContext, calculateFileValue, getFileShape, FileShape } from "@yeti-cgi/aux-common";
+import { FileCalculationContext, calculateFileValue, getFileShape, FileShape } from "@casual-simulation/aux-common";
 import { Mesh, MeshStandardMaterial, Color, LineSegments, LineBasicMaterial, Group, Vector3, MeshToonMaterial } from "three";
 import { createCube, createCubeStrokeGeometry, isTransparent, disposeMesh, createSphere } from "../SceneUtils";
 

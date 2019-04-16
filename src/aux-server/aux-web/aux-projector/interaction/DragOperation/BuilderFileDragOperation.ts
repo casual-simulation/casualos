@@ -1,9 +1,9 @@
 import { Intersection, Vector3 } from 'three';
 import { Physics } from '../../../shared/scene/Physics';
-import { File, Workspace, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated } from '@yeti-cgi/aux-common/Files';
+import { File, Workspace, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated } from '@casual-simulation/aux-common/Files';
 import { keys } from 'lodash';
 import { gridPosToRealPos, Axial, posToKey } from '../../../shared/scene/hex';
-import { FileCalculationContext, getContextMinimized, getContextSize, getBuilderContextGrid } from '@yeti-cgi/aux-common/Files/FileCalculations';
+import { FileCalculationContext, getContextMinimized, getContextSize, getBuilderContextGrid } from '@casual-simulation/aux-common/Files/FileCalculations';
 import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
 import { BuilderGroup3D } from '../../../shared/scene/BuilderGroup3D';
 import { appManager } from '../../../shared/AppManager';

@@ -1,6 +1,6 @@
-import { AuxCausalTree, AuxObject } from "@yeti-cgi/aux-common";
+import { AuxCausalTree, AuxObject } from "@casual-simulation/aux-common";
 import { FileHelper } from "./FileHelper";
-import { storedTree, site } from "@yeti-cgi/aux-common/causal-trees";
+import { storedTree, site } from "@casual-simulation/aux-common/causal-trees";
 
 
 describe('FileHelper', () => {

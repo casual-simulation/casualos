@@ -10,7 +10,7 @@ import {
     objectsAtContextGridPosition,
     isFileMovable,
     getFileConfigContexts
-} from '@yeti-cgi/aux-common';
+} from '@casual-simulation/aux-common';
 import { appManager } from '../../../shared/AppManager';
 import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperation/BaseFileClickOperation';
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';

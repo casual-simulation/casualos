@@ -1,6 +1,6 @@
 import { Vector3, Vector2, Color } from 'three';
 import { getOptionalValue } from '../shared/SharedUtils';
-import { DEFAULT_WORKSPACE_GRID_SCALE } from '@yeti-cgi/aux-common';
+import { DEFAULT_WORKSPACE_GRID_SCALE } from '@casual-simulation/aux-common';
 import { DebugObjectManager } from '../shared/scene/DebugObjectManager';
 /**
  * A grid for Aux Player to help position objects in a context.

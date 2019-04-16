@@ -1,4 +1,4 @@
-import { FileCalculationContext } from "@yeti-cgi/aux-common";
+import { FileCalculationContext } from "@casual-simulation/aux-common";
 
 export interface IOperation {
     isFinished(): boolean;

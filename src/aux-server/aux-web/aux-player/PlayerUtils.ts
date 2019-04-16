@@ -4,7 +4,7 @@ import {
     FileCalculationContext,
     calculateFileValue,
     getFileConfigContexts
-} from '@yeti-cgi/aux-common';
+} from '@casual-simulation/aux-common';
 
 interface PlayerContextSearchResult {
     /**

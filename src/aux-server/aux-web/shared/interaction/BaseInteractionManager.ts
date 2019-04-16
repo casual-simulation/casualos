@@ -7,7 +7,7 @@ import {
     FileCalculationContext,
     COMBINE_ACTION_NAME,
     getFileConfigContexts,
-} from '@yeti-cgi/aux-common';
+} from '@casual-simulation/aux-common';
 import { Physics } from '../scene/Physics';
 import { flatMap, union } from 'lodash';
 import { CameraControls } from './CameraControls';

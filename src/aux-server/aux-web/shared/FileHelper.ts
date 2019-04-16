@@ -1,5 +1,26 @@
-import { AuxFile, PartialFile, File, FileEvent, FilesState, AuxCausalTree, AuxObject, updateFile, FileCalculationContext, createCalculationContext, getActiveObjects, createFile, createWorkspace, action, calculateActionEvents, addState, Workspace, calculateFormattedFileValue, calculateFileValue, SandboxLibrary } from '@yeti-cgi/aux-common';
-import formulaLib from '@yeti-cgi/aux-common/Formulas/formula-lib';
+import { 
+    AuxFile, 
+    PartialFile,
+    File,
+    FileEvent,
+    FilesState,
+    AuxCausalTree,
+    AuxObject,
+    updateFile,
+    FileCalculationContext,
+    createCalculationContext,
+    getActiveObjects,
+    createFile,
+    createWorkspace,
+    action,
+    calculateActionEvents,
+    addState,
+    Workspace,
+    calculateFormattedFileValue,
+    calculateFileValue,
+    SandboxLibrary
+} from "@casual-simulation/aux-common";
+import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 
 /**
  * Defines an class that contains a simple set of functions

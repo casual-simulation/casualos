@@ -19,7 +19,7 @@ import {
     getContextColor,
     createFile,
     isContext
-} from '@yeti-cgi/aux-common';
+} from '@casual-simulation/aux-common';
 import { BuilderFileClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderFileClickOperation';
 import { Physics } from '../../shared/scene/Physics';
 import { flatMap, minBy, keys } from 'lodash';
