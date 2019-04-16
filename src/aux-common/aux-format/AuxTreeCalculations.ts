@@ -8,7 +8,7 @@ import { AuxCausalTree } from "./AuxCausalTree";
 import { map, startWith, flatMap, share } from "rxjs/operators";
 import { flatMap as mapFlat, values } from 'lodash';
 import { sortBy } from "lodash";
-import { File, Object, calculateStateDiff, FilesState, PartialFile, createFile, FilesStateDiff } from "../Files";
+import { File, Object, calculateStateDiff, FilesState, PartialFile, createFile, FilesStateDiff, getFileConfigContexts, tagsOnFile, isConfigTag } from "../Files";
 import uuid from "uuid/v4";
 
 /**
@@ -69,7 +69,10 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
     const filesAdded = stateDiffs.pipe(map(diff => {
         // TODO: Work with all domains
         return sortBy(diff.addedFiles, 
-            f => !f.tags['aux.builder.context'],
+            f => {
+              let tags = tagsOnFile(f);
+              return tags.length > 0 && tags.some(t => isConfigTag(t)) ? 0 : 1;
+            },
             f => f.id
         );
     }));

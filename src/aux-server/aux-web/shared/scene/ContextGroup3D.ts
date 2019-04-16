@@ -1,7 +1,15 @@
 import { AuxFile } from "@casual-simulation/aux-common/aux-format";
 import { WorkspaceMesh } from "./WorkspaceMesh";
 import { GameObject } from "./GameObject";
-import { FileCalculationContext, TagUpdatedEvent, hasValue, calculateFileValue, AuxDomain, getContextPosition } from "@casual-simulation/aux-common";
+import { 
+    FileCalculationContext,
+    TagUpdatedEvent,
+    hasValue,
+    calculateFileValue,
+    AuxDomain,
+    getContextPosition,
+    getFileConfigContexts
+} from "@casual-simulation/aux-common";
 import { difference, flatMap } from "lodash";
 import { Context3D } from "./Context3D";
 import { GridChecker } from "./grid/GridChecker";
@@ -148,7 +156,7 @@ export class ContextGroup3D extends GameObject {
      * @param calc The file calculation context that should be used.
      */
     private _updateContexts(file: AuxFile, calc: FileCalculationContext) {
-        const contexts = calculateFileValue(calc, file, `aux.${this.domain}.context`);
+        const contexts = getFileConfigContexts(calc, file);
         // TODO: Handle scenarios where builder.context is empty or null
         if (contexts) {
             this._addContexts(file, contexts, calc);

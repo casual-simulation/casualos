@@ -18,7 +18,11 @@ const config: ClientConfig = {
     dist: path.resolve(__dirname, '..', '..', 'aux-web', 'dist'),
     index: 'projector-index.html',
     domains,
-    web: webConfig
+    web: {
+        ...webConfig,
+        isBuilder: true,
+        isPlayer: false
+    }
 };
 
 export default config;

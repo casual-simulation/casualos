@@ -175,7 +175,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         const canCombine = !canMerge && 
             objs.length === 1 && 
             files.length === 1 &&
-            this._interaction.canCombineFiles(files[0], objs[0]);
+            this._interaction.canCombineFiles(calc, files[0], objs[0]);
 
         // Can stack if we're dragging more than one file,
         // or (if the single file we're dragging is stackable and 

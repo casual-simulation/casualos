@@ -317,7 +317,7 @@ export class AppManager {
                     const start = this.loadingProgress.progress;
                     this.loadingProgress.set(lerp(start, 95, progress.progress / 100), progress.status, progress.error);
                 };
-                await this._fileManager.init(this._user.channelId, false, onFileManagerInitProgress);
+                await this._fileManager.init(this._user.channelId, false, onFileManagerInitProgress, this.config);
                 this.loadingProgress.status = 'Saving user...';
                 await this._saveUser();
                 this._userSubject.next(this._user);
@@ -392,7 +392,7 @@ export class AppManager {
                 const onFileManagerInitProgress: LoadingProgressCallback = (progress: LoadingProgress) => {
                     this.loadingProgress.set(lerp(40, 95, progress.progress / 100), progress.status, progress.error);
                 }
-                await this._fileManager.init(channelId, true, onFileManagerInitProgress);
+                await this._fileManager.init(channelId, true, onFileManagerInitProgress, this.config);
 
                 this._userSubject.next(this._user);
                 this.loadingProgress.set(95, 'Saving user...', null);

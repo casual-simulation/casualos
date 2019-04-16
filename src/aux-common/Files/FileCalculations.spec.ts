@@ -36,7 +36,11 @@ import {
     removeFileFromMenu,
     getContextSize,
     addToContextDiff,
-    removeFromContextDiff
+    removeFromContextDiff,
+    isConfigTag,
+    getConfigTagContext,
+    getFileConfigContexts,
+    isContext
 } from './FileCalculations';
 import {
     cloneDeep
@@ -44,6 +48,7 @@ import {
 import { File, Object, PartialFile } from './File';
 import { FilesState, cleanFile, fileRemoved } from './FilesChannel';
 import { file } from '../aux-format';
+
 
 describe('FileCalculations', () => {
     describe('isFormula()', () => {
@@ -632,21 +637,22 @@ describe('FileCalculations', () => {
 
         it('should return the property names that are on workspaces', () => {
             expect(tagsOnFile(createWorkspace('test', 'testContext'))).toEqual([
-                'aux.builder.context',
-                'aux.builder.context.x',
-                'aux.builder.context.y',
-                'aux.builder.context.z',
-                'aux.builder.context.size',
-                'aux.builder.context.grid',
-                'aux.builder.context.scale',
-                'aux.builder.context.defaultHeight',
-                'aux.builder.context.grid.scale',
-                'aux.builder.context.color',
+                'aux.context.x',
+                'aux.context.y',
+                'aux.context.z',
+                'aux.context.size',
+                'aux.context.grid',
+                'aux.context.scale',
+                'aux.context.defaultHeight',
+                'aux.context.grid.scale',
+                'aux.context.color',
                 'testContext',
+                'testContext.config', 
                 'testContext.x',
                 'testContext.y',
                 'testContext.z',
                 'aux.color',
+                "aux.stroke.color",
                 'aux.movable',
                 'aux.scale.z'
             ]);
@@ -2586,7 +2592,7 @@ describe('FileCalculations', () => {
             const file = createFile('file');
 
             const calc = createCalculationContext([file]);
-            const size = getContextSize(calc, file, 'builder');
+            const size = getContextSize(calc, file);
 
             expect(size).toBe(1);
         });
@@ -2597,7 +2603,7 @@ describe('FileCalculations', () => {
             });
 
             const calc = createCalculationContext([file]);
-            const size = getContextSize(calc, file, 'builder');
+            const size = getContextSize(calc, file);
 
             expect(size).toBe(0);
         });
@@ -2605,11 +2611,11 @@ describe('FileCalculations', () => {
         it('should still return the user files context size', () => {
             const file = createFile('file', {
                 _user: 'user',
-                'aux.builder.context.size': 10
+                'aux.context.size': 10
             });
 
             const calc = createCalculationContext([file]);
-            const size = getContextSize(calc, file, 'builder');
+            const size = getContextSize(calc, file);
 
             expect(size).toBe(10);
         });
@@ -2682,6 +2688,87 @@ describe('FileCalculations', () => {
                 'test.y': null,
                 'test.index': null
             });
+        });
+    });
+
+    describe('isContext()', () => {
+        it('should return true when the given file has a config tag set to true', () => {
+            const file = createFile('test', {
+                'test.config': true
+            });
+
+            const calc = createCalculationContext([file]);
+            expect(isContext(calc, file)).toBe(true);
+        });
+
+        it('should return false when the given file does not have a config tag set to true', () => {
+            const file = createFile('test', {
+                'test.config': false
+            });
+
+            const calc = createCalculationContext([file]);
+            expect(isContext(calc, file)).toBe(false);
+        });
+    });
+
+    describe('isConfigTag()', () => {
+        let tags: [string, boolean][] = [
+            ['.config', false],
+            ['a.config', true],
+            ['ab.config', true],
+            ['a.config.config', true],
+            ['😁🦊🎶🎉.config', true],
+            ['😁🦊🎶🎉.config.abc', false],
+        ];
+        it.each(tags)('%s returns %s', (tag, expected) => {
+            expect(isConfigTag(tag)).toBe(expected);
+        });
+    });
+
+    describe('getConfigTagContext()', () => {
+        let tags: [string, string][] = [
+            ['.config', null],
+            ['a.config', 'a'],
+            ['ab.config', 'ab'],
+            ['a.config.config', 'a.config'],
+            ['😁🦊🎶🎉.config', '😁🦊🎶🎉'],
+            ['😁🦊🎶🎉.config.abc', null],
+        ];
+        it.each(tags)('converts %s to %s', (tag, expected) => {
+            expect(getConfigTagContext(tag)).toBe(expected);
+        });
+    });
+
+    describe('getFileConfigContexts()', () => {
+        it('should return every context that the file has a .config tag for', () => {
+            const file = createFile('test', {
+                'abc': true,
+                'abc.config': true,
+                'abc.config.config': true
+            });
+
+            const calc = createCalculationContext([file]);
+            const tags = getFileConfigContexts(calc, file);
+
+            expect(tags).toEqual([
+                'abc',
+                'abc.config'
+            ]);
+        });
+
+        it('should evalulate formulas', () => {
+            const file = createFile('test', {
+                'abc.config': '=false',
+                'abc.config.config': '=true'
+            });
+
+            const calc = createCalculationContext([file]);
+            const tags = getFileConfigContexts(calc, file);
+
+            expect(tags).toEqual([
+                // file is config for abc.config context.
+                'abc.config'
+            ]);
         });
     });
 });

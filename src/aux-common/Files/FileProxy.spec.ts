@@ -106,12 +106,12 @@ describe('FileProxy', () => {
 
         it('should be able to get nested tag values', () => {
             const file = createFile('testId');
-            file.tags['aux.builder.context'] = 'test';
+            file.tags['abc.config.config'] = 'test';
 
             const context = createCalculationContext([file]);
             const proxy = createFileProxy(context, file);
 
-            expect(proxy.aux.builder.context == 'test').toBe(true);
+            expect(proxy.abc.config.config == 'test').toBe(true);
         });
 
         it('should be able to handle nested objects', () => {

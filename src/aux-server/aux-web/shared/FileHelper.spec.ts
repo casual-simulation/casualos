@@ -43,5 +43,34 @@ describe('FileHelper', () => {
         });
     });
 
+    describe('createContext()', () => {
+        it('should define a library variable when in aux builder', () => {
+            helper = new FileHelper(tree, userId, { isBuilder: true, isPlayer: false });
+
+            const context = helper.createContext();
+
+            expect(context.sandbox.library.isBuilder).toBe(true);
+            expect(context.sandbox.library.isPlayer).toBe(false);
+        }); 
+
+        it('should define a library variable when in aux player', () => {
+            helper = new FileHelper(tree, userId, { isBuilder: false, isPlayer: true });
+
+            const context = helper.createContext();
+
+            expect(context.sandbox.library.isBuilder).toBe(false);
+            expect(context.sandbox.library.isPlayer).toBe(true);
+        });
+
+        it('should default to not in aux builder or player', () => {
+            helper = new FileHelper(tree, userId, { isBuilder: false, isPlayer: false });
+
+            const context = helper.createContext();
+
+            expect(context.sandbox.library.isBuilder).toBe(false);
+            expect(context.sandbox.library.isPlayer).toBe(false);
+        });
+    });
+
     // TODO: Add more tests
 });

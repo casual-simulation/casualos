@@ -62,6 +62,13 @@ export class Sandbox {
      */
     interface: SandboxInterface;
 
+    /**
+     * Gets the library that the sandbox is using.
+     */
+    get library() {
+        return this._lib;
+    }
+
     constructor(lib: SandboxLibrary, interface_?: SandboxInterface) {
         this._transpiler = new Transpiler();
         this._lib = lib;
