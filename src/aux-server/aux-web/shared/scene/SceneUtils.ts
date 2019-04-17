@@ -22,10 +22,12 @@ import {
     AmbientLight,
     DirectionalLight,
     Math as ThreeMath, 
-    DirectionalLightHelper} from 'three';
+    DirectionalLightHelper,
+    Euler} from 'three';
 import { flatMap } from 'lodash';
-import { calculateNumericalTagValue, FileCalculationContext, File } from '@casual-simulation/aux-common';
+import { calculateNumericalTagValue, FileCalculationContext, File, FileLabelAnchor } from '@casual-simulation/aux-common';
 import { getOptionalValue } from '../SharedUtils';
+
 /**
  * Create copy of material that most meshes in Aux Builder/Player use.
  */
@@ -311,5 +313,131 @@ export function disposeObject3D(object3d: Object3D, disposeGeometry: boolean = t
             }
         }
     }
+}
+
+/**
+ * Calculates the position and rotation that the given object should be placed at for the given anchor and position.
+ * @param bounds The bounds to anchor to.
+ * @param position The position to anchor to.
+ * @param obj The object to anchor.
+ * @param boundingBox The bounding box of the object to anchor.
+ * @param defaultScale The default scale of the object.
+ * @param extraSpacing The extra spacing to use.
+ */
+export function calculateAnchorPosition(
+    bounds: Box3,
+    position: FileLabelAnchor,
+    obj: Object3D,
+    boundingBox: Box3,
+    defaultScale: number,
+    extraSpacing: number): [Vector3, Euler] {
+    let myMax = boundingBox.max.clone();
+    let myMin = boundingBox.min.clone();
+
+    // // Position the mesh some distance above the given object's bounding box.
+    let targetSize = new Vector3();
+    bounds.getSize(targetSize);
+    let targetCenter = new Vector3();
+    bounds.getCenter(targetCenter);
+
+    let paddingScalar = obj.scale.x / defaultScale;
+
+    if (position === 'floating') {
+        let bottomCenter = new Vector3(
+            ((myMax.x - myMin.x) / 2) + myMin.x,
+            myMin.y,
+            ((myMax.z - myMin.z) / 2) + myMin.z
+        );
+
+        let posOffset = obj.position.clone().sub(bottomCenter);
+        let pos = new Vector3(
+            targetCenter.x, 
+            targetCenter.y + (targetSize.y * 0.5) + (extraSpacing * paddingScalar), 
+            targetCenter.z
+        );
+        pos.add(posOffset);
+        return [pos, new Euler(ThreeMath.degToRad(90), 0, 0)];
+    } else if (position === 'top') {
+        let center = new Vector3(
+            ((myMax.x - myMin.x) / 2) + myMin.x,
+            ((myMax.y - myMin.y) / 2) + myMin.y,
+            ((myMax.z - myMin.z) / 2) + myMin.z
+        );
+
+        let posOffset = obj.position.clone().sub(center);
+        let pos = new Vector3(
+            targetCenter.x, 
+            targetCenter.y + (targetSize.y * 0.5), 
+            targetCenter.z
+        );
+        pos.add(posOffset);
+
+        return [pos, new Euler(ThreeMath.degToRad(0), 0, 0)];
+    } else if (position === 'front') {
+        let center = new Vector3(
+            ((myMax.x - myMin.x) / 2) + myMin.x,
+            ((myMax.y - myMin.y) / 2) + myMin.y,
+            ((myMax.z - myMin.z) / 2) + myMin.z
+        );
+
+        let posOffset = obj.position.clone().sub(center);
+        let pos = new Vector3(
+            targetCenter.x, 
+            targetCenter.y, 
+            targetCenter.z + (targetSize.z * 0.5)
+        );
+        pos.add(posOffset);
+
+        return [pos, new Euler(ThreeMath.degToRad(90), 0, 0)];
+    } else if (position === 'back') {
+        let center = new Vector3(
+            ((myMax.x - myMin.x) / 2) + myMin.x,
+            ((myMax.y - myMin.y) / 2) + myMin.y,
+            ((myMax.z - myMin.z) / 2) + myMin.z
+        );
+
+        let posOffset = obj.position.clone().sub(center);
+        let pos = new Vector3(
+            targetCenter.x, 
+            targetCenter.y, 
+            targetCenter.z - (targetSize.z * 0.5)
+        );
+        pos.add(posOffset);
+
+        return [pos, new Euler(ThreeMath.degToRad(90), ThreeMath.degToRad(180), 0)];
+    } else if (position === 'left') {
+        let center = new Vector3(
+            ((myMax.x - myMin.x) / 2) + myMin.x,
+            ((myMax.y - myMin.y) / 2) + myMin.y,
+            ((myMax.z - myMin.z) / 2) + myMin.z
+        );
+
+        let posOffset = obj.position.clone().sub(center);
+        let pos = new Vector3(
+            targetCenter.x - (targetSize.x * 0.5), 
+            targetCenter.y, 
+            targetCenter.z
+        );
+        pos.add(posOffset);
+
+        return [pos, new Euler(ThreeMath.degToRad(90), ThreeMath.degToRad(90), 0)];
+    } else if (position === 'right') {
+        let center = new Vector3(
+            ((myMax.x - myMin.x) / 2) + myMin.x,
+            ((myMax.y - myMin.y) / 2) + myMin.y,
+            ((myMax.z - myMin.z) / 2) + myMin.z
+        );
+
+        let posOffset = obj.position.clone().sub(center);
+        let pos = new Vector3(
+            targetCenter.x + (targetSize.x * 0.5), 
+            targetCenter.y, 
+            targetCenter.z
+        );
+        pos.add(posOffset);
+
+        return [pos, new Euler(ThreeMath.degToRad(90), ThreeMath.degToRad(-90), 0)];
+    }
     
+    return [targetCenter, new Euler()];
 }
