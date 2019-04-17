@@ -1,3 +1,22 @@
+
+
+/**
+ * Pads the given string with zeros up to the given length.
+ */
+export function padZero(str: string, len: number = 2) {
+    var zeros = new Array(len).join('0');
+    return (zeros + str).slice(-len);
+}
+
+/**
+ * Converts a number into a 2-character hex number.
+ * @param byte The byte to convert.
+ */
+export function byteToHex(byte: number) {
+    // Turns a number (0-255) into a 2-character hex number (00-ff)
+    return ('0'+byte.toString(16)).slice(-2);
+}
+
 /**
  * Copies the given text to the user's clipboard by creating a textarea, selecting it, and then
  * running the 'copy' command. Likely will only work as a response to a user click or key event.
