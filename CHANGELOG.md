@@ -1,7 +1,7 @@
 # AUX Changelog
 
 ## V0.4.12
-### Date: TBD
+### Date: 04/17/2019
 
 ### Changes:
 - **Breaking Changes**
