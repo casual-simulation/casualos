@@ -12,6 +12,7 @@ import {
     getActiveObjects,
     createFile,
     createWorkspace,
+    createContextId,
     action,
     calculateActionEvents,
     addState,
@@ -97,11 +98,17 @@ export class FileHelper {
     /**
      * Creates a new workspace file.
      */
-    async createWorkspace(): Promise<void> {
+    async createWorkspace(builderContextId: string = ""): Promise<void> {
         console.log('[FileManager] Create File');
 
-        const workspace: Workspace = createWorkspace();
+        const workspace: Workspace = createWorkspace(null, builderContextId);
+        
         await this._tree.addFile(workspace);
+    }
+
+    createContextId(): string  {
+
+        return createContextId();
     }
 
     /**

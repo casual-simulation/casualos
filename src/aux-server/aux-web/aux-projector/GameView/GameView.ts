@@ -101,6 +101,9 @@ export default class GameView extends Vue implements IGameView {
     private _sceneBackground: Color | Texture;
     private _cameraType: CameraType;
 
+    showDialog: boolean = false;
+    contextDialog: string = "";
+
     public onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
     public onFileUpdated: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
     public onFileRemoved: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
@@ -138,6 +141,22 @@ export default class GameView extends Vue implements IGameView {
     constructor() {
         super();
     }
+
+    /**
+     * Click event from GameView.vue
+     */
+    private onConfirmDialogOk ()
+    {
+        this.fileManager.createWorkspace(this.contextDialog);
+    }
+
+    /**
+     * Click event from GameView.vue
+     */
+    private onConfirmDialogCancel ()
+    {
+    }
+
 
     public findFilesById(id: string): AuxFile3D[] {
         return flatMap(this._contexts.map(c => c.getFiles().filter(f => f.file.id === id)));
@@ -183,9 +202,8 @@ export default class GameView extends Vue implements IGameView {
     }
 
     public addNewWorkspace(): void {
-        // TODO: Make the user have to drag a workspace onto the world
-        // instead of just clicking a button and a workspace being placed somewhere.
-        this.fileManager.createWorkspace();
+        this.contextDialog = this.fileManager.helper.createContextId();
+        this.showDialog = true;
     }
 
     public setCameraType(type: CameraType) {
@@ -222,6 +240,9 @@ export default class GameView extends Vue implements IGameView {
         this._handleResize = this._handleResize.bind(this);
         window.addEventListener('resize', this._handleResize);
         window.addEventListener('vrdisplaypresentchange', this._handleResize);
+
+        this.showDialog = false;
+        this.contextDialog = "";
 
         this._time = new Time();
         this.recentFiles = this.fileManager.recent.files;

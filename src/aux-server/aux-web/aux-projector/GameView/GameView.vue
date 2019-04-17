@@ -26,6 +26,18 @@
             <trash-can v-if="showTrashCan" ref="trashCan"></trash-can>
         </div>
       </div>
+
+    <md-dialog-prompt
+            :md-active.sync="showDialog"
+            v-model="contextDialog"
+            md-title="Set Workspace Context"
+            md-confirm-text="Save"
+            md-cancel-text="Cancel"
+            @md-cancel="onConfirmDialogCancel"
+            @md-confirm="onConfirmDialogOk" />
+            />
+
+
   </div>
 </template>
 <script src="./GameView.ts"></script>
