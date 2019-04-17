@@ -29,6 +29,7 @@
   - Added the ability to pass an array of files to `clone()` and `destroy()`.
   - Changed the generated context ID format from `aux._context_{uuid}` to `context_{short-uuid}`.
   - Added `aux.mergeable` so control whether diffs can be merged into other files.
+  - Added `md-dialog-prompt` to `GameView` to allow users to set custom contexts for new workspaces.
   - Removed the `_destroyed` tag. Setting it now does nothing.
   - Aux Player now uses `aux.context.color` value as the scene's background color.
     - If `aux.context.color` has no value or is undefined, then it will fall back to `aux.scene.color`.
