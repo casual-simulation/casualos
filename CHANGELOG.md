@@ -33,6 +33,17 @@
   - Aux Player now uses `aux.context.color` value as the scene's background color.
     - If `aux.context.color` has no value or is undefined, then it will fall back to `aux.scene.color`.
   - Made diff toolbar in AUX Builder transparent and Inventory toolbar in AUX Player mostly transparent (slots are still lightly visible.)
+  - Added a trash can that shows up when dragging a file.
+    - Dragging files onto this trash can causes the file to be deleted.
+    - Dragging a diff onto the trash can causes the diff to be cleared.
+  - Added support for `aux.label.anchor` to allow positioning of the label.
+    - Supported values are:
+      - top (default)
+      - left
+      - right
+      - front
+      - back
+      - floating (word bubble)
 
 ## V0.4.11
 ### Date: 04/12/2019
