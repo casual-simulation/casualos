@@ -518,6 +518,35 @@ describe('FilesChannel', () => {
                 ]);
             });
 
+            it('should handle primitive values', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            _position: { x:0, y: 0, z: 0 },
+                            _workspace: 'abc',
+                            'abcdef()': 'shout("sayHello", true)',
+                            'sayHello()': 'this.hello = that'
+                        }
+                    }
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('abcdef', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            hello: true
+                        }
+                    })
+                ]);
+            });
+
             it('should process the message synchronously', () => {
                 const state: FilesState = {
                     thisFile: {
