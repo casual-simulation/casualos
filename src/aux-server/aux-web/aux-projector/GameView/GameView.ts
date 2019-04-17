@@ -439,10 +439,6 @@ export default class GameView extends Vue implements IGameView {
                     // this.addToRecentFilesList(file);
                 }
             }
-
-            if (file.tags._destroyed) {
-                shouldRemove = true;
-            }
         } else {
             if (file.tags.size <= 0) {
                 shouldRemove = true;
@@ -459,11 +455,6 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private async _fileAdded(file: AuxFile) {
-        if (file.tags._destroyed) {
-            return;
-        }
-        // console.log(`[GameView] File Added`, file.id);
-
         let context = new BuilderGroup3D(file, this._decoratorFactory);
         context.setGridChecker(this._gridChecker);
         this._contexts.push(context);
@@ -471,15 +462,6 @@ export default class GameView extends Vue implements IGameView {
 
         let calc = this.fileManager.createContext();
         await Promise.all([...this._contexts.values()].map(c => c.fileAdded(file, calc)));
-
-        // if (!this._shouldDisplayFile(file)) {
-        //     return;
-        // }
-
-        // var obj = new File3D(this, file);
-
-        // this._files[file.id] = obj;
-        // this._fileIds[obj.mesh.id] = obj.file.id;
 
         await this._fileUpdated(file, true);
         this.onFileAdded.invoke(file);

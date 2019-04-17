@@ -1,6 +1,6 @@
 import { sortBy, flatMap} from 'lodash';
 import { File, Object, PartialFile} from './File';
-import { createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, isDestroyed, getActiveObjects, calculateStateDiff, FilesStateDiff, filtersMatchingArguments, calculateFormulaValue } from './FileCalculations';
+import { createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, getActiveObjects, calculateStateDiff, FilesStateDiff, filtersMatchingArguments, calculateFormulaValue } from './FileCalculations';
 import { merge as mergeObj } from '../utils';
 import formulaLib, { setActions, getActions, setFileState, setCalculationContext, getCalculationContext, setUserId, getUserId } from '../Formulas/formula-lib';
 import { SetValueHandler } from './FileProxy';

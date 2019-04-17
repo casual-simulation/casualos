@@ -203,7 +203,7 @@ describe('RecentFilesManager', () => {
                         test: 'abc',
                         _destroyed: true,
                         'aux._diff': true,
-                        'aux._diffTags': [ 'test' ]
+                        'aux._diffTags': [ 'test', '_destroyed' ]
                     }
                 }
             ]);

@@ -12,7 +12,6 @@ export interface File {
 };
 
 export interface FileTags {
-    _destroyed?: any;
     
 
     // Global file tags

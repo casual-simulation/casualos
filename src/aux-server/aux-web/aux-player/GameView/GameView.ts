@@ -36,7 +36,6 @@ import {
     DEFAULT_SCENE_BACKGROUND_COLOR,
     AuxFile,
     AuxObject,
-    isDestroyed,
     hasValue
 } from '@casual-simulation/aux-common';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -412,9 +411,8 @@ export default class GameView extends Vue implements IGameView {
 
         if (!this._contextGroup) {
             // We dont have a context group yet. We are in search of a file that defines a player context that matches the user's current context.
-            const destroyed = isDestroyed(file);
             const result = doesFileDefinePlayerContext(file, this.context, calc);
-            if (!destroyed && result.matchFound) {
+            if (result.matchFound) {
                 // Create ContextGroup3D for this file that we will use to render all files in the context.
                 this._contextGroup = new ContextGroup3D(file, 'player', this._decoratorFactory);
                 this._scene.add(this._contextGroup);
@@ -422,7 +420,7 @@ export default class GameView extends Vue implements IGameView {
                 
                 // Apply back buffer of files to the newly created context group.
                 for (let entry of this._fileBackBuffer) {
-                    if (entry[0] !== file.id && !isDestroyed(entry[1])) {
+                    if (entry[0] !== file.id) {
                         await this._contextGroup.fileAdded(entry[1], calc);
                     }
                 }
@@ -467,10 +465,6 @@ export default class GameView extends Vue implements IGameView {
 
         if (this.menuContext) {
             await this.menuContext.fileUpdated(file, [], calc);
-        }
-
-        if (file.tags._destroyed) {
-            this._fileRemoved(file.id);
         }
 
         this.onFileUpdated.invoke(file);
