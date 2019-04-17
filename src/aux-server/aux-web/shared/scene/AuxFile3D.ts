@@ -5,7 +5,7 @@ import { File, TagUpdatedEvent, FileCalculationContext, AuxDomain, isFileInConte
 import { createCube, calculateScale, findParentScene } from "./SceneUtils";
 import { AuxFile3DDecorator } from "./AuxFile3DDecorator";
 import { ContextPositionDecorator } from "./decorators/ContextPositionDecorator";
-import { MeshCubeDecorator } from "./decorators/MeshCubeDecorator";
+import { FileShapeDecorator } from "./decorators/FileShapeDecorator";
 import { ContextGroup3D } from "./ContextGroup3D";
 import { ScaleDecorator } from "./decorators/ScaleDecorator";
 import { LabelDecorator } from "./decorators/LabelDecorator";

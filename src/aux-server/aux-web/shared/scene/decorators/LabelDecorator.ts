@@ -5,7 +5,7 @@ import { Text3D } from "../Text3D";
 import { setLayer, findParentScene } from "../SceneUtils";
 import { LayersHelper } from "../LayersHelper";
 import { Color, Camera, Object3D, Mesh, Vector3, Scene, Box3 } from "three";
-import { MeshCubeDecorator } from "./MeshCubeDecorator";
+import { FileShapeDecorator } from "./FileShapeDecorator";
 import { WordBubbleElement } from "../WordBubbleElement";
 import { appManager } from "../../../shared/AppManager";
 import { IGameView } from "aux-web/shared/IGameView";
