@@ -32,6 +32,7 @@
   - Removed the `_destroyed` tag. Setting it now does nothing.
   - Aux Player now uses `aux.context.color` value as the scene's background color.
     - If `aux.context.color` has no value or is undefined, then it will fall back to `aux.scene.color`.
+  - Made diff toolbar in AUX Builder transparent and Inventory toolbar in AUX Player mostly transparent (slots are still lightly visible.)
 
 ## V0.4.11
 ### Date: 04/12/2019
