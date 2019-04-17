@@ -15,7 +15,8 @@
 }
 
 .mini-file-text {
-    background-color: #fff;
+    background-color: rgba(255,255,255,0.75);
+    border-radius: 0.5em;
 }
 
 .mini-file-cube {
