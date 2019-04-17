@@ -344,11 +344,12 @@ export function combine(first: File | string, second: File | string) {
  * Runs an event on the given files.
  * @param name The name of the event to run.
  * @param files The files that the event should be executed on. If null, then the event will be run on every file.
+ * @param arg The argument to pass.
  */
-export function event(name: string, files: (File | string)[]) {
+export function event(name: string, files: (File | string)[], arg?: any) {
     if (!!state) {
         let ids = !!files ? files.map(f => typeof f === 'string' ? f : f.id) : null;
-        let results = calculateActionEvents(state, action(name, ids, userFileId));
+        let results = calculateActionEvents(state, action(name, ids, userFileId, arg));
         actions.push(...results.events);
     }
 }
@@ -357,8 +358,8 @@ export function event(name: string, files: (File | string)[]) {
  * Shouts the given event to every file.
  * @param name The event name.
  */
-export function shout(name: string) {
-    event(name, null);
+export function shout(name: string, arg?: any) {
+    event(name, null, arg);
 }
 
 /**

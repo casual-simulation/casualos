@@ -320,34 +320,7 @@ describe('FilesChannel', () => {
             ]);
         });
 
-        it('should handle shouts', () => {
-            const state: FilesState = {
-                thisFile: {
-                    id: 'thisFile',
-                    tags: {
-                        _position: { x:0, y: 0, z: 0 },
-                        _workspace: 'abc',
-                        'abcdef()': 'shout("sayHello")',
-                        'sayHello()': 'this.hello = true'
-                    }
-                }
-            };
-
-            // specify the UUID to use next
-            uuidMock.mockReturnValue('uuid-0');
-            const fileAction = action('abcdef', ['thisFile']);
-            const result = calculateActionEvents(state, fileAction);
-
-            expect(result.hasUserDefinedEvents).toBe(true);
-            
-            expect(result.events).toEqual([
-                fileUpdated('thisFile', {
-                    tags: {
-                        hello: true
-                    }
-                })
-            ]);
-        });
+        
 
         it('should preserve the user ID in shouts', () => {
             const state: FilesState = {
@@ -378,6 +351,212 @@ describe('FilesChannel', () => {
                     }
                 })
             ]);
+        });
+
+        describe('shout()', () => {
+            it('should run the event on every file', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            _position: { x:0, y: 0, z: 0 },
+                            _workspace: 'abc',
+                            'abcdef()': 'shout("sayHello")',
+                            'sayHello()': 'this.hello = true'
+                        }
+                    }
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('abcdef', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            hello: true
+                        }
+                    })
+                ]);
+            });
+
+            it('should set the given argument as the that variable', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            _position: { x:0, y: 0, z: 0 },
+                            _workspace: 'abc',
+                            'abcdef()': 'let o = { hi: "test" }; shout("sayHello", o)',
+                            'sayHello()': 'this.hello = that.hi'
+                        }
+                    }
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('abcdef', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            hello: 'test'
+                        }
+                    })
+                ]);
+            });
+
+            it('should handle passing files as arguments', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            _position: { x:0, y: 0, z: 0 },
+                            _workspace: 'abc',
+                            'abcdef()': 'shout("sayHello", @name("other"))',
+                            'sayHello()': 'this.hello = that.hi'
+                        }
+                    },
+                    otherFile: {
+                        id: 'otherFile',
+                        tags: {
+                            'name': 'other',
+                            'hi': 'test'
+                        }
+                    }
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('abcdef', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            hello: 'test'
+                        }
+                    })
+                ]);
+            });
+
+            it('should be able to modify files that are arguments', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            _position: { x:0, y: 0, z: 0 },
+                            _workspace: 'abc',
+                            'abcdef()': 'shout("sayHello", @name("other"))',
+                            'sayHello()': 'that.hello = "test"'
+                        }
+                    },
+                    otherFile: {
+                        id: 'otherFile',
+                        tags: {
+                            'name': 'other',
+                        }
+                    }
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('abcdef', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('otherFile', {
+                        tags: {
+                            hello: 'test'
+                        }
+                    })
+                ]);
+            });
+
+            it('should handle files nested in an object as an argument', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            _position: { x:0, y: 0, z: 0 },
+                            _workspace: 'abc',
+                            'abcdef()': 'let o = { other: @name("other") }; shout("sayHello", o)',
+                            'sayHello()': 'that.other.hello = "test"'
+                        }
+                    },
+                    otherFile: {
+                        id: 'otherFile',
+                        tags: {
+                            'name': 'other',
+                        }
+                    }
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('abcdef', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('otherFile', {
+                        tags: {
+                            hello: 'test'
+                        }
+                    })
+                ]);
+            });
+
+            it('should process the message synchronously', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            _position: { x:0, y: 0, z: 0 },
+                            _workspace: 'abc',
+                            'abcdef()': 'shout("sayHello", @name("other")); this.value = @name("other").hello',
+                            'sayHello()': 'that.hello = "test"'
+                        }
+                    },
+                    otherFile: {
+                        id: 'otherFile',
+                        tags: {
+                            'name': 'other',
+                        }
+                    }
+                };
+    
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('abcdef', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+    
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            value: 'test'
+                        }
+                    }),
+                    fileUpdated('otherFile', {
+                        tags: {
+                            hello: 'test'
+                        }
+                    })
+                ]);
+            });
         });
 
         describe('create()', () => {

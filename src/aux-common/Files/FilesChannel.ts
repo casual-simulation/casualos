@@ -82,7 +82,8 @@ export function calculateActionEvents(state: FilesState, action: Action) {
         f,
         action.eventName,
         factory,
-        action.userId));
+        action.userId,
+        action.argument));
     let events = fileEvents;
 
     const updates = objects.map(o => calculateFileUpdateFromChanges(o.id, changes[o.id]));
@@ -176,7 +177,8 @@ function eventActions(state: FilesState,
     file: Object, 
     eventName: string,
     setValueHandlerFactory: (file: File) => SetValueHandler,
-    userId: string | null): FileEvent[] {
+    userId: string | null,
+    argument: any): FileEvent[] {
     const otherObjects = objects.filter(o => o !== file);
     const sortedObjects = sortBy(objects, o => o !== file);
     const filters = filtersMatchingArguments(context, file, eventName, otherObjects);
@@ -185,7 +187,7 @@ function eventActions(state: FilesState,
     let prevContext = getCalculationContext();
     let prevUserId = getUserId();
     let actions: FileEvent[] = [];
-    
+
     let vars: {
         [key: string]: any
     } = {};
@@ -193,16 +195,20 @@ function eventActions(state: FilesState,
     setFileState(state);
     setCalculationContext(context);
     setUserId(userId);
-    
+
     let formulaObjects = sortedObjects.map(o => convertToFormulaObject(context, o, setValueHandlerFactory(o)));
 
-    formulaObjects.forEach((obj, index) => {
-        if (index === 1) {
-            vars['that'] = obj;
-        }
-
-        vars[`arg${index}`] = obj;
-    });
+    if (typeof argument === 'undefined') {
+        formulaObjects.forEach((obj, index) => {
+            if (index === 1) {
+                vars['that'] = obj;
+            }
+            
+            vars[`arg${index}`] = obj;
+        });
+    } else {
+        vars['that'] = argument;
+    }
 
     scripts.forEach(s => context.sandbox.run(s, {}, formulaObjects[0], vars));
 
@@ -288,6 +294,11 @@ export interface Action {
      * The name of the event.
      */
     eventName: string;
+
+    /**
+     * The argument to pass as the "that" variable to scripts.
+     */
+    argument?: any;
 }
 
 export function fileAdded(file: File): FileAddedEvent {
@@ -320,12 +331,13 @@ export function transaction(events: FileEvent[]): FileTransactionEvent {
     };
 }
 
-export function action(eventName: string, fileIds: string[] = null, userId: string = null): Action {
+export function action(eventName: string, fileIds: string[] = null, userId: string = null, arg?: any): Action {
     return {
         type: 'action',
         fileIds,
         eventName,
-        userId
+        userId,
+        argument: arg
     };
 }
 
