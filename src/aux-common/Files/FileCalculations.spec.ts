@@ -731,7 +731,7 @@ describe('FileCalculations', () => {
             ]);
         });
 
-        it('should exclude destroyed objects', () => {
+        it('should include destroyed objects', () => {
             const state: FilesState = {
                 first: {
                     id: 'first',
@@ -753,6 +753,7 @@ describe('FileCalculations', () => {
             const objects = getActiveObjects(state);
 
             expect(objects).toEqual([
+                state['first'],
                 state['second']
             ]);
         });
@@ -1549,7 +1550,6 @@ describe('FileCalculations', () => {
         const builtinTagCases = [
             ['abc.index'],
             ['_hidden'],
-            ['_destroyed'],
             ['_lastEditedBy'],
             ['abc._lastActiveTime'],
         ];
@@ -1599,6 +1599,7 @@ describe('FileCalculations', () => {
             ['aux.scale.y'],
             ['aux.scale.z'],
             ['aux.scale'],
+            ['_destroyed'],
             ['+(#tag:"value")'],
             ['onCombine(#tag:"value")'],
             ['_context_test'],
@@ -1729,7 +1730,7 @@ describe('FileCalculations', () => {
             const second = duplicateFile(first);
 
             expect(second.id).not.toEqual(first.id);
-            expect(second.tags._destroyed).toBe(undefined);
+            expect(second.tags._destroyed).toBe(true);
         });
 
         it('should not have any auto-generated contexts or selections', () => {

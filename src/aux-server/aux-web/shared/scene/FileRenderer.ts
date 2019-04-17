@@ -75,11 +75,7 @@ export class FileRenderer {
     }
 
     async render(file: AuxObject, diffball: boolean = false): Promise<string> {
-        file = merge(file, {
-            tags: {
-                _destroyed: false
-            }
-        }, diffball ? {
+        file = merge(file, diffball ? {
             tags: {
                 ['aux.shape']: 'sphere'
             }

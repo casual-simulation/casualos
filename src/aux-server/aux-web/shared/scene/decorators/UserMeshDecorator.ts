@@ -76,7 +76,7 @@ export class UserMeshDecorator extends AuxFile3DDecorator {
         let file = <AuxObject>this.file3D.file;
 
         // visible if not destroyed, and was active in the last minute
-        this.container.visible = (!file.tags._destroyed && this._isActive());
+        this.container.visible = this._isActive();
     }
 
     dispose() {

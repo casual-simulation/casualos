@@ -29,6 +29,7 @@
   - Added the ability to pass an array of files to `clone()` and `destroy()`.
   - Changed the generated context ID format from `aux._context_{uuid}` to `context_{short-uuid}`.
   - Added `aux.mergeable` so control whether diffs can be merged into other files.
+  - Removed the `_destroyed` tag. Setting it now does nothing.
 
 ## V0.4.11
 ### Date: 04/12/2019

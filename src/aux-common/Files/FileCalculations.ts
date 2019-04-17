@@ -312,19 +312,11 @@ export function isFile(object: any): object is AuxObject {
 }
 
 /**
- * Determines if the given object has been destroyed.
- * @param object Whether the object is destroyed.
- */
-export function isDestroyed(object: Object) {
-    return !!object.tags._destroyed;
-}
-
-/**
  * Gets the array of objects in the given state that are currently active.
  * @param state The state to get the active objects of.
  */
 export function getActiveObjects(state: FilesState) {
-    return <Object[]>values(state).filter(f => !isDestroyed(f));
+    return <Object[]>values(state);
 }
 
 /**
@@ -337,7 +329,6 @@ export function isFilterTag(tag: string) {
 
 export const WELL_KNOWN_TAGS = [
     /_hidden$/,
-    /_destroyed$/,
     /\.index$/,
     /_lastEditedBy/,
     /\._lastActiveTime/,
@@ -373,7 +364,6 @@ export function isTagWellKnown(tag: string, includeSelectionTags: boolean = true
  * Well-known hidden tags include:
  * - _position
  * - _hidden
- * - _destroyed
  * - _selection
  * - _index
  * 
@@ -1153,11 +1143,7 @@ export function duplicateFile(file: Object, data?: PartialFile): Object {
         delete copy.tags[t];
     });
 
-    let newFile = merge(copy, data || {}, {
-        tags: {
-            _destroyed: null
-        }
-    });
+    let newFile = merge(copy, data || {});
     newFile.id = uuid();
 
     return <Object>cleanFile(newFile);

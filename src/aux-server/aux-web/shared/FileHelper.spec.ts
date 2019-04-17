@@ -37,6 +37,7 @@ describe('FileHelper', () => {
             const objs = helper.objects;
 
             expect(objs).toEqual([
+                tree.value['test2'],
                 tree.value['test1'],
                 helper.userFile
             ]);
