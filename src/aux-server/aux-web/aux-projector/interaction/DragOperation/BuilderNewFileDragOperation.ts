@@ -49,6 +49,11 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
         if (this._initialDragMesh) {
             this._releaseDragMesh(this._initialDragMesh);
             this._initialDragMesh = null;
+
+            if (this._isOverTrashCan()) {
+                // Clear the diff
+                appManager.fileManager.recent.clear();
+            }
         }
 
         super._onDragReleased(calc);

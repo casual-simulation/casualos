@@ -33,6 +33,12 @@ html.ar-app .webxr-sessions canvas {
     max-width: calc(100vw - 16px);
 }
 
+.toolbar.right {
+    left: auto;
+    right: 8px;
+    user-select: none;
+}
+
 .toolbar-layout {
     display: flex;
     align-items: flex-end;

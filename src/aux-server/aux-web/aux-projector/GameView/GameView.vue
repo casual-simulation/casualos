@@ -22,6 +22,9 @@
             </div>
           </div>
         </div>
+        <div class="toolbar right">
+            <trash-can v-if="showTrashCan" ref="trashCan"></trash-can>
+        </div>
       </div>
   </div>
 </template>

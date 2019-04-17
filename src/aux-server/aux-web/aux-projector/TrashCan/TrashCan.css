@@ -1,0 +1,17 @@
+
+.delete-file-layout {
+    width: 120px;
+    height: 120px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+}
+
+.delete-file-icon {
+    font-size: 64px !important;
+}
+
+.md-icon.delete-file-icon:hover {
+    color: #FF0000;
+}

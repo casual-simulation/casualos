@@ -66,12 +66,14 @@ import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { BuilderInteractionManager } from '../interaction/BuilderInteractionManager';
 import Home from '../Home/Home';
+import TrashCan from '../TrashCan/TrashCan';
 import { CameraType, resizeCameraRig, createCameraRig } from '../../shared/scene/CameraRigFactory';
 import { baseAuxAmbientLight, baseAuxDirectionalLight } from '../../shared/scene/SceneUtils';
 
 @Component({
     components: {
-        'mini-file': MiniFile
+        'mini-file': MiniFile,
+        'trash-can': TrashCan
     }
 })
 export default class GameView extends Vue implements IGameView {
@@ -116,6 +118,7 @@ export default class GameView extends Vue implements IGameView {
     vrDisplay: VRDisplay = null;
     vrCapable: boolean = false;
     selectedRecentFile: Object = null;
+    showTrashCan: boolean = false;
     recentFiles: Object[] = [];
 
     @Inject() addSidebarItem: App['addSidebarItem'];
@@ -153,8 +156,9 @@ export default class GameView extends Vue implements IGameView {
     public getUIHtmlElements(): HTMLElement[] {
         return [
             ...this.home.getUIHtmlElements(),
-            <HTMLElement>this.$refs.fileQueue
-        ];
+            <HTMLElement>this.$refs.fileQueue,
+            this.$refs.trashCan ? (<TrashCan>this.$refs.trashCan).$el : null
+        ].filter(el => el);
     }
 
     public setGridsVisible(visible: boolean) {
