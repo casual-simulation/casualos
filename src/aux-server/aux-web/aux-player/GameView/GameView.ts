@@ -88,7 +88,8 @@ export default class GameView extends Vue implements IGameView {
     private _input: Input;
     private _inputVR: InputVR;
     private _interaction: PlayerInteractionManager;
-    private _originalBackground: Color | Texture;
+    private _sceneBackground: Color | Texture;
+    private _contextBackground: Color | Texture;
     private _cameraType: CameraType;
 
     public onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
@@ -119,7 +120,6 @@ export default class GameView extends Vue implements IGameView {
 
     inventoryContext: InventoryContext = null;
     menuContext: MenuContext = null;
-
     menuExpanded: boolean = true;
 
     @Inject() addSidebarItem: App['addSidebarItem'];
@@ -277,10 +277,6 @@ export default class GameView extends Vue implements IGameView {
 
         } else if (this.xrSession && xrFrame) {
 
-            // Update XR stuff
-            if (this._scene.background !== null) {
-                this._originalBackground = this._scene.background.clone();
-            }
             this._scene.background = null;
             this._renderer.setSize(this.xrSession.baseLayer.framebufferWidth, this.xrSession.baseLayer.framebufferHeight, false)
             this._renderer.setClearColor('#000', 0);
@@ -326,16 +322,13 @@ export default class GameView extends Vue implements IGameView {
     private _renderCore(): void {
         this._renderer.clear();
         this._renderer.render(this._scene, this._mainCamera);
-
+        
         // Set the background color to null when rendering the ui world camera.
-        if (this._scene.background !== null) {
-            this._originalBackground = this._scene.background.clone();
-        }
-
         this._scene.background = null;
+
         this._renderer.clearDepth(); // Clear depth buffer so that ui objects dont 
         this._renderer.render(this._scene, this._uiWorldCamera);
-        this._scene.background = this._originalBackground;
+        this._scene.background = this._sceneBackground;
     }
 
     /**
@@ -396,7 +389,8 @@ export default class GameView extends Vue implements IGameView {
 
                 // Update the scene background color.
                 let sceneBackgroundColor = file.tags['aux.scene.color'];
-                this._scene.background = hasValue(sceneBackgroundColor) ? new Color(sceneBackgroundColor) : new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
+                this._sceneBackground = hasValue(sceneBackgroundColor) ? new Color(sceneBackgroundColor) : new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
+                this._scene.background = this._sceneBackground;
 
             }))
             .subscribe());
