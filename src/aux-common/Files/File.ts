@@ -20,6 +20,7 @@ export interface FileTags {
     // Normal file tags
     ['aux.color']?: unknown;
     ['aux.movable']?: unknown;
+    ['aux.mergeable']?: unknown;
     ['aux.stackable']?: unknown;
     ['aux.stroke.color']?: unknown;
     ['aux.stroke.width']?: unknown;
@@ -29,6 +30,7 @@ export interface FileTags {
     ['aux.label.color']?: unknown;
     ['aux.label.size']?: unknown;
     ['aux.label.size.mode']?: 'auto' | null;
+    ['aux.label.anchor']?: FileLabelAnchor | null | string;
     ['aux.input']?: string;
     ['aux.input.target']?: string;
     ['aux.input.placeholder']?: string;
@@ -91,6 +93,11 @@ export type SelectionMode = 'single' | 'multi';
 export type FileShape = 'cube' | 'sphere';
 
 /**
+ * Defines the possible anchor positions for a label.
+ */
+export type FileLabelAnchor = 'top' | 'front' | 'back' | 'left' | 'right' | 'floating';
+
+/**
  * The default user mode.
  */
 export const DEFAULT_USER_MODE: UserMode = 'files';
@@ -104,6 +111,11 @@ export const DEFAULT_SELECTION_MODE: SelectionMode = 'single';
  * The default file shape.
  */
 export const DEFAULT_FILE_SHAPE: FileShape = 'cube';
+
+/**
+ * The default file label anchor.
+ */
+export const DEFAULT_LABEL_ANCHOR: FileLabelAnchor = 'top';
 
 /**
  * The default height for workspaces.

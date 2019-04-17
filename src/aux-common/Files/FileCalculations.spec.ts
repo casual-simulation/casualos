@@ -42,7 +42,8 @@ import {
     getFileConfigContexts,
     isContext,
     createContextId,
-    isMergeable
+    isMergeable,
+    getFileLabelAnchor
 } from './FileCalculations';
 import {
     cloneDeep
@@ -2833,6 +2834,48 @@ describe('FileCalculations', () => {
         it.each(cases)('should convert %s to %s', (uuid, id) => {
             uuidMock.mockReturnValue(uuid);
             expect(createContextId()).toBe(id);
+        });
+    });
+
+    describe('getLabelAnchor()', () => {
+        it('should default to top', () => {
+            const file = createFile('file');
+
+            const calc = createCalculationContext([file]);
+            const anchor = getFileLabelAnchor(calc, file);
+
+            expect(anchor).toBe('top');
+        });
+
+        const cases = [
+            ['top', 'top'],
+            ['front', 'front'],
+            ['back', 'back'],
+            ['left', 'left'],
+            ['right', 'right'],
+            ['floating', 'floating'],
+            ['abc', 'top']
+        ];
+        it.each(cases)('given %s it should return %s', (anchor, expected) => {
+            const file = createFile('file', {
+                'aux.label.anchor': anchor
+            });
+
+            const calc = createCalculationContext([file]);
+            const a = getFileLabelAnchor(calc, file);
+
+            expect(a).toBe(expected);
+        });
+
+        it('should support formulas', () => {
+            const file = createFile('file', {
+                'aux.label.anchor': '="front"'
+            });
+
+            const calc = createCalculationContext([file]);
+            const anchor = getFileLabelAnchor(calc, file);
+
+            expect(anchor).toBe('front');
         });
     });
 });

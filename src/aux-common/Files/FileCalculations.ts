@@ -13,7 +13,9 @@ import {
     FileShape,
     DEFAULT_FILE_SHAPE,
     FileTags,
-    DEFAULT_WORKSPACE_SIZE
+    DEFAULT_WORKSPACE_SIZE,
+    FileLabelAnchor,
+    DEFAULT_LABEL_ANCHOR
 } from './File';
 
 import uuid from 'uuid/v4';
@@ -213,7 +215,7 @@ export function isHiddenTag(tag: string): boolean {
     return (/^_/.test(tag) || /(\w+)\._/.test(tag));
 }
 
-export function calculateFileValue(context: FileCalculationContext, object: Object, tag: string, unwrapProxy?: boolean) {
+export function calculateFileValue(context: FileCalculationContext, object: Object, tag: keyof FileTags, unwrapProxy?: boolean) {
     if (tag === 'id') {
         return object.id;
     } else if (isFormulaObject(object)) {
@@ -932,6 +934,19 @@ export function getFileShape(calc: FileCalculationContext, file: File): FileShap
 }
 
 /**
+ * Gets the anchor position for the file's label.
+ * @param calc The calculation context to use.
+ * @param file The file.
+ */
+export function getFileLabelAnchor(calc: FileCalculationContext, file: File): FileLabelAnchor {
+    const anchor: FileLabelAnchor = calculateFileValue(calc, file, 'aux.label.anchor');
+    if (anchor === 'back' || anchor === 'floating' || anchor === 'front' || anchor === 'left' || anchor === 'right' || anchor === 'top') {
+        return anchor;
+    }
+    return DEFAULT_LABEL_ANCHOR;
+}
+
+/**
  * Determines if the given tag represents a context config.
  * @param tag The tag to check.
  */
@@ -1478,7 +1493,7 @@ function _formatValue(value: any): string {
  * @param formula The formula.
  * @param unwrapProxy (Optional) Whether to unwrap proxies. Defaults to true.
  */
-export function calculateValue(context: FileCalculationContext, object: any, tag: string, formula: string, unwrapProxy?: boolean): any {
+export function calculateValue(context: FileCalculationContext, object: any, tag: keyof FileTags, formula: string, unwrapProxy?: boolean): any {
     if (isFormula(formula)) {
         const result = _calculateFormulaValue(context, object, tag, formula, unwrapProxy);
         if (result.success) {
@@ -1503,7 +1518,7 @@ export function calculateValue(context: FileCalculationContext, object: any, tag
     }
 }
 
-function _calculateFormulaValue(context: FileCalculationContext, object: any, tag: string, formula: string, unwrapProxy: boolean = true) {
+function _calculateFormulaValue(context: FileCalculationContext, object: any, tag: keyof FileTags, formula: string, unwrapProxy: boolean = true) {
     const result = context.sandbox.run(formula, {
         formula,
         tag,
