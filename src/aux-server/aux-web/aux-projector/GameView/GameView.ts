@@ -255,7 +255,7 @@ export default class GameView extends Vue implements IGameView {
                 // Update the scene background color.
                 let sceneBackgroundColor = file.tags['aux.scene.color'];
                 this._sceneBackground = hasValue(sceneBackgroundColor) ? new Color(sceneBackgroundColor) : new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
-                this._scene.background = this._sceneBackground;
+                this._sceneBackgroundUpdate();
 
             }))
             .subscribe());
@@ -420,7 +420,7 @@ export default class GameView extends Vue implements IGameView {
 
         this._renderer.clearDepth(); // Clear depth buffer so that ui objects dont 
         this._renderer.render(this._scene, this._uiWorldCamera);
-        this._scene.background = this._sceneBackground;
+        this._sceneBackgroundUpdate();
     }
 
     private async _fileUpdated(file: AuxFile, initialUpdate = false) {
@@ -513,6 +513,14 @@ export default class GameView extends Vue implements IGameView {
         // }
     }
 
+    private _sceneBackgroundUpdate() {
+        if (this._sceneBackground) {
+            this._scene.background = this._sceneBackground;
+        } else {
+            this._scene.background = new Color(DEFAULT_SCENE_BACKGROUND_COLOR)
+        }
+    }
+
     private _setupScene() {
 
         this._scene = new Scene();
@@ -521,7 +529,8 @@ export default class GameView extends Vue implements IGameView {
 
         // Scene background color.
         let sceneBackgroundColor = globalsFile.tags['aux.scene.color'];
-        this._scene.background = hasValue(sceneBackgroundColor) ? new Color(sceneBackgroundColor) : new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
+        this._sceneBackground = hasValue(sceneBackgroundColor) ? new Color(sceneBackgroundColor) : new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
+        this._sceneBackgroundUpdate();
 
         this.setCameraType('orthographic');
         this._setupRenderer();
