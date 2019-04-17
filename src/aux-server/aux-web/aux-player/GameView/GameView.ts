@@ -424,6 +424,18 @@ export default class GameView extends Vue implements IGameView {
                         await this._contextGroup.fileAdded(entry[1], calc);
                     }
                 }
+
+                // Subscribe to file change updates for this context file so that we can do things like change the background color to match the context color, etc.
+                this._fileSubs.push(this.fileManager.fileChanged(file)
+                .pipe(tap(file => {
+    
+                    // Update the context background color.
+                    let contextBackgroundColor = file.tags['aux.context.color'];
+                    this._contextBackground = hasValue(contextBackgroundColor) ? new Color(contextBackgroundColor) : undefined;
+                    this._sceneBackgroundUpdate();
+    
+                }))
+                .subscribe());
             }
         } else {
             await this._contextGroup.fileAdded(file, calc);
