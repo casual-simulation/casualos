@@ -6,7 +6,8 @@ import {
     AuxFile,
     FileCalculationContext,
     COMBINE_ACTION_NAME,
-} from '@yeti-cgi/aux-common';
+    getFileConfigContexts,
+} from '@casual-simulation/aux-common';
 import { Physics } from '../scene/Physics';
 import { flatMap, union } from 'lodash';
 import { CameraControls } from './CameraControls';
@@ -216,11 +217,10 @@ export abstract class BaseInteractionManager {
      * @param file The first file.
      * @param other The second file.
      */
-    canCombineFiles(file: Object, other: Object): boolean {
+    canCombineFiles(calc: FileCalculationContext, file: Object, other: Object): boolean {
         // TODO: Make this work even if the file is a "workspace"
-        if (file && other && !file.tags['aux.builder.context'] && !other.tags['aux.builder.context'] && file.id !== other.id) {
-            const context = appManager.fileManager.createContext();
-            const tags = union(filtersMatchingArguments(context, file, COMBINE_ACTION_NAME, [other]), filtersMatchingArguments(context, other, COMBINE_ACTION_NAME, [file]));
+        if (file && other && getFileConfigContexts(calc, file).length === 0 && getFileConfigContexts(calc, other).length === 0 && file.id !== other.id) {
+            const tags = union(filtersMatchingArguments(calc, file, COMBINE_ACTION_NAME, [other]), filtersMatchingArguments(calc, other, COMBINE_ACTION_NAME, [file]));
             return tags.length > 0;
         }
         return false;

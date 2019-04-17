@@ -6,7 +6,7 @@ import { EventBus } from '../../shared/EventBus';
 import ConfirmDialogOptions from '../../shared/ConfirmDialogOptions';
 import AlertDialogOptions from '../../shared/AlertDialogOptions';
 import { SubscriptionLike, Subscription } from 'rxjs';
-import { FilesState, UserMode, Object, getUserMode } from '@yeti-cgi/aux-common';
+import { FilesState, UserMode, Object, getUserMode } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard } from '../../shared/SharedUtils';
 import { tap } from 'rxjs/operators';

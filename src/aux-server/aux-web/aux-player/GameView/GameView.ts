@@ -36,9 +36,9 @@ import {
     DEFAULT_SCENE_BACKGROUND_COLOR,
     AuxFile,
     AuxObject,
-    isDestroyed
-} from '@yeti-cgi/aux-common';
-import { ArgEvent } from '@yeti-cgi/aux-common/Events';
+    hasValue
+} from '@casual-simulation/aux-common';
+import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { Time } from '../../shared/scene/Time';
 import { Input, InputType } from '../../shared/scene/Input';
 import { InputVR } from '../../shared/scene/InputVR';
@@ -87,7 +87,8 @@ export default class GameView extends Vue implements IGameView {
     private _input: Input;
     private _inputVR: InputVR;
     private _interaction: PlayerInteractionManager;
-    private _originalBackground: Color | Texture;
+    private _sceneBackground: Color | Texture;
+    private _contextBackground: Color | Texture;
     private _cameraType: CameraType;
 
     public onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
@@ -118,7 +119,6 @@ export default class GameView extends Vue implements IGameView {
 
     inventoryContext: InventoryContext = null;
     menuContext: MenuContext = null;
-
     menuExpanded: boolean = true;
 
     @Inject() addSidebarItem: App['addSidebarItem'];
@@ -276,10 +276,6 @@ export default class GameView extends Vue implements IGameView {
 
         } else if (this.xrSession && xrFrame) {
 
-            // Update XR stuff
-            if (this._scene.background !== null) {
-                this._originalBackground = this._scene.background.clone();
-            }
             this._scene.background = null;
             this._renderer.setSize(this.xrSession.baseLayer.framebufferWidth, this.xrSession.baseLayer.framebufferHeight, false)
             this._renderer.setClearColor('#000', 0);
@@ -325,16 +321,13 @@ export default class GameView extends Vue implements IGameView {
     private _renderCore(): void {
         this._renderer.clear();
         this._renderer.render(this._scene, this._mainCamera);
-
+        
         // Set the background color to null when rendering the ui world camera.
-        if (this._scene.background !== null) {
-            this._originalBackground = this._scene.background.clone();
-        }
-
         this._scene.background = null;
+
         this._renderer.clearDepth(); // Clear depth buffer so that ui objects dont 
         this._renderer.render(this._scene, this._uiWorldCamera);
-        this._scene.background = this._originalBackground;
+        this._sceneBackgroundUpdate();
     }
 
     /**
@@ -394,10 +387,9 @@ export default class GameView extends Vue implements IGameView {
             .pipe(tap(file => {
 
                 // Update the scene background color.
-                let sceneBackgroundColor = (<Object>file).tags['aux.scene.color'];
-                if (sceneBackgroundColor) {
-                    this._scene.background = new Color(sceneBackgroundColor);;
-                }
+                let sceneBackgroundColor = file.tags['aux.scene.color'];
+                this._sceneBackground = hasValue(sceneBackgroundColor) ? new Color(sceneBackgroundColor) : new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
+                this._sceneBackgroundUpdate();
 
             }))
             .subscribe());
@@ -419,9 +411,8 @@ export default class GameView extends Vue implements IGameView {
 
         if (!this._contextGroup) {
             // We dont have a context group yet. We are in search of a file that defines a player context that matches the user's current context.
-            const destroyed = isDestroyed(file);
             const result = doesFileDefinePlayerContext(file, this.context, calc);
-            if (!destroyed && result.matchFound) {
+            if (result.matchFound) {
                 // Create ContextGroup3D for this file that we will use to render all files in the context.
                 this._contextGroup = new ContextGroup3D(file, 'player', this._decoratorFactory);
                 this._scene.add(this._contextGroup);
@@ -429,10 +420,22 @@ export default class GameView extends Vue implements IGameView {
                 
                 // Apply back buffer of files to the newly created context group.
                 for (let entry of this._fileBackBuffer) {
-                    if (entry[0] !== file.id && !isDestroyed(entry[1])) {
+                    if (entry[0] !== file.id) {
                         await this._contextGroup.fileAdded(entry[1], calc);
                     }
                 }
+
+                // Subscribe to file change updates for this context file so that we can do things like change the background color to match the context color, etc.
+                this._fileSubs.push(this.fileManager.fileChanged(file)
+                .pipe(tap(file => {
+    
+                    // Update the context background color.
+                    let contextBackgroundColor = file.tags['aux.context.color'];
+                    this._contextBackground = hasValue(contextBackgroundColor) ? new Color(contextBackgroundColor) : undefined;
+                    this._sceneBackgroundUpdate();
+    
+                }))
+                .subscribe());
             }
         } else {
             await this._contextGroup.fileAdded(file, calc);
@@ -476,10 +479,6 @@ export default class GameView extends Vue implements IGameView {
             await this.menuContext.fileUpdated(file, [], calc);
         }
 
-        if (file.tags._destroyed) {
-            this._fileRemoved(file.id);
-        }
-
         this.onFileUpdated.invoke(file);
     }
 
@@ -508,17 +507,26 @@ export default class GameView extends Vue implements IGameView {
         this.onFileRemoved.invoke(null);
     }
 
+    private _sceneBackgroundUpdate() {
+        if (this._contextBackground) {
+            this._scene.background = this._contextBackground;
+        } else if (this._sceneBackground) {
+            this._scene.background = this._sceneBackground;
+        } else {
+            this._scene.background = new Color(DEFAULT_SCENE_BACKGROUND_COLOR)
+        }
+    }
+
     private _setupScene() {
 
         this._scene = new Scene();
 
         let globalsFile = this.fileManager.globalsFile;
 
-        if (globalsFile && globalsFile.tags['aux.scene.color']) {
-            this._scene.background = new Color(globalsFile.tags['aux.scene.color']);
-        } else {
-            this._scene.background = new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
-        }
+        // Scene background color.
+        let sceneBackgroundColor = globalsFile.tags['aux.scene.color'];
+        this._sceneBackground = hasValue(sceneBackgroundColor) ? new Color(sceneBackgroundColor) : new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
+        this._sceneBackgroundUpdate();
         
         this.setCameraType('orthographic');
         this._setupRenderer();

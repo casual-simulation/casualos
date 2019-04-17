@@ -17,7 +17,7 @@ import {
     Vector2
 } from 'three';
 
-import { Object, Workspace, isMinimized, FileCalculationContext } from '@yeti-cgi/aux-common';
+import { Object, Workspace, isMinimized, FileCalculationContext } from '@casual-simulation/aux-common';
 import { WorkspaceMesh } from './WorkspaceMesh';
 import { IGameView } from '../IGameView';
 import { AuxFile3D } from './AuxFile3D';
@@ -94,8 +94,8 @@ export class Arrow3D extends Object3D {
         let sourceWorkspace = this._getWorkspace(this._sourceFile3d);
         let targetWorkspace = this._getWorkspace(this._targetFile3d);
 
-        const sourceMinimized = sourceWorkspace && isMinimized(calc, sourceWorkspace.file, sourceWorkspace.domain);
-        const targetMinimized = targetWorkspace && isMinimized(calc, targetWorkspace.file, targetWorkspace.domain);
+        const sourceMinimized = sourceWorkspace && isMinimized(calc, sourceWorkspace.file);
+        const targetMinimized = targetWorkspace && isMinimized(calc, targetWorkspace.file);
 
         if (sourceMinimized && targetMinimized) {
 

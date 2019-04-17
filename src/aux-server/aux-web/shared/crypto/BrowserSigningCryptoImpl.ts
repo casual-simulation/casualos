@@ -1,4 +1,4 @@
-import { SigningCryptoImpl, PrivateCryptoKey, PublicCryptoKey, SigningCryptoKey, SignatureAlgorithmType, formatPublicPEMKey, formatPrivatePEMKey, parsePublicPEMKey, parsePrivatePEMKey } from "@yeti-cgi/aux-common/crypto";
+import { SigningCryptoImpl, PrivateCryptoKey, PublicCryptoKey, SigningCryptoKey, SignatureAlgorithmType, formatPublicPEMKey, formatPrivatePEMKey, parsePublicPEMKey, parsePrivatePEMKey } from "@casual-simulation/aux-common/crypto";
 
 // DEV NOTE:
 // It kinda goes without saying, but change this code as little as possible.

@@ -1,4 +1,4 @@
-import { AtomOp, RealtimeChannelInfo, Atom } from "@yeti-cgi/aux-common/causal-trees";
+import { AtomOp, RealtimeChannelInfo, Atom } from "@casual-simulation/aux-common/causal-trees";
 
 export type WorkerEvent = CalculateValue | ValueCalculated;
 

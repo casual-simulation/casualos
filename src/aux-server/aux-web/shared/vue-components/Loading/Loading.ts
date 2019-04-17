@@ -1,8 +1,8 @@
 import Component from "vue-class-component";
 import Vue from "vue";
-import { LoadingProgress } from "@yeti-cgi/aux-common/LoadingProgress";
+import { LoadingProgress } from "@casual-simulation/aux-common/LoadingProgress";
 import { appManager } from "../../../shared/AppManager";
-import { hasValue } from "@yeti-cgi/aux-common";
+import { hasValue } from "@casual-simulation/aux-common";
 
 @Component({})
 export default class Loading extends Vue {

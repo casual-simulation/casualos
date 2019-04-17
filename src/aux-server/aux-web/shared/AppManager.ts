@@ -8,13 +8,13 @@ import { SocketManager } from './SocketManager';
 import { flatMap, map, scan } from 'rxjs/operators';
 import { downloadAuxState, readFileJson } from '../aux-projector/download';
 import { CausalTreeManager } from './causal-trees/CausalTreeManager';
-import { StoredCausalTree } from '@yeti-cgi/aux-common/causal-trees';
-import { AuxOp, FilesState, AuxCausalTree, lerp } from '@yeti-cgi/aux-common';
+import { StoredCausalTree } from '@casual-simulation/aux-common/causal-trees';
+import { AuxOp, FilesState, AuxCausalTree, lerp } from '@casual-simulation/aux-common';
 import Dexie from 'dexie';
 import { difference } from 'lodash';
 import uuid from 'uuid/v4';
 import { WebConfig } from '../../shared/WebConfig';
-import { LoadingProgress, LoadingProgressCallback } from '@yeti-cgi/aux-common/LoadingProgress';
+import { LoadingProgress, LoadingProgressCallback } from '@casual-simulation/aux-common/LoadingProgress';
 
 export interface User {
     id: string;
@@ -317,7 +317,7 @@ export class AppManager {
                     const start = this.loadingProgress.progress;
                     this.loadingProgress.set(lerp(start, 95, progress.progress / 100), progress.status, progress.error);
                 };
-                await this._fileManager.init(this._user.channelId, false, onFileManagerInitProgress);
+                await this._fileManager.init(this._user.channelId, false, onFileManagerInitProgress, this.config);
                 this.loadingProgress.status = 'Saving user...';
                 await this._saveUser();
                 this._userSubject.next(this._user);
@@ -392,7 +392,7 @@ export class AppManager {
                 const onFileManagerInitProgress: LoadingProgressCallback = (progress: LoadingProgress) => {
                     this.loadingProgress.set(lerp(40, 95, progress.progress / 100), progress.status, progress.error);
                 }
-                await this._fileManager.init(channelId, true, onFileManagerInitProgress);
+                await this._fileManager.init(channelId, true, onFileManagerInitProgress, this.config);
 
                 this._userSubject.next(this._user);
                 this.loadingProgress.set(95, 'Saving user...', null);

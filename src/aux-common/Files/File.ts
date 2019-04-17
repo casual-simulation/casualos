@@ -12,7 +12,6 @@ export interface File {
 };
 
 export interface FileTags {
-    _destroyed?: any;
     
 
     // Global file tags
@@ -21,6 +20,7 @@ export interface FileTags {
     // Normal file tags
     ['aux.color']?: unknown;
     ['aux.movable']?: unknown;
+    ['aux.mergeable']?: unknown;
     ['aux.stackable']?: unknown;
     ['aux.stroke.color']?: unknown;
     ['aux.stroke.width']?: unknown;
@@ -30,11 +30,12 @@ export interface FileTags {
     ['aux.label.color']?: unknown;
     ['aux.label.size']?: unknown;
     ['aux.label.size.mode']?: 'auto' | null;
+    ['aux.label.anchor']?: FileLabelAnchor | null | string;
     ['aux.input']?: string;
     ['aux.input.target']?: string;
     ['aux.input.placeholder']?: string;
     ['aux.shape']?: FileShape;
-    ['aux._parent']?: string;
+    ['aux._creator']?: string;
     ['aux._diff']?: boolean;
     ['aux._diffTags']?: string[];
 
@@ -50,22 +51,21 @@ export interface FileTags {
     ['aux._selectionMode']?: SelectionMode;
 
     // Builder related tags
-    ['aux.builder.context']?: string | string[];
-    ['aux.builder.context.x']?: number;
-    ['aux.builder.context.y']?: number;
-    ['aux.builder.context.z']?: number;
-    ['aux.builder.context.rotation.x']?: number;
-    ['aux.builder.context.rotation.y']?: number;
-    ['aux.builder.context.rotation.z']?: number;
-    ['aux.builder.context.scale']?: number;
-    ['aux.builder.context.grid']?: {
+    ['aux.context.x']?: number;
+    ['aux.context.y']?: number;
+    ['aux.context.z']?: number;
+    ['aux.context.rotation.x']?: number;
+    ['aux.context.rotation.y']?: number;
+    ['aux.context.rotation.z']?: number;
+    ['aux.context.scale']?: number;
+    ['aux.context.grid']?: {
         [key: string]: WorkspaceHex;
     } | null,
-    ['aux.builder.context.grid.scale']?: number;
-    ['aux.builder.context.defaultHeight']?: number;
-    ['aux.builder.context.color']?: string;
-    ['aux.builder.context.size']?: number;
-    ['aux.builder.context.minimized']?: boolean | null;
+    ['aux.context.grid.scale']?: number;
+    ['aux.context.defaultHeight']?: number;
+    ['aux.context.color']?: string;
+    ['aux.context.size']?: number;
+    ['aux.context.minimized']?: boolean | null;
 
     [key: string]: any;
 }
@@ -93,6 +93,11 @@ export type SelectionMode = 'single' | 'multi';
 export type FileShape = 'cube' | 'sphere';
 
 /**
+ * Defines the possible anchor positions for a label.
+ */
+export type FileLabelAnchor = 'top' | 'front' | 'back' | 'left' | 'right' | 'floating';
+
+/**
  * The default user mode.
  */
 export const DEFAULT_USER_MODE: UserMode = 'files';
@@ -108,9 +113,19 @@ export const DEFAULT_SELECTION_MODE: SelectionMode = 'single';
 export const DEFAULT_FILE_SHAPE: FileShape = 'cube';
 
 /**
+ * The default file label anchor.
+ */
+export const DEFAULT_LABEL_ANCHOR: FileLabelAnchor = 'top';
+
+/**
  * The default height for workspaces.
  */
 export const DEFAULT_WORKSPACE_HEIGHT = .1;
+
+/**
+ * The default size for workspaces.
+ */
+export const DEFAULT_WORKSPACE_SIZE = 1;
 
 /**
  * The default scale for workspaces.

@@ -1,7 +1,7 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Prop, Inject} from 'vue-property-decorator';
-import { Object, File, Assignment, isFormula, isAssignment, AuxObject, AuxFile, isDiff, merge } from '@yeti-cgi/aux-common';
+import { Object, File, Assignment, isFormula, isAssignment, AuxObject, AuxFile, isDiff, merge } from '@casual-simulation/aux-common';
 import {assign} from 'lodash';
 import { appManager } from '../../shared/AppManager';
 import uuid from 'uuid/v4';

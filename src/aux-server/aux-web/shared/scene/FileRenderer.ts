@@ -16,10 +16,11 @@ import {
     AmbientLight,
     DirectionalLight
 } from 'three';
-import { Object, fileRemoved, merge, AuxObject, createCalculationContext } from '@yeti-cgi/aux-common';
+import { Object, fileRemoved, merge, AuxObject, createCalculationContext } from '@casual-simulation/aux-common';
 import { AuxFile3D } from './AuxFile3D';
-import formulaLib from '@yeti-cgi/aux-common/Formulas/formula-lib';
+import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
+import { baseAuxAmbientLight, baseAuxDirectionalLight } from './SceneUtils';
 
 /**
  * Defines a class that can render a file to a transparent canvas.
@@ -27,13 +28,12 @@ import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactor
 export class FileRenderer {
 
     tileRatio = 0.2;
-    private _resolution = 100;
+    private _resolution = 128;
     private _renderer: WebGLRenderer;
     private _camera: OrthographicCamera;
     
-    private _sun: DirectionalLight;
+    private _directional: DirectionalLight;
     private _ambient: AmbientLight;
-    private _skylight: HemisphereLight;
     
     private _scene: Scene;
     private _bounds: Box3;
@@ -57,22 +57,14 @@ export class FileRenderer {
         // this._renderer.setPixelRatio(window.devicePixelRatio || 1);
 
         this._scene.add(this._camera);
-
+        
         // Ambient light.
-        this._ambient = new AmbientLight(0xffffff, 0.7);
+        this._ambient = baseAuxAmbientLight();
         this._scene.add(this._ambient);
 
-        // Sky light.
-        this._skylight = new HemisphereLight(0xc1e0fd, 0xffffff, .6);
-        this._scene.add(this._skylight);
-
-        // Sun light.
-        this._sun = new DirectionalLight(0xffffff, .6);
-        this._sun.position.set(0, 5, 10);
-        this._sun.position.multiplyScalar(50);
-        this._sun.name = 'sun';
-        this._sun.castShadow = true;
-        this._scene.add(this._sun);
+        // Directional light.
+        this._directional = baseAuxDirectionalLight();
+        this._scene.add(this._directional);
 
         this._group = new Object3D();
         this._file = new AuxFile3D(null, null, null, 'builder', [], new AuxFile3DDecoratorFactory(null));
@@ -83,11 +75,7 @@ export class FileRenderer {
     }
 
     async render(file: AuxObject, diffball: boolean = false): Promise<string> {
-        file = merge(file, {
-            tags: {
-                _destroyed: false
-            }
-        }, diffball ? {
+        file = merge(file, diffball ? {
             tags: {
                 ['aux.shape']: 'sphere'
             }
@@ -128,7 +116,7 @@ export class FileRenderer {
     private _updateScene() {
         this._group.position.copy(this._worldPosition);
 
-        this._camera.position.set(this._worldPosition.x - 1, this._worldPosition.y + 1.25, this._worldPosition.z - 1);
+        this._camera.position.set(this._worldPosition.x + 1, this._worldPosition.y + 1, this._worldPosition.z + 1);
         this._camera.updateMatrixWorld(true);
     }
 
@@ -161,7 +149,7 @@ export class FileRenderer {
         this._size.add(new Vector3(this._xImbalance, 0, this._yImbalance));
         this._size.multiplyScalar(2);
 
-        this._camera.rotation.set(ThreeMath.degToRad(-35), ThreeMath.degToRad(180 + 45), 0, 'YXZ');
+        this._camera.rotation.set(ThreeMath.degToRad(-28), ThreeMath.degToRad(45), 0, 'YXZ');
         this._camera.left = -(max / 2);
         this._camera.right = (max / 2);
         this._camera.top = (max / 2);

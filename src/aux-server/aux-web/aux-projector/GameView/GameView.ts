@@ -43,8 +43,11 @@ import {
     createFile,
     doFilesAppearEqual,
     AuxFile,
-} from '@yeti-cgi/aux-common';
-import { ArgEvent } from '@yeti-cgi/aux-common/Events';
+    getConfigTagContext,
+    getFileConfigContexts,
+    hasValue,
+} from '@casual-simulation/aux-common';
+import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { Time } from '../../shared/scene/Time';
 import { Input, InputType } from '../../shared/scene/Input';
 import { InputVR } from '../../shared/scene/InputVR';
@@ -63,12 +66,14 @@ import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { BuilderInteractionManager } from '../interaction/BuilderInteractionManager';
 import Home from '../Home/Home';
+import TrashCan from '../TrashCan/TrashCan';
 import { CameraType, resizeCameraRig, createCameraRig } from '../../shared/scene/CameraRigFactory';
 import { baseAuxAmbientLight, baseAuxDirectionalLight } from '../../shared/scene/SceneUtils';
 
 @Component({
     components: {
-        'mini-file': MiniFile
+        'mini-file': MiniFile,
+        'trash-can': TrashCan
     }
 })
 export default class GameView extends Vue implements IGameView {
@@ -93,8 +98,11 @@ export default class GameView extends Vue implements IGameView {
     private _inputVR: InputVR;
     private _interaction: BuilderInteractionManager;
     private _gridChecker: GridChecker;
-    private _originalBackground: Color | Texture;
+    private _sceneBackground: Color | Texture;
     private _cameraType: CameraType;
+
+    showDialog: boolean = false;
+    contextDialog: string = "";
 
     public onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
     public onFileUpdated: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
@@ -113,6 +121,7 @@ export default class GameView extends Vue implements IGameView {
     vrDisplay: VRDisplay = null;
     vrCapable: boolean = false;
     selectedRecentFile: Object = null;
+    showTrashCan: boolean = false;
     recentFiles: Object[] = [];
 
     @Inject() addSidebarItem: App['addSidebarItem'];
@@ -133,6 +142,22 @@ export default class GameView extends Vue implements IGameView {
         super();
     }
 
+    /**
+     * Click event from GameView.vue
+     */
+    private onConfirmDialogOk ()
+    {
+        this.fileManager.createWorkspace(this.contextDialog);
+    }
+
+    /**
+     * Click event from GameView.vue
+     */
+    private onConfirmDialogCancel ()
+    {
+    }
+
+
     public findFilesById(id: string): AuxFile3D[] {
         return flatMap(this._contexts.map(c => c.getFiles().filter(f => f.file.id === id)));
     }
@@ -150,8 +175,9 @@ export default class GameView extends Vue implements IGameView {
     public getUIHtmlElements(): HTMLElement[] {
         return [
             ...this.home.getUIHtmlElements(),
-            <HTMLElement>this.$refs.fileQueue
-        ];
+            <HTMLElement>this.$refs.fileQueue,
+            this.$refs.trashCan ? (<TrashCan>this.$refs.trashCan).$el : null
+        ].filter(el => el);
     }
 
     public setGridsVisible(visible: boolean) {
@@ -176,9 +202,8 @@ export default class GameView extends Vue implements IGameView {
     }
 
     public addNewWorkspace(): void {
-        // TODO: Make the user have to drag a workspace onto the world
-        // instead of just clicking a button and a workspace being placed somewhere.
-        this.fileManager.createWorkspace();
+        this.contextDialog = this.fileManager.helper.createContextId();
+        this.showDialog = true;
     }
 
     public setCameraType(type: CameraType) {
@@ -216,6 +241,9 @@ export default class GameView extends Vue implements IGameView {
         window.addEventListener('resize', this._handleResize);
         window.addEventListener('vrdisplaypresentchange', this._handleResize);
 
+        this.showDialog = false;
+        this.contextDialog = "";
+
         this._time = new Time();
         this.recentFiles = this.fileManager.recent.files;
         this._contexts = [];
@@ -250,10 +278,9 @@ export default class GameView extends Vue implements IGameView {
             .pipe(tap(file => {
 
                 // Update the scene background color.
-                let sceneBackgroundColor = (<Object>file).tags['aux.scene.color'];
-                if (sceneBackgroundColor) {
-                    this._scene.background = new Color(sceneBackgroundColor);
-                }
+                let sceneBackgroundColor = file.tags['aux.scene.color'];
+                this._sceneBackground = hasValue(sceneBackgroundColor) ? new Color(sceneBackgroundColor) : new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
+                this._sceneBackgroundUpdate();
 
             }))
             .subscribe());
@@ -366,10 +393,6 @@ export default class GameView extends Vue implements IGameView {
 
         } else if (this.xrSession && xrFrame) {
 
-            // Update XR stuff
-            if (this._scene.background !== null) {
-                this._originalBackground = this._scene.background.clone();
-            }
             this._scene.background = null;
             this._renderer.setSize(this.xrSession.baseLayer.framebufferWidth, this.xrSession.baseLayer.framebufferHeight, false)
             this._renderer.setClearColor('#000', 0);
@@ -418,20 +441,19 @@ export default class GameView extends Vue implements IGameView {
         this._renderer.render(this._scene, this._mainCamera);
 
         // Set the background color to null when rendering the ui world camera.
-        if (this._scene.background !== null) {
-            this._originalBackground = this._scene.background.clone();
-        }
-
         this._scene.background = null;
+
         this._renderer.clearDepth(); // Clear depth buffer so that ui objects dont 
         this._renderer.render(this._scene, this._uiWorldCamera);
-        this._scene.background = this._originalBackground;
+        this._sceneBackgroundUpdate();
     }
 
     private async _fileUpdated(file: AuxFile, initialUpdate = false) {
         let shouldRemove = false;
+        const calc = this.fileManager.createContext();
         // TODO: Work with all domains
-        if (!file.tags['aux.builder.context']) {
+        let configTags = getFileConfigContexts(calc, file);
+        if (configTags.length === 0) {
             if (!initialUpdate) {
                 if (!file.tags._user && file.tags._lastEditedBy === this.fileManager.userFile.id) {
                     if (this.fileManager.recent.selectedRecentFile && file.id === this.fileManager.recent.selectedRecentFile.id) {
@@ -442,17 +464,12 @@ export default class GameView extends Vue implements IGameView {
                     // this.addToRecentFilesList(file);
                 }
             }
-
-            if (file.tags._destroyed) {
-                shouldRemove = true;
-            }
         } else {
             if (file.tags.size <= 0) {
                 shouldRemove = true;
             }
         }
 
-        const calc = this.fileManager.createContext();
         await Promise.all([...this._contexts.values()].map(c => c.fileUpdated(file, [], calc)));
         // await obj.updateFile(file);
         this.onFileUpdated.invoke(file);
@@ -463,11 +480,6 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private async _fileAdded(file: AuxFile) {
-        if (file.tags._destroyed) {
-            return;
-        }
-        // console.log(`[GameView] File Added`, file.id);
-
         let context = new BuilderGroup3D(file, this._decoratorFactory);
         context.setGridChecker(this._gridChecker);
         this._contexts.push(context);
@@ -475,15 +487,6 @@ export default class GameView extends Vue implements IGameView {
 
         let calc = this.fileManager.createContext();
         await Promise.all([...this._contexts.values()].map(c => c.fileAdded(file, calc)));
-
-        // if (!this._shouldDisplayFile(file)) {
-        //     return;
-        // }
-
-        // var obj = new File3D(this, file);
-
-        // this._files[file.id] = obj;
-        // this._fileIds[obj.mesh.id] = obj.file.id;
 
         await this._fileUpdated(file, true);
         this.onFileAdded.invoke(file);
@@ -517,17 +520,24 @@ export default class GameView extends Vue implements IGameView {
         // }
     }
 
+    private _sceneBackgroundUpdate() {
+        if (this._sceneBackground) {
+            this._scene.background = this._sceneBackground;
+        } else {
+            this._scene.background = new Color(DEFAULT_SCENE_BACKGROUND_COLOR)
+        }
+    }
+
     private _setupScene() {
 
         this._scene = new Scene();
 
         let globalsFile = this.fileManager.globalsFile;
 
-        if (globalsFile && globalsFile.tags['aux.scene.color']) {
-            this._scene.background = new Color(globalsFile.tags['aux.scene.color']);
-        } else {
-            this._scene.background = new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
-        }
+        // Scene background color.
+        let sceneBackgroundColor = globalsFile.tags['aux.scene.color'];
+        this._sceneBackground = hasValue(sceneBackgroundColor) ? new Color(sceneBackgroundColor) : new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
+        this._sceneBackgroundUpdate();
 
         this.setCameraType('orthographic');
         this._setupRenderer();

@@ -1,9 +1,9 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { IGameView } from "../../../shared/IGameView";
-import { File, file, hasValue } from "@yeti-cgi/aux-common";
+import { File, file, hasValue } from "@casual-simulation/aux-common";
 import { ScaleDecorator } from "./ScaleDecorator";
 import { ContextPositionDecorator } from "./ContextPositionDecorator";
-import { MeshCubeDecorator } from "./MeshCubeDecorator";
+import { FileShapeDecorator } from "./FileShapeDecorator";
 import { LabelDecorator } from "./LabelDecorator";
 import { UserMeshDecorator } from "./UserMeshDecorator";
 import { AuxFile3D } from "../AuxFile3D";
@@ -11,6 +11,7 @@ import { LineToDecorator } from "./LineToDecorator";
 import { WordBubbleDecorator } from "./WordBubbleDecorator";
 import { appManager } from "../../../shared/AppManager";
 import { UserControlsDecorator } from "./UserControlsDecorator";
+import { OutlineDecorator } from "./OutlineDecorator";
 
 export class AuxFile3DDecoratorFactory { 
 
@@ -34,8 +35,13 @@ export class AuxFile3DDecoratorFactory {
                 decorators.push(new UserMeshDecorator(file3d));
             }
         } else {
+
+            let fileShapeDecorator = new FileShapeDecorator(file3d);
+            // let outlineDecorator = new OutlineDecorator(file3d, fileShapeDecorator);
+
             decorators.push(
-                new MeshCubeDecorator(file3d)
+                fileShapeDecorator,
+                // outlineDecorator
             );
         }
 

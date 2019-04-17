@@ -35,7 +35,7 @@ module.exports = {
   },
   externals: [
     nodeExternals({
-      whitelist: /^@yeti-cgi\/aux-common/,
+      whitelist: /^@casual-simulation\/aux-common/,
       
       // Use package.json instead of node_modules.
       // This way we can exclude packages even though they're not in the first node_modules

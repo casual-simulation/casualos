@@ -17,8 +17,9 @@ import {
     getContextScale,
     getContextDefaultHeight,
     getContextColor,
-    createFile
-} from '@yeti-cgi/aux-common';
+    createFile,
+    isContext
+} from '@casual-simulation/aux-common';
 import { BuilderFileClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderFileClickOperation';
 import { Physics } from '../../shared/scene/Physics';
 import { flatMap, minBy, keys } from 'lodash';
@@ -138,9 +139,13 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         }
     }
  
-    canShrinkWorkspace(file: ContextGroup3D) {
-        if (file && file.file.tags.size >= 1) {
-            if (file.file.tags.size === 1) {
+    canShrinkWorkspace(calc: FileCalculationContext, file: ContextGroup3D) {
+        if (!file) {
+            return false;
+        }
+        const size = getContextSize(calc, file.file);
+        if (size > 1) {
+            if (size === 1) {
                 // Can only shrink to zero size if there are no objects on the workspace.
                 const allObjects = this._gameView.getContexts().map((o) => { return o.file });
                 const workspaceObjects = objectsAtWorkspace(allObjects, file.file.id);
@@ -150,6 +155,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             }
             return true;
         }
+
+        return false;
     }
 
     /**
@@ -184,7 +191,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         const key = posToKey(position);
         appManager.fileManager.updateFile(file.file, {
             tags: {
-                [`aux.${file.domain}.context.grid`]: {
+                [`aux.context.grid`]: {
                     [key]: {
                         height: height
                     }
@@ -200,13 +207,13 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     pointOnWorkspaceGrid(calc: FileCalculationContext, screenPos: Vector2, camera: Camera) {
         let raycaster = new Raycaster();
         raycaster.setFromCamera(screenPos, camera);
-        const workspaces = this.getSurfaceObjects();
+        const workspaces = this.getSurfaceObjects(calc);
         const hits = raycaster.intersectObjects(workspaces, true);
         const hit = hits[0];
         if (hit) {
             const point = hit.point;
             const workspace = this.findWorkspaceForIntersection(hit);
-            if (workspace && workspace.file.tags[`aux.${workspace.domain}.context`] && !getContextMinimized(calc, workspace.file, workspace.domain)) {
+            if (workspace && isContext(calc, workspace.file) && !getContextMinimized(calc, workspace.file)) {
                 const workspaceMesh = workspace.surface;
                 const closest = workspaceMesh.closestTileToPoint(point);
 
@@ -231,7 +238,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      * @param exclude The optional workspace to exclude from the search.
      */
     closestWorkspace(calc: FileCalculationContext, point: Vector3, exclude?: AuxFile3D | ContextGroup3D) {
-        const workspaceMeshes = this._gameView.getContexts().filter(context => context !== exclude && !getContextMinimized(calc, context.file, context.domain) && !!getContextSize(calc, context.file, context.domain));
+        const workspaceMeshes = this._gameView.getContexts().filter(context => context !== exclude && !getContextMinimized(calc, context.file) && !!getContextSize(calc, context.file));
 
         if (!!workspaceMeshes && workspaceMeshes.length > 0) {
             const center = new Axial();
@@ -239,10 +246,10 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             const gridPositions = workspaceMeshes.map(mesh => {
                 const w = <Workspace>mesh.file;
                 const gridPos = this._worldPosToGridPos(calc, mesh, point);
-                const grid = getBuilderContextGrid(calc, w, mesh.domain);
+                const grid = getBuilderContextGrid(calc, w);
                 const tilePositions = grid ? keys(grid).map(keyToPos) : [];
                 const distToCenter = gridDistance(center, gridPos);
-                const size = getContextSize(calc, w, mesh.domain);
+                const size = getContextSize(calc, w);
                 const scaledDistance = distToCenter - (size - 1);
                 const distances = [
                     { position: center, distance: scaledDistance },
@@ -284,9 +291,9 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         return this.findWorkspaceForIntersection(hit) === null;
     }
 
-    getSurfaceObjects() {
+    getSurfaceObjects(calc: FileCalculationContext) {
         if (this._surfaceObjectsDirty) {
-            this._surfaceColliders = flatMap((<GameView>this._gameView).getContexts().filter(f => f.file.tags[`aux.${f.domain}.context`]), f => f.surface.colliders);
+            this._surfaceColliders = flatMap((<GameView>this._gameView).getContexts().filter(f => isContext(calc, f.file)), f => f.surface.colliders);
             this._surfaceObjectsDirty = false;
         }
         return this._surfaceColliders;
@@ -298,16 +305,16 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
         if (gameObject) {
 
-            if (gameObject instanceof ContextGroup3D && gameObject.file.tags[`aux.${gameObject.domain}.context`]) {
+            if (gameObject instanceof ContextGroup3D && isContext(calc, gameObject.file)) {
                 
                 const tile = this._worldPosToGridPos(calc, gameObject, point);
-                const currentGrid = getBuilderContextGrid(calc, gameObject.file, gameObject.domain);
+                const currentGrid = getBuilderContextGrid(calc, gameObject.file);
                 const currentTile = currentGrid ? currentGrid[posToKey(tile)] : null;
-                const defaultHeight = getContextDefaultHeight(calc, gameObject.file, gameObject.domain);
+                const defaultHeight = getContextDefaultHeight(calc, gameObject.file);
                 const currentHeight = (!!currentTile ? currentTile.height : defaultHeight) || DEFAULT_WORKSPACE_HEIGHT;
                 const increment = DEFAULT_WORKSPACE_HEIGHT_INCREMENT; // TODO: Replace with a configurable value.
                 const minHeight = DEFAULT_WORKSPACE_MIN_HEIGHT; // TODO: This too
-                const minimized = isMinimized(calc, gameObject.file, gameObject.domain);
+                const minimized = isMinimized(calc, gameObject.file);
                 
                 if (this.isInCorrectMode(gameObject)) {
                     if (!minimized) {
@@ -317,7 +324,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                         }
                         
                         actions.push({ label: 'Expand', onClick: () => this._expandWorkspace(calc, gameObject) });
-                        if (this.canShrinkWorkspace(gameObject)) {
+                        if (this.canShrinkWorkspace(calc, gameObject)) {
                             actions.push({ label: 'Shrink', onClick: () => this._shrinkWorkspace(calc, gameObject) });
                         }
                     }
@@ -328,13 +335,13 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                         let colorUpdated = (hexColor: string) => {
                             appManager.fileManager.updateFile(gameObject.file, { 
                                 tags: { 
-                                    [`aux.${gameObject.domain}.context.color`]: hexColor 
+                                    [`aux.context.color`]: hexColor 
                                 }
                             });
                         };
                         
                         let workspace = <Workspace>gameObject.file;
-                        const currentColor = getContextColor(calc, gameObject.file, gameObject.domain);
+                        const currentColor = getContextColor(calc, gameObject.file);
                         let colorPickerEvent: ColorPickerEvent = { pagePos: pagePos, initialColor: currentColor, colorUpdated: colorUpdated };
                         
                         EventBus.$emit('onColorPicker', colorPickerEvent);
@@ -351,11 +358,11 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     }
 
     private _shrinkWorkspace(calc: FileCalculationContext, file: ContextGroup3D) {
-        if (file && file.file.tags[`aux.${file.domain}.context`]) {
-            const size = getContextSize(calc, file.file, file.domain);
+        if (file && isContext(calc, file.file)) {
+            const size = getContextSize(calc, file.file);
             appManager.fileManager.updateFile(file.file, {
                 tags: {
-                    [`aux.${file.domain}.context.size`]: (size || 0) - 1
+                    [`aux.context.size`]: (size || 0) - 1
                 }
             });
         }
@@ -366,11 +373,11 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      * @param file 
      */
     private _toggleWorkspace(calc: FileCalculationContext, file: ContextGroup3D) {
-        if (file && file.file.tags[`aux.${file.domain}.context`]) {
-            const minimized = !isMinimized(calc, file.file, file.domain);
+        if (file && isContext(calc, file.file)) {
+            const minimized = !isMinimized(calc, file.file);
             appManager.fileManager.updateFile(file.file, {
                 tags: {
-                    [`aux.${file.domain}.context.minimized`]: minimized
+                    [`aux.context.minimized`]: minimized
                 }
             });
         }
@@ -378,10 +385,10 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
     private _expandWorkspace(calc: FileCalculationContext, file: ContextGroup3D) {
         if (file) {
-            const size = getContextSize(calc, file.file, file.domain);
+            const size = getContextSize(calc, file.file);
             appManager.fileManager.updateFile(file.file, {
                 tags: {
-                    [`aux.${file.domain}.context.size`]: (size || 0) + 1
+                    [`aux.context.size`]: (size || 0) + 1
                 }
             });
         }
@@ -389,7 +396,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
     private _worldPosToGridPos(calc: FileCalculationContext, file: ContextGroup3D, pos: Vector3) {
         const w = file.file;
-        const scale = getContextScale(calc, file.file, file.domain);
+        const scale = getContextScale(calc, file.file);
         const localPos = new Vector3().copy(pos).sub(file.position);
         return realPosToGridPos(new Vector2(localPos.x, localPos.z), scale);
     }

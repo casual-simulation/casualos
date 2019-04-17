@@ -15,7 +15,11 @@ const config: ClientConfig = {
     dist: path.resolve(__dirname, '..', '..', 'aux-web', 'dist'),
     index: 'player-index.html',
     domains,
-    web: webConfig
+    web: {
+        ...webConfig,
+        isBuilder: false,
+        isPlayer: true
+    }
 };
 
 export default config;

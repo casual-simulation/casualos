@@ -9,9 +9,10 @@ Make sure you have all the prerequisite tools installed:
     - Once NVM is installed, you can install the correct version of Node by running `nvm install 10.13.0` in your favorite terminal.
 - Docker ([Mac][docker-for-mac], [Windows][docker-for-windows])
     - Used to make development with MongoDB easy.
-    - Once installed, make sure the `/data` directory is shared with docker.
+    - Once installed, make sure the `/data/db` directory is shared with docker.
+        - If the `/data/db` directory doesn't exist, then create it.
         - On Mac you can get to this via:
-        - Docker Menu (On top bar) -> Preferences... -> File Sharing and add the `/data` directory.
+        - Docker Menu (On top bar) -> Preferences... -> File Sharing and add the `/data/db` directory.
 
 ## First Time Setup
 
@@ -67,7 +68,7 @@ Additionally, the CI server will publish the `aux-common` NPM package whenever t
 **To make a new release, use this process:**
 
 1. Make sure everything you want to release is ready and merged into `develop`.
-2. Update the [CHANGELOG.md](./src/aux-server/CHANGELOG.md) file with the next version number, date, and changes that were made since the last version.
+2. Update the [CHANGELOG.md](./CHANGELOG.md) file with the next version number, date, and changes that were made since the last version.
 3. Commit the updated CHANGELOG to the `develop` branch.
 4. Merge the `develop` branch into the `master` branch.
     - Don't use [fast-forward](https://ariya.io/2013/09/fast-forward-git-merge). (`--no-ff`)
@@ -110,6 +111,7 @@ Here's a list of the tools and packages that we're using to build AUX.
     - [concurrently](https://github.com/kimmobrunfeldt/concurrently) for running multiple things at a time.
     - [nodemon](https://nodemon.io/) for running node in watch mode.
     - [Visual Studio Code](https://code.visualstudio.com/) for file editing and debugging.
+    - [TypeDoc](https://typedoc.org/) for API documentation generation.
 - Dependencies
     - AUX Common
         - [acorn](https://github.com/acornjs/acorn) for parsing AUX formulas.
@@ -119,6 +121,9 @@ Here's a list of the tools and packages that we're using to build AUX.
         - [lru-cache](https://github.com/isaacs/node-lru-cache) for caching formula transpilation results.
         - [rxjs](https://github.com/ReactiveX/rxjs) for reactive programming.
         - [uuid](https://github.com/kelektiv/node-uuid) for generating UUIDs.
+        - [base64-js](https://github.com/beatgammit/base64-js) for base64 encoding/decoding of binary data.
+        - [sha.js](https://github.com/crypto-browserify/sha.js/tree/master) for SHA hashing.
+        - [fast-json-stable-stringify](https://github.com/epoberezkin/fast-json-stable-stringify) for deterministic JSON serialization. (for hashing)
     - AUX Server
         - [vue](https://github.com/vuejs/vue) for JS <--> HTML UI binding.
             - [vue-material](https://github.com/vuematerial/vue-material) for Material components.
@@ -127,6 +132,7 @@ Here's a list of the tools and packages that we're using to build AUX.
             - [vue-router](https://github.com/vuejs/vue-router) for SPA routing.
             - [vue-property-decorator](https://github.com/kaorun343/vue-property-decorator) for property decorators on Vue classes.
             - [vue-class-component](https://github.com/vuejs/vue-class-component) for class decorators on Vue classes.
+            - [vue-shortkey](https://www.npmjs.com/package/vue-shortkey) for keyboard shortcuts.
         - [three](https://threejs.org/) for 3D WebGL rendering.
             - [three-bmfont-text](https://github.com/Jam3/three-bmfont-text) for 3D text rendering.
         - [express](http://expressjs.com/) for the HTTP server.
@@ -139,6 +145,7 @@ Here's a list of the tools and packages that we're using to build AUX.
         - [mongodb](https://github.com/mongodb/node-mongodb-native) for MongoDB connections.
         - [webvr-polyfill](https://github.com/immersive-web/webvr-polyfill) for WebVR 1.0 and 1.1 support.
         - [webxr-polyfill](https://github.com/mozilla/webxr-polyfill) for [WebXR Viewer iOS app](https://github.com/mozilla-mobile/webxr-ios) support.
+        - [Dexie.js](https://dexie.org/) for IndexedDB storage.
 
 If you're using Visual Studio Code, I recommend getting the Jest extension. It makes it real easy to debug unit tests.
 

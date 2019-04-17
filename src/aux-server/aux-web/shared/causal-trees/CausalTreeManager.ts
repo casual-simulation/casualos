@@ -3,12 +3,12 @@ import io from 'socket.io-client';
 import { WorkerEvent, ValueCalculated } from './WorkerEvents';
 import { SubscriptionLike, Subject, Observable } from 'rxjs';
 import { first, map, filter, tap } from 'rxjs/operators';
-import { AtomOp, RealtimeChannelInfo, PrecalculatedOp, RealtimeCausalTree, CausalTree, RealtimeChannel, CausalTreeFactory, CausalTreeStore, Atom, CausalTreeOptions, RealtimeCausalTreeOptions } from '@yeti-cgi/aux-common/causal-trees';
+import { AtomOp, RealtimeChannelInfo, PrecalculatedOp, RealtimeCausalTree, CausalTree, RealtimeChannel, CausalTreeFactory, CausalTreeStore, Atom, CausalTreeOptions, RealtimeCausalTreeOptions } from '@casual-simulation/aux-common/causal-trees';
 import { SocketIOConnection } from './SocketIOConnection';
-import { auxCausalTreeFactory } from '@yeti-cgi/aux-common';
+import { auxCausalTreeFactory } from '@casual-simulation/aux-common';
 import { BrowserCausalTreeStore } from './BrowserCausalTreeStore';
-import { AtomValidator } from '@yeti-cgi/aux-common/causal-trees/AtomValidator';
-import { SigningCryptoImpl } from '@yeti-cgi/aux-common/crypto';
+import { AtomValidator } from '@casual-simulation/aux-common/causal-trees/AtomValidator';
+import { SigningCryptoImpl } from '@casual-simulation/aux-common/crypto';
 import { BrowserSigningCryptoImpl } from '../crypto/BrowserSigningCryptoImpl';
 
 /**

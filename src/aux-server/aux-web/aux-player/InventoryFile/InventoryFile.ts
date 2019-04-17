@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Inject, Watch, Prop } from 'vue-property-decorator';
-import { Object, AuxFile } from '@yeti-cgi/aux-common';
+import { Object, AuxFile } from '@casual-simulation/aux-common';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { appManager } from '../../shared/AppManager';
 

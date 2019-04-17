@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) 2019 YETi CGI
+ * Copyright (c) 2019 Casual Simulation, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,6 @@
 
 export * from './utils';
 export * from './state-machine';
-export * from './channels-core';
 export * from './Files';
 export * from './Formulas';
 export * from './aux-format';

@@ -197,14 +197,18 @@ export class Input {
     /**
      * Gets the closest vue component accociated with this HTML element.
      * @param element The html element.
+     * @param The vue class that the element needs to match.
      */
-    public static getVueParent(element: HTMLElement): Vue {
+    public static getVueParent(element: HTMLElement, vueClass?: any): Vue {
         const e = <any>element;
         if (!e) {
             return null;
         }
         if (e.__vue__) {
-            return <Vue>e.__vue__;
+            let vue = <Vue>e.__vue__;
+            if (!vueClass || vue instanceof vueClass) {
+                return vue;
+            }
         }
         return Input.getVueParent(element.parentElement);
     }

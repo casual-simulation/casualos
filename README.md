@@ -24,7 +24,7 @@ See [DEVELOPERS.md](./DEVELOPERS.md) for dev environment setup instructions.
 ```
 MIT License
 
-Copyright (c) 2019 YETi CGI
+Copyright (c) 2019 Casual Simulation, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

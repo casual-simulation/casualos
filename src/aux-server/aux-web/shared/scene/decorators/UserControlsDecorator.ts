@@ -4,7 +4,7 @@ import {
     PerspectiveCamera,
     OrthographicCamera,
 } from "three";
-import { FileCalculationContext, AuxObject, calculateGridScale, getFileRotation, getFilePosition, normalize, lerp } from '@yeti-cgi/aux-common'
+import { FileCalculationContext, AuxObject, calculateGridScale, getFileRotation, getFilePosition, normalize, lerp } from '@casual-simulation/aux-common'
 import { appManager } from '../../AppManager';
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
@@ -74,7 +74,7 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
             let camPosition: Vector3 = mainCamera.position.clone();
 
             // Scale camera's local position so that it maps to the context positioning.
-            const gridScale = calculateGridScale(calc, this.file3D.contextGroup.file, this.file3D.domain);
+            const gridScale = calculateGridScale(calc, this.file3D.contextGroup.file);
             const scale = calculateScale(calc, this.file3D.file, gridScale);
             camPosition.x /= scale.x;
             camPosition.y /= scale.y;

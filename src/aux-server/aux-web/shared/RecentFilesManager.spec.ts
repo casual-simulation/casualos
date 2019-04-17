@@ -1,7 +1,7 @@
 import { RecentFilesManager } from "./RecentFilesManager";
 import { FileHelper } from "./FileHelper";
-import { AuxCausalTree, createFile } from "@yeti-cgi/aux-common";
-import { storedTree, site } from "@yeti-cgi/aux-common/causal-trees";
+import { AuxCausalTree, createFile } from "@casual-simulation/aux-common";
+import { storedTree, site } from "@casual-simulation/aux-common/causal-trees";
 
 
 describe('RecentFilesManager', () => {
@@ -203,7 +203,7 @@ describe('RecentFilesManager', () => {
                         test: 'abc',
                         _destroyed: true,
                         'aux._diff': true,
-                        'aux._diffTags': [ 'test' ]
+                        'aux._diffTags': [ 'test', '_destroyed' ]
                     }
                 }
             ]);

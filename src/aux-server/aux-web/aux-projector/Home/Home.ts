@@ -13,7 +13,7 @@ import {
     AuxObject,
     DEFAULT_SELECTION_MODE,
     getSelectionMode
-} from '@yeti-cgi/aux-common';
+} from '@casual-simulation/aux-common';
 import GameView from '../GameView/GameView';
 import { appManager } from '../../shared/AppManager';
 import FileTable from '../FileTable/FileTable';

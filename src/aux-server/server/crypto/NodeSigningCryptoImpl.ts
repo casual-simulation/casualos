@@ -1,4 +1,4 @@
-import { SigningCryptoImpl, PrivateCryptoKey, PublicCryptoKey, SigningCryptoKey, SignatureAlgorithmType } from "@yeti-cgi/aux-common/crypto";
+import { SigningCryptoImpl, PrivateCryptoKey, PublicCryptoKey, SigningCryptoKey, SignatureAlgorithmType } from "@casual-simulation/aux-common/crypto";
 import { nodeSignatureToWebSignature, webSignatureToNodeSignature } from './SubtleCryptoCompat';
 import { createSign, createVerify, generateKeyPairSync, Verify } from 'crypto';
 

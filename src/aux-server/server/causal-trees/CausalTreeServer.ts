@@ -1,10 +1,10 @@
 import { Socket, Server } from 'socket.io';
-import { CausalTreeStore, CausalTreeFactory, CausalTree, AtomOp, RealtimeChannelInfo, storedTree, site, SiteVersionInfo, SiteInfo, Atom, StoredCausalTree, currentFormatVersion, atomIdToString, atomId, upgrade } from '@yeti-cgi/aux-common/causal-trees';
+import { CausalTreeStore, CausalTreeFactory, CausalTree, AtomOp, RealtimeChannelInfo, storedTree, site, SiteVersionInfo, SiteInfo, Atom, StoredCausalTree, currentFormatVersion, atomIdToString, atomId, upgrade } from '@casual-simulation/aux-common/causal-trees';
 import { find } from 'lodash';
 import { bufferTime, flatMap, filter, concatMap, tap } from 'rxjs/operators';
-import { PrivateCryptoKey, PublicCryptoKey, SigningCryptoImpl } from '@yeti-cgi/aux-common/crypto';
+import { PrivateCryptoKey, PublicCryptoKey, SigningCryptoImpl } from '@casual-simulation/aux-common/crypto';
 import { NodeSigningCryptoImpl } from '../crypto/NodeSigningCryptoImpl';
-import { AtomValidator } from '@yeti-cgi/aux-common/causal-trees/AtomValidator';
+import { AtomValidator } from '@casual-simulation/aux-common/causal-trees/AtomValidator';
 import { SubscriptionLike } from 'rxjs';
 
 /**

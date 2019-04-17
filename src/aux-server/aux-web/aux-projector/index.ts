@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) 2019 YETi CGI
+ * Copyright (c) 2019 Casual Simulation, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -46,6 +46,7 @@ import {
     MdSnackbar,
     MdSwitch,
     MdBadge,
+    MdDialogPrompt,
 } from 'vue-material/dist/components';
 import 'vue-material/dist/vue-material.min.css';
 import 'vue-material/dist/theme/default.css';
@@ -92,6 +93,7 @@ Vue.use(MdSnackbar);
 Vue.use(MdSwitch);
 Vue.use(MdBadge);
 Vue.use(VueShortkey);
+Vue.use(MdDialogPrompt);
 
 const routes: RouteConfig[] = [
     {

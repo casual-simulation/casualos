@@ -1,9 +1,9 @@
 import { Intersection, Vector3 } from 'three';
 import { Physics } from '../../../shared/scene/Physics';
-import { File, Workspace, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated } from '@yeti-cgi/aux-common/Files';
+import { File, Workspace, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated } from '@casual-simulation/aux-common/Files';
 import { keys } from 'lodash';
 import { gridPosToRealPos, Axial, posToKey } from '../../../shared/scene/hex';
-import { FileCalculationContext, getContextMinimized, getContextSize, getBuilderContextGrid } from '@yeti-cgi/aux-common/Files/FileCalculations';
+import { FileCalculationContext, getContextMinimized, getContextSize, getBuilderContextGrid } from '@casual-simulation/aux-common/Files/FileCalculations';
 import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
 import { BuilderGroup3D } from '../../../shared/scene/BuilderGroup3D';
 import { appManager } from '../../../shared/AppManager';
@@ -69,9 +69,9 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
             // if the workspace is only 1 tile large and not minimized
             const workspace = <Workspace>this._workspace.file;
             const domain = this._workspace.domain;
-            const size = getContextSize(calc, workspace, domain);
-            const minimized = getContextMinimized(calc, workspace, domain);
-            const grid = getBuilderContextGrid(calc, workspace, domain);
+            const size = getContextSize(calc, workspace);
+            const minimized = getContextMinimized(calc, workspace);
+            const grid = getBuilderContextGrid(calc, workspace);
             const files = this._workspace.getFiles();
             if (size === 1 && !minimized && (!grid || keys(grid).length === 0) && files.length === 0) {
                 // check if it is close to another workspace.
@@ -104,9 +104,9 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
 
             appManager.fileManager.updateFile(this._workspace.file, {
                 tags: {
-                    [`aux.${this._workspace.domain}.context.x`]: final.x,
-                    [`aux.${this._workspace.domain}.context.y`]: final.z,
-                    [`aux.${this._workspace.domain}.context.z`]: final.y
+                    [`aux.context.x`]: final.x,
+                    [`aux.context.y`]: final.z,
+                    [`aux.context.z`]: final.y
                 }
             });
         }
@@ -120,7 +120,7 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
             fileRemoved(this._workspace.file.id),
             fileUpdated(this._attachWorkspace.file.id, {
                 tags: {
-                    [`aux.${this._workspace.domain}.context.grid`]: {
+                    [`aux.context.grid`]: {
                         [posToKey(this._attachPoint)]: {
                             height: height
                         }

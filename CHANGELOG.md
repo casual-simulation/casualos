@@ -1,7 +1,53 @@
-# AUX Server Changelog
+# AUX Changelog
+
+## V0.4.12
+### Date: 04/17/2019
+
+### Changes:
+- **Breaking Changes**
+  - Changed worksurfaces and player config files to use `{context}.config` instead of `aux.builder.context` and `aux.player.context`.
+    - This also allows people to specify formulas on a per-context basis.
+    - We call these new tags "config tags".
+    - For example, you can show the `hello` context in both AUX Builder and AUX Player by setting the `hello.config` tag to `true`.
+    - Because of this change, existing worksurfaces no longer work. To regain your worksurfaces, do a search for `@aux.builder.context` and then create a config tag for the worksurfaces that are found.
+  - Changed worksurface config values to use `aux.context.{value}` instead of `aux.builder.context.{value}`.
+    - Removing `builder` from the name makes it easier to understand that the tags are describing the contexts that the file is configuring.
+  - Renamed `aux._parent` to `aux._creator`.
+  - Moved functions that create file diffs to their own namespace.
+    - `xyzDiff()` is now `makeDiff.xyz()`
+    - so `addToContextDiff()` is now `makeDiff.addToContext()`
+- Bug Fixes
+  - Fixed an issue that would prevent some files from showing up in Aux Builder due to being created with incorrect data.
+  - Fixed the ability to shrink worksurfaces.
+- Improvements
+  - Added the ability to pass arguments in `shout()`.
+    - For example, you can pass the number 11 to everything that has a `handleMessage()` tag using `shout("handleMessage", 11)`.
+  - Added `isBuilder` and `isPlayer` variables to formulas.
+    - This allows formulas to tell whether they are being run in AUX Builder or AUX Player.
+    - Using these variables in combination with config tags allows specifying whether a context should show up in AUX Builder or AUX Player.
+    - For example, the `hello` context will only show up in AUX Builder when the `hello.config` tag is set to `=isBuilder`.
+  - Added the ability to pass an array of files to `clone()` and `destroy()`.
+  - Changed the generated context ID format from `aux._context_{uuid}` to `context_{short-uuid}`.
+  - Added `aux.mergeable` so control whether diffs can be merged into other files.
+  - Added `md-dialog-prompt` to `GameView` to allow users to set custom contexts for new workspaces.
+  - Removed the `_destroyed` tag. Setting it now does nothing.
+  - Aux Player now uses `aux.context.color` value as the scene's background color.
+    - If `aux.context.color` has no value or is undefined, then it will fall back to `aux.scene.color`.
+  - Made diff toolbar in AUX Builder transparent and Inventory toolbar in AUX Player mostly transparent (slots are still lightly visible.)
+  - Added a trash can that shows up when dragging a file.
+    - Dragging files onto this trash can causes the file to be deleted.
+    - Dragging a diff onto the trash can causes the diff to be cleared.
+  - Added support for `aux.label.anchor` to allow positioning of the label.
+    - Supported values are:
+      - top (default)
+      - left
+      - right
+      - front
+      - back
+      - floating (word bubble)
 
 ## V0.4.11
-### Date: TBD
+### Date: 04/12/2019
 
 ### Changes:
 - Improvements

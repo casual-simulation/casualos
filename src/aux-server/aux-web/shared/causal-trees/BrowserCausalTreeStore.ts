@@ -1,4 +1,4 @@
-import { CausalTreeStore, AtomOp, StoredCausalTree, Atom, atomIdToString, StoredCausalTreeVersion3, upgrade, SiteInfo, StoredCryptoKeys, atomId } from "@yeti-cgi/aux-common/causal-trees";
+import { CausalTreeStore, AtomOp, StoredCausalTree, Atom, atomIdToString, StoredCausalTreeVersion3, upgrade, SiteInfo, StoredCryptoKeys, atomId } from "@casual-simulation/aux-common/causal-trees";
 import Dexie from 'dexie';
 
 export class BrowserCausalTreeStore implements CausalTreeStore {

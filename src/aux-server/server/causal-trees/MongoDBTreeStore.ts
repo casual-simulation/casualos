@@ -1,6 +1,6 @@
 import { MongoClient, Db, Collection } from 'mongodb';
 import pify from 'pify';
-import { CausalTreeStore, AtomOp, StoredCausalTree, Atom, ArchivedAtom, upgrade, SiteInfo, atomIdToString, StoredCryptoKeys } from '@yeti-cgi/aux-common/causal-trees';
+import { CausalTreeStore, AtomOp, StoredCausalTree, Atom, ArchivedAtom, upgrade, SiteInfo, atomIdToString, StoredCryptoKeys } from '@casual-simulation/aux-common/causal-trees';
 
 /**
  * Defines a class that is able to store a causal tree in MongoDB.

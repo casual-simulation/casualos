@@ -9,7 +9,7 @@ import {
     calculateDestroyFileEvents,
     removeFromContextDiff,
     fileUpdated,
-} from '@yeti-cgi/aux-common';
+} from '@casual-simulation/aux-common';
 
 import { setParent } from '../../../shared/scene/SceneUtils';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
@@ -18,7 +18,9 @@ import { AuxFile3DDecoratorFactory } from '../../../shared/scene/decorators/AuxF
 import { appManager } from '../../../shared/AppManager';
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
+import { Input } from '../../../shared/scene/Input';
 import GameView from '../../GameView/GameView';
+import TrashCan from '../../TrashCan/TrashCan';
 
 /**
  * Shared class for both BuilderFileDragOperation and BuilderNewFileDragOperation.
@@ -41,6 +43,8 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
      */
     constructor(gameView: GameView, interaction: BuilderInteractionManager, files: File[], context: string) {
         super(gameView, interaction, files, context);
+
+        gameView.showTrashCan = true;
     }
 
     protected _onDrag(calc: FileCalculationContext) {
@@ -63,8 +67,9 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
             this._freeDragGroup = null;
             
             // Destroy files if free dragging them (trash can)!
-            this._destroyFiles(calc, this._files);
+            this._destroyOrRemoveFiles(calc, this._files);
         }
+        this._gameView.showTrashCan = false;
     }
 
     protected _dragFilesOnWorkspace(calc: FileCalculationContext, workspace: BuilderGroup3D, gridPosition: Vector2): void {
@@ -123,17 +128,45 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         }
     }
 
-    protected _destroyFiles(calc: FileCalculationContext, files: File[]) {
+    protected _destroyOrRemoveFiles(calc: FileCalculationContext, files: File[]) {
+        if (this._isOverTrashCan()) {
+            this._destroyFiles(calc, files);
+            return;
+        }
+
+        this._removeFromContext(calc, files);
+    }
+
+    /**
+     * Determines whether the mouse is currently over the trash can.
+     */
+    protected _isOverTrashCan() {
+        const input = this._gameView.getInput();
+        if (input.isMouseFocusingAny(this._gameView.getUIHtmlElements())) {
+            const element = input.getTargetData().inputOver;
+            const vueElement = Input.getVueParent(element, TrashCan);
+            return !!vueElement;
+        }
+        return false;
+    }
+
+    private _destroyFiles(calc: FileCalculationContext, files: File[]) {
         let events: FileEvent[] = [];
         // Remove the files from the context
         for (let i = 0; i < files.length; i++) {
-            events.push(
-                fileUpdated(files[i].id, {
-                    tags: removeFromContextDiff(calc, this._context)
-                })
-            );
+            events.push(fileRemoved(files[i].id));
         }
+        appManager.fileManager.transaction(...events);
+    }
 
+    private _removeFromContext(calc: FileCalculationContext, files: File[]) {
+        let events: FileEvent[] = [];
+        // Remove the files from the context
+        for (let i = 0; i < files.length; i++) {
+            events.push(fileUpdated(files[i].id, {
+                tags: removeFromContextDiff(calc, this._context)
+            }));
+        }
         appManager.fileManager.transaction(...events);
     }
 

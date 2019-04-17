@@ -2,8 +2,8 @@ import { WebGLRenderer, Plane, PerspectiveCamera, Scene, Camera, OrthographicCam
 import { Time } from "./scene/Time";
 import { Input } from "./scene/Input";
 import { InputVR } from "./scene/InputVR";
-import { ArgEvent } from "@yeti-cgi/aux-common/Events";
-import { AuxFile } from "@yeti-cgi/aux-common/aux-format";
+import { ArgEvent } from "@casual-simulation/aux-common/Events";
+import { AuxFile } from "@casual-simulation/aux-common/aux-format";
 import { ContextGroup3D } from "./scene/ContextGroup3D";
 import { AuxFile3DFinder } from "./AuxFile3DFinder";
 import Vue from "vue";

@@ -1,8 +1,8 @@
 import { Physics } from '../../../shared/scene/Physics';
-import { File, PartialFile, fileAdded, FileEvent } from '@yeti-cgi/aux-common/Files';
-import { createFile, FileCalculationContext, getDiffUpdate, isDiff } from '@yeti-cgi/aux-common/Files/FileCalculations';
+import { File, PartialFile, fileAdded, FileEvent } from '@casual-simulation/aux-common/Files';
+import { createFile, FileCalculationContext, getDiffUpdate, isDiff } from '@casual-simulation/aux-common/Files/FileCalculations';
 import { appManager } from '../../../shared/AppManager';
-import { merge } from '@yeti-cgi/aux-common/utils';
+import { merge } from '@casual-simulation/aux-common/utils';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
 import { BaseBuilderFileDragOperation } from './BaseBuilderFileDragOperation';
 import GameView from '../../GameView/GameView';
@@ -49,6 +49,11 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
         if (this._initialDragMesh) {
             this._releaseDragMesh(this._initialDragMesh);
             this._initialDragMesh = null;
+
+            if (this._isOverTrashCan()) {
+                // Clear the diff
+                appManager.fileManager.recent.clear();
+            }
         }
 
         super._onDragReleased(calc);

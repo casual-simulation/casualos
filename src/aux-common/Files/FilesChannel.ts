@@ -1,28 +1,35 @@
-import {filter, values, union, keys, isEqual, transform, set, mergeWith, unset, get, sortBy, flatMap} from 'lodash';
-import {
-    map as rxMap,
-    flatMap as rxFlatMap,
-    pairwise as rxPairwise,
-    startWith
-} from 'rxjs/operators';
-import { ReducingStateStore, Event, ChannelConnection } from "../channels-core";
-import {File, Object, Workspace, PartialFile} from './File';
-import { createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, isDestroyed, getActiveObjects, calculateStateDiff, FilesStateDiff, filtersMatchingArguments, calculateFormulaValue } from './FileCalculations';
+import { sortBy, flatMap} from 'lodash';
+import { File, Object, PartialFile} from './File';
+import { createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, getActiveObjects, calculateStateDiff, FilesStateDiff, filtersMatchingArguments, calculateFormulaValue } from './FileCalculations';
 import { merge as mergeObj } from '../utils';
 import formulaLib, { setActions, getActions, setFileState, setCalculationContext, getCalculationContext, setUserId, getUserId } from '../Formulas/formula-lib';
-import { AnimationActionLoopStyles } from 'three';
 import { SetValueHandler } from './FileProxy';
 export interface FilesState {
     [id: string]: File;
 }
 
+/**
+ * Defines an interface that represents an event.
+ * That is, a time-ordered action in a channel.
+ * @deprecated
+ */
+export interface Event {
+    /**
+     * The type of the event. 
+     * This helps determine how the event should be applied to the state.
+     */
+    type: string;
+}
+
+/**
+ * Defines a union type for all the possible events that can be emitted from a files channel.
+ */
 export type FileEvent = 
     FileAddedEvent | 
     FileRemovedEvent | 
     FileUpdatedEvent |
     FileTransactionEvent |
     ApplyStateEvent;
-
 
 export interface DiffOptions {
     /**
@@ -75,7 +82,8 @@ export function calculateActionEvents(state: FilesState, action: Action) {
         f,
         action.eventName,
         factory,
-        action.userId));
+        action.userId,
+        action.argument));
     let events = fileEvents;
 
     const updates = objects.map(o => calculateFileUpdateFromChanges(o.id, changes[o.id]));
@@ -116,7 +124,7 @@ export function calculateDestroyFileEvents(calc: FileCalculationContext, file: F
 }
 
 function destroyChildren(calc: FileCalculationContext, events: FileEvent[], id: string) {
-    const result = calculateFormulaValue(calc, `@aux._parent("${id}")`);
+    const result = calculateFormulaValue(calc, `@aux._creator("${id}")`); 
     if (result.success) {
         const children = result.result;
         let all: File[] = [];
@@ -169,7 +177,8 @@ function eventActions(state: FilesState,
     file: Object, 
     eventName: string,
     setValueHandlerFactory: (file: File) => SetValueHandler,
-    userId: string | null): FileEvent[] {
+    userId: string | null,
+    argument: any): FileEvent[] {
     const otherObjects = objects.filter(o => o !== file);
     const sortedObjects = sortBy(objects, o => o !== file);
     const filters = filtersMatchingArguments(context, file, eventName, otherObjects);
@@ -178,7 +187,7 @@ function eventActions(state: FilesState,
     let prevContext = getCalculationContext();
     let prevUserId = getUserId();
     let actions: FileEvent[] = [];
-    
+
     let vars: {
         [key: string]: any
     } = {};
@@ -186,16 +195,20 @@ function eventActions(state: FilesState,
     setFileState(state);
     setCalculationContext(context);
     setUserId(userId);
-    
+
     let formulaObjects = sortedObjects.map(o => convertToFormulaObject(context, o, setValueHandlerFactory(o)));
 
-    formulaObjects.forEach((obj, index) => {
-        if (index === 1) {
-            vars['that'] = obj;
-        }
-
-        vars[`arg${index}`] = obj;
-    });
+    if (typeof argument === 'undefined') {
+        formulaObjects.forEach((obj, index) => {
+            if (index === 1) {
+                vars['that'] = obj;
+            }
+            
+            vars[`arg${index}`] = obj;
+        });
+    } else {
+        vars['that'] = argument;
+    }
 
     scripts.forEach(s => context.sandbox.run(s, {}, formulaObjects[0], vars));
 
@@ -281,6 +294,11 @@ export interface Action {
      * The name of the event.
      */
     eventName: string;
+
+    /**
+     * The argument to pass as the "that" variable to scripts.
+     */
+    argument?: any;
 }
 
 export function fileAdded(file: File): FileAddedEvent {
@@ -313,12 +331,13 @@ export function transaction(events: FileEvent[]): FileTransactionEvent {
     };
 }
 
-export function action(eventName: string, fileIds: string[] = null, userId: string = null): Action {
+export function action(eventName: string, fileIds: string[] = null, userId: string = null, arg?: any): Action {
     return {
         type: 'action',
         fileIds,
         eventName,
-        userId
+        userId,
+        argument: arg
     };
 }
 

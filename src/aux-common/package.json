@@ -1,5 +1,5 @@
 {
-  "name": "@yeti-cgi/aux-common",
+  "name": "@casual-simulation/aux-common",
   "version": "0.4.11",
   "description": "Common library for AUX projects",
   "main": "index.js",
@@ -10,12 +10,13 @@
     "watch:player": "npm run watch",
     "clean": "gulp clean",
     "build": "npm run clean && tsc",
+    "build:docs": "typedoc --mode file --excludeNotExported --out ../../docs/aux-common .",
     "test": "jest",
     "test:watch": "jest --watchAll"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yeticgi/aux.git"
+    "url": "git+https://github.com/casual-simulation/aux.git"
   },
   "keywords": [
     "aux",
@@ -23,12 +24,12 @@
     "realtime",
     "crdt"
   ],
-  "author": "YETi CGI",
+  "author": "Casual Simulation, Inc.",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/yeticgi/aux/issues"
+    "url": "https://github.com/casual-simulation/aux/issues"
   },
-  "homepage": "https://github.com/yeticgi/aux#readme",
+  "homepage": "https://github.com/casual-simulation/aux#readme",
   "publishConfig": {
     "access": "public"
   },

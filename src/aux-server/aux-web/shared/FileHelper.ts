@@ -1,4 +1,27 @@
-import { AuxFile, PartialFile, File, FileEvent, FilesState, AuxCausalTree, AuxObject, updateFile, FileCalculationContext, createCalculationContext, getActiveObjects, createFile, createWorkspace, action, calculateActionEvents, addState, Workspace, calculateFormattedFileValue, calculateFileValue } from "@yeti-cgi/aux-common";
+import { 
+    AuxFile, 
+    PartialFile,
+    File,
+    FileEvent,
+    FilesState,
+    AuxCausalTree,
+    AuxObject,
+    updateFile,
+    FileCalculationContext,
+    createCalculationContext,
+    getActiveObjects,
+    createFile,
+    createWorkspace,
+    createContextId,
+    action,
+    calculateActionEvents,
+    addState,
+    Workspace,
+    calculateFormattedFileValue,
+    calculateFileValue,
+    SandboxLibrary
+} from "@casual-simulation/aux-common";
+import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 
 /**
  * Defines an class that contains a simple set of functions
@@ -7,15 +30,21 @@ import { AuxFile, PartialFile, File, FileEvent, FilesState, AuxCausalTree, AuxOb
 export class FileHelper {
     private _tree: AuxCausalTree;
     private _userId: string;
+    private _lib: SandboxLibrary;
 
     /**
      * Creates a new file helper.
      * @param tree The tree that the file helper should use.
      * @param userFileId The ID of the user's file.
      */
-    constructor(tree: AuxCausalTree, userFileId: string) {
+    constructor(tree: AuxCausalTree, userFileId: string, { isBuilder, isPlayer } = { isBuilder: false, isPlayer: false }) {
         this._tree = tree;
         this._userId = userFileId;
+        this._lib = {
+            ...formulaLib,
+            isBuilder,
+            isPlayer
+        };
     }
 
     /**
@@ -69,11 +98,17 @@ export class FileHelper {
     /**
      * Creates a new workspace file.
      */
-    async createWorkspace(): Promise<void> {
+    async createWorkspace(builderContextId?: string): Promise<void> {
         console.log('[FileManager] Create File');
 
-        const workspace: Workspace = createWorkspace();
+        const workspace: Workspace = createWorkspace(undefined, builderContextId);
+        
         await this._tree.addFile(workspace);
+    }
+
+    createContextId(): string  {
+
+        return createContextId();
     }
 
     /**
@@ -114,7 +149,7 @@ export class FileHelper {
      * Creates a new FileCalculationContext from the current state.
      */
     createContext(): FileCalculationContext {
-        return createCalculationContext(this.objects);
+        return createCalculationContext(this.objects, this._lib);
     }
 
     /**

@@ -1,6 +1,6 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
-import { calculateNumericalTagValue, FileCalculationContext, File, calculateGridScale, file, objectsAtContextGridPosition, getFilePosition, getFileIndex, getContextDefaultHeight, getBuilderContextGrid, getFileRotation, getContextScale, isUserFile, getContextGridHeight, DEFAULT_WORKSPACE_GRID_SCALE } from "@yeti-cgi/aux-common";
+import { calculateNumericalTagValue, FileCalculationContext, File, calculateGridScale, file, objectsAtContextGridPosition, getFilePosition, getFileIndex, getContextDefaultHeight, getBuilderContextGrid, getFileRotation, getContextScale, isUserFile, getContextGridHeight, DEFAULT_WORKSPACE_GRID_SCALE } from "@casual-simulation/aux-common";
 import { Vector3, Quaternion, Euler, Vector2 } from "three";
 import { calculateGridTileLocalCenter } from "../grid/Grid";
 import { sumBy } from "lodash";
@@ -36,7 +36,7 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
     fileUpdated(calc: FileCalculationContext): void {
         const userContext = this.file3D.context;
         if (userContext) {
-            const scale = calculateGridScale(calc, this.file3D.contextGroup.file, this.file3D.domain);
+            const scale = calculateGridScale(calc, this.file3D.contextGroup.file);
             this._nextPos = calculateObjectPositionInGrid(calc, this.file3D, scale);
             this._nextRot = getFileRotation(calc, this.file3D.file, this.file3D.context);
             
@@ -66,7 +66,7 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
 }
 
 /**
- * 
+ * Calculates the position of the given file.
  * @param context The file calculation context to use to calculate forumula values.
  * @param file The file to calculate position for.
  * @param gridScale The scale of the grid.
@@ -92,10 +92,10 @@ export function calculateObjectPositionInGrid(context: FileCalculationContext, f
     if (file.contextGroup instanceof BuilderGroup3D) {
         if (!isUserFile(file.file)) {
             // Offset local position with hex grid height.
-            let hexScale = getContextScale(context, file.contextGroup.file, file.contextGroup.domain);
+            let hexScale = getContextScale(context, file.contextGroup.file);
             let axial = realPosToGridPos(new Vector2(localPosition.x, localPosition.z), hexScale);
             let key = posToKey(axial);
-            let height = getContextGridHeight(context, file.contextGroup.file, file.contextGroup.domain, key);
+            let height = getContextGridHeight(context, file.contextGroup.file, key);
             localPosition.add(new Vector3(0, height, 0));
         }
     }

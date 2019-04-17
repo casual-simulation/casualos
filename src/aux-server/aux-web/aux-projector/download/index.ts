@@ -1,4 +1,4 @@
-import { FilesState, AuxCausalTree } from '@yeti-cgi/aux-common';
+import { FilesState, AuxCausalTree } from '@casual-simulation/aux-common';
 import download from 'downloadjs';
 
 export function downloadAuxState(tree: AuxCausalTree, name: string) {

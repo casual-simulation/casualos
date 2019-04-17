@@ -1,7 +1,7 @@
 import { Input } from '../../../shared/scene/Input';
 import { Vector2 } from 'three';
 import { IOperation } from '../../../shared/interaction/IOperation';
-import { DEFAULT_SCENE_BACKGROUND_COLOR } from '@yeti-cgi/aux-common';
+import { DEFAULT_SCENE_BACKGROUND_COLOR } from '@casual-simulation/aux-common';
 import { appManager } from '../../../shared/AppManager';
 import { ColorPickerEvent } from '../ColorPickerEvent';
 import { EventBus } from '../../../shared/EventBus';

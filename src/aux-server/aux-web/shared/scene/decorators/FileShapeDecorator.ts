@@ -1,20 +1,24 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
-import { FileCalculationContext, calculateFileValue, getFileShape, FileShape } from "@yeti-cgi/aux-common";
+import { FileCalculationContext, calculateFileValue, getFileShape, FileShape } from "@casual-simulation/aux-common";
 import { Mesh, MeshStandardMaterial, Color, LineSegments, LineBasicMaterial, Group, Vector3, MeshToonMaterial } from "three";
 import { createCube, createCubeStrokeGeometry, isTransparent, disposeMesh, createSphere } from "../SceneUtils";
+import { IMeshDecorator } from "./IMeshDecorator";
+import { ArgEvent } from "@casual-simulation/aux-common/Events";
 
-export class MeshCubeDecorator extends AuxFile3DDecorator {
+export class FileShapeDecorator extends AuxFile3DDecorator implements IMeshDecorator {
 
     private _shape: FileShape = null;
 
     container: Group;
-    shape: Mesh;
+    mesh: Mesh;
 
     /**
      * The optional stroke outline for the file.
      */
     stroke: LineSegments;
+
+    onMeshUpdated: ArgEvent<IMeshDecorator> = new ArgEvent<IMeshDecorator>();
 
     constructor(file3D: AuxFile3D) {
         super(file3D);
@@ -50,8 +54,7 @@ export class MeshCubeDecorator extends AuxFile3DDecorator {
                 strokeMat.color = new Color(strokeColorValue);
             }
         } else {
-            strokeMat.visible = true;
-            strokeMat.color = new Color(0x999999);
+            strokeMat.visible = false;
         }
         if (typeof strokeWidth !== 'undefined') {
             strokeMat.linewidth = strokeWidth;
@@ -64,16 +67,16 @@ export class MeshCubeDecorator extends AuxFile3DDecorator {
     }
 
     dispose(): void {
-        const index = this.file3D.colliders.indexOf(this.shape);
+        const index = this.file3D.colliders.indexOf(this.mesh);
         if (index >= 0) {
             this.file3D.colliders.splice(index, 1);
         }
 
         this.file3D.display.remove(this.container);
-        disposeMesh(this.shape);
+        disposeMesh(this.mesh);
         disposeMesh(this.stroke);
         
-        this.shape = null;
+        this.mesh = null;
         this.container = null;
         this.stroke = null;
     }
@@ -88,7 +91,7 @@ export class MeshCubeDecorator extends AuxFile3DDecorator {
     }
     
     private _setColor(color: any) {
-        const shapeMat = <MeshStandardMaterial | MeshToonMaterial>this.shape.material;
+        const shapeMat = <MeshStandardMaterial | MeshToonMaterial>this.mesh.material;
         if (color) {
             shapeMat.visible = !isTransparent(color);
             if (shapeMat.visible) {
@@ -102,14 +105,10 @@ export class MeshCubeDecorator extends AuxFile3DDecorator {
 
     private _rebuildShape(shape: FileShape) {
         this._shape = shape;
-        if (this.shape) {
+        if (this.mesh) {
             this.dispose();
         }
 
-        this._createShape();
-    }
-
-    private _createShape() {
         // Container
         this.container = new Group();
         this.container.position.set(0, .5, 0);
@@ -117,9 +116,9 @@ export class MeshCubeDecorator extends AuxFile3DDecorator {
 
         if (this._shape === 'cube') {
             // Cube Mesh
-            this.shape = createCube(1);
-            this.container.add(this.shape);
-            this.file3D.colliders.push(this.shape);
+            this.mesh = createCube(1);
+            this.container.add(this.mesh);
+            this.file3D.colliders.push(this.mesh);
             
             // Stroke
             const geo = createCubeStrokeGeometry();
@@ -131,11 +130,13 @@ export class MeshCubeDecorator extends AuxFile3DDecorator {
             this.container.add(this.stroke);
         } else if (this._shape === 'sphere') {
             // Sphere Mesh
-            this.shape = createSphere(new Vector3(0,0,0), 0x000000, 0.5);
-            this.container.add(this.shape);
-            this.file3D.colliders.push(this.shape);
+            this.mesh = createSphere(new Vector3(0,0,0), 0x000000, 0.5);
+            this.container.add(this.mesh);
+            this.file3D.colliders.push(this.mesh);
 
             this.stroke = null;
         }
+
+        this.onMeshUpdated.invoke(this);
     }
 }

@@ -1,11 +1,11 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
-import { FileCalculationContext, AuxFile, calculateFileValue, isFormula, calculateFormattedFileValue, calculateNumericalTagValue, hasValue } from "@yeti-cgi/aux-common";
+import { FileCalculationContext, AuxFile, calculateFileValue, isFormula, calculateFormattedFileValue, calculateNumericalTagValue, hasValue, getFileLabelAnchor } from "@casual-simulation/aux-common";
 import { Text3D } from "../Text3D";
 import { setLayer, findParentScene } from "../SceneUtils";
 import { LayersHelper } from "../LayersHelper";
 import { Color, Camera, Object3D, Mesh, Vector3, Scene, Box3 } from "three";
-import { MeshCubeDecorator } from "./MeshCubeDecorator";
+import { FileShapeDecorator } from "./FileShapeDecorator";
 import { WordBubbleElement } from "../WordBubbleElement";
 import { appManager } from "../../../shared/AppManager";
 import { IGameView } from "aux-web/shared/IGameView";
@@ -45,19 +45,11 @@ export class LabelDecorator extends AuxFile3DDecorator implements WordBubbleElem
             }
             
             this._updateLabelSize(calc);
+            this._updateLabelAnchor(calc);
             this.file3D.computeBoundingObjects();
             this.label.setPositionForBounds(this.file3D.boundingBox);
 
-            let labelColor = this.file3D.file.tags['aux.label.color'];
-            if (labelColor) {
-
-                if (isFormula(labelColor)) {
-                    let calculatedValue = calculateFormattedFileValue(calc, this.file3D.file, 'aux.label.color');
-                    this.label.setColor(new Color(calculatedValue));
-                } else {
-                    this.label.setColor(new Color(<string>labelColor));
-                }
-            }
+            this._updateLabelColor(calc);
 
         } else {
             this.label.setText("");
@@ -112,5 +104,23 @@ export class LabelDecorator extends AuxFile3DDecorator implements WordBubbleElem
             return;
         }
         this.label.setScale(labelSize);
+    }
+
+    private _updateLabelColor(calc: FileCalculationContext) {
+        let labelColor = this.file3D.file.tags['aux.label.color'];
+        if (labelColor) {
+            if (isFormula(labelColor)) {
+                let calculatedValue = calculateFormattedFileValue(calc, this.file3D.file, 'aux.label.color');
+                this.label.setColor(new Color(calculatedValue));
+            }
+            else {
+                this.label.setColor(new Color(<string>labelColor));
+            }
+        }
+    }
+
+    private _updateLabelAnchor(calc: FileCalculationContext) {
+        let anchor = getFileLabelAnchor(calc, this.file3D.file);
+        this.label.setAnchor(anchor);
     }
 }

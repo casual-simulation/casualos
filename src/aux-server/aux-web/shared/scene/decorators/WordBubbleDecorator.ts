@@ -1,6 +1,6 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
-import { FileCalculationContext } from "@yeti-cgi/aux-common";
+import { FileCalculationContext, getFileLabelAnchor } from "@casual-simulation/aux-common";
 import { WordBubble3D } from "../WordBubble3D";
 import { WordBubbleElement } from "../WordBubbleElement";
 import { setLayer, convertToBox2 } from "../SceneUtils";
@@ -28,14 +28,14 @@ export class WordBubbleDecorator extends AuxFile3DDecorator {
     }
 
     fileUpdated(calc: FileCalculationContext): void {
-        this._updateWorldBubble();
+        this._updateWorldBubble(calc);
     }
 
     frameUpdate(calc: FileCalculationContext): void {
         if (this._elements) {
             for (let i = 0; i < this._elements.length; i++) {
                 if (this._elements[i].shouldUpdateWorldBubbleThisFrame()) {
-                    this._updateWorldBubble();
+                    this._updateWorldBubble(calc);
                     return;
                 }
             }
@@ -47,14 +47,15 @@ export class WordBubbleDecorator extends AuxFile3DDecorator {
         this.file3D.remove(this.wordBubble);
     }
 
-    private _updateWorldBubble(): void {
+    private _updateWorldBubble(calc: FileCalculationContext): void {
         let fileBoundingBox = this.file3D.boundingBox;
         if (!fileBoundingBox) {
             this.wordBubble.visible = false;
             return;
         }
-
-        this.wordBubble.visible = true;
+        
+        let anchor = getFileLabelAnchor(calc, this.file3D.file);
+        this.wordBubble.visible = anchor === 'floating';
 
         let arrowPoint = new Vector3();
         fileBoundingBox.getCenter(arrowPoint);

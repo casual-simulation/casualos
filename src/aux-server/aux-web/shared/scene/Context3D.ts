@@ -1,6 +1,6 @@
 import { GameObject } from "./GameObject";
-import { AuxFile } from "@yeti-cgi/aux-common/aux-format";
-import { FileCalculationContext, calculateFileValue, TagUpdatedEvent, AuxDomain, isFileInContext } from "@yeti-cgi/aux-common";
+import { AuxFile } from "@casual-simulation/aux-common/aux-format";
+import { FileCalculationContext, calculateFileValue, TagUpdatedEvent, AuxDomain, isFileInContext } from "@casual-simulation/aux-common";
 import { Object3D, SceneUtils } from "three";
 import { AuxFile3D } from "./AuxFile3D";
 import { ContextGroup3D } from "./ContextGroup3D";

@@ -1,5 +1,5 @@
-import { RealtimeChannelConnection } from '@yeti-cgi/aux-common/causal-trees/RealtimeChannelConnection';
-import { ConnectionEvent } from '@yeti-cgi/aux-common/causal-trees/ConnectionEvent';
+import { RealtimeChannelConnection } from '@casual-simulation/aux-common/causal-trees/RealtimeChannelConnection';
+import { ConnectionEvent } from '@casual-simulation/aux-common/causal-trees/ConnectionEvent';
 import { Observable, merge, Subject, BehaviorSubject, SubscriptionLike } from 'rxjs';
 import { socketEvent } from '../socket-io/Utils';
 import { map, shareReplay } from 'rxjs/operators';

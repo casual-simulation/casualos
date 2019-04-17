@@ -3,3 +3,4 @@
 *.d.ts
 !gulpfile.js
 !typings/
+docs

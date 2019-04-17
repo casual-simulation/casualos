@@ -17,13 +17,15 @@ import {
     isMinimized,
     isContext,
     getContextColor,
-    isUserFile
-} from '@yeti-cgi/aux-common/Files';
+    isUserFile,
+    DEFAULT_WORKSPACE_COLOR,
+    hasValue
+} from '@casual-simulation/aux-common/Files';
 import { keys, minBy, isEqual } from 'lodash';
 import { GridChecker, GridCheckResults } from './grid/GridChecker';
 import { GameObject } from './GameObject';
-import { AuxFile } from '@yeti-cgi/aux-common/aux-format';
-import { idEquals } from '@yeti-cgi/aux-common/causal-trees';
+import { AuxFile } from '@casual-simulation/aux-common/aux-format';
+import { idEquals } from '@casual-simulation/aux-common/causal-trees';
 import { disposeMesh } from './SceneUtils';
 
 /**
@@ -144,8 +146,8 @@ export class WorkspaceMesh extends GameObject {
         const prev = this.workspace;
         this.workspace = (workspace) || prev;
 
-        this.visible = isContext(calc, this.workspace, this.domain);
-        this.container.visible = !isMinimized(calc, this.workspace, this.domain);
+        this.visible = isContext(calc, this.workspace);
+        this.container.visible = !isMinimized(calc, this.workspace);
         this.miniHex.visible = !this.container.visible;
 
         let gridUpdate: GridCheckResults = this._debugInfo.gridCheckResults;
@@ -166,13 +168,12 @@ export class WorkspaceMesh extends GameObject {
             }
         }
 
-        const colorValue = getContextColor(calc, this.workspace, this.domain);
-        if (colorValue) {
-            let color = new Color(colorValue);
-            let hexes = this.hexGrid.hexes;
-            hexes.forEach((h) => { h.color = color; });
-            this.miniHex.color = color;
-        }
+        // Hex color.
+        const colorValue = getContextColor(calc, this.workspace);
+        const color: Color = hasValue(colorValue) ? new Color(colorValue) : new Color(DEFAULT_WORKSPACE_COLOR);
+        const hexes = this.hexGrid.hexes;
+        hexes.forEach((h) => { h.color = color; });
+        this.miniHex.color = color;
 
         this.updateMatrixWorld(false);
 
@@ -200,15 +201,15 @@ export class WorkspaceMesh extends GameObject {
             this.container.remove(this.hexGrid);
         }
         
-        const size = getContextSize(calc, this.workspace, this.domain);
-        const defaultHeight = getContextDefaultHeight(calc, this.workspace, this.domain);
-        const scale = getContextScale(calc, this.workspace, this.domain);
+        const size = getContextSize(calc, this.workspace);
+        const defaultHeight = getContextDefaultHeight(calc, this.workspace);
+        const scale = getContextScale(calc, this.workspace);
         this.hexGrid = HexGridMesh.createFilledInHexGrid(
             size, 
             defaultHeight || DEFAULT_WORKSPACE_HEIGHT, 
             scale || DEFAULT_WORKSPACE_SCALE);
         
-        const grid = getBuilderContextGrid(calc, this.workspace, this.domain);
+        const grid = getBuilderContextGrid(calc, this.workspace);
         const positionsKeys = grid ? keys(grid) : [];
         positionsKeys.forEach(key => {
             const position = keyToPos(key);
@@ -236,7 +237,7 @@ export class WorkspaceMesh extends GameObject {
             this.container.remove(...this.squareGrids);
         }
 
-        const gridScale = getContextGridScale(calc, this.workspace, this.domain);
+        const gridScale = getContextGridScale(calc, this.workspace);
         checker.tileRatio = gridScale || DEFAULT_WORKSPACE_GRID_SCALE;
         const results = await checker.check(this.hexGrid);
         const levels = results.levels;
@@ -252,14 +253,14 @@ export class WorkspaceMesh extends GameObject {
         if (!previous) {
             return true;
         } else {
-            const currentSize = getContextSize(calc, current, this.domain);
-            const previousSize = getContextSize(calc, previous, this.domain);
+            const currentSize = getContextSize(calc, current);
+            const previousSize = getContextSize(calc, previous);
             if (currentSize !== previousSize) {
                 return true;
             } else {
 
-                const currentGrid = getBuilderContextGrid(calc, current, this.domain);
-                const previousGrid = getBuilderContextGrid(calc, previous, this.domain);
+                const currentGrid = getBuilderContextGrid(calc, current);
+                const previousGrid = getBuilderContextGrid(calc, previous);
                 
                 return !isEqual(currentGrid, previousGrid);
             }
