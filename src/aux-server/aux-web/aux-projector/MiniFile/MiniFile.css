@@ -14,6 +14,10 @@
     border-bottom: 1px solid #000;
 }
 
+.mini-file-text {
+    background-color: #fff;
+}
+
 .mini-file-cube {
     width: 48px;
 }
