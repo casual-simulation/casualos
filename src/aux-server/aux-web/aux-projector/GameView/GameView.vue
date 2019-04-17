@@ -35,8 +35,6 @@
             md-cancel-text="Cancel"
             @md-cancel="onConfirmDialogCancel"
             @md-confirm="onConfirmDialogOk" />
-            />
-
 
   </div>
 </template>

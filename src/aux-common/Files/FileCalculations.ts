@@ -667,10 +667,6 @@ export function createFile(id = uuid(), tags: Object['tags'] = {}) {
  */
 export function createWorkspace(id = uuid(), builderContextId: string = createContextId()): Workspace {
     
-    if(id === undefined){
-        id = uuid();
-    }
-
     // checks if given context string is empty or just whitespace
     if(builderContextId.length === 0 || /^\s*$/.test(builderContextId)){
         builderContextId = createContextId();
