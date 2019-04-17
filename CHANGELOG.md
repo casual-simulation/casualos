@@ -20,11 +20,14 @@
   - Fixed an issue that would prevent some files from showing up in Aux Builder due to being created with incorrect data.
   - Fixed the ability to shrink worksurfaces.
 - Improvements
+  - Added the ability to pass arguments in `shout()`.
+    - For example, you can pass the number 11 to everything that has a `handleMessage()` tag using `shout("handleMessage", 11)`.
   - Added `isBuilder` and `isPlayer` variables to formulas.
     - This allows formulas to tell whether they are being run in AUX Builder or AUX Player.
     - Using these variables in combination with config tags allows specifying whether a context should show up in AUX Builder or AUX Player.
     - For example, the `hello` context will only show up in AUX Builder when the `hello.config` tag is set to `=isBuilder`.
   - Added the ability to pass an array of files to `clone()` and `destroy()`.
+  - Changed the generated context ID format from `aux._context_{uuid}` to `context_{short-uuid}`.
 
 ## V0.4.11
 ### Date: 04/12/2019
