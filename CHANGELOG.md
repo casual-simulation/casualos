@@ -28,6 +28,7 @@
     - For example, the `hello` context will only show up in AUX Builder when the `hello.config` tag is set to `=isBuilder`.
   - Added the ability to pass an array of files to `clone()` and `destroy()`.
   - Changed the generated context ID format from `aux._context_{uuid}` to `context_{short-uuid}`.
+  - Added `aux.mergeable` so control whether diffs can be merged into other files.
 
 ## V0.4.11
 ### Date: 04/12/2019
