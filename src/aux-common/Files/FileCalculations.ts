@@ -40,7 +40,7 @@ import formulaLib from '../Formulas/formula-lib';
 import SandboxInterface, { FilterFunction } from '../Formulas/SandboxInterface';
 import { PartialFile } from '../Files';
 import { FilesState, cleanFile, hasValue, FileUpdatedEvent, fileUpdated } from './FilesChannel';
-import { merge } from '../utils';
+import { merge, shortUuid } from '../utils';
 import { AtomOp, Atom } from '../causal-trees';
 import { AuxOp, AuxOpType, AuxFile, file, AuxObject } from '../aux-format';
 
@@ -342,6 +342,7 @@ export const WELL_KNOWN_TAGS = [
     /_lastEditedBy/,
     /\._lastActiveTime/,
     /^aux\._context_/,
+    /^context_/,
 ];
 
 /**
@@ -500,7 +501,7 @@ export function toggleFileSelection(file: Object, selectionId: string, userId: s
  * Creates a new selection id.
  */
 export function newSelectionId() {
-    return `aux._selection_${uuid()}`;
+    return `aux._selection_${shortUuid()}`;
 }
 
 /**
@@ -653,7 +654,7 @@ export function getFileTag(file: File, tag: string) {
  * Creates a new context ID.
  */
 export function createContextId() {
-    return `context_${uuid().substr(0, 8)}`;
+    return `context_${shortUuid()}`;
 }
 
 /**

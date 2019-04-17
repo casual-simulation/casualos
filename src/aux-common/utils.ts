@@ -1,4 +1,5 @@
 import { union, keys, every, some } from "lodash";
+import uuid from 'uuid/v4';
 
 /**
  * Merges the two objects and returns a new object that contains the combination of the two.
@@ -60,4 +61,11 @@ export function normalize(value: number, min: number, max: number): number {
 export function unnormalize(normal: number, min: number, max: number): number {
     normal = clamp(normal, 0.0, 1.0);
     return normal * (max - min) + min;
+}
+
+/**
+ * Creates and returns a short 8 character UUID (no dashes).
+ */
+export function shortUuid() {
+    return uuid().substr(0, 8);
 }
