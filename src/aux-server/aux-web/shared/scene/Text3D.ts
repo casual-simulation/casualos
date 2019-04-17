@@ -18,9 +18,10 @@ import {
 import robotoFont from '../public/bmfonts/Roboto.json';
 import robotoTexturePath from '../public/bmfonts/Roboto.png';
 import createBMFont, { TextGeometry, TextGeometryOptions } from "three-bmfont-text";
-import { findParentScene } from "./SceneUtils";
+import { findParentScene, calculateAnchorPosition } from "./SceneUtils";
 import { DebugObjectManager } from "./DebugObjectManager";
 import { Debug } from "@sentry/core/dist/integrations";
+import { FileLabelAnchor } from "@casual-simulation/aux-common";
 
 var sdfShader = require('three-bmfont-text/shaders/sdf');
 
@@ -64,6 +65,9 @@ export class Text3D extends Object3D {
 
     // The bounding box for the text 3d.
     private _boundingBox: Box3;
+
+    // The anchor position for the text 3d.
+    private _anchor: FileLabelAnchor = 'top';
 
     /**
      * the text that was last set on this text3d.
@@ -128,31 +132,52 @@ export class Text3D extends Object3D {
         if (!bounds || bounds.isEmpty())
             return;
 
-        let myMin = this._boundingBox.min.clone();
-        let myMax = this._boundingBox.max.clone();
+        const [pos, rotation] = calculateAnchorPosition(bounds, this._anchor, this, this._boundingBox, Text3D.defaultScale, Text3D.extraSpacing);
+        this.position.copy(pos);
+        this.rotation.copy(rotation);
 
-        let bottomCenter = new Vector3(
-            ((myMax.x - myMin.x) / 2) + myMin.x,
-            myMin.y,
-            ((myMax.z - myMin.z) / 2) + myMin.z
-        );
+        // let myMin = this._boundingBox.min.clone();
+        // let myMax = this._boundingBox.max.clone();
 
-        let posOffset = this.position.clone().sub(bottomCenter);
+        
+        // // // Position the mesh some distance above the given object's bounding box.
+        // let targetSize = new Vector3();
+        // bounds.getSize(targetSize);
+        // let targetCenter = new Vector3();
+        // bounds.getCenter(targetCenter);
+        
+        // let paddingScalar = this.scale.x / Text3D.defaultScale;
+        
+        // if (this._anchor === 'floating') {
+        //     let bottomCenter = new Vector3(
+        //         ((myMax.x - myMin.x) / 2) + myMin.x,
+        //         myMin.y,
+        //         ((myMax.z - myMin.z) / 2) + myMin.z
+        //     );
+    
+        //     let posOffset = this.position.clone().sub(bottomCenter);
+        //     this.position.set(
+        //         targetCenter.x, 
+        //         targetCenter.y + (targetSize.y * 0.5) + (Text3D.extraSpacing * paddingScalar), 
+        //         targetCenter.z
+        //     );
+        //     this.position.add(posOffset);
+        // } else if (this._anchor === 'top') {
+        //     let center = new Vector3(
+        //         ((myMax.x - myMin.x) / 2) + myMin.x,
+        //         ((myMax.y - myMin.y) / 2) + myMin.y,
+        //         ((myMax.z - myMin.z) / 2) + myMin.z
+        //     );
+    
+        //     let posOffset = this.position.clone().sub(center);
 
-        // // Position the mesh some distance above the given object's bounding box.
-        let targetSize = new Vector3();
-        bounds.getSize(targetSize);
-        let targetCenter = new Vector3();
-        bounds.getCenter(targetCenter);
-
-        let paddingScalar = this.scale.x / Text3D.defaultScale;
-
-        this.position.set(
-            targetCenter.x, 
-            targetCenter.y + (targetSize.y * 0.5) + (Text3D.extraSpacing * paddingScalar), 
-            targetCenter.z
-        );
-        this.position.add(posOffset);
+        //     this.position.set(
+        //         targetCenter.x, 
+        //         targetCenter.y + (targetSize.y * 0.5) + (Text3D.extraSpacing * paddingScalar), 
+        //         targetCenter.z
+        //     );
+        //     this.position.add(posOffset);
+        // }
 
         this.updateBoundingBox();
     }
@@ -289,6 +314,15 @@ export class Text3D extends Object3D {
 
         this.rotation.copy(nextRotation);
         this.updateBoundingBox();
+    }
+
+    /**
+     * Sets the anchor position that this text should use.
+     * Requires updating the position by calling setPositionForBounds after changing the anchor.
+     * @param anchor The anchor.
+     */
+    public setAnchor(anchor: FileLabelAnchor) {
+        this._anchor = anchor;
     }
 
     public dispose(): void { 
