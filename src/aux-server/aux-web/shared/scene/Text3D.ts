@@ -134,7 +134,7 @@ export class Text3D extends Object3D {
 
         const [pos, rotation] = calculateAnchorPosition(bounds, this._anchor, this, this._boundingBox, Text3D.defaultScale, Text3D.extraSpacing);
         this.position.copy(pos);
-        this.rotation.copy(rotation);
+        this._mesh.rotation.copy(new Euler(rotation.x + ThreeMath.degToRad(90), rotation.y, rotation.z));
 
         // let myMin = this._boundingBox.min.clone();
         // let myMax = this._boundingBox.max.clone();
