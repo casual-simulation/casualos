@@ -149,14 +149,10 @@ export default class GameView extends Vue implements IGameView {
      */
     private onConfirmDialogOk ()
     {
-        let contextType: unknown = true;
+        let contextType: unknown = '=isBuilder';
 
-        if(this.playerCheck && this.builderCheck){
+        if(this.playerCheck){
             contextType = '=isBuilder || isPlayer'
-        }else if(this.playerCheck){
-            contextType = '=isPlayer'
-        }else if(this.builderCheck){
-            contextType = '=isBuilder'
         }
 
         this.fileManager.createWorkspace(this.contextDialog, contextType);
@@ -218,7 +214,7 @@ export default class GameView extends Vue implements IGameView {
 
     public addNewWorkspace(): void {
         this.contextDialog = this.fileManager.helper.createContextId();
-        this.playerCheck = this.builderCheck = false;
+        this.playerCheck = false;
         this.showDialog = true;
     }
 

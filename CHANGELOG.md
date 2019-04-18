@@ -7,6 +7,7 @@
 ### Changes:
 - Improvements
   - Users that join as a guest will now have a cleaner visible name of `Guest`.
+  - Removed the builder checkbox on the new workspace popup to make the feature cleaner.
 
 
 ## V0.4.13

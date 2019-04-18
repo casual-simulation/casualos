@@ -41,8 +41,8 @@
           @keydown.enter.native="onConfirm" />
       </md-field>
     
-      <md-checkbox v-model="builderCheck">Make Builder Context</md-checkbox>
-      <md-checkbox v-model="playerCheck">Make Player Context</md-checkbox>
+      <!--md-checkbox v-model="builderCheck">Make Builder Context</md-checkbox-->
+      <md-checkbox v-model="playerCheck">Make available in player</md-checkbox>
     </md-dialog-content>
 
     <md-dialog-actions>
