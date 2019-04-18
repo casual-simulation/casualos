@@ -4,7 +4,6 @@
       <div v-show="!isMakingNewTag && !isSearching" class="file-table-toggle-buttons">
         <file-table-toggle 
             :files="files"
-            :showNumFiles="selectionMode !== 'single'"
             @click="closeWindow()">
         </file-table-toggle>
         <md-button v-if="hasFiles" class="md-icon-button" @click="toggleHidden()">
