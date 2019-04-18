@@ -1,5 +1,15 @@
 # AUX Changelog
 
+## V0.4.13
+### Date: TBD
+
+### Changes:
+- Improvements
+  - Can load external images by setting `aux.image` to an image url. 
+    - **NOTE:** The remote server must be CORS enabled in order to allow retrieval of the image.
+  - Added `sprite` as an option for `aux.shape`.
+    - This is a camera facing quad that is great for displaying transparent images.
+
 ## V0.4.12
 ### Date: 04/17/2019
 
