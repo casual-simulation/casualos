@@ -37,8 +37,8 @@ import { getOptionalValue } from '../SharedUtils';
 export function baseAuxMeshMaterial() {
     return new MeshToonMaterial({
         color: 0x00ff00,
-        reflectivity: 1.0,
-        shininess: 30
+        reflectivity: 0.0,
+        shininess: 2
     });
 }
 
