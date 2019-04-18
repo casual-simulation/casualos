@@ -22,7 +22,7 @@ export class TextureDecorator extends AuxFile3DDecorator {
 
     private _targetMeshDecorator: IMeshDecorator;
     private _loader: AuxTextureLoader;
-    private _texture: Texture;
+    private _texture: Texture = null;
 
     constructor(file3D: AuxFile3D, targetMeshDecorator: IMeshDecorator) {
         super(file3D);
