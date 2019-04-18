@@ -9,7 +9,7 @@ import {
     getFileConfigContexts,
 } from '@casual-simulation/aux-common';
 import { Physics } from '../scene/Physics';
-import { flatMap, union } from 'lodash';
+import { flatMap, union, debounce } from 'lodash';
 import { CameraControls } from './CameraControls';
 import { MouseButtonId } from '../scene/Input';
 import { appManager } from '../AppManager';
@@ -18,6 +18,7 @@ import { AuxFile3D } from '../scene/AuxFile3D';
 import { IGameView } from '../IGameView';
 import { GameObject } from '../scene/GameObject';
 import { Orthographic_MinZoom, Orthographic_MaxZoom } from '../scene/CameraRigFactory';
+import { TapCodeManager } from './TapCodeManager';
 
 export abstract class BaseInteractionManager {
 
@@ -25,6 +26,8 @@ export abstract class BaseInteractionManager {
     protected _draggableColliders: Object3D[];
     protected _draggableObjectsDirty: boolean;
     protected _cameraControls: CameraControls;
+    protected _tapCodeManager: TapCodeManager;
+    protected _maxTapCodeLength: number;
 
     private _operations: IOperation[];
 
@@ -35,6 +38,8 @@ export abstract class BaseInteractionManager {
         this._cameraControls.minZoom = Orthographic_MinZoom;
         this._cameraControls.maxZoom = Orthographic_MaxZoom;
         this._operations = [];
+        this._tapCodeManager = new TapCodeManager();
+        this._maxTapCodeLength = 4;
 
         // Bind event handlers to this instance of the class.
         this._handleFileAdded = this._handleFileAdded.bind(this);
@@ -139,6 +144,22 @@ export abstract class BaseInteractionManager {
                     // Always allow camera control with middle clicks.
                     this._cameraControls.enabled = true;
                 }
+            }
+
+            this._tapCodeManager.recordTouches(input.getTouchCount());
+            if (input.getKeyHeld('Alt')) {
+                for (let i = 1; i <= 9; i++) {
+                    if (input.getKeyDown(i.toString())) {
+                        this._tapCodeManager.recordTouches(i);
+                    }
+                }
+            }
+
+            if (this._tapCodeManager.code.length >= this._maxTapCodeLength) {
+                const code = this._tapCodeManager.code;
+                console.log('[InteractionManager] TapCode: ', code);
+                appManager.fileManager.action('onTapCode', null, code);
+                this._tapCodeManager.trim(this._maxTapCodeLength - 1);
             }
         }
     }
