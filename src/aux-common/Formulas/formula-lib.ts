@@ -18,7 +18,9 @@ import {
     setPositionDiff as calcSetPositionDiff,
     isFile,
     isFormulaObject,
-    unwrapProxy
+    unwrapProxy,
+    CREATE_ACTION_NAME,
+    DESTROY_ACTION_NAME
 } from '../Files/FileCalculations';
 
 let actions: FileEvent[] = [];
@@ -211,6 +213,7 @@ export function destroyFile(file: FileProxy | string) {
     }
 
     if (id) {
+        event(DESTROY_ACTION_NAME, [id]);
         actions.push(fileRemoved(id));
     }
 
@@ -262,10 +265,16 @@ export function create(...diffs: FileDiff[]) {
     };
 
     applyDiff(file.tags, ...diffs);
-    let event: FileAddedEvent = fileAdded(file);
+    actions.push(fileAdded(file));
 
-    actions.push(event);
-    return calc.sandbox.interface.addFile(file);
+    const ret = calc.sandbox.interface.addFile(file);
+
+    state = Object.assign({}, state, {
+        [id]: file
+    });
+
+    event(CREATE_ACTION_NAME, [file]);
+    return ret;
 }
 
 /**
@@ -281,10 +290,16 @@ export function cloneFile(...diffs: FileDiff[]) {
     };
 
     applyDiff(newFile.tags, ...diffs);
-    let event: FileAddedEvent = fileAdded(newFile);
+    actions.push(fileAdded(newFile));
 
-    actions.push(event);
-    return calc.sandbox.interface.addFile(newFile);
+    const ret = calc.sandbox.interface.addFile(newFile);
+
+    state = Object.assign({}, state, {
+        [id]: newFile
+    });
+
+    event(CREATE_ACTION_NAME, [newFile]);
+    return ret;
 }
 
 /**
@@ -348,7 +363,10 @@ export function combine(first: File | string, second: File | string) {
  */
 export function event(name: string, files: (File | string)[], arg?: any) {
     if (!!state) {
-        let ids = !!files ? files.map(f => typeof f === 'string' ? f : f.id) : null;
+        let ids = !!files ? files.map(f => {
+            const file = unwrapProxy(f);
+            return typeof file === 'string' ? file : file.id;
+        }) : null;
         let results = calculateActionEvents(state, action(name, ids, userFileId, arg));
         actions.push(...results.events);
     }

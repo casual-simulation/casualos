@@ -6,6 +6,7 @@ import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { appManager } from '../../shared/AppManager';
 import TagColor from '../TagColor/TagColor';
 import { sort } from '@casual-simulation/aux-common/Formulas/formula-lib';
+import { EventBus } from '../../shared/EventBus';
 
 @Component({
     components: {
@@ -47,6 +48,7 @@ export default class MiniFile extends Vue {
         } else {
             this.label = '';
         }
+        this.$forceUpdate();
     }
 
     constructor() {
@@ -56,9 +58,20 @@ export default class MiniFile extends Vue {
 
     mounted() {
         this._fileChanged(this.file);
+        EventBus.$on('file_render_refresh', this._handleFileRenderRefresh);
+    }
+
+    beforeDestroy() {
+        EventBus.$off('file_render_refresh', this._handleFileRenderRefresh);
     }
 
     click() {
         this.$emit('click');
+    }
+
+    private _handleFileRenderRefresh(file: AuxFile): void {
+        if (this.file === file) {
+            this._fileChanged(file);
+        }
     }
 };

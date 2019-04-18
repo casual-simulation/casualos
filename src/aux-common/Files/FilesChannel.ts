@@ -1,9 +1,9 @@
-import { sortBy, flatMap} from 'lodash';
+import { sortBy, flatMap, mapValues } from 'lodash';
 import { File, Object, PartialFile} from './File';
-import { createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, getActiveObjects, calculateStateDiff, FilesStateDiff, filtersMatchingArguments, calculateFormulaValue } from './FileCalculations';
+import { createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, getActiveObjects, calculateStateDiff, FilesStateDiff, filtersMatchingArguments, calculateFormulaValue, isFile } from './FileCalculations';
 import { merge as mergeObj } from '../utils';
 import formulaLib, { setActions, getActions, setFileState, setCalculationContext, getCalculationContext, setUserId, getUserId } from '../Formulas/formula-lib';
-import { SetValueHandler } from './FileProxy';
+import { SetValueHandler, isProxy } from './FileProxy';
 export interface FilesState {
     [id: string]: File;
 }
@@ -207,7 +207,7 @@ function eventActions(state: FilesState,
             vars[`arg${index}`] = obj;
         });
     } else {
-        vars['that'] = argument;
+        vars['that'] = mapToFormulaObjects(context, argument, setValueHandlerFactory);
     }
 
     scripts.forEach(s => context.sandbox.run(s, {}, formulaObjects[0], vars));
@@ -218,6 +218,30 @@ function eventActions(state: FilesState,
     setUserId(prevUserId);
 
     return actions;
+}
+
+function mapToFormulaObjects(context: FileCalculationContext, argument: any, setValueHandlerFactory: (file: File) => SetValueHandler): any {
+    if (isFile(argument)) {
+        return convertToFormulaObject(context, argument, setValueHandlerFactory(argument));
+    } else if (argument && typeof argument === 'object' && !argument[isProxy]) {
+        if (Array.isArray(argument)) {
+            return argument.map(v => {
+                if (isFile(v)) {
+                    return convertToFormulaObject(context, v, setValueHandlerFactory(v));
+                }
+                return v;
+            });
+        } else {
+            return mapValues(argument, v => {
+                if (isFile(v)) {
+                    return convertToFormulaObject(context, v, setValueHandlerFactory(v));
+                }
+                return mapToFormulaObjects(context, v, setValueHandlerFactory);
+            });
+        }
+    } else {
+        return argument;
+    }
 }
 
 function calculateFileUpdateFromChanges(id: string, changes: { changedTags: string[], newValues: any[] }): FileUpdatedEvent {

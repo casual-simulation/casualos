@@ -1,8 +1,8 @@
 import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
 import { AuxFile3D } from "../AuxFile3D";
 import { FileCalculationContext, calculateFileValue, getFileShape, FileShape } from "@casual-simulation/aux-common";
-import { Mesh, MeshStandardMaterial, Color, LineSegments, LineBasicMaterial, Group, Vector3, MeshToonMaterial } from "three";
-import { createCube, createCubeStrokeGeometry, isTransparent, disposeMesh, createSphere } from "../SceneUtils";
+import { Mesh, MeshStandardMaterial, Color, LineSegments, LineBasicMaterial, Group, Vector3, MeshToonMaterial, Sprite } from "three";
+import { createCube, createCubeStrokeGeometry, isTransparent, disposeMesh, createSphere, createSprite } from "../SceneUtils";
 import { IMeshDecorator } from "./IMeshDecorator";
 import { ArgEvent } from "@casual-simulation/aux-common/Events";
 
@@ -11,7 +11,7 @@ export class FileShapeDecorator extends AuxFile3DDecorator implements IMeshDecor
     private _shape: FileShape = null;
 
     container: Group;
-    mesh: Mesh;
+    mesh: Mesh | Sprite;
 
     /**
      * The optional stroke outline for the file.
@@ -133,6 +133,14 @@ export class FileShapeDecorator extends AuxFile3DDecorator implements IMeshDecor
             this.mesh = createSphere(new Vector3(0,0,0), 0x000000, 0.5);
             this.container.add(this.mesh);
             this.file3D.colliders.push(this.mesh);
+
+            this.stroke = null;
+        } else if (this._shape === 'sprite') {
+            // Sprite Mesh
+            this.mesh = createSprite();
+            this.container.add(this.mesh);
+            this.file3D.colliders.push(this.mesh);
+            
 
             this.stroke = null;
         }

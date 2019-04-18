@@ -9,6 +9,9 @@ import {
     calculateDestroyFileEvents,
     removeFromContextDiff,
     fileUpdated,
+    action,
+    calculateActionEvents,
+    DESTROY_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 
 import { setParent } from '../../../shared/scene/SceneUtils';
@@ -39,6 +42,13 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     private _freeDragDistance: number;
 
     /**
+     * Gets whether the files are currently being placed on a workspace.
+     */
+    protected _isOnWorkspace(): boolean {
+        return !this._freeDragGroup;
+    }
+
+    /**
      * Create a new drag rules.
      */
     constructor(gameView: GameView, interaction: BuilderInteractionManager, files: File[], context: string) {
@@ -61,6 +71,8 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     }
 
     protected _onDragReleased(calc: FileCalculationContext): void {
+        super._onDragReleased(calc);
+        
         // Button has been released.
         if (this._freeDragGroup) {
             this._releaseFreeDragGroup(this._freeDragGroup);
@@ -104,6 +116,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         const firstFileExists = true;
         
         if (firstFileExists) {
+
             // Move the file freely in space at the distance the file is currently from the camera.
             if (!this._freeDragGroup) {
                 this._freeDragMeshes = this._files.map(f => this._createDragMesh(calc, f));
@@ -152,8 +165,15 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
 
     private _destroyFiles(calc: FileCalculationContext, files: File[]) {
         let events: FileEvent[] = [];
+        const state = appManager.fileManager.filesState;
+        
         // Remove the files from the context
         for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const actionData = action(DESTROY_ACTION_NAME, [file.id], appManager.fileManager.userFile.id);
+            const result = calculateActionEvents(state, actionData);
+            
+            events.push(...result.events);
             events.push(fileRemoved(files[i].id));
         }
         appManager.fileManager.transaction(...events);

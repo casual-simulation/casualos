@@ -1,6 +1,6 @@
 import { Physics } from '../../../shared/scene/Physics';
 import { File, PartialFile, fileAdded, FileEvent } from '@casual-simulation/aux-common/Files';
-import { createFile, FileCalculationContext, getDiffUpdate, isDiff } from '@casual-simulation/aux-common/Files/FileCalculations';
+import { createFile, FileCalculationContext, getDiffUpdate, isDiff, CREATE_ACTION_NAME } from '@casual-simulation/aux-common/Files/FileCalculations';
 import { appManager } from '../../../shared/AppManager';
 import { merge } from '@casual-simulation/aux-common/utils';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
@@ -54,6 +54,8 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
                 // Clear the diff
                 appManager.fileManager.recent.clear();
             }
+        } else if (this._isOnWorkspace) {
+            appManager.fileManager.action(CREATE_ACTION_NAME, this._files);
         }
 
         super._onDragReleased(calc);

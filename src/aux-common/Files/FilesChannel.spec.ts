@@ -320,8 +320,6 @@ describe('FilesChannel', () => {
             ]);
         });
 
-        
-
         it('should preserve the user ID in shouts', () => {
             const state: FilesState = {
                 userFile: {
@@ -351,6 +349,172 @@ describe('FilesChannel', () => {
                     }
                 })
             ]);
+        });
+
+        describe('arguments', () => {
+            it('should convert the argument to a proxy object if it is a file', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'this.hi = that.hi'
+                        }
+                    },
+                    otherFile: {
+                        id: 'otherFile',
+                        tags: {
+                            'name': 'other',
+                            'hi': 'test'
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], null, state.otherFile);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            hi: 'test'
+                        }
+                    })
+                ]);
+            });
+
+            it('should convert the argument to a list of proxy objects if it is a list of files', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'this.hi = that[0].hi; this.l = that.length'
+                        }
+                    },
+                    otherFile: {
+                        id: 'otherFile',
+                        tags: {
+                            'name': 'other',
+                            'hi': 'test'
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], null, [state.otherFile]);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            hi: 'test',
+                            l: 1
+                        }
+                    })
+                ]);
+            });
+
+            it('should convert the argument fields to proxy objects if they are files', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'this.hi = that.file.hi'
+                        }
+                    },
+                    otherFile: {
+                        id: 'otherFile',
+                        tags: {
+                            'name': 'other',
+                            'hi': 'test'
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], null, {
+                    file: state.otherFile,
+                    num: 100
+                });
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            hi: 'test'
+                        }
+                    })
+                ]);
+            });
+
+            it('should convert nested fields to proxy objects', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'this.hi = that.files[0].hi'
+                        }
+                    },
+                    otherFile: {
+                        id: 'otherFile',
+                        tags: {
+                            'name': 'other',
+                            'hi': 'test'
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], null, {
+                    files: [state.otherFile],
+                });
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            hi: 'test'
+                        }
+                    })
+                ]);
+            });
+
+            it('should handle null arguments', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'this.hi = "test"'
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], null, null);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            hi: 'test'
+                        }
+                    })
+                ]);
+            });
         });
 
         describe('shout()', () => {
@@ -876,6 +1040,41 @@ describe('FilesChannel', () => {
                 expect(parent[isProxy]).toBeFalsy();
                 expect(abc[isProxy]).toBeFalsy();
             });
+
+            it('should trigger onCreate() on the created file.', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            num: 1,
+                            'test()': 'create(this, { abc: this.num, "onCreate()": "this.num = 100" });',
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            'aux._creator': 'thisFile',
+                            abc: 1,
+                            'onCreate()': 'this.num = 100'
+                        }
+                    }),
+                    fileUpdated('uuid-0', {
+                        tags: {
+                            num: 100
+                        }
+                    })
+                ]);
+            });
         });
 
         describe('clone()', () => {
@@ -1164,6 +1363,44 @@ describe('FilesChannel', () => {
                     })
                 ]);
             });
+
+            it('should trigger onCreate() on the cloned file', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            num: 1,
+                            'onCreate()': 'this.num = 100',
+                            'test()': 'clone(this, this, { abc: this.num });',
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            'aux._creator': 'thisFile',
+                            'onCreate()': 'this.num = 100',
+                            'test()': 'clone(this, this, { abc: this.num });',
+                            num: 1,
+                            abc: 1,
+                        }
+                    }),
+                    fileUpdated('uuid-0', {
+                        tags: {
+                            num: 100
+                        }
+                    })
+                ]);
+            });
         });
 
         describe('destroy()', () => {
@@ -1275,6 +1512,38 @@ describe('FilesChannel', () => {
                 expect(result.events).toEqual([
                     fileRemoved('file1'),
                     fileRemoved('file2')
+                ]);
+            });
+
+            it('should trigger onDestroy()', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'onDestroy()': '@name("other").num = 100',
+                            'test()': 'destroy(this)',
+                        }
+                    },
+                    otherFile: {
+                        id: 'otherFile',
+                        tags: {
+                            name: 'other'
+                        }
+                    }
+                };
+
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('otherFile', {
+                        tags: {
+                            num: 100
+                        }
+                    }),
+                    fileRemoved('thisFile')
                 ]);
             });
         });

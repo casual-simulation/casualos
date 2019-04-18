@@ -1,5 +1,31 @@
 # AUX Changelog
 
+## V0.4.13
+### Date: 04/18/2019
+
+### Changes:
+- Improvements
+  - Can load external images by setting `aux.image` to an image url. 
+    - **NOTE:** The remote server must be CORS enabled in order to allow retrieval of the image.
+  - Added `sprite` as an option for `aux.shape`.
+    - This is a camera facing quad that is great for displaying transparent images.
+  - Added several events:
+    - `onCreate()` is called on the file that was created after being created.
+    - `onDestroy()` is called on the file just before it is destroyed.
+    - `onDropInContext()` is called on all the files that a user just dragged onto a context. (`that` is the context name)
+    - `onDragOutOfContext()` is called on all the files that a user just dragged out of a context. (`that` is the context name)
+    - `onDropAnyInContext()` is called on all files when any file is dragged onto a context. (`that` is an object that contains the `context` and `files`)
+    - `onDragAnyOutOfContext()` is called on all files when any file is dragged out of a context. (`that` is an object that contains the `context` and `files`)
+    - `onDropInInventory()` is called on the file that a user just dragged into their inventory.
+    - `onDragOutOfInventory()` is called on the file that a user just dragged out of their inventory.
+    - `onDropAnyInInventory()` is called on all files when any file is dragged into the user's inventory. (`that` is the list of files)
+    - `onDragAnyOutOfInventory()` is called on all files when any file is dragged out of the user's inventory. (`that` is the list of files)
+    - `onTapCode()` is called on every file whenever a 4 digit tap code has been entered. (`that` is the code)
+      - It is recommended to use an `if` statement to filter the tap code.
+      - This way you won't get events for tap code `1111` all the time due to the user tapping the screen.
+    - All of the drag/drop events are triggered once the user is done dragging. (not during their drag)
+  - Added checkboxes the new workspace modal to allow users to set whether it should show up in builder, player, or both.
+
 ## V0.4.12
 ### Date: 04/17/2019
 

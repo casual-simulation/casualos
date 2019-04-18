@@ -23,7 +23,10 @@ import {
     DirectionalLight,
     Math as ThreeMath, 
     DirectionalLightHelper,
-    Euler} from 'three';
+    Euler,
+    SpriteMaterial,
+    Sprite,
+    Texture} from 'three';
 import { flatMap } from 'lodash';
 import { calculateNumericalTagValue, FileCalculationContext, File, FileLabelAnchor } from '@casual-simulation/aux-common';
 import { getOptionalValue } from '../SharedUtils';
@@ -34,8 +37,8 @@ import { getOptionalValue } from '../SharedUtils';
 export function baseAuxMeshMaterial() {
     return new MeshToonMaterial({
         color: 0x00ff00,
-        reflectivity: 1.0,
-        shininess: 30
+        reflectivity: 0.0,
+        shininess: 2
     });
 }
 
@@ -64,6 +67,16 @@ export function createSphere(position: Vector3, color: number, size: number = 0.
     const sphere = new Mesh(geometry, material.clone());
     sphere.position.copy(position);
     return sphere;
+}
+
+export function createSprite(): Sprite {
+    let material = new SpriteMaterial({
+        color: 0x00ff00,
+        transparent: true
+    });
+
+    let sprite = new Sprite(material);
+    return sprite;
 }
 
 export function createUserCone(radius?: number, height?: number): Mesh {

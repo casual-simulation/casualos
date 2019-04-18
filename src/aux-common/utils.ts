@@ -1,4 +1,4 @@
-import { union, keys, every, some } from "lodash";
+import { union, keys, every, some, isObject, mapValues } from "lodash";
 import uuid from 'uuid/v4';
 
 /**
@@ -32,6 +32,16 @@ function decide(...vals: any[]) {
             return undefed[undefed.length - 1];
         }
     }
+}
+
+/**
+ * Maps all the values of the given object.
+ * @param value The object to map.
+ * @param callback The callback that transforms one value into another.
+ */
+export function mapValuesDeep(value: any, callback: (v: any) => any): any {
+    return isObject(value) ? mapValues(value, v => mapValuesDeep(v, callback))
+        : callback(value);
 }
 
 /**

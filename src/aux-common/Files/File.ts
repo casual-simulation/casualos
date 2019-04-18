@@ -90,7 +90,7 @@ export type SelectionMode = 'single' | 'multi';
 /**
  * Defines the possible shapes that a file can appear as.
  */
-export type FileShape = 'cube' | 'sphere';
+export type FileShape = 'cube' | 'sphere' | 'sprite';
 
 /**
  * Defines the possible anchor positions for a label.

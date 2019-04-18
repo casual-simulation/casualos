@@ -103,6 +103,8 @@ export default class GameView extends Vue implements IGameView {
 
     showDialog: boolean = false;
     contextDialog: string = "";
+    builderCheck: boolean = false;
+    playerCheck:boolean = false;
 
     public onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
     public onFileUpdated: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
@@ -147,7 +149,19 @@ export default class GameView extends Vue implements IGameView {
      */
     private onConfirmDialogOk ()
     {
-        this.fileManager.createWorkspace(this.contextDialog);
+        let contextType: unknown = true;
+
+        if(this.playerCheck && this.builderCheck){
+            contextType = '=isBuilder || isPlayer'
+        }else if(this.playerCheck){
+            contextType = '=isPlayer'
+        }else if(this.builderCheck){
+            contextType = '=isBuilder'
+        }
+
+        this.fileManager.createWorkspace(this.contextDialog, contextType);
+
+        this.showDialog = false;
     }
 
     /**
@@ -155,6 +169,7 @@ export default class GameView extends Vue implements IGameView {
      */
     private onConfirmDialogCancel ()
     {
+        this.showDialog = false;
     }
 
 
@@ -203,6 +218,7 @@ export default class GameView extends Vue implements IGameView {
 
     public addNewWorkspace(): void {
         this.contextDialog = this.fileManager.helper.createContextId();
+        this.playerCheck = this.builderCheck = false;
         this.showDialog = true;
     }
 

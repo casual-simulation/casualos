@@ -281,12 +281,12 @@ export class FileManager {
     return this._helper.createFile(id, tags);
   }
 
-  createWorkspace(builderContextId?: string) {
-    return this._helper.createWorkspace(builderContextId);
+  createWorkspace(builderContextId?: string, contextType?: unknown) {
+    return this._helper.createWorkspace(builderContextId, contextType);
   }
 
-  action(eventName: string, files: File[]) {
-    return this._helper.action(eventName, files);
+  action(eventName: string, files: File[], arg?: any) {
+    return this._helper.action(eventName, files, arg); 
   }
 
   transaction(...events: FileEvent[]) {

@@ -27,7 +27,6 @@
             <file-table-toggle 
                 :files="selectedFiles" 
                 :raised="true"
-                :showNumFiles="selectionMode !== 'single'"
                 @click="toggleOpen()">
             </file-table-toggle>
           </div>
