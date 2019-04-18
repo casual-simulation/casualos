@@ -455,6 +455,41 @@ describe('FilesChannel', () => {
                 ]);
             });
 
+            it('should convert nested fields to proxy objects', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'this.hi = that.files[0].hi'
+                        }
+                    },
+                    otherFile: {
+                        id: 'otherFile',
+                        tags: {
+                            'name': 'other',
+                            'hi': 'test'
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], null, {
+                    files: [state.otherFile],
+                });
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            hi: 'test'
+                        }
+                    })
+                ]);
+            });
+
             it('should handle null arguments', () => {
                 const state: FilesState = {
                     thisFile: {

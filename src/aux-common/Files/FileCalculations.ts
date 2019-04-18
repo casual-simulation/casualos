@@ -69,9 +69,19 @@ export const DESTROY_ACTION_NAME: string = 'onDestroy';
 export const DROP_IN_CONTEXT_ACTION_NAME: string = 'onDropInContext';
 
 /**
+ * The name of the event that represents any file being dragged into a context.
+ */
+export const DROP_ANY_IN_CONTEXT_ACTION_NAME: string = 'onDropAnyInContext';
+
+/**
  * The name of the event that represents a file being dragged out of a context.
  */
 export const DRAG_OUT_OF_CONTEXT_ACTION_NAME: string = 'onDragOutOfContext';
+
+/**
+ * The name of the event that represents any file being dragged out of a context.
+ */
+export const DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME: string = 'onDragAnyOutOfContext';
 
 /**
  * The name of the event that represents a file being dragged out of the user's inventory.
@@ -79,9 +89,19 @@ export const DRAG_OUT_OF_CONTEXT_ACTION_NAME: string = 'onDragOutOfContext';
 export const DRAG_OUT_OF_INVENTORY_ACTION_NAME: string = 'onDragOutOfInventory';
 
 /**
+ * The name of the event that represents any file being dragged out of the user's inventory.
+ */
+export const DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME: string = 'onDragAnyOutOfInventory';
+
+/**
  * The name of the event that represents a file being dropped into the user's inventory.
  */
 export const DROP_IN_INVENTORY_ACTION_NAME: string = 'onDropInInventory';
+
+/**
+ * The name of the event that represents any file being dropped into the user's inventory.
+ */
+export const DROP_ANY_IN_INVENTORY_ACTION_NAME: string = 'onDropAnyInInventory';
 
 /**
  * Defines an interface for objects that represent assignment formula expressions.

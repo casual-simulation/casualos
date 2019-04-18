@@ -19,7 +19,9 @@ import {
     DRAG_OUT_OF_CONTEXT_ACTION_NAME,
     DROP_IN_CONTEXT_ACTION_NAME,
     action,
-    calculateActionEvents
+    calculateActionEvents,
+    DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME,
+    DROP_ANY_IN_CONTEXT_ACTION_NAME
 } from '@casual-simulation/aux-common';
 
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
@@ -252,13 +254,25 @@ export abstract class BaseFileDragOperation implements IOperation {
             let events: FileEvent[] = [];
             if (this._originalContext) {
                 // trigger drag out of context
-                const result = appManager.fileManager.helper.actionEvents(DRAG_OUT_OF_CONTEXT_ACTION_NAME, this._files, this._originalContext);
+                let result = appManager.fileManager.helper.actionEvents(DRAG_OUT_OF_CONTEXT_ACTION_NAME, this._files, this._originalContext);
+                events.push(...result.events);
+
+                result = appManager.fileManager.helper.actionEvents(DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME, null, {
+                    context: this._originalContext,
+                    files: this._files
+                });
                 events.push(...result.events);
             }
 
             if (this._inContext) {
                 // Trigger drag into context
-                const result = appManager.fileManager.helper.actionEvents(DROP_IN_CONTEXT_ACTION_NAME, this._files, this._context);
+                let result = appManager.fileManager.helper.actionEvents(DROP_IN_CONTEXT_ACTION_NAME, this._files, this._context);
+                events.push(...result.events);
+
+                result = appManager.fileManager.helper.actionEvents(DROP_ANY_IN_CONTEXT_ACTION_NAME, null, {
+                    context: this._context,
+                    files: this._files
+                });
                 events.push(...result.events);
             }
         }

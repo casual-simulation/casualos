@@ -1,5 +1,5 @@
 import { BaseFileDragOperation } from "../../../shared/interaction/DragOperation/BaseFileDragOperation";
-import { File, FileCalculationContext, DRAG_OUT_OF_INVENTORY_ACTION_NAME, DROP_IN_INVENTORY_ACTION_NAME } from "@casual-simulation/aux-common";
+import { File, FileCalculationContext, DRAG_OUT_OF_INVENTORY_ACTION_NAME, DROP_IN_INVENTORY_ACTION_NAME, FileEvent, DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME, convertToFormulaObject, DROP_ANY_IN_INVENTORY_ACTION_NAME, DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME } from "@casual-simulation/aux-common";
 import { PlayerInteractionManager } from "../PlayerInteractionManager";
 import GameView from "../../GameView/GameView";
 import { Intersection, Vector2 } from "three";
@@ -73,9 +73,21 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
         super._onDragReleased(calc);
 
         if (this._originallyInInventory && !this._inInventory) {
-            appManager.fileManager.action(DRAG_OUT_OF_INVENTORY_ACTION_NAME, this._files);
+            let events: FileEvent[] = [];
+            let result = appManager.fileManager.helper.actionEvents(DRAG_OUT_OF_INVENTORY_ACTION_NAME, this._files);
+            events.push(...result.events);
+            result = appManager.fileManager.helper.actionEvents(DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME, null, this._files);
+            events.push(...result.events);
+
+            appManager.fileManager.transaction(...events);
         } else if (!this._originallyInInventory && this._inInventory) {
-            appManager.fileManager.action(DROP_IN_INVENTORY_ACTION_NAME, this._files);
+            let events: FileEvent[] = [];
+            let result = appManager.fileManager.helper.actionEvents(DROP_IN_INVENTORY_ACTION_NAME, this._files);
+            events.push(...result.events);
+            result = appManager.fileManager.helper.actionEvents(DROP_ANY_IN_INVENTORY_ACTION_NAME, null, this._files);
+            events.push(...result.events);
+
+            appManager.fileManager.transaction(...events);
         }
     }
 }

@@ -207,27 +207,7 @@ function eventActions(state: FilesState,
             vars[`arg${index}`] = obj;
         });
     } else {
-        if (isFile(argument)) {
-            vars['that'] = convertToFormulaObject(context, argument, setValueHandlerFactory(argument));
-        } else if (argument && typeof argument === 'object' && !argument[isProxy]) {
-            if (Array.isArray(argument)) {
-                vars['that'] = argument.map(v => {
-                    if (isFile(v)) {
-                        return convertToFormulaObject(context, v, setValueHandlerFactory(v));
-                    }
-                    return v;
-                });
-            } else {
-                vars['that'] = mapValues(argument, v => {
-                    if (isFile(v)) {
-                        return convertToFormulaObject(context, v, setValueHandlerFactory(v));
-                    }
-                    return v;
-                });
-            }
-        } else {
-            vars['that'] = argument;
-        }
+        vars['that'] = mapToFormulaObjects(context, argument, setValueHandlerFactory);
     }
 
     scripts.forEach(s => context.sandbox.run(s, {}, formulaObjects[0], vars));
@@ -238,6 +218,30 @@ function eventActions(state: FilesState,
     setUserId(prevUserId);
 
     return actions;
+}
+
+function mapToFormulaObjects(context: FileCalculationContext, argument: any, setValueHandlerFactory: (file: File) => SetValueHandler): any {
+    if (isFile(argument)) {
+        return convertToFormulaObject(context, argument, setValueHandlerFactory(argument));
+    } else if (argument && typeof argument === 'object' && !argument[isProxy]) {
+        if (Array.isArray(argument)) {
+            return argument.map(v => {
+                if (isFile(v)) {
+                    return convertToFormulaObject(context, v, setValueHandlerFactory(v));
+                }
+                return v;
+            });
+        } else {
+            return mapValues(argument, v => {
+                if (isFile(v)) {
+                    return convertToFormulaObject(context, v, setValueHandlerFactory(v));
+                }
+                return mapToFormulaObjects(context, v, setValueHandlerFactory);
+            });
+        }
+    } else {
+        return argument;
+    }
 }
 
 function calculateFileUpdateFromChanges(id: string, changes: { changedTags: string[], newValues: any[] }): FileUpdatedEvent {

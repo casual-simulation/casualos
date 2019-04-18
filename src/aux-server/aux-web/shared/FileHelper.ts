@@ -121,7 +121,7 @@ export class FileHelper {
         console.log('[FileManager] Run event:', eventName, 'on files:', files);
 
         // Calculate the events on a single client and then run them in a transaction to make sure the order is right.
-        const fileIds = files.map(f => f.id);
+        const fileIds = files ? files.map(f => f.id) : null;
         const actionData = action(eventName, fileIds, this._userId, arg);
         const result = calculateActionEvents(this._tree.value, actionData);
         console.log('  result: ', result);
