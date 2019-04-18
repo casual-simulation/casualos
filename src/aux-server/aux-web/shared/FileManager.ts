@@ -281,8 +281,8 @@ export class FileManager {
     return this._helper.createFile(id, tags);
   }
 
-  createWorkspace(builderContextId?: string) {
-    return this._helper.createWorkspace(builderContextId);
+  createWorkspace(builderContextId?: string, contextType?: unknown) {
+    return this._helper.createWorkspace(builderContextId, contextType);
   }
 
   action(eventName: string, files: File[], arg?: any) {

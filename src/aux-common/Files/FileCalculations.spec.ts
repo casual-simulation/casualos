@@ -1381,6 +1381,42 @@ describe('FileCalculations', () => {
             expect(workspace.tags['userSetID']).toBe(true);
         });
 
+        // Test for the context type changes
+        it('context type should be set to isBuilder when type is set to builder', () => {
+            uuidMock.mockReturnValue('uuid');
+            const workspace = createWorkspace('test', 'userSetID','=isBuilder');
+            
+            expect(workspace.tags['userSetID.config']).toBe('=isBuilder');
+        });
+
+        it('context type should be set to isPlayer when type is set to player', () => {
+            uuidMock.mockReturnValue('uuid');
+            const workspace = createWorkspace('test', 'userSetID','=isPlayer');
+            
+            expect(workspace.tags['userSetID.config']).toBe('=isPlayer');
+        });
+
+        it('context type should be set to both isPlayer and isBuilder when type is set to both', () => {
+            uuidMock.mockReturnValue('uuid');
+            const workspace = createWorkspace('test', 'userSetID','=isBuilder || isPlayer');
+            
+            expect(workspace.tags['userSetID.config']).toBe('=isBuilder || isPlayer');
+        });
+
+        it('context type should be set to true when type is set to neither', () => {
+            uuidMock.mockReturnValue('uuid');
+            const workspace = createWorkspace('test', 'userSetID');
+            
+            expect(workspace.tags['userSetID.config']).toBe(true);
+        });
+
+        it('context type should be set to true when type is set to true', () => {
+            uuidMock.mockReturnValue('uuid');
+            const workspace = createWorkspace('test', 'userSetID', true);
+            
+            expect(workspace.tags['userSetID.config']).toBe(true);
+        });
+
     });
 
 

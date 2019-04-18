@@ -98,10 +98,10 @@ export class FileHelper {
     /**
      * Creates a new workspace file.
      */
-    async createWorkspace(builderContextId?: string): Promise<void> {
+    async createWorkspace(builderContextId?: string, contextType?: unknown): Promise<void> {
         console.log('[FileManager] Create File');
 
-        const workspace: Workspace = createWorkspace(undefined, builderContextId);
+        const workspace: Workspace = createWorkspace(undefined, builderContextId, contextType);
         
         await this._tree.addFile(workspace);
     }

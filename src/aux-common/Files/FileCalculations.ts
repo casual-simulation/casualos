@@ -715,12 +715,14 @@ export function createFile(id = uuid(), tags: Object['tags'] = {}) {
  * @param id The ID of the new workspace.
  * @param builderContextId The tag that should be used for contexts stored on this workspace.
  */
-export function createWorkspace(id = uuid(), builderContextId: string = createContextId()): Workspace {
+export function createWorkspace(id = uuid(), builderContextId: string = createContextId(), contextType: unknown = true): Workspace {
     
     // checks if given context string is empty or just whitespace
     if(builderContextId.length === 0 || /^\s*$/.test(builderContextId)){
         builderContextId = createContextId();
     }
+
+    
 
     return {
         id: id,
@@ -729,7 +731,7 @@ export function createWorkspace(id = uuid(), builderContextId: string = createCo
             'aux.context.y': 0,
             'aux.context.z': 0,
             [builderContextId]: true,
-            [`${builderContextId}.config`]: '=isBuilder',
+            [`${builderContextId}.config`]: contextType,
             [`${builderContextId}.x`]: 0,
             [`${builderContextId}.y`]: 0,
             [`${builderContextId}.z`]: 0,

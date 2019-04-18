@@ -27,14 +27,31 @@
         </div>
       </div>
 
-    <md-dialog-prompt
-            :md-active.sync="showDialog"
-            v-model="contextDialog"
-            md-title="Set Workspace Context"
-            md-confirm-text="Save"
-            md-cancel-text="Cancel"
-            @md-cancel="onConfirmDialogCancel"
-            @md-confirm="onConfirmDialogOk" />
+    <md-dialog
+            :md-active.sync="showDialog">
+
+    <md-dialog-title>Set Workspace Context</md-dialog-title>
+
+    <md-dialog-content>
+      <md-field>
+        <md-input
+          ref="input"
+          v-model="contextDialog"
+          maxlength="40"
+          @keydown.enter.native="onConfirm" />
+      </md-field>
+    
+      <md-checkbox v-model="builderCheck">Make Builder Context</md-checkbox>
+      <md-checkbox v-model="playerCheck">Make Player Context</md-checkbox>
+    </md-dialog-content>
+
+    <md-dialog-actions>
+      <md-button class="md-primary" @click="onConfirmDialogCancel">Cancel</md-button>
+      <md-button class="md-primary" @click="onConfirmDialogOk">Save</md-button>
+    </md-dialog-actions>
+
+
+    </md-dialog>
 
   </div>
 </template>
