@@ -1,7 +1,7 @@
 # AUX Changelog
 
 ## V0.4.13
-### Date: TBD
+### Date: 04/18/2019
 
 ### Changes:
 - Improvements
@@ -25,7 +25,6 @@
       - This way you won't get events for tap code `1111` all the time due to the user tapping the screen.
     - All of the drag/drop events are triggered once the user is done dragging. (not during their drag)
   - Added checkboxes the new workspace modal to allow users to set whether it should show up in builder, player, or both.
-
 
 ## V0.4.12
 ### Date: 04/17/2019
