@@ -71,6 +71,8 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     }
 
     protected _onDragReleased(calc: FileCalculationContext): void {
+        super._onDragReleased(calc);
+        
         // Button has been released.
         if (this._freeDragGroup) {
             this._releaseFreeDragGroup(this._freeDragGroup);
@@ -114,6 +116,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         const firstFileExists = true;
         
         if (firstFileExists) {
+
             // Move the file freely in space at the distance the file is currently from the camera.
             if (!this._freeDragGroup) {
                 this._freeDragMeshes = this._files.map(f => this._createDragMesh(calc, f));

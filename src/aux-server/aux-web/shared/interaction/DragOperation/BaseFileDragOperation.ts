@@ -15,7 +15,11 @@ import {
     getDiffUpdate,
     fileRemoved,
     COMBINE_ACTION_NAME,
-    isMergeable
+    isMergeable,
+    DRAG_OUT_OF_CONTEXT_ACTION_NAME,
+    DROP_IN_CONTEXT_ACTION_NAME,
+    action,
+    calculateActionEvents
 } from '@casual-simulation/aux-common';
 
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
@@ -39,19 +43,25 @@ export abstract class BaseFileDragOperation implements IOperation {
     protected _other: File;
     protected _context: string;
     protected _previousContext: string;
+    protected _originalContext: string;
+
+    private _inContext: boolean;
 
     /**
      * Create a new drag rules.
-     * @param input the input module to interface with.
-     * @param buttonId the button id of the input that this drag operation is being performed with. If desktop this is the mouse button
+     * @param gameView The game view.
+     * @param interaction The interaction manager.
+     * @param files The files to drag.
+     * @param context The context that the files are currently in.
      */
     constructor(gameView: IGameView, interaction: BaseInteractionManager, files: File[], context: string) {
         this._gameView = gameView;
         this._interaction = interaction;
         this._setFiles(files);
         this._lastScreenPos = this._gameView.getInput().getMouseScreenPos();
-        this._context = context;
+        this._originalContext = this._context = context;
         this._previousContext = null;
+        this._inContext = true;
     }
 
     update(calc: FileCalculationContext): void {
@@ -119,6 +129,7 @@ export abstract class BaseFileDragOperation implements IOperation {
 
     protected _updateFilesPositions(files: File[], gridPosition: Vector2, index: number) {
 
+        this._inContext = true;
         let events: FileEvent[] = [];
         for (let i = 0; i < files.length; i++) {
             let tags = {
@@ -139,6 +150,7 @@ export abstract class BaseFileDragOperation implements IOperation {
     }
 
     protected _updateFileContexts(files: File[], inContext: boolean) {
+        this._inContext = inContext;
         let events: FileEvent[] = [];
         for (let i = 0; i < files.length; i++) {
             let tags = {
@@ -234,11 +246,31 @@ export abstract class BaseFileDragOperation implements IOperation {
         return nextIndex;
     }
 
+    protected _onDragReleased(calc: FileCalculationContext): void {
+        if (this._context !== this._originalContext) {
+
+            let events: FileEvent[] = [];
+            if (this._originalContext) {
+                // trigger drag out of context
+                const fileIds = this._files.map(f => f.id);
+                const actionData = action(DRAG_OUT_OF_CONTEXT_ACTION_NAME, fileIds, appManager.fileManager.userFile.id, this._originalContext);
+                const result = calculateActionEvents(appManager.fileManager.filesState, actionData);
+                events.push(...result.events);
+            }
+
+            if (this._inContext) {
+                // Trigger drag into context
+                const fileIds = this._files.map(f => f.id);
+                const actionData = action(DROP_IN_CONTEXT_ACTION_NAME, fileIds, appManager.fileManager.userFile.id, this._context);
+                const result = calculateActionEvents(appManager.fileManager.filesState, actionData);
+                events.push(...result.events);
+            }
+        }
+    }
 
     //
     // Abstractions
     //
 
     protected abstract _onDrag(calc:FileCalculationContext): void;
-    protected abstract _onDragReleased(calc: FileCalculationContext): void;
 }

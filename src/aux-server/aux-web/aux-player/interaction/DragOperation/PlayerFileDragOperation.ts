@@ -61,8 +61,9 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
                 }
             }
         }
-    }    
+    }
     
-    protected _onDragReleased(): void {
+    protected _onDragReleased(calc: FileCalculationContext): void {
+        super._onDragReleased(calc);
     }
 }

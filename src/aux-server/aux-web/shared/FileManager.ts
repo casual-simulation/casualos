@@ -285,8 +285,8 @@ export class FileManager {
     return this._helper.createWorkspace(builderContextId);
   }
 
-  action(eventName: string, files: File[]) {
-    return this._helper.action(eventName, files);
+  action(eventName: string, files: File[], arg?: any) {
+    return this._helper.action(eventName, files, arg); 
   }
 
   transaction(...events: FileEvent[]) {

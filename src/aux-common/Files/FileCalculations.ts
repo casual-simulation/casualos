@@ -64,6 +64,16 @@ export const CREATE_ACTION_NAME: string = 'onCreate';
 export const DESTROY_ACTION_NAME: string = 'onDestroy';
 
 /**
+ * The name of the event that represents a file being dragged into a context.
+ */
+export const DROP_IN_CONTEXT_ACTION_NAME: string = 'onDropInContext';
+
+/**
+ * The name of the event that represents a file being dragged out of a context.
+ */
+export const DRAG_OUT_OF_CONTEXT_ACTION_NAME: string = 'onDragOutOfContext';
+
+/**
  * Defines an interface for objects that represent assignment formula expressions.
  * Assignment formula expressions are formulas that are only evaluated once.
  * Internally we store them as objects in the tag and display the calculated result.
