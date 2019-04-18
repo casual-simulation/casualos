@@ -1,9 +1,9 @@
-import { sortBy, flatMap} from 'lodash';
+import { sortBy, flatMap, mapValues } from 'lodash';
 import { File, Object, PartialFile} from './File';
-import { createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, getActiveObjects, calculateStateDiff, FilesStateDiff, filtersMatchingArguments, calculateFormulaValue } from './FileCalculations';
+import { createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, getActiveObjects, calculateStateDiff, FilesStateDiff, filtersMatchingArguments, calculateFormulaValue, isFile } from './FileCalculations';
 import { merge as mergeObj } from '../utils';
 import formulaLib, { setActions, getActions, setFileState, setCalculationContext, getCalculationContext, setUserId, getUserId } from '../Formulas/formula-lib';
-import { SetValueHandler } from './FileProxy';
+import { SetValueHandler, isProxy } from './FileProxy';
 export interface FilesState {
     [id: string]: File;
 }
@@ -207,7 +207,27 @@ function eventActions(state: FilesState,
             vars[`arg${index}`] = obj;
         });
     } else {
-        vars['that'] = argument;
+        if (isFile(argument)) {
+            vars['that'] = convertToFormulaObject(context, argument, setValueHandlerFactory(argument));
+        } else if (argument && typeof argument === 'object' && !argument[isProxy]) {
+            if (Array.isArray(argument)) {
+                vars['that'] = argument.map(v => {
+                    if (isFile(v)) {
+                        return convertToFormulaObject(context, v, setValueHandlerFactory(v));
+                    }
+                    return v;
+                });
+            } else {
+                vars['that'] = mapValues(argument, v => {
+                    if (isFile(v)) {
+                        return convertToFormulaObject(context, v, setValueHandlerFactory(v));
+                    }
+                    return v;
+                });
+            }
+        } else {
+            vars['that'] = argument;
+        }
     }
 
     scripts.forEach(s => context.sandbox.run(s, {}, formulaObjects[0], vars));

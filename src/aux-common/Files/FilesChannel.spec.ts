@@ -351,6 +351,137 @@ describe('FilesChannel', () => {
             ]);
         });
 
+        describe('arguments', () => {
+            it('should convert the argument to a proxy object if it is a file', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'this.hi = that.hi'
+                        }
+                    },
+                    otherFile: {
+                        id: 'otherFile',
+                        tags: {
+                            'name': 'other',
+                            'hi': 'test'
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], null, state.otherFile);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            hi: 'test'
+                        }
+                    })
+                ]);
+            });
+
+            it('should convert the argument to a list of proxy objects if it is a list of files', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'this.hi = that[0].hi; this.l = that.length'
+                        }
+                    },
+                    otherFile: {
+                        id: 'otherFile',
+                        tags: {
+                            'name': 'other',
+                            'hi': 'test'
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], null, [state.otherFile]);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            hi: 'test',
+                            l: 1
+                        }
+                    })
+                ]);
+            });
+
+            it('should convert the argument fields to proxy objects if they are files', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'this.hi = that.file.hi'
+                        }
+                    },
+                    otherFile: {
+                        id: 'otherFile',
+                        tags: {
+                            'name': 'other',
+                            'hi': 'test'
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], null, {
+                    file: state.otherFile,
+                    num: 100
+                });
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            hi: 'test'
+                        }
+                    })
+                ]);
+            });
+
+            it('should handle null arguments', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'this.hi = "test"'
+                        }
+                    }
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], null, null);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+                
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            hi: 'test'
+                        }
+                    })
+                ]);
+            });
+        });
+
         describe('shout()', () => {
             it('should run the event on every file', () => {
                 const state: FilesState = {
