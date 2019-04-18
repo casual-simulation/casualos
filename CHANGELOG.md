@@ -9,6 +9,19 @@
     - **NOTE:** The remote server must be CORS enabled in order to allow retrieval of the image.
   - Added `sprite` as an option for `aux.shape`.
     - This is a camera facing quad that is great for displaying transparent images.
+  - Added several events:
+    - `onCreate()` is called on the file that was created after being created.
+    - `onDestroy()` is called on the file just before it is destroyed.
+    - `onDropInContext()` is called on all the files that a user just dragged onto a context. (`that` is the context name)
+    - `onDragOutOfContext()` is called on all the files that a user just dragged out of a context. (`that` is the context name)
+    - `onDropAnyInContext()` is called on all files when any file is dragged onto a context. (`that` is an object that contains the `context` and `files`)
+    - `onDragAnyOutOfContext()` is called on all files when any file is dragged out of a context. (`that` is an object that contains the `context` and `files`)
+    - `onDropInInventory()` is called on the file that a user just dragged into their inventory.
+    - `onDragOutOfInventory()` is called on the file that a user just dragged out of their inventory.
+    - `onDropAnyInInventory()` is called on all files when any file is dragged into the user's inventory. (`that` is the list of files)
+    - `onDragAnyOutOfInventory()` is called on all files when any file is dragged out of the user's inventory. (`that` is the list of files)
+    - All of the drag/drop events are triggered once the user is done dragging. (not during their drag)
+
 
 ## V0.4.12
 ### Date: 04/17/2019
