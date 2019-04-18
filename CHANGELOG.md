@@ -20,7 +20,11 @@
     - `onDragOutOfInventory()` is called on the file that a user just dragged out of their inventory.
     - `onDropAnyInInventory()` is called on all files when any file is dragged into the user's inventory. (`that` is the list of files)
     - `onDragAnyOutOfInventory()` is called on all files when any file is dragged out of the user's inventory. (`that` is the list of files)
+    - `onTapCode()` is called on every file whenever a 4 digit tap code has been entered. (`that` is the code)
+      - It is recommended to use an `if` statement to filter the tap code.
+      - This way you won't get events for tap code `1111` all the time due to the user tapping the screen.
     - All of the drag/drop events are triggered once the user is done dragging. (not during their drag)
+  - Added checkboxes the new workspace modal to allow users to set whether it should show up in builder, player, or both.
 
 
 ## V0.4.12
