@@ -1,5 +1,14 @@
 # AUX Changelog
 
+
+## V0.4.14
+### Date: 04/19/2019
+
+### Changes:
+- Improvements
+  - Users that join as a guest will now have a cleaner visible name of `Guest`.
+
+
 ## V0.4.13
 ### Date: 04/18/2019
 

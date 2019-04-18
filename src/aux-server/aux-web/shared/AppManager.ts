@@ -309,6 +309,12 @@ export class AppManager {
         if (user) {
             if (user.id) {
                 this._user = user;
+
+
+                if(this._user.name.includes("guest_")){
+                    this._user.name = "Guest";
+                }
+
                 if (!session) {
                     this._user.id = uuid();
                 }
