@@ -54,6 +54,16 @@ export var ShortId_Length: number = 5;
 export const COMBINE_ACTION_NAME: string = 'onCombine';
 
 /**
+ * The name of the event that represents a file being created.
+ */
+export const CREATE_ACTION_NAME: string = 'onCreate';
+
+/**
+ * The name of the event that represents a file being destroyed.
+ */
+export const DESTROY_ACTION_NAME: string = 'onDestroy';
+
+/**
  * Defines an interface for objects that represent assignment formula expressions.
  * Assignment formula expressions are formulas that are only evaluated once.
  * Internally we store them as objects in the tag and display the calculated result.

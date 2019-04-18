@@ -9,6 +9,9 @@ import {
     calculateDestroyFileEvents,
     removeFromContextDiff,
     fileUpdated,
+    action,
+    calculateActionEvents,
+    DESTROY_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 
 import { setParent } from '../../../shared/scene/SceneUtils';
@@ -37,6 +40,13 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     private _freeDragGroup: Group;
     private _freeDragMeshes: AuxFile3D[];
     private _freeDragDistance: number;
+
+    /**
+     * Gets whether the files are currently being placed on a workspace.
+     */
+    protected _isOnWorkspace(): boolean {
+        return !this._freeDragGroup;
+    }
 
     /**
      * Create a new drag rules.
@@ -152,8 +162,15 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
 
     private _destroyFiles(calc: FileCalculationContext, files: File[]) {
         let events: FileEvent[] = [];
+        const state = appManager.fileManager.filesState;
+        
         // Remove the files from the context
         for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const actionData = action(DESTROY_ACTION_NAME, [file.id], appManager.fileManager.userFile.id);
+            const result = calculateActionEvents(state, actionData);
+            
+            events.push(...result.events);
             events.push(fileRemoved(files[i].id));
         }
         appManager.fileManager.transaction(...events);
