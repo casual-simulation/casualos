@@ -12,6 +12,7 @@ import { WordBubbleDecorator } from "./WordBubbleDecorator";
 import { appManager } from "../../../shared/AppManager";
 import { UserControlsDecorator } from "./UserControlsDecorator";
 import { OutlineDecorator } from "./OutlineDecorator";
+import { TextureDecorator } from "./TextureDecorator";
 
 export class AuxFile3DDecoratorFactory { 
 
@@ -37,10 +38,12 @@ export class AuxFile3DDecoratorFactory {
         } else {
 
             let fileShapeDecorator = new FileShapeDecorator(file3d);
+            let textureDecorator = new TextureDecorator(file3d, fileShapeDecorator);
             // let outlineDecorator = new OutlineDecorator(file3d, fileShapeDecorator);
 
             decorators.push(
                 fileShapeDecorator,
+                textureDecorator,
                 // outlineDecorator
             );
         }
