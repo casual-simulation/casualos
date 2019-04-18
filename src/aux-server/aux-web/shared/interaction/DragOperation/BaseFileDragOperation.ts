@@ -252,17 +252,13 @@ export abstract class BaseFileDragOperation implements IOperation {
             let events: FileEvent[] = [];
             if (this._originalContext) {
                 // trigger drag out of context
-                const fileIds = this._files.map(f => f.id);
-                const actionData = action(DRAG_OUT_OF_CONTEXT_ACTION_NAME, fileIds, appManager.fileManager.userFile.id, this._originalContext);
-                const result = calculateActionEvents(appManager.fileManager.filesState, actionData);
+                const result = appManager.fileManager.helper.actionEvents(DRAG_OUT_OF_CONTEXT_ACTION_NAME, this._files, this._originalContext);
                 events.push(...result.events);
             }
 
             if (this._inContext) {
                 // Trigger drag into context
-                const fileIds = this._files.map(f => f.id);
-                const actionData = action(DROP_IN_CONTEXT_ACTION_NAME, fileIds, appManager.fileManager.userFile.id, this._context);
-                const result = calculateActionEvents(appManager.fileManager.filesState, actionData);
+                const result = appManager.fileManager.helper.actionEvents(DROP_IN_CONTEXT_ACTION_NAME, this._files, this._context);
                 events.push(...result.events);
             }
         }

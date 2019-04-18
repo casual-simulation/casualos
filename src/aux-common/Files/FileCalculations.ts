@@ -74,6 +74,16 @@ export const DROP_IN_CONTEXT_ACTION_NAME: string = 'onDropInContext';
 export const DRAG_OUT_OF_CONTEXT_ACTION_NAME: string = 'onDragOutOfContext';
 
 /**
+ * The name of the event that represents a file being dragged out of the user's inventory.
+ */
+export const DRAG_OUT_OF_INVENTORY_ACTION_NAME: string = 'onDragOutOfInventory';
+
+/**
+ * The name of the event that represents a file being dropped into the user's inventory.
+ */
+export const DROP_IN_INVENTORY_ACTION_NAME: string = 'onDropInInventory';
+
+/**
  * Defines an interface for objects that represent assignment formula expressions.
  * Assignment formula expressions are formulas that are only evaluated once.
  * Internally we store them as objects in the tag and display the calculated result.

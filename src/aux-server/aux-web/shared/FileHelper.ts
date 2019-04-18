@@ -112,12 +112,12 @@ export class FileHelper {
     }
 
     /**
-     * Runs the given event on the given files.
+     * Calculates the list of file events for the given event running on the given files.
      * @param eventName The name of the event to run.
-     * @param files The files that should be searched for handlers for the event name.
+     * @param files The files that should be searched for handlers for the event.
      * @param arg The argument that should be passed to the event handlers.
      */
-    async action(eventName: string, files: File[], arg?: any): Promise<void> {
+    actionEvents(eventName: string, files: File[], arg?: any) {
         console.log('[FileManager] Run event:', eventName, 'on files:', files);
 
         // Calculate the events on a single client and then run them in a transaction to make sure the order is right.
@@ -126,6 +126,17 @@ export class FileHelper {
         const result = calculateActionEvents(this._tree.value, actionData);
         console.log('  result: ', result);
 
+        return result;
+    }
+
+    /**
+     * Runs the given event on the given files.
+     * @param eventName The name of the event to run.
+     * @param files The files that should be searched for handlers for the event name.
+     * @param arg The argument that should be passed to the event handlers.
+     */
+    async action(eventName: string, files: File[], arg?: any): Promise<void> {
+        const result = this.actionEvents(eventName, files, arg);
         await this._tree.addEvents(result.events);
     }
 
