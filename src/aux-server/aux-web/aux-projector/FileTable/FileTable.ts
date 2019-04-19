@@ -2,7 +2,7 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import {Provide, Prop, Inject, Watch} from 'vue-property-decorator';
 import { some, union } from 'lodash';
-import {File, Object, fileTags, isHiddenTag, AuxObject, hasValue, isFormula, getShortId, searchFileState, SandboxResult, isFile, isDiff, merge, SelectionMode} from '@casual-simulation/aux-common';
+import {File, Object, fileTags, isHiddenTag, AuxObject, hasValue, isFormula, getShortId, searchFileState, SandboxResult, isFile, isDiff, merge, SelectionMode, tweenTo} from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
 import { appManager } from '../../shared/AppManager';
 
@@ -244,6 +244,10 @@ export default class FileTable extends Vue {
             this.searchResults = searchFileState(this.search, this.fileManager.filesState);
         }
         this._updateTags();
+    }
+
+    onFileClicked(file: AuxObject) {
+        this.fileManager.transaction(tweenTo(file.id));
     }
 
     toggleHidden() {

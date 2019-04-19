@@ -112,6 +112,7 @@ Here's a list of the tools and packages that we're using to build AUX.
     - [nodemon](https://nodemon.io/) for running node in watch mode.
     - [Visual Studio Code](https://code.visualstudio.com/) for file editing and debugging.
     - [TypeDoc](https://typedoc.org/) for API documentation generation.
+    - [Husky](https://github.com/typicode/husky) for pre-commit hooks.
 - Dependencies
     - AUX Common
         - [acorn](https://github.com/acornjs/acorn) for parsing AUX formulas.

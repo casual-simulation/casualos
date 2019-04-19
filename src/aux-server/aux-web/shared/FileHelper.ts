@@ -19,9 +19,12 @@ import {
     Workspace,
     calculateFormattedFileValue,
     calculateFileValue,
-    SandboxLibrary
+    SandboxLibrary,
+    LocalEvent,
+    LocalEvents
 } from "@casual-simulation/aux-common";
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
+import { Subject, Observable } from 'rxjs';
 
 /**
  * Defines an class that contains a simple set of functions
@@ -31,6 +34,7 @@ export class FileHelper {
     private _tree: AuxCausalTree;
     private _userId: string;
     private _lib: SandboxLibrary;
+    private _localEvents: Subject<LocalEvents>;
 
     /**
      * Creates a new file helper.
@@ -40,6 +44,7 @@ export class FileHelper {
     constructor(tree: AuxCausalTree, userFileId: string, { isBuilder, isPlayer } = { isBuilder: false, isPlayer: false }) {
         this._tree = tree;
         this._userId = userFileId;
+        this._localEvents = new Subject<LocalEvents>();
         this._lib = {
             ...formulaLib,
             isBuilder,
@@ -70,6 +75,13 @@ export class FileHelper {
             return objs[0];
         }
         return null;
+    }
+
+    /**
+     * Gets the observable list of local events that have been processed by this file helper.
+     */
+    get localEvents(): Observable<LocalEvents> {
+        return this._localEvents;
     }
 
     /**
@@ -106,11 +118,6 @@ export class FileHelper {
         await this._tree.addFile(workspace);
     }
 
-    createContextId(): string  {
-
-        return createContextId();
-    }
-
     /**
      * Calculates the list of file events for the given event running on the given files.
      * @param eventName The name of the event to run.
@@ -138,6 +145,7 @@ export class FileHelper {
     async action(eventName: string, files: File[], arg?: any): Promise<void> {
         const result = this.actionEvents(eventName, files, arg);
         await this._tree.addEvents(result.events);
+        this._sendLocalEvents(result.events);
     }
 
     /**
@@ -147,6 +155,7 @@ export class FileHelper {
      */
     async transaction(...events: FileEvent[]): Promise<void> {
         await this._tree.addEvents(events);
+        this._sendLocalEvents(events);
     }
     
     /**
@@ -180,5 +189,14 @@ export class FileHelper {
      */
     calculateFileValue(file: File, tag: string) {
         return calculateFileValue(this.createContext(), file, tag);
+    }
+
+    private _sendLocalEvents(events: FileEvent[]) {
+        for (let i = 0; i < events.length; i++) {
+            const event = events[i];
+            if (event.type === 'local') {
+                this._localEvents.next(<LocalEvents>event);
+            }
+        }
     }
 }

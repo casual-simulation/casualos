@@ -61,6 +61,9 @@ export class CameraControls {
     public position0: Vector3;
     public zoom0: number;
 
+    // Offset the apply to the camera this frame.
+    public cameraOffset: Vector3 = new Vector3();
+
     private _camera: PerspectiveCamera | OrthographicCamera;
     private _gameView: IGameView;
     private _enabled = true;
@@ -264,9 +267,8 @@ export class CameraControls {
 
         if (this._enabled) {
             this.updateInput();
+            this.updateCamera();
         }
-
-        this.updateCamera();
 
     }
 
@@ -535,9 +537,10 @@ export class CameraControls {
 
         // move target to panned location
         this.target.add(this.panOffset);
-
+        this.target.add(this.cameraOffset);
+        
         offset.setFromSpherical(this.spherical);
-
+        
         // rotate offset back to "camera-up-vector-is-up" space
         offset.applyQuaternion(quatInverse);
 
@@ -550,13 +553,14 @@ export class CameraControls {
             this.sphericalDelta.theta *= (1 - this.dampingFactor);
             this.sphericalDelta.phi *= (1 - this.dampingFactor);
             this.panOffset.multiplyScalar(1 - this.dampingFactor);
-
+            
         } else {
-
+            
             this.sphericalDelta.set(0, 0, 0);
             this.panOffset.set(0, 0, 0);
-
+            
         }
+        this.cameraOffset.set(0, 0, 0);
 
         this.scale = 1;
 

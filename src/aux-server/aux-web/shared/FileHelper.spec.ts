@@ -1,4 +1,4 @@
-import { AuxCausalTree, AuxObject } from "@casual-simulation/aux-common";
+import { AuxCausalTree, AuxObject, FileEvent, LocalEvent } from "@casual-simulation/aux-common";
 import { FileHelper } from "./FileHelper";
 import { storedTree, site } from "@casual-simulation/aux-common/causal-trees";
 
@@ -70,6 +70,13 @@ describe('FileHelper', () => {
 
             expect(context.sandbox.library.isBuilder).toBe(false);
             expect(context.sandbox.library.isPlayer).toBe(false);
+        });
+    });
+
+    describe('localEvents', () => {
+        it('should emit local events that are sent via transaction()', () => {
+            let events: LocalEvent[] = [];
+            helper.localEvents.subscribe(e => events.push(e));
         });
     });
 

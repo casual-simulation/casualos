@@ -1,9 +1,13 @@
 import { sortBy, flatMap, mapValues } from 'lodash';
 import { File, Object, PartialFile} from './File';
-import { createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, getActiveObjects, calculateStateDiff, FilesStateDiff, filtersMatchingArguments, calculateFormulaValue, isFile } from './FileCalculations';
+import { createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, getActiveObjects, filtersMatchingArguments, calculateFormulaValue, isFile } from './FileCalculations';
 import { merge as mergeObj } from '../utils';
 import formulaLib, { setActions, getActions, setFileState, setCalculationContext, getCalculationContext, setUserId, getUserId } from '../Formulas/formula-lib';
 import { SetValueHandler, isProxy } from './FileProxy';
+
+/**
+ * Defines an interface for the state that an AUX file can contain.
+ */
 export interface FilesState {
     [id: string]: File;
 }
@@ -29,15 +33,8 @@ export type FileEvent =
     FileRemovedEvent | 
     FileUpdatedEvent |
     FileTransactionEvent |
-    ApplyStateEvent;
-
-export interface DiffOptions {
-    /**
-     * Whether the diff results should contain
-     * both parents or just the changes needed to turn parent 1 into parent 2.
-     */
-    fullDiff?: boolean;
-}
+    ApplyStateEvent |
+    LocalEvent;
 
 /**
  * Calculates the set of events that should be run for the given action.
@@ -75,7 +72,7 @@ export function calculateActionEvents(state: FilesState, action: Action) {
         };
     });
 
-    const fileEvents = flatMap(files, (f, index) => eventActions(
+    const fileEvents = flatMap(files, (f) => eventActions(
         state, 
         files, 
         context, 
@@ -261,17 +258,26 @@ function calculateFileUpdateFromChanges(id: string, changes: { changedTags: stri
     return fileUpdated(id, partial);
 }
 
+/**
+ * Defines a file event that indicates a file was added to the state.
+ */
 export interface FileAddedEvent extends Event {
     type: 'file_added';
     id: string;
     file: File;
 }
 
+/**
+ * Defines a file event that indicates a file was removed from the state.
+ */
 export interface FileRemovedEvent extends Event {
     type: 'file_removed';
     id: string;
 }
 
+/**
+ * Defines a file event that indicates a file was updated.
+ */
 export interface FileUpdatedEvent extends Event {
     type: 'file_updated';
     id: string;
@@ -294,6 +300,39 @@ export interface FileTransactionEvent extends Event {
 export interface ApplyStateEvent extends Event {
     type: 'apply_state';
     state: FilesState;
+}
+
+/**
+ * An event that is used as a way to communicate local changes from script actions to the interface.
+ * For example, showing a toast message is a local event.
+ */
+export interface LocalEvent extends Event {
+    type: 'local';
+}
+
+/**
+ * Defines a set of possible local event types.
+ */
+export type LocalEvents = ShowToastEvent | TweenToEvent;
+
+/**
+ * An event that is used to show a toast message to the user.
+ */
+export interface ShowToastEvent extends LocalEvent {
+    name: 'show_toast';
+    message: string;
+}
+
+/**
+ * An event that is used to tween the camera to the given file's location.
+ */
+export interface TweenToEvent extends LocalEvent {
+    name: 'tween_to';
+
+    /**
+     * The ID of the file to tween to.
+     */
+    fileId: string;
 }
 
 /**
@@ -325,6 +364,10 @@ export interface Action {
     argument?: any;
 }
 
+/**
+ * Creates a new FileAddedEvent.
+ * @param file The file that was added.
+ */
 export function fileAdded(file: File): FileAddedEvent {
     return {
         type: 'file_added',
@@ -333,6 +376,10 @@ export function fileAdded(file: File): FileAddedEvent {
     };
 }
 
+/**
+ * Creates a new FileRemovedEvent.
+ * @param fileId The ID of the file that was removed.
+ */
 export function fileRemoved(fileId: string): FileRemovedEvent {
     return {
         type: 'file_removed',
@@ -340,6 +387,11 @@ export function fileRemoved(fileId: string): FileRemovedEvent {
     };
 }
 
+/**
+ * Creates a new FileUpdatedEvent.
+ * @param id The ID of the file that was updated.
+ * @param update The update that was applied to the file.
+ */
 export function fileUpdated(id: string, update: PartialFile): FileUpdatedEvent {
     return {
         type: 'file_updated',
@@ -348,6 +400,10 @@ export function fileUpdated(id: string, update: PartialFile): FileUpdatedEvent {
     };
 }
 
+/**
+ * Creates a new FileTransactionEvent.
+ * @param events The events to contain in the transaction.
+ */
 export function transaction(events: FileEvent[]): FileTransactionEvent {
     return {
         type: 'transaction',
@@ -355,6 +411,13 @@ export function transaction(events: FileEvent[]): FileTransactionEvent {
     };
 }
 
+/**
+ * Creates a new Action.
+ * @param eventName The name of the event.
+ * @param fileIds The IDs of the files that the event should be sent to. If null then the event is sent to every file.
+ * @param userId The ID of the file for the current user.
+ * @param arg The optional argument to provide.
+ */
 export function action(eventName: string, fileIds: string[] = null, userId: string = null, arg?: any): Action {
     return {
         type: 'action',
@@ -365,9 +428,37 @@ export function action(eventName: string, fileIds: string[] = null, userId: stri
     };
 }
 
+/**
+ * Creates a new ApplyStateEvent.
+ * @param state The state to apply.
+ */
 export function addState(state: FilesState): ApplyStateEvent {
     return {
         type: 'apply_state',
         state: state
+    };
+}
+
+/**
+ * Creates a new ShowToastEvent.
+ * @param message The message to show with the event.
+ */
+export function toast(message: string): ShowToastEvent {
+    return {
+        type: 'local',
+        name: 'show_toast',
+        message: message
+    };
+}
+
+/**
+ * Creates a new TweenToEvent.
+ * @param fileId The ID of the file to tween to.
+ */
+export function tweenTo(fileId: string): TweenToEvent {
+    return {
+        type: 'local',
+        name: 'tween_to',
+        fileId: fileId
     };
 }

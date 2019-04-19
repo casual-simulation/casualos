@@ -244,6 +244,10 @@ export class Text3D extends Object3D {
 
         if (text) {
 
+            if(text.includes("guest_")){
+                text = "Guest";
+            }
+
             // Text has value, enable the mesh and update the geometry.
             this.visible = true;
             this._geometry.update(text);
