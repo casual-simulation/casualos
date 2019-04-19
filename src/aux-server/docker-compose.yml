@@ -1,7 +1,14 @@
 mongo:
-   image: 'mongo:latest'
-   restart: always
-   ports:
-     - '27017:27017'
-   volumes:
-    - '/data/db:/data/db'
+    image: 'mongo:latest'
+    restart: always
+    ports:
+        - '27017:27017'
+    volumes:
+        - '/data/db:/data/db'
+redis:
+    image: 'redis:latest'
+    restart: always
+    ports:
+        - '6379:6379'
+    volumes:
+        - '/data/cache:/data'

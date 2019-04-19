@@ -14,12 +14,17 @@ import { auxCausalTreeFactory } from '@casual-simulation/aux-common/aux-format';
 import { AppVersion, apiVersion } from '@casual-simulation/aux-common';
 import uuid from 'uuid/v4';
 import axios from 'axios';
+import { RedisClient, createClient as createRedisClient } from 'redis';
+import util from 'util';
 
 const connect = pify(MongoClient.connect);
 
 export class ClientServer {
     private _app: express.Express;
+    private _redisClient: RedisClient;
+    private _hgetall: any;
     private _config: ClientConfig;
+    private _cacheExpireSeconds: number;
 
     get app() {
         return this._app;
@@ -29,9 +34,18 @@ export class ClientServer {
         return this._config;
     }
 
-    constructor(config: ClientConfig) {
+    constructor(
+        config: ClientConfig,
+        redisClient: RedisClient,
+        cacheExpireSeconds: number
+    ) {
         this._app = express();
         this._config = config;
+        this._redisClient = redisClient;
+        this._hgetall = util
+            .promisify(this._redisClient.hgetall)
+            .bind(this._redisClient);
+        this._cacheExpireSeconds = cacheExpireSeconds;
     }
 
     configure() {
@@ -68,14 +82,41 @@ export class ClientServer {
             '/proxy',
             asyncMiddleware(async (req, res) => {
                 const url = req.query.url;
-                console.log('[Server] Proxying request:', url);
                 try {
+                    const cached = await this._hgetall(url);
+                    if (cached) {
+                        console.log('[Server] Returning cached request:', url);
+                        const contentType = cached.contentType.toString();
+                        const status = parseInt(cached.status.toString());
+                        const data: Buffer = cached.data;
+                        res.status(status);
+                        res.contentType(contentType);
+                        res.send(data);
+
+                        return;
+                    }
+
+                    console.log('[Server] Proxying request:', url);
                     const resp = await axios.get(url, {
-                        responseType: 'stream',
+                        responseType: 'arraybuffer',
                     });
                     const contentType = resp.headers['content-type'];
+                    const status = resp.status;
+                    const data = resp.data;
+
+                    if (this._shouldCache(contentType)) {
+                        console.log('[Server] Caching', contentType);
+                        this._redisClient.hmset(url, {
+                            contentType: contentType,
+                            status: status,
+                            data: data,
+                        });
+                        this._redisClient.EXPIRE(url, this._cacheExpireSeconds);
+                    }
+
                     res.contentType(contentType);
-                    resp.data.pipe(res);
+                    res.status(resp.status);
+                    res.send(data);
                 } catch (ex) {
                     console.error(ex);
                     res.sendStatus(500);
@@ -86,6 +127,20 @@ export class ClientServer {
         this._app.use('*', (req, res) => {
             res.sendFile(path.join(this._config.dist, this._config.index));
         });
+    }
+
+    private _shouldCache(contentType: string) {
+        return (
+            [
+                'image/png',
+                'image/bmp',
+                'image/gif',
+                'image/jpeg',
+                'image/vnd.microsoft.icon',
+                'image/tiff',
+                'image/webp',
+            ].indexOf(contentType) >= 0
+        );
     }
 }
 
@@ -101,6 +156,7 @@ export class Server {
     private _clients: ClientServer[];
     private _mongoClient: MongoClient;
     private _userCount: number;
+    private _redisClient: RedisClient;
 
     constructor(config: Config) {
         this._config = config;
@@ -108,7 +164,18 @@ export class Server {
         this._http = new Http.Server(this._app);
         this._config = config;
         this._socket = SocketIO(this._http, config.socket);
-        this._clients = this._config.clients.map(c => new ClientServer(c));
+        this._redisClient = createRedisClient({
+            ...config.redis.options,
+            return_buffers: true,
+        });
+        this._clients = this._config.clients.map(
+            c =>
+                new ClientServer(
+                    c,
+                    this._redisClient,
+                    config.redis.defaultExpireSeconds
+                )
+        );
         this._userCount = 0;
     }
 
