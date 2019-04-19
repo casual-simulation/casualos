@@ -35,10 +35,12 @@ export class GridMesh extends Object3D {
 
     constructor(level: GridLevel) {
         super();
-        this.tiles = level.tiles.filter(t => t.valid).map(t => ({
-            localPosition: t.localPosition,
-            gridPosition: t.gridPosition,
-        }));
+        this.tiles = level.tiles
+            .filter(t => t.valid)
+            .map(t => ({
+                localPosition: t.localPosition,
+                gridPosition: t.gridPosition,
+            }));
         this.add(constructGridLines(level));
     }
 

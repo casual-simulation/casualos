@@ -253,10 +253,8 @@ export abstract class BaseFileDragOperation implements IOperation {
         files: File[],
         objs: File[]
     ): number {
-        const except = differenceBy(
-            objs,
-            files,
-            f => (f instanceof AuxFile3D ? f.file.id : f.id)
+        const except = differenceBy(objs, files, f =>
+            f instanceof AuxFile3D ? f.file.id : f.id
         );
 
         const indexes = except.map(o => ({

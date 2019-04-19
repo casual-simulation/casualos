@@ -197,8 +197,8 @@ function _createProxyHandler(
                 nextTags = isFile
                     ? val.tags
                     : typeof val === 'object'
-                        ? val
-                        : tags;
+                    ? val
+                    : tags;
             }
 
             if (
