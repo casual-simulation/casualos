@@ -1,2 +1,4 @@
 *.json
-*.vue
+/coverage
+/docs
+test-report.html
