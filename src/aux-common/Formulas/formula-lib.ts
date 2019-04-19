@@ -1,5 +1,5 @@
 import { File, FileTags } from '../Files/File';
-import { FileUpdatedEvent, FileEvent, FileAddedEvent, action, FilesState, calculateActionEvents, FileRemovedEvent, fileRemoved, fileAdded, fileUpdated } from "../Files/FilesChannel";
+import { FileUpdatedEvent, FileEvent, FileAddedEvent, action, FilesState, calculateActionEvents, FileRemovedEvent, fileRemoved, fileAdded, toast as toastMessage } from "../Files/FilesChannel";
 import uuid from 'uuid/v4';
 import { every, find } from "lodash";
 import { isProxy, proxyObject, FileProxy } from "../Files/FileProxy";
@@ -566,6 +566,14 @@ export function removeFromMenu(file: FileProxy) {
 }
 
 /**
+ * Shows a toast message to the user.
+ * @param message The message to show.
+ */
+export function toast(message: string) {
+    actions.push(toastMessage(message));
+}
+
+/**
  * Defines a set of functions that are able to make File Diffs.
  */
 export const makeDiff = {
@@ -604,5 +612,7 @@ export default {
     removeFromContext,
 
     addToMenu,
-    removeFromMenu
+    removeFromMenu,
+
+    toast
 };

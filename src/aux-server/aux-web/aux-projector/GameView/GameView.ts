@@ -46,6 +46,7 @@ import {
     getConfigTagContext,
     getFileConfigContexts,
     hasValue,
+    createContextId,
 } from '@casual-simulation/aux-common';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { Time } from '../../shared/scene/Time';
@@ -213,7 +214,7 @@ export default class GameView extends Vue implements IGameView {
     }
 
     public addNewWorkspace(): void {
-        this.contextDialog = this.fileManager.helper.createContextId();
+        this.contextDialog = createContextId();
         this.playerCheck = false;
         this.showDialog = true;
     }

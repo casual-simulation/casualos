@@ -231,6 +231,15 @@ export default class App extends Vue {
                 })
             ).subscribe());
 
+            subs.push(fileManager.helper.localEvents.subscribe(e => {
+                if (e.name === 'show_toast') {
+                    this.snackbar = {
+                        message: e.message,
+                        visible: true
+                    };
+                }
+            }));
+
             subs.push(new Subscription(() => {
                 this.loggedIn = false;
             }));

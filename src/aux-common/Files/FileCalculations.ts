@@ -6,7 +6,6 @@ import {
     DEFAULT_WORKSPACE_HEIGHT, 
     DEFAULT_WORKSPACE_GRID_SCALE, 
     DEFAULT_USER_MODE, 
-    DEFAULT_WORKSPACE_COLOR, 
     UserMode,
     SelectionMode,
     DEFAULT_SELECTION_MODE,
@@ -30,8 +29,6 @@ import {
     values,
     isEqual,
     sortBy,
-    sumBy,
-    difference,
     cloneDeep
 } from 'lodash';
 import { Sandbox, SandboxLibrary, SandboxResult } from '../Formulas/Sandbox';
@@ -41,10 +38,10 @@ import { isProxy, createFileProxy, proxyObject, SetValueHandler, FileProxy } fro
 import formulaLib from '../Formulas/formula-lib';
 import SandboxInterface, { FilterFunction } from '../Formulas/SandboxInterface';
 import { PartialFile } from '../Files';
-import { FilesState, cleanFile, hasValue, FileUpdatedEvent, fileUpdated } from './FilesChannel';
+import { FilesState, cleanFile, hasValue } from './FilesChannel';
 import { merge, shortUuid } from '../utils';
-import { AtomOp, Atom } from '../causal-trees';
-import { AuxOp, AuxOpType, AuxFile, file, AuxObject } from '../aux-format';
+import { AuxFile, AuxObject, AuxOp } from '../aux-format';
+import { Atom } from '../causal-trees';
 
 export var ShortId_Length: number = 5;
 

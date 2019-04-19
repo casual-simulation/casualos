@@ -8,6 +8,7 @@ import {
     fileUpdated,
     calculateDestroyFileEvents,
     FileAddedEvent,
+    toast,
 } from './FilesChannel';
 import { File } from './File';
 import uuid from 'uuid/v4';
@@ -2146,6 +2147,30 @@ describe('FilesChannel', () => {
                             context: 'abc'
                         }
                     })
+                ]);
+            });
+        });
+
+        describe('toast()', () => {
+            it('should return a ShowToastEvent', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'toast("hello, world!")',
+                        }
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    toast('hello, world!')
                 ]);
             });
         });
