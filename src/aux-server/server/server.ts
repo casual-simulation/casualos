@@ -13,6 +13,7 @@ import { MongoDBTreeStore } from './causal-trees/MongoDBTreeStore';
 import { auxCausalTreeFactory } from '@casual-simulation/aux-common/aux-format';
 import { AppVersion, apiVersion } from '@casual-simulation/aux-common';
 import uuid from 'uuid/v4';
+import axios from 'axios';
 
 const connect = pify(MongoClient.connect);
 
@@ -62,6 +63,25 @@ export class ClientServer {
         });
 
         this._app.use(express.static(this._config.dist));
+
+        this._app.use(
+            '/proxy',
+            asyncMiddleware(async (req, res) => {
+                const url = req.query.url;
+                console.log('[Server] Proxying request:', url);
+                try {
+                    const resp = await axios.get(url, {
+                        responseType: 'stream',
+                    });
+                    const contentType = resp.headers['content-type'];
+                    res.contentType(contentType);
+                    resp.data.pipe(res);
+                } catch (ex) {
+                    console.error(ex);
+                    res.sendStatus(500);
+                }
+            })
+        );
 
         this._app.use('*', (req, res) => {
             res.sendFile(path.join(this._config.dist, this._config.index));
