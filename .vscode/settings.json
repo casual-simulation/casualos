@@ -7,7 +7,7 @@
         "**/.DS_Store": true,
         "**/*.js": { "when": "$(basename).ts" },
         "**/*.js.map": true,
-        "src/aux-common/**/*.d.ts": { "when": "$(basename).ts" },
+        "src/aux-common/**/*.d.ts": { "when": "$(basename).ts" }
     },
     "editor.insertSpaces": true,
     "editor.tabSize": 4,

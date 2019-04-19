@@ -1,26 +1,26 @@
 {
-    "apps": [{
-        "name": "FILE-SIMULATOR-" + process.env.NODE_ENV,
-        "script": "server/dist/main.js",
-        "env": {
-            "NODE_ENV": "dev"
-        },
-        "env_dev": {
-            "NODE_ENV": "dev"
-        },
-        "env_test": {
-            "NODE_ENV": "test"
-        },
-        "env_production": {
-            "NODE_ENV": "production"
-        },
+    "apps": [
+        {
+            "name": "FILE-SIMULATOR-" + process.env.NODE_ENV,
+            "script": "server/dist/main.js",
+            "env": {
+                "NODE_ENV": "dev"
+            },
+            "env_dev": {
+                "NODE_ENV": "dev"
+            },
+            "env_test": {
+                "NODE_ENV": "test"
+            },
+            "env_production": {
+                "NODE_ENV": "production"
+            },
 
-        "out_file": "/dev/null"
-    }],
+            "out_file": "/dev/null"
+        }
+    ],
 
     "deploy": {
-
-
         "dev": {
             "user": "PM2_USER",
             "host": "HOST_IP_ADDRESS",
