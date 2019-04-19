@@ -2,25 +2,30 @@
 <template>
     <div>
         <md-dialog
-                :md-fullscreen="false"
-                :md-click-outside-to-close="false"
-                :md-close-on-esc="false"
-                :md-backdrop="true"
-                :md-active="show">
+            :md-fullscreen="false"
+            :md-click-outside-to-close="false"
+            :md-close-on-esc="false"
+            :md-backdrop="true"
+            :md-active="show"
+        >
             <div v-if="!hasError" class="loading-dialog">
                 <div class="loading-text-content">
                     <div class="loading-title">
                         <h1>Loading...</h1>
-                        <md-progress-spinner md-mode="indeterminate" :md-diameter="20" :md-stroke="2"></md-progress-spinner>
+                        <md-progress-spinner
+                            md-mode="indeterminate"
+                            :md-diameter="20"
+                            :md-stroke="2"
+                        ></md-progress-spinner>
                     </div>
-                    <p>{{status}}</p>
+                    <p>{{ status }}</p>
                 </div>
-                <md-progress-bar md-mode="determinate" :md-value="progress" ></md-progress-bar>
+                <md-progress-bar md-mode="determinate" :md-value="progress"></md-progress-bar>
             </div>
             <div v-else class="loading-error">
                 <div class="loading-text-content error-text-content">
                     <h1>An error has occured.</h1>
-                    <p>{{error}}</p>
+                    <p>{{ error }}</p>
                 </div>
                 <md-button @click="onErrorDismiss">Dismiss</md-button>
             </div>

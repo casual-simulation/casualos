@@ -1,8 +1,8 @@
 <!-- App.vue -->
 <template>
-  <div>
-      {{message}}
-  </div>
+    <div>
+        {{ message }}
+    </div>
 </template>
 <script src="./World.ts"></script>
 <style src="./World.css"></style>
