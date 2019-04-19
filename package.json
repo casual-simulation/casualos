@@ -17,7 +17,9 @@
         "debug:server:chrome": "node --inspect src/aux-server/server/dist/main.js"
     },
     "husky": {
-        "hooks": {}
+        "hooks": {
+            "pre-commit": "pretty-quick --staged"
+        }
     },
     "devDependencies": {
         "@babel/core": "^7.2.0",
