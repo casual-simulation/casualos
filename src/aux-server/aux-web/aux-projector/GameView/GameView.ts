@@ -14,7 +14,8 @@ import {
     GridHelper,
     Quaternion,
     Matrix4,
-    Texture
+    Texture,
+    Vector2
 } from 'three';
 
 import VRControlsModule from 'three-vrcontrols-module';
@@ -66,10 +67,12 @@ import { DebugObjectManager } from '../../shared/scene/DebugObjectManager';
 import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { BuilderInteractionManager } from '../interaction/BuilderInteractionManager';
+import { TweenCameraToOperation } from '../../shared/interaction/TweenCameraToOperation';
 import Home from '../Home/Home';
 import TrashCan from '../TrashCan/TrashCan';
 import { CameraType, resizeCameraRig, createCameraRig } from '../../shared/scene/CameraRigFactory';
 import { baseAuxAmbientLight, baseAuxDirectionalLight } from '../../shared/scene/SceneUtils';
+import { Physics } from '../../shared/scene/Physics';
 
 @Component({
     components: {
@@ -248,6 +251,30 @@ export default class GameView extends Vue implements IGameView {
         this.onCameraTypeChanged.invoke(this._mainCamera);
     }
 
+    /**
+     * Animates the main camera into position to view the given file ID.
+     * @param fileId The ID of the file to view.
+     */
+    public tweenCameraToFile(fileId: string) {
+        console.log('[GameView] Tween to: ', fileId);
+
+        // find the file with the given ID
+        const files = this.findFilesById(fileId);
+        if (files.length > 0) {
+            const file = files[0];
+            const targetPosition = new Vector3();
+            file.display.getWorldPosition(targetPosition);
+            this.tweenCameraToPosition(targetPosition);
+        }
+    }
+
+    /**
+     * Animates the main camera to the given position.
+     * @param position The position to animate to.
+     */
+    public tweenCameraToPosition(position: Vector3) {
+        this._interaction.addOperation(new TweenCameraToOperation(this, this._interaction, position));
+    }
 
     public async mounted() {
         this._handleResize = this._handleResize.bind(this);
@@ -302,6 +329,14 @@ export default class GameView extends Vue implements IGameView {
             .pipe(tap(_ => {
                 this.recentFiles = this.fileManager.recent.files;
                 this.selectedRecentFile = this.fileManager.recent.selectedRecentFile;
+            }))
+            .subscribe());
+
+        this._subs.push(this.fileManager.helper.localEvents
+            .pipe(tap(e => {
+                if (e.name === 'tween_to') {
+                    this.tweenCameraToFile(e.fileId);
+                }
             }))
             .subscribe());
 

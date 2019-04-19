@@ -9,6 +9,7 @@ import {
     calculateDestroyFileEvents,
     FileAddedEvent,
     toast,
+    tweenTo,
 } from './FilesChannel';
 import { File } from './File';
 import uuid from 'uuid/v4';
@@ -2152,7 +2153,7 @@ describe('FilesChannel', () => {
         });
 
         describe('toast()', () => {
-            it('should return a ShowToastEvent', () => {
+            it('should emit a ShowToastEvent', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -2171,6 +2172,52 @@ describe('FilesChannel', () => {
 
                 expect(result.events).toEqual([
                     toast('hello, world!')
+                ]);
+            });
+        });
+
+        describe('tweenTo()', () => {
+            it('should emit a TweenToEvent', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'tweenTo("test")',
+                        }
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    tweenTo('test')
+                ]);
+            });
+
+            it('should handle files', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'tweenTo(this)',
+                        }
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    tweenTo('thisFile')
                 ]);
             });
         });

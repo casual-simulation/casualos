@@ -54,6 +54,25 @@ export abstract class BaseInteractionManager {
         this._gameView.onCameraTypeChanged.addListener(this._handleCameraTypeChanged);
     }
 
+    /**
+     * Gets the camera controls.
+     */
+    get cameraControls() {
+        return this._cameraControls;
+    }
+
+    /**
+     * Adds the given operation to the operation list.
+     * @param operation The operation to add.
+     * @param disableCameraControls Whether to disable the camera controls while the operation is in effect.
+     */
+    addOperation(operation: IOperation, disableCameraControls: boolean = false) {
+        this._operations.push(operation);
+        if (disableCameraControls) {
+            this._cameraControls.enabled = false;
+        }
+    }
+
     update(): void {
 
         const calc = appManager.fileManager.createContext();

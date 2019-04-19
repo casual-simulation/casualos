@@ -132,7 +132,7 @@
                     </div>
 
                     <!-- File ID -->
-                    <div :key="file.id" class="file-cell id header">{{getShortId(file)}}</div>
+                    <div :key="file.id" class="file-cell id header" @click="onFileClicked(file)">{{getShortId(file)}}</div>
 
                     <!-- File Tags -->
                     <div v-for="(tag, tagIndex) in tags" :key="`${file.id}-${tagIndex}`" class="file-cell" :class="getTagCellClass(file, tag)">

@@ -313,7 +313,7 @@ export interface LocalEvent extends Event {
 /**
  * Defines a set of possible local event types.
  */
-export type LocalEvents = ShowToastEvent;
+export type LocalEvents = ShowToastEvent | TweenToEvent;
 
 /**
  * An event that is used to show a toast message to the user.
@@ -321,6 +321,18 @@ export type LocalEvents = ShowToastEvent;
 export interface ShowToastEvent extends LocalEvent {
     name: 'show_toast';
     message: string;
+}
+
+/**
+ * An event that is used to tween the camera to the given file's location.
+ */
+export interface TweenToEvent extends LocalEvent {
+    name: 'tween_to';
+
+    /**
+     * The ID of the file to tween to.
+     */
+    fileId: string;
 }
 
 /**
@@ -436,5 +448,17 @@ export function toast(message: string): ShowToastEvent {
         type: 'local',
         name: 'show_toast',
         message: message
+    };
+}
+
+/**
+ * Creates a new TweenToEvent.
+ * @param fileId The ID of the file to tween to.
+ */
+export function tweenTo(fileId: string): TweenToEvent {
+    return {
+        type: 'local',
+        name: 'tween_to',
+        fileId: fileId
     };
 }

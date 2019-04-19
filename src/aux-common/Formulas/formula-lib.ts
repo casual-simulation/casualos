@@ -1,5 +1,5 @@
 import { File, FileTags } from '../Files/File';
-import { FileUpdatedEvent, FileEvent, FileAddedEvent, action, FilesState, calculateActionEvents, FileRemovedEvent, fileRemoved, fileAdded, toast as toastMessage } from "../Files/FilesChannel";
+import { FileUpdatedEvent, FileEvent, FileAddedEvent, action, FilesState, calculateActionEvents, FileRemovedEvent, fileRemoved, fileAdded, toast as toastMessage, tweenTo as calcTweenTo } from "../Files/FilesChannel";
 import uuid from 'uuid/v4';
 import { every, find } from "lodash";
 import { isProxy, proxyObject, FileProxy } from "../Files/FileProxy";
@@ -328,18 +328,25 @@ export function clone(file: FileProxy | FileProxy[], ...diffs: FileDiff[]) {
 }
 
 /**
+ * Gets the file ID from the given file.
+ * @param file The file or string.
+ */
+export function getFileId(file: FileProxy | string): string {
+    if (typeof file === 'string') {
+        return file;
+    } else if(file) {
+        let original = file[isProxy] ? file[proxyObject] : file;
+        return original.id;
+    }
+}
+
+/**
  * Creates a new file that is a child of the given file.
  * @param parent The file that should be the parent of the new file.
  * @param data The object that specifies the new file's tag values.
  */
 export function createFrom(parent: FileProxy | string, ...datas: FileDiff[]) {
-    let parentId: string;
-    if (typeof parent === 'string') {
-        parentId = parent;
-    } else if(parent) {
-        let original = parent[isProxy] ? parent[proxyObject] : parent;
-        parentId = original.id;
-    }
+    let parentId = getFileId(parent);
     let parentDiff = parentId ? {
         'aux._creator': parentId
     } : {}; 
@@ -574,6 +581,14 @@ export function toast(message: string) {
 }
 
 /**
+ * Tweens the user's camera to view the given file.
+ * @param file The file to view.
+ */
+export function tweenTo(file: FileProxy | string) {
+    actions.push(calcTweenTo(getFileId(file)));
+}
+
+/**
  * Defines a set of functions that are able to make File Diffs.
  */
 export const makeDiff = {
@@ -614,5 +629,6 @@ export default {
     addToMenu,
     removeFromMenu,
 
-    toast
+    toast,
+    tweenTo
 };
