@@ -11,21 +11,21 @@ module.exports = merge.smart(common, {
     devtool: 'source-map',
     output: {
         filename: '[name].[contenthash].js',
-        path: path.resolve(__dirname, 'dist')
+        path: path.resolve(__dirname, 'dist'),
     },
     module: {
         rules: [
             {
                 test: /\.css$/,
                 use: [
-                    MiniCssExtractPlugin.loader, 
+                    MiniCssExtractPlugin.loader,
                     {
                         loader: 'css-loader',
                         options: {
                             importLoaders: 1,
-                            minimize: true
-                        }
-                    }
+                            minimize: true,
+                        },
+                    },
                 ],
             },
             {
@@ -35,39 +35,39 @@ module.exports = merge.smart(common, {
                     loader: 'babel-loader',
                     options: {
                         presets: ['@babel/preset-env'],
-                        plugins: ['@babel/plugin-syntax-dynamic-import']
-                    }
-                }
+                        plugins: ['@babel/plugin-syntax-dynamic-import'],
+                    },
+                },
             },
-        ]
+        ],
     },
     plugins: [
         new webpack.DefinePlugin({
             PRODUCTION: JSON.stringify(true),
-            ENABLE_SENTRY: JSON.stringify(true)
+            ENABLE_SENTRY: JSON.stringify(true),
         }),
         new MiniCssExtractPlugin({
-            filename: '[name].[contenthash].css'
+            filename: '[name].[contenthash].css',
         }),
-        new webpack.HashedModuleIdsPlugin()
+        new webpack.HashedModuleIdsPlugin(),
     ],
     optimization: {
         minimize: true,
         minimizer: [
             new TerserPlugin({
                 parallel: true,
-                sourceMap: true
+                sourceMap: true,
             }),
-            new OptimizeCSSAssetsPlugin({})
+            new OptimizeCSSAssetsPlugin({}),
         ],
         splitChunks: {
             cacheGroups: {
                 vendor: {
                     test: /[\\/](node_modules|public)[\\/](?!aux-common)/,
                     name: 'vendors',
-                    chunks: 'all'
-                }
-            }
-        }
-    }
+                    chunks: 'all',
+                },
+            },
+        },
+    },
 });
