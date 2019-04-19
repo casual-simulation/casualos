@@ -13,109 +13,121 @@ import {
 } from './FilesChannel';
 import { File } from './File';
 import uuid from 'uuid/v4';
-import { COMBINE_ACTION_NAME, createFile, createCalculationContext } from './FileCalculations';
+import {
+    COMBINE_ACTION_NAME,
+    createFile,
+    createCalculationContext,
+} from './FileCalculations';
 import { isProxy } from './FileProxy';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
 
 describe('FilesChannel', () => {
-
     describe('calculateActionEvents()', () => {
-
         it('should run scripts on the this file and return the resulting actions', () => {
-            
             const state: FilesState = {
                 thisFile: {
                     id: 'thisFile',
                     tags: {
-                        _position: { x:0, y: 0, z: 0 },
+                        _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'onCombine(#name:"Joe")': 'clone(null, this);destroy(this);destroy(that);',
-                        'onCombine(#name:"Friend")': 'clone(null, this, { bad: true })',
-                    }
+                        'onCombine(#name:"Joe")':
+                            'clone(null, this);destroy(this);destroy(that);',
+                        'onCombine(#name:"Friend")':
+                            'clone(null, this, { bad: true })',
+                    },
                 },
                 thatFile: {
                     id: 'thatFile',
                     tags: {
-                        _position: { x:0, y: 0, z: 0 },
+                        _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'def',
-                        name: 'Joe'
-                    }
-                }
+                        name: 'Joe',
+                    },
+                },
             };
 
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
-            const fileAction = action(COMBINE_ACTION_NAME, ['thisFile', 'thatFile']);
+            const fileAction = action(COMBINE_ACTION_NAME, [
+                'thisFile',
+                'thatFile',
+            ]);
             const result = calculateActionEvents(state, fileAction);
 
             expect(result.hasUserDefinedEvents).toBe(true);
-            
+
             expect(result.events).toEqual([
                 fileAdded({
                     id: 'uuid-0',
                     tags: {
-                        _position: { x:0, y: 0, z: 0 },
+                        _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'onCombine(#name:"Joe")': 'clone(null, this);destroy(this);destroy(that);',
-                        'onCombine(#name:"Friend")': 'clone(null, this, { bad: true })',
+                        'onCombine(#name:"Joe")':
+                            'clone(null, this);destroy(this);destroy(that);',
+                        'onCombine(#name:"Friend")':
+                            'clone(null, this, { bad: true })',
 
                         // the new file is not destroyed
-                    }
+                    },
                 }),
                 fileRemoved('thisFile'),
-                fileRemoved('thatFile')
+                fileRemoved('thatFile'),
             ]);
         });
 
         it('should preserve formulas when copying', () => {
-            
             const state: FilesState = {
                 thisFile: {
                     id: 'thisFile',
                     tags: {
-                        _position: { x:0, y: 0, z: 0 },
+                        _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
                         num: 15,
                         formula: '=this.num',
-                        'onCombine(#name:"Friend")': 'clone(null, this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
-                    }
+                        'onCombine(#name:"Friend")':
+                            'clone(null, this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
+                    },
                 },
                 thatFile: {
                     id: 'thatFile',
                     tags: {
-                        _position: { x:0, y: 0, z: 0 },
+                        _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        name: 'Friend'
-                    }
-                }
+                        name: 'Friend',
+                    },
+                },
             };
 
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
-            const fileAction = action(COMBINE_ACTION_NAME, ['thisFile', 'thatFile']);
+            const fileAction = action(COMBINE_ACTION_NAME, [
+                'thisFile',
+                'thatFile',
+            ]);
             const result = calculateActionEvents(state, fileAction);
 
             expect(result.hasUserDefinedEvents).toBe(true);
-            
+
             expect(result.events).toEqual([
                 fileAdded({
                     id: 'uuid-0',
                     tags: {
-                        _position: { x:0, y: 0, z: 0 },
+                        _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
                         num: 15,
                         formula: '=this.num',
-                        'onCombine(#name:"Friend")': 'clone(null, this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
+                        'onCombine(#name:"Friend")':
+                            'clone(null, this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
                         name: 'Friend',
-                        testFormula: '=this.name'
+                        testFormula: '=this.name',
 
                         // the new file is not destroyed
-                    }
+                    },
                 }),
                 fileRemoved('thisFile'),
-                fileRemoved('thatFile')
+                fileRemoved('thatFile'),
             ]);
         });
 
@@ -124,19 +136,19 @@ describe('FilesChannel', () => {
                 thisFile: {
                     id: 'thisFile',
                     tags: {
-                        _position: { x:0, y: 0, z: 0 },
+                        _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef(#name:"Joe")': 'clone(null, this)'
-                    }
+                        'abcdef(#name:"Joe")': 'clone(null, this)',
+                    },
                 },
                 thatFile: {
                     id: 'thatFile',
                     tags: {
-                        _position: { x:0, y: 0, z: 0 },
+                        _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'def',
-                        name: 'Joe'
-                    }
-                }
+                        name: 'Joe',
+                    },
+                },
             };
 
             // specify the UUID to use next
@@ -145,16 +157,16 @@ describe('FilesChannel', () => {
             const result = calculateActionEvents(state, fileAction);
 
             expect(result.hasUserDefinedEvents).toBe(true);
-            
+
             expect(result.events).toEqual([
                 fileAdded({
                     id: 'uuid-0',
                     tags: {
-                        _position: { x:0, y: 0, z: 0 },
+                        _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef(#name:"Joe")': 'clone(null, this)'
-                    }
-                })
+                        'abcdef(#name:"Joe")': 'clone(null, this)',
+                    },
+                }),
             ]);
         });
 
@@ -163,19 +175,19 @@ describe('FilesChannel', () => {
                 thisFile: {
                     id: 'thisFile',
                     tags: {
-                        _position: { x:0, y: 0, z: 0 },
+                        _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef()': 'clone(null, this)'
-                    }
+                        'abcdef()': 'clone(null, this)',
+                    },
                 },
                 thatFile: {
                     id: 'thatFile',
                     tags: {
-                        _position: { x:0, y: 0, z: 0 },
+                        _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'def',
-                        name: 'Joe'
-                    }
-                }
+                        name: 'Joe',
+                    },
+                },
             };
 
             // specify the UUID to use next
@@ -184,16 +196,16 @@ describe('FilesChannel', () => {
             const result = calculateActionEvents(state, fileAction);
 
             expect(result.hasUserDefinedEvents).toBe(true);
-            
+
             expect(result.events).toEqual([
                 fileAdded({
                     id: 'uuid-0',
                     tags: {
-                        _position: { x:0, y: 0, z: 0 },
+                        _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef()': 'clone(null, this)'
-                    }
-                })
+                        'abcdef()': 'clone(null, this)',
+                    },
+                }),
             ]);
         });
 
@@ -202,11 +214,11 @@ describe('FilesChannel', () => {
                 thisFile: {
                     id: 'thisFile',
                     tags: {
-                        _position: { x:0, y: 0, z: 0 },
+                        _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef()': 'this.val = 10; this.nested.value = true'
-                    }
-                }
+                        'abcdef()': 'this.val = 10; this.nested.value = true',
+                    },
+                },
             };
 
             // specify the UUID to use next
@@ -215,14 +227,14 @@ describe('FilesChannel', () => {
             const result = calculateActionEvents(state, fileAction);
 
             expect(result.hasUserDefinedEvents).toBe(true);
-            
+
             expect(result.events).toEqual([
                 fileUpdated('thisFile', {
                     tags: {
                         val: 10,
-                        'nested.value': true
-                    }
-                })
+                        'nested.value': true,
+                    },
+                }),
             ]);
         });
 
@@ -231,15 +243,15 @@ describe('FilesChannel', () => {
                 thisFile: {
                     id: 'thisFile',
                     tags: {
-                        'abcdef()': '@name("test").abc = "def"'
-                    }
+                        'abcdef()': '@name("test").abc = "def"',
+                    },
                 },
                 editFile: {
                     id: 'editFile',
                     tags: {
-                        name: 'test'
-                    }
-                }
+                        name: 'test',
+                    },
+                },
             };
 
             // specify the UUID to use next
@@ -247,13 +259,13 @@ describe('FilesChannel', () => {
             const result = calculateActionEvents(state, fileAction);
 
             expect(result.hasUserDefinedEvents).toBe(true);
-            
+
             expect(result.events).toEqual([
                 fileUpdated('editFile', {
                     tags: {
-                        abc: 'def'
-                    }
-                })
+                        abc: 'def',
+                    },
+                }),
             ]);
         });
 
@@ -262,16 +274,16 @@ describe('FilesChannel', () => {
                 thisFile: {
                     id: 'thisFile',
                     tags: {
-                        'formula': '=@name("test")', 
-                        'abcdef()': 'this.formula.abc = "def"'
-                    }
+                        formula: '=@name("test")',
+                        'abcdef()': 'this.formula.abc = "def"',
+                    },
                 },
                 editFile: {
                     id: 'editFile',
                     tags: {
-                        name: 'test'
-                    }
-                }
+                        name: 'test',
+                    },
+                },
             };
 
             // specify the UUID to use next
@@ -279,13 +291,13 @@ describe('FilesChannel', () => {
             const result = calculateActionEvents(state, fileAction);
 
             expect(result.hasUserDefinedEvents).toBe(true);
-            
+
             expect(result.events).toEqual([
                 fileUpdated('editFile', {
                     tags: {
-                        abc: 'def'
-                    }
-                })
+                        abc: 'def',
+                    },
+                }),
             ]);
         });
 
@@ -294,17 +306,18 @@ describe('FilesChannel', () => {
                 thisFile: {
                     id: 'thisFile',
                     tags: {
-                        'formula': '=@name("test")', 
-                        'abcdef()': 'this.formula.num += 1; this.formula.num += 1'
-                    }
+                        formula: '=@name("test")',
+                        'abcdef()':
+                            'this.formula.num += 1; this.formula.num += 1',
+                    },
                 },
                 editFile: {
                     id: 'editFile',
                     tags: {
                         name: 'test',
-                        num: 1
-                    }
-                }
+                        num: 1,
+                    },
+                },
             };
 
             // specify the UUID to use next
@@ -312,13 +325,13 @@ describe('FilesChannel', () => {
             const result = calculateActionEvents(state, fileAction);
 
             expect(result.hasUserDefinedEvents).toBe(true);
-            
+
             expect(result.events).toEqual([
                 fileUpdated('editFile', {
                     tags: {
-                        num: 3
-                    }
-                })
+                        num: 3,
+                    },
+                }),
             ]);
         });
 
@@ -326,15 +339,15 @@ describe('FilesChannel', () => {
             const state: FilesState = {
                 userFile: {
                     id: 'userFile',
-                    tags: {}
+                    tags: {},
                 },
                 thisFile: {
                     id: 'thisFile',
                     tags: {
                         'abcdef()': 'shout("sayHello")',
-                        'sayHello()': 'this.userId = getUser().id'
-                    }
-                }
+                        'sayHello()': 'this.userId = getUser().id',
+                    },
+                },
             };
 
             // specify the UUID to use next
@@ -343,13 +356,13 @@ describe('FilesChannel', () => {
             const result = calculateActionEvents(state, fileAction);
 
             expect(result.hasUserDefinedEvents).toBe(true);
-            
+
             expect(result.events).toEqual([
                 fileUpdated('thisFile', {
                     tags: {
-                        userId: 'userFile'
-                    }
-                })
+                        userId: 'userFile',
+                    },
+                }),
             ]);
         });
 
@@ -359,31 +372,36 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.hi = that.hi'
-                        }
+                            'test()': 'this.hi = that.hi',
+                        },
                     },
                     otherFile: {
                         id: 'otherFile',
                         tags: {
-                            'name': 'other',
-                            'hi': 'test'
-                        }
-                    }
+                            name: 'other',
+                            hi: 'test',
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], null, state.otherFile);
+                const fileAction = action(
+                    'test',
+                    ['thisFile'],
+                    null,
+                    state.otherFile
+                );
                 const result = calculateActionEvents(state, fileAction);
 
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
                         tags: {
-                            hi: 'test'
-                        }
-                    })
+                            hi: 'test',
+                        },
+                    }),
                 ]);
             });
 
@@ -392,32 +410,35 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.hi = that[0].hi; this.l = that.length'
-                        }
+                            'test()':
+                                'this.hi = that[0].hi; this.l = that.length',
+                        },
                     },
                     otherFile: {
                         id: 'otherFile',
                         tags: {
-                            'name': 'other',
-                            'hi': 'test'
-                        }
-                    }
+                            name: 'other',
+                            hi: 'test',
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], null, [state.otherFile]);
+                const fileAction = action('test', ['thisFile'], null, [
+                    state.otherFile,
+                ]);
                 const result = calculateActionEvents(state, fileAction);
 
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
                         tags: {
                             hi: 'test',
-                            l: 1
-                        }
-                    })
+                            l: 1,
+                        },
+                    }),
                 ]);
             });
 
@@ -426,34 +447,34 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.hi = that.file.hi'
-                        }
+                            'test()': 'this.hi = that.file.hi',
+                        },
                     },
                     otherFile: {
                         id: 'otherFile',
                         tags: {
-                            'name': 'other',
-                            'hi': 'test'
-                        }
-                    }
+                            name: 'other',
+                            hi: 'test',
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const fileAction = action('test', ['thisFile'], null, {
                     file: state.otherFile,
-                    num: 100
+                    num: 100,
                 });
                 const result = calculateActionEvents(state, fileAction);
 
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
                         tags: {
-                            hi: 'test'
-                        }
-                    })
+                            hi: 'test',
+                        },
+                    }),
                 ]);
             });
 
@@ -462,16 +483,16 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.hi = that.files[0].hi'
-                        }
+                            'test()': 'this.hi = that.files[0].hi',
+                        },
                     },
                     otherFile: {
                         id: 'otherFile',
                         tags: {
-                            'name': 'other',
-                            'hi': 'test'
-                        }
-                    }
+                            name: 'other',
+                            hi: 'test',
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
@@ -482,13 +503,13 @@ describe('FilesChannel', () => {
                 const result = calculateActionEvents(state, fileAction);
 
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
                         tags: {
-                            hi: 'test'
-                        }
-                    })
+                            hi: 'test',
+                        },
+                    }),
                 ]);
             });
 
@@ -497,9 +518,9 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.hi = "test"'
-                        }
-                    }
+                            'test()': 'this.hi = "test"',
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
@@ -508,13 +529,13 @@ describe('FilesChannel', () => {
                 const result = calculateActionEvents(state, fileAction);
 
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
                         tags: {
-                            hi: 'test'
-                        }
-                    })
+                            hi: 'test',
+                        },
+                    }),
                 ]);
             });
         });
@@ -525,27 +546,27 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            _position: { x:0, y: 0, z: 0 },
+                            _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
                             'abcdef()': 'shout("sayHello")',
-                            'sayHello()': 'this.hello = true'
-                        }
-                    }
+                            'sayHello()': 'this.hello = true',
+                        },
+                    },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const fileAction = action('abcdef', ['thisFile']);
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
                         tags: {
-                            hello: true
-                        }
-                    })
+                            hello: true,
+                        },
+                    }),
                 ]);
             });
 
@@ -554,27 +575,28 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            _position: { x:0, y: 0, z: 0 },
+                            _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
-                            'abcdef()': 'let o = { hi: "test" }; shout("sayHello", o)',
-                            'sayHello()': 'this.hello = that.hi'
-                        }
-                    }
+                            'abcdef()':
+                                'let o = { hi: "test" }; shout("sayHello", o)',
+                            'sayHello()': 'this.hello = that.hi',
+                        },
+                    },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const fileAction = action('abcdef', ['thisFile']);
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
                         tags: {
-                            hello: 'test'
-                        }
-                    })
+                            hello: 'test',
+                        },
+                    }),
                 ]);
             });
 
@@ -583,34 +605,34 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            _position: { x:0, y: 0, z: 0 },
+                            _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
                             'abcdef()': 'shout("sayHello", @name("other"))',
-                            'sayHello()': 'this.hello = that.hi'
-                        }
+                            'sayHello()': 'this.hello = that.hi',
+                        },
                     },
                     otherFile: {
                         id: 'otherFile',
                         tags: {
-                            'name': 'other',
-                            'hi': 'test'
-                        }
-                    }
+                            name: 'other',
+                            hi: 'test',
+                        },
+                    },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const fileAction = action('abcdef', ['thisFile']);
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
                         tags: {
-                            hello: 'test'
-                        }
-                    })
+                            hello: 'test',
+                        },
+                    }),
                 ]);
             });
 
@@ -619,33 +641,33 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            _position: { x:0, y: 0, z: 0 },
+                            _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
                             'abcdef()': 'shout("sayHello", @name("other"))',
-                            'sayHello()': 'that.hello = "test"'
-                        }
+                            'sayHello()': 'that.hello = "test"',
+                        },
                     },
                     otherFile: {
                         id: 'otherFile',
                         tags: {
-                            'name': 'other',
-                        }
-                    }
+                            name: 'other',
+                        },
+                    },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const fileAction = action('abcdef', ['thisFile']);
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('otherFile', {
                         tags: {
-                            hello: 'test'
-                        }
-                    })
+                            hello: 'test',
+                        },
+                    }),
                 ]);
             });
 
@@ -654,33 +676,34 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            _position: { x:0, y: 0, z: 0 },
+                            _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
-                            'abcdef()': 'let o = { other: @name("other") }; shout("sayHello", o)',
-                            'sayHello()': 'that.other.hello = "test"'
-                        }
+                            'abcdef()':
+                                'let o = { other: @name("other") }; shout("sayHello", o)',
+                            'sayHello()': 'that.other.hello = "test"',
+                        },
                     },
                     otherFile: {
                         id: 'otherFile',
                         tags: {
-                            'name': 'other',
-                        }
-                    }
+                            name: 'other',
+                        },
+                    },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const fileAction = action('abcdef', ['thisFile']);
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('otherFile', {
                         tags: {
-                            hello: 'test'
-                        }
-                    })
+                            hello: 'test',
+                        },
+                    }),
                 ]);
             });
 
@@ -689,27 +712,27 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            _position: { x:0, y: 0, z: 0 },
+                            _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
                             'abcdef()': 'shout("sayHello", true)',
-                            'sayHello()': 'this.hello = that'
-                        }
-                    }
+                            'sayHello()': 'this.hello = that',
+                        },
+                    },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const fileAction = action('abcdef', ['thisFile']);
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
                         tags: {
-                            hello: true
-                        }
-                    })
+                            hello: true,
+                        },
+                    }),
                 ]);
             });
 
@@ -718,38 +741,39 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            _position: { x:0, y: 0, z: 0 },
+                            _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
-                            'abcdef()': 'shout("sayHello", @name("other")); this.value = @name("other").hello',
-                            'sayHello()': 'that.hello = "test"'
-                        }
+                            'abcdef()':
+                                'shout("sayHello", @name("other")); this.value = @name("other").hello',
+                            'sayHello()': 'that.hello = "test"',
+                        },
                     },
                     otherFile: {
                         id: 'otherFile',
                         tags: {
-                            'name': 'other',
-                        }
-                    }
+                            name: 'other',
+                        },
+                    },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const fileAction = action('abcdef', ['thisFile']);
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
                         tags: {
-                            value: 'test'
-                        }
+                            value: 'test',
+                        },
                     }),
                     fileUpdated('otherFile', {
                         tags: {
-                            hello: 'test'
-                        }
-                    })
+                            hello: 'test',
+                        },
+                    }),
                 ]);
             });
         });
@@ -761,8 +785,8 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()': 'create(this, { abc: "def" })',
-                        }
-                    }
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
@@ -777,9 +801,9 @@ describe('FilesChannel', () => {
                         id: 'uuid-0',
                         tags: {
                             abc: 'def',
-                            'aux._creator': 'thisFile'
-                        }
-                    })
+                            'aux._creator': 'thisFile',
+                        },
+                    }),
                 ]);
             });
 
@@ -789,8 +813,8 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()': 'create("thisFile", { abc: "def" })',
-                        }
-                    }
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
@@ -805,9 +829,9 @@ describe('FilesChannel', () => {
                         id: 'uuid-0',
                         tags: {
                             abc: 'def',
-                            'aux._creator': 'thisFile'
-                        }
-                    })
+                            'aux._creator': 'thisFile',
+                        },
+                    }),
                 ]);
             });
 
@@ -816,9 +840,10 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'create("thisFile", { abc: "def" }, { ghi: 123 })',
-                        }
-                    }
+                            'test()':
+                                'create("thisFile", { abc: "def" }, { ghi: 123 })',
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
@@ -834,9 +859,9 @@ describe('FilesChannel', () => {
                         tags: {
                             abc: 'def',
                             ghi: 123,
-                            'aux._creator': 'thisFile'
-                        }
-                    })
+                            'aux._creator': 'thisFile',
+                        },
+                    }),
                 ]);
             });
 
@@ -846,16 +871,16 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()': 'create("thisFile", @name("that"))',
-                        }
+                        },
                     },
                     thatFile: {
                         id: 'thatFile',
                         tags: {
                             name: 'that',
                             abc: 'def',
-                            formula: '=this.abc'
-                        }
-                    }
+                            formula: '=this.abc',
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
@@ -872,9 +897,9 @@ describe('FilesChannel', () => {
                             abc: 'def',
                             name: 'that',
                             formula: '=this.abc',
-                            'aux._creator': 'thisFile'
-                        }
-                    })
+                            'aux._creator': 'thisFile',
+                        },
+                    }),
                 ]);
             });
 
@@ -883,9 +908,10 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.newFileId = create(null, { abc: "def" }).id',
-                        }
-                    }
+                            'test()':
+                                'this.newFileId = create(null, { abc: "def" }).id',
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
@@ -899,14 +925,14 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-0',
                         tags: {
-                            abc: 'def'
-                        }
+                            abc: 'def',
+                        },
                     }),
                     fileUpdated('thisFile', {
                         tags: {
-                            newFileId: 'uuid-0'
-                        }
-                    })
+                            newFileId: 'uuid-0',
+                        },
+                    }),
                 ]);
             });
 
@@ -915,9 +941,10 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'let newFile = create(null, { abc: "def" }); newFile.fun = true; newFile.num = 123;',
-                        }
-                    }
+                            'test()':
+                                'let newFile = create(null, { abc: "def" }); newFile.fun = true; newFile.num = 123;',
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
@@ -931,15 +958,15 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-0',
                         tags: {
-                            abc: 'def'
-                        }
+                            abc: 'def',
+                        },
                     }),
                     fileUpdated('uuid-0', {
                         tags: {
                             fun: true,
-                            num: 123
-                        }
-                    })
+                            num: 123,
+                        },
+                    }),
                 ]);
             });
 
@@ -948,9 +975,10 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'create(null, { name: "bob" }); this.fileId = @name("bob").id',
-                        }
-                    }
+                            'test()':
+                                'create(null, { name: "bob" }); this.fileId = @name("bob").id',
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
@@ -964,14 +992,14 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-0',
                         tags: {
-                            name: 'bob'
-                        }
+                            name: 'bob',
+                        },
                     }),
                     fileUpdated('thisFile', {
                         tags: {
-                            fileId: 'uuid-0'
-                        }
-                    })
+                            fileId: 'uuid-0',
+                        },
+                    }),
                 ]);
             });
 
@@ -980,9 +1008,10 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'let newFile = create(null, { formula: "=this.num", num: 100 }); this.result = newFile.formula;',
-                        }
-                    }
+                            'test()':
+                                'let newFile = create(null, { formula: "=this.num", num: 100 }); this.result = newFile.formula;',
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
@@ -997,14 +1026,14 @@ describe('FilesChannel', () => {
                         id: 'uuid-0',
                         tags: {
                             formula: '=this.num',
-                            num: 100
-                        }
+                            num: 100,
+                        },
                     }),
                     fileUpdated('thisFile', {
                         tags: {
-                            result: 100
-                        }
-                    })
+                            result: 100,
+                        },
+                    }),
                 ]);
             });
 
@@ -1014,9 +1043,10 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             num: 100,
-                            'test()': 'let newFile = create(this, { abc: this.num });',
-                        }
-                    }
+                            'test()':
+                                'let newFile = create(this, { abc: this.num });',
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
@@ -1031,9 +1061,9 @@ describe('FilesChannel', () => {
                         id: 'uuid-0',
                         tags: {
                             'aux._creator': 'thisFile',
-                            abc: 100
-                        }
-                    })
+                            abc: 100,
+                        },
+                    }),
                 ]);
 
                 const event = result.events[0] as FileAddedEvent;
@@ -1049,9 +1079,10 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             num: 1,
-                            'test()': 'create(this, { abc: this.num, "onCreate()": "this.num = 100" });',
-                        }
-                    }
+                            'test()':
+                                'create(this, { abc: this.num, "onCreate()": "this.num = 100" });',
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
@@ -1067,14 +1098,14 @@ describe('FilesChannel', () => {
                         tags: {
                             'aux._creator': 'thisFile',
                             abc: 1,
-                            'onCreate()': 'this.num = 100'
-                        }
+                            'onCreate()': 'this.num = 100',
+                        },
                     }),
                     fileUpdated('uuid-0', {
                         tags: {
-                            num: 100
-                        }
-                    })
+                            num: 100,
+                        },
+                    }),
                 ]);
             });
         });
@@ -1086,8 +1117,8 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()': 'clone(this, { abc: "def" })',
-                        }
-                    }
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
@@ -1103,9 +1134,9 @@ describe('FilesChannel', () => {
                         tags: {
                             abc: 'def',
                             'test()': 'clone(this, { abc: "def" })',
-                            'aux._creator': 'thisFile'
-                        }
-                    })
+                            'aux._creator': 'thisFile',
+                        },
+                    }),
                 ]);
             });
 
@@ -1114,9 +1145,10 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.newFileId = clone(null, this, { abc: "def" }).id',
-                        }
-                    }
+                            'test()':
+                                'this.newFileId = clone(null, this, { abc: "def" }).id',
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
@@ -1130,15 +1162,16 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-0',
                         tags: {
-                            'test()': 'this.newFileId = clone(null, this, { abc: "def" }).id',
-                            abc: 'def'
-                        }
+                            'test()':
+                                'this.newFileId = clone(null, this, { abc: "def" }).id',
+                            abc: 'def',
+                        },
                     }),
                     fileUpdated('thisFile', {
                         tags: {
-                            newFileId: 'uuid-0'
-                        }
-                    })
+                            newFileId: 'uuid-0',
+                        },
+                    }),
                 ]);
             });
 
@@ -1147,9 +1180,10 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'let newFile = clone(null, this, { abc: "def" }); newFile.fun = true; newFile.num = 123;',
-                        }
-                    }
+                            'test()':
+                                'let newFile = clone(null, this, { abc: "def" }); newFile.fun = true; newFile.num = 123;',
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
@@ -1163,16 +1197,17 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-0',
                         tags: {
-                            'test()': 'let newFile = clone(null, this, { abc: "def" }); newFile.fun = true; newFile.num = 123;',
-                            abc: 'def'
-                        }
+                            'test()':
+                                'let newFile = clone(null, this, { abc: "def" }); newFile.fun = true; newFile.num = 123;',
+                            abc: 'def',
+                        },
                     }),
                     fileUpdated('uuid-0', {
                         tags: {
                             fun: true,
-                            num: 123
-                        }
-                    })
+                            num: 123,
+                        },
+                    }),
                 ]);
             });
 
@@ -1181,9 +1216,10 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'clone(null, this, { name: "bob" }); this.fileId = @name("bob").id',
-                        }
-                    }
+                            'test()':
+                                'clone(null, this, { name: "bob" }); this.fileId = @name("bob").id',
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
@@ -1197,15 +1233,16 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-0',
                         tags: {
-                            'test()': 'clone(null, this, { name: "bob" }); this.fileId = @name("bob").id',
-                            name: 'bob'
-                        }
+                            'test()':
+                                'clone(null, this, { name: "bob" }); this.fileId = @name("bob").id',
+                            name: 'bob',
+                        },
                     }),
                     fileUpdated('thisFile', {
                         tags: {
-                            fileId: 'uuid-0'
-                        }
-                    })
+                            fileId: 'uuid-0',
+                        },
+                    }),
                 ]);
             });
 
@@ -1214,9 +1251,10 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'let newFile = clone(null, this, { formula: "=this.num", num: 100 }); this.result = newFile.formula;',
-                        }
-                    }
+                            'test()':
+                                'let newFile = clone(null, this, { formula: "=this.num", num: 100 }); this.result = newFile.formula;',
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
@@ -1230,16 +1268,17 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-0',
                         tags: {
-                            'test()': 'let newFile = clone(null, this, { formula: "=this.num", num: 100 }); this.result = newFile.formula;',
+                            'test()':
+                                'let newFile = clone(null, this, { formula: "=this.num", num: 100 }); this.result = newFile.formula;',
                             num: 100,
-                            formula: '=this.num'
-                        }
+                            formula: '=this.num',
+                        },
                     }),
                     fileUpdated('thisFile', {
                         tags: {
-                            result: 100
-                        }
-                    })
+                            result: 100,
+                        },
+                    }),
                 ]);
             });
 
@@ -1248,9 +1287,10 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'let newFile = clone(this, this, { formula: "=this.num", num: 100 });',
-                        }
-                    }
+                            'test()':
+                                'let newFile = clone(this, this, { formula: "=this.num", num: 100 });',
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
@@ -1265,11 +1305,12 @@ describe('FilesChannel', () => {
                         id: 'uuid-0',
                         tags: {
                             'aux._creator': 'thisFile',
-                            'test()': 'let newFile = clone(this, this, { formula: "=this.num", num: 100 });',
+                            'test()':
+                                'let newFile = clone(this, this, { formula: "=this.num", num: 100 });',
                             num: 100,
-                            formula: '=this.num'
-                        }
-                    })
+                            formula: '=this.num',
+                        },
+                    }),
                 ]);
             });
 
@@ -1279,9 +1320,10 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             num: 100,
-                            'test()': 'let newFile = clone(this, this, { abc: this.num });',
-                        }
-                    }
+                            'test()':
+                                'let newFile = clone(this, this, { abc: this.num });',
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
@@ -1296,11 +1338,12 @@ describe('FilesChannel', () => {
                         id: 'uuid-0',
                         tags: {
                             'aux._creator': 'thisFile',
-                            'test()': 'let newFile = clone(this, this, { abc: this.num });',
+                            'test()':
+                                'let newFile = clone(this, this, { abc: this.num });',
                             abc: 100,
-                            num: 100
-                        }
-                    })
+                            num: 100,
+                        },
+                    }),
                 ]);
 
                 const event = result.events[0] as FileAddedEvent;
@@ -1315,23 +1358,24 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'let newFile = clone(@clone, { abc: "def" });',
-                        }
+                            'test()':
+                                'let newFile = clone(@clone, { abc: "def" });',
+                        },
                     },
                     file1: {
                         id: 'file1',
                         tags: {
                             clone: true,
-                            test1: true
-                        }
+                            test1: true,
+                        },
                     },
                     file2: {
                         id: 'file2',
                         tags: {
                             clone: true,
-                            test2: true
-                        }
-                    }
+                            test2: true,
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
@@ -1351,8 +1395,8 @@ describe('FilesChannel', () => {
                             'aux._creator': 'file1',
                             clone: true,
                             test1: true,
-                            abc: "def"
-                        }
+                            abc: 'def',
+                        },
                     }),
                     fileAdded({
                         id: 'uuid-1',
@@ -1360,9 +1404,9 @@ describe('FilesChannel', () => {
                             'aux._creator': 'file2',
                             clone: true,
                             test2: true,
-                            abc: "def"
-                        }
-                    })
+                            abc: 'def',
+                        },
+                    }),
                 ]);
             });
 
@@ -1374,8 +1418,8 @@ describe('FilesChannel', () => {
                             num: 1,
                             'onCreate()': 'this.num = 100',
                             'test()': 'clone(this, this, { abc: this.num });',
-                        }
-                    }
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
@@ -1394,13 +1438,13 @@ describe('FilesChannel', () => {
                             'test()': 'clone(this, this, { abc: this.num });',
                             num: 1,
                             abc: 1,
-                        }
+                        },
                     }),
                     fileUpdated('uuid-0', {
                         tags: {
-                            num: 100
-                        }
-                    })
+                            num: 100,
+                        },
+                    }),
                 ]);
             });
         });
@@ -1412,14 +1456,14 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()': 'destroy(this)',
-                        }
+                        },
                     },
                     childFile: {
                         id: 'childFile',
                         tags: {
-                            'aux._creator': 'thisFile'
-                        }
-                    }
+                            'aux._creator': 'thisFile',
+                        },
+                    },
                 };
 
                 const fileAction = action('test', ['thisFile']);
@@ -1439,32 +1483,32 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()': 'destroy(this)',
-                        }
+                        },
                     },
                     childFile: {
                         id: 'childFile',
                         tags: {
-                            'aux._creator': 'thisFile'
-                        }
+                            'aux._creator': 'thisFile',
+                        },
                     },
                     childChildFile: {
                         id: 'childChildFile',
                         tags: {
-                            'aux._creator': 'childFile'
-                        }
+                            'aux._creator': 'childFile',
+                        },
                     },
                     otherChildFile: {
                         id: 'otherChildFile',
                         tags: {
-                            'aux._creator': 'thisFile'
-                        }
+                            'aux._creator': 'thisFile',
+                        },
                     },
                     otherChildChildFile: {
                         id: 'otherChildChildFile',
                         tags: {
-                            'aux._creator': 'otherChildFile'
-                        }
-                    }
+                            'aux._creator': 'otherChildFile',
+                        },
+                    },
                 };
 
                 const fileAction = action('test', ['thisFile']);
@@ -1487,22 +1531,22 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()': 'destroy(@clone);',
-                        }
+                        },
                     },
                     file1: {
                         id: 'file1',
                         tags: {
                             clone: true,
-                            test1: true
-                        }
+                            test1: true,
+                        },
                     },
                     file2: {
                         id: 'file2',
                         tags: {
                             clone: true,
-                            test2: true
-                        }
-                    }
+                            test2: true,
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
@@ -1513,7 +1557,7 @@ describe('FilesChannel', () => {
 
                 expect(result.events).toEqual([
                     fileRemoved('file1'),
-                    fileRemoved('file2')
+                    fileRemoved('file2'),
                 ]);
             });
 
@@ -1524,14 +1568,14 @@ describe('FilesChannel', () => {
                         tags: {
                             'onDestroy()': '@name("other").num = 100',
                             'test()': 'destroy(this)',
-                        }
+                        },
                     },
                     otherFile: {
                         id: 'otherFile',
                         tags: {
-                            name: 'other'
-                        }
-                    }
+                            name: 'other',
+                        },
+                    },
                 };
 
                 const fileAction = action('test', ['thisFile']);
@@ -1542,10 +1586,10 @@ describe('FilesChannel', () => {
                 expect(result.events).toEqual([
                     fileUpdated('otherFile', {
                         tags: {
-                            num: 100
-                        }
+                            num: 100,
+                        },
                     }),
-                    fileRemoved('thisFile')
+                    fileRemoved('thisFile'),
                 ]);
             });
         });
@@ -1557,27 +1601,31 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()': 'getUser().name = "Test"',
-                        }
+                        },
                     },
                     userFile: {
                         id: 'userFile',
-                        tags: {}
-                    }
+                        tags: {},
+                    },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile', 'userFile'], 'userFile');
+                const fileAction = action(
+                    'test',
+                    ['thisFile', 'userFile'],
+                    'userFile'
+                );
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('userFile', {
                         tags: {
-                            name: 'Test'
-                        }
-                    })
+                            name: 'Test',
+                        },
+                    }),
                 ]);
             });
         });
@@ -1589,39 +1637,43 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'addItem()': 'addToMenu(@name("bob"))',
-                        }
+                        },
                     },
                     userFile: {
                         id: 'userFile',
                         tags: {
-                            _userMenuContext: 'context'
-                        }
+                            _userMenuContext: 'context',
+                        },
                     },
                     menuFile: {
                         id: 'menuFile',
                         tags: {
-                            name: 'bob'
-                        }
-                    }
+                            name: 'bob',
+                        },
+                    },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('addItem', ['thisFile', 'userFile', 'menuFile'], 'userFile');
+                const fileAction = action(
+                    'addItem',
+                    ['thisFile', 'userFile', 'menuFile'],
+                    'userFile'
+                );
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('menuFile', {
                         tags: {
                             'context.id': 'uuid-0',
                             'context.index': 0,
-                            'context': true,
+                            context: true,
                             'context.x': 0,
-                            'context.y': 0
-                        }
-                    })
+                            'context.y': 0,
+                        },
+                    }),
                 ]);
             });
         });
@@ -1632,40 +1684,45 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'addItem()': 'applyDiff(@name("bob"), makeDiff.addToMenu())',
-                        }
+                            'addItem()':
+                                'applyDiff(@name("bob"), makeDiff.addToMenu())',
+                        },
                     },
                     userFile: {
                         id: 'userFile',
                         tags: {
-                            _userMenuContext: 'context'
-                        }
+                            _userMenuContext: 'context',
+                        },
                     },
                     menuFile: {
                         id: 'menuFile',
                         tags: {
-                            name: 'bob'
-                        }
-                    }
+                            name: 'bob',
+                        },
+                    },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('addItem', ['thisFile', 'userFile', 'menuFile'], 'userFile');
+                const fileAction = action(
+                    'addItem',
+                    ['thisFile', 'userFile', 'menuFile'],
+                    'userFile'
+                );
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('menuFile', {
                         tags: {
                             'context.id': 'uuid-0',
                             'context.index': 0,
-                            'context': true,
+                            context: true,
                             'context.x': 0,
-                            'context.y': 0
-                        }
-                    })
+                            'context.y': 0,
+                        },
+                    }),
                 ]);
             });
         });
@@ -1676,42 +1733,46 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'removeItem()': 'removeFromMenu(@name("bob"))', 
-                        }
+                            'removeItem()': 'removeFromMenu(@name("bob"))',
+                        },
                     },
                     userFile: {
                         id: 'userFile',
                         tags: {
-                            _userMenuContext: 'context'
-                        }
+                            _userMenuContext: 'context',
+                        },
                     },
                     menuFile: {
                         id: 'menuFile',
                         tags: {
                             name: 'bob',
-                            'context': 0,
-                            'context.id': 'abcdef'
-                        }
-                    }
+                            context: 0,
+                            'context.id': 'abcdef',
+                        },
+                    },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('removeItem', ['thisFile', 'userFile', 'menuFile'], 'userFile');
+                const fileAction = action(
+                    'removeItem',
+                    ['thisFile', 'userFile', 'menuFile'],
+                    'userFile'
+                );
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('menuFile', {
                         tags: {
                             'context.id': null,
                             'context.index': null,
-                            'context': null,
+                            context: null,
                             'context.x': null,
-                            'context.y': null
-                        }
-                    })
+                            'context.y': null,
+                        },
+                    }),
                 ]);
             });
         });
@@ -1722,42 +1783,47 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'addItem()': 'applyDiff(@name("bob"), makeDiff.removeFromMenu())',
-                        }
+                            'addItem()':
+                                'applyDiff(@name("bob"), makeDiff.removeFromMenu())',
+                        },
                     },
                     userFile: {
                         id: 'userFile',
                         tags: {
-                            _userMenuContext: 'context'
-                        }
+                            _userMenuContext: 'context',
+                        },
                     },
                     menuFile: {
                         id: 'menuFile',
                         tags: {
                             name: 'bob',
-                            'context': 0,
-                            'context.id': 'abcdef'
-                        }
-                    }
+                            context: 0,
+                            'context.id': 'abcdef',
+                        },
+                    },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('addItem', ['thisFile', 'userFile', 'menuFile'], 'userFile');
+                const fileAction = action(
+                    'addItem',
+                    ['thisFile', 'userFile', 'menuFile'],
+                    'userFile'
+                );
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('menuFile', {
                         tags: {
                             'context.id': null,
                             'context.index': null,
-                            'context': null,
+                            context: null,
                             'context.x': null,
-                            'context.y': null
-                        }
-                    })
+                            'context.y': null,
+                        },
+                    }),
                 ]);
             });
         });
@@ -1768,26 +1834,27 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'applyDiff(this, { abc: "def", ghi: true, num: 1 })',
-                        }
+                            'test()':
+                                'applyDiff(this, { abc: "def", ghi: true, num: 1 })',
+                        },
                     },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const fileAction = action('test', ['thisFile']);
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
                         tags: {
-                            abc: "def",
+                            abc: 'def',
                             ghi: true,
-                            num: 1
-                        }
-                    })
+                            num: 1,
+                        },
+                    }),
                 ]);
             });
 
@@ -1796,26 +1863,27 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'applyDiff(this, { abc: "def", ghi: true, num: 1 }, { abc: "xyz" });',
-                        }
+                            'test()':
+                                'applyDiff(this, { abc: "def", ghi: true, num: 1 }, { abc: "xyz" });',
+                        },
                     },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const fileAction = action('test', ['thisFile']);
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
                         tags: {
-                            abc: "xyz",
+                            abc: 'xyz',
                             ghi: true,
-                            num: 1
-                        }
-                    })
+                            num: 1,
+                        },
+                    }),
                 ]);
             });
 
@@ -1824,27 +1892,28 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'abc': 123,
-                            'test()': 'applyDiff(this, { abc: "def", ghi: true, num: 1 }); applyDiff(this, { "abc": this.abc })',
-                        }
+                            abc: 123,
+                            'test()':
+                                'applyDiff(this, { abc: "def", ghi: true, num: 1 }); applyDiff(this, { "abc": this.abc })',
+                        },
                     },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const fileAction = action('test', ['thisFile']);
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
                         tags: {
-                            abc: "def",
+                            abc: 'def',
                             ghi: true,
-                            num: 1
-                        }
-                    })
+                            num: 1,
+                        },
+                    }),
                 ]);
             });
         });
@@ -1856,26 +1925,26 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()': 'addToContext(this, "abc")',
-                        }
+                        },
                     },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const fileAction = action('test', ['thisFile']);
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
                         tags: {
-                            'abc': true,
+                            abc: true,
                             'abc.x': 0,
                             'abc.y': 0,
-                            'abc.index': 0
-                        }
-                    })
+                            'abc.index': 0,
+                        },
+                    }),
                 ]);
             });
         });
@@ -1886,28 +1955,28 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'abc': true,
+                            abc: true,
                             'test()': 'removeFromContext(this, "abc")',
-                        }
+                        },
                     },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const fileAction = action('test', ['thisFile']);
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
                         tags: {
-                            'abc': null,
+                            abc: null,
                             'abc.x': null,
                             'abc.y': null,
-                            'abc.index': null
-                        }
-                    })
+                            'abc.index': null,
+                        },
+                    }),
                 ]);
             });
         });
@@ -1918,27 +1987,28 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'applyDiff(this, makeDiff.addToContext("abc"))',
-                        }
+                            'test()':
+                                'applyDiff(this, makeDiff.addToContext("abc"))',
+                        },
                     },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const fileAction = action('test', ['thisFile']);
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
                         tags: {
-                            'abc': true,
+                            abc: true,
                             'abc.x': 0,
                             'abc.y': 0,
-                            'abc.index': 0
-                        }
-                    })
+                            'abc.index': 0,
+                        },
+                    }),
                 ]);
             });
         });
@@ -1949,28 +2019,29 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'abc': true,
-                            'test()': 'applyDiff(this, makeDiff.removeFromContext("abc"))',
-                        }
+                            abc: true,
+                            'test()':
+                                'applyDiff(this, makeDiff.removeFromContext("abc"))',
+                        },
                     },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const fileAction = action('test', ['thisFile']);
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
                         tags: {
-                            'abc': null,
+                            abc: null,
                             'abc.x': null,
                             'abc.y': null,
-                            'abc.index': null
-                        }
-                    })
+                            'abc.index': null,
+                        },
+                    }),
                 ]);
             });
         });
@@ -1981,31 +2052,32 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'abc': true,
-                            'test()': 'this.length = getFilesInContext("abc").length',
-                        }
+                            abc: true,
+                            'test()':
+                                'this.length = getFilesInContext("abc").length',
+                        },
                     },
                     thatFile: {
                         id: 'thatFile',
                         tags: {
-                            'abc': true
-                        }
+                            abc: true,
+                        },
                     },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const fileAction = action('test', ['thisFile', 'thatFile']);
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
                         tags: {
-                            'length': 2
-                        }
-                    })
+                            length: 2,
+                        },
+                    }),
                 ]);
             });
 
@@ -2014,25 +2086,26 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'abc': true,
-                            'test()': 'this.length = getFilesInContext("abc").length',
-                        }
-                    }
+                            abc: true,
+                            'test()':
+                                'this.length = getFilesInContext("abc").length',
+                        },
+                    },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const fileAction = action('test', ['thisFile']);
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
                         tags: {
-                            'length': 1
-                        }
-                    })
+                            length: 1,
+                        },
+                    }),
                 ]);
             });
         });
@@ -2043,25 +2116,26 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'applyDiff(this, makeDiff.setPosition("abc", 1, 2))',
-                        }
-                    }
+                            'test()':
+                                'applyDiff(this, makeDiff.setPosition("abc", 1, 2))',
+                        },
+                    },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const fileAction = action('test', ['thisFile']);
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
                         tags: {
-                            "abc.x": 1,
-                            "abc.y": 2
-                        }
-                    })
+                            'abc.x': 1,
+                            'abc.y': 2,
+                        },
+                    }),
                 ]);
             });
 
@@ -2070,24 +2144,25 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'applyDiff(this, makeDiff.setPosition("abc", undefined, 2))',
-                        }
-                    }
+                            'test()':
+                                'applyDiff(this, makeDiff.setPosition("abc", undefined, 2))',
+                        },
+                    },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const fileAction = action('test', ['thisFile']);
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
                         tags: {
-                            "abc.y": 2
-                        }
-                    })
+                            'abc.y': 2,
+                        },
+                    }),
                 ]);
             });
 
@@ -2096,24 +2171,25 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'applyDiff(this, makeDiff.setPosition("abc", undefined, undefined, 2))',
-                        }
-                    }
+                            'test()':
+                                'applyDiff(this, makeDiff.setPosition("abc", undefined, undefined, 2))',
+                        },
+                    },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const fileAction = action('test', ['thisFile']);
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
                         tags: {
-                            "abc.index": 2
-                        }
-                    })
+                            'abc.index': 2,
+                        },
+                    }),
                 ]);
             });
         });
@@ -2125,29 +2201,33 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()': 'this.context = getUserMenuContext()',
-                        }
+                        },
                     },
                     userFile: {
                         id: 'userFile',
                         tags: {
-                            _userMenuContext: 'abc'
-                        }
-                    }
+                            _userMenuContext: 'abc',
+                        },
+                    },
                 };
-    
+
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile', 'userFile'], 'userFile');
+                const fileAction = action(
+                    'test',
+                    ['thisFile', 'userFile'],
+                    'userFile'
+                );
                 const result = calculateActionEvents(state, fileAction);
-    
+
                 expect(result.hasUserDefinedEvents).toBe(true);
-                
+
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
                         tags: {
-                            context: 'abc'
-                        }
-                    })
+                            context: 'abc',
+                        },
+                    }),
                 ]);
             });
         });
@@ -2159,7 +2239,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()': 'toast("hello, world!")',
-                        }
+                        },
                     },
                 };
 
@@ -2170,9 +2250,7 @@ describe('FilesChannel', () => {
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([
-                    toast('hello, world!')
-                ]);
+                expect(result.events).toEqual([toast('hello, world!')]);
             });
         });
 
@@ -2183,7 +2261,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()': 'tweenTo("test")',
-                        }
+                        },
                     },
                 };
 
@@ -2194,9 +2272,7 @@ describe('FilesChannel', () => {
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([
-                    tweenTo('test')
-                ]);
+                expect(result.events).toEqual([tweenTo('test')]);
             });
 
             it('should handle files', () => {
@@ -2205,7 +2281,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()': 'tweenTo(this)',
-                        }
+                        },
                     },
                 };
 
@@ -2216,35 +2292,39 @@ describe('FilesChannel', () => {
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([
-                    tweenTo('thisFile')
-                ]);
+                expect(result.events).toEqual([tweenTo('thisFile')]);
             });
         });
     });
-    
+
     describe('calculateDestroyFileEvents()', () => {
         it('should return a list of events needed to destroy the given file', () => {
             const file1 = createFile('file1');
             const file2 = createFile('file2', {
-                'aux._creator': 'file1'
+                'aux._creator': 'file1',
             });
             const file3 = createFile('file3', {
-                'aux._creator': 'file2'
+                'aux._creator': 'file2',
             });
-            const file4 = createFile('file4', { 
-                'aux._creator': 'file1'
+            const file4 = createFile('file4', {
+                'aux._creator': 'file1',
             });
             const file5 = createFile('file5');
 
-            const calc = createCalculationContext([file1, file2, file3, file4, file5]);
+            const calc = createCalculationContext([
+                file1,
+                file2,
+                file3,
+                file4,
+                file5,
+            ]);
             const events = calculateDestroyFileEvents(calc, file1);
 
             expect(events).toEqual([
                 fileRemoved('file1'),
                 fileRemoved('file2'),
                 fileRemoved('file3'),
-                fileRemoved('file4')
+                fileRemoved('file4'),
             ]);
         });
     });

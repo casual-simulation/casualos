@@ -4,13 +4,13 @@ import { WebConfig } from '../shared/WebConfig';
  * The server config.
  */
 export interface Config {
-    socket: SocketIO.ServerOptions,
-    socketPort: number,
-    httpPort: number,
-    clients: ClientConfig[],
+    socket: SocketIO.ServerOptions;
+    socketPort: number;
+    httpPort: number;
+    clients: ClientConfig[];
     mongodb: MongoDbConfig;
     trees: CausalTreeServerConfig;
-};
+}
 
 export interface ClientConfig {
     dist: string;

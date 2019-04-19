@@ -1,4 +1,3 @@
-
 /**
  * Gets the API version that the AUX common library currently supports.
  * This needs to get manually incremented whenever a new API version is added.

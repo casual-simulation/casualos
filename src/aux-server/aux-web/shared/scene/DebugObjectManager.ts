@@ -1,9 +1,20 @@
-import { Box3, Object3D, Scene, Vector3, Box3Helper, Color, AxesHelper, LineBasicMaterial, LineSegments, NoColors } from "three";
-import { setLayer } from "./SceneUtils";
-import { LayersHelper } from "./LayersHelper";
-import { Time } from "./Time";
-import { getOptionalValue } from "../SharedUtils";
-import { Object3DPool } from "./Object3DPool";
+import {
+    Box3,
+    Object3D,
+    Scene,
+    Vector3,
+    Box3Helper,
+    Color,
+    AxesHelper,
+    LineBasicMaterial,
+    LineSegments,
+    NoColors,
+} from 'three';
+import { setLayer } from './SceneUtils';
+import { LayersHelper } from './LayersHelper';
+import { Time } from './Time';
+import { getOptionalValue } from '../SharedUtils';
+import { Object3DPool } from './Object3DPool';
 
 const BOX3HELPER_POOL_ID = 'box3helper_pool';
 const AXESHELPER_POOL_ID = 'axeshelper_pool';
@@ -13,7 +24,6 @@ const AXESHELPER_POOL_ID = 'axeshelper_pool';
  * By default, debug objects are only drawn for one frame and are automatically removed by the manager.
  */
 export namespace DebugObjectManager {
-
     var _time: Time;
     var _scene: Scene;
     var _debugObjects: DebugObject[];
@@ -25,7 +35,7 @@ export namespace DebugObjectManager {
      * @param time The Time module the debug object manager will use to create timestamps and decide when debug objects have passed their expiration time.
      * @param scene The scene that debug objects will by default be parented to.
      */
-    export function init(time:Time, scene: Scene): void {
+    export function init(time: Time, scene: Scene): void {
         _time = time;
         _scene = scene;
         _debugObjects = [];
@@ -35,24 +45,30 @@ export namespace DebugObjectManager {
         const startSize = 3;
         let sourceObject: Object3D = null;
 
-        sourceObject = new Box3Helper(new Box3(), new Color("green"));
-        _objectPools.set(BOX3HELPER_POOL_ID, new Object3DPool(sourceObject, startSize, BOX3HELPER_POOL_ID));
+        sourceObject = new Box3Helper(new Box3(), new Color('green'));
+        _objectPools.set(
+            BOX3HELPER_POOL_ID,
+            new Object3DPool(sourceObject, startSize, BOX3HELPER_POOL_ID)
+        );
 
         sourceObject = new AxesHelper(1);
-        _objectPools.set(AXESHELPER_POOL_ID, new Object3DPool(sourceObject, startSize, AXESHELPER_POOL_ID));
+        _objectPools.set(
+            AXESHELPER_POOL_ID,
+            new Object3DPool(sourceObject, startSize, AXESHELPER_POOL_ID)
+        );
     }
 
     /**
      * Remove all currently active debug objects.
      */
     export function removeAll(): void {
-        _debugObjects.forEach((o) => {
+        _debugObjects.forEach(o => {
             let pool = _objectPools.get(o.poolId);
             pool.restore(o.object);
-        })
+        });
         _debugObjects = [];
     }
-    
+
     export function update(): void {
         // Filter for elements that should still be alive.
         // Dispose of elements that should not be alive anymore.
@@ -75,15 +91,28 @@ export namespace DebugObjectManager {
      * @param depthTest Should the wireframe box write to the depth buffer? Default is false.
      * @param duration How long the debug object should render for. Default is one frame.
      */
-    export function debugBox3(box3: Box3, parent?: Object3D, color?: Color, depthTest?: boolean, duration?: number) {
-        if (!hasValue(box3))
-            return;
+    export function debugBox3(
+        box3: Box3,
+        parent?: Object3D,
+        color?: Color,
+        depthTest?: boolean,
+        duration?: number
+    ) {
+        if (!hasValue(box3)) return;
         let parentObj = getOptionalValue(parent, _scene);
         let boxColor = getOptionalValue(color, new Color(0, 1, 0));
         let depth = getOptionalValue(depthTest, false);
         let killTime = getOptionalValue(duration, _time.timeSinceStart);
         let object = _objectPools.get(BOX3HELPER_POOL_ID).retrieve();
-        let debugBox3 = new DebugBox3(object, BOX3HELPER_POOL_ID, killTime, parentObj, box3, boxColor, depth);
+        let debugBox3 = new DebugBox3(
+            object,
+            BOX3HELPER_POOL_ID,
+            killTime,
+            parentObj,
+            box3,
+            boxColor,
+            depth
+        );
         _debugObjects.push(debugBox3);
     }
 
@@ -96,16 +125,31 @@ export namespace DebugObjectManager {
      * @param color The color the debug object should. Default is the color of axes that the lines represent (red, green, blue).
      * @param duration How long the debug object should render for. Default is one frame.
      */
-    export function debugPoint(point: Vector3, parent?: Object3D, size?: number, depthTest?: boolean, color?: Color, duration?: number) {
-        if (!hasValue(point))
-            return;
+    export function debugPoint(
+        point: Vector3,
+        parent?: Object3D,
+        size?: number,
+        depthTest?: boolean,
+        color?: Color,
+        duration?: number
+    ) {
+        if (!hasValue(point)) return;
         let parentObj = getOptionalValue(parent, _scene);
         let pointSize = getOptionalValue(size, 1);
         let pointColor = getOptionalValue(color, null);
         let depth = getOptionalValue(depthTest, false);
         let killTime = getOptionalValue(duration, _time.timeSinceStart);
         let object = _objectPools.get(AXESHELPER_POOL_ID).retrieve();
-        let debugPoint = new DebugPoint(<AxesHelper>object, AXESHELPER_POOL_ID, killTime, parentObj, point, pointSize, pointColor, depth)
+        let debugPoint = new DebugPoint(
+            <AxesHelper>object,
+            AXESHELPER_POOL_ID,
+            killTime,
+            parentObj,
+            point,
+            pointSize,
+            pointColor,
+            depth
+        );
         _debugObjects.push(debugPoint);
     }
 
@@ -118,24 +162,38 @@ export namespace DebugObjectManager {
      * @param color The color the debug object should. Default is the color of axes that the lines represent (red, green, blue).
      * @param duration How long the debug object should render for. Default is one frame.
      */
-    export function debugObjectPosition(object3d: Object3D, worldspace: boolean, size?: number, depthTest?: boolean, color?: Color, duration?: number) {
-        if (!hasValue(object3d))
-            return;
+    export function debugObjectPosition(
+        object3d: Object3D,
+        worldspace: boolean,
+        size?: number,
+        depthTest?: boolean,
+        color?: Color,
+        duration?: number
+    ) {
+        if (!hasValue(object3d)) return;
         let pointSize = getOptionalValue(size, 1);
         let pointColor = getOptionalValue(color, null);
         let world = getOptionalValue(worldspace, false);
         let depth = getOptionalValue(depthTest, false);
         let killTime = getOptionalValue(duration, _time.timeSinceStart);
         let object = _objectPools.get(AXESHELPER_POOL_ID).retrieve();
-        let debugObjPosition = new DebugObjectPosition(<AxesHelper>object, AXESHELPER_POOL_ID, killTime, _scene, object3d, world, pointSize, pointColor, depth);
+        let debugObjPosition = new DebugObjectPosition(
+            <AxesHelper>object,
+            AXESHELPER_POOL_ID,
+            killTime,
+            _scene,
+            object3d,
+            world,
+            pointSize,
+            pointColor,
+            depth
+        );
         _debugObjects.push(debugObjPosition);
     }
 
     function hasValue(obj: any): boolean {
-        return (obj !== undefined && obj !== null);
+        return obj !== undefined && obj !== null;
     }
-
-
 
     //
     // Internal Helper Classes
@@ -146,23 +204,38 @@ export namespace DebugObjectManager {
         parent: Object3D;
         killTime: number;
 
-        constructor(object: Object3D, poolId: string, parent: Object3D, killTime: number) {
+        constructor(
+            object: Object3D,
+            poolId: string,
+            parent: Object3D,
+            killTime: number
+        ) {
             this.object = object;
             this.poolId = poolId;
             this.killTime = killTime;
             this.parent = parent;
         }
     }
-    
+
     class DebugBox3 extends DebugObject {
         killTime: number;
         box3Helper: Box3Helper;
-    
-        constructor(box3Helper: Box3Helper, poolId: string, killTime: number, parent: Object3D, box3: Box3, color: Color, depthTest: boolean) {
+
+        constructor(
+            box3Helper: Box3Helper,
+            poolId: string,
+            killTime: number,
+            parent: Object3D,
+            box3: Box3,
+            color: Color,
+            depthTest: boolean
+        ) {
             super(box3Helper, poolId, parent, killTime);
             this.box3Helper = box3Helper;
 
-            let lineMaterial = <LineBasicMaterial>(<LineSegments>this.box3Helper).material;
+            let lineMaterial = <LineBasicMaterial>(
+                (<LineSegments>this.box3Helper).material
+            );
             lineMaterial.vertexColors = NoColors;
             lineMaterial.color = color;
 
@@ -183,11 +256,20 @@ export namespace DebugObjectManager {
             this.box3Helper.updateMatrixWorld(true);
         }
     }
-    
+
     class DebugPoint extends DebugObject {
         axesHelper: AxesHelper;
-    
-        constructor(axesHelper: AxesHelper, poolId: string, killTime: number, parent: Object3D, point: Vector3, size: number, color: Color, depthTest: boolean) {
+
+        constructor(
+            axesHelper: AxesHelper,
+            poolId: string,
+            killTime: number,
+            parent: Object3D,
+            point: Vector3,
+            size: number,
+            color: Color,
+            depthTest: boolean
+        ) {
             super(axesHelper, poolId, parent, killTime);
             this.axesHelper = axesHelper;
 
@@ -219,13 +301,23 @@ export namespace DebugObjectManager {
         object3d: Object3D;
         worldspace: boolean;
         axesHelper: AxesHelper;
-    
-        constructor(axesHelper: AxesHelper, poolId: string, killTime: number, scene: Scene, object3d: Object3D, worldspace: boolean, size: number, color: Color, depthTest: boolean) {
+
+        constructor(
+            axesHelper: AxesHelper,
+            poolId: string,
+            killTime: number,
+            scene: Scene,
+            object3d: Object3D,
+            worldspace: boolean,
+            size: number,
+            color: Color,
+            depthTest: boolean
+        ) {
             super(axesHelper, poolId, scene, killTime);
             this.object3d = object3d;
             this.worldspace = worldspace;
             this.axesHelper = this.axesHelper;
-            
+
             this.axesHelper.scale.setScalar(size);
 
             let lineMaterial = <LineBasicMaterial>this.axesHelper.material;

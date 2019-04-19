@@ -1,4 +1,4 @@
-import { 
+import {
     Vector3,
     MeshBasicMaterial,
     SphereBufferGeometry,
@@ -21,14 +21,20 @@ import {
     MeshToonMaterial,
     AmbientLight,
     DirectionalLight,
-    Math as ThreeMath, 
+    Math as ThreeMath,
     DirectionalLightHelper,
     Euler,
     SpriteMaterial,
     Sprite,
-    Texture} from 'three';
+    Texture,
+} from 'three';
 import { flatMap } from 'lodash';
-import { calculateNumericalTagValue, FileCalculationContext, File, FileLabelAnchor } from '@casual-simulation/aux-common';
+import {
+    calculateNumericalTagValue,
+    FileCalculationContext,
+    File,
+    FileLabelAnchor,
+} from '@casual-simulation/aux-common';
 import { getOptionalValue } from '../SharedUtils';
 
 /**
@@ -38,7 +44,7 @@ export function baseAuxMeshMaterial() {
     return new MeshToonMaterial({
         color: 0x00ff00,
         reflectivity: 0.0,
-        shininess: 2
+        shininess: 2,
     });
 }
 
@@ -53,14 +59,18 @@ export function baseAuxAmbientLight() {
  * Create copy of directional light that is common to all aux scenes.
  */
 export function baseAuxDirectionalLight() {
-    let dirLight =  new DirectionalLight(0xffffff, 1);
+    let dirLight = new DirectionalLight(0xffffff, 1);
     dirLight.position.set(0.25, 3.0, 2.4);
     // let helper = new DirectionalLightHelper(dirLight);
     // dirLight.add(helper);
     return dirLight;
 }
 
-export function createSphere(position: Vector3, color: number, size: number = 0.1) {
+export function createSphere(
+    position: Vector3,
+    color: number,
+    size: number = 0.1
+) {
     const geometry = new SphereBufferGeometry(size, 16, 14);
     let material = baseAuxMeshMaterial();
 
@@ -72,7 +82,7 @@ export function createSphere(position: Vector3, color: number, size: number = 0.
 export function createSprite(): Sprite {
     let material = new SpriteMaterial({
         color: 0x00ff00,
-        transparent: true
+        transparent: true,
     });
 
     let sprite = new Sprite(material);
@@ -110,34 +120,46 @@ export function createCubeStrokeGeometry(): BufferGeometry {
 
     let verticies: number[][] = [
         [-0.5, -0.5, -0.5], // left  bottom back  - 0
-        [ 0.5, -0.5, -0.5], // right bottom back  - 1
-        [-0.5,  0.5, -0.5], // left  top    back  - 2
-        [ 0.5,  0.5, -0.5], // right top    back  - 3
-        [-0.5, -0.5,  0.5], // left  bottom front - 4
-        [ 0.5, -0.5,  0.5], // right bottom front - 5
-        [-0.5,  0.5,  0.5], // left  top    front - 6
-        [ 0.5,  0.5,  0.5], // right top    front - 7
+        [0.5, -0.5, -0.5], // right bottom back  - 1
+        [-0.5, 0.5, -0.5], // left  top    back  - 2
+        [0.5, 0.5, -0.5], // right top    back  - 3
+        [-0.5, -0.5, 0.5], // left  bottom front - 4
+        [0.5, -0.5, 0.5], // right bottom front - 5
+        [-0.5, 0.5, 0.5], // left  top    front - 6
+        [0.5, 0.5, 0.5], // right top    front - 7
     ];
 
     const indicies = [
-        0,1,
-        0,2,
-        0,4,
+        0,
+        1,
+        0,
+        2,
+        0,
+        4,
 
-        4,5,
-        4,6,
+        4,
+        5,
+        4,
+        6,
 
-        5,7,
-        5,1,
+        5,
+        7,
+        5,
+        1,
 
-        1,3,
+        1,
+        3,
 
-        2,3,
-        2,6,
+        2,
+        3,
+        2,
+        6,
 
-        3,7,
+        3,
+        7,
 
-        6,7,
+        6,
+        7,
     ];
     const lines: number[] = flatMap(indicies, i => verticies[i]);
     const array = new Float32Array(lines);
@@ -153,9 +175,9 @@ export function createCubeStrokeGeometry(): BufferGeometry {
  * @param scene the scene that these objects exist in.
  */
 export function setParent(object3d: Object3D, parent: Object3D, scene: Scene) {
-
     if (!object3d) return;
-    if (!scene) throw new Error('utils.setParent needs a valid scene parameter.');
+    if (!scene)
+        throw new Error('utils.setParent needs a valid scene parameter.');
 
     // Detach
     if (object3d.parent && object3d.parent !== scene) {
@@ -163,7 +185,7 @@ export function setParent(object3d: Object3D, parent: Object3D, scene: Scene) {
         object3d.parent.remove(object3d);
         scene.add(object3d);
     }
-    
+
     // Attach
     if (parent) {
         object3d.applyMatrix(new Matrix4().getInverse(parent.matrixWorld));
@@ -211,7 +233,7 @@ export function convertToBox2(box3: Box3): Box2 {
 export function setLayer(obj: Object3D, layer: number, children?: boolean) {
     obj.layers.set(layer);
     if (children) {
-        obj.traverse((child) => {
+        obj.traverse(child => {
             child.layers.set(layer);
         });
     }
@@ -223,10 +245,14 @@ export function setLayer(obj: Object3D, layer: number, children?: boolean) {
  * @param layerMask The layer mask to set the object 3d to.
  * @param children Should change all children of given object 3d as well?
  */
-export function setLayerMask(obj: Object3D, layerMask: number, children?: boolean) {
+export function setLayerMask(
+    obj: Object3D,
+    layerMask: number,
+    children?: boolean
+) {
     obj.layers.mask = layerMask;
     if (children) {
-        obj.traverse((child) => {
+        obj.traverse(child => {
             child.layers.mask = layerMask;
         });
     }
@@ -257,15 +283,44 @@ export function debugLayersToString(obj: Object3D): string {
  * @param defaultScale The default value.
  * @param prefix The optional prefix for the tags. Defaults to `aux.`
  */
-export function calculateScale(context: FileCalculationContext, obj: File, multiplier: number = 1, defaultScale: number = 1, prefix: string = 'aux.'): Vector3 {
-    const scaleX = calculateNumericalTagValue(context, obj, `${prefix}scale.x`, defaultScale);
-    const scaleY = calculateNumericalTagValue(context, obj, `${prefix}scale.y`, defaultScale);
-    const scaleZ = calculateNumericalTagValue(context, obj, `${prefix}scale.z`, defaultScale);
-    const uniformScale = calculateNumericalTagValue(context, obj, `${prefix}scale`, 1);
+export function calculateScale(
+    context: FileCalculationContext,
+    obj: File,
+    multiplier: number = 1,
+    defaultScale: number = 1,
+    prefix: string = 'aux.'
+): Vector3 {
+    const scaleX = calculateNumericalTagValue(
+        context,
+        obj,
+        `${prefix}scale.x`,
+        defaultScale
+    );
+    const scaleY = calculateNumericalTagValue(
+        context,
+        obj,
+        `${prefix}scale.y`,
+        defaultScale
+    );
+    const scaleZ = calculateNumericalTagValue(
+        context,
+        obj,
+        `${prefix}scale.z`,
+        defaultScale
+    );
+    const uniformScale = calculateNumericalTagValue(
+        context,
+        obj,
+        `${prefix}scale`,
+        1
+    );
 
-    return new Vector3(scaleX * multiplier * uniformScale, scaleZ * multiplier * uniformScale, scaleY * multiplier * uniformScale);
+    return new Vector3(
+        scaleX * multiplier * uniformScale,
+        scaleZ * multiplier * uniformScale,
+        scaleY * multiplier * uniformScale
+    );
 }
-
 
 /**
  * Determines whether the given color means transparent.
@@ -281,7 +336,7 @@ export function isTransparent(color: string): boolean {
  */
 export function disposeMaterial(material: Material | Material[]) {
     if (!material) return;
-    if(Array.isArray(material)) {
+    if (Array.isArray(material)) {
         material.forEach(m => m.dispose());
     } else {
         material.dispose();
@@ -294,7 +349,14 @@ export function disposeMaterial(material: Material | Material[]) {
  * @param disposeGeometry Whether to dispose the mesh's geometry. Default true.
  * @param disposeMat Whether to dispose the mesh's material(s). Default true.
  */
-export function disposeMesh(mesh: { geometry: Geometry | BufferGeometry, material: Material | Material[] }, disposeGeometry: boolean = true, disposeMat: boolean = true) {
+export function disposeMesh(
+    mesh: {
+        geometry: Geometry | BufferGeometry;
+        material: Material | Material[];
+    },
+    disposeGeometry: boolean = true,
+    disposeMat: boolean = true
+) {
     if (!mesh) return;
     if (disposeGeometry) {
         mesh.geometry.dispose();
@@ -304,7 +366,11 @@ export function disposeMesh(mesh: { geometry: Geometry | BufferGeometry, materia
     }
 }
 
-export function disposeObject3D(object3d: Object3D, disposeGeometry: boolean = true, disposeMaterial: boolean = true) {
+export function disposeObject3D(
+    object3d: Object3D,
+    disposeGeometry: boolean = true,
+    disposeMaterial: boolean = true
+) {
     if (!object3d) return;
 
     if (disposeGeometry) {
@@ -343,7 +409,8 @@ export function calculateAnchorPosition(
     obj: Object3D,
     boundingBox: Box3,
     defaultScale: number,
-    extraSpacing: number): [Vector3, Euler] {
+    extraSpacing: number
+): [Vector3, Euler] {
     let myMax = boundingBox.max.clone();
     let myMin = boundingBox.min.clone();
 
@@ -357,30 +424,30 @@ export function calculateAnchorPosition(
 
     if (position === 'floating') {
         let bottomCenter = new Vector3(
-            ((myMax.x - myMin.x) / 2) + myMin.x,
+            (myMax.x - myMin.x) / 2 + myMin.x,
             myMin.y,
-            ((myMax.z - myMin.z) / 2) + myMin.z
+            (myMax.z - myMin.z) / 2 + myMin.z
         );
 
         let posOffset = obj.position.clone().sub(bottomCenter);
         let pos = new Vector3(
-            targetCenter.x, 
-            targetCenter.y + (targetSize.y * 0.5) + (extraSpacing * paddingScalar), 
+            targetCenter.x,
+            targetCenter.y + targetSize.y * 0.5 + extraSpacing * paddingScalar,
             targetCenter.z
         );
         pos.add(posOffset);
         return [pos, new Euler(ThreeMath.degToRad(90), 0, 0)];
     } else if (position === 'top') {
         let center = new Vector3(
-            ((myMax.x - myMin.x) / 2) + myMin.x,
-            ((myMax.y - myMin.y) / 2) + myMin.y,
-            ((myMax.z - myMin.z) / 2) + myMin.z
+            (myMax.x - myMin.x) / 2 + myMin.x,
+            (myMax.y - myMin.y) / 2 + myMin.y,
+            (myMax.z - myMin.z) / 2 + myMin.z
         );
 
         let posOffset = obj.position.clone().sub(center);
         let pos = new Vector3(
-            targetCenter.x, 
-            targetCenter.y + (targetSize.y * 0.5), 
+            targetCenter.x,
+            targetCenter.y + targetSize.y * 0.5,
             targetCenter.z
         );
         pos.add(posOffset);
@@ -388,69 +455,78 @@ export function calculateAnchorPosition(
         return [pos, new Euler(ThreeMath.degToRad(0), 0, 0)];
     } else if (position === 'front') {
         let center = new Vector3(
-            ((myMax.x - myMin.x) / 2) + myMin.x,
-            ((myMax.y - myMin.y) / 2) + myMin.y,
-            ((myMax.z - myMin.z) / 2) + myMin.z
+            (myMax.x - myMin.x) / 2 + myMin.x,
+            (myMax.y - myMin.y) / 2 + myMin.y,
+            (myMax.z - myMin.z) / 2 + myMin.z
         );
 
         let posOffset = obj.position.clone().sub(center);
         let pos = new Vector3(
-            targetCenter.x, 
-            targetCenter.y, 
-            targetCenter.z + (targetSize.z * 0.5)
+            targetCenter.x,
+            targetCenter.y,
+            targetCenter.z + targetSize.z * 0.5
         );
         pos.add(posOffset);
 
         return [pos, new Euler(ThreeMath.degToRad(90), 0, 0)];
     } else if (position === 'back') {
         let center = new Vector3(
-            ((myMax.x - myMin.x) / 2) + myMin.x,
-            ((myMax.y - myMin.y) / 2) + myMin.y,
-            ((myMax.z - myMin.z) / 2) + myMin.z
+            (myMax.x - myMin.x) / 2 + myMin.x,
+            (myMax.y - myMin.y) / 2 + myMin.y,
+            (myMax.z - myMin.z) / 2 + myMin.z
         );
 
         let posOffset = obj.position.clone().sub(center);
         let pos = new Vector3(
-            targetCenter.x, 
-            targetCenter.y, 
-            targetCenter.z - (targetSize.z * 0.5)
+            targetCenter.x,
+            targetCenter.y,
+            targetCenter.z - targetSize.z * 0.5
         );
         pos.add(posOffset);
 
-        return [pos, new Euler(ThreeMath.degToRad(90), ThreeMath.degToRad(180), 0)];
+        return [
+            pos,
+            new Euler(ThreeMath.degToRad(90), ThreeMath.degToRad(180), 0),
+        ];
     } else if (position === 'left') {
         let center = new Vector3(
-            ((myMax.x - myMin.x) / 2) + myMin.x,
-            ((myMax.y - myMin.y) / 2) + myMin.y,
-            ((myMax.z - myMin.z) / 2) + myMin.z
+            (myMax.x - myMin.x) / 2 + myMin.x,
+            (myMax.y - myMin.y) / 2 + myMin.y,
+            (myMax.z - myMin.z) / 2 + myMin.z
         );
 
         let posOffset = obj.position.clone().sub(center);
         let pos = new Vector3(
-            targetCenter.x - (targetSize.x * 0.5), 
-            targetCenter.y, 
+            targetCenter.x - targetSize.x * 0.5,
+            targetCenter.y,
             targetCenter.z
         );
         pos.add(posOffset);
 
-        return [pos, new Euler(ThreeMath.degToRad(90), ThreeMath.degToRad(90), 0)];
+        return [
+            pos,
+            new Euler(ThreeMath.degToRad(90), ThreeMath.degToRad(90), 0),
+        ];
     } else if (position === 'right') {
         let center = new Vector3(
-            ((myMax.x - myMin.x) / 2) + myMin.x,
-            ((myMax.y - myMin.y) / 2) + myMin.y,
-            ((myMax.z - myMin.z) / 2) + myMin.z
+            (myMax.x - myMin.x) / 2 + myMin.x,
+            (myMax.y - myMin.y) / 2 + myMin.y,
+            (myMax.z - myMin.z) / 2 + myMin.z
         );
 
         let posOffset = obj.position.clone().sub(center);
         let pos = new Vector3(
-            targetCenter.x + (targetSize.x * 0.5), 
-            targetCenter.y, 
+            targetCenter.x + targetSize.x * 0.5,
+            targetCenter.y,
             targetCenter.z
         );
         pos.add(posOffset);
 
-        return [pos, new Euler(ThreeMath.degToRad(90), ThreeMath.degToRad(-90), 0)];
+        return [
+            pos,
+            new Euler(ThreeMath.degToRad(90), ThreeMath.degToRad(-90), 0),
+        ];
     }
-    
+
     return [targetCenter, new Euler()];
 }

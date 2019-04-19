@@ -5,21 +5,24 @@ import { Prop, Watch } from 'vue-property-decorator';
 import App from '../App/App';
 import { SubscriptionLike } from 'rxjs';
 import { TreeView } from 'vue-json-tree-view';
-import { calculateFormulaValue, createCalculationContext, searchFileState } from '@casual-simulation/aux-common';
+import {
+    calculateFormulaValue,
+    createCalculationContext,
+    searchFileState,
+} from '@casual-simulation/aux-common';
 import { values } from 'lodash';
 
 @Component({
     components: {
-        'tree-view': TreeView
-    }
+        'tree-view': TreeView,
+    },
 })
 export default class AuxDebug extends Vue {
-
     auxJson: any = null;
     includeDestroyed: boolean = false;
     search: string = '';
     error: string;
-    
+
     private _subs: SubscriptionLike[];
 
     get fileManager() {
@@ -42,9 +45,21 @@ export default class AuxDebug extends Vue {
         this.auxJson = this.fileManager.filesState;
 
         this._subs = [];
-        this._subs.push(this.fileManager.filesDiscovered.subscribe((file) => { this.refreshAuxJson()}));
-        this._subs.push(this.fileManager.filesRemoved.subscribe((file) => { this.refreshAuxJson()}));
-        this._subs.push(this.fileManager.filesUpdated.subscribe((file) => { this.refreshAuxJson()}));
+        this._subs.push(
+            this.fileManager.filesDiscovered.subscribe(file => {
+                this.refreshAuxJson();
+            })
+        );
+        this._subs.push(
+            this.fileManager.filesRemoved.subscribe(file => {
+                this.refreshAuxJson();
+            })
+        );
+        this._subs.push(
+            this.fileManager.filesUpdated.subscribe(file => {
+                this.refreshAuxJson();
+            })
+        );
     }
 
     download() {
@@ -74,14 +89,18 @@ export default class AuxDebug extends Vue {
     }
 
     beforeDestroy() {
-      if (this._subs) {
-        this._subs.forEach(sub => sub.unsubscribe());
-        this._subs = [];
-      }
+        if (this._subs) {
+            this._subs.forEach(sub => sub.unsubscribe());
+            this._subs = [];
+        }
     }
 
     private _search() {
-        const value = searchFileState(this.search, this.fileManager.filesState, { includeDestroyed: this.includeDestroyed });
+        const value = searchFileState(
+            this.search,
+            this.fileManager.filesState,
+            { includeDestroyed: this.includeDestroyed }
+        );
         return value;
     }
 }

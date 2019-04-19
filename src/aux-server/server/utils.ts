@@ -1,22 +1,25 @@
 import * as os from 'os';
 import * as process from 'process';
-import {Request, Response, Handler} from 'express';
+import { Request, Response, Handler } from 'express';
 import { AxiosError } from 'axios';
 import { flatMap } from 'lodash';
 
 export const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
     return (req, res, next) => {
-        Promise.resolve(fn(req, res, next))
-            .catch(er => {
-                const err : AxiosError = er;
-                if(err.response && err.response.data) {
-                    console.error('An Axios request failed.', err, err.response.data);
-                }
+        Promise.resolve(fn(req, res, next)).catch(er => {
+            const err: AxiosError = er;
+            if (err.response && err.response.data) {
+                console.error(
+                    'An Axios request failed.',
+                    err,
+                    err.response.data
+                );
+            }
 
-                next(er);
-            });
+            next(er);
+        });
     };
-}
+};
 
 /**
  * Gets the list of IP Addresses that are assigned to this machine.
@@ -33,7 +36,7 @@ export function getLocalIpAddresses() {
 
 /**
  * Gets the domains that should be added to the given site for development purposes.
- * @param site 
+ * @param site
  */
 export function getExtraDomainsForSite(site: 'projector' | 'player'): string[] {
     const env = process.env.NODE_ENV;
@@ -43,7 +46,10 @@ export function getExtraDomainsForSite(site: 'projector' | 'player'): string[] {
         }
     } else {
         const mode = process.argv[2];
-        if (mode === site || (typeof mode === 'undefined' && site === 'projector')) {
+        if (
+            mode === site ||
+            (typeof mode === 'undefined' && site === 'projector')
+        ) {
             return ['localhost', ...getLocalIpAddresses()];
         }
     }

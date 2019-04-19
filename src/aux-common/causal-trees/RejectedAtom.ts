@@ -1,14 +1,15 @@
-import { Atom, AtomOp, AtomId } from "./Atom";
+import { Atom, AtomOp, AtomId } from './Atom';
 
 /**
  * The possible reasons for rejecting an atom.
  */
-export type RejectionReason = CauseNotFound |
-    SecondRootNotAllowed |
-    AtomIdAlreadyExists |
-    ChecksumFailed |
-    SignatureFailed |
-    NoPublicKey;
+export type RejectionReason =
+    | CauseNotFound
+    | SecondRootNotAllowed
+    | AtomIdAlreadyExists
+    | ChecksumFailed
+    | SignatureFailed
+    | NoPublicKey;
 
 /**
  * Defines that the atom was not added to the weave
@@ -48,7 +49,6 @@ export type NoPublicKey = 'no_public_key';
  * Defines an interface for an atom that was rejected.
  */
 export interface RejectedAtom<T extends AtomOp> {
-    
     /**
      * The atom that was rejected.
      */

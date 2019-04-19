@@ -2,13 +2,13 @@ import Vue from 'vue';
 import { Chrome } from 'vue-color';
 import Component from 'vue-class-component';
 import { Inject, Watch, Prop } from 'vue-property-decorator';
-import { 
+import {
     Object,
     File,
     getUserMode,
     UserMode,
     DEFAULT_USER_MODE,
-    Workspace
+    Workspace,
 } from '@casual-simulation/aux-common';
 import GameView from '../GameView/GameView';
 import { appManager } from '../../shared/AppManager';
@@ -21,7 +21,6 @@ import { tap } from 'rxjs/operators';
     },
 })
 export default class Home extends Vue {
-
     @Prop() context: string;
 
     debug: boolean = false;
@@ -38,6 +37,5 @@ export default class Home extends Vue {
         super();
     }
 
-    async created() {
-    }
-};
+    async created() {}
+}

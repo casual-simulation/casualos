@@ -1,13 +1,35 @@
-import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
-import { AuxFile3D } from "../AuxFile3D";
-import { FileCalculationContext, calculateFileValue, getFileShape, FileShape } from "@casual-simulation/aux-common";
-import { Mesh, MeshStandardMaterial, Color, LineSegments, LineBasicMaterial, Group, Vector3, MeshToonMaterial, Sprite } from "three";
-import { createCube, createCubeStrokeGeometry, isTransparent, disposeMesh, createSphere, createSprite } from "../SceneUtils";
-import { IMeshDecorator } from "./IMeshDecorator";
-import { ArgEvent } from "@casual-simulation/aux-common/Events";
+import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
+import { AuxFile3D } from '../AuxFile3D';
+import {
+    FileCalculationContext,
+    calculateFileValue,
+    getFileShape,
+    FileShape,
+} from '@casual-simulation/aux-common';
+import {
+    Mesh,
+    MeshStandardMaterial,
+    Color,
+    LineSegments,
+    LineBasicMaterial,
+    Group,
+    Vector3,
+    MeshToonMaterial,
+    Sprite,
+} from 'three';
+import {
+    createCube,
+    createCubeStrokeGeometry,
+    isTransparent,
+    disposeMesh,
+    createSphere,
+    createSprite,
+} from '../SceneUtils';
+import { IMeshDecorator } from './IMeshDecorator';
+import { ArgEvent } from '@casual-simulation/aux-common/Events';
 
-export class FileShapeDecorator extends AuxFile3DDecorator implements IMeshDecorator {
-
+export class FileShapeDecorator extends AuxFile3DDecorator
+    implements IMeshDecorator {
     private _shape: FileShape = null;
 
     container: Group;
@@ -27,7 +49,6 @@ export class FileShapeDecorator extends AuxFile3DDecorator implements IMeshDecor
     }
 
     fileUpdated(calc: FileCalculationContext): void {
-
         const shape = getFileShape(calc, this.file3D.file);
         if (this._shape !== shape) {
             this._rebuildShape(shape);
@@ -45,8 +66,16 @@ export class FileShapeDecorator extends AuxFile3DDecorator implements IMeshDecor
         }
 
         this.stroke.visible = true;
-        const strokeColorValue = calculateFileValue(calc, this.file3D.file, 'aux.stroke.color');
-        const strokeWidth: number = calculateFileValue(calc, this.file3D.file, 'aux.stroke.width');
+        const strokeColorValue = calculateFileValue(
+            calc,
+            this.file3D.file,
+            'aux.stroke.color'
+        );
+        const strokeWidth: number = calculateFileValue(
+            calc,
+            this.file3D.file,
+            'aux.stroke.width'
+        );
         const strokeMat = <LineBasicMaterial>this.stroke.material;
         if (typeof strokeColorValue !== 'undefined') {
             strokeMat.visible = !isTransparent(strokeColorValue);
@@ -63,8 +92,7 @@ export class FileShapeDecorator extends AuxFile3DDecorator implements IMeshDecor
         }
     }
 
-    frameUpdate(calc: FileCalculationContext): void {
-    }
+    frameUpdate(calc: FileCalculationContext): void {}
 
     dispose(): void {
         const index = this.file3D.colliders.indexOf(this.mesh);
@@ -75,7 +103,7 @@ export class FileShapeDecorator extends AuxFile3DDecorator implements IMeshDecor
         this.file3D.display.remove(this.container);
         disposeMesh(this.mesh);
         disposeMesh(this.stroke);
-        
+
         this.mesh = null;
         this.container = null;
         this.stroke = null;
@@ -89,9 +117,11 @@ export class FileShapeDecorator extends AuxFile3DDecorator implements IMeshDecor
 
         this._setColor(color);
     }
-    
+
     private _setColor(color: any) {
-        const shapeMat = <MeshStandardMaterial | MeshToonMaterial>this.mesh.material;
+        const shapeMat = <MeshStandardMaterial | MeshToonMaterial>(
+            this.mesh.material
+        );
         if (color) {
             shapeMat.visible = !isTransparent(color);
             if (shapeMat.visible) {
@@ -99,7 +129,7 @@ export class FileShapeDecorator extends AuxFile3DDecorator implements IMeshDecor
             }
         } else {
             shapeMat.visible = true;
-            shapeMat.color = new Color(0xFFFFFF);
+            shapeMat.color = new Color(0xffffff);
         }
     }
 
@@ -111,7 +141,7 @@ export class FileShapeDecorator extends AuxFile3DDecorator implements IMeshDecor
 
         // Container
         this.container = new Group();
-        this.container.position.set(0, .5, 0);
+        this.container.position.set(0, 0.5, 0);
         this.file3D.display.add(this.container);
 
         if (this._shape === 'cube') {
@@ -119,18 +149,18 @@ export class FileShapeDecorator extends AuxFile3DDecorator implements IMeshDecor
             this.mesh = createCube(1);
             this.container.add(this.mesh);
             this.file3D.colliders.push(this.mesh);
-            
+
             // Stroke
             const geo = createCubeStrokeGeometry();
             const material = new LineBasicMaterial({
                 color: 0x000000,
             });
-            
+
             this.stroke = new LineSegments(geo, material);
             this.container.add(this.stroke);
         } else if (this._shape === 'sphere') {
             // Sphere Mesh
-            this.mesh = createSphere(new Vector3(0,0,0), 0x000000, 0.5);
+            this.mesh = createSphere(new Vector3(0, 0, 0), 0x000000, 0.5);
             this.container.add(this.mesh);
             this.file3D.colliders.push(this.mesh);
 
@@ -140,7 +170,6 @@ export class FileShapeDecorator extends AuxFile3DDecorator implements IMeshDecor
             this.mesh = createSprite();
             this.container.add(this.mesh);
             this.file3D.colliders.push(this.mesh);
-            
 
             this.stroke = null;
         }

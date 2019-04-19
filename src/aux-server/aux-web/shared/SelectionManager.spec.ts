@@ -1,10 +1,15 @@
-import { createFile, File, AuxObject, AuxCausalTree, getSelectionMode } from "@casual-simulation/aux-common";
-import { SelectionManager } from "./SelectionManager";
-import { FileHelper } from "./FileHelper";
-import { storedTree, site } from "@casual-simulation/aux-common/causal-trees";
+import {
+    createFile,
+    File,
+    AuxObject,
+    AuxCausalTree,
+    getSelectionMode,
+} from '@casual-simulation/aux-common';
+import { SelectionManager } from './SelectionManager';
+import { FileHelper } from './FileHelper';
+import { storedTree, site } from '@casual-simulation/aux-common/causal-trees';
 
 describe('SelectionManager', () => {
-
     let tree: AuxCausalTree;
     let helper: FileHelper;
     let manager: SelectionManager;
@@ -28,24 +33,22 @@ describe('SelectionManager', () => {
     });
 
     describe('selectFile()', () => {
-
         describe('single select', () => {
             let file: AuxObject;
-            
+
             beforeEach(async () => {
                 await tree.addFile(createFile('file1'));
                 file = tree.value['file1'];
             });
 
             it('should set the user _selection tag to the given files ID', async () => {
-                
                 await manager.selectFile(file);
 
                 file = tree.value['file1'];
 
                 expect(helper.userFile.tags).toMatchObject({
                     _selection: 'file1',
-                    _editingFile: 'file1'
+                    _editingFile: 'file1',
                 });
                 expect(file.tags._lastEditedBy).toBe(helper.userFile.id);
             });
@@ -54,8 +57,8 @@ describe('SelectionManager', () => {
                 let user = tree.value['user'];
                 await tree.updateFile(user, {
                     tags: {
-                        _selection: 'file1'
-                    }
+                        _selection: 'file1',
+                    },
                 });
 
                 const file = tree.value['file1'];
@@ -68,8 +71,8 @@ describe('SelectionManager', () => {
                 let user = tree.value['user'];
                 await tree.updateFile(user, {
                     tags: {
-                        _selection: 'file1'
-                    }
+                        _selection: 'file1',
+                    },
                 });
                 await tree.addFile(createFile('file2'));
 
@@ -81,22 +84,23 @@ describe('SelectionManager', () => {
                 const selection = helper.userFile.tags._selection;
                 expect(selection).toBeTruthy();
                 expect(selection).not.toBe('file1');
-                expect(helper.userFile.tags['aux._selectionMode']).toBe('multi');
+                expect(helper.userFile.tags['aux._selectionMode']).toBe(
+                    'multi'
+                );
                 expect(file1.tags[selection]).toBe(true);
                 expect(file2.tags[selection]).toBe(true);
             });
         });
 
         describe('multi select', () => {
-
             let file: AuxObject;
 
             beforeEach(async () => {
                 let user = tree.value['user'];
                 await tree.updateFile(user, {
                     tags: {
-                        'aux._selectionMode': 'multi'
-                    }
+                        'aux._selectionMode': 'multi',
+                    },
                 });
 
                 await tree.addFile(createFile('file1'));
@@ -104,7 +108,6 @@ describe('SelectionManager', () => {
             });
 
             it('should create a new selection ID if the user has none', async () => {
-                
                 await manager.selectFile(file);
 
                 file = tree.value['file1'];
@@ -169,15 +172,14 @@ describe('SelectionManager', () => {
             await manager.setMode('single');
             expect(helper.userFile.tags['aux._selectionMode']).toBe('single');
         });
-
     });
 
     describe('clearSelection()', () => {
         it('should set the _selection tag to null', async () => {
             await tree.updateFile(helper.userFile, {
                 tags: {
-                    _selection: 'abc'
-                }
+                    _selection: 'abc',
+                },
             });
 
             await manager.clearSelection();
@@ -189,8 +191,8 @@ describe('SelectionManager', () => {
             await tree.updateFile(helper.userFile, {
                 tags: {
                     _selection: 'abc',
-                    'aux._selectionMode': 'multi'
-                }
+                    'aux._selectionMode': 'multi',
+                },
             });
 
             await manager.clearSelection();
@@ -202,24 +204,25 @@ describe('SelectionManager', () => {
 
     describe('getSelectedFilesForUser()', () => {
         it('should return the list of files that the user has selected', async () => {
-            await tree.addFile(createFile('file1', {
-                abc: true
-            }));
-            await tree.addFile(createFile('file2', {
-                abc: true
-            }));
+            await tree.addFile(
+                createFile('file1', {
+                    abc: true,
+                })
+            );
+            await tree.addFile(
+                createFile('file2', {
+                    abc: true,
+                })
+            );
             await tree.updateFile(helper.userFile, {
                 tags: {
-                    _selection: 'abc'
-                }
+                    _selection: 'abc',
+                },
             });
 
             const selected = manager.getSelectedFilesForUser(helper.userFile);
 
-            expect(selected.map(s => s.id)).toEqual([
-                'file2',
-                'file1'
-            ]);
+            expect(selected.map(s => s.id)).toEqual(['file2', 'file1']);
         });
     });
 });

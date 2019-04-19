@@ -1,20 +1,24 @@
 import { WorkerEvent, CalculateValue, ValueCalculated } from './WorkerEvents';
 import { AuxReducer } from '@casual-simulation/aux-common';
-import { AtomOp, AtomReducer, Weave } from '@casual-simulation/aux-common/causal-trees';
+import {
+    AtomOp,
+    AtomReducer,
+    Weave,
+} from '@casual-simulation/aux-common/causal-trees';
 
 const ctx: Worker = self as any;
 let reducers: {
-    [type: string]: AtomReducer<AtomOp, any, any>
+    [type: string]: AtomReducer<AtomOp, any, any>;
 } = {};
 
-ctx.onmessage = (msg) => {
+ctx.onmessage = msg => {
     const e = msg.data as WorkerEvent;
     if (e.type === 'calculate') {
         const val = calculateValue(e);
         const msg: ValueCalculated = {
             type: 'value_calculated',
             id: e.id,
-            value: val
+            value: val,
         };
         ctx.postMessage(msg);
     }
@@ -22,7 +26,7 @@ ctx.onmessage = (msg) => {
 
 function calculateValue(e: CalculateValue): any {
     let reducer = reducers[e.treeType];
-    if(!reducer) {
+    if (!reducer) {
         if (e.treeType === 'aux') {
             reducer = new AuxReducer();
             reducers[e.treeType] = reducer;

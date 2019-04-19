@@ -5,7 +5,6 @@ import { Vector3, Box3 } from 'three';
  * Defines an interface that represents a single level of a square grid.
  */
 export interface GridLevel {
-
     /**
      * The tiles.
      */

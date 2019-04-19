@@ -1,8 +1,7 @@
-import { Object3DPool } from "./Object3DPool";
-import { AxesHelper, Object3D } from "three";
+import { Object3DPool } from './Object3DPool';
+import { AxesHelper, Object3D } from 'three';
 
 describe('Object3DPool', () => {
-    
     // Source object for all our object 3d pool tests.
     const sourceObject = new AxesHelper(1);
 

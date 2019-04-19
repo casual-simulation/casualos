@@ -12,10 +12,9 @@ import GameView from '../../GameView/GameView';
  * Empty Click Operation handles clicking of empty space for mouse and touch input with the primary (left/first finger) interaction button.
  */
 export class BuilderEmptyClickOperation implements IOperation {
-
     public static readonly DragThreshold: number = 0.02;
     public static CanOpenColorPicker = true;
-    
+
     protected _interaction: BuilderInteractionManager;
 
     private _gameView: GameView;
@@ -34,23 +33,25 @@ export class BuilderEmptyClickOperation implements IOperation {
         if (this._finished) return;
 
         if (!this._gameView.getInput().getMouseButtonHeld(0)) {
-            
             const curScreenPos = this._gameView.getInput().getMouseScreenPos();
             const distance = curScreenPos.distanceTo(this._startScreenPos);
 
             if (distance < BuilderEmptyClickOperation.DragThreshold) {
-
                 if (this._interaction.mode === 'worksurfaces') {
-
                     // When we release the empty click, make sure we are still over nothing.
-                    const screenPos = this._gameView.getInput().getMouseScreenPos();
+                    const screenPos = this._gameView
+                        .getInput()
+                        .getMouseScreenPos();
                     if (this._interaction.isEmptySpace(screenPos)) {
-
                         // Still not clicking on anything.
-                        if (BuilderEmptyClickOperation.CanOpenColorPicker && !this._gameView.xrSession) {
-                            this.sceneBackgroundColorPicker(this._gameView.getInput().getMousePagePos());
+                        if (
+                            BuilderEmptyClickOperation.CanOpenColorPicker &&
+                            !this._gameView.xrSession
+                        ) {
+                            this.sceneBackgroundColorPicker(
+                                this._gameView.getInput().getMousePagePos()
+                            );
                         }
-
                     }
                 } else if (this._interaction.mode === 'files') {
                     if (this._interaction.selectionMode === 'single') {
@@ -74,29 +75,29 @@ export class BuilderEmptyClickOperation implements IOperation {
         return this._finished;
     }
 
-    public dispose(): void {
-
-    }
+    public dispose(): void {}
 
     /**
      * Opens up the color picker and allows you to change the scene's background color.
      */
     public sceneBackgroundColorPicker(pagePos: Vector2) {
-        
         let globalsFile = appManager.fileManager.globalsFile;
 
         // This function is invoked as the color picker changes the color value.
         let colorUpdated = (hexColor: string) => {
-            appManager.fileManager.updateFile(globalsFile, { 
-                tags: { 
-                    'aux.scene.color': hexColor
-                } 
-            })
+            appManager.fileManager.updateFile(globalsFile, {
+                tags: {
+                    'aux.scene.color': hexColor,
+                },
+            });
         };
 
         // This function is invoked when the color picker is closed.
         let pickerClosed = (inputPagePos: Vector2) => {
-            let screenPos = Input.screenPosition(inputPagePos, this._gameView.gameView);
+            let screenPos = Input.screenPosition(
+                inputPagePos,
+                this._gameView.gameView
+            );
             if (this._interaction.isEmptySpace(screenPos)) {
                 // temporarily disable color picker opening, until the next empty click.
                 BuilderEmptyClickOperation.CanOpenColorPicker = false;
@@ -108,15 +109,13 @@ export class BuilderEmptyClickOperation implements IOperation {
             initialColor = DEFAULT_SCENE_BACKGROUND_COLOR;
         }
 
-        let colorPickerEvent: ColorPickerEvent = { 
-            pagePos: pagePos, 
-            initialColor: 
-            initialColor, 
+        let colorPickerEvent: ColorPickerEvent = {
+            pagePos: pagePos,
+            initialColor: initialColor,
             colorUpdated: colorUpdated,
-            pickerClosed: pickerClosed
-         };
+            pickerClosed: pickerClosed,
+        };
 
         EventBus.$emit('onColorPicker', colorPickerEvent);
-
     }
 }

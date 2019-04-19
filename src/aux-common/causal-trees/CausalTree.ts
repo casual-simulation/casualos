@@ -1,20 +1,20 @@
-import { AtomOp, Atom, AtomId, atomIdToString, atomId } from "./Atom";
-import { Weave } from "./Weave";
-import { AtomFactory } from "./AtomFactory";
-import { AtomReducer } from "./AtomReducer";
-import { sortBy, unionBy, find, groupBy } from "lodash";
-import { SiteInfo } from "./SiteIdInfo";
-import { StoredCausalTree } from "./StoredCausalTree";
-import { SiteVersionInfo } from "./SiteVersionInfo";
+import { AtomOp, Atom, AtomId, atomIdToString, atomId } from './Atom';
+import { Weave } from './Weave';
+import { AtomFactory } from './AtomFactory';
+import { AtomReducer } from './AtomReducer';
+import { sortBy, unionBy, find, groupBy } from 'lodash';
+import { SiteInfo } from './SiteIdInfo';
+import { StoredCausalTree } from './StoredCausalTree';
+import { SiteVersionInfo } from './SiteVersionInfo';
 import { PrecalculatedOp } from './PrecalculatedOp';
 import { Subject } from 'rxjs';
 import { AtomValidator } from './AtomValidator';
-import { PrivateCryptoKey, PublicCryptoKey } from "../crypto";
-import { RejectedAtom } from "./RejectedAtom";
+import { PrivateCryptoKey, PublicCryptoKey } from '../crypto';
+import { RejectedAtom } from './RejectedAtom';
 import { AddResult, mergeIntoBatch } from './AddResult';
 import { AtomBatch } from './AtomBatch';
-import { LoadingProgress, LoadingProgressCallback } from "../LoadingProgress";
-import { lerp } from "../utils";
+import { LoadingProgress, LoadingProgressCallback } from '../LoadingProgress';
+import { lerp } from '../utils';
 
 /**
  * Defines an interface that contains possible options that can be set on a causal tree.
@@ -74,7 +74,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
     }
 
     /**
-     * Gets the most recent time that this causal tree 
+     * Gets the most recent time that this causal tree
      * has observed.
      */
     get time() {
@@ -146,15 +146,26 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * @param reducer The reducer used to convert a list of operations into a single value.
      * @param options The options to use.
      */
-    constructor(tree: StoredCausalTree<TOp>, reducer: AtomReducer<TOp, TValue, TMetadata>, options: CausalTreeOptions = {}) {
+    constructor(
+        tree: StoredCausalTree<TOp>,
+        reducer: AtomReducer<TOp, TValue, TMetadata>,
+        options: CausalTreeOptions = {}
+    ) {
         this._site = tree.site;
-        this._knownSites = unionBy([
-            this.site
-        ], tree.knownSites || [], site => site.id);
+        this._knownSites = unionBy(
+            [this.site],
+            tree.knownSites || [],
+            site => site.id
+        );
         this._validator = options.validator || null;
         this._keyMap = new Map();
         this._weave = new Weave<TOp>();
-        this._factory = new AtomFactory<TOp>(this._site, 0, this._validator, options.signingKey);
+        this._factory = new AtomFactory<TOp>(
+            this._site,
+            0,
+            this._validator,
+            options.signingKey
+        );
         this._reducer = reducer;
         this._value = undefined;
         this._metadata = undefined;
@@ -167,8 +178,14 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         this._rejected = [];
         this.garbageCollect = options.garbageCollect || false;
 
-        if (this._validator && options.signingKey && (!tree.site.crypto || !tree.site.crypto.publicKey)) {
-            console.warn(`[CausalTree] Created a tree with a signing key but no public key. This might cause some remotes to reject atoms because they shouldn't be signed.`);
+        if (
+            this._validator &&
+            options.signingKey &&
+            (!tree.site.crypto || !tree.site.crypto.publicKey)
+        ) {
+            console.warn(
+                `[CausalTree] Created a tree with a signing key but no public key. This might cause some remotes to reject atoms because they shouldn't be signed.`
+            );
         }
     }
 
@@ -184,7 +201,10 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * @param atom The atom to add to the tree.
      * @param verifySignature Whether to verify the signature on the given atom. (Default true)
      */
-    async add<T extends TOp>(atom: Atom<T>, verifySignature: boolean = true): Promise<AddResult<T>> {
+    async add<T extends TOp>(
+        atom: Atom<T>,
+        verifySignature: boolean = true
+    ): Promise<AddResult<T>> {
         if (verifySignature) {
             const [rej] = await this._validate([atom]);
             if (rej) {
@@ -195,7 +215,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
                 }
                 return {
                     added: null,
-                    rejected: rej
+                    rejected: rej,
                 };
             }
         }
@@ -220,8 +240,8 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
             }
         }
         return {
-            added: ref, 
-            rejected: rejected
+            added: ref,
+            rejected: rejected,
         };
     }
 
@@ -230,9 +250,17 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * @param refs The references to add.
      * @param verifySignatures Whether to verify that the signatures on the atoms are valid. (Default false)
      */
-    async addMany(refs: Atom<TOp>[], verifySignatures: boolean = false, loadingCallback?: LoadingProgressCallback): Promise<AtomBatch<TOp>> {
+    async addMany(
+        refs: Atom<TOp>[],
+        verifySignatures: boolean = false,
+        loadingCallback?: LoadingProgressCallback
+    ): Promise<AtomBatch<TOp>> {
         const loadingProgress = new LoadingProgress();
-        if (loadingCallback) { loadingProgress.onChanged.addListener(() => loadingCallback(loadingProgress)) };
+        if (loadingCallback) {
+            loadingProgress.onChanged.addListener(() =>
+                loadingCallback(loadingProgress)
+            );
+        }
 
         if (verifySignatures) {
             loadingProgress.status = `Validating ${refs.length} atoms...`;
@@ -241,7 +269,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
                 loadingProgress.onChanged.removeAllListeners();
                 return {
                     added: [],
-                    rejected: invalid
+                    rejected: invalid,
                 };
             }
         }
@@ -254,10 +282,13 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
             for (let i = 0; i < atoms.length; i++) {
                 let atom = atoms[i];
                 if (atom) {
-                    let { added: result, rejected: rej } = await this.add(atom, verifySignatures);
+                    let { added: result, rejected: rej } = await this.add(
+                        atom,
+                        verifySignatures
+                    );
                     if (result) {
                         added.push(result);
-                    } 
+                    }
                     if (rej) {
                         rejected.push(rej);
                     }
@@ -267,11 +298,11 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
             return { added, rejected };
         });
     }
-    
+
     /**
      * Batches all the operations in the given function so that
      * only a single notification is sent.
-     * @param func 
+     * @param func
      */
     async batch<T>(func: () => T | Promise<T>): Promise<T> {
         if (this._isBatching) {
@@ -284,7 +315,9 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         } finally {
             if (this._batch.length > 0) {
                 this.triggerGarbageCollection(this._batch);
-                [this._value, this._metadata] = this._calculateValue(this._batch);
+                [this._value, this._metadata] = this._calculateValue(
+                    this._batch
+                );
                 this._atomAdded.next(this._batch);
                 this._batch = [];
             }
@@ -303,9 +336,18 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * @param validate Whether to validate the incoming weave.
      * @param verifySignatures Whether to verify the signatures of the incoming atoms. (Default false)
      */
-    async importWeave<T extends TOp>(refs: Atom<T>[], validate: boolean = true, verifySignatures: boolean = false, loadingCallback?: LoadingProgressCallback): Promise<AtomBatch<TOp>> {
+    async importWeave<T extends TOp>(
+        refs: Atom<T>[],
+        validate: boolean = true,
+        verifySignatures: boolean = false,
+        loadingCallback?: LoadingProgressCallback
+    ): Promise<AtomBatch<TOp>> {
         const loadingProgress = new LoadingProgress();
-        if (loadingCallback) { loadingProgress.onChanged.addListener(() => loadingCallback(loadingProgress)) };
+        if (loadingCallback) {
+            loadingProgress.onChanged.addListener(() =>
+                loadingCallback(loadingProgress)
+            );
+        }
 
         if (validate) {
             let weave = new Weave<T>();
@@ -313,7 +355,9 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
             weave.import(refs);
             if (!weave.isValid()) {
                 loadingProgress.error = 'Imported references are not valid.';
-                throw new Error('[CausalTree] Imported references are not valid.');
+                throw new Error(
+                    '[CausalTree] Imported references are not valid.'
+                );
             }
         }
 
@@ -325,7 +369,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
                 loadingProgress.onChanged.removeAllListeners();
                 return {
                     added: [],
-                    rejected: bad
+                    rejected: bad,
                 };
             }
         }
@@ -352,7 +396,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         loadingProgress.onChanged.removeAllListeners();
         return {
             added: newAtoms,
-            rejected: rejected
+            rejected: rejected,
         };
     }
 
@@ -361,15 +405,28 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * @param tree The tree to import.
      * @param verifySignatures Whether to verify the signatures of the incoming atoms. (Default false)
      */
-    async import<T extends TOp>(tree: StoredCausalTree<T>, verifySignatures: boolean = false, loadingCallback?: LoadingProgressCallback): Promise<AtomBatch<TOp>> {
-
+    async import<T extends TOp>(
+        tree: StoredCausalTree<T>,
+        verifySignatures: boolean = false,
+        loadingCallback?: LoadingProgressCallback
+    ): Promise<AtomBatch<TOp>> {
         const loadingProgress = new LoadingProgress();
-        if (loadingCallback) { loadingProgress.onChanged.addListener(() => loadingCallback(loadingProgress)) };
-
-        const onImportProgress: LoadingProgressCallback = (importProgress: LoadingProgress) => {
-            const start = loadingProgress.progress;
-            loadingProgress.set(lerp(start, 100, importProgress.progress / 100), importProgress.status, importProgress.error);
+        if (loadingCallback) {
+            loadingProgress.onChanged.addListener(() =>
+                loadingCallback(loadingProgress)
+            );
         }
+
+        const onImportProgress: LoadingProgressCallback = (
+            importProgress: LoadingProgress
+        ) => {
+            const start = loadingProgress.progress;
+            loadingProgress.set(
+                lerp(start, 100, importProgress.progress / 100),
+                importProgress.status,
+                importProgress.error
+            );
+        };
 
         if (tree.knownSites) {
             tree.knownSites.forEach(s => {
@@ -380,24 +437,46 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         let added: AtomBatch<TOp>;
         if (tree.weave) {
             if (tree.formatVersion === 2) {
-                added = await this.importWeave(tree.weave, true, verifySignatures, onImportProgress);
-            } else if(tree.formatVersion === 3) {
+                added = await this.importWeave(
+                    tree.weave,
+                    true,
+                    verifySignatures,
+                    onImportProgress
+                );
+            } else if (tree.formatVersion === 3) {
                 if (tree.ordered) {
-                    added = await this.importWeave(tree.weave, true, verifySignatures, onImportProgress);
+                    added = await this.importWeave(
+                        tree.weave,
+                        true,
+                        verifySignatures,
+                        onImportProgress
+                    );
                 } else {
-                    added = await this.addMany(tree.weave, verifySignatures, onImportProgress);
+                    added = await this.addMany(
+                        tree.weave,
+                        verifySignatures,
+                        onImportProgress
+                    );
                 }
             } else if (typeof tree.formatVersion === 'undefined') {
-                added = await this.importWeave(tree.weave.map(ref => ref.atom), true, verifySignatures, onImportProgress);
+                added = await this.importWeave(
+                    tree.weave.map(ref => ref.atom),
+                    true,
+                    verifySignatures,
+                    onImportProgress
+                );
             } else {
-                console.warn("[CausalTree] Don't know how to import tree version:", tree.formatVersion);
+                console.warn(
+                    "[CausalTree] Don't know how to import tree version:",
+                    tree.formatVersion
+                );
                 added = {
                     added: [],
-                    rejected: []
+                    rejected: [],
                 };
             }
         }
-        
+
         loadingProgress.onChanged.removeAllListeners();
         return added;
     }
@@ -411,7 +490,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
             site: this._site,
             ordered: true,
             knownSites: this.knownSites.slice(),
-            weave: this.weave.atoms.slice()
+            weave: this.weave.atoms.slice(),
         };
     }
 
@@ -421,7 +500,11 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * @param parent The parent atom.
      * @param priority The priority.
      */
-    async create<T extends TOp>(op: T, parent: Atom<TOp> | Atom<TOp> | AtomId, priority?: number): Promise<AddResult<T>> {
+    async create<T extends TOp>(
+        op: T,
+        parent: Atom<TOp> | Atom<TOp> | AtomId,
+        priority?: number
+    ): Promise<AddResult<T>> {
         const atom = await this.factory.create(op, parent, priority);
         return await this.add(atom);
     }
@@ -430,9 +513,15 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * Creates a new atom from the given precalculated operation and adds it to the tree's history.
      * @param precalc The operation to create and add.
      */
-    async createFromPrecalculated<T extends TOp>(precalc: PrecalculatedOp<T>): Promise<AddResult<T>> {
+    async createFromPrecalculated<T extends TOp>(
+        precalc: PrecalculatedOp<T>
+    ): Promise<AddResult<T>> {
         if (precalc) {
-            return await this.create<T>(precalc.op, <Atom<TOp>>precalc.cause, precalc.priority);
+            return await this.create<T>(
+                precalc.op,
+                <Atom<TOp>>precalc.cause,
+                precalc.priority
+            );
         } else {
             return null;
         }
@@ -442,7 +531,9 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * Creates a new atom from the given precalculated operation and adds it to the tree's history.
      * @param precalc The operation to create and add.
      */
-    async createManyFromPrecalculated<T extends TOp>(precalc: PrecalculatedOp<T>[]): Promise<AtomBatch<T>> {
+    async createManyFromPrecalculated<T extends TOp>(
+        precalc: PrecalculatedOp<T>[]
+    ): Promise<AtomBatch<T>> {
         const nonNull = precalc.filter(pc => !!pc);
         const promises = nonNull.map(pc => this.createFromPrecalculated(pc));
         let results = await Promise.all(promises);
@@ -451,11 +542,11 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
 
     /**
      * Registers the given site in this tree's known sites list.
-     * @param site The site. 
+     * @param site The site.
      */
     registerSite(site: SiteInfo) {
         let existing = find(this._knownSites, s => s.id === site.id);
-        if(!existing) {
+        if (!existing) {
             this._knownSites.push(site);
         }
     }
@@ -467,7 +558,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         return {
             site: this.site,
             knownSites: this.knownSites,
-            version: this.weave.getVersion()
+            version: this.weave.getVersion(),
         };
     }
 
@@ -520,7 +611,9 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * Ensures that the given atom is valid.
      * @param atom The atom to validate.
      */
-    private async _validate<T extends TOp>(atoms: Atom<T>[]): Promise<RejectedAtom<T>[]> {
+    private async _validate<T extends TOp>(
+        atoms: Atom<T>[]
+    ): Promise<RejectedAtom<T>[]> {
         const grouped = groupBy(atoms, a => a.id.site);
         const sites = Object.keys(grouped);
         let rejected: RejectedAtom<T>[] = [];
@@ -531,20 +624,27 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
             const first = siteAtoms[0];
             if (key) {
                 const valid = await this._validator.verifyBatch(key, siteAtoms);
-                const rej: RejectedAtom<T>[] = valid.map((v, i) => {
-                    if (!v) {
-                        return <RejectedAtom<T>>{
-                            atom: siteAtoms[i],
-                            reason: 'signature_failed'
-                        };
-                    }
-                    return null;
-                }).filter(a => a);
+                const rej: RejectedAtom<T>[] = valid
+                    .map((v, i) => {
+                        if (!v) {
+                            return <RejectedAtom<T>>{
+                                atom: siteAtoms[i],
+                                reason: 'signature_failed',
+                            };
+                        }
+                        return null;
+                    })
+                    .filter(a => a);
                 rejected.push(...rej);
-            } else if (!key && !!first.signature && this._validator && this._validator.impl.supported()) {
+            } else if (
+                !key &&
+                !!first.signature &&
+                this._validator &&
+                this._validator.impl.supported()
+            ) {
                 rejected.push({
                     atom: first,
-                    reason: 'no_public_key'
+                    reason: 'no_public_key',
                 });
             }
         }
@@ -560,8 +660,16 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         let key = this._keyMap.get(siteId);
         if (!key) {
             const site = find(this.knownSites, s => s.id === siteId);
-            if (site && site.crypto && site.crypto.publicKey && this._validator && this._validator.impl.supported()) {
-                key = await this._validator.impl.importPublicKey(site.crypto.publicKey);
+            if (
+                site &&
+                site.crypto &&
+                site.crypto.publicKey &&
+                this._validator &&
+                this._validator.impl.supported()
+            ) {
+                key = await this._validator.impl.importPublicKey(
+                    site.crypto.publicKey
+                );
             }
 
             if (key) {
@@ -573,6 +681,11 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
 
     private _calculateValue(refs: Atom<TOp>[]): [TValue, TMetadata] {
         this._dirty = false;
-        return this._reducer.eval(this._weave, refs, this._value, this._metadata);
+        return this._reducer.eval(
+            this._weave,
+            refs,
+            this._value,
+            this._metadata
+        );
     }
 }

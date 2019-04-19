@@ -1,4 +1,3 @@
-
 /**
  * Defines an interface that contains information about a realtime channel.
  */

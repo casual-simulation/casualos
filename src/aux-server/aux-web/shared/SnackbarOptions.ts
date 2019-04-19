@@ -1,4 +1,3 @@
-
 /**
  * The options for the snackbar.
  */

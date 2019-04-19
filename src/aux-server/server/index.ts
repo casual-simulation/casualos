@@ -9,7 +9,7 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
  *
@@ -27,12 +27,12 @@ import process from 'process';
 import { Server } from './server';
 
 import prodConfig from './config.prod';
-import devConfig from './config.dev'; 
+import devConfig from './config.dev';
 import { Config } from './config';
 
 const env = process.env.NODE_ENV;
 let config: Config;
-if(env === 'production') {
+if (env === 'production') {
     config = prodConfig;
 } else {
     config = devConfig;

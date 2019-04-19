@@ -1,30 +1,28 @@
-import { ContextGroup3D } from "./ContextGroup3D";
-import { WorkspaceMesh } from "./WorkspaceMesh";
-import { GridChecker } from "./grid/GridChecker";
-import { AuxFile3DDecoratorFactory } from "./decorators/AuxFile3DDecoratorFactory";
+import { ContextGroup3D } from './ContextGroup3D';
+import { WorkspaceMesh } from './WorkspaceMesh';
+import { GridChecker } from './grid/GridChecker';
+import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
 import {
     AuxFile,
     getContextPosition,
     TagUpdatedEvent,
     FileCalculationContext,
-    isContext
-} from "@casual-simulation/aux-common";
-import { Object3D } from "three";
+    isContext,
+} from '@casual-simulation/aux-common';
+import { Object3D } from 'three';
 
 /**
  * Defines a class that represents a builder group.
  * That is, a context group that is specific to the AUX Builder.
  */
 export class BuilderGroup3D extends ContextGroup3D {
-
-    
     /**
      * The workspace that this context contains.
      */
     surface: WorkspaceMesh;
 
     private _checker: GridChecker;
-    
+
     /**
      * Sets the grid checker that should be used by this group's workspace.
      * @param gridChecker The grid checker to use.
@@ -49,17 +47,25 @@ export class BuilderGroup3D extends ContextGroup3D {
         super(file, 'builder', decoratorFactory);
     }
 
-    protected async _updateThis(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
+    protected async _updateThis(
+        file: AuxFile,
+        updates: TagUpdatedEvent[],
+        calc: FileCalculationContext
+    ) {
         await this._updateWorkspace(file, updates, calc);
     }
 
     /**
      * Updates this builder's workspace.
-     * @param file 
-     * @param updates 
-     * @param calc 
+     * @param file
+     * @param updates
+     * @param calc
      */
-    private async _updateWorkspace(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
+    private async _updateWorkspace(
+        file: AuxFile,
+        updates: TagUpdatedEvent[],
+        calc: FileCalculationContext
+    ) {
         if (isContext(calc, file)) {
             if (!this.surface) {
                 this.surface = new WorkspaceMesh(this.domain);
@@ -71,7 +77,7 @@ export class BuilderGroup3D extends ContextGroup3D {
             this.position.x = position.x;
             this.position.y = position.z;
             this.position.z = position.y;
-            
+
             this.updateMatrixWorld(true);
             await this.surface.update(calc, file);
             this.display.visible = this.surface.container.visible;

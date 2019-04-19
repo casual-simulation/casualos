@@ -5,16 +5,19 @@ import {
     MeshToonMaterial,
     MeshStandardMaterial,
     SpriteMaterial,
-} from "three";
-import { FileCalculationContext, calculateFileValue, hasValue } from '@casual-simulation/aux-common'
-import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
-import { AuxFile3D } from "../AuxFile3D";
-import { IMeshDecorator } from "./IMeshDecorator";
-import { AuxTextureLoader } from "../AuxTextureLoader";
-import { EventBus } from "../../../shared/EventBus";
+} from 'three';
+import {
+    FileCalculationContext,
+    calculateFileValue,
+    hasValue,
+} from '@casual-simulation/aux-common';
+import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
+import { AuxFile3D } from '../AuxFile3D';
+import { IMeshDecorator } from './IMeshDecorator';
+import { AuxTextureLoader } from '../AuxTextureLoader';
+import { EventBus } from '../../../shared/EventBus';
 
 export class TextureDecorator extends AuxFile3DDecorator {
-
     /**
      * The url path of the texture.
      */
@@ -26,24 +29,31 @@ export class TextureDecorator extends AuxFile3DDecorator {
 
     constructor(file3D: AuxFile3D, targetMeshDecorator: IMeshDecorator) {
         super(file3D);
-        
+
         this._loader = new AuxTextureLoader();
 
         this._targetMeshDecorator = targetMeshDecorator;
-        
-        this._handleTargetMeshUpdated = this._handleTargetMeshUpdated.bind(this);
+
+        this._handleTargetMeshUpdated = this._handleTargetMeshUpdated.bind(
+            this
+        );
         this._handleTextureLoaded = this._handleTextureLoaded.bind(this);
         this._handleTextureError = this._handleTextureError.bind(this);
-        
-        this._targetMeshDecorator.onMeshUpdated.addListener(this._handleTargetMeshUpdated);
+
+        this._targetMeshDecorator.onMeshUpdated.addListener(
+            this._handleTargetMeshUpdated
+        );
     }
 
     fileUpdated(calc: FileCalculationContext): void {
-
         let imageValueChanged = false;
 
         // Get value of image tag.
-        const imageValue = calculateFileValue(calc, this.file3D.file, 'aux.image');
+        const imageValue = calculateFileValue(
+            calc,
+            this.file3D.file,
+            'aux.image'
+        );
 
         if (hasValue(imageValue)) {
             if (this.image !== imageValue) {
@@ -70,7 +80,11 @@ export class TextureDecorator extends AuxFile3DDecorator {
 
             // Assign value of texture.
             if (this.image) {
-                this._loader.load(this.image, this._handleTextureLoaded, this._handleTextureError)
+                this._loader.load(
+                    this.image,
+                    this._handleTextureLoaded,
+                    this._handleTextureError
+                );
             } else {
                 this._texture = null;
             }
@@ -79,12 +93,13 @@ export class TextureDecorator extends AuxFile3DDecorator {
         }
     }
 
-    frameUpdate(calc: FileCalculationContext) {
-    }
+    frameUpdate(calc: FileCalculationContext) {}
 
     dispose() {
         if (this._targetMeshDecorator) {
-            this._targetMeshDecorator.onMeshUpdated.removeListener(this._handleTargetMeshUpdated);
+            this._targetMeshDecorator.onMeshUpdated.removeListener(
+                this._handleTargetMeshUpdated
+            );
         }
 
         if (this._texture) {
@@ -95,7 +110,12 @@ export class TextureDecorator extends AuxFile3DDecorator {
     }
 
     private _updateTargetMeshTexture(): void {
-        let material = <MeshBasicMaterial | MeshToonMaterial | MeshStandardMaterial | SpriteMaterial>this._targetMeshDecorator.mesh.material;
+        let material = <
+            | MeshBasicMaterial
+            | MeshToonMaterial
+            | MeshStandardMaterial
+            | SpriteMaterial
+        >this._targetMeshDecorator.mesh.material;
         material.map = this._texture;
         // material.transparent = true;
         material.needsUpdate = true;

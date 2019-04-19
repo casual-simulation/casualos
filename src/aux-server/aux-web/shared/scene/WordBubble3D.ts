@@ -1,7 +1,7 @@
-import { 
+import {
     Math as ThreeMath,
-    Mesh, 
-    Object3D, 
+    Mesh,
+    Object3D,
     DoubleSide,
     Color,
     TextureLoader,
@@ -20,7 +20,7 @@ import {
     MeshBasicMaterial,
     ShapeBufferGeometry,
     Box3Helper,
-    AxesHelper
+    AxesHelper,
 } from 'three';
 import { merge } from '@casual-simulation/aux-common/utils';
 import { setLayerMask, convertToBox2 } from './SceneUtils';
@@ -28,7 +28,6 @@ import { DebugObjectManager } from './DebugObjectManager';
 import { Debug } from '@sentry/core/dist/integrations';
 
 export class WordBubble3D extends Object3D {
-
     private _shapeGeometry: ShapeBufferGeometry;
     private _shapeMeshMaterial: MeshBasicMaterial;
     private _shapeMesh: Mesh;
@@ -42,8 +41,8 @@ export class WordBubble3D extends Object3D {
         this._options = {
             paddingWidth: 0.02,
             paddingHeight: 0.02,
-            color: new Color(1, 1, 1)
-        }
+            color: new Color(1, 1, 1),
+        };
 
         if (opt) {
             // Merge values of provied options into internal options.
@@ -53,7 +52,7 @@ export class WordBubble3D extends Object3D {
         // Material for word bubble.
         this._shapeMeshMaterial = new MeshBasicMaterial({
             side: DoubleSide,
-            color: this._options.color
+            color: this._options.color,
         });
     }
 
@@ -67,14 +66,27 @@ export class WordBubble3D extends Object3D {
     }
 
     public regenerateMesh(box: Box2, arrowPoint: Vector3) {
-        
         let boxWithPadding = box.clone();
-        boxWithPadding.expandByVector(new Vector2(this._options.paddingWidth, this._options.paddingHeight));
-        
+        boxWithPadding.expandByVector(
+            new Vector2(this._options.paddingWidth, this._options.paddingHeight)
+        );
+
         // Get local space conversion of min, max, and arrowPoint.
         const arrowPointLocal = this.worldToLocal(arrowPoint.clone());
-        const minLocal = this.worldToLocal(new Vector3(boxWithPadding.min.x, boxWithPadding.min.y, arrowPointLocal.z));
-        const maxLocal = this.worldToLocal(new Vector3(boxWithPadding.max.x, boxWithPadding.max.y, arrowPointLocal.z));
+        const minLocal = this.worldToLocal(
+            new Vector3(
+                boxWithPadding.min.x,
+                boxWithPadding.min.y,
+                arrowPointLocal.z
+            )
+        );
+        const maxLocal = this.worldToLocal(
+            new Vector3(
+                boxWithPadding.max.x,
+                boxWithPadding.max.y,
+                arrowPointLocal.z
+            )
+        );
 
         // Clamp arrow width to the size of the box if the box is smaller than the defualt arrow width.
         const arrowWidthPct = 0.3;
@@ -86,12 +98,12 @@ export class WordBubble3D extends Object3D {
 
         // Sharp corners.
         shape.moveTo(arrowPointLocal.x, arrowPointLocal.y);
-        shape.lineTo((-arrowWidth / 2) + arrowPointLocal.x, minLocal.y);
+        shape.lineTo(-arrowWidth / 2 + arrowPointLocal.x, minLocal.y);
         shape.lineTo(minLocal.x, minLocal.y);
         shape.lineTo(minLocal.x, maxLocal.y);
         shape.lineTo(maxLocal.x, maxLocal.y);
         shape.lineTo(maxLocal.x, minLocal.y);
-        shape.lineTo((arrowWidth / 2) + arrowPointLocal.x, minLocal.y);
+        shape.lineTo(arrowWidth / 2 + arrowPointLocal.x, minLocal.y);
 
         // let points: Vector2[] = shape.getPoints();
         // points.forEach((p, i) => {
@@ -108,13 +120,14 @@ export class WordBubble3D extends Object3D {
         }
         this._shapeGeometry = new ShapeBufferGeometry(shape, 12);
 
-
         // Only create mesh if it doesnt exist. Otherwise just update geometry.
         if (!this._shapeMesh) {
-            this._shapeMesh = new Mesh(this._shapeGeometry, this._shapeMeshMaterial);
+            this._shapeMesh = new Mesh(
+                this._shapeGeometry,
+                this._shapeMeshMaterial
+            );
             setLayerMask(this._shapeMesh, this.layers.mask, true);
             this.add(this._shapeMesh);
-    
         } else {
             this._shapeMesh.geometry = this._shapeGeometry;
         }
@@ -123,8 +136,7 @@ export class WordBubble3D extends Object3D {
         this._shapeMesh.position.set(0, 0, arrowPointLocal.z - 0.01);
     }
 
-    dispose(): void {
-    }
+    dispose(): void {}
 }
 
 interface WordBubbleOptions {

@@ -2,7 +2,7 @@ import Vue from 'vue';
 import { Chrome } from 'vue-color';
 import Component from 'vue-class-component';
 import { Inject, Watch, Provide } from 'vue-property-decorator';
-import { 
+import {
     Object,
     File,
     getUserMode,
@@ -12,7 +12,7 @@ import {
     Workspace,
     AuxObject,
     DEFAULT_SELECTION_MODE,
-    getSelectionMode
+    getSelectionMode,
 } from '@casual-simulation/aux-common';
 import GameView from '../GameView/GameView';
 import { appManager } from '../../shared/AppManager';
@@ -30,20 +30,19 @@ import FileTableToggle from '../FileTableToggle/FileTableToggle';
         'file-table': FileTable,
         'color-picker': ColorPicker,
         'tag-editor': TagEditor,
-        'file-table-toggle': FileTableToggle
+        'file-table-toggle': FileTableToggle,
     },
 })
 export default class Home extends Vue {
-
     @Provide() home = this;
 
     debug: boolean = false;
 
     contextMenuStyle: any = {
         left: '0px',
-        top: '0px'
+        top: '0px',
     };
-    
+
     contextMenuVisible: boolean = false;
     contextMenuEvent: ContextMenuEvent = null;
     status: string = '';
@@ -55,7 +54,7 @@ export default class Home extends Vue {
     isOpen: boolean = false;
     isLoading: boolean = false;
     progress: number = 0;
-    progressMode: "indeterminate" | "determinate" = "determinate";
+    progressMode: 'indeterminate' | 'determinate' = 'determinate';
     selectedRecentFile: File = null;
 
     private _subs: SubscriptionLike[] = [];
@@ -64,12 +63,12 @@ export default class Home extends Vue {
         return appManager.user;
     }
 
-    getUIHtmlElements(): HTMLElement[] { 
+    getUIHtmlElements(): HTMLElement[] {
         const table = <FileTable>this.$refs.table;
         if (table) {
             return table.uiHtmlElements();
         }
-        return []; 
+        return [];
     }
 
     get hasFiles() {
@@ -88,9 +87,13 @@ export default class Home extends Vue {
         }
     }
 
-    get filesMode() { return this.mode === 'files'; }
-    get workspacesMode() { return this.mode === 'worksurfaces'; }
-    get singleSelection() { 
+    get filesMode() {
+        return this.mode === 'files';
+    }
+    get workspacesMode() {
+        return this.mode === 'worksurfaces';
+    }
+    get singleSelection() {
         return this.selectionMode === 'single' && this.selectedFiles.length > 0;
     }
 
@@ -106,7 +109,6 @@ export default class Home extends Vue {
                 // if we went from having a file selected to not
                 // having a file selected
             } else if (!selected && old) {
-
                 // close the sheet
                 this.isOpen = false;
             }
@@ -160,30 +162,42 @@ export default class Home extends Vue {
         this.selectedRecentFile = null;
         this.updateTime = -1;
 
-        this._subs.push(this.fileManager.selectedFilesUpdated.subscribe(event => {
-            this.files = event.files;
-            const now = Date.now();
-            this.updateTime = now;
-        }));
+        this._subs.push(
+            this.fileManager.selectedFilesUpdated.subscribe(event => {
+                this.files = event.files;
+                const now = Date.now();
+                this.updateTime = now;
+            })
+        );
 
-        this._subs.push(this.fileManager.fileChanged(this.fileManager.userFile)
-            .pipe(tap(file => {
-                this.mode = getUserMode(file);
+        this._subs.push(
+            this.fileManager
+                .fileChanged(this.fileManager.userFile)
+                .pipe(
+                    tap(file => {
+                        this.mode = getUserMode(file);
 
-                let previousSelectionMode = this.selectionMode;
-                this.selectionMode = getSelectionMode(file);
-                if (previousSelectionMode !== this.selectionMode && this.selectionMode === 'multi') {
-                    this.isOpen = true;
-                }
-            }))
-            .subscribe());
+                        let previousSelectionMode = this.selectionMode;
+                        this.selectionMode = getSelectionMode(file);
+                        if (
+                            previousSelectionMode !== this.selectionMode &&
+                            this.selectionMode === 'multi'
+                        ) {
+                            this.isOpen = true;
+                        }
+                    })
+                )
+                .subscribe()
+        );
 
-        this._subs.push(this.fileManager.recent.onUpdated.subscribe(_ => {
-            this.selectedRecentFile = this.fileManager.recent.selectedRecentFile;
-        }));
+        this._subs.push(
+            this.fileManager.recent.onUpdated.subscribe(_ => {
+                this.selectedRecentFile = this.fileManager.recent.selectedRecentFile;
+            })
+        );
 
         this.isLoading = false;
-        
+
         this._setStatus('Waiting for input...');
     }
 
@@ -191,4 +205,4 @@ export default class Home extends Vue {
         this.status = status;
         console.log('[Home] Status:', status);
     }
-};
+}

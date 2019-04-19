@@ -1,7 +1,7 @@
-import { 
+import {
     Math as ThreeMath,
-    Mesh, 
-    Object3D, 
+    Mesh,
+    Object3D,
     DoubleSide,
     Color,
     TextureLoader,
@@ -14,10 +14,15 @@ import {
     ArrowHelper,
     Sphere,
     Ray,
-    Vector2
+    Vector2,
 } from 'three';
 
-import { Object, Workspace, isMinimized, FileCalculationContext } from '@casual-simulation/aux-common';
+import {
+    Object,
+    Workspace,
+    isMinimized,
+    FileCalculationContext,
+} from '@casual-simulation/aux-common';
 import { WorkspaceMesh } from './WorkspaceMesh';
 import { IGameView } from '../IGameView';
 import { AuxFile3D } from './AuxFile3D';
@@ -26,7 +31,6 @@ import { BuilderGroup3D } from './BuilderGroup3D';
 import { disposeMaterial } from './SceneUtils';
 
 export class Arrow3D extends Object3D {
-
     public static DefaultColor: Color = new Color(1, 1, 1);
     public static DefaultHeadWidth = 0.15;
     public static DefaultHeadLength = 0.3;
@@ -35,7 +39,7 @@ export class Arrow3D extends Object3D {
      * Three JS helper that draws arrows.
      */
     private _arrowHelper: ArrowHelper;
-    
+
     /**
      * The file that this arrow is coming from.
      */
@@ -46,8 +50,12 @@ export class Arrow3D extends Object3D {
      */
     private _targetFile3d: AuxFile3D;
 
-    public get sourceFile3d() { return this._sourceFile3d; }
-    public get targetFile3d() { return this._targetFile3d; }
+    public get sourceFile3d() {
+        return this._sourceFile3d;
+    }
+    public get targetFile3d() {
+        return this._targetFile3d;
+    }
 
     constructor(sourceFile3d: AuxFile3D, targetFile3d: AuxFile3D) {
         super();
@@ -55,7 +63,12 @@ export class Arrow3D extends Object3D {
         this._targetFile3d = targetFile3d;
 
         // Create the arrow mesh.
-        this._arrowHelper = new ArrowHelper(new Vector3(0,0,0), new Vector3(0,0,0), 0, Arrow3D.DefaultColor.getHex());
+        this._arrowHelper = new ArrowHelper(
+            new Vector3(0, 0, 0),
+            new Vector3(0, 0, 0),
+            0,
+            Arrow3D.DefaultColor.getHex()
+        );
         this.add(this._arrowHelper);
     }
 
@@ -82,63 +95,72 @@ export class Arrow3D extends Object3D {
 
     public setLength(length: number) {
         if (!this._arrowHelper) return;
-        this._arrowHelper.setLength(length, Arrow3D.DefaultHeadLength, Arrow3D.DefaultHeadWidth);
+        this._arrowHelper.setLength(
+            length,
+            Arrow3D.DefaultHeadLength,
+            Arrow3D.DefaultHeadWidth
+        );
     }
 
     public update(calc: FileCalculationContext) {
         if (!this._arrowHelper) return;
-        
+
         let sourceFile = <Object>this._sourceFile3d.file;
         let targetFile = <Object>this._targetFile3d.file;
-        
+
         let sourceWorkspace = this._getWorkspace(this._sourceFile3d);
         let targetWorkspace = this._getWorkspace(this._targetFile3d);
 
-        const sourceMinimized = sourceWorkspace && isMinimized(calc, sourceWorkspace.file);
-        const targetMinimized = targetWorkspace && isMinimized(calc, targetWorkspace.file);
+        const sourceMinimized =
+            sourceWorkspace && isMinimized(calc, sourceWorkspace.file);
+        const targetMinimized =
+            targetWorkspace && isMinimized(calc, targetWorkspace.file);
 
         if (sourceMinimized && targetMinimized) {
-
             // The workspace of both the source file and target file are minimized. Hide arrow and do nothing else.
             this._arrowHelper.visible = false;
-
         } else {
-        
             this._arrowHelper.visible = true;
-    
+
             // Update arrow origin.
             if (sourceWorkspace instanceof BuilderGroup3D && sourceMinimized) {
-                let miniHexSphere = (sourceWorkspace.surface).miniHex.boundingSphere;
+                let miniHexSphere =
+                    sourceWorkspace.surface.miniHex.boundingSphere;
                 this.setOrigin(miniHexSphere.center, true);
             } else {
                 this._sourceFile3d.computeBoundingObjects();
                 let sourceSphere = this._sourceFile3d.boundingSphere;
                 this.setOrigin(sourceSphere.center, true);
             }
-            
+
             // Update arrow direction and length.
             let targetSphere: Sphere;
-    
+
             // Lets get the bounding sphere of the target.
             // This could be either the sphere of the file itself or the sphere of the minimized workspace the file is on.
             if (targetWorkspace instanceof BuilderGroup3D && targetMinimized) {
-                targetSphere = (targetWorkspace.surface).miniHex.boundingSphere;
+                targetSphere = targetWorkspace.surface.miniHex.boundingSphere;
             } else {
                 this._targetFile3d.computeBoundingObjects();
-                targetSphere = (this._targetFile3d).boundingSphere;
+                targetSphere = this._targetFile3d.boundingSphere;
             }
-        
-            let targetCenterLocal = this.worldToLocal(targetSphere.center.clone());
+
+            let targetCenterLocal = this.worldToLocal(
+                targetSphere.center.clone()
+            );
             let dir = targetCenterLocal.clone().sub(this._arrowHelper.position);
-    
-            // Decrease length of direction vector so that it only goes 
+
+            // Decrease length of direction vector so that it only goes
             // as far as the hull of the target bounding sphere.
             dir.setLength(dir.length() - targetSphere.radius);
-            
+
             let length = dir.length();
             this._arrowHelper.setDirection(dir.normalize());
-            this._arrowHelper.setLength(length, Arrow3D.DefaultHeadLength, Arrow3D.DefaultHeadWidth);
-
+            this._arrowHelper.setLength(
+                length,
+                Arrow3D.DefaultHeadLength,
+                Arrow3D.DefaultHeadWidth
+            );
         }
     }
 
@@ -154,7 +176,7 @@ export class Arrow3D extends Object3D {
         this._targetFile3d = null;
     }
 
-    private _getWorkspace (file3d: AuxFile3D): ContextGroup3D { 
+    private _getWorkspace(file3d: AuxFile3D): ContextGroup3D {
         return file3d.contextGroup;
     }
 }

@@ -1,8 +1,7 @@
-import { AuxFile3D } from "./AuxFile3D";
-import { FileCalculationContext } from "@casual-simulation/aux-common";
+import { AuxFile3D } from './AuxFile3D';
+import { FileCalculationContext } from '@casual-simulation/aux-common';
 
 export abstract class AuxFile3DDecorator {
-
     /**
      * The aux file 3d that this decorator belongs to.
      */

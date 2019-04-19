@@ -1,5 +1,5 @@
-import { 
-    AuxFile, 
+import {
+    AuxFile,
     PartialFile,
     File,
     FileEvent,
@@ -21,8 +21,8 @@ import {
     calculateFileValue,
     SandboxLibrary,
     LocalEvent,
-    LocalEvents
-} from "@casual-simulation/aux-common";
+    LocalEvents,
+} from '@casual-simulation/aux-common';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { Subject, Observable } from 'rxjs';
 
@@ -41,14 +41,18 @@ export class FileHelper {
      * @param tree The tree that the file helper should use.
      * @param userFileId The ID of the user's file.
      */
-    constructor(tree: AuxCausalTree, userFileId: string, { isBuilder, isPlayer } = { isBuilder: false, isPlayer: false }) {
+    constructor(
+        tree: AuxCausalTree,
+        userFileId: string,
+        { isBuilder, isPlayer } = { isBuilder: false, isPlayer: false }
+    ) {
         this._tree = tree;
         this._userId = userFileId;
         this._localEvents = new Subject<LocalEvents>();
         this._lib = {
             ...formulaLib,
             isBuilder,
-            isPlayer
+            isPlayer,
         };
     }
 
@@ -110,11 +114,18 @@ export class FileHelper {
     /**
      * Creates a new workspace file.
      */
-    async createWorkspace(builderContextId?: string, contextType?: unknown): Promise<void> {
+    async createWorkspace(
+        builderContextId?: string,
+        contextType?: unknown
+    ): Promise<void> {
         console.log('[FileManager] Create File');
 
-        const workspace: Workspace = createWorkspace(undefined, builderContextId, contextType);
-        
+        const workspace: Workspace = createWorkspace(
+            undefined,
+            builderContextId,
+            contextType
+        );
+
         await this._tree.addFile(workspace);
     }
 
@@ -157,7 +168,7 @@ export class FileHelper {
         await this._tree.addEvents(events);
         this._sendLocalEvents(events);
     }
-    
+
     /**
      * Adds the given state to the current file state.
      * @param state The state to add.

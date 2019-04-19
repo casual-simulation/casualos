@@ -1,22 +1,38 @@
-
-import { Atom, AtomOp, PrecalculatedOp, precalculatedOp, RealtimeCausalTree, Weave } from "../causal-trees";
-import { AuxFile, AuxTagMetadata, AuxObject, AuxState } from "./AuxState";
-import { InsertOp, DeleteOp, AuxOp, AuxOpType, FileOp } from "./AuxOpTypes";
-import { calculateSequenceRef, calculateSequenceRefs } from "./AuxReducer";
-import { insert, del } from "./AuxAtoms";
-import { AuxCausalTree } from "./AuxCausalTree";
-import { map, startWith, flatMap, share } from "rxjs/operators";
+import {
+    Atom,
+    AtomOp,
+    PrecalculatedOp,
+    precalculatedOp,
+    RealtimeCausalTree,
+    Weave,
+} from '../causal-trees';
+import { AuxFile, AuxTagMetadata, AuxObject, AuxState } from './AuxState';
+import { InsertOp, DeleteOp, AuxOp, AuxOpType, FileOp } from './AuxOpTypes';
+import { calculateSequenceRef, calculateSequenceRefs } from './AuxReducer';
+import { insert, del } from './AuxAtoms';
+import { AuxCausalTree } from './AuxCausalTree';
+import { map, startWith, flatMap, share } from 'rxjs/operators';
 import { flatMap as mapFlat, values } from 'lodash';
-import { sortBy } from "lodash";
-import { File, Object, calculateStateDiff, FilesState, PartialFile, createFile, FilesStateDiff, getFileConfigContexts, tagsOnFile, isConfigTag } from "../Files";
-import uuid from "uuid/v4";
+import { sortBy } from 'lodash';
+import {
+    File,
+    Object,
+    calculateStateDiff,
+    FilesState,
+    PartialFile,
+    createFile,
+    FilesStateDiff,
+    getFileConfigContexts,
+    tagsOnFile,
+    isConfigTag,
+} from '../Files';
+import uuid from 'uuid/v4';
 
 /**
  * Builds the fileAdded, fileRemoved, and fileUpdated observables from the given channel connection.
  * @param connection The channel connection.
  */
 export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
-
     const stateDiffs = tree.onUpdated.pipe(
         startWith(tree.tree.weave.atoms),
         map(events => {
@@ -34,7 +50,7 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
                         addedIds[id] = true;
                     }
                     return;
-                } else if(e.value.type === AuxOpType.delete) {
+                } else if (e.value.type === AuxOpType.delete) {
                     let cause = tree.tree.weave.getAtom(e.cause);
                     if (cause.value.type === AuxOpType.file) {
                         const id = cause.value.id;
@@ -48,17 +64,16 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
                 if (file) {
                     const id = file.value.id;
                     const val = tree.tree.value[id];
-                    if(!updatedFiles[id] && val) {
+                    if (!updatedFiles[id] && val) {
                         updatedFiles[id] = val;
                     }
                 }
             });
 
-
             let diff: FilesStateDiff = {
                 addedFiles: addedFiles,
                 removedFiles: deletedFiles,
-                updatedFiles: values(updatedFiles)
+                updatedFiles: values(updatedFiles),
             };
 
             return diff;
@@ -66,34 +81,40 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
         share()
     );
 
-    const filesAdded = stateDiffs.pipe(map(diff => {
-        // TODO: Work with all domains
-        return sortBy(diff.addedFiles, 
-            f => {
-              let tags = tagsOnFile(f);
-              return tags.length > 0 && tags.some(t => isConfigTag(t)) ? 0 : 1;
-            },
-            f => f.id
-        );
-    }));
-
-    const filesRemoved = stateDiffs.pipe(
-      map(diff => diff.removedFiles)
+    const filesAdded = stateDiffs.pipe(
+        map(diff => {
+            // TODO: Work with all domains
+            return sortBy(
+                diff.addedFiles,
+                f => {
+                    let tags = tagsOnFile(f);
+                    return tags.length > 0 && tags.some(t => isConfigTag(t))
+                        ? 0
+                        : 1;
+                },
+                f => f.id
+            );
+        })
     );
+
+    const filesRemoved = stateDiffs.pipe(map(diff => diff.removedFiles));
 
     const filesUpdated = stateDiffs.pipe(map(diff => diff.updatedFiles));
 
     return {
         filesAdded,
         filesRemoved,
-        filesUpdated
+        filesUpdated,
     };
 }
 
 /**
  * Gets the File Atom that the given atom is childed under.
  */
-export function getAtomFile(weave: Weave<AuxOp>, ref: Atom<AuxOp>): Atom<FileOp> {
+export function getAtomFile(
+    weave: Weave<AuxOp>,
+    ref: Atom<AuxOp>
+): Atom<FileOp> {
     if (ref.value.type === AuxOpType.file) {
         return <Atom<FileOp>>ref;
     }
@@ -122,10 +143,15 @@ export function getTagMetadata(file: AuxFile, tag: string): AuxTagMetadata {
  * Inserts the given text into the given tag or value on the given file.
  * @param file The file that the text should be inserted into.
  * @param tag The tag that the text should be inserted into.
- * @param text The text that should be inserted. 
+ * @param text The text that should be inserted.
  * @param index The index that the text should be inserted at.
  */
-export function insertIntoTagValue(file: AuxFile, tag: string, text: string, index: number): PrecalculatedOp<InsertOp> {
+export function insertIntoTagValue(
+    file: AuxFile,
+    tag: string,
+    text: string,
+    index: number
+): PrecalculatedOp<InsertOp> {
     const tagMeta = getTagMetadata(file, tag);
     if (tagMeta) {
         const result = calculateSequenceRef(tagMeta.value.sequence, index);
@@ -142,7 +168,12 @@ export function insertIntoTagValue(file: AuxFile, tag: string, text: string, ind
  * @param text The text to insert into the tag name.
  * @param index The index that the text should be inserted at.
  */
-export function insertIntoTagName(file: AuxFile, tag: string, text: string, index: number): PrecalculatedOp<InsertOp> {
+export function insertIntoTagName(
+    file: AuxFile,
+    tag: string,
+    text: string,
+    index: number
+): PrecalculatedOp<InsertOp> {
     const tagMeta = getTagMetadata(file, tag);
     if (tagMeta) {
         const result = calculateSequenceRef(tagMeta.name, index);
@@ -159,11 +190,22 @@ export function insertIntoTagName(file: AuxFile, tag: string, text: string, inde
  * @param index The index that the text should be deleted at.
  * @param length The number of characters to delete.
  */
-export function deleteFromTagValue(file: AuxFile, tag: string, index: number, length: number): PrecalculatedOp<DeleteOp>[] {
+export function deleteFromTagValue(
+    file: AuxFile,
+    tag: string,
+    index: number,
+    length: number
+): PrecalculatedOp<DeleteOp>[] {
     const tagMeta = getTagMetadata(file, tag);
     if (tagMeta) {
-        const result = calculateSequenceRefs(tagMeta.value.sequence, index, length);
-        return result.map(r => precalculatedOp(del(r.index, r.index + r.length), r.ref, 1));
+        const result = calculateSequenceRefs(
+            tagMeta.value.sequence,
+            index,
+            length
+        );
+        return result.map(r =>
+            precalculatedOp(del(r.index, r.index + r.length), r.ref, 1)
+        );
     } else {
         return null;
     }
@@ -174,13 +216,20 @@ export function deleteFromTagValue(file: AuxFile, tag: string, index: number, le
  * Note that after inserting the text the tag name will change.
  * @param tag The tag whose name should be updated.
  * @param index The index that the characters should be deleted from.
- * @param length The number of characters to delete. 
+ * @param length The number of characters to delete.
  */
-export function deleteFromTagName(file: AuxFile, tag: string, index: number, length: number): PrecalculatedOp<DeleteOp>[] {
+export function deleteFromTagName(
+    file: AuxFile,
+    tag: string,
+    index: number,
+    length: number
+): PrecalculatedOp<DeleteOp>[] {
     const tagMeta = getTagMetadata(file, tag);
     if (tagMeta) {
         const result = calculateSequenceRefs(tagMeta.name, index);
-        return result.map(r =>  precalculatedOp(del(r.index, r.index + r.length), r.ref, 1));
+        return result.map(r =>
+            precalculatedOp(del(r.index, r.index + r.length), r.ref, 1)
+        );
     } else {
         return null;
     }

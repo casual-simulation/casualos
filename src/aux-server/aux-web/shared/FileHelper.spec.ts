@@ -1,10 +1,13 @@
-import { AuxCausalTree, AuxObject, FileEvent, LocalEvent } from "@casual-simulation/aux-common";
-import { FileHelper } from "./FileHelper";
-import { storedTree, site } from "@casual-simulation/aux-common/causal-trees";
-
+import {
+    AuxCausalTree,
+    AuxObject,
+    FileEvent,
+    LocalEvent,
+} from '@casual-simulation/aux-common';
+import { FileHelper } from './FileHelper';
+import { storedTree, site } from '@casual-simulation/aux-common/causal-trees';
 
 describe('FileHelper', () => {
-
     let userId: string = 'user';
     let tree: AuxCausalTree;
     let helper: FileHelper;
@@ -28,8 +31,8 @@ describe('FileHelper', () => {
 
     describe('objects', () => {
         it('should return active objects', async () => {
-            const {added: file1 } = await tree.file('test1');
-            
+            const { added: file1 } = await tree.file('test1');
+
             const { added: file2 } = await tree.file('test2');
             const { added: tag } = await tree.tag('_destroyed', file2);
             const { added: val } = await tree.val(true, tag);
@@ -39,23 +42,29 @@ describe('FileHelper', () => {
             expect(objs).toEqual([
                 tree.value['test2'],
                 tree.value['test1'],
-                helper.userFile
+                helper.userFile,
             ]);
         });
     });
 
     describe('createContext()', () => {
         it('should define a library variable when in aux builder', () => {
-            helper = new FileHelper(tree, userId, { isBuilder: true, isPlayer: false });
+            helper = new FileHelper(tree, userId, {
+                isBuilder: true,
+                isPlayer: false,
+            });
 
             const context = helper.createContext();
 
             expect(context.sandbox.library.isBuilder).toBe(true);
             expect(context.sandbox.library.isPlayer).toBe(false);
-        }); 
+        });
 
         it('should define a library variable when in aux player', () => {
-            helper = new FileHelper(tree, userId, { isBuilder: false, isPlayer: true });
+            helper = new FileHelper(tree, userId, {
+                isBuilder: false,
+                isPlayer: true,
+            });
 
             const context = helper.createContext();
 
@@ -64,7 +73,10 @@ describe('FileHelper', () => {
         });
 
         it('should default to not in aux builder or player', () => {
-            helper = new FileHelper(tree, userId, { isBuilder: false, isPlayer: false });
+            helper = new FileHelper(tree, userId, {
+                isBuilder: false,
+                isPlayer: false,
+            });
 
             const context = helper.createContext();
 

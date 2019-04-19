@@ -1,16 +1,23 @@
+import { Vector3, Euler, PerspectiveCamera, OrthographicCamera } from 'three';
 import {
-    Vector3,
-    Euler,
-    PerspectiveCamera,
-    OrthographicCamera,
-} from "three";
-import { FileCalculationContext, AuxObject, calculateGridScale, getFileRotation, getFilePosition, normalize, lerp } from '@casual-simulation/aux-common'
+    FileCalculationContext,
+    AuxObject,
+    calculateGridScale,
+    getFileRotation,
+    getFilePosition,
+    normalize,
+    lerp,
+} from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
-import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
-import { AuxFile3D } from "../AuxFile3D";
-import { calculateScale } from "../SceneUtils";
-import { IGameView } from "aux-web/shared/IGameView";
-import { Orthographic_DefaultZoom, Orthographic_MinZoom, Orthographic_MaxZoom } from "../CameraRigFactory";
+import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
+import { AuxFile3D } from '../AuxFile3D';
+import { calculateScale } from '../SceneUtils';
+import { IGameView } from 'aux-web/shared/IGameView';
+import {
+    Orthographic_DefaultZoom,
+    Orthographic_MinZoom,
+    Orthographic_MaxZoom,
+} from '../CameraRigFactory';
 
 /**
  * The amount of time between checking a user's mouse for activity.
@@ -41,7 +48,6 @@ export const TIME_BETWEEN_UPDATES = 1000 / MAX_UPDATE_RATE;
  * Defines a class that represents the controls for an "user" file.
  */
 export class UserControlsDecorator extends AuxFile3DDecorator {
-
     private _lastActiveCheckTime: number;
     private _lastPositionUpdateTime: number = -1000;
 
@@ -68,13 +74,18 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
         if (time > this._lastPositionUpdateTime + TIME_BETWEEN_UPDATES) {
             const mainCamera = this._gameView.getMainCamera();
             const camRotation = mainCamera.rotation.clone();
-            const camRotationVector = new Vector3(0, 0, 1).applyEuler(camRotation);
+            const camRotationVector = new Vector3(0, 0, 1).applyEuler(
+                camRotation
+            );
 
             // Handle camera position differently based on the type camera it is.
             let camPosition: Vector3 = mainCamera.position.clone();
 
             // Scale camera's local position so that it maps to the context positioning.
-            const gridScale = calculateGridScale(calc, this.file3D.contextGroup.file);
+            const gridScale = calculateGridScale(
+                calc,
+                this.file3D.contextGroup.file
+            );
             const scale = calculateScale(calc, this.file3D.file, gridScale);
             camPosition.x /= scale.x;
             camPosition.y /= scale.y;
@@ -93,30 +104,67 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
                 let dollyDist: number;
 
                 if (mainCamera.zoom >= Orthographic_DefaultZoom) {
-                    let t = normalize(mainCamera.zoom, Orthographic_DefaultZoom, Orthographic_MaxZoom);
-                    dollyDist = lerp(orthoDollyRange.base, orthoDollyRange.max, t);
+                    let t = normalize(
+                        mainCamera.zoom,
+                        Orthographic_DefaultZoom,
+                        Orthographic_MaxZoom
+                    );
+                    dollyDist = lerp(
+                        orthoDollyRange.base,
+                        orthoDollyRange.max,
+                        t
+                    );
                 } else {
-                    let t = normalize(mainCamera.zoom, Orthographic_MinZoom, Orthographic_DefaultZoom);
-                    dollyDist = lerp(orthoDollyRange.min, orthoDollyRange.base, t);
+                    let t = normalize(
+                        mainCamera.zoom,
+                        Orthographic_MinZoom,
+                        Orthographic_DefaultZoom
+                    );
+                    dollyDist = lerp(
+                        orthoDollyRange.min,
+                        orthoDollyRange.base,
+                        t
+                    );
                 }
 
                 let newCamPos = new Vector3();
-                let direction = camRotationVector.clone().normalize().multiplyScalar(-1);
-                newCamPos.addVectors(camPosition, direction.multiplyScalar(dollyDist));
+                let direction = camRotationVector
+                    .clone()
+                    .normalize()
+                    .multiplyScalar(-1);
+                newCamPos.addVectors(
+                    camPosition,
+                    direction.multiplyScalar(dollyDist)
+                );
                 // console.log(`zoom: ${mainCamera.zoom},\ndollyDist: ${dollyDist}\nnewCamPos: (${newCamPos.x}, ${newCamPos.y}, ${newCamPos.z})`);
 
                 camPosition = newCamPos.clone();
             }
 
-            const filePosition = getFilePosition(calc, file, this.file3D.context);
-            const fileRotation = getFileRotation(calc, file, this.file3D.context);
+            const filePosition = getFilePosition(
+                calc,
+                file,
+                this.file3D.context
+            );
+            const fileRotation = getFileRotation(
+                calc,
+                file,
+                this.file3D.context
+            );
 
-            const fileRotationVector = new Vector3(0, 0, 1).applyEuler(new Euler(fileRotation.x, fileRotation.z, fileRotation.y));
-            const distance = camPosition.distanceTo(new Vector3(filePosition.x, filePosition.z, -filePosition.y));
+            const fileRotationVector = new Vector3(0, 0, 1).applyEuler(
+                new Euler(fileRotation.x, fileRotation.z, fileRotation.y)
+            );
+            const distance = camPosition.distanceTo(
+                new Vector3(filePosition.x, filePosition.z, -filePosition.y)
+            );
             const angle = camRotationVector.angleTo(fileRotationVector);
-            if (distance > DEFAULT_USER_MOVEMENT_INCREMENT || angle > DEFAULT_USER_ROTATION_INCREMENT) {
+            if (
+                distance > DEFAULT_USER_MOVEMENT_INCREMENT ||
+                angle > DEFAULT_USER_ROTATION_INCREMENT
+            ) {
                 this._lastPositionUpdateTime = time;
-                
+
                 appManager.fileManager.updateFile(file, {
                     tags: {
                         [`${this.file3D.context}.x`]: camPosition.x,
@@ -128,7 +176,7 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
                         [`${this.file3D.context}.rotation.x`]: camRotation.x,
                         [`${this.file3D.context}.rotation.y`]: camRotation.z,
                         [`${this.file3D.context}.rotation.z`]: camRotation.y,
-                    }
+                    },
                 });
             }
         }
@@ -142,12 +190,15 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
 
     private _checkIsActive() {
         const timeBetweenChecks = Date.now() - this._lastActiveCheckTime;
-        if (!this._lastActiveCheckTime || timeBetweenChecks > DEFAULT_USER_ACTIVE_CHECK_INTERVAL) {
+        if (
+            !this._lastActiveCheckTime ||
+            timeBetweenChecks > DEFAULT_USER_ACTIVE_CHECK_INTERVAL
+        ) {
             this._lastActiveCheckTime = Date.now();
             appManager.fileManager.updateFile(<AuxObject>this.file3D.file, {
                 tags: {
-                    [`${this.file3D.context}._lastActiveTime`]: Date.now()
-                }
+                    [`${this.file3D.context}._lastActiveTime`]: Date.now(),
+                },
             });
         }
     }

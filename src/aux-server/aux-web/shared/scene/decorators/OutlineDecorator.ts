@@ -5,13 +5,17 @@ import {
     Color,
     MeshBasicMaterial,
     BackSide,
-} from "three";
-import { FileCalculationContext, calculateFileValue, hasValue } from '@casual-simulation/aux-common'
-import { disposeMesh, isTransparent } from "../SceneUtils";
-import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
-import { AuxFile3D } from "../AuxFile3D";
-import { IMeshDecorator } from "./IMeshDecorator";
-import { ArgEvent } from "@casual-simulation/aux-common/Events";
+} from 'three';
+import {
+    FileCalculationContext,
+    calculateFileValue,
+    hasValue,
+} from '@casual-simulation/aux-common';
+import { disposeMesh, isTransparent } from '../SceneUtils';
+import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
+import { AuxFile3D } from '../AuxFile3D';
+import { IMeshDecorator } from './IMeshDecorator';
+import { ArgEvent } from '@casual-simulation/aux-common/Events';
 
 const BASE_SCALAR = 0.25;
 const DEFAULT_OUTLINE_COLOR: string = '#000000';
@@ -22,8 +26,8 @@ const DEFAULT_OUTLINE_WIDTH: number = 1;
 //   1. Renders behind normal file mesh.
 //   2. Does not intersect other outlines (dont do full fledged depth sorting against other outlines).
 //   3. Still gets occluded by other meshes (hexes and files) that are in front of it.
-export class OutlineDecorator extends AuxFile3DDecorator implements IMeshDecorator {
-
+export class OutlineDecorator extends AuxFile3DDecorator
+    implements IMeshDecorator {
     /**
      * The mesh for the outline.
      */
@@ -54,24 +58,35 @@ export class OutlineDecorator extends AuxFile3DDecorator implements IMeshDecorat
         this._targetMeshDecorator = targetMeshDecorator;
         this._rebuildOutlineMesh();
         this._updateOutlineMesh();
-        
-        this._handleTargetMeshUpdated = this._handleTargetMeshUpdated.bind(this);
-        
-        this._targetMeshDecorator.onMeshUpdated.addListener(this._handleTargetMeshUpdated);
 
+        this._handleTargetMeshUpdated = this._handleTargetMeshUpdated.bind(
+            this
+        );
+
+        this._targetMeshDecorator.onMeshUpdated.addListener(
+            this._handleTargetMeshUpdated
+        );
     }
 
     fileUpdated(calc: FileCalculationContext): void {
         // Color
-        const colorValue = calculateFileValue(calc, this.file3D.file, 'aux.stroke.color');
+        const colorValue = calculateFileValue(
+            calc,
+            this.file3D.file,
+            'aux.stroke.color'
+        );
         if (hasValue(colorValue)) {
-            this.color = colorValue
+            this.color = colorValue;
         } else {
             this.color = DEFAULT_OUTLINE_COLOR;
         }
 
         // Width
-        const widthValue = calculateFileValue(calc, this.file3D.file, 'aux.stroke.width');
+        const widthValue = calculateFileValue(
+            calc,
+            this.file3D.file,
+            'aux.stroke.width'
+        );
         if (hasValue(widthValue)) {
             this.width = widthValue;
         } else {
@@ -81,12 +96,13 @@ export class OutlineDecorator extends AuxFile3DDecorator implements IMeshDecorat
         this._updateOutlineMesh();
     }
 
-    frameUpdate(calc: FileCalculationContext) {
-    }
+    frameUpdate(calc: FileCalculationContext) {}
 
     dispose() {
         if (this._targetMeshDecorator) {
-            this._targetMeshDecorator.onMeshUpdated.removeListener(this._handleTargetMeshUpdated);
+            this._targetMeshDecorator.onMeshUpdated.removeListener(
+                this._handleTargetMeshUpdated
+            );
         }
 
         this.file3D.display.remove(this.container);
@@ -103,7 +119,9 @@ export class OutlineDecorator extends AuxFile3DDecorator implements IMeshDecorat
 
         // Container
         this.container = new Group();
-        this.container.position.copy(this._targetMeshDecorator.container.position);
+        this.container.position.copy(
+            this._targetMeshDecorator.container.position
+        );
         this.file3D.display.add(this.container);
 
         // Mesh
@@ -111,7 +129,7 @@ export class OutlineDecorator extends AuxFile3DDecorator implements IMeshDecorat
         let outlineMat = new MeshBasicMaterial({
             color: new Color(DEFAULT_OUTLINE_COLOR),
             lights: false,
-            side: BackSide
+            side: BackSide,
         });
 
         this.mesh = new Mesh(outlineGeo, outlineMat);
@@ -137,10 +155,10 @@ export class OutlineDecorator extends AuxFile3DDecorator implements IMeshDecorat
             material.visible = true;
             const targetScale = this._targetMeshDecorator.mesh.scale;
             this.mesh.scale.set(
-                targetScale.x + (BASE_SCALAR * this.width), 
-                targetScale.y + (BASE_SCALAR * this.width), 
-                targetScale.z + (BASE_SCALAR * this.width)
-                );
+                targetScale.x + BASE_SCALAR * this.width,
+                targetScale.y + BASE_SCALAR * this.width,
+                targetScale.z + BASE_SCALAR * this.width
+            );
         } else {
             material.visible = false;
         }

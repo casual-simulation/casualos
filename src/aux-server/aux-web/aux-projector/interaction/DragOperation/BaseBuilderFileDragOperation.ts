@@ -1,7 +1,7 @@
 import { Vector2, Vector3, Group } from 'three';
 import { Physics } from '../../../shared/scene/Physics';
 import { WorkspaceMesh } from '../../../shared/scene/WorkspaceMesh';
-import { 
+import {
     File,
     FileEvent,
     FileCalculationContext,
@@ -29,7 +29,6 @@ import TrashCan from '../../TrashCan/TrashCan';
  * Shared class for both BuilderFileDragOperation and BuilderNewFileDragOperation.
  */
 export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation {
-
     // Override base class IGameView
     protected _gameView: GameView;
     // Override base class BaseInteractionManager
@@ -51,7 +50,12 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     /**
      * Create a new drag rules.
      */
-    constructor(gameView: GameView, interaction: BuilderInteractionManager, files: File[], context: string) {
+    constructor(
+        gameView: GameView,
+        interaction: BuilderInteractionManager,
+        files: File[],
+        context: string
+    ) {
         super(gameView, interaction, files, context);
 
         gameView.showTrashCan = true;
@@ -59,7 +63,15 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
 
     protected _onDrag(calc: FileCalculationContext) {
         const mouseScreenPos = this._gameView.getInput().getMouseScreenPos();
-        const { good, gridPosition, workspace } = this._interaction.pointOnWorkspaceGrid(calc, mouseScreenPos, this._gameView.getMainCamera());
+        const {
+            good,
+            gridPosition,
+            workspace,
+        } = this._interaction.pointOnWorkspaceGrid(
+            calc,
+            mouseScreenPos,
+            this._gameView.getMainCamera()
+        );
 
         if (this._files.length > 0) {
             if (good) {
@@ -72,19 +84,23 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
 
     protected _onDragReleased(calc: FileCalculationContext): void {
         super._onDragReleased(calc);
-        
+
         // Button has been released.
         if (this._freeDragGroup) {
             this._releaseFreeDragGroup(this._freeDragGroup);
             this._freeDragGroup = null;
-            
+
             // Destroy files if free dragging them (trash can)!
             this._destroyOrRemoveFiles(calc, this._files);
         }
         this._gameView.showTrashCan = false;
     }
 
-    protected _dragFilesOnWorkspace(calc: FileCalculationContext, workspace: BuilderGroup3D, gridPosition: Vector2): void {
+    protected _dragFilesOnWorkspace(
+        calc: FileCalculationContext,
+        workspace: BuilderGroup3D,
+        gridPosition: Vector2
+    ): void {
         if (this._freeDragGroup) {
             this._releaseFreeDragGroup(this._freeDragGroup);
             this._freeDragGroup = null;
@@ -92,7 +108,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
 
         this._showGrid(workspace);
 
-        this._previousContext= null;
+        this._previousContext = null;
         if (!workspace.contexts.get(this._context)) {
             const next = this._interaction.firstContextInWorkspace(workspace);
             this._previousContext = this._context;
@@ -112,22 +128,34 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     }
 
     protected _dragFilesFree(calc: FileCalculationContext): void {
-        const mouseDir = Physics.screenPosToRay(this._gameView.getInput().getMouseScreenPos(), this._gameView.getMainCamera());
+        const mouseDir = Physics.screenPosToRay(
+            this._gameView.getInput().getMouseScreenPos(),
+            this._gameView.getMainCamera()
+        );
         const firstFileExists = true;
-        
-        if (firstFileExists) {
 
+        if (firstFileExists) {
             // Move the file freely in space at the distance the file is currently from the camera.
             if (!this._freeDragGroup) {
-                this._freeDragMeshes = this._files.map(f => this._createDragMesh(calc, f));
-                this._freeDragGroup = this._createFreeDragGroup(this._freeDragMeshes);
+                this._freeDragMeshes = this._files.map(f =>
+                    this._createDragMesh(calc, f)
+                );
+                this._freeDragGroup = this._createFreeDragGroup(
+                    this._freeDragMeshes
+                );
 
                 this._updateFileContexts(this._files, false);
 
                 // Calculate the distance to perform free drag at.
-                const fileWorldPos = this._freeDragMeshes[0].getWorldPosition(new Vector3());
-                const cameraWorldPos = this._gameView.getMainCamera().getWorldPosition(new Vector3());
-                this._freeDragDistance = cameraWorldPos.distanceTo(fileWorldPos);
+                const fileWorldPos = this._freeDragMeshes[0].getWorldPosition(
+                    new Vector3()
+                );
+                const cameraWorldPos = this._gameView
+                    .getMainCamera()
+                    .getWorldPosition(new Vector3());
+                this._freeDragDistance = cameraWorldPos.distanceTo(
+                    fileWorldPos
+                );
             }
 
             this._freeDragMeshes.forEach(m => {
@@ -141,7 +169,10 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         }
     }
 
-    protected _destroyOrRemoveFiles(calc: FileCalculationContext, files: File[]) {
+    protected _destroyOrRemoveFiles(
+        calc: FileCalculationContext,
+        files: File[]
+    ) {
         if (this._isOverTrashCan()) {
             this._destroyFiles(calc, files);
             return;
@@ -166,13 +197,17 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     private _destroyFiles(calc: FileCalculationContext, files: File[]) {
         let events: FileEvent[] = [];
         const state = appManager.fileManager.filesState;
-        
+
         // Remove the files from the context
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            const actionData = action(DESTROY_ACTION_NAME, [file.id], appManager.fileManager.userFile.id);
+            const actionData = action(
+                DESTROY_ACTION_NAME,
+                [file.id],
+                appManager.fileManager.userFile.id
+            );
             const result = calculateActionEvents(state, actionData);
-            
+
             events.push(...result.events);
             events.push(fileRemoved(files[i].id));
         }
@@ -183,15 +218,25 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         let events: FileEvent[] = [];
         // Remove the files from the context
         for (let i = 0; i < files.length; i++) {
-            events.push(fileUpdated(files[i].id, {
-                tags: removeFromContextDiff(calc, this._context)
-            }));
+            events.push(
+                fileUpdated(files[i].id, {
+                    tags: removeFromContextDiff(calc, this._context),
+                })
+            );
         }
         appManager.fileManager.transaction(...events);
     }
 
-    protected _calcWorkspaceDragPosition(calc: FileCalculationContext, gridPosition: Vector2) {
-        return this._calculateFileDragStackPosition(calc, this._context, gridPosition, ...this._files);
+    protected _calcWorkspaceDragPosition(
+        calc: FileCalculationContext,
+        gridPosition: Vector2
+    ) {
+        return this._calculateFileDragStackPosition(
+            calc,
+            this._context,
+            gridPosition,
+            ...this._files
+        );
     }
 
     protected _showGrid(workspace: BuilderGroup3D): void {
@@ -208,7 +253,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
      */
     private _createFreeDragGroup(fileMeshes: AuxFile3D[]): Group {
         let firstFileMesh = fileMeshes[0];
-        
+
         // Set the group to the position of the first file. Doing this allows us to more easily
         // inherit the height offsets of any other files in the stack.
         let group = new Group();
@@ -242,10 +287,20 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
      * @param calc The file calculation context.
      * @param file The file.
      */
-    protected _createDragMesh(calc: FileCalculationContext, file: File): AuxFile3D {
+    protected _createDragMesh(
+        calc: FileCalculationContext,
+        file: File
+    ): AuxFile3D {
         // Instance a file mesh to represent the file in its intial drag state before being added to the world.
-        let mesh = new AuxFile3D(file, null, null, null, [], new AuxFile3DDecoratorFactory(this._gameView));
-        
+        let mesh = new AuxFile3D(
+            file,
+            null,
+            null,
+            null,
+            [],
+            new AuxFile3DDecoratorFactory(this._gameView)
+        );
+
         mesh.fileUpdated(file, [], calc);
 
         if (!mesh.parent) {
@@ -253,7 +308,11 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         } else {
             // KLUDGE: FileMesh will reparent the object to a workspace if the the file has a workspace assigned.
             // Setting the parent here will force the FileMesh to be in world space again.
-            setParent(mesh, this._gameView.getScene(), this._gameView.getScene());
+            setParent(
+                mesh,
+                this._gameView.getScene(),
+                this._gameView.getScene()
+            );
         }
 
         return mesh;

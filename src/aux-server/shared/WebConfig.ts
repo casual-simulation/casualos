@@ -1,4 +1,3 @@
-
 /**
  * Defines an interface for the configuration that the web client should try to pull from the server.
  */

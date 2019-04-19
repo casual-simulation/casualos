@@ -1,5 +1,17 @@
-import { FileHelper } from "./FileHelper";
-import { AuxObject, getSelectionMode, selectionIdForUser, updateUserSelection, toggleFileSelection, filterFilesBySelection, SelectionMode, newSelectionId, FileEvent, updateFile, fileUpdated } from "@casual-simulation/aux-common";
+import { FileHelper } from './FileHelper';
+import {
+    AuxObject,
+    getSelectionMode,
+    selectionIdForUser,
+    updateUserSelection,
+    toggleFileSelection,
+    filterFilesBySelection,
+    SelectionMode,
+    newSelectionId,
+    FileEvent,
+    updateFile,
+    fileUpdated,
+} from '@casual-simulation/aux-common';
 
 /**
  * Defines a class that is able to manage selections for users.
@@ -42,14 +54,16 @@ export class SelectionManager {
             fileUpdated(this._helper.userFile.id, {
                 tags: {
                     _selection: newId,
-                    ['aux._selectionMode']: 'multi'
-                }
+                    ['aux._selectionMode']: 'multi',
+                },
             }),
-            ...files.map(f => fileUpdated(f.id, {
-                tags: {
-                    [newId]: true
-                }
-            }))
+            ...files.map(f =>
+                fileUpdated(f.id, {
+                    tags: {
+                        [newId]: true,
+                    },
+                })
+            )
         );
     }
 
@@ -70,7 +84,7 @@ export class SelectionManager {
             return this._helper.updateFile(this._helper.userFile, {
                 tags: {
                     'aux._selectionMode': mode,
-                }
+                },
             });
         }
     }
@@ -80,7 +94,10 @@ export class SelectionManager {
      * @param user The file of the user.
      */
     getSelectedFilesForUser(user: AuxObject) {
-        return filterFilesBySelection(this._helper.objects, user.tags._selection);
+        return filterFilesBySelection(
+            this._helper.objects,
+            user.tags._selection
+        );
     }
 
     /**
@@ -93,12 +110,16 @@ export class SelectionManager {
         await this._helper.updateFile(user, {
             tags: {
                 ...update.tags,
-                "aux._selectionMode": 'single'
-            }
+                'aux._selectionMode': 'single',
+            },
         });
     }
 
-    private async _selectFileForUser(file: AuxObject, user: AuxObject, multiSelect: boolean) {
+    private async _selectFileForUser(
+        file: AuxObject,
+        user: AuxObject,
+        multiSelect: boolean
+    ) {
         console.log('[SelectionManager] Select File:', file.id);
 
         const mode = getSelectionMode(user);
@@ -120,8 +141,8 @@ export class SelectionManager {
                 await this._helper.updateFile(user, {
                     tags: {
                         ...update.tags,
-                        ['aux._selectionMode']: 'multi'
-                    }
+                        ['aux._selectionMode']: 'multi',
+                    },
                 });
 
                 if (current) {
@@ -129,19 +150,20 @@ export class SelectionManager {
                     if (currentFile) {
                         await this._helper.updateFile(currentFile, {
                             tags: {
-                                [newId]: true
-                            }
+                                [newId]: true,
+                            },
                         });
                     }
                 }
 
                 await this._helper.updateFile(file, {
                     tags: {
-                        [newId]: true
-                    }
+                        [newId]: true,
+                    },
                 });
             } else {
-                const selection = user.tags._selection === file.id ? null : file.id;
+                const selection =
+                    user.tags._selection === file.id ? null : file.id;
                 const update = updateUserSelection(selection, file.id);
                 await this._helper.updateFile(user, update);
                 await this._helper.updateFile(file, { tags: {} });

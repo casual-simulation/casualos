@@ -1,4 +1,4 @@
-import { AtomOp } from "../causal-trees/Atom";
+import { AtomOp } from '../causal-trees/Atom';
 
 /**
  * The list of operation types.
@@ -9,7 +9,7 @@ export enum AuxOpType {
     tag = 2,
     value = 3,
     delete = 4,
-    insert = 5
+    insert = 5,
 }
 
 /**
@@ -53,7 +53,7 @@ export interface FileOp extends AuxOpBase {
 
 /**
  * Defines an atom value that instructs the system to create or rename a tag on a file.
- * 
+ *
  * When two tags exist with the same name
  */
 export interface TagOp extends AuxOpBase {

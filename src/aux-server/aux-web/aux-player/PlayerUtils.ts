@@ -1,9 +1,8 @@
-
 import {
     AuxFile,
     FileCalculationContext,
     calculateFileValue,
-    getFileConfigContexts
+    getFileConfigContexts,
 } from '@casual-simulation/aux-common';
 
 interface PlayerContextSearchResult {
@@ -18,10 +17,14 @@ interface PlayerContextSearchResult {
     playerContexts: string[];
 }
 
-export function doesFileDefinePlayerContext(file: AuxFile, context: string, calc: FileCalculationContext): PlayerContextSearchResult {
+export function doesFileDefinePlayerContext(
+    file: AuxFile,
+    context: string,
+    calc: FileCalculationContext
+): PlayerContextSearchResult {
     const contexts = getFileConfigContexts(calc, file);
     return {
         playerContexts: contexts,
-        matchFound: contexts.indexOf(context) >= 0
+        matchFound: contexts.indexOf(context) >= 0,
     };
 }

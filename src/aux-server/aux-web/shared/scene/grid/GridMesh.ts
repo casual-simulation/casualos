@@ -1,6 +1,24 @@
-import { Mesh, Object3D, Line, Vector3, Vector2, BufferGeometry, Float32BufferAttribute, LineBasicMaterial, LineSegments } from 'three';
+import {
+    Mesh,
+    Object3D,
+    Line,
+    Vector3,
+    Vector2,
+    BufferGeometry,
+    Float32BufferAttribute,
+    LineBasicMaterial,
+    LineSegments,
+} from 'three';
 import { GridLevel } from './GridLevel';
-import { flatMap, groupBy, minBy, maxBy, values, sortBy, Dictionary } from 'lodash';
+import {
+    flatMap,
+    groupBy,
+    minBy,
+    maxBy,
+    values,
+    sortBy,
+    Dictionary,
+} from 'lodash';
 import { GridTile } from './GridTile';
 import { disposeMesh } from '../SceneUtils';
 
@@ -11,15 +29,15 @@ export const Y_OFFSET = 0.01;
  */
 export class GridMesh extends Object3D {
     tiles: {
-        localPosition: Vector3,
-        gridPosition: Vector2
+        localPosition: Vector3;
+        gridPosition: Vector2;
     }[];
 
     constructor(level: GridLevel) {
         super();
         this.tiles = level.tiles.filter(t => t.valid).map(t => ({
             localPosition: t.localPosition,
-            gridPosition: t.gridPosition
+            gridPosition: t.gridPosition,
         }));
         this.add(constructGridLines(level));
     }
@@ -31,14 +49,14 @@ export class GridMesh extends Object3D {
     closestTileToPoint(point: Vector3) {
         const p = new Vector3().copy(point);
         this.worldToLocal(p);
-        
+
         const validTiles = this.tiles;
         const mapped = validTiles.map(t => ({
             tile: t,
-            distance: p.distanceTo(t.localPosition)
-        }))
+            distance: p.distanceTo(t.localPosition),
+        }));
         const closestTile = minBy(mapped, t => t.distance);
-        return  closestTile;
+        return closestTile;
     }
 
     dispose() {
@@ -52,7 +70,7 @@ export class GridMesh extends Object3D {
 
 export function constructGridLines(level: GridLevel): Line {
     const validTiles = level.tiles.filter(t => t.valid);
-    
+
     const allPoints = flatMap(validTiles, t => t.localPoints);
 
     const verticalPoints = groupBy(allPoints, p => p.x);
@@ -62,11 +80,15 @@ export function constructGridLines(level: GridLevel): Line {
     let horizontalKeys = Object.keys(horizontalPoints);
     let verticalKeys = Object.keys(verticalPoints);
 
-    function calcVerticies(keys: string[], map: Dictionary<Vector3[]>, prop: 'x' | 'z') {
+    function calcVerticies(
+        keys: string[],
+        map: Dictionary<Vector3[]>,
+        prop: 'x' | 'z'
+    ) {
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i];
             const points = sortBy(map[key], prop);
-    
+
             if (points.length < 2) {
                 continue;
             }
@@ -87,8 +109,16 @@ export function constructGridLines(level: GridLevel): Line {
 
                 let avgDist = sumDist / count;
                 if (!isNaN(avgDist) && dist > avgDist + 0.01) {
-                    verticies.push(minPoint.x, minPoint.y + Y_OFFSET, minPoint.z);
-                    verticies.push(maxPoint.x, maxPoint.y + Y_OFFSET, maxPoint.z);
+                    verticies.push(
+                        minPoint.x,
+                        minPoint.y + Y_OFFSET,
+                        minPoint.z
+                    );
+                    verticies.push(
+                        maxPoint.x,
+                        maxPoint.y + Y_OFFSET,
+                        maxPoint.z
+                    );
                     maxPoint = newMax;
                     minPoint = newMax;
                     continue;
@@ -98,7 +128,7 @@ export function constructGridLines(level: GridLevel): Line {
                 sumDist += dist;
                 count += 1;
             }
-    
+
             verticies.push(minPoint.x, minPoint.y + Y_OFFSET, minPoint.z);
             verticies.push(maxPoint.x, maxPoint.y + Y_OFFSET, maxPoint.z);
         }
@@ -108,15 +138,15 @@ export function constructGridLines(level: GridLevel): Line {
     calcVerticies(verticalKeys, verticalPoints, 'z');
 
     // const allPairs = flatMap(validTiles, t => [
-    //     [t.localPoints[0], t.localPoints[1]], 
+    //     [t.localPoints[0], t.localPoints[1]],
     //     [t.localPoints[1], t.localPoints[2]],
-    //     [t.localPoints[2], t.localPoints[3]], 
-    //     [t.localPoints[3], t.localPoints[0]], 
+    //     [t.localPoints[2], t.localPoints[3]],
+    //     [t.localPoints[3], t.localPoints[0]],
     // ]);
 
-    // const verticies = flatMap(allPairs, (pair => [ 
-    //     pair[0].x, pair[0].y + Y_OFFSET, pair[0].z, 
-    //     pair[1].x, pair[1].y + Y_OFFSET, pair[1].z, 
+    // const verticies = flatMap(allPairs, (pair => [
+    //     pair[0].x, pair[0].y + Y_OFFSET, pair[0].z,
+    //     pair[1].x, pair[1].y + Y_OFFSET, pair[1].z,
     // ]));
 
     const geometry = new BufferGeometry();

@@ -1,6 +1,12 @@
 import { RealtimeChannelConnection } from '@casual-simulation/aux-common/causal-trees/RealtimeChannelConnection';
 import { ConnectionEvent } from '@casual-simulation/aux-common/causal-trees/ConnectionEvent';
-import { Observable, merge, Subject, BehaviorSubject, SubscriptionLike } from 'rxjs';
+import {
+    Observable,
+    merge,
+    Subject,
+    BehaviorSubject,
+    SubscriptionLike,
+} from 'rxjs';
 import { socketEvent } from '../socket-io/Utils';
 import { map, shareReplay } from 'rxjs/operators';
 
@@ -8,7 +14,6 @@ import { map, shareReplay } from 'rxjs/operators';
  * Defines a RealtimeChannelConnection that can use Socket.IO.
  */
 export class SocketIOConnection implements RealtimeChannelConnection {
-
     private _socket: typeof io.Socket;
     private _events: Subject<ConnectionEvent>;
     private _knownEvents: string[];
@@ -25,11 +30,14 @@ export class SocketIOConnection implements RealtimeChannelConnection {
         this._events = new Subject<ConnectionEvent>();
         this._connected = new BehaviorSubject<boolean>(socket.connected);
 
-        const connected = socketEvent<void>(this._socket, 'connect').pipe(map(()=> true));
-        const disconnected = socketEvent<void>(this._socket, 'disconnect').pipe(map(() => false));
+        const connected = socketEvent<void>(this._socket, 'connect').pipe(
+            map(() => true)
+        );
+        const disconnected = socketEvent<void>(this._socket, 'disconnect').pipe(
+            map(() => false)
+        );
 
-        this._sub = merge(connected, disconnected)
-            .subscribe(this._connected);
+        this._sub = merge(connected, disconnected).subscribe(this._connected);
     }
 
     init(knownEventNames: string[]): void {
@@ -39,7 +47,7 @@ export class SocketIOConnection implements RealtimeChannelConnection {
                 setTimeout(() => {
                     this._events.next({
                         name,
-                        data
+                        data,
                     });
                 }, 0);
             });
@@ -82,4 +90,3 @@ export class SocketIOConnection implements RealtimeChannelConnection {
 
     closed: boolean;
 }
-

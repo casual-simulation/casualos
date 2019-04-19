@@ -1,13 +1,22 @@
-import { Vector2, Camera, Vector3, Ray, Raycaster, Object3D, Intersection, Mesh, Plane } from "three";
+import {
+    Vector2,
+    Camera,
+    Vector3,
+    Ray,
+    Raycaster,
+    Object3D,
+    Intersection,
+    Mesh,
+    Plane,
+} from 'three';
 
 /**
  * Container for all custom physics functions for game engine.
  */
 export namespace Physics {
-
     /**
-    * Defines the result of a raycast.
-    */
+     * Defines the result of a raycast.
+     */
     export interface RaycastResult {
         /**
          * The screen position used to perform this raycast.
@@ -37,7 +46,11 @@ export namespace Physics {
      * @param distance The distance along the ray from the origin.
      */
     export function pointOnRay(ray: Ray, distance: number): Vector3 {
-        let pos = new Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
+        let pos = new Vector3(
+            ray.direction.x,
+            ray.direction.y,
+            ray.direction.z
+        );
         pos.multiplyScalar(distance);
         pos.add(ray.origin);
 
@@ -64,13 +77,18 @@ export namespace Physics {
      * @param objects The objects to raycast against.
      * @param camera The camera to use.
      */
-    export function raycastAtScreenPos(pos: Vector2, raycaster: Raycaster, objects: Object3D[], camera: Camera): RaycastResult {
+    export function raycastAtScreenPos(
+        pos: Vector2,
+        raycaster: Raycaster,
+        objects: Object3D[],
+        camera: Camera
+    ): RaycastResult {
         raycaster.setFromCamera(pos, camera);
         const intersects = raycaster.intersectObjects(objects, true);
 
         return {
             pointerScreenPos: pos,
-            intersects
+            intersects,
         };
     }
 

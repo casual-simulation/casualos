@@ -1,5 +1,5 @@
 import {
-    isFormula, 
+    isFormula,
     isNumber,
     isArray,
     updateFile,
@@ -43,11 +43,9 @@ import {
     isContext,
     createContextId,
     isMergeable,
-    getFileLabelAnchor
+    getFileLabelAnchor,
 } from './FileCalculations';
-import {
-    cloneDeep
-} from 'lodash';
+import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
 import { FilesState, cleanFile, fileRemoved } from './FilesChannel';
 import { file } from '../aux-format';
@@ -104,7 +102,6 @@ describe('FileCalculations', () => {
             expect(isArray('1,2,3')).toBeFalsy();
             expect(isArray('clone(this, { something: true })')).toBeFalsy();
         });
-
     });
 
     describe('parseArray()', () => {
@@ -115,35 +112,40 @@ describe('FileCalculations', () => {
 
     describe('isFile()', () => {
         it('should return true if the object has an ID and tags', () => {
-            expect(isFile({
-                id: 'test',
-                tags: {}
-            })).toBe(true);
+            expect(
+                isFile({
+                    id: 'test',
+                    tags: {},
+                })
+            ).toBe(true);
 
-            expect(isFile({
-                id: 'false',
-                tags: {
-                    test: 'abc'
-                }
-            })).toBe(true);
+            expect(
+                isFile({
+                    id: 'false',
+                    tags: {
+                        test: 'abc',
+                    },
+                })
+            ).toBe(true);
 
-            expect(isFile({
-                id: '',
-                tags: {}
-            })).toBe(false);
+            expect(
+                isFile({
+                    id: '',
+                    tags: {},
+                })
+            ).toBe(false);
 
             expect(isFile(null)).toBe(false);
             expect(isFile({})).toBe(false);
         });
     });
-    
-    describe('objectsAtContextGridPosition()', () => {
 
+    describe('objectsAtContextGridPosition()', () => {
         it('should return files at the given position', () => {
             const file1 = createFile('test1', {
                 context: true,
                 'context.x': -1,
-                'context.y': 1
+                'context.y': 1,
             });
             const file2 = createFile('test2', {
                 context: true,
@@ -157,13 +159,12 @@ describe('FileCalculations', () => {
             });
 
             const context = createCalculationContext([file1, file2, file3]);
-            const result = objectsAtContextGridPosition(context, 'context', { x: -1, y: 1 });
+            const result = objectsAtContextGridPosition(context, 'context', {
+                x: -1,
+                y: 1,
+            });
 
-            expect(result).toEqual([
-                file1,
-                file2,
-                file3
-            ]);
+            expect(result).toEqual([file1, file2, file3]);
         });
 
         it('should ignore user files', () => {
@@ -171,7 +172,7 @@ describe('FileCalculations', () => {
                 context: true,
                 'context.x': -1,
                 'context.y': 1,
-                _user: 'abc'
+                _user: 'abc',
             });
             const file2 = createFile('test2', {
                 context: true,
@@ -180,33 +181,33 @@ describe('FileCalculations', () => {
             });
 
             const context = createCalculationContext([file1, file2]);
-            const result = objectsAtContextGridPosition(context, 'context', { x: -1, y: 1 });
+            const result = objectsAtContextGridPosition(context, 'context', {
+                x: -1,
+                y: 1,
+            });
 
-            expect(result).toEqual([
-                file2
-            ]);
+            expect(result).toEqual([file2]);
         });
     });
-    
-    describe('calculateStateDiff()', () => {
 
+    describe('calculateStateDiff()', () => {
         it('should return no changes', () => {
             const prevState: FilesState = {
-                'test': {
+                test: {
                     id: 'test',
                     tags: {
-                        _position: {x:0, y:0, z:0},
+                        _position: { x: 0, y: 0, z: 0 },
                         size: 1,
                         grid: {},
                         scale: 0.5,
                         defaultHeight: 0.1,
                         gridScale: 0.2,
-                        color: "#999999"
-                    }
-                }
+                        color: '#999999',
+                    },
+                },
             };
             const currState: FilesState = {
-                'test': prevState['test']
+                test: prevState['test'],
             };
 
             const result = calculateStateDiff(prevState, currState);
@@ -218,28 +219,28 @@ describe('FileCalculations', () => {
 
         it('should detect that a file was added', () => {
             const prevState: FilesState = {
-                'test': {
+                test: {
                     id: 'test',
                     tags: {
-                        position: {x:0, y:0, z:0},
+                        position: { x: 0, y: 0, z: 0 },
                         size: 1,
                         grid: {},
                         scale: 0.5,
                         defaultHeight: 0.1,
                         gridScale: 0.2,
-                        color: "#999999"
-                    }
-                }
+                        color: '#999999',
+                    },
+                },
             };
             const currState: FilesState = {
-                'new': {
+                new: {
                     id: 'new',
                     tags: {
-                        _position: {x:0,y:0,z:0},
+                        _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'test',
-                    }
+                    },
                 },
-                'test': prevState['test']
+                test: prevState['test'],
             };
 
             const result = calculateStateDiff(prevState, currState);
@@ -252,18 +253,18 @@ describe('FileCalculations', () => {
 
         it('should detect that a file was removed', () => {
             const prevState: FilesState = {
-                'test': {
+                test: {
                     id: 'test',
                     tags: {
-                        position: {x:0, y:0, z:0},
+                        position: { x: 0, y: 0, z: 0 },
                         size: 1,
                         grid: {},
                         scale: 0.5,
                         defaultHeight: 0.1,
                         gridScale: 0.2,
-                        color: "#999999"
-                    }
-                }
+                        color: '#999999',
+                    },
+                },
             };
             const currState: FilesState = {};
 
@@ -277,35 +278,35 @@ describe('FileCalculations', () => {
 
         it('should detect that a file was updated', () => {
             const prevState: FilesState = {
-                'test': {
+                test: {
                     id: 'test',
                     tags: {
-                        position: {x:0, y:0, z:0},
+                        position: { x: 0, y: 0, z: 0 },
                         size: 1,
                         grid: {},
                         scale: 0.5,
                         defaultHeight: 0.1,
                         gridScale: 0.2,
-                        color: "#999999"
-                    }
+                        color: '#999999',
+                    },
                 },
-                'updated': {
+                updated: {
                     id: 'updated',
                     tags: {
-                        _position: {x:0, y:0, z:0},
-                        _workspace: 'test'
-                    }
-                }
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'test',
+                    },
+                },
             };
             const currState: FilesState = {
-                'test': prevState['test'],
-                'updated': {
+                test: prevState['test'],
+                updated: {
                     id: 'updated',
                     tags: {
-                        _position: {x:0, y:0, z:0},
-                        _workspace: null
-                    }
-                }
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: null,
+                    },
+                },
             };
 
             const result = calculateStateDiff(prevState, currState);
@@ -318,35 +319,35 @@ describe('FileCalculations', () => {
 
         it('should use deep equality for updates', () => {
             const prevState: FilesState = {
-                'test': {
+                test: {
                     id: 'test',
                     tags: {
-                        _position: {x:0, y:0, z:0},
+                        _position: { x: 0, y: 0, z: 0 },
                         size: 1,
                         grid: {},
                         scale: 0.5,
                         defaultHeight: 0.1,
                         gridScale: 0.2,
-                        color: "#999999"
-                    }
+                        color: '#999999',
+                    },
                 },
-                'updated': {
+                updated: {
                     id: 'updated',
                     tags: {
-                        _position: {x:0, y:0, z:0},
-                        _workspace: 'test'
-                    }
-                }
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'test',
+                    },
+                },
             };
             const currState: FilesState = {
-                'test': prevState['test'],
-                'updated': {
+                test: prevState['test'],
+                updated: {
                     id: 'updated',
                     tags: {
-                        _position: {x:0, y:0, z:0},
-                        _workspace: 'test'
-                    }
-                }
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'test',
+                    },
+                },
             };
 
             const result = calculateStateDiff(prevState, currState);
@@ -358,61 +359,61 @@ describe('FileCalculations', () => {
 
         it('should handle multiple changes at once', () => {
             const prevState: FilesState = {
-                'test': {
+                test: {
                     id: 'test',
                     tags: {
-                        position: {x:0, y:0, z:0},
+                        position: { x: 0, y: 0, z: 0 },
                         size: 1,
                         grid: {},
                         scale: 0.5,
                         defaultHeight: 0.1,
                         gridScale: 0.2,
-                        color: "#999999"
-                    }
+                        color: '#999999',
+                    },
                 },
-                'removed': {
+                removed: {
                     id: 'removed',
                     tags: {
-                        position: {x:0, y:0, z:0},
+                        position: { x: 0, y: 0, z: 0 },
                         size: 2,
                         grid: {},
                         scale: 0.5,
                         defaultHeight: 0.1,
                         gridScale: 0.2,
-                        color: "#999999"
-                    }
+                        color: '#999999',
+                    },
                 },
-                'updated': {
+                updated: {
                     id: 'updated',
                     tags: {
-                        _position: {x:0, y:0, z:0},
-                        _workspace: 'test'
-                    }
-                }
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'test',
+                    },
+                },
             };
             const currState: FilesState = {
-                'test': prevState['test'],
-                'updated': {
+                test: prevState['test'],
+                updated: {
                     id: 'updated',
                     tags: {
-                        _position: {x:0, y:0, z:0},
-                        _workspace: null
-                    }
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: null,
+                    },
                 },
-                'new': {
+                new: {
                     id: 'new',
                     tags: {
-                        _position: {x:1, y:0, z:3},
-                        _workspace: null
-                    }
+                        _position: { x: 1, y: 0, z: 3 },
+                        _workspace: null,
+                    },
                 },
-                'new2': {
+                new2: {
                     id: 'new',
                     tags: {
-                        _position: {x:1, y:15, z:3},
-                        _workspace: 'test'
-                    }
-                }
+                        _position: { x: 1, y: 15, z: 3 },
+                        _workspace: 'test',
+                    },
+                },
             };
 
             const result = calculateStateDiff(prevState, currState);
@@ -428,28 +429,28 @@ describe('FileCalculations', () => {
 
         it.skip('should short-circut when a file_added event is given', () => {
             const prevState: FilesState = {
-                'test': {
+                test: {
                     id: 'test',
                     tags: {
-                        position: {x:0, y:0, z:0},
+                        position: { x: 0, y: 0, z: 0 },
                         size: 1,
                         grid: {},
                         scale: 0.5,
                         defaultHeight: 0.1,
                         gridScale: 0.2,
-                        color: "#999999"
-                    }
+                        color: '#999999',
+                    },
                 },
             };
             const currState: FilesState = {
-                'test': prevState['test'],
-                'new': {
+                test: prevState['test'],
+                new: {
                     id: 'new',
                     tags: {
-                        _position: {x:1, y:0, z:3},
-                        _workspace: null
-                    }
-                }
+                        _position: { x: 1, y: 0, z: 3 },
+                        _workspace: null,
+                    },
+                },
             };
 
             // const result = calculateStateDiff(prevState, currState, {
@@ -467,29 +468,28 @@ describe('FileCalculations', () => {
 
         it.skip('should short-circut when a file_removed event is given', () => {
             const prevState: FilesState = {
-                'test': {
+                test: {
                     id: 'test',
                     tags: {
-                        position: {x:0, y:0, z:0},
+                        position: { x: 0, y: 0, z: 0 },
                         size: 1,
                         grid: {},
                         scale: 0.5,
                         defaultHeight: 0.1,
                         gridScale: 0.2,
-                        color: "#999999"
-                    }
+                        color: '#999999',
+                    },
                 },
-                'old': {
+                old: {
                     id: 'old',
                     tags: {
-                        _position: {x:1, y:0, z:3},
-                        _workspace: null
-                    }
-                }
+                        _position: { x: 1, y: 0, z: 3 },
+                        _workspace: null,
+                    },
+                },
             };
             const currState: FilesState = {
-                'test': prevState['test'],
-                
+                test: prevState['test'],
             };
 
             // const result = calculateStateDiff(prevState, currState, {
@@ -506,31 +506,31 @@ describe('FileCalculations', () => {
 
         it.skip('should short-circut when a file_updated event is given', () => {
             const prevState: FilesState = {
-                'updated': {
+                updated: {
                     id: 'updated',
                     tags: {
-                        position: {x:0, y:0, z:0},
+                        position: { x: 0, y: 0, z: 0 },
                         size: 1,
                         grid: {},
                         scale: 0.5,
                         defaultHeight: 0.1,
                         gridScale: 0.2,
-                        color: "#999999"
-                    }
+                        color: '#999999',
+                    },
                 },
             };
             const currState: FilesState = {
-                'updated': {
+                updated: {
                     id: 'updated',
                     tags: {
-                        position: {x:2, y:1, z:3},
+                        position: { x: 2, y: 1, z: 3 },
                         size: 1,
                         grid: {},
                         scale: 0.5,
                         defaultHeight: 0.1,
                         gridScale: 0.2,
-                        color: "#999999"
-                    }
+                        color: '#999999',
+                    },
                 },
             };
 
@@ -538,7 +538,7 @@ describe('FileCalculations', () => {
             //     type: 'file_updated',
             //     creation_time: new Date(),
             //     id: 'updated',
-            //     update: { 
+            //     update: {
             //         position: {x:2, y:1, z:3},
             //     }
             // });
@@ -551,61 +551,61 @@ describe('FileCalculations', () => {
 
         it.skip('should not short-circut when a action event is given', () => {
             const prevState: FilesState = {
-                'test': {
+                test: {
                     id: 'test',
                     tags: {
-                        position: {x:0, y:0, z:0},
+                        position: { x: 0, y: 0, z: 0 },
                         size: 1,
                         grid: {},
                         scale: 0.5,
                         defaultHeight: 0.1,
                         gridScale: 0.2,
-                        color: "#999999"
-                    }
+                        color: '#999999',
+                    },
                 },
-                'removed': {
+                removed: {
                     id: 'removed',
                     tags: {
-                        position: {x:0, y:0, z:0},
+                        position: { x: 0, y: 0, z: 0 },
                         size: 2,
                         grid: {},
                         scale: 0.5,
                         defaultHeight: 0.1,
                         gridScale: 0.2,
-                        color: "#999999"
-                    }
+                        color: '#999999',
+                    },
                 },
-                'updated': {
+                updated: {
                     id: 'updated',
                     tags: {
-                        _position: {x:0, y:0, z:0},
-                        _workspace: 'test'
-                    }
-                }
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'test',
+                    },
+                },
             };
             const currState: FilesState = {
-                'test': prevState['test'],
-                'updated': {
+                test: prevState['test'],
+                updated: {
                     id: 'updated',
                     tags: {
-                        _position: {x:0, y:0, z:0},
-                        _workspace: null
-                    }
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: null,
+                    },
                 },
-                'new': {
+                new: {
                     id: 'new',
                     tags: {
-                        _position: {x:1, y:0, z:3},
-                        _workspace: null
-                    }
+                        _position: { x: 1, y: 0, z: 3 },
+                        _workspace: null,
+                    },
                 },
-                'new2': {
+                new2: {
                     id: 'new',
                     tags: {
-                        _position: {x:1, y:15, z:3},
-                        _workspace: 'test'
-                    }
-                }
+                        _position: { x: 1, y: 15, z: 3 },
+                        _workspace: 'test',
+                    },
+                },
             };
 
             // const result = calculateStateDiff(prevState, currState, {
@@ -626,20 +626,18 @@ describe('FileCalculations', () => {
 
     describe('tagsOnFile()', () => {
         it('should return the tag names that are on objects', () => {
-
             expect(tagsOnFile(createFile('test'))).toEqual([]);
 
-            expect(tagsOnFile(createFile('test', {
-                _position: { x: 0, y: 0, z: 0 },
-                _workspace: null,
-                test: 123,
-                abc: undefined
-            }))).toEqual([
-                '_position',
-                '_workspace',
-                'test',
-                'abc'
-            ]);
+            expect(
+                tagsOnFile(
+                    createFile('test', {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: null,
+                        test: 123,
+                        abc: undefined,
+                    })
+                )
+            ).toEqual(['_position', '_workspace', 'test', 'abc']);
         });
 
         it('should return the property names that are on workspaces', () => {
@@ -648,14 +646,14 @@ describe('FileCalculations', () => {
                 'aux.context.y',
                 'aux.context.z',
                 'testContext',
-                'testContext.config', 
+                'testContext.config',
                 'testContext.x',
                 'testContext.y',
                 'testContext.z',
                 'aux.color',
-                "aux.stroke.color",
+                'aux.stroke.color',
                 'aux.movable',
-                'aux.scale.z'
+                'aux.scale.z',
             ]);
         });
     });
@@ -699,15 +697,15 @@ describe('FileCalculations', () => {
                     id: 'first',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
-                        _workspace: 'test'
-                    }
+                        _workspace: 'test',
+                    },
                 },
                 second: {
                     id: 'second',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
-                        _workspace: 'test'
-                    }
+                        _workspace: 'test',
+                    },
                 },
                 workspace: {
                     id: 'workspace',
@@ -715,12 +713,12 @@ describe('FileCalculations', () => {
                         defaultHeight: 1,
                         grid: {},
                         gridScale: 1,
-                        position: { x:0, y: 0, z: 0},
+                        position: { x: 0, y: 0, z: 0 },
                         size: 1,
                         scale: 1,
-                        color: "#999999"
-                    }
-                }
+                        color: '#999999',
+                    },
+                },
             };
 
             const objects = getActiveObjects(state);
@@ -728,7 +726,7 @@ describe('FileCalculations', () => {
             expect(objects).toEqual([
                 state['first'],
                 state['second'],
-                state['workspace']
+                state['workspace'],
             ]);
         });
 
@@ -739,24 +737,21 @@ describe('FileCalculations', () => {
                     tags: {
                         _destroyed: true,
                         _position: { x: 0, y: 0, z: 0 },
-                        _workspace: 'test'
-                    }
+                        _workspace: 'test',
+                    },
                 },
                 second: {
                     id: 'second',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
-                        _workspace: 'test'
-                    }
+                        _workspace: 'test',
+                    },
                 },
             };
 
             const objects = getActiveObjects(state);
 
-            expect(objects).toEqual([
-                state['first'],
-                state['second']
-            ]);
+            expect(objects).toEqual([state['first'], state['second']]);
         });
     });
 
@@ -773,10 +768,10 @@ describe('FileCalculations', () => {
         it('should unwrap proxy values', () => {
             const obj1 = createFile('test1', {
                 name: 'test',
-                num: 123
+                num: 123,
             });
             const context = createCalculationContext([obj1]);
-            
+
             const formula = '=@name("test").num';
             const result = calculateFormulaValue(context, formula);
 
@@ -788,7 +783,7 @@ describe('FileCalculations', () => {
     describe('calculateFileValue()', () => {
         it('should convert to a number if it is a number', () => {
             const file = createFile();
-            file.tags.tag = '123.145'
+            file.tags.tag = '123.145';
             const context = createCalculationContext([file]);
             const value = calculateFileValue(context, file, 'tag');
 
@@ -812,17 +807,11 @@ describe('FileCalculations', () => {
 
         it('should convert arrays into arrays', () => {
             const file = createFile();
-            file.tags.tag = '[test(a, b, c), 1.23, true]'
+            file.tags.tag = '[test(a, b, c), 1.23, true]';
             const context = createCalculationContext([file]);
             const value = calculateFileValue(context, file, 'tag');
 
-            expect(value).toEqual([
-                'test(a',
-                'b',
-                'c)',
-                1.23,
-                true
-            ]);
+            expect(value).toEqual(['test(a', 'b', 'c)', 1.23, true]);
         });
 
         describe('filterFilesBySelection()', () => {
@@ -841,14 +830,12 @@ describe('FileCalculations', () => {
                 file4.tags[selectionId] = 'hello';
                 file5.tags[selectionId] = false;
 
-                const selected = filterFilesBySelection([file1, file2, file3, file4, file5, file6], selectionId);
+                const selected = filterFilesBySelection(
+                    [file1, file2, file3, file4, file5, file6],
+                    selectionId
+                );
 
-                expect(selected).toEqual([
-                    file1,
-                    file2,
-                    file3,
-                    file4
-                ]);
+                expect(selected).toEqual([file1, file2, file3, file4]);
             });
 
             it('should return files that have the same ID as the selection', () => {
@@ -858,18 +845,17 @@ describe('FileCalculations', () => {
 
                 file1.tags[selectionId] = true;
 
-                const selected = filterFilesBySelection([file1, file2], selectionId);
+                const selected = filterFilesBySelection(
+                    [file1, file2],
+                    selectionId
+                );
 
-                expect(selected).toEqual([
-                    file1,
-                    file2
-                ]);
+                expect(selected).toEqual([file1, file2]);
             });
         });
 
         describe('formulas', () => {
             describe('# syntax', () => {
-            
                 it('should get every tag value', () => {
                     const file1 = createFile('test1');
                     const file2 = createFile('test2');
@@ -882,15 +868,16 @@ describe('FileCalculations', () => {
 
                     file3.tags.formula = '=#abc';
 
-                    const context = createCalculationContext([file4, file2, file1, file3]);
+                    const context = createCalculationContext([
+                        file4,
+                        file2,
+                        file1,
+                        file3,
+                    ]);
                     const value = calculateFileValue(context, file3, 'formula');
 
                     // Order is dependent on the position in the context.
-                    expect(value).toEqual([
-                        'world',
-                        'hello',
-                        '!'
-                    ]);
+                    expect(value).toEqual(['world', 'hello', '!']);
                 });
 
                 it('should return all the values that equal the given value', () => {
@@ -905,13 +892,15 @@ describe('FileCalculations', () => {
 
                     file3.tags.formula = '=#abc(2)';
 
-                    const context = createCalculationContext([file4, file2, file1, file3]);
-                    const value = calculateFileValue(context, file3, 'formula');
-                    
-                    expect(value).toEqual([
-                        2,
-                        2
+                    const context = createCalculationContext([
+                        file4,
+                        file2,
+                        file1,
+                        file3,
                     ]);
+                    const value = calculateFileValue(context, file3, 'formula');
+
+                    expect(value).toEqual([2, 2]);
                 });
 
                 it('should use the given filter', () => {
@@ -926,13 +915,15 @@ describe('FileCalculations', () => {
 
                     file3.tags.formula = '=#abc(num => num > 1)';
 
-                    const context = createCalculationContext([file2, file4, file1, file3]);
+                    const context = createCalculationContext([
+                        file2,
+                        file4,
+                        file1,
+                        file3,
+                    ]);
                     const value = calculateFileValue(context, file3, 'formula');
 
-                    expect(value).toEqual([
-                        2,
-                        3
-                    ]);
+                    expect(value).toEqual([2, 3]);
                 });
 
                 it('should handle filters on formulas', () => {
@@ -947,13 +938,15 @@ describe('FileCalculations', () => {
 
                     file3.tags.formula = '=#abc(num => num > 1)';
 
-                    const context = createCalculationContext([file2, file4, file1, file3]);
+                    const context = createCalculationContext([
+                        file2,
+                        file4,
+                        file1,
+                        file3,
+                    ]);
                     const value = calculateFileValue(context, file3, 'formula');
 
-                    expect(value).toEqual([
-                        5,
-                        3
-                    ]);
+                    expect(value).toEqual([5, 3]);
                 });
 
                 it('should support tags with dots', () => {
@@ -970,21 +963,19 @@ describe('FileCalculations', () => {
                     file3.tags.formula1 = '=#abc.def(num => num >= 2)';
                     file3.tags.formula2 = '=#abc.def(2)';
 
-                    const context = createCalculationContext([file2, file1, file4, file3]);
+                    const context = createCalculationContext([
+                        file2,
+                        file1,
+                        file4,
+                        file3,
+                    ]);
                     let value = calculateFileValue(context, file3, 'formula');
 
-                    expect(value).toEqual([
-                        2,
-                        1,
-                        3
-                    ]);
+                    expect(value).toEqual([2, 1, 3]);
 
                     value = calculateFileValue(context, file3, 'formula1');
 
-                    expect(value).toEqual([
-                        2,
-                        3
-                    ]);
+                    expect(value).toEqual([2, 3]);
 
                     value = calculateFileValue(context, file3, 'formula2');
 
@@ -1003,14 +994,15 @@ describe('FileCalculations', () => {
 
                     file3.tags.formula = '=#"🎶🎉🦊"';
 
-                    const context = createCalculationContext([file2, file1, file4, file3]);
+                    const context = createCalculationContext([
+                        file2,
+                        file1,
+                        file4,
+                        file3,
+                    ]);
                     let value = calculateFileValue(context, file3, 'formula');
 
-                    expect(value).toEqual([
-                        2,
-                        1,
-                        3
-                    ]);
+                    expect(value).toEqual([2, 1, 3]);
                 });
 
                 it('should support tags in strings with filters', () => {
@@ -1025,20 +1017,22 @@ describe('FileCalculations', () => {
 
                     file3.tags.formula = '=#"🎶🎉🦊"(num => num >= 2)';
 
-                    const context = createCalculationContext([file2, file1, file4, file3]);
+                    const context = createCalculationContext([
+                        file2,
+                        file1,
+                        file4,
+                        file3,
+                    ]);
                     let value = calculateFileValue(context, file3, 'formula');
 
-                    expect(value).toEqual([
-                        2,
-                        3
-                    ]);
+                    expect(value).toEqual([2, 3]);
                 });
 
                 it('should work with dots after the filter args', () => {
                     const file1 = createFile('test1');
 
                     file1.tags.num = {
-                        a: 1
+                        a: 1,
                     };
 
                     file1.tags.formula = '=#num(() => true).a';
@@ -1062,15 +1056,16 @@ describe('FileCalculations', () => {
 
                     file3.tags.formula = '=@abc';
 
-                    const context = createCalculationContext([file2, file1, file4, file3]);
+                    const context = createCalculationContext([
+                        file2,
+                        file1,
+                        file4,
+                        file3,
+                    ]);
                     const value = calculateFileValue(context, file3, 'formula');
 
                     // Order is dependent on the position in the context.
-                    expect(value).toEqual([
-                        file2,
-                        file1,
-                        file3
-                    ]);
+                    expect(value).toEqual([file2, file1, file3]);
                 });
 
                 it('should get every file that has the given tag which matches the filter', () => {
@@ -1085,14 +1080,16 @@ describe('FileCalculations', () => {
 
                     file3.tags.formula = '=@abc(num => num >= 2)';
 
-                    const context = createCalculationContext([file2, file1, file4, file3]);
+                    const context = createCalculationContext([
+                        file2,
+                        file1,
+                        file4,
+                        file3,
+                    ]);
                     const value = calculateFileValue(context, file3, 'formula');
 
                     // Order is dependent on the position in the context.
-                    expect(value).toEqual([
-                        file2,
-                        file3
-                    ]);
+                    expect(value).toEqual([file2, file3]);
                 });
 
                 it('should handle filters on formulas', () => {
@@ -1107,14 +1104,16 @@ describe('FileCalculations', () => {
 
                     file3.tags.formula = '=@abc(num => num >= 2)';
 
-                    const context = createCalculationContext([file2, file1, file4, file3]);
+                    const context = createCalculationContext([
+                        file2,
+                        file1,
+                        file4,
+                        file3,
+                    ]);
                     const value = calculateFileValue(context, file3, 'formula');
 
                     // Order is dependent on the position in the context.
-                    expect(value).toEqual([
-                        file2,
-                        file3
-                    ]);
+                    expect(value).toEqual([file2, file3]);
                 });
 
                 it('should support tags with dots', () => {
@@ -1131,21 +1130,19 @@ describe('FileCalculations', () => {
                     file3.tags.formula1 = '=@abc.def(num => num >= 2)';
                     file3.tags.formula2 = '=@abc.def(2)';
 
-                    const context = createCalculationContext([file2, file1, file4, file3]);
-                    let value = calculateFileValue(context, file3, 'formula');
-
-                    expect(value).toEqual([
+                    const context = createCalculationContext([
                         file2,
                         file1,
+                        file4,
                         file3,
                     ]);
+                    let value = calculateFileValue(context, file3, 'formula');
+
+                    expect(value).toEqual([file2, file1, file3]);
 
                     value = calculateFileValue(context, file3, 'formula1');
 
-                    expect(value).toEqual([
-                        file2,
-                        file3,
-                    ]);
+                    expect(value).toEqual([file2, file3]);
 
                     value = calculateFileValue(context, file3, 'formula2');
 
@@ -1164,14 +1161,15 @@ describe('FileCalculations', () => {
 
                     file3.tags.formula = '=@"🎶🎉🦊"';
 
-                    const context = createCalculationContext([file2, file1, file4, file3]);
-                    let value = calculateFileValue(context, file3, 'formula');
-
-                    expect(value).toEqual([
+                    const context = createCalculationContext([
                         file2,
                         file1,
-                        file3
+                        file4,
+                        file3,
                     ]);
+                    let value = calculateFileValue(context, file3, 'formula');
+
+                    expect(value).toEqual([file2, file1, file3]);
                 });
 
                 it('should support tags in strings with filters', () => {
@@ -1186,20 +1184,22 @@ describe('FileCalculations', () => {
 
                     file3.tags.formula = '=@"🎶🎉🦊"(num => num >= 2)';
 
-                    const context = createCalculationContext([file2, file1, file4, file3]);
+                    const context = createCalculationContext([
+                        file2,
+                        file1,
+                        file4,
+                        file3,
+                    ]);
                     let value = calculateFileValue(context, file3, 'formula');
 
-                    expect(value).toEqual([
-                        file2,
-                        file3
-                    ]);
+                    expect(value).toEqual([file2, file3]);
                 });
 
                 it('should work with dots after the filter args', () => {
                     const file1 = createFile('test1');
 
                     file1.tags.num = {
-                        a: 1
+                        a: 1,
                     };
                     file1.tags.name = 'test';
 
@@ -1246,7 +1246,8 @@ describe('FileCalculations', () => {
                     file1.tags.name = 'test';
                     file2.tags.name = 'test';
 
-                    file1.tags.formula = '=@name("test")[( (1 + 1 - 2) * 10 + 1 - 1)].num.a';
+                    file1.tags.formula =
+                        '=@name("test")[( (1 + 1 - 2) * 10 + 1 - 1)].num.a';
                     const context = createCalculationContext([file1, file2]);
                     let value = calculateFileValue(context, file1, 'formula');
 
@@ -1266,10 +1267,7 @@ describe('FileCalculations', () => {
                     const context = createCalculationContext([file1, file2]);
                     let value = calculateFileValue(context, file1, 'formula');
 
-                    expect(value).toEqual([
-                        1,
-                        3
-                    ]);
+                    expect(value).toEqual([1, 3]);
                 });
             });
         });
@@ -1277,11 +1275,12 @@ describe('FileCalculations', () => {
 
     describe('updateFile()', () => {
         it('should do nothing if there is no new data', () => {
-
             let file: Object = createFile();
             let newData = {};
 
-            updateFile(file, 'testUser', newData, () => createCalculationContext([file]));
+            updateFile(file, 'testUser', newData, () =>
+                createCalculationContext([file])
+            );
 
             expect(newData).toEqual({});
         });
@@ -1296,11 +1295,13 @@ describe('FileCalculations', () => {
                     d: <any>[],
                     e: <any>null,
                     f: <any>undefined,
-                    g: NaN
-                }
+                    g: NaN,
+                },
             };
 
-            updateFile(file, 'testUser', newData, () => createCalculationContext([file]));
+            updateFile(file, 'testUser', newData, () =>
+                createCalculationContext([file])
+            );
 
             expect(newData).toEqual({
                 tags: {
@@ -1311,8 +1312,8 @@ describe('FileCalculations', () => {
                     e: null,
                     f: undefined,
                     g: NaN,
-                    _lastEditedBy: 'testUser'
-                }
+                    _lastEditedBy: 'testUser',
+                },
             });
         });
 
@@ -1322,89 +1323,102 @@ describe('FileCalculations', () => {
 
             let newData: any = {
                 tags: {
-                    sum: ":=this.num + 5"
-                }
+                    sum: ':=this.num + 5',
+                },
             };
 
-            updateFile(file, 'testUser', newData, () => createCalculationContext([file]));
+            updateFile(file, 'testUser', newData, () =>
+                createCalculationContext([file])
+            );
 
             expect(newData.tags.sum.value).toBe(10);
             expect(newData.tags.sum.formula).toBe(':=this.num + 5');
         });
     });
 
-
     describe('isMergeable()', () => {
         it('should return true if the file is mergeable', () => {
-            const file1 = createFile(undefined, { 'aux.mergeable': true } );
-            const update1 = isMergeable(createCalculationContext([file1]), file1);
+            const file1 = createFile(undefined, { 'aux.mergeable': true });
+            const update1 = isMergeable(
+                createCalculationContext([file1]),
+                file1
+            );
 
             expect(update1).toBe(true);
         });
 
         it('should return false if the file is not mergeable', () => {
-            const file1 = createFile(undefined, { 'aux.mergeable': false } );
-            const update1 = isMergeable(createCalculationContext([file1]), file1);
+            const file1 = createFile(undefined, { 'aux.mergeable': false });
+            const update1 = isMergeable(
+                createCalculationContext([file1]),
+                file1
+            );
 
-            expect(update1).toBe(false); 
-        }); 
+            expect(update1).toBe(false);
+        });
     });
 
-
     describe('createWorkspace', () => {
-
         it('should create new random context id if empty', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', '');
-            
+
             expect(workspace.tags['context_uuid']).toBe(true);
         });
 
         it('should create new random context id if undefined', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', undefined);
-            
+
             expect(workspace.tags['context_uuid']).toBe(true);
         });
 
         it('should create new random context id if whitespace', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', ' ');
-            
+
             expect(workspace.tags['context_uuid']).toBe(true);
         });
 
         it('should use input context id if given', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', 'userSetID');
-            
+
             expect(workspace.tags['userSetID']).toBe(true);
         });
 
         // Test for the context type changes
         it('context type should be set to isBuilder when type is set to builder', () => {
             uuidMock.mockReturnValue('uuid');
-            const workspace = createWorkspace('test', 'userSetID','=isBuilder');
-            
+            const workspace = createWorkspace(
+                'test',
+                'userSetID',
+                '=isBuilder'
+            );
+
             expect(workspace.tags['userSetID.config']).toBe('=isBuilder');
         });
 
         it('context type should be set to true when type is set to neither', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', 'userSetID');
-            
+
             expect(workspace.tags['userSetID.config']).toBe('=isBuilder');
         });
 
         it('context type should be set to both isPlayer and isBuilder when type is set to both', () => {
             uuidMock.mockReturnValue('uuid');
-            const workspace = createWorkspace('test', 'userSetID','=isBuilder || isPlayer');
-            
-            expect(workspace.tags['userSetID.config']).toBe('=isBuilder || isPlayer');
+            const workspace = createWorkspace(
+                'test',
+                'userSetID',
+                '=isBuilder || isPlayer'
+            );
+
+            expect(workspace.tags['userSetID.config']).toBe(
+                '=isBuilder || isPlayer'
+            );
         });
-
     });
-
 
     describe('getDiffUpdate()', () => {
         it('should return null if the file is not a diff', () => {
@@ -1412,7 +1426,9 @@ describe('FileCalculations', () => {
             const update1 = getDiffUpdate(file1);
 
             // not a diff because it doesn't have any tags
-            const file2 = createFile(undefined, { tags: { 'aux._diff': true } });
+            const file2 = createFile(undefined, {
+                tags: { 'aux._diff': true },
+            });
             const update2 = getDiffUpdate(file2);
 
             expect(update1).toBe(null);
@@ -1429,7 +1445,7 @@ describe('FileCalculations', () => {
                 'false',
                 'gone',
                 'empty',
-                'null'
+                'null',
             ];
 
             file1.tags.name = 'test';
@@ -1445,10 +1461,10 @@ describe('FileCalculations', () => {
             expect(update).toEqual({
                 tags: {
                     'aux.label': 'label',
-                    'name': 'test',
-                    'zero': 0,
-                    'false': false
-                }
+                    name: 'test',
+                    zero: 0,
+                    false: false,
+                },
             });
         });
     });
@@ -1457,29 +1473,39 @@ describe('FileCalculations', () => {
         it('should return an empty array if no tags match', () => {
             let file = createFile();
             let other = createFile();
-            
-            const context = createCalculationContext([ file, other ]);
-            const tags = filtersMatchingArguments(context, file, COMBINE_ACTION_NAME, [other]);
+
+            const context = createCalculationContext([file, other]);
+            const tags = filtersMatchingArguments(
+                context,
+                file,
+                COMBINE_ACTION_NAME,
+                [other]
+            );
 
             expect(tags).toEqual([]);
         });
 
         it('should match based on tag and exact value', () => {
             let other = createFile();
-            other.tags.name = "Test";
-            other.tags.val = "";
+            other.tags.name = 'Test';
+            other.tags.val = '';
 
             let file = createFile();
             file.tags['onCombine(#name:"Test")'] = 'abc';
             file.tags['onCombine(#val:"")'] = 'abc';
             file.tags['onCombine(#name:"test")'] = 'def';
-            
-            const context = createCalculationContext([ file, other ]);
-            const tags = filtersMatchingArguments(context, file, COMBINE_ACTION_NAME, [other]);
+
+            const context = createCalculationContext([file, other]);
+            const tags = filtersMatchingArguments(
+                context,
+                file,
+                COMBINE_ACTION_NAME,
+                [other]
+            );
 
             expect(tags.map(t => t.tag)).toEqual([
                 'onCombine(#name:"Test")',
-                'onCombine(#val:"")'
+                'onCombine(#val:"")',
             ]);
         });
 
@@ -1488,14 +1514,17 @@ describe('FileCalculations', () => {
             file.tags['onCombine(#name:"Test")'] = 'abc';
 
             let other = createFile();
-            other.tags.name = "Test";
-            
-            const context = createCalculationContext([ file, other ]);
-            const tags = filtersMatchingArguments(context, file, COMBINE_ACTION_NAME, [other]);
+            other.tags.name = 'Test';
 
-            expect(tags.map(t => t.tag)).toEqual([
-                'onCombine(#name:"Test")'
-            ]);
+            const context = createCalculationContext([file, other]);
+            const tags = filtersMatchingArguments(
+                context,
+                file,
+                COMBINE_ACTION_NAME,
+                [other]
+            );
+
+            expect(tags.map(t => t.tag)).toEqual(['onCombine(#name:"Test")']);
         });
     });
 
@@ -1504,97 +1533,167 @@ describe('FileCalculations', () => {
             let other = createFile();
             other.tags.name = 'test';
 
-            const context = createCalculationContext([ other ]);
+            const context = createCalculationContext([other]);
             const filter = parseFilterTag('onCombine(#name:"test")');
-            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
+            expect(
+                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
+                    other,
+                ])
+            ).toBe(true);
         });
 
         it('should match number values', () => {
             let other = createFile();
             other.tags.num = 123456;
 
-            const context = createCalculationContext([ other ]);
+            const context = createCalculationContext([other]);
             let filter = parseFilterTag('onCombine(#num:"123456")');
-            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
+            expect(
+                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
+                    other,
+                ])
+            ).toBe(true);
 
             other.tags.num = 3.14159;
             filter = parseFilterTag('onCombine(#num:"3.14159")');
-            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
+            expect(
+                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
+                    other,
+                ])
+            ).toBe(true);
         });
 
         it('should match boolean values', () => {
             let other = createFile();
             other.tags.bool = true;
-            const context = createCalculationContext([ other ]);
+            const context = createCalculationContext([other]);
             let filter = parseFilterTag('onCombine(#bool:"true")');
-            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
+            expect(
+                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
+                    other,
+                ])
+            ).toBe(true);
 
             other.tags.bool = false;
 
             filter = parseFilterTag('onCombine(#bool:"false")');
-            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
+            expect(
+                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
+                    other,
+                ])
+            ).toBe(true);
         });
 
         it('should match array values', () => {
             let other = createFile();
             other.tags.array = [];
-            const context = createCalculationContext([ other ]);
+            const context = createCalculationContext([other]);
 
             let filter = parseFilterTag('onCombine(#array:"[]")');
-            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
+            expect(
+                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
+                    other,
+                ])
+            ).toBe(true);
 
-            filter = parseFilterTag('onCombine(#array:"[\"anything\"]")');
-            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(false);
+            filter = parseFilterTag('onCombine(#array:"["anything"]")');
+            expect(
+                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
+                    other,
+                ])
+            ).toBe(false);
 
             other.tags.array = [1];
             filter = parseFilterTag('onCombine(#array:"[1]")');
-            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
+            expect(
+                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
+                    other,
+                ])
+            ).toBe(true);
 
             other.tags.array = ['hello', 'world'];
             filter = parseFilterTag('onCombine(#array:"[hello, world]")');
-            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
+            expect(
+                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
+                    other,
+                ])
+            ).toBe(true);
 
             other.tags.array = ['hello', 'world', 12.34];
-            filter = parseFilterTag('onCombine(#array:"[hello, world, 12.34]")');
-            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
+            filter = parseFilterTag(
+                'onCombine(#array:"[hello, world, 12.34]")'
+            );
+            expect(
+                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
+                    other,
+                ])
+            ).toBe(true);
         });
 
         it('should evaluate the value filters', () => {
             let other = createFile();
-            other.tags.name = "=this.cool";
-            other.tags.cool = "Test";
+            other.tags.name = '=this.cool';
+            other.tags.cool = 'Test';
 
-            const context = createCalculationContext([ other, other ]);
+            const context = createCalculationContext([other, other]);
             let filter = parseFilterTag('onCombine(#name:"Test")');
-            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
-            
-            other.tags.value = "10.15";
+            expect(
+                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
+                    other,
+                ])
+            ).toBe(true);
+
+            other.tags.value = '10.15';
             filter = parseFilterTag('onCombine(#value:10.15)');
-            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
+            expect(
+                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
+                    other,
+                ])
+            ).toBe(true);
 
-            other.tags.value = "true";
+            other.tags.value = 'true';
             filter = parseFilterTag('onCombine(#value:true)');
-            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
+            expect(
+                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
+                    other,
+                ])
+            ).toBe(true);
 
             filter = parseFilterTag('onCombine(#value:false)');
-            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(false);
+            expect(
+                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
+                    other,
+                ])
+            ).toBe(false);
 
-            other.tags.value = "false";
+            other.tags.value = 'false';
             filter = parseFilterTag('onCombine(#value:true)');
-            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(false);
+            expect(
+                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
+                    other,
+                ])
+            ).toBe(false);
 
             filter = parseFilterTag('onCombine(#value:false)');
-            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
+            expect(
+                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
+                    other,
+                ])
+            ).toBe(true);
 
             let newData: PartialFile = {
                 tags: {
-                    assign: ":=this.cool"
-                }
+                    assign: ':=this.cool',
+                },
             };
             updateFile(other, 'testId', newData, () => context);
             other.tags.assign = newData.tags.assign;
             filter = parseFilterTag('onCombine(#assign:"Test")');
-            expect(filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [other])).toBe(true);
+            expect(
+                filterMatchesArguments(context, filter, COMBINE_ACTION_NAME, [
+                    other,
+                ])
+            ).toBe(true);
         });
     });
 
@@ -1607,9 +1706,12 @@ describe('FileCalculations', () => {
             ['_lastEditedBy'],
             ['abc._lastActiveTime'],
         ];
-        it.each(builtinTagCases)('should return true for some builtin tag %s', (tag) => {
-            expect(isTagWellKnown(tag)).toBe(true);
-        });
+        it.each(builtinTagCases)(
+            'should return true for some builtin tag %s',
+            tag => {
+                expect(isTagWellKnown(tag)).toBe(true);
+            }
+        );
 
         const contextCases = [
             [createContextId()],
@@ -1620,28 +1722,36 @@ describe('FileCalculations', () => {
             ['context_ something else'],
             ['context_ 😊😜😢'],
         ];
-        it.each(contextCases)('should return true for autogenerated context tag %s', (tag) => {
-            expect(isTagWellKnown(tag)).toBe(true);
-        });
+        it.each(contextCases)(
+            'should return true for autogenerated context tag %s',
+            tag => {
+                expect(isTagWellKnown(tag)).toBe(true);
+            }
+        );
 
         const selectionCases = [
             ['aux._selection_09a1ee66-bb0f-4f9e-81d2-d8d4da5683b8'],
             ['aux._selection_6a7aa1c5-807c-4390-9982-ff8b2dd5b54e'],
             ['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'],
         ];
-        it.each(selectionCases)('should return true for selection tag %s', (tag) => {
-            expect(isTagWellKnown(tag)).toBe(true);
-        });
-
+        it.each(selectionCases)(
+            'should return true for selection tag %s',
+            tag => {
+                expect(isTagWellKnown(tag)).toBe(true);
+            }
+        );
 
         const ingoreSelectionCases = [
             ['aux._selection_09a1ee66-bb0f-4f9e-81d2-d8d4da5683b8'],
             ['aux._selection_6a7aa1c5-807c-4390-9982-ff8b2dd5b54e'],
             ['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'],
         ];
-        it.each(ingoreSelectionCases)('should return false for selection tag %s when they should be ignored', (tag) => {
-            expect(isTagWellKnown(tag, false)).toBe(false);
-        });
+        it.each(ingoreSelectionCases)(
+            'should return false for selection tag %s when they should be ignored',
+            tag => {
+                expect(isTagWellKnown(tag, false)).toBe(false);
+            }
+        );
 
         const normalCases = [
             ['aux.movable'],
@@ -1662,7 +1772,7 @@ describe('FileCalculations', () => {
             ['_selection_09a1ee66-bb0f-4f9e-81d2-d8d4da5683b8'],
             ['📦'],
         ];
-        it.each(normalCases)('should return false for %', (tag) => {
+        it.each(normalCases)('should return false for %', tag => {
             expect(isTagWellKnown(tag)).toBe(false);
         });
     });
@@ -1692,8 +1802,10 @@ describe('FileCalculations', () => {
             let first = createFile('id1');
             let second = createFile('id2');
 
-            first.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] = 'a';
-            second.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] = 'b';
+            first.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] =
+                'a';
+            second.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] =
+                'b';
 
             const result = doFilesAppearEqual(first, second);
 
@@ -1704,8 +1816,10 @@ describe('FileCalculations', () => {
             let first = createFile('id1');
             let second = createFile('id2');
 
-            first.tags['aux._context_83e80481-13a1-439e-94e6-f3b73942288f'] = 'a';
-            second.tags['aux._context_83e80481-13a1-439e-94e6-f3b73942288f'] = 'b';
+            first.tags['aux._context_83e80481-13a1-439e-94e6-f3b73942288f'] =
+                'a';
+            second.tags['aux._context_83e80481-13a1-439e-94e6-f3b73942288f'] =
+                'b';
 
             const result = doFilesAppearEqual(first, second);
 
@@ -1716,10 +1830,14 @@ describe('FileCalculations', () => {
             let first = createFile('id1');
             let second = createFile('id2');
 
-            first.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] = 'a';
-            second.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] = 'b';
+            first.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] =
+                'a';
+            second.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] =
+                'b';
 
-            const result = doFilesAppearEqual(first, second, { ignoreSelectionTags: false });
+            const result = doFilesAppearEqual(first, second, {
+                ignoreSelectionTags: false,
+            });
 
             expect(result).toBe(false);
         });
@@ -1733,8 +1851,10 @@ describe('FileCalculations', () => {
 
             // Defaults to using the ID as a shortcut
             expect(doFilesAppearEqual(first, second)).toBe(true);
-            
-            expect(doFilesAppearEqual(first, second, { ignoreId: true })).toBe(false);
+
+            expect(doFilesAppearEqual(first, second, { ignoreId: true })).toBe(
+                false
+            );
         });
 
         it('should should ignore default hidden tags', () => {
@@ -1779,7 +1899,7 @@ describe('FileCalculations', () => {
             let first: Object = createFile('id');
             first.tags._destroyed = true;
             first.tags._workspace = 'abc';
-            
+
             uuidMock.mockReturnValue('test');
             const second = duplicateFile(first);
 
@@ -1803,11 +1923,11 @@ describe('FileCalculations', () => {
             expect(second.id).not.toEqual(first.id);
             expect(second.tags).toEqual({
                 'aux.other': 100,
-                'myTag': 'Hello'
+                myTag: 'Hello',
             });
             expect(first.tags).toEqual({
                 'aux.other': 100,
-                'myTag': 'Hello',
+                myTag: 'Hello',
                 'aux._context_abcdefg': true,
                 'aux._context_1234567': true,
                 'aux._context_1234567.x': 1,
@@ -1825,34 +1945,34 @@ describe('FileCalculations', () => {
             const second = duplicateFile(first, {
                 tags: {
                     [`aux._selection_99999`]: true,
-                    [`aux._context_abcdefg`]: true
-                }
+                    [`aux._context_abcdefg`]: true,
+                },
             });
 
             expect(second.id).not.toEqual(first.id);
             expect(second.tags).toEqual({
                 'aux.other': 100,
-                'myTag': 'Hello',
+                myTag: 'Hello',
                 'aux._context_abcdefg': true,
-                'aux._selection_99999': true
+                'aux._selection_99999': true,
             });
         });
 
         it('should merge in the additional changes', () => {
             let first: Object = createFile('id', {
                 testTag: 'abcdefg',
-                name: 'ken'
+                name: 'ken',
             });
             const second = duplicateFile(first, {
                 tags: {
-                    name: 'abcdef'
-                }
+                    name: 'abcdef',
+                },
             });
 
             expect(second.id).not.toEqual(first.id);
             expect(second.tags).toEqual({
                 testTag: 'abcdefg',
-                name: 'abcdef'
+                name: 'abcdef',
             });
         });
 
@@ -1871,7 +1991,7 @@ describe('FileCalculations', () => {
             first.tags['aux._diffTags'] = ['abvc'];
 
             const second = duplicateFile(first);
- 
+
             expect(second.tags['aux._diff']).toBe(true);
             expect(second.tags['aux._diffTags']).toEqual(['abvc']);
         });
@@ -1880,12 +2000,12 @@ describe('FileCalculations', () => {
     describe('cleanFile()', () => {
         it('should remove null and undefined tags', () => {
             let file = createFile('test', {
-                'testTag': 'abcdefg',
-                'other': 0,
-                'falsy': false,
-                'truthy': true,
+                testTag: 'abcdefg',
+                other: 0,
+                falsy: false,
+                truthy: true,
                 _workspace: null,
-                _test: undefined
+                _test: undefined,
             });
 
             const result = cleanFile(file);
@@ -1893,22 +2013,22 @@ describe('FileCalculations', () => {
             expect(result).toEqual({
                 id: 'test',
                 tags: {
-                    'testTag': 'abcdefg',
-                    'other': 0,
-                    'falsy': false,
-                    'truthy': true,
-                }
+                    testTag: 'abcdefg',
+                    other: 0,
+                    falsy: false,
+                    truthy: true,
+                },
             });
         });
 
         it('should not modify the given file', () => {
             let file = createFile('test', {
-                'testTag': 'abcdefg',
-                'other': 0,
-                'falsy': false,
-                'truthy': true,
+                testTag: 'abcdefg',
+                other: 0,
+                falsy: false,
+                truthy: true,
                 _workspace: null,
-                _test: undefined
+                _test: undefined,
             });
 
             const result = cleanFile(file);
@@ -1916,13 +2036,13 @@ describe('FileCalculations', () => {
             expect(file).toEqual({
                 id: 'test',
                 tags: {
-                    'testTag': 'abcdefg',
-                    'other': 0,
-                    'falsy': false,
-                    'truthy': true,
+                    testTag: 'abcdefg',
+                    other: 0,
+                    falsy: false,
+                    truthy: true,
                     _workspace: null,
-                    _test: undefined
-                }
+                    _test: undefined,
+                },
             });
         });
     });
@@ -1936,7 +2056,7 @@ describe('FileCalculations', () => {
 
         it('should return false when aux.movable is false', () => {
             let file = createFile('test', {
-                ['aux.movable']: false
+                ['aux.movable']: false,
             });
             const context = createCalculationContext([file]);
             expect(isFileMovable(context, file)).toBe(false);
@@ -1944,7 +2064,7 @@ describe('FileCalculations', () => {
 
         it('should return false when aux.movable calculates to false', () => {
             let file = createFile('test', {
-                ['aux.movable']: '=false'
+                ['aux.movable']: '=false',
             });
             const context = createCalculationContext([file]);
             expect(isFileMovable(context, file)).toBe(false);
@@ -1952,7 +2072,7 @@ describe('FileCalculations', () => {
 
         it('should return true when aux.movable has any other value', () => {
             let file = createFile('test', {
-                ['aux.movable']: 'anything'
+                ['aux.movable']: 'anything',
             });
             const context = createCalculationContext([file]);
             expect(isFileMovable(context, file)).toBe(true);
@@ -1968,7 +2088,7 @@ describe('FileCalculations', () => {
 
         it('should return false when aux.stackable is false', () => {
             let file = createFile('test', {
-                ['aux.stackable']: false
+                ['aux.stackable']: false,
             });
             const context = createCalculationContext([file]);
             expect(isFileStackable(context, file)).toBe(false);
@@ -1976,7 +2096,7 @@ describe('FileCalculations', () => {
 
         it('should return false when aux.stackable calculates to false', () => {
             let file = createFile('test', {
-                ['aux.stackable']: '=false'
+                ['aux.stackable']: '=false',
             });
             const context = createCalculationContext([file]);
             expect(isFileStackable(context, file)).toBe(false);
@@ -1984,7 +2104,7 @@ describe('FileCalculations', () => {
 
         it('should return true when aux.stackable has any other value', () => {
             let file = createFile('test', {
-                ['aux.stackable']: 'anything'
+                ['aux.stackable']: 'anything',
             });
             const context = createCalculationContext([file]);
             expect(isFileStackable(context, file)).toBe(true);
@@ -1998,7 +2118,7 @@ describe('FileCalculations', () => {
 
             result = parseFilterTag('onCombinemyTag');
             expect(result.success).toBe(false);
-            
+
             result = parseFilterTag('onCombine(myTag)');
             expect(result.success).toBe(false);
 
@@ -2016,8 +2136,8 @@ describe('FileCalculations', () => {
                 eventName: COMBINE_ACTION_NAME,
                 filter: {
                     tag: 'name',
-                    value: ''
-                }
+                    value: '',
+                },
             });
 
             result = parseFilterTag('onCombine(#name:"abc")');
@@ -2026,8 +2146,8 @@ describe('FileCalculations', () => {
                 eventName: COMBINE_ACTION_NAME,
                 filter: {
                     tag: 'name',
-                    value: 'abc'
-                }
+                    value: 'abc',
+                },
             });
 
             result = parseFilterTag('-(#name:"abc")');
@@ -2036,8 +2156,8 @@ describe('FileCalculations', () => {
                 eventName: '-',
                 filter: {
                     tag: 'name',
-                    value: 'abc'
-                }
+                    value: 'abc',
+                },
             });
 
             result = parseFilterTag('craziness(#lalalal:"abc")');
@@ -2046,8 +2166,8 @@ describe('FileCalculations', () => {
                 eventName: 'craziness',
                 filter: {
                     tag: 'lalalal',
-                    value: 'abc'
-                }
+                    value: 'abc',
+                },
             });
 
             result = parseFilterTag('onCombine ( #lalalal : "abc" )');
@@ -2056,18 +2176,18 @@ describe('FileCalculations', () => {
                 eventName: COMBINE_ACTION_NAME,
                 filter: {
                     tag: 'lalalal',
-                    value: 'abc'
-                }
+                    value: 'abc',
+                },
             });
-            
+
             result = parseFilterTag('onCombine ( #lalalal : "abc"');
             expect(result).toMatchObject({
                 success: true,
                 eventName: COMBINE_ACTION_NAME,
                 filter: {
                     tag: 'lalalal',
-                    value: 'abc'
-                }
+                    value: 'abc',
+                },
             });
 
             result = parseFilterTag('onCombine ( #lalalal : "abc');
@@ -2076,8 +2196,8 @@ describe('FileCalculations', () => {
                 eventName: COMBINE_ACTION_NAME,
                 filter: {
                     tag: 'lalalal',
-                    value: 'abc'
-                }
+                    value: 'abc',
+                },
             });
 
             result = parseFilterTag('onCombine ( #lalalal : "abc  ');
@@ -2086,8 +2206,8 @@ describe('FileCalculations', () => {
                 eventName: COMBINE_ACTION_NAME,
                 filter: {
                     tag: 'lalalal',
-                    value: 'abc  '
-                }
+                    value: 'abc  ',
+                },
             });
 
             result = parseFilterTag('onCombine ( # lalalal : "abc  ');
@@ -2096,8 +2216,8 @@ describe('FileCalculations', () => {
                 eventName: COMBINE_ACTION_NAME,
                 filter: {
                     tag: 'lalalal',
-                    value: 'abc  '
-                }
+                    value: 'abc  ',
+                },
             });
 
             result = parseFilterTag('onCombine ( # lal alal : "abc  ');
@@ -2106,8 +2226,8 @@ describe('FileCalculations', () => {
                 eventName: COMBINE_ACTION_NAME,
                 filter: {
                     tag: 'lal alal',
-                    value: 'abc  '
-                }
+                    value: 'abc  ',
+                },
             });
 
             result = parseFilterTag('onCombine(#lalalal:abc)');
@@ -2116,8 +2236,8 @@ describe('FileCalculations', () => {
                 eventName: COMBINE_ACTION_NAME,
                 filter: {
                     tag: 'lalalal',
-                    value: 'abc'
-                }
+                    value: 'abc',
+                },
             });
 
             result = parseFilterTag('onCombine(#lalalal:abc');
@@ -2126,8 +2246,8 @@ describe('FileCalculations', () => {
                 eventName: COMBINE_ACTION_NAME,
                 filter: {
                     tag: 'lalalal',
-                    value: 'abc'
-                }
+                    value: 'abc',
+                },
             });
 
             result = parseFilterTag('onCombine(#lalalal: abc\t');
@@ -2136,8 +2256,8 @@ describe('FileCalculations', () => {
                 eventName: COMBINE_ACTION_NAME,
                 filter: {
                     tag: 'lalalal',
-                    value: ' abc\t'
-                }
+                    value: ' abc\t',
+                },
             });
         });
 
@@ -2147,7 +2267,7 @@ describe('FileCalculations', () => {
                 success: true,
                 tag: 'event()',
                 eventName: 'event',
-                filter: null
+                filter: null,
             });
 
             result = parseFilterTag('event( )');
@@ -2155,7 +2275,7 @@ describe('FileCalculations', () => {
                 success: true,
                 tag: 'event( )',
                 eventName: 'event',
-                filter: null
+                filter: null,
             });
 
             result = parseFilterTag('event( ab)');
@@ -2163,9 +2283,9 @@ describe('FileCalculations', () => {
                 success: false,
                 tag: 'event( ab)',
                 eventName: 'event',
-                partialSuccess: true
+                partialSuccess: true,
             });
-        })
+        });
 
         it('should return partial success if it was able to parse the event name', () => {
             const result = parseFilterTag('onCombine (');
@@ -2173,7 +2293,7 @@ describe('FileCalculations', () => {
                 success: false,
                 tag: 'onCombine (',
                 partialSuccess: true,
-                eventName: COMBINE_ACTION_NAME
+                eventName: COMBINE_ACTION_NAME,
             });
         });
 
@@ -2185,8 +2305,8 @@ describe('FileCalculations', () => {
                 tag: 'onCombine(#abc:"123.45")',
                 filter: {
                     tag: 'abc',
-                    value: 123.45
-                }
+                    value: 123.45,
+                },
             });
         });
 
@@ -2198,21 +2318,23 @@ describe('FileCalculations', () => {
                 tag: 'onCombine(#abc:"true")',
                 filter: {
                     tag: 'abc',
-                    value: true
-                }
+                    value: true,
+                },
             });
         });
 
         it('should parse arrays', () => {
-            let result = parseFilterTag('onCombine(#abc:"[hello, world, 12.34]")');
+            let result = parseFilterTag(
+                'onCombine(#abc:"[hello, world, 12.34]")'
+            );
             expect(result).toEqual({
                 success: true,
                 eventName: COMBINE_ACTION_NAME,
                 tag: 'onCombine(#abc:"[hello, world, 12.34]")',
                 filter: {
                     tag: 'abc',
-                    value: ['hello', 'world', 12.34]
-                }
+                    value: ['hello', 'world', 12.34],
+                },
             });
 
             result = parseFilterTag('onCombine(#abc:"[]")');
@@ -2222,8 +2344,8 @@ describe('FileCalculations', () => {
                 tag: 'onCombine(#abc:"[]")',
                 filter: {
                     tag: 'abc',
-                    value: []
-                }
+                    value: [],
+                },
             });
         });
     });
@@ -2233,19 +2355,19 @@ describe('FileCalculations', () => {
             let errors = validateTag('');
             expect(errors).toEqual({
                 valid: false,
-                'tag.required': {}
+                'tag.required': {},
             });
 
             errors = validateTag(null);
             expect(errors).toEqual({
                 valid: false,
-                'tag.required': {}
+                'tag.required': {},
             });
 
             errors = validateTag('  \t\n');
             expect(errors).toEqual({
                 valid: false,
-                'tag.required': {}
+                'tag.required': {},
             });
         });
 
@@ -2253,63 +2375,63 @@ describe('FileCalculations', () => {
             let errors = validateTag('#');
             expect(errors).toEqual({
                 valid: false,
-                'tag.invalidChar': { char: '#' }
+                'tag.invalidChar': { char: '#' },
             });
 
             errors = validateTag('abc#');
             expect(errors).toEqual({
                 valid: false,
-                'tag.invalidChar': { char: '#' }
+                'tag.invalidChar': { char: '#' },
             });
 
             errors = validateTag(' #def');
             expect(errors).toEqual({
                 valid: false,
-                'tag.invalidChar': { char: '#' }
+                'tag.invalidChar': { char: '#' },
             });
         });
 
         it('should allow # when it is a filter', () => {
             let errors = validateTag(COMBINE_ACTION_NAME);
             expect(errors).toEqual({
-                valid: true
+                valid: true,
             });
 
             errors = validateTag('onCombine(');
             expect(errors).toEqual({
-                valid: true
+                valid: true,
             });
 
             errors = validateTag('onCombine(#');
             expect(errors).toEqual({
-                valid: true
+                valid: true,
             });
 
             errors = validateTag('onCombine(#tag:"###test');
             expect(errors).toEqual({
-                valid: true
+                valid: true,
             });
 
             errors = validateTag('onCombine(#tag:"###test")');
             expect(errors).toEqual({
-                valid: true
+                valid: true,
             });
         });
 
         it('should be valid when tag is fine', () => {
             let errors = validateTag('abcdef');
             expect(errors).toEqual({
-                valid: true
+                valid: true,
             });
 
             errors = validateTag('  abcdef');
             expect(errors).toEqual({
-                valid: true
+                valid: true,
             });
 
             errors = validateTag('abcdef  ');
             expect(errors).toEqual({
-                valid: true
+                valid: true,
             });
         });
     });
@@ -2336,7 +2458,7 @@ describe('FileCalculations', () => {
             expect(isHiddenTag('aux._context_')).toBe(true);
             expect(isHiddenTag('aux._selection')).toBe(true);
             expect(isHiddenTag('domain._hidden')).toBe(true);
-            
+
             expect(isHiddenTag('._')).toBe(false);
             expect(isHiddenTag('-._')).toBe(false);
             expect(isHiddenTag('\\._')).toBe(false);
@@ -2352,41 +2474,38 @@ describe('FileCalculations', () => {
                     id: 'test',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
-                        _workspace: 'abc'
-                    }
+                        _workspace: 'abc',
+                    },
                 },
                 {
                     id: 'test2',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        tag: 'hello'
-                    }
+                        tag: 'hello',
+                    },
                 },
                 {
                     id: 'test3',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        tag: 'again'
-                    }
+                        tag: 'again',
+                    },
                 },
                 {
                     id: 'test4',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        other: 'tag'
-                    }
-                }
+                        other: 'tag',
+                    },
+                },
             ];
 
             const tags = fileTags(files, [], []);
 
-            expect(tags).toEqual([
-                'tag',
-                'other'
-            ]);
+            expect(tags).toEqual(['tag', 'other']);
         });
 
         it('should preserve the order of the current tags', () => {
@@ -2395,44 +2514,38 @@ describe('FileCalculations', () => {
                     id: 'test',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
-                        _workspace: 'abc'
-                    }
+                        _workspace: 'abc',
+                    },
                 },
                 {
                     id: 'test2',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        tag: 'hello'
-                    }
+                        tag: 'hello',
+                    },
                 },
                 {
                     id: 'test3',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        tag: 'again'
-                    }
+                        tag: 'again',
+                    },
                 },
                 {
                     id: 'test4',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        other: 'tag'
-                    }
-                }
+                        other: 'tag',
+                    },
+                },
             ];
 
-            const tags = fileTags(files, [
-                'other',
-                'tag'
-            ], []);
+            const tags = fileTags(files, ['other', 'tag'], []);
 
-            expect(tags).toEqual([
-                'other',
-                'tag'
-            ]);
+            expect(tags).toEqual(['other', 'tag']);
         });
 
         it('should include the given extra tags', () => {
@@ -2441,46 +2554,38 @@ describe('FileCalculations', () => {
                     id: 'test',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
-                        _workspace: 'abc'
-                    }
+                        _workspace: 'abc',
+                    },
                 },
                 {
                     id: 'test2',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        tag: 'hello'
-                    }
+                        tag: 'hello',
+                    },
                 },
                 {
                     id: 'test3',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        tag: 'again'
-                    }
+                        tag: 'again',
+                    },
                 },
                 {
                     id: 'test4',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        other: 'tag'
-                    }
-                }
+                        other: 'tag',
+                    },
+                },
             ];
 
-            const tags = fileTags(files, [], [
-                'abc',
-                '_position'
-            ]);
+            const tags = fileTags(files, [], ['abc', '_position']);
 
-            expect(tags).toEqual([
-                'tag',
-                'other',
-                'abc',
-                '_position'
-            ]);
+            expect(tags).toEqual(['tag', 'other', 'abc', '_position']);
         });
 
         it('should not include extra tags that are given in the currrentTags array', () => {
@@ -2489,43 +2594,38 @@ describe('FileCalculations', () => {
                     id: 'test',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
-                        _workspace: 'abc'
-                    }
+                        _workspace: 'abc',
+                    },
                 },
                 {
                     id: 'test2',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        tag: 'hello'
-                    }
+                        tag: 'hello',
+                    },
                 },
                 {
                     id: 'test3',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        tag: 'again'
-                    }
+                        tag: 'again',
+                    },
                 },
                 {
                     id: 'test4',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        other: 'tag'
-                    }
-                }
+                        other: 'tag',
+                    },
+                },
             ];
 
-            const tags = fileTags(files, [
-                'notIncluded'
-            ], []);
+            const tags = fileTags(files, ['notIncluded'], []);
 
-            expect(tags).toEqual([
-                'tag',
-                'other'
-            ]);
+            expect(tags).toEqual(['tag', 'other']);
         });
 
         it('should include hidden tags if specified', () => {
@@ -2534,34 +2634,32 @@ describe('FileCalculations', () => {
                     id: 'test',
                     tags: {
                         _hiddenTag1: 'abc',
-                    }
+                    },
                 },
                 {
                     id: 'test2',
                     tags: {
                         _hiddenTag2: 'abc',
-                        tag: 'hello'
-                    }
+                        tag: 'hello',
+                    },
                 },
                 {
                     id: 'test3',
                     tags: {
                         _hiddenTag3: 'abc',
-                        tag: 'again'
-                    }
+                        tag: 'again',
+                    },
                 },
                 {
                     id: 'test4',
                     tags: {
                         _hiddenTag4: 'abc',
-                        other: 'tag'
-                    }
-                }
+                        other: 'tag',
+                    },
+                },
             ];
 
-            const tags = fileTags(files, [
-                'notIncluded'
-            ], [], true);
+            const tags = fileTags(files, ['notIncluded'], [], true);
 
             expect(tags).toEqual([
                 '_hiddenTag1',
@@ -2569,7 +2667,7 @@ describe('FileCalculations', () => {
                 'tag',
                 '_hiddenTag3',
                 '_hiddenTag4',
-                'other'
+                'other',
             ]);
         });
     });
@@ -2577,7 +2675,7 @@ describe('FileCalculations', () => {
     describe('getUserMenuId()', () => {
         it('should return the value from _userMenuContext', () => {
             const user = createFile('user', {
-                _userMenuContext: 'context'
+                _userMenuContext: 'context',
             });
 
             const calc = createCalculationContext([user]);
@@ -2589,36 +2687,32 @@ describe('FileCalculations', () => {
     describe('getFilesInMenu()', () => {
         it('should return the list of files in the users menu', () => {
             const user = createFile('user', {
-                _userMenuContext: 'context'
+                _userMenuContext: 'context',
             });
             const file1 = createFile('file1', {
                 context: true,
-                'context.index': 0
+                'context.index': 0,
             });
             const file2 = createFile('file2', {
                 context: true,
-                'context.index': 1
+                'context.index': 1,
             });
             const file3 = createFile('file3', {
                 context: true,
-                'context.index': 2
+                'context.index': 2,
             });
 
             const calc = createCalculationContext([user, file2, file1, file3]);
             const files = getFilesInMenu(calc, user);
 
-            expect(files).toEqual([
-                file1,
-                file2,
-                file3
-            ]);
+            expect(files).toEqual([file1, file2, file3]);
         });
     });
 
     describe('addFileToMenu()', () => {
         it('should return the update needed to add the given file ID to the given users menu', () => {
             const user = createFile('user', {
-                _userMenuContext: 'context'
+                _userMenuContext: 'context',
             });
             const file = createFile('file');
 
@@ -2627,16 +2721,16 @@ describe('FileCalculations', () => {
 
             expect(update).toEqual({
                 tags: {
-                    'context': true,
+                    context: true,
                     'context.index': 0,
-                    'context.id': 'item'
-                }
+                    'context.id': 'item',
+                },
             });
         });
 
         it('should return the given index', () => {
             const user = createFile('user', {
-                _userMenuContext: 'context'
+                _userMenuContext: 'context',
             });
             const file = createFile('file');
 
@@ -2645,20 +2739,20 @@ describe('FileCalculations', () => {
 
             expect(update).toEqual({
                 tags: {
-                    'context': true,
+                    context: true,
                     'context.index': 5,
-                    'context.id': 'item'
-                }
+                    'context.id': 'item',
+                },
             });
         });
 
         it('should return index needed to place the file at the end of the list', () => {
             const user = createFile('user', {
-                _userMenuContext: 'context'
+                _userMenuContext: 'context',
             });
             const file = createFile('file');
             const file2 = createFile('file2', {
-                context: 0
+                context: 0,
             });
 
             const calc = createCalculationContext([user, file, file2]);
@@ -2666,10 +2760,10 @@ describe('FileCalculations', () => {
 
             expect(update).toEqual({
                 tags: {
-                    'context': true,
+                    context: true,
                     'context.index': 1,
-                    'context.id': 'abc'
-                }
+                    'context.id': 'abc',
+                },
             });
         });
     });
@@ -2677,7 +2771,7 @@ describe('FileCalculations', () => {
     describe('removeFileFromMenu()', () => {
         it('should return the update needed to remove the given file from the users menu', () => {
             const user = createFile('user', {
-                _userMenuContext: 'context'
+                _userMenuContext: 'context',
             });
             const file = createFile('file');
 
@@ -2686,10 +2780,10 @@ describe('FileCalculations', () => {
 
             expect(update).toEqual({
                 tags: {
-                    'context': null,
+                    context: null,
                     'context.index': null,
-                    'context.id': null
-                }
+                    'context.id': null,
+                },
             });
         });
     });
@@ -2706,7 +2800,7 @@ describe('FileCalculations', () => {
 
         it('should default to 0 if the file is a user file', () => {
             const file = createFile('file', {
-                _user: 'user'
+                _user: 'user',
             });
 
             const calc = createCalculationContext([file]);
@@ -2718,7 +2812,7 @@ describe('FileCalculations', () => {
         it('should still return the user files context size', () => {
             const file = createFile('file', {
                 _user: 'user',
-                'aux.context.size': 10
+                'aux.context.size': 10,
             });
 
             const calc = createCalculationContext([file]);
@@ -2736,35 +2830,35 @@ describe('FileCalculations', () => {
             const tags = addToContextDiff(calc, 'test');
 
             expect(tags).toEqual({
-                'test': true,
+                test: true,
                 'test.x': 0,
                 'test.y': 0,
-                'test.index': 0
+                'test.index': 0,
             });
         });
 
         it('should calculate the index', () => {
             const file = createFile('file', {});
             const file2 = createFile('file2', {
-                'test': true,
-                'test.index': 0
+                test: true,
+                'test.index': 0,
             });
 
             const calc = createCalculationContext([file, file2]);
             const tags = addToContextDiff(calc, 'test');
 
             expect(tags).toEqual({
-                'test': true,
+                test: true,
                 'test.x': 0,
                 'test.y': 0,
-                'test.index': 1
+                'test.index': 1,
             });
         });
 
         it('should calculate the index based on the given position', () => {
             const file = createFile('file', {});
             const file2 = createFile('file2', {
-                'test': true,
+                test: true,
                 'test.index': 0,
                 'test.x': 0,
                 'test.y': 0,
@@ -2774,26 +2868,24 @@ describe('FileCalculations', () => {
             const tags = addToContextDiff(calc, 'test', 1, 2);
 
             expect(tags).toEqual({
-                'test': true,
+                test: true,
                 'test.x': 1,
                 'test.y': 2,
-                'test.index': 0
+                'test.index': 0,
             });
         });
     });
 
-    
     describe('addToContextDiff()', () => {
         it('should return the tags needed to add a file to a context', () => {
-
             const calc = createCalculationContext([]);
             const tags = removeFromContextDiff(calc, 'test');
 
             expect(tags).toEqual({
-                'test': null,
+                test: null,
                 'test.x': null,
                 'test.y': null,
-                'test.index': null
+                'test.index': null,
             });
         });
     });
@@ -2801,7 +2893,7 @@ describe('FileCalculations', () => {
     describe('isContext()', () => {
         it('should return true when the given file has a config tag set to true', () => {
             const file = createFile('test', {
-                'test.config': true
+                'test.config': true,
             });
 
             const calc = createCalculationContext([file]);
@@ -2810,7 +2902,7 @@ describe('FileCalculations', () => {
 
         it('should return false when the given file does not have a config tag set to true', () => {
             const file = createFile('test', {
-                'test.config': false
+                'test.config': false,
             });
 
             const calc = createCalculationContext([file]);
@@ -2849,24 +2941,21 @@ describe('FileCalculations', () => {
     describe('getFileConfigContexts()', () => {
         it('should return every context that the file has a .config tag for', () => {
             const file = createFile('test', {
-                'abc': true,
+                abc: true,
                 'abc.config': true,
-                'abc.config.config': true
+                'abc.config.config': true,
             });
 
             const calc = createCalculationContext([file]);
             const tags = getFileConfigContexts(calc, file);
 
-            expect(tags).toEqual([
-                'abc',
-                'abc.config'
-            ]);
+            expect(tags).toEqual(['abc', 'abc.config']);
         });
 
         it('should evalulate formulas', () => {
             const file = createFile('test', {
                 'abc.config': '=false',
-                'abc.config.config': '=true'
+                'abc.config.config': '=true',
             });
 
             const calc = createCalculationContext([file]);
@@ -2874,16 +2963,13 @@ describe('FileCalculations', () => {
 
             expect(tags).toEqual([
                 // file is config for abc.config context.
-                'abc.config'
+                'abc.config',
             ]);
         });
     });
 
     describe('createContextId()', () => {
-
-        const cases = [
-            ['abcdefghi', 'context_abcdefgh']
-        ];
+        const cases = [['abcdefghi', 'context_abcdefgh']];
         it.each(cases)('should convert %s to %s', (uuid, id) => {
             uuidMock.mockReturnValue(uuid);
             expect(createContextId()).toBe(id);
@@ -2907,11 +2993,11 @@ describe('FileCalculations', () => {
             ['left', 'left'],
             ['right', 'right'],
             ['floating', 'floating'],
-            ['abc', 'top']
+            ['abc', 'top'],
         ];
         it.each(cases)('given %s it should return %s', (anchor, expected) => {
             const file = createFile('file', {
-                'aux.label.anchor': anchor
+                'aux.label.anchor': anchor,
             });
 
             const calc = createCalculationContext([file]);
@@ -2922,7 +3008,7 @@ describe('FileCalculations', () => {
 
         it('should support formulas', () => {
             const file = createFile('file', {
-                'aux.label.anchor': '="front"'
+                'aux.label.anchor': '="front"',
             });
 
             const calc = createCalculationContext([file]);

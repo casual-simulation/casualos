@@ -1,5 +1,4 @@
-import { TapCodeManager } from "./TapCodeManager";
-
+import { TapCodeManager } from './TapCodeManager';
 
 describe('TapCodeManager', () => {
     let manager: TapCodeManager;

@@ -1,12 +1,11 @@
-import { Object3D } from "three";
-import {  } from 'lodash';
-import { getOptionalValue } from "../SharedUtils";
+import { Object3D } from 'three';
+import {} from 'lodash';
+import { getOptionalValue } from '../SharedUtils';
 import uuid from 'uuid/v4';
-import { disposeObject3D } from "./SceneUtils";
+import { disposeObject3D } from './SceneUtils';
 import { remove } from 'lodash';
 
 export class Object3DPool {
-
     name: string;
 
     /**
@@ -23,9 +22,16 @@ export class Object3DPool {
      */
     private _objectIds: Map<string, boolean>;
 
-    get poolSize(): number { return this._pool.length; }
-    
-    constructor(sourceObject: Object3D, startSize: number, name?: string, poolEmptyWarn?: boolean) {
+    get poolSize(): number {
+        return this._pool.length;
+    }
+
+    constructor(
+        sourceObject: Object3D,
+        startSize: number,
+        name?: string,
+        poolEmptyWarn?: boolean
+    ) {
         this.name = getOptionalValue(name, `Object3DPool_${uuid()}`);
         this.poolEmptyWarn = getOptionalValue(poolEmptyWarn, true);
         this._sourceObject = sourceObject.clone(true);
@@ -53,10 +59,14 @@ export class Object3DPool {
         if (this._pool.length > 0) {
             // obj3d = this._pool.splice(this._pool.length - 1, 1)[0];
             obj3d = this._pool[0];
-            remove(this._pool, (o) =>  o === obj3d );
+            remove(this._pool, o => o === obj3d);
         } else {
             if (this.poolEmptyWarn) {
-                console.warn('[Object3DPool]', this.name, 'ran out of objects in its pool, so it is generating another one.');
+                console.warn(
+                    '[Object3DPool]',
+                    this.name,
+                    'ran out of objects in its pool, so it is generating another one.'
+                );
             }
             obj3d = this._sourceObject.clone(true);
             this._objectIds.set(obj3d.uuid, true);
@@ -68,11 +78,17 @@ export class Object3DPool {
 
     /**
      * Restore the object to the pool.
-     * @param obj3d 
+     * @param obj3d
      */
     restore(obj3d: Object3D): boolean {
         if (!this._objectIds.has(obj3d.uuid)) {
-            console.warn('[Object3DPool] Can\'t place object', obj3d, 'in pool', this.name, 'because it does not originate from it.');
+            console.warn(
+                "[Object3DPool] Can't place object",
+                obj3d,
+                'in pool',
+                this.name,
+                'because it does not originate from it.'
+            );
             return false;
         }
 

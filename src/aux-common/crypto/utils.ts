@@ -1,4 +1,4 @@
-import { fromByteArray, toByteArray } from "base64-js";
+import { fromByteArray, toByteArray } from 'base64-js';
 
 /**
  * The header that gets added to private keys formated as a PEM file.
@@ -42,7 +42,11 @@ export function formatPrivatePEMKey(key: ArrayBuffer) {
  * @param header The header to use.
  * @param footer The footer to use.
  */
-export function formatPEM(buffer: ArrayBuffer, header: string, footer: string): string {
+export function formatPEM(
+    buffer: ArrayBuffer,
+    header: string,
+    footer: string
+): string {
     const bytes = new Uint8Array(buffer);
     const base64 = fromByteArray(bytes);
     const pem = `${header}\n${base64}\n${footer}`;
@@ -68,20 +72,27 @@ export function parsePublicPEMKey(pem: string): ArrayBuffer {
 /**
  * Parses the given PEM file using the given header and footer strings.
  * Returns an ArrayBuffer containing the bytes that were formatted into the PEM file.
- * 
+ *
  * Note that this should probably not be used for PEM files other than the ones produced by
  * formatPEM(). This is because PEM files can contain a lot of extra data that this implementation
  * does not expect. For example, some PEM files can contain multiple keys and probably allow more whitespace.
- * 
+ *
  * @param pem The PEM file to parse.
  * @param header The header that we're expecting the file to have.
  * @param footer The footer that we're expecting the file to have.
  */
-export function parsePEM(pem: string, header: string, footer: string): ArrayBuffer {
+export function parsePEM(
+    pem: string,
+    header: string,
+    footer: string
+): ArrayBuffer {
     pem = pem.trim();
-    
+
     // Make sure we remove the newlines
-    let contents = pem.substring(header.length + 1, pem.length - (footer.length + 1));
+    let contents = pem.substring(
+        header.length + 1,
+        pem.length - (footer.length + 1)
+    );
     contents = contents.replace('\n', '');
     const buffer = toByteArray(contents);
     return buffer.buffer;

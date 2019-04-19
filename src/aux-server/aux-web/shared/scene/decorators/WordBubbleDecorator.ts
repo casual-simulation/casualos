@@ -1,15 +1,17 @@
-import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
-import { AuxFile3D } from "../AuxFile3D";
-import { FileCalculationContext, getFileLabelAnchor } from "@casual-simulation/aux-common";
-import { WordBubble3D } from "../WordBubble3D";
-import { WordBubbleElement } from "../WordBubbleElement";
-import { setLayer, convertToBox2 } from "../SceneUtils";
-import { LayersHelper } from "../LayersHelper";
-import { Scene, Box3, Vector3, Color } from "three";
-import { DebugObjectManager } from "../DebugObjectManager";
+import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
+import { AuxFile3D } from '../AuxFile3D';
+import {
+    FileCalculationContext,
+    getFileLabelAnchor,
+} from '@casual-simulation/aux-common';
+import { WordBubble3D } from '../WordBubble3D';
+import { WordBubbleElement } from '../WordBubbleElement';
+import { setLayer, convertToBox2 } from '../SceneUtils';
+import { LayersHelper } from '../LayersHelper';
+import { Scene, Box3, Vector3, Color } from 'three';
+import { DebugObjectManager } from '../DebugObjectManager';
 
-export class WordBubbleDecorator extends AuxFile3DDecorator {    
-
+export class WordBubbleDecorator extends AuxFile3DDecorator {
     /**
      * The world bubble for the cube.
      */
@@ -53,7 +55,7 @@ export class WordBubbleDecorator extends AuxFile3DDecorator {
             this.wordBubble.visible = false;
             return;
         }
-        
+
         let anchor = getFileLabelAnchor(calc, this.file3D.file);
         this.wordBubble.visible = anchor === 'floating';
 
@@ -63,14 +65,17 @@ export class WordBubbleDecorator extends AuxFile3DDecorator {
         let size = new Vector3();
         fileBoundingBox.getSize(size);
         arrowPoint.y += size.y / 2;
-        
-        let elementsBoundingBox:Box3 = null;
 
-        this._elements.forEach((e) => {
+        let elementsBoundingBox: Box3 = null;
+
+        this._elements.forEach(e => {
             let elementBox = e.getBoundingBox();
             if (elementBox) {
                 if (elementsBoundingBox === null) {
-                    elementsBoundingBox = new Box3(elementBox.min, elementBox.max);
+                    elementsBoundingBox = new Box3(
+                        elementBox.min,
+                        elementBox.max
+                    );
                 } else {
                     elementsBoundingBox.union(elementBox);
                 }
@@ -78,7 +83,10 @@ export class WordBubbleDecorator extends AuxFile3DDecorator {
         });
 
         if (elementsBoundingBox) {
-            this.wordBubble.update(convertToBox2(elementsBoundingBox), arrowPoint);
+            this.wordBubble.update(
+                convertToBox2(elementsBoundingBox),
+                arrowPoint
+            );
         }
     }
 }

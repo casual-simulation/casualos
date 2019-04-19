@@ -1,22 +1,30 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
-import {Prop, Inject} from 'vue-property-decorator';
+import { Prop, Inject } from 'vue-property-decorator';
 import { SubscriptionLike } from 'rxjs';
-import { Object, File, getShortId, AuxObject } from '@casual-simulation/aux-common';
+import {
+    Object,
+    File,
+    getShortId,
+    AuxObject,
+} from '@casual-simulation/aux-common';
 import FileValue from '../FileValue/FileValue';
 import { appManager } from '../../shared/AppManager';
 
 @Component({
     components: {
-        'file-value': FileValue
-    }
+        'file-value': FileValue,
+    },
 })
 export default class FileRow extends Vue {
     @Prop() file: AuxObject;
     @Prop() tags: string[];
-    @Prop({ default: false }) readOnly: boolean;
-    @Prop({}) updateTime: number;
-    @Prop({ default: true }) showFormulasWhenFocused: boolean;
+    @Prop({ default: false })
+    readOnly: boolean;
+    @Prop({})
+    updateTime: number;
+    @Prop({ default: true })
+    showFormulasWhenFocused: boolean;
 
     get fileManager() {
         return appManager.fileManager;
@@ -44,7 +52,7 @@ export default class FileRow extends Vue {
         this.$emit('tagFocusChanged', {
             file,
             tag,
-            focused
+            focused,
         });
     }
-};
+}

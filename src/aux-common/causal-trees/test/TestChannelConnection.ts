@@ -1,6 +1,6 @@
-import { Observable, Subject } from "rxjs";
-import { RealtimeChannelConnection } from "../RealtimeChannelConnection";
-import { ConnectionEvent } from "../ConnectionEvent";
+import { Observable, Subject } from 'rxjs';
+import { RealtimeChannelConnection } from '../RealtimeChannelConnection';
+import { ConnectionEvent } from '../ConnectionEvent';
 
 export interface TestChannelRequest {
     name: string;
@@ -10,7 +10,6 @@ export interface TestChannelRequest {
 }
 
 export class TestChannelConnection implements RealtimeChannelConnection {
-
     private _connectionStateChanged: Subject<boolean>;
     knownEventNames: string[];
     events: Subject<ConnectionEvent>;
@@ -18,7 +17,7 @@ export class TestChannelConnection implements RealtimeChannelConnection {
     requests: TestChannelRequest[];
     flush: boolean;
     resolve: (name: string, data: any) => any;
-    
+
     _connected: boolean;
     closed: boolean;
 
@@ -66,7 +65,7 @@ export class TestChannelConnection implements RealtimeChannelConnection {
                     name,
                     data,
                     resolve,
-                    reject
+                    reject,
                 });
             }
         });

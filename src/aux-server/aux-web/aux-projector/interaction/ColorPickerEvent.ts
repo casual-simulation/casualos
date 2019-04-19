@@ -1,4 +1,4 @@
-import { Vector2 } from "three";
+import { Vector2 } from 'three';
 
 export interface ColorPickerEvent {
     /**
@@ -16,9 +16,9 @@ export interface ColorPickerEvent {
      */
     colorUpdated: (hexColor: string) => void;
 
-    /** 
-     * Callback function that will be invoked when the color picker is closed. 
+    /**
+     * Callback function that will be invoked when the color picker is closed.
      * @argument inputScreenPos The page position of the input when the picker was closed.
      */
     pickerClosed?: (inputPagePos: Vector2) => void;
-  }
+}

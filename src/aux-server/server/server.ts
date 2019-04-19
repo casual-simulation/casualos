@@ -14,7 +14,6 @@ import { auxCausalTreeFactory } from '@casual-simulation/aux-common/aux-format';
 import { AppVersion, apiVersion } from '@casual-simulation/aux-common';
 import uuid from 'uuid/v4';
 
-
 const connect = pify(MongoClient.connect);
 
 export class ClientServer {
@@ -35,25 +34,28 @@ export class ClientServer {
     }
 
     configure() {
-        this._app.post('/api/users', asyncMiddleware(async (req, res) => {
-            const json = req.body;
+        this._app.post(
+            '/api/users',
+            asyncMiddleware(async (req, res) => {
+                const json = req.body;
 
-            let username;
+                let username;
 
-            if (json.email.indexOf('@') >= 0) {
-                username = json.email.split('@')[0];
-            } else {
-                username = json.email;
-            }
+                if (json.email.indexOf('@') >= 0) {
+                    username = json.email.split('@')[0];
+                } else {
+                    username = json.email;
+                }
 
-            // TODO: Do something like actual user login
-            res.send({
-                id: uuid(),
-                email: json.email,
-                username: username,
-                name: username
-            });
-        }));
+                // TODO: Do something like actual user login
+                res.send({
+                    id: uuid(),
+                    email: json.email,
+                    username: username,
+                    name: username,
+                });
+            })
+        );
 
         this._app.get('/api/config', (req, res) => {
             res.send(this._config.web);
@@ -71,7 +73,6 @@ export class ClientServer {
  * Defines a class that represents a fully featured SO4 server.
  */
 export class Server {
-
     private _app: express.Express;
     private _http: Http.Server;
     private _socket: SocketIO.Server;
@@ -90,7 +91,7 @@ export class Server {
         this._clients = this._config.clients.map(c => new ClientServer(c));
         this._userCount = 0;
     }
-    
+
     async configure() {
         this._mongoClient = await connect(this._config.mongodb.url);
 
@@ -107,33 +108,47 @@ export class Server {
     }
 
     start() {
-        this._http.listen(this._config.httpPort, () => console.log(`Server listening on port ${this._config.httpPort}!`));
+        this._http.listen(this._config.httpPort, () =>
+            console.log(`Server listening on port ${this._config.httpPort}!`)
+        );
     }
 
     private async _configureSocketServices() {
-        const store = new MongoDBTreeStore(this._mongoClient, this._config.trees.dbName);
+        const store = new MongoDBTreeStore(
+            this._mongoClient,
+            this._config.trees.dbName
+        );
         await store.init();
         this._treeServer = new CausalTreeServer(
             this._socket,
-            store, 
-            auxCausalTreeFactory());
+            store,
+            auxCausalTreeFactory()
+        );
 
-        this._socket.on('connection', (socket) => {
+        this._socket.on('connection', socket => {
             this._userCount += 1;
-            console.log('[Server] A user connected! There are now', this._userCount, 'users connected.');
+            console.log(
+                '[Server] A user connected! There are now',
+                this._userCount,
+                'users connected.'
+            );
 
             socket.on('version', (callback: (version: AppVersion) => void) => {
                 callback({
                     gitTag: GIT_TAG,
                     gitHash: GIT_HASH,
-                    apiVersion: apiVersion
+                    apiVersion: apiVersion,
                 });
             });
 
             socket.on('disconnect', () => {
                 this._userCount -= 1;
-                console.log('[Server] A user disconnected! There are now', this._userCount, 'users connected.');
+                console.log(
+                    '[Server] A user disconnected! There are now',
+                    this._userCount,
+                    'users connected.'
+                );
             });
         });
     }
-};
+}

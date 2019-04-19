@@ -1,9 +1,20 @@
 import { Intersection, Vector3 } from 'three';
 import { Physics } from '../../../shared/scene/Physics';
-import { File, Workspace, DEFAULT_WORKSPACE_SCALE, fileRemoved, fileUpdated } from '@casual-simulation/aux-common/Files';
+import {
+    File,
+    Workspace,
+    DEFAULT_WORKSPACE_SCALE,
+    fileRemoved,
+    fileUpdated,
+} from '@casual-simulation/aux-common/Files';
 import { keys } from 'lodash';
 import { gridPosToRealPos, Axial, posToKey } from '../../../shared/scene/hex';
-import { FileCalculationContext, getContextMinimized, getContextSize, getBuilderContextGrid } from '@casual-simulation/aux-common/Files/FileCalculations';
+import {
+    FileCalculationContext,
+    getContextMinimized,
+    getContextSize,
+    getBuilderContextGrid,
+} from '@casual-simulation/aux-common/Files/FileCalculations';
 import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
 import { BuilderGroup3D } from '../../../shared/scene/BuilderGroup3D';
 import { appManager } from '../../../shared/AppManager';
@@ -15,7 +26,6 @@ import { BaseBuilderFileDragOperation } from './BaseBuilderFileDragOperation';
  * File Drag Operation handles dragging of files for mouse and touch input.
  */
 export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
-
     // This overrides the base class BaseInteractionManager
     protected _interaction: BuilderInteractionManager;
     // This overrides the base class IGameView
@@ -30,7 +40,14 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
     /**
      * Create a new drag rules.
      */
-    constructor(gameView: GameView, interaction: BuilderInteractionManager, hit: Intersection, files: File[], workspace: BuilderGroup3D, context: string) {
+    constructor(
+        gameView: GameView,
+        interaction: BuilderInteractionManager,
+        hit: Intersection,
+        files: File[],
+        workspace: BuilderGroup3D,
+        context: string
+    ) {
         super(gameView, interaction, files, context);
 
         this._workspace = workspace;
@@ -39,7 +56,9 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
             // calculate the delta needed to be applied to the pointer
             // positions to have the pointer drag around the originally tapped point
             // instead of where the anchor is.
-            this._workspaceDelta = new Vector3().copy(this._workspace.position).sub(hit.point);
+            this._workspaceDelta = new Vector3()
+                .copy(this._workspace.position)
+                .sub(hit.point);
             this._workspaceDelta.setY(0);
         }
     }
@@ -61,11 +80,16 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
     }
 
     protected _onDragWorkspace(calc: FileCalculationContext) {
-        const mouseDir = Physics.screenPosToRay(this._gameView.getInput().getMouseScreenPos(), this._gameView.getMainCamera());
-        const point = Physics.pointOnPlane(mouseDir, this._gameView.getGroundPlane());
+        const mouseDir = Physics.screenPosToRay(
+            this._gameView.getInput().getMouseScreenPos(),
+            this._gameView.getMainCamera()
+        );
+        const point = Physics.pointOnPlane(
+            mouseDir,
+            this._gameView.getGroundPlane()
+        );
 
         if (point) {
-
             // if the workspace is only 1 tile large and not minimized
             const workspace = <Workspace>this._workspace.file;
             const domain = this._workspace.domain;
@@ -73,9 +97,18 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
             const minimized = getContextMinimized(calc, workspace);
             const grid = getBuilderContextGrid(calc, workspace);
             const files = this._workspace.getFiles();
-            if (size === 1 && !minimized && (!grid || keys(grid).length === 0) && files.length === 0) {
+            if (
+                size === 1 &&
+                !minimized &&
+                (!grid || keys(grid).length === 0) &&
+                files.length === 0
+            ) {
                 // check if it is close to another workspace.
-                const closest = this._interaction.closestWorkspace(calc, point, this._workspace);
+                const closest = this._interaction.closestWorkspace(
+                    calc,
+                    point,
+                    this._workspace
+                );
 
                 if (closest) {
                     if (closest.distance <= 1) {
@@ -92,7 +125,9 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
                 const w = <Workspace>this._attachWorkspace.file;
                 const scale = w.tags.scale || DEFAULT_WORKSPACE_SCALE;
                 const realPos = gridPosToRealPos(this._attachPoint, scale);
-                point.copy(new Vector3(realPos.x, 0, realPos.y)).add(this._attachWorkspace.position);
+                point
+                    .copy(new Vector3(realPos.x, 0, realPos.y))
+                    .add(this._attachWorkspace.position);
                 point.setY(0);
             }
 
@@ -106,8 +141,8 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
                 tags: {
                     [`aux.context.x`]: final.x,
                     [`aux.context.y`]: final.z,
-                    [`aux.context.z`]: final.y
-                }
+                    [`aux.context.z`]: final.y,
+                },
             });
         }
     }
@@ -122,10 +157,10 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
                 tags: {
                     [`aux.context.grid`]: {
                         [posToKey(this._attachPoint)]: {
-                            height: height
-                        }
-                    }
-                }
+                            height: height,
+                        },
+                    },
+                },
             })
         );
     }

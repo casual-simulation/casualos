@@ -1,8 +1,8 @@
-import { AtomFactory } from "./AtomFactory";
-import { AtomOp, AtomId, atomId, atom } from "./Atom";
+import { AtomFactory } from './AtomFactory';
+import { AtomOp, AtomId, atomId, atom } from './Atom';
 import { site } from './SiteIdInfo';
-import { AtomValidator } from "./AtomValidator";
-import { TestCryptoImpl } from "../crypto/test/TestCryptoImpl";
+import { AtomValidator } from './AtomValidator';
+import { TestCryptoImpl } from '../crypto/test/TestCryptoImpl';
 
 class Op implements AtomOp {
     type: number;
@@ -82,7 +82,7 @@ describe('AtomFactory', () => {
         expect(a2.value).toBe(op2);
         expect(factory.time).toBe(3);
     });
-    
+
     it('should not sign atoms if there is no private key', async () => {
         const crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
         const validator = new AtomValidator(crypto);

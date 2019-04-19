@@ -1,4 +1,14 @@
-import { SigningCryptoImpl, PrivateCryptoKey, PublicCryptoKey, SigningCryptoKey, SignatureAlgorithmType, formatPublicPEMKey, formatPrivatePEMKey, parsePublicPEMKey, parsePrivatePEMKey } from "@casual-simulation/aux-common/crypto";
+import {
+    SigningCryptoImpl,
+    PrivateCryptoKey,
+    PublicCryptoKey,
+    SigningCryptoKey,
+    SignatureAlgorithmType,
+    formatPublicPEMKey,
+    formatPrivatePEMKey,
+    parsePublicPEMKey,
+    parsePrivatePEMKey,
+} from '@casual-simulation/aux-common/crypto';
 
 // DEV NOTE:
 // It kinda goes without saying, but change this code as little as possible.
@@ -12,7 +22,6 @@ import { SigningCryptoImpl, PrivateCryptoKey, PublicCryptoKey, SigningCryptoKey,
  * Currently, the only algorithm supported is ECDSA using SHA256 for hashing.
  */
 export class BrowserSigningCryptoImpl implements SigningCryptoImpl {
-
     /**
      * The EC Curve that is used.
      */
@@ -24,51 +33,75 @@ export class BrowserSigningCryptoImpl implements SigningCryptoImpl {
      */
     constructor(algorithm: SignatureAlgorithmType) {
         if (algorithm !== 'ECDSA-SHA256-NISTP256') {
-            throw new Error('[BrowserSigningCryptoImpl] Algorithms other than ECDSA-SHA256-NISTP256 are not supported.');
+            throw new Error(
+                '[BrowserSigningCryptoImpl] Algorithms other than ECDSA-SHA256-NISTP256 are not supported.'
+            );
         }
     }
 
     supported() {
-        return (typeof window.crypto.subtle !== 'undefined');
+        return typeof window.crypto.subtle !== 'undefined';
     }
 
     async sign(key: PrivateCryptoKey, data: ArrayBuffer): Promise<ArrayBuffer> {
         if (key instanceof BrowserPrivateCryptoKey) {
-            return await crypto.subtle.sign({
-                name: 'ECDSA',
-                hash: {
-                    name: 'SHA-256'
-                }
-            }, key.privateKey, data);
+            return await crypto.subtle.sign(
+                {
+                    name: 'ECDSA',
+                    hash: {
+                        name: 'SHA-256',
+                    },
+                },
+                key.privateKey,
+                data
+            );
         }
         throw this._unknownKey();
     }
 
-    async verify(key: PublicCryptoKey, signature: ArrayBuffer, data: ArrayBuffer): Promise<boolean> {
+    async verify(
+        key: PublicCryptoKey,
+        signature: ArrayBuffer,
+        data: ArrayBuffer
+    ): Promise<boolean> {
         if (key instanceof BrowserPublicCryptoKey) {
-            return await crypto.subtle.verify({
-                name: 'ECDSA',
-                hash: {
-                    name: 'SHA-256'
-                }
-            }, key.publicKey, signature, data);
+            return await crypto.subtle.verify(
+                {
+                    name: 'ECDSA',
+                    hash: {
+                        name: 'SHA-256',
+                    },
+                },
+                key.publicKey,
+                signature,
+                data
+            );
         }
         throw this._unknownKey();
     }
 
-    verifyBatch(key: PublicCryptoKey, signatures: ArrayBuffer[], datas: ArrayBuffer[]): Promise<boolean[]> {
+    verifyBatch(
+        key: PublicCryptoKey,
+        signatures: ArrayBuffer[],
+        datas: ArrayBuffer[]
+    ): Promise<boolean[]> {
         if (key instanceof BrowserPublicCryptoKey) {
             let pub = key.publicKey;
             let promises = new Array<PromiseLike<boolean>>(datas.length);
             let options = {
                 name: 'ECDSA',
                 hash: {
-                    name: 'SHA-256'
-                }
+                    name: 'SHA-256',
+                },
             };
-            
+
             for (let i = 0; i < promises.length; i++) {
-                promises[i] = crypto.subtle.verify(options, pub, signatures[i], datas[i]);
+                promises[i] = crypto.subtle.verify(
+                    options,
+                    pub,
+                    signatures[i],
+                    datas[i]
+                );
             }
 
             return Promise.all(promises);
@@ -81,7 +114,7 @@ export class BrowserSigningCryptoImpl implements SigningCryptoImpl {
         if (key instanceof BrowserPublicCryptoKey) {
             buffer = await crypto.subtle.exportKey('spki', key.publicKey);
             return formatPublicPEMKey(buffer);
-        } else if(key instanceof BrowserPrivateCryptoKey) {
+        } else if (key instanceof BrowserPrivateCryptoKey) {
             buffer = await crypto.subtle.exportKey('pkcs8', key.privateKey);
             return formatPrivatePEMKey(buffer);
         }
@@ -90,38 +123,56 @@ export class BrowserSigningCryptoImpl implements SigningCryptoImpl {
 
     async importPublicKey(key: string): Promise<PublicCryptoKey> {
         const buffer = parsePublicPEMKey(key);
-        const cryptoKey = await crypto.subtle.importKey('spki', buffer, {
-            name: 'ECDSA',
-            namedCurve: BrowserSigningCryptoImpl.NAMED_CURVE
-        }, true, ['verify']);
+        const cryptoKey = await crypto.subtle.importKey(
+            'spki',
+            buffer,
+            {
+                name: 'ECDSA',
+                namedCurve: BrowserSigningCryptoImpl.NAMED_CURVE,
+            },
+            true,
+            ['verify']
+        );
 
         return new BrowserPublicCryptoKey(cryptoKey);
     }
-    
+
     async importPrivateKey(key: string): Promise<PrivateCryptoKey> {
         const buffer = parsePrivatePEMKey(key);
-        const cryptoKey = await crypto.subtle.importKey('pkcs8', buffer, {
-            name: 'ECDSA',
-            namedCurve: BrowserSigningCryptoImpl.NAMED_CURVE
-        }, true, ['sign']);
+        const cryptoKey = await crypto.subtle.importKey(
+            'pkcs8',
+            buffer,
+            {
+                name: 'ECDSA',
+                namedCurve: BrowserSigningCryptoImpl.NAMED_CURVE,
+            },
+            true,
+            ['sign']
+        );
 
         return new BrowserPrivateCryptoKey(cryptoKey);
     }
 
     async generateKeyPair(): Promise<[PublicCryptoKey, PrivateCryptoKey]> {
-        const keyPair = await crypto.subtle.generateKey({
-            name: 'ECDSA',
-            namedCurve: BrowserSigningCryptoImpl.NAMED_CURVE
-        }, true, ['sign', 'verify']);
+        const keyPair = await crypto.subtle.generateKey(
+            {
+                name: 'ECDSA',
+                namedCurve: BrowserSigningCryptoImpl.NAMED_CURVE,
+            },
+            true,
+            ['sign', 'verify']
+        );
 
         return [
             new BrowserPublicCryptoKey(keyPair.publicKey),
-            new BrowserPrivateCryptoKey(keyPair.privateKey)
+            new BrowserPrivateCryptoKey(keyPair.privateKey),
         ];
     }
 
     private _unknownKey() {
-        return new Error('[BrowserSigningCryptoImpl] Key not a recognized implementation.');
+        return new Error(
+            '[BrowserSigningCryptoImpl] Key not a recognized implementation.'
+        );
     }
 }
 
@@ -134,7 +185,7 @@ export class BrowserPublicCryptoKey implements PublicCryptoKey {
     /**
      * The public key.
      */
-    publicKey: CryptoKey
+    publicKey: CryptoKey;
 
     /**
      * Creates a new browser public crypto key.
@@ -155,7 +206,7 @@ export class BrowserPrivateCryptoKey implements PrivateCryptoKey {
     /**
      * The private key.
      */
-    privateKey: CryptoKey
+    privateKey: CryptoKey;
 
     /**
      * Creates a new browser private crypto key.

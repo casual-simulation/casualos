@@ -1,9 +1,7 @@
 import { IOperation } from './IOperation';
 import { BaseInteractionManager } from './BaseInteractionManager';
-import { Vector2, Vector3} from 'three';
-import { 
-    FileCalculationContext,
-} from '@casual-simulation/aux-common';
+import { Vector2, Vector3 } from 'three';
+import { FileCalculationContext } from '@casual-simulation/aux-common';
 
 import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { IGameView } from '../../shared/IGameView';
@@ -14,7 +12,6 @@ import { differenceBy, maxBy } from 'lodash';
  * Class that is able to tween the main camera to a given location.
  */
 export class TweenCameraToOperation implements IOperation {
-
     private _gameView: IGameView;
     private _interaction: BaseInteractionManager;
     private _target: Vector3;
@@ -26,7 +23,11 @@ export class TweenCameraToOperation implements IOperation {
      * @param interaction The interaction manager.
      * @param target The target location to tween to.
      */
-    constructor(gameView: IGameView, interaction: BaseInteractionManager, target: Vector3) {
+    constructor(
+        gameView: IGameView,
+        interaction: BaseInteractionManager,
+        target: Vector3
+    ) {
         this._gameView = gameView;
         this._interaction = interaction;
         this._finished = false;
@@ -35,7 +36,10 @@ export class TweenCameraToOperation implements IOperation {
         const currentPivotPoint = this._interaction.cameraControls.target;
         const rayPointToTargetPosition = target.clone().sub(currentPivotPoint);
         const rayPointToCamera = cam.position.clone().sub(currentPivotPoint);
-        const finalPosition = currentPivotPoint.clone().add(rayPointToTargetPosition).add(rayPointToCamera);
+        const finalPosition = currentPivotPoint
+            .clone()
+            .add(rayPointToTargetPosition)
+            .add(rayPointToCamera);
         this._target = finalPosition;
     }
 
@@ -46,7 +50,10 @@ export class TweenCameraToOperation implements IOperation {
         const camPos = cam.position.clone();
         const dist = camPos.distanceToSquared(this._target);
         if (dist > 0.001) {
-            const dir = this._target.clone().sub(camPos).multiplyScalar(0.1);
+            const dir = this._target
+                .clone()
+                .sub(camPos)
+                .multiplyScalar(0.1);
             this._interaction.cameraControls.cameraOffset.copy(dir);
         } else {
             // This tween operation is finished.
@@ -58,6 +65,5 @@ export class TweenCameraToOperation implements IOperation {
         return this._finished;
     }
 
-    dispose(): void {
-    }
+    dispose(): void {}
 }

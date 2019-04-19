@@ -6,7 +6,6 @@ import { DebugObjectManager } from '../shared/scene/DebugObjectManager';
  * A grid for Aux Player to help position objects in a context.
  */
 export class PlayerGrid {
-
     tileScale: number;
 
     /**
@@ -32,7 +31,7 @@ export class PlayerGrid {
         let tile: GridTile = {
             center: tilePoints.center,
             corners: tilePoints.corners,
-            tileCoordinate: new Vector2(tileX, tileY)
+            tileCoordinate: new Vector2(tileX, tileY),
         };
 
         tile.tileCoordinate = new Vector2(tileX, tileY);
@@ -49,23 +48,64 @@ export class PlayerGrid {
         return {
             center: tilePoints.center,
             corners: tilePoints.corners,
-            tileCoordinate: new Vector2(x, y)
-        }
+            tileCoordinate: new Vector2(x, y),
+        };
     }
 
     /**
      * Draw corners for tiles in given coordinate range for duration.
      */
-    debugDrawTiles(xStart: number, xEnd: number, yStart: number, yEnd: number, duration: number) {
+    debugDrawTiles(
+        xStart: number,
+        xEnd: number,
+        yStart: number,
+        yEnd: number,
+        duration: number
+    ) {
         // Debug all tile corner points.
         for (let x = xStart; x <= xEnd; x++) {
             for (let y = yStart; y <= yEnd; y++) {
                 let tile = this.getTileFromCoordinate(x, y);
-                DebugObjectManager.debugPoint(tile.corners[0], null, 0.05, false, new Color("green"), duration);
-                DebugObjectManager.debugPoint(tile.corners[1], null, 0.05, false, new Color("green"), duration);
-                DebugObjectManager.debugPoint(tile.corners[2], null, 0.05, false, new Color("green"), duration);
-                DebugObjectManager.debugPoint(tile.corners[3], null, 0.05, false, new Color("green"), duration);
-                DebugObjectManager.debugPoint(tile.center, null, 0.05, false, new Color("yellow"), duration);
+                DebugObjectManager.debugPoint(
+                    tile.corners[0],
+                    null,
+                    0.05,
+                    false,
+                    new Color('green'),
+                    duration
+                );
+                DebugObjectManager.debugPoint(
+                    tile.corners[1],
+                    null,
+                    0.05,
+                    false,
+                    new Color('green'),
+                    duration
+                );
+                DebugObjectManager.debugPoint(
+                    tile.corners[2],
+                    null,
+                    0.05,
+                    false,
+                    new Color('green'),
+                    duration
+                );
+                DebugObjectManager.debugPoint(
+                    tile.corners[3],
+                    null,
+                    0.05,
+                    false,
+                    new Color('green'),
+                    duration
+                );
+                DebugObjectManager.debugPoint(
+                    tile.center,
+                    null,
+                    0.05,
+                    false,
+                    new Color('yellow'),
+                    duration
+                );
             }
         }
     }
@@ -73,7 +113,7 @@ export class PlayerGrid {
     private _snapToTileCoord(num: number): number {
         // We need to snap the number to a tile coordinate.
         let normalized = num / this.tileScale;
-        let remaining = (normalized % 1);
+        let remaining = normalized % 1;
         let whole = normalized - remaining;
 
         if (remaining >= 0) {
@@ -143,7 +183,7 @@ export function calculateGridTilePoints(x: number, y: number, scale: number) {
         center: localCenter,
         corners: corners.map(p => {
             return new Vector3().copy(p).add(localCenter);
-        })
+        }),
     };
 }
 
@@ -154,8 +194,12 @@ export function calculateGridTilePoints(x: number, y: number, scale: number) {
  * @param z The height of the tile.
  * @param scale The size of the tiles.
  */
-export function calculateGridTileLocalCenter(gridX: number, gridY: number, scale: number) {
-    const x = (gridX * scale);
-    const z = (gridY * scale); // for some reason the Y coordinate needs mirroring
-    return new Vector3(x, 0, z)
+export function calculateGridTileLocalCenter(
+    gridX: number,
+    gridY: number,
+    scale: number
+) {
+    const x = gridX * scale;
+    const z = gridY * scale; // for some reason the Y coordinate needs mirroring
+    return new Vector3(x, 0, z);
 }

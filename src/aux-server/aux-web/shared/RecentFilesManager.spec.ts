@@ -1,8 +1,7 @@
-import { RecentFilesManager } from "./RecentFilesManager";
-import { FileHelper } from "./FileHelper";
-import { AuxCausalTree, createFile } from "@casual-simulation/aux-common";
-import { storedTree, site } from "@casual-simulation/aux-common/causal-trees";
-
+import { RecentFilesManager } from './RecentFilesManager';
+import { FileHelper } from './FileHelper';
+import { AuxCausalTree, createFile } from '@casual-simulation/aux-common';
+import { storedTree, site } from '@casual-simulation/aux-common/causal-trees';
 
 describe('RecentFilesManager', () => {
     let tree: AuxCausalTree;
@@ -18,30 +17,28 @@ describe('RecentFilesManager', () => {
         expect(recent.files).toEqual([
             {
                 id: 'empty',
-                tags: {}
-            }
+                tags: {},
+            },
         ]);
     });
-    
+
     describe('addTagDiff()', () => {
         it('should add a recent file for editing a tag', () => {
-
             recent.addTagDiff('testFileId', 'testTag', 'newValue');
 
             expect(recent.files).toEqual([
                 {
                     id: 'testFileId',
                     tags: {
-                        testTag: 'newValue', 
+                        testTag: 'newValue',
                         'aux._diff': true,
-                        'aux._diffTags': ['testTag']
-                    }
-                }
+                        'aux._diffTags': ['testTag'],
+                    },
+                },
             ]);
         });
 
         it('should limit files to 1 file', () => {
-
             recent.addTagDiff('testFileId1', 'testTag1', 'newValue');
             recent.addTagDiff('testFileId2', 'testTag2', 'newValue');
             recent.addTagDiff('testFileId3', 'testTag3', 'newValue');
@@ -55,9 +52,9 @@ describe('RecentFilesManager', () => {
                     tags: {
                         testTag6: 'newValue',
                         'aux._diff': true,
-                        'aux._diffTags': ['testTag6']
-                    }
-                }
+                        'aux._diffTags': ['testTag6'],
+                    },
+                },
             ]);
         });
 
@@ -73,7 +70,6 @@ describe('RecentFilesManager', () => {
         });
 
         it('should move reused IDs to the front of the list with the new value', () => {
-
             recent.addTagDiff('testFileId1', 'testTag1', 'newValue1');
             recent.addTagDiff('testFileId2', 'testTag2', 'newValue2');
             recent.addTagDiff('testFileId3', 'testTag3', 'newValue3');
@@ -85,14 +81,13 @@ describe('RecentFilesManager', () => {
                     tags: {
                         testTag4: 'newValue4',
                         'aux._diff': true,
-                        'aux._diffTags': ['testTag4']
-                    }
-                }
+                        'aux._diffTags': ['testTag4'],
+                    },
+                },
             ]);
         });
 
         it('should unselect the selected recent file', () => {
-
             recent.addTagDiff('abc', 'deg', 'ghi');
             recent.selectedRecentFile = recent.files[0];
 
@@ -102,7 +97,6 @@ describe('RecentFilesManager', () => {
         });
 
         it('should preserve the selected recent file if the ID is the same', () => {
-
             recent.addTagDiff('abc', 'deg', 'ghi');
             recent.selectedRecentFile = recent.files[0];
 
@@ -111,10 +105,10 @@ describe('RecentFilesManager', () => {
             expect(recent.selectedRecentFile).toEqual({
                 id: 'abc',
                 tags: {
-                    'deg': 'zzz',
+                    deg: 'zzz',
                     'aux._diff': true,
-                    'aux._diffTags': [ 'deg' ]
-                }
+                    'aux._diffTags': ['deg'],
+                },
             });
         });
     });
@@ -123,7 +117,7 @@ describe('RecentFilesManager', () => {
         it('should add the given file', () => {
             let file = createFile('testId', {
                 test: 'abc',
-                "aux.color": 'red'
+                'aux.color': 'red',
             });
             recent.addFileDiff(file);
 
@@ -133,20 +127,20 @@ describe('RecentFilesManager', () => {
                     tags: {
                         ...file.tags,
                         'aux._diff': true,
-                        'aux._diffTags': [ 'test', 'aux.color' ]
-                    }
-                }
+                        'aux._diffTags': ['test', 'aux.color'],
+                    },
+                },
             ]);
         });
 
         it('should unselect the selected recent file', () => {
             let file1 = createFile('testId1', {
                 test: 'abc',
-                "aux.color": 'red'
+                'aux.color': 'red',
             });
             let file2 = createFile('testId2', {
                 test: 'abc',
-                "aux.color": 'green'
+                'aux.color': 'green',
             });
 
             recent.addFileDiff(file1);
@@ -157,11 +151,10 @@ describe('RecentFilesManager', () => {
             expect(recent.selectedRecentFile).toBe(null);
         });
 
-        
         it('should preserve the selected recent file if the ID is the same', () => {
             let file1 = createFile('testId1', {
                 test: 'abc',
-                "aux.color": 'red'
+                'aux.color': 'red',
             });
 
             recent.addFileDiff(file1);
@@ -169,9 +162,9 @@ describe('RecentFilesManager', () => {
 
             let file2 = createFile('diff-testId1', {
                 test1: 'abc',
-                "aux.color": 'red',
+                'aux.color': 'red',
                 'aux._diff': true,
-                'aux._diffTags': ['test1', 'aux.color']
+                'aux._diffTags': ['test1', 'aux.color'],
             });
 
             recent.addFileDiff(file2);
@@ -182,15 +175,15 @@ describe('RecentFilesManager', () => {
                     test1: 'abc',
                     'aux.color': 'red',
                     'aux._diff': true,
-                    'aux._diffTags': [ 'test1', 'aux.color' ]
-                }
+                    'aux._diffTags': ['test1', 'aux.color'],
+                },
             });
         });
 
         it('should ignore well known tags', () => {
             let file1 = createFile('testId1', {
                 test: 'abc',
-                _destroyed: true
+                _destroyed: true,
             });
 
             recent.addFileDiff(file1);
@@ -203,16 +196,16 @@ describe('RecentFilesManager', () => {
                         test: 'abc',
                         _destroyed: true,
                         'aux._diff': true,
-                        'aux._diffTags': [ 'test', '_destroyed' ]
-                    }
-                }
+                        'aux._diffTags': ['test', '_destroyed'],
+                    },
+                },
             ]);
         });
 
         it('should update the diff tags', () => {
             let file1 = createFile('testId1', {
                 test: 'abc',
-                "aux.color": 'red'
+                'aux.color': 'red',
             });
 
             recent.addFileDiff(file1);
@@ -220,9 +213,9 @@ describe('RecentFilesManager', () => {
 
             let file2 = createFile('diff-testId1', {
                 test1: 'abc',
-                "aux.color": 'red',
+                'aux.color': 'red',
                 'aux._diff': true,
-                'aux._diffTags': ['test1', 'aux.color']
+                'aux._diffTags': ['test1', 'aux.color'],
             });
 
             recent.addFileDiff(file2, true);
@@ -233,15 +226,15 @@ describe('RecentFilesManager', () => {
                     test1: 'abc',
                     'aux.color': 'red',
                     'aux._diff': true,
-                    'aux._diffTags': [ 'test1', 'aux.color' ]
-                }
+                    'aux._diffTags': ['test1', 'aux.color'],
+                },
             });
         });
 
         it('should send updates', () => {
             let file = createFile('testId', {
                 test: 'abc',
-                "aux.color": 'red'
+                'aux.color': 'red',
             });
             let updates: number[] = [];
             recent.onUpdated.subscribe(_ => {
@@ -249,37 +242,35 @@ describe('RecentFilesManager', () => {
             });
             recent.addFileDiff(file);
 
-            expect(updates).toEqual([
-                1
-            ]);
+            expect(updates).toEqual([1]);
         });
 
         it('should trim to the max length', () => {
             let file1 = createFile('testId1', {
                 test: 'abc',
-                "aux.color": 'red'
+                'aux.color': 'red',
             });
             let file2 = createFile('testId2', {
                 test: 'abc',
-                "aux.color": 'green'
+                'aux.color': 'green',
             });
             let file3 = createFile('testId3', {
                 test: 'abc',
-                "aux.color": 'blue'
+                'aux.color': 'blue',
             });
             let file4 = createFile('testId4', {
                 test: 'abc',
-                "aux.color": 'magenta'
+                'aux.color': 'magenta',
             });
             let file5 = createFile('testId5', {
                 test: 'abc',
-                "aux.color": 'yellow'
+                'aux.color': 'yellow',
             });
             let file6 = createFile('testId6', {
                 test: 'abc',
-                "aux.color": 'cyan'
+                'aux.color': 'cyan',
             });
-            
+
             recent.addFileDiff(file1);
             recent.addFileDiff(file2);
             recent.addFileDiff(file3);
@@ -293,30 +284,30 @@ describe('RecentFilesManager', () => {
                     tags: {
                         ...file6.tags,
                         'aux._diff': true,
-                        'aux._diffTags': [ 'test', 'aux.color' ]
-                    }
-                }
+                        'aux._diffTags': ['test', 'aux.color'],
+                    },
+                },
             ]);
         });
 
         it('should move reused IDs to the front of the list with the new value', () => {
             let file1 = createFile('testId1', {
                 test: 'abc',
-                "aux.color": 'red'
+                'aux.color': 'red',
             });
             let file2 = createFile('testId2', {
                 test: 'abc',
-                "aux.color": 'green'
+                'aux.color': 'green',
             });
             let file3 = createFile('testId3', {
                 test: 'abc',
-                "aux.color": 'blue'
+                'aux.color': 'blue',
             });
             let file1_2 = createFile('testId1', {
                 test1: '999',
-                "aux.color": 'magenta'
+                'aux.color': 'magenta',
             });
-            
+
             recent.addFileDiff(file1);
             recent.addFileDiff(file2);
             recent.addFileDiff(file3);
@@ -328,30 +319,30 @@ describe('RecentFilesManager', () => {
                     tags: {
                         ...file1_2.tags,
                         'aux._diff': true,
-                        'aux._diffTags': [ 'test1', 'aux.color' ]
-                    }
-                }
+                        'aux._diffTags': ['test1', 'aux.color'],
+                    },
+                },
             ]);
         });
 
         it('should move files that appear equal to the front of the list', () => {
             let file1 = createFile('testId1', {
                 test: 'abc',
-                "aux.color": 'red'
+                'aux.color': 'red',
             });
             let file2 = createFile('testId2', {
                 test: 'abc',
-                "aux.color": 'green'
+                'aux.color': 'green',
             });
             let file3 = createFile('testId3', {
                 test: 'abc',
-                "aux.color": 'blue'
+                'aux.color': 'blue',
             });
             let file4 = createFile('testId4', {
                 test: 'abc',
-                "aux.color": 'red'
+                'aux.color': 'red',
             });
-            
+
             recent.addFileDiff(file1);
             recent.addFileDiff(file2);
             recent.addFileDiff(file3);
@@ -363,9 +354,9 @@ describe('RecentFilesManager', () => {
                     tags: {
                         ...file4.tags,
                         'aux._diff': true,
-                        'aux._diffTags': [ 'test', 'aux.color' ]
-                    }
-                }
+                        'aux._diffTags': ['test', 'aux.color'],
+                    },
+                },
             ]);
         });
     });
@@ -377,8 +368,8 @@ describe('RecentFilesManager', () => {
             expect(recent.files).toEqual([
                 {
                     id: 'empty',
-                    tags: {}
-                }
+                    tags: {},
+                },
             ]);
         });
 
@@ -390,10 +381,7 @@ describe('RecentFilesManager', () => {
             recent.addTagDiff('fileId', 'tag', 'value');
             recent.clear();
 
-            expect(updates).toEqual([
-                1,
-                1
-            ]);
+            expect(updates).toEqual([1, 1]);
         });
     });
 });

@@ -1,17 +1,29 @@
 import { File, FileTags } from '../Files/File';
-import { FileUpdatedEvent, FileEvent, FileAddedEvent, action, FilesState, calculateActionEvents, FileRemovedEvent, fileRemoved, fileAdded, toast as toastMessage, tweenTo as calcTweenTo } from "../Files/FilesChannel";
+import {
+    FileUpdatedEvent,
+    FileEvent,
+    FileAddedEvent,
+    action,
+    FilesState,
+    calculateActionEvents,
+    FileRemovedEvent,
+    fileRemoved,
+    fileAdded,
+    toast as toastMessage,
+    tweenTo as calcTweenTo,
+} from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
-import { every, find } from "lodash";
-import { isProxy, proxyObject, FileProxy } from "../Files/FileProxy";
-import { 
-    FileCalculationContext, 
-    calculateFormulaValue, 
-    COMBINE_ACTION_NAME, 
-    addFileToMenu, 
-    getUserMenuId, 
-    filesInContext, 
-    calculateFileValue, 
-    removeFileFromMenu, 
+import { every, find } from 'lodash';
+import { isProxy, proxyObject, FileProxy } from '../Files/FileProxy';
+import {
+    FileCalculationContext,
+    calculateFormulaValue,
+    COMBINE_ACTION_NAME,
+    addFileToMenu,
+    getUserMenuId,
+    filesInContext,
+    calculateFileValue,
+    removeFileFromMenu,
     getFilesInMenu,
     addToContextDiff as calcAddToContextDiff,
     removeFromContextDiff as calcRemoveFromContextDiff,
@@ -20,7 +32,7 @@ import {
     isFormulaObject,
     unwrapProxy,
     CREATE_ACTION_NAME,
-    DESTROY_ACTION_NAME
+    DESTROY_ACTION_NAME,
 } from '../Files/FileCalculations';
 
 let actions: FileEvent[] = [];
@@ -73,7 +85,7 @@ export type FileDiff = FileTags | FileProxy;
  * Sums the given array of numbers and returns the result.
  * If any value in the list is not a number, it will be converted to one.
  * If the given value is not an array, then it will be converted to a number and returned.
- * 
+ *
  * @param list The value that should be summed. If it is a list, then the result will be the sum of the items in the list.
  *             If it is not a list, then the result will be the value converted to a number.
  */
@@ -101,13 +113,13 @@ export function sum(list: any): number {
  *             If it is not a list, then the result will be the value converted to a number.
  */
 export function avg(list: any) {
-    if(!Array.isArray(list)) {
+    if (!Array.isArray(list)) {
         return parseFloat(list);
     }
 
     let total = sum(list);
     let count = list.length;
-    return total/count;
+    return total / count;
 }
 
 /**
@@ -128,11 +140,11 @@ export function abs(number: any) {
 
 /**
  * Calculates the standard deviation of the numbers in the given list and returns the result.
- * 
+ *
  * @param list The value that the standard deviation should be calculated for.
  */
 export function stdDev(list: any) {
-    if(!Array.isArray(list)) {
+    if (!Array.isArray(list)) {
         list = [parseFloat(list)];
     }
 
@@ -147,7 +159,7 @@ export function stdDev(list: any) {
  * Sorts the given array in ascending order and returns the sorted values in a new array.
  * @param array The array of numbers to sort.
  */
-export function sort(array: any[], direction: ('ASC' | 'DESC') = 'ASC'): any[] {
+export function sort(array: any[], direction: 'ASC' | 'DESC' = 'ASC'): any[] {
     let newArray = array.slice();
     let isAscending = direction.toUpperCase() !== 'DESC';
     if (isAscending) {
@@ -261,7 +273,7 @@ export function create(...diffs: FileDiff[]) {
 
     let file: File = {
         id: id,
-        tags: {}
+        tags: {},
     };
 
     applyDiff(file.tags, ...diffs);
@@ -270,7 +282,7 @@ export function create(...diffs: FileDiff[]) {
     const ret = calc.sandbox.interface.addFile(file);
 
     state = Object.assign({}, state, {
-        [id]: file
+        [id]: file,
     });
 
     event(CREATE_ACTION_NAME, [file]);
@@ -295,7 +307,7 @@ export function cloneFile(...diffs: FileDiff[]) {
     const ret = calc.sandbox.interface.addFile(newFile);
 
     state = Object.assign({}, state, {
-        [id]: newFile
+        [id]: newFile,
     });
 
     event(CREATE_ACTION_NAME, [newFile]);
@@ -308,9 +320,11 @@ export function cloneFile(...diffs: FileDiff[]) {
  * @param data The files or objects to use for the new file's tags.
  */
 export function cloneFrom(file: FileProxy, ...data: FileDiff[]) {
-    let parent = file ? {
-        'aux._creator': file.id
-    } : {};
+    let parent = file
+        ? {
+              'aux._creator': file.id,
+          }
+        : {};
     return cloneFile(file, parent, ...data);
 }
 
@@ -334,7 +348,7 @@ export function clone(file: FileProxy | FileProxy[], ...diffs: FileDiff[]) {
 export function getFileId(file: FileProxy | string): string {
     if (typeof file === 'string') {
         return file;
-    } else if(file) {
+    } else if (file) {
         let original = file[isProxy] ? file[proxyObject] : file;
         return original.id;
     }
@@ -347,9 +361,11 @@ export function getFileId(file: FileProxy | string): string {
  */
 export function createFrom(parent: FileProxy | string, ...datas: FileDiff[]) {
     let parentId = getFileId(parent);
-    let parentDiff = parentId ? {
-        'aux._creator': parentId
-    } : {}; 
+    let parentDiff = parentId
+        ? {
+              'aux._creator': parentId,
+          }
+        : {};
     return create(parentDiff, ...datas);
 }
 
@@ -370,11 +386,16 @@ export function combine(first: File | string, second: File | string) {
  */
 export function event(name: string, files: (File | string)[], arg?: any) {
     if (!!state) {
-        let ids = !!files ? files.map(f => {
-            const file = unwrapProxy(f);
-            return typeof file === 'string' ? file : file.id;
-        }) : null;
-        let results = calculateActionEvents(state, action(name, ids, userFileId, arg));
+        let ids = !!files
+            ? files.map(f => {
+                  const file = unwrapProxy(f);
+                  return typeof file === 'string' ? file : file.id;
+              })
+            : null;
+        let results = calculateActionEvents(
+            state,
+            action(name, ids, userFileId, arg)
+        );
         actions.push(...results.events);
     }
 }
@@ -396,7 +417,7 @@ export function goToContext(simulationId: string, context?: string) {
     if (!context) {
         // Go to context in same simulation
         context = simulationId;
-        
+
         // Grab the simulation ID from the current URL.
         // pathname always starts with a '/' so the first part is actually the second
         // element.
@@ -490,7 +511,12 @@ export function applyDiff(file: any, ...diffs: FileDiff[]) {
  * @param y The Y position that the file should be added at.
  * @param index The index that the file should be added at.
  */
-export function addToContextDiff(context: string, x: number = 0, y: number = 0, index?: number) {
+export function addToContextDiff(
+    context: string,
+    x: number = 0,
+    y: number = 0,
+    index?: number
+) {
     return calcAddToContextDiff(calc, context, x, y, index);
 }
 
@@ -510,7 +536,13 @@ export function removeFromContextDiff(context: string) {
  * @param y The Y position that the file should be added at.
  * @param index The index that the file should be added at.
  */
-export function addToContext(file: FileProxy, context: string, x: number = 0, y: number = 0, index?: number) {
+export function addToContext(
+    file: FileProxy,
+    context: string,
+    x: number = 0,
+    y: number = 0,
+    index?: number
+) {
     applyDiff(file, addToContextDiff(context, x, y, index));
 }
 
@@ -530,8 +562,13 @@ export function removeFromContext(file: FileProxy, context: string) {
  * @param y The Y position.
  * @param index The index.
  */
-export function setPositionDiff(context: string, x?: number, y?: number, index?: number) {
-    return calcSetPositionDiff(calc, context, x, y, index); 
+export function setPositionDiff(
+    context: string,
+    x?: number,
+    y?: number,
+    index?: number
+) {
+    return calcSetPositionDiff(calc, context, x, y, index);
 }
 
 /**
@@ -539,9 +576,9 @@ export function setPositionDiff(context: string, x?: number, y?: number, index?:
  */
 export function addToMenuDiff(): FileTags {
     const context = getUserMenuContext();
-    return { 
+    return {
         ...addToContextDiff(context),
-        [`${context}.id`]: uuid()
+        [`${context}.id`]: uuid(),
     };
 }
 
@@ -558,9 +595,9 @@ export function addToMenu(file: FileProxy) {
  */
 export function removeFromMenuDiff(): FileTags {
     const context = getUserMenuContext();
-    return { 
+    return {
         ...removeFromContextDiff(context),
-        [`${context}.id`]: null
+        [`${context}.id`]: null,
     };
 }
 
@@ -596,7 +633,7 @@ export const makeDiff = {
     removeFromContext: removeFromContextDiff,
     addToMenu: addToMenuDiff,
     removeFromMenu: removeFromMenuDiff,
-    setPosition: setPositionDiff
+    setPosition: setPositionDiff,
 };
 
 export default {
@@ -630,5 +667,5 @@ export default {
     removeFromMenu,
 
     toast,
-    tweenTo
+    tweenTo,
 };

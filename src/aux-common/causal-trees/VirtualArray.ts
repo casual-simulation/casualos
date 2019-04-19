@@ -1,13 +1,11 @@
-
 /**
  * Defines an array that wraps part another array.
  */
 export class VirtualArray<T> {
-
     private _array: T[];
     private _start: number;
     private _end: number;
-    
+
     get start() {
         return this._start;
     }
@@ -25,14 +23,14 @@ export class VirtualArray<T> {
 
     /**
      * Creates a new virtual array that wraps over the given array from the start index to the end index.
-     * @param array 
-     * @param start 
-     * @param end 
+     * @param array
+     * @param start
+     * @param end
      */
     constructor(array: T[], start: number, end?: number) {
         this._array = array;
         this._start = start || 0;
-        this._end = typeof end === 'undefined' ? this._array.length : (end || 0);
+        this._end = typeof end === 'undefined' ? this._array.length : end || 0;
     }
 
     /**
@@ -49,8 +47,8 @@ export class VirtualArray<T> {
 
     /**
      * Sets the value at the given index.
-     * @param index 
-     * @param value 
+     * @param index
+     * @param value
      */
     set(index: number, value: T) {
         if (index < 0) {
@@ -59,7 +57,7 @@ export class VirtualArray<T> {
 
         if (index >= this.length) {
             const newElements = index - (this.length - 1);
-            this._array.splice(this.end, 0, ...(new Array<T>(newElements)));
+            this._array.splice(this.end, 0, ...new Array<T>(newElements));
             this._end = this.end + newElements;
         }
         const final = this._start + index;

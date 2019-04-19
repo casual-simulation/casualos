@@ -1,4 +1,4 @@
-import { Vector2 } from "three";
+import { Vector2 } from 'three';
 
 /**
  * Defines a class that contains axial coordinates.
@@ -44,7 +44,7 @@ export class Axial {
 
         var x = this._q;
         var z = this._r;
-        var y = -x-z;
+        var y = -x - z;
         var rx = Math.round(x);
         var ry = Math.round(y);
         var rz = Math.round(z);
@@ -53,12 +53,12 @@ export class Axial {
         var yDiff = Math.abs(ry - y);
         var zDiff = Math.abs(rz - z);
 
-        if(xDiff > yDiff && xDiff > zDiff) {
-            rx = -ry-rz;
-        } else if(yDiff > zDiff) {
-            ry = -rx-rz;
+        if (xDiff > yDiff && xDiff > zDiff) {
+            rx = -ry - rz;
+        } else if (yDiff > zDiff) {
+            ry = -rx - rz;
         } else {
-            rz = -rx-ry;
+            rz = -rx - ry;
         }
 
         return new Axial(rx, rz);

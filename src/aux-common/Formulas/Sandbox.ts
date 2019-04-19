@@ -1,6 +1,6 @@
-import {Transpiler} from './Transpiler';
+import { Transpiler } from './Transpiler';
 import SandboxInterface from './SandboxInterface';
-import {keys} from 'lodash';
+import { keys } from 'lodash';
 import { merge } from '../utils';
 
 export interface SandboxMacro {
@@ -35,7 +35,7 @@ export interface SandboxResult<TExtra> {
  * to inject into a sandbox.
  */
 export interface SandboxLibrary {
-    [key: string]: any
+    [key: string]: any;
 }
 
 /**
@@ -53,8 +53,8 @@ export class Sandbox {
     macros: SandboxMacro[] = [
         {
             test: /^(?:\=|\:\=)/g,
-            replacement: (val) => ''
-        }
+            replacement: val => '',
+        },
     ];
 
     /**
@@ -81,12 +81,22 @@ export class Sandbox {
      * @param extras The extra data to include in the run. These extras are passed to the interface during execution.
      * @param context The object that should be mapped to "this" during execution. Enables usage of "this" inside formulas.
      */
-    run<TExtra>(formula: string, extras: TExtra, context: any, variables: SandboxLibrary = {}) : SandboxResult<TExtra> {
+    run<TExtra>(
+        formula: string,
+        extras: TExtra,
+        context: any,
+        variables: SandboxLibrary = {}
+    ): SandboxResult<TExtra> {
         const macroed = this._replaceMacros(formula);
         return this._runJs(macroed, extras, context, variables);
     }
 
-    private _runJs<TExtra>(__js: string, __extras: TExtra, __context: any, __variables: SandboxLibrary): SandboxResult<TExtra> {
+    private _runJs<TExtra>(
+        __js: string,
+        __extras: TExtra,
+        __context: any,
+        __variables: SandboxLibrary
+    ): SandboxResult<TExtra> {
         const __this = this;
 
         // This works because even though we never decrement
@@ -97,7 +107,7 @@ export class Sandbox {
             return {
                 success: false,
                 extras: __extras,
-                error: new Error('Ran out of energy')
+                error: new Error('Ran out of energy'),
             };
         }
 
@@ -107,7 +117,10 @@ export class Sandbox {
             return __this.interface.listTagValues(tag, filter, __extras);
         }
 
-        function _listObjectsWithTag(tag: string, filter?: (value: any) => boolean) {
+        function _listObjectsWithTag(
+            tag: string,
+            filter?: (value: any) => boolean
+        ) {
             return __this.interface.listObjectsWithTag(tag, filter, __extras);
         }
 
@@ -121,24 +134,31 @@ export class Sandbox {
 
         function __evalWrapper(js: string): any {
             const finalVars = merge(__this._lib, __variables);
-            const final = keys(finalVars).map(v => `var ${v} = finalVars["${v}"];`).join('\n') + '\n' + js;
+            const final =
+                keys(finalVars)
+                    .map(v => `var ${v} = finalVars["${v}"];`)
+                    .join('\n') +
+                '\n' +
+                js;
             return eval(final);
         }
 
         try {
             this._recursionCounter += 1;
             const __transpiled = this._transpile(__js);
-            const result = __context ? __evalWrapper.call(__context, __transpiled) : __evalWrapper(__js);
+            const result = __context
+                ? __evalWrapper.call(__context, __transpiled)
+                : __evalWrapper(__js);
             return {
                 success: true,
                 extras: __extras,
-                result
+                result,
             };
-        } catch(e) {
+        } catch (e) {
             return {
                 success: false,
                 extras: __extras,
-                error: e
+                error: e,
             };
         }
     }

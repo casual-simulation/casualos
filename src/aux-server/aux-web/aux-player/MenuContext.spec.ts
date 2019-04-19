@@ -1,5 +1,11 @@
-import { MenuContext } from "./MenuContext";
-import { File, createFile, createCalculationContext, AuxObject, updateFile } from "@casual-simulation/aux-common";
+import { MenuContext } from './MenuContext';
+import {
+    File,
+    createFile,
+    createCalculationContext,
+    AuxObject,
+    updateFile,
+} from '@casual-simulation/aux-common';
 
 describe('MenuContext', () => {
     it('should construct for specific context', () => {
@@ -8,13 +14,16 @@ describe('MenuContext', () => {
     });
 
     it('should not allow invalid context name', () => {
-
         function createWith(context: any) {
             let inventory = new MenuContext(context);
-        };
+        }
 
-        expect( () => {createWith(null)} ).toThrow();
-        expect( () => {createWith(undefined)} ).toThrow();
+        expect(() => {
+            createWith(null);
+        }).toThrow();
+        expect(() => {
+            createWith(undefined);
+        }).toThrow();
     });
 
     it('should add and remove files that are part of the context', () => {
@@ -82,18 +91,33 @@ describe('MenuContext', () => {
         let context = 'my_inventory';
         let menu = new MenuContext(context);
         let files: File[] = [
-            createFile('testId_4', { [context]: true, [`${context}.index`]: 0 }),
-            createFile('testId_3', { [context]: true, [`${context}.index`]: 1 }),
-            createFile('testId_2', { [context]: true, [`${context}.index`]: 2 }),
-            createFile('testId_1', { [context]: true, [`${context}.index`]: 3 }),
-            createFile('testId_0', { [context]: true, [`${context}.index`]: 4 }),
+            createFile('testId_4', {
+                [context]: true,
+                [`${context}.index`]: 0,
+            }),
+            createFile('testId_3', {
+                [context]: true,
+                [`${context}.index`]: 1,
+            }),
+            createFile('testId_2', {
+                [context]: true,
+                [`${context}.index`]: 2,
+            }),
+            createFile('testId_1', {
+                [context]: true,
+                [`${context}.index`]: 3,
+            }),
+            createFile('testId_0', {
+                [context]: true,
+                [`${context}.index`]: 4,
+            }),
         ];
         const calc = createCalculationContext(files);
 
         for (let i = 0; i < files.length; i++) {
             menu.fileAdded(<AuxObject>files[i], calc);
         }
-        
+
         // Should be empty.
         expect(menu.items).toEqual([]);
 
@@ -115,8 +139,14 @@ describe('MenuContext', () => {
         let context = 'my_inventory';
         let menu = new MenuContext(context);
         let files: File[] = [
-            createFile('testId_0', { [context]: true, [`${context}.index`]: 0}),
-            createFile('testId_1', { [context]: true, [`${context}.index`]: 1}),
+            createFile('testId_0', {
+                [context]: true,
+                [`${context}.index`]: 0,
+            }),
+            createFile('testId_1', {
+                [context]: true,
+                [`${context}.index`]: 1,
+            }),
         ];
 
         let calc = createCalculationContext(files);
@@ -142,7 +172,7 @@ describe('MenuContext', () => {
         // Now lets move testId_1 to the fourth slot.
         let file = files[1];
         file.tags[`${context}.index`] = 3;
-        
+
         calc = createCalculationContext(files);
         menu.fileUpdated(<AuxObject>file, null, calc);
         menu.frameUpdate(calc);

@@ -1,7 +1,15 @@
-import { FileHelper } from "./FileHelper";
-import { File, doFilesAppearEqual, createFile, merge, tagsOnFile, isDiff, isTagWellKnown } from '@casual-simulation/aux-common';
+import { FileHelper } from './FileHelper';
+import {
+    File,
+    doFilesAppearEqual,
+    createFile,
+    merge,
+    tagsOnFile,
+    isDiff,
+    isTagWellKnown,
+} from '@casual-simulation/aux-common';
 import { Subject, Observable } from 'rxjs';
-import { keys } from "d3";
+import { keys } from 'd3';
 
 /**
  * Defines a class that helps manage recent files.
@@ -10,7 +18,7 @@ export class RecentFilesManager {
     private _helper: FileHelper;
     private _onUpdated: Subject<void>;
     private _selectedRecentFile: File = null;
-    
+
     /**
      * The files that have been stored in the recent files manager.
      */
@@ -50,9 +58,7 @@ export class RecentFilesManager {
     constructor(helper: FileHelper) {
         this._helper = helper;
         this._onUpdated = new Subject<void>();
-        this.files = [
-            createFile('empty')
-        ];
+        this.files = [createFile('empty')];
     }
 
     /**
@@ -68,8 +74,8 @@ export class RecentFilesManager {
             tags: {
                 [tag]: value,
                 'aux._diff': true,
-                'aux._diffTags': [tag]
-            } 
+                'aux._diffTags': [tag],
+            },
         });
         this._trimList();
         this._updateSelectedRecentFile();
@@ -89,18 +95,17 @@ export class RecentFilesManager {
             id = `diff-${file.id}`;
         }
         this._cleanFiles(id, file);
-        let {
-            'aux._diff': diff,
-            'aux._diffTags': t,
-            ...others
-        } = file.tags;
+        let { 'aux._diff': diff, 'aux._diffTags': t, ...others } = file.tags;
 
         const f = merge(file, {
             id: id,
             tags: {
                 'aux._diff': true,
-                'aux._diffTags': (updateTags || !t) ? keys(others).filter(t => !isTagWellKnown(t)) : t
-            }
+                'aux._diffTags':
+                    updateTags || !t
+                        ? keys(others).filter(t => !isTagWellKnown(t))
+                        : t,
+            },
         });
         this.files.unshift(f);
         this._trimList();
@@ -110,7 +115,9 @@ export class RecentFilesManager {
 
     private _updateSelectedRecentFile() {
         if (this.selectedRecentFile) {
-            let file = this.files.find(f => f.id === this.selectedRecentFile.id);
+            let file = this.files.find(
+                f => f.id === this.selectedRecentFile.id
+            );
             this.selectedRecentFile = file || null;
         }
     }
@@ -119,9 +126,7 @@ export class RecentFilesManager {
      * Clears the files list.
      */
     clear() {
-        this.files = [
-            createFile('empty')
-        ];
+        this.files = [createFile('empty')];
         this._onUpdated.next();
     }
 

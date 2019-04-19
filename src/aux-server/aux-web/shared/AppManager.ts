@@ -9,12 +9,20 @@ import { flatMap, map, scan } from 'rxjs/operators';
 import { downloadAuxState, readFileJson } from '../aux-projector/download';
 import { CausalTreeManager } from './causal-trees/CausalTreeManager';
 import { StoredCausalTree } from '@casual-simulation/aux-common/causal-trees';
-import { AuxOp, FilesState, AuxCausalTree, lerp } from '@casual-simulation/aux-common';
+import {
+    AuxOp,
+    FilesState,
+    AuxCausalTree,
+    lerp,
+} from '@casual-simulation/aux-common';
 import Dexie from 'dexie';
 import { difference } from 'lodash';
 import uuid from 'uuid/v4';
 import { WebConfig } from '../../shared/WebConfig';
-import { LoadingProgress, LoadingProgressCallback } from '@casual-simulation/aux-common/LoadingProgress';
+import {
+    LoadingProgress,
+    LoadingProgressCallback,
+} from '@casual-simulation/aux-common/LoadingProgress';
 
 export interface User {
     id: string;
@@ -47,21 +55,20 @@ interface StoredValue<T> {
 }
 
 class AppDatabase extends Dexie {
-
     keyval: Dexie.Table<StoredValue<any>, string>;
 
     constructor() {
         super('Aux');
 
         this.version(1).stores({
-            'keyval': 'key'
+            keyval: 'key',
         });
     }
 }
 
 export enum AppType {
     Builder = 'builder',
-    Player = 'player'
+    Player = 'player',
 }
 
 export class AppManager {
@@ -128,7 +135,7 @@ export class AppManager {
     get version(): VersionInfo {
         return {
             gitCommit: GIT_HASH,
-            latestTaggedVersion: GIT_TAG
+            latestTaggedVersion: GIT_TAG,
         };
     }
 
@@ -152,7 +159,10 @@ export class AppManager {
      * Downloads the current local application state to a file.
      */
     downloadState(): void {
-        downloadAuxState(this.fileManager.aux.tree, `${this.user.name}-${this.user.channelId || 'default'}`);
+        downloadAuxState(
+            this.fileManager.aux.tree,
+            `${this.user.name}-${this.user.channelId || 'default'}`
+        );
     }
 
     /**
@@ -165,18 +175,20 @@ export class AppManager {
         let value: FilesState;
         if (state.site && state.knownSites && state.weave) {
             console.log('[AppManager] Importing Weave.');
-            
+
             // Don't try to import the tree because it's like trying to
             // import an unrelated Git repo. Git handles this by allowing
             // multiple root nodes but we dont allow multiple roots.
-            const tree = <AuxCausalTree>this._treeManager.factory.create('aux', state);
+            const tree = <AuxCausalTree>(
+                this._treeManager.factory.create('aux', state)
+            );
             await tree.import(state);
             value = tree.value;
         } else {
             console.log('[AppManager] Old file detected, adding state.');
-            value = <FilesState><unknown>state;
+            value = <FilesState>(<unknown>state);
         }
-        
+
         await this.fileManager.addState(value);
     }
 
@@ -184,22 +196,26 @@ export class AppManager {
      * Helper function that ensures services are only running while the user is logged in.
      * The provided setup function will be run once the user logs in or if they are already logged in
      * and the returned subscriptions will be unsubscribed once the user logs out.
-     * @param setup 
+     * @param setup
      */
-    whileLoggedIn(setup: (user: User, fileManager: FileManager) => SubscriptionLike[]): SubscriptionLike {
-        return this.userObservable.pipe(
-            scan((subs: SubscriptionLike[], user: User, index) => {
-                console.log('user', user, index);
-                if (subs) {
-                    subs.forEach(s => s.unsubscribe());
-                }
-                if (user) {   
-                    return setup(user, this.fileManager);
-                } else {
-                    return null;
-                }
-            }, null)
-        ).subscribe();
+    whileLoggedIn(
+        setup: (user: User, fileManager: FileManager) => SubscriptionLike[]
+    ): SubscriptionLike {
+        return this.userObservable
+            .pipe(
+                scan((subs: SubscriptionLike[], user: User, index) => {
+                    console.log('user', user, index);
+                    if (subs) {
+                        subs.forEach(s => s.unsubscribe());
+                    }
+                    if (user) {
+                        return setup(user, this.fileManager);
+                    } else {
+                        return null;
+                    }
+                }, null)
+            )
+            .subscribe();
     }
 
     private async _init() {
@@ -217,7 +233,9 @@ export class AppManager {
         this._config = await this._getConfig();
         await this._saveConfig();
         if (!this._config) {
-            console.warn('[AppManager] Config not able to be fetched from the server or local storage.');
+            console.warn(
+                '[AppManager] Config not able to be fetched from the server or local storage.'
+            );
         }
     }
 
@@ -230,7 +248,7 @@ export class AppManager {
                 integrations: [new Sentry.Integrations.Vue({ Vue: Vue })],
                 release: GIT_HASH,
                 environment: sentryEnv,
-                enabled: ENABLE_SENTRY
+                enabled: ENABLE_SENTRY,
             });
         } else {
             console.log('Skipping Sentry Initialization');
@@ -247,7 +265,7 @@ export class AppManager {
                     message: 'Updating service worker.',
                     level: Sentry.Severity.Info,
                     category: 'app',
-                    type: 'default'
+                    type: 'default',
                 });
             },
             onUpdateReady: () => {
@@ -260,13 +278,16 @@ export class AppManager {
                     message: 'Updated service worker.',
                     level: Sentry.Severity.Info,
                     category: 'app',
-                    type: 'default'
+                    type: 'default',
                 });
                 this._updateAvailable.next(true);
             },
             onUpdateFailed: () => {
                 console.log('[ServiceWorker]: Update failed.');
-                Sentry.captureMessage('Service Worker update failed', Sentry.Severity.Error);
+                Sentry.captureMessage(
+                    'Service Worker update failed',
+                    Sentry.Severity.Error
+                );
             },
             onInstalled: () => {
                 console.log('[ServiceWorker]: Installed.');
@@ -274,9 +295,9 @@ export class AppManager {
                     message: 'Installed service worker.',
                     level: Sentry.Severity.Info,
                     category: 'app',
-                    type: 'default'
+                    type: 'default',
                 });
-            }
+            },
         });
     }
 
@@ -293,13 +314,15 @@ export class AppManager {
         });
 
         let userJson = sessionStorage.getItem('user');
-        let user: User; 
+        let user: User;
         let session: boolean = false;
         if (userJson) {
             user = JSON.parse(userJson);
             session = true;
         } else {
-            const storedUser: StoredValue<User> = await this._db.keyval.get('user');
+            const storedUser: StoredValue<User> = await this._db.keyval.get(
+                'user'
+            );
             if (storedUser) {
                 user = storedUser.value;
                 session = false;
@@ -310,20 +333,30 @@ export class AppManager {
             if (user.id) {
                 this._user = user;
 
-
-                if(this._user.name.includes("guest_")){
-                    this._user.name = "Guest";
+                if (this._user.name.includes('guest_')) {
+                    this._user.name = 'Guest';
                 }
 
                 if (!session) {
                     this._user.id = uuid();
                 }
 
-                const onFileManagerInitProgress: LoadingProgressCallback = (progress: LoadingProgress) => {
+                const onFileManagerInitProgress: LoadingProgressCallback = (
+                    progress: LoadingProgress
+                ) => {
                     const start = this.loadingProgress.progress;
-                    this.loadingProgress.set(lerp(start, 95, progress.progress / 100), progress.status, progress.error);
+                    this.loadingProgress.set(
+                        lerp(start, 95, progress.progress / 100),
+                        progress.status,
+                        progress.error
+                    );
                 };
-                await this._fileManager.init(this._user.channelId, false, onFileManagerInitProgress, this.config);
+                await this._fileManager.init(
+                    this._user.channelId,
+                    false,
+                    onFileManagerInitProgress,
+                    this.config
+                );
                 this.loadingProgress.status = 'Saving user...';
                 await this._saveUser();
                 this._userSubject.next(this._user);
@@ -353,7 +386,7 @@ export class AppManager {
                 type: 'default',
                 level: Sentry.Severity.Info,
             });
-            console.log("[AppManager] Logout");
+            console.log('[AppManager] Logout');
 
             this._fileManager.dispose();
             this._user = null;
@@ -362,12 +395,14 @@ export class AppManager {
         }
     }
 
-    async loginOrCreateUser(email: string, channelId?: string): Promise<boolean> {
+    async loginOrCreateUser(
+        email: string,
+        channelId?: string
+    ): Promise<boolean> {
         this.loadingProgress.show = true;
         this.loadingProgress.set(0, 'Checking current user...', null);
-        
-        if (this.user && this.user.channelId === channelId)
-        {
+
+        if (this.user && this.user.channelId === channelId) {
             this.loadingProgress.set(100, 'Complete!', null);
             return true;
         }
@@ -377,7 +412,7 @@ export class AppManager {
         try {
             this.loadingProgress.set(10, 'Getting user from server...', null);
             const result = await Axios.post('/api/users', {
-                email: email
+                email: email,
             });
 
             if (result.status === 200) {
@@ -385,9 +420,13 @@ export class AppManager {
                     message: 'Login Success!',
                     category: 'auth',
                     level: Sentry.Severity.Info,
-                    type: 'default'
+                    type: 'default',
                 });
-                this.loadingProgress.set(20, 'Recieved user from server.', null);
+                this.loadingProgress.set(
+                    20,
+                    'Recieved user from server.',
+                    null
+                );
                 console.log('[AppManager] Login Success!', result);
 
                 this._user = result.data;
@@ -395,10 +434,21 @@ export class AppManager {
 
                 this.loadingProgress.set(40, 'Loading Files...', null);
 
-                const onFileManagerInitProgress: LoadingProgressCallback = (progress: LoadingProgress) => {
-                    this.loadingProgress.set(lerp(40, 95, progress.progress / 100), progress.status, progress.error);
-                }
-                await this._fileManager.init(channelId, true, onFileManagerInitProgress, this.config);
+                const onFileManagerInitProgress: LoadingProgressCallback = (
+                    progress: LoadingProgress
+                ) => {
+                    this.loadingProgress.set(
+                        lerp(40, 95, progress.progress / 100),
+                        progress.status,
+                        progress.error
+                    );
+                };
+                await this._fileManager.init(
+                    channelId,
+                    true,
+                    onFileManagerInitProgress,
+                    this.config
+                );
 
                 this._userSubject.next(this._user);
                 this.loadingProgress.set(95, 'Saving user...', null);
@@ -413,18 +463,26 @@ export class AppManager {
                     message: 'Login failure',
                     category: 'auth',
                     level: Sentry.Severity.Error,
-                    type: 'error'
+                    type: 'error',
                 });
                 console.error(result);
 
-                this.loadingProgress.set(0, 'Error occured while logging in.', result.statusText);
+                this.loadingProgress.set(
+                    0,
+                    'Error occured while logging in.',
+                    result.statusText
+                );
                 return false;
             }
         } catch (ex) {
             Sentry.captureException(ex);
             console.error(ex);
 
-            this.loadingProgress.set(0, 'Exception occured while logging in.', ex.message);
+            this.loadingProgress.set(
+                0,
+                'Exception occured while logging in.',
+                ex.message
+            );
             return false;
         }
     }

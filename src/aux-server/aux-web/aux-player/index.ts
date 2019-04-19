@@ -9,7 +9,7 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
  *
@@ -26,18 +26,18 @@
 import * as Sentry from '@sentry/browser';
 import Vue from 'vue';
 import VueRouter, { RouteConfig } from 'vue-router';
-import { 
-    MdButton, 
-    MdContent, 
-    MdApp, 
-    MdCard, 
-    MdToolbar, 
-    MdField, 
-    MdProgress, 
-    MdDrawer, 
-    MdList, 
-    MdMenu, 
-    MdDialog, 
+import {
+    MdButton,
+    MdContent,
+    MdApp,
+    MdCard,
+    MdToolbar,
+    MdField,
+    MdProgress,
+    MdDrawer,
+    MdList,
+    MdMenu,
+    MdDialog,
     MdDialogConfirm,
     MdDialogAlert,
     MdTabs,
@@ -83,7 +83,7 @@ Vue.use(MdList);
 Vue.use(MdMenu);
 Vue.use(MdDialog);
 Vue.use(MdDialogConfirm);
-Vue.use(MdDialogAlert)
+Vue.use(MdDialogAlert);
 Vue.use(MdTabs);
 Vue.use(MdTooltip);
 Vue.use(MdSnackbar);
@@ -100,73 +100,97 @@ const routes: RouteConfig[] = [
         path: '/:id/:context',
         name: 'home',
         component: Home,
-        props: (route) => ({
-            context: route.params.context
-        })
+        props: route => ({
+            context: route.params.context,
+        }),
     },
     {
         path: '/:id?',
         name: 'aux-builder',
         redirect: to => {
             if (appManager.config) {
-                window.location.href = `${appManager.config.projectorBaseUrl}/${to.params.id}`;
+                window.location.href = `${appManager.config.projectorBaseUrl}/${
+                    to.params.id
+                }`;
             }
-            
+
             return `/${to.params.id}/default`;
-        }
+        },
     },
-]
+];
 
 const router = new VueRouter({
     mode: 'history',
-    routes
+    routes,
 });
 
 router.beforeEach((to, from, next) => {
-    appManager.initPromise.then(() => {
-        const channelId = to.params.id || null;
-        const contextId = to.params.context || null;
-        if (to.path !== '/login') {
-            if (!appManager.user) {
-                next({ name: 'login', query: { id: channelId, context: contextId } });
-                return;
-            } else {
-                if (appManager.user.channelId != channelId) {
-                    console.log(`[Router] Changing channels: ${channelId}`);
-                    return appManager.loginOrCreateUser(appManager.user.email, channelId).then(() => {
-                        console.log(`[Router] Logged In!`);
-                        next();
-                    }, ex => {
-                        console.error(ex);
-                        next({ name: 'login', query: { id: channelId, context: contextId } });
+    appManager.initPromise.then(
+        () => {
+            const channelId = to.params.id || null;
+            const contextId = to.params.context || null;
+            if (to.path !== '/login') {
+                if (!appManager.user) {
+                    next({
+                        name: 'login',
+                        query: { id: channelId, context: contextId },
                     });
+                    return;
+                } else {
+                    if (appManager.user.channelId != channelId) {
+                        console.log(`[Router] Changing channels: ${channelId}`);
+                        return appManager
+                            .loginOrCreateUser(appManager.user.email, channelId)
+                            .then(
+                                () => {
+                                    console.log(`[Router] Logged In!`);
+                                    next();
+                                },
+                                ex => {
+                                    console.error(ex);
+                                    next({
+                                        name: 'login',
+                                        query: {
+                                            id: channelId,
+                                            context: contextId,
+                                        },
+                                    });
+                                }
+                            );
+                    }
+                }
+            } else {
+                if (appManager.user) {
+                    next({
+                        name: 'home',
+                        params: {
+                            id: appManager.user.channelId,
+                            context: contextId,
+                        },
+                    });
+                    return;
                 }
             }
-        } else {
-            if (appManager.user) {
-                next({ name: 'home', params: { id: appManager.user.channelId, context: contextId }});
-                return;
-            }
+
+            next();
+        },
+        ex => {
+            console.error(ex);
+            next({ name: 'login' });
         }
-
-
-        next();
-    }, ex => {
-        console.error(ex);
-        next({ name: 'login' });
-    });
+    );
 });
 
 async function start() {
     const loading = new Vue({
-        render: createEle => createEle(Loading)
+        render: createEle => createEle(Loading),
     }).$mount('#loading');
-    
+
     await appManager.initPromise;
-    
+
     const app = new Vue({
         router,
-        render: createEle => createEle(App)
+        render: createEle => createEle(App),
     }).$mount('#app');
 }
 
