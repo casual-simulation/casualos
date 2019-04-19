@@ -8,6 +8,10 @@
 - Improvements
   - Users that join as a guest will now have a cleaner visible name of `Guest`.
   - Removed the builder checkbox on the new workspace popup to make the feature cleaner.
+  - Added the ability to zoom to a file by tapping/clicking its ID in the file sheet.
+  - Added a couple script functions:
+    - `tweenTo(file or id)` causes the current user's camera to tween to the given file. (just like how the sheet does it)
+    - `toast(message)` causes a toast message to pop up with the given message. It will automatically go away after some time.
 
 
 ## V0.4.13
