@@ -4,11 +4,11 @@ mongo:
     ports:
         - '27017:27017'
     volumes:
-        - '/data/db:/data/db'
+        - './docker/services/data/db:/data/db'
 redis:
     image: 'redis:latest'
     restart: always
     ports:
         - '6379:6379'
     volumes:
-        - '/data/cache:/data'
+        - './docker/services/data/cache:/data'
