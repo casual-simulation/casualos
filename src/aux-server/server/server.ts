@@ -20,6 +20,7 @@ import sharp from 'sharp';
 import {
     parseCacheControlHeader,
     CacheControlHeaderValues,
+    formatCacheControlHeader,
 } from './CacheHelpers';
 
 const connect = pify(MongoClient.connect);
@@ -178,6 +179,17 @@ export class ClientServer {
                         });
 
                         this._redisClient.EXPIRE(url, expire);
+                        cacheControl = {
+                            public: true,
+                            'max-age': expire,
+                        };
+                    }
+
+                    let cacheControlHeader = formatCacheControlHeader(
+                        cacheControl
+                    );
+                    if (cacheControlHeader && cacheControlHeader.length > 0) {
+                        res.setHeader('Cache-Control', cacheControlHeader);
                     }
 
                     res.contentType(contentType);

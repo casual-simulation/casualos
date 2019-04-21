@@ -28,3 +28,19 @@ export function parseCacheControlHeader(
 
     return values;
 }
+
+export function formatCacheControlHeader(header: CacheControlHeaderValues) {
+    let entries: string[] = [];
+    for (let key in header) {
+        if (header.hasOwnProperty(key)) {
+            let val = (<any>header)[key];
+            if (typeof val === 'boolean') {
+                entries.push(key);
+            } else {
+                entries.push(`${key}=${val}`);
+            }
+        }
+    }
+
+    return entries.join(', ');
+}
