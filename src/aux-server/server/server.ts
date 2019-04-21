@@ -13,10 +13,14 @@ import { MongoDBTreeStore } from './causal-trees/MongoDBTreeStore';
 import { auxCausalTreeFactory } from '@casual-simulation/aux-common/aux-format';
 import { AppVersion, apiVersion } from '@casual-simulation/aux-common';
 import uuid from 'uuid/v4';
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { RedisClient, createClient as createRedisClient } from 'redis';
 import util from 'util';
 import sharp from 'sharp';
+import {
+    parseCacheControlHeader,
+    CacheControlHeaderValues,
+} from './CacheHelpers';
 
 const connect = pify(MongoClient.connect);
 
@@ -121,8 +125,14 @@ export class ClientServer {
                     const status = resp.status;
                     let contentType = resp.headers['content-type'];
                     let data: Buffer = resp.data;
+                    let cacheControl = parseCacheControlHeader(
+                        resp.headers['cache-control'] || ''
+                    );
 
-                    if (this._redisClient && this._shouldCache(contentType)) {
+                    if (
+                        this._redisClient &&
+                        this._shouldCache(contentType, cacheControl)
+                    ) {
                         if (this._shouldOptimise(contentType)) {
                             console.log('[Server] Optimizing image...');
                             const beforeSize = data.length;
@@ -152,13 +162,22 @@ export class ClientServer {
                             console.log('[Server] Skipping Optimization.');
                         }
 
-                        console.log('[Server] Caching', contentType);
+                        let expire = this._cacheExpireSeconds;
+                        if (cacheControl['s-maxage']) {
+                            expire = cacheControl['s-maxage'];
+                        } else if (cacheControl['max-age']) {
+                            expire = cacheControl['max-age'];
+                        }
+                        console.log(
+                            `[Server] Caching ${contentType} for ${expire} seconds.`
+                        );
                         this._redisClient.hmset(url, {
                             contentType: contentType,
                             status: status,
                             data: <any>data,
                         });
-                        this._redisClient.EXPIRE(url, this._cacheExpireSeconds);
+
+                        this._redisClient.EXPIRE(url, expire);
                     }
 
                     res.contentType(contentType);
@@ -202,8 +221,14 @@ export class ClientServer {
         return imageMimeTypes.indexOf(contentType) >= 0;
     }
 
-    private _shouldCache(contentType: string) {
-        return imageMimeTypes.indexOf(contentType) >= 0;
+    private _shouldCache(
+        contentType: string,
+        cacheControl: CacheControlHeaderValues
+    ) {
+        const isImage = imageMimeTypes.indexOf(contentType) >= 0;
+        return (
+            isImage && !cacheControl['no-cache'] && !cacheControl['no-store']
+        );
     }
 }
 
