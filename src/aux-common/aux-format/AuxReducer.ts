@@ -1,4 +1,4 @@
-import { AtomReducer } from '../causal-trees/AtomReducer';
+import { AtomReducer } from '@casual-simulation/causal-trees';
 import {
     AuxOp,
     AuxOpType,
@@ -8,12 +8,12 @@ import {
     DeleteOp,
     ValueOp,
 } from './AuxOpTypes';
-import { Weave } from '../causal-trees/Weave';
+import { Weave } from '@casual-simulation/causal-trees';
 import { FilesState, File, Object, hasValue } from '../Files';
 import { createFile, createWorkspace } from '../Files/FileCalculations';
-import { WeaveTraverser } from '../causal-trees/WeaveTraverser';
+import { WeaveTraverser } from '@casual-simulation/causal-trees';
 import { merge, splice } from '../utils';
-import { AtomFactory } from '../causal-trees/AtomFactory';
+import { AtomFactory } from '@casual-simulation/causal-trees';
 import {
     AuxFile,
     AuxObject,
@@ -25,7 +25,7 @@ import {
 } from './AuxState';
 import { flatMap, fill } from 'lodash';
 import { MetaProperty } from 'estree';
-import { Atom } from '../causal-trees/Atom';
+import { Atom } from '@casual-simulation/causal-trees';
 
 /**
  * Defines a type for a map from weave references to their calculated values.

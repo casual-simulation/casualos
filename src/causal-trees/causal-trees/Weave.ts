@@ -9,7 +9,7 @@ import {
 } from './Atom';
 import { keys } from 'lodash';
 import { WeaveVersion, WeaveSiteVersion } from './WeaveVersion';
-import { getHash } from './Hash';
+import { getHash } from '../crypto/Hash';
 import { RejectedAtom } from './RejectedAtom';
 
 /**

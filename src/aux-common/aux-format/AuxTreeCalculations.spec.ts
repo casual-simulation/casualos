@@ -6,10 +6,10 @@ import {
     storedTree,
     site,
     Atom,
-} from '../causal-trees';
+} from '@casual-simulation/causal-trees';
 import { auxCausalTreeFactory } from './AuxCausalTreeFactory';
-import { TestCausalTreeStore } from '../causal-trees/test/TestCausalTreeStore';
-import { TestChannelConnection } from '../causal-trees/test/TestChannelConnection';
+import { TestCausalTreeStore } from '@casual-simulation/causal-trees/test';
+import { TestChannelConnection } from '@casual-simulation/causal-trees/test';
 import {
     fileChangeObservables,
     getAtomFile,

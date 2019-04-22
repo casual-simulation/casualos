@@ -5,7 +5,7 @@ import {
     precalculatedOp,
     RealtimeCausalTree,
     Weave,
-} from '../causal-trees';
+} from '@casual-simulation/causal-trees';
 import { AuxFile, AuxTagMetadata, AuxObject, AuxState } from './AuxState';
 import { InsertOp, DeleteOp, AuxOp, AuxOpType, FileOp } from './AuxOpTypes';
 import { calculateSequenceRef, calculateSequenceRefs } from './AuxReducer';

@@ -22,7 +22,7 @@ import { storedTree, StoredCausalTree } from './StoredCausalTree';
 import { WeaveVersion, versionsEqual } from './WeaveVersion';
 import { PrivateCryptoKey } from '../crypto';
 import { RejectedAtom } from './RejectedAtom';
-import { LoadingProgress, LoadingProgressCallback } from '../LoadingProgress';
+import { LoadingProgressCallback } from './LoadingProgress';
 
 /**
  * Defines an interface for options that a realtime causal tree can accept.
@@ -78,7 +78,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
     private _options: RealtimeCausalTreeOptions;
     private _storeAtoms: boolean;
     private _bufferTime: number;
-    private _loadingProgress: LoadingProgress;
+    private _loadingCallback: LoadingProgressCallback;
 
     /**
      * Gets the realtime channel that this tree is using.
@@ -181,32 +181,27 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
      * Initializes the realtime causal tree.
      */
     async init(loadingCallback?: LoadingProgressCallback): Promise<void> {
-        if (this._loadingProgress) {
-            this._loadingProgress.onChanged.removeAllListeners();
-            this._loadingProgress = null;
-        }
-
-        this._loadingProgress = new LoadingProgress();
-        if (loadingCallback) {
-            this._loadingProgress.onChanged.addListener(() => {
-                loadingCallback(this._loadingProgress);
-            });
-        }
+        this._loadingCallback = loadingCallback || (() => {});
 
         // Skip using the stored tree if
         // we should always load from the server.
         if (!this._alwaysRequestNewSiteId) {
-            this._loadingProgress.status = 'Checking for stored causal tree...';
+            this._loadingCallback({
+                message: 'Checking for stored causal tree...',
+            });
             const stored = await this._store.get(this.id, false);
 
             if (stored) {
-                this._loadingProgress.status = 'Retrieving stored keys...';
+                this._loadingCallback({
+                    message: 'Retrieving stored keys...',
+                });
                 const keys = await this._store.getKeys(this.id);
 
                 let tree: TTree;
                 if (keys) {
-                    this._loadingProgress.status =
-                        'Importing private signing key...';
+                    this._loadingCallback({
+                        message: 'Importing private signing key...',
+                    });
                     const signingKey = await this._options.validator.impl.importPrivateKey(
                         keys.privateKey
                     );
@@ -222,20 +217,30 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
                         stored.knownSites
                     );
                 } else {
-                    this._loadingProgress.status =
-                        'Creating new casual tree...';
+                    this._loadingCallback({
+                        message: 'Creating new casual tree...',
+                    });
+
                     tree = <TTree>(
                         this._factory.create(this.type, stored, this._options)
                     );
                 }
                 this._listenForRejectedAtoms(tree);
 
-                this._loadingProgress.status = 'Importing stored tree...';
-                await tree.import(stored);
+                this._loadingCallback({
+                    message: 'Importing stored tree...',
+                });
+                await tree.import(stored, undefined, status => {
+                    this._loadingCallback({
+                        progressPercent: status.progressPercent,
+                    });
+                });
 
                 this._setTree(tree);
 
-                this._loadingProgress.status = 'Updating stored tree...';
+                this._loadingCallback({
+                    message: 'Updating stored tree...',
+                });
                 await this._putTree(tree, true);
             }
         }
@@ -346,13 +351,10 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
     async waitToGetTreeFromServer() {
         if (!this.tree) {
             await this.onUpdated.pipe(first()).toPromise();
-            this._loadingProgress.set(
-                100,
-                'Tree initialization complete.',
-                null
-            );
-            this._loadingProgress.onChanged.removeAllListeners();
-            this._loadingProgress = null;
+            this._loadingCallback({
+                message: 'Tree initialization complete.',
+                progressPercent: 1,
+            });
         }
     }
 
@@ -406,23 +408,14 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
             } atoms....`
         );
 
-        this._loadingProgress.status = `Importing ${
-            weave.weave.length
-        } atoms...`;
-        const onWeaveImportProgress: LoadingProgressCallback = (
-            weaveProgress: LoadingProgress
-        ) => {
-            this._loadingProgress.set(
-                this._loadingProgress.progress,
-                weaveProgress.status,
-                weaveProgress.error
-            );
-        };
+        this._loadingCallback({
+            message: `Importing ${weave.weave.length} atoms...`,
+        });
 
         const { added: results } = await tree.import(
             weave,
             this._options.verifyAllSignatures || false,
-            onWeaveImportProgress
+            this._loadingCallback
         );
         console.log(
             `[RealtimeCausalTree] ${this.id}: Imported ${results.length} atoms.`
@@ -478,7 +471,9 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
                 console.log(
                     `[RealtimeCausalTree] ${id}: Generating crypto keys...`
                 );
-                this._loadingProgress.status = 'Generating crypto keys...';
+                this._loadingCallback({
+                    message: 'Generating crypto keys...',
+                });
                 const [
                     pubKey,
                     privKey,
@@ -500,7 +495,9 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
                 console.log(
                     `[RealtimeCausalTree] ${id}: Using existing keys...`
                 );
-                this._loadingProgress.status = 'Using exisiting crypto keys...';
+                this._loadingCallback({
+                    message: 'Using exisiting crypto keys...',
+                });
                 crypto = {
                     publicKey: keys.publicKey,
                     signatureAlgorithm: 'ECDSA-SHA256-NISTP256',
@@ -525,9 +522,9 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
         while (!success) {
             nextSite += 1;
             mySite = site(nextSite, crypto);
-            this._loadingProgress.status = `Requesting side id ${
-                mySite.id
-            } from remote...`;
+            this._loadingCallback({
+                message: `Requesting side id ${mySite.id} from remote...`,
+            });
             success = await this._channel.requestSiteId(mySite);
         }
 

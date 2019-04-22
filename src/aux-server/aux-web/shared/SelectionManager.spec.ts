@@ -7,7 +7,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { SelectionManager } from './SelectionManager';
 import { FileHelper } from './FileHelper';
-import { storedTree, site } from '@casual-simulation/aux-common/causal-trees';
+import { storedTree, site } from '@casual-simulation/causal-trees';
 
 describe('SelectionManager', () => {
     let tree: AuxCausalTree;

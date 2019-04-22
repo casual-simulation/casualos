@@ -39,7 +39,7 @@ import {
 import { AppManager, appManager } from './AppManager';
 import { SocketManager } from './SocketManager';
 import { CausalTreeManager } from './causal-trees/CausalTreeManager';
-import { RealtimeCausalTree } from '@casual-simulation/aux-common/causal-trees';
+import { RealtimeCausalTree } from '@casual-simulation/causal-trees';
 import { getOptionalValue } from './SharedUtils';
 import {
     LoadingProgress,

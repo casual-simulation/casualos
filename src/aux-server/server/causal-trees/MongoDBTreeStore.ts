@@ -10,7 +10,7 @@ import {
     SiteInfo,
     atomIdToString,
     StoredCryptoKeys,
-} from '@casual-simulation/aux-common/causal-trees';
+} from '@casual-simulation/causal-trees';
 
 /**
  * Defines a class that is able to store a causal tree in MongoDB.

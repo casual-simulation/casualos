@@ -1,4 +1,4 @@
-import { CausalTreeFactory } from '../causal-trees';
+import { CausalTreeFactory } from '@casual-simulation/causal-trees';
 import { AuxCausalTree } from './AuxCausalTree';
 
 /**

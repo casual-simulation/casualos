@@ -1,8 +1,5 @@
 import io from 'socket.io-client';
-// import CausalTreeWorker from './AuxCausalTree.worker';
-import { WorkerEvent, ValueCalculated } from './WorkerEvents';
 import { SubscriptionLike, Subject, Observable } from 'rxjs';
-import { first, map, filter, tap } from 'rxjs/operators';
 import {
     AtomOp,
     RealtimeChannelInfo,
@@ -15,12 +12,12 @@ import {
     Atom,
     CausalTreeOptions,
     RealtimeCausalTreeOptions,
-} from '@casual-simulation/aux-common/causal-trees';
+} from '@casual-simulation/causal-trees';
 import { SocketIOConnection } from './SocketIOConnection';
 import { auxCausalTreeFactory } from '@casual-simulation/aux-common';
 import { BrowserCausalTreeStore } from './BrowserCausalTreeStore';
-import { AtomValidator } from '@casual-simulation/aux-common/causal-trees/AtomValidator';
-import { SigningCryptoImpl } from '@casual-simulation/aux-common/crypto';
+import { AtomValidator } from '@casual-simulation/causal-trees';
+import { SigningCryptoImpl } from '@casual-simulation/causal-trees';
 import { BrowserSigningCryptoImpl } from '../crypto/BrowserSigningCryptoImpl';
 
 /**

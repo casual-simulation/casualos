@@ -17,3 +17,8 @@ export * from './Weave';
 export * from './WeaveTraverser';
 export * from './WeaveVersion';
 export * from './PrecalculatedOp';
+export * from './RejectedAtom';
+export * from './AtomBatch';
+export * from './AddResult';
+export * from './AtomValidator';
+export * from './RealtimeChannelConnection';

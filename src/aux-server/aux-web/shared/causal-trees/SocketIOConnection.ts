@@ -1,5 +1,5 @@
-import { RealtimeChannelConnection } from '@casual-simulation/aux-common/causal-trees/RealtimeChannelConnection';
-import { ConnectionEvent } from '@casual-simulation/aux-common/causal-trees/ConnectionEvent';
+import { RealtimeChannelConnection } from '@casual-simulation/causal-trees';
+import { ConnectionEvent } from '@casual-simulation/causal-trees';
 import {
     Observable,
     merge,

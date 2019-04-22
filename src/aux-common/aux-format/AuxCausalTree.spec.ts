@@ -1,5 +1,4 @@
 import { AuxCausalTree } from './AuxCausalTree';
-import { AtomFactory } from '../causal-trees/AtomFactory';
 import { AuxOp, AuxOpType } from './AuxOpTypes';
 import {
     DEFAULT_WORKSPACE_SCALE,
@@ -15,10 +14,15 @@ import {
     addState,
     File,
 } from '../Files';
-import { site } from '../causal-trees/SiteIdInfo';
-import { storedTree } from '../causal-trees/StoredCausalTree';
+import {
+    storedTree,
+    site,
+    atomId,
+    atom,
+    Atom,
+    AtomFactory,
+} from '@casual-simulation/causal-trees';
 import { AuxState } from './AuxState';
-import { atomId, atom, Atom } from '../causal-trees/Atom';
 import { file, tag, value, del } from './AuxAtoms';
 
 Date.now = jest.fn();

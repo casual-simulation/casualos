@@ -15,16 +15,16 @@ import {
     atomIdToString,
     atomId,
     upgrade,
-} from '@casual-simulation/aux-common/causal-trees';
+} from '@casual-simulation/causal-trees';
 import { find } from 'lodash';
 import { bufferTime, flatMap, filter, concatMap, tap } from 'rxjs/operators';
 import {
     PrivateCryptoKey,
     PublicCryptoKey,
     SigningCryptoImpl,
-} from '@casual-simulation/aux-common/crypto';
+} from '@casual-simulation/causal-trees/crypto';
 import { NodeSigningCryptoImpl } from '../crypto/NodeSigningCryptoImpl';
-import { AtomValidator } from '@casual-simulation/aux-common/causal-trees/AtomValidator';
+import { AtomValidator } from '@casual-simulation/causal-trees';
 import { SubscriptionLike } from 'rxjs';
 
 /**

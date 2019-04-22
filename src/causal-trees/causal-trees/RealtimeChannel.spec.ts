@@ -1,4 +1,4 @@
-import { TestChannelConnection } from './test/TestChannelConnection';
+import { TestChannelConnection } from '../test/TestChannelConnection';
 import { RealtimeChannelConnection } from './RealtimeChannelConnection';
 import { RealtimeChannel } from './RealtimeChannel';
 import { site, SiteInfo } from './SiteIdInfo';

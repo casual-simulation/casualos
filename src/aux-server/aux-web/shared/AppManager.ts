@@ -8,7 +8,7 @@ import { SocketManager } from './SocketManager';
 import { flatMap, map, scan } from 'rxjs/operators';
 import { downloadAuxState, readFileJson } from '../aux-projector/download';
 import { CausalTreeManager } from './causal-trees/CausalTreeManager';
-import { StoredCausalTree } from '@casual-simulation/aux-common/causal-trees';
+import { StoredCausalTree } from '@casual-simulation/causal-trees';
 import {
     AuxOp,
     FilesState,

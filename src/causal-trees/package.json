@@ -1,0 +1,44 @@
+{
+    "name": "@casual-simulation/causal-trees",
+    "version": "0.4.14",
+    "description": "Create persistent, distributed, realtime, and conflict-free data types.",
+    "keywords": [
+        "crdt"
+    ],
+    "author": "Casual Simulation, Inc.",
+    "homepage": "https://github.com/casual-simulation/aux",
+    "license": "MIT",
+    "main": "index.js",
+    "types": "index.d.ts",
+    "module": "index.js",
+    "files": [
+        "/README.md",
+        "/LICENSE.txt",
+        "**/*.js",
+        "**/*.js.map",
+        "**/*.d.ts"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/casual-simulation/aux.git"
+    },
+    "scripts": {
+        "watch": "npm run clean && tsc --watch",
+        "watch:player": "npm run watch",
+        "clean": "gulp clean",
+        "build": "npm run clean && tsc",
+        "build:docs": "typedoc --mode file --excludeNotExported --out ../../docs/causal-trees .",
+        "test": "jest",
+        "test:watch": "jest --watchAll"
+    },
+    "bugs": {
+        "url": "https://github.com/casual-simulation/aux/issues"
+    },
+    "dependencies": {
+        "@types/fast-json-stable-stringify": "^2.0.0",
+        "@types/sha.js": "^2.4.0",
+        "fast-json-stable-stringify": "^2.0.0",
+        "rxjs": "^6.4.0",
+        "sha.js": "^2.4.11"
+    }
+}

@@ -1,7 +1,7 @@
 import { RecentFilesManager } from './RecentFilesManager';
 import { FileHelper } from './FileHelper';
 import { AuxCausalTree, createFile } from '@casual-simulation/aux-common';
-import { storedTree, site } from '@casual-simulation/aux-common/causal-trees';
+import { storedTree, site } from '@casual-simulation/causal-trees';
 
 describe('RecentFilesManager', () => {
     let tree: AuxCausalTree;
