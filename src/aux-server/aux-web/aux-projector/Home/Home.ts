@@ -167,6 +167,12 @@ export default class Home extends Vue {
                 this.files = event.files;
                 const now = Date.now();
                 this.updateTime = now;
+                if (
+                    this.selectionMode === 'single' &&
+                    this.selectedFiles.length > 0
+                ) {
+                    this.isOpen = true;
+                }
             })
         );
 

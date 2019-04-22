@@ -10,6 +10,9 @@
 
     -   Restricted onCombine feature to only fire in aux-player and restrict it from happening on aux-builder.
 
+-   Bug Fixes
+    -   Stopped sheet closing bug from taking multiple clicks to reopen.
+
 ## V0.4.15
 
 ### Date: 04/22/2019
