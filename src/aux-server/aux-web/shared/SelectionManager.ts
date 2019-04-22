@@ -17,6 +17,7 @@ import {
  * Defines a class that is able to manage selections for users.
  */
 export class SelectionManager {
+    private static readonly _debug = false;
     private _helper: FileHelper;
 
     /**
@@ -105,7 +106,9 @@ export class SelectionManager {
      * @param user The file for the user to clear the selection of.
      */
     private async _clearSelectionForUser(user: AuxObject) {
-        console.log('[SelectionManager] Clear selection for', user.id);
+        if (SelectionManager._debug) {
+            console.log('[SelectionManager] Clear selection for', user.id);
+        }
         const update = updateUserSelection(null, null);
         await this._helper.updateFile(user, {
             tags: {
@@ -120,7 +123,9 @@ export class SelectionManager {
         user: AuxObject,
         multiSelect: boolean
     ) {
-        console.log('[SelectionManager] Select File:', file.id);
+        if (SelectionManager._debug) {
+            console.log('[SelectionManager] Select File:', file.id);
+        }
 
         const mode = getSelectionMode(user);
         if (mode === 'multi') {

@@ -22,6 +22,7 @@
             -   `TIFF`
             -   `ICO`
         -   Upon caching an image, we also optimize it to WEBP format to reduce file size while preserving quality.
+    -   Added `onPointerEnter()` and `onPointerExit()` events that are triggered on files that the user's cursor hovers.
     -   Added a pre-commit task to automatically format files.
     -   Formatted all of the source files. (TS, JS, Vue, JSON, HTML, CSS)
 

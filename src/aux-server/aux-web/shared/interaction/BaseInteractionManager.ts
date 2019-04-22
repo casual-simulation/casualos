@@ -19,7 +19,7 @@ import {
 import { Physics } from '../scene/Physics';
 import { flatMap, union, debounce } from 'lodash';
 import { CameraControls } from './CameraControls';
-import { MouseButtonId } from '../scene/Input';
+import { MouseButtonId, InputType } from '../scene/Input';
 import { appManager } from '../AppManager';
 import { IOperation } from './IOperation';
 import { AuxFile3D } from '../scene/AuxFile3D';
@@ -38,6 +38,7 @@ export abstract class BaseInteractionManager {
     protected _cameraControls: CameraControls;
     protected _tapCodeManager: TapCodeManager;
     protected _maxTapCodeLength: number;
+    protected _hoveredObject: GameObject;
 
     private _operations: IOperation[];
 
@@ -53,6 +54,7 @@ export abstract class BaseInteractionManager {
         this._operations = [];
         this._tapCodeManager = new TapCodeManager();
         this._maxTapCodeLength = 4;
+        this._hoveredObject = null;
 
         // Bind event handlers to this instance of the class.
         this._handleFileAdded = this._handleFileAdded.bind(this);
@@ -225,6 +227,41 @@ export abstract class BaseInteractionManager {
                 appManager.fileManager.action('onTapCode', null, code);
                 this._tapCodeManager.trim(this._maxTapCodeLength - 1);
             }
+
+            if (input.currentInputType === InputType.Mouse) {
+                const screenPos = input.getMouseScreenPos();
+                const raycastResult = Physics.raycastAtScreenPos(
+                    screenPos,
+                    new Raycaster(),
+                    this.getDraggableObjects(),
+                    this._gameView.getMainCamera()
+                );
+                const hit = Physics.firstRaycastHit(raycastResult);
+                const gameObject = hit
+                    ? this.findGameObjectObjectForHit(hit)
+                    : null;
+                if (gameObject !== this._hoveredObject) {
+                    if (this._hoveredObject) {
+                        this.handlePointerExit(this._hoveredObject);
+                    }
+                    this._hoveredObject = gameObject;
+                    if (this._hoveredObject) {
+                        this.handlePointerEnter(this._hoveredObject);
+                    }
+                }
+            }
+        }
+    }
+
+    handlePointerEnter(object: GameObject) {
+        if (object instanceof AuxFile3D) {
+            appManager.fileManager.action('onPointerEnter', [object.file]);
+        }
+    }
+
+    handlePointerExit(object: GameObject) {
+        if (object instanceof AuxFile3D) {
+            appManager.fileManager.action('onPointerExit', [object.file]);
         }
     }
 
