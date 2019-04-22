@@ -209,7 +209,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
             const result = calculateActionEvents(state, actionData);
 
             events.push(...result.events);
-            events.push(fileRemoved(files[i].id));
+            events.push(...calculateDestroyFileEvents(calc, files[i]));
         }
         appManager.fileManager.transaction(...events);
     }
