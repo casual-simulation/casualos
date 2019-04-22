@@ -5,6 +5,9 @@ import { Config } from './config';
 import projectorConfig from './projector.config';
 import playerConfig from './player.config';
 
+const redisHost = process.env.REDIS_HOST;
+const redisPort = parseInt(process.env.REDIS_PORT);
+
 const config: Config = {
     socket: {
         pingInterval: 2000,
@@ -17,15 +20,17 @@ const config: Config = {
     mongodb: {
         url: process.env.MONGO_URL,
     },
-    redis: {
-        options: {
-            host: '127.0.0.1',
-            port: 6379,
-        },
+    redis: redisHost
+        ? {
+              options: {
+                  host: redisHost,
+                  port: redisPort,
+              },
 
-        // expire after a month
-        defaultExpireSeconds: 60 * 60 * 24 * (365 / 12),
-    },
+              // expire after a month
+              defaultExpireSeconds: 60 * 60 * 24 * (365 / 12),
+          }
+        : null,
     trees: {
         dbName: 'aux-trees',
     },

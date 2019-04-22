@@ -30,6 +30,7 @@ import {
     getContextColor,
     createFile,
     isContext,
+    getFileConfigContexts,
 } from '@casual-simulation/aux-common';
 import { BuilderFileClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderFileClickOperation';
 import { Physics } from '../../shared/scene/Physics';
@@ -478,6 +479,11 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     label: minimizedLabel,
                     onClick: () => this._toggleWorkspace(calc, gameObject),
                 });
+
+                actions.push({
+                    label: 'Switch to Player',
+                    onClick: () => this._switchToPlayer(calc, gameObject),
+                });
             }
         }
 
@@ -528,6 +534,27 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 },
             });
         }
+    }
+
+    private _switchToPlayer(
+        calc: FileCalculationContext,
+        file: ContextGroup3D
+    ) {
+        let contexts = getFileConfigContexts(calc, file.file);
+        let context = contexts[0];
+
+        let url = `${appManager.config.playerBaseUrl}/`;
+
+        // https://auxbuilder.com/
+        //   ^     |     host    |     path           |
+        // simulationId: ''
+        const simulationId = window.location.pathname.split('/')[1];
+
+        // open in same tab
+        //window.location.assign(`${url}/${simulationId || 'default'}/${context}`);
+
+        // open in new tab
+        window.open(`${url}${simulationId || 'default'}/${context}`, '_blank');
     }
 
     private _worldPosToGridPos(

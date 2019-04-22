@@ -77,6 +77,13 @@ export class FileManager {
     _errored: boolean;
 
     /**
+     * Gets the ID of the simulation that is currently being used.
+     */
+    get id() {
+        return this._id;
+    }
+
+    /**
      * Gets all the files that represent an object.
      */
     get objects(): AuxObject[] {

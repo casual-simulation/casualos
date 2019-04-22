@@ -2260,7 +2260,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'tweenTo("test")',
+                            'test()': 'tweenPlayerTo("test")',
                         },
                     },
                 };
@@ -2280,7 +2280,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'tweenTo(this)',
+                            'test()': 'tweenPlayerTo(this)',
                         },
                     },
                 };

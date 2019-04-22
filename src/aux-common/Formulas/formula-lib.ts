@@ -429,6 +429,16 @@ export function goToContext(simulationId: string, context?: string) {
 }
 
 /**
+ * Derermines wather the player is in the given context.
+ * @param context The context.
+ */
+export function isPlayerInContext(givenContext: string) {
+    let currentContext = window.location.pathname.split('/')[2];
+
+    return currentContext === givenContext;
+}
+
+/**
  * Gets the current user's file.
  */
 export function getUser() {
@@ -621,7 +631,7 @@ export function toast(message: string) {
  * Tweens the user's camera to view the given file.
  * @param file The file to view.
  */
-export function tweenTo(file: FileProxy | string) {
+export function tweenPlayerTo(file: FileProxy | string) {
     actions.push(calcTweenTo(getFileId(file)));
 }
 
@@ -653,6 +663,7 @@ export default {
     event,
     shout,
     goToContext,
+    isPlayerInContext,
     getUser,
     getUserMenuContext,
     getUserInventoryContext,
@@ -667,5 +678,5 @@ export default {
     removeFromMenu,
 
     toast,
-    tweenTo,
+    tweenPlayerTo,
 };
