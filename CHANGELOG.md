@@ -25,6 +25,7 @@
     -   Added `onPointerEnter()` and `onPointerExit()` events that are triggered on files that the user's cursor hovers.
     -   Added a pre-commit task to automatically format files.
     -   Formatted all of the source files. (TS, JS, Vue, JSON, HTML, CSS)
+    -   Added an option to the dropdown in aux-builder to jump to aux-player for the current context
 
 ## V0.4.14
 
