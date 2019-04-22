@@ -6,10 +6,9 @@
     "types": "index.d.ts",
     "module": "index.js",
     "scripts": {
-        "watch": "npm run clean && tsc --watch",
+        "watch": "tsc --watch",
         "watch:player": "npm run watch",
-        "clean": "gulp clean",
-        "build": "npm run clean && tsc",
+        "build": "tsc",
         "build:docs": "typedoc --mode file --excludeNotExported --out ../../docs/aux-common .",
         "test": "jest",
         "test:watch": "jest --watchAll"

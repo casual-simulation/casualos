@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/crypto",
-    "version": "0.4.14",
+    "version": "0.4.15",
     "description": "Crypto helpers used by AUX",
     "keywords": [
         "cryptography",
@@ -24,11 +24,10 @@
         "url": "git+https://github.com/casual-simulation/aux.git"
     },
     "scripts": {
-        "watch": "npm run clean && tsc --watch",
+        "watch": "tsc --watch",
         "watch:player": "npm run watch",
-        "clean": "gulp clean",
-        "build": "npm run clean && tsc",
-        "build:docs": "typedoc --mode file --excludeNotExported --out ../../docs/causal-trees .",
+        "build": "tsc",
+        "build:docs": "typedoc --mode file --excludeNotExported --out ../../docs/crypto .",
         "test": "jest",
         "test:watch": "jest --watchAll"
     },

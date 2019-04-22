@@ -18,7 +18,7 @@ import { auxCausalTreeFactory } from '@casual-simulation/aux-common';
 import { BrowserCausalTreeStore } from './BrowserCausalTreeStore';
 import { AtomValidator } from '@casual-simulation/causal-trees';
 import { SigningCryptoImpl } from '@casual-simulation/crypto';
-import { BrowserSigningCryptoImpl } from '../crypto/BrowserSigningCryptoImpl';
+import { BrowserSigningCryptoImpl } from '@casual-simulation/crypto-browser';
 
 /**
  * Defines a class that is able to help manage interactions with causal trees.
