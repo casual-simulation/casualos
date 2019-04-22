@@ -548,7 +548,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         // https://auxbuilder.com/
         //   ^     |     host    |     path           |
         // simulationId: ''
-        const simulationId = appManager.fileManager.id;
+        const simulationId = window.location.pathname.split('/')[1];
 
         // open in same tab
         //window.location.assign(`${url}/${simulationId || 'default'}/${context}`);

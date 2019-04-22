@@ -433,7 +433,7 @@ export function goToContext(simulationId: string, context?: string) {
  * @param context The context.
  */
 export function isPlayerInContext(givenContext: string) {
-    let currentContext = '/aux-default/Violence'.split('/')[2];
+    let currentContext = window.location.pathname.split('/')[2];
 
     return currentContext === givenContext;
 }
