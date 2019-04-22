@@ -59,10 +59,6 @@ import MiniFile from '../MiniFile/MiniFile';
 import FileTag from '../FileTag/FileTag';
 import FileTable from '../FileTable/FileTable';
 
-import formulaLib, {
-    goToContext,
-} from '../../../../aux-common/Formulas/formula-lib';
-
 export class BuilderInteractionManager extends BaseInteractionManager {
     // This overrides the base class IGameView
     protected _gameView: GameView;
@@ -554,7 +550,10 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         // simulationId: ''
         const simulationId = appManager.fileManager.id;
 
+        // open in same tab
         //window.location.assign(`${url}/${simulationId || 'default'}/${context}`);
+
+        // open in new tab
         window.open(`${url}${simulationId || 'default'}/${context}`, '_blank');
     }
 

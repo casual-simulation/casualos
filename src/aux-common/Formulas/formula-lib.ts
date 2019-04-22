@@ -429,6 +429,16 @@ export function goToContext(simulationId: string, context?: string) {
 }
 
 /**
+ * Derermines wather the player is in the given context.
+ * @param context The context.
+ */
+export function isPlayerInContext(givenContext: string) {
+    let currentContext = '/aux-default/Violence'.split('/')[2];
+
+    return currentContext === givenContext;
+}
+
+/**
  * Gets the current user's file.
  */
 export function getUser() {
@@ -653,6 +663,7 @@ export default {
     event,
     shout,
     goToContext,
+    isPlayerInContext,
     getUser,
     getUserMenuContext,
     getUserInventoryContext,

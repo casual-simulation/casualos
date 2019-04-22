@@ -26,6 +26,7 @@
     -   Added a pre-commit task to automatically format files.
     -   Formatted all of the source files. (TS, JS, Vue, JSON, HTML, CSS)
     -   Added an option to the dropdown in aux-builder to jump to aux-player for the current context
+    -   `formula-lib.ts` has added a `isPlayerInContext` function to determine if path is in the expected context in aux-player.
 
 ## V0.4.14
 
