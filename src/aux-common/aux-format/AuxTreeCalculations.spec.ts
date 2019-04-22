@@ -8,8 +8,8 @@ import {
     Atom,
 } from '@casual-simulation/causal-trees';
 import { auxCausalTreeFactory } from './AuxCausalTreeFactory';
-import { TestCausalTreeStore } from '@casual-simulation/causal-trees/test';
-import { TestChannelConnection } from '@casual-simulation/causal-trees/test';
+import { TestCausalTreeStore } from '@casual-simulation/causal-trees/test/TestCausalTreeStore';
+import { TestChannelConnection } from '@casual-simulation/causal-trees/test/TestChannelConnection';
 import {
     fileChangeObservables,
     getAtomFile,

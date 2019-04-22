@@ -2,7 +2,7 @@ import { AtomFactory } from './AtomFactory';
 import { AtomOp, AtomId, atomId, atom } from './Atom';
 import { site } from './SiteIdInfo';
 import { AtomValidator } from './AtomValidator';
-import { TestCryptoImpl } from '../crypto/test/TestCryptoImpl';
+import { TestCryptoImpl } from '@casual-simulation/crypto/test/TestCryptoImpl';
 
 class Op implements AtomOp {
     type: number;

@@ -15,7 +15,7 @@ import { storedTree } from './StoredCausalTree';
 import { TestScheduler } from 'rxjs/testing';
 import { AsyncScheduler } from 'rxjs/internal/scheduler/AsyncScheduler';
 import { AtomValidator } from './AtomValidator';
-import { TestCryptoImpl } from '../crypto/test/TestCryptoImpl';
+import { TestCryptoImpl } from '@casual-simulation/crypto/test/TestCryptoImpl';
 import { RejectedAtom } from './RejectedAtom';
 
 jest.useFakeTimers();

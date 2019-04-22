@@ -1,6 +1,6 @@
 import { atom, atomId, AtomOp } from './Atom';
 import { AtomValidator } from './AtomValidator';
-import { TestCryptoImpl } from '@casual-simulation/crypto/test';
+import { TestCryptoImpl } from '@casual-simulation/crypto/test/TestCryptoImpl';
 import { toByteArray, fromByteArray } from 'base64-js';
 import { PublicCryptoKey } from '@casual-simulation/crypto';
 

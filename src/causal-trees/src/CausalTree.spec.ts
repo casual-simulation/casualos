@@ -14,7 +14,10 @@ import {
 import { precalculatedOp } from './PrecalculatedOp';
 import { jestPreset } from 'ts-jest';
 import { AtomValidator } from './AtomValidator';
-import { TestCryptoImpl, TestCryptoKey } from '../crypto/test/TestCryptoImpl';
+import {
+    TestCryptoImpl,
+    TestCryptoKey,
+} from '@casual-simulation/crypto/test/TestCryptoImpl';
 import { RejectedAtom } from './RejectedAtom';
 import { AddResult } from './AddResult';
 
