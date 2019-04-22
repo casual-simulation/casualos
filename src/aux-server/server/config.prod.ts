@@ -17,6 +17,15 @@ const config: Config = {
     mongodb: {
         url: process.env.MONGO_URL,
     },
+    redis: {
+        options: {
+            host: '127.0.0.1',
+            port: 6379,
+        },
+
+        // expire after a month
+        defaultExpireSeconds: 60 * 60 * 24 * (365 / 12),
+    },
     trees: {
         dbName: 'aux-trees',
     },

@@ -147,6 +147,7 @@ module.exports = {
             AppCache: false,
             ServiceWorker: {
                 events: true,
+                entry: path.resolve(__dirname, 'shared', 'sw.ts'),
             },
             rewrites: function(asset) {
                 if (asset.endsWith('projector-index.html')) {

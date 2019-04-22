@@ -42,6 +42,8 @@
         "@types/socket.io-client": "^1.4.32",
         "@types/uuid": "^3.3.2",
         "@types/vue-color": "^2.4.1",
+        "@types/redis": "2.8.12",
+        "@types/sharp": "0.22.1",
         "babel-loader": "^8.0.4",
         "braces": "^2.3.2",
         "chai": "^4.2.0",
