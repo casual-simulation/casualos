@@ -2,11 +2,12 @@
 
 ## V0.4.15
 
-### Date: TBD
+### Date: 04/22/2019
 
 ### Changes:
 
 -   Improvements
+
     -   Added a basic proxy to the server so that external web requests can be cached for offline use.
         -   Only works when the app is served over HTTPS.
         -   Uses service workers to redirect external requests to the server which can then download and cache the resources.
@@ -27,6 +28,7 @@
     -   Formatted all of the source files. (TS, JS, Vue, JSON, HTML, CSS)
     -   Added an option to the dropdown in aux-builder to jump to aux-player for the current context
     -   `formula-lib.ts` has added a `isPlayerInContext` function to determine if path is in the expected context in aux-player.
+    -   `formula-lib.ts` has changed `toTween` function to `toPlayerTween` for better clarity on the function's use.
 
 ## V0.4.14
 

@@ -631,7 +631,7 @@ export function toast(message: string) {
  * Tweens the user's camera to view the given file.
  * @param file The file to view.
  */
-export function tweenTo(file: FileProxy | string) {
+export function tweenPlayerTo(file: FileProxy | string) {
     actions.push(calcTweenTo(getFileId(file)));
 }
 
@@ -678,5 +678,5 @@ export default {
     removeFromMenu,
 
     toast,
-    tweenTo,
+    tweenPlayerTo,
 };
