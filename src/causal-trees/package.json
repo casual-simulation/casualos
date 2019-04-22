@@ -31,6 +31,9 @@
         "test": "jest",
         "test:watch": "jest --watchAll"
     },
+    "publishConfig": {
+        "access": "public"
+    },
     "bugs": {
         "url": "https://github.com/casual-simulation/aux/issues"
     },
