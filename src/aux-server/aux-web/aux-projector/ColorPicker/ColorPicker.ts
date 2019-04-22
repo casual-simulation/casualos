@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import { Swatches } from 'vue-color';
-import Component from "vue-class-component";
+import Component from 'vue-class-component';
 import { ColorPickerEvent } from '../interaction/ColorPickerEvent';
 import { EventBus } from '../../shared/EventBus';
 import { Prop } from 'vue-property-decorator';
@@ -8,44 +8,38 @@ import { Vector2 } from 'three';
 
 @Component({
     components: {
-        'swatch-color-picker': Swatches
+        'swatch-color-picker': Swatches,
     },
 })
 export default class ColorPicker extends Vue {
-
     colorPickerStyle: any = {
         left: '0px',
-        top: '0px'
-    }
+        top: '0px',
+    };
 
     colorPickerEvent: ColorPickerEvent = null;
     colorPickerVisible: boolean = false;
-    colors: string = "#FF0000";
-    
+    colors: string = '#FF0000';
+
     constructor() {
         super();
     }
-    
-    async mounted() {
 
+    async mounted() {
         this.open = this.open.bind(this);
         this._handleMouseDown = this._handleMouseDown.bind(this);
 
         EventBus.$on('onColorPicker', this.open);
-
     }
 
     beforeDestroy() {
-
         EventBus.$off('onColorPicker', this.open);
-
     }
-    
+
     /**
      * Open the color picker.
      */
     open(event: ColorPickerEvent) {
-
         if (!event) return;
 
         // Force the component to disable current color picker.
@@ -68,32 +62,31 @@ export default class ColorPicker extends Vue {
 
             // Wait another frame so that the component has time to turn on and we can get the rect sizes.
             this.$nextTick(() => {
-                
                 // Lets make sure we are constrainted inside our parent rect.
-                let parentRect = <DOMRect>this.$el.parentElement.getBoundingClientRect();
+                let parentRect = <DOMRect>(
+                    this.$el.parentElement.getBoundingClientRect()
+                );
                 let rect = <DOMRect>this.$el.getBoundingClientRect();
 
                 if (rect.x + rect.width > parentRect.width) {
                     // Move the x position so that the elements entire width fits inside the parent rect.
-                    let x = rect.x - ((rect.x + rect.width) - parentRect.width);
+                    let x = rect.x - (rect.x + rect.width - parentRect.width);
                     this.colorPickerStyle.left = x + 'px';
                 }
 
                 if (rect.y + rect.height > parentRect.height) {
                     // Move the y position so that the elements entire height fits inside the parent rect.
-                    let y = rect.y - ((rect.y + rect.height) - parentRect.height);
+                    let y = rect.y - (rect.y + rect.height - parentRect.height);
                     this.colorPickerStyle.top = y + 'px';
                 }
             });
         });
-
     }
 
     /**
      * Close the color picker.
      */
     close(invokeCallback: boolean, inputPagePos: Vector2) {
-
         this.colorPickerVisible = false;
 
         // Stop listening for clicks on the DOM.
@@ -108,33 +101,30 @@ export default class ColorPicker extends Vue {
     }
 
     onColorPickerInput() {
-
         if (!this.colorPickerEvent) return;
 
         let hexColor = (<any>this.colors).hex;
         this.colorPickerEvent.colorUpdated(hexColor);
-
     }
 
     private _handleMouseDown(event: MouseEvent) {
-
         if (event.target instanceof Element) {
-            if (!this.$el.contains(event.target)){
+            if (!this.$el.contains(event.target)) {
                 let inputPagePos = new Vector2(event.pageX, event.pageY);
                 this.close(true, inputPagePos);
             }
         }
-
     }
 
     private _handleTouchStart(event: TouchEvent) {
-        
         if (event.target instanceof Element) {
             if (!this.$el.contains(event.target)) {
-                let inputPagePos = new Vector2(event.touches[0].pageX, event.touches[0].pageY);
+                let inputPagePos = new Vector2(
+                    event.touches[0].pageX,
+                    event.touches[0].pageY
+                );
                 this.close(true, inputPagePos);
             }
         }
     }
-
 }

@@ -1,4 +1,3 @@
-
 /**
  * Defines an interface for an application version.
  */

@@ -6,25 +6,24 @@ declare module 'vue-filepond';
 declare module 'filepond-plugin-file-validate-type';
 declare module 'webxr-polyfill';
 
-
 declare module '*.jpg' {
-  const url: string;
-  export default url;
+    const url: string;
+    export default url;
 }
 
 declare module '*.png' {
-  const url: string;
-  export default url;
+    const url: string;
+    export default url;
 }
 
 declare module '*.gltf' {
-  const url: string;
-  export default url;
+    const url: string;
+    export default url;
 }
 
 declare module '*.json' {
-  const json: string;
-  export default json;
+    const json: string;
+    export default json;
 }
 
 // declare module 'three-examples/loaders/GLTFLoader';
@@ -35,8 +34,8 @@ declare module 'three-vreffect-module';
 declare module 'webvr-ui';
 
 declare module 'downloadjs' {
-  function download(data: any, fileName: string, mimeType: string): void;
-  export default download;
+    function download(data: any, fileName: string, mimeType: string): void;
+    export default download;
 }
 
 declare var PRODUCTION: boolean;

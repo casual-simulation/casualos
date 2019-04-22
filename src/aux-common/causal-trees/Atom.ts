@@ -1,4 +1,4 @@
-import { getHashBuffer } from "./Hash";
+import { getHashBuffer } from './Hash';
 
 /**
  * Defines an interface for normal JS objects that represent Atom IDs.
@@ -11,7 +11,7 @@ export interface StorableAtomId {
 
 /**
  * Defines an ID for an atom.
- * 
+ *
  * 16 bytes per ID. (each number is 8 bytes)
  */
 export interface AtomId {
@@ -35,28 +35,35 @@ export interface AtomId {
 
 /**
  * Determines if the two given IDs equal each other.
- * @param first 
- * @param second 
+ * @param first
+ * @param second
  */
 export function idEquals(first: AtomId, second: AtomId) {
-    return first === second || 
-        (first && second &&
+    return (
+        first === second ||
+        (first &&
+            second &&
             second.site === first.site &&
             second.timestamp === first.timestamp &&
-            second.priority === first.priority);
+            second.priority === first.priority)
+    );
 }
 
 /**
  * Creates a new Atom ID.
- * @param site 
- * @param timestamp 
- * @param priority 
+ * @param site
+ * @param timestamp
+ * @param priority
  */
-export function atomId(site: number, timestamp: number, priority: number = 0): AtomId {
+export function atomId(
+    site: number,
+    timestamp: number,
+    priority: number = 0
+): AtomId {
     return {
-        site, 
+        site,
         timestamp,
-        priority
+        priority,
     };
 }
 
@@ -71,7 +78,7 @@ export interface AtomOp {
  * Defines an atom.
  * That is, an object that represents a unique operation paired with a unique cause.
  * The cause is effectively the parent of this atom because without it the atom logically could not exist.
- * 
+ *
  * 32 bytes + value size per atom.
  */
 export interface Atom<T extends AtomOp> {
@@ -121,21 +128,25 @@ export interface ArchivedAtom {
 
 /**
  * Creates a new atom.
- * @param id 
- * @param cause 
- * @param value 
+ * @param id
+ * @param cause
+ * @param value
  */
-export function atom<T extends AtomOp>(id: AtomId, cause: AtomId, value: T): Atom<T> {
+export function atom<T extends AtomOp>(
+    id: AtomId,
+    cause: AtomId,
+    value: T
+): Atom<T> {
     const hash = getHashBuffer([id, cause, value]);
     return {
         id,
         cause,
         value,
-        
+
         // Read only 32 bits of the hash.
-        // This should be good enough to prevent collisions for weaves 
+        // This should be good enough to prevent collisions for weaves
         // of up to ~2 billion atoms instead of never.
-        checksum: hash.readUInt32BE(0)
+        checksum: hash.readUInt32BE(0),
     };
 }
 

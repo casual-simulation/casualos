@@ -1,21 +1,28 @@
-import { Atom, AtomId, AtomOp, idEquals, atomIdToString, atomId, atomMatchesChecksum } from "./Atom";
-import { keys } from "lodash";
-import { WeaveVersion, WeaveSiteVersion } from "./WeaveVersion";
+import {
+    Atom,
+    AtomId,
+    AtomOp,
+    idEquals,
+    atomIdToString,
+    atomId,
+    atomMatchesChecksum,
+} from './Atom';
+import { keys } from 'lodash';
+import { WeaveVersion, WeaveSiteVersion } from './WeaveVersion';
 import { getHash } from './Hash';
-import { RejectedAtom } from "./RejectedAtom";
+import { RejectedAtom } from './RejectedAtom';
 
 /**
- * Defines a weave. 
+ * Defines a weave.
  * That is, the depth-first preorder traversal of a causal tree.
  */
 export class Weave<TOp extends AtomOp> {
-    
     private _atoms: Atom<TOp>[];
     private _sites: SiteMap<TOp>;
 
     /**
      * A map of atom IDs to the total number of atoms that they contain.
-     * 
+     *
      * This can effectively be used as a skip list so that jumping between parent nodes
      * is a quick operation. (much quicker than O(n) and closer to O(log n))
      */
@@ -55,25 +62,35 @@ export class Weave<TOp extends AtomOp> {
      * Inserts the given atom into the weave and returns it.
      * @param atom The atom.
      */
-    insert<T extends TOp>(atom: Atom<T>): [Atom<T> | null, RejectedAtom<T> | null] {
-
+    insert<T extends TOp>(
+        atom: Atom<T>
+    ): [Atom<T> | null, RejectedAtom<T> | null] {
         if (!atomMatchesChecksum(atom)) {
-            console.warn(`[Weave] Atom ${atomIdToString(atom.id)} rejected because its checksum didn't match itself.`);
-            return [null, {
-                atom: atom,
-                reason: 'checksum_failed'
-            }];
+            console.warn(
+                `[Weave] Atom ${atomIdToString(
+                    atom.id
+                )} rejected because its checksum didn't match itself.`
+            );
+            return [
+                null,
+                {
+                    atom: atom,
+                    reason: 'checksum_failed',
+                },
+            ];
         }
 
         const site = this.getSite(atom.id.site);
         if (!atom.cause) {
-
             // check for an existing root atom
             if (this.atoms.length > 0) {
-                return [null, {
-                    atom: atom,
-                    reason: 'second_root_not_allowed'
-                }];
+                return [
+                    null,
+                    {
+                        atom: atom,
+                        reason: 'second_root_not_allowed',
+                    },
+                ];
             }
 
             // Add the atom at the root of the weave.
@@ -84,17 +101,23 @@ export class Weave<TOp extends AtomOp> {
         } else {
             const cause = this.getAtom(atom.cause);
             if (!cause) {
-                return [null, {
-                    atom: atom,
-                    reason: 'cause_not_found'
-                }];
+                return [
+                    null,
+                    {
+                        atom: atom,
+                        reason: 'cause_not_found',
+                    },
+                ];
             }
             const causeIndex = this._atomIndexOf(cause);
-            if (causeIndex < 0 ) {
-                return [null, {
-                    atom: atom,
-                    reason: 'cause_not_found'
-                }];
+            if (causeIndex < 0) {
+                return [
+                    null,
+                    {
+                        atom: atom,
+                        reason: 'cause_not_found',
+                    },
+                ];
             }
             const weaveIndex = this._weaveIndex(causeIndex, atom.id);
             const siteIndex = atom.id.timestamp;
@@ -107,7 +130,7 @@ export class Weave<TOp extends AtomOp> {
             }
             this._atoms.splice(weaveIndex, 0, atom);
             site[siteIndex] = atom;
-            
+
             this._updateAtomSizes([atom]);
 
             return [atom, null];
@@ -164,7 +187,7 @@ export class Weave<TOp extends AtomOp> {
             // of the cause.
             return [];
         }
-        
+
         // TODO: Find a way to make _getSpan faster.
         //       The biggest slowdown with it is that it calls _indexOf()
         //       which triggers a scan of the entire atom list.
@@ -178,7 +201,7 @@ export class Weave<TOp extends AtomOp> {
         }
         const startSplice = refSpan.index + refSpan.length;
         const endSplice = causeSpan.index + causeSpan.length;
-        const spliceLength = (endSplice - startSplice);
+        const spliceLength = endSplice - startSplice;
         return this._removeSpan(startSplice, spliceLength);
     }
 
@@ -240,7 +263,7 @@ export class Weave<TOp extends AtomOp> {
 
         return {
             sites,
-            hash: this.getHash()
+            hash: this.getHash(),
         };
     }
 
@@ -255,7 +278,10 @@ export class Weave<TOp extends AtomOp> {
      * Gets a new weave that contains only the atoms needed to keep the given version consistent.
      * @param version The version of the weave to get.
      */
-    getWeft(version: WeaveSiteVersion, preserveChildren: boolean = false): Weave<TOp> {
+    getWeft(
+        version: WeaveSiteVersion,
+        preserveChildren: boolean = false
+    ): Weave<TOp> {
         let newWeave = this.copy();
 
         if (preserveChildren) {
@@ -311,7 +337,6 @@ export class Weave<TOp extends AtomOp> {
      * @param atoms The atoms to import into this weave.
      */
     import(atoms: Atom<TOp>[]): [Atom<TOp>[], RejectedAtom<TOp>[]] {
-        
         let newAtoms: Atom<TOp>[] = [];
         let rejectedAtoms: RejectedAtom<TOp>[] = [];
         let localOffset = 0;
@@ -322,7 +347,7 @@ export class Weave<TOp extends AtomOp> {
             if (!atomMatchesChecksum(a)) {
                 rejectedAtoms.push({
                     atom: a,
-                    reason: 'checksum_failed'
+                    reason: 'checksum_failed',
                 });
                 break;
             }
@@ -350,11 +375,11 @@ export class Weave<TOp extends AtomOp> {
                     if (exists) {
                         rejectedAtoms.push({
                             atom: atom,
-                            reason: 'atom_id_already_exists'
+                            reason: 'atom_id_already_exists',
                         });
                         continue;
                     }
-                    
+
                     this._atoms.push(atom);
                     newAtoms.push(atom);
                     const site = this.getSite(atom.id.site);
@@ -381,7 +406,7 @@ export class Weave<TOp extends AtomOp> {
                     // even though they claim to be
                     rejectedAtoms.push({
                         atom: a,
-                        reason: 'atom_id_already_exists'
+                        reason: 'atom_id_already_exists',
                     });
                     break;
                 }
@@ -389,15 +414,15 @@ export class Weave<TOp extends AtomOp> {
                 let order = this._compareAtoms(a, local);
                 if (order === 0) {
                     // Atoms are equal, no action needed.
-                } else if(order < 0) {
+                } else if (order < 0) {
                     // New atom should be before local atom.
                     // insert at this index.
                     this._atoms.splice(i + localOffset, 0, a);
                     newAtoms.push(a);
-                    
+
                     const site = this.getSite(a.id.site);
                     site[a.id.timestamp] = a;
-                } else if(order > 0) {
+                } else if (order > 0) {
                     // New atom should be after local atom.
                     // Skip local atoms until we find the right place to put the new atom.
                     // Basically we're skipping until we are after the current local atom's children
@@ -405,14 +430,18 @@ export class Weave<TOp extends AtomOp> {
                     do {
                         localOffset += 1;
                         local = this._atoms[i + localOffset];
-                    } while (local && (this._isInCausalGroup(a, local) || 
-                        (this._areSiblings(a, local) && this._compareAtomIds(a.id, local.id) > 0)));
-                    
+                    } while (
+                        local &&
+                        (this._isInCausalGroup(a, local) ||
+                            (this._areSiblings(a, local) &&
+                                this._compareAtomIds(a.id, local.id) > 0))
+                    );
+
                     if (!local) {
                         // We reached the end of the weave
                         this._atoms.splice(i + localOffset, 0, a);
                         newAtoms.push(a);
-                        
+
                         const site = this.getSite(a.id.site);
                         site[a.id.timestamp] = a;
                     } else {
@@ -421,11 +450,17 @@ export class Weave<TOp extends AtomOp> {
                         if (order < 0) {
                             this._atoms.splice(i + localOffset, 0, a);
                             newAtoms.push(a);
-                            
+
                             const site = this.getSite(a.id.site);
                             site[a.id.timestamp] = a;
                         } else if (order > 0) {
-                            throw new Error(`[Weave] Atom (${atomIdToString(a.id)}) is supposed to be placed before (${atomIdToString(local.id)}) but the IDs say otherwise.`);
+                            throw new Error(
+                                `[Weave] Atom (${atomIdToString(
+                                    a.id
+                                )}) is supposed to be placed before (${atomIdToString(
+                                    local.id
+                                )}) but the IDs say otherwise.`
+                            );
                         }
                     }
                 }
@@ -436,12 +471,14 @@ export class Weave<TOp extends AtomOp> {
 
         return [newAtoms, rejectedAtoms];
     }
-    
+
     /**
      * Gets the list of site IDs that this weave contains.
      */
     siteIds() {
-        return keys(this._sites).map(id => parseInt(id)).sort();
+        return keys(this._sites)
+            .map(id => parseInt(id))
+            .sort();
     }
 
     /**
@@ -454,11 +491,15 @@ export class Weave<TOp extends AtomOp> {
         let chain = [ref];
 
         let cause = ref.cause;
-        while(cause) {
+        while (cause) {
             const causeRef = this.getAtom(cause);
-            
+
             if (!causeRef) {
-                throw new Error(`[Weave] Could not find cause for atom ${atomIdToString(cause)}`);
+                throw new Error(
+                    `[Weave] Could not find cause for atom ${atomIdToString(
+                        cause
+                    )}`
+                );
             }
 
             chain.push(causeRef);
@@ -484,10 +525,18 @@ export class Weave<TOp extends AtomOp> {
 
             const existing = this.getAtom(child.id);
             if (!existing) {
-                console.warn(`[Weave] Invalid tree. ${atomIdToString(child.id)} was not able to be found by its ID. This means the site cache is out of date.`);
+                console.warn(
+                    `[Weave] Invalid tree. ${atomIdToString(
+                        child.id
+                    )} was not able to be found by its ID. This means the site cache is out of date.`
+                );
                 return false;
             } else if (child.checksum !== existing.checksum) {
-                console.warn(`[Weave] Invalid tree. There is a duplicate ${atomIdToString(child.id)} in the tree. Checksums did not match.`);
+                console.warn(
+                    `[Weave] Invalid tree. There is a duplicate ${atomIdToString(
+                        child.id
+                    )} in the tree. Checksums did not match.`
+                );
                 return false;
             }
 
@@ -496,7 +545,13 @@ export class Weave<TOp extends AtomOp> {
 
                 // siblings
                 if (order < 0) {
-                    console.warn(`[Weave] Invalid tree. ${atomIdToString(child.id)} says it happened before its sibling (${atomIdToString(parent.id)}) that occurred before it in the tree.`);
+                    console.warn(
+                        `[Weave] Invalid tree. ${atomIdToString(
+                            child.id
+                        )} says it happened before its sibling (${atomIdToString(
+                            parent.id
+                        )}) that occurred before it in the tree.`
+                    );
                     return false;
                 }
             }
@@ -504,14 +559,26 @@ export class Weave<TOp extends AtomOp> {
             while (!idEquals(child.cause, parent.id)) {
                 parents.shift();
                 if (parents.length === 0) {
-                    console.warn(`[Weave] Invalid tree. ${atomIdToString(child.id)} is either inserted before ${atomIdToString(child.cause)} or the cause is not in the tree.`);
+                    console.warn(
+                        `[Weave] Invalid tree. ${atomIdToString(
+                            child.id
+                        )} is either inserted before ${atomIdToString(
+                            child.cause
+                        )} or the cause is not in the tree.`
+                    );
                     return false;
                 }
                 parent = parents[0];
             }
 
             if (child.id.timestamp <= parent.id.timestamp) {
-                console.warn(`[Weave] Invalid tree. ${atomIdToString(child.id)} says it happened before its parent ${atomIdToString(child.cause)}.`);
+                console.warn(
+                    `[Weave] Invalid tree. ${atomIdToString(
+                        child.id
+                    )} says it happened before its parent ${atomIdToString(
+                        child.cause
+                    )}.`
+                );
                 return false;
             }
 
@@ -523,7 +590,7 @@ export class Weave<TOp extends AtomOp> {
 
     /**
      * Trims the site map so that it only contains spaces for atoms that are currently in this weave.
-     * As a result, getVersion() will no longer show the latest timestamp from each site but only 
+     * As a result, getVersion() will no longer show the latest timestamp from each site but only
      * the latest timestamp that is currently in the site.
      */
     private _trimSites() {
@@ -589,7 +656,7 @@ export class Weave<TOp extends AtomOp> {
             if (order < 0) {
                 break;
             }
-            
+
             if (atom.cause.timestamp < cause.id.timestamp) {
                 break;
             }
@@ -649,7 +716,6 @@ export class Weave<TOp extends AtomOp> {
         return this._compareAtomIds(first.cause, second.cause) === 0;
     }
 
-
     /**
      * Compares the two atoms to see which should be sorted in front of the other.
      * Returns -1 if the first should be before the second.
@@ -677,24 +743,24 @@ export class Weave<TOp extends AtomOp> {
     private _compareAtomIds(first: AtomId, second: AtomId) {
         if (!first && second) {
             return -1;
-        } else if(!second && first) {
+        } else if (!second && first) {
             return 1;
         } else if (first === second) {
             return 0;
         }
         if (first.priority > second.priority) {
             return -1;
-        } else if(first.priority < second.priority) {
+        } else if (first.priority < second.priority) {
             return 1;
         } else if (first.priority === second.priority) {
             if (first.timestamp > second.timestamp) {
                 return -1;
-            } else if(first.timestamp < second.timestamp) {
+            } else if (first.timestamp < second.timestamp) {
                 return 1;
             } else if (first.timestamp === second.timestamp) {
                 if (first.site < second.site) {
                     return -1;
-                } else if(first.site > second.site) {
+                } else if (first.site > second.site) {
                     return 1;
                 }
             }
@@ -705,7 +771,7 @@ export class Weave<TOp extends AtomOp> {
     /**
      * Builds a weave from an array of atoms.
      * This array is assumed to already be sorted in the correct order.
-     * If the array was obtained from Weave.atoms, then it will be in the correct order. 
+     * If the array was obtained from Weave.atoms, then it will be in the correct order.
      * @param refs The atom references that the new weave should be built from.
      */
     static buildFromArray<TOp extends AtomOp>(refs: Atom<TOp>[]): Weave<TOp> {
@@ -731,7 +797,11 @@ export interface SiteMap<TOp extends AtomOp> {
  * @param id The ID of the atom to find.
  * @param start The optional starting index.
  */
-export function weaveIndexOf<TOp extends AtomOp>(arr: Atom<TOp>[], id: AtomId, start: number = 0): number {
+export function weaveIndexOf<TOp extends AtomOp>(
+    arr: Atom<TOp>[],
+    id: AtomId,
+    start: number = 0
+): number {
     for (let i = start; i < arr.length; i++) {
         const atom = arr[i];
         if (idEquals(atom.id, id)) {

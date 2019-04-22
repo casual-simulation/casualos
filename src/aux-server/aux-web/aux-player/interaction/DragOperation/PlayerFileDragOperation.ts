@@ -1,15 +1,24 @@
-import { BaseFileDragOperation } from "../../../shared/interaction/DragOperation/BaseFileDragOperation";
-import { File, FileCalculationContext, DRAG_OUT_OF_INVENTORY_ACTION_NAME, DROP_IN_INVENTORY_ACTION_NAME, FileEvent, DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME, convertToFormulaObject, DROP_ANY_IN_INVENTORY_ACTION_NAME, DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME } from "@casual-simulation/aux-common";
-import { PlayerInteractionManager } from "../PlayerInteractionManager";
-import GameView from "../../GameView/GameView";
-import { Intersection, Vector2 } from "three";
-import { Physics } from "../../../shared/scene/Physics";
-import { Input } from "../../../shared/scene/Input";
-import InventoryFile from "../../InventoryFile/InventoryFile";
-import { appManager } from "../../../shared/AppManager";
+import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
+import {
+    File,
+    FileCalculationContext,
+    DRAG_OUT_OF_INVENTORY_ACTION_NAME,
+    DROP_IN_INVENTORY_ACTION_NAME,
+    FileEvent,
+    DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME,
+    convertToFormulaObject,
+    DROP_ANY_IN_INVENTORY_ACTION_NAME,
+    DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME,
+} from '@casual-simulation/aux-common';
+import { PlayerInteractionManager } from '../PlayerInteractionManager';
+import GameView from '../../GameView/GameView';
+import { Intersection, Vector2 } from 'three';
+import { Physics } from '../../../shared/scene/Physics';
+import { Input } from '../../../shared/scene/Input';
+import InventoryFile from '../../InventoryFile/InventoryFile';
+import { appManager } from '../../../shared/AppManager';
 
 export class PlayerFileDragOperation extends BaseFileDragOperation {
-
     // This overrides the base class BaseInteractionManager
     protected _interaction: PlayerInteractionManager;
     // This overrides the base class IGameView
@@ -21,9 +30,17 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
     /**
      * Create a new drag rules.
      */
-    constructor(gameView: GameView, interaction: PlayerInteractionManager, files: File[], context: string) {
+    constructor(
+        gameView: GameView,
+        interaction: PlayerInteractionManager,
+        files: File[],
+        context: string
+    ) {
         super(gameView, interaction, files, context);
-        this._originallyInInventory = this._inInventory = context && appManager.fileManager.userFile.tags._userInventoryContext === context;
+        this._originallyInInventory = this._inInventory =
+            context &&
+            appManager.fileManager.userFile.tags._userInventoryContext ===
+                context;
     }
 
     protected _onDrag(calc: FileCalculationContext): void {
@@ -43,7 +60,11 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
                     const x = vueElement.slotIndex;
                     const y = 0;
 
-                    this._updateFilesPositions(this._files, new Vector2(x, y), 0);
+                    this._updateFilesPositions(
+                        this._files,
+                        new Vector2(x, y),
+                        0
+                    );
                 }
             } else {
                 if (this._context !== this._gameView.context) {
@@ -52,39 +73,68 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
                     this._inInventory = false;
                 }
 
-                const mouseDir = Physics.screenPosToRay(this._gameView.getInput().getMouseScreenPos(), this._gameView.getMainCamera());
-                const { good, gridTile } = this._interaction.pointOnGrid(calc, mouseDir);
-                
+                const mouseDir = Physics.screenPosToRay(
+                    this._gameView.getInput().getMouseScreenPos(),
+                    this._gameView.getMainCamera()
+                );
+                const { good, gridTile } = this._interaction.pointOnGrid(
+                    calc,
+                    mouseDir
+                );
+
                 if (good) {
-                    const result = this._calculateFileDragStackPosition(calc, this._context, gridTile.tileCoordinate, ...this._files);
+                    const result = this._calculateFileDragStackPosition(
+                        calc,
+                        this._context,
+                        gridTile.tileCoordinate,
+                        ...this._files
+                    );
 
                     this._combine = result.combine;
                     this._other = result.other;
-    
+
                     if (result.stackable || result.index === 0) {
-                        this._updateFilesPositions(this._files, gridTile.tileCoordinate, result.index);
+                        this._updateFilesPositions(
+                            this._files,
+                            gridTile.tileCoordinate,
+                            result.index
+                        );
                     }
                 }
             }
         }
     }
-    
+
     protected _onDragReleased(calc: FileCalculationContext): void {
         super._onDragReleased(calc);
 
         if (this._originallyInInventory && !this._inInventory) {
             let events: FileEvent[] = [];
-            let result = appManager.fileManager.helper.actionEvents(DRAG_OUT_OF_INVENTORY_ACTION_NAME, this._files);
+            let result = appManager.fileManager.helper.actionEvents(
+                DRAG_OUT_OF_INVENTORY_ACTION_NAME,
+                this._files
+            );
             events.push(...result.events);
-            result = appManager.fileManager.helper.actionEvents(DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME, null, this._files);
+            result = appManager.fileManager.helper.actionEvents(
+                DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME,
+                null,
+                this._files
+            );
             events.push(...result.events);
 
             appManager.fileManager.transaction(...events);
         } else if (!this._originallyInInventory && this._inInventory) {
             let events: FileEvent[] = [];
-            let result = appManager.fileManager.helper.actionEvents(DROP_IN_INVENTORY_ACTION_NAME, this._files);
+            let result = appManager.fileManager.helper.actionEvents(
+                DROP_IN_INVENTORY_ACTION_NAME,
+                this._files
+            );
             events.push(...result.events);
-            result = appManager.fileManager.helper.actionEvents(DROP_ANY_IN_INVENTORY_ACTION_NAME, null, this._files);
+            result = appManager.fileManager.helper.actionEvents(
+                DROP_ANY_IN_INVENTORY_ACTION_NAME,
+                null,
+                this._files
+            );
             events.push(...result.events);
 
             appManager.fileManager.transaction(...events);

@@ -1,5 +1,5 @@
-import { 
-    AuxFile, 
+import {
+    AuxFile,
     PartialFile,
     File,
     FileEvent,
@@ -21,8 +21,8 @@ import {
     calculateFileValue,
     SandboxLibrary,
     LocalEvent,
-    LocalEvents
-} from "@casual-simulation/aux-common";
+    LocalEvents,
+} from '@casual-simulation/aux-common';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { Subject, Observable } from 'rxjs';
 
@@ -31,6 +31,7 @@ import { Subject, Observable } from 'rxjs';
  * that help manipulate files.
  */
 export class FileHelper {
+    private static readonly _debug = false;
     private _tree: AuxCausalTree;
     private _userId: string;
     private _lib: SandboxLibrary;
@@ -41,14 +42,18 @@ export class FileHelper {
      * @param tree The tree that the file helper should use.
      * @param userFileId The ID of the user's file.
      */
-    constructor(tree: AuxCausalTree, userFileId: string, { isBuilder, isPlayer } = { isBuilder: false, isPlayer: false }) {
+    constructor(
+        tree: AuxCausalTree,
+        userFileId: string,
+        { isBuilder, isPlayer } = { isBuilder: false, isPlayer: false }
+    ) {
         this._tree = tree;
         this._userId = userFileId;
         this._localEvents = new Subject<LocalEvents>();
         this._lib = {
             ...formulaLib,
             isBuilder,
-            isPlayer
+            isPlayer,
         };
     }
 
@@ -101,7 +106,9 @@ export class FileHelper {
      * @param tags (Optional) The tags that the file should have.
      */
     async createFile(id?: string, tags?: File['tags']): Promise<void> {
-        console.log('[FileManager] Create File');
+        if (FileHelper._debug) {
+            console.log('[FileManager] Create File');
+        }
 
         const file = createFile(id, tags);
         await this._tree.addFile(file);
@@ -110,11 +117,20 @@ export class FileHelper {
     /**
      * Creates a new workspace file.
      */
-    async createWorkspace(builderContextId?: string, contextType?: unknown): Promise<void> {
-        console.log('[FileManager] Create File');
+    async createWorkspace(
+        builderContextId?: string,
+        contextType?: unknown
+    ): Promise<void> {
+        if (FileHelper._debug) {
+            console.log('[FileManager] Create File');
+        }
 
-        const workspace: Workspace = createWorkspace(undefined, builderContextId, contextType);
-        
+        const workspace: Workspace = createWorkspace(
+            undefined,
+            builderContextId,
+            contextType
+        );
+
         await this._tree.addFile(workspace);
     }
 
@@ -125,13 +141,22 @@ export class FileHelper {
      * @param arg The argument that should be passed to the event handlers.
      */
     actionEvents(eventName: string, files: File[], arg?: any) {
-        console.log('[FileManager] Run event:', eventName, 'on files:', files);
+        if (FileHelper._debug) {
+            console.log(
+                '[FileManager] Run event:',
+                eventName,
+                'on files:',
+                files
+            );
+        }
 
         // Calculate the events on a single client and then run them in a transaction to make sure the order is right.
         const fileIds = files ? files.map(f => f.id) : null;
         const actionData = action(eventName, fileIds, this._userId, arg);
         const result = calculateActionEvents(this._tree.value, actionData);
-        console.log('  result: ', result);
+        if (FileHelper._debug) {
+            console.log('  result: ', result);
+        }
 
         return result;
     }
@@ -157,7 +182,7 @@ export class FileHelper {
         await this._tree.addEvents(events);
         this._sendLocalEvents(events);
     }
-    
+
     /**
      * Adds the given state to the current file state.
      * @param state The state to add.

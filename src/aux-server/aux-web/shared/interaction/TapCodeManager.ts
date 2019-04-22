@@ -1,8 +1,7 @@
-
 /**
  * Defines a class that is able to handle recognizing tap codes.
  */
-export class TapCodeManager {    
+export class TapCodeManager {
     private _code: string;
     private _max: number;
 

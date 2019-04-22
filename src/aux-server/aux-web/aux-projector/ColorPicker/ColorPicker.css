@@ -1,6 +1,6 @@
 .color-picker {
     position: absolute;
-    transform-origin: 0% 0%; /* Put the origin in the upper right corner */ 
+    transform-origin: 0% 0%; /* Put the origin in the upper right corner */
     transform: scale(0.75); /* This is how we scale the color picker down */
 }
 

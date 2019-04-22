@@ -1,5 +1,12 @@
 import { File, FileTags } from './File';
-import { FileCalculationContext, calculateFileValue, isFormula, isFile as isObjFile, calculateFormulaValue, calculateValue } from './FileCalculations';
+import {
+    FileCalculationContext,
+    calculateFileValue,
+    isFormula,
+    isFile as isObjFile,
+    calculateFormulaValue,
+    calculateValue,
+} from './FileCalculations';
 import { cloneDeep, uniq } from 'lodash';
 
 /**
@@ -31,7 +38,7 @@ export interface ProxyObject<T> {
  * Defines an interface for a file that is being proxied so that
  * formulas are transparently calculated and deep values can be handled transparently.
  */
-export interface FileProxy extends ProxyObject<File>, FileTags  {
+export interface FileProxy extends ProxyObject<File>, FileTags {
     /**
      * Gets the ID of the file.
      */
@@ -46,11 +53,34 @@ export type SetValueHandler = (tag: string, value: any) => any;
  * @param file The file.
  * @param setValue The function that should be called with a file event whenever a value is changed.
  */
-export function createFileProxy(calc: FileCalculationContext, file: File, setValue: SetValueHandler = null): FileProxy {
-    return <FileProxy>new Proxy(file, _createProxyHandler(calc, file, cloneDeep(file.tags), setValue, true));
+export function createFileProxy(
+    calc: FileCalculationContext,
+    file: File,
+    setValue: SetValueHandler = null
+): FileProxy {
+    return <FileProxy>(
+        new Proxy(
+            file,
+            _createProxyHandler(
+                calc,
+                file,
+                cloneDeep(file.tags),
+                setValue,
+                true
+            )
+        )
+    );
 }
 
-function _createProxyHandler(calc: FileCalculationContext, file: File, tags: any, setValue: SetValueHandler, isFile: boolean, props?: string, fullProps?: string[]): ProxyHandler<any> {
+function _createProxyHandler(
+    calc: FileCalculationContext,
+    file: File,
+    tags: any,
+    setValue: SetValueHandler,
+    isFile: boolean,
+    props?: string,
+    fullProps?: string[]
+): ProxyHandler<any> {
     return {
         ownKeys: function(target) {
             let props: (string | number | symbol)[] = isFile ? ['id'] : [];
@@ -74,7 +104,7 @@ function _createProxyHandler(calc: FileCalculationContext, file: File, tags: any
         has: function(target, prop) {
             return prop in tags;
         },
-        get: function (target, property, receiver) {
+        get: function(target, property, receiver) {
             let descriptor = Reflect.getOwnPropertyDescriptor(target, property);
             if (descriptor && !descriptor.configurable) {
                 return Reflect.get(target, property);
@@ -96,7 +126,7 @@ function _createProxyHandler(calc: FileCalculationContext, file: File, tags: any
                         return target;
                     }
                 } else if (property === Symbol.toPrimitive) {
-                    return function (hint: string) {
+                    return function(hint: string) {
                         if (target instanceof Number) {
                             return target.valueOf();
                         } else if (target instanceof Boolean) {
@@ -116,7 +146,7 @@ function _createProxyHandler(calc: FileCalculationContext, file: File, tags: any
                         return 'Array';
                     }
                 }
-                
+
                 return target[property];
             }
 
@@ -129,52 +159,109 @@ function _createProxyHandler(calc: FileCalculationContext, file: File, tags: any
             let val = target[property];
             let fromTag = false;
             if (typeof val === 'undefined') {
-                nextProps = props ? `${props}.${property}` : property.toString();
+                nextProps = props
+                    ? `${props}.${property}`
+                    : property.toString();
                 val = target[nextProps];
                 if (typeof val === 'undefined') {
                     fromTag = true;
                     val = tags[nextProps];
                 }
             }
-            
+
             if (val) {
                 isFile = isObjFile(val);
                 if (isFile) {
                     nextFile = val;
                 }
                 if (fromTag) {
-                    val = calculateValue(calc, file, nextProps || property.toString(), val, false);
+                    val = calculateValue(
+                        calc,
+                        file,
+                        nextProps || property.toString(),
+                        val,
+                        false
+                    );
                     if (val[isProxy]) {
                         return val;
                     }
                 }
-                
+
                 if (typeof val === 'object') {
                     nextFullProps = nextFullProps ? nextFullProps.slice() : [];
                     nextFullProps.push(nextProps || property.toString());
                     nextProps = null;
                 }
-                
+
                 val = isFile ? cloneDeep(val) : val;
-                nextTags = isFile ? val.tags : 
-                    typeof val === 'object' ? val :
-                    tags;
+                nextTags = isFile
+                    ? val.tags
+                    : typeof val === 'object'
+                    ? val
+                    : tags;
             }
 
-            if (nextFullProps && nextFullProps.length > 0 && nextFullProps[0] === 'id') {
+            if (
+                nextFullProps &&
+                nextFullProps.length > 0 &&
+                nextFullProps[0] === 'id'
+            ) {
                 return val;
             }
 
             if (typeof val === 'boolean') {
-                return new Proxy(new Boolean(val), _createProxyHandler(calc, nextFile, nextTags, setValue, isFile, nextProps, nextFullProps));
+                return new Proxy(
+                    new Boolean(val),
+                    _createProxyHandler(
+                        calc,
+                        nextFile,
+                        nextTags,
+                        setValue,
+                        isFile,
+                        nextProps,
+                        nextFullProps
+                    )
+                );
             } else if (typeof val === 'number') {
-                return new Proxy(new Number(val), _createProxyHandler(calc, nextFile, nextTags, setValue, isFile, nextProps, nextFullProps));
+                return new Proxy(
+                    new Number(val),
+                    _createProxyHandler(
+                        calc,
+                        nextFile,
+                        nextTags,
+                        setValue,
+                        isFile,
+                        nextProps,
+                        nextFullProps
+                    )
+                );
             } else if (typeof val === 'string') {
-                return new Proxy(new String(val), _createProxyHandler(calc, nextFile, nextTags, setValue, isFile, nextProps, nextFullProps));
+                return new Proxy(
+                    new String(val),
+                    _createProxyHandler(
+                        calc,
+                        nextFile,
+                        nextTags,
+                        setValue,
+                        isFile,
+                        nextProps,
+                        nextFullProps
+                    )
+                );
             }
 
-
-            return new Proxy(val || new String(''), _createProxyHandler(calc, nextFile, nextTags, setValue, isFile, nextProps, nextFullProps));
+            return new Proxy(
+                val || new String(''),
+                _createProxyHandler(
+                    calc,
+                    nextFile,
+                    nextTags,
+                    setValue,
+                    isFile,
+                    nextProps,
+                    nextFullProps
+                )
+            );
         },
         set: function(target, property, value, receiver) {
             if (!setValue) {
@@ -183,13 +270,17 @@ function _createProxyHandler(calc: FileCalculationContext, file: File, tags: any
             if (typeof property === 'symbol') {
                 return;
             }
-            
-            let actualProp: string = props ? `${props}.${property}` : property.toString();
+
+            let actualProp: string = props
+                ? `${props}.${property}`
+                : property.toString();
             // let settableProp = actualProp;
             // if (isFile) {
             //     settableProp = `tags.${settableProp}`;
             // }
-            let fullProp: string = fullProps ? `${fullProps.join('.')}` : actualProp;
+            let fullProp: string = fullProps
+                ? `${fullProps.join('.')}`
+                : actualProp;
 
             const ret = Reflect.set(target, actualProp, value, tags);
 
@@ -207,6 +298,6 @@ function _createProxyHandler(calc: FileCalculationContext, file: File, tags: any
             }
 
             return target.apply(thisArg, args);
-        }
+        },
     };
 }

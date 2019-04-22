@@ -1,5 +1,4 @@
-import { Box3 } from "three";
-
+import { Box3 } from 'three';
 
 /**
  * Defines an interface for objects that can be wrapped by a word bubble 3d.

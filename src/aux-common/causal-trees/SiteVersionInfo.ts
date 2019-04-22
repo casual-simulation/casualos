@@ -1,5 +1,5 @@
-import { WeaveVersion } from "./WeaveVersion";
-import { SiteInfo } from "./SiteIdInfo";
+import { WeaveVersion } from './WeaveVersion';
+import { SiteInfo } from './SiteIdInfo';
 
 /**
  * Defines an interface for version information

@@ -1,12 +1,21 @@
-import { AuxFile, calculateFileValue, FileCalculationContext, TagUpdatedEvent, isFileInContext, getContextPosition, getFilePosition, getFileIndex, fileContextSortOrder } from "@casual-simulation/aux-common";
+import {
+    AuxFile,
+    calculateFileValue,
+    FileCalculationContext,
+    TagUpdatedEvent,
+    isFileInContext,
+    getContextPosition,
+    getFilePosition,
+    getFileIndex,
+    fileContextSortOrder,
+} from '@casual-simulation/aux-common';
 import { remove, sortBy } from 'lodash';
-import { getOptionalValue } from "../shared/SharedUtils";
+import { getOptionalValue } from '../shared/SharedUtils';
 
 /**
  * MenuContext is a helper class to assist with managing the user's menu context.
  */
 export class MenuContext {
-
     /**
      * The context that this object represents.
      */
@@ -16,7 +25,7 @@ export class MenuContext {
      * All the files that are in this context.
      */
     files: AuxFile[] = [];
-    
+
     /**
      * The files in this contexts mapped into menu items.
      * Files are ordered in ascending order based on their index in the context.
@@ -33,7 +42,7 @@ export class MenuContext {
         this.context = context;
         this.files = [];
     }
-    
+
     /**
      * Notifies this context that the given file was added to the state.
      * @param file The file.
@@ -42,7 +51,7 @@ export class MenuContext {
     async fileAdded(file: AuxFile, calc: FileCalculationContext) {
         const isInContext = !!this.files.find(f => f.id == file.id);
         const shouldBeInContext = isFileInContext(calc, file, this.context);
-        
+
         if (!isInContext && shouldBeInContext) {
             this._addFile(file, calc);
         }
@@ -54,7 +63,11 @@ export class MenuContext {
      * @param updates The changes made to the file.
      * @param calc The calculation context that should be used.
      */
-    async fileUpdated(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
+    async fileUpdated(
+        file: AuxFile,
+        updates: TagUpdatedEvent[],
+        calc: FileCalculationContext
+    ) {
         const isInContext = !!this.files.find(f => f.id == file.id);
         const shouldBeInContext = isFileInContext(calc, file, this.context);
 
@@ -62,7 +75,7 @@ export class MenuContext {
             this._addFile(file, calc);
         } else if (isInContext && !shouldBeInContext) {
             this._removeFile(file.id);
-        } else if(isInContext && shouldBeInContext) {
+        } else if (isInContext && shouldBeInContext) {
             this._updateFile(file, updates, calc);
         }
     }
@@ -83,8 +96,7 @@ export class MenuContext {
         }
     }
 
-    dispose(): void {
-    }
+    dispose(): void {}
 
     private _addFile(file: AuxFile, calc: FileCalculationContext) {
         this.files.push(file);
@@ -92,11 +104,15 @@ export class MenuContext {
     }
 
     private _removeFile(id: string) {
-        remove(this.files, f => f.id === id );
+        remove(this.files, f => f.id === id);
         this._itemsDirty = true;
     }
 
-    private _updateFile(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
+    private _updateFile(
+        file: AuxFile,
+        updates: TagUpdatedEvent[],
+        calc: FileCalculationContext
+    ) {
         let fileIndex = this.files.findIndex(f => f.id == file.id);
         if (fileIndex >= 0) {
             this.files[fileIndex] = file;
@@ -105,6 +121,8 @@ export class MenuContext {
     }
 
     private _resortItems(calc: FileCalculationContext): void {
-        this.items = sortBy(this.files, f => fileContextSortOrder(calc, f, this.context));
+        this.items = sortBy(this.files, f =>
+            fileContextSortOrder(calc, f, this.context)
+        );
     }
 }

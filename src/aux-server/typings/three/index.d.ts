@@ -1,4 +1,11 @@
-import { Object3D, Box3, Color, MeshPhongMaterial, MeshPhongMaterialParameters, Texture } from "three";
+import {
+    Object3D,
+    Box3,
+    Color,
+    MeshPhongMaterial,
+    MeshPhongMaterialParameters,
+    Texture,
+} from 'three';
 
 declare module 'three' {
     class Box3Helper extends Object3D {
@@ -12,4 +19,4 @@ declare module 'three' {
 
         constructor(parameters: MeshPhongMaterialParameters);
     }
-  }
+}

@@ -1,11 +1,10 @@
-import { AtomOp, AtomId, idEquals, Atom } from "./Atom";
-import { Weave } from "./Weave";
+import { AtomOp, AtomId, idEquals, Atom } from './Atom';
+import { Weave } from './Weave';
 
 /**
  * Defines a class that helps with traversing weaves.
  */
 export class WeaveTraverser<TOp extends AtomOp> {
-
     private _weave: Weave<TOp>;
     private _index: number;
 
@@ -28,7 +27,7 @@ export class WeaveTraverser<TOp extends AtomOp> {
             if (idEquals(parent, atom.cause)) {
                 return atom;
             }
-        } 
+        }
         return null;
     }
 

@@ -18,7 +18,10 @@
             <md-switch v-model="includeDestroyed">Include Destroyed</md-switch>
         </div>
         <div class="json-content">
-            <tree-view :data="auxJson" :options="{ limitRenderDepth: true, maxDepth: 2 }"></tree-view>
+            <tree-view
+                :data="auxJson"
+                :options="{ limitRenderDepth: true, maxDepth: 2 }"
+            ></tree-view>
         </div>
     </div>
 </template>

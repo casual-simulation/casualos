@@ -19,7 +19,7 @@ import {
     getContextColor,
     isUserFile,
     DEFAULT_WORKSPACE_COLOR,
-    hasValue
+    hasValue,
 } from '@casual-simulation/aux-common/Files';
 import { keys, minBy, isEqual } from 'lodash';
 import { GridChecker, GridCheckResults } from './grid/GridChecker';
@@ -32,7 +32,6 @@ import { disposeMesh } from './SceneUtils';
  * Defines a mesh that represents a workspace.
  */
 export class WorkspaceMesh extends GameObject {
-
     private _debugMesh: Object3D;
     private _debug: boolean;
     private _debugInfo: WorkspaceMeshDebugInfo;
@@ -93,15 +92,16 @@ export class WorkspaceMesh extends GameObject {
         this.container = new Object3D();
         this.domain = domain;
         this.miniHex = new HexMesh(
-            new Axial(0, 0), 
-            DEFAULT_MINI_WORKSPACE_SCALE, 
-            DEFAULT_WORKSPACE_HEIGHT);
+            new Axial(0, 0),
+            DEFAULT_MINI_WORKSPACE_SCALE,
+            DEFAULT_WORKSPACE_HEIGHT
+        );
         this.miniHex.visible = false;
         this.add(this.container);
         this.add(this.miniHex);
         this._debugInfo = {
             id: this.id,
-            gridCheckResults: null
+            gridCheckResults: null,
         };
     }
 
@@ -127,7 +127,9 @@ export class WorkspaceMesh extends GameObject {
      * @param point The world point to test.
      */
     closestTileToPoint(point: Vector3) {
-        const tiles = this.squareGrids.map(g => g.closestTileToPoint(point)).filter(t => !!t);
+        const tiles = this.squareGrids
+            .map(g => g.closestTileToPoint(point))
+            .filter(t => !!t);
         const closest = minBy(tiles, t => t.distance);
         return closest;
     }
@@ -139,12 +141,16 @@ export class WorkspaceMesh extends GameObject {
      * @param workspace The new workspace data. If not provided the mesh will re-update using the existing data.
      * @param force Whether to force the workspace to update everything, even aspects that have not changed.
      */
-    async update(calc: FileCalculationContext, workspace?: AuxFile, force?: boolean) {
+    async update(
+        calc: FileCalculationContext,
+        workspace?: AuxFile,
+        force?: boolean
+    ) {
         if (!workspace) {
             return;
         }
         const prev = this.workspace;
-        this.workspace = (workspace) || prev;
+        this.workspace = workspace || prev;
 
         this.visible = isContext(calc, this.workspace);
         this.container.visible = !isMinimized(calc, this.workspace);
@@ -162,7 +168,9 @@ export class WorkspaceMesh extends GameObject {
                 }
                 if (this._debug) {
                     this._debugMesh = new Object3D();
-                    this._debugMesh.add(GridChecker.createVisualization(gridUpdate));
+                    this._debugMesh.add(
+                        GridChecker.createVisualization(gridUpdate)
+                    );
                     this.add(this._debugMesh);
                 }
             }
@@ -170,9 +178,13 @@ export class WorkspaceMesh extends GameObject {
 
         // Hex color.
         const colorValue = getContextColor(calc, this.workspace);
-        const color: Color = hasValue(colorValue) ? new Color(colorValue) : new Color(DEFAULT_WORKSPACE_COLOR);
+        const color: Color = hasValue(colorValue)
+            ? new Color(colorValue)
+            : new Color(DEFAULT_WORKSPACE_COLOR);
         const hexes = this.hexGrid.hexes;
-        hexes.forEach((h) => { h.color = color; });
+        hexes.forEach(h => {
+            h.color = color;
+        });
         this.miniHex.color = color;
 
         this.updateMatrixWorld(false);
@@ -180,13 +192,12 @@ export class WorkspaceMesh extends GameObject {
         if (this._debug) {
             this._debugInfo = {
                 gridCheckResults: gridUpdate,
-                id: this.id
+                id: this.id,
             };
         }
     }
 
-    public frameUpdate() {
-    }
+    public frameUpdate() {}
 
     public dispose() {
         super.dispose();
@@ -200,29 +211,33 @@ export class WorkspaceMesh extends GameObject {
             this.hexGrid.dispose();
             this.container.remove(this.hexGrid);
         }
-        
+
         const size = getContextSize(calc, this.workspace);
         const defaultHeight = getContextDefaultHeight(calc, this.workspace);
         const scale = getContextScale(calc, this.workspace);
         this.hexGrid = HexGridMesh.createFilledInHexGrid(
-            size, 
-            defaultHeight || DEFAULT_WORKSPACE_HEIGHT, 
-            scale || DEFAULT_WORKSPACE_SCALE);
-        
+            size,
+            defaultHeight || DEFAULT_WORKSPACE_HEIGHT,
+            scale || DEFAULT_WORKSPACE_SCALE
+        );
+
         const grid = getBuilderContextGrid(calc, this.workspace);
         const positionsKeys = grid ? keys(grid) : [];
         positionsKeys.forEach(key => {
             const position = keyToPos(key);
             const workspaceHex = grid[key];
-            
+
             const hex = this.hexGrid.addAt(position);
-            let nextHeight = workspaceHex.height || defaultHeight || DEFAULT_WORKSPACE_HEIGHT;
+            let nextHeight =
+                workspaceHex.height ||
+                defaultHeight ||
+                DEFAULT_WORKSPACE_HEIGHT;
             if (nextHeight < 0) {
                 nextHeight = defaultHeight || DEFAULT_WORKSPACE_HEIGHT;
             }
             hex.height = nextHeight;
         });
-        
+
         this.colliders = [...this.hexGrid.hexes, this.miniHex];
         this.container.add(this.hexGrid);
     }
@@ -231,7 +246,10 @@ export class WorkspaceMesh extends GameObject {
      * Updates the square grid to match the workspace data.
      * @param checker The grid checker to use.
      */
-    async updateSquareGrids(checker: GridChecker, calc: FileCalculationContext) {
+    async updateSquareGrids(
+        checker: GridChecker,
+        calc: FileCalculationContext
+    ) {
         if (this.squareGrids && this.squareGrids.length > 0) {
             this.squareGrids.forEach(g => g.dispose());
             this.container.remove(...this.squareGrids);
@@ -242,14 +260,18 @@ export class WorkspaceMesh extends GameObject {
         const results = await checker.check(this.hexGrid);
         const levels = results.levels;
         this.squareGrids = levels.map(l => new GridMesh(l));
-        this.squareGrids.forEach(grid => grid.visible = false);
+        this.squareGrids.forEach(grid => (grid.visible = false));
         if (this.squareGrids && this.squareGrids.length > 0) {
             this.container.add(...this.squareGrids);
         }
         return results;
     }
 
-    private _gridChanged(current: AuxFile, previous: AuxFile, calc: FileCalculationContext) {
+    private _gridChanged(
+        current: AuxFile,
+        previous: AuxFile,
+        calc: FileCalculationContext
+    ) {
         if (!previous) {
             return true;
         } else {
@@ -258,10 +280,9 @@ export class WorkspaceMesh extends GameObject {
             if (currentSize !== previousSize) {
                 return true;
             } else {
-
                 const currentGrid = getBuilderContextGrid(calc, current);
                 const previousGrid = getBuilderContextGrid(calc, previous);
-                
+
                 return !isEqual(currentGrid, previousGrid);
             }
         }

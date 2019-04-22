@@ -23,33 +23,37 @@
     color: #ff1c1cb4;
 }
 
-.md-list-item-container:not([disabled]) .md-icon.md-theme-default.md-icon-font.nuke-everything-icon {
+.md-list-item-container:not([disabled])
+    .md-icon.md-theme-default.md-icon-font.nuke-everything-icon {
     color: #ff1c1cb4;
 }
 
-.md-list.md-theme-default .nuke-site-item .md-list-item-container:not(.md-list-item-default):not([disabled]):hover {
+.md-list.md-theme-default
+    .nuke-site-item
+    .md-list-item-container:not(.md-list-item-default):not([disabled]):hover {
     background-color: #fc0e0eda;
     color: #eee;
 }
 
-.md-list-item-container:hover:not([disabled]) .md-icon.md-theme-default.md-icon-font.nuke-everything-icon {
+.md-list-item-container:hover:not([disabled])
+    .md-icon.md-theme-default.md-icon-font.nuke-everything-icon {
     color: inherit;
 }
 
 /* Only visible to screen readers */
 .sr-only {
-    border: 0; 
-    clip: rect(0 0 0 0); 
-    height: 1px; 
+    border: 0;
+    clip: rect(0 0 0 0);
+    height: 1px;
     margin: -1px;
     overflow: hidden;
     padding: 0;
     position: absolute;
     width: 1px;
-  }
+}
 
 .session-id {
-    background-color: rgba(0,0,0,.3);
+    background-color: rgba(0, 0, 0, 0.3);
     padding: 4px;
 }
 
@@ -66,15 +70,19 @@
 }
 
 .md-switch.md-theme-default.md-checked.user-mode-toggle .md-switch-container {
-    background-color: rgba(0,0,0,0.38);
+    background-color: rgba(0, 0, 0, 0.38);
 }
 
-.md-switch.md-theme-default.md-checked.user-mode-toggle .md-switch-thumb, .md-switch.md-theme-default:not(.md-checked).user-mode-toggle .md-switch-thumb {
-    background-color: var(--md-theme-default-text-primary-on-background-variant, #777);
+.md-switch.md-theme-default.md-checked.user-mode-toggle .md-switch-thumb,
+.md-switch.md-theme-default:not(.md-checked).user-mode-toggle .md-switch-thumb {
+    background-color: var(
+        --md-theme-default-text-primary-on-background-variant,
+        #777
+    );
 }
 
-.md-switch.md-theme-default.user-mode-toggle .md-ripple, 
-.md-toolbar.md-theme-default .md-title, 
+.md-switch.md-theme-default.user-mode-toggle .md-ripple,
+.md-toolbar.md-theme-default .md-title,
 .md-toolbar.md-theme-default .md-icon {
     color: var(--md-theme-default-text-primary-on-background-variant, #777);
 }

@@ -1,19 +1,20 @@
-import { AtomOp, Atom } from "./Atom";
-import { SiteInfo } from "./SiteIdInfo";
+import { AtomOp, Atom } from './Atom';
+import { SiteInfo } from './SiteIdInfo';
 
 export const currentFormatVersion = 3;
 
 /**
  * Defines an interface for a causal tree that is in a storable format.
  */
-export type StoredCausalTree<T extends AtomOp> = StoredCausalTreeVersion1<T> | 
-    StoredCausalTreeVersion2<T> |
-    StoredCausalTreeVersion3<T>;
+export type StoredCausalTree<T extends AtomOp> =
+    | StoredCausalTreeVersion1<T>
+    | StoredCausalTreeVersion2<T>
+    | StoredCausalTreeVersion3<T>;
 
 export interface StoredCausalTreeVersion3<T extends AtomOp> {
     formatVersion: 3;
     site: SiteInfo;
-    knownSites: SiteInfo[],
+    knownSites: SiteInfo[];
     weave: Atom<T>[];
 
     /**
@@ -31,7 +32,7 @@ export interface StoredCausalTreeVersion3<T extends AtomOp> {
 export interface StoredCausalTreeVersion2<T extends AtomOp> {
     formatVersion: 2;
     site: SiteInfo;
-    knownSites: SiteInfo[],
+    knownSites: SiteInfo[];
     weave: Atom<T>[];
 }
 
@@ -42,7 +43,7 @@ export interface StoredCausalTreeVersion2<T extends AtomOp> {
 export interface StoredCausalTreeVersion1<T extends AtomOp> {
     formatVersion?: 1;
     site: SiteInfo;
-    knownSites: SiteInfo[],
+    knownSites: SiteInfo[];
     weave: WeaveReference<T>[];
 }
 
@@ -55,17 +56,21 @@ export interface WeaveReference<T extends AtomOp> {
 
 /**
  * Creates a stored causal tree with the given data.
- * @param site 
- * @param knownSites 
- * @param weave 
+ * @param site
+ * @param knownSites
+ * @param weave
  */
-export function storedTree<T extends AtomOp>(site: SiteInfo, knownSites: SiteInfo[] = null, weave: Atom<T>[] = null): StoredCausalTreeVersion3<T> {
+export function storedTree<T extends AtomOp>(
+    site: SiteInfo,
+    knownSites: SiteInfo[] = null,
+    weave: Atom<T>[] = null
+): StoredCausalTreeVersion3<T> {
     return {
         formatVersion: currentFormatVersion,
         site: site,
         knownSites: knownSites,
         weave: weave,
-        ordered: true
+        ordered: true,
     };
 }
 
@@ -73,29 +78,35 @@ export function storedTree<T extends AtomOp>(site: SiteInfo, knownSites: SiteInf
  * Upgrades the given stored causal tree to the latest version.
  * @param stored The stored tree.
  */
-export function upgrade<T extends AtomOp>(stored: StoredCausalTree<T>): StoredCausalTreeVersion3<T> {
+export function upgrade<T extends AtomOp>(
+    stored: StoredCausalTree<T>
+): StoredCausalTreeVersion3<T> {
     if (!stored) {
         return null;
     }
     if (stored.formatVersion === 3) {
         return stored;
-    } else if(stored.formatVersion === 2) {
+    } else if (stored.formatVersion === 2) {
         return {
             formatVersion: 3,
             knownSites: stored.knownSites,
             site: stored.site,
             weave: stored.weave,
-            ordered: true
+            ordered: true,
         };
-    } else if(typeof stored.formatVersion === 'undefined') {
+    } else if (typeof stored.formatVersion === 'undefined') {
         return {
             formatVersion: 3,
             knownSites: stored.knownSites,
             site: stored.site,
             weave: stored.weave ? stored.weave.map(a => a.atom) : null,
-            ordered: true
+            ordered: true,
         };
     } else {
-        throw new Error(`[StoredCausalTree] Unable to update the given tree version ${stored.formatVersion}`);
+        throw new Error(
+            `[StoredCausalTree] Unable to update the given tree version ${
+                stored.formatVersion
+            }`
+        );
     }
 }

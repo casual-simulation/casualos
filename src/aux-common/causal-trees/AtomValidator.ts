@@ -1,4 +1,8 @@
-import { SigningCryptoImpl, PrivateCryptoKey, PublicCryptoKey } from '../crypto';
+import {
+    SigningCryptoImpl,
+    PrivateCryptoKey,
+    PublicCryptoKey,
+} from '../crypto';
 import { AtomOp, Atom } from './Atom';
 import stringify from 'fast-json-stable-stringify';
 import { toByteArray, fromByteArray } from 'base64-js';
@@ -30,7 +34,10 @@ export class AtomValidator {
      * @param key The key to sign the atom with.
      * @param atom The atom to sign.
      */
-    async sign<T extends AtomOp>(key: PrivateCryptoKey, atom: Atom<T>): Promise<Atom<T>> {
+    async sign<T extends AtomOp>(
+        key: PrivateCryptoKey,
+        atom: Atom<T>
+    ): Promise<Atom<T>> {
         const buffer = this._getData(atom);
         const signature = await this._impl.sign(key, buffer);
         const ints = new Uint8Array(signature);
@@ -48,7 +55,10 @@ export class AtomValidator {
      * @param key The key to use for decrypting the signature.
      * @param atom The atom to verify.
      */
-    async verify<T extends AtomOp>(key: PublicCryptoKey, atom: Atom<T>): Promise<boolean> {
+    async verify<T extends AtomOp>(
+        key: PublicCryptoKey,
+        atom: Atom<T>
+    ): Promise<boolean> {
         if (!atom.signature) {
             return false;
         }
@@ -63,7 +73,10 @@ export class AtomValidator {
      * @param key The key to use.
      * @param atoms The atoms to verify.
      */
-    verifyBatch<T extends AtomOp>(key: PublicCryptoKey, atoms: Atom<T>[]): Promise<boolean[]> {
+    verifyBatch<T extends AtomOp>(
+        key: PublicCryptoKey,
+        atoms: Atom<T>[]
+    ): Promise<boolean[]> {
         let signatures = new Array<Uint8Array>(atoms.length);
         let buffers = new Array<ArrayBuffer>(atoms.length);
         for (let i = 0; i < atoms.length; i++) {
@@ -80,5 +93,4 @@ export class AtomValidator {
         const buffer = Buffer.from(json);
         return buffer;
     }
-
 }

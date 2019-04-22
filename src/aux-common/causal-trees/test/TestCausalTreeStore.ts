@@ -1,27 +1,28 @@
-import { CausalTreeStore, StoredCryptoKeys } from "../CausalTreeStore";
-import { AtomOp, Atom } from "../Atom";
-import { StoredCausalTree, WeaveReference, upgrade } from "../StoredCausalTree";
+import { CausalTreeStore, StoredCryptoKeys } from '../CausalTreeStore';
+import { AtomOp, Atom } from '../Atom';
+import { StoredCausalTree, WeaveReference, upgrade } from '../StoredCausalTree';
 
 export class TestCausalTreeStore implements CausalTreeStore {
-    
-    
     private _store: {
         [key: string]: StoredCausalTree<any>;
     } = {};
 
     private _atoms: {
-        [key: string]: Atom<any>[]
+        [key: string]: Atom<any>[];
     } = {};
 
     private _keys: {
-        [key: string]: StoredCryptoKeys
+        [key: string]: StoredCryptoKeys;
     } = {};
 
     init(): Promise<void> {
         return Promise.resolve();
     }
 
-    put<T extends AtomOp>(id: string, tree: StoredCausalTree<T>): Promise<void> {
+    put<T extends AtomOp>(
+        id: string,
+        tree: StoredCausalTree<T>
+    ): Promise<void> {
         return new Promise((resolve, reject) => {
             this._store[id] = tree;
             resolve();
@@ -31,14 +32,14 @@ export class TestCausalTreeStore implements CausalTreeStore {
     add<T extends AtomOp>(id: string, atoms: Atom<T>[]): Promise<void> {
         return new Promise((resolve, reject) => {
             let list = this._atoms[id];
-            if(!list) {
+            if (!list) {
                 list = [];
                 this._atoms[id] = list;
-            } 
+            }
             list.push(...atoms);
         });
     }
-    
+
     get<T extends AtomOp>(id: string): Promise<StoredCausalTree<T>> {
         return new Promise((resolve, reject) => {
             const stored = this._store[id];
@@ -47,7 +48,9 @@ export class TestCausalTreeStore implements CausalTreeStore {
             let atoms: Atom<any>[] = null;
             if (stored) {
                 if (stored.weave) {
-                    atoms = list ? [...(upgraded.weave), ...list] : upgraded.weave;
+                    atoms = list
+                        ? [...upgraded.weave, ...list]
+                        : upgraded.weave;
                 }
                 const ordered = !list;
                 resolve({
@@ -55,7 +58,7 @@ export class TestCausalTreeStore implements CausalTreeStore {
                     knownSites: stored.knownSites,
                     site: stored.site,
                     ordered: ordered && upgraded.ordered,
-                    weave: atoms
+                    weave: atoms,
                 });
             } else {
                 resolve(undefined);
@@ -63,10 +66,14 @@ export class TestCausalTreeStore implements CausalTreeStore {
         });
     }
 
-    async putKeys(id: string, privateKey: string, publicKey: string): Promise<void> {
+    async putKeys(
+        id: string,
+        privateKey: string,
+        publicKey: string
+    ): Promise<void> {
         const keys: StoredCryptoKeys = {
             privateKey: privateKey,
-            publicKey: publicKey
+            publicKey: publicKey,
         };
         this._keys[id] = keys;
     }

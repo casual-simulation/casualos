@@ -1,4 +1,3 @@
-
 /**
  * Defines an interface that represents a tag update.
  * That is, a notification which indicates that a tag was updated.

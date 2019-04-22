@@ -1,7 +1,16 @@
-import { AuxFile, calculateFileValue, FileCalculationContext, TagUpdatedEvent, isFileInContext, getContextPosition, getFilePosition, getFileIndex } from "@casual-simulation/aux-common";
+import {
+    AuxFile,
+    calculateFileValue,
+    FileCalculationContext,
+    TagUpdatedEvent,
+    isFileInContext,
+    getContextPosition,
+    getFilePosition,
+    getFileIndex,
+} from '@casual-simulation/aux-common';
 import { remove } from 'lodash';
-import { getOptionalValue } from "../shared/SharedUtils";
-import { appManager } from "../shared/AppManager";
+import { getOptionalValue } from '../shared/SharedUtils';
+import { appManager } from '../shared/AppManager';
 
 export const DEFAULT_INVENTORY_COUNT = 5;
 
@@ -9,7 +18,6 @@ export const DEFAULT_INVENTORY_COUNT = 5;
  * Inventory is a helper class to assist with managing the user's inventory context.
  */
 export class InventoryContext {
-
     /**
      * The context that this object represents.
      */
@@ -19,7 +27,7 @@ export class InventoryContext {
      * All the files that are in this context.
      */
     files: AuxFile[] = [];
-    
+
     /**
      * The files in this contexts mapped into the inventory slots.
      * Files are ordered left to right based on their x position in the context, starting at 0 and incrementing from there.
@@ -40,14 +48,16 @@ export class InventoryContext {
         }
 
         if (slotCount < 0) {
-            throw new Error('Inventory context cannot have slot count less than 0.');
+            throw new Error(
+                'Inventory context cannot have slot count less than 0.'
+            );
         }
 
         this.context = context;
         this.setSlotCount(getOptionalValue(slotCount, DEFAULT_INVENTORY_COUNT));
-        this.files = []
+        this.files = [];
     }
-    
+
     /**
      * Notifies this context that the given file was added to the state.
      * @param file The file.
@@ -56,7 +66,7 @@ export class InventoryContext {
     async fileAdded(file: AuxFile, calc: FileCalculationContext) {
         const isInContext = !!this.files.find(f => f.id == file.id);
         const shouldBeInContext = isFileInContext(calc, file, this.context);
-        
+
         if (!isInContext && shouldBeInContext) {
             this._addFile(file, calc);
         }
@@ -68,7 +78,11 @@ export class InventoryContext {
      * @param updates The changes made to the file.
      * @param calc The calculation context that should be used.
      */
-    async fileUpdated(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
+    async fileUpdated(
+        file: AuxFile,
+        updates: TagUpdatedEvent[],
+        calc: FileCalculationContext
+    ) {
         const isInContext = !!this.files.find(f => f.id == file.id);
         const shouldBeInContext = isFileInContext(calc, file, this.context);
 
@@ -76,7 +90,7 @@ export class InventoryContext {
             this._addFile(file, calc);
         } else if (isInContext && !shouldBeInContext) {
             this._removeFile(file.id);
-        } else if(isInContext && shouldBeInContext) {
+        } else if (isInContext && shouldBeInContext) {
             this._updateFile(file, updates, calc);
         }
     }
@@ -108,15 +122,17 @@ export class InventoryContext {
 
     setSlotCount(count: number): void {
         if (count == null || count == undefined || count < 0) {
-            throw new Error('Inventory Context cannot set the slot count to a value of:' + JSON.stringify(count));
+            throw new Error(
+                'Inventory Context cannot set the slot count to a value of:' +
+                    JSON.stringify(count)
+            );
         }
 
         this._slotCount = count;
         this._slotsDirty = true;
     }
 
-    dispose(): void {
-    }
+    dispose(): void {}
 
     private _addFile(file: AuxFile, calc: FileCalculationContext) {
         this.files.push(file);
@@ -124,11 +140,15 @@ export class InventoryContext {
     }
 
     private _removeFile(id: string) {
-        remove(this.files, f => f.id === id );
+        remove(this.files, f => f.id === id);
         this._slotsDirty = true;
     }
 
-    private _updateFile(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
+    private _updateFile(
+        file: AuxFile,
+        updates: TagUpdatedEvent[],
+        calc: FileCalculationContext
+    ) {
         let fileIndex = this.files.findIndex(f => f.id == file.id);
         if (fileIndex >= 0) {
             this.files[fileIndex] = file;
@@ -141,7 +161,7 @@ export class InventoryContext {
         const y = 0;
 
         for (let x = 0; x < this._slotCount; x++) {
-            let file = this.files.find((f) => {
+            let file = this.files.find(f => {
                 let contextPos = getFilePosition(calc, f, this.context);
                 if (contextPos.x === x && contextPos.y === y) {
                     let index = getFileIndex(calc, f, this.context);

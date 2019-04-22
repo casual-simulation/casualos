@@ -4,7 +4,6 @@ import { Vector3, Vector2 } from 'three';
  * Defines an interface that represents a single grid tile.
  */
 export interface GridTile {
-
     /**
      * Whether or not the tile is in a valid position.
      */

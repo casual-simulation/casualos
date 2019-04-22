@@ -1,14 +1,30 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
-import {Provide, Prop, Inject, Watch} from 'vue-property-decorator';
+import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
 import { some, union } from 'lodash';
-import {File, Object, fileTags, isHiddenTag, AuxObject, hasValue, isFormula, getShortId, searchFileState, SandboxResult, isFile, isDiff, merge, SelectionMode, tweenTo} from '@casual-simulation/aux-common';
+import {
+    File,
+    Object,
+    fileTags,
+    isHiddenTag,
+    AuxObject,
+    hasValue,
+    isFormula,
+    getShortId,
+    searchFileState,
+    SandboxResult,
+    isFile,
+    isDiff,
+    merge,
+    SelectionMode,
+    tweenTo,
+} from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
 import { appManager } from '../../shared/AppManager';
 
 import FileValue from '../FileValue/FileValue';
 import TagEditor from '../TagEditor/TagEditor';
-import AlertDialogOptions from '../../shared/AlertDialogOptions'
+import AlertDialogOptions from '../../shared/AlertDialogOptions';
 import FileTag from '../FileTag/FileTag';
 import FileTableToggle from '../FileTableToggle/FileTableToggle';
 import { TreeView } from 'vue-json-tree-view';
@@ -20,29 +36,32 @@ import { tickStep } from 'd3';
         'file-tag': FileTag,
         'tag-editor': TagEditor,
         'file-table-toggle': FileTableToggle,
-        'tree-view': TreeView
+        'tree-view': TreeView,
     },
-    
 })
 export default class FileTable extends Vue {
-    
     @Prop() files: AuxObject[];
-    @Prop({ default: (() => <any>[]) }) extraTags: string[];
-    @Prop({ default: false }) readOnly: boolean;
-    @Prop({ default: 'single' }) selectionMode: SelectionMode;
-    @Prop({ default: false }) diffSelected: boolean;
+    @Prop({ default: () => <any>[] })
+    extraTags: string[];
+    @Prop({ default: false })
+    readOnly: boolean;
+    @Prop({ default: 'single' })
+    selectionMode: SelectionMode;
+    @Prop({ default: false })
+    diffSelected: boolean;
 
     /**
      * A property that can be set to indicate to the table that its values should be updated.
      */
-    @Prop({}) updateTime: number;
+    @Prop({})
+    updateTime: number;
     tags: string[] = [];
     addedTags: string[] = [];
     lastEditedTag: string = null;
     focusedFile: AuxObject = null;
     focusedTag: string = null;
     isFocusedTagFormula: boolean = false;
-    multilineValue: string = "";
+    multilineValue: string = '';
     isMakingNewTag: boolean = false;
     isMakingNewAction: boolean = false;
     newTag: string = 'myNewTag';
@@ -63,19 +82,21 @@ export default class FileTable extends Vue {
             return [];
         }
     }
-    
+
     get fileTableGridStyle() {
         const sizeType = this.viewMode === 'rows' ? 'columns' : 'rows';
         if (this.tags.length === 0) {
-            return { 
-                [`grid-template-${sizeType}`]: `auto auto`
+            return {
+                [`grid-template-${sizeType}`]: `auto auto`,
             };
         }
-        return { 
-            [`grid-template-${sizeType}`]: `auto auto repeat(${this.tags.length}, auto)`
+        return {
+            [`grid-template-${sizeType}`]: `auto auto repeat(${
+                this.tags.length
+            }, auto)`,
         };
     }
-    
+
     get fileManager() {
         return appManager.fileManager;
     }
@@ -109,7 +130,8 @@ export default class FileTable extends Vue {
         this._updateTags();
         this.numFilesSelected = this.files.length;
         if (this.focusedFile) {
-            this.focusedFile = this.files.find(f => f.id === this.focusedFile.id) || null;
+            this.focusedFile =
+                this.files.find(f => f.id === this.focusedFile.id) || null;
         }
     }
 
@@ -119,16 +141,20 @@ export default class FileTable extends Vue {
             if (isDiff(this.focusedFile)) {
                 const updated = merge(this.focusedFile, {
                     tags: {
-                        [this.focusedTag]: this.multilineValue
-                    }
+                        [this.focusedTag]: this.multilineValue,
+                    },
                 });
                 this.fileManager.recent.addFileDiff(updated, true);
             } else {
-                this.fileManager.recent.addTagDiff(`${this.focusedFile.id}_${this.focusedTag}`, this.focusedTag, this.multilineValue);
+                this.fileManager.recent.addTagDiff(
+                    `${this.focusedFile.id}_${this.focusedTag}`,
+                    this.focusedTag,
+                    this.multilineValue
+                );
                 this.fileManager.updateFile(this.focusedFile, {
                     tags: {
-                        [this.focusedTag]: this.multilineValue
-                    }
+                        [this.focusedTag]: this.multilineValue,
+                    },
                 });
             }
         }
@@ -169,19 +195,19 @@ export default class FileTable extends Vue {
 
     addTag(isAction: boolean = false) {
         if (this.isMakingNewTag) {
-
             // Check to make sure that the tag is unique.
             if (this.tagExists(this.newTag)) {
                 var options = new AlertDialogOptions();
                 options.title = 'Tag already exists';
-                options.body = 'Tag \'' + this.newTag + '\' already exists on this file.';
-                options.confirmText = "Close";
+                options.body =
+                    "Tag '" + this.newTag + "' already exists on this file.";
+                options.confirmText = 'Close';
 
                 // Emit dialog event.
                 EventBus.$emit('showAlertDialog', options);
                 return;
             }
-            
+
             this.addedTags.unshift(this.newTag);
             this.tags.unshift(this.newTag);
 
@@ -189,11 +215,11 @@ export default class FileTable extends Vue {
             if (table) {
                 table.scrollIntoView({
                     block: 'start',
-                    inline: 'start'
+                    inline: 'start',
                 });
             }
         } else {
-            this.newTag = '';   
+            this.newTag = '';
         }
         this.isMakingNewTag = !this.isMakingNewTag;
         this.isMakingNewAction = isAction && this.isMakingNewTag;
@@ -230,7 +256,7 @@ export default class FileTable extends Vue {
             this.focusedTag = tag;
             this.multilineValue = this.focusedFile.tags[this.focusedTag];
             this.isFocusedTagFormula = isFormula(this.multilineValue);
-            
+
             this.$nextTick(() => {
                 (<any>this.$refs.multiLineEditor).applyStyles();
             });
@@ -241,7 +267,10 @@ export default class FileTable extends Vue {
     @Watch('search')
     onSearchChanged() {
         if (this.search) {
-            this.searchResults = searchFileState(this.search, this.fileManager.filesState);
+            this.searchResults = searchFileState(
+                this.search,
+                this.fileManager.filesState
+            );
         }
         this._updateTags();
     }
@@ -291,11 +320,11 @@ export default class FileTable extends Vue {
     getSearchResultData(): any {
         const result = this.searchResults.result;
         if (result) {
-            if(typeof result === 'object') {
+            if (typeof result === 'object') {
                 return result;
             } else {
                 return {
-                    result: result
+                    result: result,
                 };
             }
         }
@@ -303,7 +332,11 @@ export default class FileTable extends Vue {
     }
 
     removeTag(tag: string) {
-        if (tag === this.lastEditedTag || tag === this.newTag || tag === this.focusedTag) {
+        if (
+            tag === this.lastEditedTag ||
+            tag === this.newTag ||
+            tag === this.focusedTag
+        ) {
             this.lastEditedTag = null;
             this.focusedTag = null;
         }
@@ -333,10 +366,10 @@ export default class FileTable extends Vue {
     getShortId(file: Object) {
         return getShortId(file);
     }
-    
+
     getTagCellClass(file: AuxObject, tag: string) {
         return {
-            'focused': (file === this.focusedFile && tag === this.focusedTag)
+            focused: file === this.focusedFile && tag === this.focusedTag,
         };
     }
 
@@ -358,9 +391,10 @@ export default class FileTable extends Vue {
         const editingTags = this.lastEditedTag ? [this.lastEditedTag] : [];
         const allExtraTags = union(this.extraTags, this.addedTags, editingTags);
         this.tags = fileTags(
-            this.displayedFiles, 
-            this.tags, 
+            this.displayedFiles,
+            this.tags,
             allExtraTags,
-            this.showHidden);
+            this.showHidden
+        );
     }
-};
+}

@@ -12,7 +12,11 @@ import { Axial } from './Axial';
  * @param center The center of the hex.
  * @param size The size of the hex.
  */
-export function hexCorner(index: number, center: Vector2 = new Vector2(), size: number): Vector2 {
+export function hexCorner(
+    index: number,
+    center: Vector2 = new Vector2(),
+    size: number
+): Vector2 {
     const angleDeg = 60 * index;
     const angleRad = (Math.PI / 180) * angleDeg;
     return new Vector2(
@@ -25,7 +29,7 @@ export function hexCorner(index: number, center: Vector2 = new Vector2(), size: 
  * Calculates the vertex positions for a flat-topped hex.
  */
 export function hex(size: number): Vector2[] {
-    const idx = range(0, 6)
+    const idx = range(0, 6);
     return idx.map(i => hexCorner(i, undefined, size));
 }
 
@@ -48,6 +52,4 @@ export function hexHeight(size: number): number {
 /**
  * Defines a class that represents a single hex.
  */
-export class Hex {
-    
-}
+export class Hex {}

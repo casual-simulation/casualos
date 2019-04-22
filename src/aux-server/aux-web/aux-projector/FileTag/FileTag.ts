@@ -1,7 +1,11 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
-import {Prop, Inject} from 'vue-property-decorator';
-import { isFilterTag, parseFilterTag, COMBINE_ACTION_NAME } from '@casual-simulation/aux-common';
+import { Prop, Inject } from 'vue-property-decorator';
+import {
+    isFilterTag,
+    parseFilterTag,
+    COMBINE_ACTION_NAME,
+} from '@casual-simulation/aux-common';
 import CombineIcon from '../public/icons/combine_icon.svg';
 import { getColorForTags } from '../../shared/scene/ColorUtils';
 import TagColor from '../TagColor/TagColor';
@@ -9,8 +13,8 @@ import TagColor from '../TagColor/TagColor';
 @Component({
     components: {
         'combine-icon': CombineIcon,
-        'tag-color': TagColor
-    }
+        'tag-color': TagColor,
+    },
 })
 export default class FileTag extends Vue {
     @Prop() tag: string;
@@ -18,7 +22,8 @@ export default class FileTag extends Vue {
     /**
      * Whether the tag is allowed to be dragged from the file table into the world.
      */
-    @Prop({ default: true }) allowCloning: boolean;
+    @Prop({ default: true })
+    allowCloning: boolean;
 
     get filterData() {
         return parseFilterTag(this.tag);
@@ -37,8 +42,7 @@ export default class FileTag extends Vue {
         }
     }
 
-
     constructor() {
         super();
     }
-};
+}

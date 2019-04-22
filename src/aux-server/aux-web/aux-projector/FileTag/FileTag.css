@@ -1,11 +1,10 @@
-
 .file-tag.clonable {
     cursor: pointer;
     user-select: none;
 }
 
 .hashtag {
-    color: #2F8DFE;
+    color: #2f8dfe;
 }
 
 .tag-name {
@@ -17,7 +16,7 @@
 }
 
 .event-name {
-    color: #FE772F;
+    color: #fe772f;
 }
 
 .event-name-svg {

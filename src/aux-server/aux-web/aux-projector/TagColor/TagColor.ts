@@ -4,11 +4,11 @@ import { Inject, Provide, Prop } from 'vue-property-decorator';
 import { getColorForTags } from '../../shared/scene/ColorUtils';
 
 @Component({
-    components: {}
+    components: {},
 })
 export default class TagColor extends Vue {
-
-    @Prop({ required: true }) tag: string;
+    @Prop({ required: true })
+    tag: string;
 
     get tagColor() {
         return getColorForTags([this.tag]);
@@ -16,7 +16,7 @@ export default class TagColor extends Vue {
 
     get tagStyle() {
         return {
-            'background-color': this.tagColor
+            'background-color': this.tagColor,
         };
     }
-};
+}

@@ -7,33 +7,31 @@ export class Time {
     private _clock: Clock;
 
     constructor() {
-
-      this._frameCount = 0;
-      this._timeSinceStart = 0;
-      this._deltaTime = 0;
-      this._clock = new Clock(true);
-      
+        this._frameCount = 0;
+        this._timeSinceStart = 0;
+        this._deltaTime = 0;
+        this._clock = new Clock(true);
     }
 
     /**
      * Number of frames that have passed since this game view was created.
      */
     get frameCount(): number {
-      return this._frameCount;
+        return this._frameCount;
     }
-  
+
     /**
      * Number of seconds that have passed since this game view was created.
      */
     get timeSinceStart(): number {
-      return this._timeSinceStart;
+        return this._timeSinceStart;
     }
-  
+
     /**
      * Time in seconds that has passed since the last frame.
      */
     get deltaTime(): number {
-      return this._deltaTime;
+        return this._deltaTime;
     }
 
     update() {

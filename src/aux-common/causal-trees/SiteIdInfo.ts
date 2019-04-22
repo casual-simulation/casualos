@@ -41,6 +41,6 @@ export interface SiteInfoCrypto {
 export function site(id: number, crypto?: SiteInfoCrypto): SiteInfo {
     return {
         id: id,
-        crypto
+        crypto,
     };
 }

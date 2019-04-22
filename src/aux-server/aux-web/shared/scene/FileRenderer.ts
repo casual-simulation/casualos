@@ -1,9 +1,9 @@
-import { 
-    WebGLRenderer, 
-    OrthographicCamera, 
-    Scene, 
-    WebGLRenderTarget, 
-    Box3, 
+import {
+    WebGLRenderer,
+    OrthographicCamera,
+    Scene,
+    WebGLRenderTarget,
+    Box3,
     Vector3,
     Math as ThreeMath,
     Color,
@@ -14,9 +14,15 @@ import {
     Light,
     HemisphereLight,
     AmbientLight,
-    DirectionalLight
+    DirectionalLight,
 } from 'three';
-import { Object, fileRemoved, merge, AuxObject, createCalculationContext } from '@casual-simulation/aux-common';
+import {
+    Object,
+    fileRemoved,
+    merge,
+    AuxObject,
+    createCalculationContext,
+} from '@casual-simulation/aux-common';
 import { AuxFile3D } from './AuxFile3D';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
@@ -26,15 +32,14 @@ import { baseAuxAmbientLight, baseAuxDirectionalLight } from './SceneUtils';
  * Defines a class that can render a file to a transparent canvas.
  */
 export class FileRenderer {
-
     tileRatio = 0.2;
     private _resolution = 128;
     private _renderer: WebGLRenderer;
     private _camera: OrthographicCamera;
-    
+
     private _directional: DirectionalLight;
     private _ambient: AmbientLight;
-    
+
     private _scene: Scene;
     private _bounds: Box3;
     private _center: Vector3 = new Vector3();
@@ -51,13 +56,13 @@ export class FileRenderer {
         this._renderer = new WebGLRenderer({
             alpha: true,
             preserveDrawingBuffer: true,
-            antialias: false
+            antialias: false,
         });
         this._renderer.setClearColor(new Color(), 0);
         // this._renderer.setPixelRatio(window.devicePixelRatio || 1);
 
         this._scene.add(this._camera);
-        
+
         // Ambient light.
         this._ambient = baseAuxAmbientLight();
         this._scene.add(this._ambient);
@@ -67,19 +72,31 @@ export class FileRenderer {
         this._scene.add(this._directional);
 
         this._group = new Object3D();
-        this._file = new AuxFile3D(null, null, null, 'builder', [], new AuxFile3DDecoratorFactory(null));
+        this._file = new AuxFile3D(
+            null,
+            null,
+            null,
+            'builder',
+            [],
+            new AuxFile3DDecoratorFactory(null)
+        );
 
         this._group.add(this._file);
         this._scene.add(this._group);
     }
 
     async render(file: AuxObject, diffball: boolean = false): Promise<string> {
-        file = merge(file, diffball ? {
-            tags: {
-                ['aux.shape']: 'sphere'
-            }
-        } : {});
-        
+        file = merge(
+            file,
+            diffball
+                ? {
+                      tags: {
+                          ['aux.shape']: 'sphere',
+                      },
+                  }
+                : {}
+        );
+
         const calc = createCalculationContext([file], formulaLib);
         this._file.file = file;
         this._file.fileUpdated(file, [], calc);
@@ -92,16 +109,24 @@ export class FileRenderer {
 
     private _renderFile() {
         this._updateScene();
-        
+
         this._render();
 
         const gl = this._renderer.context;
         const size = {
             width: gl.drawingBufferWidth,
-            height: gl.drawingBufferHeight
+            height: gl.drawingBufferHeight,
         };
         const data = new Uint8Array(size.width * size.height * 4);
-        gl.readPixels(0, 0, size.width, size.height, gl.RGBA, gl.UNSIGNED_BYTE, data);
+        gl.readPixels(
+            0,
+            0,
+            size.width,
+            size.height,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            data
+        );
 
         const image = this._renderer.domElement.toDataURL();
 
@@ -115,7 +140,11 @@ export class FileRenderer {
     private _updateScene() {
         this._group.position.copy(this._worldPosition);
 
-        this._camera.position.set(this._worldPosition.x + 1, this._worldPosition.y + 1, this._worldPosition.z + 1);
+        this._camera.position.set(
+            this._worldPosition.x + 1,
+            this._worldPosition.y + 1,
+            this._worldPosition.z + 1
+        );
         this._camera.updateMatrixWorld(true);
     }
 
@@ -148,10 +177,15 @@ export class FileRenderer {
         this._size.add(new Vector3(this._xImbalance, 0, this._yImbalance));
         this._size.multiplyScalar(2);
 
-        this._camera.rotation.set(ThreeMath.degToRad(-28), ThreeMath.degToRad(45), 0, 'YXZ');
+        this._camera.rotation.set(
+            ThreeMath.degToRad(-28),
+            ThreeMath.degToRad(45),
+            0,
+            'YXZ'
+        );
         this._camera.left = -(max / 2);
-        this._camera.right = (max / 2);
-        this._camera.top = (max / 2);
+        this._camera.right = max / 2;
+        this._camera.top = max / 2;
         this._camera.bottom = -(max / 2);
 
         this._camera.near = 0.1;

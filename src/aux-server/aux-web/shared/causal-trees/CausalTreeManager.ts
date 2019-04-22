@@ -3,7 +3,19 @@ import io from 'socket.io-client';
 import { WorkerEvent, ValueCalculated } from './WorkerEvents';
 import { SubscriptionLike, Subject, Observable } from 'rxjs';
 import { first, map, filter, tap } from 'rxjs/operators';
-import { AtomOp, RealtimeChannelInfo, PrecalculatedOp, RealtimeCausalTree, CausalTree, RealtimeChannel, CausalTreeFactory, CausalTreeStore, Atom, CausalTreeOptions, RealtimeCausalTreeOptions } from '@casual-simulation/aux-common/causal-trees';
+import {
+    AtomOp,
+    RealtimeChannelInfo,
+    PrecalculatedOp,
+    RealtimeCausalTree,
+    CausalTree,
+    RealtimeChannel,
+    CausalTreeFactory,
+    CausalTreeStore,
+    Atom,
+    CausalTreeOptions,
+    RealtimeCausalTreeOptions,
+} from '@casual-simulation/aux-common/causal-trees';
 import { SocketIOConnection } from './SocketIOConnection';
 import { auxCausalTreeFactory } from '@casual-simulation/aux-common';
 import { BrowserCausalTreeStore } from './BrowserCausalTreeStore';
@@ -64,20 +76,28 @@ export class CausalTreeManager implements SubscriptionLike {
      * @param info The info that identifies the tree that should be retrieved or created.
      * @param options The options that should be used for the tree.
      */
-    async getTree<TTree extends CausalTree<AtomOp, any, any>>(info: RealtimeChannelInfo, options: RealtimeCausalTreeOptions = {}): Promise<RealtimeCausalTree<TTree>> {
+    async getTree<TTree extends CausalTree<AtomOp, any, any>>(
+        info: RealtimeChannelInfo,
+        options: RealtimeCausalTreeOptions = {}
+    ): Promise<RealtimeCausalTree<TTree>> {
         let realtime = <RealtimeCausalTree<TTree>>this._trees[info.id];
         if (!realtime) {
             let connection = new SocketIOConnection(this._socket);
             let channel = new RealtimeChannel<Atom<AtomOp>[]>(info, connection);
-            let validator = new AtomValidator(this._crypto)
-            realtime = new RealtimeCausalTree<TTree>(this._factory, this._store, channel, {
-                validator: validator,
-                storeAtoms: true,
-                ...options
-            });
+            let validator = new AtomValidator(this._crypto);
+            realtime = new RealtimeCausalTree<TTree>(
+                this._factory,
+                this._store,
+                channel,
+                {
+                    validator: validator,
+                    storeAtoms: true,
+                    ...options,
+                }
+            );
             this._trees[info.id] = realtime;
         }
-        
+
         return realtime;
     }
 
@@ -87,7 +107,10 @@ export class CausalTreeManager implements SubscriptionLike {
      * @param tree The tree to fork.
      * @param newId The ID of the channel that should be used for the fork.
      */
-    async forkTree<TTree extends CausalTree<AtomOp, any, any>>(realtime: RealtimeCausalTree<TTree>, newId: string): Promise<RealtimeCausalTree<TTree>> {
+    async forkTree<TTree extends CausalTree<AtomOp, any, any>>(
+        realtime: RealtimeCausalTree<TTree>,
+        newId: string
+    ): Promise<RealtimeCausalTree<TTree>> {
         let oldTree = <RealtimeCausalTree<TTree>>this._trees[newId];
         if (oldTree) {
             throw new Error('The given channel ID already exists.');
@@ -96,14 +119,18 @@ export class CausalTreeManager implements SubscriptionLike {
         const info: RealtimeChannelInfo = {
             type: realtime.channel.info.type,
             id: newId,
-            bare: true
+            bare: true,
         };
 
         await this._store.put(newId, realtime.tree.export());
 
         let connection = new SocketIOConnection(this._socket);
         let channel = new RealtimeChannel<Atom<AtomOp>[]>(info, connection);
-        let newRealtime = new RealtimeCausalTree<TTree>(this._factory, this._store, channel);
+        let newRealtime = new RealtimeCausalTree<TTree>(
+            this._factory,
+            this._store,
+            channel
+        );
         // newRealtime.storeArchivedAtoms = true;
         this._trees[info.id] = newRealtime;
 

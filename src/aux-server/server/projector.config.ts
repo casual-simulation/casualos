@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as os from 'os';
 import * as process from 'process';
-import { ClientConfig } from "./config";
+import { ClientConfig } from './config';
 import { getLocalIpAddresses, getExtraDomainsForSite } from './utils';
 import webConfig from './web.config';
 
@@ -11,7 +11,7 @@ let domains = [
     'projector.*.filesimulator.com',
     'projector.localhost',
     'auxbuilder.com',
-    ...getExtraDomainsForSite('projector')
+    ...getExtraDomainsForSite('projector'),
 ];
 
 const config: ClientConfig = {
@@ -21,8 +21,8 @@ const config: ClientConfig = {
     web: {
         ...webConfig,
         isBuilder: true,
-        isPlayer: false
-    }
+        isPlayer: false,
+    },
 };
 
 export default config;

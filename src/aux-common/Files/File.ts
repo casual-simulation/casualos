@@ -1,4 +1,3 @@
-
 export type PartialFile = Partial<File>;
 
 export type AuxDomain = 'builder' | 'player';
@@ -9,11 +8,9 @@ export type Workspace = File;
 export interface File {
     id: string;
     tags: FileTags;
-};
+}
 
 export interface FileTags {
-    
-
     // Global file tags
     ['aux.scene.color']?: string;
 
@@ -60,7 +57,7 @@ export interface FileTags {
     ['aux.context.scale']?: number;
     ['aux.context.grid']?: {
         [key: string]: WorkspaceHex;
-    } | null,
+    } | null;
     ['aux.context.grid.scale']?: number;
     ['aux.context.defaultHeight']?: number;
     ['aux.context.color']?: string;
@@ -95,7 +92,13 @@ export type FileShape = 'cube' | 'sphere' | 'sprite';
 /**
  * Defines the possible anchor positions for a label.
  */
-export type FileLabelAnchor = 'top' | 'front' | 'back' | 'left' | 'right' | 'floating';
+export type FileLabelAnchor =
+    | 'top'
+    | 'front'
+    | 'back'
+    | 'left'
+    | 'right'
+    | 'floating';
 
 /**
  * The default user mode.
@@ -120,7 +123,7 @@ export const DEFAULT_LABEL_ANCHOR: FileLabelAnchor = 'top';
 /**
  * The default height for workspaces.
  */
-export const DEFAULT_WORKSPACE_HEIGHT = .1;
+export const DEFAULT_WORKSPACE_HEIGHT = 0.1;
 
 /**
  * The default size for workspaces.
@@ -135,7 +138,7 @@ export const DEFAULT_WORKSPACE_SCALE = 2;
 /**
  * The default scale for mini workspaces.
  */
-export const DEFAULT_MINI_WORKSPACE_SCALE = DEFAULT_WORKSPACE_SCALE  / 3;
+export const DEFAULT_MINI_WORKSPACE_SCALE = DEFAULT_WORKSPACE_SCALE / 3;
 
 /**
  * The default grid scale for workspaces.
@@ -155,9 +158,9 @@ export const DEFAULT_WORKSPACE_MIN_HEIGHT = 0.1;
 /**
  * The default color for workspaces.
  */
-export const DEFAULT_WORKSPACE_COLOR = "#999999";
+export const DEFAULT_WORKSPACE_COLOR = '#999999';
 
 /**
  * The default color for scene background.
  */
-export const DEFAULT_SCENE_BACKGROUND_COLOR = "#CCE6FF";
+export const DEFAULT_SCENE_BACKGROUND_COLOR = '#CCE6FF';

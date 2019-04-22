@@ -1,11 +1,10 @@
 import * as Acorn from 'acorn';
-import {generate, baseGenerator} from 'astring';
-import {replace} from 'estraverse';
-import {assign} from 'lodash';
+import { generate, baseGenerator } from 'astring';
+import { replace } from 'estraverse';
+import { assign } from 'lodash';
 import LRU from 'lru-cache';
 
 declare module 'acorn' {
-
     /**
      * Extends the acorn parser interface.
      */
@@ -19,7 +18,11 @@ declare module 'acorn' {
         parseLiteral(value: string): Acorn.Node;
         parseIdent(): Acorn.Node;
         parseExprSubscripts(): Acorn.Node;
-        parseSubscript(base: Acorn.Node, startPos: number, startLoc: number): Acorn.Node;
+        parseSubscript(
+            base: Acorn.Node,
+            startPos: number,
+            startLoc: number
+        ): Acorn.Node;
         unexpected(): void;
         startNodeAt(start: number, startLoc: number): Acorn.Node;
         readToken(code: number): any;
@@ -44,7 +47,7 @@ export interface ObjectValueNode extends Acorn.Node {
 
 const tok = {
     tag: new Acorn.TokenType('tag'),
-    objRef: new Acorn.TokenType('objRef')
+    objRef: new Acorn.TokenType('objRef'),
 };
 
 function isTagStart(char: number) {
@@ -60,9 +63,9 @@ function callExpr(name: string, args: any[]) {
         type: 'CallExpression',
         callee: {
             type: 'Identifier',
-            name: name
+            name: name,
         },
-        arguments: args
+        arguments: args,
     };
 }
 
@@ -71,21 +74,21 @@ function memberExpr(object: any, property: any) {
         type: 'MemberExpression',
         object: object,
         computed: property.type !== 'Identifier',
-        property: property
+        property: property,
     };
 }
 
 function ident(name: string) {
     return {
         type: 'Identifier',
-        name: name
+        name: name,
     };
 }
 
 function literal(raw: string) {
     return {
         type: 'Literal',
-        raw: raw
+        raw: raw,
     };
 }
 
@@ -105,9 +108,9 @@ function exJsParser(parser: typeof Acorn.Parser) {
         }
 
         parseExprAtom(refShortHandDefaultPos: any): Acorn.Node {
-            if(this.type === tok.tag) {
+            if (this.type === tok.tag) {
                 return this.parseTag();
-            } else if(this.type === tok.objRef) {
+            } else if (this.type === tok.objRef) {
                 return this.parseObjRef();
             }
             return super.parseExprAtom(refShortHandDefaultPos);
@@ -123,19 +126,20 @@ function exJsParser(parser: typeof Acorn.Parser) {
         parseTagAt(startPos: number, startLoc: number): Acorn.Node {
             let node: ExJsNode = <any>this.startNodeAt(startPos, startLoc);
             node.identifier = null;
-            if(this.type === Acorn.tokTypes.string) {
+            if (this.type === Acorn.tokTypes.string) {
                 node.identifier = this.parseLiteral(this.value);
-            } else if(this.type === Acorn.tokTypes.name) {
+            } else if (this.type === Acorn.tokTypes.name) {
                 const expr = this.parseExprAtom(null);
                 let base = expr;
                 let element;
                 while (true) {
                     element = super.parseSubscript(base, startPos, startLoc);
-                    if(element === base || element.type === 'CallExpression') break;
+                    if (element === base || element.type === 'CallExpression')
+                        break;
                     base = element;
                 }
                 node.identifier = element;
-            } else if(this.type === Acorn.tokTypes.parenL) {
+            } else if (this.type === Acorn.tokTypes.parenL) {
             } else {
                 this.unexpected();
             }
@@ -152,25 +156,26 @@ function exJsParser(parser: typeof Acorn.Parser) {
         parseObjRefAt(startPos: number, startLoc: number): Acorn.Node {
             let node: ExJsNode = <any>this.startNodeAt(startPos, startLoc);
             node.identifier = null;
-            if(this.type === Acorn.tokTypes.string) {
+            if (this.type === Acorn.tokTypes.string) {
                 node.identifier = this.parseLiteral(this.value);
-            } else if(this.type === Acorn.tokTypes.name) {
+            } else if (this.type === Acorn.tokTypes.name) {
                 const expr = this.parseExprAtom(null);
                 let base = expr;
                 let element;
                 while (true) {
                     element = super.parseSubscript(base, startPos, startLoc);
-                    if (element === base || element.type === 'CallExpression') break;
+                    if (element === base || element.type === 'CallExpression')
+                        break;
                     base = element;
                 }
                 node.identifier = element;
-            } else if(this.type === Acorn.tokTypes.parenL) {
+            } else if (this.type === Acorn.tokTypes.parenL) {
             } else {
                 this.unexpected();
             }
             return this.finishNode(node, 'ObjectValue');
         }
-    }
+    };
 }
 
 const exJsGenerator = assign({}, baseGenerator, {});
@@ -178,7 +183,7 @@ const exJsGenerator = assign({}, baseGenerator, {});
 /**
  * Defines a class that is able to compile code from AUX's custom JavaScript dialect
  * into pure ES6 JavaScript. Does not preserve spacing or comments.
- * 
+ *
  * See https://docs.google.com/document/d/1WQXQPjdXxyx_lau15WPpwTTYvt66_wPCu3x-08rpLoY/edit?usp=sharing
  */
 export class Transpiler {
@@ -212,7 +217,10 @@ export class Transpiler {
             enter: <any>((n: any) => {
                 // #tag or #tag(filter) syntax
                 // or @tag or @tag(filter) syntax
-                if ((n.type === 'TagValue' || n.type === 'ObjectValue') && n.identifier) {
+                if (
+                    (n.type === 'TagValue' || n.type === 'ObjectValue') &&
+                    n.identifier
+                ) {
                     // _listTagValues('tag', filter)
 
                     let currentNode = n.identifier;
@@ -220,7 +228,7 @@ export class Transpiler {
                     let args: any[] = [];
                     let nodes: any[] = [];
 
-                    while(currentNode.type === 'MemberExpression') {
+                    while (currentNode.type === 'MemberExpression') {
                         currentNode = currentNode.object;
                     }
 
@@ -242,15 +250,21 @@ export class Transpiler {
                     if (identifier.type === 'MemberExpression') {
                         tag = this._toJs(identifier);
                     } else {
-                        tag = (identifier.name || identifier.value);
+                        tag = identifier.name || identifier.value;
                     }
 
-                    const funcName = n.type === 'TagValue' ? '_listTagValues' : '_listObjectsWithTag';
+                    const funcName =
+                        n.type === 'TagValue'
+                            ? '_listTagValues'
+                            : '_listObjectsWithTag';
 
-                    const call = callExpr(funcName, [{
-                        type: 'Literal',
-                        value: tag
-                    }, ...args]);
+                    const call = callExpr(funcName, [
+                        {
+                            type: 'Literal',
+                            value: tag,
+                        },
+                        ...args,
+                    ]);
 
                     if (nodes.length === 0) {
                         return call;
@@ -260,29 +274,37 @@ export class Transpiler {
                             return memberExpr(prev, prop);
                         }, call);
                     }
-
-                } else if(n.type === 'CallExpression') {
-                    if (n.callee.type === 'TagValue' || n.callee.type === 'ObjectValue') {
+                } else if (n.type === 'CallExpression') {
+                    if (
+                        n.callee.type === 'TagValue' ||
+                        n.callee.type === 'ObjectValue'
+                    ) {
                         if (n.callee.identifier) {
-
                             let identifier = n.callee.identifier;
-                            let tag: string = (identifier.name || identifier.value);
+                            let tag: string =
+                                identifier.name || identifier.value;
 
-                            const funcName = n.callee.type === 'TagValue' ? '_listTagValues' : '_listObjectsWithTag';
-                            return callExpr(funcName, [{
-                                type: 'Literal',
-                                value: tag
-                            }, ...n.arguments]);
+                            const funcName =
+                                n.callee.type === 'TagValue'
+                                    ? '_listTagValues'
+                                    : '_listObjectsWithTag';
+                            return callExpr(funcName, [
+                                {
+                                    type: 'Literal',
+                                    value: tag,
+                                },
+                                ...n.arguments,
+                            ]);
                         }
                     }
                 }
-            })
+            }),
         });
     }
 
     private _toJs(node: Acorn.Node): string {
         return generate(<any>node, {
-            generator: exJsGenerator
+            generator: exJsGenerator,
         });
     }
 }

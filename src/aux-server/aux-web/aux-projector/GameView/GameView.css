@@ -1,10 +1,11 @@
-
 .game-canvas {
     position: absolute;
     touch-action: none;
 }
 
-html.ar-app, html.ar-app body, html.ar-app .md-content {
+html.ar-app,
+html.ar-app body,
+html.ar-app .md-content {
     background-color: transparent !important;
 }
 

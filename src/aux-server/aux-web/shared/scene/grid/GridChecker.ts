@@ -1,20 +1,18 @@
-import { 
-    WebGLRenderer, 
-    OrthographicCamera, 
-    Scene, 
-    WebGLRenderTarget, 
-    Box3, 
+import {
+    WebGLRenderer,
+    OrthographicCamera,
+    Scene,
+    WebGLRenderTarget,
+    Box3,
     Vector3,
     Math as ThreeMath,
     Color,
     MeshBasicMaterial,
     Vector2,
     Object3D,
-    Box3Helper
+    Box3Helper,
 } from 'three';
-import {
-    groupBy, keys, every
-} from 'lodash';
+import { groupBy, keys, every } from 'lodash';
 import { HexGridMesh, HexMesh } from '../hex';
 import { GridLevel } from './GridLevel';
 import { GridTile } from './GridTile';
@@ -25,13 +23,12 @@ import { createSphere, disposeMaterial } from '../SceneUtils';
 /**
  * Defines a class that can check a HexGridMesh to see which square grid tiles
  * should be visible.
- * 
- * It does this by doing an off-screen render of the worksurface at a resolution matching the 
+ *
+ * It does this by doing an off-screen render of the worksurface at a resolution matching the
  * square grid tile size and bounds matching the hex grid. Upon completion it will check the resulting image
  * for tiles that have a hex under them or not and calculate whether the square grid should appear based on that.
  */
 export class GridChecker {
-
     tileRatio = 0.2;
     private _supersampling = 2;
     private _renderer: WebGLRenderer;
@@ -60,7 +57,7 @@ export class GridChecker {
         this._renderer = new WebGLRenderer({
             alpha: true,
             preserveDrawingBuffer: true,
-            antialias: false
+            antialias: false,
         });
         this._debug = false;
         this._renderer.setClearColor(new Color(), 0);
@@ -76,7 +73,7 @@ export class GridChecker {
         if (grid.hexes.length === 0) {
             return {
                 levels: [],
-                bounds: new Box3()
+                bounds: new Box3(),
             };
         }
 
@@ -88,17 +85,21 @@ export class GridChecker {
         this._updateRenderer();
         this._updateHexes();
 
-        const groups = groupBy(this._grid.hexes, h => Math.floor(h.height * this._heightSpacing));
+        const groups = groupBy(this._grid.hexes, h =>
+            Math.floor(h.height * this._heightSpacing)
+        );
         const heights = keys(groups);
-        const results = heights.map(h => this.checkLevel(groups[h], groups[h][0].height));
-        
+        const results = heights.map(h =>
+            this.checkLevel(groups[h], groups[h][0].height)
+        );
+
         this._revertHexes();
 
         // Convert bounds to local space
         this._bounds.min.sub(this._worldPosition);
         this._bounds.max.sub(this._worldPosition);
 
-        return { 
+        return {
             levels: results,
             bounds: this._bounds,
         };
@@ -109,16 +110,24 @@ export class GridChecker {
         this._height = height;
 
         this._updateScene();
-        
+
         this._render();
 
         const gl = this._renderer.context;
         const size = {
             width: gl.drawingBufferWidth,
-            height: gl.drawingBufferHeight
+            height: gl.drawingBufferHeight,
         };
         const data = new Uint8Array(size.width * size.height * 4);
-        gl.readPixels(0, 0, size.width, size.height, gl.RGBA, gl.UNSIGNED_BYTE, data);
+        gl.readPixels(
+            0,
+            0,
+            size.width,
+            size.height,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            data
+        );
 
         const image = this._debug ? this._renderer.domElement.toDataURL() : '';
 
@@ -132,17 +141,33 @@ export class GridChecker {
         for (let x = 0; x < actualWidth; x++) {
             for (let y = 0; y < actualHeight; y++) {
                 const centerPixel = this._pixelPos(x, y, size.width);
-                const topLeftPixel = this._pixelPos(x - 0.5, y + 0.5, size.width);
-                const topRightPixel = this._pixelPos(x + 0.5, y + 0.5, size.width);
-                const bottomLeftPixel = this._pixelPos(x - 0.5, y - 0.5, size.width);
-                const bottomRightPixel = this._pixelPos(x + 0.5, y - 0.5, size.width);
+                const topLeftPixel = this._pixelPos(
+                    x - 0.5,
+                    y + 0.5,
+                    size.width
+                );
+                const topRightPixel = this._pixelPos(
+                    x + 0.5,
+                    y + 0.5,
+                    size.width
+                );
+                const bottomLeftPixel = this._pixelPos(
+                    x - 0.5,
+                    y - 0.5,
+                    size.width
+                );
+                const bottomRightPixel = this._pixelPos(
+                    x + 0.5,
+                    y - 0.5,
+                    size.width
+                );
 
                 const pixels = [
                     centerPixel,
                     topLeftPixel,
                     topRightPixel,
                     bottomLeftPixel,
-                    bottomRightPixel
+                    bottomRightPixel,
                 ];
                 const alphas = pixels.map(p => data[p + 3]);
                 const matching = alphas.filter(a => a);
@@ -151,25 +176,26 @@ export class GridChecker {
                 // const r = data[pixel];
                 // const g = data[pixel + 1];
                 // const b = data[pixel + 2];
-                const offsetX = x - (actualWidth / 2);
-                const offsetY = y - (actualHeight / 2);
+                const offsetX = x - actualWidth / 2;
+                const offsetY = y - actualHeight / 2;
                 const gridX = Math.ceil(offsetX);
                 const gridY = Math.ceil(offsetY);
                 const tilePoints = calculateGridTileLocalPositions(
-                    gridX, 
-                    gridY, 
-                    
+                    gridX,
+                    gridY,
+
                     // Divide by tileSize so that when height gets multiplied by tileSize it equals 1
                     // This makes the output Z match height exactly and not get scaled by tileSize.
                     height / this._tileSize,
-                    this._tileSize, 
-                    points);
+                    this._tileSize,
+                    points
+                );
                 tiles.push({
                     valid,
                     gridPosition: new Vector2(gridX, gridY),
                     localPosition: tilePoints.center,
                     // points: points,
-                    localPoints: tilePoints.points
+                    localPoints: tilePoints.points,
                 });
             }
         }
@@ -181,14 +207,14 @@ export class GridChecker {
             width: actualWidth,
             height: actualHeight,
             size: this._size,
-            center: this._center
+            center: this._center,
         };
     }
 
     private _pixelPos(x: number, y: number, width: number) {
         const pixelX = x * this._supersampling;
-        const pixelY = y * this._supersampling
-        const idx = pixelX + (pixelY * width);
+        const pixelY = y * this._supersampling;
+        const idx = pixelX + pixelY * width;
         const pixel = idx * 4;
         return pixel;
     }
@@ -205,14 +231,18 @@ export class GridChecker {
         this._group.position.copy(this._worldPosition);
 
         this._hexBounds = new Box3().setFromObject(this._group);
-        this._camera.position.set(this._worldPosition.x, this._hexBounds.max.y, this._worldPosition.z);
+        this._camera.position.set(
+            this._worldPosition.x,
+            this._hexBounds.max.y,
+            this._worldPosition.z
+        );
         this._camera.updateMatrixWorld(true);
     }
-    
+
     private _updateHexes() {
         // update all the meshes with a unlit material.
         const mat = new MeshBasicMaterial({
-            color: 0x000000
+            color: 0x000000,
         });
         this._grid.hexes.forEach(h => {
             let a: any = h;
@@ -264,7 +294,7 @@ export class GridChecker {
         this._camera.rotation.set(ThreeMath.degToRad(-90), 0, 0);
         this._camera.left = -this._size.x / 2;
         this._camera.right = this._size.x / 2;
-        this._camera.top = this._size.z / 2
+        this._camera.top = this._size.z / 2;
         this._camera.bottom = -this._size.z / 2;
 
         this._camera.near = 0;
@@ -279,14 +309,20 @@ export class GridChecker {
         const worldHeight = this._size.z;
         const tileWidth = Math.ceil(worldWidth / this._tileSize);
         const tileHeight = Math.ceil(worldHeight / this._tileSize);
-        this._renderer.setSize(tileWidth * this._supersampling, tileHeight * this._supersampling);
+        this._renderer.setSize(
+            tileWidth * this._supersampling,
+            tileHeight * this._supersampling
+        );
     }
 
     private _render() {
         this._renderer.render(this._scene, this._camera);
     }
 
-    public static createVisualization(results: GridCheckResults, options: GridCheckerVisualizationOptions = {}) {
+    public static createVisualization(
+        results: GridCheckResults,
+        options: GridCheckerVisualizationOptions = {}
+    ) {
         let debugDots = new Object3D();
         const size = options.sphereSize || 0.05;
         const tileColor = options.tileCenterColor || 0x0000ff;
@@ -295,23 +331,39 @@ export class GridChecker {
         results.levels.forEach(level => {
             level.tiles.forEach(tile => {
                 if (tile.valid || options.showInvalidPoints) {
-                    const tileWorldPosition = new Vector3().copy(tile.localPosition);
+                    const tileWorldPosition = new Vector3().copy(
+                        tile.localPosition
+                    );
                     if (options.workspace) {
                         tileWorldPosition.add(options.workspace.position);
                     }
-                    debugDots.add(createSphere(tileWorldPosition, tile.valid ? tileColor : invalidColor, size));
+                    debugDots.add(
+                        createSphere(
+                            tileWorldPosition,
+                            tile.valid ? tileColor : invalidColor,
+                            size
+                        )
+                    );
                     tile.localPoints.forEach(p => {
                         const pointWorldPosition = new Vector3().copy(p);
                         if (options.workspace) {
                             pointWorldPosition.add(options.workspace.position);
                         }
-                        debugDots.add(createSphere(pointWorldPosition, tilePointColor, size));
+                        debugDots.add(
+                            createSphere(
+                                pointWorldPosition,
+                                tilePointColor,
+                                size
+                            )
+                        );
                     });
                 }
             });
-
         });
-        if (options.showBoundingBoxes || (typeof options.showBoundingBoxes === 'undefined')) {
+        if (
+            options.showBoundingBoxes ||
+            typeof options.showBoundingBoxes === 'undefined'
+        ) {
             const bounds = new Box3().copy(results.bounds);
             if (options.workspace) {
                 // convert to global space
@@ -324,7 +376,10 @@ export class GridChecker {
             const boundsColor = options.boundsColor || 0xff00ff;
             const center = new Vector3();
             bounds.getCenter(center);
-            const helper = new Box3Helper(results.bounds, new Color(boundsColor));
+            const helper = new Box3Helper(
+                results.bounds,
+                new Color(boundsColor)
+            );
             debugDots.add(helper);
 
             debugDots.add(createSphere(center, boundsColor, 0.1));

@@ -1,19 +1,27 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Inject, Watch, Prop } from 'vue-property-decorator';
-import { File, AuxFile, FileCalculationContext, getFileInputTarget, calculateFormattedFileValue, calculateFileValue, isFormula, getFileInputPlaceholder } from '@casual-simulation/aux-common';
+import {
+    File,
+    AuxFile,
+    FileCalculationContext,
+    getFileInputTarget,
+    calculateFormattedFileValue,
+    calculateFileValue,
+    isFormula,
+    getFileInputPlaceholder,
+} from '@casual-simulation/aux-common';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { appManager } from '../../shared/AppManager';
 
 @Component({
-    components: {
-    },
+    components: {},
 })
 export default class MenuFile extends Vue {
-
     @Prop() file: AuxFile;
     @Prop() index: number;
-    @Prop({ default: false }) selected: boolean;
+    @Prop({ default: false })
+    selected: boolean;
     @Prop() context: string;
 
     label: string = '';
@@ -67,8 +75,8 @@ export default class MenuFile extends Vue {
         if (this.showDialog) {
             await appManager.fileManager.updateFile(this.inputTarget, {
                 tags: {
-                    [this.input]: this.inputValue
-                }
+                    [this.input]: this.inputValue,
+                },
             });
             await appManager.fileManager.action('onSave', [this.file]);
             await this.closeDialog();
@@ -89,7 +97,11 @@ export default class MenuFile extends Vue {
             this.label = calculateFormattedFileValue(calc, file, 'aux.label');
             const labelColor = file.tags['aux.label.color'];
             if (labelColor) {
-                this.labelColor = calculateFormattedFileValue(calc, file, 'aux.label.color');
+                this.labelColor = calculateFormattedFileValue(
+                    calc,
+                    file,
+                    'aux.label.color'
+                );
             } else {
                 this.labelColor = '#000';
             }
@@ -105,11 +117,16 @@ export default class MenuFile extends Vue {
 
             if (this.input) {
                 this.inputTarget = getFileInputTarget(calc, file);
-                this.inputValue = calculateFormattedFileValue(calc, this.inputTarget, this.input);
-                this.placeholder = getFileInputPlaceholder(calc, file) || this.input;
+                this.inputValue = calculateFormattedFileValue(
+                    calc,
+                    this.inputTarget,
+                    this.input
+                );
+                this.placeholder =
+                    getFileInputPlaceholder(calc, file) || this.input;
             }
         } else {
             this.input = '';
         }
     }
-};
+}

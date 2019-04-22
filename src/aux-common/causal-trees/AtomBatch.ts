@@ -1,5 +1,5 @@
-import { RejectedAtom } from "./RejectedAtom";
-import { Atom, AtomOp } from "./Atom";
+import { RejectedAtom } from './RejectedAtom';
+import { Atom, AtomOp } from './Atom';
 
 /**
  * Defines a batch of atoms that were added or rejected.

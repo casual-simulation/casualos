@@ -1,4 +1,4 @@
 //client config - test
 const lbServicesConfig = {
-    url:"https://filesimulator.com"
+    url: 'https://filesimulator.com',
 };

@@ -1,4 +1,4 @@
-import { AtomOp, Atom } from "./Atom";
+import { AtomOp, Atom } from './Atom';
 
 /**
  * Defines an interface for an operation that was calculated
@@ -23,13 +23,17 @@ export interface PrecalculatedOp<T extends AtomOp> {
 
 /**
  * Creates a new precalculated operation.
- * @param op 
- * @param cause 
+ * @param op
+ * @param cause
  */
-export function precalculatedOp<T extends AtomOp>(op: T, cause: Atom<AtomOp> = null, priority?: number): PrecalculatedOp<T> {
+export function precalculatedOp<T extends AtomOp>(
+    op: T,
+    cause: Atom<AtomOp> = null,
+    priority?: number
+): PrecalculatedOp<T> {
     return {
         op,
         cause,
-        priority
+        priority,
     };
 }

@@ -1,7 +1,6 @@
-
 :root {
-    --disabled-cell-color: #F2F2F2;
-    --file-cell-border-color: #CCC;
+    --disabled-cell-color: #f2f2f2;
+    --file-cell-border-color: #ccc;
     --file-cell-border: 1px solid var(--file-cell-border-color);
 }
 
@@ -84,7 +83,7 @@
 }
 
 th:last-child {
-    border-right: 1px solid rgba(0,0,0,.2);
+    border-right: 1px solid rgba(0, 0, 0, 0.2);
 }
 
 .has-add-button th:last-child {
@@ -156,7 +155,7 @@ th:last-child {
 }
 
 .multi-line-tag-value-editor.formula {
-    font-family: Consolas, "Courier New", monospace;
+    font-family: Consolas, 'Courier New', monospace;
     letter-spacing: 0;
 }
 

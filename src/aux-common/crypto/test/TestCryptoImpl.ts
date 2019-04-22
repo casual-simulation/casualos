@@ -1,4 +1,9 @@
-import { SigningCryptoImpl, PrivateCryptoKey, PublicCryptoKey, SigningCryptoKey } from '../CryptoImpl';
+import {
+    SigningCryptoImpl,
+    PrivateCryptoKey,
+    PublicCryptoKey,
+    SigningCryptoKey,
+} from '../CryptoImpl';
 import { SignatureAlgorithmType } from '../SignatureAlgorithm';
 
 export class TestCryptoImpl implements SigningCryptoImpl {
@@ -17,19 +22,27 @@ export class TestCryptoImpl implements SigningCryptoImpl {
     async sign(key: PrivateCryptoKey, data: ArrayBuffer): Promise<ArrayBuffer> {
         return this.signature || data.slice(0, 32);
     }
-    
-    async verify(key: PublicCryptoKey, signature: ArrayBuffer, data: ArrayBuffer): Promise<boolean> {
+
+    async verify(
+        key: PublicCryptoKey,
+        signature: ArrayBuffer,
+        data: ArrayBuffer
+    ): Promise<boolean> {
         return this.valid;
     }
 
-    async verifyBatch(key: PublicCryptoKey, signatures: ArrayBuffer[], datas: ArrayBuffer[]): Promise<boolean[]> {
+    async verifyBatch(
+        key: PublicCryptoKey,
+        signatures: ArrayBuffer[],
+        datas: ArrayBuffer[]
+    ): Promise<boolean[]> {
         return signatures.map(s => this.valid);
     }
 
     exportKey(key: SigningCryptoKey): Promise<string> {
         return Promise.resolve(key.type);
     }
-    
+
     importPublicKey(key: string): Promise<PublicCryptoKey> {
         return Promise.resolve(<PublicCryptoKey>new TestCryptoKey(key));
     }
@@ -39,7 +52,10 @@ export class TestCryptoImpl implements SigningCryptoImpl {
     }
 
     async generateKeyPair(): Promise<[PublicCryptoKey, PrivateCryptoKey]> {
-        return [<PublicCryptoKey>new TestCryptoKey('public'), <PrivateCryptoKey>new TestCryptoKey('private')];
+        return [
+            <PublicCryptoKey>new TestCryptoKey('public'),
+            <PrivateCryptoKey>new TestCryptoKey('private'),
+        ];
     }
 }
 

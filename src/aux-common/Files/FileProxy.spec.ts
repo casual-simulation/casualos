@@ -1,9 +1,9 @@
-import { createFile, createCalculationContext } from "./FileCalculations";
+import { createFile, createCalculationContext } from './FileCalculations';
 import { createFileProxy, isProxy, proxyObject } from './FileProxy';
 import formulaLib from '../Formulas/formula-lib';
 import { File } from './File';
 import { keys } from 'lodash';
-import { FileEvent } from ".";
+import { FileEvent } from '.';
 
 describe('FileProxy', () => {
     describe('createFileProxy()', () => {
@@ -37,7 +37,7 @@ describe('FileProxy', () => {
             const pVal = proxy.num;
             expect(pVal[isProxy]).toBe(true);
             expect(pVal[Symbol.toPrimitive]('default')).toBe(100);
-            
+
             const val = pVal[proxyObject];
             expect(val).toBe(100);
         });
@@ -117,7 +117,7 @@ describe('FileProxy', () => {
         it('should be able to handle nested objects', () => {
             const file = createFile('testId');
             file.tags['my.obj'] = {
-                test: 'hahaha'
+                test: 'hahaha',
             };
 
             const context = createCalculationContext([file]);
@@ -130,8 +130,8 @@ describe('FileProxy', () => {
             const file = createFile('testId');
             file.tags['my.obj'] = {
                 'test.deep': {
-                    final: 'cool'
-                }
+                    final: 'cool',
+                },
             };
 
             const context = createCalculationContext([file]);
@@ -147,10 +147,10 @@ describe('FileProxy', () => {
             const proxy = createFileProxy(context, file);
 
             expect(proxy.some.crazy.tag == false).toBe(true);
-            
-            // Type is a 
+
+            // Type is a
             expect(!proxy.some.crazy.tag).toBe(false);
-            
+
             const val = proxy.some.crazy.tag;
             expect(typeof val === 'object').toBe(true);
             expect(val instanceof String).toBe(true);
@@ -161,23 +161,18 @@ describe('FileProxy', () => {
             const file = createFile('testId');
             file.tags.abc = 1;
             file.tags.def = 2;
-            
+
             const context = createCalculationContext([file]);
             const proxy = createFileProxy(context, file);
 
             const tags = Object.keys(proxy);
-            expect(tags).toEqual([
-                'id',
-                'tags',
-                'abc',
-                'def'
-            ]);
+            expect(tags).toEqual(['id', 'tags', 'abc', 'def']);
         });
 
         it('should support the in operator', () => {
             const file = createFile('testId');
             file.tags.abc = 1;
-            
+
             const context = createCalculationContext([file]);
             const proxy = createFileProxy(context, file);
             expect('abc' in proxy).toBe(true);
@@ -191,7 +186,7 @@ describe('FileProxy', () => {
             file2.tags.num = 5;
 
             file1.tags.sum = '=sum(#num)';
-            
+
             const context = createCalculationContext([file1, file2]);
             const proxy = createFileProxy(context, file1);
 
@@ -201,7 +196,7 @@ describe('FileProxy', () => {
         it('should call a function when a value was set', () => {
             const file = createFile('testId');
             file.tags.abc = 1;
-            
+
             let tags: string[] = [];
             let vals: any[] = [];
 
@@ -214,26 +209,18 @@ describe('FileProxy', () => {
             proxy.abc = 2;
             proxy.cool.stuff = 'hi';
             proxy.pretty.neat.ability = {
-                test: 'hello'
+                test: 'hello',
             };
 
-            expect(tags).toEqual([
-                'abc',
-                'cool.stuff',
-                'pretty.neat.ability'
-            ]);
+            expect(tags).toEqual(['abc', 'cool.stuff', 'pretty.neat.ability']);
 
-            expect(vals).toEqual([
-                2,
-                'hi',
-                { test: 'hello' }
-            ]);
+            expect(vals).toEqual([2, 'hi', { test: 'hello' }]);
         });
 
         it('should set the value on the tags', () => {
             const file = createFile('testId');
             file.tags.abc = 1;
-            
+
             let tags: string[] = [];
             let vals: any[] = [];
 
@@ -245,7 +232,7 @@ describe('FileProxy', () => {
 
             proxy.abc = 2;
             proxy.cool.stuff = 'hi';
-            
+
             expect(proxy.abc.valueOf()).toBe(2);
             expect(proxy.cool.stuff.valueOf()).toBe('hi');
             expect(file.tags.abc).toBe(1);
@@ -259,9 +246,9 @@ describe('FileProxy', () => {
             const file = createFile('testId');
             file.tags['abc.def'] = {
                 ghi: 15,
-                zzz: true
+                zzz: true,
             };
-            
+
             let tags: string[] = [];
             let vals: any[] = [];
 
@@ -273,15 +260,12 @@ describe('FileProxy', () => {
 
             proxy.abc.def.ghi = 2;
             proxy.abc.def.zzz = 'hi';
-            
+
             expect(proxy.abc.def.ghi.valueOf()).toBe(2);
             expect(proxy.abc.def.zzz.valueOf()).toBe('hi');
             expect(file.tags['abc.def'].ghi).toBe(15);
             expect(file.tags['abc.def'].zzz).toBe(true);
-            expect(tags).toEqual([
-                'abc.def',
-                'abc.def'
-            ]);
+            expect(tags).toEqual(['abc.def', 'abc.def']);
             expect(vals).toEqual([
                 { ghi: 2, zzz: true },
                 { ghi: 2, zzz: 'hi' },
@@ -293,11 +277,11 @@ describe('FileProxy', () => {
             const second = createFile('lalala');
             file.tags['abc.def'] = {
                 ghi: 15,
-                zzz: true
+                zzz: true,
             };
             file.tags.second = '=@name("other")';
             second.tags.name = 'other';
-            
+
             let files: File[] = [];
             let tags: string[] = [];
             let vals: any[] = [];
@@ -309,31 +293,26 @@ describe('FileProxy', () => {
                     vals.push(value);
                 };
             };
-            const context = createCalculationContext([file, second], formulaLib, factory);
+            const context = createCalculationContext(
+                [file, second],
+                formulaLib,
+                factory
+            );
             const proxy = createFileProxy(context, file, factory(file));
 
             proxy.second.def = 2;
             proxy.second.hello = 'abc';
-            
+
             expect(file.tags.second).toBe('=@name("other")');
             expect(second).toEqual({
                 id: 'lalala',
                 tags: {
-                    name: 'other'
-                }
+                    name: 'other',
+                },
             });
-            expect(files).toEqual([
-                second,
-                second
-            ]);
-            expect(tags).toEqual([
-                'def',
-                'hello',
-            ]);
-            expect(vals).toEqual([
-                2,
-                'abc',
-            ]);
+            expect(files).toEqual([second, second]);
+            expect(tags).toEqual(['def', 'hello']);
+            expect(vals).toEqual([2, 'abc']);
         });
 
         it('should return the same proxy objects from formulas', () => {
@@ -341,11 +320,11 @@ describe('FileProxy', () => {
             const second = createFile('lalala');
             file.tags['abc.def'] = {
                 ghi: 15,
-                zzz: true
+                zzz: true,
             };
             file.tags.second = '=@name("other")';
             second.tags.name = 'other';
-            
+
             let files: File[] = [];
             let tags: string[] = [];
             let vals: any[] = [];
@@ -357,12 +336,16 @@ describe('FileProxy', () => {
                     vals.push(value);
                 };
             };
-            const context = createCalculationContext([file, second], formulaLib, factory);
+            const context = createCalculationContext(
+                [file, second],
+                formulaLib,
+                factory
+            );
             const proxy = createFileProxy(context, file, factory(file));
 
             proxy.second.def = 2;
             proxy.second.hello = 'abc';
-            
+
             expect(proxy.second.def.valueOf()).toBe(2);
             expect(proxy.second.hello.valueOf()).toBe('abc');
         });
@@ -371,7 +354,7 @@ describe('FileProxy', () => {
             const file = createFile('testId');
             file.tags.arr = [0, 1, 2];
             file.tags.index = 0;
-            
+
             let tags: string[] = [];
             let vals: any[] = [];
 
@@ -381,16 +364,13 @@ describe('FileProxy', () => {
                 vals.push(e);
             });
 
-            proxy.index = proxy.index >= proxy.arr.length - 1 ? 0 : proxy.index + 1;
-            
+            proxy.index =
+                proxy.index >= proxy.arr.length - 1 ? 0 : proxy.index + 1;
+
             expect(proxy.index.valueOf()).toBe(1);
             expect(file.tags.index).toBe(0);
-            expect(tags).toEqual([
-                'index',
-            ]);
-            expect(vals).toEqual([
-                1
-            ]);
+            expect(tags).toEqual(['index']);
+            expect(vals).toEqual([1]);
         });
 
         it('should support formulas that return arrays', () => {
@@ -401,13 +381,9 @@ describe('FileProxy', () => {
             const proxy = createFileProxy(context, file);
 
             const arr = proxy.arr;
-            
+
             expect(arr[isProxy]).toBe(true);
-            expect(arr[proxyObject]).toEqual([
-                0,
-                1,
-                2
-            ]);
+            expect(arr[proxyObject]).toEqual([0, 1, 2]);
 
             const _0 = arr[0];
             expect(_0[isProxy]).toBe(true);
@@ -416,7 +392,7 @@ describe('FileProxy', () => {
             const _1 = arr[1];
             expect(_1[isProxy]).toBe(true);
             expect(_1.valueOf()).toBe(1);
-            
+
             const _2 = arr[2];
             expect(_2[isProxy]).toBe(true);
             expect(_2.valueOf()).toBe(2);
@@ -431,13 +407,9 @@ describe('FileProxy', () => {
             const proxy = createFileProxy(context, file);
 
             const arr = proxy.prop;
-            
+
             expect(arr[isProxy]).toBe(true);
-            expect(arr[proxyObject]).toEqual([
-                0,
-                1,
-                2
-            ]);
+            expect(arr[proxyObject]).toEqual([0, 1, 2]);
 
             const _0 = arr[0];
             expect(_0[isProxy]).toBe(true);
@@ -446,7 +418,7 @@ describe('FileProxy', () => {
             const _1 = arr[1];
             expect(_1[isProxy]).toBe(true);
             expect(_1.valueOf()).toBe(1);
-            
+
             const _2 = arr[2];
             expect(_2[isProxy]).toBe(true);
             expect(_2.valueOf()).toBe(2);
@@ -461,7 +433,7 @@ describe('FileProxy', () => {
             const proxy = createFileProxy(context, file);
 
             const target = proxy.aux.input.target;
-            
+
             expect(target[isProxy]).toBe(true);
             expect(target[proxyObject]).toEqual(123);
         });
@@ -482,7 +454,6 @@ describe('FileProxy', () => {
             expect(proxy.bol[Symbol.toStringTag]).toBe('Boolean');
             expect(proxy.arr[Symbol.toStringTag]).toBe('Array');
             expect(proxy.obj[Symbol.toStringTag]).toBeUndefined();
-
         });
     });
 });

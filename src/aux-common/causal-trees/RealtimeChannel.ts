@@ -1,25 +1,24 @@
-import { RealtimeChannelInfo } from "./RealtimeChannelInfo";
-import { CausalTree } from "./CausalTree";
-import { Observable, SubscriptionLike, Subject, BehaviorSubject } from "rxjs";
-import { RealtimeChannelConnection } from "./RealtimeChannelConnection";
-import { SiteVersionInfo } from "./SiteVersionInfo";
-import { filter, map, tap, first, flatMap } from "rxjs/operators";
-import { ConnectionEvent } from "./ConnectionEvent";
-import { SiteInfo } from "./SiteIdInfo";
-import { WeaveVersion } from "./WeaveVersion";
-import { AtomOp, Atom } from "./Atom";
-import { WeaveReference, StoredCausalTree } from "./StoredCausalTree";
+import { RealtimeChannelInfo } from './RealtimeChannelInfo';
+import { CausalTree } from './CausalTree';
+import { Observable, SubscriptionLike, Subject, BehaviorSubject } from 'rxjs';
+import { RealtimeChannelConnection } from './RealtimeChannelConnection';
+import { SiteVersionInfo } from './SiteVersionInfo';
+import { filter, map, tap, first, flatMap } from 'rxjs/operators';
+import { ConnectionEvent } from './ConnectionEvent';
+import { SiteInfo } from './SiteIdInfo';
+import { WeaveVersion } from './WeaveVersion';
+import { AtomOp, Atom } from './Atom';
+import { WeaveReference, StoredCausalTree } from './StoredCausalTree';
 
 /**
  * Defines a class for a realtime event channel.
  * That is, a persistent connection between two devices.
- * 
+ *
  * Upon connecting, the channel can ask the other device questions about its state
  * and get a response.
  * In addition, the channel can send arbitrary events to the other device.
  */
 export class RealtimeChannel<TEvent> implements SubscriptionLike {
-
     private _connection: RealtimeChannelConnection;
     private _connectionStateChanged: BehaviorSubject<boolean>;
     private _emitName: string;
@@ -31,10 +30,13 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
 
     /**
      * Creates a new realtime channel.
-     * @param info 
-     * @param connection 
+     * @param info
+     * @param connection
      */
-    constructor(info: RealtimeChannelInfo, connection: RealtimeChannelConnection) {
+    constructor(
+        info: RealtimeChannelInfo,
+        connection: RealtimeChannelConnection
+    ) {
         this.info = info;
         this._connection = connection;
         this._emitName = `event_${info.id}`;
@@ -48,7 +50,7 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
             this._emitName,
             this._siteName,
             this._infoName,
-            this._requestSiteIdName
+            this._requestSiteIdName,
         ]);
 
         this.events = this._connection.events.pipe(
@@ -61,16 +63,22 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
             map(e => e.data)
         );
 
-        this._connection.connectionStateChanged.pipe(
-            filter(connected => !connected),
-            tap(_ => this._connectionStateChanged.next(false))
-        ).subscribe();
+        this._connection.connectionStateChanged
+            .pipe(
+                filter(connected => !connected),
+                tap(_ => this._connectionStateChanged.next(false))
+            )
+            .subscribe();
 
-        this._connection.connectionStateChanged.pipe(
-            filter(connected => connected),
-            flatMap(connected => this._connection.request('join_channel', this.info)),
-            tap(_ => this._connectionStateChanged.next(true))
-        ).subscribe();
+        this._connection.connectionStateChanged
+            .pipe(
+                filter(connected => connected),
+                flatMap(connected =>
+                    this._connection.request('join_channel', this.info)
+                ),
+                tap(_ => this._connectionStateChanged.next(true))
+            )
+            .subscribe();
     }
 
     /**
@@ -108,7 +116,7 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
      * Requests the given site ID from the remote peer.
      * This can act as a way to solve race conditions when two peers
      * try to become the same site at the same time.
-     * 
+     *
      * Returns true if the given site info was granted to this peer.
      * Otherwise returns false.
      * @param site The site info that this channel is trying to use.
@@ -127,7 +135,9 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
      * @param weave The weave to send to the remote server.
      * @param currentVersion The local weave version.
      */
-    exchangeWeaves<T extends AtomOp>(message: StoredCausalTree<T>): Promise<StoredCausalTree<T>> {
+    exchangeWeaves<T extends AtomOp>(
+        message: StoredCausalTree<T>
+    ): Promise<StoredCausalTree<T>> {
         return this._connection.request(this._requestWeaveName, message);
     }
 
@@ -138,8 +148,8 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
      */
     emit(event: TEvent) {
         this._connection.emit({
-            name: this._emitName, 
-            data: event
+            name: this._emitName,
+            data: event,
         });
     }
 
@@ -154,7 +164,7 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
      * An observable that resolves whenever the state between this client
      * and the remote peer changes. Upon subscription, this observable
      * will resolve immediately with the current connection state.
-     * 
+     *
      * Basically this resolves with true whenever we're connected and false whenever we're disconnected.
      */
     get connectionStateChanged() {
@@ -167,7 +177,7 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
     unsubscribe(): void {
         this._connection.emit({
             name: this._leaveName,
-            data: null
+            data: null,
         });
         this._connection.unsubscribe();
     }

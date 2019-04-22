@@ -1,34 +1,34 @@
-import { merge } from "./utils";
+import { merge } from './utils';
 
 describe('utils', () => {
     describe('merge()', () => {
         it('should take keys from both objects and return a new object', () => {
             const first = {
-                abc: 'def'
+                abc: 'def',
             };
             const second = {
-                def: 'abc'
+                def: 'abc',
             };
 
             const final = merge(first, second);
 
             expect(final).toEqual({
                 abc: 'def',
-                def: 'abc'
+                def: 'abc',
             });
         });
 
         it('should not change objects that are the same in both', () => {
             const inner = {
-                test: 'abc'
+                test: 'abc',
             };
             const first = {
                 inner: inner,
-                abc: 'def'
+                abc: 'def',
             };
             const second = {
                 inner: inner,
-                def: 'abc'
+                def: 'abc',
             };
 
             const final = merge(first, second);
@@ -37,16 +37,16 @@ describe('utils', () => {
             expect(final).toEqual({
                 inner: inner,
                 abc: 'def',
-                def: 'abc'
+                def: 'abc',
             });
         });
 
         it('should take the latest value', () => {
             const first = {
-                abc: 'def'
+                abc: 'def',
             };
             const second = {
-                abc: 'abc'
+                abc: 'abc',
             };
 
             const final = merge(first, second);
@@ -60,12 +60,12 @@ describe('utils', () => {
             const first = {
                 isNull: <any>null,
                 value: 10,
-                other: 'cool'
+                other: 'cool',
             };
             const second = {
                 isUndefined: <any>undefined,
                 value: <number>null,
-                other: <number>undefined
+                other: <number>undefined,
             };
 
             const final = merge(first, second);
@@ -74,7 +74,7 @@ describe('utils', () => {
                 isNull: null,
                 isUndefined: undefined,
                 value: null,
-                other: 'cool'
+                other: 'cool',
             });
         });
     });

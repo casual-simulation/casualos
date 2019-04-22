@@ -1,24 +1,41 @@
-import { GameObject } from "./GameObject";
-import { AuxFile } from "@casual-simulation/aux-common/aux-format";
-import { Object3D, Mesh, SceneUtils, Box3, Sphere, Group, Vector3, Box3Helper, Color } from "three";
-import { File, TagUpdatedEvent, FileCalculationContext, AuxDomain, isFileInContext, getBuilderContextGrid, calculateGridScale } from "@casual-simulation/aux-common";
-import { createCube, calculateScale, findParentScene } from "./SceneUtils";
-import { AuxFile3DDecorator } from "./AuxFile3DDecorator";
-import { ContextPositionDecorator } from "./decorators/ContextPositionDecorator";
-import { FileShapeDecorator } from "./decorators/FileShapeDecorator";
-import { ContextGroup3D } from "./ContextGroup3D";
-import { ScaleDecorator } from "./decorators/ScaleDecorator";
-import { LabelDecorator } from "./decorators/LabelDecorator";
-import { UserMeshDecorator } from "./decorators/UserMeshDecorator";
-import { AuxFile3DDecoratorFactory } from "./decorators/AuxFile3DDecoratorFactory";
-import { appManager } from "../AppManager";
-import { DebugObjectManager } from "./DebugObjectManager";
+import { GameObject } from './GameObject';
+import { AuxFile } from '@casual-simulation/aux-common/aux-format';
+import {
+    Object3D,
+    Mesh,
+    SceneUtils,
+    Box3,
+    Sphere,
+    Group,
+    Vector3,
+    Box3Helper,
+    Color,
+} from 'three';
+import {
+    File,
+    TagUpdatedEvent,
+    FileCalculationContext,
+    AuxDomain,
+    isFileInContext,
+    getBuilderContextGrid,
+    calculateGridScale,
+} from '@casual-simulation/aux-common';
+import { createCube, calculateScale, findParentScene } from './SceneUtils';
+import { AuxFile3DDecorator } from './AuxFile3DDecorator';
+import { ContextPositionDecorator } from './decorators/ContextPositionDecorator';
+import { FileShapeDecorator } from './decorators/FileShapeDecorator';
+import { ContextGroup3D } from './ContextGroup3D';
+import { ScaleDecorator } from './decorators/ScaleDecorator';
+import { LabelDecorator } from './decorators/LabelDecorator';
+import { UserMeshDecorator } from './decorators/UserMeshDecorator';
+import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
+import { appManager } from '../AppManager';
+import { DebugObjectManager } from './DebugObjectManager';
 
 /**
  * Defines a class that is able to display Aux files.
  */
 export class AuxFile3D extends GameObject {
-
     /**
      * The context this file visualization was created for.
      */
@@ -66,7 +83,14 @@ export class AuxFile3D extends GameObject {
         return this._boundingSphere ? this._boundingSphere.clone() : null;
     }
 
-    constructor(file: File, contextGroup: ContextGroup3D, context: string, domain: AuxDomain, colliders: Object3D[], decoratorFactory: AuxFile3DDecoratorFactory) {
+    constructor(
+        file: File,
+        contextGroup: ContextGroup3D,
+        context: string,
+        domain: AuxDomain,
+        colliders: Object3D[],
+        decoratorFactory: AuxFile3DDecoratorFactory
+    ) {
         super();
         this.file = file;
         this.domain = domain;
@@ -75,7 +99,7 @@ export class AuxFile3D extends GameObject {
         this.context = context;
         this.display = new Group();
         this.add(this.display);
-        
+
         this.decorators = decoratorFactory.loadDecorators(this);
     }
 
@@ -87,7 +111,7 @@ export class AuxFile3D extends GameObject {
         if (this._boundingBox === null) {
             this._boundingBox = new Box3();
         }
-        
+
         this._boundingBox.setFromObject(this.display);
 
         // Calculate Bounding Sphere
@@ -113,7 +137,11 @@ export class AuxFile3D extends GameObject {
      * @param updates The updates that happened on the file.
      * @param calc The calculation context.
      */
-    fileUpdated(file: File, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
+    fileUpdated(
+        file: File,
+        updates: TagUpdatedEvent[],
+        calc: FileCalculationContext
+    ) {
         if (this._shouldUpdate(calc, file)) {
             if (file.id === this.file.id) {
                 this.file = file;
@@ -130,7 +158,7 @@ export class AuxFile3D extends GameObject {
     fileRemoved(file: AuxFile, calc: FileCalculationContext) {
         // TODO:
     }
-    
+
     frameUpdate(calc: FileCalculationContext): void {
         if (this.decorators) {
             this.decorators.forEach(d => d.frameUpdate(calc));
@@ -140,13 +168,17 @@ export class AuxFile3D extends GameObject {
     dispose() {
         super.dispose();
         if (this.decorators) {
-            this.decorators.forEach(d => { d.dispose(); });
+            this.decorators.forEach(d => {
+                d.dispose();
+            });
         }
     }
 
     private _shouldUpdate(calc: FileCalculationContext, file: File): boolean {
-        return file.id === this.file.id ||
+        return (
+            file.id === this.file.id ||
             isFileInContext(calc, file, this.context) ||
-            (this.contextGroup && this.contextGroup.file.id === file.id);
-    };
+            (this.contextGroup && this.contextGroup.file.id === file.id)
+        );
+    }
 }

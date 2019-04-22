@@ -1,4 +1,8 @@
-import { NodeSigningCryptoImpl, NodePublicCryptoKey, NodePrivateCryptoKey } from './NodeSigningCryptoImpl';
+import {
+    NodeSigningCryptoImpl,
+    NodePublicCryptoKey,
+    NodePrivateCryptoKey,
+} from './NodeSigningCryptoImpl';
 
 describe('NodeSigningCryptoImpl', () => {
     describe('constructor', () => {

@@ -21,8 +21,8 @@ export interface AuxObject extends Object {
 export interface AuxFileMetadata {
     ref: Atom<FileOp>;
     tags: {
-        [key: string]: AuxTagMetadata
-    }
+        [key: string]: AuxTagMetadata;
+    };
 }
 
 /**
@@ -52,7 +52,6 @@ export interface AuxValueMetadata {
  * Defines an interface that contains metadata for an AUX sequence.
  */
 export interface AuxSequenceMetadata {
-
     /**
      * The list of indicies that relate a text position to
      * an index in a ref.

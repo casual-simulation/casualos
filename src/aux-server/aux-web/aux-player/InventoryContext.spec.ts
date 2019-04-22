@@ -1,5 +1,11 @@
-import { InventoryContext, DEFAULT_INVENTORY_COUNT } from "./InventoryContext";
-import { File, createFile, createCalculationContext, AuxObject, updateFile } from "@casual-simulation/aux-common";
+import { InventoryContext, DEFAULT_INVENTORY_COUNT } from './InventoryContext';
+import {
+    File,
+    createFile,
+    createCalculationContext,
+    AuxObject,
+    updateFile,
+} from '@casual-simulation/aux-common';
 
 describe('InventoryContext', () => {
     it('should construct for specific context', () => {
@@ -8,13 +14,16 @@ describe('InventoryContext', () => {
     });
 
     it('should not allow invalid context name', () => {
-
         function createWith(context: any) {
             let inventory = new InventoryContext(context);
-        };
+        }
 
-        expect( () => {createWith(null)} ).toThrow();
-        expect( () => {createWith(undefined)} ).toThrow();
+        expect(() => {
+            createWith(null);
+        }).toThrow();
+        expect(() => {
+            createWith(undefined);
+        }).toThrow();
     });
 
     it('should contain default number of slots if none are specified', () => {
@@ -114,7 +123,7 @@ describe('InventoryContext', () => {
         for (let i = 0; i < files.length; i++) {
             inventory.fileAdded(<AuxObject>files[i], calc);
         }
-        
+
         // Should be empty.
         expect(inventory.slots).toEqual([]);
 
@@ -137,18 +146,38 @@ describe('InventoryContext', () => {
         let slotCount = 5;
         let inventory = new InventoryContext(context, slotCount);
         let files: File[] = [
-            createFile('testId_4', { [context]: true, [`${context}.x`]: 0, [`${context}.y`]: 0 }),
-            createFile('testId_3', { [context]: true, [`${context}.x`]: 1, [`${context}.y`]: -1 }),
-            createFile('testId_2', { [context]: true, [`${context}.x`]: 2, [`${context}.y`]: 100 }),
-            createFile('testId_1', { [context]: true, [`${context}.x`]: 3, [`${context}.y`]: 2 }),
-            createFile('testId_0', { [context]: true, [`${context}.x`]: 4, [`${context}.y`]: 0 }),
+            createFile('testId_4', {
+                [context]: true,
+                [`${context}.x`]: 0,
+                [`${context}.y`]: 0,
+            }),
+            createFile('testId_3', {
+                [context]: true,
+                [`${context}.x`]: 1,
+                [`${context}.y`]: -1,
+            }),
+            createFile('testId_2', {
+                [context]: true,
+                [`${context}.x`]: 2,
+                [`${context}.y`]: 100,
+            }),
+            createFile('testId_1', {
+                [context]: true,
+                [`${context}.x`]: 3,
+                [`${context}.y`]: 2,
+            }),
+            createFile('testId_0', {
+                [context]: true,
+                [`${context}.x`]: 4,
+                [`${context}.y`]: 0,
+            }),
         ];
         const calc = createCalculationContext(files);
 
         for (let i = 0; i < files.length; i++) {
             inventory.fileAdded(<AuxObject>files[i], calc);
         }
-        
+
         // Should be empty.
         expect(inventory.slots).toEqual([]);
 
@@ -172,18 +201,43 @@ describe('InventoryContext', () => {
         let slotCount = 5;
         let inventory = new InventoryContext(context, slotCount);
         let files: File[] = [
-            createFile('testId_4', { [context]: true, [`${context}.x`]: 0, [`${context}.y`]: 0, [`${context}.index`]: 1 }),
-            createFile('testId_3', { [context]: true, [`${context}.x`]: 1, [`${context}.y`]: 0, [`${context}.index`]: 0 }),
-            createFile('testId_2', { [context]: true, [`${context}.x`]: 2, [`${context}.y`]: 0, [`${context}.index`]: -1 }),
-            createFile('testId_1', { [context]: true, [`${context}.x`]: 3, [`${context}.y`]: 0, [`${context}.index`]: 0 }),
-            createFile('testId_0', { [context]: true, [`${context}.x`]: 4, [`${context}.y`]: 0, [`${context}.index`]: 0 }),
+            createFile('testId_4', {
+                [context]: true,
+                [`${context}.x`]: 0,
+                [`${context}.y`]: 0,
+                [`${context}.index`]: 1,
+            }),
+            createFile('testId_3', {
+                [context]: true,
+                [`${context}.x`]: 1,
+                [`${context}.y`]: 0,
+                [`${context}.index`]: 0,
+            }),
+            createFile('testId_2', {
+                [context]: true,
+                [`${context}.x`]: 2,
+                [`${context}.y`]: 0,
+                [`${context}.index`]: -1,
+            }),
+            createFile('testId_1', {
+                [context]: true,
+                [`${context}.x`]: 3,
+                [`${context}.y`]: 0,
+                [`${context}.index`]: 0,
+            }),
+            createFile('testId_0', {
+                [context]: true,
+                [`${context}.x`]: 4,
+                [`${context}.y`]: 0,
+                [`${context}.index`]: 0,
+            }),
         ];
         const calc = createCalculationContext(files);
 
         for (let i = 0; i < files.length; i++) {
             inventory.fileAdded(<AuxObject>files[i], calc);
         }
-        
+
         // Should be empty.
         expect(inventory.slots).toEqual([]);
 
@@ -207,8 +261,8 @@ describe('InventoryContext', () => {
         let slotCount = 5;
         let inventory = new InventoryContext(context, slotCount);
         let files: File[] = [
-            createFile('testId_0', { [context]: true, [`${context}.x`]: 0}),
-            createFile('testId_1', { [context]: true, [`${context}.x`]: 1}),
+            createFile('testId_0', { [context]: true, [`${context}.x`]: 0 }),
+            createFile('testId_1', { [context]: true, [`${context}.x`]: 1 }),
         ];
 
         let calc = createCalculationContext(files);
@@ -234,7 +288,7 @@ describe('InventoryContext', () => {
         // Now lets move testId_1 to the fourth slot.
         let file = files[1];
         file.tags[`${context}.x`] = 3;
-        
+
         calc = createCalculationContext(files);
         inventory.fileUpdated(<AuxObject>file, null, calc);
         inventory.frameUpdate(calc);
@@ -251,6 +305,4 @@ describe('InventoryContext', () => {
         expect(inventory.slots[3].id).toEqual('testId_1');
         expect(inventory.slots[4]).toBeUndefined();
     });
-
-
 });

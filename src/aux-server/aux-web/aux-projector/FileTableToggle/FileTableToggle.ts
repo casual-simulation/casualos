@@ -1,18 +1,17 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
-import {Provide, Prop, Inject, Watch} from 'vue-property-decorator';
-import {File, Object} from '@casual-simulation/aux-common';
+import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
+import { File, Object } from '@casual-simulation/aux-common';
 
 @Component({
-    components: {
-    },
-    
+    components: {},
 })
 export default class FileTableToggle extends Vue {
-    
     @Prop() files: Object[];
-    @Prop({ default: false }) raised: boolean;
-    @Prop({ default: true }) showNumFiles: boolean;
+    @Prop({ default: false })
+    raised: boolean;
+    @Prop({ default: true })
+    showNumFiles: boolean;
     numFilesSelected: number = 0;
 
     @Watch('files')
@@ -31,4 +30,4 @@ export default class FileTableToggle extends Vue {
     async created() {
         this.numFilesSelected = this.files.length;
     }
-};
+}

@@ -1,4 +1,11 @@
-import { AtomId, atomId, idEquals, atomIdToString, atom, atomMatchesChecksum } from "./Atom";
+import {
+    AtomId,
+    atomId,
+    idEquals,
+    atomIdToString,
+    atom,
+    atomMatchesChecksum,
+} from './Atom';
 
 describe('AtomId', () => {
     it('should be equal to other IDs', () => {
@@ -56,4 +63,3 @@ describe('AtomId', () => {
         });
     });
 });
-

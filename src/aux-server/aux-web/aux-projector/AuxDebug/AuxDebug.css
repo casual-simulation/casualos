@@ -6,23 +6,23 @@
 } */
 
 .tree-view-item-value-number {
-    color: #00AA00;
-    background: #FFF;
+    color: #00aa00;
+    background: #fff;
 }
 
 .tree-view-item-value-boolean {
-    color: #FF00AA;
-    background: #FFF;
+    color: #ff00aa;
+    background: #fff;
 }
 
 .tree-view-item-value-string {
-    color: #FF9900;
-    background: #FFF;
+    color: #ff9900;
+    background: #fff;
 }
 
 .tree-view-item-value-null {
     color: #333;
-    background: #FFF;
+    background: #fff;
 }
 
 .tree-view-item-key {

@@ -11,15 +11,16 @@ import CombineIcon from '../public/icons/combine_icon.svg';
  */
 @Component({
     components: {
-        'combine-icon': CombineIcon
-    }
+        'combine-icon': CombineIcon,
+    },
 })
 export default class TagEditor extends Vue {
-
     @Prop() value: string;
     @Prop() tagExists: boolean;
-    @Prop({ default: false }) isAction: boolean;
-    @Prop({ default: false }) useMaterialInput: boolean;
+    @Prop({ default: false })
+    isAction: boolean;
+    @Prop({ default: false })
+    useMaterialInput: boolean;
 
     changed: boolean = false;
     focused: boolean = false;
@@ -43,13 +44,15 @@ export default class TagEditor extends Vue {
     get errorMessage() {
         const errors = validateTag(this.value);
         if (!errors.valid) {
-            if(errors['tag.required']) {
+            if (errors['tag.required']) {
                 return 'You must provide a value.';
-            } else if(errors['tag.invalidChar']) {
+            } else if (errors['tag.invalidChar']) {
                 if (this.isAction && errors['tag.invalidChar'].char === '#') {
                     return 'Actions must start with (';
                 } else {
-                    return `Tags cannot contain ${errors['tag.invalidChar'].char}.`;
+                    return `Tags cannot contain ${
+                        errors['tag.invalidChar'].char
+                    }.`;
                 }
             }
         }
@@ -87,7 +90,6 @@ export default class TagEditor extends Vue {
     // }
 
     focus() {
-        
         let element: any = this.$refs.inputBox;
         let html: HTMLInputElement;
         if (element.focus) {
@@ -124,4 +126,4 @@ export default class TagEditor extends Vue {
     private _convertToFinalValue(value: string) {
         return this.isAction ? `+${value}` : value;
     }
-};
+}

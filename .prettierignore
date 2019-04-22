@@ -1,2 +1,8 @@
-*.json
-*.vue
+/coverage
+/docs
+/src/aux-common/**/*.js
+!/src/aux-common/gulpfile.js
+public
+dist
+test-report.html
+package-lock.json

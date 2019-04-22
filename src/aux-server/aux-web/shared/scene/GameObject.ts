@@ -1,10 +1,9 @@
-import { Object3D, Geometry } from "three";
+import { Object3D, Geometry } from 'three';
 
 /**
  * Defines a class for a game object that can contain a mesh and a collider.
  */
 export class GameObject extends Object3D {
-
     /**
      * The colliders that this object has.
      */
@@ -24,7 +23,5 @@ export class GameObject extends Object3D {
     /**
      * Allows object to clean itself up before being removed.
      */
-    dispose() {
-
-    }
+    dispose() {}
 }

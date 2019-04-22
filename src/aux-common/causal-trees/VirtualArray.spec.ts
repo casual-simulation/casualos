@@ -1,4 +1,4 @@
-import { VirtualArray } from "./VirtualArray";
+import { VirtualArray } from './VirtualArray';
 
 describe('VirtualArray', () => {
     describe('get()', () => {
@@ -49,7 +49,7 @@ describe('VirtualArray', () => {
             a.insert(3, 10);
             expect(a.length).toBe(4);
             expect(arr.length).toBe(5);
-            
+
             expect(a.get(0)).toBe(5);
             expect(a.get(1)).toBe(2);
             expect(a.get(2)).toBe(3);
@@ -71,7 +71,7 @@ describe('VirtualArray', () => {
             a.insert(0, 5);
             expect(a.length).toBe(1);
             expect(arr.length).toBe(4);
-            
+
             expect(a.get(0)).toBe(5);
 
             expect(arr[0]).toBe(5);
@@ -92,7 +92,7 @@ describe('VirtualArray', () => {
 
             expect(a.length).toBe(1);
             expect(arr.length).toBe(2);
-            
+
             expect(a.get(0)).toBe(2);
 
             expect(arr[0]).toBe(1);

@@ -1,8 +1,25 @@
 import { sortBy, flatMap, mapValues } from 'lodash';
-import { File, Object, PartialFile} from './File';
-import { createCalculationContext, FileCalculationContext, calculateFileValue, convertToFormulaObject, getActiveObjects, filtersMatchingArguments, calculateFormulaValue, isFile } from './FileCalculations';
+import { File, Object, PartialFile } from './File';
+import {
+    createCalculationContext,
+    FileCalculationContext,
+    calculateFileValue,
+    convertToFormulaObject,
+    getActiveObjects,
+    filtersMatchingArguments,
+    calculateFormulaValue,
+    isFile,
+} from './FileCalculations';
 import { merge as mergeObj } from '../utils';
-import formulaLib, { setActions, getActions, setFileState, setCalculationContext, getCalculationContext, setUserId, getUserId } from '../Formulas/formula-lib';
+import formulaLib, {
+    setActions,
+    getActions,
+    setFileState,
+    setCalculationContext,
+    getCalculationContext,
+    setUserId,
+    getUserId,
+} from '../Formulas/formula-lib';
 import { SetValueHandler, isProxy } from './FileProxy';
 
 /**
@@ -19,7 +36,7 @@ export interface FilesState {
  */
 export interface Event {
     /**
-     * The type of the event. 
+     * The type of the event.
      * This helps determine how the event should be applied to the state.
      */
     type: string;
@@ -28,13 +45,13 @@ export interface Event {
 /**
  * Defines a union type for all the possible events that can be emitted from a files channel.
  */
-export type FileEvent = 
-    FileAddedEvent | 
-    FileRemovedEvent | 
-    FileUpdatedEvent |
-    FileTransactionEvent |
-    ApplyStateEvent |
-    LocalEvent;
+export type FileEvent =
+    | FileAddedEvent
+    | FileRemovedEvent
+    | FileUpdatedEvent
+    | FileTransactionEvent
+    | ApplyStateEvent
+    | LocalEvent;
 
 /**
  * Calculates the set of events that should be run for the given action.
@@ -43,13 +60,15 @@ export type FileEvent =
  */
 export function calculateActionEvents(state: FilesState, action: Action) {
     const objects = getActiveObjects(state);
-    const files = !!action.fileIds ? action.fileIds.map(id => state[id]) : objects;
+    const files = !!action.fileIds
+        ? action.fileIds.map(id => state[id])
+        : objects;
     const factory = (o: File) => {
         return (tag: string, value: any) => {
             if (!changes[o.id]) {
                 changes[o.id] = {
                     changedTags: [],
-                    newValues: []
+                    newValues: [],
                 };
             }
             changes[o.id].changedTags.push(tag);
@@ -62,28 +81,33 @@ export function calculateActionEvents(state: FilesState, action: Action) {
         [key: string]: {
             changedTags: string[];
             newValues: string[];
-        }
+        };
     } = {};
 
     objects.forEach(o => {
         changes[o.id] = {
             changedTags: [],
-            newValues: []
+            newValues: [],
         };
     });
 
-    const fileEvents = flatMap(files, (f) => eventActions(
-        state, 
-        files, 
-        context, 
-        f,
-        action.eventName,
-        factory,
-        action.userId,
-        action.argument));
+    const fileEvents = flatMap(files, f =>
+        eventActions(
+            state,
+            files,
+            context,
+            f,
+            action.eventName,
+            factory,
+            action.userId,
+            action.argument
+        )
+    );
     let events = fileEvents;
 
-    const updates = objects.map(o => calculateFileUpdateFromChanges(o.id, changes[o.id]));
+    const updates = objects.map(o =>
+        calculateFileUpdateFromChanges(o.id, changes[o.id])
+    );
     updates.forEach(u => {
         if (u) {
             events.push(u);
@@ -92,17 +116,19 @@ export function calculateActionEvents(state: FilesState, action: Action) {
 
     return {
         events,
-        hasUserDefinedEvents: events.length > 0
+        hasUserDefinedEvents: events.length > 0,
     };
 }
-
 
 /**
  * Calculates the list of events needed to destroy the given file and all of its decendents.
  * @param calc The file calculation context.
  * @param file The file to destroy.
  */
-export function calculateDestroyFileEvents(calc: FileCalculationContext, file: File): FileEvent[] {
+export function calculateDestroyFileEvents(
+    calc: FileCalculationContext,
+    file: File
+): FileEvent[] {
     let events: FileEvent[] = [];
     let id: string;
     if (typeof file === 'object') {
@@ -120,8 +146,12 @@ export function calculateDestroyFileEvents(calc: FileCalculationContext, file: F
     return events;
 }
 
-function destroyChildren(calc: FileCalculationContext, events: FileEvent[], id: string) {
-    const result = calculateFormulaValue(calc, `@aux._creator("${id}")`); 
+function destroyChildren(
+    calc: FileCalculationContext,
+    events: FileEvent[],
+    id: string
+) {
+    const result = calculateFormulaValue(calc, `@aux._creator("${id}")`);
     if (result.success) {
         const children = result.result;
         let all: File[] = [];
@@ -167,18 +197,24 @@ export function cleanFile(file: File): File {
     return cleaned;
 }
 
-
-function eventActions(state: FilesState, 
-    objects: Object[], 
-    context: FileCalculationContext, 
-    file: Object, 
+function eventActions(
+    state: FilesState,
+    objects: Object[],
+    context: FileCalculationContext,
+    file: Object,
     eventName: string,
     setValueHandlerFactory: (file: File) => SetValueHandler,
     userId: string | null,
-    argument: any): FileEvent[] {
+    argument: any
+): FileEvent[] {
     const otherObjects = objects.filter(o => o !== file);
     const sortedObjects = sortBy(objects, o => o !== file);
-    const filters = filtersMatchingArguments(context, file, eventName, otherObjects);
+    const filters = filtersMatchingArguments(
+        context,
+        file,
+        eventName,
+        otherObjects
+    );
     const scripts = filters.map(f => calculateFileValue(context, file, f.tag));
     let previous = getActions();
     let prevContext = getCalculationContext();
@@ -186,25 +222,31 @@ function eventActions(state: FilesState,
     let actions: FileEvent[] = [];
 
     let vars: {
-        [key: string]: any
+        [key: string]: any;
     } = {};
     setActions(actions);
     setFileState(state);
     setCalculationContext(context);
     setUserId(userId);
 
-    let formulaObjects = sortedObjects.map(o => convertToFormulaObject(context, o, setValueHandlerFactory(o)));
+    let formulaObjects = sortedObjects.map(o =>
+        convertToFormulaObject(context, o, setValueHandlerFactory(o))
+    );
 
     if (typeof argument === 'undefined') {
         formulaObjects.forEach((obj, index) => {
             if (index === 1) {
                 vars['that'] = obj;
             }
-            
+
             vars[`arg${index}`] = obj;
         });
     } else {
-        vars['that'] = mapToFormulaObjects(context, argument, setValueHandlerFactory);
+        vars['that'] = mapToFormulaObjects(
+            context,
+            argument,
+            setValueHandlerFactory
+        );
     }
 
     scripts.forEach(s => context.sandbox.run(s, {}, formulaObjects[0], vars));
@@ -217,21 +259,37 @@ function eventActions(state: FilesState,
     return actions;
 }
 
-function mapToFormulaObjects(context: FileCalculationContext, argument: any, setValueHandlerFactory: (file: File) => SetValueHandler): any {
+function mapToFormulaObjects(
+    context: FileCalculationContext,
+    argument: any,
+    setValueHandlerFactory: (file: File) => SetValueHandler
+): any {
     if (isFile(argument)) {
-        return convertToFormulaObject(context, argument, setValueHandlerFactory(argument));
+        return convertToFormulaObject(
+            context,
+            argument,
+            setValueHandlerFactory(argument)
+        );
     } else if (argument && typeof argument === 'object' && !argument[isProxy]) {
         if (Array.isArray(argument)) {
             return argument.map(v => {
                 if (isFile(v)) {
-                    return convertToFormulaObject(context, v, setValueHandlerFactory(v));
+                    return convertToFormulaObject(
+                        context,
+                        v,
+                        setValueHandlerFactory(v)
+                    );
                 }
                 return v;
             });
         } else {
             return mapValues(argument, v => {
                 if (isFile(v)) {
-                    return convertToFormulaObject(context, v, setValueHandlerFactory(v));
+                    return convertToFormulaObject(
+                        context,
+                        v,
+                        setValueHandlerFactory(v)
+                    );
                 }
                 return mapToFormulaObjects(context, v, setValueHandlerFactory);
             });
@@ -241,7 +299,10 @@ function mapToFormulaObjects(context: FileCalculationContext, argument: any, set
     }
 }
 
-function calculateFileUpdateFromChanges(id: string, changes: { changedTags: string[], newValues: any[] }): FileUpdatedEvent {
+function calculateFileUpdateFromChanges(
+    id: string,
+    changes: { changedTags: string[]; newValues: any[] }
+): FileUpdatedEvent {
     if (!changes) {
         return null;
     }
@@ -249,9 +310,9 @@ function calculateFileUpdateFromChanges(id: string, changes: { changedTags: stri
         return null;
     }
     let partial: PartialFile = {
-        tags: {}
+        tags: {},
     };
-    for(let i = 0; i < changes.changedTags.length; i++) {
+    for (let i = 0; i < changes.changedTags.length; i++) {
         partial.tags[changes.changedTags[i]] = changes.newValues[i];
     }
 
@@ -372,7 +433,7 @@ export function fileAdded(file: File): FileAddedEvent {
     return {
         type: 'file_added',
         id: file.id,
-        file: file
+        file: file,
     };
 }
 
@@ -383,7 +444,7 @@ export function fileAdded(file: File): FileAddedEvent {
 export function fileRemoved(fileId: string): FileRemovedEvent {
     return {
         type: 'file_removed',
-        id: fileId
+        id: fileId,
     };
 }
 
@@ -407,7 +468,7 @@ export function fileUpdated(id: string, update: PartialFile): FileUpdatedEvent {
 export function transaction(events: FileEvent[]): FileTransactionEvent {
     return {
         type: 'transaction',
-        events: events
+        events: events,
     };
 }
 
@@ -418,13 +479,18 @@ export function transaction(events: FileEvent[]): FileTransactionEvent {
  * @param userId The ID of the file for the current user.
  * @param arg The optional argument to provide.
  */
-export function action(eventName: string, fileIds: string[] = null, userId: string = null, arg?: any): Action {
+export function action(
+    eventName: string,
+    fileIds: string[] = null,
+    userId: string = null,
+    arg?: any
+): Action {
     return {
         type: 'action',
         fileIds,
         eventName,
         userId,
-        argument: arg
+        argument: arg,
     };
 }
 
@@ -435,7 +501,7 @@ export function action(eventName: string, fileIds: string[] = null, userId: stri
 export function addState(state: FilesState): ApplyStateEvent {
     return {
         type: 'apply_state',
-        state: state
+        state: state,
     };
 }
 
@@ -447,7 +513,7 @@ export function toast(message: string): ShowToastEvent {
     return {
         type: 'local',
         name: 'show_toast',
-        message: message
+        message: message,
     };
 }
 
@@ -459,6 +525,6 @@ export function tweenTo(fileId: string): TweenToEvent {
     return {
         type: 'local',
         name: 'tween_to',
-        fileId: fileId
+        fileId: fileId,
     };
 }

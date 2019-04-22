@@ -1,7 +1,9 @@
 import { Vector2, Vector3, Intersection, Ray, Raycaster } from 'three';
 import { ContextMenuAction } from '../../shared/interaction/ContextMenuEvent';
 import {
-    File, FileCalculationContext, calculateGridScale,
+    File,
+    FileCalculationContext,
+    calculateGridScale,
 } from '@casual-simulation/aux-common';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
@@ -17,7 +19,6 @@ import { PlayerInventoryFileClickOperation } from './ClickOperation/PlayerInvent
 import { appManager } from '../../shared/AppManager';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
-
     // This overrides the base class IGameView
     protected _gameView: GameView;
 
@@ -30,9 +31,16 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         this._grid = new PlayerGrid(gridScale);
     }
 
-    createGameObjectClickOperation(gameObject: GameObject, hit: Intersection): IOperation {
+    createGameObjectClickOperation(
+        gameObject: GameObject,
+        hit: Intersection
+    ): IOperation {
         if (gameObject instanceof AuxFile3D) {
-            let fileClickOp = new PlayerFileClickOperation(this._gameView, this, gameObject);
+            let fileClickOp = new PlayerFileClickOperation(
+                this._gameView,
+                this,
+                gameObject
+            );
             return fileClickOp;
         } else {
             return null;
@@ -47,9 +55,13 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         const vueElement: any = Input.getVueParent(element);
         if (vueElement instanceof InventoryFile) {
             if (vueElement.file) {
-                let inventoryClickOperation = new PlayerInventoryFileClickOperation(this._gameView, this, vueElement.file, vueElement.context);
+                let inventoryClickOperation = new PlayerInventoryFileClickOperation(
+                    this._gameView,
+                    this,
+                    vueElement.file,
+                    vueElement.context
+                );
                 return inventoryClickOperation;
-                
             }
         }
 
@@ -61,7 +73,10 @@ export class PlayerInteractionManager extends BaseInteractionManager {
      * @param ray The ray to test.
      */
     pointOnGrid(calc: FileCalculationContext, ray: Ray) {
-        let planeHit = Physics.pointOnPlane(ray, this._gameView.getGroundPlane());
+        let planeHit = Physics.pointOnPlane(
+            ray,
+            this._gameView.getGroundPlane()
+        );
         // We need to flip the sign of the z coordinate here.
         planeHit.z = -planeHit.z;
 
@@ -70,17 +85,22 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             if (gridTile) {
                 return {
                     good: true,
-                    gridTile: gridTile
-                }
+                    gridTile: gridTile,
+                };
             }
         }
 
         return {
-            good: false
-        }
+            good: false,
+        };
     }
 
-    protected _contextMenuActions(calc: FileCalculationContext, gameObject: GameObject, point: Vector3, pagePos: Vector2): ContextMenuAction[] {
+    protected _contextMenuActions(
+        calc: FileCalculationContext,
+        gameObject: GameObject,
+        point: Vector3,
+        pagePos: Vector2
+    ): ContextMenuAction[] {
         return null;
     }
 }

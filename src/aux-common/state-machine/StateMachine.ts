@@ -1,7 +1,6 @@
-import { _callOnClient } from "@sentry/minimal";
+import { _callOnClient } from '@sentry/minimal';
 
 export class StateMachine {
-
     public readonly name: string;
 
     /**
@@ -14,14 +13,14 @@ export class StateMachine {
      * Map of available states. state id -> State.
      */
     private _states: {
-        [id: string]: State
+        [id: string]: State;
     } = {};
-    
+
     /**
      * Map of transition hash code -> state id
      */
     private _transitions: {
-        [transitionHash: number]: string
+        [transitionHash: number]: string;
     } = {};
 
     /**
@@ -38,8 +37,10 @@ export class StateMachine {
     private _lastUpdateFrame: number;
     private _active: boolean;
 
-    get currentState(): State { return this._states[this._curStateId]; }
-    
+    get currentState(): State {
+        return this._states[this._curStateId];
+    }
+
     /**
      * Create a new state machine. Setup the state machine using `addState` and `addStateTransition`.
      * Start the state machine using the `start` method. Manually call `update` every frame in order to update the state machine.
@@ -71,15 +72,27 @@ export class StateMachine {
     }
 
     public addState(state: State): void {
-        if (this._active) throw new Error("Cannot add states to state machine after it has started.");
+        if (this._active)
+            throw new Error(
+                'Cannot add states to state machine after it has started.'
+            );
 
         this._states[state.id] = state;
     }
 
-    public addStateTransition(transition: Transition, nextStateId: string): void {
-        if (this._active) throw new Error("Cannot add state transitions after the state machine has been started.");
-        if (!this._states[nextStateId]) throw new Error(`Can't add transition for state '${nextStateId}'. This state does not exist on the state machine.`);
-        
+    public addStateTransition(
+        transition: Transition,
+        nextStateId: string
+    ): void {
+        if (this._active)
+            throw new Error(
+                'Cannot add state transitions after the state machine has been started.'
+            );
+        if (!this._states[nextStateId])
+            throw new Error(
+                `Can't add transition for state '${nextStateId}'. This state does not exist on the state machine.`
+            );
+
         let transitionHash = computeTransitionHash(transition);
         this._transitions[transitionHash] = nextStateId;
     }
@@ -91,45 +104,64 @@ export class StateMachine {
     public update(curFrame: number): void {
         if (!this._active) return;
         if (this._lastUpdateFrame === curFrame) return;
-        
+
         this._curFrame = curFrame;
         this._lastUpdateFrame = curFrame;
 
         if (this._changeStateId) {
-
             let curState = this._states[this._curStateId];
             if (curState) {
-                if (this.debugLevel >= 1) console.log(`${this.toString()} ${curState.id} onStateExit. frame: ${curFrame}`);
+                if (this.debugLevel >= 1)
+                    console.log(
+                        `${this.toString()} ${
+                            curState.id
+                        } onStateExit. frame: ${curFrame}`
+                    );
                 curState.onStateExit();
             }
 
             curState = this._states[this._changeStateId];
             if (curState) {
-                if (this.debugLevel >= 1) console.log(`${this.toString()} ${curState.id} onStateEnter. frame: ${curFrame}`);
+                if (this.debugLevel >= 1)
+                    console.log(
+                        `${this.toString()} ${
+                            curState.id
+                        } onStateEnter. frame: ${curFrame}`
+                    );
                 curState.onStateEnter();
             }
-
         } else {
-
-            throw new Error(`${this.toString()} No state with id '${this._changeStateId}' found.`);
-
+            throw new Error(
+                `${this.toString()} No state with id '${
+                    this._changeStateId
+                }' found.`
+            );
         }
 
         let curState = this._states[this._curStateId];
         if (curState) {
+            if (this.debugLevel >= 3)
+                console.log(
+                    `${this.toString()} ${
+                        curState.id
+                    } onStateUpdate. frame: ${curFrame}`
+                );
 
-            if (this.debugLevel >= 3) console.log(`${this.toString()} ${curState.id} onStateUpdate. frame: ${curFrame}`);
-            
             let command = curState.onStateUpdate();
             if (command) {
-                if (this.debugLevel >= 2) console.log(`${this.toString()} ${curState.id} command: ${command}, nextState: ${this.getNextStateId(command)}, frame: ${curFrame}`);
+                if (this.debugLevel >= 2)
+                    console.log(
+                        `${this.toString()} ${
+                            curState.id
+                        } command: ${command}, nextState: ${this.getNextStateId(
+                            command
+                        )}, frame: ${curFrame}`
+                    );
                 this._changeState(this.getNextStateId(command));
             }
-            
         }
 
         this._changeStateId = undefined;
-
     }
 
     public toString(): string {
@@ -152,7 +184,7 @@ export class StateMachine {
 
     private _changeState(stateId: string): void {
         this._changeStateId = stateId;
-        
+
         // Set the last update frame to an invalid number so that the update state function is forced to run.
         this._lastUpdateFrame = -1;
 
@@ -163,20 +195,29 @@ export class StateMachine {
     private getNextStateId(command: string): string {
         if (this._transitions) return;
 
-        let transition: Transition = { stateId: this._curStateId, command: command };
+        let transition: Transition = {
+            stateId: this._curStateId,
+            command: command,
+        };
         let transitionHash = computeTransitionHash(transition);
         let nextStateId = this._transitions[transitionHash];
 
-        if (!nextStateId) throw new Error(`No transition found for State '${this._curStateId}' with command '${command}'`);
+        if (!nextStateId)
+            throw new Error(
+                `No transition found for State '${
+                    this._curStateId
+                }' with command '${command}'`
+            );
         return nextStateId;
     }
 }
 
 export abstract class State {
-
     private _id: string;
 
-    get id(): string { return this._id; }
+    get id(): string {
+        return this._id;
+    }
 
     constructor(id: string) {
         this._id = id;
@@ -187,27 +228,32 @@ export abstract class State {
     public abstract onStateExit(): void;
 }
 
-interface Transition { 
-    stateId: string,
-    command: string
+interface Transition {
+    stateId: string;
+    command: string;
 }
 
 /**
- * Compute a hash code for the specified Transition. 
+ * Compute a hash code for the specified Transition.
  * @param transition The transition to compute hash code for.
  */
 function computeTransitionHash(transition: Transition): number {
-
     let hashCode = (s: string) => {
-        let h = 0, l = s.length, i = 0;
-        if ( l > 0 ) {
+        let h = 0,
+            l = s.length,
+            i = 0;
+        if (l > 0) {
             while (i < l) {
-                h = (h << 5) - h + s.charCodeAt(i++) | 0;
+                h = ((h << 5) - h + s.charCodeAt(i++)) | 0;
             }
         }
 
         return h;
-    }
+    };
 
-    return 17 + 31 * hashCode(transition.stateId) + 31 * hashCode(transition.command);
+    return (
+        17 +
+        31 * hashCode(transition.stateId) +
+        31 * hashCode(transition.command)
+    );
 }

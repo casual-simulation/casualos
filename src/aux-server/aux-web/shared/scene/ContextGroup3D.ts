@@ -1,29 +1,28 @@
-import { AuxFile } from "@casual-simulation/aux-common/aux-format";
-import { WorkspaceMesh } from "./WorkspaceMesh";
-import { GameObject } from "./GameObject";
-import { 
+import { AuxFile } from '@casual-simulation/aux-common/aux-format';
+import { WorkspaceMesh } from './WorkspaceMesh';
+import { GameObject } from './GameObject';
+import {
     FileCalculationContext,
     TagUpdatedEvent,
     hasValue,
     calculateFileValue,
     AuxDomain,
     getContextPosition,
-    getFileConfigContexts
-} from "@casual-simulation/aux-common";
-import { difference, flatMap } from "lodash";
-import { Context3D } from "./Context3D";
-import { GridChecker } from "./grid/GridChecker";
-import { Object3D, Group } from "three";
-import { AuxFile3DDecoratorFactory } from "./decorators/AuxFile3DDecoratorFactory";
+    getFileConfigContexts,
+} from '@casual-simulation/aux-common';
+import { difference, flatMap } from 'lodash';
+import { Context3D } from './Context3D';
+import { GridChecker } from './grid/GridChecker';
+import { Object3D, Group } from 'three';
+import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
 
 /**
  * Defines a class that represents a visualization of a context for the AUX Builder.
- * 
+ *
  * Note that each aux file gets its own builder context.
  * Whether or not anything is visualized in the context depends on the file tags.
  */
 export class ContextGroup3D extends GameObject {
-
     private _childColliders: Object3D[];
 
     /**
@@ -74,7 +73,11 @@ export class ContextGroup3D extends GameObject {
      * Creates a new Builder Context 3D Object.
      * @param The file that this builder represents.
      */
-    constructor(file: AuxFile, domain: AuxDomain, decoratorFactory: AuxFile3DDecoratorFactory) {
+    constructor(
+        file: AuxFile,
+        domain: AuxDomain,
+        decoratorFactory: AuxFile3DDecoratorFactory
+    ) {
         super();
         this.domain = domain;
         this.file = file;
@@ -109,7 +112,7 @@ export class ContextGroup3D extends GameObject {
             await this._updateThis(file, [], calc);
             this._updateContexts(file, calc);
         }
-        
+
         this.contexts.forEach(context => {
             context.fileAdded(file, calc);
         });
@@ -121,13 +124,17 @@ export class ContextGroup3D extends GameObject {
      * @param updates The updates that happened on the file.
      * @param calc The file calculation context that should be used.
      */
-    async fileUpdated(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
+    async fileUpdated(
+        file: AuxFile,
+        updates: TagUpdatedEvent[],
+        calc: FileCalculationContext
+    ) {
         if (file.id === this.file.id) {
             this.file = file;
             await this._updateThis(file, updates, calc);
             this._updateContexts(file, calc);
         }
-        
+
         this.contexts.forEach(context => {
             context.fileUpdated(file, updates, calc);
         });
@@ -145,9 +152,9 @@ export class ContextGroup3D extends GameObject {
     }
 
     dispose(): void {
-        this.contexts.forEach((context => {
+        this.contexts.forEach(context => {
             context.dispose();
-        }));
+        });
     }
 
     /**
@@ -163,9 +170,17 @@ export class ContextGroup3D extends GameObject {
         }
     }
 
-    protected async _updateThis(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {}
+    protected async _updateThis(
+        file: AuxFile,
+        updates: TagUpdatedEvent[],
+        calc: FileCalculationContext
+    ) {}
 
-    private _addContexts(file: AuxFile, newContexts: string | string[], calc: FileCalculationContext) {
+    private _addContexts(
+        file: AuxFile,
+        newContexts: string | string[],
+        calc: FileCalculationContext
+    ) {
         let contexts: string[];
         if (Array.isArray(newContexts)) {
             contexts = newContexts;
@@ -177,7 +192,16 @@ export class ContextGroup3D extends GameObject {
             const currentContexts = this.currentContexts();
             const missingContexts = difference(contexts, currentContexts);
             const removedContexts = difference(currentContexts, contexts);
-            const realNewContexts = missingContexts.map(c => new Context3D(c, this, this.domain, this._childColliders, this._decoratorFactory));
+            const realNewContexts = missingContexts.map(
+                c =>
+                    new Context3D(
+                        c,
+                        this,
+                        this.domain,
+                        this._childColliders,
+                        this._decoratorFactory
+                    )
+            );
 
             realNewContexts.forEach(c => {
                 // console.log(`[ContextGroup3D] Add context ${c.context} to group ${this.file.id}.`);

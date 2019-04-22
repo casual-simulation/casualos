@@ -37,7 +37,7 @@ export default interface SandboxInterface {
 
     /**
      * Adds the given file to the interface.
-     * @param file 
+     * @param file
      */
     addFile(file: File): FileProxy;
 }

@@ -1,9 +1,7 @@
 declare module 'layout-bmfont-text' {
-
-    export default function createLayout (opt: LayoutOptions): TextLayout;
+    export default function createLayout(opt: LayoutOptions): TextLayout;
 
     class TextLayout {
-
         /**
          * An array of laid out glyphs that can be used for rendering. Each glyph looks like this:
          * @interface index: Number,    //the index of this glyph into the string
@@ -23,14 +21,13 @@ declare module 'layout-bmfont-text' {
     }
 
     interface LayoutOptions {
-
         /** the BMFont definition which holds chars, kernings, etc */
         font: any;
 
         /** the text to layout. Newline characters (\n) will cause line breaks */
         text?: string;
 
-        /** the desired width of the text box, causes word-wrapping and clipping in "pre" mode. 
+        /** the desired width of the text box, causes word-wrapping and clipping in "pre" mode.
          * Leave as undefined to remove word-wrapping (default behaviour) */
         width?: number;
 
@@ -54,7 +51,6 @@ declare module 'layout-bmfont-text' {
         start?: number;
 
         /** the ending index (exclusive) into the text to layout (default text.length) */
-        end?: number; 
-
+        end?: number;
     }
 }

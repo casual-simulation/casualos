@@ -1,4 +1,4 @@
-import { FileCalculationContext } from "@casual-simulation/aux-common";
+import { FileCalculationContext } from '@casual-simulation/aux-common';
 
 export interface IOperation {
     isFinished(): boolean;

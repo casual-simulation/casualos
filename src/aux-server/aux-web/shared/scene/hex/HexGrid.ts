@@ -11,7 +11,7 @@ import { keys, values } from 'lodash';
 export function gridPosToRealPos(pos: Axial, size: number): Vector2 {
     const halfWidth = hexWidth(size) / 2;
     return new Vector2(
-        halfWidth * 3 / 2 * pos.q,
+        ((halfWidth * 3) / 2) * pos.q,
         halfWidth * Math.sqrt(3) * (pos.r + pos.q / 2)
     );
 }
@@ -25,8 +25,8 @@ export function gridPosToRealPos(pos: Axial, size: number): Vector2 {
 export function realPosToGridPos(pos: Vector2, size: number): Axial {
     const halfWidth = hexWidth(size) / 2;
     const point = new Axial(
-        pos.x * 2 / 3 / halfWidth,
-        (-pos.x / 3 + Math.sqrt(3) / 3 * pos.y) / halfWidth
+        (pos.x * 2) / 3 / halfWidth,
+        (-pos.x / 3 + (Math.sqrt(3) / 3) * pos.y) / halfWidth
     );
 
     return point.round();
@@ -40,10 +40,10 @@ export function realPosToGridPos(pos: Vector2, size: number): Axial {
 export function gridDistance(first: Axial, second: Axial): number {
     var x1 = first.q;
     var z1 = first.r;
-    var y1 = -x1-z1;
+    var y1 = -x1 - z1;
     var x2 = second.q;
     var z2 = second.r;
-    var y2 = -x2-z2;
+    var y2 = -x2 - z2;
 
     return (Math.abs(x1 - x2) + Math.abs(y1 - y2) + Math.abs(z1 - z2)) / 2;
 }
@@ -78,7 +78,7 @@ export function posToKey(pos: Axial): string {
 
 /**
  * Calculates the grid position for the given storage key.
- * @param key 
+ * @param key
  */
 export function keyToPos(key: string): Axial {
     const split = key.split(':');
@@ -86,15 +86,15 @@ export function keyToPos(key: string): Axial {
 }
 
 /**
- * Defines a class that represents a 2D grid of objects 
+ * Defines a class that represents a 2D grid of objects
  * organized in a hexagonal pattern.
  */
 export class HexGrid<T> {
     private _data: {
         [key: string]: {
-            val: T,
-            pos: Axial
-        }
+            val: T;
+            pos: Axial;
+        };
     };
 
     /**
@@ -143,7 +143,7 @@ export class HexGrid<T> {
         } else {
             this._data[k] = {
                 val: data,
-                pos: pos
+                pos: pos,
             };
         }
     }
@@ -158,7 +158,7 @@ export class HexGrid<T> {
 
     /**
      * Loops through all of the data in this grid and calls the given callback for each.
-     * @param callback 
+     * @param callback
      */
     forEach<R>(callback: (data: T, pos: Axial) => R): R {
         const vals = values(this._data);

@@ -2,7 +2,7 @@ import io from 'socket.io-client';
 
 export class SocketManager {
     private _socket: SocketIOClient.Socket;
-    
+
     // Whether this manager has forced the user to be offline or not.
     private _forcedOffline: boolean = false;
 
@@ -19,8 +19,7 @@ export class SocketManager {
 
     constructor() {
         console.log('[SocketManager] Starting...');
-        this._socket = io({
-        });
+        this._socket = io({});
 
         this._socket.on('connect', () => {
             console.log('[SocketManager] Connected.');
@@ -28,7 +27,7 @@ export class SocketManager {
 
         this._socket.on('disconnect', () => {
             console.log('[SocketManger] Disconnected.');
-        })
+        });
     }
 
     /**

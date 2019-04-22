@@ -1,13 +1,20 @@
-import { AuxFile3DDecorator } from "../AuxFile3DDecorator";
-import { AuxFile3D } from "../AuxFile3D";
-import { FileCalculationContext, AuxFile, isFormula, calculateFormattedFileValue, calculateFileValue, isArray, parseArray } from "@casual-simulation/aux-common";
-import { Arrow3D } from "../Arrow3D";
-import { Color } from "three";
-import { AuxFile3DFinder } from "../../../shared/AuxFile3DFinder";
-import { find } from "lodash";
+import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
+import { AuxFile3D } from '../AuxFile3D';
+import {
+    FileCalculationContext,
+    AuxFile,
+    isFormula,
+    calculateFormattedFileValue,
+    calculateFileValue,
+    isArray,
+    parseArray,
+} from '@casual-simulation/aux-common';
+import { Arrow3D } from '../Arrow3D';
+import { Color } from 'three';
+import { AuxFile3DFinder } from '../../../shared/AuxFile3DFinder';
+import { find } from 'lodash';
 
-export class LineToDecorator extends AuxFile3DDecorator {    
-
+export class LineToDecorator extends AuxFile3DDecorator {
     /**
      * The optional arrows for the file.
      */
@@ -19,7 +26,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
         super(file3D);
         this._finder = fileFinder;
     }
-    
+
     fileUpdated(calc: FileCalculationContext): void {}
 
     frameUpdate(calc: FileCalculationContext): void {
@@ -28,14 +35,13 @@ export class LineToDecorator extends AuxFile3DDecorator {
 
     dispose(): void {
         if (this.arrows) {
-            this.arrows.forEach((a) => {
+            this.arrows.forEach(a => {
                 a.dispose();
             });
         }
     }
 
     private _tagUpdateLine(calc: FileCalculationContext): void {
-
         if (!this._finder) {
             return;
         }
@@ -53,7 +59,11 @@ export class LineToDecorator extends AuxFile3DDecorator {
 
             if (lineColorTagValue) {
                 if (isFormula(lineColorTagValue)) {
-                    let calculatedValue = calculateFormattedFileValue(calc, this.file3D.file, 'aux.line.color');
+                    let calculatedValue = calculateFormattedFileValue(
+                        calc,
+                        this.file3D.file,
+                        'aux.line.color'
+                    );
                     lineColor = new Color(calculatedValue);
                 } else {
                     lineColor = new Color(<string>lineColorTagValue);
@@ -63,31 +73,61 @@ export class LineToDecorator extends AuxFile3DDecorator {
             // Parse the line.to tag.
             // It can either be a formula or a handtyped string.
             if (isFormula(lineTo)) {
-                let calculatedValue = calculateFileValue(calc, this.file3D.file, 'aux.line.to');
-                
-                if (Array.isArray(calculatedValue)) { 
+                let calculatedValue = calculateFileValue(
+                    calc,
+                    this.file3D.file,
+                    'aux.line.to'
+                );
+
+                if (Array.isArray(calculatedValue)) {
                     // Array of objects.
-                    calculatedValue.forEach((o) => { if (o) { this._trySetupLines(calc, o.id, validLineIds, lineColor); } });
+                    calculatedValue.forEach(o => {
+                        if (o) {
+                            this._trySetupLines(
+                                calc,
+                                o.id,
+                                validLineIds,
+                                lineColor
+                            );
+                        }
+                    });
                 } else {
                     // Single object.
-                    if (calculatedValue) { this._trySetupLines(calc, calculatedValue.id, validLineIds, lineColor); }
+                    if (calculatedValue) {
+                        this._trySetupLines(
+                            calc,
+                            calculatedValue.id,
+                            validLineIds,
+                            lineColor
+                        );
+                    }
                 }
             } else {
                 if (isArray(lineTo)) {
                     // Array of strings.
-                    parseArray(<string>lineTo).forEach((s) => { this._trySetupLines(calc, s, validLineIds, lineColor); });
+                    parseArray(<string>lineTo).forEach(s => {
+                        this._trySetupLines(calc, s, validLineIds, lineColor);
+                    });
                 } else {
                     // Single string.
-                    this._trySetupLines(calc, <string>lineTo, validLineIds, lineColor);
+                    this._trySetupLines(
+                        calc,
+                        <string>lineTo,
+                        validLineIds,
+                        lineColor
+                    );
                 }
             }
         }
-        
+
         if (this.arrows) {
             // Filter out lines that are no longer being used.
-            this.arrows = this.arrows.filter((a) => {
+            this.arrows = this.arrows.filter(a => {
                 if (a && a.targetFile3d) {
-                    if (validLineIds && validLineIds.indexOf(a.targetFile3d.id) >= 0) {
+                    if (
+                        validLineIds &&
+                        validLineIds.indexOf(a.targetFile3d.id) >= 0
+                    ) {
                         // This line is active, keep it in.
                         return true;
                     }
@@ -100,7 +140,12 @@ export class LineToDecorator extends AuxFile3DDecorator {
         }
     }
 
-    private _trySetupLines(calc: FileCalculationContext, targetFileId: string, validLineIds: number[], color?: Color) {
+    private _trySetupLines(
+        calc: FileCalculationContext,
+        targetFileId: string,
+        validLineIds: number[],
+        color?: Color
+    ) {
         // Undefined target filed id.
         if (!targetFileId) return;
 
@@ -112,8 +157,12 @@ export class LineToDecorator extends AuxFile3DDecorator {
         files.forEach(f => this._trySetupLine(calc, f, validLineIds, color));
     }
 
-    private _trySetupLine(calc: FileCalculationContext, targetFile: AuxFile3D, validLineIds: number[], color?: Color) {
-        
+    private _trySetupLine(
+        calc: FileCalculationContext,
+        targetFile: AuxFile3D,
+        validLineIds: number[],
+        color?: Color
+    ) {
         if (!targetFile) {
             // No file found.
             return;
@@ -122,7 +171,9 @@ export class LineToDecorator extends AuxFile3DDecorator {
         // Initialize arrows array if needed.
         if (!this.arrows) this.arrows = [];
 
-        let targetArrow: Arrow3D = find(this.arrows, (a: Arrow3D) => { return a.targetFile3d === targetFile });
+        let targetArrow: Arrow3D = find(this.arrows, (a: Arrow3D) => {
+            return a.targetFile3d === targetFile;
+        });
         if (!targetArrow) {
             // Create arrow for target.
             let sourceFile = this.file3D;

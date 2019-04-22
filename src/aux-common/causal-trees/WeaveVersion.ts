@@ -11,7 +11,7 @@ export interface WeaveVersion {
      * The hash of the atoms contained in this weave.
      */
     hash: string;
-};
+}
 
 /**
  * Defines an interface that represents a version number calculated by
@@ -23,13 +23,16 @@ export interface WeaveSiteVersion {
 
 /**
  * Creates a new weave version from the given hash and sites.
- * @param hash 
- * @param sites 
+ * @param hash
+ * @param sites
  */
-export function weaveVersion(hash: string, sites: WeaveSiteVersion): WeaveVersion {
+export function weaveVersion(
+    hash: string,
+    sites: WeaveSiteVersion
+): WeaveVersion {
     return {
         hash,
-        sites
+        sites,
     };
 }
 
@@ -38,10 +41,13 @@ export function weaveVersion(hash: string, sites: WeaveSiteVersion): WeaveVersio
  * @param first The first version.
  * @param second The second version.
  */
-export function versionsEqual(first: WeaveVersion, second: WeaveVersion): boolean {
+export function versionsEqual(
+    first: WeaveVersion,
+    second: WeaveVersion
+): boolean {
     if (!first && second) {
         return false;
-    } else if(first && !second) {
+    } else if (first && !second) {
         return false;
     } else {
         return first.hash === second.hash;

@@ -1,5 +1,19 @@
 import { hex } from './Hex';
-import { Mesh, BufferGeometry, ExtrudeBufferGeometry, Shape, Material, MeshStandardMaterial, Matrix4, Vector3, MeshBasicMaterial, Color, Box3, Sphere, MeshToonMaterial } from 'three';
+import {
+    Mesh,
+    BufferGeometry,
+    ExtrudeBufferGeometry,
+    Shape,
+    Material,
+    MeshStandardMaterial,
+    Matrix4,
+    Vector3,
+    MeshBasicMaterial,
+    Color,
+    Box3,
+    Sphere,
+    MeshToonMaterial,
+} from 'three';
 import { Axial } from './Axial';
 import { gridPosToRealPos } from './HexGrid';
 import { baseAuxMeshMaterial } from '../SceneUtils';
@@ -8,7 +22,6 @@ import { baseAuxMeshMaterial } from '../SceneUtils';
  * Defines a class that represents a 3D Hex.
  */
 export class HexMesh extends Mesh {
-
     private _gridPosition: Axial;
     private _size: number;
     private _height: number;
@@ -54,7 +67,7 @@ export class HexMesh extends Mesh {
         let material = <MeshStandardMaterial | MeshToonMaterial>this.material;
         material.color = val;
     }
-    
+
     get boundingBox(): Box3 {
         return new Box3().setFromObject(this);
     }
@@ -73,8 +86,16 @@ export class HexMesh extends Mesh {
      * @param size The radius of the hex.
      * @param height The default height of the hex.
      */
-    constructor(pos: Axial = new Axial(), size: number, height: number, material?: Material) {
-        super(createHexMeshGeometry(size, height), createDefaultHexMaterial(material));
+    constructor(
+        pos: Axial = new Axial(),
+        size: number,
+        height: number,
+        material?: Material
+    ) {
+        super(
+            createHexMeshGeometry(size, height),
+            createDefaultHexMaterial(material)
+        );
         this.receiveShadow = true;
         // TODO: Find a way to fix three.js's shadows so that they don't cause
         // fake 'shadow borders' when hexes the same height are next to each other.
@@ -105,7 +126,10 @@ export function createDefaultHexMaterial(mat: Material): Material {
  * @param size The size of the hex.
  * @param height The height of the hex.
  */
-export function createHexMeshGeometry(size: number, height: number): BufferGeometry {
+export function createHexMeshGeometry(
+    size: number,
+    height: number
+): BufferGeometry {
     const verts = hex(size);
     const shape = new Shape(verts);
     const geometry = new ExtrudeBufferGeometry(shape, {

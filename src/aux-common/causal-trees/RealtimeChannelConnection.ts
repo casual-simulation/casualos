@@ -1,14 +1,13 @@
-import { Observable, SubscriptionLike } from "rxjs";
-import { ConnectionEvent } from "./ConnectionEvent";
+import { Observable, SubscriptionLike } from 'rxjs';
+import { ConnectionEvent } from './ConnectionEvent';
 
 /**
  * Defines an interface for a realtime channel connection.
  * That is, objects that are able to manage a connection with a remote peer.
- * 
+ *
  * From an implementation perspective, this is basically a simple abstract wrapper around Socket IO.
  */
 export interface RealtimeChannelConnection extends SubscriptionLike {
-
     /**
      * Initializes the channel connection with a list of known event names.
      * @param knownEventNames The event names that the connection should be listening for.

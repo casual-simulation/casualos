@@ -6,14 +6,13 @@ import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { appManager } from '../../shared/AppManager';
 
 @Component({
-    components: {
-    },
+    components: {},
 })
 export default class InventoryFile extends Vue {
-
     @Prop() file: AuxFile;
     @Prop() slotIndex: number;
-    @Prop({ default: false }) selected: boolean;
+    @Prop({ default: false })
+    selected: boolean;
     @Prop() context: string;
 
     image: string = '';
@@ -28,12 +27,17 @@ export default class InventoryFile extends Vue {
             this.image = await this.fileRenderer.render(file);
             let label = file.tags['aux.label'];
             if (label) {
-                this.label = appManager.fileManager.calculateFormattedFileValue(file, 'aux.label');
-    
+                this.label = appManager.fileManager.calculateFormattedFileValue(
+                    file,
+                    'aux.label'
+                );
+
                 const labelColor = file.tags['aux.label.color'];
                 if (labelColor) {
-                    this.labelColor = appManager.fileManager.calculateFormattedFileValue(file, 'aux.label.color');
-    
+                    this.labelColor = appManager.fileManager.calculateFormattedFileValue(
+                        file,
+                        'aux.label.color'
+                    );
                 } else {
                     this.labelColor = '#000';
                 }
@@ -59,4 +63,4 @@ export default class InventoryFile extends Vue {
     click() {
         this.$emit('click');
     }
-};
+}

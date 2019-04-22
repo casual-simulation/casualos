@@ -23,20 +23,15 @@ import * as webvrui from 'webvr-ui';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Inject, Provide, Prop } from 'vue-property-decorator';
-import {
-    SubscriptionLike
-} from 'rxjs';
-import {
-    concatMap, tap,
-    flatMap as rxFlatMap
-} from 'rxjs/operators';
+import { SubscriptionLike } from 'rxjs';
+import { concatMap, tap, flatMap as rxFlatMap } from 'rxjs/operators';
 
 import {
     Object,
     DEFAULT_SCENE_BACKGROUND_COLOR,
     AuxFile,
     AuxObject,
-    hasValue
+    hasValue,
 } from '@casual-simulation/aux-common';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { Time } from '../../shared/scene/Time';
@@ -58,17 +53,23 @@ import MenuFile from '../MenuFile/MenuFile';
 import { InventoryContext } from '../InventoryContext';
 import { doesFileDefinePlayerContext } from '../PlayerUtils';
 import { MenuContext } from '../MenuContext';
-import { CameraType, resizeCameraRig, createCameraRig } from '../../shared/scene/CameraRigFactory';
-import { baseAuxAmbientLight, baseAuxDirectionalLight } from '../../shared/scene/SceneUtils';
+import {
+    CameraType,
+    resizeCameraRig,
+    createCameraRig,
+} from '../../shared/scene/CameraRigFactory';
+import {
+    baseAuxAmbientLight,
+    baseAuxDirectionalLight,
+} from '../../shared/scene/SceneUtils';
 
 @Component({
     components: {
         'inventory-file': InventoryFile,
-        'menu-file': MenuFile
-    }
+        'menu-file': MenuFile,
+    },
 })
 export default class GameView extends Vue implements IGameView {
-
     private _scene: Scene;
     private _mainCamera: OrthographicCamera | PerspectiveCamera;
     private _uiWorldCamera: OrthographicCamera | PerspectiveCamera;
@@ -94,7 +95,9 @@ export default class GameView extends Vue implements IGameView {
     public onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
     public onFileUpdated: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
     public onFileRemoved: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
-    public onCameraTypeChanged: ArgEvent<PerspectiveCamera | OrthographicCamera> = new ArgEvent<PerspectiveCamera | OrthographicCamera>();
+    public onCameraTypeChanged: ArgEvent<
+        PerspectiveCamera | OrthographicCamera
+    > = new ArgEvent<PerspectiveCamera | OrthographicCamera>();
 
     /**
      * Keep files in a back buffer so that we can add files to contexts when they come in.
@@ -127,30 +130,64 @@ export default class GameView extends Vue implements IGameView {
 
     @Provide() fileRenderer: FileRenderer = new FileRenderer();
 
-    get gameView(): HTMLElement { return <HTMLElement>this.$refs.gameView; }
-    get canvas() { return this._canvas; }
-    get dev(): boolean { return !PRODUCTION; }
-    get filesMode(): boolean { console.error("AUX Player does not implement filesMode."); return false; }
-    get workspacesMode(): boolean { console.error("AUX Player does not implement workspacesMode."); return false; }
-    get fileManager() { return appManager.fileManager; }
+    get gameView(): HTMLElement {
+        return <HTMLElement>this.$refs.gameView;
+    }
+    get canvas() {
+        return this._canvas;
+    }
+    get dev(): boolean {
+        return !PRODUCTION;
+    }
+    get filesMode(): boolean {
+        console.error('AUX Player does not implement filesMode.');
+        return false;
+    }
+    get workspacesMode(): boolean {
+        console.error('AUX Player does not implement workspacesMode.');
+        return false;
+    }
+    get fileManager() {
+        return appManager.fileManager;
+    }
 
     constructor() {
         super();
     }
 
     public findFilesById(id: string): AuxFile3D[] {
-        return flatMap(this._contextGroup.getFiles().filter(f => f.file.id === id));
+        return flatMap(
+            this._contextGroup.getFiles().filter(f => f.file.id === id)
+        );
     }
 
-    public getTime() { return this._time; }
-    public getInput() { return this._input; }
-    public getInputVR() { return this._inputVR; }
-    public getScene() { return this._scene; }
-    public getRenderer() { return this._renderer; }
-    public getGroundPlane() { return this._groundPlane; }
-    public getMainCamera(): PerspectiveCamera | OrthographicCamera { return this._mainCamera; }
-    public getContexts(): ContextGroup3D[] { return [this._contextGroup]; }
-    public getUIHtmlElements(): HTMLElement[] { return [<HTMLElement>this.$refs.inventory]; }
+    public getTime() {
+        return this._time;
+    }
+    public getInput() {
+        return this._input;
+    }
+    public getInputVR() {
+        return this._inputVR;
+    }
+    public getScene() {
+        return this._scene;
+    }
+    public getRenderer() {
+        return this._renderer;
+    }
+    public getGroundPlane() {
+        return this._groundPlane;
+    }
+    public getMainCamera(): PerspectiveCamera | OrthographicCamera {
+        return this._mainCamera;
+    }
+    public getContexts(): ContextGroup3D[] {
+        return [this._contextGroup];
+    }
+    public getUIHtmlElements(): HTMLElement[] {
+        return [<HTMLElement>this.$refs.inventory];
+    }
 
     public setGridsVisible(visible: boolean) {
         // This currently does nothing for AUX Player, we dont really show any grids right now.
@@ -169,7 +206,12 @@ export default class GameView extends Vue implements IGameView {
         this._cameraType = type;
 
         const { width, height } = this._calculateCameraSize();
-        const rig = createCameraRig(this._cameraType, this._scene, width, height);
+        const rig = createCameraRig(
+            this._cameraType,
+            this._scene,
+            width,
+            height
+        );
 
         this._mainCamera = rig.mainCamera;
         this._uiWorldCamera = rig.uiWorldCamera;
@@ -177,9 +219,23 @@ export default class GameView extends Vue implements IGameView {
         // Update side bar item.
         this.removeSidebarItem('toggle_camera_type');
         if (this._cameraType === 'orthographic') {
-            this.addSidebarItem('toggle_camera_type', 'Enable Perspective Camera', () => { this.setCameraType('perspective'); }, 'videocam');
+            this.addSidebarItem(
+                'toggle_camera_type',
+                'Enable Perspective Camera',
+                () => {
+                    this.setCameraType('perspective');
+                },
+                'videocam'
+            );
         } else {
-            this.addSidebarItem('toggle_camera_type', 'Disable Perspective Camera', () => { this.setCameraType('orthographic'); }, 'videocam_off');
+            this.addSidebarItem(
+                'toggle_camera_type',
+                'Disable Perspective Camera',
+                () => {
+                    this.setCameraType('orthographic');
+                },
+                'videocam_off'
+            );
         }
 
         this.onCameraTypeChanged.invoke(this._mainCamera);
@@ -208,7 +264,10 @@ export default class GameView extends Vue implements IGameView {
 
     public beforeDestroy() {
         window.removeEventListener('resize', this._handleResize);
-        window.removeEventListener('vrdisplaypresentchange', this._handleResize);
+        window.removeEventListener(
+            'vrdisplaypresentchange',
+            this._handleResize
+        );
         this.removeSidebarItem('enable_xr');
         this.removeSidebarItem('disable_xr');
         this.removeSidebarItem('debug_mode');
@@ -223,7 +282,6 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _frameUpdate(xrFrame?: any) {
-
         DebugObjectManager.update();
 
         let calc = this.fileManager.createContext();
@@ -243,7 +301,7 @@ export default class GameView extends Vue implements IGameView {
         if (this.menuContext) {
             this.menuContext.frameUpdate(calc);
         }
-        
+
         this._cameraUpdate();
 
         this._renderUpdate(xrFrame);
@@ -252,7 +310,9 @@ export default class GameView extends Vue implements IGameView {
         if (this.vrDisplay && this.vrDisplay.isPresenting) {
             this.vrDisplay.requestAnimationFrame(() => this._frameUpdate());
         } else if (this.xrSession) {
-            this.xrSession.requestFrame((nextXRFrame: any) => this._frameUpdate(nextXRFrame));
+            this.xrSession.requestFrame((nextXRFrame: any) =>
+                this._frameUpdate(nextXRFrame)
+            );
         } else {
             requestAnimationFrame(() => this._frameUpdate());
         }
@@ -267,17 +327,17 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _renderUpdate(xrFrame?: any) {
-
         if (this.vrDisplay && this.vrDisplay.isPresenting) {
-
             this._vrControls.update();
             this._renderCore();
             this._vrEffect.render(this._scene, this._mainCamera);
-
         } else if (this.xrSession && xrFrame) {
-
             this._scene.background = null;
-            this._renderer.setSize(this.xrSession.baseLayer.framebufferWidth, this.xrSession.baseLayer.framebufferHeight, false)
+            this._renderer.setSize(
+                this.xrSession.baseLayer.framebufferWidth,
+                this.xrSession.baseLayer.framebufferHeight,
+                false
+            );
             this._renderer.setClearColor('#000', 0);
 
             this._mainCamera.matrixAutoUpdate = false;
@@ -302,17 +362,22 @@ export default class GameView extends Vue implements IGameView {
                 this._mainCamera.updateMatrix();
                 this._mainCamera.updateMatrixWorld(false);
 
-                this._mainCamera.projectionMatrix.fromArray(view.projectionMatrix);
+                this._mainCamera.projectionMatrix.fromArray(
+                    view.projectionMatrix
+                );
 
                 // Set up the _renderer to the XRView's viewport and then render
                 const viewport = view.getViewport(this.xrSession.baseLayer);
-                this._renderer.setViewport(viewport.x, viewport.y, viewport.width, viewport.height);
+                this._renderer.setViewport(
+                    viewport.x,
+                    viewport.y,
+                    viewport.width,
+                    viewport.height
+                );
 
                 this._renderCore();
             }
-
         } else {
-
             this._mainCamera.matrixAutoUpdate = true;
             this._renderCore();
         }
@@ -321,11 +386,11 @@ export default class GameView extends Vue implements IGameView {
     private _renderCore(): void {
         this._renderer.clear();
         this._renderer.render(this._scene, this._mainCamera);
-        
+
         // Set the background color to null when rendering the ui world camera.
         this._scene.background = null;
 
-        this._renderer.clearDepth(); // Clear depth buffer so that ui objects dont 
+        this._renderer.clearDepth(); // Clear depth buffer so that ui objects dont
         this._renderer.render(this._scene, this._uiWorldCamera);
         this._sceneBackgroundUpdate();
     }
@@ -366,43 +431,85 @@ export default class GameView extends Vue implements IGameView {
         }
 
         // Subscribe to file events.
-        this._fileSubs.push(this.fileManager.fileChanged(this.fileManager.userFile)
-            .pipe(tap(file => {
+        this._fileSubs.push(
+            this.fileManager
+                .fileChanged(this.fileManager.userFile)
+                .pipe(
+                    tap(file => {
+                        const userInventoryContextValue = (<Object>file).tags
+                            ._userInventoryContext;
+                        if (
+                            !this.inventoryContext ||
+                            this.inventoryContext.context !==
+                                userInventoryContextValue
+                        ) {
+                            this.inventoryContext = new InventoryContext(
+                                userInventoryContextValue
+                            );
+                            console.log(
+                                '[GameView] User changed inventory context to: ',
+                                userInventoryContextValue
+                            );
+                        }
 
-                const userInventoryContextValue = (<Object>file).tags._userInventoryContext;
-                if (!this.inventoryContext || (this.inventoryContext.context !== userInventoryContextValue)) {
-                    this.inventoryContext = new InventoryContext(userInventoryContextValue);
-                    console.log('[GameView] User changed inventory context to: ', userInventoryContextValue);
-                }
+                        const userMenuContextValue = file.tags._userMenuContext;
+                        if (
+                            !this.menuContext ||
+                            this.menuContext.context !== userMenuContextValue
+                        ) {
+                            this.menuContext = new MenuContext(
+                                userMenuContextValue
+                            );
+                            console.log(
+                                '[GameView] User changed menu context to: ',
+                                userMenuContextValue
+                            );
+                        }
+                    })
+                )
+                .subscribe()
+        );
 
-                const userMenuContextValue = file.tags._userMenuContext;
-                if (!this.menuContext || (this.menuContext.context !== userMenuContextValue)) {
-                    this.menuContext = new MenuContext(userMenuContextValue);
-                    console.log('[GameView] User changed menu context to: ', userMenuContextValue);
-                }
-            }))
-            .subscribe());
+        this._fileSubs.push(
+            this.fileManager
+                .fileChanged(this.fileManager.globalsFile)
+                .pipe(
+                    tap(file => {
+                        // Update the scene background color.
+                        let sceneBackgroundColor = file.tags['aux.scene.color'];
+                        this._sceneBackground = hasValue(sceneBackgroundColor)
+                            ? new Color(sceneBackgroundColor)
+                            : new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
+                        this._sceneBackgroundUpdate();
+                    })
+                )
+                .subscribe()
+        );
 
-        this._fileSubs.push(this.fileManager.fileChanged(this.fileManager.globalsFile)
-            .pipe(tap(file => {
-
-                // Update the scene background color.
-                let sceneBackgroundColor = file.tags['aux.scene.color'];
-                this._sceneBackground = hasValue(sceneBackgroundColor) ? new Color(sceneBackgroundColor) : new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
-                this._sceneBackgroundUpdate();
-
-            }))
-            .subscribe());
-
-        this._fileSubs.push(this.fileManager.filesDiscovered
-            .pipe(rxFlatMap(files => files), concatMap(files => this._fileAdded(files)))
-            .subscribe());
-        this._fileSubs.push(this.fileManager.filesRemoved
-            .pipe(rxFlatMap(files => files), tap(file => this._fileRemoved(file)))
-            .subscribe());
-        this._fileSubs.push(this.fileManager.filesUpdated
-            .pipe(rxFlatMap(files => files), concatMap(file => this._fileUpdated(file)))
-            .subscribe());
+        this._fileSubs.push(
+            this.fileManager.filesDiscovered
+                .pipe(
+                    rxFlatMap(files => files),
+                    concatMap(files => this._fileAdded(files))
+                )
+                .subscribe()
+        );
+        this._fileSubs.push(
+            this.fileManager.filesRemoved
+                .pipe(
+                    rxFlatMap(files => files),
+                    tap(file => this._fileRemoved(file))
+                )
+                .subscribe()
+        );
+        this._fileSubs.push(
+            this.fileManager.filesUpdated
+                .pipe(
+                    rxFlatMap(files => files),
+                    concatMap(file => this._fileUpdated(file))
+                )
+                .subscribe()
+        );
     }
 
     private async _fileAdded(file: AuxFile) {
@@ -411,13 +518,21 @@ export default class GameView extends Vue implements IGameView {
 
         if (!this._contextGroup) {
             // We dont have a context group yet. We are in search of a file that defines a player context that matches the user's current context.
-            const result = doesFileDefinePlayerContext(file, this.context, calc);
+            const result = doesFileDefinePlayerContext(
+                file,
+                this.context,
+                calc
+            );
             if (result.matchFound) {
                 // Create ContextGroup3D for this file that we will use to render all files in the context.
-                this._contextGroup = new ContextGroup3D(file, 'player', this._decoratorFactory);
+                this._contextGroup = new ContextGroup3D(
+                    file,
+                    'player',
+                    this._decoratorFactory
+                );
                 this._scene.add(this._contextGroup);
                 await this._contextGroup.fileAdded(file, calc);
-                
+
                 // Apply back buffer of files to the newly created context group.
                 for (let entry of this._fileBackBuffer) {
                     if (entry[0] !== file.id) {
@@ -426,21 +541,29 @@ export default class GameView extends Vue implements IGameView {
                 }
 
                 // Subscribe to file change updates for this context file so that we can do things like change the background color to match the context color, etc.
-                this._fileSubs.push(this.fileManager.fileChanged(file)
-                .pipe(tap(file => {
-    
-                    // Update the context background color.
-                    let contextBackgroundColor = file.tags['aux.context.color'];
-                    this._contextBackground = hasValue(contextBackgroundColor) ? new Color(contextBackgroundColor) : undefined;
-                    this._sceneBackgroundUpdate();
-    
-                }))
-                .subscribe());
+                this._fileSubs.push(
+                    this.fileManager
+                        .fileChanged(file)
+                        .pipe(
+                            tap(file => {
+                                // Update the context background color.
+                                let contextBackgroundColor =
+                                    file.tags['aux.context.color'];
+                                this._contextBackground = hasValue(
+                                    contextBackgroundColor
+                                )
+                                    ? new Color(contextBackgroundColor)
+                                    : undefined;
+                                this._sceneBackgroundUpdate();
+                            })
+                        )
+                        .subscribe()
+                );
             }
         } else {
             await this._contextGroup.fileAdded(file, calc);
         }
-        
+
         if (this.inventoryContext) {
             await this.inventoryContext.fileAdded(file, calc);
         }
@@ -457,8 +580,12 @@ export default class GameView extends Vue implements IGameView {
         // could call fileUpdated from fileAdded.
         if (file.id === this.fileManager.userFile.id) {
             const userFile = appManager.fileManager.userFile;
-            console.log('[GameView] Setting user\'s context to: ' + this.context);
-            appManager.fileManager.updateFile(userFile, { tags: { _userContext: this.context }});
+            console.log(
+                "[GameView] Setting user's context to: " + this.context
+            );
+            appManager.fileManager.updateFile(userFile, {
+                tags: { _userContext: this.context },
+            });
         }
     }
 
@@ -503,7 +630,7 @@ export default class GameView extends Vue implements IGameView {
         if (this.menuContext) {
             this.menuContext.fileRemoved(id, calc);
         }
-        
+
         this.onFileRemoved.invoke(null);
     }
 
@@ -513,21 +640,22 @@ export default class GameView extends Vue implements IGameView {
         } else if (this._sceneBackground) {
             this._scene.background = this._sceneBackground;
         } else {
-            this._scene.background = new Color(DEFAULT_SCENE_BACKGROUND_COLOR)
+            this._scene.background = new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
         }
     }
 
     private _setupScene() {
-
         this._scene = new Scene();
 
         let globalsFile = this.fileManager.globalsFile;
 
         // Scene background color.
         let sceneBackgroundColor = globalsFile.tags['aux.scene.color'];
-        this._sceneBackground = hasValue(sceneBackgroundColor) ? new Color(sceneBackgroundColor) : new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
+        this._sceneBackground = hasValue(sceneBackgroundColor)
+            ? new Color(sceneBackgroundColor)
+            : new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
         this._sceneBackgroundUpdate();
-        
+
         this.setCameraType('orthographic');
         this._setupRenderer();
 
@@ -544,11 +672,10 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _setupRenderer() {
-
-        const webGlRenderer = this._renderer = new WebGLRenderer({
+        const webGlRenderer = (this._renderer = new WebGLRenderer({
             antialias: true,
-            alpha: true
-        });
+            alpha: true,
+        }));
         webGlRenderer.autoClear = false;
         webGlRenderer.shadowMap.enabled = false;
         webGlRenderer.shadowMap.type = PCFSoftShadowMap;
@@ -559,9 +686,8 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _setupWebVR() {
-
         let onBeforeEnter = () => {
-            console.log("[GameView] vr on before enter");
+            console.log('[GameView] vr on before enter');
 
             this._renderer.vr.enabled = true;
             this._renderer.shadowMap.enabled = false;
@@ -575,7 +701,7 @@ export default class GameView extends Vue implements IGameView {
             this._resizeVR();
             this._renderer.setPixelRatio(window.devicePixelRatio);
 
-            return new Promise((resolve) => {
+            return new Promise(resolve => {
                 resolve(null);
             });
         };
@@ -585,10 +711,13 @@ export default class GameView extends Vue implements IGameView {
         // WebVR enable button.
         let vrButtonOptions = {
             color: 'black',
-            beforeEnter: onBeforeEnter
+            beforeEnter: onBeforeEnter,
         };
 
-        this._enterVr = new webvrui.EnterVRButton(this._canvas, vrButtonOptions);
+        this._enterVr = new webvrui.EnterVRButton(
+            this._canvas,
+            vrButtonOptions
+        );
 
         // Event handlers for the vr button.
         this._handleReadyVR = this._handleReadyVR.bind(this);
@@ -604,7 +733,6 @@ export default class GameView extends Vue implements IGameView {
         let vrButtonContainer = document.getElementById('vr-button-container');
         vrButtonContainer.appendChild(this._enterVr.domElement);
     }
-
 
     // TODO: All this needs to be reworked to use the right WebXR polyfill
     // - Use this one: https://github.com/immersive-web/webxr-polyfill
@@ -624,11 +752,13 @@ export default class GameView extends Vue implements IGameView {
         this.xrSessionInitParameters = {
             exclusive: false,
             type: win.XRSession.AUGMENTATION,
-            videoFrames: false,    //computer_vision_data
+            videoFrames: false, //computer_vision_data
             alignEUS: true,
-            worldSensing: false
+            worldSensing: false,
         };
-        const matchingDisplay = find(displays, d => d.supportsSession(this.xrSessionInitParameters));
+        const matchingDisplay = find(displays, d =>
+            d.supportsSession(this.xrSessionInitParameters)
+        );
         if (matchingDisplay && this._isRealAR(matchingDisplay)) {
             this.xrCapable = true;
             this.xrDisplay = matchingDisplay;
@@ -642,7 +772,6 @@ export default class GameView extends Vue implements IGameView {
     private async _toggleXR() {
         console.log('toggle XR');
         if (this.xrDisplay) {
-
             if (this.xrSession) {
                 this.removeSidebarItem('disable_xr');
                 this.addSidebarItem('enable_xr', 'Enable AR', () => {
@@ -659,13 +788,21 @@ export default class GameView extends Vue implements IGameView {
                 });
 
                 document.documentElement.classList.add('ar-app');
-                this.xrSession = await this.xrDisplay.requestSession(this.xrSessionInitParameters);
+                this.xrSession = await this.xrDisplay.requestSession(
+                    this.xrSessionInitParameters
+                );
                 this.xrSession.near = 0.1;
                 this.xrSession.far = 1000;
 
-                this.xrSession.addEventListener('focus', (ev: any) => this._handleXRSessionFocus());
-                this.xrSession.addEventListener('blur', (ev: any) => this._handleXRSessionBlur());
-                this.xrSession.addEventListener('end', (ev: any) => this._handleXRSessionEnded());
+                this.xrSession.addEventListener('focus', (ev: any) =>
+                    this._handleXRSessionFocus()
+                );
+                this.xrSession.addEventListener('blur', (ev: any) =>
+                    this._handleXRSessionBlur()
+                );
+                this.xrSession.addEventListener('end', (ev: any) =>
+                    this._handleXRSessionEnded()
+                );
 
                 this._startXR();
 
@@ -683,41 +820,44 @@ export default class GameView extends Vue implements IGameView {
         }
 
         // Set the xrSession's base layer into which the app will render
-        this.xrSession.baseLayer = new win.XRWebGLLayer(this.xrSession, this._renderer.context);
+        this.xrSession.baseLayer = new win.XRWebGLLayer(
+            this.xrSession,
+            this._renderer.context
+        );
 
         // Handle layer focus events
-        this.xrSession.baseLayer.addEventListener('focus', (ev: any) => { this._handleXRLayerFocus() })
-        this.xrSession.baseLayer.addEventListener('blur', (ev: any) => { this._handleXRLayerBlur() })
+        this.xrSession.baseLayer.addEventListener('focus', (ev: any) => {
+            this._handleXRLayerFocus();
+        });
+        this.xrSession.baseLayer.addEventListener('blur', (ev: any) => {
+            this._handleXRLayerBlur();
+        });
 
         // this.xrSession.requestFrame(this._boundHandleFrame)
     }
 
-    private _handleXRSessionFocus() {
-    }
+    private _handleXRSessionFocus() {}
 
-    private _handleXRSessionBlur() {
-    }
+    private _handleXRSessionBlur() {}
 
-    private _handleXRSessionEnded() {
-    }
+    private _handleXRSessionEnded() {}
 
-    private _handleXRLayerFocus() {
-    }
+    private _handleXRLayerFocus() {}
 
-    private _handleXRLayerBlur() {
-    }
+    private _handleXRLayerBlur() {}
 
     private _isRealAR(xrDisplay: any): boolean {
         // The worst hack of all time.
         // Basically does the check that the webxr polyfill does
         // to see it the device really supports Web XR.
-        return typeof (<any>window).webkit !== 'undefined' ||
-            xrDisplay._reality._vrDisplay;
+        return (
+            typeof (<any>window).webkit !== 'undefined' ||
+            xrDisplay._reality._vrDisplay
+        );
     }
 
     private _handleReadyVR(display: VRDisplay) {
-
-        console.log("[GameView] vr display is ready.");
+        console.log('[GameView] vr display is ready.');
         console.log(display);
         this.vrDisplay = display;
 
@@ -727,14 +867,12 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _handleEnterVR(display: any) {
-
         console.log('[GameView] enter vr.');
         console.log(display);
         this.vrDisplay = display;
     }
 
     private _handleExitVR(display: any) {
-
         console.log('[GameView] exit vr.');
         console.log(display);
 
@@ -763,8 +901,15 @@ export default class GameView extends Vue implements IGameView {
 
     private _handleResize() {
         const { width, height } = this._calculateCameraSize();
-        resizeCameraRig({ mainCamera: this._mainCamera, uiWorldCamera: this._uiWorldCamera }, width, height);
-        
+        resizeCameraRig(
+            {
+                mainCamera: this._mainCamera,
+                uiWorldCamera: this._uiWorldCamera,
+            },
+            width,
+            height
+        );
+
         this._resizeRenderer();
         this._resizeVR();
     }
@@ -788,11 +933,12 @@ export default class GameView extends Vue implements IGameView {
 
     private _calculateCameraSize() {
         const width = window.innerWidth;
-        const height = window.innerHeight - this._container.getBoundingClientRect().top;
+        const height =
+            window.innerHeight - this._container.getBoundingClientRect().top;
         return { width, height };
     }
 
     private get _container() {
         return <HTMLElement>this.$refs.container;
     }
-};
+}

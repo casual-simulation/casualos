@@ -1,31 +1,30 @@
-import { AuxCausalTree } from "./AuxCausalTree";
-import { AtomFactory } from "../causal-trees/AtomFactory";
-import { AuxOp, AuxOpType } from "./AuxOpTypes";
-import { 
-    DEFAULT_WORKSPACE_SCALE, 
+import { AuxCausalTree } from './AuxCausalTree';
+import { AtomFactory } from '../causal-trees/AtomFactory';
+import { AuxOp, AuxOpType } from './AuxOpTypes';
+import {
+    DEFAULT_WORKSPACE_SCALE,
     DEFAULT_WORKSPACE_HEIGHT,
-    DEFAULT_WORKSPACE_GRID_SCALE, 
-    DEFAULT_WORKSPACE_COLOR, 
-    createFile, 
-    createWorkspace, 
-    fileUpdated, 
-    fileAdded, 
-    fileRemoved, 
-    transaction, 
+    DEFAULT_WORKSPACE_GRID_SCALE,
+    DEFAULT_WORKSPACE_COLOR,
+    createFile,
+    createWorkspace,
+    fileUpdated,
+    fileAdded,
+    fileRemoved,
+    transaction,
     addState,
-    File
-} from "../Files";
-import { site } from "../causal-trees/SiteIdInfo";
-import { storedTree } from "../causal-trees/StoredCausalTree";
-import { AuxState } from "./AuxState";
-import { atomId, atom, Atom } from "../causal-trees/Atom";
-import { file, tag, value, del } from "./AuxAtoms";
+    File,
+} from '../Files';
+import { site } from '../causal-trees/SiteIdInfo';
+import { storedTree } from '../causal-trees/StoredCausalTree';
+import { AuxState } from './AuxState';
+import { atomId, atom, Atom } from '../causal-trees/Atom';
+import { file, tag, value, del } from './AuxAtoms';
 
 Date.now = jest.fn();
 
 describe('AuxCausalTree', () => {
     describe('value', () => {
-
         describe('calculations', () => {
             it('should add files to the state', async () => {
                 let tree = new AuxCausalTree(storedTree(site(1)));
@@ -34,14 +33,14 @@ describe('AuxCausalTree', () => {
                 const { added: file } = await tree.file('fileId');
 
                 expect(tree.value).toEqual({
-                    'fileId': {
+                    fileId: {
                         id: 'fileId',
                         tags: {},
                         metadata: {
                             ref: file,
-                            tags: {}
-                        }
-                    }
+                            tags: {},
+                        },
+                    },
                 });
             });
 
@@ -54,16 +53,19 @@ describe('AuxCausalTree', () => {
                 const { added: sizeVal } = await tree.val(4, size);
 
                 const { added: extra } = await tree.tag('extra', file);
-                const { added: extraVal } = await tree.val({ test: 'abc' }, extra);
+                const { added: extraVal } = await tree.val(
+                    { test: 'abc' },
+                    extra
+                );
 
                 expect(tree.value).toMatchObject({
-                    'fileId': {
+                    fileId: {
                         id: 'fileId',
                         tags: {
                             size: 4,
                             extra: { test: 'abc' },
-                        }
-                    }
+                        },
+                    },
                 });
             });
 
@@ -76,7 +78,10 @@ describe('AuxCausalTree', () => {
 
                 const { added: first } = await site1.file('fileId');
                 const { added: firstTag } = await site1.tag('test', first);
-                const { added: firstTagValue } = await site1.val(null, firstTag);
+                const { added: firstTagValue } = await site1.val(
+                    null,
+                    firstTag
+                );
 
                 site2.add(first);
                 site2.add(firstTag);
@@ -84,17 +89,20 @@ describe('AuxCausalTree', () => {
 
                 const { added: second } = await site2.file('fileId');
                 const { added: secondTag } = await site2.tag('other', second);
-                const { added: secondTagValue } = await site2.val(null, secondTag);
+                const { added: secondTagValue } = await site2.val(
+                    null,
+                    secondTag
+                );
 
                 site1.add(second);
                 site1.add(secondTag);
                 site1.add(secondTagValue);
-                
+
                 expect(site1.value).toMatchObject({
-                    'fileId': {
+                    fileId: {
                         id: 'fileId',
                         tags: {},
-                    }
+                    },
                 });
             });
 
@@ -107,16 +115,19 @@ describe('AuxCausalTree', () => {
 
                 const { added: first } = await site1.file('fileId');
                 const { added: firstTag } = await site1.tag('test', first);
-                const { added: firstTagValue } = await site1.val('abc', firstTag);
+                const { added: firstTagValue } = await site1.val(
+                    'abc',
+                    firstTag
+                );
 
                 await site2.add(first);
                 await site2.add(firstTag);
                 await site2.add(firstTagValue);
 
                 const { added: deleteFile } = await site2.delete(first);
-                
+
                 await site1.add(deleteFile);
-                
+
                 expect(site1.value).toEqual({});
             });
 
@@ -172,12 +183,12 @@ describe('AuxCausalTree', () => {
                 const { added: sizeVal } = await site1.val('\n', sizeTag);
 
                 expect(site1.value).toMatchObject({
-                    'fileId': {
+                    fileId: {
                         id: 'fileId',
                         tags: {
-                            size: '\n'
-                        }
-                    }
+                            size: '\n',
+                        },
+                    },
                 });
             });
 
@@ -190,25 +201,31 @@ describe('AuxCausalTree', () => {
 
                 const { added: first } = await site1.file('fileId');
                 const { added: firstTag } = await site1.tag('test', first);
-                const { added: firstTagValue } = await site1.val('abc', firstTag);
+                const { added: firstTagValue } = await site1.val(
+                    'abc',
+                    firstTag
+                );
 
                 await site2.add(first);
                 await site2.add(firstTag);
                 await site2.add(firstTagValue);
 
                 const { added: secondTag } = await site2.tag('test', first);
-                const { added: secondTagValue } = await site2.val('123', secondTag);
+                const { added: secondTagValue } = await site2.val(
+                    '123',
+                    secondTag
+                );
 
                 await site1.add(secondTag);
                 await site1.add(secondTagValue);
-                
+
                 expect(site1.value).toMatchObject({
-                    'fileId': {
+                    fileId: {
                         id: 'fileId',
                         tags: {
-                            test: '123'
+                            test: '123',
                         },
-                    }
+                    },
                 });
             });
 
@@ -221,30 +238,36 @@ describe('AuxCausalTree', () => {
 
                 const { added: first } = await site1.file('fileId');
                 const { added: firstTag } = await site1.tag('test', first);
-                const { added: firstTagValue } = await site1.val('abc', firstTag);
+                const { added: firstTagValue } = await site1.val(
+                    'abc',
+                    firstTag
+                );
 
                 await site2.add(first);
                 await site2.add(firstTag);
                 await site2.add(firstTagValue);
 
                 const { added: secondTag } = await site2.tag('other', first);
-                const { added: secondTagValue } = await site2.val('123', secondTag);
+                const { added: secondTagValue } = await site2.val(
+                    '123',
+                    secondTag
+                );
 
                 await site1.add(secondTag);
                 await site1.add(secondTagValue);
-                
+
                 expect(site1.value).toMatchObject({
-                    'fileId': {
+                    fileId: {
                         id: 'fileId',
                         tags: {
                             test: 'abc',
-                            other: '123'
+                            other: '123',
                         },
                         // metadata: {
                         //     ref: first,
                         //     tags: {}
                         // }
-                    }
+                    },
                 });
             });
 
@@ -257,27 +280,33 @@ describe('AuxCausalTree', () => {
 
                 const { added: first } = await site1.file('fileId');
                 const { added: firstTag } = await site1.tag('test', first);
-                const { added: firstTagValue } = await site1.val('abc', firstTag);
+                const { added: firstTagValue } = await site1.val(
+                    'abc',
+                    firstTag
+                );
 
                 await site2.add(first);
                 await site2.add(firstTag);
                 await site2.add(firstTagValue);
 
-                const { added: secondTagValue } = await site2.val('123', firstTag);
+                const { added: secondTagValue } = await site2.val(
+                    '123',
+                    firstTag
+                );
 
                 await site1.add(secondTagValue);
-                
+
                 expect(site1.value).toMatchObject({
-                    'fileId': {
+                    fileId: {
                         id: 'fileId',
                         tags: {
-                            test: '123'
+                            test: '123',
                         },
                         // metadata: {
                         //     ref: first,
                         //     tags: {}
                         // }
-                    }
+                    },
                 });
             });
 
@@ -292,7 +321,10 @@ describe('AuxCausalTree', () => {
 
                 const { added: first } = await site1.file('fileId');
                 const { added: firstTag } = await site1.tag('first', first);
-                const { added: firstTagValue } = await site1.val('abc', firstTag);
+                const { added: firstTagValue } = await site1.val(
+                    'abc',
+                    firstTag
+                );
 
                 await site2.add(first);
                 await site2.add(firstTag);
@@ -301,10 +333,26 @@ describe('AuxCausalTree', () => {
                 await site3.add(firstTag);
                 await site3.add(firstTagValue);
 
-                const { added: firstDelete } = await site1.delete(firstTag, 0, 5);
-                const { added: firstInsert } = await site1.insert(0, 'reallylong', firstTag);
-                const { added: secondRename } = await site2.insert(5, '1', firstTag);
-                const { added: thirdRename } = await site3.insert(0, '99', firstTag);
+                const { added: firstDelete } = await site1.delete(
+                    firstTag,
+                    0,
+                    5
+                );
+                const { added: firstInsert } = await site1.insert(
+                    0,
+                    'reallylong',
+                    firstTag
+                );
+                const { added: secondRename } = await site2.insert(
+                    5,
+                    '1',
+                    firstTag
+                );
+                const { added: thirdRename } = await site3.insert(
+                    0,
+                    '99',
+                    firstTag
+                );
 
                 await site1.add(thirdRename);
                 await site1.add(secondRename);
@@ -318,14 +366,14 @@ describe('AuxCausalTree', () => {
                 await site3.add(secondRename);
 
                 const expected: any = {
-                    'fileId': {
+                    fileId: {
                         id: 'fileId',
                         tags: {
-                            '99reallylong1': 'abc'
-                        }
-                    }
+                            '99reallylong1': 'abc',
+                        },
+                    },
                 };
-                
+
                 expect(site1.value).toMatchObject(expected);
                 expect(site2.value).toMatchObject(expected);
                 expect(site3.value).toMatchObject(expected);
@@ -342,7 +390,10 @@ describe('AuxCausalTree', () => {
 
                 const { added: first } = await site1.file('fileId');
                 const { added: firstTag } = await site1.tag('first', first);
-                const { added: firstTagValue } = await site1.val('abc', firstTag);
+                const { added: firstTagValue } = await site1.val(
+                    'abc',
+                    firstTag
+                );
 
                 await site2.add(first);
                 await site2.add(firstTag);
@@ -351,9 +402,21 @@ describe('AuxCausalTree', () => {
                 await site3.add(firstTag);
                 await site3.add(firstTagValue);
 
-                const { added: secondDelete } = await site2.delete(firstTag, 1, 5);
-                const { added: secondRename } = await site2.insert(1, '1', firstTag);
-                const { added: thirdRename } = await site3.insert(0, '99', firstTag);
+                const { added: secondDelete } = await site2.delete(
+                    firstTag,
+                    1,
+                    5
+                );
+                const { added: secondRename } = await site2.insert(
+                    1,
+                    '1',
+                    firstTag
+                );
+                const { added: thirdRename } = await site3.insert(
+                    0,
+                    '99',
+                    firstTag
+                );
 
                 await site1.add(secondDelete);
                 await site1.add(thirdRename);
@@ -363,14 +426,14 @@ describe('AuxCausalTree', () => {
 
                 await site3.add(secondDelete);
                 await site3.add(secondRename);
-                
+
                 const expected: any = {
-                    'fileId': {
+                    fileId: {
                         id: 'fileId',
                         tags: {
-                            '99f1': 'abc'
-                        }
-                    }
+                            '99f1': 'abc',
+                        },
+                    },
                 };
 
                 expect(site1.value).toMatchObject(expected);
@@ -386,16 +449,16 @@ describe('AuxCausalTree', () => {
                 const { added: first } = await site1.file('fileId');
                 const { added: firstTag } = await site1.tag('first', first);
                 await site1.delete(firstTag, 0, 5);
-                
+
                 const expected: AuxState = {
-                    'fileId': {
+                    fileId: {
                         id: 'fileId',
                         tags: {},
                         metadata: {
                             ref: first,
-                            tags: {}
-                        }
-                    }
+                            tags: {},
+                        },
+                    },
                 };
 
                 expect(site1.value).toEqual(expected);
@@ -412,7 +475,10 @@ describe('AuxCausalTree', () => {
 
                 const { added: first } = await site1.file('fileId');
                 const { added: firstTag } = await site1.tag('first', first);
-                const { added: firstTagValue } = await site1.val('abc', firstTag);
+                const { added: firstTagValue } = await site1.val(
+                    'abc',
+                    firstTag
+                );
 
                 await site2.add(first);
                 await site2.add(firstTag);
@@ -421,9 +487,21 @@ describe('AuxCausalTree', () => {
                 await site3.add(firstTag);
                 await site3.add(firstTagValue);
 
-                const { added: secondDelete } = await site2.delete(firstTagValue, 1, 3);
-                const { added: secondRename } = await site2.insert(1, '1', firstTagValue);
-                const { added: thirdRename } = await site3.insert(0, '99', firstTagValue);
+                const { added: secondDelete } = await site2.delete(
+                    firstTagValue,
+                    1,
+                    3
+                );
+                const { added: secondRename } = await site2.insert(
+                    1,
+                    '1',
+                    firstTagValue
+                );
+                const { added: thirdRename } = await site3.insert(
+                    0,
+                    '99',
+                    firstTagValue
+                );
 
                 await site1.add(secondDelete);
                 await site1.add(thirdRename);
@@ -433,14 +511,14 @@ describe('AuxCausalTree', () => {
 
                 await site3.add(secondDelete);
                 await site3.add(secondRename);
-                
+
                 const expected: any = {
-                    'fileId': {
+                    fileId: {
                         id: 'fileId',
                         tags: {
-                            'first': '99a1'
-                        }
-                    }
+                            first: '99a1',
+                        },
+                    },
                 };
 
                 expect(site1.value).toMatchObject(expected);
@@ -459,11 +537,17 @@ describe('AuxCausalTree', () => {
                 const { added: file } = await tree.file('fileId');
                 const { added: test } = await tree.tag('test', file);
                 const { added: testVal1 } = await tree.val(99, test);
-                const { added: testVal2 } = await tree.val('hello, world', test);
+                const { added: testVal2 } = await tree.val(
+                    'hello, world',
+                    test
+                );
 
                 const { added: test2 } = await tree.tag('test2', file);
                 const { added: test2Val1 } = await tree.val(99, test2);
-                const { added: test2Val2 } = await tree.val('hello, world', test2);
+                const { added: test2Val2 } = await tree.val(
+                    'hello, world',
+                    test2
+                );
 
                 expect(tree.weave.atoms).toEqual([
                     root,
@@ -471,7 +555,7 @@ describe('AuxCausalTree', () => {
                     test2,
                     test2Val2,
                     test,
-                    testVal2
+                    testVal2,
                 ]);
                 expect(tree.weave.isValid()).toBe(true);
             });
@@ -485,11 +569,17 @@ describe('AuxCausalTree', () => {
                 const { added: file } = await tree.file('fileId');
                 const { added: test } = await tree.tag('test', file);
                 const testVal1 = await tree.factory.create(value(99), test);
-                const testVal2 = await tree.factory.create(value('hello, world'), test);
+                const testVal2 = await tree.factory.create(
+                    value('hello, world'),
+                    test
+                );
 
                 const { added: test2 } = await tree.tag('test2', file);
                 const test2Val1 = await tree.factory.create(value(99), test2);
-                const test2Val2 = await tree.factory.create(value('hello, world'), test2);
+                const test2Val2 = await tree.factory.create(
+                    value('hello, world'),
+                    test2
+                );
 
                 await tree.addMany([test2Val2, test2Val1, testVal1, testVal2]);
 
@@ -499,7 +589,7 @@ describe('AuxCausalTree', () => {
                     test2,
                     test2Val2,
                     test,
-                    testVal2
+                    testVal2,
                 ]);
                 expect(tree.weave.isValid()).toBe(true);
             });
@@ -512,11 +602,17 @@ describe('AuxCausalTree', () => {
                 const { added: file } = await tree.file('fileId');
                 const { added: test } = await tree.tag('test', file);
                 const { added: testVal1 } = await tree.val(99, test);
-                const { added: testVal2 } = await tree.val('hello, world', test);
+                const { added: testVal2 } = await tree.val(
+                    'hello, world',
+                    test
+                );
 
                 const { added: test2 } = await tree.tag('test2', file);
                 const { added: test2Val1 } = await tree.val(99, test2);
-                const { added: test2Val2 } = await tree.val('hello, world', test2);
+                const { added: test2Val2 } = await tree.val(
+                    'hello, world',
+                    test2
+                );
 
                 let other = new AuxCausalTree(storedTree(site(1)));
                 other.garbageCollect = true;
@@ -528,7 +624,7 @@ describe('AuxCausalTree', () => {
                     test2,
                     test2Val2,
                     test,
-                    testVal2
+                    testVal2,
                 ]);
                 expect(other.weave.isValid()).toBe(true);
             });
@@ -541,15 +637,21 @@ describe('AuxCausalTree', () => {
                 const { added: file } = await tree.file('fileId');
                 const { added: test } = await tree.tag('test', file);
                 const { added: testVal1 } = await tree.val(99, test);
-                const { added: testVal2 } = await tree.val('hello, world', test);
+                const { added: testVal2 } = await tree.val(
+                    'hello, world',
+                    test
+                );
 
                 const { added: test2 } = await tree.tag('test2', file);
                 const { added: test2Val1 } = await tree.val(99, test2);
-                const { added: test2Val2 } = await tree.val('hello, world', test2);
+                const { added: test2Val2 } = await tree.val(
+                    'hello, world',
+                    test2
+                );
 
                 const exported = tree.export();
                 let other = new AuxCausalTree(exported, {
-                    garbageCollect: true
+                    garbageCollect: true,
                 });
                 await other.import(exported);
 
@@ -559,7 +661,7 @@ describe('AuxCausalTree', () => {
                     test2,
                     test2Val2,
                     test,
-                    testVal2
+                    testVal2,
                 ]);
                 expect(other.weave.isValid()).toBe(true);
             });
@@ -568,7 +670,7 @@ describe('AuxCausalTree', () => {
                 let tree = new AuxCausalTree(storedTree(site(1)));
 
                 tree.garbageCollect = true;
-                
+
                 let archived: Atom<AuxOp>[] = [];
                 let error = jest.fn();
                 tree.atomsArchived.subscribe(a => {
@@ -579,17 +681,20 @@ describe('AuxCausalTree', () => {
                 const { added: file } = await tree.file('fileId');
                 const { added: test } = await tree.tag('test', file);
                 const { added: testVal1 } = await tree.val(99, test);
-                const { added: testVal2 } = await tree.val('hello, world', test);
+                const { added: testVal2 } = await tree.val(
+                    'hello, world',
+                    test
+                );
 
                 const { added: test2 } = await tree.tag('test2', file);
                 const { added: test2Val1 } = await tree.val(99, test2);
-                const { added: test2Val2 } = await tree.val('hello, world', test2);
+                const { added: test2Val2 } = await tree.val(
+                    'hello, world',
+                    test2
+                );
 
                 expect(error).not.toBeCalled();
-                expect(archived).toEqual([
-                    testVal1,
-                    test2Val1
-                ]);
+                expect(archived).toEqual([testVal1, test2Val1]);
                 expect(tree.weave.isValid()).toBe(true);
             });
 
@@ -597,7 +702,7 @@ describe('AuxCausalTree', () => {
                 let tree = new AuxCausalTree(storedTree(site(1)));
 
                 tree.garbageCollect = true;
-                
+
                 let archived: Atom<AuxOp>[] = [];
                 let error = jest.fn();
                 tree.atomsArchived.subscribe(a => {
@@ -611,14 +716,15 @@ describe('AuxCausalTree', () => {
                 let testVal1: Atom<AuxOp>;
                 let testVal2: Atom<AuxOp>;
                 await tree.batch(async () => {
-                    ({ added: testVal1} = await tree.val(99, test));
-                    ({ added: testVal2} = await tree.val('hello, world', test));
+                    ({ added: testVal1 } = await tree.val(99, test));
+                    ({ added: testVal2 } = await tree.val(
+                        'hello, world',
+                        test
+                    ));
                 });
 
                 expect(error).not.toBeCalled();
-                expect(archived).toEqual([
-                    testVal1
-                ]);
+                expect(archived).toEqual([testVal1]);
 
                 expect(tree.weave.isValid()).toBe(true);
             });
@@ -627,7 +733,7 @@ describe('AuxCausalTree', () => {
                 let tree = new AuxCausalTree(storedTree(site(1)));
 
                 tree.garbageCollect = true;
-                
+
                 let archived: Atom<AuxOp>[] = [];
                 let error = jest.fn();
                 tree.atomsArchived.subscribe(a => {
@@ -654,7 +760,7 @@ describe('AuxCausalTree', () => {
                     test2,
                     val1,
                     root,
-                    file
+                    file,
                 ]);
 
                 expect(error).not.toBeCalled();
@@ -674,71 +780,71 @@ describe('AuxCausalTree', () => {
                 const { added: sizeVal } = await tree.val(4, size);
 
                 const { added: extra } = await tree.tag('extra', file);
-                const { added: extraVal } = await tree.val({ test: 'abc' }, extra);
+                const { added: extraVal } = await tree.val(
+                    { test: 'abc' },
+                    extra
+                );
 
                 const { added: last } = await tree.tag('last', file);
                 const { added: lastVal } = await tree.val('123456', last);
 
                 expect(tree.value).toMatchObject({
-                    'fileId': {
+                    fileId: {
                         metadata: {
                             ref: file,
                             tags: {
-                                size: { 
-                                    ref: size, 
+                                size: {
+                                    ref: size,
                                     name: {
-                                        indexes: [
-                                            0, 1, 2, 3
-                                        ],
-                                        refs: [
-                                            size, size, size, size
-                                        ]
+                                        indexes: [0, 1, 2, 3],
+                                        refs: [size, size, size, size],
                                     },
-                                    value: { 
+                                    value: {
                                         ref: sizeVal,
-                                        sequence: null
-                                    }
+                                        sequence: null,
+                                    },
                                 },
-                                extra: { 
+                                extra: {
                                     ref: extra,
                                     name: {
-                                        indexes: [
-                                            0, 1, 2, 3, 4
-                                        ],
+                                        indexes: [0, 1, 2, 3, 4],
                                         refs: [
-                                            extra, extra, extra, extra, extra
-                                        ]
+                                            extra,
+                                            extra,
+                                            extra,
+                                            extra,
+                                            extra,
+                                        ],
                                     },
-                                    value: { 
-                                        ref: extraVal, 
-                                        sequence: null
-                                    }
+                                    value: {
+                                        ref: extraVal,
+                                        sequence: null,
+                                    },
                                 },
-                                last: { 
+                                last: {
                                     ref: last,
                                     name: {
-                                        indexes: [
-                                            0, 1, 2, 3
-                                        ],
-                                        refs: [
-                                            last, last, last, last
-                                        ]
+                                        indexes: [0, 1, 2, 3],
+                                        refs: [last, last, last, last],
                                     },
-                                    value: { 
-                                        ref: lastVal, 
+                                    value: {
+                                        ref: lastVal,
                                         sequence: {
-                                            indexes: [
-                                                0, 1, 2, 3, 4, 5
-                                            ],
+                                            indexes: [0, 1, 2, 3, 4, 5],
                                             refs: [
-                                                lastVal, lastVal, lastVal, lastVal, lastVal, lastVal
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                                                lastVal,
+                                                lastVal,
+                                                lastVal,
+                                                lastVal,
+                                                lastVal,
+                                                lastVal,
+                                            ],
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
                 });
             });
         });
@@ -755,11 +861,16 @@ describe('AuxCausalTree', () => {
 
             const files = tree.value;
 
-            const { added: insert } = await tree.insertIntoTagValue(files['testId'], 'test', '123', 2);
+            const { added: insert } = await tree.insertIntoTagValue(
+                files['testId'],
+                'test',
+                '123',
+                2
+            );
 
             expect(insert.value).toMatchObject({
                 index: 2,
-                text: '123'
+                text: '123',
             });
         });
 
@@ -778,12 +889,17 @@ describe('AuxCausalTree', () => {
 
             const files = tree.value;
 
-            const { added: insert } = await tree.insertIntoTagValue(files['testId'], 'test', '5555', 2);
+            const { added: insert } = await tree.insertIntoTagValue(
+                files['testId'],
+                'test',
+                '5555',
+                2
+            );
 
             expect(insert.cause).toEqual(insert2.id);
             expect(insert.value).toMatchObject({
                 index: 0,
-                text: '5555'
+                text: '5555',
             });
         });
 
@@ -793,16 +909,24 @@ describe('AuxCausalTree', () => {
             await tree.root();
             const { added: file } = await tree.file('testId');
             const { added: tag } = await tree.tag('test', file);
-            const { added: val } = await tree.val('the quick brown fox jumped over the lazy dog', tag);
+            const { added: val } = await tree.val(
+                'the quick brown fox jumped over the lazy dog',
+                tag
+            );
 
             const files = tree.value;
 
-            const { added: insert } = await tree.insertIntoTagValue(files['testId'], 'test', '🦊', 16);
+            const { added: insert } = await tree.insertIntoTagValue(
+                files['testId'],
+                'test',
+                '🦊',
+                16
+            );
 
             expect(insert.cause).toEqual(val.id);
             expect(insert.value).toMatchObject({
                 index: 16,
-                text: '🦊'
+                text: '🦊',
             });
             expect(tree.value['testId'].tags.test).toEqual(
                 'the quick brown 🦊fox jumped over the lazy dog'
@@ -821,12 +945,17 @@ describe('AuxCausalTree', () => {
 
             const files = tree.value;
 
-            const { added: deleted } = await tree.deleteFromTagValue(files['testId'], 'test', 1, 2);
+            const { added: deleted } = await tree.deleteFromTagValue(
+                files['testId'],
+                'test',
+                1,
+                2
+            );
 
             expect(deleted.length).toBe(1);
             expect(deleted[0].value).toMatchObject({
                 start: 1,
-                end: 3
+                end: 3,
             });
         });
 
@@ -844,38 +973,43 @@ describe('AuxCausalTree', () => {
             // "21ab3c"
             const files = tree.value;
 
-            const { added: deleted } = await tree.deleteFromTagValue(files['testId'], 'test', 0, 6);
+            const { added: deleted } = await tree.deleteFromTagValue(
+                files['testId'],
+                'test',
+                0,
+                6
+            );
 
             expect(deleted.length).toBe(5);
-            
+
             expect(deleted[0].cause).toEqual(insert2.id);
             expect(deleted[0].value).toMatchObject({
                 start: 0,
-                end: 1
+                end: 1,
             });
-            
+
             expect(deleted[1].cause).toEqual(insert1.id);
             expect(deleted[1].value).toMatchObject({
                 start: 0,
-                end: 1
+                end: 1,
             });
-            
+
             expect(deleted[2].cause).toEqual(val.id);
             expect(deleted[2].value).toMatchObject({
                 start: 0,
-                end: 2
+                end: 2,
             });
 
             expect(deleted[3].cause).toEqual(insert3.id);
             expect(deleted[3].value).toMatchObject({
                 start: 0,
-                end: 1
+                end: 1,
             });
 
             expect(deleted[4].cause).toEqual(val.id);
             expect(deleted[4].value).toMatchObject({
                 start: 2,
-                end: 3
+                end: 3,
             });
         });
     });
@@ -885,7 +1019,7 @@ describe('AuxCausalTree', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
             const newFile = createFile('test', <any>{
                 abc: 'def',
-                num: 5
+                num: 5,
             });
 
             const { added: root } = await tree.root();
@@ -903,7 +1037,7 @@ describe('AuxCausalTree', () => {
                 abcTag,
                 abcTagValue,
                 numTag,
-                numTagValue
+                numTagValue,
             ]);
             expect(tree.weave.atoms.map(ref => ref)).toEqual([
                 root,
@@ -911,7 +1045,7 @@ describe('AuxCausalTree', () => {
                 numTag,
                 numTagValue,
                 abcTag,
-                abcTagValue
+                abcTagValue,
             ]);
         });
 
@@ -920,16 +1054,24 @@ describe('AuxCausalTree', () => {
             const newFile: File = {
                 id: 'test',
                 tags: {
-                    'position': { x: 0, y: 0, z: 0}
-                }
+                    position: { x: 0, y: 0, z: 0 },
+                },
             };
 
             const { added: root } = await tree.root();
             const { added: result } = await tree.addFile(newFile);
 
             const fileAtom = atom(atomId(1, 2), root.id, file('test'));
-            const positionTag = atom(atomId(1, 3), fileAtom.id, tag('position'));
-            const positionTagValue = atom(atomId(1, 4, 1), positionTag.id, value({x: 0, y: 0, z: 0}));
+            const positionTag = atom(
+                atomId(1, 3),
+                fileAtom.id,
+                tag('position')
+            );
+            const positionTagValue = atom(
+                atomId(1, 4, 1),
+                positionTag.id,
+                value({ x: 0, y: 0, z: 0 })
+            );
 
             const resultAtoms = result.map(ref => ref);
             expect(resultAtoms).toContainEqual(fileAtom);
@@ -947,19 +1089,27 @@ describe('AuxCausalTree', () => {
             const newFile = {
                 id: 'test',
                 tags: {
-                    'position': { x: 0, y: 0, z: 0}
-                }
+                    position: { x: 0, y: 0, z: 0 },
+                },
             };
 
             const { added: root } = await tree.root();
-            
+
             let updates: Atom<AuxOp>[][] = [];
             tree.atomAdded.subscribe(refs => updates.push(refs));
             const { added: result } = await tree.addFile(newFile);
 
             const fileAtom = atom(atomId(1, 2), root.id, file('test'));
-            const positionTag = atom(atomId(1, 3), fileAtom.id, tag('position'));
-            const positionTagValue = atom(atomId(1, 4, 1), positionTag.id, value({x: 0, y: 0, z: 0}));
+            const positionTag = atom(
+                atomId(1, 3),
+                fileAtom.id,
+                tag('position')
+            );
+            const positionTagValue = atom(
+                atomId(1, 4, 1),
+                positionTag.id,
+                value({ x: 0, y: 0, z: 0 })
+            );
 
             expect(updates.length).toBe(1);
             const resultAtoms = result.map(ref => ref);
@@ -980,17 +1130,24 @@ describe('AuxCausalTree', () => {
 
             await tree.root();
             const { added: file } = await tree.file('test');
-            const { added: result } = await tree.updateFile(tree.value['test'], {
-                tags: {
-                    _position: { x: 1, y: 0, z: 0 },
-                    abc: '123',
-                    num: 99,
-                    b: true
+            const { added: result } = await tree.updateFile(
+                tree.value['test'],
+                {
+                    tags: {
+                        _position: { x: 1, y: 0, z: 0 },
+                        abc: '123',
+                        num: 99,
+                        b: true,
+                    },
                 }
-            });
+            );
 
             const positionTag = atom(atomId(1, 3), file.id, tag('_position'));
-            const positionTagValue = atom(atomId(1, 7, 1), positionTag.id, value({ x: 1, y: 0, z: 0 }));
+            const positionTagValue = atom(
+                atomId(1, 7, 1),
+                positionTag.id,
+                value({ x: 1, y: 0, z: 0 })
+            );
 
             const abcTag = atom(atomId(1, 4), file.id, tag('abc'));
             const abcTagValue = atom(atomId(1, 8, 1), abcTag.id, value('123'));
@@ -1009,7 +1166,7 @@ describe('AuxCausalTree', () => {
                 numTag,
                 numTagValue,
                 bTag,
-                bTagValue
+                bTagValue,
             ]);
         });
 
@@ -1021,21 +1178,26 @@ describe('AuxCausalTree', () => {
             await tree.updateFile(tree.value['test'], {
                 tags: {
                     _position: { x: 0, y: 0, z: 0 },
-                }
+                },
             });
 
-            const { added: result } = await tree.updateFile(tree.value['test'], {
-                tags: {
-                    _position: <any>{ x: 1 },
+            const { added: result } = await tree.updateFile(
+                tree.value['test'],
+                {
+                    tags: {
+                        _position: <any>{ x: 1 },
+                    },
                 }
-            });
+            );
 
             const positionTag = atom(atomId(1, 3), file.id, tag('_position'));
-            const positionTagValue = atom(atomId(1, 5, 1), positionTag.id, value({ x: 1, y: 0, z: 0 }));
+            const positionTagValue = atom(
+                atomId(1, 5, 1),
+                positionTag.id,
+                value({ x: 1, y: 0, z: 0 })
+            );
 
-            expect(result.map(ref => ref)).toEqual([
-                positionTagValue
-            ]);
+            expect(result.map(ref => ref)).toEqual([positionTagValue]);
         });
 
         it('should batch the updates together', async () => {
@@ -1043,30 +1205,34 @@ describe('AuxCausalTree', () => {
 
             await tree.root();
             const { added: file } = await tree.file('test');
-            
+
             let updates: Atom<AuxOp>[][] = [];
             tree.atomAdded.subscribe(refs => updates.push(refs));
-            
+
             await tree.updateFile(tree.value['test'], {
                 tags: {
                     _position: { x: 0, y: 0, z: 0 },
-                }
+                },
             });
 
-            const { added: result } = await tree.updateFile(tree.value['test'], {
-                tags: {
-                    _position: <any>{ x: 1 },
+            const { added: result } = await tree.updateFile(
+                tree.value['test'],
+                {
+                    tags: {
+                        _position: <any>{ x: 1 },
+                    },
                 }
-            });
+            );
 
             const positionTag = atom(atomId(1, 3), file.id, tag('_position'));
-            const positionTagValue = atom(atomId(1, 5, 1), positionTag.id, value({ x: 1, y: 0, z: 0 }));
+            const positionTagValue = atom(
+                atomId(1, 5, 1),
+                positionTag.id,
+                value({ x: 1, y: 0, z: 0 })
+            );
 
-            
             expect(updates.length).toBe(2);
-            expect(result.map(ref => ref)).toEqual([
-                positionTagValue
-            ]);
+            expect(result.map(ref => ref)).toEqual([positionTagValue]);
         });
 
         it('should not write duplicates', async () => {
@@ -1076,20 +1242,23 @@ describe('AuxCausalTree', () => {
             const file = createFile('test', {
                 _workspace: null,
                 _position: { x: 0, y: 0, z: 0 },
-                test: 99
+                test: 99,
             });
             await tree.addFile(file);
-            
+
             let updates: Atom<AuxOp>[][] = [];
             tree.atomAdded.subscribe(refs => updates.push(refs));
-            
-            const { added: result } = await tree.updateFile(tree.value['test'], {
-                tags: {
-                    test: 99,
-                    _workspace: null,
-                    _position: { x: 0, y: 0, z: 0 }
+
+            const { added: result } = await tree.updateFile(
+                tree.value['test'],
+                {
+                    tags: {
+                        test: 99,
+                        _workspace: null,
+                        _position: { x: 0, y: 0, z: 0 },
+                    },
                 }
-            });
+            );
 
             expect(updates.length).toBe(0);
             expect(result.map(ref => ref)).toEqual([]);
@@ -1102,22 +1271,25 @@ describe('AuxCausalTree', () => {
             const file = createFile('test', {
                 _workspace: null,
                 _position: { x: 0, y: 0, z: 0 },
-                test: 99
+                test: 99,
             });
             await tree.addFile(file);
-            
+
             let updates: Atom<AuxOp>[][] = [];
             tree.atomAdded.subscribe(refs => updates.push(refs));
-            
-            const { added: result } = await tree.updateFile(tree.value['test'], {
-                tags: {
-                    test: null
+
+            const { added: result } = await tree.updateFile(
+                tree.value['test'],
+                {
+                    tags: {
+                        test: null,
+                    },
                 }
-            });
+            );
 
             expect(updates.length).toBe(1);
             expect(result.map(ref => ref)).toEqual([
-                atom(atomId(1, 9, 1), atomId(1, 5), value(null))
+                atom(atomId(1, 9, 1), atomId(1, 5), value(null)),
             ]);
         });
     });
@@ -1134,13 +1306,17 @@ describe('AuxCausalTree', () => {
                         _position: { x: 1, y: 0, z: 0 },
                         abc: '123',
                         num: 99,
-                        b: true
-                    }
-                })
+                        b: true,
+                    },
+                }),
             ]);
 
             const positionTag = atom(atomId(1, 3), file.id, tag('_position'));
-            const positionTagValue = atom(atomId(1, 7, 1), positionTag.id, value({ x: 1, y: 0, z: 0 }));
+            const positionTagValue = atom(
+                atomId(1, 7, 1),
+                positionTag.id,
+                value({ x: 1, y: 0, z: 0 })
+            );
 
             const abcTag = atom(atomId(1, 4), file.id, tag('abc'));
             const abcTagValue = atom(atomId(1, 8, 1), abcTag.id, value('123'));
@@ -1159,7 +1335,7 @@ describe('AuxCausalTree', () => {
                 numTag,
                 numTagValue,
                 bTag,
-                bTagValue
+                bTagValue,
             ]);
         });
 
@@ -1167,12 +1343,12 @@ describe('AuxCausalTree', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
             const newFile = createFile('test', <any>{
                 abc: 'def',
-                num: 5
+                num: 5,
             });
 
             const { added: root } = await tree.root();
             const { added: result } = await tree.addEvents([
-                fileAdded(newFile)
+                fileAdded(newFile),
             ]);
 
             const fileAtom = atom(atomId(1, 2), root.id, file('test'));
@@ -1187,7 +1363,7 @@ describe('AuxCausalTree', () => {
                 abcTag,
                 abcTagValue,
                 numTag,
-                numTagValue
+                numTagValue,
             ]);
             expect(tree.weave.atoms.map(ref => ref)).toEqual([
                 root,
@@ -1195,7 +1371,7 @@ describe('AuxCausalTree', () => {
                 numTag,
                 numTagValue,
                 abcTag,
-                abcTagValue
+                abcTagValue,
             ]);
         });
 
@@ -1206,14 +1382,12 @@ describe('AuxCausalTree', () => {
             const { added: file } = await tree.file('test');
 
             const { added: result } = await tree.addEvents([
-                fileRemoved('test')
+                fileRemoved('test'),
             ]);
 
             const deleteFile = atom(atomId(1, 3, 1), file.id, del());
 
-            expect(result.map(ref => ref)).toEqual([
-                deleteFile
-            ]);
+            expect(result.map(ref => ref)).toEqual([deleteFile]);
             expect(tree.weave.atoms.map(ref => ref)).toEqual([
                 root,
                 file,
@@ -1229,7 +1403,7 @@ describe('AuxCausalTree', () => {
             const { added: del } = await tree.delete(file);
 
             const { added: result } = await tree.addEvents([
-                fileRemoved('test')
+                fileRemoved('test'),
             ]);
 
             expect(result.map(ref => ref)).toEqual([]);
@@ -1242,14 +1416,11 @@ describe('AuxCausalTree', () => {
             const { added: newFile } = await tree.file('test');
             const newFile2 = createFile('test', <any>{
                 abc: 'def',
-                num: 5
+                num: 5,
             });
 
             const { added: result } = await tree.addEvents([
-                transaction([
-                    fileRemoved('test'),
-                    fileAdded(newFile2)
-                ])
+                transaction([fileRemoved('test'), fileAdded(newFile2)]),
             ]);
 
             const deleteFile = atom(atomId(1, 3, 1), newFile.id, del());
@@ -1267,7 +1438,7 @@ describe('AuxCausalTree', () => {
                 abcTag,
                 abcTagValue,
                 numTag,
-                numTagValue
+                numTagValue,
             ]);
             expect(tree.weave.atoms.map(ref => ref)).toEqual([
                 root,
@@ -1287,13 +1458,13 @@ describe('AuxCausalTree', () => {
             const { added: root } = await tree.root();
             const newFile = createFile('test', <any>{
                 abc: 'def',
-                num: 5
+                num: 5,
             });
 
             const { added: result } = await tree.addEvents([
                 addState({
-                    'test': newFile
-                })
+                    test: newFile,
+                }),
             ]);
 
             const fileAtom = atom(atomId(1, 2), root.id, file('test'));
@@ -1308,7 +1479,7 @@ describe('AuxCausalTree', () => {
                 abcTag,
                 abcTagValue,
                 numTag,
-                numTagValue
+                numTagValue,
             ]);
             expect(tree.weave.atoms.map(ref => ref)).toEqual([
                 root,
@@ -1316,7 +1487,7 @@ describe('AuxCausalTree', () => {
                 numTag,
                 numTagValue,
                 abcTag,
-                abcTagValue
+                abcTagValue,
             ]);
         });
 
@@ -1326,13 +1497,13 @@ describe('AuxCausalTree', () => {
             const { added: root } = await tree.root();
             const newFile = createFile('test', <any>{
                 abc: 'def',
-                num: 5
+                num: 5,
             });
 
             const { added: result } = await tree.addEvents([
                 addState({
-                    'test': newFile
-                })
+                    test: newFile,
+                }),
             ]);
 
             const fileAtom = atom(atomId(1, 2), root.id, file('test'));
@@ -1347,7 +1518,7 @@ describe('AuxCausalTree', () => {
                 abcTag,
                 abcTagValue,
                 numTag,
-                numTagValue
+                numTagValue,
             ]);
             expect(tree.weave.atoms.map(ref => ref)).toEqual([
                 root,
@@ -1355,7 +1526,7 @@ describe('AuxCausalTree', () => {
                 numTag,
                 numTagValue,
                 abcTag,
-                abcTagValue
+                abcTagValue,
             ]);
         });
 
@@ -1365,16 +1536,16 @@ describe('AuxCausalTree', () => {
             const { added: root } = await tree.root();
             const newFile = createFile('test', <any>{
                 abc: 'def',
-                num: 5
+                num: 5,
             });
 
             const { added: result } = await tree.addEvents([
                 fileAdded(newFile),
                 fileUpdated('test', {
                     tags: {
-                        num: 22
-                    }
-                })
+                        num: 22,
+                    },
+                }),
             ]);
 
             const fileAtom = atom(atomId(1, 2), root.id, file('test'));
@@ -1401,7 +1572,7 @@ describe('AuxCausalTree', () => {
                 numTagValue2,
                 numTagValue,
                 abcTag,
-                abcTagValue
+                abcTagValue,
             ]);
         });
 
@@ -1411,7 +1582,7 @@ describe('AuxCausalTree', () => {
             const { added: root } = await tree.root();
             const newFile = createFile('test', <any>{
                 abc: 'def',
-                num: 5
+                num: 5,
             });
 
             const { added: otherFile } = await tree.file('other');
@@ -1423,15 +1594,15 @@ describe('AuxCausalTree', () => {
 
             const { added: result } = await tree.addEvents([
                 addState({
-                    'test': newFile,
-                    'other': <any><Partial<Object>>{
+                    test: newFile,
+                    other: <any>(<Partial<Object>>{
                         id: 'other',
                         type: 'object',
                         tags: {
-                            tag: 'hello'
-                        }
-                    }
-                })
+                            tag: 'hello',
+                        },
+                    }),
+                }),
             ]);
 
             const fileAtom = atom(atomId(1, 5), root.id, file('test'));
@@ -1441,7 +1612,11 @@ describe('AuxCausalTree', () => {
             const numTag = atom(atomId(1, 8), fileAtom.id, tag('num'));
             const numTagValue = atom(atomId(1, 10, 1), numTag.id, value(5));
 
-            const newOtherTagValue = atom(atomId(1, 6, 1), otherTag.id, value('hello'));
+            const newOtherTagValue = atom(
+                atomId(1, 6, 1),
+                otherTag.id,
+                value('hello')
+            );
 
             expect(updates.length).toBe(1);
             expect(result.map(ref => ref)).toEqual([
@@ -1450,7 +1625,7 @@ describe('AuxCausalTree', () => {
                 abcTagValue,
                 numTag,
                 numTagValue,
-                newOtherTagValue
+                newOtherTagValue,
             ]);
             expect(tree.weave.atoms.map(ref => ref)).toEqual([
                 root,
@@ -1462,7 +1637,7 @@ describe('AuxCausalTree', () => {
                 otherFile,
                 otherTag,
                 newOtherTagValue,
-                otherTagValue
+                otherTagValue,
             ]);
         });
     });

@@ -7,9 +7,13 @@ import { padZero, byteToHex } from '../SharedUtils';
  * @param s The saturation.
  * @param v The value.
  */
-export function hsvToRgb(h: number, s: number, v: number): { r: number, g: number, b: number } {
-    let hInt = Math.trunc(h*6);
-    let hFrac = (h*6) - hInt;
+export function hsvToRgb(
+    h: number,
+    s: number,
+    v: number
+): { r: number; g: number; b: number } {
+    let hInt = Math.trunc(h * 6);
+    let hFrac = h * 6 - hInt;
     let p = v * (1 - s);
     let q = v * (1 - hFrac * s);
     let t = v * (1 - (1 - hFrac) * s);
@@ -45,7 +49,7 @@ export function hsvToRgb(h: number, s: number, v: number): { r: number, g: numbe
     return {
         r: r * 256,
         g: g * 256,
-        b: b * 256
+        b: b * 256,
     };
 }
 
@@ -69,11 +73,10 @@ export function rgbToHex(r: number, g: number, b: number): string {
 export function getColorForTags(tags: string[]) {
     let hash = getHashBuffer(tags);
     let int = hash.readUInt32BE(0);
-    let frac = int / 0xFFFFFFFF;
+    let frac = int / 0xffffffff;
     let { r, g, b } = hsvToRgb(frac, 0.5, 0.95);
     return rgbToHex(r, g, b);
 }
-
 
 /**
  * Inverts the given color. If the useBlackAndWhite option is set, then the output color will always be black or white.
@@ -97,16 +100,19 @@ export function invertColor(hex: string, useBlackAndWhite?: boolean): string {
         b = parseInt(hex.slice(4, 6), 16);
     if (useBlackAndWhite) {
         // http://stackoverflow.com/a/3943023/112731
-        return (r * 0.299 + g * 0.587 + b * 0.114) > 186
-            ? '#000000'
-            : '#FFFFFF';
+        return r * 0.299 + g * 0.587 + b * 0.114 > 186 ? '#000000' : '#FFFFFF';
     }
     // invert color components
-    r = (255 - r);
-    g = (255 - g);
-    b = (255 - b);
+    r = 255 - r;
+    g = 255 - g;
+    b = 255 - b;
     // pad each with zeros and return
-    return "#" + padZero(r.toString(16)) + padZero(g.toString(16)) + padZero(b.toString(16));
+    return (
+        '#' +
+        padZero(r.toString(16)) +
+        padZero(g.toString(16)) +
+        padZero(b.toString(16))
+    );
 }
 
 /**
@@ -138,8 +144,10 @@ export class ColorConvert {
      * @return  A valid rgba CSS color string
      */
     toRgba(color: string) {
-      var a = this.toRgbaArray(color);
-      return 'rgba('+a[0]+','+a[1]+','+a[2]+','+(a[3]/255)+')';
+        var a = this.toRgbaArray(color);
+        return (
+            'rgba(' + a[0] + ',' + a[1] + ',' + a[2] + ',' + a[3] / 255 + ')'
+        );
     }
 
     /**
@@ -154,10 +162,14 @@ export class ColorConvert {
      * @return  A valid rgba CSS color string
      */
     toHex(color: string) {
-      var a = this.toRgbaArray(color);
-      // Sigh, you can't map() typed arrays
-      var hex = [0,1,2].map(function(i) { return byteToHex(a[i]) }).join('');
-      return '#'+hex;
+        var a = this.toRgbaArray(color);
+        // Sigh, you can't map() typed arrays
+        var hex = [0, 1, 2]
+            .map(function(i) {
+                return byteToHex(a[i]);
+            })
+            .join('');
+        return '#' + hex;
     }
 
     /**
@@ -168,12 +180,12 @@ export class ColorConvert {
      * color_convert.to_rgb_array('garbagey')  # [0, 0, 0, 0]
      */
     toRgbaArray(color: string) {
-      // Setting an invalid fillStyle leaves this unchanged
-      this._context.fillStyle = 'rgba(0, 0, 0, 0)';
-      // We're reusing the canvas, so fill it with something predictable
-      this._context.clearRect(0, 0, 1, 1);
-      this._context.fillStyle = color;
-      this._context.fillRect(0, 0, 1, 1);
-      return this._context.getImageData(0, 0, 1, 1).data;
+        // Setting an invalid fillStyle leaves this unchanged
+        this._context.fillStyle = 'rgba(0, 0, 0, 0)';
+        // We're reusing the canvas, so fill it with something predictable
+        this._context.clearRect(0, 0, 1, 1);
+        this._context.fillStyle = color;
+        this._context.fillRect(0, 0, 1, 1);
+        return this._context.getImageData(0, 0, 1, 1).data;
     }
 }

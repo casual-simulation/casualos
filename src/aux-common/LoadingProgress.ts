@@ -1,22 +1,23 @@
-import { ArgEvent } from './Events'
+import { ArgEvent } from './Events';
 
-export declare type LoadingProgressCallback = (progress: LoadingProgress) => void;
+export declare type LoadingProgressCallback = (
+    progress: LoadingProgress
+) => void;
 
 export class LoadingProgress {
-
     /**
      * This event is fired any time a value in this loading progress object changes.
      */
-    public onChanged: ArgEvent<LoadingProgress> = new ArgEvent<LoadingProgress>();
+    public onChanged: ArgEvent<LoadingProgress> = new ArgEvent<
+        LoadingProgress
+    >();
 
     private _show: boolean = true;
     private _progress: number = 0;
     private _status: string = '';
     private _error: string = '';
 
-    constructor() {
-
-    }
+    constructor() {}
 
     /**
      * Should a loading progress screen be shown?
@@ -93,5 +94,5 @@ export class LoadingProgress {
 }
 
 function getOptionalValue(obj: any, defaultValue: any): any {
-    return (obj !== undefined && obj !== null) ? obj : defaultValue;
+    return obj !== undefined && obj !== null ? obj : defaultValue;
 }

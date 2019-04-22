@@ -23,14 +23,20 @@ export function calculateTilePoints(scale: number) {
  * @param scale The size of the tiles.
  * @param points The tile points that the grid level relative coordinates should be calculated for.
  */
-export function calculateGridTileLocalPositions(x: number, y: number, z: number, scale: number, points: Vector3[]) {
+export function calculateGridTileLocalPositions(
+    x: number,
+    y: number,
+    z: number,
+    scale: number,
+    points: Vector3[]
+) {
     const localCenter = calculateGridTileLocalCenter(x, y, z, scale);
 
     return {
         center: localCenter,
         points: points.map(p => {
             return new Vector3().copy(p).add(localCenter);
-        })
+        }),
     };
 }
 
@@ -41,9 +47,14 @@ export function calculateGridTileLocalPositions(x: number, y: number, z: number,
  * @param z The height of the tile.
  * @param scale The size of the tiles.
  */
-export function calculateGridTileLocalCenter(gridX: number, gridY: number, z: number, scale: number) {
-    const x = (gridX * scale);
-    const y = (gridY * -scale); // for some reason the Y coordinate needs mirroring
-    z = (z * scale);
-    return new Vector3(x, z, y)
+export function calculateGridTileLocalCenter(
+    gridX: number,
+    gridY: number,
+    z: number,
+    scale: number
+) {
+    const x = gridX * scale;
+    const y = gridY * -scale; // for some reason the Y coordinate needs mirroring
+    z = z * scale;
+    return new Vector3(x, z, y);
 }

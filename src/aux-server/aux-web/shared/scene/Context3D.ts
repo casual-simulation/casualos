@@ -1,16 +1,21 @@
-import { GameObject } from "./GameObject";
-import { AuxFile } from "@casual-simulation/aux-common/aux-format";
-import { FileCalculationContext, calculateFileValue, TagUpdatedEvent, AuxDomain, isFileInContext } from "@casual-simulation/aux-common";
-import { Object3D, SceneUtils } from "three";
-import { AuxFile3D } from "./AuxFile3D";
-import { ContextGroup3D } from "./ContextGroup3D";
-import { AuxFile3DDecoratorFactory } from "./decorators/AuxFile3DDecoratorFactory";
+import { GameObject } from './GameObject';
+import { AuxFile } from '@casual-simulation/aux-common/aux-format';
+import {
+    FileCalculationContext,
+    calculateFileValue,
+    TagUpdatedEvent,
+    AuxDomain,
+    isFileInContext,
+} from '@casual-simulation/aux-common';
+import { Object3D, SceneUtils } from 'three';
+import { AuxFile3D } from './AuxFile3D';
+import { ContextGroup3D } from './ContextGroup3D';
+import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
 
 /**
  * Defines a class that represents the visualization of a context.
  */
 export class Context3D extends GameObject {
-
     static debug: boolean = false;
 
     /**
@@ -40,7 +45,13 @@ export class Context3D extends GameObject {
      * @param context The tag that this context represents.
      * @param colliders The array that new colliders should be added to.
      */
-    constructor(context: string, group: ContextGroup3D, domain: AuxDomain, colliders: Object3D[], decoratorFactory: AuxFile3DDecoratorFactory) {
+    constructor(
+        context: string,
+        group: ContextGroup3D,
+        domain: AuxDomain,
+        colliders: Object3D[],
+        decoratorFactory: AuxFile3DDecoratorFactory
+    ) {
         super();
         this.context = context;
         this.colliders = colliders;
@@ -58,7 +69,7 @@ export class Context3D extends GameObject {
     fileAdded(file: AuxFile, calc: FileCalculationContext) {
         const isInContext3D = typeof this.files.get(file.id) !== 'undefined';
         const isInContext = isFileInContext(calc, file, this.context);
-        
+
         if (!isInContext3D && isInContext) {
             this._addFile(file, calc);
         }
@@ -70,7 +81,11 @@ export class Context3D extends GameObject {
      * @param updates The changes made to the file.
      * @param calc The calculation context that should be used.
      */
-    fileUpdated(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
+    fileUpdated(
+        file: AuxFile,
+        updates: TagUpdatedEvent[],
+        calc: FileCalculationContext
+    ) {
         const isInContext3D = typeof this.files.get(file.id) !== 'undefined';
         const isInContext = isFileInContext(calc, file, this.context);
 
@@ -78,7 +93,7 @@ export class Context3D extends GameObject {
             this._addFile(file, calc);
         } else if (isInContext3D && !isInContext) {
             this._removeFile(file.id);
-        } else if(isInContext3D && isInContext) {
+        } else if (isInContext3D && isInContext) {
             this._updateFile(file, updates, calc);
         }
     }
@@ -100,7 +115,9 @@ export class Context3D extends GameObject {
 
     dispose(): void {
         if (this.files) {
-            this.files.forEach(f => { f.dispose(); });
+            this.files.forEach(f => {
+                f.dispose();
+            });
         }
     }
 
@@ -108,7 +125,14 @@ export class Context3D extends GameObject {
         if (Context3D.debug) {
             console.log('[Context3D] Add', file.id, 'to context', this.context);
         }
-        const mesh = new AuxFile3D(file, this.contextGroup, this.context, this.domain, this.colliders, this._decoratorFactory);
+        const mesh = new AuxFile3D(
+            file,
+            this.contextGroup,
+            this.context,
+            this.domain,
+            this.colliders,
+            this._decoratorFactory
+        );
         this.files.set(file.id, mesh);
         this.add(mesh);
 
@@ -127,7 +151,11 @@ export class Context3D extends GameObject {
         }
     }
 
-    private _updateFile(file: AuxFile, updates: TagUpdatedEvent[], calc: FileCalculationContext) {
+    private _updateFile(
+        file: AuxFile,
+        updates: TagUpdatedEvent[],
+        calc: FileCalculationContext
+    ) {
         this.files.forEach(mesh => {
             mesh.fileUpdated(file, updates, calc);
         });

@@ -9,7 +9,7 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
  *
@@ -26,18 +26,18 @@
 import * as Sentry from '@sentry/browser';
 import Vue from 'vue';
 import VueRouter, { RouteConfig } from 'vue-router';
-import { 
-    MdButton, 
-    MdContent, 
-    MdApp, 
-    MdCard, 
-    MdToolbar, 
-    MdField, 
-    MdProgress, 
-    MdDrawer, 
-    MdList, 
-    MdMenu, 
-    MdDialog, 
+import {
+    MdButton,
+    MdContent,
+    MdApp,
+    MdCard,
+    MdToolbar,
+    MdField,
+    MdProgress,
+    MdDrawer,
+    MdList,
+    MdMenu,
+    MdDialog,
     MdDialogConfirm,
     MdDialogAlert,
     MdTabs,
@@ -86,7 +86,7 @@ Vue.use(MdList);
 Vue.use(MdMenu);
 Vue.use(MdDialog);
 Vue.use(MdDialogConfirm);
-Vue.use(MdDialogAlert)
+Vue.use(MdDialogAlert);
 Vue.use(MdTabs);
 Vue.use(MdTooltip);
 Vue.use(MdSnackbar);
@@ -104,75 +104,87 @@ const routes: RouteConfig[] = [
     {
         path: '/:id?/aux-debug',
         name: 'aux-debug',
-        component: AuxDebug
+        component: AuxDebug,
     },
     {
         path: '/:id/:context',
         name: 'aux-player',
         redirect: to => {
             if (appManager.config) {
-                window.location.href = `${appManager.config.playerBaseUrl}/${to.params.id}/${to.params.context}`;
+                window.location.href = `${appManager.config.playerBaseUrl}/${
+                    to.params.id
+                }/${to.params.context}`;
             }
-            
+
             return `/${to.params.id}`;
-        }
+        },
     },
     {
         path: '/:id?',
         name: 'home',
         component: Home,
     },
-]
+];
 
 const router = new VueRouter({
     mode: 'history',
-    routes
+    routes,
 });
 
 router.beforeEach((to, from, next) => {
-    appManager.initPromise.then(() => {
-        const channelId = to.params.id || null;
-        if (to.path !== '/login') {
-            if (!appManager.user) {
-                next({ name: 'login', query: { id: channelId } });
-                return;
+    appManager.initPromise.then(
+        () => {
+            const channelId = to.params.id || null;
+            if (to.path !== '/login') {
+                if (!appManager.user) {
+                    next({ name: 'login', query: { id: channelId } });
+                    return;
+                } else {
+                    if (appManager.user.channelId != channelId) {
+                        console.log(`[Router] Changing channels: ${channelId}`);
+                        return appManager
+                            .loginOrCreateUser(appManager.user.email, channelId)
+                            .then(
+                                () => {
+                                    console.log(`[Router] Logged In!`);
+                                    next();
+                                },
+                                ex => {
+                                    console.error(ex);
+                                    next();
+                                    // next({ name: 'login', query: { id: channelId } });
+                                }
+                            );
+                    }
+                }
             } else {
-                if (appManager.user.channelId != channelId) {
-                    console.log(`[Router] Changing channels: ${channelId}`);
-                    return appManager.loginOrCreateUser(appManager.user.email, channelId).then(() => {
-                        console.log(`[Router] Logged In!`);
-                        next();
-                    }, ex => {
-                        console.error(ex);
-                        next();
-                        // next({ name: 'login', query: { id: channelId } });
+                if (appManager.user) {
+                    next({
+                        name: 'home',
+                        params: { id: appManager.user.channelId },
                     });
+                    return;
                 }
             }
-        } else {
-            if (appManager.user) {
-                next({ name: 'home', params: { id: appManager.user.channelId }});
-                return;
-            }
+            next();
+        },
+        ex => {
+            console.error(ex);
+            next();
         }
-        next();
-    }, ex => {
-        console.error(ex);
-        next();
-    });
+    );
 });
 
 async function start() {
     const loading = new Vue({
-        render: createEle => createEle(Loading)
+        render: createEle => createEle(Loading),
     }).$mount('#loading');
 
     await appManager.initPromise;
     const app = new Vue({
         router,
-        render: createEle => createEle(App)
+        render: createEle => createEle(App),
     }).$mount('#app');
-
 }
 
 start();

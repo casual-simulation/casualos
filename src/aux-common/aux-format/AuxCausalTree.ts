@@ -1,14 +1,45 @@
 import { Weave } from '../causal-trees/Weave';
-import { AuxOp, FileOp, TagOp, InsertOp, ValueOp, DeleteOp, AuxOpType } from './AuxOpTypes';
+import {
+    AuxOp,
+    FileOp,
+    TagOp,
+    InsertOp,
+    ValueOp,
+    DeleteOp,
+    AuxOpType,
+} from './AuxOpTypes';
 import { CausalTree, CausalTreeOptions } from '../causal-trees/CausalTree';
-import { FilesState, FileEvent, PartialFile, Object, File, Workspace, tagsOnFile, getFileTag, hasValue, getTag, cleanFile } from '../Files';
+import {
+    FilesState,
+    FileEvent,
+    PartialFile,
+    Object,
+    File,
+    Workspace,
+    tagsOnFile,
+    getFileTag,
+    hasValue,
+    getTag,
+    cleanFile,
+} from '../Files';
 import { AuxReducer, AuxReducerMetadata } from './AuxReducer';
 import { root, file, tag, value, del, insert } from './AuxAtoms';
 import { AtomId, Atom, atomIdToString, atomId } from '../causal-trees/Atom';
 import { SiteInfo } from '../causal-trees/SiteIdInfo';
 import { StoredCausalTree } from '../causal-trees/StoredCausalTree';
-import { AuxState, AuxTagMetadata, AuxValueMetadata, AuxFile } from './AuxState';
-import { getTagMetadata, insertIntoTagValue, insertIntoTagName, deleteFromTagValue, deleteFromTagName } from './AuxTreeCalculations';
+import {
+    AuxState,
+    AuxTagMetadata,
+    AuxValueMetadata,
+    AuxFile,
+} from './AuxState';
+import {
+    getTagMetadata,
+    insertIntoTagValue,
+    insertIntoTagName,
+    deleteFromTagValue,
+    deleteFromTagName,
+} from './AuxTreeCalculations';
 import { flatMap, keys, isEqual } from 'lodash';
 import { merge } from '../utils';
 import { RejectedAtom } from '../causal-trees/RejectedAtom';
@@ -18,8 +49,11 @@ import { AddResult, mergeIntoBatch } from '../causal-trees/AddResult';
 /**
  * Defines a Causal Tree for aux files.
  */
-export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadata> {
-
+export class AuxCausalTree extends CausalTree<
+    AuxOp,
+    AuxState,
+    AuxReducerMetadata
+> {
     /**
      * Creates a new AUX Causal Tree.
      * @param tree The stored tree that this object should be constructed from.
@@ -71,7 +105,16 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
      * @param start The start index of the deletion. If not provided then the entire parent will be deleted.
      * @param end The end index of the deletion.
      */
-    delete(atom: Atom<FileOp> | Atom<TagOp> | Atom<InsertOp> | Atom<ValueOp> | AtomId, start?: number, end?: number) {
+    delete(
+        atom:
+            | Atom<FileOp>
+            | Atom<TagOp>
+            | Atom<InsertOp>
+            | Atom<ValueOp>
+            | AtomId,
+        start?: number,
+        end?: number
+    ) {
         return this.create(del(start, end), atom, 1);
     }
 
@@ -81,7 +124,11 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
      * @param text The text to insert.
      * @param atom The atom that the text should be inserted at.
      */
-    insert(index: number, text: string, atom: Atom<ValueOp> | Atom<TagOp> | Atom<InsertOp> | AtomId) {
+    insert(
+        index: number,
+        text: string,
+        atom: Atom<ValueOp> | Atom<TagOp> | Atom<InsertOp> | AtomId
+    ) {
         return this.create(insert(index, text), atom);
     }
 
@@ -89,10 +136,15 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
      * Inserts the given text into the given tag or value on the given file.
      * @param file The file that the text should be inserted into.
      * @param tag The tag that the text should be inserted into.
-     * @param text The text that should be inserted. 
+     * @param text The text that should be inserted.
      * @param index The index that the text should be inserted at.
      */
-    insertIntoTagValue(file: AuxFile, tag: string, text: string, index: number): Promise<AddResult<InsertOp>> {
+    insertIntoTagValue(
+        file: AuxFile,
+        tag: string,
+        text: string,
+        index: number
+    ): Promise<AddResult<InsertOp>> {
         const precalc = insertIntoTagValue(file, tag, text, index);
         return this.createFromPrecalculated(precalc);
     }
@@ -104,7 +156,12 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
      * @param text The text to insert into the tag name.
      * @param index The index that the text should be inserted at.
      */
-    insertIntoTagName(file: AuxFile, tag: string, text: string, index: number): Promise<AddResult<InsertOp>> {
+    insertIntoTagName(
+        file: AuxFile,
+        tag: string,
+        text: string,
+        index: number
+    ): Promise<AddResult<InsertOp>> {
         const precalc = insertIntoTagName(file, tag, text, index);
         return this.createFromPrecalculated(precalc);
     }
@@ -116,7 +173,12 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
      * @param index The index that the text should be deleted at.
      * @param length The number of characters to delete.
      */
-    deleteFromTagValue(file: AuxFile, tag: string, index: number, length: number): Promise<AtomBatch<DeleteOp>> {
+    deleteFromTagValue(
+        file: AuxFile,
+        tag: string,
+        index: number,
+        length: number
+    ): Promise<AtomBatch<DeleteOp>> {
         const precalc = deleteFromTagValue(file, tag, index, length);
         return this.createManyFromPrecalculated(precalc);
     }
@@ -126,9 +188,14 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
      * Note that after inserting the text the tag name will change.
      * @param tag The tag whose name should be updated.
      * @param index The index that the characters should be deleted from.
-     * @param length The number of characters to delete. 
+     * @param length The number of characters to delete.
      */
-    deleteFromTagName(file: AuxFile, tag: string, index: number, length: number): Promise<AtomBatch<DeleteOp>> {
+    deleteFromTagName(
+        file: AuxFile,
+        tag: string,
+        index: number,
+        length: number
+    ): Promise<AtomBatch<DeleteOp>> {
         const precalc = deleteFromTagName(file, tag, index, length);
         return this.createManyFromPrecalculated(precalc);
     }
@@ -149,14 +216,14 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
                 if (e.type === 'file_updated') {
                     const file = this.value[e.id];
                     batch = await this.updateFile(file, e.update);
-                } else if(e.type === 'file_added') {
+                } else if (e.type === 'file_added') {
                     batch = await this.addFile(e.file);
-                } else if(e.type === 'file_removed') {
+                } else if (e.type === 'file_removed') {
                     const file = this.value[e.id];
                     batch = await this.removeFile(file);
-                } else if(e.type === 'transaction') {
+                } else if (e.type === 'transaction') {
                     batch = await this.addEvents(e.events);
-                } else if(e.type === 'apply_state') {
+                } else if (e.type === 'apply_state') {
                     batch = await this.applyState(e.state, this.value);
                 }
 
@@ -168,11 +235,11 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
 
             return {
                 added,
-                rejected
+                rejected,
             };
         });
     }
-    
+
     /**
      * Removes the given file from the state by marking it as deleted.
      * @param file The file to remove.
@@ -181,23 +248,23 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
         if (!file) {
             return {
                 added: [],
-                rejected: []
+                rejected: [],
             };
         }
         const result = await this.delete(file.metadata.ref);
         if (result.added) {
             return {
                 added: [result.added],
-                rejected: []
+                rejected: [],
             };
         } else {
             return {
                 added: [],
-                rejected: [result.rejected]
+                rejected: [result.rejected],
             };
         }
     }
-    
+
     /**
      * Adds the given file to the tree.
      * @param file The file to add to the tree.
@@ -208,7 +275,7 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
             if (f.rejected) {
                 return {
                     added: [],
-                    rejected: [f.rejected]
+                    rejected: [f.rejected],
                 };
             }
             let tags = tagsOnFile(file);
@@ -220,7 +287,7 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
                 const val = await this.val(file.tags[t], tag.added);
                 return [tag, val];
             });
-            
+
             const results = await Promise.all(promises);
             const refs = flatMap(results);
             return mergeIntoBatch<AuxOp>([f, ...refs]);
@@ -232,7 +299,10 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
      * @param file The file to update.
      * @param newData The new data to include in the file.
      */
-    async updateFile(file: AuxFile, newData: PartialFile): Promise<AtomBatch<AuxOp>> {
+    async updateFile(
+        file: AuxFile,
+        newData: PartialFile
+    ): Promise<AtomBatch<AuxOp>> {
         return await this.batch(async () => {
             let tags = tagsOnFile(newData);
             let promises = tags.map(async t => {
@@ -240,7 +310,12 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
                 let newVal = getTag(newData, t);
                 if (tagMeta) {
                     const oldVal = getFileTag(file, t);
-                    if (newVal && typeof newVal === 'object' && !Array.isArray(newVal) && !Array.isArray(oldVal)) {
+                    if (
+                        newVal &&
+                        typeof newVal === 'object' &&
+                        !Array.isArray(newVal) &&
+                        !Array.isArray(oldVal)
+                    ) {
                         newVal = merge(oldVal, newVal);
                     }
 
@@ -270,7 +345,7 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
 
             return {
                 added,
-                rejected
+                rejected,
             };
         });
     }
@@ -281,7 +356,10 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
      * @param state The state to add/update in the tree.
      * @param value The optional precalculated value to use for resolving tree references.
      */
-    async applyState(state: FilesState, value?: AuxState): Promise<AtomBatch<AuxOp>> {
+    async applyState(
+        state: FilesState,
+        value?: AuxState
+    ): Promise<AtomBatch<AuxOp>> {
         value = value || this.value;
         const files = keys(state);
         const promises = files.map(id => {
@@ -299,7 +377,7 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
 
         return {
             added,
-            rejected
+            rejected,
         };
     }
 
@@ -317,8 +395,16 @@ export class AuxCausalTree extends CausalTree<AuxOp, AuxState, AuxReducerMetadat
                 for (let j = 0; j < newlyRemoved.length; j++) {
                     const r = newlyRemoved[j];
                     if (r.value.type < AuxOpType.value) {
-                        console.error(`[AuxCausalTree] Removed atom of type: ${r.value.type} (${atomIdToString(r.id)}) incorrectly.`);
-                        console.error(`[AuxCausalTree] This happened while removing ${atomIdToString(atom.id)}`);
+                        console.error(
+                            `[AuxCausalTree] Removed atom of type: ${
+                                r.value.type
+                            } (${atomIdToString(r.id)}) incorrectly.`
+                        );
+                        console.error(
+                            `[AuxCausalTree] This happened while removing ${atomIdToString(
+                                atom.id
+                            )}`
+                        );
                         debugger;
                     }
                 }

@@ -1,6 +1,17 @@
 import { Physics } from '../../../shared/scene/Physics';
-import { File, PartialFile, fileAdded, FileEvent } from '@casual-simulation/aux-common/Files';
-import { createFile, FileCalculationContext, getDiffUpdate, isDiff, CREATE_ACTION_NAME } from '@casual-simulation/aux-common/Files/FileCalculations';
+import {
+    File,
+    PartialFile,
+    fileAdded,
+    FileEvent,
+} from '@casual-simulation/aux-common/Files';
+import {
+    createFile,
+    FileCalculationContext,
+    getDiffUpdate,
+    isDiff,
+    CREATE_ACTION_NAME,
+} from '@casual-simulation/aux-common/Files/FileCalculations';
 import { appManager } from '../../../shared/AppManager';
 import { merge } from '@casual-simulation/aux-common/utils';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
@@ -12,7 +23,6 @@ import { BuilderInteractionManager } from '../BuilderInteractionManager';
  * New File Drag Operation handles dragging of new files from the file queue.
  */
 export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
-
     public static readonly FreeDragDistance: number = 6;
 
     private _fileAdded: boolean;
@@ -21,13 +31,17 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
     /**
      * Create a new drag rules.
      */
-    constructor(gameView: GameView, interaction: BuilderInteractionManager, duplicatedFile: File, originalFile: File) {
+    constructor(
+        gameView: GameView,
+        interaction: BuilderInteractionManager,
+        duplicatedFile: File,
+        originalFile: File
+    ) {
         super(gameView, interaction, [duplicatedFile], null);
     }
 
     protected _updateFile(file: File, data: PartialFile): FileEvent {
         if (!this._fileAdded) {
-
             if (this._initialDragMesh) {
                 this._releaseDragMesh(this._initialDragMesh);
                 this._initialDragMesh = null;
@@ -68,8 +82,14 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
                 this._initialDragMesh = this._createDragMesh(calc, this._file);
             }
 
-            const mouseDir = Physics.screenPosToRay(this._gameView.getInput().getMouseScreenPos(), this._gameView.getMainCamera());
-            let worldPos = Physics.pointOnRay(mouseDir, BuilderNewFileDragOperation.FreeDragDistance);
+            const mouseDir = Physics.screenPosToRay(
+                this._gameView.getInput().getMouseScreenPos(),
+                this._gameView.getMainCamera()
+            );
+            let worldPos = Physics.pointOnRay(
+                mouseDir,
+                BuilderNewFileDragOperation.FreeDragDistance
+            );
             this._initialDragMesh.position.copy(worldPos);
             this._initialDragMesh.updateMatrixWorld(true);
         } else {
