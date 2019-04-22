@@ -11,7 +11,7 @@ let folders = [
 
 let patterns = [`/**/*.js`, `/**/*.js.map`, `/**/*.d.ts`];
 
-let negativePatterns = [`/**/gulpfile.js`, `/typings/**/*`];
+let negativePatterns = [`/typings/**/*`];
 
 let globs = [];
 folders.forEach(f => {
@@ -25,6 +25,5 @@ folders.forEach(f => {
 });
 
 gulp.task('clean', function() {
-    console.log(globs);
-    // return del();
+    return del(globs);
 });
