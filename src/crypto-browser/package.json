@@ -1,0 +1,39 @@
+{
+    "name": "@casual-simulation/crypto-browser",
+    "version": "0.4.15",
+    "description": "An implemenation of @casual-simulation/crypto for web browsers.",
+    "keywords": [
+        "crypto"
+    ],
+    "author": "Casual Simulation, Inc.",
+    "homepage": "https://github.com/casual-simulation/aux",
+    "license": "MIT",
+    "main": "index.js",
+    "types": "index.d.ts",
+    "module": "index.js",
+    "files": [
+        "/README.md",
+        "/LICENSE.txt",
+        "**/*.js",
+        "**/*.js.map",
+        "**/*.d.ts"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/casual-simulation/aux.git"
+    },
+    "scripts": {
+        "watch": "tsc --watch",
+        "watch:player": "npm run watch",
+        "build": "tsc",
+        "build:docs": "typedoc --mode file --excludeNotExported --out ../../docs/crypto-browser .",
+        "test": "jest",
+        "test:watch": "jest --watchAll"
+    },
+    "bugs": {
+        "url": "https://github.com/casual-simulation/aux/issues"
+    },
+    "dependencies": {
+        "@casual-simulation/crypto": "^0.4.15"
+    }
+}
