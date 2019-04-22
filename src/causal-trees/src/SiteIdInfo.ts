@@ -1,4 +1,4 @@
-import { SignatureAlgorithmType } from '../crypto';
+import { SignatureAlgorithmType } from '@casual-simulation/crypto';
 
 /**
  * Gets information about a reserved site.

@@ -1,4 +1,4 @@
-import { getHashBuffer } from '@casual-simulation/causal-trees';
+import { getHashBuffer } from '@casual-simulation/crypto';
 import { padZero, byteToHex } from '../SharedUtils';
 
 /**

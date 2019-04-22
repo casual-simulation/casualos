@@ -1,6 +1,6 @@
 import { AtomOp, Atom, AtomId, atom, atomId } from './Atom';
 import { SiteInfo } from './SiteIdInfo';
-import { PrivateCryptoKey } from '../crypto';
+import { PrivateCryptoKey } from '@casual-simulation/crypto';
 import { AtomValidator } from './AtomValidator';
 
 /**

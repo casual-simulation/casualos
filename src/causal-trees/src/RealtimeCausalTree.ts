@@ -20,7 +20,7 @@ import {
 import { maxBy } from 'lodash';
 import { storedTree, StoredCausalTree } from './StoredCausalTree';
 import { WeaveVersion, versionsEqual } from './WeaveVersion';
-import { PrivateCryptoKey } from '../crypto';
+import { PrivateCryptoKey } from '@casual-simulation/crypto';
 import { RejectedAtom } from './RejectedAtom';
 import { LoadingProgressCallback } from './LoadingProgress';
 

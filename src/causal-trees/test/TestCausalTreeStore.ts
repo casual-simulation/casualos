@@ -1,13 +1,10 @@
-import {
-    CausalTreeStore,
-    StoredCryptoKeys,
-} from '../causal-trees/CausalTreeStore';
-import { AtomOp, Atom } from '../causal-trees/Atom';
+import { CausalTreeStore, StoredCryptoKeys } from '../src/CausalTreeStore';
+import { AtomOp, Atom } from '../src/Atom';
 import {
     StoredCausalTree,
     WeaveReference,
     upgrade,
-} from '../causal-trees/StoredCausalTree';
+} from '../src/StoredCausalTree';
 
 export class TestCausalTreeStore implements CausalTreeStore {
     private _store: {

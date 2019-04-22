@@ -1,9 +1,10 @@
 {
-    "name": "@casual-simulation/causal-trees",
+    "name": "@casual-simulation/crypto",
     "version": "0.4.14",
-    "description": "Create persistent, distributed, realtime, and conflict-free data types.",
+    "description": "Crypto helpers used by AUX",
     "keywords": [
-        "crdt"
+        "cryptography",
+        "crypto"
     ],
     "author": "Casual Simulation, Inc.",
     "homepage": "https://github.com/casual-simulation/aux",
@@ -31,18 +32,14 @@
         "test": "jest",
         "test:watch": "jest --watchAll"
     },
-    "publishConfig": {
-        "access": "public"
-    },
     "bugs": {
         "url": "https://github.com/casual-simulation/aux/issues"
     },
     "dependencies": {
-        "@casual-simulation/crypto": "^0.4.14",
-        "@types/lodash": "^4.14.118",
-        "@types/base64-js": "^1.2.5",
-        "base64-js": "^1.3.0",
-        "rxjs": "^6.4.0",
-        "lodash": "^4.17.11"
+        "@types/fast-json-stable-stringify": "^2.0.0",
+        "@types/sha.js": "^2.4.0",
+        "fast-json-stable-stringify": "^2.0.0",
+        "sha.js": "^2.4.11",
+        "base64-js": "^1.3.0"
     }
 }

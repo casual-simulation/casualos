@@ -9,7 +9,7 @@ import { SiteVersionInfo } from './SiteVersionInfo';
 import { PrecalculatedOp } from './PrecalculatedOp';
 import { Subject } from 'rxjs';
 import { AtomValidator } from './AtomValidator';
-import { PrivateCryptoKey, PublicCryptoKey } from '../crypto';
+import { PrivateCryptoKey, PublicCryptoKey } from '@casual-simulation/crypto';
 import { RejectedAtom } from './RejectedAtom';
 import { AddResult, mergeIntoBatch } from './AddResult';
 import { AtomBatch } from './AtomBatch';

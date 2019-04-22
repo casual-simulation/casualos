@@ -1,4 +1,4 @@
-import { getHashBuffer } from '../crypto/Hash';
+import { getHashBuffer } from '@casual-simulation/crypto';
 
 /**
  * Defines an interface for normal JS objects that represent Atom IDs.

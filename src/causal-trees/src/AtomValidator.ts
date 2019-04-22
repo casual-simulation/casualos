@@ -2,7 +2,7 @@ import {
     SigningCryptoImpl,
     PrivateCryptoKey,
     PublicCryptoKey,
-} from '../crypto';
+} from '@casual-simulation/crypto';
 import { AtomOp, Atom } from './Atom';
 import stringify from 'fast-json-stable-stringify';
 import { toByteArray, fromByteArray } from 'base64-js';

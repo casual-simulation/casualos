@@ -1,8 +1,8 @@
 import { atom, atomId, AtomOp } from './Atom';
 import { AtomValidator } from './AtomValidator';
-import { TestCryptoImpl } from '../crypto/test/TestCryptoImpl';
+import { TestCryptoImpl } from '@casual-simulation/crypto/test';
 import { toByteArray, fromByteArray } from 'base64-js';
-import { PublicCryptoKey } from '../crypto';
+import { PublicCryptoKey } from '@casual-simulation/crypto';
 
 describe('AtomValidator', () => {
     class Op implements AtomOp {

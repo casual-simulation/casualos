@@ -8,7 +8,7 @@ import {
     formatPrivatePEMKey,
     parsePublicPEMKey,
     parsePrivatePEMKey,
-} from '@casual-simulation/causal-trees/crypto';
+} from '@casual-simulation/crypto';
 
 // DEV NOTE:
 // It kinda goes without saying, but change this code as little as possible.

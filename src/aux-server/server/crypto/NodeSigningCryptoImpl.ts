@@ -4,7 +4,7 @@ import {
     PublicCryptoKey,
     SigningCryptoKey,
     SignatureAlgorithmType,
-} from '@casual-simulation/causal-trees/crypto';
+} from '@casual-simulation/crypto';
 import {
     nodeSignatureToWebSignature,
     webSignatureToNodeSignature,

@@ -48,7 +48,7 @@ import {
 import { FileHelper } from './FileHelper';
 import { SelectionManager } from './SelectionManager';
 import { RecentFilesManager } from './RecentFilesManager';
-import { ProgressStatus } from '@casual-simulation/causal-trees/causal-trees/LoadingProgress';
+import { ProgressStatus } from '@casual-simulation/causal-trees';
 
 export interface SelectedFilesUpdatedEvent {
     files: AuxObject[];

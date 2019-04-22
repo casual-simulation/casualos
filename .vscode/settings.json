@@ -8,7 +8,8 @@
         "**/*.js": { "when": "$(basename).ts" },
         "**/*.js.map": true,
         "src/aux-common/**/*.d.ts": { "when": "$(basename).ts" },
-        "src/causal-trees/**/*.d.ts": { "when": "$(basename).ts" }
+        "src/causal-trees/**/*.d.ts": { "when": "$(basename).ts" },
+        "src/crypto/**/*.d.ts": { "when": "$(basename).ts" }
     },
     "editor.insertSpaces": true,
     "editor.tabSize": 4,

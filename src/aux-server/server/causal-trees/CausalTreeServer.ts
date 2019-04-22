@@ -22,7 +22,7 @@ import {
     PrivateCryptoKey,
     PublicCryptoKey,
     SigningCryptoImpl,
-} from '@casual-simulation/causal-trees/crypto';
+} from '@casual-simulation/crypto';
 import { NodeSigningCryptoImpl } from '../crypto/NodeSigningCryptoImpl';
 import { AtomValidator } from '@casual-simulation/causal-trees';
 import { SubscriptionLike } from 'rxjs';
