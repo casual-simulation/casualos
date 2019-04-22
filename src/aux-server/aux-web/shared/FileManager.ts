@@ -48,6 +48,7 @@ import {
 import { FileHelper } from './FileHelper';
 import { SelectionManager } from './SelectionManager';
 import { RecentFilesManager } from './RecentFilesManager';
+import { ProgressStatus } from '@casual-simulation/causal-trees/causal-trees/LoadingProgress';
 
 export interface SelectedFilesUpdatedEvent {
     files: AuxObject[];
@@ -441,13 +442,17 @@ export class FileManager {
 
             loadingProgress.set(20, 'Loading tree from server...', null);
             const onTreeInitProgress: LoadingProgressCallback = (
-                treeProgress: LoadingProgress
+                status: ProgressStatus
             ) => {
-                loadingProgress.set(
-                    lerp(20, 70, treeProgress.progress / 100),
-                    treeProgress.status,
-                    treeProgress.error
-                );
+                let percent = status.progressPercent
+                    ? lerp(20, 70, status.progressPercent)
+                    : loadingProgress.progress;
+                let message = status.message
+                    ? status.message
+                    : loadingProgress.status;
+                let error = status.error ? status.error : loadingProgress.error;
+
+                loadingProgress.set(percent, message, error);
             };
             await this._aux.init(onTreeInitProgress);
             await this._aux.waitToGetTreeFromServer();
