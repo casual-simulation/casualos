@@ -4,7 +4,8 @@
         "baseUrl": ".",
         "outDir": ".",
         "declaration": true,
-        "composite": true
+        "composite": true,
+        "incremental": true
     },
     "include": ["./**/*"],
     "exclude": ["node_modules", "lib", "**/*.spec.ts"],

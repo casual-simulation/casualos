@@ -3,7 +3,8 @@
     "compilerOptions": {
         "baseUrl": ".",
         "outDir": ".",
-        "declaration": true
+        "declaration": true,
+        "incremental": true
     },
     "include": ["./**/*"],
     "exclude": ["node_modules", "lib", "**/*.spec.ts"],

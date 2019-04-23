@@ -12,7 +12,7 @@ let folders = [
     `${__dirname}/src/crypto-browser`,
 ];
 
-let patterns = [`/**/*.js`, `/**/*.js.map`, `/**/*.d.ts`];
+let patterns = [`/**/*.js`, `/**/*.js.map`, `/**/*.d.ts`, `/*.tsbuildinfo`];
 
 let negativePatterns = [`/typings/**/*`];
 

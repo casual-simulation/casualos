@@ -4,7 +4,8 @@
         "baseUrl": ".",
         "outDir": ".",
         "declaration": true,
-        "composite": true
+        "composite": true,
+        "incremental": true
     },
     "exclude": ["node_modules", "lib", "**/*.spec.ts"],
     "references": [{ "path": "../causal-trees" }, { "path": "../crypto" }]
