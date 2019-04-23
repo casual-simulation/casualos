@@ -5,7 +5,7 @@ import {
     LocalEvent,
 } from '@casual-simulation/aux-common';
 import { FileHelper } from './FileHelper';
-import { storedTree, site } from '@casual-simulation/aux-common/causal-trees';
+import { storedTree, site } from '@casual-simulation/causal-trees';
 
 describe('FileHelper', () => {
     let userId: string = 'user';

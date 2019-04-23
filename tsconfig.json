@@ -1,16 +1,19 @@
 {
+    "extends": "./tsconfig.base.json",
     "compilerOptions": {
-        "outDir": "./temp/",
-        "baseUrl": ".",
-        "noImplicitAny": true,
-        "module": "esNext",
-        "esModuleInterop": true,
-        "target": "es6",
-        "allowJs": false,
-        "moduleResolution": "node",
-        "sourceMap": true,
-        "lib": ["es2015", "es5", "dom"],
-        "experimentalDecorators": true,
-        "typeRoots": ["node_modules/@types", "./typings"]
-    }
+        "typeRoots": [
+            "node_modules/@types",
+            "src/aux-server/typings",
+            "src/crypto-node/typings"
+        ]
+    },
+    "files": [],
+    "references": [
+        { "path": "./src/crypto" },
+        { "path": "./src/aux-common" },
+        { "path": "./src/causal-trees" },
+        { "path": "./src/causal-tree-server-socketio" },
+        { "path": "./src/crypto-browser" },
+        { "path": "./src/crypto-node" }
+    ]
 }

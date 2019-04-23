@@ -1,4 +1,3 @@
-import { Weave } from '../causal-trees/Weave';
 import { AuxOp } from './AuxOpTypes';
 import {
     AuxReducer,
@@ -6,10 +5,13 @@ import {
     calculateSequenceRefs,
     AuxReducerMetadata,
 } from './AuxReducer';
-import { WeaveTraverser } from '../causal-trees/WeaveTraverser';
+import {
+    Weave,
+    site,
+    storedTree,
+    WeaveTraverser,
+} from '@casual-simulation/causal-trees';
 import { AuxCausalTree } from './AuxCausalTree';
-import { storedTree } from '../causal-trees/StoredCausalTree';
-import { site } from '../causal-trees/SiteIdInfo';
 import { AuxSequenceMetadata } from './AuxState';
 
 describe('AuxReducer', () => {

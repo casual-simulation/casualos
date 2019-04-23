@@ -1,0 +1,12 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "baseUrl": ".",
+        "outDir": ".",
+        "declaration": true,
+        "composite": true,
+        "incremental": true
+    },
+    "exclude": ["node_modules", "lib", "**/*.spec.ts"],
+    "references": [{ "path": "../crypto" }]
+}

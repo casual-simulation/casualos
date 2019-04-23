@@ -1,4 +1,4 @@
-import { AtomOp } from '../causal-trees/Atom';
+import { AtomOp } from '@casual-simulation/causal-trees';
 
 /**
  * The list of operation types.
