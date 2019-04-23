@@ -67,6 +67,14 @@
                         >Must be online &amp; synced to clear the simulation.</md-tooltip
                     >
                 </md-list-item>
+                <router-link
+                    v-if="dev && getUser() != null"
+                    tag="md-list-item"
+                    :to="{ name: 'aux-debug', params: { id: session } }"
+                >
+                    <md-icon>bug_report</md-icon>
+                    <span class="md-list-item-text">Debug</span>
+                </router-link>
                 <md-list-item @click.right="toggleOnlineOffline()">
                     <md-icon id="forced-offline-error" v-if="forcedOffline()">error</md-icon>
                     <md-icon id="synced-checkmark" v-else-if="synced">cloud_done</md-icon>
@@ -89,14 +97,6 @@
                     <md-icon>update</md-icon>
                     <span class="md-list-item-text">An new version is available!</span>
                 </md-list-item>
-                <router-link
-                    v-if="dev && getUser() != null"
-                    tag="md-list-item"
-                    :to="{ name: 'aux-debug', params: { id: session } }"
-                >
-                    <md-icon>bug_report</md-icon>
-                    <span class="md-list-item-text">Debug</span>
-                </router-link>
                 <md-list-item v-for="item in extraItems" :key="item.id" @click="item.click()">
                     <md-icon v-if="item.icon">{{ item.icon }}</md-icon>
                     <span class="md-list-item-text">{{ item.text }}</span>
