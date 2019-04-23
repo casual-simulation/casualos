@@ -10,15 +10,18 @@
     "author": "Casual Simulation, Inc.",
     "homepage": "https://github.com/casual-simulation/aux",
     "license": "MIT",
-    "main": "index.js",
-    "types": "index.d.ts",
-    "module": "index.js",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "module": "lib/index.js",
+    "directories": {
+        "lib": "lib"
+    },
     "files": [
         "/README.md",
         "/LICENSE.txt",
-        "**/*.js",
-        "**/*.js.map",
-        "**/*.d.ts"
+        "lib/**/*.js",
+        "lib/**/*.js.map",
+        "lib/**/*.d.ts"
     ],
     "repository": {
         "type": "git",

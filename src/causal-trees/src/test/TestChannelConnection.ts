@@ -1,6 +1,6 @@
 import { Observable, Subject } from 'rxjs';
-import { RealtimeChannelConnection } from '../src/RealtimeChannelConnection';
-import { ConnectionEvent } from '../src/ConnectionEvent';
+import { RealtimeChannelConnection } from '../RealtimeChannelConnection';
+import { ConnectionEvent } from '../ConnectionEvent';
 
 export interface TestChannelRequest {
     name: string;

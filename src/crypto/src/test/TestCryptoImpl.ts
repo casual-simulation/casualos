@@ -3,8 +3,8 @@ import {
     PrivateCryptoKey,
     PublicCryptoKey,
     SigningCryptoKey,
-} from '../src/CryptoImpl';
-import { SignatureAlgorithmType } from '../src/SignatureAlgorithm';
+} from '../CryptoImpl';
+import { SignatureAlgorithmType } from '../SignatureAlgorithm';
 
 export class TestCryptoImpl implements SigningCryptoImpl {
     valid: boolean = false;
