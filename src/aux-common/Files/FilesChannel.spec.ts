@@ -33,9 +33,9 @@ describe('FilesChannel', () => {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
                         'onCombine(#name:"Joe")':
-                            'clone(null, this);destroy(this);destroy(that);',
+                            'create(null, this);destroy(this);destroy(that);',
                         'onCombine(#name:"Friend")':
-                            'clone(null, this, { bad: true })',
+                            'create(null, this, { bad: true })',
                     },
                 },
                 thatFile: {
@@ -65,9 +65,9 @@ describe('FilesChannel', () => {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
                         'onCombine(#name:"Joe")':
-                            'clone(null, this);destroy(this);destroy(that);',
+                            'create(null, this);destroy(this);destroy(that);',
                         'onCombine(#name:"Friend")':
-                            'clone(null, this, { bad: true })',
+                            'create(null, this, { bad: true })',
 
                         // the new file is not destroyed
                     },
@@ -87,7 +87,7 @@ describe('FilesChannel', () => {
                         num: 15,
                         formula: '=this.num',
                         'onCombine(#name:"Friend")':
-                            'clone(null, this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
+                            'create(null, this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
                     },
                 },
                 thatFile: {
@@ -119,7 +119,7 @@ describe('FilesChannel', () => {
                         num: 15,
                         formula: '=this.num',
                         'onCombine(#name:"Friend")':
-                            'clone(null, this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
+                            'create(null, this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
                         name: 'Friend',
                         testFormula: '=this.name',
 
@@ -138,7 +138,7 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef(#name:"Joe")': 'clone(null, this)',
+                        'abcdef(#name:"Joe")': 'create(null, this)',
                     },
                 },
                 thatFile: {
@@ -164,7 +164,7 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef(#name:"Joe")': 'clone(null, this)',
+                        'abcdef(#name:"Joe")': 'create(null, this)',
                     },
                 }),
             ]);
@@ -177,7 +177,7 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef()': 'clone(null, this)',
+                        'abcdef()': 'create(null, this)',
                     },
                 },
                 thatFile: {
@@ -203,7 +203,7 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef()': 'clone(null, this)',
+                        'abcdef()': 'create(null, this)',
                     },
                 }),
             ]);
@@ -1108,193 +1108,21 @@ describe('FilesChannel', () => {
                     }),
                 ]);
             });
-        });
 
-        describe('clone()', () => {
-            it('should create a new file with aux._creator set to the given files ID', () => {
-                const state: FilesState = {
-                    thisFile: {
-                        id: 'thisFile',
-                        tags: {
-                            'test()': 'clone(this, { abc: "def" })',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
-                const result = calculateActionEvents(state, fileAction);
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    fileAdded({
-                        id: 'uuid-0',
-                        tags: {
-                            abc: 'def',
-                            'test()': 'clone(this, { abc: "def" })',
-                            'aux._creator': 'thisFile',
-                        },
-                    }),
-                ]);
-            });
-
-            it('should return the created file', () => {
+            it('should support arrays of diffs as arguments', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'this.newFileId = clone(null, this, { abc: "def" }).id',
+                                'this.num = create("thisFile", [ { hello: true }, { hello: false } ]).length',
                         },
                     },
                 };
 
                 // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
-                const result = calculateActionEvents(state, fileAction);
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    fileAdded({
-                        id: 'uuid-0',
-                        tags: {
-                            'test()':
-                                'this.newFileId = clone(null, this, { abc: "def" }).id',
-                            abc: 'def',
-                        },
-                    }),
-                    fileUpdated('thisFile', {
-                        tags: {
-                            newFileId: 'uuid-0',
-                        },
-                    }),
-                ]);
-            });
-
-            it('should support modifying the returned file', () => {
-                const state: FilesState = {
-                    thisFile: {
-                        id: 'thisFile',
-                        tags: {
-                            'test()':
-                                'let newFile = clone(null, this, { abc: "def" }); newFile.fun = true; newFile.num = 123;',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
-                const result = calculateActionEvents(state, fileAction);
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    fileAdded({
-                        id: 'uuid-0',
-                        tags: {
-                            'test()':
-                                'let newFile = clone(null, this, { abc: "def" }); newFile.fun = true; newFile.num = 123;',
-                            abc: 'def',
-                        },
-                    }),
-                    fileUpdated('uuid-0', {
-                        tags: {
-                            fun: true,
-                            num: 123,
-                        },
-                    }),
-                ]);
-            });
-
-            it('should add the new file to formulas', () => {
-                const state: FilesState = {
-                    thisFile: {
-                        id: 'thisFile',
-                        tags: {
-                            'test()':
-                                'clone(null, this, { name: "bob" }); this.fileId = @name("bob").id',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
-                const result = calculateActionEvents(state, fileAction);
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    fileAdded({
-                        id: 'uuid-0',
-                        tags: {
-                            'test()':
-                                'clone(null, this, { name: "bob" }); this.fileId = @name("bob").id',
-                            name: 'bob',
-                        },
-                    }),
-                    fileUpdated('thisFile', {
-                        tags: {
-                            fileId: 'uuid-0',
-                        },
-                    }),
-                ]);
-            });
-
-            it('should support formulas on the new file', () => {
-                const state: FilesState = {
-                    thisFile: {
-                        id: 'thisFile',
-                        tags: {
-                            'test()':
-                                'let newFile = clone(null, this, { formula: "=this.num", num: 100 }); this.result = newFile.formula;',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
-                const result = calculateActionEvents(state, fileAction);
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    fileAdded({
-                        id: 'uuid-0',
-                        tags: {
-                            'test()':
-                                'let newFile = clone(null, this, { formula: "=this.num", num: 100 }); this.result = newFile.formula;',
-                            num: 100,
-                            formula: '=this.num',
-                        },
-                    }),
-                    fileUpdated('thisFile', {
-                        tags: {
-                            result: 100,
-                        },
-                    }),
-                ]);
-            });
-
-            it('should support using files for the creator', () => {
-                const state: FilesState = {
-                    thisFile: {
-                        id: 'thisFile',
-                        tags: {
-                            'test()':
-                                'let newFile = clone(this, this, { formula: "=this.num", num: 100 });',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
+                let num = 0;
+                uuidMock.mockImplementation(() => `uuid-${num++}`);
                 const fileAction = action('test', ['thisFile']);
                 const result = calculateActionEvents(state, fileAction);
 
@@ -1305,125 +1133,38 @@ describe('FilesChannel', () => {
                         id: 'uuid-0',
                         tags: {
                             'aux._creator': 'thisFile',
-                            'test()':
-                                'let newFile = clone(this, this, { formula: "=this.num", num: 100 });',
-                            num: 100,
-                            formula: '=this.num',
-                        },
-                    }),
-                ]);
-            });
-
-            it('should clean proxy objects', () => {
-                const state: FilesState = {
-                    thisFile: {
-                        id: 'thisFile',
-                        tags: {
-                            num: 100,
-                            'test()':
-                                'let newFile = clone(this, this, { abc: this.num });',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
-                const result = calculateActionEvents(state, fileAction);
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    fileAdded({
-                        id: 'uuid-0',
-                        tags: {
-                            'aux._creator': 'thisFile',
-                            'test()':
-                                'let newFile = clone(this, this, { abc: this.num });',
-                            abc: 100,
-                            num: 100,
-                        },
-                    }),
-                ]);
-
-                const event = result.events[0] as FileAddedEvent;
-                const parent = event.file.tags['aux._creator'] as any;
-                const abc = event.file.tags['abc'] as any;
-                expect(parent[isProxy]).toBeFalsy();
-                expect(abc[isProxy]).toBeFalsy();
-            });
-
-            it('should support an array of files to clone', () => {
-                const state: FilesState = {
-                    thisFile: {
-                        id: 'thisFile',
-                        tags: {
-                            'test()':
-                                'let newFile = clone(@clone, { abc: "def" });',
-                        },
-                    },
-                    file1: {
-                        id: 'file1',
-                        tags: {
-                            clone: true,
-                            test1: true,
-                        },
-                    },
-                    file2: {
-                        id: 'file2',
-                        tags: {
-                            clone: true,
-                            test2: true,
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                let id = 0;
-                uuidMock.mockImplementation(() => {
-                    return `uuid-${id++}`;
-                });
-                const fileAction = action('test', ['thisFile']);
-                const result = calculateActionEvents(state, fileAction);
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    fileAdded({
-                        id: 'uuid-0',
-                        tags: {
-                            'aux._creator': 'file1',
-                            clone: true,
-                            test1: true,
-                            abc: 'def',
+                            hello: true,
                         },
                     }),
                     fileAdded({
                         id: 'uuid-1',
                         tags: {
-                            'aux._creator': 'file2',
-                            clone: true,
-                            test2: true,
-                            abc: 'def',
+                            'aux._creator': 'thisFile',
+                            hello: false,
+                        },
+                    }),
+                    fileUpdated('thisFile', {
+                        tags: {
+                            num: 2,
                         },
                     }),
                 ]);
             });
 
-            it('should trigger onCreate() on the cloned file', () => {
+            it('should create every combination of diff', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            num: 1,
-                            'onCreate()': 'this.num = 100',
-                            'test()': 'clone(this, this, { abc: this.num });',
+                            'test()':
+                                'this.num = create("thisFile", [ { hello: true }, { hello: false } ], [ { wow: 1 }, { oh: "haha" }, { test: "a" } ]).length',
                         },
                     },
                 };
 
                 // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
+                let num = 0;
+                uuidMock.mockImplementation(() => `uuid-${num++}`);
                 const fileAction = action('test', ['thisFile']);
                 const result = calculateActionEvents(state, fileAction);
 
@@ -1434,15 +1175,105 @@ describe('FilesChannel', () => {
                         id: 'uuid-0',
                         tags: {
                             'aux._creator': 'thisFile',
-                            'onCreate()': 'this.num = 100',
-                            'test()': 'clone(this, this, { abc: this.num });',
-                            num: 1,
-                            abc: 1,
+                            hello: true,
+                            wow: 1,
                         },
                     }),
-                    fileUpdated('uuid-0', {
+                    fileAdded({
+                        id: 'uuid-1',
                         tags: {
-                            num: 100,
+                            'aux._creator': 'thisFile',
+                            hello: false,
+                            wow: 1,
+                        },
+                    }),
+                    fileAdded({
+                        id: 'uuid-2',
+                        tags: {
+                            'aux._creator': 'thisFile',
+                            hello: true,
+                            oh: 'haha',
+                        },
+                    }),
+                    fileAdded({
+                        id: 'uuid-3',
+                        tags: {
+                            'aux._creator': 'thisFile',
+                            hello: false,
+                            oh: 'haha',
+                        },
+                    }),
+                    fileAdded({
+                        id: 'uuid-4',
+                        tags: {
+                            'aux._creator': 'thisFile',
+                            hello: true,
+                            test: 'a',
+                        },
+                    }),
+                    fileAdded({
+                        id: 'uuid-5',
+                        tags: {
+                            'aux._creator': 'thisFile',
+                            hello: false,
+                            test: 'a',
+                        },
+                    }),
+                    fileUpdated('thisFile', {
+                        tags: {
+                            num: 6,
+                        },
+                    }),
+                ]);
+            });
+
+            it('should duplicate each of the files in the list', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'create("thisFile", @test(true))',
+                        },
+                    },
+                    thatFile: {
+                        id: 'thatFile',
+                        tags: {
+                            test: true,
+                            hello: true,
+                        },
+                    },
+                    otherFile: {
+                        id: 'otherFile',
+                        tags: {
+                            test: true,
+                            hello: false,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                let num = 0;
+                uuidMock.mockImplementation(() => `uuid-${num++}`);
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            'aux._creator': 'thisFile',
+                            test: true,
+                            hello: true,
+                        },
+                    }),
+                    fileAdded({
+                        id: 'uuid-1',
+                        tags: {
+                            'aux._creator': 'thisFile',
+                            test: true,
+                            hello: false,
                         },
                     }),
                 ]);

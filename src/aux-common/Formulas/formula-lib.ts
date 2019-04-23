@@ -268,76 +268,59 @@ function destroyChildren(id: string) {
  * Creates a new file that contains the given tags.
  * @param diffs The diffs that specify what tags to set on the file.
  */
-export function create(...diffs: FileDiff[]) {
-    let id = uuid();
+export function create(...diffs: (FileDiff | FileDiff[])[]) {
+    let variants: FileDiff[][] = new Array<FileDiff[]>(1);
+    variants[0] = [];
 
-    let file: File = {
-        id: id,
-        tags: {},
-    };
+    for (let i = 0; i < diffs.length; i++) {
+        let diff = diffs[i];
+        if (Array.isArray(diff)) {
+            let newVariants: FileDiff[][] = new Array<FileDiff[]>(
+                variants.length * diff.length
+            );
 
-    applyDiff(file.tags, ...diffs);
-    actions.push(fileAdded(file));
+            for (let b = 0; b < newVariants.length; b++) {
+                let diffIdx = Math.floor(b / variants.length);
+                let d = diff[diffIdx];
+                let variantIdx = b % variants.length;
+                let newVariant = variants[variantIdx].slice();
+                newVariant.push(d);
+                newVariants[b] = newVariant;
+            }
 
-    const ret = calc.sandbox.interface.addFile(file);
+            variants = newVariants;
+        } else {
+            for (let b = 0; b < variants.length; b++) {
+                variants[b].push(diff);
+            }
+        }
+    }
 
-    state = Object.assign({}, state, {
-        [id]: file,
+    let files: File[] = variants.map(v => {
+        let file = {
+            id: uuid(),
+            tags: {},
+        };
+        applyDiff(file.tags, ...v);
+        return file;
     });
 
-    event(CREATE_ACTION_NAME, [file]);
-    return ret;
-}
+    actions.push(...files.map(f => fileAdded(f)));
 
-/**
- * Creates a new file that contains tags from the given files or objects.
- * @param diffs The diffs to use for the new file's tags.
- */
-export function cloneFile(...diffs: FileDiff[]) {
-    let id = uuid();
+    let ret = new Array<FileProxy>(files.length);
+    for (let i = 0; i < files.length; i++) {
+        ret[i] = calc.sandbox.interface.addFile(files[i]);
+        state = Object.assign({}, state, {
+            [files[i].id]: files[i],
+        });
+    }
 
-    let newFile: File = {
-        id: id,
-        tags: {},
-    };
+    event(CREATE_ACTION_NAME, files);
 
-    applyDiff(newFile.tags, ...diffs);
-    actions.push(fileAdded(newFile));
-
-    const ret = calc.sandbox.interface.addFile(newFile);
-
-    state = Object.assign({}, state, {
-        [id]: newFile,
-    });
-
-    event(CREATE_ACTION_NAME, [newFile]);
-    return ret;
-}
-
-/**
- * Creates a new file that contains tags from and is parented under the given file.
- * @param file The file that the clone should be a child of.
- * @param data The files or objects to use for the new file's tags.
- */
-export function cloneFrom(file: FileProxy, ...data: FileDiff[]) {
-    let parent = file
-        ? {
-              'aux._creator': file.id,
-          }
-        : {};
-    return cloneFile(file, parent, ...data);
-}
-
-/**
- * Clones the given file or set of files and applies the given set of file diffs to them.
- * @param file The file or files to clone.
- * @param diffs The diffs to apply to the cloned files.
- */
-export function clone(file: FileProxy | FileProxy[], ...diffs: FileDiff[]) {
-    if (Array.isArray(file)) {
-        return file.map(f => cloneFrom(f, ...diffs));
+    if (ret.length === 1) {
+        return ret[0];
     } else {
-        return cloneFrom(file, ...diffs);
+        return ret;
     }
 }
 
@@ -657,7 +640,6 @@ export default {
     random,
     join,
     destroy,
-    clone,
     create: createFrom,
     combine,
     event,
