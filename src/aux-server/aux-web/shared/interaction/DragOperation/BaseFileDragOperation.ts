@@ -208,6 +208,7 @@ export abstract class BaseFileDragOperation implements IOperation {
             isMergeable(calc, objs[0]);
 
         const canCombine =
+            this._allowCombine() &&
             !canMerge &&
             objs.length === 1 &&
             files.length === 1 &&
@@ -328,6 +329,11 @@ export abstract class BaseFileDragOperation implements IOperation {
     //
     // Abstractions
     //
+
+    // A checked function to verify that the stacks can combine
+    protected _allowCombine(): boolean {
+        return true;
+    }
 
     protected abstract _onDrag(calc: FileCalculationContext): void;
 }

@@ -1,5 +1,18 @@
 # AUX Changelog
 
+## V0.4.16
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+
+    -   Restricted onCombine feature to only fire in aux-player and restrict it from happening on aux-builder.
+
+-   Bug Fixes
+    -   Stopped sheet closing bug from taking multiple clicks to reopen.
+
 ## V0.4.15
 
 ### Date: 04/22/2019
@@ -28,7 +41,7 @@
     -   Formatted all of the source files. (TS, JS, Vue, JSON, HTML, CSS)
     -   Added an option to the dropdown in aux-builder to jump to aux-player for the current context
     -   `formula-lib.ts` has added a `isPlayerInContext` function to determine if path is in the expected context in aux-player.
-    -   `formula-lib.ts` has changed `toTween` function to `toPlayerTween` for better clarity on the function's use.
+    -   `formula-lib.ts` has changed `tweenTo` function to `tweenPlayerTo` for better clarity on the function's use.
 
 ## V0.4.14
 

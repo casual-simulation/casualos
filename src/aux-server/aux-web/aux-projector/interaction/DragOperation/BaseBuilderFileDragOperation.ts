@@ -317,4 +317,8 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
 
         return mesh;
     }
+
+    protected _allowCombine(): boolean {
+        return false;
+    }
 }
