@@ -1,4 +1,12 @@
 {
+    "extends": "./tsconfig.base.json",
+    "compilerOptions": {
+        "typeRoots": [
+            "node_modules/@types",
+            "src/aux-server/typings",
+            "src/crypto-node/typings"
+        ]
+    },
     "files": [],
     "references": [
         { "path": "./src/crypto" },

@@ -5,11 +5,11 @@ const path = require('path');
 
 let folders = [
     `${__dirname}/src/aux-common`,
-    `${__dirname}/src/causal-trees/lib`,
-    `${__dirname}/src/causal-tree-server-socketio/lib`,
-    `${__dirname}/src/crypto/lib`,
-    `${__dirname}/src/crypto-node/lib`,
-    `${__dirname}/src/crypto-browser/lib`,
+    `${__dirname}/src/causal-trees`,
+    `${__dirname}/src/causal-tree-server-socketio`,
+    `${__dirname}/src/crypto`,
+    `${__dirname}/src/crypto-node`,
+    `${__dirname}/src/crypto-browser`,
 ];
 
 let patterns = [`/**/*.js`, `/**/*.js.map`, `/**/*.d.ts`];
