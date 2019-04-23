@@ -158,7 +158,7 @@ describe('FileCalculations', () => {
                 'context.y': 1,
             });
 
-            const context = createCalculationContext([file1, file2, file3]);
+            const context = createCalculationContext([file2, file1, file3]);
             const result = objectsAtContextGridPosition(context, 'context', {
                 x: -1,
                 y: 1,

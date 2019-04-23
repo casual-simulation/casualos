@@ -7,10 +7,18 @@
 ### Changes:
 
 -   Improvements
-
     -   Restricted onCombine feature to only fire in aux-player and restrict it from happening on aux-builder.
-    -   Added a zoom property to the `tweenPlayerTo` function to set a consistent zoom on file focus.
-
+    -   Removed the `clone()` function.
+    -   Improved the `create()` function to be able to accept lists of diffs/files.
+        -   This allows you to quickly create every combination of a set of diffs.
+        -   For example, `create(this, [ { hello: true }, { hello: false } ])` will create two files. One with `#hello: true` and one with `#hello: false`.
+        -   More complicated scenarios can be created as well:
+            -   `create(this, [ { row: 1 }, { row: 2 } ], [ { column: 1 }, { column: 2 } ])` will create four files for every possible combination between `row: 1|2` and `column: 1|2`.
+            -   `create(this, { 'aux.color': 'red' }, [ makeDiff.addToContext('context_1'), makeDiff.addToContext('context_2') ])` will create two files that are both red but are on different contexts.
+            -   `create(this, @aux.color('red'), { 'aux.color': 'green' })` will find every file that is red, duplicate them, and set the new files' colors to green.
+    -   Improved how we position files to prevent two files from appearing at the same index.
+        -   Creating new files at the same position will now automatically stack them.
+        -   Stacking is determined first by the index and second by the file ID.
 -   Bug Fixes
     -   Stopped sheet closing bug from taking multiple clicks to reopen.
 
