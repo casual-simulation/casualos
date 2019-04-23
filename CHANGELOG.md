@@ -9,6 +9,7 @@
 -   Improvements
 
     -   Restricted onCombine feature to only fire in aux-player and restrict it from happening on aux-builder.
+    -   Added a zoom property to the `tweenPlayerTo` function to set a consistent zoom on file focus.
 
 -   Bug Fixes
     -   Stopped sheet closing bug from taking multiple clicks to reopen.

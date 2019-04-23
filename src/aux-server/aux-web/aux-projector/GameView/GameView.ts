@@ -309,7 +309,7 @@ export default class GameView extends Vue implements IGameView {
      * Animates the main camera into position to view the given file ID.
      * @param fileId The ID of the file to view.
      */
-    public tweenCameraToFile(fileId: string) {
+    public tweenCameraToFile(fileId: string, zoomValue: number) {
         console.log('[GameView] Tween to: ', fileId);
 
         // find the file with the given ID
@@ -319,6 +319,11 @@ export default class GameView extends Vue implements IGameView {
             const targetPosition = new Vector3();
             file.display.getWorldPosition(targetPosition);
             this.tweenCameraToPosition(targetPosition);
+
+            if (zoomValue >= 0) {
+                const cam = this.getMainCamera();
+                this._interaction.cameraControls.dollySet(zoomValue);
+            }
         }
     }
 
@@ -424,7 +429,7 @@ export default class GameView extends Vue implements IGameView {
                 .pipe(
                     tap(e => {
                         if (e.name === 'tween_to') {
-                            this.tweenCameraToFile(e.fileId);
+                            this.tweenCameraToFile(e.fileId, e.aValue);
                         }
                     })
                 )
