@@ -23,6 +23,7 @@ import TagEditor from '../TagEditor/TagEditor';
 import { SubscriptionLike } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import FileTableToggle from '../FileTableToggle/FileTableToggle';
+import { EventBus } from '../../shared/EventBus';
 
 @Component({
     components: {
@@ -58,6 +59,7 @@ export default class Home extends Vue {
     selectedRecentFile: File = null;
 
     private _subs: SubscriptionLike[] = [];
+    private _;
 
     get user() {
         return appManager.user;
@@ -202,9 +204,17 @@ export default class Home extends Vue {
             })
         );
 
+        this.toggleOpen = this.toggleOpen.bind(this);
+
+        EventBus.$on('toggleFilePanel', this.toggleOpen);
+
         this.isLoading = false;
 
         this._setStatus('Waiting for input...');
+    }
+
+    destroyed() {
+        EventBus.$off('toggleFilePanel', this.toggleOpen);
     }
 
     private _setStatus(status: string) {

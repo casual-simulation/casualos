@@ -7,7 +7,12 @@ import ConfirmDialogOptions from '../../shared/ConfirmDialogOptions';
 import AlertDialogOptions from '../../shared/AlertDialogOptions';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import { SubscriptionLike, Subscription } from 'rxjs';
-import { UserMode, Object, getUserMode } from '@casual-simulation/aux-common';
+import {
+    UserMode,
+    Object,
+    getUserMode,
+    AuxObject,
+} from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard } from '../../shared/SharedUtils';
 import { tap } from 'rxjs/operators';
@@ -16,6 +21,7 @@ import QRCode from '@chenfengyuan/vue-qrcode';
 import QRAuxBuilder from '../public/icons/qr-aux-builder.svg';
 import Loading from '../../shared/vue-components/Loading/Loading';
 import ForkIcon from '../public/icons/repo-forked.svg';
+import FileTableToggle from '../FileTableToggle/FileTableToggle';
 
 import vueFilePond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
@@ -36,6 +42,7 @@ export interface SidebarItem {
         'file-pond': FilePond,
         'fork-icon': ForkIcon,
         'qr-icon': QRAuxBuilder,
+        'file-table-toggle': FileTableToggle,
     },
 })
 export default class App extends Vue {
@@ -115,6 +122,11 @@ export default class App extends Vue {
     extraItems: SidebarItem[] = [];
 
     /**
+     * The files that the user has selected.
+     */
+    files: AuxObject[] = [];
+
+    /**
      * Gets whether we're in developer mode.
      */
     get dev() {
@@ -189,6 +201,10 @@ export default class App extends Vue {
         return appManager.socketManager.forcedOffline;
     }
 
+    toggleOpen() {
+        EventBus.$emit('toggleFilePanel');
+    }
+
     created() {
         appManager.loadingProgress.onChanged.addListener(
             this.onLoadingProgressChanged
@@ -261,6 +277,12 @@ export default class App extends Vue {
                                 visible: true,
                             };
                         }
+                    })
+                );
+
+                subs.push(
+                    fileManager.selectedFilesUpdated.subscribe(e => {
+                        this.files = e.files;
                     })
                 );
 

@@ -6,6 +6,10 @@
                 <md-button class="md-icon-button" @click="menuClicked()">
                     <md-icon>menu</md-icon>
                 </md-button>
+                <div v-if="loggedIn">
+                    <file-table-toggle :files="files" :raised="false" @click="toggleOpen()">
+                    </file-table-toggle>
+                </div>
             </div>
             <div class="md-toolbar-section-end">
                 <div v-if="loggedIn">
