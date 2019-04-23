@@ -33,7 +33,8 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/causal-trees": "^0.4.14",
+        "@casual-simulation/causal-trees": "^0.4.15",
+        "@casual-simulation/crypto": "^0.4.15",
         "@types/acorn": "^4.0.5",
         "@types/astring": "^1.3.0",
         "@types/estraverse": "^0.0.6",

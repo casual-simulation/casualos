@@ -7,7 +7,7 @@
         "bootstrap": "lerna bootstrap --hoist",
         "watch": "npm run clean && lerna exec --parallel -- npm run watch",
         "watch:player": "lerna exec --parallel -- npm run watch:player",
-        "build": "gulp build",
+        "build": "npm run clean && lerna exec -- npm run build",
         "build:docs": "lerna exec -- npm run build:docs",
         "test:watch": "npm run clean && jest --watchAll",
         "test": "npm run clean && jest --verbose",

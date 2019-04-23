@@ -6,5 +6,5 @@
         "declaration": true
     },
     "exclude": ["node_modules", "lib", "**/*.spec.ts"],
-    "references": [{ "path": "../causal-trees" }]
+    "references": [{ "path": "../causal-trees" }, { "path": "../crypto" }]
 }

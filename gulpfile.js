@@ -30,15 +30,3 @@ folders.forEach(f => {
 gulp.task('clean', function() {
     return del(globs);
 });
-
-gulp.task('build:libs', function() {
-    return childProcess.exec('npx tsc --build');
-});
-
-gulp.task('build:server', function() {
-    return childProcess.exec('npm run build', {
-        cwd: path.resolve(__dirname, 'src', 'aux-server'),
-    });
-});
-
-gulp.task('build', ['clean', 'build:libs', 'build:server']);
