@@ -29,7 +29,7 @@
     "scripts": {
         "watch": "tsc --watch",
         "watch:player": "npm run watch",
-        "build": "tsc --build",
+        "build": "echo \"Nothing to do.\"",
         "build:docs": "typedoc --mode file --excludeNotExported --out ../../docs/crypto .",
         "test": "jest",
         "test:watch": "jest --watchAll"
