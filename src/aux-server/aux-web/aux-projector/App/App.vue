@@ -6,9 +6,6 @@
                 <md-button class="md-icon-button" @click="menuClicked()">
                     <md-icon>menu</md-icon>
                 </md-button>
-                <a class="md-title clickable" @click="showQRCode = true">
-                    {{ session || 'AUX Builder' }}
-                </a>
             </div>
             <div class="md-toolbar-section-end">
                 <div v-if="loggedIn">
@@ -36,6 +33,10 @@
                     <md-icon>home</md-icon>
                     <span class="md-list-item-text">Home</span>
                 </router-link>
+                <md-list-item @click="showQRCode = true" v-if="getUser() != null">
+                    <qr-icon class="md-icon md-icon-font md-theme-default"></qr-icon>
+                    <span class="md-list-item-text">Show QR Code</span>
+                </md-list-item>
                 <md-list-item @click="upload" v-if="getUser() != null">
                     <md-icon>cloud_upload</md-icon>
                     <span class="md-list-item-text">Upload AUX</span>

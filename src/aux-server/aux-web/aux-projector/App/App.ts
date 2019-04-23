@@ -13,6 +13,7 @@ import { copyToClipboard } from '../../shared/SharedUtils';
 import { tap } from 'rxjs/operators';
 import { findIndex } from 'lodash';
 import QRCode from '@chenfengyuan/vue-qrcode';
+import QRAuxBuilder from '../public/icons/qr-aux-builder.svg';
 import Loading from '../../shared/vue-components/Loading/Loading';
 import ForkIcon from '../public/icons/repo-forked.svg';
 
@@ -34,6 +35,7 @@ export interface SidebarItem {
         'qr-code': QRCode,
         'file-pond': FilePond,
         'fork-icon': ForkIcon,
+        'qr-icon': QRAuxBuilder,
     },
 })
 export default class App extends Vue {
