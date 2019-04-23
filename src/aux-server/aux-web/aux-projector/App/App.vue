@@ -19,7 +19,8 @@
 
         <md-drawer :md-active.sync="showNavigation">
             <div class="menu-header">
-                <span class="md-title">AUX Builder</span><br />
+                <span class="md-title">{{ session || 'AUX Builder' }}</span
+                ><br />
                 <span class="md-body-1" v-if="getUser() != null"
                     >Logged In: {{ getUser().name }}</span
                 >
