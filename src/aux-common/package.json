@@ -6,9 +6,9 @@
     "types": "index.d.ts",
     "module": "index.js",
     "scripts": {
-        "watch": "tsc --watch",
+        "watch": "tsc --build --watch",
         "watch:player": "npm run watch",
-        "build": "tsc",
+        "build": "tsc --build",
         "build:docs": "typedoc --mode file --excludeNotExported --out ../../docs/aux-common .",
         "test": "jest",
         "test:watch": "jest --watchAll"

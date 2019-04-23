@@ -1,11 +1,13 @@
 {
-    "extends": "../../tsconfig.json",
+    "extends": "../../tsconfig.base.json",
     "compilerOptions": {
         "baseUrl": ".",
         "outDir": "lib",
         "rootDir": "src",
-        "declaration": true
+        "declaration": true,
+        "composite": true
     },
     "include": ["./**/*"],
-    "exclude": ["node_modules", "lib", "**/*.spec.ts"]
+    "exclude": ["node_modules", "lib", "**/*.spec.ts"],
+    "references": [{ "path": "../crypto" }]
 }

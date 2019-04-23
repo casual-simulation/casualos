@@ -30,7 +30,7 @@
     "scripts": {
         "watch": "tsc --watch",
         "watch:player": "npm run watch",
-        "build": "tsc",
+        "build": "tsc --build",
         "build:docs": "typedoc --mode file --excludeNotExported --out ../../docs/causal-trees .",
         "test": "jest",
         "test:watch": "jest --watchAll"

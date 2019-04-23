@@ -1,5 +1,5 @@
 {
-    "extends": "../../tsconfig.json",
+    "extends": "../../tsconfig.base.json",
     "compilerOptions": {
         "baseUrl": ".",
         "outDir": "lib",
@@ -7,5 +7,10 @@
         "declaration": true
     },
     "include": ["./**/*"],
-    "exclude": ["node_modules", "lib", "**/*.spec.ts"]
+    "exclude": ["node_modules", "lib", "**/*.spec.ts"],
+    "references": [
+        { "path": "../causal-trees" },
+        { "path": "../crypto" },
+        { "path": "../crypto-node" }
+    ]
 }
