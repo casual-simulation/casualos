@@ -22,6 +22,7 @@ import QRAuxBuilder from '../public/icons/qr-aux-builder.svg';
 import Loading from '../../shared/vue-components/Loading/Loading';
 import ForkIcon from '../public/icons/repo-forked.svg';
 import FileTableToggle from '../FileTableToggle/FileTableToggle';
+import FileSearch from '../FileSearch/FileSearch';
 
 import vueFilePond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
@@ -42,6 +43,7 @@ export interface SidebarItem {
         'file-pond': FilePond,
         'fork-icon': ForkIcon,
         'qr-icon': QRAuxBuilder,
+        'file-search': FileSearch,
         'file-table-toggle': FileTableToggle,
     },
 })

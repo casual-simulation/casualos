@@ -6,18 +6,7 @@
                 <md-button class="md-icon-button" @click="menuClicked()">
                     <md-icon>menu</md-icon>
                 </md-button>
-                <div v-if="loggedIn">
-                    <file-table-toggle :files="files" :raised="false" @click="toggleOpen()">
-                    </file-table-toggle>
-                </div>
-            </div>
-            <div class="md-toolbar-section-end">
-                <div v-if="loggedIn">
-                    <md-button class="md-icon-button user-mode-toggle" @click="toggleUserMode()">
-                        <md-icon v-if="userMode">settings</md-icon>
-                        <md-icon v-else>close</md-icon>
-                    </md-button>
-                </div>
+                <file-search v-if="loggedIn"></file-search>
             </div>
         </md-toolbar>
 

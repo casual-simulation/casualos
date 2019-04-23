@@ -1,0 +1,28 @@
+.file-search {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.file-search:not(.open) {
+    justify-content: flex-end;
+}
+
+.num-files {
+    background-color: #999;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    text-align: center;
+    border-radius: 16px;
+    cursor: pointer;
+}
+
+.num-files.md-suffix {
+    color: #fff;
+}
+
+.md-toolbar .file-search .md-field {
+    margin-top: 0;
+    margin-bottom: 8px;
+}

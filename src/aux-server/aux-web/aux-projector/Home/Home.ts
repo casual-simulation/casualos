@@ -59,7 +59,6 @@ export default class Home extends Vue {
     selectedRecentFile: File = null;
 
     private _subs: SubscriptionLike[] = [];
-    private _;
 
     get user() {
         return appManager.user;
@@ -117,8 +116,12 @@ export default class Home extends Vue {
         }
     }
 
-    async toggleOpen() {
-        this.isOpen = !this.isOpen;
+    async toggleOpen(open?: boolean) {
+        if (typeof open !== 'undefined') {
+            this.isOpen = open;
+        } else {
+            this.isOpen = !this.isOpen;
+        }
     }
 
     startSearch() {
@@ -206,7 +209,7 @@ export default class Home extends Vue {
 
         this.toggleOpen = this.toggleOpen.bind(this);
 
-        EventBus.$on('toggleFilePanel', this.toggleOpen);
+        EventBus.$on('filesOpen', this.toggleOpen);
 
         this.isLoading = false;
 
@@ -214,7 +217,7 @@ export default class Home extends Vue {
     }
 
     destroyed() {
-        EventBus.$off('toggleFilePanel', this.toggleOpen);
+        EventBus.$off('filesOpen', this.toggleOpen);
     }
 
     private _setStatus(status: string) {
