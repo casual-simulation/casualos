@@ -19,7 +19,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { Vector3, Quaternion, Euler, Vector2 } from 'three';
 import { calculateGridTileLocalCenter } from '../grid/Grid';
-import { sumBy } from 'lodash';
+import { sumBy, takeWhile } from 'lodash';
 import { ContextGroup3D } from '../ContextGroup3D';
 import { realPosToGridPos, Axial, posToKey } from '../hex';
 import { BuilderGroup3D } from '../BuilderGroup3D';
@@ -129,8 +129,10 @@ export function calculateObjectPositionInGrid(
     );
 
     // Offset local position using index of file.
-    const index = getFileIndex(context, file.file, file.context);
-    const objectsBelowThis = objectsAtPosition.slice(0, index);
+    const objectsBelowThis = takeWhile(
+        objectsAtPosition,
+        o => o.id !== file.file.id
+    );
     const totalScales = sumBy(objectsBelowThis, obj =>
         calculateVerticalHeight(context, obj, file.context, gridScale)
     );

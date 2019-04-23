@@ -1435,7 +1435,8 @@ export function objectsAtContextGridPosition(
             }
             return false;
         }),
-        o => getFileIndex(calc, o, context)
+        o => getFileIndex(calc, o, context),
+        o => o.id
     );
 }
 

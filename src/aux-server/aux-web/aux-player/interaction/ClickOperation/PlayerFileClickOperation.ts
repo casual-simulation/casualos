@@ -12,6 +12,7 @@ import {
 import { appManager } from '../../../shared/AppManager';
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
 import { PlayerFileDragOperation } from '../DragOperation/PlayerFileDragOperation';
+import { dropWhile } from 'lodash';
 
 export class PlayerFileClickOperation extends BaseFileClickOperation {
     // This overrides the base class BaseInteractionManager
@@ -49,10 +50,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
                 console.log(context);
             }
             const file = this._file;
-            const index = getFileIndex(calc, file, file3D.context);
-            const draggedObjects = objects
-                .filter(o => getFileIndex(calc, o, context) >= index)
-                .map(o => o);
+            const draggedObjects = dropWhile(objects, o => o.id !== file.id);
             return new PlayerFileDragOperation(
                 this._gameView,
                 this._interaction,
