@@ -5,7 +5,7 @@ import {
     AuxCausalTree,
     getSelectionMode,
 } from '@casual-simulation/aux-common';
-import { SelectionManager } from './SelectionManager';
+import SelectionManager from './SelectionManager';
 import { FileHelper } from './FileHelper';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 

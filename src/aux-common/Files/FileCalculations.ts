@@ -46,7 +46,7 @@ import SandboxInterface, { FilterFunction } from '../Formulas/SandboxInterface';
 import { PartialFile } from '../Files';
 import { FilesState, cleanFile, hasValue } from './FilesChannel';
 import { merge, shortUuid } from '../utils';
-import { AuxFile, AuxObject, AuxOp } from '../aux-format';
+import { AuxFile, AuxObject, AuxOp, AuxState } from '../aux-format';
 import { Atom } from '@casual-simulation/causal-trees';
 
 export var ShortId_Length: number = 5;

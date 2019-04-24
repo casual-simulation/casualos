@@ -16,7 +16,7 @@ import {
 /**
  * Defines a class that is able to manage selections for users.
  */
-export class SelectionManager {
+export default class SelectionManager {
     private static readonly _debug = false;
     private _helper: FileHelper;
 
