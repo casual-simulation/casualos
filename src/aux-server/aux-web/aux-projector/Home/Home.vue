@@ -50,8 +50,6 @@
                 </md-menu-content>
             </md-menu>
         </div>
-
-        <color-picker></color-picker>
     </div>
 </template>
 <script src="./Home.ts"></script>
