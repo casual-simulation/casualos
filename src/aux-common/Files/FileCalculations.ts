@@ -320,7 +320,7 @@ export function calculateFormattedFileValue(
     tag: string
 ): string {
     const value = calculateFileValue(context, file, tag);
-    return _formatValue(value);
+    return formatValue(value);
 }
 
 /**
@@ -1834,10 +1834,14 @@ function _isAssignmentFormula(value: any): boolean {
     }
 }
 
-function _formatValue(value: any): string {
+/**
+ * Formats the given value and returns a string representing it.
+ * @param value The value to format.
+ */
+export function formatValue(value: any): string {
     if (typeof value === 'object') {
         if (Array.isArray(value)) {
-            return `[${value.map(v => _formatValue(v)).join(',')}]`;
+            return `[${value.map(v => formatValue(v)).join(',')}]`;
         } else {
             if (value.id) {
                 return getShortId(value);

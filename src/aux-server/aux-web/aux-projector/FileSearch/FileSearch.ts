@@ -2,7 +2,11 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Inject, Watch } from 'vue-property-decorator';
 import { EventBus } from '../../shared/EventBus';
-import { AuxObject } from '@casual-simulation/aux-common';
+import {
+    AuxObject,
+    getShortId,
+    formatValue,
+} from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import { SubscriptionLike } from 'rxjs';
 
@@ -11,7 +15,7 @@ import { SubscriptionLike } from 'rxjs';
 })
 export default class FileSearch extends Vue {
     isOpen: boolean = false;
-    files: any = null;
+    files: AuxObject[] = [];
     search: string = '';
 
     toggleOpen() {
@@ -21,6 +25,14 @@ export default class FileSearch extends Vue {
     @Watch('search')
     onSearchChanged() {
         appManager.fileManager.filePanel.search = this.search;
+    }
+
+    get placeholder() {
+        if (this.files.length > 0) {
+            return formatValue(this.files);
+        } else {
+            return 'Search';
+        }
     }
 
     constructor() {
@@ -36,6 +48,9 @@ export default class FileSearch extends Vue {
                 }),
                 fileManager.filePanel.isOpenChanged.subscribe(open => {
                     this.isOpen = open;
+                }),
+                fileManager.filePanel.searchUpdated.subscribe(search => {
+                    this.search = search;
                 })
             );
             return subs;

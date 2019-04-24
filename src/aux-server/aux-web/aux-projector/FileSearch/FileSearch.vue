@@ -1,7 +1,7 @@
 <template>
     <div class="file-search" :class="{ open: isOpen }">
         <md-field md-inline v-if="isOpen">
-            <label>Search</label>
+            <label>{{ placeholder }}</label>
             <md-input v-model="search"></md-input>
             <!-- <span class="md-suffix num-files" @click="toggleOpen()">1</span> -->
         </md-field>
