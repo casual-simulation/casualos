@@ -12,9 +12,12 @@
             </div>
             <div class="md-toolbar-section-end">
                 <div v-if="loggedIn">
-                    <md-button class="md-icon-button user-mode-toggle" @click="toggleUserMode()">
-                        <md-icon v-if="userMode">settings</md-icon>
-                        <md-icon v-else>close</md-icon>
+                    <md-button
+                        class="md-icon-button user-mode-toggle"
+                        v-if="userMode === false"
+                        @click="toggleUserMode()"
+                    >
+                        <md-icon>close</md-icon>
                     </md-button>
                 </div>
             </div>
