@@ -1,8 +1,14 @@
 <template>
     <div class="file-table" ref="wrapper">
         <div class="top-part">
-            <div v-show="!isMakingNewTag && !isSearch" class="file-table-toggle-buttons">
-                <md-button v-if="hasFiles" class="md-icon-button" @click="toggleHidden()">
+            <div
+                v-show="!isMakingNewTag && !isSearch && hasFiles"
+                class="file-table-toggle-buttons"
+            >
+                <md-button class="md-icon-button new-tag-button" @click="addTag()">
+                    <img alt="Add Tag" src="../public/icons/tag-add.webp" />
+                </md-button>
+                <md-button class="md-icon-button" @click="toggleHidden()">
                     <md-icon v-if="showHidden">visibility</md-icon>
                     <md-icon v-else>visibility_off</md-icon>
                     <md-tooltip v-if="showHidden">Hide Hidden Tags</md-tooltip>
@@ -11,10 +17,7 @@
                 <!-- <md-button @click="flipTable()">Flip</md-button> -->
             </div>
             <div class="file-table-actions">
-                <div v-if="!isMakingNewTag">
-                    <md-button class="new-tag-button" @click="addTag()">+tag</md-button>
-                </div>
-                <div v-else="isMakingNewTag">
+                <div v-if="isMakingNewTag">
                     <form class="file-table-form" @submit.prevent="addTag()">
                         <div class="finish-tag-button-wrapper">
                             <md-button class="md-icon-button finish-tag-button" type="submit">
