@@ -115,6 +115,8 @@ export class CameraControls {
     private dollyEnd = new Vector2();
     private dollyDelta = new Vector2();
 
+    private sphereRadiusSetter: number = 10;
+
     get enabled() {
         return this._enabled;
     }
@@ -236,6 +238,19 @@ export class CameraControls {
             this._camera.zoom = Math.max(
                 this.minZoom,
                 Math.min(this.maxZoom, this._camera.zoom * dollyScale)
+            );
+            this._camera.updateProjectionMatrix();
+            this.zoomChanged = true;
+        }
+    }
+
+    public dollySet(dollyScale: number) {
+        if (this._camera instanceof PerspectiveCamera) {
+            this.sphereRadiusSetter = dollyScale;
+        } else {
+            this._camera.zoom = Math.max(
+                this.minZoom,
+                Math.min(this.maxZoom, dollyScale)
             );
             this._camera.updateProjectionMatrix();
             this.zoomChanged = true;
@@ -583,7 +598,15 @@ export class CameraControls {
 
         this.spherical.makeSafe();
 
+        if (this._camera instanceof PerspectiveCamera) {
+            this.spherical.radius = this.sphereRadiusSetter;
+        }
+
         this.spherical.radius *= this.scale;
+
+        if (this._camera instanceof PerspectiveCamera) {
+            this.sphereRadiusSetter = this.spherical.radius;
+        }
 
         // restrict radius to be between desired limits
         this.spherical.radius = Math.max(

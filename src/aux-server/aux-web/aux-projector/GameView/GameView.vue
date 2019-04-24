@@ -5,7 +5,7 @@
         <slot></slot>
         <div class="ui-container">
             <div class="toolbar">
-                <md-button
+                <!--md-button
                     v-if="workspacesMode"
                     class="md-fab add-button"
                     @click="addNewWorkspace()"
@@ -13,7 +13,7 @@
                     <md-icon>add</md-icon>
                     <span class="sr-only">New Worksurface</span>
                     <md-tooltip md-direction="bottom">New Worksurface</md-tooltip>
-                </md-button>
+                </md-button-->
                 <span
                     v-show="vrDisplay"
                     id="vr-button-container"

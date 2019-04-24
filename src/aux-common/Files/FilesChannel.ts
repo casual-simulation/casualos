@@ -394,6 +394,11 @@ export interface TweenToEvent extends LocalEvent {
      * The ID of the file to tween to.
      */
     fileId: string;
+
+    /* 
+     * Additional value that can change the tween
+]    */
+    aValue: number;
 }
 
 /**
@@ -521,10 +526,14 @@ export function toast(message: string): ShowToastEvent {
  * Creates a new TweenToEvent.
  * @param fileId The ID of the file to tween to.
  */
-export function tweenTo(fileId: string): TweenToEvent {
+export function tweenTo(
+    fileId: string,
+    additionalValue: number = -1
+): TweenToEvent {
     return {
         type: 'local',
         name: 'tween_to',
         fileId: fileId,
+        aValue: additionalValue,
     };
 }

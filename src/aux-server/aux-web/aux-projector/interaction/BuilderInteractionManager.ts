@@ -403,76 +403,42 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 const minHeight = DEFAULT_WORKSPACE_MIN_HEIGHT; // TODO: This too
                 const minimized = isMinimized(calc, gameObject.file);
 
-                if (this.isInCorrectMode(gameObject)) {
-                    if (!minimized) {
+                //if (this.isInCorrectMode(gameObject)) {
+                if (!minimized) {
+                    actions.push({
+                        label: 'Raise',
+                        onClick: () =>
+                            this.updateTileHeightAtGridPosition(
+                                gameObject,
+                                tile,
+                                currentHeight + increment
+                            ),
+                    });
+                    if (currentTile && currentHeight - increment >= minHeight) {
                         actions.push({
-                            label: 'Raise',
+                            label: 'Lower',
                             onClick: () =>
                                 this.updateTileHeightAtGridPosition(
                                     gameObject,
                                     tile,
-                                    currentHeight + increment
+                                    currentHeight - increment
                                 ),
                         });
-                        if (
-                            currentTile &&
-                            currentHeight - increment >= minHeight
-                        ) {
-                            actions.push({
-                                label: 'Lower',
-                                onClick: () =>
-                                    this.updateTileHeightAtGridPosition(
-                                        gameObject,
-                                        tile,
-                                        currentHeight - increment
-                                    ),
-                            });
-                        }
-
-                        actions.push({
-                            label: 'Expand',
-                            onClick: () =>
-                                this._expandWorkspace(calc, gameObject),
-                        });
-                        if (this.canShrinkWorkspace(calc, gameObject)) {
-                            actions.push({
-                                label: 'Shrink',
-                                onClick: () =>
-                                    this._shrinkWorkspace(calc, gameObject),
-                            });
-                        }
                     }
 
                     actions.push({
-                        label: 'Change Color',
-                        onClick: () => {
-                            // This function is invoked as the color picker changes the color value.
-                            let colorUpdated = (hexColor: string) => {
-                                appManager.fileManager.updateFile(
-                                    gameObject.file,
-                                    {
-                                        tags: {
-                                            [`aux.context.color`]: hexColor,
-                                        },
-                                    }
-                                );
-                            };
-
-                            let workspace = <Workspace>gameObject.file;
-                            const currentColor = getContextColor(
-                                calc,
-                                gameObject.file
-                            );
-                            let colorPickerEvent: ColorPickerEvent = {
-                                pagePos: pagePos,
-                                initialColor: currentColor,
-                                colorUpdated: colorUpdated,
-                            };
-
-                            EventBus.$emit('onColorPicker', colorPickerEvent);
-                        },
+                        label: 'Expand',
+                        onClick: () => this._expandWorkspace(calc, gameObject),
                     });
+                    if (this.canShrinkWorkspace(calc, gameObject)) {
+                        actions.push({
+                            label: 'Shrink',
+                            onClick: () =>
+                                this._shrinkWorkspace(calc, gameObject),
+                        });
+                    }
                 }
+                //}
 
                 const minimizedLabel = minimized ? 'Maximize' : 'Minimize';
                 actions.push({

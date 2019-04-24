@@ -19,6 +19,7 @@
     -   Improved how we position files to prevent two files from appearing at the same index.
         -   Creating new files at the same position will now automatically stack them.
         -   Stacking is determined first by the index and second by the file ID.
+    -   Added a zoom property to the `tweenPlayerTo` function to set a consistent zoom on file focus.
 -   Bug Fixes
     -   Stopped sheet closing bug from taking multiple clicks to reopen.
 

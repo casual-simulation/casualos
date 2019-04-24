@@ -65,7 +65,8 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
 
     protected _onDrag(calc: FileCalculationContext) {
         if (this._workspace) {
-            this._onDragWorkspace(calc);
+            //stop workspace dragging
+            //this._onDragWorkspace(calc);
         } else {
             super._onDrag(calc);
         }
