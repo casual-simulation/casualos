@@ -1,14 +1,11 @@
 <!-- App.vue -->
 <template>
     <div id="app">
-        <md-toolbar>
+        <md-toolbar class="md-transparent" md-elevation="0">
             <div class="md-toolbar-section-start">
-                <md-button class="md-icon-button" @click="menuClicked()">
+                <md-button class="md-icon-button md-raised" @click="menuClicked()">
                     <md-icon>menu</md-icon>
                 </md-button>
-                <a class="md-title clickable" @click="showQRCode = true">
-                    {{ session || 'AUX Player' }}
-                </a>
             </div>
         </md-toolbar>
 
