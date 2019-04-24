@@ -66,103 +66,12 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
     protected _onDrag(calc: FileCalculationContext) {
         if (this._workspace) {
             //stop workspace dragging
-            //this._onDragWorkspace(calc);
         } else {
             super._onDrag(calc);
         }
     }
 
     protected _disposeCore() {
-        if (this._attachWorkspace) {
-            this._attachWorkspaces();
-        } else {
-            super._disposeCore();
-        }
-    }
-
-    protected _onDragWorkspace(calc: FileCalculationContext) {
-        const mouseDir = Physics.screenPosToRay(
-            this._gameView.getInput().getMouseScreenPos(),
-            this._gameView.getMainCamera()
-        );
-        const point = Physics.pointOnPlane(
-            mouseDir,
-            this._gameView.getGroundPlane()
-        );
-
-        if (point) {
-            // if the workspace is only 1 tile large and not minimized
-            const workspace = <Workspace>this._workspace.file;
-            const domain = this._workspace.domain;
-            const size = getContextSize(calc, workspace);
-            const minimized = getContextMinimized(calc, workspace);
-            const grid = getBuilderContextGrid(calc, workspace);
-            const files = this._workspace.getFiles();
-            if (
-                size === 1 &&
-                !minimized &&
-                (!grid || keys(grid).length === 0) &&
-                files.length === 0
-            ) {
-                // check if it is close to another workspace.
-                const closest = this._interaction.closestWorkspace(
-                    calc,
-                    point,
-                    this._workspace
-                );
-
-                if (closest) {
-                    if (closest.distance <= 1) {
-                        this._attachWorkspace = closest.mesh;
-                        this._attachPoint = closest.gridPosition;
-                    } else {
-                        this._attachWorkspace = null;
-                        this._attachPoint = null;
-                    }
-                }
-            }
-
-            if (this._attachWorkspace) {
-                const w = <Workspace>this._attachWorkspace.file;
-                const scale = w.tags.scale || DEFAULT_WORKSPACE_SCALE;
-                const realPos = gridPosToRealPos(this._attachPoint, scale);
-                point
-                    .copy(new Vector3(realPos.x, 0, realPos.y))
-                    .add(this._attachWorkspace.position);
-                point.setY(0);
-            }
-
-            // move the center of the workspace to the point
-            let final = new Vector3().copy(point);
-            if (!this._attachWorkspace) {
-                final.add(this._workspaceDelta);
-            }
-
-            appManager.fileManager.updateFile(this._workspace.file, {
-                tags: {
-                    [`aux.context.x`]: final.x,
-                    [`aux.context.y`]: final.z,
-                    [`aux.context.z`]: final.y,
-                },
-            });
-        }
-    }
-
-    protected _attachWorkspaces() {
-        const mesh = this._workspace.surface;
-        const height = mesh.hexGrid.hexes[0].height;
-
-        appManager.fileManager.transaction(
-            fileRemoved(this._workspace.file.id),
-            fileUpdated(this._attachWorkspace.file.id, {
-                tags: {
-                    [`aux.context.grid`]: {
-                        [posToKey(this._attachPoint)]: {
-                            height: height,
-                        },
-                    },
-                },
-            })
-        );
+        super._disposeCore();
     }
 }
