@@ -113,8 +113,6 @@ export default class Home extends Vue {
     //     }
     // }
 
-    onSelectionCleared() {}
-
     handleContextMenu(event: ContextMenuEvent) {
         // Force the component to disable current context menu.
         this.contextMenuEvent = null;

@@ -6,7 +6,7 @@ import {
     from,
     SubscriptionLike,
 } from 'rxjs';
-import { map, flatMap, tap } from 'rxjs/operators';
+import { map, flatMap, tap, withLatestFrom, startWith } from 'rxjs/operators';
 import FileWatcher from './FIleWatcher';
 import { FileHelper } from './FileHelper';
 import SelectionManager from './SelectionManager';
@@ -50,8 +50,10 @@ export default class FilePanelManager implements SubscriptionLike {
      * Sets the current search phrase.
      */
     set search(value: string) {
-        this._search = value;
-        this._searchUpdated.next(this._search);
+        if (value !== this._search) {
+            this._search = value;
+            this._searchUpdated.next(this._search);
+        }
     }
 
     /**
@@ -65,7 +67,7 @@ export default class FilePanelManager implements SubscriptionLike {
      * Sets whether the file panel is open.
      */
     set isOpen(value: boolean) {
-        if (value != this.isOpen) {
+        if (value !== this.isOpen) {
             this._isOpen = value;
             this._openChanged.next(this._isOpen);
         }
@@ -83,6 +85,13 @@ export default class FilePanelManager implements SubscriptionLike {
      */
     get filesUpdated(): Observable<FilesUpdatedEvent> {
         return this._filesUpdated;
+    }
+
+    /**
+     * Gets an observable that resolves whenever the search text is changed.
+     */
+    get searchUpdated(): Observable<string> {
+        return this._searchUpdated;
     }
 
     /**
@@ -112,14 +121,16 @@ export default class FilePanelManager implements SubscriptionLike {
         });
 
         this._subs.push(
-            this._filesUpdated
+            this._selection.userChangedSelection
                 .pipe(
-                    tap(e => {
-                        if (
-                            this._selection.mode === 'single' &&
-                            e.files.length > 0
-                        ) {
-                            this.isOpen = true;
+                    withLatestFrom(this._filesUpdated),
+                    tap(([, e]) => {
+                        if (this._selection.mode === 'single') {
+                            if (e.files.length > 0) {
+                                this.isOpen = true;
+                            } else if (!e.isSearch) {
+                                this.isOpen = false;
+                            }
                         }
                     })
                 )

@@ -321,7 +321,126 @@ describe('FilePanelManager', () => {
             await selection.selectFile(tree.value['test']);
             fileUpdated.next([tree.value['test']]);
 
+            // Need to re-trigger the selection changed event
+            // because the file update doesn't trigger the refresh.
+            await selection.selectFile(tree.value['test']);
+
             expect(files).toEqual([tree.value['test']]);
+            expect(isOpen).toBe(true);
+        });
+
+        it('should automatically close the panel if the user deselects a file and there are none left', async () => {
+            let files: AuxFile[];
+            let isOpen: boolean;
+            manager.filesUpdated.subscribe(e => {
+                files = e.files;
+            });
+
+            manager.isOpenChanged.subscribe(open => {
+                isOpen = open;
+            });
+
+            await tree.addFile(
+                createFile('test', {
+                    hello: true,
+                })
+            );
+
+            await tree.addFile(
+                createFile('test2', {
+                    hello: false,
+                })
+            );
+
+            await tree.addFile(
+                createFile('recent', {
+                    hello: false,
+                })
+            );
+
+            manager.isOpen = true;
+
+            await selection.selectFile(tree.value['test']);
+            await selection.selectFile(tree.value['test']);
+
+            expect(isOpen).toBe(false);
+            expect(files).toEqual([]);
+        });
+
+        it('should not automatically close the panel if there are no files and a file update happens', async () => {
+            let files: AuxFile[];
+            let isOpen: boolean;
+            manager.filesUpdated.subscribe(e => {
+                files = e.files;
+            });
+
+            manager.isOpenChanged.subscribe(open => {
+                isOpen = open;
+            });
+
+            await tree.addFile(
+                createFile('test', {
+                    hello: true,
+                })
+            );
+
+            await tree.addFile(
+                createFile('test2', {
+                    hello: false,
+                })
+            );
+
+            await tree.addFile(
+                createFile('recent', {
+                    hello: false,
+                })
+            );
+
+            await selection.selectFile(tree.value['test']);
+            await selection.selectFile(tree.value['test']);
+
+            manager.isOpen = true;
+
+            fileUpdated.next([tree.value['test']]);
+
+            expect(files).toEqual([]);
+            expect(isOpen).toBe(true);
+        });
+
+        it('should keep the panel open when searching and no files', async () => {
+            let files: AuxFile[];
+            let isOpen: boolean;
+            manager.filesUpdated.subscribe(e => {
+                files = e.files;
+            });
+
+            manager.isOpenChanged.subscribe(open => {
+                isOpen = open;
+            });
+
+            await tree.addFile(
+                createFile('test', {
+                    hello: true,
+                })
+            );
+
+            await tree.addFile(
+                createFile('test2', {
+                    hello: false,
+                })
+            );
+
+            await tree.addFile(
+                createFile('recent', {
+                    hello: false,
+                })
+            );
+
+            manager.isOpen = true;
+
+            manager.search = ' ';
+
+            expect(files).toEqual([]);
             expect(isOpen).toBe(true);
         });
     });

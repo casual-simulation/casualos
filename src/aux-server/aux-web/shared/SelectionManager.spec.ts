@@ -131,6 +131,15 @@ describe('SelectionManager', () => {
                 expect(file2.tags[selection]).toBe(true);
             });
         });
+
+        it('should trigger a change event', async () => {
+            let changes = 0;
+            manager.userChangedSelection.subscribe(() => (changes += 1));
+            await tree.addFile(createFile('file1'));
+            let file = tree.value['file1'];
+            await manager.selectFile(file);
+            expect(changes).toBe(1);
+        });
     });
 
     describe('setSelectedFiles()', () => {
@@ -161,6 +170,22 @@ describe('SelectionManager', () => {
             expect(file0.tags[newSelection]).toBe(true);
             expect(file1.tags[newSelection]).toBe(true);
             expect(file2.tags[newSelection]).toBe(true);
+        });
+
+        it('should trigger a change event', async () => {
+            let changes = 0;
+            manager.userChangedSelection.subscribe(() => (changes += 1));
+            await tree.addFile(createFile('file0'));
+            await tree.addFile(createFile('file1'));
+            await tree.addFile(createFile('file2'));
+
+            let file0 = tree.value['file0'];
+            let file1 = tree.value['file1'];
+            let file2 = tree.value['file2'];
+
+            await manager.setSelectedFiles([file1, file2, file0]);
+
+            expect(changes).toBe(1);
         });
     });
 
@@ -199,6 +224,22 @@ describe('SelectionManager', () => {
 
             expect(helper.userFile.tags._selection).toBeFalsy();
             expect(helper.userFile.tags['aux._selectionMode']).toBe('single');
+        });
+
+        it('should trigger a change event', async () => {
+            let changes = 0;
+            manager.userChangedSelection.subscribe(() => (changes += 1));
+
+            await tree.updateFile(helper.userFile, {
+                tags: {
+                    _selection: 'abc',
+                    'aux._selectionMode': 'multi',
+                },
+            });
+
+            await manager.clearSelection();
+
+            expect(changes).toBe(1);
         });
     });
 

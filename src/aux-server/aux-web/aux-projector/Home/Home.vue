@@ -11,7 +11,6 @@
                                 class="files-table"
                                 @closeWindow="toggleOpen()"
                                 @tagFocusChanged="tagFocusChanged"
-                                @selectionCleared="onSelectionCleared"
                                 :files="files"
                                 :searchResult="searchResult"
                                 :isSearch="isSearch"

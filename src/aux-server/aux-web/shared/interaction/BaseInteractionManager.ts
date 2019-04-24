@@ -317,6 +317,7 @@ export abstract class BaseInteractionManager {
     }
 
     async selectFile(file: AuxFile3D) {
+        appManager.fileManager.filePanel.search = '';
         const shouldMultiSelect = this._gameView
             .getInput()
             .getKeyHeld('Control');
@@ -329,6 +330,7 @@ export abstract class BaseInteractionManager {
     }
 
     async clearSelection() {
+        appManager.fileManager.filePanel.search = '';
         await appManager.fileManager.selection.clearSelection();
     }
 
