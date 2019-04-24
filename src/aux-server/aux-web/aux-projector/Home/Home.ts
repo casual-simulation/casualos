@@ -13,6 +13,7 @@ import {
     AuxObject,
     DEFAULT_SELECTION_MODE,
     getSelectionMode,
+    isFile,
 } from '@casual-simulation/aux-common';
 import GameView from '../GameView/GameView';
 import { appManager } from '../../shared/AppManager';
@@ -48,6 +49,9 @@ export default class Home extends Vue {
     contextMenuEvent: ContextMenuEvent = null;
     status: string = '';
     files: AuxObject[] = [];
+    searchResult: any = null;
+    isSearch: boolean = false;
+    isDiff: boolean = false;
     tags: string[] = [];
     updateTime: number = -1;
     mode: UserMode = DEFAULT_USER_MODE;
@@ -56,7 +60,6 @@ export default class Home extends Vue {
     isLoading: boolean = false;
     progress: number = 0;
     progressMode: 'indeterminate' | 'determinate' = 'determinate';
-    selectedRecentFile: File = null;
 
     private _subs: SubscriptionLike[] = [];
 
@@ -73,29 +76,23 @@ export default class Home extends Vue {
     }
 
     get hasFiles() {
-        return this.selectedFiles.length > 0;
+        return this.files && this.files.length > 0;
     }
 
     get fileManager() {
         return appManager.fileManager;
     }
 
-    get selectedFiles() {
-        if (this.selectedRecentFile) {
-            return [this.selectedRecentFile];
-        } else {
-            return this.files;
-        }
-    }
-
     get filesMode() {
         return this.mode === 'files';
     }
+
     get workspacesMode() {
         return this.mode === 'worksurfaces';
     }
+
     get singleSelection() {
-        return this.selectionMode === 'single' && this.selectedFiles.length > 0;
+        return this.selectionMode === 'single' && this.files.length > 0;
     }
 
     @Watch('singleSelection')
@@ -164,20 +161,25 @@ export default class Home extends Vue {
         this._subs = [];
         this.files = [];
         this.tags = [];
-        this.selectedRecentFile = null;
         this.updateTime = -1;
 
         this._subs.push(
-            this.fileManager.selectedFilesUpdated.subscribe(event => {
-                this.files = event.files;
+            this.fileManager.filePanel.filesUpdated.subscribe(e => {
+                this.files = e.files;
+                this.isDiff = e.isDiff;
+                this.searchResult = e.searchResult;
+                this.isSearch = e.isSearch;
                 const now = Date.now();
                 this.updateTime = now;
-                if (
-                    this.selectionMode === 'single' &&
-                    this.selectedFiles.length > 0
-                ) {
-                    this.isOpen = true;
-                }
+                // if (
+                //     this.selectionMode === 'single' &&
+                //     this.selectedFiles.length > 0
+                // ) {
+                //     this.isOpen = true;
+                // }
+            }),
+            this.fileManager.filePanel.isOpenChanged.subscribe(open => {
+                this.isOpen = open;
             })
         );
 
@@ -190,21 +192,15 @@ export default class Home extends Vue {
 
                         let previousSelectionMode = this.selectionMode;
                         this.selectionMode = getSelectionMode(file);
-                        if (
-                            previousSelectionMode !== this.selectionMode &&
-                            this.selectionMode === 'multi'
-                        ) {
-                            this.isOpen = true;
-                        }
+                        // if (
+                        //     previousSelectionMode !== this.selectionMode &&
+                        //     this.selectionMode === 'multi'
+                        // ) {
+                        //     this.isOpen = true;
+                        // }
                     })
                 )
                 .subscribe()
-        );
-
-        this._subs.push(
-            this.fileManager.recent.onUpdated.subscribe(_ => {
-                this.selectedRecentFile = this.fileManager.recent.selectedRecentFile;
-            })
         );
 
         this.toggleOpen = this.toggleOpen.bind(this);

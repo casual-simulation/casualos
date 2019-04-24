@@ -12,10 +12,12 @@
                                 @closeWindow="toggleOpen()"
                                 @tagFocusChanged="tagFocusChanged"
                                 @selectionCleared="onSelectionCleared"
-                                :files="selectedFiles"
+                                :files="files"
+                                :searchResult="searchResult"
+                                :isSearch="isSearch"
                                 :updateTime="updateTime"
                                 :selectionMode="selectionMode"
-                                :diffSelected="!!selectedRecentFile"
+                                :diffSelected="isDiff"
                                 :showAddTagButton="false"
                             ></file-table>
 
@@ -25,10 +27,6 @@
                         </div>
                     </md-card-content>
                 </md-card>
-                <div v-else-if="filesMode" class="outside-toggle">
-                    <file-table-toggle :files="selectedFiles" :raised="true" @click="toggleOpen()">
-                    </file-table-toggle>
-                </div>
             </div>
         </game-view>
 

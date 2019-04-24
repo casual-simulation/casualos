@@ -124,11 +124,6 @@ export default class App extends Vue {
     extraItems: SidebarItem[] = [];
 
     /**
-     * The files that the user has selected.
-     */
-    files: AuxObject[] = [];
-
-    /**
      * Gets whether we're in developer mode.
      */
     get dev() {
@@ -279,12 +274,6 @@ export default class App extends Vue {
                                 visible: true,
                             };
                         }
-                    })
-                );
-
-                subs.push(
-                    fileManager.selectedFilesUpdated.subscribe(e => {
-                        this.files = e.files;
                     })
                 );
 

@@ -192,7 +192,10 @@ export function isContext(
  * @param files The files to filter.
  * @param selectionId The selection to check.
  */
-export function filterFilesBySelection(files: Object[], selectionId: string) {
+export function filterFilesBySelection<TFile extends File>(
+    files: TFile[],
+    selectionId: string
+) {
     return files.filter(f => {
         if (f.id === selectionId) {
             return true;

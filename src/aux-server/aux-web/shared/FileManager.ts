@@ -491,13 +491,16 @@ export class FileManager {
                 filesUpdated,
             } = fileChangeObservables(this._aux);
             this._watcher = new FileWatcher(
-                this._helper,
-                this._selection,
                 filesAdded,
                 filesRemoved,
                 filesUpdated
             );
-            this._filePanel = new FilePanelManager();
+            this._filePanel = new FilePanelManager(
+                this._watcher,
+                this._helper,
+                this._selection,
+                this._recent
+            );
 
             this._setStatus('Initialized.');
             loadingProgress.set(100, 'File manager initialized.', null);

@@ -30,13 +30,7 @@ describe('FileWatcher', () => {
         await tree.root();
         await tree.file(userId);
 
-        watcher = new FileWatcher(
-            helper,
-            selection,
-            fileAdded,
-            fileRemoved,
-            fileUpdated
-        );
+        watcher = new FileWatcher(fileAdded, fileRemoved, fileUpdated);
     });
 
     describe('filesDiscovered', () => {

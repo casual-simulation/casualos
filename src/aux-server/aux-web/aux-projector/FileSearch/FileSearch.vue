@@ -5,8 +5,8 @@
             <md-input v-model="search"></md-input>
             <!-- <span class="md-suffix num-files" @click="toggleOpen()">1</span> -->
         </md-field>
-        <md-button v-if="isOpen" class="md-icon-button" @click="toggleOpen()">
-            1
+        <md-button v-if="isOpen" class="md-icon-button num-files" @click="toggleOpen()">
+            {{ (values ? values.length : 0) || 0 }}
         </md-button>
         <md-button v-if="!isOpen" class="search-button md-icon-button" @click="toggleOpen()">
             <md-icon>search</md-icon>
