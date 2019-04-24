@@ -1,10 +1,7 @@
 <template>
     <div class="file-table" ref="wrapper">
         <div class="top-part">
-            <div
-                v-show="!isMakingNewTag && !isSearch && hasFiles"
-                class="file-table-toggle-buttons"
-            >
+            <div v-show="!isMakingNewTag && hasFiles" class="file-table-toggle-buttons">
                 <md-button class="md-icon-button new-tag-button" @click="addTag()">
                     <img alt="Add Tag" src="../public/icons/tag-add.webp" />
                 </md-button>
@@ -40,11 +37,20 @@
                         ></tag-editor>
                     </form>
                 </div>
+                <div v-else>
+                    <md-button class="md-icon-button" @click="downloadFiles()">
+                        <md-icon>cloud_download</md-icon>
+                        <md-tooltip>Download Selection/Search</md-tooltip>
+                    </md-button>
+                </div>
             </div>
         </div>
         <div>
             <p v-if="isSearch && searchResult === null" class="no-search-results-message">
                 No files found
+            </p>
+            <p v-else-if="!hasFiles" class="no-files-message">
+                Select a file or search
             </p>
             <div v-else-if="hasFiles" class="file-table-wrapper">
                 <!--   -->

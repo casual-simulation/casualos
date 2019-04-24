@@ -11,13 +11,12 @@ import {
     hasValue,
     isFormula,
     getShortId,
-    searchFileState,
-    SandboxResult,
-    isFile,
     isDiff,
     merge,
     SelectionMode,
     tweenTo,
+    AuxCausalTree,
+    fileAdded,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
 import { appManager } from '../../shared/AppManager';
@@ -29,6 +28,8 @@ import FileTag from '../FileTag/FileTag';
 import FileTableToggle from '../FileTableToggle/FileTableToggle';
 import { TreeView } from 'vue-json-tree-view';
 import { tickStep } from 'd3';
+import { downloadAuxState } from '../download';
+import { storedTree, site } from '@casual-simulation/causal-trees';
 
 @Component({
     components: {
@@ -72,7 +73,6 @@ export default class FileTable extends Vue {
     numFilesSelected: number = 0;
     viewMode: 'rows' | 'columns' = 'columns';
     showHidden: boolean = false;
-    isSearching: boolean = false;
 
     uiHtmlElements(): HTMLElement[] {
         if (this.$refs.tags) {
@@ -165,14 +165,6 @@ export default class FileTable extends Vue {
         await this.fileManager.selection.selectFile(file);
     }
 
-    async addSearch() {
-        // let files = this.getFileSearchResults();
-        // if (files && files.length > 0) {
-        //     await this.fileManager.selection.setSelectedFiles(files);
-        // }
-        // this.cancelSearch();
-    }
-
     addTag(isAction: boolean = false) {
         if (this.isMakingNewTag) {
             // Check to make sure that the tag is unique.
@@ -220,6 +212,20 @@ export default class FileTable extends Vue {
 
     async multiSelect() {
         await this.fileManager.selection.setSelectedFiles(this.files);
+    }
+
+    async downloadFiles() {
+        if (this.hasFiles) {
+            let tree = new AuxCausalTree(
+                storedTree(this.fileManager.aux.tree.site)
+            );
+
+            let events = this.files.map(f => fileAdded(f));
+            await tree.root();
+            await tree.addEvents(events);
+
+            downloadAuxState(tree, `selection-${Date.now()}`);
+        }
     }
 
     onTagChanged(file: AuxObject, tag: string, value: string) {
