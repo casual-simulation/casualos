@@ -215,8 +215,8 @@ export default class FileTable extends Vue {
     }
 
     async clearSelection() {
-        await this.fileManager.selection.clearSelection();
-        this.$emit('selectionCleared');
+        // await this.fileManager.selection.clearSelection();
+        // this.$emit('selectionCleared');
     }
 
     async multiSelect() {

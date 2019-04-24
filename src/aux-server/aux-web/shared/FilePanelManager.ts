@@ -6,7 +6,7 @@ import {
     from,
     SubscriptionLike,
 } from 'rxjs';
-import { map, flatMap, combineLatest } from 'rxjs/operators';
+import { map, flatMap, tap } from 'rxjs/operators';
 import FileWatcher from './FIleWatcher';
 import { FileHelper } from './FileHelper';
 import SelectionManager from './SelectionManager';
@@ -112,6 +112,18 @@ export default class FilePanelManager implements SubscriptionLike {
         });
 
         this._subs.push(
+            this._filesUpdated
+                .pipe(
+                    tap(e => {
+                        if (
+                            this._selection.mode === 'single' &&
+                            e.files.length > 0
+                        ) {
+                            this.isOpen = true;
+                        }
+                    })
+                )
+                .subscribe(),
             this._calculateFilesUpdated().subscribe(this._filesUpdated)
         );
     }

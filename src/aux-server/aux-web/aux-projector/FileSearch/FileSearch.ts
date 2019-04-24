@@ -11,7 +11,7 @@ import { SubscriptionLike } from 'rxjs';
 })
 export default class FileSearch extends Vue {
     isOpen: boolean = false;
-    values: any = null;
+    files: any = null;
     search: string = '';
 
     toggleOpen() {
@@ -32,7 +32,7 @@ export default class FileSearch extends Vue {
             let subs: SubscriptionLike[] = [];
             subs.push(
                 fileManager.filePanel.filesUpdated.subscribe(e => {
-                    this.values = e.files;
+                    this.files = e.files;
                 }),
                 fileManager.filePanel.isOpenChanged.subscribe(open => {
                     this.isOpen = open;

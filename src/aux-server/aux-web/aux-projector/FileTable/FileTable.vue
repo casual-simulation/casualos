@@ -40,10 +40,7 @@
             </div>
         </div>
         <div>
-            <p v-if="isSearching && !searchResult" class="no-search-results-message">
-                No results
-            </p>
-            <p v-else-if="isSearching && !hasSearchResults()" class="no-search-results-message">
+            <p v-if="isSearch && searchResult === null" class="no-search-results-message">
                 No files found
             </p>
             <div v-else-if="hasFiles" class="file-table-wrapper">

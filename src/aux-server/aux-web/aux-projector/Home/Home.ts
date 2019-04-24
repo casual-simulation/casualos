@@ -95,42 +95,25 @@ export default class Home extends Vue {
         return this.selectionMode === 'single' && this.files.length > 0;
     }
 
-    @Watch('singleSelection')
-    onSingleSelectionChanged(selected: boolean, old: boolean) {
-        if (this.selectionMode === 'single') {
-            // If we went from not having a file selected
-            // to selecting a file
-            if (!old && selected) {
-                // open the sheet
-                this.isOpen = true;
+    // @Watch('singleSelection')
+    // onSingleSelectionChanged(selected: boolean, old: boolean) {
+    //     if (this.selectionMode === 'single') {
+    //         // If we went from not having a file selected
+    //         // to selecting a file
+    //         if (!old && selected) {
+    //             // open the sheet
+    //             this.isOpen = true;
 
-                // if we went from having a file selected to not
-                // having a file selected
-            } else if (!selected && old) {
-                // close the sheet
-                this.isOpen = false;
-            }
-        }
-    }
+    //             // if we went from having a file selected to not
+    //             // having a file selected
+    //         } else if (!selected && old) {
+    //             // close the sheet
+    //             this.isOpen = false;
+    //         }
+    //     }
+    // }
 
-    async toggleOpen(open?: boolean) {
-        if (typeof open !== 'undefined') {
-            this.isOpen = open;
-        } else {
-            this.isOpen = !this.isOpen;
-        }
-    }
-
-    startSearch() {
-        this.isOpen = true;
-        this.$nextTick(() => {
-            (<any>this.$refs.table).startSearch();
-        });
-    }
-
-    onSelectionCleared() {
-        this.isOpen = false;
-    }
+    onSelectionCleared() {}
 
     handleContextMenu(event: ContextMenuEvent) {
         // Force the component to disable current context menu.
@@ -203,18 +186,12 @@ export default class Home extends Vue {
                 .subscribe()
         );
 
-        this.toggleOpen = this.toggleOpen.bind(this);
-
-        EventBus.$on('filesOpen', this.toggleOpen);
-
         this.isLoading = false;
 
         this._setStatus('Waiting for input...');
     }
 
-    destroyed() {
-        EventBus.$off('filesOpen', this.toggleOpen);
-    }
+    destroyed() {}
 
     private _setStatus(status: string) {
         this.status = status;

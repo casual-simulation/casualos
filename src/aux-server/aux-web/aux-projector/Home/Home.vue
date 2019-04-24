@@ -20,10 +20,6 @@
                                 :diffSelected="isDiff"
                                 :showAddTagButton="false"
                             ></file-table>
-
-                            <p class="no-files-message" v-if="!hasFiles">
-                                Select a file
-                            </p>
                         </div>
                     </md-card-content>
                 </md-card>

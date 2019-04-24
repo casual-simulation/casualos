@@ -288,5 +288,41 @@ describe('FilePanelManager', () => {
             expect(result).toEqual([true, true]);
             expect(isSearch).toEqual(true);
         });
+
+        it('should automatically open the panel when selecting a file in single select mode', async () => {
+            let files: AuxFile[];
+            let isOpen: boolean;
+            manager.filesUpdated.subscribe(e => {
+                files = e.files;
+            });
+
+            manager.isOpenChanged.subscribe(open => {
+                isOpen = open;
+            });
+
+            await tree.addFile(
+                createFile('test', {
+                    hello: true,
+                })
+            );
+
+            await tree.addFile(
+                createFile('test2', {
+                    hello: false,
+                })
+            );
+
+            await tree.addFile(
+                createFile('recent', {
+                    hello: false,
+                })
+            );
+
+            await selection.selectFile(tree.value['test']);
+            fileUpdated.next([tree.value['test']]);
+
+            expect(files).toEqual([tree.value['test']]);
+            expect(isOpen).toBe(true);
+        });
     });
 });
