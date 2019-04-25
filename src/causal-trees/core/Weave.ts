@@ -317,6 +317,49 @@ export class Weave<TOp extends AtomOp> {
     }
 
     /**
+     * Gets the list of atoms that are children of the given atom.
+     * @param parent The atom to find the children of.
+     */
+    decendants(parent: Atom<TOp>): Atom<TOp>[] {
+        const size = this.getAtomSize(parent.id);
+        if (size) {
+            const index = this._atomIndexOf(parent);
+            if (index >= 0) {
+                return this.atoms.slice(index + 1, index + size);
+            }
+        }
+        return [];
+    }
+
+    /**
+     * Constructs a new weave that contains the smallest possible valid causal history for the given list
+     * of parent atoms.
+     * @param parents The list of atoms that should be kept in the weave.
+     */
+    subweave(...parents: Atom<TOp>[]): Weave<TOp> {
+        const weaves = parents.map(atom => {
+            const children = this.decendants(atom);
+            let chain = this.referenceChain(atom);
+            chain.reverse();
+            return [...chain, ...children];
+        });
+
+        let newWeave = new Weave<TOp>();
+        for (let i = 0; i < weaves.length; i++) {
+            let weave = weaves[i];
+            const [, rejected] = newWeave.import(weave);
+            if (rejected.length > 0) {
+                // Should be impossible to reject atoms because they were already in the weave.
+                throw new Error(
+                    '[Weave] Atoms were ignored or rejected when it should be impossible to due so.'
+                );
+            }
+        }
+
+        return newWeave;
+    }
+
+    /**
      * Copies this weave and returns the clone.
      */
     copy(): Weave<TOp> {

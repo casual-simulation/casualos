@@ -216,13 +216,15 @@ export default class FileTable extends Vue {
 
     async downloadFiles() {
         if (this.hasFiles) {
-            let tree = new AuxCausalTree(
-                storedTree(this.fileManager.aux.tree.site)
+            const atoms = this.files.map(f => f.metadata.ref);
+            const weave = this.fileManager.aux.tree.weave.subweave(...atoms);
+            const stored = storedTree(
+                this.fileManager.aux.tree.site,
+                this.fileManager.aux.tree.knownSites,
+                weave.atoms
             );
-
-            let events = this.files.map(f => fileAdded(f));
-            await tree.root();
-            await tree.addEvents(events);
+            let tree = new AuxCausalTree(stored);
+            await tree.import(stored);
 
             downloadAuxState(tree, `selection-${Date.now()}`);
         }
