@@ -234,12 +234,38 @@ export class Input {
     }
 
     /**
+     * Determines if the given event is for any of the the given elements and should
+     * therefore be intercepted.
+     * @param event The event.
+     * @param elements The elements.
+     */
+    public isEventForAnyElement(
+        event: MouseEvent | TouchEvent,
+        elements: HTMLElement[]
+    ): boolean {
+        let el: Element;
+        if (event instanceof MouseEvent) {
+            el = document.elementFromPoint(event.clientX, event.clientY);
+        } else {
+            el = document.elementFromPoint(
+                event.changedTouches[0].clientX,
+                event.changedTouches[0].clientY
+            );
+        }
+
+        const matchingElement = elements.find(e =>
+            Input.isElementContainedByOrEqual(el, e)
+        );
+        return !!matchingElement;
+    }
+
+    /**
      * Determines if the given HTML element is contained by the given container element.
      * @param element The HTML element.
      * @param container The container.
      */
     public static isElementContainedByOrEqual(
-        element: HTMLElement,
+        element: Element,
         container: HTMLElement
     ): boolean {
         if (element === container) {
@@ -646,6 +672,15 @@ export class Input {
             this._inputType = InputType.Mouse;
         if (this._inputType != InputType.Mouse) return;
 
+        if (
+            this.isEventForAnyElement(event, [
+                this._gameView.gameView,
+                ...this._gameView.getUIHtmlElements(),
+            ])
+        ) {
+            event.preventDefault();
+        }
+
         let buttonState: InputState = this._getMouseButtonState(event.button);
         if (buttonState) {
             buttonState.setDownFrame(this._gameView.getTime().frameCount);
@@ -677,6 +712,15 @@ export class Input {
             this._inputType = InputType.Mouse;
         if (this._inputType != InputType.Mouse) return;
 
+        if (
+            this.isEventForAnyElement(event, [
+                this._gameView.gameView,
+                ...this._gameView.getUIHtmlElements(),
+            ])
+        ) {
+            event.preventDefault();
+        }
+
         let buttonState: InputState = this._getMouseButtonState(event.button);
         if (buttonState) {
             buttonState.setUpFrame(this._gameView.getTime().frameCount);
@@ -704,6 +748,15 @@ export class Input {
         if (this._inputType == InputType.Undefined)
             this._inputType = InputType.Mouse;
         if (this._inputType != InputType.Mouse) return;
+
+        if (
+            this.isEventForAnyElement(event, [
+                this._gameView.gameView,
+                ...this._gameView.getUIHtmlElements(),
+            ])
+        ) {
+            event.preventDefault();
+        }
 
         this._mouseData.clientPos = new Vector2(event.clientX, event.clientY);
         this._mouseData.pagePos = new Vector2(event.pageX, event.pageY);
@@ -806,6 +859,15 @@ export class Input {
             this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch) return;
 
+        if (
+            this.isEventForAnyElement(event, [
+                this._gameView.gameView,
+                ...this._gameView.getUIHtmlElements(),
+            ])
+        ) {
+            event.preventDefault();
+        }
+
         // For the touchstart event, it is a list of the touch points that became active with the current event.
         let changed = event.changedTouches;
 
@@ -851,10 +913,11 @@ export class Input {
         if (this._inputType != InputType.Touch) return;
 
         if (
-            this.isMouseFocusing(this._gameView.gameView) ||
-            this.isMouseFocusingAny(this._gameView.getUIHtmlElements())
+            this.isEventForAnyElement(event, [
+                this._gameView.gameView,
+                ...this._gameView.getUIHtmlElements(),
+            ])
         ) {
-            // This prevents the browser from doing things like allow the pull down refresh on Chrome.
             event.preventDefault();
         }
 
@@ -903,6 +966,15 @@ export class Input {
         if (this._inputType == InputType.Undefined)
             this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch) return;
+
+        if (
+            this.isEventForAnyElement(event, [
+                this._gameView.gameView,
+                ...this._gameView.getUIHtmlElements(),
+            ])
+        ) {
+            event.preventDefault();
+        }
 
         // For the touchend event, it is a list of the touch points that have been removed from the surface.
         let changed = event.changedTouches;
