@@ -15,7 +15,7 @@ import {
 } from '@casual-simulation/causal-trees';
 import { SocketIOConnection } from './SocketIOConnection';
 import { auxCausalTreeFactory } from '@casual-simulation/aux-common';
-import { BrowserCausalTreeStore } from './BrowserCausalTreeStore';
+import { BrowserCausalTreeStore } from '@casual-simulation/causal-tree-store-browser';
 import { AtomValidator } from '@casual-simulation/causal-trees';
 import { SigningCryptoImpl } from '@casual-simulation/crypto';
 import { BrowserSigningCryptoImpl } from '@casual-simulation/crypto-browser';
