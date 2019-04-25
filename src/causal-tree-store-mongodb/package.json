@@ -1,0 +1,48 @@
+{
+    "name": "@casual-simulation/causal-tree-store-mongodb",
+    "version": "0.5.0",
+    "description": "A causal tree store that interfaces with MongoDB",
+    "keywords": [
+        "mongodb",
+        "crdt"
+    ],
+    "author": "Casual Simulation, Inc.",
+    "homepage": "https://github.com/casual-simulation/aux",
+    "license": "MIT",
+    "main": "index.js",
+    "types": "index.d.ts",
+    "module": "index.js",
+    "directories": {
+        "lib": "."
+    },
+    "files": [
+        "/README.md",
+        "/LICENSE.txt",
+        "**/*.js",
+        "**/*.js.map",
+        "**/*.d.ts"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/casual-simulation/aux.git"
+    },
+    "scripts": {
+        "watch": "tsc --watch",
+        "watch:player": "npm run watch",
+        "build": "echo \"Nothing to do.\"",
+        "build:docs": "typedoc --mode file --excludeNotExported --out ../../docs/causal-tree-store-mongodb .",
+        "test": "jest",
+        "test:watch": "jest --watchAll"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "bugs": {
+        "url": "https://github.com/casual-simulation/aux/issues"
+    },
+    "dependencies": {
+        "@casual-simulation/causal-trees": "^0.5.0",
+        "@types/mongodb": "^3.1.25",
+        "mongodb": "3.2.3"
+    }
+}

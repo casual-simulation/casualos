@@ -7,6 +7,7 @@ let folders = [
     `${__dirname}/src/aux-common`,
     `${__dirname}/src/causal-trees`,
     `${__dirname}/src/causal-tree-server-socketio`,
+    `${__dirname}/src/causal-tree-store-mongodb`,
     `${__dirname}/src/crypto`,
     `${__dirname}/src/crypto-node`,
     `${__dirname}/src/crypto-browser`,
