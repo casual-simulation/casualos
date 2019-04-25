@@ -167,7 +167,7 @@ export default class GameView extends Vue implements IGameView {
      * Click event from GameView.vue
      */
     private onConfirmDialogOk() {
-        let contextType: unknown = '=isBuilder';
+        let contextType = '=isBuilder';
 
         if (this.playerCheck) {
             contextType = '=isBuilder || isPlayer';
