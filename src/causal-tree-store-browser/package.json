@@ -3,7 +3,8 @@
     "version": "0.5.0",
     "description": "A causal tree store that supports browser environments",
     "keywords": [
-        "crdt"
+        "crdt",
+        "causal-tree"
     ],
     "author": "Casual Simulation, Inc.",
     "homepage": "https://github.com/casual-simulation/aux",

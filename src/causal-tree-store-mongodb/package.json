@@ -4,7 +4,8 @@
     "description": "A causal tree store that interfaces with MongoDB",
     "keywords": [
         "mongodb",
-        "crdt"
+        "crdt",
+        "causal-tree"
     ],
     "author": "Casual Simulation, Inc.",
     "homepage": "https://github.com/casual-simulation/aux",
