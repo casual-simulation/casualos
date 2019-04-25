@@ -20,7 +20,7 @@
             </div>
             <md-list>
                 <router-link
-                    v-if="getUser() != null"
+                    v-if="getUser() != null && $route.name !== 'home'"
                     tag="md-list-item"
                     :to="{ name: 'home', params: { id: session } }"
                 >
