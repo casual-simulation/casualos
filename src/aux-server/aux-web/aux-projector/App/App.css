@@ -66,6 +66,10 @@
     justify-content: center;
 }
 
+.qr-code-item canvas {
+    margin: auto;
+}
+
 .qr-code-dialog .qr-code-container {
     display: flex;
     flex-flow: column;

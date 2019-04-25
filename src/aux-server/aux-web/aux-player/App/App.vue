@@ -11,14 +11,22 @@
 
         <md-drawer :md-active.sync="showNavigation">
             <div class="menu-header">
-                <span class="md-title">AUX Player</span><br />
+                <span class="md-title">{{ session || 'AUX Player' }}</span
+                ><br />
                 <span class="md-body-1" v-if="getUser() != null"
                     >Logged In: {{ getUser().name }}</span
                 >
             </div>
             <md-list>
-                <router-link
+                <md-list-item
+                    @click="showQRCode = true"
                     v-if="getUser() != null"
+                    class="qr-code-item"
+                >
+                    <qr-code :value="url()" :options="{ width: 256 }" />
+                </md-list-item>
+                <router-link
+                    v-if="getUser() != null && $route.name !== 'home'"
                     tag="md-list-item"
                     :to="{ name: 'home', params: { id: session } }"
                 >

@@ -7,6 +7,13 @@
                     <md-icon>menu</md-icon>
                 </md-button>
                 <file-search v-if="loggedIn"></file-search>
+                <md-button
+                    class="md-icon-button user-mode-toggle"
+                    v-if="userMode === false"
+                    @click="toggleUserMode()"
+                >
+                    <md-icon>close</md-icon>
+                </md-button>
             </div>
         </md-toolbar>
 
@@ -25,7 +32,6 @@
                     class="qr-code-item"
                 >
                     <qr-code :value="url()" :options="{ width: 256 }" />
-                    <!-- <span class="md-list-item-text">Show QR Code</span> -->
                 </md-list-item>
                 <router-link
                     v-if="getUser() != null && $route.name !== 'home'"
