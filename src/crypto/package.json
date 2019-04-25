@@ -37,6 +37,9 @@
     "bugs": {
         "url": "https://github.com/casual-simulation/aux/issues"
     },
+    "publishConfig": {
+        "access": "public"
+    },
     "dependencies": {
         "@types/fast-json-stable-stringify": "^2.0.0",
         "@types/sha.js": "^2.4.0",
