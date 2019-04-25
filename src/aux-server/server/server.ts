@@ -9,7 +9,7 @@ import { MongoClient } from 'mongodb';
 import { asyncMiddleware } from './utils';
 import { Config, ClientConfig, RedisConfig } from './config';
 import { CausalTreeServer } from '@casual-simulation/causal-tree-server-socketio';
-import { MongoDBTreeStore } from './causal-trees/MongoDBTreeStore';
+import { MongoDBTreeStore } from '@casual-simulation/causal-tree-store-mongodb';
 import { auxCausalTreeFactory } from '@casual-simulation/aux-common';
 import { AppVersion, apiVersion } from '@casual-simulation/aux-common';
 import uuid from 'uuid/v4';

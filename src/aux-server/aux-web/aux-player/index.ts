@@ -62,6 +62,7 @@ import App from './App/App';
 import Welcome from './Welcome/Welcome';
 import Home from './Home/Home';
 import Loading from '../shared/vue-components/Loading/Loading';
+import uuid from 'uuid/v4';
 
 // Import the WebXR Polyfill
 import 'webxr-polyfill';
@@ -131,10 +132,21 @@ router.beforeEach((to, from, next) => {
             const contextId = to.params.context || null;
             if (to.path !== '/login') {
                 if (!appManager.user) {
-                    next({
-                        name: 'login',
-                        query: { id: channelId, context: contextId },
-                    });
+                    if (to.name !== 'login') {
+                        appManager
+                            .loginOrCreateUser(`guest_${uuid()}`, channelId)
+                            .then(
+                                () => {
+                                    console.log(`[Router] Logged In!`);
+                                    next();
+                                },
+                                ex => {
+                                    console.error(ex);
+                                    next();
+                                    // next({ name: 'login', query: { id: channelId } });
+                                }
+                            );
+                    }
                     return;
                 } else {
                     if (appManager.user.channelId != channelId) {

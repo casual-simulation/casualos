@@ -1,13 +1,9 @@
 <!-- App.vue -->
 <template>
     <div id="app">
-        <md-toolbar class="md-transparent" md-elevation="0">
-            <div class="md-toolbar-section-start">
-                <md-button class="md-icon-button md-raised" @click="menuClicked()">
-                    <md-icon>menu</md-icon>
-                </md-button>
-            </div>
-        </md-toolbar>
+        <md-button class="show-navigation-button md-icon-button md-raised" @click="menuClicked()">
+            <md-icon>menu</md-icon>
+        </md-button>
 
         <md-drawer :md-active.sync="showNavigation">
             <div class="menu-header">

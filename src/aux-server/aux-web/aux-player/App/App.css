@@ -4,6 +4,12 @@
     padding-bottom: 0px;
 }
 
+.show-navigation-button {
+    position: absolute;
+    left: 16px;
+    top: 16px;
+}
+
 .app-content {
     padding: 16px;
 }

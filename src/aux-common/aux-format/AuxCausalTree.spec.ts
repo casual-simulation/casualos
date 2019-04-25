@@ -1296,6 +1296,50 @@ describe('AuxCausalTree', () => {
                 atom(atomId(1, 9, 1), atomId(1, 5), value(null)),
             ]);
         });
+
+        it('should handle setting a new object value when it was previously set to null', async () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            await tree.root();
+            const file = createFile('test', {});
+            await tree.addFile(file);
+
+            let updates: Atom<AuxOp>[][] = [];
+            tree.atomAdded.subscribe(refs => updates.push(refs));
+
+            await tree.updateFile(tree.value['test'], {
+                tags: {
+                    obj: {
+                        hello: 'test',
+                    },
+                },
+            });
+            await tree.updateFile(tree.value['test'], {
+                tags: {
+                    obj: null,
+                },
+            });
+            const { added: result } = await tree.updateFile(
+                tree.value['test'],
+                {
+                    tags: {
+                        obj: {
+                            hello: 'cool',
+                        },
+                    },
+                }
+            );
+
+            expect(result.map(ref => ref)).toEqual([
+                atom(
+                    atomId(1, 6, 1),
+                    atomId(1, 3),
+                    value({
+                        hello: 'cool',
+                    })
+                ),
+            ]);
+        });
     });
 
     describe('addEvents()', () => {

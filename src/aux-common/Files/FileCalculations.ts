@@ -1234,6 +1234,20 @@ export function getConfigTagContext(tag: string): string {
 }
 
 /**
+ * Determines if the given file is a config file for the given context.
+ * @param calc The calculation context.
+ * @param file The file to check.
+ * @param context The context to check if the file is the config of.
+ */
+export function isConfigForContext(
+    calc: FileCalculationContext,
+    file: File,
+    context: string
+) {
+    return calculateBooleanTagValue(calc, file, `${context}.config`, false);
+}
+
+/**
  * Gets the list of contexts that the given file is a config file for.
  * @param calc The calculation context.
  * @param file The file that represents the context.

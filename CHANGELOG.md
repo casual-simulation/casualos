@@ -1,5 +1,19 @@
 # AUX Changelog
 
+## V0.5.1
+
+### Date: 04/25/2019
+
+### Changes:
+
+-   Improvements
+    -   Automatically log in the user as a guest if they attempt to got to as context without being logged in.
+-   Bug Fixes
+    -   Stopped a new Guest's username from saying `guest_###` upon logging into a new guest account for the first time.
+    -   Fixed highlighting issues when dragging files around.
+    -   Totally removed the AUX Player toolbar so that it doesn't get in the way of input events. (Was previously just transparent)
+    -   Fixed an issue with files not responding to height changes on a hex when the config file wasn't in the same context.
+
 ## V0.5.0
 
 ### Date: 04/25/2019
