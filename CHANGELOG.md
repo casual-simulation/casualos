@@ -1,5 +1,16 @@
 # AUX Changelog
 
+## V0.5.1
+
+### Date: 04/25/2019
+
+### Changes:
+
+-   Improvements
+    -   Automatically log in the user as a guest if they attempt to got to as context without being logged in.
+-   Bug Fixes
+    -   Stopped a new Guest's username from saying `guest_###` upon logging into a new guest account for the first time.
+
 ## V0.5.0
 
 ### Date: 04/25/2019
