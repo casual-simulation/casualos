@@ -1,8 +1,8 @@
 # AUX Changelog
 
-## V0.4.16
+## V0.5.0
 
-### Date: TBD
+### Date: 04/25/2019
 
 ### Changes:
 
@@ -20,6 +20,22 @@
         -   Creating new files at the same position will now automatically stack them.
         -   Stacking is determined first by the index and second by the file ID.
     -   Added a zoom property to the `tweenPlayerTo` function to set a consistent zoom on file focus.
+    -   Moved the worksurface context menu options to files mode.
+    -   Moved the channel name to the hamburger menu and added the QR Code to the menu as well.
+    -   Worksurface improvements
+        -   Removed the header in AUX Player so that only the hamburger menu is shown.
+        -   Removed the option to enter into worksurfaces mode.
+            -   If users are already in worksurfaces mode then they can still exit.
+        -   Removed the ability to snap or drag worksurfaces.
+        -   Removed the ability to change the worksurface color.
+    -   Removed the change background color context menu.
+    -   Made the globals file generate as a worksurface.
+    -   File Sheet/Search improvements
+        -   Removed the edit icon and replaced it with a search icon at the top right of the top bar.
+        -   Added the ability to save a `.aux` file from the current selection/search.
+        -   Moved the "+tag" button to the left side of the panel and added an icon for it.
+        -   Added another "Add Tag" button to the bottom of the tags list.
+        -   Added the ability to show the list of selected file IDs in the search bar.
 -   Bug Fixes
     -   Stopped sheet closing bug from taking multiple clicks to reopen.
 
