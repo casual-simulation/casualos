@@ -31,7 +31,7 @@
         "watch": "tsc --watch",
         "watch:player": "npm run watch",
         "build": "echo \"Nothing to do.\"",
-        "build:docs": "typedoc --mode file --excludeNotExported --out ../../docs/causal-trees .",
+        "build:docs": "typedoc --mode file --excludeNotExported --out ../../docs/causal-trees-server-socketio .",
         "test": "jest",
         "test:watch": "jest --watchAll"
     },

@@ -4,6 +4,7 @@
         "baseUrl": ".",
         "outDir": ".",
         "declaration": true,
+        "composite": true,
         "incremental": true
     },
     "include": ["./**/*"],
