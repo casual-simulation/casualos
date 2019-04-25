@@ -44,6 +44,7 @@ import {
     createContextId,
     isMergeable,
     getFileLabelAnchor,
+    formatValue,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
@@ -3015,6 +3016,19 @@ describe('FileCalculations', () => {
             const anchor = getFileLabelAnchor(calc, file);
 
             expect(anchor).toBe('front');
+        });
+    });
+
+    describe('formatValue()', () => {
+        it('should format files to a short ID', () => {
+            const file = createFile('abcdefghijklmnopqrstuvwxyz');
+            expect(formatValue(file)).toBe('abcde');
+        });
+
+        it('should format file arrays', () => {
+            const file1 = createFile('abcdefghijklmnopqrstuvwxyz');
+            const file2 = createFile('zyxwvutsrqponmlkjighfedcba');
+            expect(formatValue([file1, file2])).toBe('[abcde,zyxwv]');
         });
     });
 });

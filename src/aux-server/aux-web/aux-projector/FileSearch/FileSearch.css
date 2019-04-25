@@ -1,0 +1,19 @@
+.file-search {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.file-search:not(.open) {
+    justify-content: flex-end;
+}
+
+.num-files {
+    background-color: #999;
+    color: #fff;
+}
+
+.md-toolbar .file-search .md-field {
+    margin-top: 0;
+    margin-bottom: 8px;
+}

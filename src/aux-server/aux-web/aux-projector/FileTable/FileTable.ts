@@ -11,13 +11,12 @@ import {
     hasValue,
     isFormula,
     getShortId,
-    searchFileState,
-    SandboxResult,
-    isFile,
     isDiff,
     merge,
     SelectionMode,
     tweenTo,
+    AuxCausalTree,
+    fileAdded,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
 import { appManager } from '../../shared/AppManager';
@@ -29,6 +28,8 @@ import FileTag from '../FileTag/FileTag';
 import FileTableToggle from '../FileTableToggle/FileTableToggle';
 import { TreeView } from 'vue-json-tree-view';
 import { tickStep } from 'd3';
+import { downloadAuxState } from '../download';
+import { storedTree, site } from '@casual-simulation/causal-trees';
 
 @Component({
     components: {
@@ -41,6 +42,7 @@ import { tickStep } from 'd3';
 })
 export default class FileTable extends Vue {
     @Prop() files: AuxObject[];
+    @Prop({ default: null }) searchResult: any;
     @Prop({ default: () => <any>[] })
     extraTags: string[];
     @Prop({ default: false })
@@ -49,6 +51,8 @@ export default class FileTable extends Vue {
     selectionMode: SelectionMode;
     @Prop({ default: false })
     diffSelected: boolean;
+    @Prop({ default: false })
+    isSearch: boolean;
 
     /**
      * A property that can be set to indicate to the table that its values should be updated.
@@ -63,13 +67,10 @@ export default class FileTable extends Vue {
     isFocusedTagFormula: boolean = false;
     multilineValue: string = '';
     isMakingNewTag: boolean = false;
-    isMakingNewAction: boolean = false;
     newTag: string = 'myNewTag';
     newTagValid: boolean = true;
+    newTagPlacement: NewTagPlacement = 'top';
     numFilesSelected: number = 0;
-    isSearching: boolean = false;
-    search: string = '';
-    searchResults: SandboxResult<any> = null;
     viewMode: 'rows' | 'columns' = 'columns';
     showHidden: boolean = false;
 
@@ -87,13 +88,13 @@ export default class FileTable extends Vue {
         const sizeType = this.viewMode === 'rows' ? 'columns' : 'rows';
         if (this.tags.length === 0) {
             return {
-                [`grid-template-${sizeType}`]: `auto auto`,
+                [`grid-template-${sizeType}`]: `auto auto auto`,
             };
         }
         return {
             [`grid-template-${sizeType}`]: `auto auto repeat(${
                 this.tags.length
-            }, auto)`,
+            }, auto) auto`,
         };
     }
 
@@ -106,7 +107,7 @@ export default class FileTable extends Vue {
     }
 
     get hasFiles() {
-        return this.displayedFiles.length > 0;
+        return this.files.length > 0;
     }
 
     get hasTags() {
@@ -115,14 +116,6 @@ export default class FileTable extends Vue {
 
     get newTagExists() {
         return this.tagExists(this.newTag);
-    }
-
-    get displayedFiles(): File[] {
-        if (this.hasSearchResults()) {
-            return this.getFileSearchResults();
-        } else {
-            return this.files;
-        }
     }
 
     @Watch('files')
@@ -172,28 +165,7 @@ export default class FileTable extends Vue {
         await this.fileManager.selection.selectFile(file);
     }
 
-    startSearch() {
-        this.isSearching = true;
-        this.$nextTick(() => {
-            (<any>this.$refs.searchField).$el.focus();
-        });
-    }
-
-    cancelSearch() {
-        this.isSearching = false;
-        this.search = '';
-        this.searchResults = null;
-    }
-
-    async addSearch() {
-        let files = this.getFileSearchResults();
-        if (files && files.length > 0) {
-            await this.fileManager.selection.setSelectedFiles(files);
-        }
-        this.cancelSearch();
-    }
-
-    addTag(isAction: boolean = false) {
+    addTag(placement: NewTagPlacement = 'top') {
         if (this.isMakingNewTag) {
             // Check to make sure that the tag is unique.
             if (this.tagExists(this.newTag)) {
@@ -208,21 +180,26 @@ export default class FileTable extends Vue {
                 return;
             }
 
-            this.addedTags.unshift(this.newTag);
-            this.tags.unshift(this.newTag);
+            if (this.newTagPlacement === 'top') {
+                this.addedTags.unshift(this.newTag);
+                this.tags.unshift(this.newTag);
+            } else {
+                this.addedTags.push(this.newTag);
+                this.tags.push(this.newTag);
+            }
 
             const table = this.$refs.table as HTMLElement;
             if (table) {
                 table.scrollIntoView({
-                    block: 'start',
+                    block: this.newTagPlacement === 'top' ? 'start' : 'end',
                     inline: 'start',
                 });
             }
         } else {
             this.newTag = '';
+            this.newTagPlacement = placement;
         }
         this.isMakingNewTag = !this.isMakingNewTag;
-        this.isMakingNewAction = isAction && this.isMakingNewTag;
     }
 
     closeWindow() {
@@ -231,16 +208,34 @@ export default class FileTable extends Vue {
 
     cancelNewTag() {
         this.isMakingNewTag = false;
-        this.isMakingNewAction = false;
+    }
+
+    clearSearch() {
+        this.fileManager.filePanel.search = '';
     }
 
     async clearSelection() {
         await this.fileManager.selection.clearSelection();
-        this.$emit('selectionCleared');
     }
 
     async multiSelect() {
         await this.fileManager.selection.setSelectedFiles(this.files);
+    }
+
+    async downloadFiles() {
+        if (this.hasFiles) {
+            const atoms = this.files.map(f => f.metadata.ref);
+            const weave = this.fileManager.aux.tree.weave.subweave(...atoms);
+            const stored = storedTree(
+                this.fileManager.aux.tree.site,
+                this.fileManager.aux.tree.knownSites,
+                weave.atoms
+            );
+            let tree = new AuxCausalTree(stored);
+            await tree.import(stored);
+
+            downloadAuxState(tree, `selection-${Date.now()}`);
+        }
     }
 
     onTagChanged(file: AuxObject, tag: string, value: string) {
@@ -264,17 +259,6 @@ export default class FileTable extends Vue {
         this.$emit('tagFocusChanged', file, tag, focused);
     }
 
-    @Watch('search')
-    onSearchChanged() {
-        if (this.search) {
-            this.searchResults = searchFileState(
-                this.search,
-                this.fileManager.filesState
-            );
-        }
-        this._updateTags();
-    }
-
     onFileClicked(file: AuxObject) {
         this.fileManager.transaction(tweenTo(file.id));
     }
@@ -282,53 +266,6 @@ export default class FileTable extends Vue {
     toggleHidden() {
         this.showHidden = !this.showHidden;
         this._updateTags();
-    }
-
-    /**
-     * Determines if we have any valid search results.
-     */
-    hasSearchResults() {
-        if (!this.searchResults || !this.searchResults.success) {
-            return false;
-        } else {
-            const result = this.searchResults.result;
-            if (Array.isArray(result)) {
-                return result.length > 0;
-            } else if (typeof result === 'object') {
-                return !!result;
-            } else {
-                return true;
-            }
-        }
-    }
-
-    getFileSearchResults(): AuxObject[] {
-        if (!this.searchResults) {
-            return [];
-        }
-        const result = this.searchResults.result;
-        if (result) {
-            if (Array.isArray(result)) {
-                return result;
-            } else if (isFile(result)) {
-                return [result];
-            }
-        }
-        return [];
-    }
-
-    getSearchResultData(): any {
-        const result = this.searchResults.result;
-        if (result) {
-            if (typeof result === 'object') {
-                return result;
-            } else {
-                return {
-                    result: result,
-                };
-            }
-        }
-        return {};
     }
 
     removeTag(tag: string) {
@@ -391,10 +328,15 @@ export default class FileTable extends Vue {
         const editingTags = this.lastEditedTag ? [this.lastEditedTag] : [];
         const allExtraTags = union(this.extraTags, this.addedTags, editingTags);
         this.tags = fileTags(
-            this.displayedFiles,
+            this.files,
             this.tags,
             allExtraTags,
             this.showHidden
         );
     }
 }
+
+/**
+ * Defines a set of valid positions that a new tag can be positioned at in the list.
+ */
+export type NewTagPlacement = 'top' | 'bottom';

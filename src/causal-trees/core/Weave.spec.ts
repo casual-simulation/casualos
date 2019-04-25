@@ -1677,4 +1677,81 @@ describe('Weave', () => {
             expect(chain).toEqual([greatGrandChild, grandChild, child, root]);
         });
     });
+
+    describe('decendants()', () => {
+        it('should return all the child atoms of the given atom', () => {
+            const a11 = atom(atomId(1, 1), null, new Op());
+            const a22 = atom(atomId(2, 2), atomId(1, 1), new Op());
+            const a23 = atom(atomId(2, 3), atomId(2, 2), new Op());
+            const a34 = atom(atomId(3, 4), atomId(2, 3), new Op());
+            const a35 = atom(atomId(3, 5), atomId(2, 3), new Op());
+            const a46 = atom(atomId(4, 6), atomId(3, 4), new Op());
+
+            let weave = new Weave();
+            weave.insertMany(a11, a22, a23, a34, a35, a46);
+
+            let children = weave.decendants(a11);
+            expect(children).toEqual([a22, a23, a35, a34, a46]);
+        });
+    });
+
+    describe('subweave()', () => {
+        it('should return the parents of the given atom', () => {
+            const a11 = atom(atomId(1, 1), null, new Op());
+            const a36 = atom(atomId(3, 6), atomId(1, 1), new Op());
+            const a24 = atom(atomId(2, 4), atomId(1, 1), new Op());
+            const a22 = atom(atomId(2, 2), atomId(1, 1), new Op());
+            const a23 = atom(atomId(2, 3), atomId(2, 2), new Op());
+            const a35 = atom(atomId(3, 5), atomId(2, 3), new Op());
+            const a34 = atom(atomId(3, 4), atomId(2, 3), new Op());
+            const a46 = atom(atomId(4, 6), atomId(3, 4), new Op());
+            const a12 = atom(atomId(1, 2), atomId(1, 1), new Op());
+
+            const weave = new Weave<Op>();
+            weave.insertMany(a11, a12, a22, a23, a24, a34, a35, a36, a46);
+
+            const sub = weave.subweave(a35);
+
+            expect(sub.atoms).toEqual([a11, a22, a23, a35]);
+        });
+
+        it('should return the children of the given atom', () => {
+            const a11 = atom(atomId(1, 1), null, new Op());
+            const a36 = atom(atomId(3, 6), atomId(1, 1), new Op());
+            const a24 = atom(atomId(2, 4), atomId(1, 1), new Op());
+            const a22 = atom(atomId(2, 2), atomId(1, 1), new Op());
+            const a23 = atom(atomId(2, 3), atomId(2, 2), new Op());
+            const a35 = atom(atomId(3, 5), atomId(2, 3), new Op());
+            const a34 = atom(atomId(3, 4), atomId(2, 3), new Op());
+            const a46 = atom(atomId(4, 6), atomId(3, 4), new Op());
+            const a12 = atom(atomId(1, 2), atomId(1, 1), new Op());
+
+            const weave = new Weave<Op>();
+            weave.insertMany(a11, a12, a22, a23, a24, a34, a35, a36, a46);
+
+            const sub = weave.subweave(a11);
+
+            expect(sub.atoms).toEqual(weave.atoms);
+        });
+
+        it('should return a weave containing full histories of both of the given atoms', () => {
+            const a11 = atom(atomId(1, 1), null, new Op());
+            const a36 = atom(atomId(3, 6), atomId(1, 1), new Op());
+            const a24 = atom(atomId(2, 4), atomId(1, 1), new Op());
+            const a25 = atom(atomId(2, 5), atomId(2, 4), new Op());
+            const a22 = atom(atomId(2, 2), atomId(1, 1), new Op());
+            const a23 = atom(atomId(2, 3), atomId(2, 2), new Op());
+            const a35 = atom(atomId(3, 5), atomId(2, 3), new Op());
+            const a34 = atom(atomId(3, 4), atomId(2, 3), new Op());
+            const a46 = atom(atomId(4, 6), atomId(3, 4), new Op());
+            const a12 = atom(atomId(1, 2), atomId(1, 1), new Op());
+
+            const weave = new Weave<Op>();
+            weave.insertMany(a11, a12, a22, a23, a24, a25, a34, a35, a36, a46);
+
+            const sub = weave.subweave(a35, a24);
+
+            expect(sub.atoms).toEqual([a11, a24, a25, a22, a23, a35]);
+        });
+    });
 });

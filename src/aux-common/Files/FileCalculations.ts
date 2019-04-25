@@ -46,7 +46,7 @@ import SandboxInterface, { FilterFunction } from '../Formulas/SandboxInterface';
 import { PartialFile } from '../Files';
 import { FilesState, cleanFile, hasValue } from './FilesChannel';
 import { merge, shortUuid } from '../utils';
-import { AuxFile, AuxObject, AuxOp } from '../aux-format';
+import { AuxFile, AuxObject, AuxOp, AuxState } from '../aux-format';
 import { Atom } from '@casual-simulation/causal-trees';
 
 export var ShortId_Length: number = 5;
@@ -192,7 +192,10 @@ export function isContext(
  * @param files The files to filter.
  * @param selectionId The selection to check.
  */
-export function filterFilesBySelection(files: Object[], selectionId: string) {
+export function filterFilesBySelection<TFile extends File>(
+    files: TFile[],
+    selectionId: string
+) {
     return files.filter(f => {
         if (f.id === selectionId) {
             return true;
@@ -317,7 +320,7 @@ export function calculateFormattedFileValue(
     tag: string
 ): string {
     const value = calculateFileValue(context, file, tag);
-    return _formatValue(value);
+    return formatValue(value);
 }
 
 /**
@@ -1831,10 +1834,14 @@ function _isAssignmentFormula(value: any): boolean {
     }
 }
 
-function _formatValue(value: any): string {
+/**
+ * Formats the given value and returns a string representing it.
+ * @param value The value to format.
+ */
+export function formatValue(value: any): string {
     if (typeof value === 'object') {
         if (Array.isArray(value)) {
-            return `[${value.map(v => _formatValue(v)).join(',')}]`;
+            return `[${value.map(v => formatValue(v)).join(',')}]`;
         } else {
             if (value.id) {
                 return getShortId(value);

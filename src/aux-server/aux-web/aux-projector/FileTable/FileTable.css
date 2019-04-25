@@ -59,6 +59,21 @@
     border: none;
 }
 
+.file-cell.new-tag {
+    text-align: center;
+    background-color: var(--disabled-cell-color);
+}
+
+.file-cell.new-tag .md-button {
+    margin: 0;
+    width: 100%;
+}
+
+.file-cell.new-tag img {
+    width: 24px;
+    height: 24px;
+}
+
 .remove-tag.md-button {
     width: 24px;
     min-width: 24px;
@@ -169,6 +184,11 @@ th:last-child {
 
 .no-search-results-message {
     text-align: center;
+}
+
+.no-files-message {
+    text-align: center;
+    padding: 0 16px;
 }
 
 .search-field {

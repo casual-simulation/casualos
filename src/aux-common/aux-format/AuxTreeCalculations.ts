@@ -17,7 +17,6 @@ import { sortBy } from 'lodash';
 import {
     File,
     Object,
-    calculateStateDiff,
     FilesState,
     PartialFile,
     createFile,
@@ -27,6 +26,12 @@ import {
     isConfigTag,
 } from '../Files';
 import uuid from 'uuid/v4';
+
+export interface AuxStateDiff {
+    addedFiles: AuxFile[];
+    removedFiles: string[];
+    updatedFiles: AuxFile[];
+}
 
 /**
  * Builds the fileAdded, fileRemoved, and fileUpdated observables from the given channel connection.
@@ -70,7 +75,7 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
                 }
             });
 
-            let diff: FilesStateDiff = {
+            let diff: AuxStateDiff = {
                 addedFiles: addedFiles,
                 removedFiles: deletedFiles,
                 updatedFiles: values(updatedFiles),

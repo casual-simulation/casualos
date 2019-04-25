@@ -6,26 +6,14 @@
                 <md-button class="md-icon-button" @click="menuClicked()">
                     <md-icon>menu</md-icon>
                 </md-button>
-                <a class="md-title clickable" @click="showQRCode = true">
-                    {{ session || 'AUX Builder' }}
-                </a>
-            </div>
-            <div class="md-toolbar-section-end">
-                <div v-if="loggedIn">
-                    <md-button
-                        class="md-icon-button user-mode-toggle"
-                        v-if="userMode === false"
-                        @click="toggleUserMode()"
-                    >
-                        <md-icon>close</md-icon>
-                    </md-button>
-                </div>
+                <file-search v-if="loggedIn"></file-search>
             </div>
         </md-toolbar>
 
         <md-drawer :md-active.sync="showNavigation">
             <div class="menu-header">
-                <span class="md-title">AUX Builder</span><br />
+                <span class="md-title">{{ session || 'AUX Builder' }}</span
+                ><br />
                 <span class="md-body-1" v-if="getUser() != null"
                     >Logged In: {{ getUser().name }}</span
                 >
@@ -39,6 +27,10 @@
                     <md-icon>home</md-icon>
                     <span class="md-list-item-text">Home</span>
                 </router-link>
+                <md-list-item @click="showQRCode = true" v-if="getUser() != null">
+                    <qr-icon class="md-icon md-icon-font md-theme-default"></qr-icon>
+                    <span class="md-list-item-text">Show QR Code</span>
+                </md-list-item>
                 <md-list-item @click="upload" v-if="getUser() != null">
                     <md-icon>cloud_upload</md-icon>
                     <span class="md-list-item-text">Upload AUX</span>
@@ -68,6 +60,14 @@
                         >Must be online &amp; synced to clear the simulation.</md-tooltip
                     >
                 </md-list-item>
+                <router-link
+                    v-if="dev && getUser() != null"
+                    tag="md-list-item"
+                    :to="{ name: 'aux-debug', params: { id: session } }"
+                >
+                    <md-icon>bug_report</md-icon>
+                    <span class="md-list-item-text">Debug</span>
+                </router-link>
                 <md-list-item @click.right="toggleOnlineOffline()">
                     <md-icon id="forced-offline-error" v-if="forcedOffline()">error</md-icon>
                     <md-icon id="synced-checkmark" v-else-if="synced">cloud_done</md-icon>
@@ -90,14 +90,6 @@
                     <md-icon>update</md-icon>
                     <span class="md-list-item-text">An new version is available!</span>
                 </md-list-item>
-                <router-link
-                    v-if="dev && getUser() != null"
-                    tag="md-list-item"
-                    :to="{ name: 'aux-debug', params: { id: session } }"
-                >
-                    <md-icon>bug_report</md-icon>
-                    <span class="md-list-item-text">Debug</span>
-                </router-link>
                 <md-list-item v-for="item in extraItems" :key="item.id" @click="item.click()">
                     <md-icon v-if="item.icon">{{ item.icon }}</md-icon>
                     <span class="md-list-item-text">{{ item.text }}</span>
