@@ -19,6 +19,7 @@ import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
 import { BuilderGroup3D } from '../../../shared/scene/BuilderGroup3D';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import GameView from '../../GameView/GameView';
+import { dropWhile } from 'lodash';
 
 /**
  * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
@@ -69,10 +70,10 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
                     console.log(context);
                 }
                 const file = this._file;
-                const index = getFileIndex(calc, file, file3D.context);
-                const draggedObjects = objects
-                    .filter(o => getFileIndex(calc, o, context) >= index)
-                    .map(o => o);
+                const draggedObjects = dropWhile(
+                    objects,
+                    o => o.id !== file.id
+                );
                 return new BuilderFileDragOperation(
                     this._gameView,
                     this._interaction,

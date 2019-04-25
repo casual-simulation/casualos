@@ -1,6 +1,7 @@
 .menu-header {
     margin: 16px;
-    padding-bottom: 8px;
+    margin-bottom: 0px;
+    padding-bottom: 0px;
 }
 
 .app-content {
@@ -59,6 +60,14 @@
 
 .md-title.clickable {
     cursor: pointer;
+}
+
+.qr-code-item {
+    justify-content: center;
+}
+
+.qr-code-item canvas {
+    margin: auto;
 }
 
 .qr-code-dialog .qr-code-container {

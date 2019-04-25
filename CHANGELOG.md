@@ -1,6 +1,43 @@
 # AUX Changelog
 
-Test
+## V0.5.0
+
+### Date: 04/25/2019
+
+### Changes:
+
+-   Improvements
+    -   Restricted onCombine feature to only fire in aux-player and restrict it from happening on aux-builder.
+    -   Removed the `clone()` function.
+    -   Improved the `create()` function to be able to accept lists of diffs/files.
+        -   This allows you to quickly create every combination of a set of diffs.
+        -   For example, `create(this, [ { hello: true }, { hello: false } ])` will create two files. One with `#hello: true` and one with `#hello: false`.
+        -   More complicated scenarios can be created as well:
+            -   `create(this, [ { row: 1 }, { row: 2 } ], [ { column: 1 }, { column: 2 } ])` will create four files for every possible combination between `row: 1|2` and `column: 1|2`.
+            -   `create(this, { 'aux.color': 'red' }, [ makeDiff.addToContext('context_1'), makeDiff.addToContext('context_2') ])` will create two files that are both red but are on different contexts.
+            -   `create(this, @aux.color('red'), { 'aux.color': 'green' })` will find every file that is red, duplicate them, and set the new files' colors to green.
+    -   Improved how we position files to prevent two files from appearing at the same index.
+        -   Creating new files at the same position will now automatically stack them.
+        -   Stacking is determined first by the index and second by the file ID.
+    -   Added a zoom property to the `tweenPlayerTo` function to set a consistent zoom on file focus.
+    -   Moved the worksurface context menu options to files mode.
+    -   Moved the channel name to the hamburger menu and added the QR Code to the menu as well.
+    -   Worksurface improvements
+        -   Removed the header in AUX Player so that only the hamburger menu is shown.
+        -   Removed the option to enter into worksurfaces mode.
+            -   If users are already in worksurfaces mode then they can still exit.
+        -   Removed the ability to snap or drag worksurfaces.
+        -   Removed the ability to change the worksurface color.
+    -   Removed the change background color context menu.
+    -   Made the globals file generate as a worksurface.
+    -   File Sheet/Search improvements
+        -   Removed the edit icon and replaced it with a search icon at the top right of the top bar.
+        -   Added the ability to save a `.aux` file from the current selection/search.
+        -   Moved the "+tag" button to the left side of the panel and added an icon for it.
+        -   Added another "Add Tag" button to the bottom of the tags list.
+        -   Added the ability to show the list of selected file IDs in the search bar.
+-   Bug Fixes
+    -   Stopped sheet closing bug from taking multiple clicks to reopen.
 
 ## V0.4.15
 
@@ -30,7 +67,7 @@ Test
     -   Formatted all of the source files. (TS, JS, Vue, JSON, HTML, CSS)
     -   Added an option to the dropdown in aux-builder to jump to aux-player for the current context
     -   `formula-lib.ts` has added a `isPlayerInContext` function to determine if path is in the expected context in aux-player.
-    -   `formula-lib.ts` has changed `toTween` function to `toPlayerTween` for better clarity on the function's use.
+    -   `formula-lib.ts` has changed `tweenTo` function to `tweenPlayerTo` for better clarity on the function's use.
 
 ## V0.4.14
 

@@ -25,7 +25,7 @@ import { keys, minBy, isEqual } from 'lodash';
 import { GridChecker, GridCheckResults } from './grid/GridChecker';
 import { GameObject } from './GameObject';
 import { AuxFile } from '@casual-simulation/aux-common/aux-format';
-import { idEquals } from '@casual-simulation/aux-common/causal-trees';
+import { idEquals } from '@casual-simulation/causal-trees';
 import { disposeMesh } from './SceneUtils';
 
 /**

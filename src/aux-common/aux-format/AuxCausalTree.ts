@@ -1,4 +1,18 @@
-import { Weave } from '../causal-trees/Weave';
+import {
+    Weave,
+    CausalTree,
+    CausalTreeOptions,
+    SiteInfo,
+    StoredCausalTree,
+    AtomId,
+    Atom,
+    atomIdToString,
+    atomId,
+    RejectedAtom,
+    AtomBatch,
+    AddResult,
+    mergeIntoBatch,
+} from '@casual-simulation/causal-trees';
 import {
     AuxOp,
     FileOp,
@@ -8,7 +22,6 @@ import {
     DeleteOp,
     AuxOpType,
 } from './AuxOpTypes';
-import { CausalTree, CausalTreeOptions } from '../causal-trees/CausalTree';
 import {
     FilesState,
     FileEvent,
@@ -24,9 +37,6 @@ import {
 } from '../Files';
 import { AuxReducer, AuxReducerMetadata } from './AuxReducer';
 import { root, file, tag, value, del, insert } from './AuxAtoms';
-import { AtomId, Atom, atomIdToString, atomId } from '../causal-trees/Atom';
-import { SiteInfo } from '../causal-trees/SiteIdInfo';
-import { StoredCausalTree } from '../causal-trees/StoredCausalTree';
 import {
     AuxState,
     AuxTagMetadata,
@@ -42,9 +52,6 @@ import {
 } from './AuxTreeCalculations';
 import { flatMap, keys, isEqual } from 'lodash';
 import { merge } from '../utils';
-import { RejectedAtom } from '../causal-trees/RejectedAtom';
-import { AtomBatch } from '../causal-trees/AtomBatch';
-import { AddResult, mergeIntoBatch } from '../causal-trees/AddResult';
 
 /**
  * Defines a Causal Tree for aux files.

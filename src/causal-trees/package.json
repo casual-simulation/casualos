@@ -1,0 +1,50 @@
+{
+    "name": "@casual-simulation/causal-trees",
+    "version": "0.4.15",
+    "description": "Create persistent, distributed, realtime, and conflict-free data types.",
+    "keywords": [
+        "crdt"
+    ],
+    "author": "Casual Simulation, Inc.",
+    "homepage": "https://github.com/casual-simulation/aux",
+    "license": "MIT",
+    "main": "index.js",
+    "types": "index.d.ts",
+    "module": "index.js",
+    "directories": {
+        "lib": "."
+    },
+    "files": [
+        "/README.md",
+        "/LICENSE.txt",
+        "**/*.js",
+        "**/*.js.map",
+        "**/*.d.ts"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/casual-simulation/aux.git"
+    },
+    "scripts": {
+        "watch": "tsc --watch",
+        "watch:player": "npm run watch",
+        "build": "echo \"Nothing to do.\"",
+        "build:docs": "typedoc --mode file --excludeNotExported --out ../../docs/causal-trees .",
+        "test": "jest",
+        "test:watch": "jest --watchAll"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "bugs": {
+        "url": "https://github.com/casual-simulation/aux/issues"
+    },
+    "dependencies": {
+        "@casual-simulation/crypto": "^0.4.14",
+        "@types/lodash": "^4.14.123",
+        "@types/base64-js": "^1.2.5",
+        "base64-js": "^1.3.0",
+        "rxjs": "^6.4.0",
+        "lodash": "^4.17.11"
+    }
+}

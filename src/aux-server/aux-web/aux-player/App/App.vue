@@ -1,27 +1,32 @@
 <!-- App.vue -->
 <template>
     <div id="app">
-        <md-toolbar>
+        <md-toolbar class="md-transparent" md-elevation="0">
             <div class="md-toolbar-section-start">
-                <md-button class="md-icon-button" @click="menuClicked()">
+                <md-button class="md-icon-button md-raised" @click="menuClicked()">
                     <md-icon>menu</md-icon>
                 </md-button>
-                <a class="md-title clickable" @click="showQRCode = true">
-                    {{ session || 'AUX Player' }}
-                </a>
             </div>
         </md-toolbar>
 
         <md-drawer :md-active.sync="showNavigation">
             <div class="menu-header">
-                <span class="md-title">AUX Player</span><br />
+                <span class="md-title">{{ session || 'AUX Player' }}</span
+                ><br />
                 <span class="md-body-1" v-if="getUser() != null"
                     >Logged In: {{ getUser().name }}</span
                 >
             </div>
             <md-list>
-                <router-link
+                <md-list-item
+                    @click="showQRCode = true"
                     v-if="getUser() != null"
+                    class="qr-code-item"
+                >
+                    <qr-code :value="url()" :options="{ width: 256 }" />
+                </md-list-item>
+                <router-link
+                    v-if="getUser() != null && $route.name !== 'home'"
                     tag="md-list-item"
                     :to="{ name: 'home', params: { id: session } }"
                 >

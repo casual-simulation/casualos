@@ -26,10 +26,9 @@ export default class ColorPicker extends Vue {
     }
 
     async mounted() {
-        this.open = this.open.bind(this);
-        this._handleMouseDown = this._handleMouseDown.bind(this);
-
-        EventBus.$on('onColorPicker', this.open);
+        //this.open = this.open.bind(this);
+        //this._handleMouseDown = this._handleMouseDown.bind(this);
+        //EventBus.$on('onColorPicker', this.open);
     }
 
     beforeDestroy() {
@@ -50,11 +49,11 @@ export default class ColorPicker extends Vue {
             this.colorPickerEvent = event;
 
             // Starting value of the color picker is determined by the provided color in the event.
-            this.colors = this.colorPickerEvent.initialColor;
+            //this.colors = this.colorPickerEvent.initialColor;
 
-            this.colorPickerStyle.left = event.pagePos.x + 'px';
-            this.colorPickerStyle.top = event.pagePos.y + 'px';
-            this.colorPickerVisible = true;
+            //this.colorPickerStyle.left = event.pagePos.x + 'px';
+            //this.colorPickerStyle.top = event.pagePos.y + 'px';
+            //this.colorPickerVisible = true;
 
             // Listen for clicks on the DOM.
             document.addEventListener('mousedown', this._handleMouseDown);

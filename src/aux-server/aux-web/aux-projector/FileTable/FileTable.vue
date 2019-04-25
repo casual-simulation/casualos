@@ -1,9 +1,11 @@
 <template>
     <div class="file-table" ref="wrapper">
         <div class="top-part">
-            <div v-show="!isMakingNewTag && !isSearching" class="file-table-toggle-buttons">
-                <file-table-toggle :files="files" @click="closeWindow()"> </file-table-toggle>
-                <md-button v-if="hasFiles" class="md-icon-button" @click="toggleHidden()">
+            <div v-show="!isMakingNewTag && hasFiles" class="file-table-toggle-buttons">
+                <md-button class="md-icon-button new-tag-button" @click="addTag()">
+                    <img alt="Add Tag" src="../public/icons/tag-add.webp" />
+                </md-button>
+                <md-button class="md-icon-button" @click="toggleHidden()">
                     <md-icon v-if="showHidden">visibility</md-icon>
                     <md-icon v-else>visibility_off</md-icon>
                     <md-tooltip v-if="showHidden">Hide Hidden Tags</md-tooltip>
@@ -12,18 +14,7 @@
                 <!-- <md-button @click="flipTable()">Flip</md-button> -->
             </div>
             <div class="file-table-actions">
-                <div v-if="!isMakingNewTag && !isSearching">
-                    <md-button class="new-tag-button" @click="addTag()">+tag</md-button>
-                    <md-button
-                        class="search-button md-icon-button"
-                        @click="startSearch()"
-                        v-shortkey.once="['ctrl', 'f']"
-                        @shortkey="startSearch()"
-                    >
-                        <md-icon>search</md-icon>
-                    </md-button>
-                </div>
-                <div v-else-if="isMakingNewTag">
+                <div v-if="isMakingNewTag">
                     <form class="file-table-form" @submit.prevent="addTag()">
                         <div class="finish-tag-button-wrapper">
                             <md-button class="md-icon-button finish-tag-button" type="submit">
@@ -41,43 +32,25 @@
                             :useMaterialInput="true"
                             v-model="newTag"
                             :tagExists="newTagExists"
-                            :isAction="isMakingNewAction"
+                            :isAction="false"
                             @valid="newTagValidityUpdated"
                         ></tag-editor>
                     </form>
                 </div>
-                <div v-else-if="isSearching">
-                    <form class="file-table-form" @submit.prevent="addSearch()">
-                        <div class="finish-tag-button-wrapper">
-                            <md-button class="md-icon-button finish-tag-button" type="submit">
-                                <md-icon class="done">check</md-icon>
-                            </md-button>
-                            <md-button
-                                class="md-icon-button finish-tag-button"
-                                @click="cancelSearch()"
-                            >
-                                <md-icon class="cancel">cancel</md-icon>
-                            </md-button>
-                        </div>
-                        <md-field class="search-field">
-                            <md-icon>search</md-icon>
-                            <label>Search...</label>
-                            <md-input
-                                ref="searchField"
-                                v-model="search"
-                                @keyup.esc="cancelSearch()"
-                            ></md-input>
-                        </md-field>
-                    </form>
+                <div v-else-if="hasFiles">
+                    <md-button class="md-icon-button" @click="downloadFiles()">
+                        <md-icon>cloud_download</md-icon>
+                        <md-tooltip>Download Selection/Search</md-tooltip>
+                    </md-button>
                 </div>
             </div>
         </div>
         <div>
-            <p v-if="isSearching && !search" class="no-search-results-message">
-                Enter a search
-            </p>
-            <p v-else-if="isSearching && !hasSearchResults()" class="no-search-results-message">
+            <p v-if="isSearch && searchResult === null" class="no-search-results-message">
                 No files found
+            </p>
+            <p v-else-if="!hasFiles" class="no-files-message">
+                Select a file or search
             </p>
             <div v-else-if="hasFiles" class="file-table-wrapper">
                 <!--   -->
@@ -89,8 +62,11 @@
                 >
                     <!-- Remove all button -->
                     <div class="file-cell remove-item">
+                        <md-button v-if="isSearch" class="md-dense" @click="clearSearch()">
+                            Clear Search
+                        </md-button>
                         <md-button
-                            v-if="selectionMode === 'multi'"
+                            v-else-if="selectionMode === 'multi'"
                             class="md-dense"
                             @click="clearSelection()"
                         >
@@ -114,7 +90,7 @@
                         <file-tag
                             ref="tags"
                             :tag="tag"
-                            :allowCloning="displayedFiles.length === 1"
+                            :allowCloning="files.length === 1"
                         ></file-tag>
 
                         <!-- Show X button for tags that don't have values or tags that are hidden -->
@@ -130,11 +106,22 @@
                         </md-button>
                     </div>
 
+                    <!-- New Tag at bottom -->
+                    <div class="file-cell new-tag">
+                        <md-button class="md-dense" @click="addTag('bottom')">
+                            <img alt="Add Tag" src="../public/icons/tag-add.webp" /> Add Tag
+                        </md-button>
+                    </div>
+
                     <!-- Files -->
-                    <template v-for="file in displayedFiles">
+                    <template v-for="file in files">
                         <!-- deselect button -->
                         <div :key="`${file.id}-remove`" class="file-cell remove-item">
-                            <md-button class="md-icon-button md-dense" @click="toggleFile(file)">
+                            <md-button
+                                v-if="!isSearch"
+                                class="md-icon-button md-dense"
+                                @click="toggleFile(file)"
+                            >
                                 <md-icon>remove</md-icon>
                                 <md-tooltip md-delay="1000" md-direction="top"
                                     >Unselect Item</md-tooltip
@@ -167,19 +154,19 @@
                                 @focusChanged="onTagFocusChanged(file, tag, $event)"
                             ></file-value>
                         </div>
+
+                        <!-- Empty tag at bottom -->
+                        <div class="file-cell"></div>
                     </template>
                 </div>
             </div>
-            <div v-else-if="hasSearchResults()" class="search-results-wrapper">
+            <div v-else-if="searchResult !== null" class="search-results-wrapper">
                 <tree-view
-                    :data="getSearchResultData()"
+                    :data="searchResult"
                     :options="{ limitRenderDepth: true, maxDepth: 1 }"
                 ></tree-view>
             </div>
-            <div
-                v-if="focusedFile && focusedTag && !isSearching"
-                class="multi-line-tag-value-wrapper"
-            >
+            <div v-if="focusedFile && focusedTag" class="multi-line-tag-value-wrapper">
                 <md-field>
                     <label><file-tag :tag="focusedTag"></file-tag></label>
                     <md-textarea

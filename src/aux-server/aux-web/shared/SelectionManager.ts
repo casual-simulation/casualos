@@ -12,13 +12,23 @@ import {
     updateFile,
     fileUpdated,
 } from '@casual-simulation/aux-common';
+import { Subject, Observable } from 'rxjs';
 
 /**
  * Defines a class that is able to manage selections for users.
  */
-export class SelectionManager {
+export default class SelectionManager {
     private static readonly _debug = false;
     private _helper: FileHelper;
+
+    private _userChangedSelection: Subject<void>;
+
+    /**
+     * Gets an observable that resolves whenever the user takes an action to change the selection.
+     */
+    get userChangedSelection(): Observable<void> {
+        return this._userChangedSelection;
+    }
 
     /**
      * Creates a new object that is able to manage selections for a user.
@@ -26,6 +36,7 @@ export class SelectionManager {
      */
     constructor(helper: FileHelper) {
         this._helper = helper;
+        this._userChangedSelection = new Subject<void>();
     }
 
     /**
@@ -66,6 +77,8 @@ export class SelectionManager {
                 })
             )
         );
+
+        this._userChangedSelection.next();
     }
 
     /**
@@ -73,6 +86,7 @@ export class SelectionManager {
      */
     async clearSelection() {
         await this._clearSelectionForUser(this._helper.userFile);
+        this._userChangedSelection.next();
     }
 
     /**
@@ -174,5 +188,7 @@ export class SelectionManager {
                 await this._helper.updateFile(file, { tags: {} });
             }
         }
+
+        this._userChangedSelection.next();
     }
 }

@@ -46,8 +46,8 @@ import SandboxInterface, { FilterFunction } from '../Formulas/SandboxInterface';
 import { PartialFile } from '../Files';
 import { FilesState, cleanFile, hasValue } from './FilesChannel';
 import { merge, shortUuid } from '../utils';
-import { AuxFile, AuxObject, AuxOp } from '../aux-format';
-import { Atom } from '../causal-trees';
+import { AuxFile, AuxObject, AuxOp, AuxState } from '../aux-format';
+import { Atom } from '@casual-simulation/causal-trees';
 
 export var ShortId_Length: number = 5;
 
@@ -192,7 +192,10 @@ export function isContext(
  * @param files The files to filter.
  * @param selectionId The selection to check.
  */
-export function filterFilesBySelection(files: Object[], selectionId: string) {
+export function filterFilesBySelection<TFile extends File>(
+    files: TFile[],
+    selectionId: string
+) {
     return files.filter(f => {
         if (f.id === selectionId) {
             return true;
@@ -317,7 +320,7 @@ export function calculateFormattedFileValue(
     tag: string
 ): string {
     const value = calculateFileValue(context, file, tag);
-    return _formatValue(value);
+    return formatValue(value);
 }
 
 /**
@@ -819,11 +822,12 @@ export function createFile(id = uuid(), tags: Object['tags'] = {}) {
  * Creates a new Workspace with default values.
  * @param id The ID of the new workspace.
  * @param builderContextId The tag that should be used for contexts stored on this workspace.
+ * @param contextFormula The formula that should be used to determine whether the workspace is allowed to be a context.
  */
 export function createWorkspace(
     id = uuid(),
     builderContextId: string = createContextId(),
-    contextType: unknown = '=isBuilder'
+    contextFormula: string = '=isBuilder'
 ): Workspace {
     // checks if given context string is empty or just whitespace
     if (builderContextId.length === 0 || /^\s*$/.test(builderContextId)) {
@@ -837,7 +841,7 @@ export function createWorkspace(
             'aux.context.y': 0,
             'aux.context.z': 0,
             [builderContextId]: true,
-            [`${builderContextId}.config`]: contextType,
+            [`${builderContextId}.config`]: contextFormula,
             [`${builderContextId}.x`]: 0,
             [`${builderContextId}.y`]: 0,
             [`${builderContextId}.z`]: 0,
@@ -1435,7 +1439,8 @@ export function objectsAtContextGridPosition(
             }
             return false;
         }),
-        o => getFileIndex(calc, o, context)
+        o => getFileIndex(calc, o, context),
+        o => o.id
     );
 }
 
@@ -1830,10 +1835,14 @@ function _isAssignmentFormula(value: any): boolean {
     }
 }
 
-function _formatValue(value: any): string {
+/**
+ * Formats the given value and returns a string representing it.
+ * @param value The value to format.
+ */
+export function formatValue(value: any): string {
     if (typeof value === 'object') {
         if (Array.isArray(value)) {
-            return `[${value.map(v => _formatValue(v)).join(',')}]`;
+            return `[${value.map(v => formatValue(v)).join(',')}]`;
         } else {
             if (value.id) {
                 return getShortId(value);

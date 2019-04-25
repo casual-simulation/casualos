@@ -9,7 +9,7 @@ import {
     SiteInfo,
     StoredCryptoKeys,
     atomId,
-} from '@casual-simulation/aux-common/causal-trees';
+} from '@casual-simulation/causal-trees';
 import Dexie from 'dexie';
 
 export class BrowserCausalTreeStore implements CausalTreeStore {

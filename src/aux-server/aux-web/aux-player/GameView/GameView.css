@@ -1,5 +1,5 @@
 .game-canvas {
-    position: absolute;
+    position: relative;
     touch-action: none;
 }
 
@@ -10,8 +10,7 @@ html.ar-app .md-content {
 }
 
 html.ar-app .webxr-sessions canvas {
-    position: relative;
-    top: 56px;
+    top: 0px;
 }
 
 .game-container {

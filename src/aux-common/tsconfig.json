@@ -1,9 +1,13 @@
 {
-    "extends": "../../tsconfig.json",
+    "extends": "../../tsconfig.base.json",
     "compilerOptions": {
         "baseUrl": ".",
         "outDir": ".",
-        "declaration": true
+        "declaration": true,
+        "composite": true,
+        "incremental": true
     },
-    "exclude": ["node_modules", "lib", "**/*.spec.ts"]
+    "include": ["**/*.ts"],
+    "exclude": ["node_modules", "lib", "**/*.spec.ts"],
+    "references": [{ "path": "../causal-trees" }, { "path": "../crypto" }]
 }

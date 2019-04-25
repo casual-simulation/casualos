@@ -1,10 +1,6 @@
 import { WorkerEvent, CalculateValue, ValueCalculated } from './WorkerEvents';
 import { AuxReducer } from '@casual-simulation/aux-common';
-import {
-    AtomOp,
-    AtomReducer,
-    Weave,
-} from '@casual-simulation/aux-common/causal-trees';
+import { AtomOp, AtomReducer, Weave } from '@casual-simulation/causal-trees';
 
 const ctx: Worker = self as any;
 let reducers: {

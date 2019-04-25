@@ -39,19 +39,18 @@ import {
 import { AppManager, appManager } from './AppManager';
 import { SocketManager } from './SocketManager';
 import { CausalTreeManager } from './causal-trees/CausalTreeManager';
-import { RealtimeCausalTree } from '@casual-simulation/aux-common/causal-trees';
+import { RealtimeCausalTree } from '@casual-simulation/causal-trees';
 import { getOptionalValue } from './SharedUtils';
 import {
     LoadingProgress,
     LoadingProgressCallback,
 } from '@casual-simulation/aux-common/LoadingProgress';
 import { FileHelper } from './FileHelper';
-import { SelectionManager } from './SelectionManager';
+import SelectionManager from './SelectionManager';
 import { RecentFilesManager } from './RecentFilesManager';
-
-export interface SelectedFilesUpdatedEvent {
-    files: AuxObject[];
-}
+import { ProgressStatus } from '@casual-simulation/causal-trees';
+import FileWatcher from './FileWatcher';
+import FilePanelManager from './FilePanelManager';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -63,14 +62,12 @@ export class FileManager {
     private _helper: FileHelper;
     private _selection: SelectionManager;
     private _recent: RecentFilesManager;
+    private _watcher: FileWatcher;
+    private _filePanel: FilePanelManager;
 
     private _subscriptions: SubscriptionLike[];
     private _status: string;
     private _initPromise: Promise<string>;
-    private _filesDiscoveredObservable: ReplaySubject<AuxFile[]>;
-    private _filesRemovedObservable: ReplaySubject<string[]>;
-    private _filesUpdatedObservable: Subject<AuxFile[]>;
-    private _selectedFilesUpdated: BehaviorSubject<SelectedFilesUpdatedEvent>;
     private _id: string;
     private _aux: RealtimeCausalTree<AuxCausalTree>;
     _errored: boolean;
@@ -108,7 +105,7 @@ export class FileManager {
      * That is, it was created or added by another user.
      */
     get filesDiscovered(): Observable<AuxFile[]> {
-        return this._filesDiscoveredObservable;
+        return this._watcher.filesDiscovered;
     }
 
     /**
@@ -117,24 +114,23 @@ export class FileManager {
      * branch that does not contain the file or by deleting it.
      */
     get filesRemoved(): Observable<string[]> {
-        return this._filesRemovedObservable;
+        return this._watcher.filesRemoved;
     }
 
     /**
      * Gets an observable that resolves whenever a file is updated.
      */
     get filesUpdated(): Observable<AuxFile[]> {
-        return this._filesUpdatedObservable;
-    }
-
-    get selectedFilesUpdated(): Observable<SelectedFilesUpdatedEvent> {
-        return this._selectedFilesUpdated;
+        return this._watcher.filesUpdated;
     }
 
     get status(): string {
         return this._status;
     }
 
+    /**
+     * Gets the file for the current user.
+     */
     get userFile(): AuxObject {
         if (!this._appManager.user) {
             return;
@@ -142,6 +138,9 @@ export class FileManager {
         return this._helper.userFile;
     }
 
+    /**
+     * Gets the globals file.
+     */
     get globalsFile(): AuxObject {
         let objs = this.objects.filter(o => o.id === 'globals');
         if (objs.length > 0) {
@@ -205,6 +204,20 @@ export class FileManager {
      */
     get recent() {
         return this._recent;
+    }
+
+    /**
+     * Gets the file watcher.
+     */
+    get watcher() {
+        return this._watcher;
+    }
+
+    /**
+     * Gets the files panel manager.
+     */
+    get filePanel() {
+        return this._filePanel;
     }
 
     constructor(app: AppManager, treeManager: CausalTreeManager) {
@@ -297,8 +310,12 @@ export class FileManager {
         return this._helper.createFile(id, tags);
     }
 
-    createWorkspace(builderContextId?: string, contextType?: unknown) {
-        return this._helper.createWorkspace(builderContextId, contextType);
+    createWorkspace(builderContextId?: string, contextFormula?: string) {
+        return this._helper.createWorkspace(
+            undefined,
+            builderContextId,
+            contextFormula
+        );
     }
 
     action(eventName: string, files: File[], arg?: any) {
@@ -410,12 +427,6 @@ export class FileManager {
             this._id = this._getTreeName(id);
 
             this._subscriptions = [];
-            this._filesDiscoveredObservable = new ReplaySubject<AuxFile[]>();
-            this._filesRemovedObservable = new ReplaySubject<string[]>();
-            this._filesUpdatedObservable = new Subject<AuxFile[]>();
-            this._selectedFilesUpdated = new BehaviorSubject<
-                SelectedFilesUpdatedEvent
-            >({ files: [] });
 
             loadingProgress.set(10, 'Initializing causal tree manager..', null);
             await this._treeManager.init();
@@ -448,13 +459,17 @@ export class FileManager {
 
             loadingProgress.set(20, 'Loading tree from server...', null);
             const onTreeInitProgress: LoadingProgressCallback = (
-                treeProgress: LoadingProgress
+                status: ProgressStatus
             ) => {
-                loadingProgress.set(
-                    lerp(20, 70, treeProgress.progress / 100),
-                    treeProgress.status,
-                    treeProgress.error
-                );
+                let percent = status.progressPercent
+                    ? lerp(20, 70, status.progressPercent)
+                    : loadingProgress.progress;
+                let message = status.message
+                    ? status.message
+                    : loadingProgress.status;
+                let error = status.error ? status.error : loadingProgress.error;
+
+                loadingProgress.set(percent, message, error);
             };
             await this._aux.init(onTreeInitProgress);
             await this._aux.waitToGetTreeFromServer();
@@ -479,43 +494,16 @@ export class FileManager {
                 filesRemoved,
                 filesUpdated,
             } = fileChangeObservables(this._aux);
-
-            this._subscriptions.push(
-                filesAdded.subscribe(this._filesDiscoveredObservable)
+            this._watcher = new FileWatcher(
+                filesAdded,
+                filesRemoved,
+                filesUpdated
             );
-            this._subscriptions.push(
-                filesRemoved.subscribe(this._filesRemovedObservable)
-            );
-            this._subscriptions.push(
-                filesUpdated.subscribe(this._filesUpdatedObservable)
-            );
-            const alreadySelected = this.selectedObjects;
-            const alreadySelectedObservable = from(alreadySelected);
-
-            const allFilesSelected = alreadySelectedObservable;
-
-            const allFilesSelectedUpdatedAddedAndRemoved = mergeObservables(
-                allFilesSelected,
-                filesAdded.pipe(
-                    flatMap(files => files),
-                    map(f => f.id)
-                ),
-                filesUpdated.pipe(
-                    flatMap(files => files),
-                    map(f => f.id)
-                ),
-                filesRemoved
-            );
-
-            const allSelectedFilesUpdated = allFilesSelectedUpdatedAddedAndRemoved.pipe(
-                map(() => {
-                    const selectedFiles = this.selectedObjects;
-                    return { files: selectedFiles };
-                })
-            );
-
-            this._subscriptions.push(
-                allSelectedFilesUpdated.subscribe(this._selectedFilesUpdated)
+            this._filePanel = new FilePanelManager(
+                this._watcher,
+                this._helper,
+                this._selection,
+                this._recent
             );
 
             this._setStatus('Initialized.');
@@ -592,7 +580,7 @@ export class FileManager {
         this._setStatus('Updating globals file...');
         let globalsFile = this.globalsFile;
         if (!globalsFile) {
-            await this.createFile('globals', {});
+            await this._helper.createWorkspace('globals');
         }
     }
 

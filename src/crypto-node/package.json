@@ -1,0 +1,45 @@
+{
+    "name": "@casual-simulation/crypto-node",
+    "version": "0.4.15",
+    "description": "An implementation of the @casual-simulation/crypto package for Node.js",
+    "keywords": [
+        "crypto"
+    ],
+    "author": "Casual Simulation, Inc.",
+    "homepage": "https://github.com/casual-simulation/aux",
+    "license": "MIT",
+    "main": "index.js",
+    "types": "index.d.ts",
+    "module": "index.js",
+    "directories": {
+        "lib": "."
+    },
+    "files": [
+        "/README.md",
+        "/LICENSE.txt",
+        "**/*.js",
+        "**/*.js.map",
+        "**/*.d.ts"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/casual-simulation/aux.git"
+    },
+    "scripts": {
+        "watch": "tsc --watch",
+        "watch:player": "npm run watch",
+        "build": "echo \"Nothing to do.\"",
+        "build:docs": "typedoc --mode file --excludeNotExported --out ../../docs/crypto-node .",
+        "test": "jest",
+        "test:watch": "jest --watchAll"
+    },
+    "bugs": {
+        "url": "https://github.com/casual-simulation/aux/issues"
+    },
+    "dependencies": {
+        "@casual-simulation/crypto": "0.4.15",
+        "@types/bn.js": "^4.11.4",
+        "asn1.js": "^5.0.1",
+        "bn.js": "^4.11.8"
+    }
+}

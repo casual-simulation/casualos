@@ -62,6 +62,7 @@ import {
     baseAuxAmbientLight,
     baseAuxDirectionalLight,
 } from '../../shared/scene/SceneUtils';
+import { TweenCameraToOperation } from '../../shared/interaction/TweenCameraToOperation';
 
 @Component({
     components: {
@@ -260,6 +261,18 @@ export default class GameView extends Vue implements IGameView {
         await this._setupWebXR();
         this._triggerFilesRefresh();
         this._frameUpdate();
+
+        this._fileSubs.push(
+            this.fileManager.helper.localEvents
+                .pipe(
+                    tap(e => {
+                        if (e.name === 'tween_to') {
+                            this.tweenCameraToFile(e.fileId, e.zoomValue);
+                        }
+                    })
+                )
+                .subscribe()
+        );
     }
 
     public beforeDestroy() {
@@ -279,6 +292,38 @@ export default class GameView extends Vue implements IGameView {
             });
             this._fileSubs = [];
         }
+    }
+
+    /**
+     * Animates the main camera into position to view the given file ID.
+     * @param fileId The ID of the file to view.
+     */
+    public tweenCameraToFile(fileId: string, zoomValue: number) {
+        console.log('[GameView] Tween to: ', fileId);
+
+        // find the file with the given ID
+        const files = this.findFilesById(fileId);
+        if (files.length > 0) {
+            const file = files[0];
+            const targetPosition = new Vector3();
+            file.display.getWorldPosition(targetPosition);
+            this.tweenCameraToPosition(targetPosition);
+
+            if (zoomValue >= 0) {
+                const cam = this.getMainCamera();
+                this._interaction.cameraControls.dollySet(zoomValue);
+            }
+        }
+    }
+
+    /**
+     * Animates the main camera to the given position.
+     * @param position The position to animate to.
+     */
+    public tweenCameraToPosition(position: Vector3) {
+        this._interaction.addOperation(
+            new TweenCameraToOperation(this, this._interaction, position)
+        );
     }
 
     private _frameUpdate(xrFrame?: any) {
