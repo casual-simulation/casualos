@@ -436,6 +436,10 @@ export class AppManager {
                 this._user = result.data;
                 this._user.channelId = channelId;
 
+                if (this._user.name.includes('guest_')) {
+                    this._user.name = 'Guest';
+                }
+
                 this.loadingProgress.set(40, 'Loading Files...', null);
 
                 const onFileManagerInitProgress: LoadingProgressCallback = (
