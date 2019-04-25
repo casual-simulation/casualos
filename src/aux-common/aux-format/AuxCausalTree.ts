@@ -319,7 +319,9 @@ export class AuxCausalTree extends CausalTree<
                     const oldVal = getFileTag(file, t);
                     if (
                         newVal &&
+                        oldVal &&
                         typeof newVal === 'object' &&
+                        typeof oldVal === 'object' &&
                         !Array.isArray(newVal) &&
                         !Array.isArray(oldVal)
                     ) {

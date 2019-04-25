@@ -6,6 +6,8 @@ import {
     TagUpdatedEvent,
     AuxDomain,
     isFileInContext,
+    getFileConfigContexts,
+    isConfigForContext,
 } from '@casual-simulation/aux-common';
 import { Object3D, SceneUtils } from 'three';
 import { AuxFile3D } from './AuxFile3D';
@@ -88,12 +90,13 @@ export class Context3D extends GameObject {
     ) {
         const isInContext3D = typeof this.files.get(file.id) !== 'undefined';
         const isInContext = isFileInContext(calc, file, this.context);
+        const isForContext = isConfigForContext(calc, file, this.context);
 
         if (!isInContext3D && isInContext) {
             this._addFile(file, calc);
         } else if (isInContext3D && !isInContext) {
             this._removeFile(file.id);
-        } else if (isInContext3D && isInContext) {
+        } else if ((isInContext3D && isInContext) || isForContext) {
             this._updateFile(file, updates, calc);
         }
     }
