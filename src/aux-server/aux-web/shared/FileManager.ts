@@ -38,7 +38,7 @@ import {
 
 import { AppManager, appManager } from './AppManager';
 import { SocketManager } from './SocketManager';
-import { CausalTreeManager } from './causal-trees/CausalTreeManager';
+import { CausalTreeManager } from '@casual-simulation/causal-tree-client-socketio';
 import { RealtimeCausalTree } from '@casual-simulation/causal-trees';
 import { getOptionalValue } from './SharedUtils';
 import {

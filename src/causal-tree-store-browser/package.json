@@ -1,11 +1,9 @@
 {
-    "name": "@casual-simulation/causal-tree-server-socketio",
+    "name": "@casual-simulation/causal-tree-store-browser",
     "version": "0.5.0",
-    "description": "Casual trees served over socket.io.",
+    "description": "A causal tree store that supports browser environments",
     "keywords": [
-        "socket.io",
         "crdt",
-        "realtime",
         "causal-tree"
     ],
     "author": "Casual Simulation, Inc.",
@@ -32,7 +30,7 @@
         "watch": "tsc --watch",
         "watch:player": "npm run watch",
         "build": "echo \"Nothing to do.\"",
-        "build:docs": "typedoc --mode file --excludeNotExported --out ../../docs/causal-tree-server-socketio .",
+        "build:docs": "typedoc --mode file --excludeNotExported --out ../../docs/causal-tree-store-browser .",
         "test": "jest",
         "test:watch": "jest --watchAll"
     },
@@ -44,12 +42,6 @@
     },
     "dependencies": {
         "@casual-simulation/causal-trees": "^0.5.0",
-        "@casual-simulation/crypto": "^0.5.0",
-        "@casual-simulation/crypto-node": "^0.5.0",
-        "@types/lodash": "^4.14.123",
-        "@types/socket.io": "^2.1.2",
-        "lodash": "^4.17.11",
-        "rxjs": "^6.5.1",
-        "socket.io": "2.2.0"
+        "dexie": "^2.0.4"
     }
 }

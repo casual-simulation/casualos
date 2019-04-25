@@ -7,7 +7,7 @@ import {
     BehaviorSubject,
     SubscriptionLike,
 } from 'rxjs';
-import { socketEvent } from '../socket-io/Utils';
+import { socketEvent } from './Utils';
 import { map, shareReplay } from 'rxjs/operators';
 
 /**

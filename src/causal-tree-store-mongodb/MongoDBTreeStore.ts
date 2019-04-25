@@ -1,5 +1,4 @@
 import { MongoClient, Db, Collection } from 'mongodb';
-import pify from 'pify';
 import {
     CausalTreeStore,
     AtomOp,

@@ -7,13 +7,14 @@ import { FileManager } from './FileManager';
 import { SocketManager } from './SocketManager';
 import { flatMap, map, scan } from 'rxjs/operators';
 import { downloadAuxState, readFileJson } from '../aux-projector/download';
-import { CausalTreeManager } from './causal-trees/CausalTreeManager';
+import { CausalTreeManager } from '@casual-simulation/causal-tree-client-socketio';
 import { StoredCausalTree } from '@casual-simulation/causal-trees';
 import {
     AuxOp,
     FilesState,
     AuxCausalTree,
     lerp,
+    auxCausalTreeFactory,
 } from '@casual-simulation/aux-common';
 import Dexie from 'dexie';
 import { difference } from 'lodash';
@@ -95,7 +96,10 @@ export class AppManager {
         this._initSentry();
         this._initOffline();
         this._socketManager = new SocketManager();
-        this._treeManager = new CausalTreeManager(this._socketManager.socket);
+        this._treeManager = new CausalTreeManager(
+            this._socketManager.socket,
+            auxCausalTreeFactory()
+        );
         this._fileManager = new FileManager(this, this._treeManager);
         this._userSubject = new BehaviorSubject<User>(null);
         this._db = new AppDatabase();
