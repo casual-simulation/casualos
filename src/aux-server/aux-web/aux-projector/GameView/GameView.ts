@@ -429,7 +429,7 @@ export default class GameView extends Vue implements IGameView {
                 .pipe(
                     tap(e => {
                         if (e.name === 'tween_to') {
-                            this.tweenCameraToFile(e.fileId, e.aValue);
+                            this.tweenCameraToFile(e.fileId, e.zoomValue);
                         }
                     })
                 )

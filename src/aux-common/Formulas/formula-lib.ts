@@ -613,9 +613,10 @@ export function toast(message: string) {
 /**
  * Tweens the user's camera to view the given file.
  * @param file The file to view.
+ * @param zoomValue The zoom value to use.
  */
-export function tweenPlayerTo(file: FileProxy | string, zoomInValue?: number) {
-    actions.push(calcTweenTo(getFileId(file), zoomInValue));
+export function tweenPlayerTo(file: FileProxy | string, zoomValue?: number) {
+    actions.push(calcTweenTo(getFileId(file), zoomValue));
 }
 
 /**

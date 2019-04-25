@@ -395,10 +395,10 @@ export interface TweenToEvent extends LocalEvent {
      */
     fileId: string;
 
-    /* 
-     * Additional value that can change the tween
-]    */
-    aValue: number;
+    /*
+     * The zoom value to use.
+     */
+    zoomValue: number;
 }
 
 /**
@@ -525,15 +525,13 @@ export function toast(message: string): ShowToastEvent {
 /**
  * Creates a new TweenToEvent.
  * @param fileId The ID of the file to tween to.
+ * @param zoomValue The zoom value to use.
  */
-export function tweenTo(
-    fileId: string,
-    additionalValue: number = -1
-): TweenToEvent {
+export function tweenTo(fileId: string, zoomValue: number = -1): TweenToEvent {
     return {
         type: 'local',
         name: 'tween_to',
         fileId: fileId,
-        aValue: additionalValue,
+        zoomValue: zoomValue,
     };
 }
