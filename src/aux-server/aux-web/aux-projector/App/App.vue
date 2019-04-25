@@ -19,6 +19,14 @@
                 >
             </div>
             <md-list>
+                <md-list-item
+                    @click="showQRCode = true"
+                    v-if="getUser() != null"
+                    class="qr-code-item"
+                >
+                    <qr-code :value="url()" :options="{ width: 256 }" />
+                    <!-- <span class="md-list-item-text">Show QR Code</span> -->
+                </md-list-item>
                 <router-link
                     v-if="getUser() != null && $route.name !== 'home'"
                     tag="md-list-item"
@@ -27,10 +35,6 @@
                     <md-icon>home</md-icon>
                     <span class="md-list-item-text">Home</span>
                 </router-link>
-                <md-list-item @click="showQRCode = true" v-if="getUser() != null">
-                    <qr-icon class="md-icon md-icon-font md-theme-default"></qr-icon>
-                    <span class="md-list-item-text">Show QR Code</span>
-                </md-list-item>
                 <md-list-item @click="upload" v-if="getUser() != null">
                     <md-icon>cloud_upload</md-icon>
                     <span class="md-list-item-text">Upload AUX</span>
