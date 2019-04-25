@@ -210,6 +210,10 @@ export default class FileTable extends Vue {
         this.isMakingNewTag = false;
     }
 
+    clearSearch() {
+        this.fileManager.filePanel.search = '';
+    }
+
     async clearSelection() {
         await this.fileManager.selection.clearSelection();
     }
