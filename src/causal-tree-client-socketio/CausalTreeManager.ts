@@ -14,7 +14,6 @@ import {
     RealtimeCausalTreeOptions,
 } from '@casual-simulation/causal-trees';
 import { SocketIOConnection } from './SocketIOConnection';
-import { auxCausalTreeFactory } from '@casual-simulation/aux-common';
 import { BrowserCausalTreeStore } from '@casual-simulation/causal-tree-store-browser';
 import { AtomValidator } from '@casual-simulation/causal-trees';
 import { SigningCryptoImpl } from '@casual-simulation/crypto';
@@ -41,12 +40,13 @@ export class CausalTreeManager implements SubscriptionLike {
     /**
      * Creates a new Causal Tree Manager.
      * @param socket The socket.io connection that should be used.
+     * @param factory The factory to use for new causal trees.
      */
-    constructor(socket: typeof io.Socket) {
+    constructor(socket: typeof io.Socket, factory: CausalTreeFactory) {
         this._socket = socket;
         this._trees = {};
         this._initialized = false;
-        this._factory = auxCausalTreeFactory();
+        this._factory = factory;
         this._store = new BrowserCausalTreeStore();
         this._events = new Subject<MessageEvent>();
         this._crypto = new BrowserSigningCryptoImpl('ECDSA-SHA256-NISTP256');

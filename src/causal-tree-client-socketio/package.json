@@ -1,9 +1,11 @@
 {
-    "name": "@casual-simulation/causal-trees",
+    "name": "@casual-simulation/causal-tree-client-socketio",
     "version": "0.5.0",
-    "description": "Create persistent, distributed, realtime, and conflict-free data types.",
+    "description": "A set of services that can be used to network with @casual-simulation/causal-tree-server-socketio",
     "keywords": [
+        "socket.io",
         "crdt",
+        "realtime",
         "causal-tree"
     ],
     "author": "Casual Simulation, Inc.",
@@ -30,7 +32,7 @@
         "watch": "tsc --watch",
         "watch:player": "npm run watch",
         "build": "echo \"Nothing to do.\"",
-        "build:docs": "typedoc --mode file --excludeNotExported --out ../../docs/causal-trees .",
+        "build:docs": "typedoc --mode file --excludeNotExported --out ../../docs/causal-tree-client-socketio .",
         "test": "jest",
         "test:watch": "jest --watchAll"
     },
@@ -41,11 +43,12 @@
         "url": "https://github.com/casual-simulation/aux/issues"
     },
     "dependencies": {
+        "@casual-simulation/causal-trees": "^0.5.0",
         "@casual-simulation/crypto": "^0.5.0",
-        "@types/base64-js": "^1.2.5",
-        "@types/lodash": "^4.14.123",
-        "base64-js": "^1.3.0",
-        "lodash": "^4.17.11",
-        "rxjs": "^6.5.1"
+        "@casual-simulation/crypto-browser": "^0.5.0",
+        "@casual-simulation/causal-tree-store-browser": "^0.5.0",
+        "@types/socket.io-client": "^1.4.32",
+        "rxjs": "^6.5.1",
+        "socket.io-client": "2.2.0"
     }
 }
