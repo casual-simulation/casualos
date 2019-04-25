@@ -32,12 +32,12 @@
                             :useMaterialInput="true"
                             v-model="newTag"
                             :tagExists="newTagExists"
-                            :isAction="isMakingNewAction"
+                            :isAction="false"
                             @valid="newTagValidityUpdated"
                         ></tag-editor>
                     </form>
                 </div>
-                <div v-else>
+                <div v-else-if="hasFiles">
                     <md-button class="md-icon-button" @click="downloadFiles()">
                         <md-icon>cloud_download</md-icon>
                         <md-tooltip>Download Selection/Search</md-tooltip>
@@ -103,6 +103,13 @@
                         </md-button>
                     </div>
 
+                    <!-- New Tag at bottom -->
+                    <div class="file-cell new-tag">
+                        <md-button class="md-dense" @click="addTag('bottom')">
+                            <img alt="Add Tag" src="../public/icons/tag-add.webp" /> Add Tag
+                        </md-button>
+                    </div>
+
                     <!-- Files -->
                     <template v-for="file in files">
                         <!-- deselect button -->
@@ -140,6 +147,9 @@
                                 @focusChanged="onTagFocusChanged(file, tag, $event)"
                             ></file-value>
                         </div>
+
+                        <!-- Empty tag at bottom -->
+                        <div class="file-cell"></div>
                     </template>
                 </div>
             </div>

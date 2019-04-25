@@ -67,9 +67,9 @@ export default class FileTable extends Vue {
     isFocusedTagFormula: boolean = false;
     multilineValue: string = '';
     isMakingNewTag: boolean = false;
-    isMakingNewAction: boolean = false;
     newTag: string = 'myNewTag';
     newTagValid: boolean = true;
+    newTagPlacement: NewTagPlacement = 'top';
     numFilesSelected: number = 0;
     viewMode: 'rows' | 'columns' = 'columns';
     showHidden: boolean = false;
@@ -88,13 +88,13 @@ export default class FileTable extends Vue {
         const sizeType = this.viewMode === 'rows' ? 'columns' : 'rows';
         if (this.tags.length === 0) {
             return {
-                [`grid-template-${sizeType}`]: `auto auto`,
+                [`grid-template-${sizeType}`]: `auto auto auto`,
             };
         }
         return {
             [`grid-template-${sizeType}`]: `auto auto repeat(${
                 this.tags.length
-            }, auto)`,
+            }, auto) auto`,
         };
     }
 
@@ -165,7 +165,7 @@ export default class FileTable extends Vue {
         await this.fileManager.selection.selectFile(file);
     }
 
-    addTag(isAction: boolean = false) {
+    addTag(placement: NewTagPlacement = 'top') {
         if (this.isMakingNewTag) {
             // Check to make sure that the tag is unique.
             if (this.tagExists(this.newTag)) {
@@ -180,21 +180,26 @@ export default class FileTable extends Vue {
                 return;
             }
 
-            this.addedTags.unshift(this.newTag);
-            this.tags.unshift(this.newTag);
+            if (this.newTagPlacement === 'top') {
+                this.addedTags.unshift(this.newTag);
+                this.tags.unshift(this.newTag);
+            } else {
+                this.addedTags.push(this.newTag);
+                this.tags.push(this.newTag);
+            }
 
             const table = this.$refs.table as HTMLElement;
             if (table) {
                 table.scrollIntoView({
-                    block: 'start',
+                    block: this.newTagPlacement === 'top' ? 'start' : 'end',
                     inline: 'start',
                 });
             }
         } else {
             this.newTag = '';
+            this.newTagPlacement = placement;
         }
         this.isMakingNewTag = !this.isMakingNewTag;
-        this.isMakingNewAction = isAction && this.isMakingNewTag;
     }
 
     closeWindow() {
@@ -203,7 +208,6 @@ export default class FileTable extends Vue {
 
     cancelNewTag() {
         this.isMakingNewTag = false;
-        this.isMakingNewAction = false;
     }
 
     async clearSelection() {
@@ -327,3 +331,8 @@ export default class FileTable extends Vue {
         );
     }
 }
+
+/**
+ * Defines a set of valid positions that a new tag can be positioned at in the list.
+ */
+export type NewTagPlacement = 'top' | 'bottom';
