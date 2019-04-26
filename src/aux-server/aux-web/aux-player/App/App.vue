@@ -82,6 +82,20 @@
             </md-dialog-actions>
         </md-dialog>
 
+        <md-dialog
+            :md-active.sync="showQRScanner"
+            class="qr-scanner-dialog"
+            @md-closed="onQrCodeScannerClosed()"
+        >
+            <div class="qr-scanner-container">
+                <h3>Scan a QR Code</h3>
+                <qrcode-stream @decode="onQRCodeScanned"></qrcode-stream>
+            </div>
+            <md-dialog-actions>
+                <md-button class="md-primary" @click="hideQRCodeScanner()">Close</md-button>
+            </md-dialog-actions>
+        </md-dialog>
+
         <md-dialog-confirm
             :md-active.sync="showConfirmDialog"
             v-bind:md-title="confirmDialogOptions.title"

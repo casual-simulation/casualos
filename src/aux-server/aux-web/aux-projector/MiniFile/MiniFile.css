@@ -42,3 +42,12 @@
     line-height: 16px;
     overflow: hidden;
 }
+
+.mini-file-tags {
+    line-height: 4px;
+}
+
+.mini-file .tag-color {
+    width: 4px;
+    height: 4px;
+}

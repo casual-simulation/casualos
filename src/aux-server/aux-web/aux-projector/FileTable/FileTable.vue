@@ -3,7 +3,11 @@
         <div class="top-part">
             <div v-show="!isMakingNewTag && hasFiles" class="file-table-toggle-buttons">
                 <md-button class="md-icon-button new-tag-button" @click="addTag()">
-                    <img alt="Add Tag" src="../public/icons/tag-add.webp" />
+                    <picture>
+                        <source srcset="../public/icons/tag-add.webp" type="image/webp" />
+                        <source srcset="../public/icons/tag-add.png" type="image/png" />
+                        <img alt="Add Tag" src="../public/icons/tag-add.png" />
+                    </picture>
                 </md-button>
                 <md-button class="md-icon-button" @click="toggleHidden()">
                     <md-icon v-if="showHidden">visibility</md-icon>
@@ -109,7 +113,12 @@
                     <!-- New Tag at bottom -->
                     <div class="file-cell new-tag">
                         <md-button class="md-dense" @click="addTag('bottom')">
-                            <img alt="Add Tag" src="../public/icons/tag-add.webp" /> Add Tag
+                            <picture>
+                                <source srcset="../public/icons/tag-add.webp" type="image/webp" />
+                                <source srcset="../public/icons/tag-add.png" type="image/png" />
+                                <img alt="Add Tag" src="../public/icons/tag-add.png" />
+                            </picture>
+                            Add Tag
                         </md-button>
                     </div>
 

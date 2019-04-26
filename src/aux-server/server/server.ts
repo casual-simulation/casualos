@@ -22,6 +22,8 @@ import {
     CacheControlHeaderValues,
     formatCacheControlHeader,
 } from './CacheHelpers';
+import { Request } from 'express';
+import useragent from 'useragent';
 
 const connect = pify(MongoClient.connect);
 
@@ -111,10 +113,22 @@ export class ClientServer {
                             const contentType = cached.contentType.toString();
                             const status = parseInt(cached.status.toString());
                             const data: Buffer = cached.data;
-                            res.status(status);
-                            res.contentType(contentType);
-                            res.send(data);
+                            const optimized: Buffer = cached.optimizedData;
+                            const optimizedContentType = cached.optimizedContentType.toString();
 
+                            let [
+                                retContentType,
+                                retData,
+                            ] = this._getDataForBrowser(
+                                req,
+                                contentType,
+                                data,
+                                optimizedContentType,
+                                optimized
+                            );
+                            res.status(status);
+                            res.contentType(retContentType);
+                            res.send(retData);
                             return;
                         }
                     }
@@ -130,19 +144,21 @@ export class ClientServer {
                         resp.headers['cache-control'] || ''
                     );
 
+                    let optimizedData: Buffer = null;
+                    let optimizedContentType: string = null;
                     if (
                         this._redisClient &&
                         this._shouldCache(contentType, cacheControl)
                     ) {
-                        if (this._shouldOptimise(contentType)) {
+                        if (this._shouldOptimize(req, contentType)) {
                             console.log('[Server] Optimizing image...');
                             const beforeSize = data.length;
                             const beforeContentType = contentType;
-                            [contentType, data] = await this._optimizeImage(
-                                contentType,
-                                data
-                            );
-                            const afterSize = data.length;
+                            [
+                                optimizedContentType,
+                                optimizedData,
+                            ] = await this._optimizeImage(contentType, data);
+                            const afterSize = optimizedData.length;
 
                             const sizeDifference = beforeSize - afterSize;
                             const percentageDifference =
@@ -153,7 +169,10 @@ export class ClientServer {
                                 `    ${beforeContentType}:`,
                                 beforeSize
                             );
-                            console.log(`    ${contentType}:`, afterSize);
+                            console.log(
+                                `    ${optimizedContentType}:`,
+                                afterSize
+                            );
                             console.log('    Size Diff:', sizeDifference);
                             console.log(
                                 '       % Diff:',
@@ -176,6 +195,8 @@ export class ClientServer {
                             contentType: contentType,
                             status: status,
                             data: <any>data,
+                            optimizedData: <any>optimizedData,
+                            optimizedContentType: optimizedContentType,
                         });
 
                         this._redisClient.EXPIRE(url, expire);
@@ -192,9 +213,16 @@ export class ClientServer {
                         res.setHeader('Cache-Control', cacheControlHeader);
                     }
 
-                    res.contentType(contentType);
+                    let [retContentType, retData] = this._getDataForBrowser(
+                        req,
+                        contentType,
+                        data,
+                        optimizedContentType,
+                        optimizedData
+                    );
+                    res.contentType(retContentType);
                     res.status(resp.status);
-                    res.send(data);
+                    res.send(retData);
                 } catch (ex) {
                     console.error(ex);
                     if (ex.response) {
@@ -226,7 +254,28 @@ export class ClientServer {
         return ['image/webp', optimized];
     }
 
-    private _shouldOptimise(contentType: string) {
+    private _getDataForBrowser(
+        req: Request,
+        originalContentType: string,
+        originalData: Buffer,
+        optimizedContentType: string,
+        optimizedData: Buffer
+    ): [string, Buffer] {
+        const ua = useragent.is(req.header('user-agent'));
+        if (ua.safari || ua.mobile_safari) {
+            console.log(
+                "[Server] Returning original data because safari doesn't support WebP"
+            );
+            return [originalContentType, originalData];
+        } else {
+            return [
+                optimizedContentType || originalContentType,
+                optimizedData || originalData,
+            ];
+        }
+    }
+
+    private _shouldOptimize(req: Request, contentType: string) {
         if (contentType === 'image/webp') {
             return false;
         }

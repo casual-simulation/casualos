@@ -69,6 +69,7 @@
     width: 100%;
 }
 
+.file-cell.new-tag picture,
 .file-cell.new-tag img {
     width: 24px;
     height: 24px;

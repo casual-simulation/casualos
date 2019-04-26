@@ -8,9 +8,12 @@
 
 @media (min-width: 1024px) {
     .info-card {
-        max-width: 45% !important;
-        min-width: 20%;
+        max-width: 45vw !important;
+        min-width: 20vw;
         width: fit-content;
+        position: absolute;
+        left: auto;
+        right: 0px;
     }
 }
 

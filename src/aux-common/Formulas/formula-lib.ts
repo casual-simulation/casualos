@@ -11,6 +11,7 @@ import {
     fileAdded,
     toast as toastMessage,
     tweenTo as calcTweenTo,
+    openQRCodeScanner as calcOpenQRCodeScanner,
 } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
 import { every, find } from 'lodash';
@@ -415,7 +416,7 @@ export function goToContext(simulationId: string, context?: string) {
  * Derermines wather the player is in the given context.
  * @param context The context.
  */
-export function isPlayerInContext(givenContext: string) {
+export function isInContext(givenContext: string) {
     let currentContext = window.location.pathname.split('/')[2];
 
     return currentContext === givenContext;
@@ -620,14 +621,32 @@ export function tweenPlayerTo(file: FileProxy | string, zoomValue?: number) {
 }
 
 /**
+ * Opens the QR Code Scanner.
+ */
+export function openQRCodeScanner() {
+    actions.push(calcOpenQRCodeScanner(true));
+}
+
+/**
+ * Closes the QR Code Scanner.
+ */
+export function closeQRCodeScanner() {
+    actions.push(calcOpenQRCodeScanner(false));
+}
+
+/**
  * Defines a set of functions that are able to make File Diffs.
  */
-export const makeDiff = {
+export const diff = {
     addToContext: addToContextDiff,
     removeFromContext: removeFromContextDiff,
     addToMenu: addToMenuDiff,
     removeFromMenu: removeFromMenuDiff,
     setPosition: setPositionDiff,
+};
+
+export const player = {
+    isInContext,
 };
 
 export default {
@@ -646,13 +665,15 @@ export default {
     event,
     shout,
     goToContext,
-    isPlayerInContext,
     getUser,
     getUserMenuContext,
     getUserInventoryContext,
 
+    player,
+    isInContext,
+
     getFilesInContext,
-    makeDiff,
+    diff,
     applyDiff,
     addToContext,
     removeFromContext,
@@ -662,4 +683,7 @@ export default {
 
     toast,
     tweenPlayerTo,
+
+    openQRCodeScanner,
+    closeQRCodeScanner,
 };

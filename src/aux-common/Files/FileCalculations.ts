@@ -74,7 +74,7 @@ export const DROP_IN_CONTEXT_ACTION_NAME: string = 'onDropInContext';
 /**
  * The name of the event that represents any file being dragged into a context.
  */
-export const DROP_ANY_IN_CONTEXT_ACTION_NAME: string = 'onDropAnyInContext';
+export const DROP_ANY_IN_CONTEXT_ACTION_NAME: string = 'onAnyDropInContext';
 
 /**
  * The name of the event that represents a file being dragged out of a context.
@@ -85,7 +85,7 @@ export const DRAG_OUT_OF_CONTEXT_ACTION_NAME: string = 'onDragOutOfContext';
  * The name of the event that represents any file being dragged out of a context.
  */
 export const DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME: string =
-    'onDragAnyOutOfContext';
+    'onAnyDragOutOfContext';
 
 /**
  * The name of the event that represents a file being dragged out of the user's inventory.
@@ -96,7 +96,7 @@ export const DRAG_OUT_OF_INVENTORY_ACTION_NAME: string = 'onDragOutOfInventory';
  * The name of the event that represents any file being dragged out of the user's inventory.
  */
 export const DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME: string =
-    'onDragAnyOutOfInventory';
+    'onAnyDragOutOfInventory';
 
 /**
  * The name of the event that represents a file being dropped into the user's inventory.
@@ -106,7 +106,24 @@ export const DROP_IN_INVENTORY_ACTION_NAME: string = 'onDropInInventory';
 /**
  * The name of the event that represents any file being dropped into the user's inventory.
  */
-export const DROP_ANY_IN_INVENTORY_ACTION_NAME: string = 'onDropAnyInInventory';
+export const DROP_ANY_IN_INVENTORY_ACTION_NAME: string = 'onAnyDropInInventory';
+
+/**
+ * The name of the event that is triggered when a QR Code is scanned.
+ */
+export const ON_QR_CODE_SCANNED_ACTION_NAME: string = 'onQRCodeScanned';
+
+/**
+ * The name of the event that is triggered when the QR Code scanner is closed.
+ */
+export const ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME: string =
+    'onQRCodeScannerClosed';
+
+/**
+ * The name of the event that is triggered when the QR Code scanner is opened.
+ */
+export const ON_QR_CODE_SCANNER_OPENED_ACTION_NAME: string =
+    'onQRCodeScannerOpened';
 
 /**
  * Defines an interface for objects that represent assignment formula expressions.
