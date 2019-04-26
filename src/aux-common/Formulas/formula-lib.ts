@@ -637,7 +637,7 @@ export function closeQRCodeScanner() {
 /**
  * Defines a set of functions that are able to make File Diffs.
  */
-export const makeDiff = {
+export const diff = {
     addToContext: addToContextDiff,
     removeFromContext: removeFromContextDiff,
     addToMenu: addToMenuDiff,
@@ -673,7 +673,7 @@ export default {
     isInContext,
 
     getFilesInContext,
-    makeDiff,
+    diff,
     applyDiff,
     addToContext,
     removeFromContext,
