@@ -416,7 +416,7 @@ export function goToContext(simulationId: string, context?: string) {
  * Derermines wather the player is in the given context.
  * @param context The context.
  */
-export function isPlayerInContext(givenContext: string) {
+export function isInContext(givenContext: string) {
     let currentContext = window.location.pathname.split('/')[2];
 
     return currentContext === givenContext;
@@ -645,6 +645,10 @@ export const makeDiff = {
     setPosition: setPositionDiff,
 };
 
+export const player = {
+    isInContext,
+};
+
 export default {
     sum,
     avg,
@@ -661,10 +665,12 @@ export default {
     event,
     shout,
     goToContext,
-    isPlayerInContext,
     getUser,
     getUserMenuContext,
     getUserInventoryContext,
+
+    player,
+    isInContext,
 
     getFilesInContext,
     makeDiff,

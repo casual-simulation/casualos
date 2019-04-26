@@ -9,6 +9,7 @@
 -   Improvements
     -   Set builder's default background color to dark gray. Player remains the light blue.
     -   Changed the `onDragAny/onDropAny` actions to be `onAnyDrag/onAnyDrop`.
+    -   `formula-lib.ts` has changed `isPlayerInContext` export to `player.isInContext`.
 -   Bug Fixes
 
 ## V0.5.1
