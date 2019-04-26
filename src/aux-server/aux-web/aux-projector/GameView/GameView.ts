@@ -406,7 +406,7 @@ export default class GameView extends Vue implements IGameView {
                         let sceneBackgroundColor = file.tags['aux.scene.color'];
                         this._sceneBackground = hasValue(sceneBackgroundColor)
                             ? new Color(sceneBackgroundColor)
-                            : new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
+                            : new Color('#263238');
                         this._sceneBackgroundUpdate();
                     })
                 )
@@ -681,7 +681,7 @@ export default class GameView extends Vue implements IGameView {
         if (this._sceneBackground) {
             this._scene.background = this._sceneBackground;
         } else {
-            this._scene.background = new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
+            this._scene.background = new Color('#263238');
         }
     }
 
@@ -694,7 +694,7 @@ export default class GameView extends Vue implements IGameView {
         let sceneBackgroundColor = globalsFile.tags['aux.scene.color'];
         this._sceneBackground = hasValue(sceneBackgroundColor)
             ? new Color(sceneBackgroundColor)
-            : new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
+            : new Color('#263238');
         this._sceneBackgroundUpdate();
 
         this.setCameraType('orthographic');
