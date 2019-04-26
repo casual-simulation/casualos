@@ -25,11 +25,16 @@
         -   The `onQRCodeScannerOpened()` event is triggered whenever the QR Code Scanner is opened.
         -   The `onQRCodeScannerClosed()` event is triggered whenever the QR Code Scanner is closed.
     -   Changed the default scene background color to #263238.
+    -   Made the mini file dots much smaller.
 -   Bug Fixes
     -   Stopped a new Guest's username from saying `guest_###` upon logging into a new guest account for the first time.
     -   Fixed highlighting issues when dragging files around.
     -   Totally removed the AUX Player toolbar so that it doesn't get in the way of input events. (Was previously just transparent)
     -   Fixed an issue with files not responding to height changes on a hex when the config file wasn't in the same context.
+    -   Fixed an issue with trying to load a WebP version of the "add tag" icon in Safari.
+        -   Safari doesn't support WebP - so we instead have to load it as a PNG.
+    -   Fixed the proxy to return the original content type of images to Safari.
+        -   Because Safari doesn't support WebP we can't automatically optimize the images.
 
 ## V0.5.0
 
