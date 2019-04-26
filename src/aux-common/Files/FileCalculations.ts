@@ -109,6 +109,23 @@ export const DROP_IN_INVENTORY_ACTION_NAME: string = 'onDropInInventory';
 export const DROP_ANY_IN_INVENTORY_ACTION_NAME: string = 'onDropAnyInInventory';
 
 /**
+ * The name of the event that is triggered when a QR Code is scanned.
+ */
+export const ON_QR_CODE_SCANNED_ACTION_NAME: string = 'onQRCodeScanned';
+
+/**
+ * The name of the event that is triggered when the QR Code scanner is closed.
+ */
+export const ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME: string =
+    'onQRCodeScannerClosed';
+
+/**
+ * The name of the event that is triggered when the QR Code scanner is opened.
+ */
+export const ON_QR_CODE_SCANNER_OPENED_ACTION_NAME: string =
+    'onQRCodeScannerOpened';
+
+/**
  * Defines an interface for objects that represent assignment formula expressions.
  * Assignment formula expressions are formulas that are only evaluated once.
  * Internally we store them as objects in the tag and display the calculated result.

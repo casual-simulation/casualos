@@ -11,6 +11,9 @@ import {
     UserMode,
     Object,
     getUserMode,
+    ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME,
+    ON_QR_CODE_SCANNED_ACTION_NAME,
+    ON_QR_CODE_SCANNER_OPENED_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard } from '../../shared/SharedUtils';
@@ -19,6 +22,7 @@ import { findIndex } from 'lodash';
 import QRCode from '@chenfengyuan/vue-qrcode';
 import CubeIcon from '../public/icons/Cube.svg';
 import HexIcon from '../public/icons/Hexagon.svg';
+import { QrcodeStream } from 'vue-qrcode-reader';
 
 export interface SidebarItem {
     id: string;
@@ -31,6 +35,7 @@ export interface SidebarItem {
     components: {
         app: App,
         'qr-code': QRCode,
+        'qrcode-stream': QrcodeStream,
     },
 })
 export default class App extends Vue {
@@ -72,6 +77,11 @@ export default class App extends Vue {
      * Whether to show the QR Code.
      */
     showQRCode: boolean = false;
+
+    /**
+     * Whether to show the QR Code Scanner.
+     */
+    showQRScanner: boolean = false;
 
     /**
      * The session/
@@ -191,6 +201,20 @@ export default class App extends Vue {
                                 message: e.message,
                                 visible: true,
                             };
+                        } else if (e.name === 'show_qr_code') {
+                            if (this.showQRScanner !== e.open) {
+                                this.showQRScanner = e.open;
+                                if (e.open) {
+                                    appManager.fileManager.action(
+                                        ON_QR_CODE_SCANNER_OPENED_ACTION_NAME,
+                                        null
+                                    );
+                                } else {
+                                    // Don't need to send an event for closing
+                                    // because onQrCodeScannerClosed() gets triggered
+                                    // automatically.
+                                }
+                            }
                         }
                     })
                 );
@@ -283,6 +307,25 @@ export default class App extends Vue {
             EventBus.$off(options.okEvent);
         });
         EventBus.$emit('showConfirmDialog', options);
+    }
+
+    async hideQRCodeScanner() {
+        this.showQRScanner = false;
+    }
+
+    async onQrCodeScannerClosed() {
+        await appManager.fileManager.action(
+            ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME,
+            null
+        );
+    }
+
+    async onQRCodeScanned(code: string) {
+        await appManager.fileManager.action(
+            ON_QR_CODE_SCANNED_ACTION_NAME,
+            null,
+            code
+        );
     }
 
     private _showConnectionLost() {

@@ -2,6 +2,7 @@ declare module 'vue-material';
 declare module 'vue-shortkey';
 declare module 'vue-material/dist/components';
 declare module '@chenfengyuan/vue-qrcode';
+declare module 'vue-qrcode-reader';
 declare module 'vue-filepond';
 declare module 'filepond-plugin-file-validate-type';
 declare module 'webxr-polyfill';

@@ -80,6 +80,14 @@
     padding: 5px;
 }
 
+.qr-scanner-dialog .qr-scanner-container {
+    display: flex;
+    flex-flow: column;
+    flex: 1;
+    align-items: center;
+    padding: 5px;
+}
+
 .md-switch.md-theme-default.md-checked.user-mode-toggle .md-switch-container {
     background-color: rgba(0, 0, 0, 0.38);
 }

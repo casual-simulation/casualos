@@ -374,7 +374,10 @@ export interface LocalEvent extends Event {
 /**
  * Defines a set of possible local event types.
  */
-export type LocalEvents = ShowToastEvent | TweenToEvent;
+export type LocalEvents =
+    | ShowToastEvent
+    | TweenToEvent
+    | OpenQRCodeScannerEvent;
 
 /**
  * An event that is used to show a toast message to the user.
@@ -399,6 +402,18 @@ export interface TweenToEvent extends LocalEvent {
      * The zoom value to use.
      */
     zoomValue: number;
+}
+
+/**
+ * An event that is used to show or hide the QR Code Scanner.
+ */
+export interface OpenQRCodeScannerEvent extends LocalEvent {
+    name: 'show_qr_code';
+
+    /**
+     * Whether the QR Code scanner should be visible.
+     */
+    open: boolean;
 }
 
 /**
@@ -533,5 +548,17 @@ export function tweenTo(fileId: string, zoomValue: number = -1): TweenToEvent {
         name: 'tween_to',
         fileId: fileId,
         zoomValue: zoomValue,
+    };
+}
+
+/**
+ * Creates a new OpenQRCodeScannerEvent.
+ * @param open Whether the QR Code scanner should be open or closed.
+ */
+export function openQRCodeScanner(open: boolean): OpenQRCodeScannerEvent {
+    return {
+        type: 'local',
+        name: 'show_qr_code',
+        open: open,
     };
 }

@@ -10,6 +10,7 @@ import {
     FileAddedEvent,
     toast,
     tweenTo,
+    openQRCodeScanner,
 } from './FilesChannel';
 import { File } from './File';
 import uuid from 'uuid/v4';
@@ -2124,6 +2125,50 @@ describe('FilesChannel', () => {
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([tweenTo('thisFile')]);
+            });
+        });
+
+        describe('openQRCodeScanner()', () => {
+            it('should emit a OpenQRCodeScannerEvent', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'openQRCodeScanner()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([openQRCodeScanner(true)]);
+            });
+        });
+
+        describe('closeQRCodeScanner()', () => {
+            it('should emit a OpenQRCodeScannerEvent', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'closeQRCodeScanner()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([openQRCodeScanner(false)]);
             });
         });
     });

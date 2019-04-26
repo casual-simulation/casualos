@@ -11,6 +11,7 @@ import {
     fileAdded,
     toast as toastMessage,
     tweenTo as calcTweenTo,
+    openQRCodeScanner as calcOpenQRCodeScanner,
 } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
 import { every, find } from 'lodash';
@@ -620,6 +621,20 @@ export function tweenPlayerTo(file: FileProxy | string, zoomValue?: number) {
 }
 
 /**
+ * Opens the QR Code Scanner.
+ */
+export function openQRCodeScanner() {
+    actions.push(calcOpenQRCodeScanner(true));
+}
+
+/**
+ * Closes the QR Code Scanner.
+ */
+export function closeQRCodeScanner() {
+    actions.push(calcOpenQRCodeScanner(false));
+}
+
+/**
  * Defines a set of functions that are able to make File Diffs.
  */
 export const makeDiff = {
@@ -662,4 +677,7 @@ export default {
 
     toast,
     tweenPlayerTo,
+
+    openQRCodeScanner,
+    closeQRCodeScanner,
 };
