@@ -2,7 +2,7 @@
 
 ## V0.5.2
 
-### Date: TBD
+### Date: 04/26/2019
 
 ### Changes:
 
