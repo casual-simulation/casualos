@@ -1,5 +1,16 @@
 # AUX Changelog
 
+## V0.5.2
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Set builder's default background color to dark gray. Player remains the light blue.
+    -   Changed the `onDragAny/onDropAny` actions to be `onAnyDrag/onAnyDrop`.
+-   Bug Fixes
+
 ## V0.5.1
 
 ### Date: 04/25/2019
