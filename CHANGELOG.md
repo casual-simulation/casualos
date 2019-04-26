@@ -11,6 +11,17 @@
     -   Changed the `onDragAny/onDropAny` actions to be `onAnyDrag/onAnyDrop`.
     -   `formula-lib.ts` has changed `isPlayerInContext` export to `player.isInContext`.
     -   `formula-lib.ts` has changed `makeDiff` export to `diff`.
+    -   Made the mini file dots much smaller.
+    -   Added the ability to show and hide a QR Code Scanner using the `openQRCodeScanner()` and `closeQRCodeScanner()` functions.
+        -   Upon scanning a QR Code the `onQRCodeScanned()` event is triggered with the `that` variable bound to the scanned QR code.
+        -   The `onQRCodeScannerOpened()` event is triggered whenever the QR Code Scanner is opened.
+        -   The `onQRCodeScannerClosed()` event is triggered whenever the QR Code Scanner is closed.
+    -   Moved the file sheet to the right side of the screen.
+-   Bug Fixes
+    -   Fixed an issue with trying to load a WebP version of the "add tag" icon in Safari.
+        -   Safari doesn't support WebP - so we instead have to load it as a PNG.
+    -   Fixed the proxy to return the original content type of images to Safari.
+        -   Because Safari doesn't support WebP we can't automatically optimize the images.
 
 ## V0.5.1
 
@@ -20,21 +31,11 @@
 
 -   Improvements
     -   Automatically log in the user as a guest if they attempt to got to as context without being logged in.
-    -   Added the ability to show and hide a QR Code Scanner using the `openQRCodeScanner()` and `closeQRCodeScanner()` functions.
-        -   Upon scanning a QR Code the `onQRCodeScanned()` event is triggered with the `that` variable bound to the scanned QR code.
-        -   The `onQRCodeScannerOpened()` event is triggered whenever the QR Code Scanner is opened.
-        -   The `onQRCodeScannerClosed()` event is triggered whenever the QR Code Scanner is closed.
-    -   Changed the default scene background color to #263238.
-    -   Made the mini file dots much smaller.
 -   Bug Fixes
     -   Stopped a new Guest's username from saying `guest_###` upon logging into a new guest account for the first time.
     -   Fixed highlighting issues when dragging files around.
     -   Totally removed the AUX Player toolbar so that it doesn't get in the way of input events. (Was previously just transparent)
     -   Fixed an issue with files not responding to height changes on a hex when the config file wasn't in the same context.
-    -   Fixed an issue with trying to load a WebP version of the "add tag" icon in Safari.
-        -   Safari doesn't support WebP - so we instead have to load it as a PNG.
-    -   Fixed the proxy to return the original content type of images to Safari.
-        -   Because Safari doesn't support WebP we can't automatically optimize the images.
 
 ## V0.5.0
 
