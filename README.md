@@ -1,23 +1,24 @@
 # AUX
 
+![GitHub issues](https://img.shields.io/github/issues/casual-simulation/aux.svg) ![GitHub](https://img.shields.io/github/license/casual-simulation/aux.svg)
+
 A monorepo that contains the AUX (Ambient User Experience) packages.
 
 ## Packages
 
 This repository contains the following packages:
 
-- AUX Common
-    - Library of common code for AUX projects.
-    - Contains the AUX file format and basic primitives to enable realtime-web applications.
-- AUX Server
-    - Web application containing the AUX Projector and AUX Player.
-    - Uses a Node.js server to distribute the files and WebSockets for realtime communication.
-    - Built on top of AUX Common.
+-   AUX Common
+    -   Library of common code for AUX projects.
+    -   Contains the AUX file format and basic primitives to enable realtime-web applications.
+-   AUX Server
+    -   Web application containing the AUX Projector and AUX Player.
+    -   Uses a Node.js server to distribute the files and WebSockets for realtime communication.
+    -   Built on top of AUX Common.
 
 ## Developing
 
 See [DEVELOPERS.md](./DEVELOPERS.md) for dev environment setup instructions.
-
 
 ## License
 

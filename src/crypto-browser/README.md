@@ -1,5 +1,7 @@
 # `crypto-browser`
 
+![npm (scoped)](https://img.shields.io/npm/v/@casual-simulation/crypto-browser.svg)
+
 > TODO: description
 
 ## Usage
