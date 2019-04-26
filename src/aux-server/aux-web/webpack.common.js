@@ -46,7 +46,18 @@ module.exports = {
             //   },
             {
                 test: /\.vue$/,
-                use: 'vue-loader',
+                use: {
+                    loader: 'vue-loader',
+                    options: {
+                        transformAssetUrls: {
+                            video: ['src', 'poster'],
+                            source: ['src', 'srcset'],
+                            img: 'src',
+                            image: ['xlink:href', 'href'],
+                            use: ['xlink:href', 'href'],
+                        },
+                    },
+                },
                 exclude: /node_modules/,
             },
             {
