@@ -8,6 +8,11 @@
 
 -   Improvements
     -   Automatically log in the user as a guest if they attempt to got to as context without being logged in.
+    -   Added the ability to show and hide a QR Code Scanner using the `openQRCodeScanner()` and `closeQRCodeScanner()` functions.
+        -   Upon scanning a QR Code the `onQRCodeScanned()` event is triggered with the `that` variable bound to the scanned QR code.
+        -   The `onQRCodeScannerOpened()` event is triggered whenever the QR Code Scanner is opened.
+        -   The `onQRCodeScannerClosed()` event is triggered whenever the QR Code Scanner is closed.
+    -   Changed the default scene background color to #263238.
 -   Bug Fixes
     -   Stopped a new Guest's username from saying `guest_###` upon logging into a new guest account for the first time.
     -   Fixed highlighting issues when dragging files around.
