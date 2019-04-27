@@ -1,5 +1,17 @@
 # AUX Changelog
 
+## V0.5.3
+
+### Date: 04/26/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed an issue that would cause data loss on the server.
+        -   The issue was caused by not cleaning up some resources completely.
+        -   Because some services were left running, they would allow a session to run indefinitely while the server was running but were not saving any new data to the database.
+        -   As a result, any changes that happened after the "cleanup" would be lost after a server restart.
+
 ## V0.5.2
 
 ### Date: 04/26/2019
