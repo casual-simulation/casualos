@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.5.4
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Changed AUX Player's default background color to match the dark background color that AUX Builder uses.
+
 ## V0.5.3
 
 ### Date: 04/26/2019
