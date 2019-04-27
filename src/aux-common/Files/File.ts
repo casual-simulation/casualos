@@ -163,4 +163,4 @@ export const DEFAULT_WORKSPACE_COLOR = '#999999';
 /**
  * The default color for scene background.
  */
-export const DEFAULT_SCENE_BACKGROUND_COLOR = '#CCE6FF';
+export const DEFAULT_SCENE_BACKGROUND_COLOR = '#263238';
