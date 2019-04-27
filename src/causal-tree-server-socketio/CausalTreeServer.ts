@@ -305,7 +305,9 @@ export class CausalTreeServer {
                         info.id
                     } because no more users are connected...`
                 );
+
                 this._treePromises[info.id] = null;
+                this._treeList[info.id] = null;
                 data.inactive = true;
                 data.subs.forEach(s => {
                     s.unsubscribe();
