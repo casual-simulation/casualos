@@ -488,10 +488,8 @@ export function isTagWellKnown(
  * We also care about things like aux.movable but not _position, _index _selection, etc.
  *
  * Well-known hidden tags include:
- * - _position
- * - _hidden
- * - _selection
- * - _index
+ * - aux._selection
+ * - context._index
  *
  * You can determine if a tag is "well-known" by using isWellKnownTag().
  * @param first The first file.
@@ -590,8 +588,8 @@ export function validateTag(tag: string) {
  * @param user The user's file.
  */
 export function selectionIdForUser(user: Object) {
-    if (user && user.tags._selection) {
-        return { id: user.tags._selection || null, newId: <string>null };
+    if (user && user.tags['aux._selection']) {
+        return { id: user.tags['aux._selection'] || null, newId: <string>null };
     } else {
         const id = newSelectionId();
         return { id: id, newId: id };
@@ -606,7 +604,7 @@ export function selectionIdForUser(user: Object) {
 export function updateUserSelection(selectionId: string, fileId: string) {
     return {
         tags: {
-            _selection: selectionId,
+            ['aux._selection']: selectionId,
             ['aux._editingFile']: fileId,
         },
     };

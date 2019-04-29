@@ -41,37 +41,37 @@ describe('SelectionManager', () => {
                 file = tree.value['file1'];
             });
 
-            it('should set the user _selection tag to the given files ID', async () => {
+            it('should set the user aux._selection tag to the given files ID', async () => {
                 await manager.selectFile(file);
 
                 file = tree.value['file1'];
 
                 expect(helper.userFile.tags).toMatchObject({
-                    _selection: 'file1',
+                    ['aux._selection']: 'file1',
                     'aux._editingFile': 'file1',
                 });
                 expect(file.tags['aux._lastEditedBy']).toBe(helper.userFile.id);
             });
 
-            it('should clear the user _selection tag if the given files ID matches the current selection', async () => {
+            it('should clear the user aux._selection tag if the given files ID matches the current selection', async () => {
                 let user = tree.value['user'];
                 await tree.updateFile(user, {
                     tags: {
-                        _selection: 'file1',
+                        'aux._selection': 'file1',
                     },
                 });
 
                 const file = tree.value['file1'];
                 await manager.selectFile(file);
 
-                expect(helper.userFile.tags._selection).toBeFalsy();
+                expect(helper.userFile.tags['aux._selection']).toBeFalsy();
             });
 
             it('should kick the user into multi select mode if specified', async () => {
                 let user = tree.value['user'];
                 await tree.updateFile(user, {
                     tags: {
-                        _selection: 'file1',
+                        'aux._selection': 'file1',
                     },
                 });
                 await tree.addFile(createFile('file2'));
@@ -81,7 +81,7 @@ describe('SelectionManager', () => {
 
                 const file1 = tree.value['file1'];
                 const file2 = tree.value['file2'];
-                const selection = helper.userFile.tags._selection;
+                const selection = helper.userFile.tags['aux._selection'];
                 expect(selection).toBeTruthy();
                 expect(selection).not.toBe('file1');
                 expect(helper.userFile.tags['aux._selectionMode']).toBe(
@@ -111,7 +111,7 @@ describe('SelectionManager', () => {
                 await manager.selectFile(file);
 
                 file = tree.value['file1'];
-                const selection = helper.userFile.tags._selection;
+                const selection = helper.userFile.tags['aux._selection'];
                 expect(selection).toBeTruthy();
                 expect(file.tags[selection]).toBe(true);
             });
@@ -125,7 +125,7 @@ describe('SelectionManager', () => {
 
                 file = tree.value['file1'];
                 file2 = tree.value['file2'];
-                const selection = helper.userFile.tags._selection;
+                const selection = helper.userFile.tags['aux._selection'];
                 expect(selection).toBeTruthy();
                 expect(file.tags[selection]).toBe(true);
                 expect(file2.tags[selection]).toBe(true);
@@ -149,7 +149,7 @@ describe('SelectionManager', () => {
             let file0 = tree.value['file0'];
             await manager.selectFile(file0);
 
-            let oldSelection = helper.userFile.tags._selection;
+            let oldSelection = helper.userFile.tags['aux._selection'];
 
             await tree.addFile(createFile('file1'));
             await tree.addFile(createFile('file2'));
@@ -163,7 +163,7 @@ describe('SelectionManager', () => {
             file1 = tree.value['file1'];
             file2 = tree.value['file2'];
 
-            let newSelection = helper.userFile.tags._selection;
+            let newSelection = helper.userFile.tags['aux._selection'];
             expect(newSelection).not.toEqual(oldSelection);
             expect(newSelection).toBeTruthy();
             expect(getSelectionMode(helper.userFile)).toBe('multi');
@@ -200,29 +200,29 @@ describe('SelectionManager', () => {
     });
 
     describe('clearSelection()', () => {
-        it('should set the _selection tag to null', async () => {
+        it('should set the aux._selection tag to null', async () => {
             await tree.updateFile(helper.userFile, {
                 tags: {
-                    _selection: 'abc',
+                    ['aux._selection']: 'abc',
                 },
             });
 
             await manager.clearSelection();
 
-            expect(helper.userFile.tags._selection).toBeFalsy();
+            expect(helper.userFile.tags['aux._selection']).toBeFalsy();
         });
 
         it('should set the aux._selectionMode tag to single', async () => {
             await tree.updateFile(helper.userFile, {
                 tags: {
-                    _selection: 'abc',
+                    'aux._selection': 'abc',
                     'aux._selectionMode': 'multi',
                 },
             });
 
             await manager.clearSelection();
 
-            expect(helper.userFile.tags._selection).toBeFalsy();
+            expect(helper.userFile.tags['aux._selection']).toBeFalsy();
             expect(helper.userFile.tags['aux._selectionMode']).toBe('single');
         });
 
@@ -232,7 +232,7 @@ describe('SelectionManager', () => {
 
             await tree.updateFile(helper.userFile, {
                 tags: {
-                    _selection: 'abc',
+                    'aux._selection': 'abc',
                     'aux._selectionMode': 'multi',
                 },
             });
@@ -257,7 +257,7 @@ describe('SelectionManager', () => {
             );
             await tree.updateFile(helper.userFile, {
                 tags: {
-                    _selection: 'abc',
+                    'aux._selection': 'abc',
                 },
             });
 

@@ -37,7 +37,7 @@ export interface FileTags {
     ['aux._diffTags']?: string[];
 
     // User tags
-    _selection?: string;
+    ['aux._selection']?: string;
     ['aux._user']?: string;
     ['aux._userContext']?: string;
     ['aux._userInventoryContext']?: string;
