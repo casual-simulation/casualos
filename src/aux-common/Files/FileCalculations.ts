@@ -1752,7 +1752,7 @@ export function isFileInContext(
         const userContextValue = calculateFileValue(
             context,
             file,
-            '_userContext'
+            'aux._userContext'
         );
         result = userContextValue == contextId;
     }

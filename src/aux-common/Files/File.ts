@@ -39,7 +39,7 @@ export interface FileTags {
     // User tags
     _selection?: string;
     _user?: string;
-    _userContext?: string;
+    ['aux._userContext']?: string;
     ['aux._userInventoryContext']?: string;
     _userMenuContext?: string;
     ['aux._mode']?: UserMode;

@@ -247,7 +247,8 @@ export default class App extends Vue {
     }
 
     logout() {
-        const context = appManager.fileManager.userFile.tags._userContext;
+        const context =
+            appManager.fileManager.userFile.tags['aux._userContext'];
         appManager.logout();
         this.showNavigation = false;
         this.$router.push({
