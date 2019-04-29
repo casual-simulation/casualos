@@ -653,6 +653,7 @@ describe('FileCalculations', () => {
                 'testContext.y',
                 'testContext.z',
                 'aux.movable',
+                'aux.label',
             ]);
         });
     });
