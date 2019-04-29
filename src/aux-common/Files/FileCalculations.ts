@@ -453,7 +453,7 @@ export function isFilterTag(tag: string) {
 export const WELL_KNOWN_TAGS = [
     /_hidden$/,
     /\.index$/,
-    /_lastEditedBy/,
+    /^aux\._lastEditedBy$/,
     /\._lastActiveTime/,
     /^aux\._context_/,
     /^context_/,
@@ -488,10 +488,8 @@ export function isTagWellKnown(
  * We also care about things like aux.movable but not _position, _index _selection, etc.
  *
  * Well-known hidden tags include:
- * - _position
- * - _hidden
- * - _selection
- * - _index
+ * - aux._selection
+ * - context._index
  *
  * You can determine if a tag is "well-known" by using isWellKnownTag().
  * @param first The first file.
@@ -590,8 +588,8 @@ export function validateTag(tag: string) {
  * @param user The user's file.
  */
 export function selectionIdForUser(user: Object) {
-    if (user && user.tags._selection) {
-        return { id: user.tags._selection || null, newId: <string>null };
+    if (user && user.tags['aux._selection']) {
+        return { id: user.tags['aux._selection'] || null, newId: <string>null };
     } else {
         const id = newSelectionId();
         return { id: id, newId: id };
@@ -606,8 +604,8 @@ export function selectionIdForUser(user: Object) {
 export function updateUserSelection(selectionId: string, fileId: string) {
     return {
         tags: {
-            _selection: selectionId,
-            _editingFile: fileId,
+            ['aux._selection']: selectionId,
+            ['aux._editingFile']: fileId,
         },
     };
 }
@@ -642,7 +640,7 @@ export function newSelectionId() {
  * @param userFile The file for the user.
  */
 export function getUserMenuId(calc: FileCalculationContext, userFile: File) {
-    return calculateFileValue(calc, userFile, '_userMenuContext');
+    return calculateFileValue(calc, userFile, 'aux._userMenuContext');
 }
 
 /**
@@ -844,7 +842,8 @@ export function createFile(id = uuid(), tags: Object['tags'] = {}) {
 export function createWorkspace(
     id = uuid(),
     builderContextId: string = createContextId(),
-    contextFormula: string = '=isBuilder'
+    contextFormula: string = '=isBuilder',
+    label: string = null
 ): Workspace {
     // checks if given context string is empty or just whitespace
     if (builderContextId.length === 0 || /^\s*$/.test(builderContextId)) {
@@ -862,10 +861,8 @@ export function createWorkspace(
             [`${builderContextId}.x`]: 0,
             [`${builderContextId}.y`]: 0,
             [`${builderContextId}.z`]: 0,
-            'aux.color': 'clear',
-            'aux.stroke.color': '#777',
             'aux.movable': false,
-            'aux.scale.z': 0.01,
+            'aux.label': label,
         },
     };
 }
@@ -884,7 +881,7 @@ export function updateFile(
     createContext: () => FileCalculationContext
 ) {
     if (newData.tags) {
-        newData.tags._lastEditedBy = userId;
+        newData.tags['aux._lastEditedBy'] = userId;
         // Cleanup/preprocessing
         for (let property in newData.tags) {
             let value = newData.tags[property];
@@ -1322,6 +1319,18 @@ export function isFileMovable(
 }
 
 /**
+ * Gets whether the given file's context is movable.
+ * @param calc The calculation context.
+ * @param file The file to check.
+ */
+export function isContextMovable(
+    calc: FileCalculationContext,
+    file: File
+): boolean {
+    return calculateBooleanTagValue(calc, file, 'aux.context.movable', true);
+}
+
+/**
  * Gets the position that the context should be at using the given file.
  * @param calc The calculation context to use.
  * @param contextFile The file that represents the context.
@@ -1479,7 +1488,7 @@ export function objectsAtContextGridPosition(
  * Determines if the given file is for a user.
  */
 export function isUserFile(file: File): boolean {
-    return !!file.tags._user;
+    return !!file.tags['aux._user'];
 }
 
 /**
@@ -1645,7 +1654,7 @@ export function parseFilterTag(tag: string): FilterParseResult {
  * @param object The file.
  */
 export function getUserMode(object: Object): UserMode {
-    return object.tags._mode || DEFAULT_USER_MODE;
+    return object.tags['aux._mode'] || DEFAULT_USER_MODE;
 }
 
 /**
@@ -1748,11 +1757,11 @@ export function isFileInContext(
         result = contextValue === true;
     }
 
-    if (!result && hasValue(file.tags._user)) {
+    if (!result && hasValue(file.tags['aux._user'])) {
         const userContextValue = calculateFileValue(
             context,
             file,
-            '_userContext'
+            'aux._userContext'
         );
         result = userContextValue == contextId;
     }

@@ -10,6 +10,8 @@ import {
     objectsAtContextGridPosition,
     isFileMovable,
     getFileConfigContexts,
+    isMinimized,
+    isContextMovable,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../../shared/AppManager';
 import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperation/BaseFileClickOperation';
@@ -139,16 +141,26 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
     }
 
     protected _canDragFile(calc: FileCalculationContext, file: File): boolean {
-        if (this._interaction.isInCorrectMode(this._file3D)) {
-            if (this._interaction.isInWorksurfacesMode()) {
-                let tags = getFileConfigContexts(calc, file);
-                if (tags.length > 0) {
-                    // Workspaces are always movable.
-                    return true;
-                }
-            }
+        if (this._file3D instanceof ContextGroup3D) {
+            let tags = getFileConfigContexts(calc, file);
+            return (
+                isContextMovable(calc, file) &&
+                isMinimized(calc, file) &&
+                tags.length > 0
+            );
+        } else {
             return isFileMovable(calc, file);
         }
-        return false;
+        // if (this._interaction.isInCorrectMode(this._file3D)) {
+        //     if (this._interaction.isInWorksurfacesMode()) {
+        //         let tags = getFileConfigContexts(calc, file);
+        //         if (tags.length > 0) {
+        //             // Workspaces are always movable.
+        //             return true;
+        //         }
+        //     }
+        //     return isFileMovable(calc, file);
+        // }
+        // return false;
     }
 }

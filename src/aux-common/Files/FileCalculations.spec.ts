@@ -45,6 +45,7 @@ import {
     isMergeable,
     getFileLabelAnchor,
     formatValue,
+    isContextMovable,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
@@ -173,7 +174,7 @@ describe('FileCalculations', () => {
                 context: true,
                 'context.x': -1,
                 'context.y': 1,
-                _user: 'abc',
+                'aux._user': 'abc',
             });
             const file2 = createFile('test2', {
                 context: true,
@@ -651,10 +652,7 @@ describe('FileCalculations', () => {
                 'testContext.x',
                 'testContext.y',
                 'testContext.z',
-                'aux.color',
-                'aux.stroke.color',
                 'aux.movable',
-                'aux.scale.z',
             ]);
         });
     });
@@ -736,7 +734,7 @@ describe('FileCalculations', () => {
                 first: {
                     id: 'first',
                     tags: {
-                        _destroyed: true,
+                        'aux._destroyed': true,
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'test',
                     },
@@ -1313,7 +1311,7 @@ describe('FileCalculations', () => {
                     e: null,
                     f: undefined,
                     g: NaN,
-                    _lastEditedBy: 'testUser',
+                    'aux._lastEditedBy': 'testUser',
                 },
             });
         });
@@ -1704,7 +1702,7 @@ describe('FileCalculations', () => {
         const builtinTagCases = [
             ['abc.index'],
             ['_hidden'],
-            ['_lastEditedBy'],
+            ['aux._lastEditedBy'],
             ['abc._lastActiveTime'],
         ];
         it.each(builtinTagCases)(
@@ -1764,7 +1762,7 @@ describe('FileCalculations', () => {
             ['aux.scale.y'],
             ['aux.scale.z'],
             ['aux.scale'],
-            ['_destroyed'],
+            ['aux._destroyed'],
             ['+(#tag:"value")'],
             ['onCombine(#tag:"value")'],
             ['_context_test'],
@@ -1898,14 +1896,14 @@ describe('FileCalculations', () => {
 
         it('should not be destroyed', () => {
             let first: Object = createFile('id');
-            first.tags._destroyed = true;
+            first.tags['aux._destroyed'] = true;
             first.tags._workspace = 'abc';
 
             uuidMock.mockReturnValue('test');
             const second = duplicateFile(first);
 
             expect(second.id).not.toEqual(first.id);
-            expect(second.tags._destroyed).toBe(true);
+            expect(second.tags['aux._destroyed']).toBe(true);
         });
 
         it('should not have any auto-generated contexts or selections', () => {
@@ -1979,11 +1977,11 @@ describe('FileCalculations', () => {
 
         it('should not modify the original file', () => {
             let first: Object = createFile('id');
-            first.tags._destroyed = true;
+            first.tags['aux._destroyed'] = true;
 
             const second = duplicateFile(first);
 
-            expect(first.tags._destroyed).toBe(true);
+            expect(first.tags['aux._destroyed']).toBe(true);
         });
 
         it('should not clear aux._diff', () => {
@@ -2674,9 +2672,9 @@ describe('FileCalculations', () => {
     });
 
     describe('getUserMenuId()', () => {
-        it('should return the value from _userMenuContext', () => {
+        it('should return the value from aux._userMenuContext', () => {
             const user = createFile('user', {
-                _userMenuContext: 'context',
+                'aux._userMenuContext': 'context',
             });
 
             const calc = createCalculationContext([user]);
@@ -2688,7 +2686,7 @@ describe('FileCalculations', () => {
     describe('getFilesInMenu()', () => {
         it('should return the list of files in the users menu', () => {
             const user = createFile('user', {
-                _userMenuContext: 'context',
+                'aux._userMenuContext': 'context',
             });
             const file1 = createFile('file1', {
                 context: true,
@@ -2713,7 +2711,7 @@ describe('FileCalculations', () => {
     describe('addFileToMenu()', () => {
         it('should return the update needed to add the given file ID to the given users menu', () => {
             const user = createFile('user', {
-                _userMenuContext: 'context',
+                'aux._userMenuContext': 'context',
             });
             const file = createFile('file');
 
@@ -2731,7 +2729,7 @@ describe('FileCalculations', () => {
 
         it('should return the given index', () => {
             const user = createFile('user', {
-                _userMenuContext: 'context',
+                'aux._userMenuContext': 'context',
             });
             const file = createFile('file');
 
@@ -2749,7 +2747,7 @@ describe('FileCalculations', () => {
 
         it('should return index needed to place the file at the end of the list', () => {
             const user = createFile('user', {
-                _userMenuContext: 'context',
+                'aux._userMenuContext': 'context',
             });
             const file = createFile('file');
             const file2 = createFile('file2', {
@@ -2772,7 +2770,7 @@ describe('FileCalculations', () => {
     describe('removeFileFromMenu()', () => {
         it('should return the update needed to remove the given file from the users menu', () => {
             const user = createFile('user', {
-                _userMenuContext: 'context',
+                'aux._userMenuContext': 'context',
             });
             const file = createFile('file');
 
@@ -2801,7 +2799,7 @@ describe('FileCalculations', () => {
 
         it('should default to 0 if the file is a user file', () => {
             const file = createFile('file', {
-                _user: 'user',
+                'aux._user': 'user',
             });
 
             const calc = createCalculationContext([file]);
@@ -2812,7 +2810,7 @@ describe('FileCalculations', () => {
 
         it('should still return the user files context size', () => {
             const file = createFile('file', {
-                _user: 'user',
+                'aux._user': 'user',
                 'aux.context.size': 10,
             });
 
@@ -2888,6 +2886,40 @@ describe('FileCalculations', () => {
                 'test.y': null,
                 'test.index': null,
             });
+        });
+    });
+
+    describe('isContextMovable()', () => {
+        it('should return true if movable', () => {
+            const file = createFile('test', {
+                abc: true,
+                'abc.config': true,
+                'aux.context.movable': true,
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(isContextMovable(calc, file)).toBe(true);
+        });
+
+        it('should return false if not movable', () => {
+            const file = createFile('test', {
+                abc: true,
+                'abc.config': true,
+                'aux.context.movable': false,
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(isContextMovable(calc, file)).toBe(false);
+        });
+
+        it('should be movable by default', () => {
+            const file = createFile('test', {});
+
+            const calc = createCalculationContext([file]);
+
+            expect(isContextMovable(calc, file)).toBe(true);
         });
     });
 

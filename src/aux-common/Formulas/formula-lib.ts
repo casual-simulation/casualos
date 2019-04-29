@@ -446,7 +446,7 @@ export function getUser() {
 export function getUserMenuContext(): string {
     const user = getUser();
     if (user) {
-        return user._userMenuContext;
+        return user['aux._userMenuContext'];
     } else {
         return null;
     }
@@ -458,7 +458,7 @@ export function getUserMenuContext(): string {
 export function getUserInventoryContext(): string {
     const user = getUser();
     if (user) {
-        return user._userInventoryContext;
+        return user['aux._userInventoryContext'];
     } else {
         return null;
     }
@@ -616,7 +616,7 @@ export function toast(message: string) {
  * @param file The file to view.
  * @param zoomValue The zoom value to use.
  */
-export function tweenPlayerTo(file: FileProxy | string, zoomValue?: number) {
+export function tweenTo(file: FileProxy | string, zoomValue?: number) {
     actions.push(calcTweenTo(getFileId(file), zoomValue));
 }
 
@@ -645,45 +645,55 @@ export const diff = {
     setPosition: setPositionDiff,
 };
 
+/**
+ * Defines a set of functions that relate to common player operations.
+ */
 export const player = {
     isInContext,
+    goToContext,
+    getFile: getUser,
+    getMenuContext: getUserMenuContext,
+    getInventoryContext: getUserInventoryContext,
+    toast,
+    tweenTo,
+    openQRCodeScanner,
+    closeQRCodeScanner,
 };
 
-export default {
+/**
+ * Defines a set of functions that relate to common math operations.
+ */
+export const math = {
     sum,
     avg,
     sqrt,
     abs,
     stdDev,
-    sort,
     randomInt,
     random,
+};
+
+/**
+ * Defines a set of functions that relate to common data operations.
+ */
+export const data = {
+    sort,
     join,
-    destroy,
-    create: createFrom,
-    combine,
-    event,
-    shout,
-    goToContext,
-    getUser,
-    getUserMenuContext,
-    getUserInventoryContext,
+};
 
-    player,
-    isInContext,
-
-    getFilesInContext,
+export default {
+    // Namespaces
+    data,
     diff,
+    math,
+    player,
+
+    // Global functions
     applyDiff,
-    addToContext,
-    removeFromContext,
-
-    addToMenu,
-    removeFromMenu,
-
-    toast,
-    tweenPlayerTo,
-
-    openQRCodeScanner,
-    closeQRCodeScanner,
+    combine,
+    create: createFrom,
+    destroy,
+    event,
+    getFilesInContext,
+    shout,
 };

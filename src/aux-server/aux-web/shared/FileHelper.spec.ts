@@ -34,7 +34,7 @@ describe('FileHelper', () => {
             const { added: file1 } = await tree.file('test1');
 
             const { added: file2 } = await tree.file('test2');
-            const { added: tag } = await tree.tag('_destroyed', file2);
+            const { added: tag } = await tree.tag('aux._destroyed', file2);
             const { added: val } = await tree.val(true, tag);
 
             const objs = helper.objects;

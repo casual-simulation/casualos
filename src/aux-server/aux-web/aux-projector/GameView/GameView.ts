@@ -235,6 +235,10 @@ export default class GameView extends Vue implements IGameView {
         });
     }
 
+    public setWorldGridVisible(visible: boolean) {
+        this._gridMesh.visible = visible;
+    }
+
     public selectRecentFile(file: Object) {
         if (
             !this.fileManager.recent.selectedRecentFile ||
@@ -391,7 +395,6 @@ export default class GameView extends Vue implements IGameView {
                         this.mode = this._interaction.mode = getUserMode(<
                             Object
                         >file);
-                        this._gridMesh.visible = this.workspacesMode;
                     })
                 )
                 .subscribe()
@@ -406,7 +409,7 @@ export default class GameView extends Vue implements IGameView {
                         let sceneBackgroundColor = file.tags['aux.scene.color'];
                         this._sceneBackground = hasValue(sceneBackgroundColor)
                             ? new Color(sceneBackgroundColor)
-                            : new Color('#263238');
+                            : new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
                         this._sceneBackgroundUpdate();
                     })
                 )
@@ -602,8 +605,9 @@ export default class GameView extends Vue implements IGameView {
         if (configTags.length === 0) {
             if (!initialUpdate) {
                 if (
-                    !file.tags._user &&
-                    file.tags._lastEditedBy === this.fileManager.userFile.id
+                    !file.tags['aux._user'] &&
+                    file.tags['aux._lastEditedBy'] ===
+                        this.fileManager.userFile.id
                 ) {
                     if (
                         this.fileManager.recent.selectedRecentFile &&
@@ -681,7 +685,7 @@ export default class GameView extends Vue implements IGameView {
         if (this._sceneBackground) {
             this._scene.background = this._sceneBackground;
         } else {
-            this._scene.background = new Color('#263238');
+            this._scene.background = new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
         }
     }
 

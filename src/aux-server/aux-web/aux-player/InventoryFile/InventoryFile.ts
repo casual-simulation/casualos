@@ -18,6 +18,7 @@ export default class InventoryFile extends Vue {
     image: string = '';
     label: string = '';
     labelColor: string = '#000';
+    showImage: string = 'flex';
 
     @Inject() fileRenderer: FileRenderer;
 
@@ -25,6 +26,7 @@ export default class InventoryFile extends Vue {
     private async _fileChanged(file: AuxFile) {
         if (file) {
             this.image = await this.fileRenderer.render(file);
+            this.showImage = 'flex';
             let label = file.tags['aux.label'];
             if (label) {
                 this.label = appManager.fileManager.calculateFormattedFileValue(
@@ -48,6 +50,7 @@ export default class InventoryFile extends Vue {
             this.image = '';
             this.label = '';
             this.labelColor = '#000';
+            this.showImage = 'none';
         }
     }
 

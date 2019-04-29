@@ -37,14 +37,14 @@ export interface FileTags {
     ['aux._diffTags']?: string[];
 
     // User tags
-    _selection?: string;
-    _user?: string;
-    _userContext?: string;
-    _userInventoryContext?: string;
-    _userMenuContext?: string;
-    _mode?: UserMode;
-    _editingFile?: string;
-    _lastEditedBy?: string;
+    ['aux._selection']?: string;
+    ['aux._user']?: string;
+    ['aux._userContext']?: string;
+    ['aux._userInventoryContext']?: string;
+    ['aux._userMenuContext']?: string;
+    ['aux._mode']?: UserMode;
+    ['aux._editingFile']?: string;
+    ['aux._lastEditedBy']?: string;
     ['aux._selectionMode']?: SelectionMode;
 
     // Builder related tags
@@ -63,6 +63,7 @@ export interface FileTags {
     ['aux.context.color']?: string;
     ['aux.context.size']?: number;
     ['aux.context.minimized']?: boolean | null;
+    ['aux.context.movable']?: unknown;
 
     [key: string]: any;
 }
@@ -163,4 +164,4 @@ export const DEFAULT_WORKSPACE_COLOR = '#999999';
 /**
  * The default color for scene background.
  */
-export const DEFAULT_SCENE_BACKGROUND_COLOR = '#CCE6FF';
+export const DEFAULT_SCENE_BACKGROUND_COLOR = '#263238';

@@ -65,7 +65,7 @@ export default class SelectionManager {
         await this._helper.transaction(
             fileUpdated(this._helper.userFile.id, {
                 tags: {
-                    _selection: newId,
+                    ['aux._selection']: newId,
                     ['aux._selectionMode']: 'multi',
                 },
             }),
@@ -111,7 +111,7 @@ export default class SelectionManager {
     getSelectedFilesForUser(user: AuxObject) {
         return filterFilesBySelection(
             this._helper.objects,
-            user.tags._selection
+            user.tags['aux._selection']
         );
     }
 
@@ -155,7 +155,7 @@ export default class SelectionManager {
         } else {
             if (multiSelect) {
                 const newId = newSelectionId();
-                const current = user.tags._selection;
+                const current = user.tags['aux._selection'];
                 const update = updateUserSelection(newId, file.id);
                 await this._helper.updateFile(user, {
                     tags: {
@@ -182,7 +182,7 @@ export default class SelectionManager {
                 });
             } else {
                 const selection =
-                    user.tags._selection === file.id ? null : file.id;
+                    user.tags['aux._selection'] === file.id ? null : file.id;
                 const update = updateUserSelection(selection, file.id);
                 await this._helper.updateFile(user, update);
                 await this._helper.updateFile(file, { tags: {} });

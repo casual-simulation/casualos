@@ -119,11 +119,13 @@ export class FileHelper {
      * @param fileId The ID of the file to create. If not specified a new ID will be generated.
      * @param builderContextId The ID of the context to create for the file. If not specified a new context ID will be generated.
      * @param contextFormula The formula that should be used to determine whether the workspace is allowed to be a context.
+     * @param label The label that should be added to the created file.
      */
     async createWorkspace(
         fileId?: string,
         builderContextId?: string,
-        contextFormula?: string
+        contextFormula?: string,
+        label?: string
     ): Promise<void> {
         if (FileHelper._debug) {
             console.log('[FileManager] Create File');
@@ -132,7 +134,8 @@ export class FileHelper {
         const workspace: Workspace = createWorkspace(
             fileId,
             builderContextId,
-            contextFormula
+            contextFormula,
+            label
         );
 
         await this._tree.addFile(workspace);

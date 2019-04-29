@@ -5,7 +5,12 @@
             <div class="inventory-file-text" v-show="label" :style="{ color: labelColor }">
                 {{ label }}
             </div>
-            <img class="inventory-file-img" :src="image" draggable="false" />
+            <img
+                class="inventory-file-img"
+                :src="image"
+                draggable="false"
+                :style="{ display: showImage }"
+            />
         </div>
     </div>
 </template>

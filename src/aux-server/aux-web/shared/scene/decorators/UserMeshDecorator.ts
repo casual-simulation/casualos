@@ -48,7 +48,7 @@ export class UserMeshDecorator extends AuxFile3DDecorator
 
         // Label
         this.label = new Text3D();
-        this.label.setText(this.file3D.file.tags._user);
+        this.label.setText(this.file3D.file.tags['aux._user']);
         setLayer(this.label, LayersHelper.Layer_UIWorld);
         this.label.setScale(Text3D.defaultScale * 2);
         this.label.setWorldPosition(new Vector3(0, 0, 0));

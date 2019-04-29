@@ -14,6 +14,7 @@ import {
     getContextMinimized,
     getContextSize,
     getBuilderContextGrid,
+    isMinimized,
 } from '@casual-simulation/aux-common/Files/FileCalculations';
 import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
 import { BuilderGroup3D } from '../../../shared/scene/BuilderGroup3D';
@@ -32,9 +33,6 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
     protected _gameView: GameView;
 
     private _workspace: BuilderGroup3D;
-    private _attachWorkspace: ContextGroup3D;
-    private _attachPoint: Axial;
-
     private _workspaceDelta: Vector3;
 
     /**
@@ -53,6 +51,8 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
         this._workspace = workspace;
 
         if (this._workspace) {
+            this._gameView.setWorldGridVisible(true);
+
             // calculate the delta needed to be applied to the pointer
             // positions to have the pointer drag around the originally tapped point
             // instead of where the anchor is.
@@ -63,15 +63,44 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
         }
     }
 
+    protected _disposeCore() {
+        if (this._workspace) {
+            this._gameView.setWorldGridVisible(false);
+        }
+        super._disposeCore();
+    }
+
     protected _onDrag(calc: FileCalculationContext) {
         if (this._workspace) {
-            //stop workspace dragging
+            if (isMinimized(calc, this._workspace.file)) {
+                this._onDragWorkspace(calc);
+            }
         } else {
             super._onDrag(calc);
         }
     }
 
-    protected _disposeCore() {
-        super._disposeCore();
+    protected _onDragWorkspace(calc: FileCalculationContext) {
+        const mouseDir = Physics.screenPosToRay(
+            this._gameView.getInput().getMouseScreenPos(),
+            this._gameView.getMainCamera()
+        );
+        const point = Physics.pointOnPlane(
+            mouseDir,
+            this._gameView.getGroundPlane()
+        );
+
+        if (point) {
+            // move the center of the workspace to the point
+            let final = new Vector3().copy(point);
+
+            appManager.fileManager.updateFile(this._workspace.file, {
+                tags: {
+                    [`aux.context.x`]: final.x,
+                    [`aux.context.y`]: final.z,
+                    [`aux.context.z`]: final.y,
+                },
+            });
+        }
     }
 }

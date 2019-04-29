@@ -39,8 +39,9 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
         super(gameView, interaction, files, context);
         this._originallyInInventory = this._inInventory =
             context &&
-            appManager.fileManager.userFile.tags._userInventoryContext ===
-                context;
+            appManager.fileManager.userFile.tags[
+                'aux._userInventoryContext'
+            ] === context;
     }
 
     protected _onDrag(calc: FileCalculationContext): void {
