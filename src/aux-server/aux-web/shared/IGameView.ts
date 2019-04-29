@@ -59,4 +59,10 @@ export interface IGameView extends AuxFile3DFinder, Vue {
      * Sets the visibility of the file grids.
      */
     setGridsVisible(visible: boolean): void;
+
+    /**
+     * Sets the visibility of the world grid.
+     * @param visible Whether the grid is visible.
+     */
+    setWorldGridVisible(visible: boolean): void;
 }

@@ -235,6 +235,10 @@ export default class GameView extends Vue implements IGameView {
         });
     }
 
+    public setWorldGridVisible(visible: boolean) {
+        this._gridMesh.visible = visible;
+    }
+
     public selectRecentFile(file: Object) {
         if (
             !this.fileManager.recent.selectedRecentFile ||
@@ -391,7 +395,6 @@ export default class GameView extends Vue implements IGameView {
                         this.mode = this._interaction.mode = getUserMode(<
                             Object
                         >file);
-                        this._gridMesh.visible = this.workspacesMode;
                     })
                 )
                 .subscribe()

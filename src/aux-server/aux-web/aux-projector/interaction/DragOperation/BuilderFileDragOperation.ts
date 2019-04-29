@@ -51,6 +51,8 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
         this._workspace = workspace;
 
         if (this._workspace) {
+            this._gameView.setWorldGridVisible(true);
+
             // calculate the delta needed to be applied to the pointer
             // positions to have the pointer drag around the originally tapped point
             // instead of where the anchor is.
@@ -59,6 +61,13 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
                 .sub(hit.point);
             this._workspaceDelta.setY(0);
         }
+    }
+
+    protected _disposeCore() {
+        if (this._workspace) {
+            this._gameView.setWorldGridVisible(false);
+        }
+        super._disposeCore();
     }
 
     protected _onDrag(calc: FileCalculationContext) {

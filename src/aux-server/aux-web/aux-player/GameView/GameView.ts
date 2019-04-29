@@ -194,6 +194,8 @@ export default class GameView extends Vue implements IGameView {
         // This currently does nothing for AUX Player, we dont really show any grids right now.
     }
 
+    public setWorldGridVisible(visible: boolean) {}
+
     public setCameraType(type: CameraType) {
         if (this._cameraType === type) return;
 
