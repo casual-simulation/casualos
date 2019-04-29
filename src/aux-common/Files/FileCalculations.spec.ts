@@ -736,7 +736,7 @@ describe('FileCalculations', () => {
                 first: {
                     id: 'first',
                     tags: {
-                        _destroyed: true,
+                        'aux._destroyed': true,
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'test',
                     },
@@ -1764,7 +1764,7 @@ describe('FileCalculations', () => {
             ['aux.scale.y'],
             ['aux.scale.z'],
             ['aux.scale'],
-            ['_destroyed'],
+            ['aux._destroyed'],
             ['+(#tag:"value")'],
             ['onCombine(#tag:"value")'],
             ['_context_test'],
@@ -1898,14 +1898,14 @@ describe('FileCalculations', () => {
 
         it('should not be destroyed', () => {
             let first: Object = createFile('id');
-            first.tags._destroyed = true;
+            first.tags['aux._destroyed'] = true;
             first.tags._workspace = 'abc';
 
             uuidMock.mockReturnValue('test');
             const second = duplicateFile(first);
 
             expect(second.id).not.toEqual(first.id);
-            expect(second.tags._destroyed).toBe(true);
+            expect(second.tags['aux._destroyed']).toBe(true);
         });
 
         it('should not have any auto-generated contexts or selections', () => {
@@ -1979,11 +1979,11 @@ describe('FileCalculations', () => {
 
         it('should not modify the original file', () => {
             let first: Object = createFile('id');
-            first.tags._destroyed = true;
+            first.tags['aux._destroyed'] = true;
 
             const second = duplicateFile(first);
 
-            expect(first.tags._destroyed).toBe(true);
+            expect(first.tags['aux._destroyed']).toBe(true);
         });
 
         it('should not clear aux._diff', () => {
@@ -2812,7 +2812,7 @@ describe('FileCalculations', () => {
 
         it('should still return the user files context size', () => {
             const file = createFile('file', {
-                _user: 'user',
+                'aux._user': 'user',
                 'aux.context.size': 10,
             });
 
