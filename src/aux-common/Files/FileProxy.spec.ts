@@ -185,7 +185,7 @@ describe('FileProxy', () => {
             file1.tags.num = 5;
             file2.tags.num = 5;
 
-            file1.tags.sum = '=sum(#num)';
+            file1.tags.sum = '=math.sum(#num)';
 
             const context = createCalculationContext([file1, file2]);
             const proxy = createFileProxy(context, file1);
