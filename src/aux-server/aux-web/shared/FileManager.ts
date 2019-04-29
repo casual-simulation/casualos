@@ -258,7 +258,7 @@ export class FileManager {
     setUserMode(mode: UserMode) {
         return this.updateFile(this.userFile, {
             tags: {
-                _mode: mode,
+                'aux._mode': mode,
             },
         });
     }
@@ -556,7 +556,7 @@ export class FileManager {
                 _user: this._appManager.user.username,
                 _userInventoryContext: userInventoryContext,
                 _userMenuContext: userMenuContext,
-                _mode: DEFAULT_USER_MODE,
+                'aux._mode': DEFAULT_USER_MODE,
             });
         } else {
             if (!userFile.tags._userMenuContext) {

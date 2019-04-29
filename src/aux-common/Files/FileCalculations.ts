@@ -1645,7 +1645,7 @@ export function parseFilterTag(tag: string): FilterParseResult {
  * @param object The file.
  */
 export function getUserMode(object: Object): UserMode {
-    return object.tags._mode || DEFAULT_USER_MODE;
+    return object.tags['aux._mode'] || DEFAULT_USER_MODE;
 }
 
 /**
