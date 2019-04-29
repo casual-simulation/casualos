@@ -453,7 +453,7 @@ export function isFilterTag(tag: string) {
 export const WELL_KNOWN_TAGS = [
     /_hidden$/,
     /\.index$/,
-    /_lastEditedBy/,
+    /^aux\._lastEditedBy$/,
     /\._lastActiveTime/,
     /^aux\._context_/,
     /^context_/,
@@ -884,7 +884,7 @@ export function updateFile(
     createContext: () => FileCalculationContext
 ) {
     if (newData.tags) {
-        newData.tags._lastEditedBy = userId;
+        newData.tags['aux._lastEditedBy'] = userId;
         // Cleanup/preprocessing
         for (let property in newData.tags) {
             let value = newData.tags[property];

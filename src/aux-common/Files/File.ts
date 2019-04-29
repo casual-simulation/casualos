@@ -44,7 +44,7 @@ export interface FileTags {
     _userMenuContext?: string;
     _mode?: UserMode;
     _editingFile?: string;
-    _lastEditedBy?: string;
+    ['aux._lastEditedBy']?: string;
     ['aux._selectionMode']?: SelectionMode;
 
     // Builder related tags

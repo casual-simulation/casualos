@@ -50,7 +50,7 @@ describe('SelectionManager', () => {
                     _selection: 'file1',
                     _editingFile: 'file1',
                 });
-                expect(file.tags._lastEditedBy).toBe(helper.userFile.id);
+                expect(file.tags['aux._lastEditedBy']).toBe(helper.userFile.id);
             });
 
             it('should clear the user _selection tag if the given files ID matches the current selection', async () => {

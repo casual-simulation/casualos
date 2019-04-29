@@ -1313,7 +1313,7 @@ describe('FileCalculations', () => {
                     e: null,
                     f: undefined,
                     g: NaN,
-                    _lastEditedBy: 'testUser',
+                    'aux._lastEditedBy': 'testUser',
                 },
             });
         });
@@ -1704,7 +1704,7 @@ describe('FileCalculations', () => {
         const builtinTagCases = [
             ['abc.index'],
             ['_hidden'],
-            ['_lastEditedBy'],
+            ['aux._lastEditedBy'],
             ['abc._lastActiveTime'],
         ];
         it.each(builtinTagCases)(
