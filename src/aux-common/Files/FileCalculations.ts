@@ -1320,6 +1320,18 @@ export function isFileMovable(
 }
 
 /**
+ * Gets whether the given file's context is movable.
+ * @param calc The calculation context.
+ * @param file The file to check.
+ */
+export function isContextMovable(
+    calc: FileCalculationContext,
+    file: File
+): boolean {
+    return calculateBooleanTagValue(calc, file, 'aux.context.movable', true);
+}
+
+/**
  * Gets the position that the context should be at using the given file.
  * @param calc The calculation context to use.
  * @param contextFile The file that represents the context.

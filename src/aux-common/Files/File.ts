@@ -63,6 +63,7 @@ export interface FileTags {
     ['aux.context.color']?: string;
     ['aux.context.size']?: number;
     ['aux.context.minimized']?: boolean | null;
+    ['aux.context.movable']?: unknown;
 
     [key: string]: any;
 }

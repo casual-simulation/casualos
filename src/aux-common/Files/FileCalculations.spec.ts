@@ -45,6 +45,7 @@ import {
     isMergeable,
     getFileLabelAnchor,
     formatValue,
+    isContextMovable,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
@@ -2888,6 +2889,40 @@ describe('FileCalculations', () => {
                 'test.y': null,
                 'test.index': null,
             });
+        });
+    });
+
+    describe('isContextMovable()', () => {
+        it('should return true if movable', () => {
+            const file = createFile('test', {
+                abc: true,
+                'abc.config': true,
+                'aux.context.movable': true,
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(isContextMovable(calc, file)).toBe(true);
+        });
+
+        it('should return false if not movable', () => {
+            const file = createFile('test', {
+                abc: true,
+                'abc.config': true,
+                'aux.context.movable': false,
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(isContextMovable(calc, file)).toBe(false);
+        });
+
+        it('should be movable by default', () => {
+            const file = createFile('test', {});
+
+            const calc = createCalculationContext([file]);
+
+            expect(isContextMovable(calc, file)).toBe(true);
         });
     });
 
