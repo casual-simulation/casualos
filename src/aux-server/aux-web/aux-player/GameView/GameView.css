@@ -25,7 +25,6 @@ html.ar-app .webxr-sessions canvas {
 
 .inventory-layout {
     display: flex;
-    height: 100px;
     width: 450px;
     padding: 5px 10px;
     line-height: 24px;
