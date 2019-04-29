@@ -95,6 +95,19 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         };
     }
 
+    protected _findHoveredFile(input: Input) {
+        if (input.isMouseFocusingAny(this._gameView.getUIHtmlElements())) {
+            const element = input.getTargetData().inputOver;
+            const vueElement = Input.getVueParent(element);
+
+            if (vueElement instanceof InventoryFile) {
+                // handle hover
+                return vueElement.file;
+            }
+        }
+        return super._findHoveredFile(input);
+    }
+
     protected _contextMenuActions(
         calc: FileCalculationContext,
         gameObject: GameObject,

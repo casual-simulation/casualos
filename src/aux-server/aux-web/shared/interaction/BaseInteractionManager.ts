@@ -15,11 +15,12 @@ import {
     FileCalculationContext,
     COMBINE_ACTION_NAME,
     getFileConfigContexts,
+    File,
 } from '@casual-simulation/aux-common';
 import { Physics } from '../scene/Physics';
 import { flatMap, union, debounce } from 'lodash';
 import { CameraControls } from './CameraControls';
-import { MouseButtonId, InputType } from '../scene/Input';
+import { MouseButtonId, InputType, Input } from '../scene/Input';
 import { appManager } from '../AppManager';
 import { IOperation } from './IOperation';
 import { AuxFile3D } from '../scene/AuxFile3D';
@@ -30,6 +31,7 @@ import {
     Orthographic_MaxZoom,
 } from '../scene/CameraRigFactory';
 import { TapCodeManager } from './TapCodeManager';
+import InventoryFile from 'aux-web/aux-player/InventoryFile/InventoryFile';
 
 export abstract class BaseInteractionManager {
     protected _gameView: IGameView;
@@ -38,7 +40,7 @@ export abstract class BaseInteractionManager {
     protected _cameraControls: CameraControls;
     protected _tapCodeManager: TapCodeManager;
     protected _maxTapCodeLength: number;
-    protected _hoveredObject: GameObject;
+    protected _hoveredObject: File;
 
     private _operations: IOperation[];
 
@@ -229,22 +231,13 @@ export abstract class BaseInteractionManager {
             }
 
             if (input.currentInputType === InputType.Mouse) {
-                const screenPos = input.getMouseScreenPos();
-                const raycastResult = Physics.raycastAtScreenPos(
-                    screenPos,
-                    new Raycaster(),
-                    this.getDraggableObjects(),
-                    this._gameView.getMainCamera()
-                );
-                const hit = Physics.firstRaycastHit(raycastResult);
-                const gameObject = hit
-                    ? this.findGameObjectObjectForHit(hit)
-                    : null;
-                if (gameObject !== this._hoveredObject) {
+                const file = this._findHoveredFile(input);
+
+                if (file !== this._hoveredObject) {
                     if (this._hoveredObject) {
                         this.handlePointerExit(this._hoveredObject);
                     }
-                    this._hoveredObject = gameObject;
+                    this._hoveredObject = file;
                     if (this._hoveredObject) {
                         this.handlePointerEnter(this._hoveredObject);
                     }
@@ -253,16 +246,30 @@ export abstract class BaseInteractionManager {
         }
     }
 
-    handlePointerEnter(object: GameObject) {
-        if (object instanceof AuxFile3D) {
-            appManager.fileManager.action('onPointerEnter', [object.file]);
+    protected _findHoveredFile(input: Input): File {
+        const screenPos = input.getMouseScreenPos();
+        const raycastResult = Physics.raycastAtScreenPos(
+            screenPos,
+            new Raycaster(),
+            this.getDraggableObjects(),
+            this._gameView.getMainCamera()
+        );
+        const hit = Physics.firstRaycastHit(raycastResult);
+        const gameObject = hit ? this.findGameObjectObjectForHit(hit) : null;
+
+        if (gameObject instanceof AuxFile3D) {
+            return gameObject.file;
+        } else {
+            return null;
         }
     }
 
-    handlePointerExit(object: GameObject) {
-        if (object instanceof AuxFile3D) {
-            appManager.fileManager.action('onPointerExit', [object.file]);
-        }
+    handlePointerEnter(file: File) {
+        appManager.fileManager.action('onPointerEnter', [file]);
+    }
+
+    handlePointerExit(file: File) {
+        appManager.fileManager.action('onPointerExit', [file]);
     }
 
     showContextMenu(calc: FileCalculationContext) {
