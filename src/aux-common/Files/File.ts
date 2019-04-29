@@ -37,14 +37,14 @@ export interface FileTags {
     ['aux._diffTags']?: string[];
 
     // User tags
-    _selection?: string;
-    _user?: string;
-    _userContext?: string;
-    _userInventoryContext?: string;
-    _userMenuContext?: string;
-    _mode?: UserMode;
-    _editingFile?: string;
-    _lastEditedBy?: string;
+    ['aux._selection']?: string;
+    ['aux._user']?: string;
+    ['aux._userContext']?: string;
+    ['aux._userInventoryContext']?: string;
+    ['aux._userMenuContext']?: string;
+    ['aux._mode']?: UserMode;
+    ['aux._editingFile']?: string;
+    ['aux._lastEditedBy']?: string;
     ['aux._selectionMode']?: SelectionMode;
 
     // Builder related tags

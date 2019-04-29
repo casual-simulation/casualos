@@ -258,7 +258,7 @@ export class FileManager {
     setUserMode(mode: UserMode) {
         return this.updateFile(this.userFile, {
             tags: {
-                _mode: mode,
+                'aux._mode': mode,
             },
         });
     }
@@ -342,7 +342,7 @@ export class FileManager {
         const fileIds = keys(state);
         const files = fileIds.map(id => state[id]);
         const nonUserOrGlobalFiles = files.filter(
-            f => !f.tags._user && f.id !== 'globals'
+            f => !f.tags['aux._user'] && f.id !== 'globals'
         );
         const deleteOps = nonUserOrGlobalFiles.map(f => fileRemoved(f.id));
         await this.transaction(...deleteOps);
@@ -366,12 +366,12 @@ export class FileManager {
     }
 
     private _setEditedFileForUser(file: AuxObject, user: AuxObject) {
-        if (file.id !== user.tags._editingFile) {
+        if (file.id !== user.tags['aux._editingFile']) {
             console.log('[FileManager] Edit File:', file.id);
 
             this.updateFile(user, {
                 tags: {
-                    _editingFile: file.id,
+                    ['aux._editingFile']: file.id,
                 },
             });
         }
@@ -553,23 +553,23 @@ export class FileManager {
             await this.createFile(this._appManager.user.id, {
                 [userContext]: true,
                 [`${userContext}.config`]: true,
-                _user: this._appManager.user.username,
-                _userInventoryContext: userInventoryContext,
-                _userMenuContext: userMenuContext,
-                _mode: DEFAULT_USER_MODE,
+                ['aux._user']: this._appManager.user.username,
+                ['aux._userInventoryContext']: userInventoryContext,
+                ['aux._userMenuContext']: userMenuContext,
+                'aux._mode': DEFAULT_USER_MODE,
             });
         } else {
-            if (!userFile.tags._userMenuContext) {
+            if (!userFile.tags['aux._userMenuContext']) {
                 await this.updateFile(userFile, {
                     tags: {
-                        _userMenuContext: userMenuContext,
+                        ['aux._userMenuContext']: userMenuContext,
                     },
                 });
             }
-            if (!userFile.tags._userInventoryContext) {
+            if (!userFile.tags['aux._userInventoryContext']) {
                 await this.updateFile(userFile, {
                     tags: {
-                        _userInventoryContext: userInventoryContext,
+                        ['aux._userInventoryContext']: userInventoryContext,
                     },
                 });
             }

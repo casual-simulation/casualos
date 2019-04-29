@@ -183,7 +183,7 @@ describe('RecentFilesManager', () => {
         it('should ignore well known tags', () => {
             let file1 = createFile('testId1', {
                 test: 'abc',
-                _destroyed: true,
+                'aux._destroyed': true,
             });
 
             recent.addFileDiff(file1);
@@ -194,9 +194,9 @@ describe('RecentFilesManager', () => {
                     id: 'diff-testId1',
                     tags: {
                         test: 'abc',
-                        _destroyed: true,
+                        'aux._destroyed': true,
                         'aux._diff': true,
-                        'aux._diffTags': ['test', '_destroyed'],
+                        'aux._diffTags': ['test', 'aux._destroyed'],
                     },
                 },
             ]);

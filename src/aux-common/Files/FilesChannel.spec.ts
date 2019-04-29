@@ -346,7 +346,7 @@ describe('FilesChannel', () => {
                     id: 'thisFile',
                     tags: {
                         'abcdef()': 'shout("sayHello")',
-                        'sayHello()': 'this.userId = getUser().id',
+                        'sayHello()': 'this.userId = player.getFile().id',
                     },
                 },
             };
@@ -1432,7 +1432,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'getUser().name = "Test"',
+                            'test()': 'player.getFile().name = "Test"',
                         },
                     },
                     userFile: {
@@ -1462,54 +1462,6 @@ describe('FilesChannel', () => {
             });
         });
 
-        describe('addToMenu()', () => {
-            it('should add the given file to the users menu', () => {
-                const state: FilesState = {
-                    thisFile: {
-                        id: 'thisFile',
-                        tags: {
-                            'addItem()': 'addToMenu(@name("bob"))',
-                        },
-                    },
-                    userFile: {
-                        id: 'userFile',
-                        tags: {
-                            _userMenuContext: 'context',
-                        },
-                    },
-                    menuFile: {
-                        id: 'menuFile',
-                        tags: {
-                            name: 'bob',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action(
-                    'addItem',
-                    ['thisFile', 'userFile', 'menuFile'],
-                    'userFile'
-                );
-                const result = calculateActionEvents(state, fileAction);
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    fileUpdated('menuFile', {
-                        tags: {
-                            'context.id': 'uuid-0',
-                            'context.index': 0,
-                            context: true,
-                            'context.x': 0,
-                            'context.y': 0,
-                        },
-                    }),
-                ]);
-            });
-        });
-
         describe('addToMenuDiff()', () => {
             it('should add the given file to the users menu', () => {
                 const state: FilesState = {
@@ -1523,7 +1475,7 @@ describe('FilesChannel', () => {
                     userFile: {
                         id: 'userFile',
                         tags: {
-                            _userMenuContext: 'context',
+                            'aux._userMenuContext': 'context',
                         },
                     },
                     menuFile: {
@@ -1553,56 +1505,6 @@ describe('FilesChannel', () => {
                             context: true,
                             'context.x': 0,
                             'context.y': 0,
-                        },
-                    }),
-                ]);
-            });
-        });
-
-        describe('removeFromMenu()', () => {
-            it('should remove the given file from the users menu', () => {
-                const state: FilesState = {
-                    thisFile: {
-                        id: 'thisFile',
-                        tags: {
-                            'removeItem()': 'removeFromMenu(@name("bob"))',
-                        },
-                    },
-                    userFile: {
-                        id: 'userFile',
-                        tags: {
-                            _userMenuContext: 'context',
-                        },
-                    },
-                    menuFile: {
-                        id: 'menuFile',
-                        tags: {
-                            name: 'bob',
-                            context: 0,
-                            'context.id': 'abcdef',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action(
-                    'removeItem',
-                    ['thisFile', 'userFile', 'menuFile'],
-                    'userFile'
-                );
-                const result = calculateActionEvents(state, fileAction);
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    fileUpdated('menuFile', {
-                        tags: {
-                            'context.id': null,
-                            'context.index': null,
-                            context: null,
-                            'context.x': null,
-                            'context.y': null,
                         },
                     }),
                 ]);
@@ -1622,7 +1524,7 @@ describe('FilesChannel', () => {
                     userFile: {
                         id: 'userFile',
                         tags: {
-                            _userMenuContext: 'context',
+                            'aux._userMenuContext': 'context',
                         },
                     },
                     menuFile: {
@@ -1744,69 +1646,6 @@ describe('FilesChannel', () => {
                             abc: 'def',
                             ghi: true,
                             num: 1,
-                        },
-                    }),
-                ]);
-            });
-        });
-
-        describe('addToContext()', () => {
-            it('should add the file to the given context', () => {
-                const state: FilesState = {
-                    thisFile: {
-                        id: 'thisFile',
-                        tags: {
-                            'test()': 'addToContext(this, "abc")',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
-                const result = calculateActionEvents(state, fileAction);
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
-                        tags: {
-                            abc: true,
-                            'abc.x': 0,
-                            'abc.y': 0,
-                            'abc.index': 0,
-                        },
-                    }),
-                ]);
-            });
-        });
-
-        describe('removeFromContext()', () => {
-            it('should add the file to the given context', () => {
-                const state: FilesState = {
-                    thisFile: {
-                        id: 'thisFile',
-                        tags: {
-                            abc: true,
-                            'test()': 'removeFromContext(this, "abc")',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
-                const result = calculateActionEvents(state, fileAction);
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
-                        tags: {
-                            abc: null,
-                            'abc.x': null,
-                            'abc.y': null,
-                            'abc.index': null,
                         },
                     }),
                 ]);
@@ -2027,18 +1866,18 @@ describe('FilesChannel', () => {
         });
 
         describe('getUserMenuContext()', () => {
-            it('should return the _userMenuContext tag from the user file', () => {
+            it('should return the aux._userMenuContext tag from the user file', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.context = getUserMenuContext()',
+                            'test()': 'this.context = player.getMenuContext()',
                         },
                     },
                     userFile: {
                         id: 'userFile',
                         tags: {
-                            _userMenuContext: 'abc',
+                            'aux._userMenuContext': 'abc',
                         },
                     },
                 };
@@ -2070,7 +1909,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'toast("hello, world!")',
+                            'test()': 'player.toast("hello, world!")',
                         },
                     },
                 };
@@ -2092,7 +1931,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'tweenPlayerTo("test")',
+                            'test()': 'player.tweenTo("test")',
                         },
                     },
                 };
@@ -2112,7 +1951,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'tweenPlayerTo(this)',
+                            'test()': 'player.tweenTo(this)',
                         },
                     },
                 };
@@ -2134,7 +1973,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'openQRCodeScanner()',
+                            'test()': 'player.openQRCodeScanner()',
                         },
                     },
                 };
@@ -2156,7 +1995,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'closeQRCodeScanner()',
+                            'test()': 'player.closeQRCodeScanner()',
                         },
                     },
                 };

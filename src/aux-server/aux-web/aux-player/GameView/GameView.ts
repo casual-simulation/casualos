@@ -481,8 +481,9 @@ export default class GameView extends Vue implements IGameView {
                 .fileChanged(this.fileManager.userFile)
                 .pipe(
                     tap(file => {
-                        const userInventoryContextValue = (<Object>file).tags
-                            ._userInventoryContext;
+                        const userInventoryContextValue = (<Object>file).tags[
+                            'aux._userInventoryContext'
+                        ];
                         if (
                             !this.inventoryContext ||
                             this.inventoryContext.context !==
@@ -497,7 +498,8 @@ export default class GameView extends Vue implements IGameView {
                             );
                         }
 
-                        const userMenuContextValue = file.tags._userMenuContext;
+                        const userMenuContextValue =
+                            file.tags['aux._userMenuContext'];
                         if (
                             !this.menuContext ||
                             this.menuContext.context !== userMenuContextValue
@@ -629,7 +631,7 @@ export default class GameView extends Vue implements IGameView {
                 "[GameView] Setting user's context to: " + this.context
             );
             appManager.fileManager.updateFile(userFile, {
-                tags: { _userContext: this.context },
+                tags: { 'aux._userContext': this.context },
             });
         }
     }
