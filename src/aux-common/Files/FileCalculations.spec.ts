@@ -173,7 +173,7 @@ describe('FileCalculations', () => {
                 context: true,
                 'context.x': -1,
                 'context.y': 1,
-                _user: 'abc',
+                'aux._user': 'abc',
             });
             const file2 = createFile('test2', {
                 context: true,
@@ -2801,7 +2801,7 @@ describe('FileCalculations', () => {
 
         it('should default to 0 if the file is a user file', () => {
             const file = createFile('file', {
-                _user: 'user',
+                'aux._user': 'user',
             });
 
             const calc = createCalculationContext([file]);

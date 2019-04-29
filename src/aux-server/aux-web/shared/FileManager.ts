@@ -342,7 +342,7 @@ export class FileManager {
         const fileIds = keys(state);
         const files = fileIds.map(id => state[id]);
         const nonUserOrGlobalFiles = files.filter(
-            f => !f.tags._user && f.id !== 'globals'
+            f => !f.tags['aux._user'] && f.id !== 'globals'
         );
         const deleteOps = nonUserOrGlobalFiles.map(f => fileRemoved(f.id));
         await this.transaction(...deleteOps);
@@ -553,7 +553,7 @@ export class FileManager {
             await this.createFile(this._appManager.user.id, {
                 [userContext]: true,
                 [`${userContext}.config`]: true,
-                _user: this._appManager.user.username,
+                ['aux._user']: this._appManager.user.username,
                 ['aux._userInventoryContext']: userInventoryContext,
                 _userMenuContext: userMenuContext,
                 'aux._mode': DEFAULT_USER_MODE,

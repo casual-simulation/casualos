@@ -1479,7 +1479,7 @@ export function objectsAtContextGridPosition(
  * Determines if the given file is for a user.
  */
 export function isUserFile(file: File): boolean {
-    return !!file.tags._user;
+    return !!file.tags['aux._user'];
 }
 
 /**
@@ -1748,7 +1748,7 @@ export function isFileInContext(
         result = contextValue === true;
     }
 
-    if (!result && hasValue(file.tags._user)) {
+    if (!result && hasValue(file.tags['aux._user'])) {
         const userContextValue = calculateFileValue(
             context,
             file,

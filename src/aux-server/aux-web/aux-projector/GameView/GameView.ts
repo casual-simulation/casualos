@@ -602,7 +602,7 @@ export default class GameView extends Vue implements IGameView {
         if (configTags.length === 0) {
             if (!initialUpdate) {
                 if (
-                    !file.tags._user &&
+                    !file.tags['aux._user'] &&
                     file.tags['aux._lastEditedBy'] ===
                         this.fileManager.userFile.id
                 ) {
