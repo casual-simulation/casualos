@@ -26,6 +26,7 @@ html.ar-app .webxr-sessions canvas {
 .inventory-layout {
     display: flex;
     width: 450px;
+    height: 90px;
     padding: 5px 10px;
     line-height: 24px;
     /* background-color: rgba(255,255,255, 1); */
@@ -37,6 +38,7 @@ html.ar-app .webxr-sessions canvas {
 @media (max-width: 600px) {
     .inventory-layout {
         width: 96vw;
+        height: 20vw;
     }
 }
 
