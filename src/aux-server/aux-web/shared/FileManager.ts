@@ -554,7 +554,7 @@ export class FileManager {
                 [userContext]: true,
                 [`${userContext}.config`]: true,
                 _user: this._appManager.user.username,
-                _userInventoryContext: userInventoryContext,
+                ['aux._userInventoryContext']: userInventoryContext,
                 _userMenuContext: userMenuContext,
                 'aux._mode': DEFAULT_USER_MODE,
             });
@@ -566,10 +566,10 @@ export class FileManager {
                     },
                 });
             }
-            if (!userFile.tags._userInventoryContext) {
+            if (!userFile.tags['aux._userInventoryContext']) {
                 await this.updateFile(userFile, {
                     tags: {
-                        _userInventoryContext: userInventoryContext,
+                        ['aux._userInventoryContext']: userInventoryContext,
                     },
                 });
             }

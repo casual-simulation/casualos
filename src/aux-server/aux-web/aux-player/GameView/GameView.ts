@@ -481,8 +481,9 @@ export default class GameView extends Vue implements IGameView {
                 .fileChanged(this.fileManager.userFile)
                 .pipe(
                     tap(file => {
-                        const userInventoryContextValue = (<Object>file).tags
-                            ._userInventoryContext;
+                        const userInventoryContextValue = (<Object>file).tags[
+                            'aux._userInventoryContext'
+                        ];
                         if (
                             !this.inventoryContext ||
                             this.inventoryContext.context !==

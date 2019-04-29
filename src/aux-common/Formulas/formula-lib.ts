@@ -458,7 +458,7 @@ export function getUserMenuContext(): string {
 export function getUserInventoryContext(): string {
     const user = getUser();
     if (user) {
-        return user._userInventoryContext;
+        return user['aux._userInventoryContext'];
     } else {
         return null;
     }

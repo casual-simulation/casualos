@@ -40,7 +40,7 @@ export interface FileTags {
     _selection?: string;
     _user?: string;
     _userContext?: string;
-    _userInventoryContext?: string;
+    ['aux._userInventoryContext']?: string;
     _userMenuContext?: string;
     ['aux._mode']?: UserMode;
     ['aux._editingFile']?: string;
