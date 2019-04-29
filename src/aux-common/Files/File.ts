@@ -41,7 +41,7 @@ export interface FileTags {
     ['aux._user']?: string;
     ['aux._userContext']?: string;
     ['aux._userInventoryContext']?: string;
-    _userMenuContext?: string;
+    ['aux._userMenuContext']?: string;
     ['aux._mode']?: UserMode;
     ['aux._editingFile']?: string;
     ['aux._lastEditedBy']?: string;

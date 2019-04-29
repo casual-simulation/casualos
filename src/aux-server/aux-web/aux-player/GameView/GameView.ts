@@ -498,7 +498,8 @@ export default class GameView extends Vue implements IGameView {
                             );
                         }
 
-                        const userMenuContextValue = file.tags._userMenuContext;
+                        const userMenuContextValue =
+                            file.tags['aux._userMenuContext'];
                         if (
                             !this.menuContext ||
                             this.menuContext.context !== userMenuContextValue

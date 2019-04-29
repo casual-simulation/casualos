@@ -1475,7 +1475,7 @@ describe('FilesChannel', () => {
                     userFile: {
                         id: 'userFile',
                         tags: {
-                            _userMenuContext: 'context',
+                            'aux._userMenuContext': 'context',
                         },
                     },
                     menuFile: {
@@ -1524,7 +1524,7 @@ describe('FilesChannel', () => {
                     userFile: {
                         id: 'userFile',
                         tags: {
-                            _userMenuContext: 'context',
+                            'aux._userMenuContext': 'context',
                         },
                     },
                     menuFile: {
@@ -1866,7 +1866,7 @@ describe('FilesChannel', () => {
         });
 
         describe('getUserMenuContext()', () => {
-            it('should return the _userMenuContext tag from the user file', () => {
+            it('should return the aux._userMenuContext tag from the user file', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -1877,7 +1877,7 @@ describe('FilesChannel', () => {
                     userFile: {
                         id: 'userFile',
                         tags: {
-                            _userMenuContext: 'abc',
+                            'aux._userMenuContext': 'abc',
                         },
                     },
                 };

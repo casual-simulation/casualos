@@ -446,7 +446,7 @@ export function getUser() {
 export function getUserMenuContext(): string {
     const user = getUser();
     if (user) {
-        return user._userMenuContext;
+        return user['aux._userMenuContext'];
     } else {
         return null;
     }

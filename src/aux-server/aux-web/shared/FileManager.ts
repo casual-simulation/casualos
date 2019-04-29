@@ -555,14 +555,14 @@ export class FileManager {
                 [`${userContext}.config`]: true,
                 ['aux._user']: this._appManager.user.username,
                 ['aux._userInventoryContext']: userInventoryContext,
-                _userMenuContext: userMenuContext,
+                ['aux._userMenuContext']: userMenuContext,
                 'aux._mode': DEFAULT_USER_MODE,
             });
         } else {
-            if (!userFile.tags._userMenuContext) {
+            if (!userFile.tags['aux._userMenuContext']) {
                 await this.updateFile(userFile, {
                     tags: {
-                        _userMenuContext: userMenuContext,
+                        ['aux._userMenuContext']: userMenuContext,
                     },
                 });
             }

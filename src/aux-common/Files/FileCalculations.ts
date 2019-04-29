@@ -640,7 +640,7 @@ export function newSelectionId() {
  * @param userFile The file for the user.
  */
 export function getUserMenuId(calc: FileCalculationContext, userFile: File) {
-    return calculateFileValue(calc, userFile, '_userMenuContext');
+    return calculateFileValue(calc, userFile, 'aux._userMenuContext');
 }
 
 /**

@@ -2674,9 +2674,9 @@ describe('FileCalculations', () => {
     });
 
     describe('getUserMenuId()', () => {
-        it('should return the value from _userMenuContext', () => {
+        it('should return the value from aux._userMenuContext', () => {
             const user = createFile('user', {
-                _userMenuContext: 'context',
+                'aux._userMenuContext': 'context',
             });
 
             const calc = createCalculationContext([user]);
@@ -2688,7 +2688,7 @@ describe('FileCalculations', () => {
     describe('getFilesInMenu()', () => {
         it('should return the list of files in the users menu', () => {
             const user = createFile('user', {
-                _userMenuContext: 'context',
+                'aux._userMenuContext': 'context',
             });
             const file1 = createFile('file1', {
                 context: true,
@@ -2713,7 +2713,7 @@ describe('FileCalculations', () => {
     describe('addFileToMenu()', () => {
         it('should return the update needed to add the given file ID to the given users menu', () => {
             const user = createFile('user', {
-                _userMenuContext: 'context',
+                'aux._userMenuContext': 'context',
             });
             const file = createFile('file');
 
@@ -2731,7 +2731,7 @@ describe('FileCalculations', () => {
 
         it('should return the given index', () => {
             const user = createFile('user', {
-                _userMenuContext: 'context',
+                'aux._userMenuContext': 'context',
             });
             const file = createFile('file');
 
@@ -2749,7 +2749,7 @@ describe('FileCalculations', () => {
 
         it('should return index needed to place the file at the end of the list', () => {
             const user = createFile('user', {
-                _userMenuContext: 'context',
+                'aux._userMenuContext': 'context',
             });
             const file = createFile('file');
             const file2 = createFile('file2', {
@@ -2772,7 +2772,7 @@ describe('FileCalculations', () => {
     describe('removeFileFromMenu()', () => {
         it('should return the update needed to remove the given file from the users menu', () => {
             const user = createFile('user', {
-                _userMenuContext: 'context',
+                'aux._userMenuContext': 'context',
             });
             const file = createFile('file');
 
