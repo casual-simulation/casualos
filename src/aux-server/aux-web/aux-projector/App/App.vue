@@ -55,7 +55,9 @@
                 </md-list-item>
                 <md-list-item @click="logout" v-if="getUser() != null">
                     <md-icon>exit_to_app</md-icon>
-                    <span class="md-list-item-text">Logout</span>
+                    <span class="md-list-item-text">
+                        {{ getUser().isGuest ? 'Login' : 'Logout' }}
+                    </span>
                 </md-list-item>
                 <md-list-item
                     v-if="getUser() != null"

@@ -30,7 +30,7 @@ export interface User {
     email: string;
     username: string;
     name: string;
-
+    isGuest: boolean;
     channelId: string;
 }
 
@@ -339,6 +339,7 @@ export class AppManager {
 
                 if (this._user.name.includes('guest_')) {
                     this._user.name = 'Guest';
+                    this._user.isGuest = true;
                 }
 
                 if (!session) {
@@ -438,6 +439,7 @@ export class AppManager {
 
                 if (this._user.name.includes('guest_')) {
                     this._user.name = 'Guest';
+                    this._user.isGuest = true;
                 }
 
                 this.loadingProgress.set(40, 'Loading Files...', null);
