@@ -310,11 +310,16 @@ export class FileManager {
         return this._helper.createFile(id, tags);
     }
 
-    createWorkspace(builderContextId?: string, contextFormula?: string) {
+    createWorkspace(
+        builderContextId?: string,
+        contextFormula?: string,
+        label?: string
+    ) {
         return this._helper.createWorkspace(
             undefined,
             builderContextId,
-            contextFormula
+            contextFormula,
+            label
         );
     }
 
@@ -580,7 +585,12 @@ export class FileManager {
         this._setStatus('Updating globals file...');
         let globalsFile = this.globalsFile;
         if (!globalsFile) {
-            await this._helper.createWorkspace('globals');
+            await this._helper.createWorkspace(
+                'globals',
+                undefined,
+                undefined,
+                'Global'
+            );
         }
     }
 

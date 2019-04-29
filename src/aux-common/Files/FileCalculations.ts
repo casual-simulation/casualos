@@ -842,7 +842,8 @@ export function createFile(id = uuid(), tags: Object['tags'] = {}) {
 export function createWorkspace(
     id = uuid(),
     builderContextId: string = createContextId(),
-    contextFormula: string = '=isBuilder'
+    contextFormula: string = '=isBuilder',
+    label: string = null
 ): Workspace {
     // checks if given context string is empty or just whitespace
     if (builderContextId.length === 0 || /^\s*$/.test(builderContextId)) {
@@ -860,10 +861,8 @@ export function createWorkspace(
             [`${builderContextId}.x`]: 0,
             [`${builderContextId}.y`]: 0,
             [`${builderContextId}.z`]: 0,
-            'aux.color': 'clear',
-            'aux.stroke.color': '#777',
             'aux.movable': false,
-            'aux.scale.z': 0.01,
+            'aux.label': label,
         },
     };
 }
