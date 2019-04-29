@@ -12,7 +12,8 @@
 }
 
 .inventory-file.active {
-    border-bottom: 5px solid lightslategray;
+    /* Add a selection on click - border-bottom: 5px solid lightslategray;*/
+    border-bottom: 1px solid transparent;
 }
 
 .inventory-file-cube {
