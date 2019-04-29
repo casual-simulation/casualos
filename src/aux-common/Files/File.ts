@@ -43,7 +43,7 @@ export interface FileTags {
     _userInventoryContext?: string;
     _userMenuContext?: string;
     _mode?: UserMode;
-    _editingFile?: string;
+    ['aux._editingFile']?: string;
     ['aux._lastEditedBy']?: string;
     ['aux._selectionMode']?: SelectionMode;
 

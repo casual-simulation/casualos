@@ -607,7 +607,7 @@ export function updateUserSelection(selectionId: string, fileId: string) {
     return {
         tags: {
             _selection: selectionId,
-            _editingFile: fileId,
+            ['aux._editingFile']: fileId,
         },
     };
 }

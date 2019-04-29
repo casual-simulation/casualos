@@ -366,12 +366,12 @@ export class FileManager {
     }
 
     private _setEditedFileForUser(file: AuxObject, user: AuxObject) {
-        if (file.id !== user.tags._editingFile) {
+        if (file.id !== user.tags['aux._editingFile']) {
             console.log('[FileManager] Edit File:', file.id);
 
             this.updateFile(user, {
                 tags: {
-                    _editingFile: file.id,
+                    ['aux._editingFile']: file.id,
                 },
             });
         }

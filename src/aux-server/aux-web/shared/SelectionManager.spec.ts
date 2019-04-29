@@ -48,7 +48,7 @@ describe('SelectionManager', () => {
 
                 expect(helper.userFile.tags).toMatchObject({
                     _selection: 'file1',
-                    _editingFile: 'file1',
+                    'aux._editingFile': 'file1',
                 });
                 expect(file.tags['aux._lastEditedBy']).toBe(helper.userFile.id);
             });
