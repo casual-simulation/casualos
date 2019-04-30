@@ -51,12 +51,13 @@ import { RecentFilesManager } from './RecentFilesManager';
 import { ProgressStatus } from '@casual-simulation/causal-trees';
 import FileWatcher from './FileWatcher';
 import FilePanelManager from './FilePanelManager';
+import { Simulation } from './Simulation';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
  * to reactively edit files.
  */
-export class FileManager {
+export class FileManager implements Simulation {
     private _appManager: AppManager;
     private _treeManager: CausalTreeManager;
     private _helper: FileHelper;

@@ -24,6 +24,7 @@ import {
     LoadingProgress,
     LoadingProgressCallback,
 } from '@casual-simulation/aux-common/LoadingProgress';
+import { Simulation } from './Simulation';
 
 export interface User {
     id: string;
@@ -118,7 +119,7 @@ export class AppManager {
         return this._treeManager;
     }
 
-    get fileManager() {
+    get fileManager(): Simulation {
         if (this.user) {
             return this._fileManager;
         }
@@ -203,7 +204,7 @@ export class AppManager {
      * @param setup
      */
     whileLoggedIn(
-        setup: (user: User, fileManager: FileManager) => SubscriptionLike[]
+        setup: (user: User, fileManager: Simulation) => SubscriptionLike[]
     ): SubscriptionLike {
         return this.userObservable
             .pipe(
