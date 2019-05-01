@@ -32,6 +32,7 @@ export interface FileTags {
     ['aux.input.target']?: string;
     ['aux.input.placeholder']?: string;
     ['aux.shape']?: FileShape;
+    ['aux.image']?: string;
     ['aux._creator']?: string;
     ['aux._diff']?: boolean;
     ['aux._diffTags']?: string[];
