@@ -26,17 +26,19 @@ import {
     createSphere,
     createSprite,
     createPlane,
+    setLayer,
 } from '../SceneUtils';
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
+import { LayersHelper } from '../LayersHelper';
 
 export class ProgressBarDecorator extends AuxFile3DDecorator
     implements IMeshDecorator {
     private _shape: FileShape = 'sprite';
 
     container: Group;
-    mesh: Mesh | Sprite;
-    meshBackground: Mesh | Sprite;
+    mesh: Mesh;
+    meshBackground: Mesh;
 
     onMeshUpdated: ArgEvent<IMeshDecorator> = new ArgEvent<IMeshDecorator>();
 
@@ -113,11 +115,11 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
         }
 
         let colorBackground: any = null;
-        if (this.file3D.file.tags['aux.progressBar.colorBackground']) {
+        if (this.file3D.file.tags['aux.progressBar.backgroundColor']) {
             colorBackground = calculateFileValue(
                 calc,
                 this.file3D.file,
-                'aux.progressBar.colorBackground'
+                'aux.progressBar.backgroundColor'
             );
         }
 
@@ -151,7 +153,8 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
         const shapeMatBackground = <MeshStandardMaterial | MeshToonMaterial>(
             this.meshBackground.material
         );
-        if (color) {
+
+        if (colorBackground) {
             shapeMatBackground.visible = !isTransparent(colorBackground);
             if (shapeMatBackground.visible) {
                 shapeMatBackground.color = new Color(colorBackground);
@@ -169,12 +172,14 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
 
         // Container
         this.container = new Group();
+
         // , , less goes right
         this.container.position.set(0, 1.2, 0);
         this.file3D.display.add(this.container);
 
         this.meshBackground = createPlane(1);
         this.container.add(this.meshBackground);
+        this.file3D.colliders.push(this.meshBackground);
 
         // Sprite Mesh if a sprite mesh is actually a plane geometrically
         this.mesh = createPlane(1);
