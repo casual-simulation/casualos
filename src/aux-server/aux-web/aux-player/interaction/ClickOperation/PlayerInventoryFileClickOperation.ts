@@ -35,7 +35,9 @@ export class PlayerInventoryFileClickOperation extends BaseFileClickOperation {
     }
 
     protected _performClick(): void {
-        appManager.fileManager.helper.action('onClick', [this._file]);
+        appManager.simulationManager.primary.helper.action('onClick', [
+            this._file,
+        ]);
     }
 
     protected _createDragOperation(): BaseFileDragOperation {

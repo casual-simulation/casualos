@@ -104,17 +104,17 @@ export abstract class BaseFileDragOperation implements IOperation {
         // Combine files.
         if (this._merge && this._other) {
             const update = getDiffUpdate(this._file);
-            appManager.fileManager.helper.transaction(
+            appManager.simulationManager.primary.helper.transaction(
                 fileUpdated(this._other.id, update),
                 fileRemoved(this._file.id)
             );
         } else if (this._combine && this._other) {
-            appManager.fileManager.helper.action(COMBINE_ACTION_NAME, [
-                this._file,
-                this._other,
-            ]);
+            appManager.simulationManager.primary.helper.action(
+                COMBINE_ACTION_NAME,
+                [this._file, this._other]
+            );
         } else if (isDiff(this._file)) {
-            appManager.fileManager.helper.transaction(
+            appManager.simulationManager.primary.helper.transaction(
                 fileUpdated(this._file.id, {
                     tags: {
                         'aux._diff': null,
@@ -154,7 +154,7 @@ export abstract class BaseFileDragOperation implements IOperation {
             events.push(this._updateFile(files[i], tags));
         }
 
-        appManager.fileManager.helper.transaction(...events);
+        appManager.simulationManager.primary.helper.transaction(...events);
     }
 
     protected _updateFileContexts(files: File[], inContext: boolean) {
@@ -169,13 +169,16 @@ export abstract class BaseFileDragOperation implements IOperation {
             events.push(this._updateFile(files[i], tags));
         }
 
-        appManager.fileManager.helper.transaction(...events);
+        appManager.simulationManager.primary.helper.transaction(...events);
     }
 
     protected _updateFile(file: File, data: PartialFile): FileEvent {
-        appManager.fileManager.recent.addFileDiff(file);
-        updateFile(file, appManager.fileManager.helper.userFile.id, data, () =>
-            appManager.fileManager.helper.createContext()
+        appManager.simulationManager.primary.recent.addFileDiff(file);
+        updateFile(
+            file,
+            appManager.simulationManager.primary.helper.userFile.id,
+            data,
+            () => appManager.simulationManager.primary.helper.createContext()
         );
         return fileUpdated(file.id, data);
     }
@@ -286,14 +289,14 @@ export abstract class BaseFileDragOperation implements IOperation {
             let events: FileEvent[] = [];
             if (this._originalContext) {
                 // trigger drag out of context
-                let result = appManager.fileManager.helper.actionEvents(
+                let result = appManager.simulationManager.primary.helper.actionEvents(
                     DRAG_OUT_OF_CONTEXT_ACTION_NAME,
                     this._files,
                     this._originalContext
                 );
                 events.push(...result.events);
 
-                result = appManager.fileManager.helper.actionEvents(
+                result = appManager.simulationManager.primary.helper.actionEvents(
                     DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME,
                     null,
                     {
@@ -306,14 +309,14 @@ export abstract class BaseFileDragOperation implements IOperation {
 
             if (this._inContext) {
                 // Trigger drag into context
-                let result = appManager.fileManager.helper.actionEvents(
+                let result = appManager.simulationManager.primary.helper.actionEvents(
                     DROP_IN_CONTEXT_ACTION_NAME,
                     this._files,
                     this._context
                 );
                 events.push(...result.events);
 
-                result = appManager.fileManager.helper.actionEvents(
+                result = appManager.simulationManager.primary.helper.actionEvents(
                     DROP_ANY_IN_CONTEXT_ACTION_NAME,
                     null,
                     {

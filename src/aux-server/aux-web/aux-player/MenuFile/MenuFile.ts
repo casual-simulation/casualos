@@ -36,7 +36,7 @@ export default class MenuFile extends Vue {
     @Watch('file')
     private async _fileChanged(file: AuxFile) {
         if (file) {
-            const calc = appManager.fileManager.helper.createContext();
+            const calc = appManager.simulationManager.primary.helper.createContext();
             this._updateLabel(calc, file);
             this._updateColor(calc, file);
             this._updateInput(calc, file);
@@ -56,9 +56,11 @@ export default class MenuFile extends Vue {
     }
 
     async click() {
-        await appManager.fileManager.helper.action('onClick', [this.file]);
+        await appManager.simulationManager.primary.helper.action('onClick', [
+            this.file,
+        ]);
         if (this.input) {
-            const calc = appManager.fileManager.helper.createContext();
+            const calc = appManager.simulationManager.primary.helper.createContext();
             this._updateInput(calc, this.file);
             this.showDialog = true;
         }
@@ -66,19 +68,27 @@ export default class MenuFile extends Vue {
 
     async closeDialog() {
         if (this.showDialog) {
-            await appManager.fileManager.helper.action('onClose', [this.file]);
+            await appManager.simulationManager.primary.helper.action(
+                'onClose',
+                [this.file]
+            );
             this.showDialog = false;
         }
     }
 
     async saveDialog() {
         if (this.showDialog) {
-            await appManager.fileManager.helper.updateFile(this.inputTarget, {
-                tags: {
-                    [this.input]: this.inputValue,
-                },
-            });
-            await appManager.fileManager.helper.action('onSave', [this.file]);
+            await appManager.simulationManager.primary.helper.updateFile(
+                this.inputTarget,
+                {
+                    tags: {
+                        [this.input]: this.inputValue,
+                    },
+                }
+            );
+            await appManager.simulationManager.primary.helper.action('onSave', [
+                this.file,
+            ]);
             await this.closeDialog();
         }
     }

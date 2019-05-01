@@ -156,7 +156,7 @@ export default class GameView extends Vue implements IGameView {
         return this.mode === 'worksurfaces';
     }
     get fileManager() {
-        return appManager.fileManager;
+        return appManager.simulationManager.primary;
     }
 
     constructor() {

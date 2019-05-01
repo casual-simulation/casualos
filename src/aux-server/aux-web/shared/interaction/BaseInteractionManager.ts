@@ -98,7 +98,7 @@ export abstract class BaseInteractionManager {
     }
 
     update(): void {
-        const calc = appManager.fileManager.helper.createContext();
+        const calc = appManager.simulationManager.primary.helper.createContext();
         // Update active operations and dispose of any that are finished.
         this._operations = this._operations.filter(o => {
             o.update(calc);
@@ -226,7 +226,11 @@ export abstract class BaseInteractionManager {
             if (this._tapCodeManager.code.length >= this._maxTapCodeLength) {
                 const code = this._tapCodeManager.code;
                 console.log('[InteractionManager] TapCode: ', code);
-                appManager.fileManager.helper.action('onTapCode', null, code);
+                appManager.simulationManager.primary.helper.action(
+                    'onTapCode',
+                    null,
+                    code
+                );
                 this._tapCodeManager.trim(this._maxTapCodeLength - 1);
             }
 
@@ -265,11 +269,15 @@ export abstract class BaseInteractionManager {
     }
 
     handlePointerEnter(file: File) {
-        appManager.fileManager.helper.action('onPointerEnter', [file]);
+        appManager.simulationManager.primary.helper.action('onPointerEnter', [
+            file,
+        ]);
     }
 
     handlePointerExit(file: File) {
-        appManager.fileManager.helper.action('onPointerExit', [file]);
+        appManager.simulationManager.primary.helper.action('onPointerExit', [
+            file,
+        ]);
     }
 
     showContextMenu(calc: FileCalculationContext) {
@@ -324,21 +332,21 @@ export abstract class BaseInteractionManager {
     }
 
     async selectFile(file: AuxFile3D) {
-        appManager.fileManager.filePanel.search = '';
+        appManager.simulationManager.primary.filePanel.search = '';
         const shouldMultiSelect = this._gameView
             .getInput()
             .getKeyHeld('Control');
-        appManager.fileManager.recent.addFileDiff(file.file);
-        appManager.fileManager.recent.selectedRecentFile = null;
-        await appManager.fileManager.selection.selectFile(
+        appManager.simulationManager.primary.recent.addFileDiff(file.file);
+        appManager.simulationManager.primary.recent.selectedRecentFile = null;
+        await appManager.simulationManager.primary.selection.selectFile(
             <AuxFile>file.file,
             shouldMultiSelect
         );
     }
 
     async clearSelection() {
-        appManager.fileManager.filePanel.search = '';
-        await appManager.fileManager.selection.clearSelection();
+        appManager.simulationManager.primary.filePanel.search = '';
+        await appManager.simulationManager.primary.selection.clearSelection();
     }
 
     getDraggableObjects() {

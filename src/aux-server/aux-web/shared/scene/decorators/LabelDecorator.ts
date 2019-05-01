@@ -101,7 +101,7 @@ export class LabelDecorator extends AuxFile3DDecorator
         if (this.file3D.file.tags['aux.label.size.mode']) {
             let fileCalc = calc
                 ? calc
-                : appManager.fileManager.helper.createContext();
+                : appManager.simulationManager.primary.helper.createContext();
             let mode = calculateFileValue(
                 fileCalc,
                 this.file3D.file,

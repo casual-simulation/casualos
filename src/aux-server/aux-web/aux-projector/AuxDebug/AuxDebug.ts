@@ -26,7 +26,7 @@ export default class AuxDebug extends Vue {
     private _subs: SubscriptionLike[];
 
     get fileManager() {
-        return appManager.fileManager;
+        return appManager.simulationManager.primary;
     }
 
     get app() {

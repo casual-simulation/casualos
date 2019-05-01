@@ -39,7 +39,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
         super(gameView, interaction, files, context);
         this._originallyInInventory = this._inInventory =
             context &&
-            appManager.fileManager.helper.userFile.tags[
+            appManager.simulationManager.primary.helper.userFile.tags[
                 'aux._userInventoryContext'
             ] === context;
     }
@@ -111,34 +111,34 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
 
         if (this._originallyInInventory && !this._inInventory) {
             let events: FileEvent[] = [];
-            let result = appManager.fileManager.helper.actionEvents(
+            let result = appManager.simulationManager.primary.helper.actionEvents(
                 DRAG_OUT_OF_INVENTORY_ACTION_NAME,
                 this._files
             );
             events.push(...result.events);
-            result = appManager.fileManager.helper.actionEvents(
+            result = appManager.simulationManager.primary.helper.actionEvents(
                 DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME,
                 null,
                 this._files
             );
             events.push(...result.events);
 
-            appManager.fileManager.helper.transaction(...events);
+            appManager.simulationManager.primary.helper.transaction(...events);
         } else if (!this._originallyInInventory && this._inInventory) {
             let events: FileEvent[] = [];
-            let result = appManager.fileManager.helper.actionEvents(
+            let result = appManager.simulationManager.primary.helper.actionEvents(
                 DROP_IN_INVENTORY_ACTION_NAME,
                 this._files
             );
             events.push(...result.events);
-            result = appManager.fileManager.helper.actionEvents(
+            result = appManager.simulationManager.primary.helper.actionEvents(
                 DROP_ANY_IN_INVENTORY_ACTION_NAME,
                 null,
                 this._files
             );
             events.push(...result.events);
 
-            appManager.fileManager.helper.transaction(...events);
+            appManager.simulationManager.primary.helper.transaction(...events);
         }
     }
 }

@@ -17,11 +17,12 @@ import { FileHelper } from './FileHelper';
 import { Observable } from 'rxjs';
 import { LoadingProgressCallback } from '@casual-simulation/aux-common/LoadingProgress';
 import FilePanelManager from './FilePanelManager';
+import { Initable } from './Initable';
 
 /**
  * Defines an interface for objects that represent file simulations.
  */
-export interface Simulation {
+export interface Simulation extends Initable {
     /**
      * Gets the ID of the simulation that is currently being used.
      */
@@ -67,17 +68,6 @@ export interface Simulation {
      * Gets the files panel manager.
      */
     filePanel: FilePanelManager;
-
-    /**
-     * Initializes the file manager to connect to the session with the given ID.
-     * @param id The ID of the session to connect to.
-     */
-    init(
-        id: string,
-        force: boolean,
-        loadingCallback: LoadingProgressCallback,
-        config: { isBuilder: boolean; isPlayer: boolean }
-    ): Promise<string>;
 
     /**
      * Sets the file mode that the user should be in.

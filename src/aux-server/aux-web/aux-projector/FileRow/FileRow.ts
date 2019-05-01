@@ -27,7 +27,7 @@ export default class FileRow extends Vue {
     showFormulasWhenFocused: boolean;
 
     get fileManager() {
-        return appManager.fileManager;
+        return appManager.simulationManager.primary;
     }
 
     private _sub: SubscriptionLike;

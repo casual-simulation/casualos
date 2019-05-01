@@ -45,7 +45,7 @@ export default class FileRow extends Vue {
     isFormula: boolean = false;
 
     get fileManager() {
-        return appManager.fileManager;
+        return appManager.simulationManager.primary;
     }
 
     constructor() {

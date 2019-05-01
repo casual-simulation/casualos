@@ -148,8 +148,9 @@ export default class GameView extends Vue implements IGameView {
         console.error('AUX Player does not implement workspacesMode.');
         return false;
     }
+
     get fileManager() {
-        return appManager.fileManager;
+        return appManager.simulationManager.primary;
     }
 
     constructor() {
@@ -628,11 +629,11 @@ export default class GameView extends Vue implements IGameView {
         // because the callback for file_updated was happening before we
         // could call fileUpdated from fileAdded.
         if (file.id === this.fileManager.helper.userFile.id) {
-            const userFile = appManager.fileManager.helper.userFile;
+            const userFile = this.fileManager.helper.userFile;
             console.log(
                 "[GameView] Setting user's context to: " + this.context
             );
-            appManager.fileManager.helper.updateFile(userFile, {
+            this.fileManager.helper.updateFile(userFile, {
                 tags: { 'aux._userContext': this.context },
             });
         }

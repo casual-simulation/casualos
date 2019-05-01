@@ -66,10 +66,10 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
 
             if (this._isOverTrashCan()) {
                 // Clear the diff
-                appManager.fileManager.recent.clear();
+                appManager.simulationManager.primary.recent.clear();
             }
         } else if (this._isOnWorkspace) {
-            appManager.fileManager.helper.action(
+            appManager.simulationManager.primary.helper.action(
                 CREATE_ACTION_NAME,
                 this._files
             );

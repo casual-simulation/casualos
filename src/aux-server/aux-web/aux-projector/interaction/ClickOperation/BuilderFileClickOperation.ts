@@ -132,7 +132,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
                         }
                     );
 
-                    appManager.fileManager.helper.createFile(
+                    appManager.simulationManager.primary.helper.createFile(
                         newFile.id,
                         newFile.tags
                     );

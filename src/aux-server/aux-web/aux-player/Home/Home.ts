@@ -30,7 +30,7 @@ export default class Home extends Vue {
     }
 
     get fileManager() {
-        return appManager.fileManager;
+        return appManager.simulationManager.primary;
     }
 
     constructor() {

@@ -17,6 +17,7 @@ import {
     fileRemoved,
     UserMode,
     lerp,
+    auxCausalTreeFactory,
 } from '@casual-simulation/aux-common';
 import { keys, union, values } from 'lodash';
 import {
@@ -60,6 +61,7 @@ import { Simulation } from './Simulation';
 export class FileManager implements Simulation {
     private _appManager: AppManager;
     private _treeManager: CausalTreeManager;
+    private _socketManager: SocketManager;
     private _helper: FileHelper;
     private _selection: SelectionManager;
     private _recent: RecentFilesManager;
@@ -68,10 +70,12 @@ export class FileManager implements Simulation {
 
     private _subscriptions: SubscriptionLike[];
     private _status: string;
-    private _initPromise: Promise<string>;
     private _id: string;
     private _aux: RealtimeCausalTree<AuxCausalTree>;
+    private _config: { isBuilder: boolean; isPlayer: boolean };
     _errored: boolean;
+
+    closed: boolean;
 
     /**
      * Gets the ID of the simulation that is currently being used.
@@ -144,35 +148,29 @@ export class FileManager implements Simulation {
         return this._filePanel;
     }
 
-    constructor(app: AppManager, treeManager: CausalTreeManager) {
+    constructor(
+        app: AppManager,
+        id: string,
+        config: { isBuilder: boolean; isPlayer: boolean }
+    ) {
         this._appManager = app;
-        this._treeManager = treeManager;
+        this._id = this._getTreeName(id);
+        this._config = config;
+
+        this._socketManager = new SocketManager();
+        this._treeManager = new CausalTreeManager(
+            this._socketManager.socket,
+            auxCausalTreeFactory()
+        );
     }
 
     /**
      * Initializes the file manager to connect to the session with the given ID.
      * @param id The ID of the session to connect to.
      */
-    init(
-        id: string,
-        force: boolean,
-        loadingCallback: LoadingProgressCallback,
-        config: { isBuilder: boolean; isPlayer: boolean }
-    ): Promise<string> {
-        console.log('[FileManager] init id:', id, 'force:', force);
-        force = getOptionalValue(force, false);
-        if (this._initPromise && !force) {
-            return this._initPromise;
-        } else {
-            if (this._initPromise) {
-                this.dispose();
-            }
-            return (this._initPromise = this._init(
-                id,
-                loadingCallback,
-                config
-            ));
-        }
+    init(loadingCallback?: LoadingProgressCallback): Promise<void> {
+        console.log('[FileManager] init');
+        return this._init(loadingCallback);
     }
 
     /**
@@ -220,11 +218,7 @@ export class FileManager implements Simulation {
         return id ? `aux-${id}` : 'aux-default';
     }
 
-    private async _init(
-        id: string,
-        loadingCallback: LoadingProgressCallback,
-        config: { isBuilder: boolean; isPlayer: boolean }
-    ) {
+    private async _init(loadingCallback: LoadingProgressCallback) {
         const loadingProgress = new LoadingProgress();
         if (loadingCallback) {
             loadingProgress.onChanged.addListener(() => {
@@ -245,9 +239,6 @@ export class FileManager implements Simulation {
         }
         try {
             this._setStatus('Starting...');
-
-            this._id = this._getTreeName(id);
-
             this._subscriptions = [];
 
             loadingProgress.set(10, 'Initializing causal tree manager..', null);
@@ -301,7 +292,7 @@ export class FileManager implements Simulation {
             this._helper = new FileHelper(
                 this._aux.tree,
                 appManager.user.id,
-                config
+                this._config
             );
             this._selection = new SelectionManager(this._helper);
             this._recent = new RecentFilesManager(this._helper);
@@ -333,8 +324,6 @@ export class FileManager implements Simulation {
             if (loadingCallback) {
                 loadingProgress.onChanged.removeAllListeners();
             }
-
-            return this._id;
         } catch (ex) {
             this._errored = true;
             console.error(ex);
@@ -416,9 +405,10 @@ export class FileManager implements Simulation {
         console.log('[FileManager] Status:', status);
     }
 
-    public dispose() {
+    public unsubscribe() {
         this._setStatus('Dispose');
-        this._initPromise = null;
+        this.closed = true;
         this._subscriptions.forEach(s => s.unsubscribe());
+        this._subscriptions = [];
     }
 }

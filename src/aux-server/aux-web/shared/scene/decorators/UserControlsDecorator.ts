@@ -165,7 +165,7 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
             ) {
                 this._lastPositionUpdateTime = time;
 
-                appManager.fileManager.helper.updateFile(file, {
+                appManager.simulationManager.primary.helper.updateFile(file, {
                     tags: {
                         [`${this.file3D.context}.x`]: camPosition.x,
 
@@ -195,7 +195,7 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
             timeBetweenChecks > DEFAULT_USER_ACTIVE_CHECK_INTERVAL
         ) {
             this._lastActiveCheckTime = Date.now();
-            appManager.fileManager.helper.updateFile(
+            appManager.simulationManager.primary.helper.updateFile(
                 <AuxObject>this.file3D.file,
                 {
                     tags: {

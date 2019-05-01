@@ -144,7 +144,8 @@ export default class App extends Vue {
     }
 
     forcedOffline() {
-        return appManager.socketManager.forcedOffline;
+        // return appManager.socketManager.forcedOffline;
+        return false;
     }
 
     created() {
@@ -207,7 +208,7 @@ export default class App extends Vue {
                             if (this.showQRScanner !== e.open) {
                                 this.showQRScanner = e.open;
                                 if (e.open) {
-                                    appManager.fileManager.helper.action(
+                                    appManager.simulationManager.primary.helper.action(
                                         ON_QR_CODE_SCANNER_OPENED_ACTION_NAME,
                                         null
                                     );
@@ -250,7 +251,9 @@ export default class App extends Vue {
 
     logout() {
         const context =
-            appManager.fileManager.helper.userFile.tags['aux._userContext'];
+            appManager.simulationManager.primary.helper.userFile.tags[
+                'aux._userContext'
+            ];
         appManager.logout();
         this.showNavigation = false;
         this.$router.push({
@@ -289,27 +292,27 @@ export default class App extends Vue {
     }
 
     toggleOnlineOffline() {
-        let options = new ConfirmDialogOptions();
-        if (appManager.socketManager.forcedOffline) {
-            options.title = 'Enable online?';
-            options.body = 'Allow the app to reconnect to the server?';
-            options.okText = 'Go Online';
-            options.cancelText = 'Stay Offline';
-        } else {
-            options.title = 'Force offline mode?';
-            options.body = 'Prevent the app from connecting to the server?';
-            options.okText = 'Go Offline';
-            options.cancelText = 'Stay Online';
-        }
-
-        EventBus.$once(options.okEvent, () => {
-            appManager.socketManager.toggleForceOffline();
-            EventBus.$off(options.cancelEvent);
-        });
-        EventBus.$once(options.cancelEvent, () => {
-            EventBus.$off(options.okEvent);
-        });
-        EventBus.$emit('showConfirmDialog', options);
+        // TODO: Fix
+        // let options = new ConfirmDialogOptions();
+        // if (appManager.socketManager.forcedOffline) {
+        //     options.title = 'Enable online?';
+        //     options.body = 'Allow the app to reconnect to the server?';
+        //     options.okText = 'Go Online';
+        //     options.cancelText = 'Stay Offline';
+        // } else {
+        //     options.title = 'Force offline mode?';
+        //     options.body = 'Prevent the app from connecting to the server?';
+        //     options.okText = 'Go Offline';
+        //     options.cancelText = 'Stay Online';
+        // }
+        // EventBus.$once(options.okEvent, () => {
+        //     appManager.socketManager.toggleForceOffline();
+        //     EventBus.$off(options.cancelEvent);
+        // });
+        // EventBus.$once(options.cancelEvent, () => {
+        //     EventBus.$off(options.okEvent);
+        // });
+        // EventBus.$emit('showConfirmDialog', options);
     }
 
     async hideQRCodeScanner() {
@@ -317,14 +320,14 @@ export default class App extends Vue {
     }
 
     async onQrCodeScannerClosed() {
-        await appManager.fileManager.helper.action(
+        await appManager.simulationManager.primary.helper.action(
             ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME,
             null
         );
     }
 
     async onQRCodeScanned(code: string) {
-        await appManager.fileManager.helper.action(
+        await appManager.simulationManager.primary.helper.action(
             ON_QR_CODE_SCANNED_ACTION_NAME,
             null,
             code
