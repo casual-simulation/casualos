@@ -260,7 +260,7 @@ export default class FileTable extends Vue {
     }
 
     onFileClicked(file: AuxObject) {
-        this.fileManager.transaction(tweenTo(file.id));
+        this.fileManager.helper.transaction(tweenTo(file.id));
     }
 
     toggleHidden() {

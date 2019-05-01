@@ -98,7 +98,7 @@ export abstract class BaseInteractionManager {
     }
 
     update(): void {
-        const calc = appManager.fileManager.createContext();
+        const calc = appManager.fileManager.helper.createContext();
         // Update active operations and dispose of any that are finished.
         this._operations = this._operations.filter(o => {
             o.update(calc);

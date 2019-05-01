@@ -104,17 +104,17 @@ export abstract class BaseFileDragOperation implements IOperation {
         // Combine files.
         if (this._merge && this._other) {
             const update = getDiffUpdate(this._file);
-            appManager.fileManager.transaction(
+            appManager.fileManager.helper.transaction(
                 fileUpdated(this._other.id, update),
                 fileRemoved(this._file.id)
             );
         } else if (this._combine && this._other) {
-            appManager.fileManager.action(COMBINE_ACTION_NAME, [
+            appManager.fileManager.helper.action(COMBINE_ACTION_NAME, [
                 this._file,
                 this._other,
             ]);
         } else if (isDiff(this._file)) {
-            appManager.fileManager.transaction(
+            appManager.fileManager.helper.transaction(
                 fileUpdated(this._file.id, {
                     tags: {
                         'aux._diff': null,
@@ -154,7 +154,7 @@ export abstract class BaseFileDragOperation implements IOperation {
             events.push(this._updateFile(files[i], tags));
         }
 
-        appManager.fileManager.transaction(...events);
+        appManager.fileManager.helper.transaction(...events);
     }
 
     protected _updateFileContexts(files: File[], inContext: boolean) {
@@ -169,13 +169,13 @@ export abstract class BaseFileDragOperation implements IOperation {
             events.push(this._updateFile(files[i], tags));
         }
 
-        appManager.fileManager.transaction(...events);
+        appManager.fileManager.helper.transaction(...events);
     }
 
     protected _updateFile(file: File, data: PartialFile): FileEvent {
         appManager.fileManager.recent.addFileDiff(file);
-        updateFile(file, appManager.fileManager.userFile.id, data, () =>
-            appManager.fileManager.createContext()
+        updateFile(file, appManager.fileManager.helper.userFile.id, data, () =>
+            appManager.fileManager.helper.createContext()
         );
         return fileUpdated(file.id, data);
     }

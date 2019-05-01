@@ -36,7 +36,7 @@ export default class MenuFile extends Vue {
     @Watch('file')
     private async _fileChanged(file: AuxFile) {
         if (file) {
-            const calc = appManager.fileManager.createContext();
+            const calc = appManager.fileManager.helper.createContext();
             this._updateLabel(calc, file);
             this._updateColor(calc, file);
             this._updateInput(calc, file);
@@ -58,7 +58,7 @@ export default class MenuFile extends Vue {
     async click() {
         await appManager.fileManager.action('onClick', [this.file]);
         if (this.input) {
-            const calc = appManager.fileManager.createContext();
+            const calc = appManager.fileManager.helper.createContext();
             this._updateInput(calc, this.file);
             this.showDialog = true;
         }

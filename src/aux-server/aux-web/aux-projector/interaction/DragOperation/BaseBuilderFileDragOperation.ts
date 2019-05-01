@@ -196,7 +196,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
 
     private _destroyFiles(calc: FileCalculationContext, files: File[]) {
         let events: FileEvent[] = [];
-        const state = appManager.fileManager.filesState;
+        const state = appManager.fileManager.helper.filesState;
 
         // Remove the files from the context
         for (let i = 0; i < files.length; i++) {
@@ -204,14 +204,14 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
             const actionData = action(
                 DESTROY_ACTION_NAME,
                 [file.id],
-                appManager.fileManager.userFile.id
+                appManager.fileManager.helper.userFile.id
             );
             const result = calculateActionEvents(state, actionData);
 
             events.push(...result.events);
             events.push(...calculateDestroyFileEvents(calc, files[i]));
         }
-        appManager.fileManager.transaction(...events);
+        appManager.fileManager.helper.transaction(...events);
     }
 
     private _removeFromContext(calc: FileCalculationContext, files: File[]) {
@@ -224,7 +224,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
                 })
             );
         }
-        appManager.fileManager.transaction(...events);
+        appManager.fileManager.helper.transaction(...events);
     }
 
     protected _calcWorkspaceDragPosition(

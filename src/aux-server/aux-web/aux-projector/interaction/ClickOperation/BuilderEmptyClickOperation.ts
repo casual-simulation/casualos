@@ -81,7 +81,7 @@ export class BuilderEmptyClickOperation implements IOperation {
      * Opens up the color picker and allows you to change the scene's background color.
      */
     public sceneBackgroundColorPicker(pagePos: Vector2) {
-        let globalsFile = appManager.fileManager.globalsFile;
+        let globalsFile = appManager.fileManager.helper.globalsFile;
 
         // This function is invoked as the color picker changes the color value.
         let colorUpdated = (hexColor: string) => {

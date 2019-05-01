@@ -26,7 +26,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
 
     constructor(gameView: GameView) {
         super(gameView);
-        let calc = appManager.fileManager.createContext();
+        let calc = appManager.fileManager.helper.createContext();
         let gridScale = calculateGridScale(calc, null);
         this._grid = new PlayerGrid(gridScale);
     }

@@ -173,7 +173,11 @@ export default class GameView extends Vue implements IGameView {
             contextType = '=isBuilder || isPlayer';
         }
 
-        this.fileManager.createWorkspace(this.contextDialog, contextType);
+        this.fileManager.helper.createWorkspace(
+            undefined,
+            this.contextDialog,
+            contextType
+        );
 
         this.showDialog = false;
     }
@@ -363,7 +367,7 @@ export default class GameView extends Vue implements IGameView {
 
         // Subscriptions to file events.
         this._subs.push(
-            this.fileManager.filesDiscovered
+            this.fileManager.watcher.filesDiscovered
                 .pipe(
                     rxFlatMap(files => files),
                     concatMap(file => this._fileAdded(file))
@@ -371,7 +375,7 @@ export default class GameView extends Vue implements IGameView {
                 .subscribe()
         );
         this._subs.push(
-            this.fileManager.filesRemoved
+            this.fileManager.watcher.filesRemoved
                 .pipe(
                     rxFlatMap(files => files),
                     tap(file => this._fileRemoved(file))
@@ -379,7 +383,7 @@ export default class GameView extends Vue implements IGameView {
                 .subscribe()
         );
         this._subs.push(
-            this.fileManager.filesUpdated
+            this.fileManager.watcher.filesUpdated
                 .pipe(
                     rxFlatMap(files => files),
                     concatMap(file => this._fileUpdated(file))
@@ -388,8 +392,8 @@ export default class GameView extends Vue implements IGameView {
         );
 
         this._subs.push(
-            this.fileManager
-                .fileChanged(this.fileManager.userFile)
+            this.fileManager.watcher
+                .fileChanged(this.fileManager.helper.userFile)
                 .pipe(
                     tap(file => {
                         this.mode = this._interaction.mode = getUserMode(<
@@ -401,8 +405,8 @@ export default class GameView extends Vue implements IGameView {
         );
 
         this._subs.push(
-            this.fileManager
-                .fileChanged(this.fileManager.globalsFile)
+            this.fileManager.watcher
+                .fileChanged(this.fileManager.helper.globalsFile)
                 .pipe(
                     tap(file => {
                         // Update the scene background color.
@@ -464,7 +468,7 @@ export default class GameView extends Vue implements IGameView {
 
     private _frameUpdate(xrFrame?: any) {
         DebugObjectManager.update();
-        let calc = this.fileManager.createContext();
+        let calc = this.fileManager.helper.createContext();
 
         this._input.update();
         this._inputVR.update();
@@ -599,7 +603,7 @@ export default class GameView extends Vue implements IGameView {
 
     private async _fileUpdated(file: AuxFile, initialUpdate = false) {
         let shouldRemove = false;
-        const calc = this.fileManager.createContext();
+        const calc = this.fileManager.helper.createContext();
         // TODO: Work with all domains
         let configTags = getFileConfigContexts(calc, file);
         if (configTags.length === 0) {
@@ -607,7 +611,7 @@ export default class GameView extends Vue implements IGameView {
                 if (
                     !file.tags['aux._user'] &&
                     file.tags['aux._lastEditedBy'] ===
-                        this.fileManager.userFile.id
+                        this.fileManager.helper.userFile.id
                 ) {
                     if (
                         this.fileManager.recent.selectedRecentFile &&
@@ -644,7 +648,7 @@ export default class GameView extends Vue implements IGameView {
         this._contexts.push(context);
         this._scene.add(context);
 
-        let calc = this.fileManager.createContext();
+        let calc = this.fileManager.helper.createContext();
         await Promise.all(
             [...this._contexts.values()].map(c => c.fileAdded(file, calc))
         );
@@ -654,7 +658,7 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _fileRemoved(id: string) {
-        const calc = this.fileManager.createContext();
+        const calc = this.fileManager.helper.createContext();
         let removedIndex: number = -1;
         this._contexts.forEach((context, index) => {
             context.fileRemoved(id, calc);
@@ -692,7 +696,7 @@ export default class GameView extends Vue implements IGameView {
     private _setupScene() {
         this._scene = new Scene();
 
-        let globalsFile = this.fileManager.globalsFile;
+        let globalsFile = this.fileManager.helper.globalsFile;
 
         // Scene background color.
         let sceneBackgroundColor = globalsFile.tags['aux.scene.color'];

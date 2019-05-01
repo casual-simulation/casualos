@@ -29,6 +29,17 @@ describe('FileHelper', () => {
         });
     });
 
+    describe('globalsFile', () => {
+        it('should return the file with the globals ID', async () => {
+            await tree.file('globals');
+
+            const file = tree.value['globals'];
+            const globals = helper.globalsFile;
+
+            expect(globals).toBe(file);
+        });
+    });
+
     describe('objects', () => {
         it('should return active objects', async () => {
             const { added: file1 } = await tree.file('test1');
@@ -89,6 +100,19 @@ describe('FileHelper', () => {
         it('should emit local events that are sent via transaction()', () => {
             let events: LocalEvent[] = [];
             helper.localEvents.subscribe(e => events.push(e));
+        });
+    });
+
+    describe('setEditingFile()', () => {
+        it('should set the aux._editingFile tag on the user file', async () => {
+            await tree.file('test');
+
+            const file = tree.value['test'];
+            await helper.setEditingFile(file);
+
+            const user = tree.value['user'];
+
+            expect(user.tags['aux._editingFile']).toBe('test');
         });
     });
 

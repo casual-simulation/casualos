@@ -132,7 +132,10 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
                         }
                     );
 
-                    appManager.fileManager.createFile(newFile.id, newFile.tags);
+                    appManager.fileManager.helper.createFile(
+                        newFile.id,
+                        newFile.tags
+                    );
                 }
             } else {
                 this._interaction.showContextMenu(calc);

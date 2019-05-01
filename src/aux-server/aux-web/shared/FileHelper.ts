@@ -83,6 +83,17 @@ export class FileHelper {
     }
 
     /**
+     * Gets the globals file for the simulation.
+     */
+    get globalsFile(): AuxObject {
+        let objs = this.objects.filter(o => o.id === 'globals');
+        if (objs.length > 0) {
+            return objs[0];
+        }
+        return null;
+    }
+
+    /**
      * Gets the observable list of local events that have been processed by this file helper.
      */
     get localEvents(): Observable<LocalEvents> {
@@ -221,6 +232,18 @@ export class FileHelper {
      */
     calculateFileValue(file: File, tag: string) {
         return calculateFileValue(this.createContext(), file, tag);
+    }
+
+    /**
+     * Sets the file that the user is editing.
+     * @param file The file.
+     */
+    setEditingFile(file: File) {
+        return this.updateFile(this.userFile, {
+            tags: {
+                'aux._editingFile': file.id,
+            },
+        });
     }
 
     private _sendLocalEvents(events: FileEvent[]) {

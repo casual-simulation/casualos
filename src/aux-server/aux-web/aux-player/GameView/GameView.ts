@@ -331,7 +331,7 @@ export default class GameView extends Vue implements IGameView {
     private _frameUpdate(xrFrame?: any) {
         DebugObjectManager.update();
 
-        let calc = this.fileManager.createContext();
+        let calc = this.fileManager.helper.createContext();
 
         this._input.update();
         this._inputVR.update();
@@ -479,8 +479,8 @@ export default class GameView extends Vue implements IGameView {
 
         // Subscribe to file events.
         this._fileSubs.push(
-            this.fileManager
-                .fileChanged(this.fileManager.userFile)
+            this.fileManager.watcher
+                .fileChanged(this.fileManager.helper.userFile)
                 .pipe(
                     tap(file => {
                         const userInventoryContextValue = (<Object>file).tags[
@@ -520,8 +520,8 @@ export default class GameView extends Vue implements IGameView {
         );
 
         this._fileSubs.push(
-            this.fileManager
-                .fileChanged(this.fileManager.globalsFile)
+            this.fileManager.watcher
+                .fileChanged(this.fileManager.helper.globalsFile)
                 .pipe(
                     tap(file => {
                         // Update the scene background color.
@@ -536,7 +536,7 @@ export default class GameView extends Vue implements IGameView {
         );
 
         this._fileSubs.push(
-            this.fileManager.filesDiscovered
+            this.fileManager.watcher.filesDiscovered
                 .pipe(
                     rxFlatMap(files => files),
                     concatMap(files => this._fileAdded(files))
@@ -544,7 +544,7 @@ export default class GameView extends Vue implements IGameView {
                 .subscribe()
         );
         this._fileSubs.push(
-            this.fileManager.filesRemoved
+            this.fileManager.watcher.filesRemoved
                 .pipe(
                     rxFlatMap(files => files),
                     tap(file => this._fileRemoved(file))
@@ -552,7 +552,7 @@ export default class GameView extends Vue implements IGameView {
                 .subscribe()
         );
         this._fileSubs.push(
-            this.fileManager.filesUpdated
+            this.fileManager.watcher.filesUpdated
                 .pipe(
                     rxFlatMap(files => files),
                     concatMap(file => this._fileUpdated(file))
@@ -563,7 +563,7 @@ export default class GameView extends Vue implements IGameView {
 
     private async _fileAdded(file: AuxFile) {
         this._fileBackBuffer.set(file.id, file);
-        let calc = this.fileManager.createContext();
+        let calc = this.fileManager.helper.createContext();
 
         if (!this._contextGroup) {
             // We dont have a context group yet. We are in search of a file that defines a player context that matches the user's current context.
@@ -591,7 +591,7 @@ export default class GameView extends Vue implements IGameView {
 
                 // Subscribe to file change updates for this context file so that we can do things like change the background color to match the context color, etc.
                 this._fileSubs.push(
-                    this.fileManager
+                    this.fileManager.watcher
                         .fileChanged(file)
                         .pipe(
                             tap(file => {
@@ -627,8 +627,8 @@ export default class GameView extends Vue implements IGameView {
         // Change the user's context after first adding and updating it
         // because the callback for file_updated was happening before we
         // could call fileUpdated from fileAdded.
-        if (file.id === this.fileManager.userFile.id) {
-            const userFile = appManager.fileManager.userFile;
+        if (file.id === this.fileManager.helper.userFile.id) {
+            const userFile = appManager.fileManager.helper.userFile;
             console.log(
                 "[GameView] Setting user's context to: " + this.context
             );
@@ -640,7 +640,7 @@ export default class GameView extends Vue implements IGameView {
 
     private async _fileUpdated(file: AuxFile, initialUpdate = false) {
         this._fileBackBuffer.set(file.id, file);
-        let calc = this.fileManager.createContext();
+        let calc = this.fileManager.helper.createContext();
 
         if (this._contextGroup) {
             // TODO: Implement Tag Updates
@@ -659,7 +659,7 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _fileRemoved(id: string) {
-        const calc = this.fileManager.createContext();
+        const calc = this.fileManager.helper.createContext();
         if (this._contextGroup) {
             this._contextGroup.fileRemoved(id, calc);
 
@@ -696,7 +696,7 @@ export default class GameView extends Vue implements IGameView {
     private _setupScene() {
         this._scene = new Scene();
 
-        let globalsFile = this.fileManager.globalsFile;
+        let globalsFile = this.fileManager.helper.globalsFile;
 
         // Scene background color.
         let sceneBackgroundColor = globalsFile.tags['aux.scene.color'];

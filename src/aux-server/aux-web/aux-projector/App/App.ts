@@ -234,28 +234,30 @@ export default class App extends Vue {
                 }, 1000);
 
                 subs.push(
-                    fileManager.connectionStateChanged.subscribe(connected => {
-                        if (!connected) {
-                            this._showConnectionLost();
-                            this.online = false;
-                            this.synced = false;
-                            this.lostConnection = true;
-                        } else {
-                            this.online = true;
-                            if (this.lostConnection) {
-                                this._showConnectionRegained();
+                    fileManager.aux.channel.connectionStateChanged.subscribe(
+                        connected => {
+                            if (!connected) {
+                                this._showConnectionLost();
+                                this.online = false;
+                                this.synced = false;
+                                this.lostConnection = true;
+                            } else {
+                                this.online = true;
+                                if (this.lostConnection) {
+                                    this._showConnectionRegained();
+                                }
+                                this.lostConnection = false;
+                                this.startedOffline = false;
+                                this.synced = true;
+                                appManager.checkForUpdates();
                             }
-                            this.lostConnection = false;
-                            this.startedOffline = false;
-                            this.synced = true;
-                            appManager.checkForUpdates();
                         }
-                    })
+                    )
                 );
 
                 subs.push(
-                    fileManager
-                        .fileChanged(fileManager.userFile)
+                    fileManager.watcher
+                        .fileChanged(fileManager.helper.userFile)
                         .pipe(
                             tap(file => {
                                 this.userMode = this._calculateUserMode(<

@@ -39,7 +39,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
         super(gameView, interaction, files, context);
         this._originallyInInventory = this._inInventory =
             context &&
-            appManager.fileManager.userFile.tags[
+            appManager.fileManager.helper.userFile.tags[
                 'aux._userInventoryContext'
             ] === context;
     }
@@ -123,7 +123,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
             );
             events.push(...result.events);
 
-            appManager.fileManager.transaction(...events);
+            appManager.fileManager.helper.transaction(...events);
         } else if (!this._originallyInInventory && this._inInventory) {
             let events: FileEvent[] = [];
             let result = appManager.fileManager.helper.actionEvents(
@@ -138,7 +138,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
             );
             events.push(...result.events);
 
-            appManager.fileManager.transaction(...events);
+            appManager.fileManager.helper.transaction(...events);
         }
     }
 }

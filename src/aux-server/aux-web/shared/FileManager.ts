@@ -81,73 +81,10 @@ export class FileManager implements Simulation {
     }
 
     /**
-     * Gets all the files that represent an object.
-     */
-    get objects(): AuxObject[] {
-        return this._helper.objects;
-    }
-
-    /**
-     * Gets all of the available tags.
-     */
-    get tags(): string[] {
-        return union(...this.objects.map(o => keys(o.tags)));
-    }
-
-    /**
      * Gets all the selected files that represent an object.
      */
     get selectedObjects(): File[] {
-        return this.selection.getSelectedFilesForUser(this.userFile);
-    }
-
-    /**
-     * Gets an observable that resolves whenever a new file is discovered.
-     * That is, it was created or added by another user.
-     */
-    get filesDiscovered(): Observable<AuxFile[]> {
-        return this._watcher.filesDiscovered;
-    }
-
-    /**
-     * Gets an observable that resolves whenever a file is removed.
-     * That is, it was deleted from the working directory either by checking out a
-     * branch that does not contain the file or by deleting it.
-     */
-    get filesRemoved(): Observable<string[]> {
-        return this._watcher.filesRemoved;
-    }
-
-    /**
-     * Gets an observable that resolves whenever a file is updated.
-     */
-    get filesUpdated(): Observable<AuxFile[]> {
-        return this._watcher.filesUpdated;
-    }
-
-    get status(): string {
-        return this._status;
-    }
-
-    /**
-     * Gets the file for the current user.
-     */
-    get userFile(): AuxObject {
-        if (!this._appManager.user) {
-            return;
-        }
-        return this._helper.userFile;
-    }
-
-    /**
-     * Gets the globals file.
-     */
-    get globalsFile(): AuxObject {
-        let objs = this.objects.filter(o => o.id === 'globals');
-        if (objs.length > 0) {
-            return objs[0];
-        }
-        return null;
+        return this.selection.getSelectedFilesForUser(this.helper.userFile);
     }
 
     /**
@@ -163,20 +100,6 @@ export class FileManager implements Simulation {
      */
     get isSynced(): boolean {
         return this.isOnline;
-    }
-
-    /**
-     * Gets the observable that resolves whenever the connection state changes.
-     */
-    get connectionStateChanged(): Observable<boolean> {
-        return this._aux.channel.connectionStateChanged;
-    }
-
-    /**
-     * Gets the current local file state.
-     */
-    get filesState() {
-        return this._aux.tree.value;
     }
 
     /**
@@ -257,19 +180,11 @@ export class FileManager implements Simulation {
      * @param mode The mode that the user should use.
      */
     setUserMode(mode: UserMode) {
-        return this.updateFile(this.userFile, {
+        return this.updateFile(this.helper.userFile, {
             tags: {
                 'aux._mode': mode,
             },
         });
-    }
-
-    /**
-     * Sets the file that is currently being edited by the current user.
-     * @param file The file.
-     */
-    setEditedFile(file: AuxObject) {
-        this._setEditedFileForUser(file, this.userFile);
     }
 
     /**
@@ -307,29 +222,8 @@ export class FileManager implements Simulation {
         return this._helper.updateFile(file, newData);
     }
 
-    createFile(id?: string, tags?: Object['tags']) {
-        return this._helper.createFile(id, tags);
-    }
-
-    createWorkspace(
-        builderContextId?: string,
-        contextFormula?: string,
-        label?: string
-    ) {
-        return this._helper.createWorkspace(
-            undefined,
-            builderContextId,
-            contextFormula,
-            label
-        );
-    }
-
     action(eventName: string, files: File[], arg?: any) {
         return this._helper.action(eventName, files, arg);
-    }
-
-    transaction(...events: FileEvent[]) {
-        return this._helper.transaction(...events);
     }
 
     /**
@@ -344,50 +238,19 @@ export class FileManager implements Simulation {
     // but we'll add a config option to prevent this from happening on real sites.
     async deleteEverything() {
         console.warn('[FileManager] Delete Everything!');
-        const state = this.filesState;
+        const state = this.helper.filesState;
         const fileIds = keys(state);
         const files = fileIds.map(id => state[id]);
         const nonUserOrGlobalFiles = files.filter(
             f => !f.tags['aux._user'] && f.id !== 'globals'
         );
         const deleteOps = nonUserOrGlobalFiles.map(f => fileRemoved(f.id));
-        await this.transaction(...deleteOps);
+        await this.helper.transaction(...deleteOps);
 
         // setTimeout(() => {
         //   appManager.logout();
         //   location.reload();
         // }, 200);
-    }
-
-    /**
-     * Creates an observable that resolves whenever the given file changes.
-     * @param file The file to watch.
-     */
-    fileChanged(file: File): Observable<File> {
-        return this.filesUpdated.pipe(
-            flatMap(files => files),
-            filter(f => f.id === file.id),
-            startWith(file)
-        );
-    }
-
-    private _setEditedFileForUser(file: AuxObject, user: AuxObject) {
-        if (file.id !== user.tags['aux._editingFile']) {
-            console.log('[FileManager] Edit File:', file.id);
-
-            this.updateFile(user, {
-                tags: {
-                    ['aux._editingFile']: file.id,
-                },
-            });
-        }
-    }
-
-    /**
-     * Creates a new FileCalculationContext from the current state.
-     */
-    createContext(): FileCalculationContext {
-        return this._helper.createContext();
     }
 
     /**
@@ -545,7 +408,7 @@ export class FileManager implements Simulation {
 
     private async _initUserFile() {
         this._setStatus('Updating user file...');
-        let userFile = this.userFile;
+        let userFile = this.helper.userFile;
         const userContext = `_user_${appManager.user.username}_${
             this._aux.tree.site.id
         }`;
@@ -556,7 +419,7 @@ export class FileManager implements Simulation {
             this._aux.tree.site.id
         }_menu`;
         if (!userFile) {
-            await this.createFile(this._appManager.user.id, {
+            await this.helper.createFile(this._appManager.user.id, {
                 [userContext]: true,
                 [`${userContext}.config`]: true,
                 ['aux._user']: this._appManager.user.username,
@@ -584,7 +447,7 @@ export class FileManager implements Simulation {
 
     private async _initGlobalsFile() {
         this._setStatus('Updating globals file...');
-        let globalsFile = this.globalsFile;
+        let globalsFile = this.helper.globalsFile;
         if (!globalsFile) {
             await this._helper.createWorkspace(
                 'globals',
