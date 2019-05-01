@@ -4,6 +4,7 @@ import { File, file, hasValue } from '@casual-simulation/aux-common';
 import { ScaleDecorator } from './ScaleDecorator';
 import { ContextPositionDecorator } from './ContextPositionDecorator';
 import { FileShapeDecorator } from './FileShapeDecorator';
+import { ProgressBarDecorator } from './ProgressBarDecorator';
 import { LabelDecorator } from './LabelDecorator';
 import { UserMeshDecorator } from './UserMeshDecorator';
 import { AuxFile3D } from '../AuxFile3D';
@@ -42,12 +43,13 @@ export class AuxFile3DDecoratorFactory {
                 file3d,
                 fileShapeDecorator
             );
-            // let outlineDecorator = new OutlineDecorator(file3d, fileShapeDecorator);
+
+            let progressBarDecorator = new ProgressBarDecorator(file3d);
 
             decorators.push(
                 fileShapeDecorator,
-                textureDecorator
-                // outlineDecorator
+                textureDecorator,
+                progressBarDecorator
             );
         }
 
