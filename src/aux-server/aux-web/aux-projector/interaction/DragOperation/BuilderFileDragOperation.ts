@@ -94,7 +94,7 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
             // move the center of the workspace to the point
             let final = new Vector3().copy(point);
 
-            appManager.fileManager.updateFile(this._workspace.file, {
+            appManager.fileManager.helper.updateFile(this._workspace.file, {
                 tags: {
                     [`aux.context.x`]: final.x,
                     [`aux.context.y`]: final.z,

@@ -69,7 +69,10 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
                 appManager.fileManager.recent.clear();
             }
         } else if (this._isOnWorkspace) {
-            appManager.fileManager.action(CREATE_ACTION_NAME, this._files);
+            appManager.fileManager.helper.action(
+                CREATE_ACTION_NAME,
+                this._files
+            );
         }
 
         super._onDragReleased(calc);

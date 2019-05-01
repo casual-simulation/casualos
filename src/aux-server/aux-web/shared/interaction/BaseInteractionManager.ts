@@ -226,7 +226,7 @@ export abstract class BaseInteractionManager {
             if (this._tapCodeManager.code.length >= this._maxTapCodeLength) {
                 const code = this._tapCodeManager.code;
                 console.log('[InteractionManager] TapCode: ', code);
-                appManager.fileManager.action('onTapCode', null, code);
+                appManager.fileManager.helper.action('onTapCode', null, code);
                 this._tapCodeManager.trim(this._maxTapCodeLength - 1);
             }
 
@@ -265,11 +265,11 @@ export abstract class BaseInteractionManager {
     }
 
     handlePointerEnter(file: File) {
-        appManager.fileManager.action('onPointerEnter', [file]);
+        appManager.fileManager.helper.action('onPointerEnter', [file]);
     }
 
     handlePointerExit(file: File) {
-        appManager.fileManager.action('onPointerExit', [file]);
+        appManager.fileManager.helper.action('onPointerExit', [file]);
     }
 
     showContextMenu(calc: FileCalculationContext) {

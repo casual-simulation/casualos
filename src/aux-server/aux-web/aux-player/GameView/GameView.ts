@@ -632,7 +632,7 @@ export default class GameView extends Vue implements IGameView {
             console.log(
                 "[GameView] Setting user's context to: " + this.context
             );
-            appManager.fileManager.updateFile(userFile, {
+            appManager.fileManager.helper.updateFile(userFile, {
                 tags: { 'aux._userContext': this.context },
             });
         }

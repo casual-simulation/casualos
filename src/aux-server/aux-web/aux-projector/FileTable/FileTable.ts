@@ -144,7 +144,7 @@ export default class FileTable extends Vue {
                     this.focusedTag,
                     this.multilineValue
                 );
-                this.fileManager.updateFile(this.focusedFile, {
+                this.fileManager.helper.updateFile(this.focusedFile, {
                     tags: {
                         [this.focusedTag]: this.multilineValue,
                     },

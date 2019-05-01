@@ -56,7 +56,7 @@ export default class MenuFile extends Vue {
     }
 
     async click() {
-        await appManager.fileManager.action('onClick', [this.file]);
+        await appManager.fileManager.helper.action('onClick', [this.file]);
         if (this.input) {
             const calc = appManager.fileManager.helper.createContext();
             this._updateInput(calc, this.file);
@@ -66,19 +66,19 @@ export default class MenuFile extends Vue {
 
     async closeDialog() {
         if (this.showDialog) {
-            await appManager.fileManager.action('onClose', [this.file]);
+            await appManager.fileManager.helper.action('onClose', [this.file]);
             this.showDialog = false;
         }
     }
 
     async saveDialog() {
         if (this.showDialog) {
-            await appManager.fileManager.updateFile(this.inputTarget, {
+            await appManager.fileManager.helper.updateFile(this.inputTarget, {
                 tags: {
                     [this.input]: this.inputValue,
                 },
             });
-            await appManager.fileManager.action('onSave', [this.file]);
+            await appManager.fileManager.helper.action('onSave', [this.file]);
             await this.closeDialog();
         }
     }

@@ -29,7 +29,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
     }
 
     protected _performClick(calc: FileCalculationContext): void {
-        appManager.fileManager.action('onClick', [this._file]);
+        appManager.fileManager.helper.action('onClick', [this._file]);
     }
 
     protected _createDragOperation(

@@ -237,7 +237,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         height: number
     ) {
         const key = posToKey(position);
-        appManager.fileManager.updateFile(file.file, {
+        appManager.fileManager.helper.updateFile(file.file, {
             tags: {
                 [`aux.context.grid`]: {
                     [key]: {
@@ -462,7 +462,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     ) {
         if (file && isContext(calc, file.file)) {
             const size = getContextSize(calc, file.file);
-            appManager.fileManager.updateFile(file.file, {
+            appManager.fileManager.helper.updateFile(file.file, {
                 tags: {
                     [`aux.context.size`]: (size || 0) - 1,
                 },
@@ -480,7 +480,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     ) {
         if (file && isContext(calc, file.file)) {
             const minimized = !isMinimized(calc, file.file);
-            appManager.fileManager.updateFile(file.file, {
+            appManager.fileManager.helper.updateFile(file.file, {
                 tags: {
                     [`aux.context.minimized`]: minimized,
                 },
@@ -494,7 +494,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     ) {
         if (file) {
             const size = getContextSize(calc, file.file);
-            appManager.fileManager.updateFile(file.file, {
+            appManager.fileManager.helper.updateFile(file.file, {
                 tags: {
                     [`aux.context.size`]: (size || 0) + 1,
                 },

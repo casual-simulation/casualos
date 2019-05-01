@@ -22,9 +22,6 @@ import FilePanelManager from './FilePanelManager';
  * Defines an interface for objects that represent file simulations.
  */
 export interface Simulation {
-    addState(state: FilesState): Promise<void>;
-    action(eventName: string, files: File[], arg?: any): Promise<void>;
-
     /**
      * Gets the ID of the simulation that is currently being used.
      */
@@ -87,26 +84,6 @@ export interface Simulation {
      * @param mode The mode that the user should use.
      */
     setUserMode(mode: UserMode): Promise<void>;
-
-    /**
-     * Calculates the nicely formatted value for the given file and tag.
-     * @param file The file to calculate the value for.
-     * @param tag The tag to calculate the value for.
-     */
-    calculateFormattedFileValue(file: Object, tag: string): string;
-
-    calculateFileValue(file: Object, tag: string): any;
-
-    /**
-     * Removes the given file.
-     * @param file The file to remove.
-     */
-    removeFile(file: AuxObject): Promise<void>;
-
-    /**
-     * Updates the given file with the given data.
-     */
-    updateFile(file: AuxObject, newData: PartialFile): Promise<void>;
 
     // TODO: This seems like a pretty dangerous function to keep around,
     // but we'll add a config option to prevent this from happening on real sites.

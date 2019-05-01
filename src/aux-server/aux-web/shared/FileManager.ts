@@ -180,58 +180,11 @@ export class FileManager implements Simulation {
      * @param mode The mode that the user should use.
      */
     setUserMode(mode: UserMode) {
-        return this.updateFile(this.helper.userFile, {
+        return this.helper.updateFile(this.helper.userFile, {
             tags: {
                 'aux._mode': mode,
             },
         });
-    }
-
-    /**
-     * Calculates the nicely formatted value for the given file and tag.
-     * @param file The file to calculate the value for.
-     * @param tag The tag to calculate the value for.
-     */
-    calculateFormattedFileValue(file: Object, tag: string): string {
-        return this._helper.calculateFormattedFileValue(file, tag);
-    }
-
-    calculateFileValue(file: Object, tag: string) {
-        return this._helper.calculateFileValue(file, tag);
-    }
-
-    /**
-     * Removes the given file.
-     * @param file The file to remove.
-     */
-    async removeFile(file: AuxFile) {
-        if (this._aux.tree) {
-            console.log('[FileManager] Remove File', file.id);
-            await this._aux.tree.delete(file.metadata.ref);
-        } else {
-            console.warn(
-                '[FileManager] Tree is not loaded yet. Invalid Operation!'
-            );
-        }
-    }
-
-    /**
-     * Updates the given file with the given data.
-     */
-    updateFile(file: AuxFile, newData: PartialFile) {
-        return this._helper.updateFile(file, newData);
-    }
-
-    action(eventName: string, files: File[], arg?: any) {
-        return this._helper.action(eventName, files, arg);
-    }
-
-    /**
-     * Adds the given state to the session.
-     * @param state The state to add.
-     */
-    addState(state: FilesState) {
-        return this._helper.addState(state);
     }
 
     // TODO: This seems like a pretty dangerous function to keep around,
@@ -429,14 +382,14 @@ export class FileManager implements Simulation {
             });
         } else {
             if (!userFile.tags['aux._userMenuContext']) {
-                await this.updateFile(userFile, {
+                await this.helper.updateFile(userFile, {
                     tags: {
                         ['aux._userMenuContext']: userMenuContext,
                     },
                 });
             }
             if (!userFile.tags['aux._userInventoryContext']) {
-                await this.updateFile(userFile, {
+                await this.helper.updateFile(userFile, {
                     tags: {
                         ['aux._userInventoryContext']: userInventoryContext,
                     },

@@ -194,7 +194,7 @@ export class AppManager {
             value = <FilesState>(<unknown>state);
         }
 
-        await this.fileManager.addState(value);
+        await this.fileManager.helper.addState(value);
     }
 
     /**

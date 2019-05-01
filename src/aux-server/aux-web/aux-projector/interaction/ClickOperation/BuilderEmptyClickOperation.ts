@@ -85,7 +85,7 @@ export class BuilderEmptyClickOperation implements IOperation {
 
         // This function is invoked as the color picker changes the color value.
         let colorUpdated = (hexColor: string) => {
-            appManager.fileManager.updateFile(globalsFile, {
+            appManager.fileManager.helper.updateFile(globalsFile, {
                 tags: {
                     'aux.scene.color': hexColor,
                 },

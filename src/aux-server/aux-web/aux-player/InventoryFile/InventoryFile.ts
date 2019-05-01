@@ -29,14 +29,14 @@ export default class InventoryFile extends Vue {
             this.showImage = 'flex';
             let label = file.tags['aux.label'];
             if (label) {
-                this.label = appManager.fileManager.calculateFormattedFileValue(
+                this.label = appManager.fileManager.helper.calculateFormattedFileValue(
                     file,
                     'aux.label'
                 );
 
                 const labelColor = file.tags['aux.label.color'];
                 if (labelColor) {
-                    this.labelColor = appManager.fileManager.calculateFormattedFileValue(
+                    this.labelColor = appManager.fileManager.helper.calculateFormattedFileValue(
                         file,
                         'aux.label.color'
                     );

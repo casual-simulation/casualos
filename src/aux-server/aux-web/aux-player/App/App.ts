@@ -207,7 +207,7 @@ export default class App extends Vue {
                             if (this.showQRScanner !== e.open) {
                                 this.showQRScanner = e.open;
                                 if (e.open) {
-                                    appManager.fileManager.action(
+                                    appManager.fileManager.helper.action(
                                         ON_QR_CODE_SCANNER_OPENED_ACTION_NAME,
                                         null
                                     );
@@ -317,14 +317,14 @@ export default class App extends Vue {
     }
 
     async onQrCodeScannerClosed() {
-        await appManager.fileManager.action(
+        await appManager.fileManager.helper.action(
             ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME,
             null
         );
     }
 
     async onQRCodeScanned(code: string) {
-        await appManager.fileManager.action(
+        await appManager.fileManager.helper.action(
             ON_QR_CODE_SCANNED_ACTION_NAME,
             null,
             code
