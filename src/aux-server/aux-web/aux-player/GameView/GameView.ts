@@ -63,6 +63,8 @@ import {
     baseAuxDirectionalLight,
 } from '../../shared/scene/SceneUtils';
 import { TweenCameraToOperation } from '../../shared/interaction/TweenCameraToOperation';
+import { Simulation3D } from '../../shared/scene/Simulation3D';
+import { GridChecker } from '../../shared/scene/grid/GridChecker';
 
 @Component({
     components: {
@@ -100,16 +102,7 @@ export default class GameView extends Vue implements IGameView {
         PerspectiveCamera | OrthographicCamera
     > = new ArgEvent<PerspectiveCamera | OrthographicCamera>();
 
-    /**
-     * Keep files in a back buffer so that we can add files to contexts when they come in.
-     * We should not guarantee that contexts will come first so we must have some lazy file adding.
-     */
-    private _fileBackBuffer: Map<string, AuxObject>;
-
-    /**
-     * The current context group 3d that the AUX Player is rendering.
-     */
-    private _contextGroup: ContextGroup3D;
+    private _simulations: Simulation3D[];
 
     private _fileSubs: SubscriptionLike[];
     private _decoratorFactory: AuxFile3DDecoratorFactory;
@@ -121,8 +114,6 @@ export default class GameView extends Vue implements IGameView {
     vrDisplay: VRDisplay = null;
     vrCapable: boolean = false;
 
-    inventoryContext: InventoryContext = null;
-    menuContext: MenuContext = null;
     menuExpanded: boolean = true;
 
     @Inject() addSidebarItem: App['addSidebarItem'];
@@ -149,17 +140,17 @@ export default class GameView extends Vue implements IGameView {
         return false;
     }
 
-    get fileManager() {
-        return appManager.simulationManager.primary;
-    }
+    // get fileManager() {
+    //     return appManager.simulationManager.primary;
+    // }
 
     constructor() {
         super();
     }
 
     public findFilesById(id: string): AuxFile3D[] {
-        return flatMap(
-            this._contextGroup.getFiles().filter(f => f.file.id === id)
+        return flatMap(flatMap(this._simulations, s => s.contexts), c =>
+            c.getFiles().filter(f => f.file.id === id)
         );
     }
 
@@ -184,11 +175,20 @@ export default class GameView extends Vue implements IGameView {
     public getMainCamera(): PerspectiveCamera | OrthographicCamera {
         return this._mainCamera;
     }
-    public getContexts(): ContextGroup3D[] {
-        return [this._contextGroup];
-    }
+    // public getContexts(): ContextGroup3D[] {
+    //     return [this._contextGroup];
+    // }
     public getUIHtmlElements(): HTMLElement[] {
         return [<HTMLElement>this.$refs.inventory];
+    }
+    public getDecoratorFactory(): AuxFile3DDecoratorFactory {
+        return this._decoratorFactory;
+    }
+    public getGridChecker(): GridChecker {
+        return null;
+    }
+    public getSimulations(): Simulation3D[] {
+        return this._simulations;
     }
 
     public setGridsVisible(visible: boolean) {
@@ -252,7 +252,7 @@ export default class GameView extends Vue implements IGameView {
 
         this._time = new Time();
         this._fileSubs = [];
-        this._fileBackBuffer = new Map<string, AuxObject>();
+        // this._fileBackBuffer = new Map<string, AuxObject>();
         this._decoratorFactory = new AuxFile3DDecoratorFactory(this);
         this._setupScene();
         DebugObjectManager.init(this._time, this._scene);
@@ -265,17 +265,18 @@ export default class GameView extends Vue implements IGameView {
         this._triggerFilesRefresh();
         this._frameUpdate();
 
-        this._fileSubs.push(
-            this.fileManager.helper.localEvents
-                .pipe(
-                    tap(e => {
-                        if (e.name === 'tween_to') {
-                            this.tweenCameraToFile(e.fileId, e.zoomValue);
-                        }
-                    })
-                )
-                .subscribe()
-        );
+        // TODO: Fix
+        // this._fileSubs.push(
+        //     this.fileManager.helper.localEvents
+        //         .pipe(
+        //             tap(e => {
+        //                 if (e.name === 'tween_to') {
+        //                     this.tweenCameraToFile(e.fileId, e.zoomValue);
+        //                 }
+        //             })
+        //         )
+        //         .subscribe()
+        // );
     }
 
     public beforeDestroy() {
@@ -332,23 +333,27 @@ export default class GameView extends Vue implements IGameView {
     private _frameUpdate(xrFrame?: any) {
         DebugObjectManager.update();
 
-        let calc = this.fileManager.helper.createContext();
+        // let calc = this.fileManager.helper.createContext();
 
         this._input.update();
         this._inputVR.update();
         this._interaction.update();
 
-        if (this._contextGroup) {
-            this._contextGroup.frameUpdate(calc);
-        }
+        this._simulations.forEach(s => {
+            s.frameUpdate();
+        });
+        // if (this._contextGroup) {
+        //     this._contextGroup.frameUpdate(calc);
+        // }
 
-        if (this.inventoryContext) {
-            this.inventoryContext.frameUpdate(calc);
-        }
+        // TODO: Fix
+        // if (this.inventoryContext) {
+        //     this.inventoryContext.frameUpdate(calc);
+        // }
 
-        if (this.menuContext) {
-            this.menuContext.frameUpdate(calc);
-        }
+        // if (this.menuContext) {
+        //     this.menuContext.frameUpdate(calc);
+        // }
 
         this._cameraUpdate();
 
@@ -457,232 +462,72 @@ export default class GameView extends Vue implements IGameView {
         }
 
         // Clear our file buffer.
-        this._fileBackBuffer = new Map<string, AuxObject>();
+        // this._fileBackBuffer = new Map<string, AuxObject>();
 
         // Dispose of the current context group.
-        if (this._contextGroup) {
-            this._contextGroup.dispose();
-            this._scene.remove(this._contextGroup);
-            this._contextGroup = null;
-        }
+        // TODO: Fix
+        // if (this._contextGroup) {
+        //     this._contextGroup.dispose();
+        //     this._scene.remove(this._contextGroup);
+        //     this._contextGroup = null;
+        // }
 
         // Dispose of the current inventory context.
-        if (this.inventoryContext) {
-            this.inventoryContext.dispose();
-            this.inventoryContext = null;
-        }
+        // if (this.inventoryContext) {
+        //     this.inventoryContext.dispose();
+        //     this.inventoryContext = null;
+        // }
 
-        // Dispose of the current inventory context.
-        if (this.menuContext) {
-            this.menuContext.dispose();
-            this.menuContext = null;
-        }
+        // // Dispose of the current inventory context.
+        // if (this.menuContext) {
+        //     this.menuContext.dispose();
+        //     this.menuContext = null;
+        // }
 
         // Subscribe to file events.
-        this._fileSubs.push(
-            this.fileManager.watcher
-                .fileChanged(this.fileManager.helper.userFile)
-                .pipe(
-                    tap(file => {
-                        const userInventoryContextValue = (<Object>file).tags[
-                            'aux._userInventoryContext'
-                        ];
-                        if (
-                            !this.inventoryContext ||
-                            this.inventoryContext.context !==
-                                userInventoryContextValue
-                        ) {
-                            this.inventoryContext = new InventoryContext(
-                                userInventoryContextValue
-                            );
-                            console.log(
-                                '[GameView] User changed inventory context to: ',
-                                userInventoryContextValue
-                            );
-                        }
 
-                        const userMenuContextValue =
-                            file.tags['aux._userMenuContext'];
-                        if (
-                            !this.menuContext ||
-                            this.menuContext.context !== userMenuContextValue
-                        ) {
-                            this.menuContext = new MenuContext(
-                                userMenuContextValue
-                            );
-                            console.log(
-                                '[GameView] User changed menu context to: ',
-                                userMenuContextValue
-                            );
-                        }
-                    })
-                )
-                .subscribe()
-        );
-
-        this._fileSubs.push(
-            this.fileManager.watcher
-                .fileChanged(this.fileManager.helper.globalsFile)
-                .pipe(
-                    tap(file => {
-                        // Update the scene background color.
-                        let sceneBackgroundColor = file.tags['aux.scene.color'];
-                        this._sceneBackground = hasValue(sceneBackgroundColor)
-                            ? new Color(sceneBackgroundColor)
-                            : new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
-                        this._sceneBackgroundUpdate();
-                    })
-                )
-                .subscribe()
-        );
-
-        this._fileSubs.push(
-            this.fileManager.watcher.filesDiscovered
-                .pipe(
-                    rxFlatMap(files => files),
-                    concatMap(files => this._fileAdded(files))
-                )
-                .subscribe()
-        );
-        this._fileSubs.push(
-            this.fileManager.watcher.filesRemoved
-                .pipe(
-                    rxFlatMap(files => files),
-                    tap(file => this._fileRemoved(file))
-                )
-                .subscribe()
-        );
-        this._fileSubs.push(
-            this.fileManager.watcher.filesUpdated
-                .pipe(
-                    rxFlatMap(files => files),
-                    concatMap(file => this._fileUpdated(file))
-                )
-                .subscribe()
-        );
+        // TODO: Fix
+        // this._fileSubs.push(
+        //     this.fileManager.watcher
+        //         .fileChanged(this.fileManager.helper.globalsFile)
+        //         .pipe(
+        //             tap(file => {
+        //                 // Update the scene background color.
+        //                 let sceneBackgroundColor = file.tags['aux.scene.color'];
+        //                 this._sceneBackground = hasValue(sceneBackgroundColor)
+        //                     ? new Color(sceneBackgroundColor)
+        //                     : new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
+        //                 this._sceneBackgroundUpdate();
+        //             })
+        //         )
+        //         .subscribe()
+        // );
     }
 
-    private async _fileAdded(file: AuxFile) {
-        this._fileBackBuffer.set(file.id, file);
-        let calc = this.fileManager.helper.createContext();
+    // private _fileRemoved(id: string) {
+    //     const calc = this.fileManager.helper.createContext();
+    //     if (this._contextGroup) {
+    //         this._contextGroup.fileRemoved(id, calc);
 
-        if (!this._contextGroup) {
-            // We dont have a context group yet. We are in search of a file that defines a player context that matches the user's current context.
-            const result = doesFileDefinePlayerContext(
-                file,
-                this.context,
-                calc
-            );
-            if (result.matchFound) {
-                // Create ContextGroup3D for this file that we will use to render all files in the context.
-                this._contextGroup = new ContextGroup3D(
-                    file,
-                    'player',
-                    this._decoratorFactory
-                );
-                this._scene.add(this._contextGroup);
-                await this._contextGroup.fileAdded(file, calc);
+    //         if (this._contextGroup.file.id === id) {
+    //             // File that defined player context has been removed.
+    //             // Dispose of the context group.
+    //             this._contextGroup.dispose();
+    //             this._scene.remove(this._contextGroup);
+    //             this._contextGroup = null;
+    //         }
+    //     }
 
-                // Apply back buffer of files to the newly created context group.
-                for (let entry of this._fileBackBuffer) {
-                    if (entry[0] !== file.id) {
-                        await this._contextGroup.fileAdded(entry[1], calc);
-                    }
-                }
+    //     if (this.inventoryContext) {
+    //         this.inventoryContext.fileRemoved(id, calc);
+    //     }
 
-                // Subscribe to file change updates for this context file so that we can do things like change the background color to match the context color, etc.
-                this._fileSubs.push(
-                    this.fileManager.watcher
-                        .fileChanged(file)
-                        .pipe(
-                            tap(file => {
-                                // Update the context background color.
-                                let contextBackgroundColor =
-                                    file.tags['aux.context.color'];
-                                this._contextBackground = hasValue(
-                                    contextBackgroundColor
-                                )
-                                    ? new Color(contextBackgroundColor)
-                                    : undefined;
-                                this._sceneBackgroundUpdate();
-                            })
-                        )
-                        .subscribe()
-                );
-            }
-        } else {
-            await this._contextGroup.fileAdded(file, calc);
-        }
+    //     if (this.menuContext) {
+    //         this.menuContext.fileRemoved(id, calc);
+    //     }
 
-        if (this.inventoryContext) {
-            await this.inventoryContext.fileAdded(file, calc);
-        }
-
-        if (this.menuContext) {
-            await this.menuContext.fileAdded(file, calc);
-        }
-
-        await this._fileUpdated(file, true);
-        this.onFileAdded.invoke(file);
-
-        // Change the user's context after first adding and updating it
-        // because the callback for file_updated was happening before we
-        // could call fileUpdated from fileAdded.
-        if (file.id === this.fileManager.helper.userFile.id) {
-            const userFile = this.fileManager.helper.userFile;
-            console.log(
-                "[GameView] Setting user's context to: " + this.context
-            );
-            this.fileManager.helper.updateFile(userFile, {
-                tags: { 'aux._userContext': this.context },
-            });
-        }
-    }
-
-    private async _fileUpdated(file: AuxFile, initialUpdate = false) {
-        this._fileBackBuffer.set(file.id, file);
-        let calc = this.fileManager.helper.createContext();
-
-        if (this._contextGroup) {
-            // TODO: Implement Tag Updates
-            await this._contextGroup.fileUpdated(file, [], calc);
-        }
-
-        if (this.inventoryContext) {
-            await this.inventoryContext.fileUpdated(file, [], calc);
-        }
-
-        if (this.menuContext) {
-            await this.menuContext.fileUpdated(file, [], calc);
-        }
-
-        this.onFileUpdated.invoke(file);
-    }
-
-    private _fileRemoved(id: string) {
-        const calc = this.fileManager.helper.createContext();
-        if (this._contextGroup) {
-            this._contextGroup.fileRemoved(id, calc);
-
-            if (this._contextGroup.file.id === id) {
-                // File that defined player context has been removed.
-                // Dispose of the context group.
-                this._contextGroup.dispose();
-                this._scene.remove(this._contextGroup);
-                this._contextGroup = null;
-            }
-        }
-
-        if (this.inventoryContext) {
-            this.inventoryContext.fileRemoved(id, calc);
-        }
-
-        if (this.menuContext) {
-            this.menuContext.fileRemoved(id, calc);
-        }
-
-        this.onFileRemoved.invoke(null);
-    }
+    //     this.onFileRemoved.invoke(null);
+    // }
 
     private _sceneBackgroundUpdate() {
         if (this._contextBackground) {

@@ -31,6 +31,7 @@ import { UserMeshDecorator } from './decorators/UserMeshDecorator';
 import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
 import { appManager } from '../AppManager';
 import { DebugObjectManager } from './DebugObjectManager';
+import { Simulation3D } from './Simulation3D';
 
 /**
  * Defines a class that is able to display Aux files.
@@ -50,6 +51,11 @@ export class AuxFile3D extends GameObject {
      * The context group that this visualization belongs to.
      */
     contextGroup: ContextGroup3D;
+
+    /**
+     * The simulation that this file belongs to.
+     */
+    simulation3D: Simulation3D;
 
     /**
      * The file for the mesh.
