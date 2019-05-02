@@ -9,6 +9,7 @@ import {
     convertToFormulaObject,
     DROP_ANY_IN_INVENTORY_ACTION_NAME,
     DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME,
+    isPickupable,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import GameView from '../../GameView/GameView';
@@ -49,7 +50,10 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
         const vueElement = Input.getVueParent(targetData.inputOver);
 
         if (vueElement) {
-            if (vueElement instanceof InventoryFile) {
+            if (
+                vueElement instanceof InventoryFile &&
+                isPickupable(calc, this._file)
+            ) {
                 if (!vueElement.file) {
                     // Over empty slot, update the files context and context position to match the slot's index.
                     if (this._context !== vueElement.context) {

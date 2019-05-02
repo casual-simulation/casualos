@@ -46,6 +46,7 @@ import {
     getFileLabelAnchor,
     formatValue,
     isContextMovable,
+    isPickupable,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
@@ -1350,6 +1351,28 @@ describe('FileCalculations', () => {
         it('should return false if the file is not mergeable', () => {
             const file1 = createFile(undefined, { 'aux.mergeable': false });
             const update1 = isMergeable(
+                createCalculationContext([file1]),
+                file1
+            );
+
+            expect(update1).toBe(false);
+        });
+    });
+
+    describe('isPickupable()', () => {
+        it('should return true if the file is pickupable', () => {
+            const file1 = createFile(undefined, { 'aux.pickupable': true });
+            const update1 = isPickupable(
+                createCalculationContext([file1]),
+                file1
+            );
+
+            expect(update1).toBe(true);
+        });
+
+        it('should return false if the file is not pickupable', () => {
+            const file1 = createFile(undefined, { 'aux.pickupable': false });
+            const update1 = isPickupable(
                 createCalculationContext([file1]),
                 file1
             );
