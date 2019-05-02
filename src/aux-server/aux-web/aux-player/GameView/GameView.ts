@@ -67,7 +67,7 @@ import { GridChecker } from '../../shared/scene/grid/GridChecker';
 import { PlayerSimulation3D } from '../scene/PlayerSimulation3D';
 import { Simulation } from '../../shared/Simulation';
 import { MenuItem } from '../MenuContext';
-import { SimulationItem } from '../SimulationContext';
+import SimulationItem from '../SimulationContext';
 
 @Component({
     components: {
@@ -168,39 +168,6 @@ export default class GameView extends Vue implements IGameView {
             }
         });
         return items;
-    }
-
-    get sims() {
-        let items: SimulationItem[] = [];
-        this.simulations.forEach(sim => {
-            if (sim.simulationContext) {
-                for (let i = 0; i < sim.simulationContext.items.length; i++) {
-                    items[i] = sim.simulationContext.items[i];
-                }
-            }
-        });
-
-        items = uniqBy(items, i => i.simulationToLoad);
-        appManager.simulationManager.updateSimulations([
-            appManager.user.channelId,
-            ...items.map(i => i.simulationToLoad),
-        ]);
-
-        return items;
-    }
-
-    @Watch('sims')
-    onSimsUpdated() {
-        this.removeSidebarGroup('simulations');
-        this.sims.forEach(s => {
-            this.addSidebarItem(
-                s.simulationToLoad,
-                s.simulationToLoad,
-                () => {},
-                undefined,
-                'simulations'
-            );
-        });
     }
 
     // get fileManager() {
@@ -362,16 +329,16 @@ export default class GameView extends Vue implements IGameView {
                 .subscribe()
         );
 
-        this.addSidebarItem('add_simulation', 'Add Simulation', async () => {
-            console.log('[GameView] Add simulation!');
-            const primarySim = appManager.simulationManager.primary;
-            await primarySim.helper.createFile(undefined, {
-                [primarySim.helper.userFile.tags[
-                    'aux._userSimulationsContext'
-                ]]: true,
-                ['aux.simulation']: 'test',
-            });
-        });
+        // this.addSidebarItem('add_simulation', 'Add Simulation', async () => {
+        //     console.log('[GameView] Add simulation!');
+        //     const primarySim = appManager.simulationManager.primary;
+        //     await primarySim.helper.createFile(undefined, {
+        //         [primarySim.helper.userFile.tags[
+        //             'aux._userSimulationsContext'
+        //         ]]: true,
+        //         ['aux.simulation']: 'test',
+        //     });
+        // });
     }
 
     private _simulationAdded(sim: Simulation) {
@@ -380,6 +347,11 @@ export default class GameView extends Vue implements IGameView {
         sim3D.onFileAdded.addListener(this.onFileAdded.invoke);
         sim3D.onFileRemoved.addListener(this.onFileRemoved.invoke);
         sim3D.onFileUpdated.addListener(this.onFileUpdated.invoke);
+
+        sim3D.simulationContext.itemsUpdated.subscribe(() => {
+            this._onSimsUpdated();
+        });
+
         this.simulations.push(sim3D);
         this._scene.add(sim3D);
     }
@@ -400,6 +372,24 @@ export default class GameView extends Vue implements IGameView {
         }
     }
 
+    private _onSimsUpdated() {
+        let items: SimulationItem[] = [];
+        this.simulations.forEach(sim => {
+            if (sim.simulationContext) {
+                for (let i = 0; i < sim.simulationContext.items.length; i++) {
+                    items[i] = sim.simulationContext.items[i];
+                }
+            }
+        });
+
+        items = uniqBy(items, i => i.simulationToLoad);
+        // TODO:
+        appManager.simulationManager.updateSimulations([
+            appManager.user.channelId,
+            ...items.map(i => i.simulationToLoad),
+        ]);
+    }
+
     public beforeDestroy() {
         window.removeEventListener('resize', this._handleResize);
         window.removeEventListener(
@@ -409,7 +399,6 @@ export default class GameView extends Vue implements IGameView {
         this.removeSidebarItem('enable_xr');
         this.removeSidebarItem('disable_xr');
         this.removeSidebarItem('debug_mode');
-        this.removeSidebarItem('add_simulation');
         this.removeSidebarGroup('simulations');
         this._input.dispose();
 

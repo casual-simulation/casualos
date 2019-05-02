@@ -15,11 +15,12 @@ import {
 import { remove, sortBy } from 'lodash';
 import { getOptionalValue } from '../shared/SharedUtils';
 import { PlayerSimulation3D } from './scene/PlayerSimulation3D';
+import { Subject, Observable } from 'rxjs';
 
 /**
  * Defines an interface for an item that is in a user's menu.
  */
-export interface SimulationItem {
+export default interface SimulationItem {
     file: AuxFile;
     simulation: PlayerSimulation3D;
     simulationToLoad: string;
@@ -51,6 +52,14 @@ export class SimulationContext {
      */
     items: SimulationItem[] = [];
 
+    /**
+     * Gets an observable that resolves whenever this simulation's items are updated.
+     */
+    get itemsUpdated(): Observable<void> {
+        return this._itemsUpdated;
+    }
+
+    private _itemsUpdated: Subject<void>;
     private _itemsDirty: boolean;
 
     constructor(simulation: PlayerSimulation3D, context: string) {
@@ -60,6 +69,7 @@ export class SimulationContext {
         this.simulation = simulation;
         this.context = context;
         this.files = [];
+        this._itemsUpdated = new Subject<void>();
     }
 
     /**
@@ -119,7 +129,9 @@ export class SimulationContext {
         }
     }
 
-    dispose(): void {}
+    dispose(): void {
+        this._itemsUpdated.unsubscribe();
+    }
 
     private _addFile(file: AuxFile, calc: FileCalculationContext) {
         this.files.push(file);
@@ -154,5 +166,7 @@ export class SimulationContext {
                 context: this.context,
             };
         });
+
+        this._itemsUpdated.next();
     }
 }

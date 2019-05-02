@@ -35,6 +35,12 @@
                         {{ getUser().isGuest ? 'Login' : 'Logout' }}
                     </span>
                 </md-list-item>
+                <md-list-item @click="addSimulation()">
+                    <span class="md-list-item-text">Add Simulation</span>
+                </md-list-item>
+                <md-list-item v-for="simulation in simulations" :key="simulation">
+                    <span class="md-list-item-text">{{ simulation }}</span>
+                </md-list-item>
                 <md-list-item @click.right="toggleOnlineOffline()">
                     <md-icon id="forced-offline-error" v-if="forcedOffline()">error</md-icon>
                     <md-icon id="synced-checkmark" v-else-if="synced">cloud_done</md-icon>
@@ -97,6 +103,14 @@
                 <md-button class="md-primary" @click="hideQRCodeScanner()">Close</md-button>
             </md-dialog-actions>
         </md-dialog>
+
+        <md-dialog-prompt
+            :md-active.sync="showAddSimulation"
+            v-model="newSimulation"
+            md-title="Add Simulation"
+            md-confirm-text="Add"
+            @md-confirm="finishAddSimulation"
+        />
 
         <md-dialog-confirm
             :md-active.sync="showConfirmDialog"

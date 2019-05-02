@@ -95,6 +95,21 @@ export default class App extends Vue {
      */
     extraItems: SidebarItem[] = [];
 
+    /**
+     * The list of simulations that are in the app.
+     */
+    simulations: string[] = [];
+
+    /**
+     * Whether to show the add simulation dialog.
+     */
+    showAddSimulation: boolean = false;
+
+    /**
+     * The ID of the simulation to add.
+     */
+    newSimulation: string = '';
+
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
 
@@ -342,6 +357,21 @@ export default class App extends Vue {
         this._superAction(ON_QR_CODE_SCANNED_ACTION_NAME, code);
     }
 
+    addSimulation() {
+        this.showAddSimulation = true;
+    }
+
+    async finishAddSimulation(id: string) {
+        console.log('[App] Add simulation!');
+        const primarySim = appManager.simulationManager.primary;
+        await primarySim.helper.createFile(undefined, {
+            [primarySim.helper.userFile.tags[
+                'aux._userSimulationsContext'
+            ]]: true,
+            ['aux.simulation']: id,
+        });
+    }
+
     private _simulationAdded(simulation: Simulation) {
         let subs: SubscriptionLike[] = [];
 
@@ -370,6 +400,7 @@ export default class App extends Vue {
         );
 
         this._simulationSubs.set(simulation, subs);
+        this.simulations.push(simulation.id);
     }
 
     private _simulationRemoved(simulation: Simulation) {
@@ -382,6 +413,11 @@ export default class App extends Vue {
         }
 
         this._simulationSubs.delete(simulation);
+
+        const index = this.simulations.indexOf(simulation.id);
+        if (index >= 0) {
+            this.simulations.splice(index, 0);
+        }
     }
 
     /**
