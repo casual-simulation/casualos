@@ -23,9 +23,11 @@ import QRCode from '@chenfengyuan/vue-qrcode';
 import CubeIcon from '../public/icons/Cube.svg';
 import HexIcon from '../public/icons/Hexagon.svg';
 import { QrcodeStream } from 'vue-qrcode-reader';
+import { Simulation } from '../../shared/Simulation';
 
 export interface SidebarItem {
     id: string;
+    group: string;
     text: string;
     icon: string;
     click: () => void;
@@ -97,6 +99,7 @@ export default class App extends Vue {
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
 
     private _subs: SubscriptionLike[] = [];
+    private _simulationSubs: Map<Simulation, SubscriptionLike[]> = new Map();
 
     get version() {
         return appManager.version.latestTaggedVersion;
@@ -117,14 +120,27 @@ export default class App extends Vue {
         id: string,
         text: string,
         click: () => void,
-        icon: string = null
+        icon: string = null,
+        group: string = null
     ) {
-        this.extraItems.push({
-            id: id,
-            text: text,
-            icon: icon,
-            click: click,
-        });
+        const index = findIndex(this.extraItems, i => i.id === id);
+        if (index >= 0) {
+            this.extraItems[index] = {
+                id: id,
+                group: group,
+                text: text,
+                icon: icon,
+                click: click,
+            };
+        } else {
+            this.extraItems.push({
+                id: id,
+                group: group,
+                text: text,
+                icon: icon,
+                click: click,
+            });
+        }
     }
 
     /**
@@ -139,6 +155,20 @@ export default class App extends Vue {
         }
     }
 
+    /**
+     * Removes all the sidebar items with the given group.
+     * @param id
+     */
+    @Provide()
+    removeSidebarGroup(group: string) {
+        for (let i = this.extraItems.length - 1; i >= 0; i--) {
+            const item = this.extraItems[i];
+            if (item.group === group) {
+                this.extraItems.splice(i, 1);
+            }
+        }
+    }
+
     url() {
         return location.href;
     }
@@ -150,6 +180,7 @@ export default class App extends Vue {
 
     created() {
         this._subs = [];
+        this._simulationSubs = new Map();
         this._subs.push(
             appManager.updateAvailableObservable.subscribe(updateAvailable => {
                 if (updateAvailable) {
@@ -157,6 +188,15 @@ export default class App extends Vue {
                     this._showUpdateAvailable();
                 }
             })
+        );
+
+        this._subs.push(
+            appManager.simulationManager.simulationAdded
+                .pipe(tap(sim => this._simulationAdded(sim)))
+                .subscribe(),
+            appManager.simulationManager.simulationRemoved
+                .pipe(tap(sim => this._simulationRemoved(sim)))
+                .subscribe()
         );
 
         this._subs.push(
@@ -197,30 +237,30 @@ export default class App extends Vue {
                     )
                 );
 
-                subs.push(
-                    fileManager.helper.localEvents.subscribe(e => {
-                        if (e.name === 'show_toast') {
-                            this.snackbar = {
-                                message: e.message,
-                                visible: true,
-                            };
-                        } else if (e.name === 'show_qr_code') {
-                            if (this.showQRScanner !== e.open) {
-                                this.showQRScanner = e.open;
-                                if (e.open) {
-                                    appManager.simulationManager.primary.helper.action(
-                                        ON_QR_CODE_SCANNER_OPENED_ACTION_NAME,
-                                        null
-                                    );
-                                } else {
-                                    // Don't need to send an event for closing
-                                    // because onQrCodeScannerClosed() gets triggered
-                                    // automatically.
-                                }
-                            }
-                        }
-                    })
-                );
+                // subs.push(
+                //     fileManager.helper.localEvents.subscribe(e => {
+                //         if (e.name === 'show_toast') {
+                //             this.snackbar = {
+                //                 message: e.message,
+                //                 visible: true,
+                //             };
+                //         } else if (e.name === 'show_qr_code') {
+                //             if (this.showQRScanner !== e.open) {
+                //                 this.showQRScanner = e.open;
+                //                 if (e.open) {
+                //                     appManager.simulationManager.primary.helper.action(
+                //                         ON_QR_CODE_SCANNER_OPENED_ACTION_NAME,
+                //                         null
+                //                     );
+                //                 } else {
+                //                     // Don't need to send an event for closing
+                //                     // because onQrCodeScannerClosed() gets triggered
+                //                     // automatically.
+                //                 }
+                //             }
+                //         }
+                //     })
+                // );
 
                 subs.push(
                     new Subscription(() => {
@@ -320,18 +360,64 @@ export default class App extends Vue {
     }
 
     async onQrCodeScannerClosed() {
-        await appManager.simulationManager.primary.helper.action(
-            ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME,
-            null
-        );
+        this._superAction(ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME);
     }
 
     async onQRCodeScanned(code: string) {
-        await appManager.simulationManager.primary.helper.action(
-            ON_QR_CODE_SCANNED_ACTION_NAME,
-            null,
-            code
+        this._superAction(ON_QR_CODE_SCANNED_ACTION_NAME, code);
+    }
+
+    private _simulationAdded(simulation: Simulation) {
+        let subs: SubscriptionLike[] = [];
+
+        subs.push(
+            simulation.helper.localEvents.subscribe(e => {
+                if (e.name === 'show_toast') {
+                    this.snackbar = {
+                        message: e.message,
+                        visible: true,
+                    };
+                } else if (e.name === 'show_qr_code') {
+                    if (this.showQRScanner !== e.open) {
+                        this.showQRScanner = e.open;
+                        if (e.open) {
+                            this._superAction(
+                                ON_QR_CODE_SCANNER_OPENED_ACTION_NAME
+                            );
+                        } else {
+                            // Don't need to send an event for closing
+                            // because onQrCodeScannerClosed() gets triggered
+                            // automatically.
+                        }
+                    }
+                }
+            })
         );
+
+        this._simulationSubs.set(simulation, subs);
+    }
+
+    private _simulationRemoved(simulation: Simulation) {
+        const subs = this._simulationSubs.get(simulation);
+
+        if (subs) {
+            subs.forEach(s => {
+                s.unsubscribe();
+            });
+        }
+
+        this._simulationSubs.delete(simulation);
+    }
+
+    /**
+     * Sends the given event and argument to every loaded simulation.
+     * @param eventName The event to send.
+     * @param arg The argument to send.
+     */
+    private _superAction(eventName: string, arg?: any) {
+        appManager.simulationManager.simulations.forEach(sim => {
+            sim.helper.action(ON_QR_CODE_SCANNER_OPENED_ACTION_NAME, null, arg);
+        });
     }
 
     private _showConnectionLost() {

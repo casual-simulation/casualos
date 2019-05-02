@@ -11,6 +11,7 @@ import { InventoryContext } from '../InventoryContext';
 import { MenuContext } from '../MenuContext';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { doesFileDefinePlayerContext } from '../PlayerUtils';
+import { SimulationContext } from '../SimulationContext';
 
 export class PlayerSimulation3D extends Simulation3D {
     /**
@@ -27,6 +28,7 @@ export class PlayerSimulation3D extends Simulation3D {
     context: string;
     inventoryContext: InventoryContext = null;
     menuContext: MenuContext = null;
+    simulationContext: SimulationContext = null;
 
     constructor(context: string, gameView: IGameView, simulation: Simulation) {
         super(gameView, simulation);
@@ -76,6 +78,23 @@ export class PlayerSimulation3D extends Simulation3D {
                                 userMenuContextValue
                             );
                         }
+
+                        const userSimulationContextValue =
+                            file.tags['aux._userSimulationsContext'];
+                        if (
+                            !this.simulationContext ||
+                            this.simulationContext.context !==
+                                userSimulationContextValue
+                        ) {
+                            this.simulationContext = new SimulationContext(
+                                this,
+                                userSimulationContextValue
+                            );
+                            console.log(
+                                '[PlayerSimulation3D] User changed simulation context to: ',
+                                userSimulationContextValue
+                            );
+                        }
                     })
                 )
                 .subscribe()
@@ -101,6 +120,7 @@ export class PlayerSimulation3D extends Simulation3D {
         super._frameUpdateCore(calc);
         this.inventoryContext.frameUpdate(calc);
         this.menuContext.frameUpdate(calc);
+        this.simulationContext.frameUpdate(calc);
     }
 
     protected _createContext(calc: FileCalculationContext, file: AuxObject) {
@@ -190,6 +210,7 @@ export class PlayerSimulation3D extends Simulation3D {
 
         await this.inventoryContext.fileAdded(file, calc);
         await this.menuContext.fileAdded(file, calc);
+        await this.simulationContext.fileAdded(file, calc);
 
         // Change the user's context after first adding and updating it
         // because the callback for file_updated was happening before we
@@ -213,11 +234,13 @@ export class PlayerSimulation3D extends Simulation3D {
         await super._fileUpdatedCore(calc, file);
         await this.inventoryContext.fileUpdated(file, [], calc);
         await this.menuContext.fileUpdated(file, [], calc);
+        await this.simulationContext.fileUpdated(file, [], calc);
     }
 
     protected _fileRemovedCore(calc: FileCalculationContext, file: string) {
         super._fileRemovedCore(calc, file);
         this.inventoryContext.fileRemoved(file, calc);
         this.menuContext.fileRemoved(file, calc);
+        this.simulationContext.fileRemoved(file, calc);
     }
 }

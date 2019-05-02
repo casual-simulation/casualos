@@ -52,7 +52,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         return this._simulation3D.gameView;
     }
 
-    protected get simulation() {
+    get simulation() {
         return this._simulation3D.simulation;
     }
 

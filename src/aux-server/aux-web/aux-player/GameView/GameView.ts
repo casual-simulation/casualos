@@ -22,7 +22,7 @@ import * as webvrui from 'webvr-ui';
 
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Inject, Provide, Prop } from 'vue-property-decorator';
+import { Inject, Provide, Prop, Watch } from 'vue-property-decorator';
 import { SubscriptionLike } from 'rxjs';
 import { concatMap, tap, flatMap as rxFlatMap } from 'rxjs/operators';
 
@@ -38,7 +38,7 @@ import { Time } from '../../shared/scene/Time';
 import { Input, InputType } from '../../shared/scene/Input';
 import { InputVR } from '../../shared/scene/InputVR';
 import { appManager } from '../../shared/AppManager';
-import { find, flatMap } from 'lodash';
+import { find, flatMap, uniqBy } from 'lodash';
 import App from '../App/App';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { IGameView } from '../../shared/IGameView';
@@ -67,6 +67,7 @@ import { GridChecker } from '../../shared/scene/grid/GridChecker';
 import { PlayerSimulation3D } from '../scene/PlayerSimulation3D';
 import { Simulation } from '../../shared/Simulation';
 import { MenuItem } from '../MenuContext';
+import { SimulationItem } from '../SimulationContext';
 
 @Component({
     components: {
@@ -120,6 +121,7 @@ export default class GameView extends Vue implements IGameView {
 
     @Inject() addSidebarItem: App['addSidebarItem'];
     @Inject() removeSidebarItem: App['removeSidebarItem'];
+    @Inject() removeSidebarGroup: App['removeSidebarGroup'];
     @Prop() context: string;
 
     @Provide() fileRenderer: FileRenderer = new FileRenderer();
@@ -166,6 +168,39 @@ export default class GameView extends Vue implements IGameView {
             }
         });
         return items;
+    }
+
+    get sims() {
+        let items: SimulationItem[] = [];
+        this.simulations.forEach(sim => {
+            if (sim.simulationContext) {
+                for (let i = 0; i < sim.simulationContext.items.length; i++) {
+                    items[i] = sim.simulationContext.items[i];
+                }
+            }
+        });
+
+        items = uniqBy(items, i => i.simulationToLoad);
+        appManager.simulationManager.updateSimulations([
+            appManager.user.channelId,
+            ...items.map(i => i.simulationToLoad),
+        ]);
+
+        return items;
+    }
+
+    @Watch('sims')
+    onSimsUpdated() {
+        this.removeSidebarGroup('simulations');
+        this.sims.forEach(s => {
+            this.addSidebarItem(
+                s.simulationToLoad,
+                s.simulationToLoad,
+                () => {},
+                undefined,
+                'simulations'
+            );
+        });
     }
 
     // get fileManager() {
@@ -316,6 +351,17 @@ export default class GameView extends Vue implements IGameView {
                 )
                 .subscribe()
         );
+
+        this.addSidebarItem('add_simulation', 'Add Simulation', async () => {
+            console.log('[GameView] Add simulation!');
+            const primarySim = appManager.simulationManager.primary;
+            await primarySim.helper.createFile(undefined, {
+                [primarySim.helper.userFile.tags[
+                    'aux._userSimulationsContext'
+                ]]: true,
+                ['aux.simulation']: 'test',
+            });
+        });
     }
 
     private _simulationAdded(sim: Simulation) {
@@ -347,6 +393,8 @@ export default class GameView extends Vue implements IGameView {
         this.removeSidebarItem('enable_xr');
         this.removeSidebarItem('disable_xr');
         this.removeSidebarItem('debug_mode');
+        this.removeSidebarItem('add_simulation');
+        this.removeSidebarGroup('simulations');
         this._input.dispose();
 
         if (this._fileSubs) {

@@ -18,6 +18,7 @@ import InventoryFile from '../InventoryFile/InventoryFile';
 import { PlayerInventoryFileClickOperation } from './ClickOperation/PlayerInventoryFileClickOperation';
 import { appManager } from '../../shared/AppManager';
 import { PlayerSimulation3D } from '../scene/PlayerSimulation3D';
+import { Simulation } from '../../shared/Simulation';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class IGameView
@@ -95,14 +96,21 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         };
     }
 
-    protected _findHoveredFile(input: Input) {
+    protected _findHoveredFile(input: Input): [File, Simulation] {
         if (input.isMouseFocusingAny(this._gameView.getUIHtmlElements())) {
             const element = input.getTargetData().inputOver;
             const vueElement = Input.getVueParent(element);
 
             if (vueElement instanceof InventoryFile) {
                 // handle hover
-                return vueElement.file;
+                if (vueElement.file) {
+                    return [
+                        vueElement.file,
+                        vueElement.item.simulation.simulation,
+                    ];
+                } else {
+                    return [null, null];
+                }
             }
         }
         return super._findHoveredFile(input);

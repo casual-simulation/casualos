@@ -35,7 +35,7 @@ export abstract class BaseFileClickOperation implements IOperation {
         return this._simulation3D.gameView;
     }
 
-    protected get simulation() {
+    get simulation() {
         return this._simulation3D.simulation;
     }
 

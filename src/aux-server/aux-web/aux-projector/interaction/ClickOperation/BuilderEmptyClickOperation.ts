@@ -21,6 +21,10 @@ export class BuilderEmptyClickOperation implements IOperation {
     private _finished: boolean;
     private _startScreenPos: Vector2;
 
+    get simulation() {
+        return appManager.simulationManager.primary;
+    }
+
     constructor(gameView: GameView, interaction: BuilderInteractionManager) {
         this._gameView = gameView;
         this._interaction = interaction;

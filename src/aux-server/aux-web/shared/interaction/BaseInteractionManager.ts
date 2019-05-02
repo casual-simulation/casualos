@@ -32,6 +32,7 @@ import {
 } from '../scene/CameraRigFactory';
 import { TapCodeManager } from './TapCodeManager';
 import InventoryFile from 'aux-web/aux-player/InventoryFile/InventoryFile';
+import { Simulation } from '../Simulation';
 
 export abstract class BaseInteractionManager {
     protected _gameView: IGameView;
@@ -41,6 +42,7 @@ export abstract class BaseInteractionManager {
     protected _tapCodeManager: TapCodeManager;
     protected _maxTapCodeLength: number;
     protected _hoveredObject: File;
+    protected _hoveredSimulation: Simulation;
 
     private _operations: IOperation[];
 
@@ -98,9 +100,12 @@ export abstract class BaseInteractionManager {
     }
 
     update(): void {
-        const calc = appManager.simulationManager.primary.helper.createContext();
+        // const calc = appManager.simulationManager.primary.helper.createContext();
         // Update active operations and dispose of any that are finished.
         this._operations = this._operations.filter(o => {
+            const calc = o.simulation
+                ? o.simulation.helper.createContext()
+                : null;
             o.update(calc);
 
             if (o.isFinished()) {
@@ -226,31 +231,36 @@ export abstract class BaseInteractionManager {
             if (this._tapCodeManager.code.length >= this._maxTapCodeLength) {
                 const code = this._tapCodeManager.code;
                 console.log('[InteractionManager] TapCode: ', code);
-                appManager.simulationManager.primary.helper.action(
-                    'onTapCode',
-                    null,
-                    code
-                );
+                appManager.simulationManager.simulations.forEach(sim => {
+                    sim.helper.action('onTapCode', null, code);
+                });
                 this._tapCodeManager.trim(this._maxTapCodeLength - 1);
             }
 
             if (input.currentInputType === InputType.Mouse) {
-                const file = this._findHoveredFile(input);
+                const [file, simulation] = this._findHoveredFile(input);
 
                 if (file !== this._hoveredObject) {
                     if (this._hoveredObject) {
-                        this.handlePointerExit(this._hoveredObject);
+                        this.handlePointerExit(
+                            this._hoveredObject,
+                            this._hoveredSimulation
+                        );
                     }
                     this._hoveredObject = file;
+                    this._hoveredSimulation = simulation;
                     if (this._hoveredObject) {
-                        this.handlePointerEnter(this._hoveredObject);
+                        this.handlePointerEnter(
+                            this._hoveredObject,
+                            this._hoveredSimulation
+                        );
                     }
                 }
             }
         }
     }
 
-    protected _findHoveredFile(input: Input): File {
+    protected _findHoveredFile(input: Input): [File, Simulation] {
         const screenPos = input.getMouseScreenPos();
         const raycastResult = Physics.raycastAtScreenPos(
             screenPos,
@@ -262,22 +272,21 @@ export abstract class BaseInteractionManager {
         const gameObject = hit ? this.findGameObjectObjectForHit(hit) : null;
 
         if (gameObject instanceof AuxFile3D) {
-            return gameObject.file;
+            return [
+                gameObject.file,
+                gameObject.contextGroup.simulation.simulation,
+            ];
         } else {
-            return null;
+            return [null, null];
         }
     }
 
-    handlePointerEnter(file: File) {
-        appManager.simulationManager.primary.helper.action('onPointerEnter', [
-            file,
-        ]);
+    handlePointerEnter(file: File, simulation: Simulation) {
+        simulation.helper.action('onPointerEnter', [file]);
     }
 
-    handlePointerExit(file: File) {
-        appManager.simulationManager.primary.helper.action('onPointerExit', [
-            file,
-        ]);
+    handlePointerExit(file: File, simulation: Simulation) {
+        simulation.helper.action('onPointerExit', [file]);
     }
 
     showContextMenu(calc: FileCalculationContext) {
@@ -332,13 +341,13 @@ export abstract class BaseInteractionManager {
     }
 
     async selectFile(file: AuxFile3D) {
-        appManager.simulationManager.primary.filePanel.search = '';
+        file.contextGroup.simulation.simulation.filePanel.search = '';
         const shouldMultiSelect = this._gameView
             .getInput()
             .getKeyHeld('Control');
-        appManager.simulationManager.primary.recent.addFileDiff(file.file);
-        appManager.simulationManager.primary.recent.selectedRecentFile = null;
-        await appManager.simulationManager.primary.selection.selectFile(
+        file.contextGroup.simulation.simulation.recent.addFileDiff(file.file);
+        file.contextGroup.simulation.simulation.recent.selectedRecentFile = null;
+        await file.contextGroup.simulation.simulation.selection.selectFile(
             <AuxFile>file.file,
             shouldMultiSelect
         );

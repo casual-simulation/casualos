@@ -10,6 +10,7 @@ import {
     fileContextSortOrder,
     hasValue,
     isSimulation,
+    getFileSimulation,
 } from '@casual-simulation/aux-common';
 import { remove, sortBy } from 'lodash';
 import { getOptionalValue } from '../shared/SharedUtils';
@@ -21,6 +22,7 @@ import { PlayerSimulation3D } from './scene/PlayerSimulation3D';
 export interface SimulationItem {
     file: AuxFile;
     simulation: PlayerSimulation3D;
+    simulationToLoad: string;
     context: string;
 }
 
@@ -88,7 +90,9 @@ export class SimulationContext {
         calc: FileCalculationContext
     ) {
         const isInContext = !!this.files.find(f => f.id == file.id);
-        const shouldBeInContext = isFileInContext(calc, file, this.context);
+        const shouldBeInContext =
+            isFileInContext(calc, file, this.context) &&
+            isSimulation(calc, file);
 
         if (!isInContext && shouldBeInContext) {
             this._addFile(file, calc);
@@ -146,6 +150,7 @@ export class SimulationContext {
             return {
                 file: f,
                 simulation: this.simulation,
+                simulationToLoad: getFileSimulation(calc, f),
                 context: this.context,
             };
         });

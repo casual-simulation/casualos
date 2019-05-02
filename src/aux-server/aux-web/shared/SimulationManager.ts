@@ -49,6 +49,27 @@ export default class SimulationManager<TSimulation extends Initable> {
     }
 
     /**
+     * Updates the list of loaded simulations to
+     * contain only the given list of IDs.
+     * @param ids The simulations that should be loaded.
+     */
+    async updateSimulations(ids: string[]) {
+        for (let i = 0; i < ids.length; i++) {
+            const id = ids[i];
+
+            if (!this.simulations.has(id)) {
+                await this.addSimulation(id);
+            }
+        }
+
+        for (let [id, sim] of this.simulations) {
+            if (!ids.find(i => i === id)) {
+                await this.removeSimulation(id);
+            }
+        }
+    }
+
+    /**
      * Sets the primary simulation.
      * @param id The ID to load.
      * @param loadingCallback The loading progress callback to use.
