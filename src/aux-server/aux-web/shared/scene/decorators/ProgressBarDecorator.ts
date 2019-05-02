@@ -6,6 +6,7 @@ import {
     calculateFileValue,
     getFileShape,
     FileShape,
+    FileLabelAnchor,
 } from '@casual-simulation/aux-common';
 import {
     Mesh,
@@ -17,6 +18,8 @@ import {
     Vector3,
     MeshToonMaterial,
     Sprite,
+    Euler,
+    Math as ThreeMath,
 } from 'three';
 import {
     createCube,
@@ -27,6 +30,7 @@ import {
     createSprite,
     createPlane,
     setLayer,
+    calculateAnchorPosition,
 } from '../SceneUtils';
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -44,6 +48,8 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
 
     progressNum: number;
     progressBarHeight = 0.2;
+
+    private _anchor: FileLabelAnchor = 'top';
 
     constructor(file3D: AuxFile3D) {
         super(file3D);
@@ -175,6 +181,7 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
 
         // , , less goes right
         this.container.position.set(0, 1.2, 0);
+
         this.file3D.display.add(this.container);
 
         this.meshBackground = createPlane(1);
@@ -186,6 +193,79 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
         this.container.add(this.mesh);
         this.file3D.colliders.push(this.mesh);
 
+        const [pos, rotation] = this.calculateProgressAnchorPosition();
+
+        this.container.position.copy(pos);
+        this.container.rotation.copy(rotation);
+
         this.onMeshUpdated.invoke(this);
+    }
+
+    private calculateProgressAnchorPosition(): [Vector3, Euler] {
+        // // Position the mesh some distance above the given object's bounding box.
+        let targetSize = new Vector3(1, 1, 1);
+        let targetCenter = new Vector3(0, 0.5, 0);
+
+        const positionMultiplier = 0.6;
+
+        if (
+            this.file3D.file &&
+            this.file3D.file.tags['aux.progressBar.anchor']
+        ) {
+            this._anchor = this.file3D.file.tags['aux.progressBar.anchor'];
+        }
+
+        if (this._anchor === 'floating') {
+            //let posOffset = this.container.position.clone().sub(bottomCenter);
+            let pos = new Vector3(
+                targetCenter.x,
+                targetCenter.y + targetSize.y * positionMultiplier + 0.1,
+                targetCenter.z
+            );
+
+            return [pos, new Euler(0, ThreeMath.degToRad(0), 0)];
+        } else if (this._anchor === 'front') {
+            let pos = new Vector3(
+                targetCenter.x,
+                targetCenter.y,
+                targetCenter.z + targetSize.z * positionMultiplier
+            );
+
+            return [pos, new Euler(ThreeMath.degToRad(0), 0, 0)];
+        } else if (this._anchor === 'back') {
+            let pos = new Vector3(
+                targetCenter.x,
+                targetCenter.y,
+                targetCenter.z - targetSize.z * positionMultiplier
+            );
+
+            return [pos, new Euler(0, ThreeMath.degToRad(180), 0)];
+        } else if (this._anchor === 'left') {
+            let pos = new Vector3(
+                targetCenter.x + targetSize.x * positionMultiplier,
+                targetCenter.y,
+                targetCenter.z
+            );
+
+            return [pos, new Euler(0, ThreeMath.degToRad(90), 0)];
+        } else if (this._anchor === 'right') {
+            let pos = new Vector3(
+                targetCenter.x - targetSize.x * positionMultiplier,
+                targetCenter.y,
+                targetCenter.z
+            );
+
+            return [pos, new Euler(0, ThreeMath.degToRad(-90), 0)];
+        } else {
+            // default to top
+            let pos = new Vector3(
+                targetCenter.x,
+                targetCenter.y + targetSize.y * positionMultiplier + 0.1,
+                targetCenter.z
+            );
+
+            return [pos, new Euler(0, ThreeMath.degToRad(0), 0)];
+        }
+        return [targetCenter, new Euler()];
     }
 }
