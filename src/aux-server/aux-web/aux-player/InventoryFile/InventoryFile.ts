@@ -4,16 +4,16 @@ import { Inject, Watch, Prop } from 'vue-property-decorator';
 import { Object, AuxFile } from '@casual-simulation/aux-common';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { appManager } from '../../shared/AppManager';
+import { InventoryItem } from '../InventoryContext';
 
 @Component({
     components: {},
 })
 export default class InventoryFile extends Vue {
-    @Prop() file: AuxFile;
+    @Prop() item: InventoryItem;
     @Prop() slotIndex: number;
     @Prop({ default: false })
     selected: boolean;
-    @Prop() context: string;
 
     image: string = '';
     label: string = '';
@@ -21,6 +21,10 @@ export default class InventoryFile extends Vue {
     showImage: string = 'flex';
 
     @Inject() fileRenderer: FileRenderer;
+
+    get file(): AuxFile {
+        return this.item ? this.item.file : null;
+    }
 
     @Watch('file')
     private async _fileChanged(file: AuxFile) {

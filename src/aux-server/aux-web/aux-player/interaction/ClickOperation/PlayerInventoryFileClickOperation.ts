@@ -11,6 +11,7 @@ import GameView from '../../GameView/GameView';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import { appManager } from '../../../shared/AppManager';
 import { PlayerFileDragOperation } from '../DragOperation/PlayerFileDragOperation';
+import { InventoryItem } from 'aux-web/aux-player/InventoryContext';
 
 /**
  * New File Click Operation handles clicking of files that are in the file queue.
@@ -24,20 +25,19 @@ export class PlayerInventoryFileClickOperation extends BaseFileClickOperation {
     // The context that the file was in when click operation began.
     protected _context: string;
 
+    protected _item: InventoryItem;
+
     constructor(
         gameView: GameView,
         interaction: PlayerInteractionManager,
-        file: File,
-        context: string
+        item: InventoryItem
     ) {
-        super(gameView, interaction, file, null);
-        this._context = context;
+        super(gameView, interaction, item.file, null);
+        this._item = item;
     }
 
     protected _performClick(): void {
-        appManager.simulationManager.primary.helper.action('onClick', [
-            this._file,
-        ]);
+        this._item.simulation.helper.action('onClick', [this._file]);
     }
 
     protected _createDragOperation(): BaseFileDragOperation {

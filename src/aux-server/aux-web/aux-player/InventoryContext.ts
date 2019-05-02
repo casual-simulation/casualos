@@ -11,8 +11,18 @@ import {
 import { remove } from 'lodash';
 import { getOptionalValue } from '../shared/SharedUtils';
 import { appManager } from '../shared/AppManager';
+import { Simulation } from '../shared/Simulation';
 
 export const DEFAULT_INVENTORY_COUNT = 5;
+
+/**
+ * Defines an interface for inventory items.
+ */
+export interface InventoryItem {
+    file: AuxFile;
+    simulation: Simulation;
+    context: string;
+}
 
 /**
  * Inventory is a helper class to assist with managing the user's inventory context.
@@ -24,6 +34,11 @@ export class InventoryContext {
     context: string = null;
 
     /**
+     * The simulation that the context is for.
+     */
+    simulation: Simulation;
+
+    /**
      * All the files that are in this context.
      */
     files: AuxFile[] = [];
@@ -32,17 +47,17 @@ export class InventoryContext {
      * The files in this contexts mapped into the inventory slots.
      * Files are ordered left to right based on their x position in the context, starting at 0 and incrementing from there.
      */
-    slots: AuxFile[] = [];
+    slots: InventoryItem[] = [];
 
     /**
      * The file that is currently selected by the user.
      */
-    selectedFile: AuxFile = null;
+    selectedFile: InventoryItem = null;
 
     private _slotCount: number;
     private _slotsDirty: boolean;
 
-    constructor(context: string, slotCount?: number) {
+    constructor(simulation: Simulation, context: string, slotCount?: number) {
         if (context == null || context == undefined) {
             throw new Error('Inventory context cannot be null or undefined.');
         }
@@ -53,6 +68,7 @@ export class InventoryContext {
             );
         }
 
+        this.simulation = simulation;
         this.context = context;
         this.setSlotCount(getOptionalValue(slotCount, DEFAULT_INVENTORY_COUNT));
         this.files = [];
@@ -112,7 +128,7 @@ export class InventoryContext {
         }
     }
 
-    selectFile(file: AuxFile): void {
+    selectFile(file: InventoryItem): void {
         this.selectedFile = file;
     }
 
@@ -173,7 +189,11 @@ export class InventoryContext {
             });
 
             if (file) {
-                this.slots[x] = file;
+                this.slots[x] = {
+                    file,
+                    simulation: this.simulation,
+                    context: this.context,
+                };
             }
         }
     }

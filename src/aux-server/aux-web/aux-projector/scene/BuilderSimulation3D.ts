@@ -21,7 +21,7 @@ export class BuilderSimulation3D extends Simulation3D {
         return context;
     }
 
-    protected _fileUpdatedCore(
+    protected _shouldRemoveUpdatedFile(
         calc: FileCalculationContext,
         file: AuxObject,
         initialUpdate: boolean

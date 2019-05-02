@@ -33,6 +33,10 @@ export class PlayerSimulation3D extends Simulation3D {
 
         this.context = context;
         this._fileBackBuffer = new Map();
+    }
+
+    init() {
+        super.init();
 
         this._subs.push(
             this.simulation.watcher
@@ -48,6 +52,7 @@ export class PlayerSimulation3D extends Simulation3D {
                                 userInventoryContextValue
                         ) {
                             this.inventoryContext = new InventoryContext(
+                                this.simulation,
                                 userInventoryContextValue
                             );
                             console.log(
@@ -89,6 +94,11 @@ export class PlayerSimulation3D extends Simulation3D {
                 )
                 .subscribe()
         );
+    }
+
+    protected _frameUpdateCore(calc: FileCalculationContext) {
+        super._frameUpdateCore(calc);
+        this.inventoryContext.frameUpdate(calc);
     }
 
     protected _createContext(calc: FileCalculationContext, file: AuxObject) {
@@ -176,6 +186,8 @@ export class PlayerSimulation3D extends Simulation3D {
             })
         );
 
+        await this.inventoryContext.fileAdded(file, calc);
+
         // Change the user's context after first adding and updating it
         // because the callback for file_updated was happening before we
         // could call fileUpdated from fileAdded.
@@ -189,5 +201,18 @@ export class PlayerSimulation3D extends Simulation3D {
                 tags: { 'aux._userContext': this.context },
             });
         }
+    }
+
+    protected async _fileUpdatedCore(
+        calc: FileCalculationContext,
+        file: AuxObject
+    ) {
+        await super._fileUpdatedCore(calc, file);
+        await this.inventoryContext.fileUpdated(file, [], calc);
+    }
+
+    protected _fileRemovedCore(calc: FileCalculationContext, file: string) {
+        super._fileRemovedCore(calc, file);
+        this.inventoryContext.fileRemoved(file, calc);
     }
 }

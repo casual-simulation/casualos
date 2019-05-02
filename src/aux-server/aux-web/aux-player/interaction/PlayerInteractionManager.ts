@@ -54,12 +54,11 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     createHtmlElementClickOperation(element: HTMLElement): IOperation {
         const vueElement: any = Input.getVueParent(element);
         if (vueElement instanceof InventoryFile) {
-            if (vueElement.file) {
+            if (vueElement.item) {
                 let inventoryClickOperation = new PlayerInventoryFileClickOperation(
                     this._gameView,
                     this,
-                    vueElement.file,
-                    vueElement.context
+                    vueElement.item
                 );
                 return inventoryClickOperation;
             }

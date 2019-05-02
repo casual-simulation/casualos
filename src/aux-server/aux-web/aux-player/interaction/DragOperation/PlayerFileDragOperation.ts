@@ -54,13 +54,14 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
                 vueElement instanceof InventoryFile &&
                 isPickupable(calc, this._file)
             ) {
-                if (!vueElement.file) {
+                if (!vueElement.item) {
                     // Over empty slot, update the files context and context position to match the slot's index.
-                    if (this._context !== vueElement.context) {
-                        this._previousContext = this._context;
-                        this._context = vueElement.context;
-                        this._inInventory = true;
-                    }
+                    // TODO: Fix
+                    // if (this._context !== vueElement.item.context) {
+                    //     this._previousContext = this._context;
+                    //     this._context = vueElement.item.context;
+                    //     this._inInventory = true;
+                    // }
 
                     const x = vueElement.slotIndex;
                     const y = 0;

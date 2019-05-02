@@ -50,7 +50,7 @@ import { AuxFile3DDecoratorFactory } from '../../shared/scene/decorators/AuxFile
 import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
 import InventoryFile from '../InventoryFile/InventoryFile';
 import MenuFile from '../MenuFile/MenuFile';
-import { InventoryContext } from '../InventoryContext';
+import { InventoryContext, InventoryItem } from '../InventoryContext';
 import { doesFileDefinePlayerContext } from '../PlayerUtils';
 import { MenuContext } from '../MenuContext';
 import {
@@ -104,7 +104,7 @@ export default class GameView extends Vue implements IGameView {
         PerspectiveCamera | OrthographicCamera
     > = new ArgEvent<PerspectiveCamera | OrthographicCamera>();
 
-    private _simulations: Simulation3D[];
+    private simulations: PlayerSimulation3D[] = [];
 
     private _fileSubs: SubscriptionLike[];
     private _decoratorFactory: AuxFile3DDecoratorFactory;
@@ -142,16 +142,31 @@ export default class GameView extends Vue implements IGameView {
         return false;
     }
 
+    get inventory() {
+        let items: InventoryItem[] = [];
+
+        this.simulations.forEach(sim => {
+            if (sim.inventoryContext) {
+                for (let i = 0; i < sim.inventoryContext.slots.length; i++) {
+                    items[i] = sim.inventoryContext.slots[i];
+                }
+            }
+        });
+
+        return items;
+    }
+
     // get fileManager() {
     //     return appManager.simulationManager.primary;
     // }
 
     constructor() {
         super();
+        this.simulations = [];
     }
 
     public findFilesById(id: string): AuxFile3D[] {
-        return flatMap(flatMap(this._simulations, s => s.contexts), c =>
+        return flatMap(flatMap(this.simulations, s => s.contexts), c =>
             c.getFiles().filter(f => f.file.id === id)
         );
     }
@@ -190,10 +205,10 @@ export default class GameView extends Vue implements IGameView {
         return null;
     }
     public getSimulations(): Simulation3D[] {
-        return this._simulations;
+        return this.simulations;
     }
     public getContexts(): ContextGroup3D[] {
-        return flatMap(this._simulations, s => s.contexts);
+        return flatMap(this.simulations, s => s.contexts);
     }
 
     public setGridsVisible(visible: boolean) {
@@ -258,7 +273,7 @@ export default class GameView extends Vue implements IGameView {
         this._time = new Time();
         this._decoratorFactory = new AuxFile3DDecoratorFactory(this);
         this._fileSubs = [];
-        this._simulations = [];
+        this.simulations = [];
         this._setupScene();
         DebugObjectManager.init(this._time, this._scene);
         this._input = new Input(this);
@@ -293,17 +308,19 @@ export default class GameView extends Vue implements IGameView {
 
     private _simulationAdded(sim: Simulation) {
         const sim3D = new PlayerSimulation3D(this.context, this, sim);
-        this._simulations.push(sim3D);
+        sim3D.init();
+        this.simulations.push(sim3D);
         this._scene.add(sim3D);
     }
 
     private _simulationRemoved(sim: Simulation) {
-        const index = this._simulations.findIndex(
+        const index = this.simulations.findIndex(
             s => s.simulation.id === sim.id
         );
         if (index >= 0) {
-            const removed = this._simulations.splice(index, 1);
+            const removed = this.simulations.splice(index, 1);
             removed.forEach(s => {
+                s.unsubscribe();
                 this._scene.remove(s);
             });
         }
@@ -369,7 +386,7 @@ export default class GameView extends Vue implements IGameView {
         this._inputVR.update();
         this._interaction.update();
 
-        this._simulations.forEach(s => {
+        this.simulations.forEach(s => {
             s.frameUpdate();
         });
         // if (this._contextGroup) {

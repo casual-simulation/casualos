@@ -7,19 +7,17 @@
             <div class="toolbar">
                 <div>
                     <div ref="inventory">
-                        <div v-if="!vrDisplay && inventoryContext" class="inventory-layout">
+                        <div v-if="!vrDisplay" class="inventory-layout">
                             <inventory-file
-                                v-for="(file, index) in inventoryContext.slots"
+                                v-for="(item, index) in inventory"
                                 :key="index"
-                                :file="file"
+                                :item="item"
                                 :slotIndex="index"
-                                :context="inventoryContext.context"
-                                :selected="file && inventoryContext.selectedFile === file"
-                                @click="inventoryContext.selectFile(file)"
-                            ></inventory-file>
+                            >
+                            </inventory-file>
                         </div>
                     </div>
-                    <md-card
+                    <!-- <md-card
                         v-if="!vrDisplay && menuContext && menuContext.items.length > 0"
                         class="menu-layout md-dense"
                     >
@@ -45,7 +43,7 @@
                                 </md-content>
                             </md-list-item>
                         </md-list>
-                    </md-card>
+                    </md-card> -->
                 </div>
                 <span
                     v-show="vrDisplay"

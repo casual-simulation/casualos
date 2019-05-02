@@ -49,7 +49,12 @@ export abstract class Simulation3D extends Object3D
         this.simulation = simulation;
         this.contexts = [];
         this._subs = [];
+    }
 
+    /**
+     * Initializes the simulation 3D.
+     */
+    init() {
         // Subscriptions to file events.
         this._subs.push(
             this.simulation.watcher.filesDiscovered
@@ -75,7 +80,6 @@ export abstract class Simulation3D extends Object3D
                 )
                 .subscribe()
         );
-
         this._subs.push(
             this.simulation.helper.localEvents
                 .pipe(
@@ -93,8 +97,13 @@ export abstract class Simulation3D extends Object3D
     }
 
     frameUpdate() {
+        const calc = this.simulation.helper.createContext();
+        this._frameUpdateCore(calc);
+    }
+
+    protected _frameUpdateCore(calc: FileCalculationContext) {
         this.contexts.forEach(context => {
-            // context.frameUpdate(calc);
+            context.frameUpdate(calc);
         });
     }
 
@@ -152,11 +161,13 @@ export abstract class Simulation3D extends Object3D
         initialUpdate: boolean
     ): Promise<void> {
         const calc = this.simulation.helper.createContext();
-        let { shouldRemove } = this._fileUpdatedCore(calc, file, initialUpdate);
-
-        await Promise.all(
-            this.contexts.map(c => c.fileUpdated(file, [], calc))
+        let { shouldRemove } = this._shouldRemoveUpdatedFile(
+            calc,
+            file,
+            initialUpdate
         );
+
+        await this._fileUpdatedCore(calc, file);
         this.onFileUpdated.invoke(file);
 
         if (shouldRemove) {
@@ -164,7 +175,16 @@ export abstract class Simulation3D extends Object3D
         }
     }
 
-    protected _fileUpdatedCore(
+    protected async _fileUpdatedCore(
+        calc: FileCalculationContext,
+        file: AuxObject
+    ) {
+        await Promise.all(
+            this.contexts.map(c => c.fileUpdated(file, [], calc))
+        );
+    }
+
+    protected _shouldRemoveUpdatedFile(
         calc: FileCalculationContext,
         file: AuxObject,
         initialUpdate: boolean

@@ -381,6 +381,7 @@ export default class GameView extends Vue implements IGameView {
         this._gridChecker = new GridChecker(DEFAULT_WORKSPACE_HEIGHT_INCREMENT);
 
         this._simulations.forEach(sim => {
+            sim.init();
             sim.onFileAdded.addListener(obj => this.onFileAdded.invoke(obj));
             sim.onFileRemoved.addListener(obj =>
                 this.onFileRemoved.invoke(obj)
