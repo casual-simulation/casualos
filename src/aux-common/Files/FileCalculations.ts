@@ -1747,6 +1747,30 @@ export function calculateBooleanTagValue(
 }
 
 /**
+ * Determines if the given file is trying to load a simulation.
+ * @param calc The calculation context.
+ * @param file The file to check.
+ */
+export function isSimulation(
+    calc: FileCalculationContext,
+    file: Object
+): boolean {
+    return !!getFileSimulation(calc, file);
+}
+
+/**
+ * Gets the aux.simulation tag from the given file.
+ * @param calc The file calculation context to use.
+ * @param file The file.
+ */
+export function getFileSimulation(
+    calc: FileCalculationContext,
+    file: Object
+): string {
+    return calculateFileValue(calc, file, 'aux.simulation');
+}
+
+/**
  * Returns wether or not the given file resides in the given context id.
  * @param context The file calculation context to run formulas with.
  * @param file The file.

@@ -360,6 +360,9 @@ export class FileManager implements Simulation {
         const userMenuContext = `_user_${appManager.user.username}_${
             this._aux.tree.site.id
         }_menu`;
+        const userSimulationsContext = `_user_${appManager.user.username}_${
+            this._aux.tree.site.id
+        }_simulations`;
         if (!userFile) {
             await this.helper.createFile(this._appManager.user.id, {
                 [userContext]: true,
@@ -367,6 +370,7 @@ export class FileManager implements Simulation {
                 ['aux._user']: this._appManager.user.username,
                 ['aux._userInventoryContext']: userInventoryContext,
                 ['aux._userMenuContext']: userMenuContext,
+                ['aux._userSimulationsContext']: userSimulationsContext,
                 'aux._mode': DEFAULT_USER_MODE,
             });
         } else {
@@ -381,6 +385,13 @@ export class FileManager implements Simulation {
                 await this.helper.updateFile(userFile, {
                     tags: {
                         ['aux._userInventoryContext']: userInventoryContext,
+                    },
+                });
+            }
+            if (!userFile.tags['aux._userSimulationsContext']) {
+                await this.helper.updateFile(userFile, {
+                    tags: {
+                        ['aux._userSimulationsContext']: userSimulationsContext,
                     },
                 });
             }

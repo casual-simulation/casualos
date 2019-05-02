@@ -47,6 +47,7 @@ import {
     formatValue,
     isContextMovable,
     isPickupable,
+    isSimulation,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
@@ -1379,6 +1380,33 @@ describe('FileCalculations', () => {
 
             expect(update1).toBe(false);
         });
+    });
+
+    describe('isSimulation()', () => {
+        let cases = [
+            ['', false],
+            [null, false],
+            [0, false],
+            ['=false', false],
+            ['=0', false],
+            ['a', true],
+            [1, true],
+            [true, true],
+            ['=1', true],
+            ['="hello"', true],
+        ];
+
+        it.each(cases)(
+            'should map aux.simulation:%s to %s',
+            (value: string, expected: boolean) => {
+                let file = createFile('test', {
+                    'aux.simulation': value,
+                });
+
+                const calc = createCalculationContext([file]);
+                expect(isSimulation(calc, file)).toBe(expected);
+            }
+        );
     });
 
     describe('createWorkspace', () => {
