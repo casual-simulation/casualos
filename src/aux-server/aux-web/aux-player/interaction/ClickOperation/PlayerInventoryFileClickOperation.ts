@@ -34,6 +34,7 @@ export class PlayerInventoryFileClickOperation extends BaseFileClickOperation {
     ) {
         super(simulation, interaction, item.file, null);
         this._item = item;
+        this._context = this._item ? this._item.context : null;
     }
 
     protected _performClick(): void {

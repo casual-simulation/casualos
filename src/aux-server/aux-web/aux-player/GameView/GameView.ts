@@ -150,7 +150,9 @@ export default class GameView extends Vue implements IGameView {
         this.simulations.forEach(sim => {
             if (sim.inventoryContext) {
                 for (let i = 0; i < sim.inventoryContext.slots.length; i++) {
-                    items[i] = sim.inventoryContext.slots[i];
+                    if (sim.inventoryContext.slots[i] || !items[i]) {
+                        items[i] = sim.inventoryContext.slots[i];
+                    }
                 }
             }
         });
@@ -162,9 +164,7 @@ export default class GameView extends Vue implements IGameView {
         let items: MenuItem[] = [];
         this.simulations.forEach(sim => {
             if (sim.menuContext) {
-                for (let i = 0; i < sim.menuContext.items.length; i++) {
-                    items[i] = sim.menuContext.items[i];
-                }
+                items.push(...sim.menuContext.items);
             }
         });
         return items;

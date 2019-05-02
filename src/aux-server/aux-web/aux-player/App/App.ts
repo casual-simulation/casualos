@@ -237,31 +237,6 @@ export default class App extends Vue {
                     )
                 );
 
-                // subs.push(
-                //     fileManager.helper.localEvents.subscribe(e => {
-                //         if (e.name === 'show_toast') {
-                //             this.snackbar = {
-                //                 message: e.message,
-                //                 visible: true,
-                //             };
-                //         } else if (e.name === 'show_qr_code') {
-                //             if (this.showQRScanner !== e.open) {
-                //                 this.showQRScanner = e.open;
-                //                 if (e.open) {
-                //                     appManager.simulationManager.primary.helper.action(
-                //                         ON_QR_CODE_SCANNER_OPENED_ACTION_NAME,
-                //                         null
-                //                     );
-                //                 } else {
-                //                     // Don't need to send an event for closing
-                //                     // because onQrCodeScannerClosed() gets triggered
-                //                     // automatically.
-                //                 }
-                //             }
-                //         }
-                //     })
-                // );
-
                 subs.push(
                     new Subscription(() => {
                         this.loggedIn = false;
