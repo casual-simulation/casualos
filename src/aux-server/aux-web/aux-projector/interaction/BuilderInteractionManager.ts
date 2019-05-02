@@ -45,7 +45,6 @@ import {
 import { Input } from '../../shared/scene/Input';
 import { ColorPickerEvent } from '../../aux-projector/interaction/ColorPickerEvent';
 import { EventBus } from '../../shared/EventBus';
-import { appManager } from '../../shared/AppManager';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BuilderEmptyClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderEmptyClickOperation';
 import { BuilderNewFileClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderNewFileClickOperation';
@@ -58,6 +57,7 @@ import { GameObject } from '../../shared/scene/GameObject';
 import MiniFile from '../MiniFile/MiniFile';
 import FileTag from '../FileTag/FileTag';
 import FileTable from '../FileTable/FileTable';
+import { appManager } from '../../shared/AppManager';
 
 export class BuilderInteractionManager extends BaseInteractionManager {
     // This overrides the base class IGameView
@@ -69,7 +69,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     mode: UserMode = DEFAULT_USER_MODE;
 
     get selectionMode() {
-        return this._gameView.fileManager.selection.mode;
+        return this._gameView.simulation3D.simulation.selection.mode;
     }
 
     constructor(gameView: GameView) {
@@ -86,7 +86,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             gameObject instanceof ContextGroup3D
         ) {
             let fileClickOp = new BuilderFileClickOperation(
-                this._gameView,
+                this._gameView.simulation3D,
                 this,
                 gameObject,
                 hit
@@ -107,7 +107,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         if (vueElement instanceof MiniFile) {
             const file = <File>vueElement.file;
             let newFileClickOp = new BuilderNewFileClickOperation(
-                this._gameView,
+                this._gameView.simulation3D,
                 this,
                 file
             );
@@ -127,7 +127,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                         'aux._diffTags': [tag],
                     });
                     return new BuilderNewFileClickOperation(
-                        this._gameView,
+                        this._gameView.simulation3D,
                         this,
                         newFile
                     );
@@ -237,7 +237,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         height: number
     ) {
         const key = posToKey(position);
-        appManager.simulationManager.primary.helper.updateFile(file.file, {
+        this._gameView.simulation3D.simulation.helper.updateFile(file.file, {
             tags: {
                 [`aux.context.grid`]: {
                     [key]: {
@@ -462,11 +462,14 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     ) {
         if (file && isContext(calc, file.file)) {
             const size = getContextSize(calc, file.file);
-            appManager.simulationManager.primary.helper.updateFile(file.file, {
-                tags: {
-                    [`aux.context.size`]: (size || 0) - 1,
-                },
-            });
+            this._gameView.simulation3D.simulation.helper.updateFile(
+                file.file,
+                {
+                    tags: {
+                        [`aux.context.size`]: (size || 0) - 1,
+                    },
+                }
+            );
         }
     }
 
@@ -480,11 +483,14 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     ) {
         if (file && isContext(calc, file.file)) {
             const minimized = !isMinimized(calc, file.file);
-            appManager.simulationManager.primary.helper.updateFile(file.file, {
-                tags: {
-                    [`aux.context.minimized`]: minimized,
-                },
-            });
+            this._gameView.simulation3D.simulation.helper.updateFile(
+                file.file,
+                {
+                    tags: {
+                        [`aux.context.minimized`]: minimized,
+                    },
+                }
+            );
         }
     }
 
@@ -494,11 +500,14 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     ) {
         if (file) {
             const size = getContextSize(calc, file.file);
-            appManager.simulationManager.primary.helper.updateFile(file.file, {
-                tags: {
-                    [`aux.context.size`]: (size || 0) + 1,
-                },
-            });
+            this._gameView.simulation3D.simulation.helper.updateFile(
+                file.file,
+                {
+                    tags: {
+                        [`aux.context.size`]: (size || 0) + 1,
+                    },
+                }
+            );
         }
     }
 

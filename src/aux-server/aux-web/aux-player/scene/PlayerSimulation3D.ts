@@ -52,7 +52,7 @@ export class PlayerSimulation3D extends Simulation3D {
                                 userInventoryContextValue
                         ) {
                             this.inventoryContext = new InventoryContext(
-                                this.simulation,
+                                this,
                                 userInventoryContextValue
                             );
                             console.log(

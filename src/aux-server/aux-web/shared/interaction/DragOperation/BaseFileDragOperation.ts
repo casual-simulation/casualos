@@ -26,14 +26,14 @@ import {
 
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
 import { IGameView } from '../../../shared/IGameView';
-import { appManager } from '../../../shared/AppManager';
 import { differenceBy, maxBy } from 'lodash';
+import { Simulation3D } from 'aux-web/shared/scene/Simulation3D';
 
 /**
  * Shared class for both FileDragOperation and NewFileDragOperation.
  */
 export abstract class BaseFileDragOperation implements IOperation {
-    protected _gameView: IGameView;
+    protected _simulation3D: Simulation3D;
     protected _interaction: BaseInteractionManager;
     protected _files: File[];
     protected _file: File;
@@ -48,23 +48,33 @@ export abstract class BaseFileDragOperation implements IOperation {
 
     private _inContext: boolean;
 
+    protected get gameView() {
+        return this._simulation3D.gameView;
+    }
+
+    protected get simulation() {
+        return this._simulation3D.simulation;
+    }
+
     /**
      * Create a new drag rules.
-     * @param gameView The game view.
+     * @param simulation The simulation.
      * @param interaction The interaction manager.
      * @param files The files to drag.
      * @param context The context that the files are currently in.
      */
     constructor(
-        gameView: IGameView,
+        simulation: Simulation3D,
         interaction: BaseInteractionManager,
         files: File[],
         context: string
     ) {
-        this._gameView = gameView;
+        this._simulation3D = simulation;
         this._interaction = interaction;
         this._setFiles(files);
-        this._lastScreenPos = this._gameView.getInput().getMouseScreenPos();
+        this._lastScreenPos = this._simulation3D.gameView
+            .getInput()
+            .getMouseScreenPos();
         this._originalContext = this._context = context;
         this._previousContext = null;
         this._inContext = true;
@@ -73,8 +83,8 @@ export abstract class BaseFileDragOperation implements IOperation {
     update(calc: FileCalculationContext): void {
         if (this._finished) return;
 
-        if (this._gameView.getInput().getMouseButtonHeld(0)) {
-            const curScreenPos = this._gameView.getInput().getMouseScreenPos();
+        if (this.gameView.getInput().getMouseButtonHeld(0)) {
+            const curScreenPos = this.gameView.getInput().getMouseScreenPos();
 
             if (!curScreenPos.equals(this._lastScreenPos)) {
                 this._onDrag(calc);
@@ -95,7 +105,7 @@ export abstract class BaseFileDragOperation implements IOperation {
 
     dispose(): void {
         this._disposeCore();
-        this._gameView.setGridsVisible(false);
+        this.gameView.setGridsVisible(false);
         this._files = null;
         this._file = null;
     }
@@ -104,17 +114,17 @@ export abstract class BaseFileDragOperation implements IOperation {
         // Combine files.
         if (this._merge && this._other) {
             const update = getDiffUpdate(this._file);
-            appManager.simulationManager.primary.helper.transaction(
+            this.simulation.helper.transaction(
                 fileUpdated(this._other.id, update),
                 fileRemoved(this._file.id)
             );
         } else if (this._combine && this._other) {
-            appManager.simulationManager.primary.helper.action(
-                COMBINE_ACTION_NAME,
-                [this._file, this._other]
-            );
+            this.simulation.helper.action(COMBINE_ACTION_NAME, [
+                this._file,
+                this._other,
+            ]);
         } else if (isDiff(this._file)) {
-            appManager.simulationManager.primary.helper.transaction(
+            this.simulation.helper.transaction(
                 fileUpdated(this._file.id, {
                     tags: {
                         'aux._diff': null,
@@ -154,7 +164,7 @@ export abstract class BaseFileDragOperation implements IOperation {
             events.push(this._updateFile(files[i], tags));
         }
 
-        appManager.simulationManager.primary.helper.transaction(...events);
+        this.simulation.helper.transaction(...events);
     }
 
     protected _updateFileContexts(files: File[], inContext: boolean) {
@@ -169,16 +179,13 @@ export abstract class BaseFileDragOperation implements IOperation {
             events.push(this._updateFile(files[i], tags));
         }
 
-        appManager.simulationManager.primary.helper.transaction(...events);
+        this.simulation.helper.transaction(...events);
     }
 
     protected _updateFile(file: File, data: PartialFile): FileEvent {
-        appManager.simulationManager.primary.recent.addFileDiff(file);
-        updateFile(
-            file,
-            appManager.simulationManager.primary.helper.userFile.id,
-            data,
-            () => appManager.simulationManager.primary.helper.createContext()
+        this.simulation.recent.addFileDiff(file);
+        updateFile(file, this.simulation.helper.userFile.id, data, () =>
+            this.simulation.helper.createContext()
         );
         return fileUpdated(file.id, data);
     }
@@ -289,14 +296,14 @@ export abstract class BaseFileDragOperation implements IOperation {
             let events: FileEvent[] = [];
             if (this._originalContext) {
                 // trigger drag out of context
-                let result = appManager.simulationManager.primary.helper.actionEvents(
+                let result = this.simulation.helper.actionEvents(
                     DRAG_OUT_OF_CONTEXT_ACTION_NAME,
                     this._files,
                     this._originalContext
                 );
                 events.push(...result.events);
 
-                result = appManager.simulationManager.primary.helper.actionEvents(
+                result = this.simulation.helper.actionEvents(
                     DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME,
                     null,
                     {
@@ -309,14 +316,14 @@ export abstract class BaseFileDragOperation implements IOperation {
 
             if (this._inContext) {
                 // Trigger drag into context
-                let result = appManager.simulationManager.primary.helper.actionEvents(
+                let result = this.simulation.helper.actionEvents(
                     DROP_IN_CONTEXT_ACTION_NAME,
                     this._files,
                     this._context
                 );
                 events.push(...result.events);
 
-                result = appManager.simulationManager.primary.helper.actionEvents(
+                result = this.simulation.helper.actionEvents(
                     DROP_ANY_IN_CONTEXT_ACTION_NAME,
                     null,
                     {

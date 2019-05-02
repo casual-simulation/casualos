@@ -120,11 +120,11 @@ export default class GameView extends Vue implements IGameView {
         PerspectiveCamera | OrthographicCamera
     > = new ArgEvent<PerspectiveCamera | OrthographicCamera>();
 
-    private _simulations: BuilderSimulation3D[];
     // private _contexts: BuilderGroup3D[];
     private _subs: SubscriptionLike[];
     private _decoratorFactory: AuxFile3DDecoratorFactory;
 
+    simulation3D: BuilderSimulation3D = null;
     mode: UserMode = DEFAULT_USER_MODE;
     xrCapable: boolean = false;
     xrDisplay: any = null;
@@ -132,9 +132,7 @@ export default class GameView extends Vue implements IGameView {
     xrSessionInitParameters: any = null;
     vrDisplay: VRDisplay = null;
     vrCapable: boolean = false;
-    selectedRecentFile: Object = null;
     showTrashCan: boolean = false;
-    recentFiles: Object[] = [];
 
     @Inject() addSidebarItem: App['addSidebarItem'];
     @Inject() removeSidebarItem: App['removeSidebarItem'];
@@ -158,9 +156,9 @@ export default class GameView extends Vue implements IGameView {
     get workspacesMode() {
         return this.mode === 'worksurfaces';
     }
-    get fileManager() {
-        return appManager.simulationManager.primary;
-    }
+    // get fileManager() {
+    //     return appManager.simulationManager.primary;
+    // }
 
     constructor() {
         super();
@@ -176,7 +174,7 @@ export default class GameView extends Vue implements IGameView {
             contextType = '=isBuilder || isPlayer';
         }
 
-        this.fileManager.helper.createWorkspace(
+        this.simulation3D.simulation.helper.createWorkspace(
             undefined,
             this.contextDialog,
             contextType
@@ -193,7 +191,7 @@ export default class GameView extends Vue implements IGameView {
     }
 
     public findFilesById(id: string): AuxFile3D[] {
-        return flatMap(flatMap(this._simulations, s => s.contexts), c =>
+        return flatMap(this.simulation3D.contexts, c =>
             c.getFiles().filter(f => f.file.id === id)
         );
     }
@@ -228,12 +226,10 @@ export default class GameView extends Vue implements IGameView {
     }
 
     public getSimulations(): Simulation3D[] {
-        return this._simulations;
+        return [this.simulation3D];
     }
     public getContexts() {
-        return flatMap(this._simulations, s => s.contexts).filter(
-            c => c.contexts.size > 0
-        );
+        return this.simulation3D.contexts.filter(c => c.contexts.size > 0);
     }
 
     public getUIHtmlElements(): HTMLElement[] {
@@ -245,33 +241,15 @@ export default class GameView extends Vue implements IGameView {
     }
 
     public setGridsVisible(visible: boolean) {
-        this._simulations.forEach(s => {
-            s.contexts.forEach((c: BuilderGroup3D) => {
-                if (c.surface) {
-                    c.surface.gridsVisible = visible;
-                }
-            });
+        this.simulation3D.contexts.forEach((c: BuilderGroup3D) => {
+            if (c.surface) {
+                c.surface.gridsVisible = visible;
+            }
         });
     }
 
     public setWorldGridVisible(visible: boolean) {
         this._gridMesh.visible = visible;
-    }
-
-    public selectRecentFile(file: Object) {
-        if (
-            !this.fileManager.recent.selectedRecentFile ||
-            this.fileManager.recent.selectedRecentFile.id !== file.id
-        ) {
-            this.fileManager.recent.selectedRecentFile = file;
-            this.fileManager.selection.clearSelection();
-        } else {
-            this.fileManager.recent.selectedRecentFile = null;
-        }
-    }
-
-    public clearRecentFiles() {
-        this.fileManager.recent.clear();
     }
 
     public addNewWorkspace(): void {
@@ -370,9 +348,11 @@ export default class GameView extends Vue implements IGameView {
 
         this._time = new Time();
         this._decoratorFactory = new AuxFile3DDecoratorFactory(this);
-        this.recentFiles = this.fileManager.recent.files;
         this._subs = [];
-        this._simulations = [new BuilderSimulation3D(this, this.fileManager)];
+        this.simulation3D = new BuilderSimulation3D(
+            this,
+            appManager.simulationManager.primary
+        );
         this._setupScene();
         DebugObjectManager.init(this._time, this._scene);
         this._input = new Input(this);
@@ -380,16 +360,16 @@ export default class GameView extends Vue implements IGameView {
         this._interaction = new BuilderInteractionManager(this);
         this._gridChecker = new GridChecker(DEFAULT_WORKSPACE_HEIGHT_INCREMENT);
 
-        this._simulations.forEach(sim => {
-            sim.init();
-            sim.onFileAdded.addListener(obj => this.onFileAdded.invoke(obj));
-            sim.onFileRemoved.addListener(obj =>
-                this.onFileRemoved.invoke(obj)
-            );
-            sim.onFileUpdated.addListener(obj =>
-                this.onFileUpdated.invoke(obj)
-            );
-        });
+        this.simulation3D.init();
+        this.simulation3D.onFileAdded.addListener(obj =>
+            this.onFileAdded.invoke(obj)
+        );
+        this.simulation3D.onFileRemoved.addListener(obj =>
+            this.onFileRemoved.invoke(obj)
+        );
+        this.simulation3D.onFileUpdated.addListener(obj =>
+            this.onFileUpdated.invoke(obj)
+        );
 
         this._setupWebVR();
         await this._setupWebXR();
@@ -421,9 +401,7 @@ export default class GameView extends Vue implements IGameView {
         this._inputVR.update();
         this._interaction.update();
 
-        this._simulations.forEach(sim => {
-            sim.frameUpdate();
-        });
+        this.simulation3D.frameUpdate();
 
         this._cameraUpdate();
         this._renderUpdate(xrFrame);
@@ -643,7 +621,7 @@ export default class GameView extends Vue implements IGameView {
     private _setupScene() {
         this._scene = new Scene();
 
-        let globalsFile = this.fileManager.helper.globalsFile;
+        let globalsFile = this.simulation3D.simulation.helper.globalsFile;
 
         // Scene background color.
         let sceneBackgroundColor = globalsFile.tags['aux.scene.color'];
@@ -672,9 +650,7 @@ export default class GameView extends Vue implements IGameView {
         this._scene.add(this._gridMesh);
 
         // Simulations
-        this._simulations.forEach(s => {
-            this._scene.add(s);
-        });
+        this._scene.add(this.simulation3D);
     }
 
     private _setupRenderer() {

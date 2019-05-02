@@ -17,6 +17,7 @@ import { Input } from '../../shared/scene/Input';
 import InventoryFile from '../InventoryFile/InventoryFile';
 import { PlayerInventoryFileClickOperation } from './ClickOperation/PlayerInventoryFileClickOperation';
 import { appManager } from '../../shared/AppManager';
+import { PlayerSimulation3D } from '../scene/PlayerSimulation3D';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class IGameView
@@ -37,7 +38,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     ): IOperation {
         if (gameObject instanceof AuxFile3D) {
             let fileClickOp = new PlayerFileClickOperation(
-                this._gameView,
+                <PlayerSimulation3D>gameObject.contextGroup.simulation,
                 this,
                 gameObject
             );
@@ -56,7 +57,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         if (vueElement instanceof InventoryFile) {
             if (vueElement.item) {
                 let inventoryClickOperation = new PlayerInventoryFileClickOperation(
-                    this._gameView,
+                    vueElement.item.simulation,
                     this,
                     vueElement.item
                 );

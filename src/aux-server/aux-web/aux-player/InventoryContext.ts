@@ -12,6 +12,7 @@ import { remove } from 'lodash';
 import { getOptionalValue } from '../shared/SharedUtils';
 import { appManager } from '../shared/AppManager';
 import { Simulation } from '../shared/Simulation';
+import { PlayerSimulation3D } from './scene/PlayerSimulation3D';
 
 export const DEFAULT_INVENTORY_COUNT = 5;
 
@@ -20,7 +21,7 @@ export const DEFAULT_INVENTORY_COUNT = 5;
  */
 export interface InventoryItem {
     file: AuxFile;
-    simulation: Simulation;
+    simulation: PlayerSimulation3D;
     context: string;
 }
 
@@ -36,7 +37,7 @@ export class InventoryContext {
     /**
      * The simulation that the context is for.
      */
-    simulation: Simulation;
+    simulation: PlayerSimulation3D;
 
     /**
      * All the files that are in this context.
@@ -57,7 +58,11 @@ export class InventoryContext {
     private _slotCount: number;
     private _slotsDirty: boolean;
 
-    constructor(simulation: Simulation, context: string, slotCount?: number) {
+    constructor(
+        simulation: PlayerSimulation3D,
+        context: string,
+        slotCount?: number
+    ) {
         if (context == null || context == undefined) {
             throw new Error('Inventory context cannot be null or undefined.');
         }

@@ -12,12 +12,12 @@ import {
     isDiff,
     CREATE_ACTION_NAME,
 } from '@casual-simulation/aux-common/Files/FileCalculations';
-import { appManager } from '../../../shared/AppManager';
 import { merge } from '@casual-simulation/aux-common/utils';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
 import { BaseBuilderFileDragOperation } from './BaseBuilderFileDragOperation';
 import GameView from '../../GameView/GameView';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
+import { Simulation3D } from '../../../shared/scene/Simulation3D';
 
 /**
  * New File Drag Operation handles dragging of new files from the file queue.
@@ -32,12 +32,12 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
      * Create a new drag rules.
      */
     constructor(
-        gameView: GameView,
+        simulation: Simulation3D,
         interaction: BuilderInteractionManager,
         duplicatedFile: File,
         originalFile: File
     ) {
-        super(gameView, interaction, [duplicatedFile], null);
+        super(simulation, interaction, [duplicatedFile], null);
     }
 
     protected _updateFile(file: File, data: PartialFile): FileEvent {
@@ -66,13 +66,10 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
 
             if (this._isOverTrashCan()) {
                 // Clear the diff
-                appManager.simulationManager.primary.recent.clear();
+                this.simulation.recent.clear();
             }
         } else if (this._isOnWorkspace) {
-            appManager.simulationManager.primary.helper.action(
-                CREATE_ACTION_NAME,
-                this._files
-            );
+            this.simulation.helper.action(CREATE_ACTION_NAME, this._files);
         }
 
         super._onDragReleased(calc);
@@ -86,8 +83,8 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
             }
 
             const mouseDir = Physics.screenPosToRay(
-                this._gameView.getInput().getMouseScreenPos(),
-                this._gameView.getMainCamera()
+                this.gameView.getInput().getMouseScreenPos(),
+                this.gameView.getMainCamera()
             );
             let worldPos = Physics.pointOnRay(
                 mouseDir,
@@ -104,7 +101,7 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
     private _releaseDragMesh(mesh: AuxFile3D): void {
         if (mesh) {
             mesh.dispose();
-            this._gameView.getScene().remove(mesh);
+            this.gameView.getScene().remove(mesh);
         }
     }
 }

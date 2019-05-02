@@ -39,6 +39,13 @@ export abstract class Simulation3D extends Object3D
     simulation: Simulation;
 
     /**
+     * Gets the game view that is for this simulation.
+     */
+    get gameView() {
+        return this._gameView;
+    }
+
+    /**
      * Creates a new Simulation3D object that can be used to render the given simulation.
      * @param gameView The game view.
      * @param simulation The simulation to render.

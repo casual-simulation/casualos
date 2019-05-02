@@ -4,10 +4,43 @@ import {
     AuxObject,
     getFileConfigContexts,
     FileCalculationContext,
+    Object,
 } from '@casual-simulation/aux-common';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 
 export class BuilderSimulation3D extends Simulation3D {
+    recentFiles: Object[] = [];
+    selectedRecentFile: Object = null;
+
+    init() {
+        super.init();
+
+        this.recentFiles = this.simulation.recent.files;
+
+        this._subs.push(
+            this.simulation.recent.onUpdated.subscribe(() => {
+                this.recentFiles = this.simulation.recent.files;
+                this.selectedRecentFile = this.simulation.recent.selectedRecentFile;
+            })
+        );
+    }
+
+    clearRecentFiles() {
+        this.simulation.recent.clear();
+    }
+
+    selectRecentFile(file: Object) {
+        if (
+            !this.simulation.recent.selectedRecentFile ||
+            this.simulation.recent.selectedRecentFile.id !== file.id
+        ) {
+            this.simulation.recent.selectedRecentFile = file;
+            this.simulation.selection.clearSelection();
+        } else {
+            this.simulation.recent.selectedRecentFile = null;
+        }
+    }
+
     protected _createContext(
         calc: FileCalculationContext,
         file: AuxObject

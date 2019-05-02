@@ -18,10 +18,10 @@ import {
 } from '@casual-simulation/aux-common/Files/FileCalculations';
 import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
 import { BuilderGroup3D } from '../../../shared/scene/BuilderGroup3D';
-import { appManager } from '../../../shared/AppManager';
 import GameView from '../../GameView/GameView';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import { BaseBuilderFileDragOperation } from './BaseBuilderFileDragOperation';
+import { Simulation3D } from '../../../shared/scene/Simulation3D';
 
 /**
  * File Drag Operation handles dragging of files for mouse and touch input.
@@ -29,8 +29,6 @@ import { BaseBuilderFileDragOperation } from './BaseBuilderFileDragOperation';
 export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
     // This overrides the base class BaseInteractionManager
     protected _interaction: BuilderInteractionManager;
-    // This overrides the base class IGameView
-    protected _gameView: GameView;
 
     private _workspace: BuilderGroup3D;
     private _workspaceDelta: Vector3;
@@ -39,19 +37,19 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
      * Create a new drag rules.
      */
     constructor(
-        gameView: GameView,
+        simulation: Simulation3D,
         interaction: BuilderInteractionManager,
         hit: Intersection,
         files: File[],
         workspace: BuilderGroup3D,
         context: string
     ) {
-        super(gameView, interaction, files, context);
+        super(simulation, interaction, files, context);
 
         this._workspace = workspace;
 
         if (this._workspace) {
-            this._gameView.setWorldGridVisible(true);
+            this.gameView.setWorldGridVisible(true);
 
             // calculate the delta needed to be applied to the pointer
             // positions to have the pointer drag around the originally tapped point
@@ -65,7 +63,7 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
 
     protected _disposeCore() {
         if (this._workspace) {
-            this._gameView.setWorldGridVisible(false);
+            this.gameView.setWorldGridVisible(false);
         }
         super._disposeCore();
     }
@@ -82,28 +80,25 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
 
     protected _onDragWorkspace(calc: FileCalculationContext) {
         const mouseDir = Physics.screenPosToRay(
-            this._gameView.getInput().getMouseScreenPos(),
-            this._gameView.getMainCamera()
+            this.gameView.getInput().getMouseScreenPos(),
+            this.gameView.getMainCamera()
         );
         const point = Physics.pointOnPlane(
             mouseDir,
-            this._gameView.getGroundPlane()
+            this.gameView.getGroundPlane()
         );
 
         if (point) {
             // move the center of the workspace to the point
             let final = new Vector3().copy(point);
 
-            appManager.simulationManager.primary.helper.updateFile(
-                this._workspace.file,
-                {
-                    tags: {
-                        [`aux.context.x`]: final.x,
-                        [`aux.context.y`]: final.z,
-                        [`aux.context.z`]: final.y,
-                    },
-                }
-            );
+            this.simulation.helper.updateFile(this._workspace.file, {
+                tags: {
+                    [`aux.context.x`]: final.x,
+                    [`aux.context.y`]: final.z,
+                    [`aux.context.z`]: final.y,
+                },
+            });
         }
     }
 }
