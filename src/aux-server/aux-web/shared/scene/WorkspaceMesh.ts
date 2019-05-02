@@ -89,6 +89,7 @@ export class WorkspaceMesh extends GameObject {
      */
     constructor(domain: AuxDomain) {
         super();
+        this.squareGrids = [];
         this.container = new Object3D();
         this.domain = domain;
         this.miniHex = new HexMesh(

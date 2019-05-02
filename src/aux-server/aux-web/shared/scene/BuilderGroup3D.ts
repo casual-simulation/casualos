@@ -10,6 +10,7 @@ import {
     isContext,
 } from '@casual-simulation/aux-common';
 import { Object3D } from 'three';
+import { Simulation3D } from './Simulation3D';
 
 /**
  * Defines a class that represents a builder group.
@@ -40,11 +41,16 @@ export class BuilderGroup3D extends ContextGroup3D {
     /**
      * Creates a new BuilderGroup3D. That is, a group of contexts that are visualized
      * using a worksurface.
+     * @param simulation The simulation that this group is in.
      * @param file The file that this group represents.
      * @param decoratorFactory The decorator factory that should be used to decorate AuxFile3D objects.
      */
-    constructor(file: AuxFile, decoratorFactory: AuxFile3DDecoratorFactory) {
-        super(file, 'builder', decoratorFactory);
+    constructor(
+        simulation: Simulation3D,
+        file: AuxFile,
+        decoratorFactory: AuxFile3DDecoratorFactory
+    ) {
+        super(simulation, file, 'builder', decoratorFactory);
     }
 
     protected async _updateThis(

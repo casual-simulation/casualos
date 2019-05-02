@@ -15,6 +15,7 @@ import { Context3D } from './Context3D';
 import { GridChecker } from './grid/GridChecker';
 import { Object3D, Group } from 'three';
 import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
+import { Simulation3D } from './Simulation3D';
 
 /**
  * Defines a class that represents a visualization of a context for the AUX Builder.
@@ -45,6 +46,11 @@ export class ContextGroup3D extends GameObject {
      */
     domain: AuxDomain;
 
+    /**
+     * The simulation the group is for.
+     */
+    simulation: Simulation3D;
+
     private _decoratorFactory: AuxFile3DDecoratorFactory;
 
     /**
@@ -74,11 +80,13 @@ export class ContextGroup3D extends GameObject {
      * @param The file that this builder represents.
      */
     constructor(
+        simulation: Simulation3D,
         file: AuxFile,
         domain: AuxDomain,
         decoratorFactory: AuxFile3DDecoratorFactory
     ) {
         super();
+        this.simulation = simulation;
         this.domain = domain;
         this.file = file;
         this.display = new Group();

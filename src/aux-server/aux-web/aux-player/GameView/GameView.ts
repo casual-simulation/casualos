@@ -65,6 +65,8 @@ import {
 import { TweenCameraToOperation } from '../../shared/interaction/TweenCameraToOperation';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { GridChecker } from '../../shared/scene/grid/GridChecker';
+import { PlayerSimulation3D } from '../scene/PlayerSimulation3D';
+import { Simulation } from '../../shared/Simulation';
 
 @Component({
     components: {
@@ -190,6 +192,9 @@ export default class GameView extends Vue implements IGameView {
     public getSimulations(): Simulation3D[] {
         return this._simulations;
     }
+    public getContexts(): ContextGroup3D[] {
+        return flatMap(this._simulations, s => s.contexts);
+    }
 
     public setGridsVisible(visible: boolean) {
         // This currently does nothing for AUX Player, we dont really show any grids right now.
@@ -251,9 +256,9 @@ export default class GameView extends Vue implements IGameView {
         window.addEventListener('vrdisplaypresentchange', this._handleResize);
 
         this._time = new Time();
-        this._fileSubs = [];
-        // this._fileBackBuffer = new Map<string, AuxObject>();
         this._decoratorFactory = new AuxFile3DDecoratorFactory(this);
+        this._fileSubs = [];
+        this._simulations = [];
         this._setupScene();
         DebugObjectManager.init(this._time, this._scene);
         this._input = new Input(this);
@@ -265,18 +270,43 @@ export default class GameView extends Vue implements IGameView {
         this._triggerFilesRefresh();
         this._frameUpdate();
 
-        // TODO: Fix
-        // this._fileSubs.push(
-        //     this.fileManager.helper.localEvents
-        //         .pipe(
-        //             tap(e => {
-        //                 if (e.name === 'tween_to') {
-        //                     this.tweenCameraToFile(e.fileId, e.zoomValue);
-        //                 }
-        //             })
-        //         )
-        //         .subscribe()
-        // );
+        this._fileSubs.push(
+            appManager.simulationManager.simulationAdded
+                .pipe(
+                    tap(sim => {
+                        this._simulationAdded(sim);
+                    })
+                )
+                .subscribe()
+        );
+
+        this._fileSubs.push(
+            appManager.simulationManager.simulationRemoved
+                .pipe(
+                    tap(sim => {
+                        this._simulationRemoved(sim);
+                    })
+                )
+                .subscribe()
+        );
+    }
+
+    private _simulationAdded(sim: Simulation) {
+        const sim3D = new PlayerSimulation3D(this.context, this, sim);
+        this._simulations.push(sim3D);
+        this._scene.add(sim3D);
+    }
+
+    private _simulationRemoved(sim: Simulation) {
+        const index = this._simulations.findIndex(
+            s => s.simulation.id === sim.id
+        );
+        if (index >= 0) {
+            const removed = this._simulations.splice(index, 1);
+            removed.forEach(s => {
+                this._scene.remove(s);
+            });
+        }
     }
 
     public beforeDestroy() {
@@ -542,14 +572,15 @@ export default class GameView extends Vue implements IGameView {
     private _setupScene() {
         this._scene = new Scene();
 
-        let globalsFile = this.fileManager.helper.globalsFile;
+        // TODO: Fix
+        // let globalsFile = this.fileManager.helper.globalsFile;
 
-        // Scene background color.
-        let sceneBackgroundColor = globalsFile.tags['aux.scene.color'];
-        this._sceneBackground = hasValue(sceneBackgroundColor)
-            ? new Color(sceneBackgroundColor)
-            : new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
-        this._sceneBackgroundUpdate();
+        // // Scene background color.
+        // let sceneBackgroundColor = globalsFile.tags['aux.scene.color'];
+        // this._sceneBackground = hasValue(sceneBackgroundColor)
+        //     ? new Color(sceneBackgroundColor)
+        //     : new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
+        // this._sceneBackgroundUpdate();
 
         this.setCameraType('orthographic');
         this._setupRenderer();

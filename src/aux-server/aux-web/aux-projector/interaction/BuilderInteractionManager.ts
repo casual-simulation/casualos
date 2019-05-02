@@ -364,7 +364,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 (<GameView>this._gameView)
                     .getContexts()
                     .filter(f => isContext(calc, f.file)),
-                f => f.surface.colliders
+                (f: BuilderGroup3D) => f.surface.colliders
             );
             this._surfaceObjectsDirty = false;
         }

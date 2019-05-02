@@ -74,6 +74,21 @@ export class PlayerSimulation3D extends Simulation3D {
                 )
                 .subscribe()
         );
+
+        this._subs.push(
+            this.simulation.helper.localEvents
+                .pipe(
+                    tap(e => {
+                        if (e.name === 'tween_to') {
+                            this._gameView.tweenCameraToFile(
+                                e.fileId,
+                                e.zoomValue
+                            );
+                        }
+                    })
+                )
+                .subscribe()
+        );
     }
 
     protected _createContext(calc: FileCalculationContext, file: AuxObject) {
@@ -85,6 +100,7 @@ export class PlayerSimulation3D extends Simulation3D {
         if (result.matchFound) {
             // Create ContextGroup3D for this file that we will use to render all files in the context.
             this._contextGroup = new ContextGroup3D(
+                this,
                 file,
                 'player',
                 this._gameView.getDecoratorFactory()

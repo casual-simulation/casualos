@@ -53,11 +53,6 @@ export class AuxFile3D extends GameObject {
     contextGroup: ContextGroup3D;
 
     /**
-     * The simulation that this file belongs to.
-     */
-    simulation3D: Simulation3D;
-
-    /**
      * The file for the mesh.
      */
     file: File;

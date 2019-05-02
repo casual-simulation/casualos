@@ -1,12 +1,15 @@
 import { Initable } from './Initable';
 import { LoadingProgressCallback } from '@casual-simulation/aux-common/LoadingProgress';
+import { Subject, ReplaySubject, Observable } from 'rxjs';
 
 /**
  * Defines a class that it able to manage multiple simulations that are loaded at the same time.
  * @param TSimulation The type of objects that represent a simulation.
  */
-export class SimulationManager<TSimulation extends Initable> {
+export default class SimulationManager<TSimulation extends Initable> {
     private _factory: SimulationFactory<TSimulation>;
+    private _simulationAdded: ReplaySubject<TSimulation>;
+    private _simulationRemoved: ReplaySubject<TSimulation>;
 
     /**
      * The primary simulation to use.
@@ -19,6 +22,21 @@ export class SimulationManager<TSimulation extends Initable> {
     simulations: Map<string, TSimulation>;
 
     /**
+     * Gets an observable that resolves whenever a simulation is added to the
+     * simulation manager.
+     */
+    get simulationAdded(): Observable<TSimulation> {
+        return this._simulationAdded;
+    }
+
+    /**
+     * Gets an observable that resolves whenever a simulation is removed from the simulation manager.
+     */
+    get simulationRemoved(): Observable<TSimulation> {
+        return this._simulationRemoved;
+    }
+
+    /**
      * Creates a new simulation manager using the given simulation factory.
      * @param factory A function that, given an simulation ID, creates a new simulation.
      */
@@ -26,6 +44,8 @@ export class SimulationManager<TSimulation extends Initable> {
         this._factory = factory;
         this.simulations = new Map();
         this.primary = null;
+        this._simulationAdded = new ReplaySubject();
+        this._simulationRemoved = new ReplaySubject();
     }
 
     /**
@@ -51,6 +71,7 @@ export class SimulationManager<TSimulation extends Initable> {
             const sim = this._factory(id);
             await sim.init(loadingCallback);
             this.simulations.set(id, sim);
+            this._simulationAdded.next(sim);
             return sim;
         }
     }
@@ -67,6 +88,7 @@ export class SimulationManager<TSimulation extends Initable> {
                 this.primary = null;
             }
             this.simulations.delete(id);
+            this._simulationRemoved.next(sim);
         }
     }
 

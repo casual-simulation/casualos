@@ -25,7 +25,7 @@ import {
     LoadingProgressCallback,
 } from '@casual-simulation/aux-common/LoadingProgress';
 import { Simulation } from './Simulation';
-import { SimulationManager } from './SimulationManager';
+import SimulationManager from './SimulationManager';
 
 export interface User {
     id: string;
@@ -458,7 +458,7 @@ export class AppManager {
                     );
                 };
 
-                this.simulationManager.setPrimary(
+                await this.simulationManager.setPrimary(
                     channelId,
                     onFileManagerInitProgress
                 );

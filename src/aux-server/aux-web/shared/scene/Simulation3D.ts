@@ -98,7 +98,7 @@ export abstract class Simulation3D extends Object3D
         });
     }
 
-    async _fileAdded(file: AuxObject): Promise<void> {
+    protected async _fileAdded(file: AuxObject): Promise<void> {
         let calc = this.simulation.helper.createContext();
         let context = this._createContext(calc, file);
         if (context) {
@@ -119,7 +119,7 @@ export abstract class Simulation3D extends Object3D
         await Promise.all(this.contexts.map(c => c.fileAdded(file, calc)));
     }
 
-    async _fileRemoved(id: string): Promise<void> {
+    protected async _fileRemoved(id: string): Promise<void> {
         const calc = this.simulation.helper.createContext();
         this._fileRemovedCore(calc, id);
 
@@ -147,7 +147,10 @@ export abstract class Simulation3D extends Object3D
         this.contexts.splice(removedIndex, 1);
     }
 
-    async _fileUpdated(file: AuxObject, initialUpdate: boolean): Promise<void> {
+    protected async _fileUpdated(
+        file: AuxObject,
+        initialUpdate: boolean
+    ): Promise<void> {
         const calc = this.simulation.helper.createContext();
         let { shouldRemove } = this._fileUpdatedCore(calc, file, initialUpdate);
 

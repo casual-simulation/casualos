@@ -8,8 +8,12 @@ import {
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 
 export class BuilderSimulation3D extends Simulation3D {
-    protected _createContext(file: AuxObject): ContextGroup3D {
+    protected _createContext(
+        calc: FileCalculationContext,
+        file: AuxObject
+    ): ContextGroup3D {
         const context = new BuilderGroup3D(
+            this,
             file,
             this._gameView.getDecoratorFactory()
         );

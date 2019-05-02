@@ -230,10 +230,11 @@ export default class GameView extends Vue implements IGameView {
     public getSimulations(): Simulation3D[] {
         return this._simulations;
     }
-
-    // public getContexts() {
-    //     return this._contexts.filter(c => c.contexts.size > 0);
-    // }
+    public getContexts() {
+        return flatMap(this._simulations, s => s.contexts).filter(
+            c => c.contexts.size > 0
+        );
+    }
 
     public getUIHtmlElements(): HTMLElement[] {
         return [
@@ -368,16 +369,26 @@ export default class GameView extends Vue implements IGameView {
         this.contextDialog = '';
 
         this._time = new Time();
-        this.recentFiles = this.fileManager.recent.files;
-        this._simulations = [new BuilderSimulation3D(this, this.fileManager)];
-        this._subs = [];
         this._decoratorFactory = new AuxFile3DDecoratorFactory(this);
+        this.recentFiles = this.fileManager.recent.files;
+        this._subs = [];
+        this._simulations = [new BuilderSimulation3D(this, this.fileManager)];
         this._setupScene();
         DebugObjectManager.init(this._time, this._scene);
         this._input = new Input(this);
         this._inputVR = new InputVR(this);
         this._interaction = new BuilderInteractionManager(this);
         this._gridChecker = new GridChecker(DEFAULT_WORKSPACE_HEIGHT_INCREMENT);
+
+        this._simulations.forEach(sim => {
+            sim.onFileAdded.addListener(obj => this.onFileAdded.invoke(obj));
+            sim.onFileRemoved.addListener(obj =>
+                this.onFileRemoved.invoke(obj)
+            );
+            sim.onFileUpdated.addListener(obj =>
+                this.onFileUpdated.invoke(obj)
+            );
+        });
 
         this._setupWebVR();
         await this._setupWebXR();
