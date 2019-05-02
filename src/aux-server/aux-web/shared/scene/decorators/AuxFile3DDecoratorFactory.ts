@@ -13,6 +13,7 @@ import { appManager } from '../../../shared/AppManager';
 import { UserControlsDecorator } from './UserControlsDecorator';
 import { OutlineDecorator } from './OutlineDecorator';
 import { TextureDecorator } from './TextureDecorator';
+import { HtmlMixerDecorator } from './HtmlMixerDecorator';
 
 export class AuxFile3DDecoratorFactory {
     public gameView: IGameView;
@@ -66,7 +67,8 @@ export class AuxFile3DDecoratorFactory {
             decorators.push(
                 labelDecorator,
                 wordBubbleDecorator,
-                new LineToDecorator(file3d, this.gameView)
+                new LineToDecorator(file3d, this.gameView),
+                new HtmlMixerDecorator(file3d, this.gameView)
             );
         }
 

@@ -108,15 +108,16 @@ module.exports = {
                 include: [/aux-common/],
                 enforce: 'pre',
             },
+            {
+                // Export THREEx from all threex.*.js files.
+                test: /threex[^/]+\.js$/,
+                use: ['exports-loader?THREEx'],
+            },
         ],
     },
     resolve: {
         extensions: ['.vue', '.js', '.ts', '.css'],
         alias: {
-            'three-examples': path.join(
-                __dirname,
-                '../node_modules/three/examples/js'
-            ),
             'webxr-polyfill': path.resolve(
                 __dirname,
                 'aux-projector/public/scripts/webxr-polyfill.js'

@@ -27,8 +27,6 @@ declare module '*.json' {
     export default json;
 }
 
-// declare module 'three-examples/loaders/GLTFLoader';
-declare module 'three-examples';
 declare module 'monaco-editor/esm/vs/editor/standalone/browser/simpleServices';
 declare module 'three-vrcontrols-module';
 declare module 'three-vreffect-module';

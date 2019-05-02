@@ -33,6 +33,7 @@ export interface FileTags {
     ['aux.input.placeholder']?: string;
     ['aux.shape']?: FileShape;
     ['aux.image']?: string;
+    ['aux.iframe']?: string;
     ['aux._creator']?: string;
     ['aux._diff']?: boolean;
     ['aux._diffTags']?: string[];
