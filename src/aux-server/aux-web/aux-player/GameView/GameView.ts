@@ -317,6 +317,16 @@ export default class GameView extends Vue implements IGameView {
         window.addEventListener('resize', this._handleResize);
         window.addEventListener('vrdisplaypresentchange', this._handleResize);
 
+        this.onFileAdded.invoke = this.onFileAdded.invoke.bind(
+            this.onFileAdded
+        );
+        this.onFileRemoved.invoke = this.onFileRemoved.invoke.bind(
+            this.onFileRemoved
+        );
+        this.onFileUpdated.invoke = this.onFileUpdated.invoke.bind(
+            this.onFileUpdated
+        );
+
         this._time = new Time();
         this._decoratorFactory = new AuxFile3DDecoratorFactory(this);
         this._fileSubs = [];
@@ -367,6 +377,9 @@ export default class GameView extends Vue implements IGameView {
     private _simulationAdded(sim: Simulation) {
         const sim3D = new PlayerSimulation3D(this.context, this, sim);
         sim3D.init();
+        sim3D.onFileAdded.addListener(this.onFileAdded.invoke);
+        sim3D.onFileRemoved.addListener(this.onFileRemoved.invoke);
+        sim3D.onFileUpdated.addListener(this.onFileUpdated.invoke);
         this.simulations.push(sim3D);
         this._scene.add(sim3D);
     }
@@ -378,6 +391,9 @@ export default class GameView extends Vue implements IGameView {
         if (index >= 0) {
             const removed = this.simulations.splice(index, 1);
             removed.forEach(s => {
+                s.onFileAdded.removeListener(this.onFileAdded.invoke);
+                s.onFileRemoved.removeListener(this.onFileRemoved.invoke);
+                s.onFileUpdated.removeListener(this.onFileUpdated.invoke);
                 s.unsubscribe();
                 this._scene.remove(s);
             });
