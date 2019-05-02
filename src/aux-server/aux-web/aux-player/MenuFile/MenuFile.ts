@@ -12,17 +12,16 @@ import {
     getFileInputPlaceholder,
 } from '@casual-simulation/aux-common';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
-import { appManager } from '../../shared/AppManager';
+import { MenuItem } from '../MenuContext';
 
 @Component({
     components: {},
 })
 export default class MenuFile extends Vue {
-    @Prop() file: AuxFile;
+    @Prop() item: MenuItem;
     @Prop() index: number;
     @Prop({ default: false })
     selected: boolean;
-    @Prop() context: string;
 
     label: string = '';
     placeholder: string = '';
@@ -33,13 +32,13 @@ export default class MenuFile extends Vue {
     backgroundColor: string = '#FFF';
     showDialog: boolean = false;
 
-    @Watch('file')
-    private async _fileChanged(file: AuxFile) {
-        if (file) {
-            const calc = appManager.simulationManager.primary.helper.createContext();
-            this._updateLabel(calc, file);
-            this._updateColor(calc, file);
-            this._updateInput(calc, file);
+    @Watch('item')
+    private async _fileChanged(item: MenuItem) {
+        if (item) {
+            const calc = item.simulation.simulation.helper.createContext();
+            this._updateLabel(calc, item.file);
+            this._updateColor(calc, item.file);
+            this._updateInput(calc, item.file);
         } else {
             this.label = '';
             this.labelColor = '#000';
@@ -52,33 +51,32 @@ export default class MenuFile extends Vue {
     }
 
     mounted() {
-        this._fileChanged(this.file);
+        this._fileChanged(this.item);
     }
 
     async click() {
-        await appManager.simulationManager.primary.helper.action('onClick', [
-            this.file,
+        await this.item.simulation.simulation.helper.action('onClick', [
+            this.item.file,
         ]);
         if (this.input) {
-            const calc = appManager.simulationManager.primary.helper.createContext();
-            this._updateInput(calc, this.file);
+            const calc = this.item.simulation.simulation.helper.createContext();
+            this._updateInput(calc, this.item.file);
             this.showDialog = true;
         }
     }
 
     async closeDialog() {
         if (this.showDialog) {
-            await appManager.simulationManager.primary.helper.action(
-                'onClose',
-                [this.file]
-            );
+            await this.item.simulation.simulation.helper.action('onClose', [
+                this.item.file,
+            ]);
             this.showDialog = false;
         }
     }
 
     async saveDialog() {
         if (this.showDialog) {
-            await appManager.simulationManager.primary.helper.updateFile(
+            await this.item.simulation.simulation.helper.updateFile(
                 this.inputTarget,
                 {
                     tags: {
@@ -86,8 +84,8 @@ export default class MenuFile extends Vue {
                     },
                 }
             );
-            await appManager.simulationManager.primary.helper.action('onSave', [
-                this.file,
+            await this.item.simulation.simulation.helper.action('onSave', [
+                this.item.file,
             ]);
             await this.closeDialog();
         }

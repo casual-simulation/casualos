@@ -11,11 +11,26 @@ import {
 } from '@casual-simulation/aux-common';
 import { remove, sortBy } from 'lodash';
 import { getOptionalValue } from '../shared/SharedUtils';
+import { PlayerSimulation3D } from './scene/PlayerSimulation3D';
+
+/**
+ * Defines an interface for an item that is in a user's menu.
+ */
+export interface MenuItem {
+    file: AuxFile;
+    simulation: PlayerSimulation3D;
+    context: string;
+}
 
 /**
  * MenuContext is a helper class to assist with managing the user's menu context.
  */
 export class MenuContext {
+    /**
+     * The simulation that the context is for.
+     */
+    simulation: PlayerSimulation3D;
+
     /**
      * The context that this object represents.
      */
@@ -30,15 +45,15 @@ export class MenuContext {
      * The files in this contexts mapped into menu items.
      * Files are ordered in ascending order based on their index in the context.
      */
-    items: AuxFile[] = [];
+    items: MenuItem[] = [];
 
     private _itemsDirty: boolean;
 
-    constructor(context: string) {
+    constructor(simulation: PlayerSimulation3D, context: string) {
         if (context == null || context == undefined) {
             throw new Error('Menu context cannot be null or undefined.');
         }
-
+        this.simulation = simulation;
         this.context = context;
         this.files = [];
     }
@@ -123,6 +138,12 @@ export class MenuContext {
     private _resortItems(calc: FileCalculationContext): void {
         this.items = sortBy(this.files, f =>
             fileContextSortOrder(calc, f, this.context)
-        );
+        ).map(f => {
+            return {
+                file: f,
+                simulation: this.simulation,
+                context: this.context,
+            };
+        });
     }
 }

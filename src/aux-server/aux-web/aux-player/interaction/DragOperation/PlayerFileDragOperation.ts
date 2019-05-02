@@ -56,8 +56,6 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
             ) {
                 if (!vueElement.item) {
                     // Over empty slot, update the files context and context position to match the slot's index.
-                    // TODO: Fix
-
                     if (
                         this._context !==
                         this._simulation3D.inventoryContext.context

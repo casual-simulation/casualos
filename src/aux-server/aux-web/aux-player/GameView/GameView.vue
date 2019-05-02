@@ -17,33 +17,26 @@
                             </inventory-file>
                         </div>
                     </div>
-                    <!-- <md-card
-                        v-if="!vrDisplay && menuContext && menuContext.items.length > 0"
-                        class="menu-layout md-dense"
-                    >
+                    <md-card v-if="!vrDisplay && menu.length > 0" class="menu-layout md-dense">
                         <md-list class="md-dense">
                             <md-list-item md-expand :md-expanded.sync="menuExpanded">
                                 <md-icon>menu</md-icon>
                                 <span class="md-list-item-text">Menu</span>
-                                <md-badge
-                                    class="md-primary"
-                                    :md-content="menuContext.items.length"
-                                />
+                                <md-badge class="md-primary" :md-content="menu.length" />
                                 <md-content slot="md-expand" class="menu-items md-scrollbar">
                                     <md-list class="md-dense">
                                         <menu-file
-                                            v-for="(file, index) in menuContext.items"
-                                            :key="file.id"
-                                            :file="file"
+                                            v-for="(item, index) in menu"
+                                            :key="item.file.id"
+                                            :item="item"
                                             :index="index"
-                                            :context="menuContext.context"
                                         >
                                         </menu-file>
                                     </md-list>
                                 </md-content>
                             </md-list-item>
                         </md-list>
-                    </md-card> -->
+                    </md-card>
                 </div>
                 <span
                     v-show="vrDisplay"

@@ -52,7 +52,6 @@ import InventoryFile from '../InventoryFile/InventoryFile';
 import MenuFile from '../MenuFile/MenuFile';
 import { InventoryContext, InventoryItem } from '../InventoryContext';
 import { doesFileDefinePlayerContext } from '../PlayerUtils';
-import { MenuContext } from '../MenuContext';
 import {
     CameraType,
     resizeCameraRig,
@@ -67,6 +66,7 @@ import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { GridChecker } from '../../shared/scene/grid/GridChecker';
 import { PlayerSimulation3D } from '../scene/PlayerSimulation3D';
 import { Simulation } from '../../shared/Simulation';
+import { MenuItem } from '../MenuContext';
 
 @Component({
     components: {
@@ -153,6 +153,18 @@ export default class GameView extends Vue implements IGameView {
             }
         });
 
+        return items;
+    }
+
+    get menu() {
+        let items: MenuItem[] = [];
+        this.simulations.forEach(sim => {
+            if (sim.menuContext) {
+                for (let i = 0; i < sim.menuContext.items.length; i++) {
+                    items[i] = sim.menuContext.items[i];
+                }
+            }
+        });
         return items;
     }
 

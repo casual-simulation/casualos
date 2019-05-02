@@ -68,6 +68,7 @@ export class PlayerSimulation3D extends Simulation3D {
                             this.menuContext.context !== userMenuContextValue
                         ) {
                             this.menuContext = new MenuContext(
+                                this,
                                 userMenuContextValue
                             );
                             console.log(
@@ -99,6 +100,7 @@ export class PlayerSimulation3D extends Simulation3D {
     protected _frameUpdateCore(calc: FileCalculationContext) {
         super._frameUpdateCore(calc);
         this.inventoryContext.frameUpdate(calc);
+        this.menuContext.frameUpdate(calc);
     }
 
     protected _createContext(calc: FileCalculationContext, file: AuxObject) {
@@ -187,6 +189,7 @@ export class PlayerSimulation3D extends Simulation3D {
         );
 
         await this.inventoryContext.fileAdded(file, calc);
+        await this.menuContext.fileAdded(file, calc);
 
         // Change the user's context after first adding and updating it
         // because the callback for file_updated was happening before we
@@ -209,10 +212,12 @@ export class PlayerSimulation3D extends Simulation3D {
     ) {
         await super._fileUpdatedCore(calc, file);
         await this.inventoryContext.fileUpdated(file, [], calc);
+        await this.menuContext.fileUpdated(file, [], calc);
     }
 
     protected _fileRemovedCore(calc: FileCalculationContext, file: string) {
         super._fileRemovedCore(calc, file);
         this.inventoryContext.fileRemoved(file, calc);
+        this.menuContext.fileRemoved(file, calc);
     }
 }
