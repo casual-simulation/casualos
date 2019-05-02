@@ -71,6 +71,7 @@ export class FileManager implements Simulation {
     private _subscriptions: SubscriptionLike[];
     private _status: string;
     private _id: string;
+    private _originalId: string;
     private _aux: RealtimeCausalTree<AuxCausalTree>;
     private _config: { isBuilder: boolean; isPlayer: boolean };
     _errored: boolean;
@@ -81,7 +82,7 @@ export class FileManager implements Simulation {
      * Gets the ID of the simulation that is currently being used.
      */
     get id() {
-        return this._id;
+        return this._originalId;
     }
 
     /**
@@ -154,6 +155,7 @@ export class FileManager implements Simulation {
         config: { isBuilder: boolean; isPlayer: boolean }
     ) {
         this._appManager = app;
+        this._originalId = id;
         this._id = this._getTreeName(id);
         this._config = config;
 

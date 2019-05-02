@@ -38,7 +38,11 @@
                 <md-list-item @click="addSimulation()">
                     <span class="md-list-item-text">Add Simulation</span>
                 </md-list-item>
-                <md-list-item v-for="simulation in simulations" :key="simulation">
+                <md-list-item
+                    v-for="simulation in simulations"
+                    :key="simulation"
+                    @click="removeSimulation(simulation)"
+                >
                     <span class="md-list-item-text">{{ simulation }}</span>
                 </md-list-item>
                 <md-list-item @click.right="toggleOnlineOffline()">
@@ -110,6 +114,13 @@
             md-title="Add Simulation"
             md-confirm-text="Add"
             @md-confirm="finishAddSimulation"
+        />
+
+        <md-dialog-confirm
+            :md-active.sync="showRemoveSimulation"
+            md-title="Remove Simulation"
+            :md-content="`Remove ${simulationToRemove}?`"
+            @md-confirm="finishRemoveSimulation()"
         />
 
         <md-dialog-confirm

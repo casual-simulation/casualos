@@ -14,11 +14,15 @@ import {
     ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME,
     ON_QR_CODE_SCANNED_ACTION_NAME,
     ON_QR_CODE_SCANNER_OPENED_ACTION_NAME,
+    filesInContext,
+    isSimulation,
+    getFileSimulation,
+    calculateDestroyFileEvents,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard } from '../../shared/SharedUtils';
 import { tap } from 'rxjs/operators';
-import { findIndex } from 'lodash';
+import { findIndex, flatMap } from 'lodash';
 import QRCode from '@chenfengyuan/vue-qrcode';
 import CubeIcon from '../public/icons/Cube.svg';
 import HexIcon from '../public/icons/Hexagon.svg';
@@ -104,6 +108,16 @@ export default class App extends Vue {
      * Whether to show the add simulation dialog.
      */
     showAddSimulation: boolean = false;
+
+    /**
+     * Whether to show the confirm remove simulation dialog.
+     */
+    showRemoveSimulation: boolean = false;
+
+    /**
+     * The simulation to remove.
+     */
+    simulationToRemove: string = '';
 
     /**
      * The ID of the simulation to add.
@@ -358,6 +372,7 @@ export default class App extends Vue {
     }
 
     addSimulation() {
+        this.newSimulation = '';
         this.showAddSimulation = true;
     }
 
@@ -369,6 +384,28 @@ export default class App extends Vue {
                 'aux._userSimulationsContext'
             ]]: true,
             ['aux.simulation']: id,
+        });
+    }
+
+    removeSimulation(simulationId: string) {
+        this.showRemoveSimulation = true;
+        this.simulationToRemove = simulationId;
+    }
+
+    finishRemoveSimulation() {
+        appManager.simulationManager.simulations.forEach(sim => {
+            const calc = sim.helper.createContext();
+            const simFiles = filesInContext(
+                calc,
+                sim.helper.userFile.tags['aux._userSimulationsContext']
+            ).filter(
+                f => getFileSimulation(calc, f) === this.simulationToRemove
+            );
+
+            const events = flatMap(simFiles, f =>
+                calculateDestroyFileEvents(calc, f)
+            );
+            sim.helper.transaction(...events);
         });
     }
 
@@ -416,7 +453,7 @@ export default class App extends Vue {
 
         const index = this.simulations.indexOf(simulation.id);
         if (index >= 0) {
-            this.simulations.splice(index, 0);
+            this.simulations.splice(index, 1);
         }
     }
 
