@@ -240,7 +240,11 @@ export abstract class BaseInteractionManager {
             if (input.currentInputType === InputType.Mouse) {
                 const [file, simulation] = this._findHoveredFile(input);
 
-                if (file !== this._hoveredObject) {
+                const fileId = file ? file.id : null;
+                const hoveredId = this._hoveredObject
+                    ? this._hoveredObject.id
+                    : null;
+                if (fileId !== hoveredId) {
                     if (this._hoveredObject) {
                         this.handlePointerExit(
                             this._hoveredObject,
