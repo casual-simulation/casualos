@@ -149,6 +149,13 @@ export class FileManager implements Simulation {
         return this._filePanel;
     }
 
+    /**
+     * Gets the socket manager.
+     */
+    get socketManager() {
+        return this._socketManager;
+    }
+
     constructor(
         app: AppManager,
         id: string,

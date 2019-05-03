@@ -55,24 +55,9 @@ export default class App extends Vue {
     };
 
     /**
-     * Whether the user is online and able to connect to the server.
-     */
-    online: boolean = true;
-
-    /**
-     * Whether the user is currently synced with the server.
-     */
-    synced: boolean = true;
-
-    /**
      * Whether we had previously lost our connection to the server.
      */
     lostConnection: boolean = false;
-
-    /**
-     * Whether the app started without a connection to the server.
-     */
-    startedOffline: boolean = false;
 
     /**
      * Whether the user is logged in.
@@ -102,7 +87,7 @@ export default class App extends Vue {
     /**
      * The list of simulations that are in the app.
      */
-    simulations: string[] = [];
+    simulations: SimulationInfo[] = [];
 
     /**
      * Whether to show the add simulation dialog.
@@ -234,37 +219,37 @@ export default class App extends Vue {
 
                 this.loggedIn = true;
                 this.session = user.channelId;
-                this.online = fileManager.isOnline;
-                this.synced = fileManager.isSynced;
+                // this.online = fileManager.isOnline;
+                // this.synced = fileManager.isSynced;
 
-                setTimeout(() => {
-                    if (!this.online && !this.lostConnection) {
-                        this.startedOffline = true;
-                        this._showOffline();
-                    }
-                }, 1000);
+                // setTimeout(() => {
+                //     if (!this.online && !this.lostConnection) {
+                //         this.startedOffline = true;
+                //         this._showOffline();
+                //     }
+                // }, 1000);
 
-                subs.push(
-                    fileManager.aux.channel.connectionStateChanged.subscribe(
-                        connected => {
-                            if (!connected) {
-                                this._showConnectionLost();
-                                this.online = false;
-                                this.synced = false;
-                                this.lostConnection = true;
-                            } else {
-                                this.online = true;
-                                if (this.lostConnection) {
-                                    this._showConnectionRegained();
-                                }
-                                this.lostConnection = false;
-                                this.startedOffline = false;
-                                this.synced = true;
-                                appManager.checkForUpdates();
-                            }
-                        }
-                    )
-                );
+                // subs.push(
+                //     fileManager.aux.channel.connectionStateChanged.subscribe(
+                //         connected => {
+                //             if (!connected) {
+                //                 this._showConnectionLost();
+                //                 this.online = false;
+                //                 this.synced = false;
+                //                 this.lostConnection = true;
+                //             } else {
+                //                 this.online = true;
+                //                 if (this.lostConnection) {
+                //                     this._showConnectionRegained();
+                //                 }
+                //                 this.lostConnection = false;
+                //                 this.startedOffline = false;
+                //                 this.synced = true;
+                //                 appManager.checkForUpdates();
+                //             }
+                //         }
+                //     )
+                // );
 
                 subs.push(
                     new Subscription(() => {
@@ -335,28 +320,28 @@ export default class App extends Vue {
         });
     }
 
-    toggleOnlineOffline() {
+    toggleOnlineOffline(info: SimulationInfo) {
         // TODO: Fix
-        // let options = new ConfirmDialogOptions();
-        // if (appManager.socketManager.forcedOffline) {
-        //     options.title = 'Enable online?';
-        //     options.body = 'Allow the app to reconnect to the server?';
-        //     options.okText = 'Go Online';
-        //     options.cancelText = 'Stay Offline';
-        // } else {
-        //     options.title = 'Force offline mode?';
-        //     options.body = 'Prevent the app from connecting to the server?';
-        //     options.okText = 'Go Offline';
-        //     options.cancelText = 'Stay Online';
-        // }
-        // EventBus.$once(options.okEvent, () => {
-        //     appManager.socketManager.toggleForceOffline();
-        //     EventBus.$off(options.cancelEvent);
-        // });
-        // EventBus.$once(options.cancelEvent, () => {
-        //     EventBus.$off(options.okEvent);
-        // });
-        // EventBus.$emit('showConfirmDialog', options);
+        let options = new ConfirmDialogOptions();
+        if (info.simulation.socketManager.forcedOffline) {
+            options.title = 'Enable online?';
+            options.body = `Allow ${info.id} to reconnect to the server?`;
+            options.okText = 'Go Online';
+            options.cancelText = 'Stay Offline';
+        } else {
+            options.title = 'Force offline mode?';
+            options.body = `Prevent ${info.id} from connecting to the server?`;
+            options.okText = 'Go Offline';
+            options.cancelText = 'Stay Online';
+        }
+        EventBus.$once(options.okEvent, () => {
+            info.simulation.socketManager.toggleForceOffline();
+            EventBus.$off(options.cancelEvent);
+        });
+        EventBus.$once(options.cancelEvent, () => {
+            EventBus.$off(options.okEvent);
+        });
+        EventBus.$emit('showConfirmDialog', options);
     }
 
     async hideQRCodeScanner() {
@@ -412,6 +397,14 @@ export default class App extends Vue {
     private _simulationAdded(simulation: Simulation) {
         let subs: SubscriptionLike[] = [];
 
+        let info: SimulationInfo = {
+            id: simulation.id,
+            online: false,
+            synced: false,
+            lostConnection: false,
+            simulation: simulation,
+        };
+
         subs.push(
             simulation.helper.localEvents.subscribe(e => {
                 if (e.name === 'show_toast') {
@@ -433,11 +426,33 @@ export default class App extends Vue {
                         }
                     }
                 }
-            })
+            }),
+            simulation.aux.channel.connectionStateChanged.subscribe(
+                connected => {
+                    if (!connected) {
+                        this._showConnectionLost(info);
+                        info.online = false;
+                        info.synced = false;
+                        info.lostConnection = true;
+                    } else {
+                        info.online = true;
+                        if (info.lostConnection) {
+                            this._showConnectionRegained(info);
+                        }
+                        info.lostConnection = false;
+                        info.synced = true;
+                        if (
+                            info.id == appManager.simulationManager.primary.id
+                        ) {
+                            appManager.checkForUpdates();
+                        }
+                    }
+                }
+            )
         );
 
         this._simulationSubs.set(simulation, subs);
-        this.simulations.push(simulation.id);
+        this.simulations.push(info);
     }
 
     private _simulationRemoved(simulation: Simulation) {
@@ -451,7 +466,7 @@ export default class App extends Vue {
 
         this._simulationSubs.delete(simulation);
 
-        const index = this.simulations.indexOf(simulation.id);
+        const index = this.simulations.findIndex(s => s.id === simulation.id);
         if (index >= 0) {
             this.simulations.splice(index, 1);
         }
@@ -468,10 +483,12 @@ export default class App extends Vue {
         });
     }
 
-    private _showConnectionLost() {
+    private _showConnectionLost(info: SimulationInfo) {
         this.snackbar = {
             visible: true,
-            message: 'Connection lost. You are now working offline.',
+            message: `Connection to ${
+                info.id
+            } lost. You are now working offline.`,
         };
     }
 
@@ -494,10 +511,10 @@ export default class App extends Vue {
         };
     }
 
-    private _showConnectionRegained() {
+    private _showConnectionRegained(info: SimulationInfo) {
         this.snackbar = {
             visible: true,
-            message: 'Connection regained. You are back online.',
+            message: `Connection to ${info.id} regained. You are back online.`,
         };
     }
 
@@ -571,4 +588,12 @@ export default class App extends Vue {
         if (this.confirmDialogOptions.cancelEvent != null)
             EventBus.$emit(this.confirmDialogOptions.cancelEvent);
     }
+}
+
+export interface SimulationInfo {
+    id: string;
+    online: boolean;
+    synced: boolean;
+    lostConnection: boolean;
+    simulation: Simulation;
 }

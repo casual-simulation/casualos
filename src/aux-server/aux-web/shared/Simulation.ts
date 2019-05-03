@@ -18,6 +18,7 @@ import { Observable } from 'rxjs';
 import { LoadingProgressCallback } from '@casual-simulation/aux-common/LoadingProgress';
 import FilePanelManager from './FilePanelManager';
 import { Initable } from './Initable';
+import { SocketManager } from './SocketManager';
 
 /**
  * Defines an interface for objects that represent file simulations.
@@ -68,6 +69,11 @@ export interface Simulation extends Initable {
      * Gets the files panel manager.
      */
     filePanel: FilePanelManager;
+
+    /**
+     * Gets the socket manager.
+     */
+    socketManager: SocketManager;
 
     /**
      * Sets the file mode that the user should be in.
