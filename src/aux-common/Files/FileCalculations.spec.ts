@@ -48,6 +48,7 @@ import {
     isContextMovable,
     isPickupable,
     isSimulation,
+    parseSimulationId,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
@@ -55,6 +56,7 @@ import { FilesState, cleanFile, fileRemoved } from './FilesChannel';
 import { file } from '../aux-format';
 import uuid from 'uuid/v4';
 import { select } from 'd3';
+import { tsExpressionWithTypeArguments } from '@babel/types';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -2397,6 +2399,129 @@ describe('FileCalculations', () => {
                     tag: 'abc',
                     value: [],
                 },
+            });
+        });
+    });
+
+    describe('parseSimulationId()', () => {
+        it('should default to filling the channel ID', () => {
+            let result = parseSimulationId('abc');
+            expect(result).toEqual({
+                success: true,
+                channel: 'abc',
+            });
+
+            result = parseSimulationId('!@#$%');
+            expect(result).toEqual({
+                success: true,
+                channel: '!@#$%',
+            });
+
+            result = parseSimulationId('.test');
+            expect(result).toEqual({
+                success: true,
+                channel: '.test',
+            });
+
+            result = parseSimulationId('test.');
+            expect(result).toEqual({
+                success: true,
+                channel: 'test.',
+            });
+        });
+
+        it('should fill in the context', () => {
+            let result = parseSimulationId('abc/def');
+            expect(result).toEqual({
+                success: true,
+                channel: 'abc',
+                context: 'def',
+            });
+
+            result = parseSimulationId('!@#$%/@@a*987');
+            expect(result).toEqual({
+                success: true,
+                channel: '!@#$%',
+                context: '@@a*987',
+            });
+
+            result = parseSimulationId('abc/def/ghi/');
+            expect(result).toEqual({
+                success: true,
+                channel: 'abc',
+                context: 'def/ghi/',
+            });
+
+            result = parseSimulationId('abc/def/ghi/.hello');
+            expect(result).toEqual({
+                success: true,
+                channel: 'abc',
+                context: 'def/ghi/.hello',
+            });
+        });
+
+        it('should fill in the server', () => {
+            let result = parseSimulationId('auxplayer.com/abc/def');
+            expect(result).toEqual({
+                success: true,
+                server: 'auxplayer.com',
+                channel: 'abc',
+                context: 'def',
+            });
+
+            result = parseSimulationId('abc.test.local/!@#$%/@@a*987');
+            expect(result).toEqual({
+                success: true,
+                server: 'abc.test.local',
+                channel: '!@#$%',
+                context: '@@a*987',
+            });
+
+            result = parseSimulationId('.local/!@#$%/@@a*987');
+            expect(result).toEqual({
+                success: true,
+                server: '.local',
+                channel: '!@#$%',
+                context: '@@a*987',
+            });
+
+            result = parseSimulationId('.local/!@#$%/@@a*987');
+            expect(result).toEqual({
+                success: true,
+                server: '.local',
+                channel: '!@#$%',
+                context: '@@a*987',
+            });
+        });
+
+        it('should use the given URL', () => {
+            let result = parseSimulationId('https://example.com');
+            expect(result).toEqual({
+                success: true,
+                server: 'example.com',
+            });
+
+            result = parseSimulationId('https://example.com/sim');
+            expect(result).toEqual({
+                success: true,
+                server: 'example.com',
+                channel: 'sim',
+            });
+
+            result = parseSimulationId('https://example.com/sim/context');
+            expect(result).toEqual({
+                success: true,
+                server: 'example.com',
+                channel: 'sim',
+                context: 'context',
+            });
+
+            result = parseSimulationId('https://example.com:3000/sim/context');
+            expect(result).toEqual({
+                success: true,
+                server: 'example.com:3000',
+                channel: 'sim',
+                context: 'context',
             });
         });
     });
