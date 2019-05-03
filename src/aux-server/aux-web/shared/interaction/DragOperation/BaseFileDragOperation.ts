@@ -333,6 +333,8 @@ export abstract class BaseFileDragOperation implements IOperation {
                 );
                 events.push(...result.events);
             }
+
+            this.simulation.helper.transaction(...events);
         }
     }
 
