@@ -187,9 +187,8 @@ export default class App extends Vue {
         return location.href;
     }
 
-    forcedOffline() {
-        // return appManager.socketManager.forcedOffline;
-        return false;
+    forcedOffline(info: SimulationInfo) {
+        return info.simulation.socketManager.forcedOffline;
     }
 
     created() {
@@ -372,9 +371,16 @@ export default class App extends Vue {
         });
     }
 
-    removeSimulation(simulationId: string) {
-        this.showRemoveSimulation = true;
-        this.simulationToRemove = simulationId;
+    removeSimulation(info: SimulationInfo) {
+        if (appManager.simulationManager.primary.id === info.id) {
+            this.snackbar = {
+                message: `You cannot remove the primary simulation.`,
+                visible: true,
+            };
+        } else {
+            this.showRemoveSimulation = true;
+            this.simulationToRemove = info.id;
+        }
     }
 
     finishRemoveSimulation() {

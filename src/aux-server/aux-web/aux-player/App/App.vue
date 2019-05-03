@@ -36,21 +36,26 @@
                     </span>
                 </md-list-item>
                 <md-list-item @click="addSimulation()">
-                    <span class="md-list-item-text">Add Simulation</span>
+                    <md-icon>cloud</md-icon>
+                    <span class="md-list-item-text">Add Channel</span>
                 </md-list-item>
                 <md-list-item
                     v-for="simulation in simulations"
-                    :key="simulation"
+                    :key="simulation.id"
                     @click="removeSimulation(simulation)"
                     @click.right="toggleOnlineOffline(simulation)"
                 >
-                    <!-- <md-icon id="forced-offline-error" v-if="forcedOffline()">error</md-icon> -->
-                    <md-icon id="synced-checkmark" v-if="simulation.synced">cloud_done</md-icon>
-                    <md-icon id="not-synced-warning" v-else>cloud_off</md-icon>
-                    <!-- <span class="md-list-item-text" v-if="forcedOffline()">
+                    <md-icon class="forced-offline-error" v-if="forcedOffline(simulation)"
+                        >error</md-icon
+                    >
+                    <md-icon class="synced-checkmark" v-else-if="simulation.synced"
+                        >cloud_done</md-icon
+                    >
+                    <md-icon class="not-synced-warning" v-else>cloud_off</md-icon>
+                    <span class="md-list-item-text" v-if="forcedOffline(simulation)">
                         Forced Offline
-                    </span> -->
-                    <span class="md-list-item-text" v-if="simulation.synced">
+                    </span>
+                    <span class="md-list-item-text" v-else-if="simulation.synced">
                         Synced
                         <span v-if="simulation.online">Online</span>
                         <span v-else>Offline</span>
@@ -62,24 +67,6 @@
                     </span>
                     <span class="md-list-item-text">{{ simulation.id }}</span>
                 </md-list-item>
-                <!-- <md-list-item @click.right="toggleOnlineOffline()">
-                    <md-icon id="forced-offline-error" v-if="forcedOffline()">error</md-icon>
-                    <md-icon id="synced-checkmark" v-else-if="synced">cloud_done</md-icon>
-                    <md-icon id="not-synced-warning" v-else>cloud_off</md-icon>
-                    <span class="md-list-item-text" v-if="forcedOffline()">
-                        Forced Offline
-                    </span>
-                    <span class="md-list-item-text" v-else-if="synced">
-                        Synced
-                        <span v-if="online">Online</span>
-                        <span v-else>Offline</span>
-                    </span>
-                    <span class="md-list-item-text" v-else>
-                        Not Synced
-                        <span v-if="online">Online</span>
-                        <span v-else>Offline</span>
-                    </span>
-                </md-list-item> -->
                 <md-list-item v-if="updateAvailable" @click="refreshPage()">
                     <md-icon>update</md-icon>
                     <span class="md-list-item-text">An new version is available!</span>
@@ -128,7 +115,7 @@
         <md-dialog-prompt
             :md-active.sync="showAddSimulation"
             v-model="newSimulation"
-            md-title="Add Simulation"
+            md-title="Add Channel"
             md-confirm-text="Add"
             @md-confirm="finishAddSimulation"
         />
