@@ -1315,6 +1315,7 @@ export function isFileMovable(
     calc: FileCalculationContext,
     file: File
 ): boolean {
+    // checks if file is movable, but we should also allow it if it is pickupable so we can drag it into inventory if movable is false
     return calculateBooleanTagValue(calc, file, 'aux.movable', true);
 }
 

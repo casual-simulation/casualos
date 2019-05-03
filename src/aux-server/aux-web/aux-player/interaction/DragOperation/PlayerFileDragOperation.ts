@@ -10,6 +10,7 @@ import {
     DROP_ANY_IN_INVENTORY_ACTION_NAME,
     DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME,
     isPickupable,
+    isFileMovable,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import GameView from '../../GameView/GameView';
@@ -25,7 +26,10 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
     // This overrides the base class IGameView
     protected _gameView: GameView;
 
+    // Determines if the file is in the inventory currently
     private _inInventory: boolean;
+
+    // Determines if the file was in the inventory at the beginning of the drag operation
     private _originallyInInventory: boolean;
 
     /**
@@ -71,7 +75,10 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
                         0
                     );
                 }
-            } else {
+            } else if (
+                isFileMovable(calc, this._file) ||
+                this._originallyInInventory
+            ) {
                 if (this._context !== this._gameView.context) {
                     this._previousContext = this._context;
                     this._context = this._gameView.context;

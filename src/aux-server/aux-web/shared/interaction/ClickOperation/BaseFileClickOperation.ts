@@ -8,6 +8,7 @@ import {
     FileCalculationContext,
     AuxFile,
     isFileMovable,
+    isPickupable,
 } from '@casual-simulation/aux-common';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
@@ -78,6 +79,7 @@ export abstract class BaseFileClickOperation implements IOperation {
                     // Attempt to start dragging now that we've crossed the threshold.
                     this._triedDragging = true;
 
+                    //returns true (can drag) if either aux.movable or aux.pickupable are true
                     if (this._canDragFile(calc, this._file)) {
                         this._dragOperation = this._createDragOperation(calc);
                     } else {
@@ -110,7 +112,7 @@ export abstract class BaseFileClickOperation implements IOperation {
     }
 
     protected _canDragFile(calc: FileCalculationContext, file: File): boolean {
-        return isFileMovable(calc, file);
+        return isFileMovable(calc, file) || isPickupable(calc, file);
     }
 
     protected abstract _performClick(calc: FileCalculationContext): void;
