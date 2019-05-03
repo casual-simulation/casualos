@@ -384,14 +384,16 @@ export default class App extends Vue {
     }
 
     finishRemoveSimulation() {
+        this.removeSimulationById(this.simulationToRemove);
+    }
+
+    removeSimulationById(id: string) {
         appManager.simulationManager.simulations.forEach(sim => {
             const calc = sim.helper.createContext();
             const simFiles = filesInContext(
                 calc,
                 sim.helper.userFile.tags['aux._userSimulationsContext']
-            ).filter(
-                f => getFileSimulation(calc, f) === this.simulationToRemove
-            );
+            ).filter(f => getFileSimulation(calc, f) === id);
 
             const events = flatMap(simFiles, f =>
                 calculateDestroyFileEvents(calc, f)
@@ -431,6 +433,10 @@ export default class App extends Vue {
                             // automatically.
                         }
                     }
+                } else if (e.name === 'load_simulation') {
+                    this.finishAddSimulation(e.id);
+                } else if (e.name === 'unload_simulation') {
+                    this.removeSimulationById(e.id);
                 }
             }),
             simulation.aux.channel.connectionStateChanged.subscribe(

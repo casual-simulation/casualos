@@ -12,6 +12,8 @@ import {
     toast as toastMessage,
     tweenTo as calcTweenTo,
     openQRCodeScanner as calcOpenQRCodeScanner,
+    loadSimulation as calcLoadSimulation,
+    unloadSimulation as calcUnloadSimulation,
 } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
 import { every, find } from 'lodash';
@@ -635,6 +637,22 @@ export function closeQRCodeScanner() {
 }
 
 /**
+ * Loads the channel with the given ID.
+ * @param id The ID of the channel to load.
+ */
+export function loadChannel(id: string) {
+    actions.push(calcLoadSimulation(id));
+}
+
+/**
+ * Unloads the channel with the given ID.
+ * @param id The ID of the channel to unload.
+ */
+export function unloadChannel(id: string) {
+    actions.push(calcUnloadSimulation(id));
+}
+
+/**
  * Defines a set of functions that are able to make File Diffs.
  */
 export const diff = {
@@ -658,6 +676,8 @@ export const player = {
     tweenTo,
     openQRCodeScanner,
     closeQRCodeScanner,
+    loadChannel,
+    unloadChannel,
 };
 
 /**
