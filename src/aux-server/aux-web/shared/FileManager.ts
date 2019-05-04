@@ -18,6 +18,9 @@ import {
     UserMode,
     lerp,
     auxCausalTreeFactory,
+    SimulationIdParseResult,
+    parseSimulationId,
+    SimulationIdParseSuccess,
 } from '@casual-simulation/aux-common';
 import { keys, union, values } from 'lodash';
 import {
@@ -72,6 +75,7 @@ export class FileManager implements Simulation {
     private _status: string;
     private _id: string;
     private _originalId: string;
+    private _parsedId: SimulationIdParseSuccess;
     private _aux: RealtimeCausalTree<AuxCausalTree>;
     private _config: { isBuilder: boolean; isPlayer: boolean };
     _errored: boolean;
@@ -83,6 +87,13 @@ export class FileManager implements Simulation {
      */
     get id() {
         return this._originalId;
+    }
+
+    /**
+     * Gets the parsed ID of the simulation.
+     */
+    get parsedId(): SimulationIdParseSuccess {
+        return this._parsedId;
     }
 
     /**
@@ -163,10 +174,11 @@ export class FileManager implements Simulation {
     ) {
         this._appManager = app;
         this._originalId = id;
-        this._id = this._getTreeName(id);
+        this._parsedId = parseSimulationId(id);
+        this._id = this._getTreeName(this._parsedId.channel);
         this._config = config;
 
-        this._socketManager = new SocketManager();
+        this._socketManager = new SocketManager(this._parsedId.host);
         this._treeManager = new CausalTreeManager(
             this._socketManager.socket,
             auxCausalTreeFactory()

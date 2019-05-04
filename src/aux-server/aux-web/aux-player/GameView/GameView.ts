@@ -342,7 +342,11 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _simulationAdded(sim: Simulation) {
-        const sim3D = new PlayerSimulation3D(this.context, this, sim);
+        const sim3D = new PlayerSimulation3D(
+            sim.parsedId.context || this.context,
+            this,
+            sim
+        );
         sim3D.init();
         sim3D.onFileAdded.addListener(this.onFileAdded.invoke);
         sim3D.onFileRemoved.addListener(this.onFileRemoved.invoke);

@@ -185,7 +185,7 @@ export interface SimulationIdParseFailure {
 export interface SimulationIdParseSuccess {
     success: true;
     channel?: string;
-    server?: string;
+    host?: string;
     context?: string;
 }
 
@@ -1606,7 +1606,7 @@ export function getDiffUpdate(file: File): PartialFile {
     return null;
 }
 
-export function parseSimulationId(id: string): SimulationIdParseResult {
+export function parseSimulationId(id: string): SimulationIdParseSuccess {
     try {
         let uri = new URL(id);
         const split = uri.pathname.slice(1).split('/');
@@ -1614,19 +1614,19 @@ export function parseSimulationId(id: string): SimulationIdParseResult {
             if (split[0]) {
                 return {
                     success: true,
-                    server: uri.host,
+                    host: uri.host,
                     channel: split[0],
                 };
             } else {
                 return {
                     success: true,
-                    server: uri.host,
+                    host: uri.host,
                 };
             }
         } else {
             return {
                 success: true,
-                server: uri.host,
+                host: uri.host,
                 channel: split[0],
                 context: split.slice(1).join('/'),
             };
@@ -1645,7 +1645,7 @@ export function parseSimulationId(id: string): SimulationIdParseResult {
             if (firstDotIndex >= 0 && firstDotIndex < firstSlashIndex) {
                 return {
                     success: true,
-                    server: split[0],
+                    host: split[0],
                     channel: split[1],
                     context: split.slice(2).join('/'),
                 };

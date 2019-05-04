@@ -9,6 +9,7 @@ import {
     UserMode,
     FileCalculationContext,
     PartialFile,
+    SimulationIdParseSuccess,
 } from '@casual-simulation/aux-common';
 import FileWatcher from './FileWatcher';
 import { RecentFilesManager } from './RecentFilesManager';
@@ -28,6 +29,11 @@ export interface Simulation extends Initable {
      * Gets the ID of the simulation that is currently being used.
      */
     id: string;
+
+    /**
+     * Gets the parsed ID of the simulation.
+     */
+    parsedId: SimulationIdParseSuccess;
 
     /**
      * Gets whether the app is connected to the server but may
