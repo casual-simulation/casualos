@@ -10,7 +10,7 @@ import {
     fileContextSortOrder,
     hasValue,
     isSimulation,
-    getFileSimulation,
+    getFileChannel,
 } from '@casual-simulation/aux-common';
 import { remove, sortBy } from 'lodash';
 import { getOptionalValue } from '../shared/SharedUtils';
@@ -162,7 +162,7 @@ export class SimulationContext {
             return {
                 file: f,
                 simulation: this.simulation,
-                simulationToLoad: getFileSimulation(calc, f),
+                simulationToLoad: getFileChannel(calc, f),
                 context: this.context,
             };
         });

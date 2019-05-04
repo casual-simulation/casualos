@@ -16,7 +16,7 @@ import {
     ON_QR_CODE_SCANNER_OPENED_ACTION_NAME,
     filesInContext,
     isSimulation,
-    getFileSimulation,
+    getFileChannel,
     calculateDestroyFileEvents,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
@@ -367,7 +367,7 @@ export default class App extends Vue {
             [primarySim.helper.userFile.tags[
                 'aux._userSimulationsContext'
             ]]: true,
-            ['aux.simulation']: id,
+            ['aux.channel']: id,
         });
     }
 
@@ -393,7 +393,7 @@ export default class App extends Vue {
             const simFiles = filesInContext(
                 calc,
                 sim.helper.userFile.tags['aux._userSimulationsContext']
-            ).filter(f => getFileSimulation(calc, f) === id);
+            ).filter(f => getFileChannel(calc, f) === id);
 
             const events = flatMap(simFiles, f =>
                 calculateDestroyFileEvents(calc, f)

@@ -1399,10 +1399,10 @@ describe('FileCalculations', () => {
         ];
 
         it.each(cases)(
-            'should map aux.simulation:%s to %s',
+            'should map aux.channel:%s to %s',
             (value: string, expected: boolean) => {
                 let file = createFile('test', {
-                    'aux.simulation': value,
+                    'aux.channel': value,
                 });
 
                 const calc = createCalculationContext([file]);

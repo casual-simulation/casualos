@@ -328,17 +328,6 @@ export default class GameView extends Vue implements IGameView {
                 )
                 .subscribe()
         );
-
-        // this.addSidebarItem('add_simulation', 'Add Simulation', async () => {
-        //     console.log('[GameView] Add simulation!');
-        //     const primarySim = appManager.simulationManager.primary;
-        //     await primarySim.helper.createFile(undefined, {
-        //         [primarySim.helper.userFile.tags[
-        //             'aux._userSimulationsContext'
-        //         ]]: true,
-        //         ['aux.simulation']: 'test',
-        //     });
-        // });
     }
 
     private _simulationAdded(sim: Simulation) {

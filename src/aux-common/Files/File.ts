@@ -33,7 +33,7 @@ export interface FileTags {
     ['aux.input.placeholder']?: string;
     ['aux.shape']?: FileShape;
     ['aux.image']?: string;
-    ['aux.simulation']?: string;
+    ['aux.channel']?: string;
     ['aux._creator']?: string;
     ['aux._diff']?: boolean;
     ['aux._diffTags']?: string[];

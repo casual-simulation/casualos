@@ -1825,19 +1825,19 @@ export function isSimulation(
     calc: FileCalculationContext,
     file: Object
 ): boolean {
-    return !!getFileSimulation(calc, file);
+    return !!getFileChannel(calc, file);
 }
 
 /**
- * Gets the aux.simulation tag from the given file.
+ * Gets the aux.channel tag from the given file.
  * @param calc The file calculation context to use.
  * @param file The file.
  */
-export function getFileSimulation(
+export function getFileChannel(
     calc: FileCalculationContext,
     file: Object
 ): string {
-    return calculateFileValue(calc, file, 'aux.simulation');
+    return calculateFileValue(calc, file, 'aux.channel');
 }
 
 /**

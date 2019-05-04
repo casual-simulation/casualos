@@ -35,7 +35,7 @@ describe('SimulationContext', () => {
         for (let i = 0; i < 10; i++) {
             let file = createFile(`testId_${i}`);
             file.tags[context] = true;
-            file.tags['aux.simulation'] = 'a';
+            file.tags['aux.channel'] = 'a';
             files.push(file);
         }
 
@@ -65,7 +65,7 @@ describe('SimulationContext', () => {
         for (let i = 0; i < 6; i++) {
             let file = createFile(`testId_${i}`);
             file.tags[context] = true;
-            file.tags['aux.simulation'] = 'a';
+            file.tags['aux.channel'] = 'a';
             files.push(file);
         }
 
@@ -73,7 +73,7 @@ describe('SimulationContext', () => {
         for (let i = 6; i < 10; i++) {
             let file = createFile(`testId_${i}`);
             file.tags['some_other_context'] = true;
-            file.tags['aux.simulation'] = 'a';
+            file.tags['aux.channel'] = 'a';
             files.push(file);
         }
 
@@ -90,7 +90,7 @@ describe('SimulationContext', () => {
         expect(sim.files).toHaveLength(6);
     });
 
-    it('should ignore files that dont have aux.simulation set to something', () => {
+    it('should ignore files that dont have aux.channel set to something', () => {
         let context = 'my_inventory';
         let sim = new SimulationContext(null, context);
         let files: File[] = [];
@@ -99,7 +99,7 @@ describe('SimulationContext', () => {
         for (let i = 0; i < 6; i++) {
             let file = createFile(`testId_${i}`);
             file.tags[context] = true;
-            file.tags['aux.simulation'] = 'abc';
+            file.tags['aux.channel'] = 'abc';
             files.push(file);
         }
 
@@ -130,27 +130,27 @@ describe('SimulationContext', () => {
             createFile('testId_4', {
                 [context]: true,
                 [`${context}.index`]: 0,
-                'aux.simulation': 'a',
+                'aux.channel': 'a',
             }),
             createFile('testId_3', {
                 [context]: true,
                 [`${context}.index`]: 1,
-                'aux.simulation': 'a',
+                'aux.channel': 'a',
             }),
             createFile('testId_2', {
                 [context]: true,
                 [`${context}.index`]: 2,
-                'aux.simulation': 'a',
+                'aux.channel': 'a',
             }),
             createFile('testId_1', {
                 [context]: true,
                 [`${context}.index`]: 3,
-                'aux.simulation': 'a',
+                'aux.channel': 'a',
             }),
             createFile('testId_0', {
                 [context]: true,
                 [`${context}.index`]: 4,
-                'aux.simulation': 'a',
+                'aux.channel': 'a',
             }),
         ];
         const calc = createCalculationContext(files);
@@ -183,12 +183,12 @@ describe('SimulationContext', () => {
             createFile('testId_0', {
                 [context]: true,
                 [`${context}.index`]: 0,
-                'aux.simulation': 'a',
+                'aux.channel': 'a',
             }),
             createFile('testId_1', {
                 [context]: true,
                 [`${context}.index`]: 1,
-                'aux.simulation': 'a',
+                'aux.channel': 'a',
             }),
         ];
 
