@@ -491,7 +491,7 @@ export default class App extends Vue {
      */
     private _superAction(eventName: string, arg?: any) {
         appManager.simulationManager.simulations.forEach(sim => {
-            sim.helper.action(ON_QR_CODE_SCANNER_OPENED_ACTION_NAME, null, arg);
+            sim.helper.action(eventName, null, arg);
         });
     }
 
