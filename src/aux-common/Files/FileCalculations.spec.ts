@@ -2460,11 +2460,11 @@ describe('FileCalculations', () => {
             });
         });
 
-        it('should fill in the server', () => {
+        it('should fill in the host', () => {
             let result = parseSimulationId('auxplayer.com/abc/def');
             expect(result).toEqual({
                 success: true,
-                server: 'auxplayer.com',
+                host: 'auxplayer.com',
                 channel: 'abc',
                 context: 'def',
             });
@@ -2472,7 +2472,7 @@ describe('FileCalculations', () => {
             result = parseSimulationId('abc.test.local/!@#$%/@@a*987');
             expect(result).toEqual({
                 success: true,
-                server: 'abc.test.local',
+                host: 'abc.test.local',
                 channel: '!@#$%',
                 context: '@@a*987',
             });
@@ -2480,7 +2480,7 @@ describe('FileCalculations', () => {
             result = parseSimulationId('.local/!@#$%/@@a*987');
             expect(result).toEqual({
                 success: true,
-                server: '.local',
+                host: '.local',
                 channel: '!@#$%',
                 context: '@@a*987',
             });
@@ -2488,7 +2488,7 @@ describe('FileCalculations', () => {
             result = parseSimulationId('.local/!@#$%/@@a*987');
             expect(result).toEqual({
                 success: true,
-                server: '.local',
+                host: '.local',
                 channel: '!@#$%',
                 context: '@@a*987',
             });
@@ -2498,20 +2498,20 @@ describe('FileCalculations', () => {
             let result = parseSimulationId('https://example.com');
             expect(result).toEqual({
                 success: true,
-                server: 'example.com',
+                host: 'example.com',
             });
 
             result = parseSimulationId('https://example.com/sim');
             expect(result).toEqual({
                 success: true,
-                server: 'example.com',
+                host: 'example.com',
                 channel: 'sim',
             });
 
             result = parseSimulationId('https://example.com/sim/context');
             expect(result).toEqual({
                 success: true,
-                server: 'example.com',
+                host: 'example.com',
                 channel: 'sim',
                 context: 'context',
             });
@@ -2519,7 +2519,7 @@ describe('FileCalculations', () => {
             result = parseSimulationId('https://example.com:3000/sim/context');
             expect(result).toEqual({
                 success: true,
-                server: 'example.com:3000',
+                host: 'example.com:3000',
                 channel: 'sim',
                 context: 'context',
             });

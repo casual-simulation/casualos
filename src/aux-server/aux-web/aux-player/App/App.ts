@@ -437,6 +437,8 @@ export default class App extends Vue {
                     this.finishAddSimulation(e.id);
                 } else if (e.name === 'unload_simulation') {
                     this.removeSimulationById(e.id);
+                } else if (e.name === 'super_shout') {
+                    this._superAction(e.eventName, e.argument);
                 }
             }),
             simulation.aux.channel.connectionStateChanged.subscribe(
