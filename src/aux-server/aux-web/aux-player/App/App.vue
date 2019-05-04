@@ -52,19 +52,6 @@
                         >cloud_done</md-icon
                     >
                     <md-icon class="not-synced-warning" v-else>cloud_off</md-icon>
-                    <span class="md-list-item-text" v-if="forcedOffline(simulation)">
-                        Forced Offline
-                    </span>
-                    <span class="md-list-item-text" v-else-if="simulation.synced">
-                        Synced
-                        <span v-if="simulation.online">Online</span>
-                        <span v-else>Offline</span>
-                    </span>
-                    <span class="md-list-item-text" v-else>
-                        Not Synced
-                        <span v-if="simulation.online">Online</span>
-                        <span v-else>Offline</span>
-                    </span>
                     <span class="md-list-item-text">{{ simulation.id }}</span>
                 </md-list-item>
                 <md-list-item v-if="updateAvailable" @click="refreshPage()">
