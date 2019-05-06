@@ -49,7 +49,8 @@
                 -   This works out though, because we merge all the simulation contexts and remove duplicate channels.
                 -   When `player.unloadChannel(id)` is called, we only remove simulation files that are in the channel that the script is running in.
                 -   As a result, if another channel has called `player.loadChannel(id)` with the same ID the channel will remain loaded because at least one channel has requested that it be loaded.
-        -   Added in a tween for the zoom that fires once a file has been focused on, it will tween to file position then zoom to the set zoom value.
+    -   Added in a tween for the zoom that fires once a file has been focused on, it will tween to file position then zoom to the set zoom value.
+    -   Added `whisper(file, event, argument)` formula function that sends shouts to a single file.
 
 ## V0.5.4
 
@@ -62,7 +63,7 @@
     -   Changed the globals file to look like a normal file when created and be labeled as "Global".
     -   Updated all the formula functions to use the new naming scheme.
     -   Added the ability to drag worksurfaces when they are minimized.
-        -                         Setting `aux.context.movable` to `false` will prevent this behavior.
+        -                           Setting `aux.context.movable` to `false` will prevent this behavior.
     -   Selecting an item in the inventory no longer shows a selection indicator.
 -   Bug Fixes
     -   The inventory placeholders should now always appear square.
