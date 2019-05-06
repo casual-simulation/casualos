@@ -25,6 +25,11 @@ require('three/examples/js/renderers/CSS3DRenderer');
 
 export class HtmlMixerDecorator extends AuxFile3DDecorator {
     /**
+     * The global html mixer context used by all html mixer decorators.
+     */
+    static mixerContext: HtmlMixer.Context;
+
+    /**
      * The src url for the iframe.
      */
     url: string = null;
@@ -35,12 +40,18 @@ export class HtmlMixerDecorator extends AuxFile3DDecorator {
         super(file3D);
         this._gameView = gameView;
 
-        let mixerContext = new HtmlMixer.Context(
-            this._gameView.getRenderer(),
-            this._gameView.getScene(),
-            this._gameView.getMainCamera()
-        );
-        console.log('[HtmlMixerDecorator] mixerContext:', mixerContext);
+        if (!HtmlMixerDecorator.mixerContext) {
+            HtmlMixerDecorator.mixerContext = new HtmlMixer.Context(
+                this._gameView.getRenderer(),
+                this._gameView.getScene(),
+                this._gameView.getMainCamera()
+            );
+
+            console.log(
+                '[HtmlMixerDecorator] mixerContext:',
+                HtmlMixerDecorator.mixerContext
+            );
+        }
     }
 
     fileUpdated(calc: FileCalculationContext): void {
