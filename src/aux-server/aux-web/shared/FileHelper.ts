@@ -25,6 +25,8 @@ import {
     filesInContext,
     getFileChannel,
     calculateDestroyFileEvents,
+    merge,
+    AUX_FILE_VERSION,
 } from '@casual-simulation/aux-common';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { Subject, Observable } from 'rxjs';
@@ -154,6 +156,27 @@ export class FileHelper {
         );
 
         await this._tree.addFile(workspace);
+    }
+
+    /**
+     * Creates a new globals file.
+     * @param fileId The ID of the file to create. If not specified a new ID will be generated.
+     */
+    async createGlobalsFile(fileId?: string) {
+        const workspace: Workspace = createWorkspace(
+            fileId,
+            undefined,
+            undefined,
+            'Global'
+        );
+
+        const final = merge(workspace, {
+            tags: {
+                'aux.version': AUX_FILE_VERSION,
+            },
+        });
+
+        await this._tree.addFile(final);
     }
 
     /**

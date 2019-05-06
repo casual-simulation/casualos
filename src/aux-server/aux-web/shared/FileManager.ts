@@ -423,12 +423,7 @@ export class FileManager implements Simulation {
         this._setStatus('Updating globals file...');
         let globalsFile = this.helper.globalsFile;
         if (!globalsFile) {
-            await this._helper.createWorkspace(
-                'globals',
-                undefined,
-                undefined,
-                'Global'
-            );
+            await this._helper.createGlobalsFile('globals');
         }
     }
 

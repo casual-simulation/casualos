@@ -1124,6 +1124,16 @@ export function filterMatchesArguments(
 }
 
 /**
+ * Gets the AUX_FILE_VERSION number that the given file was created with.
+ * If not specified, then undefined is returned.
+ * @param calc The file calculation context.
+ * @param file THe file.
+ */
+export function getFileVersion(calc: FileCalculationContext, file: File) {
+    return calculateNumericalTagValue(calc, file, 'aux.version', undefined);
+}
+
+/**
  * Gets the index that the given file is at in the given context.
  * @param calc The calculation context to use.
  * @param file The file.

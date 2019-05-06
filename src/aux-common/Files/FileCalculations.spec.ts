@@ -49,6 +49,7 @@ import {
     isPickupable,
     isSimulation,
     parseSimulationId,
+    getFileVersion,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
@@ -3238,6 +3239,28 @@ describe('FileCalculations', () => {
             const file1 = createFile('abcdefghijklmnopqrstuvwxyz');
             const file2 = createFile('zyxwvutsrqponmlkjighfedcba');
             expect(formatValue([file1, file2])).toBe('[abcde,zyxwv]');
+        });
+    });
+
+    describe('getFileVersion()', () => {
+        it('should return the aux.version', () => {
+            const file = createFile('test', {
+                'aux.version': 1,
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(getFileVersion(calc, file)).toBe(1);
+        });
+
+        it('should return undefined if not a number', () => {
+            const file = createFile('test', {
+                'aux.version': 'abc',
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(getFileVersion(calc, file)).toBeUndefined();
         });
     });
 });

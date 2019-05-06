@@ -15,6 +15,7 @@ export interface FileTags {
     ['aux.scene.color']?: string;
 
     // Normal file tags
+    ['aux.version']?: unknown;
     ['aux.color']?: unknown;
     ['aux.movable']?: unknown;
     ['aux.mergeable']?: unknown;
@@ -168,3 +169,11 @@ export const DEFAULT_WORKSPACE_COLOR = '#999999';
  * The default color for scene background.
  */
 export const DEFAULT_SCENE_BACKGROUND_COLOR = '#263238';
+
+/**
+ * The current file format version for AUX Files.
+ * This number increments whenever there are any changes between AUX versions.
+ * As a result, it will allow us to make breaking changes but still upgrade people's files
+ * in the future.
+ */
+export const AUX_FILE_VERSION: number = 1;
