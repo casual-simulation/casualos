@@ -109,9 +109,14 @@ module.exports = {
                 enforce: 'pre',
             },
             {
-                // Export THREEx from all threex.*.js files.
-                test: /threex[^/]+\.js$/,
-                use: ['exports-loader?THREEx'],
+                test: /threex\.htmlmixer\.js$/,
+                use: ['exports-loader?HtmlMixer=THREEx.HtmlMixer'],
+            },
+            {
+                test: /threex\.htmlmixerhelper\.js$/,
+                use: [
+                    'exports-loader?HtmlMixerHelpers=THREEx.HtmlMixerHelpers',
+                ],
             },
         ],
     },
@@ -125,6 +130,14 @@ module.exports = {
             'vue-json-tree-view': path.resolve(
                 __dirname,
                 'shared/public/VueJsonTreeView/index.ts'
+            ),
+            'threex-htmlmixer': path.resolve(
+                __dirname,
+                'shared/public/threex-htmlmixer/threex.htmlmixer.js'
+            ),
+            'threex-htmlmixerhelpers': path.resolve(
+                __dirname,
+                'shared/public/threex-htmlmixer/threex.htmlmixerhelpers.js'
             ),
         },
     },

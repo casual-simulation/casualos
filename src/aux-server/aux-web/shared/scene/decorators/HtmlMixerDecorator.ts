@@ -5,6 +5,7 @@ import {
     MeshToonMaterial,
     MeshStandardMaterial,
     SpriteMaterial,
+    Plane,
 } from 'three';
 import {
     FileCalculationContext,
@@ -15,8 +16,8 @@ import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
 import { AuxFile3D } from '../AuxFile3D';
 import { EventBus } from '../../../shared/EventBus';
 import { IGameView } from '../../../shared/IGameView';
-
-const THREEx = require('../../../shared/public/threex-htmlmixer/threex.htmlmixer.js');
+import { HtmlMixer } from 'threex-htmlmixer';
+import { HtmlMixerHelpers } from 'threex-htmlmixerhelpers';
 
 // Need this include so that the CSS3DRenderer gets run for its side effects (being included in the THREE namespace).
 // CSS3DREnderer is required by the THREEx.HtmlMixer
@@ -34,7 +35,7 @@ export class HtmlMixerDecorator extends AuxFile3DDecorator {
         super(file3D);
         this._gameView = gameView;
 
-        let mixerContext = new THREEx.HtmlMixer.Context(
+        let mixerContext = new HtmlMixer.Context(
             this._gameView.getRenderer(),
             this._gameView.getScene(),
             this._gameView.getMainCamera()
