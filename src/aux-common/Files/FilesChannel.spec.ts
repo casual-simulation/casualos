@@ -556,6 +556,12 @@ describe('FilesChannel', () => {
                             'sayHello()': 'this.hello = true',
                         },
                     },
+                    otherFile: {
+                        id: 'otherFile',
+                        tags: {
+                            'sayHello()': 'this.hello = true',
+                        },
+                    },
                 };
 
                 // specify the UUID to use next
@@ -567,6 +573,11 @@ describe('FilesChannel', () => {
 
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
+                        tags: {
+                            hello: true,
+                        },
+                    }),
+                    fileUpdated('otherFile', {
                         tags: {
                             hello: true,
                         },
@@ -803,6 +814,43 @@ describe('FilesChannel', () => {
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([superShout('sayHello')]);
+            });
+        });
+
+        describe('whisper()', () => {
+            it('should send an event only to the given file', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            _position: { x: 0, y: 0, z: 0 },
+                            _workspace: 'abc',
+                            'abcdef()': 'whisper(this, "sayHello")',
+                            'sayHello()': 'this.hello = true',
+                        },
+                    },
+                    otherFile: {
+                        id: 'otherFile',
+                        tags: {
+                            'sayHello()': 'this.hello = true',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('abcdef', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            hello: true,
+                        },
+                    }),
+                ]);
             });
         });
 

@@ -405,6 +405,16 @@ export function superShout(eventName: string, arg?: any) {
 }
 
 /**
+ * Sends the given event to the given file.
+ * @param file The file to send the event to.
+ * @param eventName The name of the event to send.
+ * @param arg The argument to pass.
+ */
+export function whisper(file: File | string, eventName: string, arg?: any) {
+    event(eventName, [file], arg);
+}
+
+/**
  * Redirects the user to a context in the given simulation and context.
  * @param simulationId The ID of the simulation to go to.
  * @param context The context to go to. If not provided then the simulation ID will be used as the context.
@@ -727,4 +737,5 @@ export default {
     getFilesInContext,
     shout,
     superShout,
+    whisper,
 };
