@@ -11,6 +11,9 @@ import {
     toast,
     tweenTo,
     openQRCodeScanner,
+    loadSimulation,
+    unloadSimulation,
+    superShout,
 } from './FilesChannel';
 import { File } from './File';
 import uuid from 'uuid/v4';
@@ -776,6 +779,30 @@ describe('FilesChannel', () => {
                         },
                     }),
                 ]);
+            });
+        });
+
+        describe('superShout()', () => {
+            it('should emit a super_shout local event', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            _position: { x: 0, y: 0, z: 0 },
+                            _workspace: 'abc',
+                            'abcdef()': 'superShout("sayHello")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('abcdef', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([superShout('sayHello')]);
             });
         });
 
@@ -2008,6 +2035,50 @@ describe('FilesChannel', () => {
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([openQRCodeScanner(false)]);
+            });
+        });
+
+        describe('loadChannel()', () => {
+            it('should emit a LoadSimulationEvent', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'player.loadChannel("abc")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([loadSimulation('abc')]);
+            });
+        });
+
+        describe('unloadChannel()', () => {
+            it('should emit a UnloadSimulationEvent', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'player.unloadChannel("abc")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([unloadSimulation('abc')]);
             });
         });
     });

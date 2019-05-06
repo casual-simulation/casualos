@@ -24,6 +24,8 @@ import {
     LoadingProgress,
     LoadingProgressCallback,
 } from '@casual-simulation/aux-common/LoadingProgress';
+import { Simulation } from './Simulation';
+import SimulationManager from './SimulationManager';
 
 export interface User {
     id: string;
@@ -84,9 +86,10 @@ export class AppManager {
     private _db: AppDatabase;
     private _userSubject: BehaviorSubject<User>;
     private _updateAvailable: BehaviorSubject<boolean>;
-    private _fileManager: FileManager;
-    private _socketManager: SocketManager;
-    private _treeManager: CausalTreeManager;
+    private _simulationManager: SimulationManager<Simulation>;
+    // private _fileManager: FileManager;
+    // private _socketManager: SocketManager;
+    // private _treeManager: CausalTreeManager;
     private _initPromise: Promise<void>;
     private _user: User;
     private _config: WebConfig;
@@ -95,12 +98,10 @@ export class AppManager {
         this.loadingProgress = new LoadingProgress();
         this._initSentry();
         this._initOffline();
-        this._socketManager = new SocketManager();
-        this._treeManager = new CausalTreeManager(
-            this._socketManager.socket,
-            auxCausalTreeFactory()
-        );
-        this._fileManager = new FileManager(this, this._treeManager);
+        this._simulationManager = new SimulationManager(id => {
+            return new FileManager(this, id, this._config);
+        });
+        // this._fileManager = new FileManager(this, this._treeManager);
         this._userSubject = new BehaviorSubject<User>(null);
         this._db = new AppDatabase();
         this._initPromise = this._init();
@@ -110,18 +111,18 @@ export class AppManager {
         return this._initPromise;
     }
 
-    get socketManager() {
-        return this._socketManager;
-    }
+    // get socketManager() {
+    //     return this._socketManager;
+    // }
 
-    get treeManager() {
-        return this._treeManager;
-    }
+    // get fileManager(): Simulation {
+    //     if (this.user) {
+    //         return this._fileManager;
+    //     }
+    // }
 
-    get fileManager() {
-        if (this.user) {
-            return this._fileManager;
-        }
+    get simulationManager(): SimulationManager<Simulation> {
+        return this._simulationManager;
     }
 
     get userObservable(): Observable<User> {
@@ -164,7 +165,7 @@ export class AppManager {
      */
     downloadState(): void {
         downloadAuxState(
-            this.fileManager.aux.tree,
+            this.simulationManager.primary.aux.tree,
             `${this.user.name}-${this.user.channelId || 'default'}`
         );
     }
@@ -183,9 +184,7 @@ export class AppManager {
             // Don't try to import the tree because it's like trying to
             // import an unrelated Git repo. Git handles this by allowing
             // multiple root nodes but we dont allow multiple roots.
-            const tree = <AuxCausalTree>(
-                this._treeManager.factory.create('aux', state)
-            );
+            const tree = <AuxCausalTree>new AuxCausalTree(state);
             await tree.import(state);
             value = tree.value;
         } else {
@@ -193,7 +192,7 @@ export class AppManager {
             value = <FilesState>(<unknown>state);
         }
 
-        await this.fileManager.addState(value);
+        await this.simulationManager.primary.helper.addState(value);
     }
 
     /**
@@ -203,7 +202,7 @@ export class AppManager {
      * @param setup
      */
     whileLoggedIn(
-        setup: (user: User, fileManager: FileManager) => SubscriptionLike[]
+        setup: (user: User, fileManager: Simulation) => SubscriptionLike[]
     ): SubscriptionLike {
         return this.userObservable
             .pipe(
@@ -213,7 +212,7 @@ export class AppManager {
                         subs.forEach(s => s.unsubscribe());
                     }
                     if (user) {
-                        return setup(user, this.fileManager);
+                        return setup(user, this.simulationManager.primary);
                     } else {
                         return null;
                     }
@@ -306,6 +305,7 @@ export class AppManager {
     }
 
     private async _initUser() {
+        console.log('[AppManager] Initalizing user...');
         this._user = null;
         this._userSubject.subscribe(user => {
             Sentry.configureScope(scope => {
@@ -356,12 +356,16 @@ export class AppManager {
                         progress.error
                     );
                 };
-                await this._fileManager.init(
+                await this.simulationManager.setPrimary(
                     this._user.channelId,
-                    false,
-                    onFileManagerInitProgress,
-                    this.config
+                    onFileManagerInitProgress
                 );
+                // await this.simulationManager.init(
+                //     this._user.channelId,
+                //     false,
+                //     onFileManagerInitProgress,
+                //     this.config
+                // );
                 this.loadingProgress.status = 'Saving user...';
                 await this._saveUser();
                 this._userSubject.next(this._user);
@@ -393,7 +397,8 @@ export class AppManager {
             });
             console.log('[AppManager] Logout');
 
-            this._fileManager.dispose();
+            this.simulationManager.clear();
+            // this._fileManager.dispose();
             this._user = null;
             this._userSubject.next(null);
             this._saveUser();
@@ -453,12 +458,17 @@ export class AppManager {
                         progress.error
                     );
                 };
-                await this._fileManager.init(
+
+                await this.simulationManager.setPrimary(
                     channelId,
-                    true,
-                    onFileManagerInitProgress,
-                    this.config
+                    onFileManagerInitProgress
                 );
+                // await this._fileManager.init(
+                //     channelId,
+                //     true,
+                //     onFileManagerInitProgress,
+                //     this.config
+                // );
 
                 this._userSubject.next(this._user);
                 this.loadingProgress.set(95, 'Saving user...', null);

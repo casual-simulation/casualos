@@ -21,14 +21,14 @@
                 ></span>
 
                 <div ref="fileQueue">
-                    <div v-if="!vrDisplay && filesMode" class="toolbar-layout">
+                    <div v-if="!vrDisplay && filesMode && simulation3D" class="toolbar-layout">
                         <mini-file
-                            v-for="(file, index) in recentFiles"
+                            v-for="(file, index) in simulation3D.recentFiles"
                             :key="index"
                             :file="file"
-                            :selected="selectedRecentFile === file"
+                            :selected="simulation3D.selectedRecentFile === file"
                             :large="index === 0"
-                            @click="selectRecentFile(file)"
+                            @click="simulation3D.selectRecentFile(file)"
                         ></mini-file>
                     </div>
                 </div>

@@ -80,7 +80,7 @@ export default class Home extends Vue {
     }
 
     get fileManager() {
-        return appManager.fileManager;
+        return appManager.simulationManager.primary;
     }
 
     get filesMode() {
@@ -128,7 +128,7 @@ export default class Home extends Vue {
     }
 
     tagFocusChanged(file: AuxObject, tag: string, focused: boolean) {
-        this.fileManager.setEditedFile(file);
+        this.fileManager.helper.setEditingFile(file);
     }
 
     constructor() {
@@ -165,8 +165,8 @@ export default class Home extends Vue {
         );
 
         this._subs.push(
-            this.fileManager
-                .fileChanged(this.fileManager.userFile)
+            this.fileManager.watcher
+                .fileChanged(this.fileManager.helper.userFile)
                 .pipe(
                     tap(file => {
                         this.mode = getUserMode(file);

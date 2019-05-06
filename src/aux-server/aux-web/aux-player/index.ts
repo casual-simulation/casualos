@@ -46,6 +46,7 @@ import {
     MdSnackbar,
     MdSwitch,
     MdBadge,
+    MdDialogPrompt,
 } from 'vue-material/dist/components';
 import 'vue-material/dist/vue-material.min.css';
 import 'vue-material/dist/theme/default.css';
@@ -90,6 +91,7 @@ Vue.use(MdTooltip);
 Vue.use(MdSnackbar);
 Vue.use(MdSwitch);
 Vue.use(MdBadge);
+Vue.use(MdDialogPrompt);
 
 const routes: RouteConfig[] = [
     {
@@ -103,6 +105,7 @@ const routes: RouteConfig[] = [
         component: Home,
         props: route => ({
             context: route.params.context,
+            channels: route.query.channels,
         }),
     },
     {
@@ -110,6 +113,7 @@ const routes: RouteConfig[] = [
         name: 'aux-builder',
         redirect: to => {
             if (appManager.config) {
+                console.log('[Router] Redirecting to builder');
                 window.location.href = `${appManager.config.projectorBaseUrl}/${
                     to.params.id
                 }`;

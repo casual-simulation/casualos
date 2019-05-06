@@ -7,6 +7,7 @@ import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { IGameView } from '../../shared/IGameView';
 import { appManager } from '../../shared/AppManager';
 import { differenceBy, maxBy } from 'lodash';
+import { Simulation } from '../Simulation';
 
 /**
  * Class that is able to tween the main camera to a given location.
@@ -16,6 +17,10 @@ export class TweenCameraToOperation implements IOperation {
     private _interaction: BaseInteractionManager;
     private _target: Vector3;
     private _finished: boolean;
+
+    get simulation(): Simulation {
+        return null;
+    }
 
     /**
      * Create a new drag rules.

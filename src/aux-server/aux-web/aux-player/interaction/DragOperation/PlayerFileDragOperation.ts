@@ -18,13 +18,13 @@ import { Intersection, Vector2 } from 'three';
 import { Physics } from '../../../shared/scene/Physics';
 import { Input } from '../../../shared/scene/Input';
 import InventoryFile from '../../InventoryFile/InventoryFile';
-import { appManager } from '../../../shared/AppManager';
+import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 
 export class PlayerFileDragOperation extends BaseFileDragOperation {
     // This overrides the base class BaseInteractionManager
     protected _interaction: PlayerInteractionManager;
     // This overrides the base class IGameView
-    protected _gameView: GameView;
+    protected _simulation3D: PlayerSimulation3D;
 
     // Determines if the file is in the inventory currently
     private _inInventory: boolean;
@@ -36,21 +36,21 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
      * Create a new drag rules.
      */
     constructor(
-        gameView: GameView,
+        simulation: PlayerSimulation3D,
         interaction: PlayerInteractionManager,
         files: File[],
         context: string
     ) {
-        super(gameView, interaction, files, context);
+        super(simulation, interaction, files, context);
         this._originallyInInventory = this._inInventory =
             context &&
-            appManager.fileManager.userFile.tags[
+            this.simulation.helper.userFile.tags[
                 'aux._userInventoryContext'
             ] === context;
     }
 
     protected _onDrag(calc: FileCalculationContext): void {
-        const targetData = this._gameView.getInput().getTargetData();
+        const targetData = this.gameView.getInput().getTargetData();
         const vueElement = Input.getVueParent(targetData.inputOver);
 
         if (vueElement) {
@@ -58,11 +58,14 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
                 vueElement instanceof InventoryFile &&
                 isPickupable(calc, this._file)
             ) {
-                if (!vueElement.file) {
+                if (!vueElement.item) {
                     // Over empty slot, update the files context and context position to match the slot's index.
-                    if (this._context !== vueElement.context) {
+                    if (
+                        this._context !==
+                        this._simulation3D.inventoryContext.context
+                    ) {
                         this._previousContext = this._context;
-                        this._context = vueElement.context;
+                        this._context = this._simulation3D.inventoryContext.context;
                         this._inInventory = true;
                     }
 
@@ -79,15 +82,15 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
                 isFileMovable(calc, this._file) ||
                 this._originallyInInventory
             ) {
-                if (this._context !== this._gameView.context) {
+                if (this._context !== this._simulation3D.context) {
                     this._previousContext = this._context;
-                    this._context = this._gameView.context;
+                    this._context = this._simulation3D.context;
                     this._inInventory = false;
                 }
 
                 const mouseDir = Physics.screenPosToRay(
-                    this._gameView.getInput().getMouseScreenPos(),
-                    this._gameView.getMainCamera()
+                    this.gameView.getInput().getMouseScreenPos(),
+                    this.gameView.getMainCamera()
                 );
                 const { good, gridTile } = this._interaction.pointOnGrid(
                     calc,
@@ -122,34 +125,34 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
 
         if (this._originallyInInventory && !this._inInventory) {
             let events: FileEvent[] = [];
-            let result = appManager.fileManager.helper.actionEvents(
+            let result = this.simulation.helper.actionEvents(
                 DRAG_OUT_OF_INVENTORY_ACTION_NAME,
                 this._files
             );
             events.push(...result.events);
-            result = appManager.fileManager.helper.actionEvents(
+            result = this.simulation.helper.actionEvents(
                 DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME,
                 null,
                 this._files
             );
             events.push(...result.events);
 
-            appManager.fileManager.transaction(...events);
+            this.simulation.helper.transaction(...events);
         } else if (!this._originallyInInventory && this._inInventory) {
             let events: FileEvent[] = [];
-            let result = appManager.fileManager.helper.actionEvents(
+            let result = this.simulation.helper.actionEvents(
                 DROP_IN_INVENTORY_ACTION_NAME,
                 this._files
             );
             events.push(...result.events);
-            result = appManager.fileManager.helper.actionEvents(
+            result = this.simulation.helper.actionEvents(
                 DROP_ANY_IN_INVENTORY_ACTION_NAME,
                 null,
                 this._files
             );
             events.push(...result.events);
 
-            appManager.fileManager.transaction(...events);
+            this.simulation.helper.transaction(...events);
         }
     }
 }

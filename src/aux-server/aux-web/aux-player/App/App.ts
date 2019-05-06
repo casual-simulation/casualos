@@ -14,18 +14,25 @@ import {
     ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME,
     ON_QR_CODE_SCANNED_ACTION_NAME,
     ON_QR_CODE_SCANNER_OPENED_ACTION_NAME,
+    filesInContext,
+    isSimulation,
+    getFileChannel,
+    calculateDestroyFileEvents,
+    merge,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard } from '../../shared/SharedUtils';
 import { tap } from 'rxjs/operators';
-import { findIndex } from 'lodash';
+import { findIndex, flatMap } from 'lodash';
 import QRCode from '@chenfengyuan/vue-qrcode';
 import CubeIcon from '../public/icons/Cube.svg';
 import HexIcon from '../public/icons/Hexagon.svg';
 import { QrcodeStream } from 'vue-qrcode-reader';
+import { Simulation } from '../../shared/Simulation';
 
 export interface SidebarItem {
     id: string;
+    group: string;
     text: string;
     icon: string;
     click: () => void;
@@ -49,24 +56,9 @@ export default class App extends Vue {
     };
 
     /**
-     * Whether the user is online and able to connect to the server.
-     */
-    online: boolean = true;
-
-    /**
-     * Whether the user is currently synced with the server.
-     */
-    synced: boolean = true;
-
-    /**
      * Whether we had previously lost our connection to the server.
      */
     lostConnection: boolean = false;
-
-    /**
-     * Whether the app started without a connection to the server.
-     */
-    startedOffline: boolean = false;
 
     /**
      * Whether the user is logged in.
@@ -93,10 +85,36 @@ export default class App extends Vue {
      */
     extraItems: SidebarItem[] = [];
 
+    /**
+     * The list of simulations that are in the app.
+     */
+    simulations: SimulationInfo[] = [];
+
+    /**
+     * Whether to show the add simulation dialog.
+     */
+    showAddSimulation: boolean = false;
+
+    /**
+     * Whether to show the confirm remove simulation dialog.
+     */
+    showRemoveSimulation: boolean = false;
+
+    /**
+     * The simulation to remove.
+     */
+    simulationToRemove: string = '';
+
+    /**
+     * The ID of the simulation to add.
+     */
+    newSimulation: string = '';
+
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
 
     private _subs: SubscriptionLike[] = [];
+    private _simulationSubs: Map<Simulation, SubscriptionLike[]> = new Map();
 
     get version() {
         return appManager.version.latestTaggedVersion;
@@ -117,14 +135,27 @@ export default class App extends Vue {
         id: string,
         text: string,
         click: () => void,
-        icon: string = null
+        icon: string = null,
+        group: string = null
     ) {
-        this.extraItems.push({
-            id: id,
-            text: text,
-            icon: icon,
-            click: click,
-        });
+        const index = findIndex(this.extraItems, i => i.id === id);
+        if (index >= 0) {
+            this.extraItems[index] = {
+                id: id,
+                group: group,
+                text: text,
+                icon: icon,
+                click: click,
+            };
+        } else {
+            this.extraItems.push({
+                id: id,
+                group: group,
+                text: text,
+                icon: icon,
+                click: click,
+            });
+        }
     }
 
     /**
@@ -139,16 +170,31 @@ export default class App extends Vue {
         }
     }
 
+    /**
+     * Removes all the sidebar items with the given group.
+     * @param id
+     */
+    @Provide()
+    removeSidebarGroup(group: string) {
+        for (let i = this.extraItems.length - 1; i >= 0; i--) {
+            const item = this.extraItems[i];
+            if (item.group === group) {
+                this.extraItems.splice(i, 1);
+            }
+        }
+    }
+
     url() {
         return location.href;
     }
 
-    forcedOffline() {
-        return appManager.socketManager.forcedOffline;
+    forcedOffline(info: SimulationInfo) {
+        return info.simulation.socketManager.forcedOffline;
     }
 
     created() {
         this._subs = [];
+        this._simulationSubs = new Map();
         this._subs.push(
             appManager.updateAvailableObservable.subscribe(updateAvailable => {
                 if (updateAvailable) {
@@ -159,65 +205,51 @@ export default class App extends Vue {
         );
 
         this._subs.push(
+            appManager.simulationManager.simulationAdded
+                .pipe(tap(sim => this._simulationAdded(sim)))
+                .subscribe(),
+            appManager.simulationManager.simulationRemoved
+                .pipe(tap(sim => this._simulationRemoved(sim)))
+                .subscribe()
+        );
+
+        this._subs.push(
             appManager.whileLoggedIn((user, fileManager) => {
                 let subs: SubscriptionLike[] = [];
 
                 this.loggedIn = true;
                 this.session = user.channelId;
-                this.online = fileManager.isOnline;
-                this.synced = fileManager.isSynced;
+                // this.online = fileManager.isOnline;
+                // this.synced = fileManager.isSynced;
 
-                setTimeout(() => {
-                    if (!this.online && !this.lostConnection) {
-                        this.startedOffline = true;
-                        this._showOffline();
-                    }
-                }, 1000);
+                // setTimeout(() => {
+                //     if (!this.online && !this.lostConnection) {
+                //         this.startedOffline = true;
+                //         this._showOffline();
+                //     }
+                // }, 1000);
 
-                subs.push(
-                    fileManager.connectionStateChanged.subscribe(connected => {
-                        if (!connected) {
-                            this._showConnectionLost();
-                            this.online = false;
-                            this.synced = false;
-                            this.lostConnection = true;
-                        } else {
-                            this.online = true;
-                            if (this.lostConnection) {
-                                this._showConnectionRegained();
-                            }
-                            this.lostConnection = false;
-                            this.startedOffline = false;
-                            this.synced = true;
-                            appManager.checkForUpdates();
-                        }
-                    })
-                );
-
-                subs.push(
-                    fileManager.helper.localEvents.subscribe(e => {
-                        if (e.name === 'show_toast') {
-                            this.snackbar = {
-                                message: e.message,
-                                visible: true,
-                            };
-                        } else if (e.name === 'show_qr_code') {
-                            if (this.showQRScanner !== e.open) {
-                                this.showQRScanner = e.open;
-                                if (e.open) {
-                                    appManager.fileManager.action(
-                                        ON_QR_CODE_SCANNER_OPENED_ACTION_NAME,
-                                        null
-                                    );
-                                } else {
-                                    // Don't need to send an event for closing
-                                    // because onQrCodeScannerClosed() gets triggered
-                                    // automatically.
-                                }
-                            }
-                        }
-                    })
-                );
+                // subs.push(
+                //     fileManager.aux.channel.connectionStateChanged.subscribe(
+                //         connected => {
+                //             if (!connected) {
+                //                 this._showConnectionLost();
+                //                 this.online = false;
+                //                 this.synced = false;
+                //                 this.lostConnection = true;
+                //             } else {
+                //                 this.online = true;
+                //                 if (this.lostConnection) {
+                //                     this._showConnectionRegained();
+                //                 }
+                //                 this.lostConnection = false;
+                //                 this.startedOffline = false;
+                //                 this.synced = true;
+                //                 appManager.checkForUpdates();
+                //             }
+                //         }
+                //     )
+                // );
 
                 subs.push(
                     new Subscription(() => {
@@ -248,7 +280,9 @@ export default class App extends Vue {
 
     logout() {
         const context =
-            appManager.fileManager.userFile.tags['aux._userContext'];
+            appManager.simulationManager.primary.helper.userFile.tags[
+                'aux._userContext'
+            ];
         appManager.logout();
         this.showNavigation = false;
         this.$router.push({
@@ -286,22 +320,22 @@ export default class App extends Vue {
         });
     }
 
-    toggleOnlineOffline() {
+    toggleOnlineOffline(info: SimulationInfo) {
+        // TODO: Fix
         let options = new ConfirmDialogOptions();
-        if (appManager.socketManager.forcedOffline) {
+        if (info.simulation.socketManager.forcedOffline) {
             options.title = 'Enable online?';
-            options.body = 'Allow the app to reconnect to the server?';
+            options.body = `Allow ${info.id} to reconnect to the server?`;
             options.okText = 'Go Online';
             options.cancelText = 'Stay Offline';
         } else {
             options.title = 'Force offline mode?';
-            options.body = 'Prevent the app from connecting to the server?';
+            options.body = `Prevent ${info.id} from connecting to the server?`;
             options.okText = 'Go Offline';
             options.cancelText = 'Stay Online';
         }
-
         EventBus.$once(options.okEvent, () => {
-            appManager.socketManager.toggleForceOffline();
+            info.simulation.socketManager.toggleForceOffline();
             EventBus.$off(options.cancelEvent);
         });
         EventBus.$once(options.cancelEvent, () => {
@@ -315,24 +349,186 @@ export default class App extends Vue {
     }
 
     async onQrCodeScannerClosed() {
-        await appManager.fileManager.action(
-            ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME,
-            null
-        );
+        this._superAction(ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME);
     }
 
     async onQRCodeScanned(code: string) {
-        await appManager.fileManager.action(
-            ON_QR_CODE_SCANNED_ACTION_NAME,
-            null,
-            code
-        );
+        this._superAction(ON_QR_CODE_SCANNED_ACTION_NAME, code);
     }
 
-    private _showConnectionLost() {
+    addSimulation() {
+        this.newSimulation = '';
+        this.showAddSimulation = true;
+    }
+
+    async finishAddSimulation(id: string) {
+        console.log('[App] Add simulation!');
+        await appManager.simulationManager.primary.helper.createSimulation(id);
+    }
+
+    removeSimulation(info: SimulationInfo) {
+        if (appManager.simulationManager.primary.id === info.id) {
+            this.snackbar = {
+                message: `You cannot remove the primary simulation.`,
+                visible: true,
+            };
+        } else {
+            this.showRemoveSimulation = true;
+            this.simulationToRemove = info.id;
+        }
+    }
+
+    finishRemoveSimulation() {
+        this.removeSimulationById(this.simulationToRemove);
+    }
+
+    removeSimulationById(id: string) {
+        appManager.simulationManager.simulations.forEach(sim => {
+            sim.helper.destroySimulations(id);
+        });
+    }
+
+    private _simulationAdded(simulation: Simulation) {
+        const index = this.simulations.findIndex(s => s.id === simulation.id);
+        if (index >= 0) {
+            return;
+        }
+
+        let subs: SubscriptionLike[] = [];
+
+        let info: SimulationInfo = {
+            id: simulation.id,
+            online: false,
+            synced: false,
+            lostConnection: false,
+            simulation: simulation,
+        };
+
+        subs.push(
+            simulation.helper.localEvents.subscribe(e => {
+                if (e.name === 'show_toast') {
+                    this.snackbar = {
+                        message: e.message,
+                        visible: true,
+                    };
+                } else if (e.name === 'show_qr_code') {
+                    if (this.showQRScanner !== e.open) {
+                        this.showQRScanner = e.open;
+                        if (e.open) {
+                            this._superAction(
+                                ON_QR_CODE_SCANNER_OPENED_ACTION_NAME
+                            );
+                        } else {
+                            // Don't need to send an event for closing
+                            // because onQrCodeScannerClosed() gets triggered
+                            // automatically.
+                        }
+                    }
+                } else if (e.name === 'load_simulation') {
+                    this.finishAddSimulation(e.id);
+                } else if (e.name === 'unload_simulation') {
+                    this.removeSimulationById(e.id);
+                } else if (e.name === 'super_shout') {
+                    this._superAction(e.eventName, e.argument);
+                }
+            }),
+            simulation.aux.channel.connectionStateChanged.subscribe(
+                connected => {
+                    if (!connected) {
+                        this._showConnectionLost(info);
+                        info.online = false;
+                        info.synced = false;
+                        info.lostConnection = true;
+                    } else {
+                        info.online = true;
+                        if (info.lostConnection) {
+                            this._showConnectionRegained(info);
+                        }
+                        info.lostConnection = false;
+                        info.synced = true;
+                        if (
+                            info.id == appManager.simulationManager.primary.id
+                        ) {
+                            appManager.checkForUpdates();
+                        }
+                    }
+                }
+            )
+        );
+
+        this._simulationSubs.set(simulation, subs);
+        this.simulations.push(info);
+
+        this._updateQuery();
+    }
+
+    private _simulationRemoved(simulation: Simulation) {
+        const subs = this._simulationSubs.get(simulation);
+
+        if (subs) {
+            subs.forEach(s => {
+                s.unsubscribe();
+            });
+        }
+
+        this._simulationSubs.delete(simulation);
+
+        const index = this.simulations.findIndex(s => s.id === simulation.id);
+        if (index >= 0) {
+            this.simulations.splice(index, 1);
+        }
+
+        this._updateQuery();
+    }
+
+    private _updateQuery() {
+        if (!appManager.simulationManager.primary) {
+            return;
+        }
+
+        const channel =
+            appManager.simulationManager.primary.parsedId.channel ||
+            this.$router.currentRoute.params.id;
+        const context =
+            appManager.simulationManager.primary.parsedId.context ||
+            this.$router.currentRoute.params.context;
+        if (channel && context) {
+            this.$router.replace({
+                name: 'home',
+                params: {
+                    id: channel,
+                    context: context,
+                },
+                query: {
+                    channels: this.simulations
+                        .filter(
+                            sim =>
+                                sim.id !==
+                                appManager.simulationManager.primary.id
+                        )
+                        .map(sim => sim.id),
+                },
+            });
+        }
+    }
+
+    /**
+     * Sends the given event and argument to every loaded simulation.
+     * @param eventName The event to send.
+     * @param arg The argument to send.
+     */
+    private _superAction(eventName: string, arg?: any) {
+        appManager.simulationManager.simulations.forEach(sim => {
+            sim.helper.action(eventName, null, arg);
+        });
+    }
+
+    private _showConnectionLost(info: SimulationInfo) {
         this.snackbar = {
             visible: true,
-            message: 'Connection lost. You are now working offline.',
+            message: `Connection to ${
+                info.id
+            } lost. You are now working offline.`,
         };
     }
 
@@ -355,10 +551,10 @@ export default class App extends Vue {
         };
     }
 
-    private _showConnectionRegained() {
+    private _showConnectionRegained(info: SimulationInfo) {
         this.snackbar = {
             visible: true,
-            message: 'Connection regained. You are back online.',
+            message: `Connection to ${info.id} regained. You are back online.`,
         };
     }
 
@@ -432,4 +628,12 @@ export default class App extends Vue {
         if (this.confirmDialogOptions.cancelEvent != null)
             EventBus.$emit(this.confirmDialogOptions.cancelEvent);
     }
+}
+
+export interface SimulationInfo {
+    id: string;
+    online: boolean;
+    synced: boolean;
+    lostConnection: boolean;
+    simulation: Simulation;
 }

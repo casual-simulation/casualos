@@ -8,24 +8,29 @@ import {
     getFilePosition,
     getFileIndex,
     fileContextSortOrder,
+    hasValue,
+    isSimulation,
+    getFileChannel,
 } from '@casual-simulation/aux-common';
 import { remove, sortBy } from 'lodash';
 import { getOptionalValue } from '../shared/SharedUtils';
 import { PlayerSimulation3D } from './scene/PlayerSimulation3D';
+import { Subject, Observable } from 'rxjs';
 
 /**
  * Defines an interface for an item that is in a user's menu.
  */
-export interface MenuItem {
+export default interface SimulationItem {
     file: AuxFile;
     simulation: PlayerSimulation3D;
+    simulationToLoad: string;
     context: string;
 }
 
 /**
- * MenuContext is a helper class to assist with managing the user's menu context.
+ * SimulationContext is a helper class for managing the set of simulations that a user has loaded.
  */
-export class MenuContext {
+export class SimulationContext {
     /**
      * The simulation that the context is for.
      */
@@ -42,11 +47,19 @@ export class MenuContext {
     files: AuxFile[] = [];
 
     /**
-     * The files in this contexts mapped into menu items.
+     * The files in this contexts mapped into simulation items.
      * Files are ordered in ascending order based on their index in the context.
      */
-    items: MenuItem[] = [];
+    items: SimulationItem[] = [];
 
+    /**
+     * Gets an observable that resolves whenever this simulation's items are updated.
+     */
+    get itemsUpdated(): Observable<void> {
+        return this._itemsUpdated;
+    }
+
+    private _itemsUpdated: Subject<void>;
     private _itemsDirty: boolean;
 
     constructor(simulation: PlayerSimulation3D, context: string) {
@@ -56,6 +69,7 @@ export class MenuContext {
         this.simulation = simulation;
         this.context = context;
         this.files = [];
+        this._itemsUpdated = new Subject<void>();
     }
 
     /**
@@ -65,7 +79,9 @@ export class MenuContext {
      */
     async fileAdded(file: AuxFile, calc: FileCalculationContext) {
         const isInContext = !!this.files.find(f => f.id == file.id);
-        const shouldBeInContext = isFileInContext(calc, file, this.context);
+        const shouldBeInContext =
+            isFileInContext(calc, file, this.context) &&
+            isSimulation(calc, file);
 
         if (!isInContext && shouldBeInContext) {
             this._addFile(file, calc);
@@ -84,7 +100,9 @@ export class MenuContext {
         calc: FileCalculationContext
     ) {
         const isInContext = !!this.files.find(f => f.id == file.id);
-        const shouldBeInContext = isFileInContext(calc, file, this.context);
+        const shouldBeInContext =
+            isFileInContext(calc, file, this.context) &&
+            isSimulation(calc, file);
 
         if (!isInContext && shouldBeInContext) {
             this._addFile(file, calc);
@@ -111,7 +129,9 @@ export class MenuContext {
         }
     }
 
-    dispose(): void {}
+    dispose(): void {
+        this._itemsUpdated.unsubscribe();
+    }
 
     private _addFile(file: AuxFile, calc: FileCalculationContext) {
         this.files.push(file);
@@ -142,8 +162,11 @@ export class MenuContext {
             return {
                 file: f,
                 simulation: this.simulation,
+                simulationToLoad: getFileChannel(calc, f),
                 context: this.context,
             };
         });
+
+        this._itemsUpdated.next();
     }
 }

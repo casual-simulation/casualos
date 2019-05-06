@@ -48,6 +48,7 @@ import { FilesState, cleanFile, hasValue } from './FilesChannel';
 import { merge, shortUuid } from '../utils';
 import { AuxFile, AuxObject, AuxOp, AuxState } from '../aux-format';
 import { Atom } from '@casual-simulation/causal-trees';
+import { TorusGeometry } from 'three';
 
 export var ShortId_Length: number = 5;
 
@@ -171,6 +172,21 @@ export interface FilterParseFailure {
     partialSuccess: boolean;
     tag: string;
     eventName: string;
+}
+
+export type SimulationIdParseResult =
+    | SimulationIdParseFailure
+    | SimulationIdParseSuccess;
+
+export interface SimulationIdParseFailure {
+    success: false;
+}
+
+export interface SimulationIdParseSuccess {
+    success: true;
+    channel?: string;
+    host?: string;
+    context?: string;
 }
 
 /**
@@ -1591,6 +1607,60 @@ export function getDiffUpdate(file: File): PartialFile {
     return null;
 }
 
+export function parseSimulationId(id: string): SimulationIdParseSuccess {
+    try {
+        let uri = new URL(id);
+        const split = uri.pathname.slice(1).split('/');
+        if (split.length === 1) {
+            if (split[0]) {
+                return {
+                    success: true,
+                    host: uri.host,
+                    channel: split[0],
+                };
+            } else {
+                return {
+                    success: true,
+                    host: uri.host,
+                };
+            }
+        } else {
+            return {
+                success: true,
+                host: uri.host,
+                channel: split[0],
+                context: split.slice(1).join('/'),
+            };
+        }
+    } catch (ex) {
+        const split = id.split('/');
+        if (split.length === 1) {
+            return {
+                success: true,
+                channel: id,
+            };
+        } else {
+            const firstSlashIndex = id.indexOf('/');
+            const firstDotIndex = id.indexOf('.');
+
+            if (firstDotIndex >= 0 && firstDotIndex < firstSlashIndex) {
+                return {
+                    success: true,
+                    host: split[0],
+                    channel: split[1],
+                    context: split.slice(2).join('/'),
+                };
+            } else {
+                return {
+                    success: true,
+                    channel: split[0],
+                    context: split.slice(1).join('/'),
+                };
+            }
+        }
+    }
+}
+
 /**
  * Parses the given tag filter into its components.
  * @param tag
@@ -1745,6 +1815,30 @@ export function calculateBooleanTagValue(
         }
     }
     return defaultValue;
+}
+
+/**
+ * Determines if the given file is trying to load a simulation.
+ * @param calc The calculation context.
+ * @param file The file to check.
+ */
+export function isSimulation(
+    calc: FileCalculationContext,
+    file: Object
+): boolean {
+    return !!getFileChannel(calc, file);
+}
+
+/**
+ * Gets the aux.channel tag from the given file.
+ * @param calc The file calculation context to use.
+ * @param file The file.
+ */
+export function getFileChannel(
+    calc: FileCalculationContext,
+    file: Object
+): string {
+    return calculateFileValue(calc, file, 'aux.channel');
 }
 
 /**

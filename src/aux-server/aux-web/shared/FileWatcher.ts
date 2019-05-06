@@ -2,6 +2,8 @@ import {
     RealtimeAuxTree,
     AuxFile,
     fileChangeObservables,
+    File,
+    AuxObject,
 } from '@casual-simulation/aux-common';
 import { FileHelper } from './FileHelper';
 import {
@@ -13,6 +15,7 @@ import {
     merge,
     from,
 } from 'rxjs';
+import { flatMap, filter, startWith } from 'rxjs/operators';
 
 /**
  * Defines a class that can watch a realtime causal tree.
@@ -70,6 +73,18 @@ export default class FileWatcher implements SubscriptionLike {
             filesAdded.subscribe(this._filesDiscoveredObservable),
             filesRemoved.subscribe(this._filesRemovedObservable),
             filesUpdated.subscribe(this._filesUpdatedObservable)
+        );
+    }
+
+    /**
+     * Creates an observable that resolves whenever the given file changes.
+     * @param file The file to watch.
+     */
+    fileChanged(file: AuxObject): Observable<AuxObject> {
+        return this.filesUpdated.pipe(
+            flatMap(files => files),
+            filter(f => f.id === file.id),
+            startWith(file)
         );
     }
 

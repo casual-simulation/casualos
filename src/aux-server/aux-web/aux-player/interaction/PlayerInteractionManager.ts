@@ -17,6 +17,8 @@ import { Input } from '../../shared/scene/Input';
 import InventoryFile from '../InventoryFile/InventoryFile';
 import { PlayerInventoryFileClickOperation } from './ClickOperation/PlayerInventoryFileClickOperation';
 import { appManager } from '../../shared/AppManager';
+import { PlayerSimulation3D } from '../scene/PlayerSimulation3D';
+import { Simulation } from '../../shared/Simulation';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class IGameView
@@ -26,7 +28,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
 
     constructor(gameView: GameView) {
         super(gameView);
-        let calc = appManager.fileManager.createContext();
+        let calc = appManager.simulationManager.primary.helper.createContext();
         let gridScale = calculateGridScale(calc, null);
         this._grid = new PlayerGrid(gridScale);
     }
@@ -37,7 +39,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     ): IOperation {
         if (gameObject instanceof AuxFile3D) {
             let fileClickOp = new PlayerFileClickOperation(
-                this._gameView,
+                <PlayerSimulation3D>gameObject.contextGroup.simulation,
                 this,
                 gameObject
             );
@@ -54,12 +56,11 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     createHtmlElementClickOperation(element: HTMLElement): IOperation {
         const vueElement: any = Input.getVueParent(element);
         if (vueElement instanceof InventoryFile) {
-            if (vueElement.file) {
+            if (vueElement.item) {
                 let inventoryClickOperation = new PlayerInventoryFileClickOperation(
-                    this._gameView,
+                    vueElement.item.simulation,
                     this,
-                    vueElement.file,
-                    vueElement.context
+                    vueElement.item
                 );
                 return inventoryClickOperation;
             }
@@ -95,14 +96,21 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         };
     }
 
-    protected _findHoveredFile(input: Input) {
+    protected _findHoveredFile(input: Input): [File, Simulation] {
         if (input.isMouseFocusingAny(this._gameView.getUIHtmlElements())) {
             const element = input.getTargetData().inputOver;
             const vueElement = Input.getVueParent(element);
 
             if (vueElement instanceof InventoryFile) {
                 // handle hover
-                return vueElement.file;
+                if (vueElement.file) {
+                    return [
+                        vueElement.file,
+                        vueElement.item.simulation.simulation,
+                    ];
+                } else {
+                    return [null, null];
+                }
             }
         }
         return super._findHoveredFile(input);

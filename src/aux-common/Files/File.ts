@@ -33,6 +33,7 @@ export interface FileTags {
     ['aux.input.placeholder']?: string;
     ['aux.shape']?: FileShape;
     ['aux.image']?: string;
+    ['aux.channel']?: string;
     ['aux._creator']?: string;
     ['aux._diff']?: boolean;
     ['aux._diffTags']?: string[];
@@ -43,6 +44,7 @@ export interface FileTags {
     ['aux._userContext']?: string;
     ['aux._userInventoryContext']?: string;
     ['aux._userMenuContext']?: string;
+    ['aux._userSimulationsContext']?: string;
     ['aux._mode']?: UserMode;
     ['aux._editingFile']?: string;
     ['aux._lastEditedBy']?: string;

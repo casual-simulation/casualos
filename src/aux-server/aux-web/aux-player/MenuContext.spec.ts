@@ -9,13 +9,13 @@ import {
 
 describe('MenuContext', () => {
     it('should construct for specific context', () => {
-        const menu = new MenuContext('my_super_cool_context');
+        const menu = new MenuContext(null, 'my_super_cool_context');
         expect(menu.context).toEqual('my_super_cool_context');
     });
 
     it('should not allow invalid context name', () => {
         function createWith(context: any) {
-            let inventory = new MenuContext(context);
+            let inventory = new MenuContext(null, context);
         }
 
         expect(() => {
@@ -28,7 +28,7 @@ describe('MenuContext', () => {
 
     it('should add and remove files that are part of the context', () => {
         let context = 'my_inventory';
-        let menu = new MenuContext(context);
+        let menu = new MenuContext(null, context);
         let files: File[] = [];
 
         // Add some files that are assigned to the context.
@@ -57,7 +57,7 @@ describe('MenuContext', () => {
 
     it('should ignore files that are not part of the context.', () => {
         let context = 'my_inventory';
-        let menu = new MenuContext(context);
+        let menu = new MenuContext(null, context);
         let files: File[] = [];
 
         // Create files that are part of the context.
@@ -89,7 +89,7 @@ describe('MenuContext', () => {
 
     it('should sort files based on index in context', () => {
         let context = 'my_inventory';
-        let menu = new MenuContext(context);
+        let menu = new MenuContext(null, context);
         let files: File[] = [
             createFile('testId_4', {
                 [context]: true,
@@ -128,16 +128,16 @@ describe('MenuContext', () => {
         expect(menu.items).toHaveLength(5);
 
         // Should be sorted like this: testId_4, testId_3, testId_2
-        expect(menu.items[0].id).toEqual('testId_4');
-        expect(menu.items[1].id).toEqual('testId_3');
-        expect(menu.items[2].id).toEqual('testId_2');
-        expect(menu.items[3].id).toEqual('testId_1');
-        expect(menu.items[4].id).toEqual('testId_0');
+        expect(menu.items[0].file.id).toEqual('testId_4');
+        expect(menu.items[1].file.id).toEqual('testId_3');
+        expect(menu.items[2].file.id).toEqual('testId_2');
+        expect(menu.items[3].file.id).toEqual('testId_1');
+        expect(menu.items[4].file.id).toEqual('testId_0');
     });
 
     it('should update items as expected after file is added and then moved to another slot.', () => {
         let context = 'my_inventory';
-        let menu = new MenuContext(context);
+        let menu = new MenuContext(null, context);
         let files: File[] = [
             createFile('testId_0', {
                 [context]: true,
@@ -163,8 +163,8 @@ describe('MenuContext', () => {
         menu.frameUpdate(calc);
 
         // items should be be in initial state.
-        expect(menu.items[0].id).toEqual('testId_0');
-        expect(menu.items[1].id).toEqual('testId_1');
+        expect(menu.items[0].file.id).toEqual('testId_0');
+        expect(menu.items[1].file.id).toEqual('testId_1');
         expect(menu.items[2]).toBeUndefined();
         expect(menu.items[3]).toBeUndefined();
         expect(menu.items[4]).toBeUndefined();
@@ -183,8 +183,8 @@ describe('MenuContext', () => {
         expect(menu.files[1].id).toEqual('testId_1');
 
         // items should have updated accordingly.
-        expect(menu.items[0].id).toEqual('testId_0');
-        expect(menu.items[1].id).toEqual('testId_1');
+        expect(menu.items[0].file.id).toEqual('testId_0');
+        expect(menu.items[1].file.id).toEqual('testId_1');
         expect(menu.items[2]).toBeUndefined();
         expect(menu.items[3]).toBeUndefined();
         expect(menu.items[4]).toBeUndefined();

@@ -31,6 +31,7 @@ import { UserMeshDecorator } from './decorators/UserMeshDecorator';
 import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
 import { appManager } from '../AppManager';
 import { DebugObjectManager } from './DebugObjectManager';
+import { Simulation3D } from './Simulation3D';
 
 /**
  * Defines a class that is able to display Aux files.

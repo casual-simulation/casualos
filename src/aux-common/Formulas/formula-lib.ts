@@ -12,6 +12,9 @@ import {
     toast as toastMessage,
     tweenTo as calcTweenTo,
     openQRCodeScanner as calcOpenQRCodeScanner,
+    loadSimulation as calcLoadSimulation,
+    unloadSimulation as calcUnloadSimulation,
+    superShout as calcSuperShout,
 } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
 import { every, find } from 'lodash';
@@ -393,6 +396,15 @@ export function shout(name: string, arg?: any) {
 }
 
 /**
+ * Shouts the given event to every file in every loaded simulation.
+ * @param eventName The name of the event to shout.
+ * @param arg The argument to shout. This gets passed as the `that` variable to the other scripts.
+ */
+export function superShout(eventName: string, arg?: any) {
+    actions.push(calcSuperShout(eventName, arg));
+}
+
+/**
  * Redirects the user to a context in the given simulation and context.
  * @param simulationId The ID of the simulation to go to.
  * @param context The context to go to. If not provided then the simulation ID will be used as the context.
@@ -635,6 +647,22 @@ export function closeQRCodeScanner() {
 }
 
 /**
+ * Loads the channel with the given ID.
+ * @param id The ID of the channel to load.
+ */
+export function loadChannel(id: string) {
+    actions.push(calcLoadSimulation(id));
+}
+
+/**
+ * Unloads the channel with the given ID.
+ * @param id The ID of the channel to unload.
+ */
+export function unloadChannel(id: string) {
+    actions.push(calcUnloadSimulation(id));
+}
+
+/**
  * Defines a set of functions that are able to make File Diffs.
  */
 export const diff = {
@@ -658,6 +686,8 @@ export const player = {
     tweenTo,
     openQRCodeScanner,
     closeQRCodeScanner,
+    loadChannel,
+    unloadChannel,
 };
 
 /**
@@ -696,4 +726,5 @@ export default {
     event,
     getFilesInContext,
     shout,
+    superShout,
 };
