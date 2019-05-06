@@ -18,6 +18,7 @@ import {
     isSimulation,
     getFileChannel,
     calculateDestroyFileEvents,
+    merge,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard } from '../../shared/SharedUtils';
@@ -362,13 +363,7 @@ export default class App extends Vue {
 
     async finishAddSimulation(id: string) {
         console.log('[App] Add simulation!');
-        const primarySim = appManager.simulationManager.primary;
-        await primarySim.helper.createFile(undefined, {
-            [primarySim.helper.userFile.tags[
-                'aux._userSimulationsContext'
-            ]]: true,
-            ['aux.channel']: id,
-        });
+        await appManager.simulationManager.primary.helper.createSimulation(id);
     }
 
     removeSimulation(info: SimulationInfo) {
@@ -389,20 +384,16 @@ export default class App extends Vue {
 
     removeSimulationById(id: string) {
         appManager.simulationManager.simulations.forEach(sim => {
-            const calc = sim.helper.createContext();
-            const simFiles = filesInContext(
-                calc,
-                sim.helper.userFile.tags['aux._userSimulationsContext']
-            ).filter(f => getFileChannel(calc, f) === id);
-
-            const events = flatMap(simFiles, f =>
-                calculateDestroyFileEvents(calc, f)
-            );
-            sim.helper.transaction(...events);
+            sim.helper.destroySimulations(id);
         });
     }
 
     private _simulationAdded(simulation: Simulation) {
+        const index = this.simulations.findIndex(s => s.id === simulation.id);
+        if (index >= 0) {
+            return;
+        }
+
         let subs: SubscriptionLike[] = [];
 
         let info: SimulationInfo = {
@@ -467,6 +458,8 @@ export default class App extends Vue {
 
         this._simulationSubs.set(simulation, subs);
         this.simulations.push(info);
+
+        this._updateQuery();
     }
 
     private _simulationRemoved(simulation: Simulation) {
@@ -484,6 +477,25 @@ export default class App extends Vue {
         if (index >= 0) {
             this.simulations.splice(index, 1);
         }
+
+        this._updateQuery();
+    }
+
+    private _updateQuery() {
+        setTimeout(() => {
+            const merged = merge(this.$router.currentRoute, {
+                query: {
+                    channels: this.simulations
+                        .filter(
+                            sim =>
+                                sim.id !==
+                                appManager.simulationManager.primary.id
+                        )
+                        .map(sim => sim.id),
+                },
+            });
+            this.$router.replace(merged);
+        }, 200);
     }
 
     /**

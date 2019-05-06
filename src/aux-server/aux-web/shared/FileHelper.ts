@@ -22,9 +22,13 @@ import {
     SandboxLibrary,
     LocalEvent,
     LocalEvents,
+    filesInContext,
+    getFileChannel,
+    calculateDestroyFileEvents,
 } from '@casual-simulation/aux-common';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { Subject, Observable } from 'rxjs';
+import { flatMap } from 'lodash';
 
 /**
  * Defines an class that contains a simple set of functions
@@ -153,6 +157,38 @@ export class FileHelper {
     }
 
     /**
+     * Creates a new file for the current user that loads the simulation with the given ID.
+     * @param id The ID of the simulation to load.
+     * @param fileId The ID of the file to create.
+     */
+    async createSimulation(id: string, fileId?: string) {
+        const calc = this.createContext();
+        const simFiles = this._getSimulationFiles(calc, id);
+
+        if (simFiles.length === 0) {
+            await this.createFile(fileId, {
+                [this.userFile.tags['aux._userSimulationsContext']]: true,
+                ['aux.channel']: id,
+            });
+        }
+    }
+
+    /**
+     * Deletes all the files in the current user's simulation context that load the given simulation ID.
+     * @param id The ID of the simulation to load.
+     */
+    async destroySimulations(id: string) {
+        const calc = this.createContext();
+        const simFiles = this._getSimulationFiles(calc, id);
+
+        const events = flatMap(simFiles, f =>
+            calculateDestroyFileEvents(calc, f)
+        );
+
+        await this.transaction(...events);
+    }
+
+    /**
      * Calculates the list of file events for the given event running on the given files.
      * @param eventName The name of the event to run.
      * @param files The files that should be searched for handlers for the event.
@@ -253,5 +289,21 @@ export class FileHelper {
                 this._localEvents.next(<LocalEvents>event);
             }
         }
+    }
+
+    /**
+     * Gets the list of simulation files that are in the current user's simulation context.
+     * @param id The ID of the simulation to search for.
+     */
+    private _getSimulationFiles(
+        calc: FileCalculationContext,
+        id: string
+    ): File[] {
+        const simFiles = filesInContext(
+            calc,
+            this.userFile.tags['aux._userSimulationsContext']
+        ).filter(f => getFileChannel(calc, f) === id);
+
+        return simFiles;
     }
 }

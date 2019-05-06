@@ -14,6 +14,8 @@ import GameView from '../GameView/GameView';
 import { appManager } from '../../shared/AppManager';
 import { SubscriptionLike } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { Route } from 'vue-router';
+import { difference } from 'lodash';
 
 @Component({
     components: {
@@ -22,6 +24,7 @@ import { tap } from 'rxjs/operators';
 })
 export default class Home extends Vue {
     @Prop() context: string;
+    @Prop() channels: string | string[];
 
     debug: boolean = false;
 
@@ -33,9 +36,35 @@ export default class Home extends Vue {
         return appManager.simulationManager.primary;
     }
 
+    @Watch('channels')
+    async onRouteChanged(
+        newChannels: string | string[],
+        oldChannels: string | string[]
+    ) {
+        await this._updateChannels(newChannels);
+    }
+
     constructor() {
         super();
     }
 
     async created() {}
+
+    async mounted() {
+        this._updateChannels(this.channels);
+    }
+
+    private async _updateChannels(newChannels: string | string[]) {
+        newChannels = newChannels || [];
+
+        if (!Array.isArray(newChannels)) {
+            newChannels = [newChannels];
+        }
+
+        for (let i = 0; i < newChannels.length; i++) {
+            await appManager.simulationManager.primary.helper.createSimulation(
+                newChannels[i]
+            );
+        }
+    }
 }

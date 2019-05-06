@@ -105,6 +105,7 @@ const routes: RouteConfig[] = [
         component: Home,
         props: route => ({
             context: route.params.context,
+            channels: route.query.channels,
         }),
     },
     {

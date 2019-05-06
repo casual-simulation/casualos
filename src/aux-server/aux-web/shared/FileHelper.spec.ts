@@ -3,6 +3,8 @@ import {
     AuxObject,
     FileEvent,
     LocalEvent,
+    fileAdded,
+    createFile,
 } from '@casual-simulation/aux-common';
 import { FileHelper } from './FileHelper';
 import { storedTree, site } from '@casual-simulation/causal-trees';
@@ -116,5 +118,85 @@ describe('FileHelper', () => {
         });
     });
 
-    // TODO: Add more tests
+    describe('createSimulation()', () => {
+        it('should create a new simulation file', async () => {
+            await tree.updateFile(tree.value['user'], {
+                tags: {
+                    'aux._userSimulationsContext': 'abc',
+                },
+            });
+
+            await helper.createSimulation('test', 'fileId');
+            await helper.createSimulation('test2', 'fileId2');
+
+            expect(tree.value['fileId']).toMatchObject({
+                id: 'fileId',
+                tags: {
+                    abc: true,
+                    'aux.channel': 'test',
+                },
+            });
+            expect(tree.value['fileId2']).toMatchObject({
+                id: 'fileId2',
+                tags: {
+                    abc: true,
+                    'aux.channel': 'test2',
+                },
+            });
+        });
+
+        it('should not create a new simulation when one already exists for the given channel ID', async () => {
+            await tree.updateFile(tree.value['user'], {
+                tags: {
+                    'aux._userSimulationsContext': 'abc',
+                },
+            });
+
+            await tree.addEvents([
+                fileAdded(
+                    createFile('file1', {
+                        abc: true,
+                        'aux.channel': 'test',
+                    })
+                ),
+            ]);
+
+            await helper.createSimulation('test', 'file2');
+
+            expect(tree.value['file2']).toBeUndefined();
+        });
+    });
+
+    describe('destroySimulations()', () => {
+        it('should destroy the simulations that load the given ID', async () => {
+            await tree.updateFile(tree.value['user'], {
+                tags: {
+                    'aux._userSimulationsContext': 'abc',
+                },
+            });
+
+            await tree.addEvents([
+                fileAdded(
+                    createFile('file1', {
+                        abc: true,
+                        'aux.channel': 'test',
+                    })
+                ),
+            ]);
+
+            await tree.addEvents([
+                fileAdded(
+                    createFile('file2', {
+                        abc: true,
+                        'aux.channel': 'test',
+                    })
+                ),
+            ]);
+
+            await helper.destroySimulations('test');
+
+            expect(tree.value['file1']).toBeUndefined();
+            expect(tree.value['file2']).toBeUndefined();
+        });
+    });
 });
