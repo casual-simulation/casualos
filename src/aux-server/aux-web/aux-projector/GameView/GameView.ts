@@ -29,7 +29,6 @@ import { SubscriptionLike } from 'rxjs';
 import { concatMap, tap, flatMap as rxFlatMap } from 'rxjs/operators';
 
 import {
-    File,
     Object,
     DEFAULT_WORKSPACE_HEIGHT_INCREMENT,
     DEFAULT_USER_MODE,
@@ -336,6 +335,47 @@ export default class GameView extends Vue implements IGameView {
         this._interaction.addOperation(
             new TweenCameraToOperation(this, this._interaction, position)
         );
+    }
+
+    onDragEnter(event: DragEvent) {
+        if (event.dataTransfer.types.indexOf('Files') >= 0) {
+            event.preventDefault();
+        }
+    }
+
+    onDragOver(event: DragEvent) {
+        if (event.dataTransfer.types.indexOf('Files') >= 0) {
+            event.preventDefault();
+        }
+    }
+
+    onDragLeave(event: DragEvent) {}
+
+    onDrop(event: DragEvent) {
+        let auxFiles: File[] = [];
+        if (event.dataTransfer.items) {
+            for (let i = 0; i < event.dataTransfer.items.length; i++) {
+                const item = event.dataTransfer.items[i];
+                if (item.kind === 'file') {
+                    const file = item.getAsFile();
+                    if (file.name.endsWith('.aux')) {
+                        auxFiles.push(file);
+                    }
+                }
+            }
+        } else {
+            for (let i = 0; i < event.dataTransfer.files.length; i++) {
+                const file = event.dataTransfer.files.item(i);
+                if (file.name.endsWith('.aux')) {
+                    auxFiles.push(file);
+                }
+            }
+        }
+
+        if (auxFiles.length > 0) {
+            console.log(`Has ${auxFiles.length} File`);
+            event.preventDefault();
+        }
     }
 
     public async mounted() {

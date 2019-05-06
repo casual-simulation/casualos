@@ -1,6 +1,13 @@
 <!-- App.vue -->
 <template>
-    <div ref="container" class="game-container">
+    <div
+        ref="container"
+        class="game-container"
+        @dragenter="onDragEnter"
+        @dragleave="onDragLeave"
+        @drop="onDrop"
+        @dragover="onDragOver"
+    >
         <div class="game-canvas" ref="gameView"></div>
         <slot></slot>
         <div class="ui-container">
