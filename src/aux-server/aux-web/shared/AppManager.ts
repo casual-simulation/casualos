@@ -305,6 +305,7 @@ export class AppManager {
     }
 
     private async _initUser() {
+        console.log('[AppManager] Initalizing user...');
         this._user = null;
         this._userSubject.subscribe(user => {
             Sentry.configureScope(scope => {

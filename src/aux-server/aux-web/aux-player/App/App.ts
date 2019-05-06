@@ -482,8 +482,23 @@ export default class App extends Vue {
     }
 
     private _updateQuery() {
-        setTimeout(() => {
-            const merged = merge(this.$router.currentRoute, {
+        if (!appManager.simulationManager.primary) {
+            return;
+        }
+
+        const channel =
+            appManager.simulationManager.primary.parsedId.channel ||
+            this.$router.currentRoute.params.id;
+        const context =
+            appManager.simulationManager.primary.parsedId.context ||
+            this.$router.currentRoute.params.context;
+        if (channel && context) {
+            this.$router.replace({
+                name: 'home',
+                params: {
+                    id: channel,
+                    context: context,
+                },
                 query: {
                     channels: this.simulations
                         .filter(
@@ -494,8 +509,7 @@ export default class App extends Vue {
                         .map(sim => sim.id),
                 },
             });
-            this.$router.replace(merged);
-        }, 200);
+        }
     }
 
     /**

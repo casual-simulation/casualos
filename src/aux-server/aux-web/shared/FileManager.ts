@@ -173,8 +173,8 @@ export class FileManager implements Simulation {
         config: { isBuilder: boolean; isPlayer: boolean }
     ) {
         this._appManager = app;
-        this._originalId = id;
-        this._parsedId = parseSimulationId(id);
+        this._originalId = id || 'default';
+        this._parsedId = parseSimulationId(this._originalId);
         this._id = this._getTreeName(this._parsedId.channel);
         this._config = config;
 

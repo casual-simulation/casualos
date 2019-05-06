@@ -113,6 +113,7 @@ const routes: RouteConfig[] = [
         name: 'aux-builder',
         redirect: to => {
             if (appManager.config) {
+                console.log('[Router] Redirecting to builder');
                 window.location.href = `${appManager.config.projectorBaseUrl}/${
                     to.params.id
                 }`;
