@@ -416,12 +416,8 @@ export default class GameView extends Vue implements IGameView {
             const file = files[0];
             const targetPosition = new Vector3();
             file.display.getWorldPosition(targetPosition);
-            this.tweenCameraToPosition(targetPosition);
 
-            if (zoomValue >= 0) {
-                const cam = this.getMainCamera();
-                this._interaction.cameraControls.dollySet(zoomValue);
-            }
+            this.tweenCameraToPosition(targetPosition, zoomValue);
         }
     }
 
@@ -429,9 +425,14 @@ export default class GameView extends Vue implements IGameView {
      * Animates the main camera to the given position.
      * @param position The position to animate to.
      */
-    public tweenCameraToPosition(position: Vector3) {
+    public tweenCameraToPosition(position: Vector3, zoomValue: number) {
         this._interaction.addOperation(
-            new TweenCameraToOperation(this, this._interaction, position)
+            new TweenCameraToOperation(
+                this,
+                this._interaction,
+                position,
+                zoomValue
+            )
         );
     }
 
