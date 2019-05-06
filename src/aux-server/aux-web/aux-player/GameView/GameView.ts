@@ -94,8 +94,6 @@ export default class GameView extends Vue implements IGameView {
     private _input: Input;
     private _inputVR: InputVR;
     private _interaction: PlayerInteractionManager;
-    private _sceneBackground: Color | Texture;
-    private _contextBackground: Color | Texture;
     private _cameraType: CameraType;
 
     public onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
@@ -168,6 +166,17 @@ export default class GameView extends Vue implements IGameView {
             }
         });
         return items;
+    }
+
+    get background() {
+        for (let i = 0; i < this.simulations.length; i++) {
+            const sim = this.simulations[i];
+            if (sim.backgroundColor) {
+                return sim.backgroundColor;
+            }
+        }
+
+        return null;
     }
 
     // get fileManager() {
@@ -636,10 +645,8 @@ export default class GameView extends Vue implements IGameView {
     // }
 
     private _sceneBackgroundUpdate() {
-        if (this._contextBackground) {
-            this._scene.background = this._contextBackground;
-        } else if (this._sceneBackground) {
-            this._scene.background = this._sceneBackground;
+        if (this.background) {
+            this._scene.background = this.background;
         } else {
             this._scene.background = new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
         }
@@ -647,16 +654,6 @@ export default class GameView extends Vue implements IGameView {
 
     private _setupScene() {
         this._scene = new Scene();
-
-        // TODO: Fix
-        // let globalsFile = this.fileManager.helper.globalsFile;
-
-        // // Scene background color.
-        // let sceneBackgroundColor = globalsFile.tags['aux.scene.color'];
-        // this._sceneBackground = hasValue(sceneBackgroundColor)
-        //     ? new Color(sceneBackgroundColor)
-        //     : new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
-        // this._sceneBackgroundUpdate();
 
         this.setCameraType('orthographic');
         this._setupRenderer();

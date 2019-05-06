@@ -2,6 +2,8 @@ import {
     Object,
     AuxObject,
     FileCalculationContext,
+    hasValue,
+    DEFAULT_SCENE_BACKGROUND_COLOR,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { IGameView } from '../../shared/IGameView';
@@ -12,6 +14,7 @@ import { MenuContext } from '../MenuContext';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { doesFileDefinePlayerContext } from '../PlayerUtils';
 import { SimulationContext } from '../SimulationContext';
+import { Color, Texture } from 'three';
 
 export class PlayerSimulation3D extends Simulation3D {
     /**
@@ -25,10 +28,20 @@ export class PlayerSimulation3D extends Simulation3D {
      */
     private _contextGroup: ContextGroup3D;
 
+    private _contextBackground: Color | Texture = null;
+    private _sceneBackground: Color | Texture = null;
+
     context: string;
     inventoryContext: InventoryContext = null;
     menuContext: MenuContext = null;
     simulationContext: SimulationContext = null;
+
+    /**
+     * Gets the background color that the simulation defines.
+     */
+    get backgroundColor() {
+        return this._contextBackground || this._sceneBackground;
+    }
 
     constructor(context: string, gameView: IGameView, simulation: Simulation) {
         super(gameView, simulation);
@@ -101,6 +114,21 @@ export class PlayerSimulation3D extends Simulation3D {
         );
 
         this._subs.push(
+            this.simulation.watcher
+                .fileChanged(this.simulation.helper.globalsFile)
+                .pipe(
+                    tap(file => {
+                        // Scene background color.
+                        let sceneBackgroundColor = file.tags['aux.scene.color'];
+                        this._sceneBackground = hasValue(sceneBackgroundColor)
+                            ? new Color(sceneBackgroundColor)
+                            : null;
+                    })
+                )
+                .subscribe()
+        );
+
+        this._subs.push(
             this.simulation.helper.localEvents
                 .pipe(
                     tap(e => {
@@ -138,28 +166,26 @@ export class PlayerSimulation3D extends Simulation3D {
                 this._gameView.getDecoratorFactory()
             );
 
-            return this._contextGroup;
-
-            // TODO: Fix
             // Subscribe to file change updates for this context file so that we can do things like change the background color to match the context color, etc.
-            // this._fileSubs.push(
-            //     this.fileManager.watcher
-            //         .fileChanged(file)
-            //         .pipe(
-            //             tap(file => {
-            //                 // Update the context background color.
-            //                 let contextBackgroundColor =
-            //                     file.tags['aux.context.color'];
-            //                 this._contextBackground = hasValue(
-            //                     contextBackgroundColor
-            //                 )
-            //                     ? new Color(contextBackgroundColor)
-            //                     : undefined;
-            //                 this._sceneBackgroundUpdate();
-            //             })
-            //         )
-            //         .subscribe()
-            // );
+            this._subs.push(
+                this.simulation.watcher
+                    .fileChanged(file)
+                    .pipe(
+                        tap(file => {
+                            // Update the context background color.
+                            let contextBackgroundColor =
+                                file.tags['aux.context.color'];
+                            this._contextBackground = hasValue(
+                                contextBackgroundColor
+                            )
+                                ? new Color(contextBackgroundColor)
+                                : undefined;
+                        })
+                    )
+                    .subscribe()
+            );
+
+            return this._contextGroup;
         } else {
             this._fileBackBuffer.set(file.id, file);
         }
