@@ -356,6 +356,7 @@ export class AppManager {
                         progress.error
                     );
                 };
+                await this.simulationManager.clear();
                 await this.simulationManager.setPrimary(
                     this._user.channelId,
                     onFileManagerInitProgress
@@ -459,6 +460,7 @@ export class AppManager {
                     );
                 };
 
+                await this.simulationManager.clear();
                 await this.simulationManager.setPrimary(
                     channelId,
                     onFileManagerInitProgress
