@@ -14,7 +14,7 @@ import { appManager } from '../../../shared/AppManager';
 import { UserControlsDecorator } from './UserControlsDecorator';
 import { OutlineDecorator } from './OutlineDecorator';
 import { TextureDecorator } from './TextureDecorator';
-import { HtmlMixerDecorator } from './HtmlMixerDecorator';
+import { HtmlMixerPlaneDecorator } from './HtmlMixerPlaneDecorator';
 
 export class AuxFile3DDecoratorFactory {
     public gameView: IGameView;
@@ -70,7 +70,7 @@ export class AuxFile3DDecoratorFactory {
                 labelDecorator,
                 wordBubbleDecorator,
                 new LineToDecorator(file3d, this.gameView),
-                new HtmlMixerDecorator(file3d, this.gameView)
+                new HtmlMixerPlaneDecorator(file3d, this.gameView)
             );
         }
 

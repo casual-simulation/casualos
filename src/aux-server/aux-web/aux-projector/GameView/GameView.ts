@@ -16,6 +16,7 @@ import {
     Matrix4,
     Texture,
     Vector2,
+    Camera,
 } from 'three';
 
 import VRControlsModule from 'three-vrcontrols-module';
@@ -73,10 +74,16 @@ import {
 import {
     baseAuxAmbientLight,
     baseAuxDirectionalLight,
+    createHtmlMixerContext,
 } from '../../shared/scene/SceneUtils';
 import { Physics } from '../../shared/scene/Physics';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
+import { HtmlMixer } from 'threex-htmlmixer';
+
+// Need this include so that the CSS3DRenderer.js gets loaded for its side effects (being included in the THREE namespace).
+// CSS3DREnderer is required by the THREEx.HtmlMixer
+require('three/examples/js/renderers/CSS3DRenderer');
 
 @Component({
     components: {
@@ -107,6 +114,7 @@ export default class GameView extends Vue implements IGameView {
     private _gridChecker: GridChecker;
     private _sceneBackground: Color | Texture;
     private _cameraType: CameraType;
+    private _htmlMixerContext: HtmlMixer.Context;
 
     showDialog: boolean = false;
     contextDialog: string = '';
@@ -238,6 +246,10 @@ export default class GameView extends Vue implements IGameView {
             <HTMLElement>this.$refs.fileQueue,
             this.$refs.trashCan ? (<TrashCan>this.$refs.trashCan).$el : null,
         ].filter(el => el);
+    }
+
+    public getHtmlMixerContext(): HtmlMixer.Context {
+        return this._htmlMixerContext;
     }
 
     public setGridsVisible(visible: boolean) {
@@ -644,13 +656,20 @@ export default class GameView extends Vue implements IGameView {
         // Ground plane.
         this._groundPlane = new Plane(new Vector3(0, 1, 0));
 
-        // Grid plane
+        // Grid plane.
         this._gridMesh = new GridHelper(1000, 300, 0xbbbbbb, 0xbbbbbb);
         this._gridMesh.visible = false;
         this._scene.add(this._gridMesh);
 
-        // Simulations
+        // Simulations.
         this._scene.add(this.simulation3D);
+
+        // Html Mixer Context.
+        this._htmlMixerContext = createHtmlMixerContext(
+            this._renderer,
+            this._scene,
+            this._mainCamera
+        );
     }
 
     private _setupRenderer() {

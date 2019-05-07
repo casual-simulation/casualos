@@ -28,6 +28,8 @@ import {
     Sprite,
     Texture,
     PlaneBufferGeometry,
+    Camera,
+    WebGLRenderer,
 } from 'three';
 import { flatMap } from 'lodash';
 import {
@@ -37,6 +39,7 @@ import {
     FileLabelAnchor,
 } from '@casual-simulation/aux-common';
 import { getOptionalValue } from '../SharedUtils';
+import { HtmlMixer } from 'threex-htmlmixer';
 
 /**
  * Create copy of material that most meshes in Aux Builder/Player use.
@@ -540,4 +543,53 @@ export function calculateAnchorPosition(
     }
 
     return [targetCenter, new Euler()];
+}
+
+export function createHtmlMixerContext(
+    renderer: WebGLRenderer,
+    scene: Scene,
+    camera: Camera
+): HtmlMixer.Context {
+    let mixerContext = new HtmlMixer.Context(renderer, scene, camera);
+    mixerContext.rendererCss.setSize(window.innerWidth, window.innerHeight);
+
+    // Handle window resize for mixer context.
+    window.addEventListener(
+        'resize',
+        () => {
+            mixerContext.rendererCss.setSize(
+                window.innerWidth,
+                window.innerHeight
+            );
+        },
+        false
+    );
+
+    //
+    // Configure mixer context and dom attachment.
+    //
+
+    // Setup rendererCss
+    var rendererCss = mixerContext.rendererCss;
+    // Setup rendererWebgl
+    var rendererWebgl = mixerContext.rendererWebgl;
+
+    var css3dElement = rendererCss.domElement;
+    // css3dElement.style.position = 'absolute';
+    // css3dElement.style.top = '0px';
+    // css3dElement.style.width = '100%';
+    // css3dElement.style.height = '100%';
+    // document.body.appendChild(css3dElement);
+
+    var webglCanvas = rendererWebgl.domElement;
+    // webglCanvas.style.position = 'absolute';
+    // webglCanvas.style.top = '0px';
+    // webglCanvas.style.width = '100%';
+    // webglCanvas.style.height = '100%';
+    // webglCanvas.style.pointerEvents = 'none';
+    // css3dElement.appendChild(webglCanvas);
+
+    console.log('[SceneUtils] created html mixer context:', mixerContext);
+
+    return mixerContext;
 }

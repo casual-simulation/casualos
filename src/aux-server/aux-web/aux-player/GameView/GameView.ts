@@ -60,6 +60,7 @@ import {
 import {
     baseAuxAmbientLight,
     baseAuxDirectionalLight,
+    createHtmlMixerContext,
 } from '../../shared/scene/SceneUtils';
 import { TweenCameraToOperation } from '../../shared/interaction/TweenCameraToOperation';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
@@ -68,6 +69,11 @@ import { PlayerSimulation3D } from '../scene/PlayerSimulation3D';
 import { Simulation } from '../../shared/Simulation';
 import { MenuItem } from '../MenuContext';
 import SimulationItem from '../SimulationContext';
+import { HtmlMixer } from 'threex-htmlmixer';
+
+// Need this include so that the CSS3DRenderer.js gets loaded for its side effects (being included in the THREE namespace).
+// CSS3DREnderer is required by the THREEx.HtmlMixer
+require('three/examples/js/renderers/CSS3DRenderer');
 
 @Component({
     components: {
@@ -95,6 +101,7 @@ export default class GameView extends Vue implements IGameView {
     private _inputVR: InputVR;
     private _interaction: PlayerInteractionManager;
     private _cameraType: CameraType;
+    private _htmlMixerContext: HtmlMixer.Context;
 
     public onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
     public onFileUpdated: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
@@ -220,6 +227,9 @@ export default class GameView extends Vue implements IGameView {
     // }
     public getUIHtmlElements(): HTMLElement[] {
         return [<HTMLElement>this.$refs.inventory];
+    }
+    public getHtmlMixerContext(): HtmlMixer.Context {
+        return this._htmlMixerContext;
     }
     public getDecoratorFactory(): AuxFile3DDecoratorFactory {
         return this._decoratorFactory;
@@ -668,6 +678,13 @@ export default class GameView extends Vue implements IGameView {
 
         // Ground plane.
         this._groundPlane = new Plane(new Vector3(0, 1, 0));
+
+        // Html Mixer Context.
+        this._htmlMixerContext = createHtmlMixerContext(
+            this._renderer,
+            this._scene,
+            this._mainCamera
+        );
     }
 
     private _setupRenderer() {
