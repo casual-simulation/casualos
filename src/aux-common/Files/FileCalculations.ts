@@ -41,7 +41,10 @@ import {
 } from './FileProxy';
 
 /// <reference path="../typings/global.d.ts" />
-import formulaLib from '../Formulas/formula-lib';
+import formulaLib, {
+    setCalculationContext,
+    getCalculationContext,
+} from '../Formulas/formula-lib';
 import SandboxInterface, { FilterFunction } from '../Formulas/SandboxInterface';
 import { PartialFile } from '../Files';
 import { FilesState, cleanFile, hasValue } from './FilesChannel';
@@ -1867,7 +1870,15 @@ export function isFileInContext(
     if (!contextId) return false;
 
     let result: boolean;
-    const contextValue = calculateFileValue(context, file, contextId);
+
+    let contextValue = calculateFileValue(context, file, contextId.valueOf());
+
+    if (
+        typeof contextValue === 'object' &&
+        typeof contextValue.valueOf === 'function'
+    ) {
+        contextValue = contextValue.valueOf();
+    }
 
     if (typeof contextValue === 'string') {
         result = contextValue === 'true';
@@ -2071,6 +2082,9 @@ function _calculateFormulaValue(
     formula: string,
     unwrapProxy: boolean = true
 ) {
+    const prevCalc = getCalculationContext();
+    setCalculationContext(context);
+
     const result = context.sandbox.run(
         formula,
         {
@@ -2080,6 +2094,8 @@ function _calculateFormulaValue(
         },
         convertToFormulaObject(context, object)
     );
+
+    setCalculationContext(prevCalc);
 
     if (unwrapProxy) {
         // Unwrap the proxy object

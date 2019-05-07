@@ -470,6 +470,7 @@ export default class GameView extends Vue implements IGameView {
                 const oldFiles = fileIds.map(id => value[id]);
                 const calc = createCalculationContext(
                     oldFiles,
+                    appManager.simulationManager.primary.helper.userFile.id,
                     appManager.simulationManager.primary.helper.lib
                 );
                 const oldWorksurface =

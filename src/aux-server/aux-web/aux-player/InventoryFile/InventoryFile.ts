@@ -29,18 +29,21 @@ export default class InventoryFile extends Vue {
     @Watch('file')
     private async _fileChanged(file: AuxFile) {
         if (file) {
-            this.image = await this.fileRenderer.render(file);
+            this.image = await this.fileRenderer.render(
+                file,
+                this.item.simulation.simulation.helper.createContext()
+            );
             this.showImage = 'flex';
             let label = file.tags['aux.label'];
             if (label) {
-                this.label = appManager.simulationManager.primary.helper.calculateFormattedFileValue(
+                this.label = this.item.simulation.simulation.helper.calculateFormattedFileValue(
                     file,
                     'aux.label'
                 );
 
                 const labelColor = file.tags['aux.label.color'];
                 if (labelColor) {
-                    this.labelColor = appManager.simulationManager.primary.helper.calculateFormattedFileValue(
+                    this.labelColor = this.item.simulation.simulation.helper.calculateFormattedFileValue(
                         file,
                         'aux.label.color'
                     );

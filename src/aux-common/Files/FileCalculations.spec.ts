@@ -50,6 +50,7 @@ import {
     isSimulation,
     parseSimulationId,
     getFileVersion,
+    isFileInContext,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
@@ -3261,6 +3262,116 @@ describe('FileCalculations', () => {
             const calc = createCalculationContext([file]);
 
             expect(getFileVersion(calc, file)).toBeUndefined();
+        });
+    });
+
+    describe('hasFileInInventory()', () => {
+        it('should return true if the given file is in the users inventory context', () => {
+            const thisFile = createFile('thisFile', {
+                isInInventory: '=player.hasFileInInventory(@name("bob"))',
+            });
+            const thatFile = createFile('thatFile', {
+                name: 'bob',
+                test: true,
+            });
+            const user = createFile('userId', {
+                'aux._userInventoryContext': 'test',
+            });
+
+            const calc = createCalculationContext(
+                [thisFile, thatFile, user],
+                'userId'
+            );
+            const result = calculateFileValue(calc, thisFile, 'isInInventory');
+
+            expect(result).toBe(true);
+        });
+
+        it('should return true if all the given files are in the users inventory context', () => {
+            const thisFile = createFile('thisFile', {
+                isInInventory: '=player.hasFileInInventory(@name("bob"))',
+            });
+            const thatFile = createFile('thatFile', {
+                name: 'bob',
+                test: true,
+            });
+            const otherFile = createFile('otherFile', {
+                name: 'bob',
+                test: true,
+            });
+            const user = createFile('userId', {
+                'aux._userInventoryContext': 'test',
+            });
+
+            const calc = createCalculationContext(
+                [thisFile, thatFile, otherFile, user],
+                'userId'
+            );
+            const result = calculateFileValue(calc, thisFile, 'isInInventory');
+
+            expect(result).toBe(true);
+        });
+
+        it('should return false if one of the given files are not in the users inventory context', () => {
+            const thisFile = createFile('thisFile', {
+                isInInventory: '=player.hasFileInInventory(@name("bob"))',
+            });
+            const thatFile = createFile('thatFile', {
+                name: 'bob',
+                test: true,
+            });
+            const otherFile = createFile('otherFile', {
+                name: 'bob',
+                test: false,
+            });
+            const user = createFile('userId', {
+                'aux._userInventoryContext': 'test',
+            });
+
+            const calc = createCalculationContext(
+                [thisFile, thatFile, otherFile, user],
+                'userId'
+            );
+            const result = calculateFileValue(calc, thisFile, 'isInInventory');
+
+            expect(result).toBe(false);
+        });
+    });
+
+    describe('isFileInContext()', () => {
+        it('should handle boolean objects', () => {
+            const thisFile = createFile('thisFile', {
+                context: new Boolean(true),
+            });
+
+            const calc = createCalculationContext([thisFile]);
+            const result = isFileInContext(calc, thisFile, 'context');
+
+            expect(result).toBe(true);
+        });
+
+        it('should handle string objects', () => {
+            const thisFile = createFile('thisFile', {
+                context: new String('true'),
+            });
+
+            const calc = createCalculationContext([thisFile]);
+            const result = isFileInContext(calc, thisFile, 'context');
+
+            expect(result).toBe(true);
+        });
+
+        it('should handle a string object as the context', () => {
+            const thisFile = createFile('thisFile', {
+                context: true,
+            });
+
+            const calc = createCalculationContext([thisFile]);
+            const result = isFileInContext(calc, thisFile, <any>(
+                new String('context')
+            ));
+
+            expect(result).toBe(true);
         });
     });
 });

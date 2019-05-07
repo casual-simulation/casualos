@@ -21,6 +21,7 @@ import {
     COMBINE_ACTION_NAME,
     createFile,
     createCalculationContext,
+    calculateFileValue,
 } from './FileCalculations';
 import { isProxy } from './FileProxy';
 
@@ -1854,10 +1855,6 @@ describe('FilesChannel', () => {
                     }),
                 ]);
             });
-        });
-
-        describe('hasFileInInventory()', () => {
-            it('should return true if the given file is in the users inventory context', () => {});
         });
 
         describe('setPositionDiff()', () => {

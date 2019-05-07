@@ -37,6 +37,7 @@ import {
     unwrapProxy,
     CREATE_ACTION_NAME,
     DESTROY_ACTION_NAME,
+    isFileInContext,
 } from '../Files/FileCalculations';
 
 let actions: FileEvent[] = [];
@@ -435,13 +436,31 @@ export function goToContext(simulationId: string, context?: string) {
 }
 
 /**
- * Derermines wather the player is in the given context.
+ * Derermines whether the player is in the given context.
  * @param context The context.
  */
 export function isInContext(givenContext: string) {
     let currentContext = window.location.pathname.split('/')[2];
 
     return currentContext === givenContext;
+}
+
+/**
+ * Determines whether the player has the given file in their inventory.
+ * @param files The file or files to check.
+ */
+export function hasFileInInventory(files: FileProxy | FileProxy[]): boolean {
+    if (!Array.isArray(files)) {
+        files = [files];
+    }
+
+    return every(files, f =>
+        isFileInContext(
+            getCalculationContext(),
+            <any>f,
+            getUserInventoryContext()
+        )
+    );
 }
 
 /**
@@ -698,6 +717,7 @@ export const player = {
     closeQRCodeScanner,
     loadChannel,
     unloadChannel,
+    hasFileInInventory,
 };
 
 /**
