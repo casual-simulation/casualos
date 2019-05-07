@@ -11,6 +11,12 @@
         <div class="game-canvas" ref="gameView"></div>
         <slot></slot>
         <div class="ui-container">
+            <div v-if="showUploadFiles" class="upload-files">
+                <div class="upload-files-content">
+                    <md-icon class="icon-white md-size-4x">cloud_upload</md-icon>
+                    <p class="upload-files-text">Drop to upload</p>
+                </div>
+            </div>
             <div class="toolbar">
                 <!--md-button
                     v-if="workspacesMode"
