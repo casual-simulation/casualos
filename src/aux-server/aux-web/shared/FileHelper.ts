@@ -279,7 +279,11 @@ export class FileHelper {
      * Creates a new FileCalculationContext from the current state.
      */
     createContext(): FileCalculationContext {
-        return createCalculationContext(this.objects, this._lib);
+        return createCalculationContext(
+            this.objects,
+            this.userFile.id,
+            this._lib
+        );
     }
 
     /**

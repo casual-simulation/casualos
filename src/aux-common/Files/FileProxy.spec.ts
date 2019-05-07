@@ -291,6 +291,7 @@ describe('FileProxy', () => {
             };
             const context = createCalculationContext(
                 [file, second],
+                undefined,
                 formulaLib,
                 factory
             );
@@ -334,6 +335,7 @@ describe('FileProxy', () => {
             };
             const context = createCalculationContext(
                 [file, second],
+                undefined,
                 formulaLib,
                 factory
             );

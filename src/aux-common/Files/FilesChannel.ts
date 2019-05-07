@@ -17,7 +17,6 @@ import formulaLib, {
     setFileState,
     setCalculationContext,
     getCalculationContext,
-    setUserId,
     getUserId,
 } from '../Formulas/formula-lib';
 import { SetValueHandler, isProxy } from './FileProxy';
@@ -75,7 +74,12 @@ export function calculateActionEvents(state: FilesState, action: Action) {
             changes[o.id].newValues.push(value);
         };
     };
-    const context = createCalculationContext(objects, formulaLib, factory);
+    const context = createCalculationContext(
+        objects,
+        action.userId,
+        formulaLib,
+        factory
+    );
 
     let changes: {
         [key: string]: {
@@ -99,7 +103,6 @@ export function calculateActionEvents(state: FilesState, action: Action) {
             f,
             action.eventName,
             factory,
-            action.userId,
             action.argument
         )
     );
@@ -204,7 +207,6 @@ function eventActions(
     file: Object,
     eventName: string,
     setValueHandlerFactory: (file: File) => SetValueHandler,
-    userId: string | null,
     argument: any
 ): FileEvent[] {
     const otherObjects = objects.filter(o => o !== file);
@@ -227,7 +229,6 @@ function eventActions(
     setActions(actions);
     setFileState(state);
     setCalculationContext(context);
-    setUserId(userId);
 
     let formulaObjects = sortedObjects.map(o =>
         convertToFormulaObject(context, o, setValueHandlerFactory(o))
@@ -254,7 +255,6 @@ function eventActions(
     setActions(previous);
     setFileState(null);
     setCalculationContext(prevContext);
-    setUserId(prevUserId);
 
     return actions;
 }

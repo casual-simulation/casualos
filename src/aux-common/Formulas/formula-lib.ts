@@ -42,7 +42,7 @@ import {
 let actions: FileEvent[] = [];
 let state: FilesState = null;
 let calc: FileCalculationContext = null;
-let userFileId: string = null;
+// let userFileId: string = null;
 
 export function setActions(value: FileEvent[]) {
     actions = value;
@@ -69,11 +69,11 @@ export function getCalculationContext(): FileCalculationContext {
 }
 
 export function getUserId(): string {
-    return userFileId;
-}
-
-export function setUserId(id: string) {
-    userFileId = id;
+    if (calc) {
+        return calc.sandbox.interface.userId();
+    } else {
+        return null;
+    }
 }
 
 // declare const lib: string;
@@ -381,7 +381,7 @@ export function event(name: string, files: (File | string)[], arg?: any) {
             : null;
         let results = calculateActionEvents(
             state,
-            action(name, ids, userFileId, arg)
+            action(name, ids, getUserId(), arg)
         );
         actions.push(...results.events);
     }
@@ -448,10 +448,10 @@ export function isInContext(givenContext: string) {
  * Gets the current user's file.
  */
 export function getUser() {
-    if (!userFileId) {
+    if (!getUserId()) {
         return null;
     }
-    const user = calc.sandbox.interface.listObjectsWithTag('id', userFileId);
+    const user = calc.sandbox.interface.listObjectsWithTag('id', getUserId());
     if (Array.isArray(user)) {
         if (user.length === 1) {
             return user[0];

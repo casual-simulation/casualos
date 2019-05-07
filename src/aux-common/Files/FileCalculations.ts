@@ -1052,6 +1052,7 @@ export function createCalculationContextFromState(
  */
 export function createCalculationContext(
     objects: Object[],
+    userId: string = null,
     lib: SandboxLibrary = formulaLib,
     setValueHandlerFactory?: (file: File) => SetValueHandler
 ): FileCalculationContext {
@@ -1061,6 +1062,7 @@ export function createCalculationContext(
     };
     context.sandbox.interface = new SandboxInterfaceImpl(
         context,
+        userId,
         setValueHandlerFactory
     );
     return context;
@@ -2121,6 +2123,7 @@ function _singleOrArray<T>(values: T[]) {
 }
 
 class SandboxInterfaceImpl implements SandboxInterface {
+    private _userId: string;
     objects: Object[];
     context: FileCalculationContext;
     setValueHandlerFactory: (file: File) => SetValueHandler;
@@ -2128,10 +2131,12 @@ class SandboxInterfaceImpl implements SandboxInterface {
 
     constructor(
         context: FileCalculationContext,
+        userId: string,
         setValueHandlerFactory?: (file: File) => SetValueHandler
     ) {
         this.objects = context.objects;
         this.context = context;
+        this._userId = userId;
         this.proxies = new Map();
         this.setValueHandlerFactory = setValueHandlerFactory;
     }
@@ -2185,6 +2190,10 @@ class SandboxInterfaceImpl implements SandboxInterface {
 
     uuid(): string {
         return uuid();
+    }
+
+    userId(): string {
+        return this._userId;
     }
 
     private _filterValues(values: any[], filter: FilterFunction) {

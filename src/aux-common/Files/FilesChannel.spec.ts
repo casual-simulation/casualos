@@ -1856,6 +1856,10 @@ describe('FilesChannel', () => {
             });
         });
 
+        describe('hasFileInInventory()', () => {
+            it('should return true if the given file is in the users inventory context', () => {});
+        });
+
         describe('setPositionDiff()', () => {
             it('should return a diff that sets the file position in a context when applied', () => {
                 const state: FilesState = {
