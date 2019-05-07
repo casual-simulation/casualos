@@ -52,6 +52,17 @@
     -   Added in a tween for the zoom that fires once a file has been focused on, it will tween to file position then zoom to the set zoom value.
     -   Added `whisper(file, event, argument)` formula function that sends shouts to a single file.
     -   Added a `aux.version` tag to the globals file which will be used to help determine when breaking changes in the AUX file format occur.
+    -   Added the ability to copy and paste file selections in AUX Builder.
+        -   Pressing `Ctrl+C` or `Cmd+C` will cause the currently selected files to be copied to the user's clipboard.
+        -   Pressing `Ctrl+V` or `Cmd+V` will cause the currently selected files to be pasted into the world where the user's cursor is.
+        -   Does not interfere with normal copy/paste operations like copying/pasting in input boxes.
+        -   If a worksurface is included in the user's selection the new worksurface will be duplicated from it.
+            -   This allows you to do things like copy the context color.
+            -   Any files that are being copied from the old worksurface to the new one will also maintain their positions.
+    -   Added the ability to copy worksurfaces AUX Builder using the new `"Copy"` option in the context menu.
+        -   Using the `Ctrl+V` keybinding after copying the worksurface will paste a duplicate worksurface with duplicates of all the files that were on the surface.
+    -   Added the ability to drag `.aux` files into AUX Builder.
+        -   This will upload them just like the upload option in the hamburger menu.
 
 ## V0.5.4
 
@@ -64,7 +75,7 @@
     -   Changed the globals file to look like a normal file when created and be labeled as "Global".
     -   Updated all the formula functions to use the new naming scheme.
     -   Added the ability to drag worksurfaces when they are minimized.
-        -                             Setting `aux.context.movable` to `false` will prevent this behavior.
+        -                               Setting `aux.context.movable` to `false` will prevent this behavior.
     -   Selecting an item in the inventory no longer shows a selection indicator.
 -   Bug Fixes
     -   The inventory placeholders should now always appear square.
