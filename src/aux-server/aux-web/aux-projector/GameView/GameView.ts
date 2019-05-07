@@ -43,8 +43,14 @@ import {
     hasValue,
     createContextId,
     AuxCausalTree,
+    AuxOp,
+    createWorkspace,
+    addToContextDiff,
+    FilesState,
+    duplicateFile,
+    toast,
 } from '@casual-simulation/aux-common';
-import { storedTree } from '@casual-simulation/causal-trees';
+import { storedTree, StoredCausalTree } from '@casual-simulation/causal-trees';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { Time } from '../../shared/scene/Time';
 import { Input, InputType } from '../../shared/scene/Input';
@@ -52,7 +58,7 @@ import { InputVR } from '../../shared/scene/InputVR';
 
 import { appManager } from '../../shared/AppManager';
 import { GridChecker } from '../../shared/scene/grid/GridChecker';
-import { flatMap, find, findIndex, debounce } from 'lodash';
+import { flatMap, find, findIndex, debounce, keys } from 'lodash';
 import App from '../App/App';
 import MiniFile from '../MiniFile/MiniFile';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
@@ -431,6 +437,12 @@ export default class GameView extends Vue implements IGameView {
         const files = sim.selection.getSelectedFilesForUser(
             sim.helper.userFile
         );
+        if (files.length === 0) {
+            appManager.simulationManager.primary.helper.transaction(
+                toast('Nothing selected to copy!')
+            );
+            return;
+        }
         const atoms = files.map(f => f.metadata.ref);
         const weave = sim.aux.tree.weave.subweave(...atoms);
         const stored = storedTree(
@@ -443,10 +455,65 @@ export default class GameView extends Vue implements IGameView {
 
         const json = JSON.stringify(tree.export());
         copyToClipboard(json);
+
+        appManager.simulationManager.primary.helper.transaction(
+            toast('Selection Copied!')
+        );
     }
 
-    private _pasteClipboard() {
-        console.log('paste!');
+    private async _pasteClipboard() {
+        if (navigator.clipboard) {
+            try {
+                const json = await navigator.clipboard.readText();
+                const stored: StoredCausalTree<AuxOp> = JSON.parse(json);
+                let tree = new AuxCausalTree(stored);
+                await tree.import(stored);
+
+                const value = tree.value;
+                const fileIds = keys(value);
+                let state: FilesState = {};
+
+                const contextId = createContextId();
+                let worksurface = createWorkspace(undefined, contextId);
+
+                const mouseDir = Physics.screenPosToRay(
+                    this.getInput().getMouseScreenPos(),
+                    this.getMainCamera()
+                );
+                const point = Physics.pointOnPlane(
+                    mouseDir,
+                    this.getGroundPlane()
+                );
+
+                worksurface.tags['aux.context.x'] = point.x;
+                worksurface.tags['aux.context.y'] = point.z;
+                worksurface.tags['aux.context.z'] = point.y;
+
+                state[worksurface.id] = worksurface;
+
+                for (let i = 0; i < fileIds.length; i++) {
+                    const file = value[fileIds[i]];
+
+                    const newFile = duplicateFile(file, {
+                        tags: {
+                            [contextId]: true,
+                            [`${contextId}.index`]: i,
+                            [`${contextId}.x`]: 1,
+                        },
+                    });
+
+                    state[newFile.id] = newFile;
+                }
+
+                await appManager.simulationManager.primary.helper.addState(
+                    state
+                );
+            } catch (ex) {
+                console.error('[GameView] Paste failed', ex);
+            }
+        } else {
+            console.error("[GameView] Browser doesn't support clipboard API!");
+        }
     }
 
     private _isMac(): boolean {

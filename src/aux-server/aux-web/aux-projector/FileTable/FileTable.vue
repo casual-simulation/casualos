@@ -165,7 +165,7 @@
                         </div>
 
                         <!-- Empty tag at bottom -->
-                        <div class="file-cell"></div>
+                        <div :key="`${file.id}-empty`" class="file-cell"></div>
                     </template>
                 </div>
             </div>
