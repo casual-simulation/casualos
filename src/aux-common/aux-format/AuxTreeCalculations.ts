@@ -88,7 +88,6 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
 
     const filesAdded = stateDiffs.pipe(
         map(diff => {
-            // TODO: Work with all domains
             return sortBy(
                 diff.addedFiles,
                 f => {

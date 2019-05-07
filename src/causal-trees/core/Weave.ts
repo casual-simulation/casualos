@@ -188,9 +188,6 @@ export class Weave<TOp extends AtomOp> {
             return [];
         }
 
-        // TODO: Find a way to make _getSpan faster.
-        //       The biggest slowdown with it is that it calls _indexOf()
-        //       which triggers a scan of the entire atom list.
         const causeSpan = this._getSpan(cause);
         if (!causeSpan) {
             return [];

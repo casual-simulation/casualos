@@ -270,7 +270,6 @@ export abstract class BaseFileDragOperation implements IOperation {
 
         const indexes = except.map(o => ({
             object: o,
-            // TODO: Replace with context index
             index: getFileIndex(calc, o, context),
         }));
 
@@ -280,11 +279,6 @@ export abstract class BaseFileDragOperation implements IOperation {
         const maxIndex = maxBy(indexes, i => i.index);
         let nextIndex = 0;
         if (maxIndex) {
-            // if (some(files, f => f.id === maxIndex.object.id)) {
-            //     nextIndex = maxIndex.index;
-            // } else {
-            //     nextIndex = maxIndex.index + 1;
-            // }
             nextIndex = maxIndex.index + 1;
         }
 

@@ -321,7 +321,6 @@ export default class App extends Vue {
     }
 
     toggleOnlineOffline(info: SimulationInfo) {
-        // TODO: Fix
         let options = new ConfirmDialogOptions();
         if (info.simulation.socketManager.forcedOffline) {
             options.title = 'Enable online?';

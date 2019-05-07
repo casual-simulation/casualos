@@ -566,90 +566,6 @@ export default class GameView extends Vue implements IGameView {
         this._sceneBackgroundUpdate();
     }
 
-    // private async _fileUpdated(file: AuxFile, initialUpdate = false) {
-    //     let shouldRemove = false;
-    //     const calc = this.fileManager.helper.createContext();
-    //     // TODO: Work with all domains
-    //     let configTags = getFileConfigContexts(calc, file);
-    //     if (configTags.length === 0) {
-    //         if (!initialUpdate) {
-    //             if (
-    //                 !file.tags['aux._user'] &&
-    //                 file.tags['aux._lastEditedBy'] ===
-    //                     this.fileManager.helper.userFile.id
-    //             ) {
-    //                 if (
-    //                     this.fileManager.recent.selectedRecentFile &&
-    //                     file.id ===
-    //                         this.fileManager.recent.selectedRecentFile.id
-    //                 ) {
-    //                     this.fileManager.recent.selectedRecentFile = file;
-    //                 } else {
-    //                     this.fileManager.recent.selectedRecentFile = null;
-    //                 }
-    //                 // this.addToRecentFilesList(file);
-    //             }
-    //         }
-    //     } else {
-    //         if (file.tags.size <= 0) {
-    //             shouldRemove = true;
-    //         }
-    //     }
-
-    //     await Promise.all(
-    //         [...this._simulations].map(c => c.fileUpdated(file))
-    //     );
-    //     // await obj.updateFile(file);
-    //     this.onFileUpdated.invoke(file);
-
-    //     if (shouldRemove) {
-    //         this._fileRemoved(file.id);
-    //     }
-    // }
-
-    // private async _fileAdded(file: AuxFile) {
-    //     let context = new BuilderGroup3D(file, this._decoratorFactory);
-    //     context.setGridChecker(this._gridChecker);
-    //     this._contexts.push(context);
-    //     this._scene.add(context);
-
-    //     let calc = this.fileManager.helper.createContext();
-    //     await Promise.all(
-    //         [...this._contexts.values()].map(c => c.fileAdded(file, calc))
-    //     );
-
-    //     await this._fileUpdated(file, true);
-    //     this.onFileAdded.invoke(file);
-    // }
-
-    // private _fileRemoved(id: string) {
-    //     const calc = this.fileManager.helper.createContext();
-    //     let removedIndex: number = -1;
-    //     this._contexts.forEach((context, index) => {
-    //         context.fileRemoved(id, calc);
-
-    //         if (context.file.id === id) {
-    //             removedIndex = index;
-    //         }
-    //     });
-
-    //     if (removedIndex >= 0) {
-    //         const context = this._contexts[removedIndex];
-    //         this._scene.remove(context);
-    //         this._contexts.splice(removedIndex, 1);
-    //     }
-
-    //     this.onFileRemoved.invoke(null);
-
-    //     // const obj = this._files[id];
-    //     // if (obj) {
-    //     //   delete this._fileIds[obj.mesh.id];
-    //     //   delete this._files[id];
-    //     //   obj.dispose();
-
-    //     // }
-    // }
-
     private _sceneBackgroundUpdate() {
         if (this._sceneBackground) {
             this._scene.background = this._sceneBackground;
@@ -936,7 +852,6 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _resizeRenderer() {
-        // TODO: Call each time the screen size changes
         const { width, height } = this._calculateCameraSize();
         this._renderer.setPixelRatio(window.devicePixelRatio || 1);
         this._renderer.setSize(width, height);

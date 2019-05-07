@@ -195,9 +195,7 @@ export default class App extends Vue {
     }
 
     forcedOffline() {
-        // TODO: Fix
-        // return appManager.socketManager.forcedOffline;
-        return false;
+        return appManager.simulationManager.primary.socketManager.forcedOffline;
     }
 
     toggleOpen() {
@@ -415,27 +413,26 @@ export default class App extends Vue {
     }
 
     toggleOnlineOffline() {
-        // TODO: Fix
-        // let options = new ConfirmDialogOptions();
-        // if (appManager.socketManager.forcedOffline) {
-        //     options.title = 'Enable online?';
-        //     options.body = 'Allow the app to reconnect to the server?';
-        //     options.okText = 'Go Online';
-        //     options.cancelText = 'Stay Offline';
-        // } else {
-        //     options.title = 'Force offline mode?';
-        //     options.body = 'Prevent the app from connecting to the server?';
-        //     options.okText = 'Go Offline';
-        //     options.cancelText = 'Stay Online';
-        // }
-        // EventBus.$once(options.okEvent, () => {
-        //     appManager.socketManager.toggleForceOffline();
-        //     EventBus.$off(options.cancelEvent);
-        // });
-        // EventBus.$once(options.cancelEvent, () => {
-        //     EventBus.$off(options.okEvent);
-        // });
-        // EventBus.$emit('showConfirmDialog', options);
+        let options = new ConfirmDialogOptions();
+        if (appManager.simulationManager.primary.socketManager.forcedOffline) {
+            options.title = 'Enable online?';
+            options.body = 'Allow the app to reconnect to the server?';
+            options.okText = 'Go Online';
+            options.cancelText = 'Stay Offline';
+        } else {
+            options.title = 'Force offline mode?';
+            options.body = 'Prevent the app from connecting to the server?';
+            options.okText = 'Go Offline';
+            options.cancelText = 'Stay Online';
+        }
+        EventBus.$once(options.okEvent, () => {
+            appManager.simulationManager.primary.socketManager.toggleForceOffline();
+            EventBus.$off(options.cancelEvent);
+        });
+        EventBus.$once(options.cancelEvent, () => {
+            EventBus.$off(options.okEvent);
+        });
+        EventBus.$emit('showConfirmDialog', options);
     }
 
     private _showConnectionLost() {
