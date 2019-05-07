@@ -22,9 +22,15 @@ import {
     SandboxLibrary,
     LocalEvent,
     LocalEvents,
+    filesInContext,
+    getFileChannel,
+    calculateDestroyFileEvents,
+    merge,
+    AUX_FILE_VERSION,
 } from '@casual-simulation/aux-common';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { Subject, Observable } from 'rxjs';
+import { flatMap } from 'lodash';
 
 /**
  * Defines an class that contains a simple set of functions
@@ -83,10 +89,28 @@ export class FileHelper {
     }
 
     /**
+     * Gets the globals file for the simulation.
+     */
+    get globalsFile(): AuxObject {
+        let objs = this.objects.filter(o => o.id === 'globals');
+        if (objs.length > 0) {
+            return objs[0];
+        }
+        return null;
+    }
+
+    /**
      * Gets the observable list of local events that have been processed by this file helper.
      */
     get localEvents(): Observable<LocalEvents> {
         return this._localEvents;
+    }
+
+    /**
+     * Gets the formula lib that the helper is using.
+     */
+    get lib() {
+        return this._lib;
     }
 
     /**
@@ -139,6 +163,59 @@ export class FileHelper {
         );
 
         await this._tree.addFile(workspace);
+    }
+
+    /**
+     * Creates a new globals file.
+     * @param fileId The ID of the file to create. If not specified a new ID will be generated.
+     */
+    async createGlobalsFile(fileId?: string) {
+        const workspace: Workspace = createWorkspace(
+            fileId,
+            undefined,
+            undefined,
+            'Global'
+        );
+
+        const final = merge(workspace, {
+            tags: {
+                'aux.version': AUX_FILE_VERSION,
+            },
+        });
+
+        await this._tree.addFile(final);
+    }
+
+    /**
+     * Creates a new file for the current user that loads the simulation with the given ID.
+     * @param id The ID of the simulation to load.
+     * @param fileId The ID of the file to create.
+     */
+    async createSimulation(id: string, fileId?: string) {
+        const calc = this.createContext();
+        const simFiles = this._getSimulationFiles(calc, id);
+
+        if (simFiles.length === 0) {
+            await this.createFile(fileId, {
+                [this.userFile.tags['aux._userSimulationsContext']]: true,
+                ['aux.channel']: id,
+            });
+        }
+    }
+
+    /**
+     * Deletes all the files in the current user's simulation context that load the given simulation ID.
+     * @param id The ID of the simulation to load.
+     */
+    async destroySimulations(id: string) {
+        const calc = this.createContext();
+        const simFiles = this._getSimulationFiles(calc, id);
+
+        const events = flatMap(simFiles, f =>
+            calculateDestroyFileEvents(calc, f)
+        );
+
+        await this.transaction(...events);
     }
 
     /**
@@ -202,7 +279,11 @@ export class FileHelper {
      * Creates a new FileCalculationContext from the current state.
      */
     createContext(): FileCalculationContext {
-        return createCalculationContext(this.objects, this._lib);
+        return createCalculationContext(
+            this.objects,
+            this.userFile.id,
+            this._lib
+        );
     }
 
     /**
@@ -223,6 +304,18 @@ export class FileHelper {
         return calculateFileValue(this.createContext(), file, tag);
     }
 
+    /**
+     * Sets the file that the user is editing.
+     * @param file The file.
+     */
+    setEditingFile(file: File) {
+        return this.updateFile(this.userFile, {
+            tags: {
+                'aux._editingFile': file.id,
+            },
+        });
+    }
+
     private _sendLocalEvents(events: FileEvent[]) {
         for (let i = 0; i < events.length; i++) {
             const event = events[i];
@@ -230,5 +323,21 @@ export class FileHelper {
                 this._localEvents.next(<LocalEvents>event);
             }
         }
+    }
+
+    /**
+     * Gets the list of simulation files that are in the current user's simulation context.
+     * @param id The ID of the simulation to search for.
+     */
+    private _getSimulationFiles(
+        calc: FileCalculationContext,
+        id: string
+    ): File[] {
+        const simFiles = filesInContext(
+            calc,
+            this.userFile.tags['aux._userSimulationsContext']
+        ).filter(f => getFileChannel(calc, f) === id);
+
+        return simFiles;
     }
 }

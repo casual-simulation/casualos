@@ -15,11 +15,12 @@ import {
     FileCalculationContext,
     COMBINE_ACTION_NAME,
     getFileConfigContexts,
+    File,
 } from '@casual-simulation/aux-common';
 import { Physics } from '../scene/Physics';
 import { flatMap, union, debounce } from 'lodash';
 import { CameraControls } from './CameraControls';
-import { MouseButtonId, InputType } from '../scene/Input';
+import { MouseButtonId, InputType, Input } from '../scene/Input';
 import { appManager } from '../AppManager';
 import { IOperation } from './IOperation';
 import { AuxFile3D } from '../scene/AuxFile3D';
@@ -30,6 +31,8 @@ import {
     Orthographic_MaxZoom,
 } from '../scene/CameraRigFactory';
 import { TapCodeManager } from './TapCodeManager';
+import InventoryFile from 'aux-web/aux-player/InventoryFile/InventoryFile';
+import { Simulation } from '../Simulation';
 
 export abstract class BaseInteractionManager {
     protected _gameView: IGameView;
@@ -38,7 +41,8 @@ export abstract class BaseInteractionManager {
     protected _cameraControls: CameraControls;
     protected _tapCodeManager: TapCodeManager;
     protected _maxTapCodeLength: number;
-    protected _hoveredObject: GameObject;
+    protected _hoveredObject: File;
+    protected _hoveredSimulation: Simulation;
 
     private _operations: IOperation[];
 
@@ -96,9 +100,12 @@ export abstract class BaseInteractionManager {
     }
 
     update(): void {
-        const calc = appManager.fileManager.createContext();
+        // const calc = appManager.simulationManager.primary.helper.createContext();
         // Update active operations and dispose of any that are finished.
         this._operations = this._operations.filter(o => {
+            const calc = o.simulation
+                ? o.simulation.helper.createContext()
+                : null;
             o.update(calc);
 
             if (o.isFinished()) {
@@ -178,6 +185,13 @@ export abstract class BaseInteractionManager {
                                 this._operations.push(gameObjectClickOperation);
                             }
                         }
+
+                        if (gameObject instanceof AuxFile3D) {
+                            this.handlePointerDown(
+                                gameObject.file,
+                                gameObject.contextGroup.simulation.simulation
+                            );
+                        }
                     } else {
                         let emptyClickOperation = this.createEmptyClickOperation();
                         if (emptyClickOperation !== null) {
@@ -224,44 +238,57 @@ export abstract class BaseInteractionManager {
             if (this._tapCodeManager.code.length >= this._maxTapCodeLength) {
                 const code = this._tapCodeManager.code;
                 console.log('[InteractionManager] TapCode: ', code);
-                appManager.fileManager.action('onTapCode', null, code);
+                appManager.simulationManager.simulations.forEach(sim => {
+                    sim.helper.action('onTapCode', null, code);
+                });
                 this._tapCodeManager.trim(this._maxTapCodeLength - 1);
             }
 
             if (input.currentInputType === InputType.Mouse) {
-                const screenPos = input.getMouseScreenPos();
-                const raycastResult = Physics.raycastAtScreenPos(
-                    screenPos,
-                    new Raycaster(),
-                    this.getDraggableObjects(),
-                    this._gameView.getMainCamera()
-                );
-                const hit = Physics.firstRaycastHit(raycastResult);
-                const gameObject = hit
-                    ? this.findGameObjectObjectForHit(hit)
+                const [file, simulation] = this._findHoveredFile(input);
+
+                const fileId = file ? file.id : null;
+                const hoveredId = this._hoveredObject
+                    ? this._hoveredObject.id
                     : null;
-                if (gameObject !== this._hoveredObject) {
+                if (fileId !== hoveredId) {
                     if (this._hoveredObject) {
-                        this.handlePointerExit(this._hoveredObject);
+                        this.handlePointerExit(
+                            this._hoveredObject,
+                            this._hoveredSimulation
+                        );
                     }
-                    this._hoveredObject = gameObject;
+                    this._hoveredObject = file;
+                    this._hoveredSimulation = simulation;
                     if (this._hoveredObject) {
-                        this.handlePointerEnter(this._hoveredObject);
+                        this.handlePointerEnter(
+                            this._hoveredObject,
+                            this._hoveredSimulation
+                        );
                     }
                 }
             }
         }
     }
 
-    handlePointerEnter(object: GameObject) {
-        if (object instanceof AuxFile3D) {
-            appManager.fileManager.action('onPointerEnter', [object.file]);
-        }
-    }
+    protected _findHoveredFile(input: Input): [File, Simulation] {
+        const screenPos = input.getMouseScreenPos();
+        const raycastResult = Physics.raycastAtScreenPos(
+            screenPos,
+            new Raycaster(),
+            this.getDraggableObjects(),
+            this._gameView.getMainCamera()
+        );
+        const hit = Physics.firstRaycastHit(raycastResult);
+        const gameObject = hit ? this.findGameObjectObjectForHit(hit) : null;
 
-    handlePointerExit(object: GameObject) {
-        if (object instanceof AuxFile3D) {
-            appManager.fileManager.action('onPointerExit', [object.file]);
+        if (gameObject instanceof AuxFile3D) {
+            return [
+                gameObject.file,
+                gameObject.contextGroup.simulation.simulation,
+            ];
+        } else {
+            return [null, null];
         }
     }
 
@@ -317,21 +344,21 @@ export abstract class BaseInteractionManager {
     }
 
     async selectFile(file: AuxFile3D) {
-        appManager.fileManager.filePanel.search = '';
+        file.contextGroup.simulation.simulation.filePanel.search = '';
         const shouldMultiSelect = this._gameView
             .getInput()
             .getKeyHeld('Control');
-        appManager.fileManager.recent.addFileDiff(file.file);
-        appManager.fileManager.recent.selectedRecentFile = null;
-        await appManager.fileManager.selection.selectFile(
+        file.contextGroup.simulation.simulation.recent.addFileDiff(file.file);
+        file.contextGroup.simulation.simulation.recent.selectedRecentFile = null;
+        await file.contextGroup.simulation.simulation.selection.selectFile(
             <AuxFile>file.file,
             shouldMultiSelect
         );
     }
 
     async clearSelection() {
-        appManager.fileManager.filePanel.search = '';
-        await appManager.fileManager.selection.clearSelection();
+        appManager.simulationManager.primary.filePanel.search = '';
+        await appManager.simulationManager.primary.selection.clearSelection();
     }
 
     getDraggableObjects() {
@@ -440,6 +467,9 @@ export abstract class BaseInteractionManager {
     ): IOperation;
     abstract createEmptyClickOperation(): IOperation;
     abstract createHtmlElementClickOperation(element: HTMLElement): IOperation;
+    abstract handlePointerEnter(file: File, simulation: Simulation): IOperation;
+    abstract handlePointerExit(file: File, simulation: Simulation): IOperation;
+    abstract handlePointerDown(file: File, simulation: Simulation): IOperation;
 
     protected abstract _contextMenuActions(
         calc: FileCalculationContext,

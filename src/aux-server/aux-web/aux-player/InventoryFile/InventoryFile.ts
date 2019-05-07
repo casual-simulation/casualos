@@ -4,16 +4,16 @@ import { Inject, Watch, Prop } from 'vue-property-decorator';
 import { Object, AuxFile } from '@casual-simulation/aux-common';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { appManager } from '../../shared/AppManager';
+import { InventoryItem } from '../InventoryContext';
 
 @Component({
     components: {},
 })
 export default class InventoryFile extends Vue {
-    @Prop() file: AuxFile;
+    @Prop() item: InventoryItem;
     @Prop() slotIndex: number;
     @Prop({ default: false })
     selected: boolean;
-    @Prop() context: string;
 
     image: string = '';
     label: string = '';
@@ -22,21 +22,28 @@ export default class InventoryFile extends Vue {
 
     @Inject() fileRenderer: FileRenderer;
 
+    get file(): AuxFile {
+        return this.item ? this.item.file : null;
+    }
+
     @Watch('file')
     private async _fileChanged(file: AuxFile) {
         if (file) {
-            this.image = await this.fileRenderer.render(file);
+            this.image = await this.fileRenderer.render(
+                file,
+                this.item.simulation.simulation.helper.createContext()
+            );
             this.showImage = 'flex';
             let label = file.tags['aux.label'];
             if (label) {
-                this.label = appManager.fileManager.calculateFormattedFileValue(
+                this.label = this.item.simulation.simulation.helper.calculateFormattedFileValue(
                     file,
                     'aux.label'
                 );
 
                 const labelColor = file.tags['aux.label.color'];
                 if (labelColor) {
-                    this.labelColor = appManager.fileManager.calculateFormattedFileValue(
+                    this.labelColor = this.item.simulation.simulation.helper.calculateFormattedFileValue(
                         file,
                         'aux.label.color'
                     );

@@ -1,9 +1,22 @@
 <!-- App.vue -->
 <template>
-    <div ref="container" class="game-container">
+    <div
+        ref="container"
+        class="game-container"
+        @dragenter="onDragEnter"
+        @dragleave="onDragLeave"
+        @drop="onDrop"
+        @dragover="onDragOver"
+    >
         <div class="game-canvas" ref="gameView"></div>
         <slot></slot>
         <div class="ui-container">
+            <div v-if="showUploadFiles" class="upload-files">
+                <div class="upload-files-content">
+                    <md-icon class="icon-white md-size-4x">cloud_upload</md-icon>
+                    <p class="upload-files-text">Drop to upload</p>
+                </div>
+            </div>
             <div class="toolbar">
                 <!--md-button
                     v-if="workspacesMode"
@@ -21,14 +34,14 @@
                 ></span>
 
                 <div ref="fileQueue">
-                    <div v-if="!vrDisplay && filesMode" class="toolbar-layout">
+                    <div v-if="!vrDisplay && filesMode && simulation3D" class="toolbar-layout">
                         <mini-file
-                            v-for="(file, index) in recentFiles"
+                            v-for="(file, index) in simulation3D.recentFiles"
                             :key="index"
                             :file="file"
-                            :selected="selectedRecentFile === file"
+                            :selected="simulation3D.selectedRecentFile === file"
                             :large="index === 0"
-                            @click="selectRecentFile(file)"
+                            @click="simulation3D.selectRecentFile(file)"
                         ></mini-file>
                     </div>
                 </div>
@@ -36,6 +49,14 @@
             <div class="toolbar right">
                 <trash-can v-if="showTrashCan" ref="trashCan"></trash-can>
             </div>
+            <div
+                v-shortkey.once="{ normal: ['ctrl', 'c'], mac: ['meta', 'c'] }"
+                @shortkey="copySelection"
+            ></div>
+            <div
+                v-shortkey.once="{ normal: ['ctrl', 'v'], mac: ['meta', 'v'] }"
+                @shortkey="pasteClipboard"
+            ></div>
         </div>
 
         <md-dialog :md-active.sync="showDialog">

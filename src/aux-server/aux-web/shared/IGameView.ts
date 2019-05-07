@@ -14,6 +14,9 @@ import { AuxFile } from '@casual-simulation/aux-common/aux-format';
 import { ContextGroup3D } from './scene/ContextGroup3D';
 import { AuxFile3DFinder } from './AuxFile3DFinder';
 import Vue from 'vue';
+import { Simulation3D } from './scene/Simulation3D';
+import { GridChecker } from './scene/grid/GridChecker';
+import { AuxFile3DDecoratorFactory } from './scene/decorators/AuxFile3DDecoratorFactory';
 
 /**
  * Interface that described what properties and functions should be available to a GameView class/component implementation.
@@ -44,6 +47,13 @@ export interface IGameView extends AuxFile3DFinder, Vue {
     getRenderer(): WebGLRenderer;
     getGroundPlane(): Plane;
     getMainCamera(): PerspectiveCamera | OrthographicCamera;
+    getDecoratorFactory(): AuxFile3DDecoratorFactory;
+    getGridChecker(): GridChecker;
+
+    /**
+     * Gets the list of simulations that this game view contains.
+     */
+    getSimulations(): Simulation3D[];
 
     /**
      * Gets the list of contexts that this game view contains.
@@ -65,4 +75,11 @@ export interface IGameView extends AuxFile3DFinder, Vue {
      * @param visible Whether the grid is visible.
      */
     setWorldGridVisible(visible: boolean): void;
+
+    /**
+     * Tweens the user's camera to view the given file.
+     * @param fileId The ID of the file to view.
+     * @param zoomValue The zoom value to use.
+     */
+    tweenCameraToFile(fileId: string, zoomValue: number): void;
 }

@@ -8,11 +8,13 @@ import {
     FileCalculationContext,
     AuxFile,
     isFileMovable,
+    isPickupable,
 } from '@casual-simulation/aux-common';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
 import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
 import { IGameView } from '../../../shared/IGameView';
+import { Simulation3D } from '../../scene/Simulation3D';
 
 /**
  * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
@@ -20,7 +22,7 @@ import { IGameView } from '../../../shared/IGameView';
 export abstract class BaseFileClickOperation implements IOperation {
     public static readonly DragThreshold: number = 0.03;
 
-    protected _gameView: IGameView;
+    protected _simulation3D: Simulation3D;
     protected _interaction: BaseInteractionManager;
     protected _file: File;
     protected _file3D: AuxFile3D | ContextGroup3D | null;
@@ -30,19 +32,27 @@ export abstract class BaseFileClickOperation implements IOperation {
     protected _startScreenPos: Vector2;
     protected _dragOperation: BaseFileDragOperation;
 
+    protected get gameView() {
+        return this._simulation3D.gameView;
+    }
+
+    get simulation() {
+        return this._simulation3D.simulation;
+    }
+
     constructor(
-        gameView: IGameView,
+        simulation: Simulation3D,
         interaction: BaseInteractionManager,
         file: File,
         file3D: AuxFile3D | ContextGroup3D | null
     ) {
-        this._gameView = gameView;
+        this._simulation3D = simulation;
         this._interaction = interaction;
         this._file = file;
         this._file3D = file3D;
 
         // Store the screen position of the input when the click occured.
-        this._startScreenPos = this._gameView.getInput().getMouseScreenPos();
+        this._startScreenPos = this.gameView.getInput().getMouseScreenPos();
     }
 
     public update(calc: FileCalculationContext): void {
@@ -60,16 +70,16 @@ export abstract class BaseFileClickOperation implements IOperation {
 
         // If using touch, need to make sure we are only ever using one finger at a time.
         // If a second finger is detected then we cancel this click operation.
-        if (this._gameView.getInput().currentInputType === InputType.Touch) {
-            if (this._gameView.getInput().getTouchCount() >= 2) {
+        if (this.gameView.getInput().currentInputType === InputType.Touch) {
+            if (this.gameView.getInput().getTouchCount() >= 2) {
                 this._finished = true;
                 return;
             }
         }
 
-        if (this._gameView.getInput().getMouseButtonHeld(0)) {
+        if (this.gameView.getInput().getMouseButtonHeld(0)) {
             if (!this._dragOperation) {
-                const curScreenPos = this._gameView
+                const curScreenPos = this.gameView
                     .getInput()
                     .getMouseScreenPos();
                 const distance = curScreenPos.distanceTo(this._startScreenPos);
@@ -78,6 +88,7 @@ export abstract class BaseFileClickOperation implements IOperation {
                     // Attempt to start dragging now that we've crossed the threshold.
                     this._triedDragging = true;
 
+                    //returns true (can drag) if either aux.movable or aux.pickupable are true
                     if (this._canDragFile(calc, this._file)) {
                         this._dragOperation = this._createDragOperation(calc);
                     } else {
@@ -110,7 +121,7 @@ export abstract class BaseFileClickOperation implements IOperation {
     }
 
     protected _canDragFile(calc: FileCalculationContext, file: File): boolean {
-        return isFileMovable(calc, file);
+        return isFileMovable(calc, file) || isPickupable(calc, file);
     }
 
     protected abstract _performClick(calc: FileCalculationContext): void;

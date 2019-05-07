@@ -12,6 +12,9 @@ import {
     toast as toastMessage,
     tweenTo as calcTweenTo,
     openQRCodeScanner as calcOpenQRCodeScanner,
+    loadSimulation as calcLoadSimulation,
+    unloadSimulation as calcUnloadSimulation,
+    superShout as calcSuperShout,
 } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
 import { every, find } from 'lodash';
@@ -34,12 +37,13 @@ import {
     unwrapProxy,
     CREATE_ACTION_NAME,
     DESTROY_ACTION_NAME,
+    isFileInContext,
 } from '../Files/FileCalculations';
 
 let actions: FileEvent[] = [];
 let state: FilesState = null;
 let calc: FileCalculationContext = null;
-let userFileId: string = null;
+// let userFileId: string = null;
 
 export function setActions(value: FileEvent[]) {
     actions = value;
@@ -66,11 +70,11 @@ export function getCalculationContext(): FileCalculationContext {
 }
 
 export function getUserId(): string {
-    return userFileId;
-}
-
-export function setUserId(id: string) {
-    userFileId = id;
+    if (calc) {
+        return calc.sandbox.interface.userId();
+    } else {
+        return null;
+    }
 }
 
 // declare const lib: string;
@@ -378,7 +382,7 @@ export function event(name: string, files: (File | string)[], arg?: any) {
             : null;
         let results = calculateActionEvents(
             state,
-            action(name, ids, userFileId, arg)
+            action(name, ids, getUserId(), arg)
         );
         actions.push(...results.events);
     }
@@ -390,6 +394,25 @@ export function event(name: string, files: (File | string)[], arg?: any) {
  */
 export function shout(name: string, arg?: any) {
     event(name, null, arg);
+}
+
+/**
+ * Shouts the given event to every file in every loaded simulation.
+ * @param eventName The name of the event to shout.
+ * @param arg The argument to shout. This gets passed as the `that` variable to the other scripts.
+ */
+export function superShout(eventName: string, arg?: any) {
+    actions.push(calcSuperShout(eventName, arg));
+}
+
+/**
+ * Sends the given event to the given file.
+ * @param file The file to send the event to.
+ * @param eventName The name of the event to send.
+ * @param arg The argument to pass.
+ */
+export function whisper(file: File | string, eventName: string, arg?: any) {
+    event(eventName, [file], arg);
 }
 
 /**
@@ -413,7 +436,7 @@ export function goToContext(simulationId: string, context?: string) {
 }
 
 /**
- * Derermines wather the player is in the given context.
+ * Derermines whether the player is in the given context.
  * @param context The context.
  */
 export function isInContext(givenContext: string) {
@@ -423,13 +446,31 @@ export function isInContext(givenContext: string) {
 }
 
 /**
+ * Determines whether the player has the given file in their inventory.
+ * @param files The file or files to check.
+ */
+export function hasFileInInventory(files: FileProxy | FileProxy[]): boolean {
+    if (!Array.isArray(files)) {
+        files = [files];
+    }
+
+    return every(files, f =>
+        isFileInContext(
+            getCalculationContext(),
+            <any>f,
+            getUserInventoryContext()
+        )
+    );
+}
+
+/**
  * Gets the current user's file.
  */
 export function getUser() {
-    if (!userFileId) {
+    if (!getUserId()) {
         return null;
     }
-    const user = calc.sandbox.interface.listObjectsWithTag('id', userFileId);
+    const user = calc.sandbox.interface.listObjectsWithTag('id', getUserId());
     if (Array.isArray(user)) {
         if (user.length === 1) {
             return user[0];
@@ -635,6 +676,22 @@ export function closeQRCodeScanner() {
 }
 
 /**
+ * Loads the channel with the given ID.
+ * @param id The ID of the channel to load.
+ */
+export function loadChannel(id: string) {
+    actions.push(calcLoadSimulation(id));
+}
+
+/**
+ * Unloads the channel with the given ID.
+ * @param id The ID of the channel to unload.
+ */
+export function unloadChannel(id: string) {
+    actions.push(calcUnloadSimulation(id));
+}
+
+/**
  * Defines a set of functions that are able to make File Diffs.
  */
 export const diff = {
@@ -658,6 +715,9 @@ export const player = {
     tweenTo,
     openQRCodeScanner,
     closeQRCodeScanner,
+    loadChannel,
+    unloadChannel,
+    hasFileInInventory,
 };
 
 /**
@@ -696,4 +756,6 @@ export default {
     event,
     getFilesInContext,
     shout,
+    superShout,
+    whisper,
 };

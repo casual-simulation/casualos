@@ -31,10 +31,14 @@ import {
     createFile,
     isContext,
     getFileConfigContexts,
+    filesInContext,
+    AuxObject,
+    toast,
+    PartialFile,
 } from '@casual-simulation/aux-common';
 import { BuilderFileClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderFileClickOperation';
 import { Physics } from '../../shared/scene/Physics';
-import { flatMap, minBy, keys } from 'lodash';
+import { flatMap, minBy, keys, uniqBy } from 'lodash';
 import {
     Axial,
     realPosToGridPos,
@@ -45,7 +49,6 @@ import {
 import { Input } from '../../shared/scene/Input';
 import { ColorPickerEvent } from '../../aux-projector/interaction/ColorPickerEvent';
 import { EventBus } from '../../shared/EventBus';
-import { appManager } from '../../shared/AppManager';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BuilderEmptyClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderEmptyClickOperation';
 import { BuilderNewFileClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderNewFileClickOperation';
@@ -58,6 +61,8 @@ import { GameObject } from '../../shared/scene/GameObject';
 import MiniFile from '../MiniFile/MiniFile';
 import FileTag from '../FileTag/FileTag';
 import FileTable from '../FileTable/FileTable';
+import { appManager } from '../../shared/AppManager';
+import { Simulation } from 'aux-web/shared/Simulation';
 
 export class BuilderInteractionManager extends BaseInteractionManager {
     // This overrides the base class IGameView
@@ -69,7 +74,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     mode: UserMode = DEFAULT_USER_MODE;
 
     get selectionMode() {
-        return this._gameView.fileManager.selection.mode;
+        return this._gameView.simulation3D.simulation.selection.mode;
     }
 
     constructor(gameView: GameView) {
@@ -86,7 +91,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             gameObject instanceof ContextGroup3D
         ) {
             let fileClickOp = new BuilderFileClickOperation(
-                this._gameView,
+                this._gameView.simulation3D,
                 this,
                 gameObject,
                 hit
@@ -107,7 +112,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         if (vueElement instanceof MiniFile) {
             const file = <File>vueElement.file;
             let newFileClickOp = new BuilderNewFileClickOperation(
-                this._gameView,
+                this._gameView.simulation3D,
                 this,
                 file
             );
@@ -127,7 +132,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                         'aux._diffTags': [tag],
                     });
                     return new BuilderNewFileClickOperation(
-                        this._gameView,
+                        this._gameView.simulation3D,
                         this,
                         newFile
                     );
@@ -233,19 +238,38 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      */
     updateTileHeightAtGridPosition(
         file: ContextGroup3D,
-        position: Axial,
+        positions: Axial[],
         height: number
     ) {
-        const key = posToKey(position);
-        appManager.fileManager.updateFile(file.file, {
+        let partial: PartialFile = {
             tags: {
-                [`aux.context.grid`]: {
-                    [key]: {
-                        height: height,
-                    },
-                },
+                [`aux.context.grid`]: {},
             },
-        });
+        };
+
+        for (let i = 0; i < positions.length; i++) {
+            const key = posToKey(positions[i]);
+            partial.tags[`aux.context.grid`][key] = {
+                height: height,
+            };
+        }
+
+        this._gameView.simulation3D.simulation.helper.updateFile(
+            file.file,
+            partial
+        );
+    }
+
+    handlePointerEnter(file: File, simulation: Simulation): IOperation {
+        return null;
+    }
+
+    handlePointerExit(file: File, simulation: Simulation): IOperation {
+        return null;
+    }
+
+    handlePointerDown(file: File, simulation: Simulation): IOperation {
+        return null;
     }
 
     /**
@@ -364,7 +388,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 (<GameView>this._gameView)
                     .getContexts()
                     .filter(f => isContext(calc, f.file)),
-                f => f.surface.colliders
+                (f: BuilderGroup3D) => f.surface.colliders
             );
             this._surfaceObjectsDirty = false;
         }
@@ -408,9 +432,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     actions.push({
                         label: 'Raise',
                         onClick: () =>
-                            this.updateTileHeightAtGridPosition(
+                            this.SetAllHexHeight(
                                 gameObject,
-                                tile,
                                 currentHeight + increment
                             ),
                     });
@@ -418,9 +441,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                         actions.push({
                             label: 'Lower',
                             onClick: () =>
-                                this.updateTileHeightAtGridPosition(
+                                this.SetAllHexHeight(
                                     gameObject,
-                                    tile,
                                     currentHeight - increment
                                 ),
                         });
@@ -447,6 +469,11 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 });
 
                 actions.push({
+                    label: 'Copy',
+                    onClick: () => this._copyWorkspace(calc, gameObject),
+                });
+
+                actions.push({
                     label: 'Switch to Player',
                     onClick: () => this._switchToPlayer(calc, gameObject),
                 });
@@ -462,11 +489,28 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     ) {
         if (file && isContext(calc, file.file)) {
             const size = getContextSize(calc, file.file);
-            appManager.fileManager.updateFile(file.file, {
-                tags: {
-                    [`aux.context.size`]: (size || 0) - 1,
-                },
-            });
+            this._gameView.simulation3D.simulation.helper.updateFile(
+                file.file,
+                {
+                    tags: {
+                        [`aux.context.size`]: (size || 0) - 1,
+                    },
+                }
+            );
+        }
+    }
+
+    /**
+     * On raise or lower, set all hexes in workspace to given height
+     * @param file
+     */
+    private SetAllHexHeight(gameObject: ContextGroup3D, height: number) {
+        if (gameObject instanceof BuilderGroup3D) {
+            let tiles = gameObject.surface.hexGrid.hexes.map(
+                hex => hex.gridPosition
+            );
+
+            this.updateTileHeightAtGridPosition(gameObject, tiles, height);
         }
     }
 
@@ -480,11 +524,37 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     ) {
         if (file && isContext(calc, file.file)) {
             const minimized = !isMinimized(calc, file.file);
-            appManager.fileManager.updateFile(file.file, {
-                tags: {
-                    [`aux.context.minimized`]: minimized,
-                },
-            });
+            this._gameView.simulation3D.simulation.helper.updateFile(
+                file.file,
+                {
+                    tags: {
+                        [`aux.context.minimized`]: minimized,
+                    },
+                }
+            );
+        }
+    }
+
+    /**
+     * Copies all the files on the workspace to the given user's clipboard.
+     * @param file
+     */
+    private async _copyWorkspace(
+        calc: FileCalculationContext,
+        file: ContextGroup3D
+    ) {
+        if (file && isContext(calc, file.file)) {
+            const contexts = getFileConfigContexts(calc, file.file);
+            const files = flatMap(contexts, c => filesInContext(calc, c));
+            const deduped = uniqBy(files, f => f.id);
+            await appManager.copyFilesFromSimulation(
+                file.simulation.simulation,
+                <AuxObject[]>deduped
+            );
+
+            await file.simulation.simulation.helper.transaction(
+                toast('Worksurface Copied!')
+            );
         }
     }
 
@@ -494,11 +564,14 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     ) {
         if (file) {
             const size = getContextSize(calc, file.file);
-            appManager.fileManager.updateFile(file.file, {
-                tags: {
-                    [`aux.context.size`]: (size || 0) + 1,
-                },
-            });
+            this._gameView.simulation3D.simulation.helper.updateFile(
+                file.file,
+                {
+                    tags: {
+                        [`aux.context.size`]: (size || 0) + 1,
+                    },
+                }
+            );
         }
     }
 

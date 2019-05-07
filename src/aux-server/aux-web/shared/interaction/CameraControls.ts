@@ -13,6 +13,7 @@ import {
 import { BaseInteractionManager } from './BaseInteractionManager';
 import { InputType, MouseButtonId } from '../../shared/scene/Input';
 import { IGameView } from '../../shared/IGameView';
+import { lerp } from '@casual-simulation/aux-common';
 
 export class CameraControls {
     // "target" sets the location of focus, where the object orbits around
@@ -116,6 +117,9 @@ export class CameraControls {
     private dollyDelta = new Vector2();
 
     private sphereRadiusSetter: number = 10;
+    private zoomSetValue: number = 10;
+    private zoomSetValueOrtho: number = 10;
+    private zooming: boolean = false;
 
     get enabled() {
         return this._enabled;
@@ -246,14 +250,15 @@ export class CameraControls {
 
     public dollySet(dollyScale: number) {
         if (this._camera instanceof PerspectiveCamera) {
-            this.sphereRadiusSetter = dollyScale;
+            this.zoomSetValue = dollyScale;
+            this.zooming = true;
+            //this.sphereRadiusSetter = dollyScale;
         } else {
-            this._camera.zoom = Math.max(
+            this.zoomSetValueOrtho = Math.max(
                 this.minZoom,
                 Math.min(this.maxZoom, dollyScale)
             );
-            this._camera.updateProjectionMatrix();
-            this.zoomChanged = true;
+            this.zooming = true;
         }
     }
 
@@ -556,6 +561,27 @@ export class CameraControls {
     }
 
     private updateCamera() {
+        if (this._camera instanceof OrthographicCamera) {
+            if (this.zooming && this._camera.zoom != this.zoomSetValueOrtho) {
+                this._camera.zoom = lerp(
+                    this._camera.zoom,
+                    this.zoomSetValueOrtho,
+                    0.1
+                );
+
+                if (
+                    this._camera.zoom < this.zoomSetValueOrtho + 0.1 &&
+                    this._camera.zoom > this.zoomSetValueOrtho - 0.1
+                ) {
+                    this._camera.zoom = this.zoomSetValueOrtho;
+                    this.zooming = false;
+                }
+
+                this._camera.updateProjectionMatrix();
+                this.zoomChanged = true;
+            }
+        }
+
         let offset = new Vector3();
 
         // so camera.up is the orbit axis
@@ -599,7 +625,26 @@ export class CameraControls {
         this.spherical.makeSafe();
 
         if (this._camera instanceof PerspectiveCamera) {
-            this.spherical.radius = this.sphereRadiusSetter;
+            if (this.zooming && this.spherical.radius != this.zoomSetValue) {
+                this.sphereRadiusSetter = lerp(
+                    this.spherical.radius,
+                    this.zoomSetValue,
+                    0.1
+                );
+
+                if (
+                    this.spherical.radius < this.zoomSetValue + 0.1 &&
+                    this.spherical.radius > this.zoomSetValue - 0.1
+                ) {
+                    this.sphereRadiusSetter = this.zoomSetValue;
+                    this.zooming = false;
+                }
+
+                this.spherical.radius = this.sphereRadiusSetter;
+            } else {
+                this.zooming = false;
+                this.spherical.radius = this.sphereRadiusSetter;
+            }
         }
 
         this.spherical.radius *= this.scale;

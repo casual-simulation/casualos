@@ -41,13 +41,17 @@ import {
 } from './FileProxy';
 
 /// <reference path="../typings/global.d.ts" />
-import formulaLib from '../Formulas/formula-lib';
+import formulaLib, {
+    setCalculationContext,
+    getCalculationContext,
+} from '../Formulas/formula-lib';
 import SandboxInterface, { FilterFunction } from '../Formulas/SandboxInterface';
 import { PartialFile } from '../Files';
 import { FilesState, cleanFile, hasValue } from './FilesChannel';
 import { merge, shortUuid } from '../utils';
 import { AuxFile, AuxObject, AuxOp, AuxState } from '../aux-format';
 import { Atom } from '@casual-simulation/causal-trees';
+import { TorusGeometry } from 'three';
 
 export var ShortId_Length: number = 5;
 
@@ -171,6 +175,21 @@ export interface FilterParseFailure {
     partialSuccess: boolean;
     tag: string;
     eventName: string;
+}
+
+export type SimulationIdParseResult =
+    | SimulationIdParseFailure
+    | SimulationIdParseSuccess;
+
+export interface SimulationIdParseFailure {
+    success: false;
+}
+
+export interface SimulationIdParseSuccess {
+    success: true;
+    channel?: string;
+    host?: string;
+    context?: string;
 }
 
 /**
@@ -1036,6 +1055,7 @@ export function createCalculationContextFromState(
  */
 export function createCalculationContext(
     objects: Object[],
+    userId: string = null,
     lib: SandboxLibrary = formulaLib,
     setValueHandlerFactory?: (file: File) => SetValueHandler
 ): FileCalculationContext {
@@ -1045,6 +1065,7 @@ export function createCalculationContext(
     };
     context.sandbox.interface = new SandboxInterfaceImpl(
         context,
+        userId,
         setValueHandlerFactory
     );
     return context;
@@ -1105,6 +1126,16 @@ export function filterMatchesArguments(
         }
     }
     return false;
+}
+
+/**
+ * Gets the AUX_FILE_VERSION number that the given file was created with.
+ * If not specified, then undefined is returned.
+ * @param calc The file calculation context.
+ * @param file THe file.
+ */
+export function getFileVersion(calc: FileCalculationContext, file: File) {
+    return calculateNumericalTagValue(calc, file, 'aux.version', undefined);
 }
 
 /**
@@ -1315,6 +1346,7 @@ export function isFileMovable(
     calc: FileCalculationContext,
     file: File
 ): boolean {
+    // checks if file is movable, but we should also allow it if it is pickupable so we can drag it into inventory if movable is false
     return calculateBooleanTagValue(calc, file, 'aux.movable', true);
 }
 
@@ -1544,6 +1576,19 @@ export function isMergeable(calc: FileCalculationContext, file: File): boolean {
 }
 
 /**
+ * Determines if the given file allows for the file to be place in inventory.
+ * @param file The file to check.
+ */
+export function isPickupable(
+    calc: FileCalculationContext,
+    file: File
+): boolean {
+    return (
+        !!file && calculateBooleanTagValue(calc, file, 'aux.pickupable', true)
+    );
+}
+
+/**
  * Gets a partial file that can be used to apply the diff that the given file represents.
  * A diff file is any file that has `aux._diff` set to `true` and `aux._diffTags` set to a list of tag names.
  * @param file The file that represents the diff.
@@ -1575,6 +1620,60 @@ export function getDiffUpdate(file: File): PartialFile {
         return update;
     }
     return null;
+}
+
+export function parseSimulationId(id: string): SimulationIdParseSuccess {
+    try {
+        let uri = new URL(id);
+        const split = uri.pathname.slice(1).split('/');
+        if (split.length === 1) {
+            if (split[0]) {
+                return {
+                    success: true,
+                    host: uri.host,
+                    channel: split[0],
+                };
+            } else {
+                return {
+                    success: true,
+                    host: uri.host,
+                };
+            }
+        } else {
+            return {
+                success: true,
+                host: uri.host,
+                channel: split[0],
+                context: split.slice(1).join('/'),
+            };
+        }
+    } catch (ex) {
+        const split = id.split('/');
+        if (split.length === 1) {
+            return {
+                success: true,
+                channel: id,
+            };
+        } else {
+            const firstSlashIndex = id.indexOf('/');
+            const firstDotIndex = id.indexOf('.');
+
+            if (firstDotIndex >= 0 && firstDotIndex < firstSlashIndex) {
+                return {
+                    success: true,
+                    host: split[0],
+                    channel: split[1],
+                    context: split.slice(2).join('/'),
+                };
+            } else {
+                return {
+                    success: true,
+                    channel: split[0],
+                    context: split.slice(1).join('/'),
+                };
+            }
+        }
+    }
 }
 
 /**
@@ -1734,6 +1833,30 @@ export function calculateBooleanTagValue(
 }
 
 /**
+ * Determines if the given file is trying to load a simulation.
+ * @param calc The calculation context.
+ * @param file The file to check.
+ */
+export function isSimulation(
+    calc: FileCalculationContext,
+    file: Object
+): boolean {
+    return !!getFileChannel(calc, file);
+}
+
+/**
+ * Gets the aux.channel tag from the given file.
+ * @param calc The file calculation context to use.
+ * @param file The file.
+ */
+export function getFileChannel(
+    calc: FileCalculationContext,
+    file: Object
+): string {
+    return calculateFileValue(calc, file, 'aux.channel');
+}
+
+/**
  * Returns wether or not the given file resides in the given context id.
  * @param context The file calculation context to run formulas with.
  * @param file The file.
@@ -1747,7 +1870,15 @@ export function isFileInContext(
     if (!contextId) return false;
 
     let result: boolean;
-    const contextValue = calculateFileValue(context, file, contextId);
+
+    let contextValue = calculateFileValue(context, file, contextId.valueOf());
+
+    if (
+        typeof contextValue === 'object' &&
+        typeof contextValue.valueOf === 'function'
+    ) {
+        contextValue = contextValue.valueOf();
+    }
 
     if (typeof contextValue === 'string') {
         result = contextValue === 'true';
@@ -1951,6 +2082,9 @@ function _calculateFormulaValue(
     formula: string,
     unwrapProxy: boolean = true
 ) {
+    const prevCalc = getCalculationContext();
+    setCalculationContext(context);
+
     const result = context.sandbox.run(
         formula,
         {
@@ -1960,6 +2094,8 @@ function _calculateFormulaValue(
         },
         convertToFormulaObject(context, object)
     );
+
+    setCalculationContext(prevCalc);
 
     if (unwrapProxy) {
         // Unwrap the proxy object
@@ -2003,6 +2139,7 @@ function _singleOrArray<T>(values: T[]) {
 }
 
 class SandboxInterfaceImpl implements SandboxInterface {
+    private _userId: string;
     objects: Object[];
     context: FileCalculationContext;
     setValueHandlerFactory: (file: File) => SetValueHandler;
@@ -2010,10 +2147,12 @@ class SandboxInterfaceImpl implements SandboxInterface {
 
     constructor(
         context: FileCalculationContext,
+        userId: string,
         setValueHandlerFactory?: (file: File) => SetValueHandler
     ) {
         this.objects = context.objects;
         this.context = context;
+        this._userId = userId;
         this.proxies = new Map();
         this.setValueHandlerFactory = setValueHandlerFactory;
     }
@@ -2067,6 +2206,10 @@ class SandboxInterfaceImpl implements SandboxInterface {
 
     uuid(): string {
         return uuid();
+    }
+
+    userId(): string {
+        return this._userId;
     }
 
     private _filterValues(values: any[], filter: FilterFunction) {

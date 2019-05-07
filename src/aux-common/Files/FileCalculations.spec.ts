@@ -46,6 +46,11 @@ import {
     getFileLabelAnchor,
     formatValue,
     isContextMovable,
+    isPickupable,
+    isSimulation,
+    parseSimulationId,
+    getFileVersion,
+    isFileInContext,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
@@ -53,6 +58,7 @@ import { FilesState, cleanFile, fileRemoved } from './FilesChannel';
 import { file } from '../aux-format';
 import uuid from 'uuid/v4';
 import { select } from 'd3';
+import { tsExpressionWithTypeArguments } from '@babel/types';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -1358,6 +1364,55 @@ describe('FileCalculations', () => {
         });
     });
 
+    describe('isPickupable()', () => {
+        it('should return true if the file is pickupable', () => {
+            const file1 = createFile(undefined, { 'aux.pickupable': true });
+            const update1 = isPickupable(
+                createCalculationContext([file1]),
+                file1
+            );
+
+            expect(update1).toBe(true);
+        });
+
+        it('should return false if the file is not pickupable', () => {
+            const file1 = createFile(undefined, { 'aux.pickupable': false });
+            const update1 = isPickupable(
+                createCalculationContext([file1]),
+                file1
+            );
+
+            expect(update1).toBe(false);
+        });
+    });
+
+    describe('isSimulation()', () => {
+        let cases = [
+            ['', false],
+            [null, false],
+            [0, false],
+            ['=false', false],
+            ['=0', false],
+            ['a', true],
+            [1, true],
+            [true, true],
+            ['=1', true],
+            ['="hello"', true],
+        ];
+
+        it.each(cases)(
+            'should map aux.channel:%s to %s',
+            (value: string, expected: boolean) => {
+                let file = createFile('test', {
+                    'aux.channel': value,
+                });
+
+                const calc = createCalculationContext([file]);
+                expect(isSimulation(calc, file)).toBe(expected);
+            }
+        );
+    });
+
     describe('createWorkspace', () => {
         it('should create new random context id if empty', () => {
             uuidMock.mockReturnValue('uuid');
@@ -2350,6 +2405,129 @@ describe('FileCalculations', () => {
         });
     });
 
+    describe('parseSimulationId()', () => {
+        it('should default to filling the channel ID', () => {
+            let result = parseSimulationId('abc');
+            expect(result).toEqual({
+                success: true,
+                channel: 'abc',
+            });
+
+            result = parseSimulationId('!@#$%');
+            expect(result).toEqual({
+                success: true,
+                channel: '!@#$%',
+            });
+
+            result = parseSimulationId('.test');
+            expect(result).toEqual({
+                success: true,
+                channel: '.test',
+            });
+
+            result = parseSimulationId('test.');
+            expect(result).toEqual({
+                success: true,
+                channel: 'test.',
+            });
+        });
+
+        it('should fill in the context', () => {
+            let result = parseSimulationId('abc/def');
+            expect(result).toEqual({
+                success: true,
+                channel: 'abc',
+                context: 'def',
+            });
+
+            result = parseSimulationId('!@#$%/@@a*987');
+            expect(result).toEqual({
+                success: true,
+                channel: '!@#$%',
+                context: '@@a*987',
+            });
+
+            result = parseSimulationId('abc/def/ghi/');
+            expect(result).toEqual({
+                success: true,
+                channel: 'abc',
+                context: 'def/ghi/',
+            });
+
+            result = parseSimulationId('abc/def/ghi/.hello');
+            expect(result).toEqual({
+                success: true,
+                channel: 'abc',
+                context: 'def/ghi/.hello',
+            });
+        });
+
+        it('should fill in the host', () => {
+            let result = parseSimulationId('auxplayer.com/abc/def');
+            expect(result).toEqual({
+                success: true,
+                host: 'auxplayer.com',
+                channel: 'abc',
+                context: 'def',
+            });
+
+            result = parseSimulationId('abc.test.local/!@#$%/@@a*987');
+            expect(result).toEqual({
+                success: true,
+                host: 'abc.test.local',
+                channel: '!@#$%',
+                context: '@@a*987',
+            });
+
+            result = parseSimulationId('.local/!@#$%/@@a*987');
+            expect(result).toEqual({
+                success: true,
+                host: '.local',
+                channel: '!@#$%',
+                context: '@@a*987',
+            });
+
+            result = parseSimulationId('.local/!@#$%/@@a*987');
+            expect(result).toEqual({
+                success: true,
+                host: '.local',
+                channel: '!@#$%',
+                context: '@@a*987',
+            });
+        });
+
+        it('should use the given URL', () => {
+            let result = parseSimulationId('https://example.com');
+            expect(result).toEqual({
+                success: true,
+                host: 'example.com',
+            });
+
+            result = parseSimulationId('https://example.com/sim');
+            expect(result).toEqual({
+                success: true,
+                host: 'example.com',
+                channel: 'sim',
+            });
+
+            result = parseSimulationId('https://example.com/sim/context');
+            expect(result).toEqual({
+                success: true,
+                host: 'example.com',
+                channel: 'sim',
+                context: 'context',
+            });
+
+            result = parseSimulationId('https://example.com:3000/sim/context');
+            expect(result).toEqual({
+                success: true,
+                host: 'example.com:3000',
+                channel: 'sim',
+                context: 'context',
+            });
+        });
+    });
+
     describe('validateTag()', () => {
         it('should return invalid when tag is empty or null', () => {
             let errors = validateTag('');
@@ -3062,6 +3240,138 @@ describe('FileCalculations', () => {
             const file1 = createFile('abcdefghijklmnopqrstuvwxyz');
             const file2 = createFile('zyxwvutsrqponmlkjighfedcba');
             expect(formatValue([file1, file2])).toBe('[abcde,zyxwv]');
+        });
+    });
+
+    describe('getFileVersion()', () => {
+        it('should return the aux.version', () => {
+            const file = createFile('test', {
+                'aux.version': 1,
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(getFileVersion(calc, file)).toBe(1);
+        });
+
+        it('should return undefined if not a number', () => {
+            const file = createFile('test', {
+                'aux.version': 'abc',
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(getFileVersion(calc, file)).toBeUndefined();
+        });
+    });
+
+    describe('hasFileInInventory()', () => {
+        it('should return true if the given file is in the users inventory context', () => {
+            const thisFile = createFile('thisFile', {
+                isInInventory: '=player.hasFileInInventory(@name("bob"))',
+            });
+            const thatFile = createFile('thatFile', {
+                name: 'bob',
+                test: true,
+            });
+            const user = createFile('userId', {
+                'aux._userInventoryContext': 'test',
+            });
+
+            const calc = createCalculationContext(
+                [thisFile, thatFile, user],
+                'userId'
+            );
+            const result = calculateFileValue(calc, thisFile, 'isInInventory');
+
+            expect(result).toBe(true);
+        });
+
+        it('should return true if all the given files are in the users inventory context', () => {
+            const thisFile = createFile('thisFile', {
+                isInInventory: '=player.hasFileInInventory(@name("bob"))',
+            });
+            const thatFile = createFile('thatFile', {
+                name: 'bob',
+                test: true,
+            });
+            const otherFile = createFile('otherFile', {
+                name: 'bob',
+                test: true,
+            });
+            const user = createFile('userId', {
+                'aux._userInventoryContext': 'test',
+            });
+
+            const calc = createCalculationContext(
+                [thisFile, thatFile, otherFile, user],
+                'userId'
+            );
+            const result = calculateFileValue(calc, thisFile, 'isInInventory');
+
+            expect(result).toBe(true);
+        });
+
+        it('should return false if one of the given files are not in the users inventory context', () => {
+            const thisFile = createFile('thisFile', {
+                isInInventory: '=player.hasFileInInventory(@name("bob"))',
+            });
+            const thatFile = createFile('thatFile', {
+                name: 'bob',
+                test: true,
+            });
+            const otherFile = createFile('otherFile', {
+                name: 'bob',
+                test: false,
+            });
+            const user = createFile('userId', {
+                'aux._userInventoryContext': 'test',
+            });
+
+            const calc = createCalculationContext(
+                [thisFile, thatFile, otherFile, user],
+                'userId'
+            );
+            const result = calculateFileValue(calc, thisFile, 'isInInventory');
+
+            expect(result).toBe(false);
+        });
+    });
+
+    describe('isFileInContext()', () => {
+        it('should handle boolean objects', () => {
+            const thisFile = createFile('thisFile', {
+                context: new Boolean(true),
+            });
+
+            const calc = createCalculationContext([thisFile]);
+            const result = isFileInContext(calc, thisFile, 'context');
+
+            expect(result).toBe(true);
+        });
+
+        it('should handle string objects', () => {
+            const thisFile = createFile('thisFile', {
+                context: new String('true'),
+            });
+
+            const calc = createCalculationContext([thisFile]);
+            const result = isFileInContext(calc, thisFile, 'context');
+
+            expect(result).toBe(true);
+        });
+
+        it('should handle a string object as the context', () => {
+            const thisFile = createFile('thisFile', {
+                context: true,
+            });
+
+            const calc = createCalculationContext([thisFile]);
+            const result = isFileInContext(calc, thisFile, <any>(
+                new String('context')
+            ));
+
+            expect(result).toBe(true);
         });
     });
 });

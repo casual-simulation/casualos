@@ -26,7 +26,7 @@ export default class TagEditor extends Vue {
     focused: boolean = false;
 
     get fileManager() {
-        return appManager.fileManager;
+        return appManager.simulationManager.primary;
     }
 
     get showMenu() {

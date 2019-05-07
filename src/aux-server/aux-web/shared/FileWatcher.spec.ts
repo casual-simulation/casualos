@@ -95,4 +95,31 @@ describe('FileWatcher', () => {
             expect(files).toEqual([tree.value['test'], tree.value['test2']]);
         });
     });
+
+    describe('fileChanged()', () => {
+        it('should return an observable that only resolved when the given file changes', async () => {
+            await tree.addFile(
+                createFile('test', {
+                    hello: true,
+                })
+            );
+
+            await tree.addFile(
+                createFile('test2', {
+                    hello: false,
+                })
+            );
+
+            let files: AuxFile[] = [];
+            watcher
+                .fileChanged(tree.value['test'])
+                .subscribe(f => files.push(f));
+
+            fileUpdated.next([tree.value['test2']]);
+            fileUpdated.next([tree.value['test']]);
+            fileUpdated.next([tree.value['test2']]);
+
+            expect(files).toEqual([tree.value['test'], tree.value['test']]);
+        });
+    });
 });

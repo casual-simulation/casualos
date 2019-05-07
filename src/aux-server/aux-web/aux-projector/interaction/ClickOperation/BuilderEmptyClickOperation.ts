@@ -21,6 +21,10 @@ export class BuilderEmptyClickOperation implements IOperation {
     private _finished: boolean;
     private _startScreenPos: Vector2;
 
+    get simulation() {
+        return appManager.simulationManager.primary;
+    }
+
     constructor(gameView: GameView, interaction: BuilderInteractionManager) {
         this._gameView = gameView;
         this._interaction = interaction;
@@ -57,7 +61,7 @@ export class BuilderEmptyClickOperation implements IOperation {
                     if (this._interaction.selectionMode === 'single') {
                         this._interaction.clearSelection();
                     }
-                    appManager.fileManager.recent.selectedRecentFile = null;
+                    appManager.simulationManager.primary.recent.selectedRecentFile = null;
                 }
             }
 
@@ -81,15 +85,19 @@ export class BuilderEmptyClickOperation implements IOperation {
      * Opens up the color picker and allows you to change the scene's background color.
      */
     public sceneBackgroundColorPicker(pagePos: Vector2) {
-        let globalsFile = appManager.fileManager.globalsFile;
+        let globalsFile =
+            appManager.simulationManager.primary.helper.globalsFile;
 
         // This function is invoked as the color picker changes the color value.
         let colorUpdated = (hexColor: string) => {
-            appManager.fileManager.updateFile(globalsFile, {
-                tags: {
-                    'aux.scene.color': hexColor,
-                },
-            });
+            appManager.simulationManager.primary.helper.updateFile(
+                globalsFile,
+                {
+                    tags: {
+                        'aux.scene.color': hexColor,
+                    },
+                }
+            );
         };
 
         // This function is invoked when the color picker is closed.
