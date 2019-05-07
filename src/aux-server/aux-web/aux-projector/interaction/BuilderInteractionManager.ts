@@ -31,10 +31,13 @@ import {
     createFile,
     isContext,
     getFileConfigContexts,
+    filesInContext,
+    AuxObject,
+    toast,
 } from '@casual-simulation/aux-common';
 import { BuilderFileClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderFileClickOperation';
 import { Physics } from '../../shared/scene/Physics';
-import { flatMap, minBy, keys } from 'lodash';
+import { flatMap, minBy, keys, uniqBy } from 'lodash';
 import {
     Axial,
     realPosToGridPos,
@@ -447,6 +450,11 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 });
 
                 actions.push({
+                    label: 'Copy',
+                    onClick: () => this._copyWorkspace(calc, gameObject),
+                });
+
+                actions.push({
                     label: 'Switch to Player',
                     onClick: () => this._switchToPlayer(calc, gameObject),
                 });
@@ -490,6 +498,29 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                         [`aux.context.minimized`]: minimized,
                     },
                 }
+            );
+        }
+    }
+
+    /**
+     * Copies all the files on the workspace to the given user's clipboard.
+     * @param file
+     */
+    private async _copyWorkspace(
+        calc: FileCalculationContext,
+        file: ContextGroup3D
+    ) {
+        if (file && isContext(calc, file.file)) {
+            const contexts = getFileConfigContexts(calc, file.file);
+            const files = flatMap(contexts, c => filesInContext(calc, c));
+            const deduped = uniqBy(files, f => f.id);
+            await appManager.copyFilesFromSimulation(
+                file.simulation.simulation,
+                <AuxObject[]>deduped
+            );
+
+            await file.simulation.simulation.helper.transaction(
+                toast('Worksurface Copied!')
             );
         }
     }

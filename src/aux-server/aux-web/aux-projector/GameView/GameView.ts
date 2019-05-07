@@ -49,6 +49,9 @@ import {
     FilesState,
     duplicateFile,
     toast,
+    isConfigForContext,
+    createCalculationContext,
+    cleanFile,
 } from '@casual-simulation/aux-common';
 import { storedTree, StoredCausalTree } from '@casual-simulation/causal-trees';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -443,18 +446,8 @@ export default class GameView extends Vue implements IGameView {
             );
             return;
         }
-        const atoms = files.map(f => f.metadata.ref);
-        const weave = sim.aux.tree.weave.subweave(...atoms);
-        const stored = storedTree(
-            sim.aux.tree.site,
-            sim.aux.tree.knownSites,
-            weave.atoms
-        );
-        let tree = new AuxCausalTree(stored);
-        await tree.import(stored);
 
-        const json = JSON.stringify(tree.export());
-        copyToClipboard(json);
+        await appManager.copyFilesFromSimulation(sim, files);
 
         appManager.simulationManager.primary.helper.transaction(
             toast('Selection Copied!')
@@ -464,6 +457,7 @@ export default class GameView extends Vue implements IGameView {
     private async _pasteClipboard() {
         if (navigator.clipboard) {
             try {
+                // TODO: Cleanup this function
                 const json = await navigator.clipboard.readText();
                 const stored: StoredCausalTree<AuxOp> = JSON.parse(json);
                 let tree = new AuxCausalTree(stored);
@@ -473,8 +467,37 @@ export default class GameView extends Vue implements IGameView {
                 const fileIds = keys(value);
                 let state: FilesState = {};
 
-                const contextId = createContextId();
-                let worksurface = createWorkspace(undefined, contextId);
+                const oldFiles = fileIds.map(id => value[id]);
+                const calc = createCalculationContext(
+                    oldFiles,
+                    appManager.simulationManager.primary.helper.lib
+                );
+                const oldWorksurface =
+                    oldFiles.find(
+                        f => getFileConfigContexts(calc, f).length > 0
+                    ) || createWorkspace();
+                const oldContexts = getFileConfigContexts(calc, oldWorksurface);
+
+                const contextMap: Map<string, string> = new Map();
+                let newContexts: string[] = [];
+                oldContexts.forEach(c => {
+                    const context = createContextId();
+                    newContexts.push(context);
+                    contextMap.set(c, context);
+                });
+
+                let worksurface = duplicateFile(oldWorksurface);
+
+                oldContexts.forEach(c => {
+                    let newContext = contextMap.get(c);
+                    let config = oldWorksurface.tags[`${c}.config`];
+                    worksurface.tags[c] = null;
+                    worksurface.tags[`${c}.config`] = null;
+                    worksurface.tags[newContext] = true;
+                    worksurface.tags[`${newContext}.config`] = config;
+                });
+
+                worksurface = cleanFile(worksurface);
 
                 const mouseDir = Physics.screenPosToRay(
                     this.getInput().getMouseScreenPos(),
@@ -494,15 +517,33 @@ export default class GameView extends Vue implements IGameView {
                 for (let i = 0; i < fileIds.length; i++) {
                     const file = value[fileIds[i]];
 
-                    const newFile = duplicateFile(file, {
-                        tags: {
-                            [contextId]: true,
-                            [`${contextId}.index`]: i,
-                            [`${contextId}.x`]: 1,
-                        },
+                    if (file.id === oldWorksurface.id) {
+                        continue;
+                    }
+
+                    let newFile = duplicateFile(file);
+
+                    oldContexts.forEach(c => {
+                        let newContext = contextMap.get(c);
+                        newFile.tags[c] = null;
+
+                        let x = file.tags[`${c}.x`];
+                        let y = file.tags[`${c}.y`];
+                        let z = file.tags[`${c}.z`];
+                        let index = file.tags[`${c}.index`];
+                        newFile.tags[`${c}.x`] = null;
+                        newFile.tags[`${c}.y`] = null;
+                        newFile.tags[`${c}.z`] = null;
+                        newFile.tags[`${c}.index`] = null;
+
+                        newFile.tags[newContext] = true;
+                        newFile.tags[`${newContext}.x`] = x;
+                        newFile.tags[`${newContext}.y`] = y;
+                        newFile.tags[`${newContext}.z`] = z;
+                        newFile.tags[`${newContext}.index`] = index;
                     });
 
-                    state[newFile.id] = newFile;
+                    state[newFile.id] = cleanFile(newFile);
                 }
 
                 await appManager.simulationManager.primary.helper.addState(

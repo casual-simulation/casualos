@@ -107,6 +107,13 @@ export class FileHelper {
     }
 
     /**
+     * Gets the formula lib that the helper is using.
+     */
+    get lib() {
+        return this._lib;
+    }
+
+    /**
      * Updates the given file with the given data.
      * @param file The file.
      * @param newData The new data that the file should have.
