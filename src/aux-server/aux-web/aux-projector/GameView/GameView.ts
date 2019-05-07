@@ -549,11 +549,28 @@ export default class GameView extends Vue implements IGameView {
                 await appManager.simulationManager.primary.helper.addState(
                     state
                 );
+                appManager.simulationManager.primary.helper.transaction(
+                    toast(
+                        `${fileIds.length} ${
+                            fileIds.length === 1 ? 'file' : 'files'
+                        } pasted!`
+                    )
+                );
             } catch (ex) {
                 console.error('[GameView] Paste failed', ex);
+                appManager.simulationManager.primary.helper.transaction(
+                    toast(
+                        "Couldn't paste your clipboard. Have you copied a selection or worksurface?"
+                    )
+                );
             }
         } else {
             console.error("[GameView] Browser doesn't support clipboard API!");
+            appManager.simulationManager.primary.helper.transaction(
+                toast(
+                    "Sorry, but your browser doesn't support pasting files from a selection or worksurface."
+                )
+            );
         }
     }
 
