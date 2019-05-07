@@ -25,7 +25,6 @@ import { AuxFile3DDecoratorFactory } from './scene/decorators/AuxFile3DDecorator
  */
 export interface IGameView extends AuxFile3DFinder, Vue {
     readonly gameView: HTMLElement;
-    readonly canvas: HTMLCanvasElement;
     readonly dev: boolean;
     readonly filesMode: boolean;
     readonly workspacesMode: boolean;

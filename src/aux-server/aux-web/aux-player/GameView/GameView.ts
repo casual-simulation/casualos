@@ -95,7 +95,6 @@ export default class GameView extends Vue implements IGameView {
     private _ambient: AmbientLight;
 
     private _groundPlane: Plane;
-    private _canvas: HTMLCanvasElement;
     private _time: Time;
     private _input: Input;
     private _inputVR: InputVR;
@@ -133,9 +132,6 @@ export default class GameView extends Vue implements IGameView {
 
     get gameView(): HTMLElement {
         return <HTMLElement>this.$refs.gameView;
-    }
-    get canvas() {
-        return this._canvas;
     }
     get dev(): boolean {
         return !PRODUCTION;
@@ -467,6 +463,10 @@ export default class GameView extends Vue implements IGameView {
         this.simulations.forEach(s => {
             s.frameUpdate();
         });
+
+        if (this._htmlMixerContext) {
+            this._htmlMixerContext.update();
+        }
         // if (this._contextGroup) {
         //     this._contextGroup.frameUpdate(calc);
         // }
@@ -683,7 +683,8 @@ export default class GameView extends Vue implements IGameView {
         this._htmlMixerContext = createHtmlMixerContext(
             this._renderer,
             this._scene,
-            this._mainCamera
+            this._mainCamera,
+            this.gameView
         );
     }
 
@@ -697,8 +698,7 @@ export default class GameView extends Vue implements IGameView {
         webGlRenderer.shadowMap.type = PCFSoftShadowMap;
 
         this._resizeRenderer();
-        this._canvas = this._renderer.domElement;
-        this.gameView.appendChild(this._canvas);
+        this.gameView.appendChild(this._renderer.domElement);
     }
 
     private _setupWebVR() {
@@ -731,7 +731,7 @@ export default class GameView extends Vue implements IGameView {
         };
 
         this._enterVr = new webvrui.EnterVRButton(
-            this._canvas,
+            this._renderer.domElement,
             vrButtonOptions
         );
 
