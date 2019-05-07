@@ -17,6 +17,10 @@ import {
     fileRemoved,
     UserMode,
     lerp,
+    auxCausalTreeFactory,
+    SimulationIdParseResult,
+    parseSimulationId,
+    SimulationIdParseSuccess,
 } from '@casual-simulation/aux-common';
 import { keys, union, values } from 'lodash';
 import {
@@ -51,14 +55,16 @@ import { RecentFilesManager } from './RecentFilesManager';
 import { ProgressStatus } from '@casual-simulation/causal-trees';
 import FileWatcher from './FileWatcher';
 import FilePanelManager from './FilePanelManager';
+import { Simulation } from './Simulation';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
  * to reactively edit files.
  */
-export class FileManager {
+export class FileManager implements Simulation {
     private _appManager: AppManager;
     private _treeManager: CausalTreeManager;
+    private _socketManager: SocketManager;
     private _helper: FileHelper;
     private _selection: SelectionManager;
     private _recent: RecentFilesManager;
@@ -67,86 +73,34 @@ export class FileManager {
 
     private _subscriptions: SubscriptionLike[];
     private _status: string;
-    private _initPromise: Promise<string>;
     private _id: string;
+    private _originalId: string;
+    private _parsedId: SimulationIdParseSuccess;
     private _aux: RealtimeCausalTree<AuxCausalTree>;
+    private _config: { isBuilder: boolean; isPlayer: boolean };
     _errored: boolean;
+
+    closed: boolean;
 
     /**
      * Gets the ID of the simulation that is currently being used.
      */
     get id() {
-        return this._id;
+        return this._originalId;
     }
 
     /**
-     * Gets all the files that represent an object.
+     * Gets the parsed ID of the simulation.
      */
-    get objects(): AuxObject[] {
-        return this._helper.objects;
-    }
-
-    /**
-     * Gets all of the available tags.
-     */
-    get tags(): string[] {
-        return union(...this.objects.map(o => keys(o.tags)));
+    get parsedId(): SimulationIdParseSuccess {
+        return this._parsedId;
     }
 
     /**
      * Gets all the selected files that represent an object.
      */
     get selectedObjects(): File[] {
-        return this.selection.getSelectedFilesForUser(this.userFile);
-    }
-
-    /**
-     * Gets an observable that resolves whenever a new file is discovered.
-     * That is, it was created or added by another user.
-     */
-    get filesDiscovered(): Observable<AuxFile[]> {
-        return this._watcher.filesDiscovered;
-    }
-
-    /**
-     * Gets an observable that resolves whenever a file is removed.
-     * That is, it was deleted from the working directory either by checking out a
-     * branch that does not contain the file or by deleting it.
-     */
-    get filesRemoved(): Observable<string[]> {
-        return this._watcher.filesRemoved;
-    }
-
-    /**
-     * Gets an observable that resolves whenever a file is updated.
-     */
-    get filesUpdated(): Observable<AuxFile[]> {
-        return this._watcher.filesUpdated;
-    }
-
-    get status(): string {
-        return this._status;
-    }
-
-    /**
-     * Gets the file for the current user.
-     */
-    get userFile(): AuxObject {
-        if (!this._appManager.user) {
-            return;
-        }
-        return this._helper.userFile;
-    }
-
-    /**
-     * Gets the globals file.
-     */
-    get globalsFile(): AuxObject {
-        let objs = this.objects.filter(o => o.id === 'globals');
-        if (objs.length > 0) {
-            return objs[0];
-        }
-        return null;
+        return this.selection.getSelectedFilesForUser(this.helper.userFile);
     }
 
     /**
@@ -162,20 +116,6 @@ export class FileManager {
      */
     get isSynced(): boolean {
         return this.isOnline;
-    }
-
-    /**
-     * Gets the observable that resolves whenever the connection state changes.
-     */
-    get connectionStateChanged(): Observable<boolean> {
-        return this._aux.channel.connectionStateChanged;
-    }
-
-    /**
-     * Gets the current local file state.
-     */
-    get filesState() {
-        return this._aux.tree.value;
     }
 
     /**
@@ -220,35 +160,38 @@ export class FileManager {
         return this._filePanel;
     }
 
-    constructor(app: AppManager, treeManager: CausalTreeManager) {
+    /**
+     * Gets the socket manager.
+     */
+    get socketManager() {
+        return this._socketManager;
+    }
+
+    constructor(
+        app: AppManager,
+        id: string,
+        config: { isBuilder: boolean; isPlayer: boolean }
+    ) {
         this._appManager = app;
-        this._treeManager = treeManager;
+        this._originalId = id || 'default';
+        this._parsedId = parseSimulationId(this._originalId);
+        this._id = this._getTreeName(this._parsedId.channel);
+        this._config = config;
+
+        this._socketManager = new SocketManager(this._parsedId.host);
+        this._treeManager = new CausalTreeManager(
+            this._socketManager.socket,
+            auxCausalTreeFactory()
+        );
     }
 
     /**
      * Initializes the file manager to connect to the session with the given ID.
      * @param id The ID of the session to connect to.
      */
-    init(
-        id: string,
-        force: boolean,
-        loadingCallback: LoadingProgressCallback,
-        config: { isBuilder: boolean; isPlayer: boolean }
-    ): Promise<string> {
-        console.log('[FileManager] init id:', id, 'force:', force);
-        force = getOptionalValue(force, false);
-        if (this._initPromise && !force) {
-            return this._initPromise;
-        } else {
-            if (this._initPromise) {
-                this.dispose();
-            }
-            return (this._initPromise = this._init(
-                id,
-                loadingCallback,
-                config
-            ));
-        }
+    init(loadingCallback?: LoadingProgressCallback): Promise<void> {
+        console.log('[FileManager] init');
+        return this._init(loadingCallback);
     }
 
     /**
@@ -256,137 +199,30 @@ export class FileManager {
      * @param mode The mode that the user should use.
      */
     setUserMode(mode: UserMode) {
-        return this.updateFile(this.userFile, {
+        return this.helper.updateFile(this.helper.userFile, {
             tags: {
                 'aux._mode': mode,
             },
         });
     }
 
-    /**
-     * Sets the file that is currently being edited by the current user.
-     * @param file The file.
-     */
-    setEditedFile(file: AuxObject) {
-        this._setEditedFileForUser(file, this.userFile);
-    }
-
-    /**
-     * Calculates the nicely formatted value for the given file and tag.
-     * @param file The file to calculate the value for.
-     * @param tag The tag to calculate the value for.
-     */
-    calculateFormattedFileValue(file: Object, tag: string): string {
-        return this._helper.calculateFormattedFileValue(file, tag);
-    }
-
-    calculateFileValue(file: Object, tag: string) {
-        return this._helper.calculateFileValue(file, tag);
-    }
-
-    /**
-     * Removes the given file.
-     * @param file The file to remove.
-     */
-    async removeFile(file: AuxFile) {
-        if (this._aux.tree) {
-            console.log('[FileManager] Remove File', file.id);
-            await this._aux.tree.delete(file.metadata.ref);
-        } else {
-            console.warn(
-                '[FileManager] Tree is not loaded yet. Invalid Operation!'
-            );
-        }
-    }
-
-    /**
-     * Updates the given file with the given data.
-     */
-    updateFile(file: AuxFile, newData: PartialFile) {
-        return this._helper.updateFile(file, newData);
-    }
-
-    createFile(id?: string, tags?: Object['tags']) {
-        return this._helper.createFile(id, tags);
-    }
-
-    createWorkspace(
-        builderContextId?: string,
-        contextFormula?: string,
-        label?: string
-    ) {
-        return this._helper.createWorkspace(
-            undefined,
-            builderContextId,
-            contextFormula,
-            label
-        );
-    }
-
-    action(eventName: string, files: File[], arg?: any) {
-        return this._helper.action(eventName, files, arg);
-    }
-
-    transaction(...events: FileEvent[]) {
-        return this._helper.transaction(...events);
-    }
-
-    /**
-     * Adds the given state to the session.
-     * @param state The state to add.
-     */
-    addState(state: FilesState) {
-        return this._helper.addState(state);
-    }
-
     // TODO: This seems like a pretty dangerous function to keep around,
     // but we'll add a config option to prevent this from happening on real sites.
     async deleteEverything() {
         console.warn('[FileManager] Delete Everything!');
-        const state = this.filesState;
+        const state = this.helper.filesState;
         const fileIds = keys(state);
         const files = fileIds.map(id => state[id]);
         const nonUserOrGlobalFiles = files.filter(
             f => !f.tags['aux._user'] && f.id !== 'globals'
         );
         const deleteOps = nonUserOrGlobalFiles.map(f => fileRemoved(f.id));
-        await this.transaction(...deleteOps);
+        await this.helper.transaction(...deleteOps);
 
         // setTimeout(() => {
         //   appManager.logout();
         //   location.reload();
         // }, 200);
-    }
-
-    /**
-     * Creates an observable that resolves whenever the given file changes.
-     * @param file The file to watch.
-     */
-    fileChanged(file: File): Observable<File> {
-        return this.filesUpdated.pipe(
-            flatMap(files => files),
-            filter(f => f.id === file.id),
-            startWith(file)
-        );
-    }
-
-    private _setEditedFileForUser(file: AuxObject, user: AuxObject) {
-        if (file.id !== user.tags['aux._editingFile']) {
-            console.log('[FileManager] Edit File:', file.id);
-
-            this.updateFile(user, {
-                tags: {
-                    ['aux._editingFile']: file.id,
-                },
-            });
-        }
-    }
-
-    /**
-     * Creates a new FileCalculationContext from the current state.
-     */
-    createContext(): FileCalculationContext {
-        return this._helper.createContext();
     }
 
     /**
@@ -403,11 +239,7 @@ export class FileManager {
         return id ? `aux-${id}` : 'aux-default';
     }
 
-    private async _init(
-        id: string,
-        loadingCallback: LoadingProgressCallback,
-        config: { isBuilder: boolean; isPlayer: boolean }
-    ) {
+    private async _init(loadingCallback: LoadingProgressCallback) {
         const loadingProgress = new LoadingProgress();
         if (loadingCallback) {
             loadingProgress.onChanged.addListener(() => {
@@ -428,9 +260,6 @@ export class FileManager {
         }
         try {
             this._setStatus('Starting...');
-
-            this._id = this._getTreeName(id);
-
             this._subscriptions = [];
 
             loadingProgress.set(10, 'Initializing causal tree manager..', null);
@@ -484,7 +313,7 @@ export class FileManager {
             this._helper = new FileHelper(
                 this._aux.tree,
                 appManager.user.id,
-                config
+                this._config
             );
             this._selection = new SelectionManager(this._helper);
             this._recent = new RecentFilesManager(this._helper);
@@ -516,8 +345,6 @@ export class FileManager {
             if (loadingCallback) {
                 loadingProgress.onChanged.removeAllListeners();
             }
-
-            return this._id;
         } catch (ex) {
             this._errored = true;
             console.error(ex);
@@ -544,7 +371,7 @@ export class FileManager {
 
     private async _initUserFile() {
         this._setStatus('Updating user file...');
-        let userFile = this.userFile;
+        let userFile = this.helper.userFile;
         const userContext = `_user_${appManager.user.username}_${
             this._aux.tree.site.id
         }`;
@@ -554,27 +381,38 @@ export class FileManager {
         const userMenuContext = `_user_${appManager.user.username}_${
             this._aux.tree.site.id
         }_menu`;
+        const userSimulationsContext = `_user_${appManager.user.username}_${
+            this._aux.tree.site.id
+        }_simulations`;
         if (!userFile) {
-            await this.createFile(this._appManager.user.id, {
+            await this.helper.createFile(this._appManager.user.id, {
                 [userContext]: true,
                 [`${userContext}.config`]: true,
                 ['aux._user']: this._appManager.user.username,
                 ['aux._userInventoryContext']: userInventoryContext,
                 ['aux._userMenuContext']: userMenuContext,
+                ['aux._userSimulationsContext']: userSimulationsContext,
                 'aux._mode': DEFAULT_USER_MODE,
             });
         } else {
             if (!userFile.tags['aux._userMenuContext']) {
-                await this.updateFile(userFile, {
+                await this.helper.updateFile(userFile, {
                     tags: {
                         ['aux._userMenuContext']: userMenuContext,
                     },
                 });
             }
             if (!userFile.tags['aux._userInventoryContext']) {
-                await this.updateFile(userFile, {
+                await this.helper.updateFile(userFile, {
                     tags: {
                         ['aux._userInventoryContext']: userInventoryContext,
+                    },
+                });
+            }
+            if (!userFile.tags['aux._userSimulationsContext']) {
+                await this.helper.updateFile(userFile, {
+                    tags: {
+                        ['aux._userSimulationsContext']: userSimulationsContext,
                     },
                 });
             }
@@ -583,14 +421,9 @@ export class FileManager {
 
     private async _initGlobalsFile() {
         this._setStatus('Updating globals file...');
-        let globalsFile = this.globalsFile;
+        let globalsFile = this.helper.globalsFile;
         if (!globalsFile) {
-            await this._helper.createWorkspace(
-                'globals',
-                undefined,
-                undefined,
-                'Global'
-            );
+            await this._helper.createGlobalsFile('globals');
         }
     }
 
@@ -599,9 +432,10 @@ export class FileManager {
         console.log('[FileManager] Status:', status);
     }
 
-    public dispose() {
+    public unsubscribe() {
         this._setStatus('Dispose');
-        this._initPromise = null;
+        this.closed = true;
         this._subscriptions.forEach(s => s.unsubscribe());
+        this._subscriptions = [];
     }
 }

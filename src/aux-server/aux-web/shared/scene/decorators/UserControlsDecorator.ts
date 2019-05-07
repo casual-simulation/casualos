@@ -8,7 +8,6 @@ import {
     normalize,
     lerp,
 } from '@casual-simulation/aux-common';
-import { appManager } from '../../AppManager';
 import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
 import { AuxFile3D } from '../AuxFile3D';
 import { calculateScale } from '../SceneUtils';
@@ -165,19 +164,28 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
             ) {
                 this._lastPositionUpdateTime = time;
 
-                appManager.fileManager.updateFile(file, {
-                    tags: {
-                        [`${this.file3D.context}.x`]: camPosition.x,
+                this.file3D.contextGroup.simulation.simulation.helper.updateFile(
+                    file,
+                    {
+                        tags: {
+                            [`${this.file3D.context}.x`]: camPosition.x,
 
-                        // Mirror the Y coordinate so it works with ContextPositionDecorator
-                        [`${this.file3D.context}.y`]: -camPosition.z,
+                            // Mirror the Y coordinate so it works with ContextPositionDecorator
+                            [`${this.file3D.context}.y`]: -camPosition.z,
 
-                        [`${this.file3D.context}.z`]: camPosition.y,
-                        [`${this.file3D.context}.rotation.x`]: camRotation.x,
-                        [`${this.file3D.context}.rotation.y`]: camRotation.z,
-                        [`${this.file3D.context}.rotation.z`]: camRotation.y,
-                    },
-                });
+                            [`${this.file3D.context}.z`]: camPosition.y,
+                            [`${
+                                this.file3D.context
+                            }.rotation.x`]: camRotation.x,
+                            [`${
+                                this.file3D.context
+                            }.rotation.y`]: camRotation.z,
+                            [`${
+                                this.file3D.context
+                            }.rotation.z`]: camRotation.y,
+                        },
+                    }
+                );
             }
         }
 
@@ -195,11 +203,14 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
             timeBetweenChecks > DEFAULT_USER_ACTIVE_CHECK_INTERVAL
         ) {
             this._lastActiveCheckTime = Date.now();
-            appManager.fileManager.updateFile(<AuxObject>this.file3D.file, {
-                tags: {
-                    [`${this.file3D.context}._lastActiveTime`]: Date.now(),
-                },
-            });
+            this.file3D.contextGroup.simulation.simulation.helper.updateFile(
+                <AuxObject>this.file3D.file,
+                {
+                    tags: {
+                        [`${this.file3D.context}._lastActiveTime`]: Date.now(),
+                    },
+                }
+            );
         }
     }
 }

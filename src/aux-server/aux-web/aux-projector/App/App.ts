@@ -133,7 +133,7 @@ export default class App extends Vue {
     async toggleUserMode() {
         this.userMode = !this.userMode;
         const mode: UserMode = this.userMode ? 'files' : 'worksurfaces';
-        await appManager.fileManager.setUserMode(mode);
+        await appManager.simulationManager.primary.setUserMode(mode);
     }
 
     private _calculateUserMode(file: Object): boolean {
@@ -195,7 +195,9 @@ export default class App extends Vue {
     }
 
     forcedOffline() {
-        return appManager.socketManager.forcedOffline;
+        // TODO: Fix
+        // return appManager.socketManager.forcedOffline;
+        return false;
     }
 
     toggleOpen() {
@@ -234,28 +236,30 @@ export default class App extends Vue {
                 }, 1000);
 
                 subs.push(
-                    fileManager.connectionStateChanged.subscribe(connected => {
-                        if (!connected) {
-                            this._showConnectionLost();
-                            this.online = false;
-                            this.synced = false;
-                            this.lostConnection = true;
-                        } else {
-                            this.online = true;
-                            if (this.lostConnection) {
-                                this._showConnectionRegained();
+                    fileManager.aux.channel.connectionStateChanged.subscribe(
+                        connected => {
+                            if (!connected) {
+                                this._showConnectionLost();
+                                this.online = false;
+                                this.synced = false;
+                                this.lostConnection = true;
+                            } else {
+                                this.online = true;
+                                if (this.lostConnection) {
+                                    this._showConnectionRegained();
+                                }
+                                this.lostConnection = false;
+                                this.startedOffline = false;
+                                this.synced = true;
+                                appManager.checkForUpdates();
                             }
-                            this.lostConnection = false;
-                            this.startedOffline = false;
-                            this.synced = true;
-                            appManager.checkForUpdates();
                         }
-                    })
+                    )
                 );
 
                 subs.push(
-                    fileManager
-                        .fileChanged(fileManager.userFile)
+                    fileManager.watcher
+                        .fileChanged(fileManager.helper.userFile)
                         .pipe(
                             tap(file => {
                                 this.userMode = this._calculateUserMode(<
@@ -326,7 +330,7 @@ export default class App extends Vue {
     }
 
     async finishFork() {
-        await appManager.fileManager.forkAux(this.forkName);
+        await appManager.simulationManager.primary.forkAux(this.forkName);
         this.$router.push({ name: 'home', params: { id: this.forkName } });
     }
 
@@ -389,7 +393,7 @@ export default class App extends Vue {
             options.cancelText = 'Keep';
 
             EventBus.$once(options.okEvent, async () => {
-                await appManager.fileManager.deleteEverything();
+                await appManager.simulationManager.primary.deleteEverything();
                 EventBus.$off(options.cancelEvent);
             });
             EventBus.$once(options.cancelEvent, () => {
@@ -411,27 +415,27 @@ export default class App extends Vue {
     }
 
     toggleOnlineOffline() {
-        let options = new ConfirmDialogOptions();
-        if (appManager.socketManager.forcedOffline) {
-            options.title = 'Enable online?';
-            options.body = 'Allow the app to reconnect to the server?';
-            options.okText = 'Go Online';
-            options.cancelText = 'Stay Offline';
-        } else {
-            options.title = 'Force offline mode?';
-            options.body = 'Prevent the app from connecting to the server?';
-            options.okText = 'Go Offline';
-            options.cancelText = 'Stay Online';
-        }
-
-        EventBus.$once(options.okEvent, () => {
-            appManager.socketManager.toggleForceOffline();
-            EventBus.$off(options.cancelEvent);
-        });
-        EventBus.$once(options.cancelEvent, () => {
-            EventBus.$off(options.okEvent);
-        });
-        EventBus.$emit('showConfirmDialog', options);
+        // TODO: Fix
+        // let options = new ConfirmDialogOptions();
+        // if (appManager.socketManager.forcedOffline) {
+        //     options.title = 'Enable online?';
+        //     options.body = 'Allow the app to reconnect to the server?';
+        //     options.okText = 'Go Online';
+        //     options.cancelText = 'Stay Offline';
+        // } else {
+        //     options.title = 'Force offline mode?';
+        //     options.body = 'Prevent the app from connecting to the server?';
+        //     options.okText = 'Go Offline';
+        //     options.cancelText = 'Stay Online';
+        // }
+        // EventBus.$once(options.okEvent, () => {
+        //     appManager.socketManager.toggleForceOffline();
+        //     EventBus.$off(options.cancelEvent);
+        // });
+        // EventBus.$once(options.cancelEvent, () => {
+        //     EventBus.$off(options.okEvent);
+        // });
+        // EventBus.$emit('showConfirmDialog', options);
     }
 
     private _showConnectionLost() {

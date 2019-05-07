@@ -1,5 +1,58 @@
 # AUX Changelog
 
+## V0.6.0
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Added an `aux.progressBar` tag that generates a progressbar above the file, this tag can be set to any value form 0 to 1.
+        -   This new tag also has additionally: `aux.progressBar.color` and `aux.progressBar.backgroundColor` to color the progressbar's components.
+        -   This tag also has: `aux.progressBar.anchor` to set the facing direction of the progress bar relative to the file.
+    -   Added `aux.pickupable` to control whether files can be placed into the inventory in the player or not, will be true (able to be put in inventory) by default.
+        -   If `aux.pickupable` is true but `aux.movable` is false, the file can still be dragged into the inventory without moving the file position. It can also be dragged out of the inventory by setting the file position only until is is placed, then not allowing position changes again as `aux.movable` is still false.
+    -   Added the ability to load additional channels into an AUX Player channel.
+        -   Channels can be loaded from any reachable instance of AUX Server. (auxplayer.com, a boobox, etc.)
+        -   To add a channel to your AUX Player, simply open the hamburger menu and click "Add Channel".
+            -   Enter in the ID of the channel you want to load.
+            -   There are several options:
+                -   A URL (`https://auxplayer.com/channel/context`)
+                -   A remote context ID (`auxplayer.com/channel/context`)
+                -   A local context ID (`channel/context`)
+                -   A local channel ID (`channel`)
+        -   To remove a channel, open the hamburger menu and click on the one you want to remove.
+        -   Channels can also be loaded by putting them in the query string of the URL.
+            -   This is done by adding a parameter named `channels` set to the ID of the channel that you want to load.
+            -   For example, `channels=abc/test` will load the `abc/test` channel.
+            -   As a result, the URL ends up looking something like this `https://auxplayer.com/channel/context?channels=abc/test&channels=other/channel`.
+            -   Note that you can only add channels this way. You must go to the hamburger menu to remove a channel.
+                -   Sharing URLs will cause all the channels you have loaded to show up for someone else but it won't remove any channels they already have loaded.
+        -   Added several new formula functions:
+            -   `superShout(event, arg)` performs a shout that goes to every loaded channel. This is the only way for channels to communicate with each other.
+            -   `player.loadChannel(id)` loads the channel with the given ID.
+            -   `player.unloadChannel(id)` unloads the channel with the given ID.
+        -   Additionally, the following events are always sent to every channel:
+            -   `onQRCodeScannerOpened()`
+            -   `onQRCodeScannerClosed()`
+            -   `onQRCodeScanned()`
+            -   `onTapCode()`
+        -   How it works
+            -   Channels are loaded by creating files in the user's "simulation context".
+                -   You can get the user's simulation context by using `player.getFile().aux._userSimulationsContext`.
+            -   AUX Player looks for these files and checks if they have a `aux.channel` tag.
+                -   For files that do, then the `aux.channel` tag value is used as a channel ID and then AUX Player loads it for each file.
+                -   Files that don't are ignored.
+            -   Note that because we have multiple channels loaded there are multiple user files and global files.
+                -   This is fine because channels cannot lookup files that other channels have.
+                -   Because of this, a user also has multiple simulation contexts.
+                -   This works out though, because we merge all the simulation contexts and remove duplicate channels.
+                -   When `player.unloadChannel(id)` is called, we only remove simulation files that are in the channel that the script is running in.
+                -   As a result, if another channel has called `player.loadChannel(id)` with the same ID the channel will remain loaded because at least one channel has requested that it be loaded.
+    -   Added in a tween for the zoom that fires once a file has been focused on, it will tween to file position then zoom to the set zoom value.
+    -   Added `whisper(file, event, argument)` formula function that sends shouts to a single file.
+    -   Added a `aux.version` tag to the globals file which will be used to help determine when breaking changes in the AUX file format occur.
+
 ## V0.5.4
 
 ### Date: 04/29/2019
@@ -11,7 +64,7 @@
     -   Changed the globals file to look like a normal file when created and be labeled as "Global".
     -   Updated all the formula functions to use the new naming scheme.
     -   Added the ability to drag worksurfaces when they are minimized.
-        -           Setting `aux.context.movable` to `false` will prevent this behavior.
+        -                               Setting `aux.context.movable` to `false` will prevent this behavior.
     -   Selecting an item in the inventory no longer shows a selection indicator.
 -   Bug Fixes
     -   The inventory placeholders should now always appear square.

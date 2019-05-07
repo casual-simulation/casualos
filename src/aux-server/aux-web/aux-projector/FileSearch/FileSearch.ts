@@ -19,12 +19,12 @@ export default class FileSearch extends Vue {
     search: string = '';
 
     toggleOpen() {
-        appManager.fileManager.filePanel.toggleOpen();
+        appManager.simulationManager.primary.filePanel.toggleOpen();
     }
 
     @Watch('search')
     onSearchChanged() {
-        appManager.fileManager.filePanel.search = this.search;
+        appManager.simulationManager.primary.filePanel.search = this.search;
     }
 
     get placeholder() {

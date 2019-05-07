@@ -7,6 +7,7 @@ import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { IGameView } from '../../shared/IGameView';
 import { appManager } from '../../shared/AppManager';
 import { differenceBy, maxBy } from 'lodash';
+import { Simulation } from '../Simulation';
 
 /**
  * Class that is able to tween the main camera to a given location.
@@ -16,21 +17,29 @@ export class TweenCameraToOperation implements IOperation {
     private _interaction: BaseInteractionManager;
     private _target: Vector3;
     private _finished: boolean;
+    private zoomNum: number = 0;
+
+    get simulation(): Simulation {
+        return null;
+    }
 
     /**
      * Create a new drag rules.
      * @param gameView The game view.
      * @param interaction The interaction manager.
      * @param target The target location to tween to.
+     * @param zoomValue The zoom amount the camera sets to the file.
      */
     constructor(
         gameView: IGameView,
         interaction: BaseInteractionManager,
-        target: Vector3
+        target: Vector3,
+        zoomValue: number = 0
     ) {
         this._gameView = gameView;
         this._interaction = interaction;
         this._finished = false;
+        this.zoomNum = zoomValue;
 
         const cam = this._gameView.getMainCamera();
         const currentPivotPoint = this._interaction.cameraControls.target;
@@ -49,6 +58,7 @@ export class TweenCameraToOperation implements IOperation {
         const cam = this._gameView.getMainCamera();
         const camPos = cam.position.clone();
         const dist = camPos.distanceToSquared(this._target);
+
         if (dist > 0.001) {
             const dir = this._target
                 .clone()
@@ -58,6 +68,9 @@ export class TweenCameraToOperation implements IOperation {
         } else {
             // This tween operation is finished.
             this._finished = true;
+            if (this.zoomNum >= 0) {
+                this._interaction.cameraControls.dollySet(this.zoomNum);
+            }
         }
     }
 

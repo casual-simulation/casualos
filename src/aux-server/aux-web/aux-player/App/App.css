@@ -14,16 +14,16 @@
     padding: 16px;
 }
 
-#synced-checkmark {
-    color: #13bd13b4;
+.synced-checkmark {
+    color: #13bd13b4 !important;
 }
 
-#not-synced-warning {
-    color: #ff8a1cb4;
+.not-synced-warning {
+    color: #ff8a1cb4 !important;
 }
 
-#forced-offline-error {
-    color: #ff1c1cb4;
+.forced-offline-error {
+    color: #ff1c1cb4 !important;
 }
 
 .md-list-item-container:not([disabled])

@@ -13,7 +13,6 @@ import {
     isMinimized,
     isContextMovable,
 } from '@casual-simulation/aux-common';
-import { appManager } from '../../../shared/AppManager';
 import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperation/BaseFileClickOperation';
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
@@ -22,6 +21,8 @@ import { BuilderGroup3D } from '../../../shared/scene/BuilderGroup3D';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import GameView from '../../GameView/GameView';
 import { dropWhile } from 'lodash';
+import { Simulation3D } from '../../../shared/scene/Simulation3D';
+import { BuilderSimulation3D } from '../../scene/BuilderSimulation3D';
 
 /**
  * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
@@ -29,18 +30,18 @@ import { dropWhile } from 'lodash';
 export class BuilderFileClickOperation extends BaseFileClickOperation {
     // This overrides the base class BaseInteractionManager
     protected _interaction: BuilderInteractionManager;
-    // This overrides the base class IGameView
-    protected _gameView: GameView;
 
     private _hit: Intersection;
 
+    protected _simulation3D: BuilderSimulation3D;
+
     constructor(
-        gameView: GameView,
+        simulation: BuilderSimulation3D,
         interaction: BuilderInteractionManager,
         file: AuxFile3D | ContextGroup3D,
         hit: Intersection
     ) {
-        super(gameView, interaction, file.file, file);
+        super(simulation, interaction, file.file, file);
         this._hit = hit;
     }
 
@@ -77,7 +78,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
                     o => o.id !== file.id
                 );
                 return new BuilderFileDragOperation(
-                    this._gameView,
+                    this._simulation3D,
                     this._interaction,
                     this._hit,
                     draggedObjects,
@@ -87,7 +88,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
             }
         }
         return new BuilderFileDragOperation(
-            this._gameView,
+            this._simulation3D,
             this._interaction,
             this._hit,
             [this._file3D.file],
@@ -109,7 +110,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
         } else if (workspace) {
             if (
                 !this._interaction.isInCorrectMode(this._file3D) &&
-                this._gameView.selectedRecentFile
+                this.simulation.recent.selectedRecentFile
             ) {
                 // Create file at clicked workspace position.
                 let workspaceMesh = workspace.surface;
@@ -120,7 +121,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
                         workspace
                     );
                     let newFile = duplicateFile(
-                        this._gameView.selectedRecentFile,
+                        this.simulation.recent.selectedRecentFile,
                         {
                             tags: {
                                 [context]: true,
@@ -132,7 +133,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
                         }
                     );
 
-                    appManager.fileManager.createFile(newFile.id, newFile.tags);
+                    this.simulation.helper.createFile(newFile.id, newFile.tags);
                 }
             } else {
                 this._interaction.showContextMenu(calc);

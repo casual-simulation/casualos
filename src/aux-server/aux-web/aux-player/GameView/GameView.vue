@@ -7,38 +7,29 @@
             <div class="toolbar">
                 <div>
                     <div ref="inventory">
-                        <div v-if="!vrDisplay && inventoryContext" class="inventory-layout">
+                        <div v-if="!vrDisplay" class="inventory-layout">
                             <inventory-file
-                                v-for="(file, index) in inventoryContext.slots"
+                                v-for="(item, index) in inventory"
                                 :key="index"
-                                :file="file"
+                                :item="item"
                                 :slotIndex="index"
-                                :context="inventoryContext.context"
-                                :selected="file && inventoryContext.selectedFile === file"
-                                @click="inventoryContext.selectFile(file)"
-                            ></inventory-file>
+                            >
+                            </inventory-file>
                         </div>
                     </div>
-                    <md-card
-                        v-if="!vrDisplay && menuContext && menuContext.items.length > 0"
-                        class="menu-layout md-dense"
-                    >
+                    <md-card v-if="!vrDisplay && menu.length > 0" class="menu-layout md-dense">
                         <md-list class="md-dense">
                             <md-list-item md-expand :md-expanded.sync="menuExpanded">
                                 <md-icon>menu</md-icon>
                                 <span class="md-list-item-text">Menu</span>
-                                <md-badge
-                                    class="md-primary"
-                                    :md-content="menuContext.items.length"
-                                />
+                                <md-badge class="md-primary" :md-content="menu.length" />
                                 <md-content slot="md-expand" class="menu-items md-scrollbar">
                                     <md-list class="md-dense">
                                         <menu-file
-                                            v-for="(file, index) in menuContext.items"
-                                            :key="file.id"
-                                            :file="file"
+                                            v-for="(item, index) in menu"
+                                            :key="item.file.id"
+                                            :item="item"
                                             :index="index"
-                                            :context="menuContext.context"
                                         >
                                         </menu-file>
                                     </md-list>

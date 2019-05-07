@@ -45,7 +45,7 @@ export default class FileRow extends Vue {
     isFormula: boolean = false;
 
     get fileManager() {
-        return appManager.fileManager;
+        return appManager.simulationManager.primary;
     }
 
     constructor() {
@@ -56,7 +56,7 @@ export default class FileRow extends Vue {
         this.$emit('tagChanged', file, tag, value);
         if (!isDiff(file)) {
             this.fileManager.recent.addTagDiff(`${file.id}_${tag}`, tag, value);
-            this.fileManager.updateFile(file, {
+            this.fileManager.helper.updateFile(file, {
                 tags: {
                     [tag]: value,
                 },
@@ -93,7 +93,7 @@ export default class FileRow extends Vue {
     private _updateValue() {
         this.isFormula = isFormula(this.file.tags[this.tag]);
         if (!this.isFocused || !this.showFormulaWhenFocused) {
-            this.value = this.fileManager.calculateFormattedFileValue(
+            this.value = this.fileManager.helper.calculateFormattedFileValue(
                 this.file,
                 this.tag
             );
@@ -115,7 +115,7 @@ export default class FileRow extends Vue {
         if (isAssignment(val)) {
             const assignment: Assignment = val;
             if (assignment.editing) {
-                this.fileManager.updateFile(this.file, {
+                this.fileManager.helper.updateFile(this.file, {
                     tags: {
                         [this.tag]: assign(assignment, {
                             editing: false,

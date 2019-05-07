@@ -9,27 +9,27 @@ import {
     objectsAtContextGridPosition,
     getFileIndex,
 } from '@casual-simulation/aux-common';
-import { appManager } from '../../../shared/AppManager';
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
 import { PlayerFileDragOperation } from '../DragOperation/PlayerFileDragOperation';
 import { dropWhile } from 'lodash';
+import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 
 export class PlayerFileClickOperation extends BaseFileClickOperation {
     // This overrides the base class BaseInteractionManager
     protected _interaction: PlayerInteractionManager;
     // This overrides the base class IGameView
-    protected _gameView: GameView;
+    protected _simulation3D: PlayerSimulation3D;
 
     constructor(
-        gameView: GameView,
+        simulation: PlayerSimulation3D,
         interaction: PlayerInteractionManager,
         file: AuxFile3D
     ) {
-        super(gameView, interaction, file.file, file);
+        super(simulation, interaction, file.file, file);
     }
 
     protected _performClick(calc: FileCalculationContext): void {
-        appManager.fileManager.action('onClick', [this._file]);
+        this.simulation.helper.action('onClick', [this._file]);
     }
 
     protected _createDragOperation(
@@ -52,7 +52,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
             const file = this._file;
             const draggedObjects = dropWhile(objects, o => o.id !== file.id);
             return new PlayerFileDragOperation(
-                this._gameView,
+                this._simulation3D,
                 this._interaction,
                 draggedObjects,
                 file3D.context

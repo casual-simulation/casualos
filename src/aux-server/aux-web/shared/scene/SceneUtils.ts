@@ -27,6 +27,7 @@ import {
     SpriteMaterial,
     Sprite,
     Texture,
+    PlaneBufferGeometry,
 } from 'three';
 import { flatMap } from 'lodash';
 import {
@@ -113,6 +114,16 @@ export function createCube(size: number): Mesh {
     cube.castShadow = true;
     cube.receiveShadow = false;
     return cube;
+}
+
+export function createPlane(size: number): Mesh {
+    const geometry = new PlaneBufferGeometry(size, size);
+    let material = baseAuxMeshMaterial();
+
+    const plane = new Mesh(geometry, material);
+    plane.castShadow = false;
+    plane.receiveShadow = false;
+    return plane;
 }
 
 export function createCubeStrokeGeometry(): BufferGeometry {

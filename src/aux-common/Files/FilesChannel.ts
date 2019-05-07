@@ -377,7 +377,10 @@ export interface LocalEvent extends Event {
 export type LocalEvents =
     | ShowToastEvent
     | TweenToEvent
-    | OpenQRCodeScannerEvent;
+    | OpenQRCodeScannerEvent
+    | LoadSimulationEvent
+    | UnloadSimulationEvent
+    | SuperShoutEvent;
 
 /**
  * An event that is used to show a toast message to the user.
@@ -414,6 +417,47 @@ export interface OpenQRCodeScannerEvent extends LocalEvent {
      * Whether the QR Code scanner should be visible.
      */
     open: boolean;
+}
+
+/**
+ * An event that is used to load a simulation.
+ */
+export interface LoadSimulationEvent extends LocalEvent {
+    name: 'load_simulation';
+
+    /**
+     * The ID of the simulation to load.
+     */
+    id: string;
+}
+
+/**
+ * An event that is used to unload a simulation.
+ */
+export interface UnloadSimulationEvent extends LocalEvent {
+    name: 'unload_simulation';
+
+    /**
+     * The ID of the simulation to unload.
+     */
+    id: string;
+}
+
+/**
+ * Defines an event for actions that are shouted to every current loaded simulation.
+ */
+export interface SuperShoutEvent extends LocalEvent {
+    name: 'super_shout';
+
+    /**
+     * The name of the event.
+     */
+    eventName: string;
+
+    /**
+     * The argument to pass as the "that" variable to scripts.
+     */
+    argument?: any;
 }
 
 /**
@@ -560,5 +604,43 @@ export function openQRCodeScanner(open: boolean): OpenQRCodeScannerEvent {
         type: 'local',
         name: 'show_qr_code',
         open: open,
+    };
+}
+
+/**
+ * Creates a new LoadSimulationEvent.
+ * @param id The ID of the simulation to load.
+ */
+export function loadSimulation(id: string): LoadSimulationEvent {
+    return {
+        type: 'local',
+        name: 'load_simulation',
+        id: id,
+    };
+}
+
+/**
+ * Creates a new UnloadSimulationEvent.
+ * @param id The ID of the simulation to unload.
+ */
+export function unloadSimulation(id: string): UnloadSimulationEvent {
+    return {
+        type: 'local',
+        name: 'unload_simulation',
+        id: id,
+    };
+}
+
+/**
+ * Creates a new SuperShoutEvent.
+ * @param eventName The name of the event.
+ * @param arg The argument to send as the "that" variable to scripts.
+ */
+export function superShout(eventName: string, arg?: any): SuperShoutEvent {
+    return {
+        type: 'local',
+        name: 'super_shout',
+        eventName: eventName,
+        argument: arg,
     };
 }
