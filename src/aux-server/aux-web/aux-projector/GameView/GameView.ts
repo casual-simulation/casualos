@@ -351,7 +351,7 @@ export default class GameView extends Vue implements IGameView {
 
     onDragLeave(event: DragEvent) {}
 
-    onDrop(event: DragEvent) {
+    async onDrop(event: DragEvent) {
         let auxFiles: File[] = [];
         if (event.dataTransfer.items) {
             for (let i = 0; i < event.dataTransfer.items.length; i++) {
@@ -373,8 +373,15 @@ export default class GameView extends Vue implements IGameView {
         }
 
         if (auxFiles.length > 0) {
-            console.log(`Has ${auxFiles.length} File`);
             event.preventDefault();
+            console.log(
+                `[GameView] Uploading ${auxFiles.length} ${
+                    auxFiles.length === 1 ? 'file' : 'files'
+                }`
+            );
+            await Promise.all(
+                auxFiles.map(file => appManager.uploadState(file))
+            );
         }
     }
 
