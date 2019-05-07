@@ -41,11 +41,56 @@ export class HtmlMixerDecorator extends AuxFile3DDecorator {
         this._gameView = gameView;
 
         if (!HtmlMixerDecorator.mixerContext) {
+            //
+            // Create mixer context.
+            //
+
             HtmlMixerDecorator.mixerContext = new HtmlMixer.Context(
                 this._gameView.getRenderer(),
                 this._gameView.getScene(),
                 this._gameView.getMainCamera()
             );
+
+            HtmlMixerDecorator.mixerContext.rendererCss.setSize(
+                window.innerWidth,
+                window.innerHeight
+            );
+
+            // Handle window resize for mixer context.
+            window.addEventListener(
+                'resize',
+                function() {
+                    HtmlMixerDecorator.mixerContext.rendererCss.setSize(
+                        window.innerWidth,
+                        window.innerHeight
+                    );
+                },
+                false
+            );
+
+            //
+            // Configure mixer context and dom attachment.
+            //
+
+            // Setup rendererCss
+            var rendererCss = HtmlMixerDecorator.mixerContext.rendererCss;
+            // Setup rendererWebgl
+            var rendererWebgl = HtmlMixerDecorator.mixerContext.rendererWebgl;
+
+            var css3dElement = rendererCss.domElement;
+            css3dElement.style.position = 'absolute';
+            css3dElement.style.top = '0px';
+            css3dElement.style.width = '100%';
+            css3dElement.style.height = '100%';
+            document.body.appendChild(css3dElement);
+
+            var webglCanvas = rendererWebgl.domElement;
+            webglCanvas.style.position = 'absolute';
+            webglCanvas.style.top = '0px';
+            webglCanvas.style.width = '100%';
+            webglCanvas.style.height = '100%';
+            webglCanvas.style.pointerEvents = 'none';
+            css3dElement.appendChild(webglCanvas);
 
             console.log(
                 '[HtmlMixerDecorator] mixerContext:',

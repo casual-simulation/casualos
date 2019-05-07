@@ -11,7 +11,7 @@ declare module 'threex-htmlmixer' {
     namespace HtmlMixer {
         class Context {
             cssFactor: number;
-            rendererCss: unknown; // CSS3DRenderer
+            rendererCss: any; // CSS3DRenderer
             rendererWebgl: WebGLRenderer;
             cssScene: Scene;
             autoUpdateObjects: boolean;
@@ -27,7 +27,7 @@ declare module 'threex-htmlmixer' {
         class Plane {
             domElement: HTMLElement;
             object3d: Object3D;
-            cssObject: unknown; // CSS3DObject
+            cssObject: any; // CSS3DObject
 
             constructor(
                 mixerContext: Context,

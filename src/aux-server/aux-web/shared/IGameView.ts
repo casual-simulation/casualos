@@ -14,6 +14,7 @@ import { AuxFile } from '@casual-simulation/aux-common/aux-format';
 import { ContextGroup3D } from './scene/ContextGroup3D';
 import { AuxFile3DFinder } from './AuxFile3DFinder';
 import Vue from 'vue';
+import { HtmlMixer } from 'threex-htmlmixer';
 
 /**
  * Interface that described what properties and functions should be available to a GameView class/component implementation.
@@ -44,6 +45,7 @@ export interface IGameView extends AuxFile3DFinder, Vue {
     getRenderer(): WebGLRenderer;
     getGroundPlane(): Plane;
     getMainCamera(): PerspectiveCamera | OrthographicCamera;
+    getHtmlMixerContext(): HtmlMixer.Context;
 
     /**
      * Gets the list of contexts that this game view contains.
