@@ -113,7 +113,7 @@ module.exports = {
                 use: ['exports-loader?HtmlMixer=THREEx.HtmlMixer'],
             },
             {
-                test: /threex\.htmlmixerhelper\.js$/,
+                test: /threex\.htmlmixerhelpers\.js$/,
                 use: [
                     'exports-loader?HtmlMixerHelpers=THREEx.HtmlMixerHelpers',
                 ],

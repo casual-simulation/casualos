@@ -14,7 +14,7 @@ declare module 'threex-htmlmixerhelpers' {
          * set the iframe.src in a mixerPlane.
          * - Usefull as it handle IOS specificite
          */
-        function setIFrameSrc(mixerPlane: HtmlMixer.Plane, url: string): void;
+        function setIframeSrc(mixerPlane: HtmlMixer.Plane, url: string): void;
 
         /**
          * create domElement for a image to insert in a THREEx.HtmlmixedPlane
