@@ -316,7 +316,7 @@ export namespace DebugObjectManager {
             super(axesHelper, poolId, scene, killTime);
             this.object3d = object3d;
             this.worldspace = worldspace;
-            this.axesHelper = this.axesHelper;
+            this.axesHelper = axesHelper;
 
             this.axesHelper.scale.setScalar(size);
 

@@ -6,6 +6,8 @@ import {
     MeshStandardMaterial,
     SpriteMaterial,
     Plane,
+    Vector3,
+    AxesHelper,
 } from 'three';
 import {
     FileCalculationContext,
@@ -18,12 +20,18 @@ import { EventBus } from '../../EventBus';
 import { IGameView } from '../../IGameView';
 import { HtmlMixer } from 'threex-htmlmixer';
 import { HtmlMixerHelpers } from 'threex-htmlmixerhelpers';
+import { DebugObjectManager } from '../DebugObjectManager';
 
 export class HtmlMixerPlaneDecorator extends AuxFile3DDecorator {
     /**
      * The src url for the iframe.
      */
     url: string = null;
+
+    /**
+     * The 3d plane object used to display the html page.
+     */
+    mixerPlane: HtmlMixer.Plane;
 
     private _gameView: IGameView = null;
 
@@ -59,10 +67,64 @@ export class HtmlMixerPlaneDecorator extends AuxFile3DDecorator {
                 '[HtmlMixerPlaneDecorator] iframe value changed:',
                 this.url
             );
+
+            if (hasValue(this.url)) {
+                if (!this.mixerPlane) {
+                    console.log('[HtmlMixerPlaneDecorator] create plane');
+                    // Create the mixer plane.
+                    let mixerContext = this._gameView.getHtmlMixerContext();
+                    let domElement = HtmlMixerHelpers.createIframeDomElement(
+                        'https://casualsimulation.com/'
+                    );
+
+                    this.mixerPlane = new HtmlMixer.Plane(
+                        mixerContext,
+                        domElement
+                    );
+                    this.mixerPlane.object3d.scale.multiplyScalar(4.0);
+                    this.file3D.display.add(this.mixerPlane.object3d);
+
+                    // Debug axes helper.
+                    let worldPoint = new Vector3();
+                    this.mixerPlane.object3d.getWorldPosition(worldPoint);
+                }
+
+                HtmlMixerHelpers.setIframeSrc(this.mixerPlane, this.url);
+
+                // let domElement = HtmlMixerHelpers.createIframeDomElement(this.url);
+                // this.mixerPlane.setDomElement(domElement);
+            } else {
+                if (!!this.mixerPlane) {
+                    console.log('[HtmlMixerPlaneDecorator] remove plane');
+                    // Remove the mixer plane.
+                    this.file3D.display.remove(this.mixerPlane.object3d);
+                    this.mixerPlane = null;
+                }
+            }
         }
     }
 
-    frameUpdate(calc: FileCalculationContext) {}
+    axesHelper: AxesHelper;
+
+    frameUpdate(calc: FileCalculationContext) {
+        if (this.mixerPlane) {
+            if (!this.axesHelper) {
+                console.log('create axes helper');
+                this.axesHelper = new AxesHelper(2);
+                this._gameView.getScene().add(this.axesHelper);
+            }
+
+            let worldPoint = new Vector3();
+            this.mixerPlane.object3d.getWorldPosition(worldPoint);
+            this.axesHelper.position.copy(worldPoint);
+        } else {
+            if (this.axesHelper) {
+                console.log('remove axes helper');
+                this._gameView.getScene().remove(this.axesHelper);
+                this.axesHelper = null;
+            }
+        }
+    }
 
     dispose() {}
 }

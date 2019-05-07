@@ -548,7 +548,8 @@ export function calculateAnchorPosition(
 export function createHtmlMixerContext(
     renderer: WebGLRenderer,
     scene: Scene,
-    camera: Camera
+    camera: Camera,
+    parentElement: HTMLElement
 ): HtmlMixer.Context {
     let mixerContext = new HtmlMixer.Context(renderer, scene, camera);
     mixerContext.rendererCss.setSize(window.innerWidth, window.innerHeight);
@@ -556,7 +557,7 @@ export function createHtmlMixerContext(
     // Handle window resize for mixer context.
     window.addEventListener(
         'resize',
-        () => {
+        function() {
             mixerContext.rendererCss.setSize(
                 window.innerWidth,
                 window.innerHeight
@@ -575,19 +576,20 @@ export function createHtmlMixerContext(
     var rendererWebgl = mixerContext.rendererWebgl;
 
     var css3dElement = rendererCss.domElement;
-    // css3dElement.style.position = 'absolute';
-    // css3dElement.style.top = '0px';
-    // css3dElement.style.width = '100%';
-    // css3dElement.style.height = '100%';
+    css3dElement.style.position = 'absolute';
+    css3dElement.style.top = '0px';
+    css3dElement.style.width = '100%';
+    css3dElement.style.height = '100%';
     // document.body.appendChild(css3dElement);
+    parentElement.appendChild(css3dElement);
 
     var webglCanvas = rendererWebgl.domElement;
-    // webglCanvas.style.position = 'absolute';
-    // webglCanvas.style.top = '0px';
-    // webglCanvas.style.width = '100%';
-    // webglCanvas.style.height = '100%';
+    webglCanvas.style.position = 'absolute';
+    webglCanvas.style.top = '0px';
+    webglCanvas.style.width = '100%';
+    webglCanvas.style.height = '100%';
     // webglCanvas.style.pointerEvents = 'none';
-    // css3dElement.appendChild(webglCanvas);
+    css3dElement.appendChild(webglCanvas);
 
     console.log('[SceneUtils] created html mixer context:', mixerContext);
 
