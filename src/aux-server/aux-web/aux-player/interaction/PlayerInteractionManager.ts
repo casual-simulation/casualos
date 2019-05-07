@@ -49,6 +49,21 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         }
     }
 
+    handlePointerEnter(file: File, simulation: Simulation): IOperation {
+        simulation.helper.action('onPointerEnter', [file]);
+        return null;
+    }
+
+    handlePointerExit(file: File, simulation: Simulation): IOperation {
+        simulation.helper.action('onPointerExit', [file]);
+        return null;
+    }
+
+    handlePointerDown(file: File, simulation: Simulation): IOperation {
+        simulation.helper.action('onPointerDown', [file]);
+        return null;
+    }
+
     createEmptyClickOperation(): IOperation {
         return null;
     }

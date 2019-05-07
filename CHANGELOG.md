@@ -7,6 +7,7 @@
 ### Changes:
 
 -   Improvements
+
     -   Added an `aux.progressBar` tag that generates a progressbar above the file, this tag can be set to any value form 0 to 1.
         -   This new tag also has additionally: `aux.progressBar.color` and `aux.progressBar.backgroundColor` to color the progressbar's components.
         -   This tag also has: `aux.progressBar.anchor` to set the facing direction of the progress bar relative to the file.
@@ -62,9 +63,13 @@
     -   Added the ability to copy worksurfaces AUX Builder using the new `"Copy"` option in the context menu.
         -   Using the `Ctrl+V` keybinding after copying the worksurface will paste a duplicate worksurface with duplicates of all the files that were on the surface.
     -   Added the ability to drag `.aux` files into AUX Builder.
+
         -   This will upload them just like the upload option in the hamburger menu.
     -   Added `player.hasFileInInventory(file)` formula function that determines if the given file or list of files are in the current player's inventory.
         -   As a part of this change, it is now possible to use the other user-related functions in formulas.
+
+    -   Moved the `handlePointerEnter` and `handlePointerExit` function logic to only work in `PlayerInteractionManager`.
+    -   Added the `handlePointerDown` to `PlayerInteractionManager` so down events in general can be collected on the player.
 
 ## V0.5.4
 

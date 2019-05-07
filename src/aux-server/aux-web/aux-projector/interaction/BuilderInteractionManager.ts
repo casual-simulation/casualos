@@ -61,6 +61,7 @@ import MiniFile from '../MiniFile/MiniFile';
 import FileTag from '../FileTag/FileTag';
 import FileTable from '../FileTable/FileTable';
 import { appManager } from '../../shared/AppManager';
+import { Simulation } from 'aux-web/shared/Simulation';
 
 export class BuilderInteractionManager extends BaseInteractionManager {
     // This overrides the base class IGameView
@@ -249,6 +250,18 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 },
             },
         });
+    }
+
+    handlePointerEnter(file: File, simulation: Simulation): IOperation {
+        return null;
+    }
+
+    handlePointerExit(file: File, simulation: Simulation): IOperation {
+        return null;
+    }
+
+    handlePointerDown(file: File, simulation: Simulation): IOperation {
+        return null;
     }
 
     /**

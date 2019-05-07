@@ -185,6 +185,13 @@ export abstract class BaseInteractionManager {
                                 this._operations.push(gameObjectClickOperation);
                             }
                         }
+
+                        if (gameObject instanceof AuxFile3D) {
+                            this.handlePointerDown(
+                                gameObject.file,
+                                gameObject.contextGroup.simulation.simulation
+                            );
+                        }
                     } else {
                         let emptyClickOperation = this.createEmptyClickOperation();
                         if (emptyClickOperation !== null) {
@@ -283,14 +290,6 @@ export abstract class BaseInteractionManager {
         } else {
             return [null, null];
         }
-    }
-
-    handlePointerEnter(file: File, simulation: Simulation) {
-        simulation.helper.action('onPointerEnter', [file]);
-    }
-
-    handlePointerExit(file: File, simulation: Simulation) {
-        simulation.helper.action('onPointerExit', [file]);
     }
 
     showContextMenu(calc: FileCalculationContext) {
@@ -468,6 +467,9 @@ export abstract class BaseInteractionManager {
     ): IOperation;
     abstract createEmptyClickOperation(): IOperation;
     abstract createHtmlElementClickOperation(element: HTMLElement): IOperation;
+    abstract handlePointerEnter(file: File, simulation: Simulation): IOperation;
+    abstract handlePointerExit(file: File, simulation: Simulation): IOperation;
+    abstract handlePointerDown(file: File, simulation: Simulation): IOperation;
 
     protected abstract _contextMenuActions(
         calc: FileCalculationContext,
