@@ -238,10 +238,6 @@ describe('FileProxy', () => {
             expect(file.tags.abc).toBe(1);
         });
 
-        // TODO: Fix so that only the property
-        // that needs to be set on the final tags object
-        // is sent to the setValue function.
-        // Also make it so that the original tags object is not modified.
         it('should handle setting values on nested objects', () => {
             const file = createFile('testId');
             file.tags['abc.def'] = {

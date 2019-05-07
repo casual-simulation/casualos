@@ -8,13 +8,14 @@ import { SocketManager } from './SocketManager';
 import { flatMap, map, scan } from 'rxjs/operators';
 import { downloadAuxState, readFileJson } from '../aux-projector/download';
 import { CausalTreeManager } from '@casual-simulation/causal-tree-client-socketio';
-import { StoredCausalTree } from '@casual-simulation/causal-trees';
+import { StoredCausalTree, storedTree } from '@casual-simulation/causal-trees';
 import {
     AuxOp,
     FilesState,
     AuxCausalTree,
     lerp,
     auxCausalTreeFactory,
+    AuxObject,
 } from '@casual-simulation/aux-common';
 import Dexie from 'dexie';
 import { difference } from 'lodash';
@@ -26,6 +27,7 @@ import {
 } from '@casual-simulation/aux-common/LoadingProgress';
 import { Simulation } from './Simulation';
 import SimulationManager from './SimulationManager';
+import { copyToClipboard } from './SharedUtils';
 
 export interface User {
     id: string;
@@ -193,6 +195,25 @@ export class AppManager {
         }
 
         await this.simulationManager.primary.helper.addState(value);
+    }
+
+    /**
+     * Copies the given list of files as an AUX to the user's clipboard.
+     * @param files The files to copy.
+     */
+    async copyFilesFromSimulation(simulation: Simulation, files: AuxObject[]) {
+        const atoms = files.map(f => f.metadata.ref);
+        const weave = simulation.aux.tree.weave.subweave(...atoms);
+        const stored = storedTree(
+            simulation.aux.tree.site,
+            simulation.aux.tree.knownSites,
+            weave.atoms
+        );
+        let tree = new AuxCausalTree(stored);
+        await tree.import(stored);
+
+        const json = JSON.stringify(tree.export());
+        copyToClipboard(json);
     }
 
     /**

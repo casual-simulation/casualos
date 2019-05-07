@@ -93,7 +93,9 @@ Vue.use(MdTooltip);
 Vue.use(MdSnackbar);
 Vue.use(MdSwitch);
 Vue.use(MdBadge);
-Vue.use(VueShortkey);
+Vue.use(VueShortkey, {
+    prevent: ['input', 'textarea'],
+});
 Vue.use(MdDialogPrompt);
 
 const routes: RouteConfig[] = [

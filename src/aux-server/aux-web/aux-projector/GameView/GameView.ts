@@ -29,7 +29,6 @@ import { SubscriptionLike } from 'rxjs';
 import { concatMap, tap, flatMap as rxFlatMap } from 'rxjs/operators';
 
 import {
-    File,
     Object,
     DEFAULT_WORKSPACE_HEIGHT_INCREMENT,
     DEFAULT_USER_MODE,
@@ -43,7 +42,18 @@ import {
     getFileConfigContexts,
     hasValue,
     createContextId,
+    AuxCausalTree,
+    AuxOp,
+    createWorkspace,
+    addToContextDiff,
+    FilesState,
+    duplicateFile,
+    toast,
+    isConfigForContext,
+    createCalculationContext,
+    cleanFile,
 } from '@casual-simulation/aux-common';
+import { storedTree, StoredCausalTree } from '@casual-simulation/causal-trees';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { Time } from '../../shared/scene/Time';
 import { Input, InputType } from '../../shared/scene/Input';
@@ -51,7 +61,7 @@ import { InputVR } from '../../shared/scene/InputVR';
 
 import { appManager } from '../../shared/AppManager';
 import { GridChecker } from '../../shared/scene/grid/GridChecker';
-import { flatMap, find, findIndex, debounce } from 'lodash';
+import { flatMap, find, findIndex, debounce, keys } from 'lodash';
 import App from '../App/App';
 import MiniFile from '../MiniFile/MiniFile';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
@@ -77,6 +87,7 @@ import {
 import { Physics } from '../../shared/scene/Physics';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
+import { copyToClipboard } from '../../shared/SharedUtils';
 
 @Component({
     components: {
@@ -133,6 +144,7 @@ export default class GameView extends Vue implements IGameView {
     vrDisplay: VRDisplay = null;
     vrCapable: boolean = false;
     showTrashCan: boolean = false;
+    showUploadFiles: boolean = false;
 
     @Inject() addSidebarItem: App['addSidebarItem'];
     @Inject() removeSidebarItem: App['removeSidebarItem'];
@@ -338,6 +350,234 @@ export default class GameView extends Vue implements IGameView {
         );
     }
 
+    onDragEnter(event: DragEvent) {
+        if (event.dataTransfer.types.indexOf('Files') >= 0) {
+            this.showUploadFiles = true;
+            event.dataTransfer.dropEffect = 'copy';
+            event.preventDefault();
+        }
+    }
+
+    onDragOver(event: DragEvent) {
+        if (event.dataTransfer.types.indexOf('Files') >= 0) {
+            this.showUploadFiles = true;
+            event.dataTransfer.dropEffect = 'copy';
+            event.preventDefault();
+        }
+    }
+
+    onDragLeave(event: DragEvent) {
+        this.showUploadFiles = false;
+    }
+
+    async onDrop(event: DragEvent) {
+        this.showUploadFiles = false;
+        event.preventDefault();
+        let auxFiles: File[] = [];
+        if (event.dataTransfer.items) {
+            for (let i = 0; i < event.dataTransfer.items.length; i++) {
+                const item = event.dataTransfer.items[i];
+                if (item.kind === 'file') {
+                    const file = item.getAsFile();
+                    if (file.name.endsWith('.aux')) {
+                        auxFiles.push(file);
+                    }
+                }
+            }
+        } else {
+            for (let i = 0; i < event.dataTransfer.files.length; i++) {
+                const file = event.dataTransfer.files.item(i);
+                if (file.name.endsWith('.aux')) {
+                    auxFiles.push(file);
+                }
+            }
+        }
+
+        if (auxFiles.length > 0) {
+            console.log(
+                `[GameView] Uploading ${auxFiles.length} ${
+                    auxFiles.length === 1 ? 'file' : 'files'
+                }`
+            );
+            await Promise.all(
+                auxFiles.map(file => appManager.uploadState(file))
+            );
+        }
+    }
+
+    copySelection(event: any) {
+        switch (event.srcKey) {
+            case 'mac':
+                if (this._isMac()) {
+                    this._copySelection();
+                }
+                break;
+            default:
+                if (!this._isMac()) {
+                    this._copySelection();
+                }
+                break;
+        }
+    }
+
+    pasteClipboard(event: any) {
+        switch (event.srcKey) {
+            case 'mac':
+                if (this._isMac()) {
+                    this._pasteClipboard();
+                }
+                break;
+            default:
+                if (!this._isMac()) {
+                    this._pasteClipboard();
+                }
+                break;
+        }
+    }
+
+    private async _copySelection() {
+        const sim = appManager.simulationManager.primary;
+        const files = sim.selection.getSelectedFilesForUser(
+            sim.helper.userFile
+        );
+        if (files.length === 0) {
+            appManager.simulationManager.primary.helper.transaction(
+                toast('Nothing selected to copy!')
+            );
+            return;
+        }
+
+        await appManager.copyFilesFromSimulation(sim, files);
+
+        appManager.simulationManager.primary.helper.transaction(
+            toast('Selection Copied!')
+        );
+    }
+
+    private async _pasteClipboard() {
+        if (navigator.clipboard) {
+            try {
+                // TODO: Cleanup this function
+                const json = await navigator.clipboard.readText();
+                const stored: StoredCausalTree<AuxOp> = JSON.parse(json);
+                let tree = new AuxCausalTree(stored);
+                await tree.import(stored);
+
+                const value = tree.value;
+                const fileIds = keys(value);
+                let state: FilesState = {};
+
+                const oldFiles = fileIds.map(id => value[id]);
+                const calc = createCalculationContext(
+                    oldFiles,
+                    appManager.simulationManager.primary.helper.lib
+                );
+                const oldWorksurface =
+                    oldFiles.find(
+                        f => getFileConfigContexts(calc, f).length > 0
+                    ) || createWorkspace();
+                const oldContexts = getFileConfigContexts(calc, oldWorksurface);
+
+                const contextMap: Map<string, string> = new Map();
+                let newContexts: string[] = [];
+                oldContexts.forEach(c => {
+                    const context = createContextId();
+                    newContexts.push(context);
+                    contextMap.set(c, context);
+                });
+
+                let worksurface = duplicateFile(oldWorksurface);
+
+                oldContexts.forEach(c => {
+                    let newContext = contextMap.get(c);
+                    let config = oldWorksurface.tags[`${c}.config`];
+                    worksurface.tags[c] = null;
+                    worksurface.tags[`${c}.config`] = null;
+                    worksurface.tags[newContext] = true;
+                    worksurface.tags[`${newContext}.config`] = config;
+                });
+
+                worksurface = cleanFile(worksurface);
+
+                const mouseDir = Physics.screenPosToRay(
+                    this.getInput().getMouseScreenPos(),
+                    this.getMainCamera()
+                );
+                const point = Physics.pointOnPlane(
+                    mouseDir,
+                    this.getGroundPlane()
+                );
+
+                worksurface.tags['aux.context.x'] = point.x;
+                worksurface.tags['aux.context.y'] = point.z;
+                worksurface.tags['aux.context.z'] = point.y;
+
+                state[worksurface.id] = worksurface;
+
+                for (let i = 0; i < fileIds.length; i++) {
+                    const file = value[fileIds[i]];
+
+                    if (file.id === oldWorksurface.id) {
+                        continue;
+                    }
+
+                    let newFile = duplicateFile(file);
+
+                    oldContexts.forEach(c => {
+                        let newContext = contextMap.get(c);
+                        newFile.tags[c] = null;
+
+                        let x = file.tags[`${c}.x`];
+                        let y = file.tags[`${c}.y`];
+                        let z = file.tags[`${c}.z`];
+                        let index = file.tags[`${c}.index`];
+                        newFile.tags[`${c}.x`] = null;
+                        newFile.tags[`${c}.y`] = null;
+                        newFile.tags[`${c}.z`] = null;
+                        newFile.tags[`${c}.index`] = null;
+
+                        newFile.tags[newContext] = true;
+                        newFile.tags[`${newContext}.x`] = x;
+                        newFile.tags[`${newContext}.y`] = y;
+                        newFile.tags[`${newContext}.z`] = z;
+                        newFile.tags[`${newContext}.index`] = index;
+                    });
+
+                    state[newFile.id] = cleanFile(newFile);
+                }
+
+                await appManager.simulationManager.primary.helper.addState(
+                    state
+                );
+                appManager.simulationManager.primary.helper.transaction(
+                    toast(
+                        `${fileIds.length} ${
+                            fileIds.length === 1 ? 'file' : 'files'
+                        } pasted!`
+                    )
+                );
+            } catch (ex) {
+                console.error('[GameView] Paste failed', ex);
+                appManager.simulationManager.primary.helper.transaction(
+                    toast(
+                        "Couldn't paste your clipboard. Have you copied a selection or worksurface?"
+                    )
+                );
+            }
+        } else {
+            console.error("[GameView] Browser doesn't support clipboard API!");
+            appManager.simulationManager.primary.helper.transaction(
+                toast(
+                    "Sorry, but your browser doesn't support pasting files from a selection or worksurface."
+                )
+            );
+        }
+    }
+
+    private _isMac(): boolean {
+        return /(Mac)/i.test(navigator.platform);
+    }
+
     public async mounted() {
         this._handleResize = this._handleResize.bind(this);
         window.addEventListener('resize', this._handleResize);
@@ -525,90 +765,6 @@ export default class GameView extends Vue implements IGameView {
         this._renderer.render(this._scene, this._uiWorldCamera);
         this._sceneBackgroundUpdate();
     }
-
-    // private async _fileUpdated(file: AuxFile, initialUpdate = false) {
-    //     let shouldRemove = false;
-    //     const calc = this.fileManager.helper.createContext();
-    //     // TODO: Work with all domains
-    //     let configTags = getFileConfigContexts(calc, file);
-    //     if (configTags.length === 0) {
-    //         if (!initialUpdate) {
-    //             if (
-    //                 !file.tags['aux._user'] &&
-    //                 file.tags['aux._lastEditedBy'] ===
-    //                     this.fileManager.helper.userFile.id
-    //             ) {
-    //                 if (
-    //                     this.fileManager.recent.selectedRecentFile &&
-    //                     file.id ===
-    //                         this.fileManager.recent.selectedRecentFile.id
-    //                 ) {
-    //                     this.fileManager.recent.selectedRecentFile = file;
-    //                 } else {
-    //                     this.fileManager.recent.selectedRecentFile = null;
-    //                 }
-    //                 // this.addToRecentFilesList(file);
-    //             }
-    //         }
-    //     } else {
-    //         if (file.tags.size <= 0) {
-    //             shouldRemove = true;
-    //         }
-    //     }
-
-    //     await Promise.all(
-    //         [...this._simulations].map(c => c.fileUpdated(file))
-    //     );
-    //     // await obj.updateFile(file);
-    //     this.onFileUpdated.invoke(file);
-
-    //     if (shouldRemove) {
-    //         this._fileRemoved(file.id);
-    //     }
-    // }
-
-    // private async _fileAdded(file: AuxFile) {
-    //     let context = new BuilderGroup3D(file, this._decoratorFactory);
-    //     context.setGridChecker(this._gridChecker);
-    //     this._contexts.push(context);
-    //     this._scene.add(context);
-
-    //     let calc = this.fileManager.helper.createContext();
-    //     await Promise.all(
-    //         [...this._contexts.values()].map(c => c.fileAdded(file, calc))
-    //     );
-
-    //     await this._fileUpdated(file, true);
-    //     this.onFileAdded.invoke(file);
-    // }
-
-    // private _fileRemoved(id: string) {
-    //     const calc = this.fileManager.helper.createContext();
-    //     let removedIndex: number = -1;
-    //     this._contexts.forEach((context, index) => {
-    //         context.fileRemoved(id, calc);
-
-    //         if (context.file.id === id) {
-    //             removedIndex = index;
-    //         }
-    //     });
-
-    //     if (removedIndex >= 0) {
-    //         const context = this._contexts[removedIndex];
-    //         this._scene.remove(context);
-    //         this._contexts.splice(removedIndex, 1);
-    //     }
-
-    //     this.onFileRemoved.invoke(null);
-
-    //     // const obj = this._files[id];
-    //     // if (obj) {
-    //     //   delete this._fileIds[obj.mesh.id];
-    //     //   delete this._files[id];
-    //     //   obj.dispose();
-
-    //     // }
-    // }
 
     private _sceneBackgroundUpdate() {
         if (this._sceneBackground) {
@@ -896,7 +1052,6 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _resizeRenderer() {
-        // TODO: Call each time the screen size changes
         const { width, height } = this._calculateCameraSize();
         this._renderer.setPixelRatio(window.devicePixelRatio || 1);
         this._renderer.setSize(width, height);
