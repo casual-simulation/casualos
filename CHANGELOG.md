@@ -63,6 +63,8 @@
         -   Using the `Ctrl+V` keybinding after copying the worksurface will paste a duplicate worksurface with duplicates of all the files that were on the surface.
     -   Added the ability to drag `.aux` files into AUX Builder.
         -   This will upload them just like the upload option in the hamburger menu.
+    -   Added `player.hasFileInInventory(file)` formula function that determines if the given file or list of files are in the current player's inventory.
+        -   As a part of this change, it is now possible to use the other user-related functions in formulas.
 
 ## V0.5.4
 
@@ -75,7 +77,7 @@
     -   Changed the globals file to look like a normal file when created and be labeled as "Global".
     -   Updated all the formula functions to use the new naming scheme.
     -   Added the ability to drag worksurfaces when they are minimized.
-        -                               Setting `aux.context.movable` to `false` will prevent this behavior.
+        -                                 Setting `aux.context.movable` to `false` will prevent this behavior.
     -   Selecting an item in the inventory no longer shows a selection indicator.
 -   Bug Fixes
     -   The inventory placeholders should now always appear square.
