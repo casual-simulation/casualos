@@ -49,6 +49,14 @@
             <div class="toolbar right">
                 <trash-can v-if="showTrashCan" ref="trashCan"></trash-can>
             </div>
+            <div
+                v-shortkey.once="{ normal: ['ctrl', 'c'], mac: ['meta', 'c'] }"
+                @shortkey="copySelection"
+            ></div>
+            <div
+                v-shortkey.once="{ normal: ['ctrl', 'v'], mac: ['meta', 'v'] }"
+                @shortkey="pasteClipboard"
+            ></div>
         </div>
 
         <md-dialog :md-active.sync="showDialog">

@@ -42,7 +42,9 @@ import {
     getFileConfigContexts,
     hasValue,
     createContextId,
+    AuxCausalTree,
 } from '@casual-simulation/aux-common';
+import { storedTree } from '@casual-simulation/causal-trees';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { Time } from '../../shared/scene/Time';
 import { Input, InputType } from '../../shared/scene/Input';
@@ -76,6 +78,7 @@ import {
 import { Physics } from '../../shared/scene/Physics';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
+import { copyToClipboard } from '../../shared/SharedUtils';
 
 @Component({
     components: {
@@ -391,6 +394,63 @@ export default class GameView extends Vue implements IGameView {
                 auxFiles.map(file => appManager.uploadState(file))
             );
         }
+    }
+
+    copySelection(event: any) {
+        switch (event.srcKey) {
+            case 'mac':
+                if (this._isMac()) {
+                    this._copySelection();
+                }
+                break;
+            default:
+                if (!this._isMac()) {
+                    this._copySelection();
+                }
+                break;
+        }
+    }
+
+    pasteClipboard(event: any) {
+        switch (event.srcKey) {
+            case 'mac':
+                if (this._isMac()) {
+                    this._pasteClipboard();
+                }
+                break;
+            default:
+                if (!this._isMac()) {
+                    this._pasteClipboard();
+                }
+                break;
+        }
+    }
+
+    private async _copySelection() {
+        const sim = appManager.simulationManager.primary;
+        const files = sim.selection.getSelectedFilesForUser(
+            sim.helper.userFile
+        );
+        const atoms = files.map(f => f.metadata.ref);
+        const weave = sim.aux.tree.weave.subweave(...atoms);
+        const stored = storedTree(
+            sim.aux.tree.site,
+            sim.aux.tree.knownSites,
+            weave.atoms
+        );
+        let tree = new AuxCausalTree(stored);
+        await tree.import(stored);
+
+        const json = JSON.stringify(tree.export());
+        copyToClipboard(json);
+    }
+
+    private _pasteClipboard() {
+        console.log('paste!');
+    }
+
+    private _isMac(): boolean {
+        return /(Mac)/i.test(navigator.platform);
     }
 
     public async mounted() {
