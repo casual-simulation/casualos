@@ -56,8 +56,6 @@ export class FileShapeDecorator extends AuxFile3DDecorator
 
         this._updateColor(calc);
         this._updateStroke(calc);
-
-        this.file3D.display.updateMatrixWorld(false);
     }
 
     private _updateStroke(calc: FileCalculationContext) {

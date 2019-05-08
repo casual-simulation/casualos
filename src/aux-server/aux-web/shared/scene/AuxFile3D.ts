@@ -147,7 +147,9 @@ export class AuxFile3D extends GameObject {
             if (file.id === this.file.id) {
                 this.file = file;
             }
-            this.decorators.forEach(d => d.fileUpdated(calc));
+            for (let i = 0; i < this.decorators.length; i++) {
+                this.decorators[i].fileUpdated(calc);
+            }
         }
     }
 
@@ -162,7 +164,9 @@ export class AuxFile3D extends GameObject {
 
     frameUpdate(calc: FileCalculationContext): void {
         if (this.decorators) {
-            this.decorators.forEach(d => d.frameUpdate(calc));
+            for (let i = 0; i < this.decorators.length; i++) {
+                this.decorators[i].frameUpdate(calc);
+            }
         }
     }
 

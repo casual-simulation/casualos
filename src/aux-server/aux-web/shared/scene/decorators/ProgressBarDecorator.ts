@@ -92,7 +92,7 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
         this._updateColor(calc);
         this._updateFill(calc);
 
-        this.file3D.display.updateMatrixWorld(false);
+        // this.file3D.display.updateMatrixWorld(false);
     }
 
     frameUpdate(calc: FileCalculationContext): void {}
