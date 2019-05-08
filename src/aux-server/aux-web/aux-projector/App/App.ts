@@ -124,6 +124,11 @@ export default class App extends Vue {
     extraItems: SidebarItem[] = [];
 
     /**
+     * The QR Code to display.
+     */
+    qrCode: string = '';
+
+    /**
      * Gets whether we're in developer mode.
      */
     get dev() {
@@ -188,6 +193,10 @@ export default class App extends Vue {
 
     url() {
         return location.href;
+    }
+
+    getQRCode() {
+        return this.qrCode || this.url();
     }
 
     currentUserMode() {
@@ -275,6 +284,14 @@ export default class App extends Vue {
                                 message: e.message,
                                 visible: true,
                             };
+                        } else if (e.name === 'show_qr_code') {
+                            if (e.open) {
+                                this.qrCode = e.code;
+                                this.showQRCode = true;
+                            } else {
+                                this.qrCode = null;
+                                this.showQRCode = false;
+                            }
                         }
                     })
                 );

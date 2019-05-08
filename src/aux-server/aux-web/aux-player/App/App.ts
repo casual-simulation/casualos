@@ -110,6 +110,11 @@ export default class App extends Vue {
      */
     newSimulation: string = '';
 
+    /**
+     * The QR Code to show.
+     */
+    qrCode: string = '';
+
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
 
@@ -387,6 +392,10 @@ export default class App extends Vue {
         });
     }
 
+    getQRCode(): string {
+        return this.qrCode || this.url();
+    }
+
     private _simulationAdded(simulation: Simulation) {
         const index = this.simulations.findIndex(s => s.id === simulation.id);
         if (index >= 0) {
@@ -410,7 +419,7 @@ export default class App extends Vue {
                         message: e.message,
                         visible: true,
                     };
-                } else if (e.name === 'show_qr_code') {
+                } else if (e.name === 'show_qr_code_scanner') {
                     if (this.showQRScanner !== e.open) {
                         this.showQRScanner = e.open;
                         if (e.open) {
@@ -429,6 +438,14 @@ export default class App extends Vue {
                     this.removeSimulationById(e.id);
                 } else if (e.name === 'super_shout') {
                     this._superAction(e.eventName, e.argument);
+                } else if (e.name === 'show_qr_code') {
+                    if (e.open) {
+                        this.qrCode = e.code;
+                        this.showQRCode = true;
+                    } else {
+                        this.qrCode = null;
+                        this.showQRCode = false;
+                    }
                 }
             }),
             simulation.aux.channel.connectionStateChanged.subscribe(
