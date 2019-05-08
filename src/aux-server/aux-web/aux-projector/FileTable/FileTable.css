@@ -211,3 +211,13 @@ th:last-child {
 .search-results-wrapper {
     padding: 0 8px;
 }
+
+.md-button.create-file .md-button-content {
+    width: 24px;
+    height: 24px;
+}
+
+.create-file svg {
+    stroke: var(--md-theme-default-icon-on-background, rgba(0, 0, 0, 0.54));
+    fill: var(--md-theme-default-icon-on-background, rgba(0, 0, 0, 0.54));
+}
