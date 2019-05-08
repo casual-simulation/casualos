@@ -49,14 +49,15 @@
             <div class="toolbar right">
                 <trash-can v-if="showTrashCan" ref="trashCan"></trash-can>
             </div>
-            <div
-                v-shortkey.once="{ normal: ['ctrl', 'c'], mac: ['meta', 'c'] }"
-                @shortkey="copySelection"
-            ></div>
-            <div
-                v-shortkey.once="{ normal: ['ctrl', 'v'], mac: ['meta', 'v'] }"
-                @shortkey="pasteClipboard"
-            ></div>
+            <div v-shortkey.once="['ctrl', 'c']" @shortkey="copySelectionNormal"></div>
+
+            <!-- BUG: -->
+            <!-- The Meta key (Command key) only works for onkeydown events. -->
+            <!-- Vue-shortkey normally only sends events on keyup, but this is a way -->
+            <!-- to trick it. -->
+            <div v-shortkey.push="['meta', 'c']" @shortkey="copySelectionMac"></div>
+            <div v-shortkey.once="['ctrl', 'v']" @shortkey="pasteClipboardNormal"></div>
+            <div v-shortkey.push="['meta', 'v']" @shortkey="pasteClipboardMac"></div>
         </div>
 
         <md-dialog :md-active.sync="showDialog">
