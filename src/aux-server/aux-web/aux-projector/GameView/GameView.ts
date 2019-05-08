@@ -405,33 +405,27 @@ export default class GameView extends Vue implements IGameView {
         }
     }
 
-    copySelection(event: any) {
-        switch (event.srcKey) {
-            case 'mac':
-                if (this._isMac()) {
-                    this._copySelection();
-                }
-                break;
-            default:
-                if (!this._isMac()) {
-                    this._copySelection();
-                }
-                break;
+    copySelectionMac() {
+        if (this._isMac()) {
+            this._copySelection();
         }
     }
 
-    pasteClipboard(event: any) {
-        switch (event.srcKey) {
-            case 'mac':
-                if (this._isMac()) {
-                    this._pasteClipboard();
-                }
-                break;
-            default:
-                if (!this._isMac()) {
-                    this._pasteClipboard();
-                }
-                break;
+    copySelectionNormal() {
+        if (!this._isMac()) {
+            this._copySelection();
+        }
+    }
+
+    pasteClipboardMac() {
+        if (this._isMac()) {
+            this._pasteClipboard();
+        }
+    }
+
+    pasteClipboardNormal() {
+        if (!this._isMac()) {
+            this._pasteClipboard();
         }
     }
 
