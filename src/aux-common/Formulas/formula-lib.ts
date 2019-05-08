@@ -15,6 +15,7 @@ import {
     loadSimulation as calcLoadSimulation,
     unloadSimulation as calcUnloadSimulation,
     superShout as calcSuperShout,
+    showQRCode as calcShowQRCode,
 } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
 import { every, find } from 'lodash';
@@ -37,12 +38,13 @@ import {
     unwrapProxy,
     CREATE_ACTION_NAME,
     DESTROY_ACTION_NAME,
+    isFileInContext,
 } from '../Files/FileCalculations';
 
 let actions: FileEvent[] = [];
 let state: FilesState = null;
 let calc: FileCalculationContext = null;
-let userFileId: string = null;
+// let userFileId: string = null;
 
 export function setActions(value: FileEvent[]) {
     actions = value;
@@ -69,11 +71,11 @@ export function getCalculationContext(): FileCalculationContext {
 }
 
 export function getUserId(): string {
-    return userFileId;
-}
-
-export function setUserId(id: string) {
-    userFileId = id;
+    if (calc) {
+        return calc.sandbox.interface.userId();
+    } else {
+        return null;
+    }
 }
 
 // declare const lib: string;
@@ -381,7 +383,7 @@ export function event(name: string, files: (File | string)[], arg?: any) {
             : null;
         let results = calculateActionEvents(
             state,
-            action(name, ids, userFileId, arg)
+            action(name, ids, getUserId(), arg)
         );
         actions.push(...results.events);
     }
@@ -435,7 +437,7 @@ export function goToContext(simulationId: string, context?: string) {
 }
 
 /**
- * Derermines wather the player is in the given context.
+ * Derermines whether the player is in the given context.
  * @param context The context.
  */
 export function isInContext(givenContext: string) {
@@ -445,13 +447,31 @@ export function isInContext(givenContext: string) {
 }
 
 /**
+ * Determines whether the player has the given file in their inventory.
+ * @param files The file or files to check.
+ */
+export function hasFileInInventory(files: FileProxy | FileProxy[]): boolean {
+    if (!Array.isArray(files)) {
+        files = [files];
+    }
+
+    return every(files, f =>
+        isFileInContext(
+            getCalculationContext(),
+            <any>f,
+            getUserInventoryContext()
+        )
+    );
+}
+
+/**
  * Gets the current user's file.
  */
 export function getUser() {
-    if (!userFileId) {
+    if (!getUserId()) {
         return null;
     }
-    const user = calc.sandbox.interface.listObjectsWithTag('id', userFileId);
+    const user = calc.sandbox.interface.listObjectsWithTag('id', getUserId());
     if (Array.isArray(user)) {
         if (user.length === 1) {
             return user[0];
@@ -657,6 +677,21 @@ export function closeQRCodeScanner() {
 }
 
 /**
+ * Shows the given QR Code.
+ * @param code The code to show.
+ */
+export function showQRCode(code: string) {
+    actions.push(calcShowQRCode(true, code));
+}
+
+/**
+ * Hides the QR Code.
+ */
+export function hideQRCode() {
+    actions.push(calcShowQRCode(false));
+}
+
+/**
  * Loads the channel with the given ID.
  * @param id The ID of the channel to load.
  */
@@ -698,6 +733,9 @@ export const player = {
     closeQRCodeScanner,
     loadChannel,
     unloadChannel,
+    hasFileInInventory,
+    showQRCode,
+    hideQRCode,
 };
 
 /**

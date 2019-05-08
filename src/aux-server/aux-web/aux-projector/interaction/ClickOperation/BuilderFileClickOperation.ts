@@ -52,7 +52,6 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
     protected _createDragOperation(
         calc: FileCalculationContext
     ): BaseFileDragOperation {
-        // TODO: Be able to use different domains
         const workspace = this._getWorkspace();
         if (!workspace) {
             const file3D: AuxFile3D = <AuxFile3D>this._file3D;

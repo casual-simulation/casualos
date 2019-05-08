@@ -14,6 +14,7 @@ import {
     loadSimulation,
     unloadSimulation,
     superShout,
+    showQRCode,
 } from './FilesChannel';
 import { File } from './File';
 import uuid from 'uuid/v4';
@@ -21,6 +22,7 @@ import {
     COMBINE_ACTION_NAME,
     createFile,
     createCalculationContext,
+    calculateFileValue,
 } from './FileCalculations';
 import { isProxy } from './FileProxy';
 
@@ -2083,6 +2085,50 @@ describe('FilesChannel', () => {
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([openQRCodeScanner(false)]);
+            });
+        });
+
+        describe('showQRCode()', () => {
+            it('should emit a ShowQRCodeEvent', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'player.showQRCode("hello")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([showQRCode(true, 'hello')]);
+            });
+        });
+
+        describe('hideQRCode()', () => {
+            it('should emit a ShowQRCodeEvent', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'player.hideQRCode()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([showQRCode(false)]);
             });
         });
 

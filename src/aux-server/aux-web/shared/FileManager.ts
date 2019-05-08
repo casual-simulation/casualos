@@ -21,6 +21,8 @@ import {
     SimulationIdParseResult,
     parseSimulationId,
     SimulationIdParseSuccess,
+    whitelistAllowsAccess,
+    blacklistAllowsAccess,
 } from '@casual-simulation/aux-common';
 import { keys, union, values } from 'lodash';
 import {
@@ -323,6 +325,8 @@ export class FileManager implements Simulation {
             loadingProgress.set(80, 'Initalize globals file...', null);
             await this._initGlobalsFile();
 
+            this._checkAccessAllowed();
+
             const {
                 filesAdded,
                 filesRemoved,
@@ -356,6 +360,21 @@ export class FileManager implements Simulation {
             if (loadingCallback) {
                 loadingProgress.onChanged.removeAllListeners();
             }
+        }
+    }
+
+    /**
+     * Checks if the current user is allowed access to the simulation.
+     */
+    _checkAccessAllowed() {
+        const calc = this.helper.createContext();
+        const username = this.helper.userFile.tags['aux._user'];
+        const file = this.helper.globalsFile;
+        if (
+            !whitelistAllowsAccess(calc, file, username) ||
+            !blacklistAllowsAccess(calc, file, username)
+        ) {
+            throw new Error(`You are denied access to this channel.`);
         }
     }
 

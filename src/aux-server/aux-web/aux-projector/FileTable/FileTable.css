@@ -52,6 +52,17 @@
     margin: 0;
 }
 
+.file-cell.delete-item {
+    text-align: center;
+    background-color: var(--disabled-cell-color);
+}
+
+.file-cell.delete-item .md-button {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+}
+
 .file-cell input {
     width: 100%;
     height: 100%;
@@ -199,4 +210,14 @@ th:last-child {
 
 .search-results-wrapper {
     padding: 0 8px;
+}
+
+.md-button.create-file .md-button-content {
+    width: 24px;
+    height: 24px;
+}
+
+.create-file svg {
+    stroke: var(--md-theme-default-icon-on-background, rgba(0, 0, 0, 0.54));
+    fill: var(--md-theme-default-icon-on-background, rgba(0, 0, 0, 0.54));
 }

@@ -77,11 +77,18 @@
 
         <md-dialog :md-active.sync="showQRCode" class="qr-code-dialog">
             <div class="qr-code-container">
-                <span>{{ url() }}</span>
-                <qr-code :value="url()" :options="{ width: 310 }" />
+                <span>{{ getQRCode() }}</span>
+                <qr-code :value="getQRCode()" :options="{ width: 310 }" />
             </div>
             <md-dialog-actions>
-                <md-button class="md-primary" @click="showQRCode = false">Close</md-button>
+                <md-button
+                    class="md-primary"
+                    @click="
+                        showQRCode = false;
+                        qrCode = null;
+                    "
+                    >Close</md-button
+                >
             </md-dialog-actions>
         </md-dialog>
 

@@ -1,12 +1,31 @@
 # AUX Changelog
 
-## V0.6.0
+## V0.6.2
 
 ### Date: TBD
 
 ### Changes:
 
 -   Improvements
+    -   Allow users to determine which side of the file they have clicked on by using `that.face` variable on an `onClick` tag.
+
+## V0.6.1
+
+### Date: 05/07/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed the Copy/Paste shortcuts to make `Cmd+C` and `Cmd+V` work on Mac.
+
+## V0.6.0
+
+### Date: 05/07/2019
+
+### Changes:
+
+-   Improvements
+
     -   Added an `aux.progressBar` tag that generates a progressbar above the file, this tag can be set to any value form 0 to 1.
         -   This new tag also has additionally: `aux.progressBar.color` and `aux.progressBar.backgroundColor` to color the progressbar's components.
         -   This tag also has: `aux.progressBar.anchor` to set the facing direction of the progress bar relative to the file.
@@ -52,6 +71,22 @@
     -   Added in a tween for the zoom that fires once a file has been focused on, it will tween to file position then zoom to the set zoom value.
     -   Added `whisper(file, event, argument)` formula function that sends shouts to a single file.
     -   Added a `aux.version` tag to the globals file which will be used to help determine when breaking changes in the AUX file format occur.
+    -   Added the ability to copy and paste file selections in AUX Builder.
+        -   Pressing `Ctrl+C` or `Cmd+C` will cause the currently selected files to be copied to the user's clipboard.
+        -   Pressing `Ctrl+V` or `Cmd+V` will cause the currently selected files to be pasted into the world where the user's cursor is.
+        -   Does not interfere with normal copy/paste operations like copying/pasting in input boxes.
+        -   If a worksurface is included in the user's selection the new worksurface will be duplicated from it.
+            -   This allows you to do things like copy the context color.
+            -   Any files that are being copied from the old worksurface to the new one will also maintain their positions.
+    -   Added the ability to copy worksurfaces AUX Builder using the new `"Copy"` option in the context menu.
+        -   Using the `Ctrl+V` keybinding after copying the worksurface will paste a duplicate worksurface with duplicates of all the files that were on the surface.
+    -   Added the ability to drag `.aux` files into AUX Builder.
+        -   This will upload them just like the upload option in the hamburger menu.
+    -   Added `player.hasFileInInventory(file)` formula function that determines if the given file or list of files are in the current player's inventory.
+        -   As a part of this change, it is now possible to use the other user-related functions in formulas.
+    -   Moved the `handlePointerEnter` and `handlePointerExit` function logic to only work in `PlayerInteractionManager`.
+    -   Added the `handlePointerDown` to `PlayerInteractionManager` so down events in general can be collected on the player.
+    -   Clicking on the `Raise` and `Lower` options on the workspace dropdown will now effect the entrire workspace if it has been expanded.
 
 ## V0.5.4
 
@@ -64,7 +99,7 @@
     -   Changed the globals file to look like a normal file when created and be labeled as "Global".
     -   Updated all the formula functions to use the new naming scheme.
     -   Added the ability to drag worksurfaces when they are minimized.
-        -                               Setting `aux.context.movable` to `false` will prevent this behavior.
+        -   Setting `aux.context.movable` to `false` will prevent this behavior.
     -   Selecting an item in the inventory no longer shows a selection indicator.
 -   Bug Fixes
     -   The inventory placeholders should now always appear square.

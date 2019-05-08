@@ -40,4 +40,9 @@ export default interface SandboxInterface {
      * @param file
      */
     addFile(file: File): FileProxy;
+
+    /**
+     * Gets the ID of the current user.
+     */
+    userId(): string;
 }

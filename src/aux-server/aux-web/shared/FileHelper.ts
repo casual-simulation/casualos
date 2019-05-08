@@ -107,6 +107,13 @@ export class FileHelper {
     }
 
     /**
+     * Gets the formula lib that the helper is using.
+     */
+    get lib() {
+        return this._lib;
+    }
+
+    /**
      * Updates the given file with the given data.
      * @param file The file.
      * @param newData The new data that the file should have.
@@ -118,17 +125,19 @@ export class FileHelper {
     }
 
     /**
-     * Creates a new file with the given ID and tags.
+     * Creates a new file with the given ID and tags. Returns the ID of the new file.
      * @param id (Optional) The ID that the file should have.
      * @param tags (Optional) The tags that the file should have.
      */
-    async createFile(id?: string, tags?: File['tags']): Promise<void> {
+    async createFile(id?: string, tags?: File['tags']): Promise<string> {
         if (FileHelper._debug) {
             console.log('[FileManager] Create File');
         }
 
         const file = createFile(id, tags);
         await this._tree.addFile(file);
+
+        return file.id;
     }
 
     /**
@@ -212,6 +221,16 @@ export class FileHelper {
     }
 
     /**
+     * Deletes the given file.
+     * @param file The file to delete.
+     */
+    async destroyFile(file: AuxObject) {
+        const calc = this.createContext();
+        const events = calculateDestroyFileEvents(calc, file);
+        await this.transaction(...events);
+    }
+
+    /**
      * Calculates the list of file events for the given event running on the given files.
      * @param eventName The name of the event to run.
      * @param files The files that should be searched for handlers for the event.
@@ -272,7 +291,11 @@ export class FileHelper {
      * Creates a new FileCalculationContext from the current state.
      */
     createContext(): FileCalculationContext {
-        return createCalculationContext(this.objects, this._lib);
+        return createCalculationContext(
+            this.objects,
+            this.userFile.id,
+            this._lib
+        );
     }
 
     /**

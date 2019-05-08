@@ -22,6 +22,7 @@ import {
     merge,
     AuxObject,
     createCalculationContext,
+    FileCalculationContext,
 } from '@casual-simulation/aux-common';
 import { AuxFile3D } from './AuxFile3D';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
@@ -85,7 +86,11 @@ export class FileRenderer {
         this._scene.add(this._group);
     }
 
-    async render(file: AuxObject, diffball: boolean = false): Promise<string> {
+    async render(
+        file: AuxObject,
+        calc: FileCalculationContext,
+        diffball: boolean = false
+    ): Promise<string> {
         file = merge(
             file,
             diffball
@@ -97,7 +102,6 @@ export class FileRenderer {
                 : {}
         );
 
-        const calc = createCalculationContext([file], formulaLib);
         this._file.file = file;
         this._file.fileUpdated(file, [], calc);
 

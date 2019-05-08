@@ -124,6 +124,11 @@ export default class App extends Vue {
     extraItems: SidebarItem[] = [];
 
     /**
+     * The QR Code to display.
+     */
+    qrCode: string = '';
+
+    /**
      * Gets whether we're in developer mode.
      */
     get dev() {
@@ -190,14 +195,18 @@ export default class App extends Vue {
         return location.href;
     }
 
+    getQRCode() {
+        return this.qrCode || this.url();
+    }
+
     currentUserMode() {
         return this.userMode ? 'Files' : 'Worksurfaces';
     }
 
     forcedOffline() {
-        // TODO: Fix
-        // return appManager.socketManager.forcedOffline;
-        return false;
+        return appManager.simulationManager.primary
+            ? appManager.simulationManager.primary.socketManager.forcedOffline
+            : false;
     }
 
     toggleOpen() {
@@ -277,6 +286,14 @@ export default class App extends Vue {
                                 message: e.message,
                                 visible: true,
                             };
+                        } else if (e.name === 'show_qr_code') {
+                            if (e.open) {
+                                this.qrCode = e.code;
+                                this.showQRCode = true;
+                            } else {
+                                this.qrCode = null;
+                                this.showQRCode = false;
+                            }
                         }
                     })
                 );
@@ -415,27 +432,26 @@ export default class App extends Vue {
     }
 
     toggleOnlineOffline() {
-        // TODO: Fix
-        // let options = new ConfirmDialogOptions();
-        // if (appManager.socketManager.forcedOffline) {
-        //     options.title = 'Enable online?';
-        //     options.body = 'Allow the app to reconnect to the server?';
-        //     options.okText = 'Go Online';
-        //     options.cancelText = 'Stay Offline';
-        // } else {
-        //     options.title = 'Force offline mode?';
-        //     options.body = 'Prevent the app from connecting to the server?';
-        //     options.okText = 'Go Offline';
-        //     options.cancelText = 'Stay Online';
-        // }
-        // EventBus.$once(options.okEvent, () => {
-        //     appManager.socketManager.toggleForceOffline();
-        //     EventBus.$off(options.cancelEvent);
-        // });
-        // EventBus.$once(options.cancelEvent, () => {
-        //     EventBus.$off(options.okEvent);
-        // });
-        // EventBus.$emit('showConfirmDialog', options);
+        let options = new ConfirmDialogOptions();
+        if (appManager.simulationManager.primary.socketManager.forcedOffline) {
+            options.title = 'Enable online?';
+            options.body = 'Allow the app to reconnect to the server?';
+            options.okText = 'Go Online';
+            options.cancelText = 'Stay Offline';
+        } else {
+            options.title = 'Force offline mode?';
+            options.body = 'Prevent the app from connecting to the server?';
+            options.okText = 'Go Offline';
+            options.cancelText = 'Stay Online';
+        }
+        EventBus.$once(options.okEvent, () => {
+            appManager.simulationManager.primary.socketManager.toggleForceOffline();
+            EventBus.$off(options.cancelEvent);
+        });
+        EventBus.$once(options.cancelEvent, () => {
+            EventBus.$off(options.okEvent);
+        });
+        EventBus.$emit('showConfirmDialog', options);
     }
 
     private _showConnectionLost() {

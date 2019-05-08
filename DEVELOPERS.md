@@ -132,7 +132,7 @@ Here's a list of the tools and packages that we're using to build AUX.
             -   [vue-router](https://github.com/vuejs/vue-router) for SPA routing.
             -   [vue-property-decorator](https://github.com/kaorun343/vue-property-decorator) for property decorators on Vue classes.
             -   [vue-class-component](https://github.com/vuejs/vue-class-component) for class decorators on Vue classes.
-            -   [vue-shortkey](https://www.npmjs.com/package/vue-shortkey) for keyboard shortcuts.
+            -   [vue-shortkey](https://github.com/iFgR/vue-shortkey) for keyboard shortcuts.
         -   [three](https://threejs.org/) for 3D WebGL rendering.
             -   [three-bmfont-text](https://github.com/Jam3/three-bmfont-text) for 3D text rendering.
         -   [express](http://expressjs.com/) for the HTTP server.

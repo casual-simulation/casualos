@@ -20,16 +20,24 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
     // This overrides the base class IGameView
     protected _simulation3D: PlayerSimulation3D;
 
+    protected faceClicked: { face: string };
+
     constructor(
         simulation: PlayerSimulation3D,
         interaction: PlayerInteractionManager,
-        file: AuxFile3D
+        file: AuxFile3D,
+        faceValue: string
     ) {
         super(simulation, interaction, file.file, file);
+        this.faceClicked = { face: faceValue };
     }
 
     protected _performClick(calc: FileCalculationContext): void {
-        this.simulation.helper.action('onClick', [this._file]);
+        this.simulation.helper.action(
+            'onClick',
+            [this._file],
+            this.faceClicked
+        );
     }
 
     protected _createDragOperation(

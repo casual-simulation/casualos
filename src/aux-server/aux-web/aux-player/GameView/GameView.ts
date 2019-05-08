@@ -391,7 +391,6 @@ export default class GameView extends Vue implements IGameView {
         });
 
         items = uniqBy(items, i => i.simulationToLoad);
-        // TODO:
         appManager.simulationManager.updateSimulations([
             appManager.user.channelId,
             ...items.map(i => i.simulationToLoad),
@@ -585,74 +584,7 @@ export default class GameView extends Vue implements IGameView {
             });
             this._fileSubs = [];
         }
-
-        // Clear our file buffer.
-        // this._fileBackBuffer = new Map<string, AuxObject>();
-
-        // Dispose of the current context group.
-        // TODO: Fix
-        // if (this._contextGroup) {
-        //     this._contextGroup.dispose();
-        //     this._scene.remove(this._contextGroup);
-        //     this._contextGroup = null;
-        // }
-
-        // Dispose of the current inventory context.
-        // if (this.inventoryContext) {
-        //     this.inventoryContext.dispose();
-        //     this.inventoryContext = null;
-        // }
-
-        // // Dispose of the current inventory context.
-        // if (this.menuContext) {
-        //     this.menuContext.dispose();
-        //     this.menuContext = null;
-        // }
-
-        // Subscribe to file events.
-
-        // TODO: Fix
-        // this._fileSubs.push(
-        //     this.fileManager.watcher
-        //         .fileChanged(this.fileManager.helper.globalsFile)
-        //         .pipe(
-        //             tap(file => {
-        //                 // Update the scene background color.
-        //                 let sceneBackgroundColor = file.tags['aux.scene.color'];
-        //                 this._sceneBackground = hasValue(sceneBackgroundColor)
-        //                     ? new Color(sceneBackgroundColor)
-        //                     : new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
-        //                 this._sceneBackgroundUpdate();
-        //             })
-        //         )
-        //         .subscribe()
-        // );
     }
-
-    // private _fileRemoved(id: string) {
-    //     const calc = this.fileManager.helper.createContext();
-    //     if (this._contextGroup) {
-    //         this._contextGroup.fileRemoved(id, calc);
-
-    //         if (this._contextGroup.file.id === id) {
-    //             // File that defined player context has been removed.
-    //             // Dispose of the context group.
-    //             this._contextGroup.dispose();
-    //             this._scene.remove(this._contextGroup);
-    //             this._contextGroup = null;
-    //         }
-    //     }
-
-    //     if (this.inventoryContext) {
-    //         this.inventoryContext.fileRemoved(id, calc);
-    //     }
-
-    //     if (this.menuContext) {
-    //         this.menuContext.fileRemoved(id, calc);
-    //     }
-
-    //     this.onFileRemoved.invoke(null);
-    // }
 
     private _sceneBackgroundUpdate() {
         if (this.background) {
@@ -930,7 +862,6 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _resizeRenderer() {
-        // TODO: Call each time the screen size changes
         const { width, height } = this._calculateCameraSize();
         this._renderer.setPixelRatio(window.devicePixelRatio || 1);
         this._renderer.setSize(width, height);

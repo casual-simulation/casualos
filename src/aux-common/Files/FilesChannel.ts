@@ -17,7 +17,6 @@ import formulaLib, {
     setFileState,
     setCalculationContext,
     getCalculationContext,
-    setUserId,
     getUserId,
 } from '../Formulas/formula-lib';
 import { SetValueHandler, isProxy } from './FileProxy';
@@ -75,7 +74,12 @@ export function calculateActionEvents(state: FilesState, action: Action) {
             changes[o.id].newValues.push(value);
         };
     };
-    const context = createCalculationContext(objects, formulaLib, factory);
+    const context = createCalculationContext(
+        objects,
+        action.userId,
+        formulaLib,
+        factory
+    );
 
     let changes: {
         [key: string]: {
@@ -99,7 +103,6 @@ export function calculateActionEvents(state: FilesState, action: Action) {
             f,
             action.eventName,
             factory,
-            action.userId,
             action.argument
         )
     );
@@ -204,7 +207,6 @@ function eventActions(
     file: Object,
     eventName: string,
     setValueHandlerFactory: (file: File) => SetValueHandler,
-    userId: string | null,
     argument: any
 ): FileEvent[] {
     const otherObjects = objects.filter(o => o !== file);
@@ -227,7 +229,6 @@ function eventActions(
     setActions(actions);
     setFileState(state);
     setCalculationContext(context);
-    setUserId(userId);
 
     let formulaObjects = sortedObjects.map(o =>
         convertToFormulaObject(context, o, setValueHandlerFactory(o))
@@ -254,7 +255,6 @@ function eventActions(
     setActions(previous);
     setFileState(null);
     setCalculationContext(prevContext);
-    setUserId(prevUserId);
 
     return actions;
 }
@@ -378,6 +378,7 @@ export type LocalEvents =
     | ShowToastEvent
     | TweenToEvent
     | OpenQRCodeScannerEvent
+    | ShowQRCodeEvent
     | LoadSimulationEvent
     | UnloadSimulationEvent
     | SuperShoutEvent;
@@ -411,12 +412,29 @@ export interface TweenToEvent extends LocalEvent {
  * An event that is used to show or hide the QR Code Scanner.
  */
 export interface OpenQRCodeScannerEvent extends LocalEvent {
-    name: 'show_qr_code';
+    name: 'show_qr_code_scanner';
 
     /**
      * Whether the QR Code scanner should be visible.
      */
     open: boolean;
+}
+
+/**
+ * An event that is used to show or hide a QR Code on screen.
+ */
+export interface ShowQRCodeEvent extends LocalEvent {
+    name: 'show_qr_code';
+
+    /**
+     * Whether the QR Code should be visible.
+     */
+    open: boolean;
+
+    /**
+     * The code to display.
+     */
+    code: string;
 }
 
 /**
@@ -602,8 +620,22 @@ export function tweenTo(fileId: string, zoomValue: number = -1): TweenToEvent {
 export function openQRCodeScanner(open: boolean): OpenQRCodeScannerEvent {
     return {
         type: 'local',
+        name: 'show_qr_code_scanner',
+        open: open,
+    };
+}
+
+/**
+ * Creates a new ShowQRCodeEvent.
+ * @param open Whether the QR Code should be visible.
+ * @param code The code that should be shown.
+ */
+export function showQRCode(open: boolean, code?: string): ShowQRCodeEvent {
+    return {
+        type: 'local',
         name: 'show_qr_code',
         open: open,
+        code: code,
     };
 }
 
@@ -644,3 +676,5 @@ export function superShout(eventName: string, arg?: any): SuperShoutEvent {
         argument: arg,
     };
 }
+
+// export

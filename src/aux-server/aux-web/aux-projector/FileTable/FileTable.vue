@@ -8,6 +8,7 @@
                         <source srcset="../public/icons/tag-add.png" type="image/png" />
                         <img alt="Add Tag" src="../public/icons/tag-add.png" />
                     </picture>
+                    <md-tooltip>Add Tag</md-tooltip>
                 </md-button>
                 <md-button class="md-icon-button" @click="toggleHidden()">
                     <md-icon v-if="showHidden">visibility</md-icon>
@@ -15,7 +16,14 @@
                     <md-tooltip v-if="showHidden">Hide Hidden Tags</md-tooltip>
                     <md-tooltip v-else>Show Hidden Tags</md-tooltip>
                 </md-button>
-                <!-- <md-button @click="flipTable()">Flip</md-button> -->
+                <md-button
+                    v-if="!isSearch"
+                    class="md-icon-button create-file"
+                    @click="createFile()"
+                >
+                    <cube-icon></cube-icon>
+                    <md-tooltip>Create Empty File</md-tooltip>
+                </md-button>
             </div>
             <div class="file-table-actions">
                 <div v-if="isMakingNewTag">
@@ -165,7 +173,11 @@
                         </div>
 
                         <!-- Empty tag at bottom -->
-                        <div class="file-cell"></div>
+                        <div :key="`${file.id}-empty`" class="file-cell delete-item">
+                            <md-button v-if="!isSearch" class="md-dense" @click="deleteFile(file)">
+                                Destroy File
+                            </md-button>
+                        </div>
                     </template>
                 </div>
             </div>

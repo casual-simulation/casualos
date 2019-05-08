@@ -50,6 +50,13 @@ import {
     isSimulation,
     parseSimulationId,
     getFileVersion,
+    isFileInContext,
+    getFileWhitelist,
+    getFileBlacklist,
+    getFileUsernameList,
+    isInUsernameList,
+    whitelistAllowsAccess,
+    blacklistAllowsAccess,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
@@ -3261,6 +3268,268 @@ describe('FileCalculations', () => {
             const calc = createCalculationContext([file]);
 
             expect(getFileVersion(calc, file)).toBeUndefined();
+        });
+    });
+
+    describe('hasFileInInventory()', () => {
+        it('should return true if the given file is in the users inventory context', () => {
+            const thisFile = createFile('thisFile', {
+                isInInventory: '=player.hasFileInInventory(@name("bob"))',
+            });
+            const thatFile = createFile('thatFile', {
+                name: 'bob',
+                test: true,
+            });
+            const user = createFile('userId', {
+                'aux._userInventoryContext': 'test',
+            });
+
+            const calc = createCalculationContext(
+                [thisFile, thatFile, user],
+                'userId'
+            );
+            const result = calculateFileValue(calc, thisFile, 'isInInventory');
+
+            expect(result).toBe(true);
+        });
+
+        it('should return true if all the given files are in the users inventory context', () => {
+            const thisFile = createFile('thisFile', {
+                isInInventory: '=player.hasFileInInventory(@name("bob"))',
+            });
+            const thatFile = createFile('thatFile', {
+                name: 'bob',
+                test: true,
+            });
+            const otherFile = createFile('otherFile', {
+                name: 'bob',
+                test: true,
+            });
+            const user = createFile('userId', {
+                'aux._userInventoryContext': 'test',
+            });
+
+            const calc = createCalculationContext(
+                [thisFile, thatFile, otherFile, user],
+                'userId'
+            );
+            const result = calculateFileValue(calc, thisFile, 'isInInventory');
+
+            expect(result).toBe(true);
+        });
+
+        it('should return false if one of the given files are not in the users inventory context', () => {
+            const thisFile = createFile('thisFile', {
+                isInInventory: '=player.hasFileInInventory(@name("bob"))',
+            });
+            const thatFile = createFile('thatFile', {
+                name: 'bob',
+                test: true,
+            });
+            const otherFile = createFile('otherFile', {
+                name: 'bob',
+                test: false,
+            });
+            const user = createFile('userId', {
+                'aux._userInventoryContext': 'test',
+            });
+
+            const calc = createCalculationContext(
+                [thisFile, thatFile, otherFile, user],
+                'userId'
+            );
+            const result = calculateFileValue(calc, thisFile, 'isInInventory');
+
+            expect(result).toBe(false);
+        });
+    });
+
+    describe('isFileInContext()', () => {
+        it('should handle boolean objects', () => {
+            const thisFile = createFile('thisFile', {
+                context: new Boolean(true),
+            });
+
+            const calc = createCalculationContext([thisFile]);
+            const result = isFileInContext(calc, thisFile, 'context');
+
+            expect(result).toBe(true);
+        });
+
+        it('should handle string objects', () => {
+            const thisFile = createFile('thisFile', {
+                context: new String('true'),
+            });
+
+            const calc = createCalculationContext([thisFile]);
+            const result = isFileInContext(calc, thisFile, 'context');
+
+            expect(result).toBe(true);
+        });
+
+        it('should handle a string object as the context', () => {
+            const thisFile = createFile('thisFile', {
+                context: true,
+            });
+
+            const calc = createCalculationContext([thisFile]);
+            const result = isFileInContext(calc, thisFile, <any>(
+                new String('context')
+            ));
+
+            expect(result).toBe(true);
+        });
+    });
+
+    describe('getFileUsernameList()', () => {
+        const cases = [['aux.whitelist'], ['aux.blacklist']];
+
+        describe.each(cases)('%s', tag => {
+            it(`should return the ${tag}`, () => {
+                const file = createFile('test', {
+                    [tag]: '[Test, Test2]',
+                });
+
+                const calc = createCalculationContext([file]);
+
+                expect(getFileUsernameList(calc, file, tag)).toEqual([
+                    'Test',
+                    'Test2',
+                ]);
+            });
+
+            it('should always return an array', () => {
+                const file = createFile('test', {
+                    [tag]: 'Test',
+                });
+
+                const calc = createCalculationContext([file]);
+
+                expect(getFileUsernameList(calc, file, tag)).toEqual(['Test']);
+            });
+
+            it('should handle falsy values', () => {
+                const file = createFile('test', {
+                    [tag]: '',
+                });
+
+                const calc = createCalculationContext([file]);
+
+                expect(getFileUsernameList(calc, file, tag)).toBeFalsy();
+            });
+
+            it('should get the aux._user tag from files', () => {
+                const file = createFile('test', {
+                    [tag]: '=@name("bob")',
+                });
+                const user = createFile('user', {
+                    name: 'bob',
+                    'aux._user': 'a',
+                });
+                const bad = createFile('user2', {
+                    name: 'bob',
+                });
+
+                const calc = createCalculationContext([file, user, bad]);
+
+                expect(getFileUsernameList(calc, file, tag)).toEqual([
+                    'a',
+                    'user2',
+                ]);
+            });
+        });
+    });
+
+    describe('isInUsernameList()', () => {
+        const cases = [['aux.whitelist'], ['aux.blacklist']];
+
+        describe.each(cases)('%s', tag => {
+            const extraCases = [
+                ['Test', '[Test, Test2]', true],
+                ['Test', '[Test2]', false],
+                ['Test', 'Test2', false],
+                ['Test2', 'Test2', true],
+                ['Test2', '', false],
+            ];
+
+            it.each(extraCases)(
+                'should determine if %s is in the list',
+                (username, list, expected) => {
+                    const file = createFile('test', {
+                        [tag]: list,
+                    });
+
+                    const calc = createCalculationContext([file]);
+
+                    expect(isInUsernameList(calc, file, tag, username)).toBe(
+                        expected
+                    );
+                }
+            );
+        });
+    });
+
+    describe('whitelistAllowsAccess()', () => {
+        it('should check the whitelist to determine if the username is allowed access', () => {
+            const file = createFile('test', {
+                'aux.whitelist': '[ABC]',
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(whitelistAllowsAccess(calc, file, 'ABC')).toBe(true);
+        });
+
+        it('should always allow access if no usernames are specified', () => {
+            const file = createFile('test', {
+                'aux.whitelist': '',
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(whitelistAllowsAccess(calc, file, 'ABC')).toBe(true);
+        });
+
+        it('should deny access if the username is not in the list', () => {
+            const file = createFile('test', {
+                'aux.whitelist': 'Test',
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(whitelistAllowsAccess(calc, file, 'ABC')).toBe(false);
+        });
+    });
+
+    describe('blacklistAllowsAccess()', () => {
+        it('should check the blacklist to determine if the username is allowed access', () => {
+            const file = createFile('test', {
+                'aux.blacklist': '[ABC]',
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(blacklistAllowsAccess(calc, file, 'DEF')).toBe(true);
+        });
+
+        it('should always allow access if no usernames are specified', () => {
+            const file = createFile('test', {
+                'aux.blacklist': '',
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(blacklistAllowsAccess(calc, file, 'ABC')).toBe(true);
+        });
+
+        it('should deny access if the username is in the list', () => {
+            const file = createFile('test', {
+                'aux.blacklist': 'ABC',
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(blacklistAllowsAccess(calc, file, 'ABC')).toBe(false);
         });
     });
 });
