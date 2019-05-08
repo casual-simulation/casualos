@@ -1129,6 +1129,120 @@ export function filterMatchesArguments(
 }
 
 /**
+ * Determines if the given username is in the username list in the given file and tag.
+ * @param calc The file calculation context.
+ * @param file The file.
+ * @param tag The tag.
+ * @param username The username to check.
+ */
+export function isInUsernameList(
+    calc: FileCalculationContext,
+    file: File,
+    tag: string,
+    username: string
+): boolean {
+    const list = getFileUsernameList(calc, file, tag);
+    return list.indexOf(username) >= 0;
+}
+
+/**
+ * Gets a list of usernames from the given file and tag.
+ * @param calc The file calculation context.
+ * @param file The file.
+ * @param tag The tag.
+ */
+export function getFileUsernameList(
+    calc: FileCalculationContext,
+    file: File,
+    tag: string
+): string[] {
+    let value = calculateFileValue(calc, file, tag);
+
+    if (value && !Array.isArray(value)) {
+        value = [value];
+    }
+
+    if (value) {
+        for (let i = 0; i < value.length; i++) {
+            let v = value[i];
+            if (isFile(v)) {
+                value[i] = v.tags['aux._user'] || v.id;
+            }
+        }
+    }
+
+    return value;
+}
+
+/**
+ * Determines if the whitelist on the given file allows the given username.
+ * Whitelists work by allowing only the usernames that are explicitly listed.
+ * If the whitelist is empty, then everything is allowed.
+ * @param calc The file calculation context.
+ * @param file The file.
+ * @param username The username to check.
+ */
+export function whitelistAllowsAccess(
+    calc: FileCalculationContext,
+    file: File,
+    username: string
+): boolean {
+    const list = getFileWhitelist(calc, file);
+    if (list) {
+        return isInUsernameList(calc, file, 'aux.whitelist', username);
+    }
+    return true;
+}
+
+/**
+ * Determines if the whitelist on the given file allows the given username.
+ * Blacklists work by denying only the usernames that are explicitly listed.
+ * If the blacklist is empty, then everything is allowed.
+ * @param calc The file calculation context.
+ * @param file The file.
+ * @param username The username to check.
+ */
+export function blacklistAllowsAccess(
+    calc: FileCalculationContext,
+    file: File,
+    username: string
+): boolean {
+    const list = getFileBlacklist(calc, file);
+    if (list) {
+        return !isInUsernameList(calc, file, 'aux.blacklist', username);
+    }
+    return true;
+}
+
+/**
+ * Gets the aux.whitelist tag from the given file.
+ * Always returns an array of strings.
+ * If any files returned by the formula, then the aux._user tag will be used from the file.
+ * @param calc The file calculation context.
+ * @param file The file.
+ */
+export function getFileWhitelist(
+    calc: FileCalculationContext,
+    file: File
+): string[] {
+    return getFileUsernameList(calc, file, 'aux.whitelist');
+}
+
+/**
+ * Gets the aux.blacklist tag from the given file.
+ * Always returns an array of strings.
+ * If any files returned by the formula, then the aux._user tag will be used from the file.
+ * @param calc The file calculation context.
+ * @param file The file.
+ */
+export function getFileBlacklist(
+    calc: FileCalculationContext,
+    file: File
+): string[] {
+    return getFileUsernameList(calc, file, 'aux.blacklist');
+}
+
+/**
  * Gets the AUX_FILE_VERSION number that the given file was created with.
  * If not specified, then undefined is returned.
  * @param calc The file calculation context.

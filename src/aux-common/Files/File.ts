@@ -13,9 +13,11 @@ export interface File {
 export interface FileTags {
     // Global file tags
     ['aux.scene.color']?: string;
+    ['aux.whitelist']?: unknown;
+    ['aux.blacklist']?: unknown;
+    ['aux.version']?: unknown;
 
     // Normal file tags
-    ['aux.version']?: unknown;
     ['aux.color']?: unknown;
     ['aux.movable']?: unknown;
     ['aux.mergeable']?: unknown;
