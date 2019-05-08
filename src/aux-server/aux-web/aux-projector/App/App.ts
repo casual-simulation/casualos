@@ -204,7 +204,9 @@ export default class App extends Vue {
     }
 
     forcedOffline() {
-        return appManager.simulationManager.primary.socketManager.forcedOffline;
+        return appManager.simulationManager.primary
+            ? appManager.simulationManager.primary.socketManager.forcedOffline
+            : false;
     }
 
     toggleOpen() {
