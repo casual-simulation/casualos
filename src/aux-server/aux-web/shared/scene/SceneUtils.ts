@@ -39,7 +39,7 @@ import {
     FileLabelAnchor,
 } from '@casual-simulation/aux-common';
 import { getOptionalValue } from '../SharedUtils';
-import { HtmlMixer } from 'threex-htmlmixer';
+import { HtmlMixer } from '../../shared/scene/HtmlMixer';
 
 /**
  * Create copy of material that most meshes in Aux Builder/Player use.
@@ -547,11 +547,10 @@ export function calculateAnchorPosition(
 
 export function createHtmlMixerContext(
     renderer: WebGLRenderer,
-    scene: Scene,
     camera: Camera,
     parentElement: HTMLElement
 ): HtmlMixer.Context {
-    let mixerContext = new HtmlMixer.Context(renderer, scene, camera);
+    let mixerContext = new HtmlMixer.Context(renderer, camera);
     mixerContext.rendererCss.setSize(window.innerWidth, window.innerHeight);
 
     // Handle window resize for mixer context.

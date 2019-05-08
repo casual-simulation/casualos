@@ -18,9 +18,7 @@ import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
 import { AuxFile3D } from '../AuxFile3D';
 import { EventBus } from '../../EventBus';
 import { IGameView } from '../../IGameView';
-import { HtmlMixer } from 'threex-htmlmixer';
-import { HtmlMixerHelpers } from 'threex-htmlmixerhelpers';
-import { DebugObjectManager } from '../DebugObjectManager';
+import { HtmlMixer, HtmlMixerHelpers } from '../../../shared/scene/HtmlMixer';
 
 export class HtmlMixerPlaneDecorator extends AuxFile3DDecorator {
     /**

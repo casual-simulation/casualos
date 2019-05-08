@@ -14,7 +14,7 @@ import { AuxFile } from '@casual-simulation/aux-common/aux-format';
 import { ContextGroup3D } from './scene/ContextGroup3D';
 import { AuxFile3DFinder } from './AuxFile3DFinder';
 import Vue from 'vue';
-import { HtmlMixer } from 'threex-htmlmixer';
+import { HtmlMixer } from '../shared/scene/HtmlMixer';
 import { Simulation3D } from './scene/Simulation3D';
 import { GridChecker } from './scene/grid/GridChecker';
 import { AuxFile3DDecoratorFactory } from './scene/decorators/AuxFile3DDecoratorFactory';

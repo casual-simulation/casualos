@@ -69,11 +69,7 @@ import { PlayerSimulation3D } from '../scene/PlayerSimulation3D';
 import { Simulation } from '../../shared/Simulation';
 import { MenuItem } from '../MenuContext';
 import SimulationItem from '../SimulationContext';
-import { HtmlMixer } from 'threex-htmlmixer';
-
-// Need this include so that the CSS3DRenderer.js gets loaded for its side effects (being included in the THREE namespace).
-// CSS3DREnderer is required by the THREEx.HtmlMixer
-require('three/examples/js/renderers/CSS3DRenderer');
+import { HtmlMixer } from '../../shared/scene/HtmlMixer';
 
 @Component({
     components: {
@@ -682,7 +678,6 @@ export default class GameView extends Vue implements IGameView {
         // Html Mixer Context.
         this._htmlMixerContext = createHtmlMixerContext(
             this._renderer,
-            this._scene,
             this._mainCamera,
             this.gameView
         );

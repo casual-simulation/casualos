@@ -108,16 +108,6 @@ module.exports = {
                 include: [/aux-common/],
                 enforce: 'pre',
             },
-            {
-                test: /threex\.htmlmixer\.js$/,
-                use: ['exports-loader?HtmlMixer=THREEx.HtmlMixer'],
-            },
-            {
-                test: /threex\.htmlmixerhelpers\.js$/,
-                use: [
-                    'exports-loader?HtmlMixerHelpers=THREEx.HtmlMixerHelpers',
-                ],
-            },
         ],
     },
     resolve: {
@@ -130,14 +120,6 @@ module.exports = {
             'vue-json-tree-view': path.resolve(
                 __dirname,
                 'shared/public/VueJsonTreeView/index.ts'
-            ),
-            'threex-htmlmixer': path.resolve(
-                __dirname,
-                'shared/public/threex-htmlmixer/threex.htmlmixer.js'
-            ),
-            'threex-htmlmixerhelpers': path.resolve(
-                __dirname,
-                'shared/public/threex-htmlmixer/threex.htmlmixerhelpers.js'
             ),
         },
     },
