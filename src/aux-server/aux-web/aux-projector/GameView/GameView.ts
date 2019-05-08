@@ -307,6 +307,10 @@ export default class GameView extends Vue implements IGameView {
             );
         }
 
+        if (this._htmlMixerContext) {
+            this._htmlMixerContext.setupCssCamera(this._mainCamera);
+        }
+
         this.onCameraTypeChanged.invoke(this._mainCamera);
     }
 
@@ -915,6 +919,10 @@ export default class GameView extends Vue implements IGameView {
         this._renderer.setSize(width, height);
         this._container.style.height = this.gameView.style.height = this._renderer.domElement.style.height;
         this._container.style.width = this.gameView.style.width = this._renderer.domElement.style.width;
+
+        if (this._htmlMixerContext) {
+            this._htmlMixerContext.rendererCss.setSize(width, height);
+        }
     }
 
     private _resizeVR() {

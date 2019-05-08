@@ -37,43 +37,45 @@ export namespace HtmlMixer {
         rendererWebgl: WebGLRenderer;
         cssScene: Scene;
 
-        private camera: Camera;
-        private cssCamera: Camera;
+        private mainCamera: PerspectiveCamera | OrthographicCamera;
+        private cssCamera: PerspectiveCamera | OrthographicCamera;
 
-        constructor(rendererWebgl: WebGLRenderer, camera: Camera) {
-            this.camera = camera;
-
+        constructor(
+            rendererWebgl: WebGLRenderer,
+            camera: PerspectiveCamera | OrthographicCamera
+        ) {
             // build cssFactor to workaround bug due to no display
             this.cssFactor = 1000;
 
+            this.setupCssCamera(camera);
+
             this.rendererCss = new (<any>THREE).CSS3DRenderer();
             this.rendererWebgl = rendererWebgl;
-
-            if (camera instanceof PerspectiveCamera) {
-                this.cssCamera = new PerspectiveCamera(
-                    camera.fov,
-                    camera.aspect,
-                    camera.near * this.cssFactor,
-                    camera.far * this.cssFactor
-                );
-            } else {
-                this.cssCamera = new PerspectiveCamera(
-                    60,
-                    1.0,
-                    this.cssFactor,
-                    this.cssFactor
-                );
-            }
 
             this.cssScene = new Scene();
         }
 
         update(): void {
-            this.cssCamera.quaternion.copy(this.camera.quaternion);
+            this.mainCamera.updateMatrixWorld(true);
+
+            // Update css camera to match this current main camera transform and projection.
+            let position = new Vector3();
+            let scale = new Vector3();
+            let quaternion = new Quaternion();
+            this.mainCamera.matrixWorld.decompose(position, quaternion, scale);
+
+            this.cssCamera.quaternion.copy(quaternion);
 
             this.cssCamera.position
-                .copy(this.camera.position)
+                .copy(position)
                 .multiplyScalar(this.cssFactor);
+
+            this.cssCamera.scale.copy(scale);
+
+            let projection = this.mainCamera.projectionMatrix.clone();
+            this.cssCamera.projectionMatrix = projection;
+            this.cssCamera.updateProjectionMatrix();
+            this.cssCamera.updateMatrixWorld(true);
 
             // Update mixer planes.
             this.cssScene.traverse(object3d => {
@@ -84,6 +86,32 @@ export namespace HtmlMixer {
 
             // Render css scene.
             this.rendererCss.render(this.cssScene, this.cssCamera);
+        }
+
+        /**
+         * Setup the css camera to mimic the provided main camera so that the css rendering lines up with the normal webgl rendering.
+         * @param mainCamera The main camera being used to render the normal 3d scene.
+         */
+        setupCssCamera(mainCamera: PerspectiveCamera | OrthographicCamera) {
+            this.mainCamera = mainCamera;
+
+            if (this.mainCamera instanceof PerspectiveCamera) {
+                this.cssCamera = new PerspectiveCamera(
+                    this.mainCamera.fov,
+                    this.mainCamera.aspect,
+                    this.mainCamera.near * this.cssFactor,
+                    this.mainCamera.far * this.cssFactor
+                );
+            } else {
+                this.cssCamera = new OrthographicCamera(
+                    this.mainCamera.left,
+                    this.mainCamera.right,
+                    this.mainCamera.top,
+                    this.mainCamera.bottom,
+                    this.mainCamera.near * this.cssFactor,
+                    this.mainCamera.far * this.cssFactor
+                );
+            }
         }
     }
 
@@ -188,6 +216,20 @@ export namespace HtmlMixer {
             this.setDomElementSize();
         }
 
+        dispose(): void {
+            // Remove css object from css scene.
+            if (this.cssObject) {
+                this.mixerContext.cssScene.remove(this.cssObject);
+            }
+
+            // Remove dom element.
+            if (this.domElement) {
+                if (this.domElement.parentNode) {
+                    this.domElement.parentNode.removeChild(this.domElement);
+                }
+            }
+        }
+
         private setDomElementSize(): void {
             // width of iframe in pixels
             let aspectRatio = this.planeH / this.planeW;
@@ -245,8 +287,6 @@ export namespace HtmlMixerHelpers {
         mixerPlane: HtmlMixer.Plane,
         url: string
     ): void {
-        // sanity check
-        console.assert(mixerPlane instanceof HtmlMixer.Plane);
         // get the domElement
         let domElement: any = mixerPlane.domElement;
         // handle IOS special case
@@ -255,9 +295,6 @@ export namespace HtmlMixerHelpers {
         if (onIos) {
             domElement = mixerPlane.domElement.firstChild;
         }
-
-        // sanity check
-        console.assert(domElement instanceof HTMLIFrameElement);
 
         // actually set the iframe.src
         domElement.src = url;

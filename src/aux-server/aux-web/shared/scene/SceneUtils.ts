@@ -30,6 +30,8 @@ import {
     PlaneBufferGeometry,
     Camera,
     WebGLRenderer,
+    PerspectiveCamera,
+    OrthographicCamera,
 } from 'three';
 import { flatMap } from 'lodash';
 import {
@@ -547,22 +549,13 @@ export function calculateAnchorPosition(
 
 export function createHtmlMixerContext(
     renderer: WebGLRenderer,
-    camera: Camera,
+    camera: PerspectiveCamera | OrthographicCamera,
     parentElement: HTMLElement
 ): HtmlMixer.Context {
     let mixerContext = new HtmlMixer.Context(renderer, camera);
-    mixerContext.rendererCss.setSize(window.innerWidth, window.innerHeight);
-
-    // Handle window resize for mixer context.
-    window.addEventListener(
-        'resize',
-        function() {
-            mixerContext.rendererCss.setSize(
-                window.innerWidth,
-                window.innerHeight
-            );
-        },
-        false
+    mixerContext.rendererCss.setSize(
+        renderer.domElement.width,
+        renderer.domElement.height
     );
 
     //
@@ -579,7 +572,6 @@ export function createHtmlMixerContext(
     css3dElement.style.top = '0px';
     css3dElement.style.width = '100%';
     css3dElement.style.height = '100%';
-    // document.body.appendChild(css3dElement);
     parentElement.appendChild(css3dElement);
 
     var webglCanvas = rendererWebgl.domElement;
@@ -587,7 +579,7 @@ export function createHtmlMixerContext(
     webglCanvas.style.top = '0px';
     webglCanvas.style.width = '100%';
     webglCanvas.style.height = '100%';
-    // webglCanvas.style.pointerEvents = 'none';
+    webglCanvas.style.pointerEvents = 'none';
     css3dElement.appendChild(webglCanvas);
 
     console.log('[SceneUtils] created html mixer context:', mixerContext);

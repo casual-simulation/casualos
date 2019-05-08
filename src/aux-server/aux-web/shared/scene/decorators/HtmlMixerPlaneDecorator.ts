@@ -68,23 +68,20 @@ export class HtmlMixerPlaneDecorator extends AuxFile3DDecorator {
 
             if (hasValue(this.url)) {
                 if (!this.mixerPlane) {
-                    console.log('[HtmlMixerPlaneDecorator] create plane');
                     // Create the mixer plane.
+                    console.log('[HtmlMixerPlaneDecorator] create plane');
                     let mixerContext = this._gameView.getHtmlMixerContext();
                     let domElement = HtmlMixerHelpers.createIframeDomElement(
-                        'https://casualsimulation.com/'
+                        'https://casualsimulation.com'
                     );
 
                     this.mixerPlane = new HtmlMixer.Plane(
                         mixerContext,
                         domElement
                     );
-                    this.mixerPlane.object3d.scale.multiplyScalar(4.0);
                     this.file3D.display.add(this.mixerPlane.object3d);
-
-                    // Debug axes helper.
-                    let worldPoint = new Vector3();
-                    this.mixerPlane.object3d.getWorldPosition(worldPoint);
+                    this.mixerPlane.object3d.translateY(2.0);
+                    // this.mixerPlane.object3d.scale.multiplyScalar(4.0);
                 }
 
                 HtmlMixerHelpers.setIframeSrc(this.mixerPlane, this.url);
@@ -93,8 +90,8 @@ export class HtmlMixerPlaneDecorator extends AuxFile3DDecorator {
                 // this.mixerPlane.setDomElement(domElement);
             } else {
                 if (!!this.mixerPlane) {
-                    console.log('[HtmlMixerPlaneDecorator] remove plane');
                     // Remove the mixer plane.
+                    console.log('[HtmlMixerPlaneDecorator] remove plane');
                     this.file3D.display.remove(this.mixerPlane.object3d);
                     this.mixerPlane = null;
                 }
@@ -102,27 +99,12 @@ export class HtmlMixerPlaneDecorator extends AuxFile3DDecorator {
         }
     }
 
-    axesHelper: AxesHelper;
+    frameUpdate(calc: FileCalculationContext) {}
 
-    frameUpdate(calc: FileCalculationContext) {
-        if (this.mixerPlane) {
-            if (!this.axesHelper) {
-                console.log('create axes helper');
-                this.axesHelper = new AxesHelper(2);
-                this._gameView.getScene().add(this.axesHelper);
-            }
-
-            let worldPoint = new Vector3();
-            this.mixerPlane.object3d.getWorldPosition(worldPoint);
-            this.axesHelper.position.copy(worldPoint);
-        } else {
-            if (this.axesHelper) {
-                console.log('remove axes helper');
-                this._gameView.getScene().remove(this.axesHelper);
-                this.axesHelper = null;
-            }
+    dispose() {
+        if (!!this.mixerPlane) {
+            this.file3D.display.remove(this.mixerPlane.object3d);
+            this.mixerPlane.dispose();
         }
     }
-
-    dispose() {}
 }
