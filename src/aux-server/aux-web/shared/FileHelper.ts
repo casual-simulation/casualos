@@ -219,6 +219,16 @@ export class FileHelper {
     }
 
     /**
+     * Deletes the given file.
+     * @param file The file to delete.
+     */
+    async destroyFile(file: AuxObject) {
+        const calc = this.createContext();
+        const events = calculateDestroyFileEvents(calc, file);
+        await this.transaction(...events);
+    }
+
+    /**
      * Calculates the list of file events for the given event running on the given files.
      * @param eventName The name of the event to run.
      * @param files The files that should be searched for handlers for the event.

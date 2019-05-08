@@ -165,6 +165,10 @@ export default class FileTable extends Vue {
         await this.fileManager.selection.selectFile(file);
     }
 
+    async deleteFile(file: AuxObject) {
+        await this.fileManager.helper.destroyFile(file);
+    }
+
     addTag(placement: NewTagPlacement = 'top') {
         if (this.isMakingNewTag) {
             // Check to make sure that the tag is unique.
