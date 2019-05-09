@@ -22,7 +22,6 @@ export interface FileTags {
     ['aux.movable']?: unknown;
     ['aux.mergeable']?: unknown;
     ['aux.stackable']?: unknown;
-    ['aux.pickupable']?: unknown;
     ['aux.stroke.color']?: unknown;
     ['aux.stroke.width']?: unknown;
     ['aux.line.to']?: unknown;
@@ -38,7 +37,6 @@ export interface FileTags {
     ['aux.shape']?: FileShape;
     ['aux.image']?: string;
     ['aux.channel']?: string;
-    ['aux.dragMode']?: FileDragMode;
     ['aux._creator']?: string;
     ['aux._diff']?: boolean;
     ['aux._diffTags']?: string[];
@@ -100,8 +98,14 @@ export type FileShape = 'cube' | 'sphere' | 'sprite';
 
 /**
  * Defines the possible drag modes that a file can have.
+ *
+ * "all" means that the file is able to be dragged freely inside and across contexts.
+ * "none" means that the file is not able to be dragged at all.
+ * "clone" means that the file should be cloned whenever dragged.
+ * "pickup" means that the file should be able to be dragged across contexts but not within a context.
+ * "drag" means that the file should be able to be dragged within a context but not across contexts.
  */
-export type FileDragMode = 'move' | 'clone';
+export type FileDragMode = 'all' | 'none' | 'clone' | 'pickup' | 'drag';
 
 /**
  * Defines the possible anchor positions for a label.

@@ -1449,11 +1449,14 @@ export function getFileDragMode(
     calc: FileCalculationContext,
     file: File
 ): FileDragMode {
-    const val = calculateFileValue(calc, file, 'aux.dragMode');
-    if (val === 'move' || val === 'clone') {
+    const val = calculateFileValue(calc, file, 'aux.movable');
+    if (typeof val === 'boolean') {
+        return val ? 'all' : 'none';
+    }
+    if (val === 'clone' || val === 'pickup' || val === 'drag') {
         return val;
     } else {
-        return 'move';
+        return 'all';
     }
 }
 
@@ -1715,9 +1718,11 @@ export function isPickupable(
     calc: FileCalculationContext,
     file: File
 ): boolean {
-    return (
-        !!file && calculateBooleanTagValue(calc, file, 'aux.pickupable', true)
-    );
+    if (!!file && isFileMovable(calc, file)) {
+        const mode = getFileDragMode(calc, file);
+        return mode === 'pickup' || mode === 'all';
+    }
+    return false;
 }
 
 /**

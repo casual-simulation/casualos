@@ -10,6 +10,7 @@ import {
     getFileIndex,
     duplicateFile,
     File,
+    getFileDragMode,
 } from '@casual-simulation/aux-common';
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
 import { PlayerFileDragOperation } from '../DragOperation/PlayerFileDragOperation';
@@ -46,6 +47,11 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
     protected _createDragOperation(
         calc: FileCalculationContext
     ): BaseFileDragOperation {
+        const mode = getFileDragMode(calc, this._file);
+        if (mode === 'clone') {
+            return this._createCloneDragOperation();
+        }
+
         const file3D: AuxFile3D = <AuxFile3D>this._file3D;
         const context = file3D.context;
         const position = getFilePosition(calc, file3D.file, context);

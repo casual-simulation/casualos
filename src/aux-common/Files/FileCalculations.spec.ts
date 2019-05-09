@@ -1372,56 +1372,24 @@ describe('FileCalculations', () => {
     });
 
     describe('isPickupable()', () => {
-        it('should return true if the file is pickupable', () => {
-            const file1 = createFile(undefined, { 'aux.pickupable': true });
+        const cases = [
+            [true, true],
+            [true, 'move'],
+            [true, 'any'],
+            [false, 'drag'],
+            [false, 'clone'],
+            [true, 'pickup'],
+            [false, false],
+        ];
+
+        it.each(cases)('should return %s if set to %s', (expected, value) => {
+            const file1 = createFile(undefined, { 'aux.movable': value });
             const update1 = isPickupable(
                 createCalculationContext([file1]),
                 file1
             );
 
-            expect(update1).toBe(true);
-        });
-
-        it('should return false if the file is not pickupable', () => {
-            const file1 = createFile(undefined, { 'aux.pickupable': false });
-            const update1 = isPickupable(
-                createCalculationContext([file1]),
-                file1
-            );
-
-            expect(update1).toBe(false);
-        });
-    });
-
-    describe('getFileDragMode()', () => {
-        it('should return the drag mode', () => {
-            const file1 = createFile('file1', { 'aux.dragMode': 'clone' });
-            const result = getFileDragMode(
-                createCalculationContext([file1]),
-                file1
-            );
-
-            expect(result).toBe('clone');
-        });
-
-        it('should default to move', () => {
-            const file1 = createFile('file1', {});
-            const result = getFileDragMode(
-                createCalculationContext([file1]),
-                file1
-            );
-
-            expect(result).toBe('move');
-        });
-
-        it('should return the default when given an invalid value', () => {
-            const file1 = createFile('file1', { 'aux.dragMode': <any>'test' });
-            const result = getFileDragMode(
-                createCalculationContext([file1]),
-                file1
-            );
-
-            expect(result).toBe('move');
+            expect(update1).toBe(expected);
         });
     });
 
@@ -2170,6 +2138,50 @@ describe('FileCalculations', () => {
             });
             const context = createCalculationContext([file]);
             expect(isFileMovable(context, file)).toBe(true);
+        });
+    });
+
+    describe('getFileDragMode()', () => {
+        const cases = [
+            ['all', 'all'],
+            ['all', 'adfsdfa'],
+            ['all', true],
+            ['all', 'none'],
+            ['all', 0],
+            ['clone', 'clone'],
+            ['pickup', 'pickup'],
+            ['drag', 'drag'],
+            ['none', false],
+        ];
+
+        it.each(cases)('should return %s for %s', (expected, val) => {
+            const file1 = createFile('file1', { 'aux.movable': val });
+            const result = getFileDragMode(
+                createCalculationContext([file1]),
+                file1
+            );
+
+            expect(result).toBe(expected);
+        });
+
+        it('should default to all', () => {
+            const file1 = createFile('file1', {});
+            const result = getFileDragMode(
+                createCalculationContext([file1]),
+                file1
+            );
+
+            expect(result).toBe('all');
+        });
+
+        it('should return the default when given an invalid value', () => {
+            const file1 = createFile('file1', { 'aux.movable': <any>'test' });
+            const result = getFileDragMode(
+                createCalculationContext([file1]),
+                file1
+            );
+
+            expect(result).toBe('all');
         });
     });
 

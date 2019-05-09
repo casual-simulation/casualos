@@ -9,7 +9,6 @@ import {
     convertToFormulaObject,
     DROP_ANY_IN_INVENTORY_ACTION_NAME,
     DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME,
-    isPickupable,
     isFileMovable,
     merge,
     createFile,

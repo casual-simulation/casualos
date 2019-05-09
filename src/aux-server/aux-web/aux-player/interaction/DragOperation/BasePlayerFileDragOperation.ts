@@ -11,6 +11,8 @@ import {
     DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME,
     isPickupable,
     isFileMovable,
+    getFileDragMode,
+    FileDragMode,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import GameView from '../../GameView/GameView';
@@ -19,6 +21,7 @@ import { Physics } from '../../../shared/scene/Physics';
 import { Input } from '../../../shared/scene/Input';
 import InventoryFile from '../../InventoryFile/InventoryFile';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
+import next from 'vhost';
 
 export class BasePlayerFileDragOperation extends BaseFileDragOperation {
     // This overrides the base class BaseInteractionManager
@@ -32,6 +35,8 @@ export class BasePlayerFileDragOperation extends BaseFileDragOperation {
     // Determines if the file was in the inventory at the beginning of the drag operation
     protected _originallyInInventory: boolean;
 
+    protected _originalContext: string;
+
     /**
      * Create a new drag rules.
      */
@@ -42,6 +47,7 @@ export class BasePlayerFileDragOperation extends BaseFileDragOperation {
         context: string
     ) {
         super(simulation, interaction, files, context);
+        this._originalContext = context;
         this._originallyInInventory = this._inInventory =
             context &&
             this.simulation.helper.userFile.tags[
@@ -53,71 +59,84 @@ export class BasePlayerFileDragOperation extends BaseFileDragOperation {
         const targetData = this.gameView.getInput().getTargetData();
         const vueElement = Input.getVueParent(targetData.inputOver);
 
-        if (vueElement) {
-            if (
-                vueElement instanceof InventoryFile &&
-                isPickupable(calc, this._files[0])
-            ) {
-                if (!vueElement.item) {
-                    // Over empty slot, update the files context and context position to match the slot's index.
-                    if (
-                        this._context !==
-                        this._simulation3D.inventoryContext.context
-                    ) {
-                        this._previousContext = this._context;
-                        this._context = this._simulation3D.inventoryContext.context;
-                        this._inInventory = true;
-                    }
+        const mode = getFileDragMode(calc, this._files[0]);
 
-                    const x = vueElement.slotIndex;
-                    const y = 0;
+        let nextContext = this._simulation3D.context;
+        if (vueElement && vueElement instanceof InventoryFile) {
+            nextContext = this._simulation3D.inventoryContext.context;
+        }
 
+        let changingContexts = this._originalContext !== nextContext;
+        let canDrag = false;
+
+        if (!changingContexts && this._canDragWithinContext(mode)) {
+            canDrag = true;
+        } else if (changingContexts && this._canDragOutOfContext(mode)) {
+            canDrag = true;
+        }
+
+        if (!canDrag) {
+            return;
+        }
+
+        if (nextContext !== this._context) {
+            this._previousContext = this._context;
+            this._context = nextContext;
+            this._inInventory =
+                nextContext === this._simulation3D.inventoryContext.context;
+        }
+
+        if (nextContext === this._simulation3D.inventoryContext.context) {
+            const x = (<InventoryFile>vueElement).slotIndex;
+            const y = 0;
+
+            this._updateFilesPositions(this._files, new Vector2(x, y), 0);
+        } else {
+            const mouseDir = Physics.screenPosToRay(
+                this.gameView.getInput().getMouseScreenPos(),
+                this.gameView.getMainCamera()
+            );
+            const { good, gridTile } = this._interaction.pointOnGrid(
+                calc,
+                mouseDir
+            );
+
+            if (good) {
+                const result = this._calculateFileDragStackPosition(
+                    calc,
+                    this._context,
+                    gridTile.tileCoordinate,
+                    ...this._files
+                );
+
+                this._combine = result.combine;
+                this._other = result.other;
+
+                if (result.stackable || result.index === 0) {
                     this._updateFilesPositions(
                         this._files,
-                        new Vector2(x, y),
-                        0
-                    );
-                }
-            } else if (
-                isFileMovable(calc, this._files[0]) ||
-                this._originallyInInventory
-            ) {
-                if (this._context !== this._simulation3D.context) {
-                    this._previousContext = this._context;
-                    this._context = this._simulation3D.context;
-                    this._inInventory = false;
-                }
-
-                const mouseDir = Physics.screenPosToRay(
-                    this.gameView.getInput().getMouseScreenPos(),
-                    this.gameView.getMainCamera()
-                );
-                const { good, gridTile } = this._interaction.pointOnGrid(
-                    calc,
-                    mouseDir
-                );
-
-                if (good) {
-                    const result = this._calculateFileDragStackPosition(
-                        calc,
-                        this._context,
                         gridTile.tileCoordinate,
-                        ...this._files
+                        result.index
                     );
-
-                    this._combine = result.combine;
-                    this._other = result.other;
-
-                    if (result.stackable || result.index === 0) {
-                        this._updateFilesPositions(
-                            this._files,
-                            gridTile.tileCoordinate,
-                            result.index
-                        );
-                    }
                 }
             }
         }
+    }
+
+    private _canDragWithinContext(mode: FileDragMode) {
+        return this._isDraggable(mode);
+    }
+
+    private _canDragOutOfContext(mode: FileDragMode) {
+        return this._isPickupable(mode);
+    }
+
+    private _isPickupable(mode: FileDragMode): boolean {
+        return mode === 'all' || mode === 'pickup';
+    }
+
+    private _isDraggable(mode: FileDragMode): boolean {
+        return mode === 'all' || mode === 'drag';
     }
 
     protected _onDragReleased(calc: FileCalculationContext): void {

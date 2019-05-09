@@ -4,6 +4,7 @@ import {
     Object,
     duplicateFile,
     FileCalculationContext,
+    getFileDragMode,
 } from '@casual-simulation/aux-common';
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
 import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperation/BaseFileClickOperation';
@@ -42,7 +43,14 @@ export class PlayerInventoryFileClickOperation extends BaseFileClickOperation {
         this._item.simulation.simulation.helper.action('onClick', [this._file]);
     }
 
-    protected _createDragOperation(): BaseFileDragOperation {
+    protected _createDragOperation(
+        calc: FileCalculationContext
+    ): BaseFileDragOperation {
+        const mode = getFileDragMode(calc, this._file);
+        if (mode === 'clone') {
+            return this._createCloneDragOperation();
+        }
+
         return new PlayerFileDragOperation(
             this._simulation3D,
             this._interaction,
