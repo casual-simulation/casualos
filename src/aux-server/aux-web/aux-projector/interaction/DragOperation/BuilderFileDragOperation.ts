@@ -96,7 +96,6 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
                 tags: {
                     [`aux.context.x`]: final.x,
                     [`aux.context.y`]: final.z,
-                    [`aux.context.z`]: final.y,
                 },
             });
         }
