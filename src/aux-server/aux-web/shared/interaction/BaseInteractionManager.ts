@@ -168,13 +168,15 @@ export abstract class BaseInteractionManager {
                 );
             }
 
-            const webglCanvas = this._gameView.getRenderer().domElement;
-            if (this._overHtmlMixerIFrame) {
-                // webglCanvas.style.pointerEvents = 'none';
-                // Force mouse and touch inputs to be released if we are over an html mixer iframe.
-                input.forceReleaseInputs();
-            } else {
-                // webglCanvas.style.pointerEvents = 'auto';
+            const noMouseInput =
+                !input.getMouseButtonHeld(MouseButtonId.Left) &&
+                !input.getMouseButtonHeld(MouseButtonId.Middle) &&
+                !input.getMouseButtonHeld(MouseButtonId.Right);
+
+            if (noMouseInput && input.getTouchCount() === 0) {
+                // Always allow the iframes to recieve input when no inputs are being held.
+                const webglCanvas = this._gameView.getRenderer().domElement;
+                webglCanvas.style.pointerEvents = 'none';
             }
 
             if (this._operations.length === 0) {
@@ -186,6 +188,12 @@ export abstract class BaseInteractionManager {
 
             // Detect left click.
             if (input.getMouseButtonDown(MouseButtonId.Left)) {
+                if (!this._overHtmlMixerIFrame) {
+                    // Dont allow iframes to capture input.
+                    const webglCanvas = this._gameView.getRenderer().domElement;
+                    webglCanvas.style.pointerEvents = 'auto';
+                }
+
                 if (input.isMouseButtonDownOn(this._gameView.gameView)) {
                     const screenPos = input.getMouseScreenPos();
                     const raycastResult = Physics.raycastAtScreenPos(
