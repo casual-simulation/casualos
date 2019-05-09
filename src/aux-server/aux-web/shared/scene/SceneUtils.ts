@@ -553,10 +553,11 @@ export function createHtmlMixerContext(
     parentElement: HTMLElement
 ): HtmlMixer.Context {
     let mixerContext = new HtmlMixer.Context(renderer, camera);
-    mixerContext.rendererCss.setSize(
-        renderer.domElement.width,
-        renderer.domElement.height
-    );
+
+    // Set the size of the css renderer to match the size of the webgl renderer.
+    let rendererSize = new Vector2();
+    renderer.getSize(rendererSize);
+    mixerContext.rendererCss.setSize(rendererSize.x, rendererSize.y);
 
     //
     // Configure mixer context and dom attachment.
