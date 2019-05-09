@@ -8,11 +8,14 @@ import {
     getFilePosition,
     objectsAtContextGridPosition,
     getFileIndex,
+    duplicateFile,
+    File,
 } from '@casual-simulation/aux-common';
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
 import { PlayerFileDragOperation } from '../DragOperation/PlayerFileDragOperation';
 import { dropWhile } from 'lodash';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
+import { PlayerNewFileDragOperation } from '../DragOperation/PlayerNewFileDragOperation';
 
 export class PlayerFileClickOperation extends BaseFileClickOperation {
     // This overrides the base class BaseInteractionManager
@@ -68,5 +71,15 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
         }
 
         return null;
+    }
+
+    protected _createCloneDragOperation(): BaseFileDragOperation {
+        let duplicatedFile = duplicateFile(<File>this._file);
+        return new PlayerNewFileDragOperation(
+            this._simulation3D,
+            this._interaction,
+            duplicatedFile,
+            (<AuxFile3D>this._file3D).context
+        );
     }
 }

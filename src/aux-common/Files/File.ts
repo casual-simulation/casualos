@@ -22,6 +22,7 @@ export interface FileTags {
     ['aux.movable']?: unknown;
     ['aux.mergeable']?: unknown;
     ['aux.stackable']?: unknown;
+    ['aux.pickupable']?: unknown;
     ['aux.stroke.color']?: unknown;
     ['aux.stroke.width']?: unknown;
     ['aux.line.to']?: unknown;
@@ -37,6 +38,7 @@ export interface FileTags {
     ['aux.shape']?: FileShape;
     ['aux.image']?: string;
     ['aux.channel']?: string;
+    ['aux.dragMode']?: FileDragMode;
     ['aux._creator']?: string;
     ['aux._diff']?: boolean;
     ['aux._diffTags']?: string[];
@@ -95,6 +97,11 @@ export type SelectionMode = 'single' | 'multi';
  * Defines the possible shapes that a file can appear as.
  */
 export type FileShape = 'cube' | 'sphere' | 'sprite';
+
+/**
+ * Defines the possible drag modes that a file can have.
+ */
+export type FileDragMode = 'move' | 'clone';
 
 /**
  * Defines the possible anchor positions for a label.

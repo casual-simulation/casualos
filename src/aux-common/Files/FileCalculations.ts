@@ -15,6 +15,7 @@ import {
     DEFAULT_WORKSPACE_SIZE,
     FileLabelAnchor,
     DEFAULT_LABEL_ANCHOR,
+    FileDragMode,
 } from './File';
 
 import uuid from 'uuid/v4';
@@ -1437,6 +1438,23 @@ export function getContextValue(
     name: string
 ): any {
     return calculateFileValue(calc, contextFile, `aux.context.${name}`);
+}
+
+/**
+ * Gets the drag mode for the file.
+ * @param calc The file calculation context.
+ * @param file The file to check.
+ */
+export function getFileDragMode(
+    calc: FileCalculationContext,
+    file: File
+): FileDragMode {
+    const val = calculateFileValue(calc, file, 'aux.dragMode');
+    if (val === 'move' || val === 'clone') {
+        return val;
+    } else {
+        return 'move';
+    }
 }
 
 /**

@@ -23,6 +23,7 @@ import GameView from '../../GameView/GameView';
 import { dropWhile } from 'lodash';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { BuilderSimulation3D } from '../../scene/BuilderSimulation3D';
+import { BuilderNewFileDragOperation } from '../DragOperation/BuilderNewFileDragOperation';
 
 /**
  * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
@@ -93,6 +94,16 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
             [this._file3D.file],
             <BuilderGroup3D>workspace,
             null
+        );
+    }
+
+    protected _createCloneDragOperation(): BaseFileDragOperation {
+        let duplicatedFile = duplicateFile(<File>this._file);
+        return new BuilderNewFileDragOperation(
+            this._simulation3D,
+            this._interaction,
+            duplicatedFile,
+            this._file
         );
     }
 

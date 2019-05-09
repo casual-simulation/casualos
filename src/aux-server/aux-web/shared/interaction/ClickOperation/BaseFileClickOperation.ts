@@ -9,6 +9,7 @@ import {
     AuxFile,
     isFileMovable,
     isPickupable,
+    getFileDragMode,
 } from '@casual-simulation/aux-common';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
@@ -97,7 +98,15 @@ export abstract class BaseFileClickOperation implements IOperation {
 
                     //returns true (can drag) if either aux.movable or aux.pickupable are true
                     if (this._canDragFile(calc, this._file)) {
-                        this._dragOperation = this._createDragOperation(calc);
+                        if (getFileDragMode(calc, this._file) === 'clone') {
+                            this._dragOperation = this._createCloneDragOperation(
+                                calc
+                            );
+                        } else {
+                            this._dragOperation = this._createDragOperation(
+                                calc
+                            );
+                        }
                     } else {
                         // Finish the click operation because we tried dragging but could not
                         // actually drag anything.
@@ -136,6 +145,14 @@ export abstract class BaseFileClickOperation implements IOperation {
 
     protected abstract _performClick(calc: FileCalculationContext): void;
     protected abstract _createDragOperation(
+        calc: FileCalculationContext
+    ): BaseFileDragOperation;
+
+    /**
+     * Creates a file drag operation that clones the files.
+     * @param calc The file calculation context.
+     */
+    protected abstract _createCloneDragOperation(
         calc: FileCalculationContext
     ): BaseFileDragOperation;
 }

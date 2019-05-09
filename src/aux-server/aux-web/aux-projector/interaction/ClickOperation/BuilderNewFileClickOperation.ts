@@ -43,6 +43,10 @@ export class BuilderNewFileClickOperation extends BaseFileClickOperation {
         );
     }
 
+    protected _createCloneDragOperation() {
+        return this._createDragOperation();
+    }
+
     protected _canDragFile(calc: FileCalculationContext, file: File) {
         return true;
     }

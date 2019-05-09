@@ -57,6 +57,7 @@ import {
     isInUsernameList,
     whitelistAllowsAccess,
     blacklistAllowsAccess,
+    getFileDragMode,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
@@ -1389,6 +1390,38 @@ describe('FileCalculations', () => {
             );
 
             expect(update1).toBe(false);
+        });
+    });
+
+    describe('getFileDragMode()', () => {
+        it('should return the drag mode', () => {
+            const file1 = createFile('file1', { 'aux.dragMode': 'clone' });
+            const result = getFileDragMode(
+                createCalculationContext([file1]),
+                file1
+            );
+
+            expect(result).toBe('clone');
+        });
+
+        it('should default to move', () => {
+            const file1 = createFile('file1', {});
+            const result = getFileDragMode(
+                createCalculationContext([file1]),
+                file1
+            );
+
+            expect(result).toBe('move');
+        });
+
+        it('should return the default when given an invalid value', () => {
+            const file1 = createFile('file1', { 'aux.dragMode': <any>'test' });
+            const result = getFileDragMode(
+                createCalculationContext([file1]),
+                file1
+            );
+
+            expect(result).toBe('move');
         });
     });
 

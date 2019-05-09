@@ -19,19 +19,9 @@ import { Physics } from '../../../shared/scene/Physics';
 import { Input } from '../../../shared/scene/Input';
 import InventoryFile from '../../InventoryFile/InventoryFile';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
+import { BasePlayerFileDragOperation } from './BasePlayerFileDragOperation';
 
-export class PlayerFileDragOperation extends BaseFileDragOperation {
-    // This overrides the base class BaseInteractionManager
-    protected _interaction: PlayerInteractionManager;
-    // This overrides the base class IGameView
-    protected _simulation3D: PlayerSimulation3D;
-
-    // Determines if the file is in the inventory currently
-    private _inInventory: boolean;
-
-    // Determines if the file was in the inventory at the beginning of the drag operation
-    private _originallyInInventory: boolean;
-
+export class PlayerFileDragOperation extends BasePlayerFileDragOperation {
     /**
      * Create a new drag rules.
      */
@@ -42,117 +32,112 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
         context: string
     ) {
         super(simulation, interaction, files, context);
-        this._originallyInInventory = this._inInventory =
-            context &&
-            this.simulation.helper.userFile.tags[
-                'aux._userInventoryContext'
-            ] === context;
     }
 
-    protected _onDrag(calc: FileCalculationContext): void {
-        const targetData = this.gameView.getInput().getTargetData();
-        const vueElement = Input.getVueParent(targetData.inputOver);
+    // protected _onDrag(calc: FileCalculationContext): void {
+    //     const targetData = this.gameView.getInput().getTargetData();
+    //     const vueElement = Input.getVueParent(targetData.inputOver);
 
-        if (vueElement) {
-            if (
-                vueElement instanceof InventoryFile &&
-                isPickupable(calc, this._file)
-            ) {
-                if (!vueElement.item) {
-                    // Over empty slot, update the files context and context position to match the slot's index.
-                    if (
-                        this._context !==
-                        this._simulation3D.inventoryContext.context
-                    ) {
-                        this._previousContext = this._context;
-                        this._context = this._simulation3D.inventoryContext.context;
-                        this._inInventory = true;
-                    }
+    //     if (vueElement) {
+    //         if (
+    //             vueElement instanceof InventoryFile &&
+    //             isPickupable(calc, this._file)
+    //         ) {
+    //             if (!vueElement.item) {
+    //                 // Over empty slot, update the files context and context position to match the slot's index.
+    //                 if (
+    //                     this._context !==
+    //                     this._simulation3D.inventoryContext.context
+    //                 ) {
+    //                     this._previousContext = this._context;
+    //                     this._context = this._simulation3D.inventoryContext.context;
+    //                     this._inInventory = true;
+    //                 }
 
-                    const x = vueElement.slotIndex;
-                    const y = 0;
+    //                 const x = vueElement.slotIndex;
+    //                 const y = 0;
 
-                    this._updateFilesPositions(
-                        this._files,
-                        new Vector2(x, y),
-                        0
-                    );
-                }
-            } else if (
-                isFileMovable(calc, this._file) ||
-                this._originallyInInventory
-            ) {
-                if (this._context !== this._simulation3D.context) {
-                    this._previousContext = this._context;
-                    this._context = this._simulation3D.context;
-                    this._inInventory = false;
-                }
+    //                 this._updateFilesPositions(
+    //                     this._files,
+    //                     new Vector2(x, y),
+    //                     0
+    //                 );
+    //             }
+    //         } else if (
+    //             isFileMovable(calc, this._file) ||
+    //             this._originallyInInventory
+    //         ) {
+    //             if (this._context !== this._simulation3D.context) {
+    //                 this._previousContext = this._context;
+    //                 this._context = this._simulation3D.context;
+    //                 this._inInventory = false;
+    //             }
 
-                const mouseDir = Physics.screenPosToRay(
-                    this.gameView.getInput().getMouseScreenPos(),
-                    this.gameView.getMainCamera()
-                );
-                const { good, gridTile } = this._interaction.pointOnGrid(
-                    calc,
-                    mouseDir
-                );
+    //             const mouseDir = Physics.screenPosToRay(
+    //                 this.gameView.getInput().getMouseScreenPos(),
+    //                 this.gameView.getMainCamera()
+    //             );
+    //             const { good, gridTile } = this._interaction.pointOnGrid(
+    //                 calc,
+    //                 mouseDir
+    //             );
 
-                if (good) {
-                    const result = this._calculateFileDragStackPosition(
-                        calc,
-                        this._context,
-                        gridTile.tileCoordinate,
-                        ...this._files
-                    );
+    //             if (good) {
+    //                 const result = this._calculateFileDragStackPosition(
+    //                     calc,
+    //                     this._context,
+    //                     gridTile.tileCoordinate,
+    //                     ...this._files
+    //                 );
 
-                    this._combine = result.combine;
-                    this._other = result.other;
+    //                 this._combine = result.combine;
+    //                 this._other = result.other;
 
-                    if (result.stackable || result.index === 0) {
-                        this._updateFilesPositions(
-                            this._files,
-                            gridTile.tileCoordinate,
-                            result.index
-                        );
-                    }
-                }
-            }
-        }
-    }
+    //                 if (result.stackable || result.index === 0) {
+    //                     this._updateFilesPositions(
+    //                         this._files,
+    //                         gridTile.tileCoordinate,
+    //                         result.index
+    //                     );
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
-    protected _onDragReleased(calc: FileCalculationContext): void {
-        super._onDragReleased(calc);
+    // protected _onDragReleased(calc: FileCalculationContext): void {
+    //     super._onDragReleased(calc);
 
-        if (this._originallyInInventory && !this._inInventory) {
-            let events: FileEvent[] = [];
-            let result = this.simulation.helper.actionEvents(
-                DRAG_OUT_OF_INVENTORY_ACTION_NAME,
-                this._files
-            );
-            events.push(...result.events);
-            result = this.simulation.helper.actionEvents(
-                DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME,
-                null,
-                this._files
-            );
-            events.push(...result.events);
+    //     if (this._originallyInInventory && !this._inInventory) {
+    //         let events: FileEvent[] = [];
+    //         let result = this.simulation.helper.actionEvents(
+    //             DRAG_OUT_OF_INVENTORY_ACTION_NAME,
+    //             this._files
+    //         );
+    //         events.push(...result.events);
+    //         result = this.simulation.helper.actionEvents(
+    //             DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME,
+    //             null,
+    //             this._files
+    //         );
+    //         events.push(...result.events);
 
-            this.simulation.helper.transaction(...events);
-        } else if (!this._originallyInInventory && this._inInventory) {
-            let events: FileEvent[] = [];
-            let result = this.simulation.helper.actionEvents(
-                DROP_IN_INVENTORY_ACTION_NAME,
-                this._files
-            );
-            events.push(...result.events);
-            result = this.simulation.helper.actionEvents(
-                DROP_ANY_IN_INVENTORY_ACTION_NAME,
-                null,
-                this._files
-            );
-            events.push(...result.events);
+    //         this.simulation.helper.transaction(...events);
+    //     } else if (!this._originallyInInventory && this._inInventory) {
+    //         let events: FileEvent[] = [];
+    //         let result = this.simulation.helper.actionEvents(
+    //             DROP_IN_INVENTORY_ACTION_NAME,
+    //             this._files
+    //         );
+    //         events.push(...result.events);
+    //         result = this.simulation.helper.actionEvents(
+    //             DROP_ANY_IN_INVENTORY_ACTION_NAME,
+    //             null,
+    //             this._files
+    //         );
+    //         events.push(...result.events);
 
-            this.simulation.helper.transaction(...events);
-        }
-    }
+    //         this.simulation.helper.transaction(...events);
+    //     }
+    // }
 }

@@ -12,6 +12,7 @@ import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import { PlayerFileDragOperation } from '../DragOperation/PlayerFileDragOperation';
 import { InventoryItem } from 'aux-web/aux-player/InventoryContext';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
+import { PlayerNewFileDragOperation } from '../DragOperation/PlayerNewFileDragOperation';
 
 /**
  * New File Click Operation handles clicking of files that are in the file queue.
@@ -46,6 +47,16 @@ export class PlayerInventoryFileClickOperation extends BaseFileClickOperation {
             this._simulation3D,
             this._interaction,
             [this._file],
+            this._context
+        );
+    }
+
+    protected _createCloneDragOperation(): BaseFileDragOperation {
+        let duplicatedFile = duplicateFile(<File>this._file);
+        return new PlayerNewFileDragOperation(
+            this._simulation3D,
+            this._interaction,
+            duplicatedFile,
             this._context
         );
     }
