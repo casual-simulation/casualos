@@ -32,6 +32,9 @@ export abstract class BaseFileClickOperation implements IOperation {
     protected _startScreenPos: Vector2;
     protected _dragOperation: BaseFileDragOperation;
 
+    protected heldTime: number;
+    protected isMobile: boolean;
+
     protected get gameView() {
         return this._simulation3D.gameView;
     }
@@ -53,6 +56,9 @@ export abstract class BaseFileClickOperation implements IOperation {
 
         // Store the screen position of the input when the click occured.
         this._startScreenPos = this.gameView.getInput().getMouseScreenPos();
+
+        this.isMobile = this.gameView.getInput().getTouchCount() > 0;
+        this.heldTime = 0;
     }
 
     public update(calc: FileCalculationContext): void {
@@ -78,6 +84,7 @@ export abstract class BaseFileClickOperation implements IOperation {
         }
 
         if (this.gameView.getInput().getMouseButtonHeld(0)) {
+            this.heldTime++;
             if (!this._dragOperation) {
                 const curScreenPos = this.gameView
                     .getInput()
@@ -100,7 +107,10 @@ export abstract class BaseFileClickOperation implements IOperation {
             }
         } else {
             if (!this._dragOperation && !this._triedDragging) {
-                this._performClick(calc);
+                // If not mobile, allow click no matter how long you've held on file, if mobile stop click if held too long
+                if (!this.isMobile || this.heldTime < 30) {
+                    this._performClick(calc);
+                }
             }
 
             // Button has been released. This click operation is finished.
