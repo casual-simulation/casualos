@@ -8,6 +8,21 @@
 
 -   Improvements
     -   Allow users to determine which side of the file they have clicked on by using `that.face` variable on an `onClick` tag.
+    -   Removed `aux.pickupable` and replaced it with special values for `aux.movable`.
+        -   Setting `aux.movable` to `true` means it can be moved anywhere.
+        -   Setting `aux.movable` to `false` means it cannot be moved.
+        -   Setting `aux.movable` to `clone` means that dragging it will create a clone that can be placed anywhere.
+        -   Setting `aux.movable` to `pickup` means it can be moved into any other context but not moved within the context it is currently in (only applies to AUX Player).
+        -   Setting `aux.movable` to `drag` means it can be moved anywhere within the context it is currently in but not moved to another context. (only applies to AUX Player).
+    -   Added the ability to destroy files from the file sheet.
+    -   Added the ability to display a QR Code from formula actions.
+        -   Use `showQRCode(data)` and `hideQRCode()` from formula actions.
+    -   Added the ability to create a new empty file from the file sheet.
+        -   Doing so will automatically select the new file and kick the user into multi-select mode.
+    -   Added the ability to whitelist or blacklist users by using `aux.whitelist` and `aux.blacklist`.
+        -   For example, setting `aux.whitelist` to `Kal` will ensure that only users named `Kal` can access the session.
+        -   Similarly, setting `aux.blacklist` to `Kal` will ensure that users named `Kal` cannot access the session.
+        -   In the case of a name being listed in both, the whitelist wins.
 
 ## V0.6.1
 
@@ -99,7 +114,7 @@
     -   Changed the globals file to look like a normal file when created and be labeled as "Global".
     -   Updated all the formula functions to use the new naming scheme.
     -   Added the ability to drag worksurfaces when they are minimized.
-        -                                           Setting `aux.context.movable` to `false` will prevent this behavior.
+        -                                             Setting `aux.context.movable` to `false` will prevent this behavior.
     -   Selecting an item in the inventory no longer shows a selection indicator.
 -   Bug Fixes
     -   The inventory placeholders should now always appear square.
