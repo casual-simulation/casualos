@@ -58,6 +58,7 @@ import {
     whitelistAllowsAccess,
     blacklistAllowsAccess,
     getFileDragMode,
+    whitelistOrBlacklistAllowsAccess,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
@@ -3575,6 +3576,81 @@ describe('FileCalculations', () => {
             const calc = createCalculationContext([file]);
 
             expect(blacklistAllowsAccess(calc, file, 'ABC')).toBe(false);
+        });
+    });
+
+    describe('whitelistOrBlacklistAllowsAccess()', () => {
+        it('should allow access if the name is in the whitelist and the blacklist', () => {
+            const file = createFile('test', {
+                'aux.blacklist': '[ABC]',
+                'aux.whitelist': '[ABC]',
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(whitelistOrBlacklistAllowsAccess(calc, file, 'ABC')).toBe(
+                true
+            );
+        });
+
+        it('should allow access if neither list exists', () => {
+            const file = createFile('test', {});
+
+            const calc = createCalculationContext([file]);
+
+            expect(whitelistOrBlacklistAllowsAccess(calc, file, 'DEF')).toBe(
+                true
+            );
+        });
+
+        it('should deny access if the name is not in the whitelist and not in the blacklist', () => {
+            const file = createFile('test', {
+                'aux.blacklist': '[ABC]',
+                'aux.whitelist': '[ABC]',
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(whitelistOrBlacklistAllowsAccess(calc, file, 'DEF')).toBe(
+                false
+            );
+        });
+
+        it('should deny access if the name is in the blacklist and not in the whitelist', () => {
+            const file = createFile('test', {
+                'aux.blacklist': '[ABC]',
+                'aux.whitelist': '[DEF]',
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(whitelistOrBlacklistAllowsAccess(calc, file, 'ABC')).toBe(
+                false
+            );
+        });
+
+        it('should deny access if the name is in the blacklist the whitelist doesnt exist', () => {
+            const file = createFile('test', {
+                'aux.blacklist': '[ABC]',
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(whitelistOrBlacklistAllowsAccess(calc, file, 'ABC')).toBe(
+                false
+            );
+        });
+
+        it('should allow access if the name is not in the blacklist the whitelist doesnt exist', () => {
+            const file = createFile('test', {
+                'aux.blacklist': '[ABC]',
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(whitelistOrBlacklistAllowsAccess(calc, file, 'DEF')).toBe(
+                true
+            );
         });
     });
 });

@@ -1176,6 +1176,29 @@ export function getFileUsernameList(
 }
 
 /**
+ * Determines if the whitelist and blacklist on the given file allows the given username.
+ * If the username exists in both, then the whitelist wins.
+ */
+export function whitelistOrBlacklistAllowsAccess(
+    calc: FileCalculationContext,
+    file: File,
+    username: string
+): boolean {
+    const whitelist = getFileWhitelist(calc, file);
+
+    if (whitelist) {
+        return isInUsernameList(calc, file, 'aux.whitelist', username);
+    } else {
+        const blacklist = getFileBlacklist(calc, file);
+        if (blacklist) {
+            return !isInUsernameList(calc, file, 'aux.blacklist', username);
+        }
+    }
+
+    return true;
+}
+
+/**
  * Determines if the whitelist on the given file allows the given username.
  * Whitelists work by allowing only the usernames that are explicitly listed.
  * If the whitelist is empty, then everything is allowed.
