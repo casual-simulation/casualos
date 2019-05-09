@@ -23,6 +23,8 @@
         -   For example, setting `aux.whitelist` to `Kal` will ensure that only users named `Kal` can access the session.
         -   Similarly, setting `aux.blacklist` to `Kal` will ensure that users named `Kal` cannot access the session.
         -   In the case of a name being listed in both, the whitelist wins.
+-   Bug Fixes
+    -   Fixed an issue where long tapping on a file would register as a click.
 
 ## V0.6.1
 
@@ -114,7 +116,7 @@
     -   Changed the globals file to look like a normal file when created and be labeled as "Global".
     -   Updated all the formula functions to use the new naming scheme.
     -   Added the ability to drag worksurfaces when they are minimized.
-        -                                             Setting `aux.context.movable` to `false` will prevent this behavior.
+        -                                               Setting `aux.context.movable` to `false` will prevent this behavior.
     -   Selecting an item in the inventory no longer shows a selection indicator.
 -   Bug Fixes
     -   The inventory placeholders should now always appear square.
