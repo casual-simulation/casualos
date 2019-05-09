@@ -60,7 +60,11 @@ export class PlayerInventoryFileClickOperation extends BaseFileClickOperation {
     }
 
     protected _createCloneDragOperation(): BaseFileDragOperation {
-        let duplicatedFile = duplicateFile(<File>this._file);
+        let duplicatedFile = duplicateFile(<File>this._file, {
+            tags: {
+                'aux._creator': this._file.id,
+            },
+        });
         return new PlayerNewFileDragOperation(
             this._simulation3D,
             this._interaction,
