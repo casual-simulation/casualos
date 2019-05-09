@@ -13,6 +13,7 @@ import {
     Mesh,
     Vector3,
     Quaternion,
+    Vector2,
 } from 'three';
 import * as THREE from 'three';
 
@@ -79,7 +80,7 @@ export namespace HtmlMixer {
 
             // Update mixer planes.
             this.cssScene.traverse(object3d => {
-                let mixerPlane = object3d.userData.mixerPlane;
+                let mixerPlane = object3d.userData.mixerPlane as Plane;
                 if (!mixerPlane) return;
                 mixerPlane.update();
             });
@@ -112,6 +113,22 @@ export namespace HtmlMixer {
                     this.mainCamera.far * this.cssFactor
                 );
             }
+        }
+
+        isOverAnyIFrameElement(clientPos: Vector2) {
+            let children = this.cssScene.children;
+
+            for (let i = 0; i < children.length; i++) {
+                let mixerPlane = children[i].userData.mixerPlane as Plane;
+                if (!mixerPlane) return;
+
+                if (mixerPlane.domElement instanceof HTMLIFrameElement) {
+                    if (mixerPlane.isOverDomElement(clientPos)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
     }
 
@@ -214,6 +231,11 @@ export namespace HtmlMixer {
             this.cssObject.element = this.domElement;
             // reset the size of the domElement
             this.setDomElementSize();
+        }
+
+        isOverDomElement(clientPos: Vector2): boolean {
+            let elements = document.elementsFromPoint(clientPos.x, clientPos.y);
+            return elements.some(element => element === this.domElement);
         }
 
         dispose(): void {
