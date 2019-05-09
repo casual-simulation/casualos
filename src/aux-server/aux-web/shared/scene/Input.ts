@@ -579,6 +579,32 @@ export class Input {
         return this._targetData;
     }
 
+    /**
+     * Force all current input states to release (set the up frame to the current frame).
+     */
+    public forceReleaseInputs(): void {
+        const currentFrame = this._gameView.getTime().frameCount;
+
+        // Release currently held mouse buttons.
+        if (this._mouseData.leftButtonState.isHeldOnFrame(currentFrame)) {
+            this._mouseData.leftButtonState.setUpFrame(currentFrame);
+        }
+        if (this._mouseData.middleButtonState.isHeldOnFrame(currentFrame)) {
+            this._mouseData.middleButtonState.setUpFrame(currentFrame);
+        }
+        if (this._mouseData.rightButtonState.isHeldOnFrame(currentFrame)) {
+            this._mouseData.rightButtonState.setUpFrame(currentFrame);
+        }
+
+        // Release currenty held touches.
+        for (let i = 0; i < this._touchData.length; i++) {
+            let touchData = this._touchData[i];
+            if (touchData.state.isHeldOnFrame(currentFrame)) {
+                touchData.state.setUpFrame(currentFrame);
+            }
+        }
+    }
+
     public update() {
         this._cullTouchData();
         this._wheelData.removeOldFrames(this._gameView.getTime().frameCount);
@@ -1167,7 +1193,7 @@ interface WheelFrame {
 /**
  * Data about the HTML element that was targeted by a click.
  */
-interface TargetData {
+export interface TargetData {
     inputDown: HTMLElement;
     inputUp: HTMLElement;
     inputOver: HTMLElement;

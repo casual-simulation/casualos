@@ -20,7 +20,7 @@ import {
 import { Physics } from '../scene/Physics';
 import { flatMap, union, debounce } from 'lodash';
 import { CameraControls } from './CameraControls';
-import { MouseButtonId, InputType, Input } from '../scene/Input';
+import { MouseButtonId, InputType, Input, TargetData } from '../scene/Input';
 import { appManager } from '../AppManager';
 import { IOperation } from './IOperation';
 import { AuxFile3D } from '../scene/AuxFile3D';
@@ -45,6 +45,7 @@ export abstract class BaseInteractionManager {
     protected _hoveredSimulation: Simulation;
 
     private _operations: IOperation[];
+    private _overHtmlMixerIFrame: boolean;
 
     constructor(gameView: IGameView) {
         this._draggableObjectsDirty = true;
@@ -82,6 +83,10 @@ export abstract class BaseInteractionManager {
      */
     get cameraControls() {
         return this._cameraControls;
+    }
+
+    get overHtmlMixerIFrame() {
+        return this._overHtmlMixerIFrame;
     }
 
     /**
@@ -151,13 +156,33 @@ export abstract class BaseInteractionManager {
         } else {
             // Normal browser interaction.
 
-            // Enable camera controls when there are no more operations.
+            const input = this._gameView.getInput();
+
+            // Detect if we are over any html mixer iframe element.
+            this._overHtmlMixerIFrame = false;
+            const clientPos = input.getMouseClientPos();
+            if (clientPos) {
+                const htmlMixerContext = this._gameView.getHtmlMixerContext();
+                this._overHtmlMixerIFrame = htmlMixerContext.isOverAnyIFrameElement(
+                    clientPos
+                );
+            }
+
+            const webglCanvas = this._gameView.getRenderer().domElement;
+            if (this._overHtmlMixerIFrame) {
+                // webglCanvas.style.pointerEvents = 'none';
+                // Force mouse and touch inputs to be released if we are over an html mixer iframe.
+                input.forceReleaseInputs();
+            } else {
+                // webglCanvas.style.pointerEvents = 'auto';
+            }
+
             if (this._operations.length === 0) {
+                // Enable camera controls when there are no more operations.
                 this._cameraControls.enabled = true;
             }
 
             this._cameraControls.update();
-            const input = this._gameView.getInput();
 
             // Detect left click.
             if (input.getMouseButtonDown(MouseButtonId.Left)) {
