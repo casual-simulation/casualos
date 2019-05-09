@@ -77,11 +77,6 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
                     this._nextRot.y
                 );
             }
-
-            // We must call this function so that child objects get their positions updated too.
-            // Three render function does this automatically but there are functions in here that depend
-            // on accurate positioning of child objects.
-            this.file3D.updateMatrixWorld(true);
         }
     }
 

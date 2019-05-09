@@ -10,6 +10,11 @@ import {
     DROP_ANY_IN_INVENTORY_ACTION_NAME,
     DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME,
     isFileMovable,
+    merge,
+    createFile,
+    fileAdded,
+    PartialFile,
+    CREATE_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import GameView from '../../GameView/GameView';
@@ -20,16 +25,39 @@ import InventoryFile from '../../InventoryFile/InventoryFile';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 import { BasePlayerFileDragOperation } from './BasePlayerFileDragOperation';
 
-export class PlayerFileDragOperation extends BasePlayerFileDragOperation {
+export class PlayerNewFileDragOperation extends BasePlayerFileDragOperation {
+    private _fileAdded: boolean;
+
     /**
      * Create a new drag rules.
      */
     constructor(
         simulation: PlayerSimulation3D,
         interaction: PlayerInteractionManager,
-        files: File[],
+        file: File,
         context: string
     ) {
-        super(simulation, interaction, files, context);
+        super(simulation, interaction, [file], context);
+    }
+
+    protected _updateFile(file: File, data: PartialFile): FileEvent {
+        if (!this._fileAdded) {
+            // Add the duplicated file.
+            this._file = merge(this._file, data || {});
+            this._file = createFile(undefined, this._file.tags);
+            this._files = [this._file];
+            this._fileAdded = true;
+
+            return fileAdded(this._file);
+        } else {
+            return super._updateFile(this._file, data);
+        }
+    }
+
+    protected _onDragReleased(calc: FileCalculationContext): void {
+        if (this._fileAdded) {
+            this.simulation.helper.action(CREATE_ACTION_NAME, this._files);
+        }
+        super._onDragReleased(calc);
     }
 }

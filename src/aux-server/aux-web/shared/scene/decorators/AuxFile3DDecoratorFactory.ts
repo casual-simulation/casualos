@@ -14,6 +14,7 @@ import { appManager } from '../../../shared/AppManager';
 import { UserControlsDecorator } from './UserControlsDecorator';
 import { OutlineDecorator } from './OutlineDecorator';
 import { TextureDecorator } from './TextureDecorator';
+import { UpdateMaxtrixDecorator } from './UpdateMatrixDecorator';
 
 export class AuxFile3DDecoratorFactory {
     public gameView: IGameView;
@@ -66,6 +67,7 @@ export class AuxFile3DDecoratorFactory {
             );
 
             decorators.push(
+                new UpdateMaxtrixDecorator(file3d),
                 labelDecorator,
                 wordBubbleDecorator,
                 new LineToDecorator(file3d, this.gameView)

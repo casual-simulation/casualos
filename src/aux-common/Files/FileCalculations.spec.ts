@@ -51,6 +51,14 @@ import {
     parseSimulationId,
     getFileVersion,
     isFileInContext,
+    getFileWhitelist,
+    getFileBlacklist,
+    getFileUsernameList,
+    isInUsernameList,
+    whitelistAllowsAccess,
+    blacklistAllowsAccess,
+    getFileDragMode,
+    whitelistOrBlacklistAllowsAccess,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
@@ -1365,24 +1373,24 @@ describe('FileCalculations', () => {
     });
 
     describe('isPickupable()', () => {
-        it('should return true if the file is pickupable', () => {
-            const file1 = createFile(undefined, { 'aux.pickupable': true });
+        const cases = [
+            [true, true],
+            [true, 'move'],
+            [true, 'any'],
+            [false, 'drag'],
+            [false, 'clone'],
+            [true, 'pickup'],
+            [false, false],
+        ];
+
+        it.each(cases)('should return %s if set to %s', (expected, value) => {
+            const file1 = createFile(undefined, { 'aux.movable': value });
             const update1 = isPickupable(
                 createCalculationContext([file1]),
                 file1
             );
 
-            expect(update1).toBe(true);
-        });
-
-        it('should return false if the file is not pickupable', () => {
-            const file1 = createFile(undefined, { 'aux.pickupable': false });
-            const update1 = isPickupable(
-                createCalculationContext([file1]),
-                file1
-            );
-
-            expect(update1).toBe(false);
+            expect(update1).toBe(expected);
         });
     });
 
@@ -2131,6 +2139,50 @@ describe('FileCalculations', () => {
             });
             const context = createCalculationContext([file]);
             expect(isFileMovable(context, file)).toBe(true);
+        });
+    });
+
+    describe('getFileDragMode()', () => {
+        const cases = [
+            ['all', 'all'],
+            ['all', 'adfsdfa'],
+            ['all', true],
+            ['all', 'none'],
+            ['all', 0],
+            ['clone', 'clone'],
+            ['pickup', 'pickup'],
+            ['drag', 'drag'],
+            ['none', false],
+        ];
+
+        it.each(cases)('should return %s for %s', (expected, val) => {
+            const file1 = createFile('file1', { 'aux.movable': val });
+            const result = getFileDragMode(
+                createCalculationContext([file1]),
+                file1
+            );
+
+            expect(result).toBe(expected);
+        });
+
+        it('should default to all', () => {
+            const file1 = createFile('file1', {});
+            const result = getFileDragMode(
+                createCalculationContext([file1]),
+                file1
+            );
+
+            expect(result).toBe('all');
+        });
+
+        it('should return the default when given an invalid value', () => {
+            const file1 = createFile('file1', { 'aux.movable': <any>'test' });
+            const result = getFileDragMode(
+                createCalculationContext([file1]),
+                file1
+            );
+
+            expect(result).toBe('all');
         });
     });
 
@@ -3372,6 +3424,233 @@ describe('FileCalculations', () => {
             ));
 
             expect(result).toBe(true);
+        });
+    });
+
+    describe('getFileUsernameList()', () => {
+        const cases = [['aux.whitelist'], ['aux.blacklist']];
+
+        describe.each(cases)('%s', tag => {
+            it(`should return the ${tag}`, () => {
+                const file = createFile('test', {
+                    [tag]: '[Test, Test2]',
+                });
+
+                const calc = createCalculationContext([file]);
+
+                expect(getFileUsernameList(calc, file, tag)).toEqual([
+                    'Test',
+                    'Test2',
+                ]);
+            });
+
+            it('should always return an array', () => {
+                const file = createFile('test', {
+                    [tag]: 'Test',
+                });
+
+                const calc = createCalculationContext([file]);
+
+                expect(getFileUsernameList(calc, file, tag)).toEqual(['Test']);
+            });
+
+            it('should handle falsy values', () => {
+                const file = createFile('test', {
+                    [tag]: '',
+                });
+
+                const calc = createCalculationContext([file]);
+
+                expect(getFileUsernameList(calc, file, tag)).toBeFalsy();
+            });
+
+            it('should get the aux._user tag from files', () => {
+                const file = createFile('test', {
+                    [tag]: '=@name("bob")',
+                });
+                const user = createFile('user', {
+                    name: 'bob',
+                    'aux._user': 'a',
+                });
+                const bad = createFile('user2', {
+                    name: 'bob',
+                });
+
+                const calc = createCalculationContext([file, user, bad]);
+
+                expect(getFileUsernameList(calc, file, tag)).toEqual([
+                    'a',
+                    'user2',
+                ]);
+            });
+        });
+    });
+
+    describe('isInUsernameList()', () => {
+        const cases = [['aux.whitelist'], ['aux.blacklist']];
+
+        describe.each(cases)('%s', tag => {
+            const extraCases = [
+                ['Test', '[Test, Test2]', true],
+                ['Test', '[Test2]', false],
+                ['Test', 'Test2', false],
+                ['Test2', 'Test2', true],
+                ['Test2', '', false],
+            ];
+
+            it.each(extraCases)(
+                'should determine if %s is in the list',
+                (username, list, expected) => {
+                    const file = createFile('test', {
+                        [tag]: list,
+                    });
+
+                    const calc = createCalculationContext([file]);
+
+                    expect(isInUsernameList(calc, file, tag, username)).toBe(
+                        expected
+                    );
+                }
+            );
+        });
+    });
+
+    describe('whitelistAllowsAccess()', () => {
+        it('should check the whitelist to determine if the username is allowed access', () => {
+            const file = createFile('test', {
+                'aux.whitelist': '[ABC]',
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(whitelistAllowsAccess(calc, file, 'ABC')).toBe(true);
+        });
+
+        it('should always allow access if no usernames are specified', () => {
+            const file = createFile('test', {
+                'aux.whitelist': '',
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(whitelistAllowsAccess(calc, file, 'ABC')).toBe(true);
+        });
+
+        it('should deny access if the username is not in the list', () => {
+            const file = createFile('test', {
+                'aux.whitelist': 'Test',
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(whitelistAllowsAccess(calc, file, 'ABC')).toBe(false);
+        });
+    });
+
+    describe('blacklistAllowsAccess()', () => {
+        it('should check the blacklist to determine if the username is allowed access', () => {
+            const file = createFile('test', {
+                'aux.blacklist': '[ABC]',
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(blacklistAllowsAccess(calc, file, 'DEF')).toBe(true);
+        });
+
+        it('should always allow access if no usernames are specified', () => {
+            const file = createFile('test', {
+                'aux.blacklist': '',
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(blacklistAllowsAccess(calc, file, 'ABC')).toBe(true);
+        });
+
+        it('should deny access if the username is in the list', () => {
+            const file = createFile('test', {
+                'aux.blacklist': 'ABC',
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(blacklistAllowsAccess(calc, file, 'ABC')).toBe(false);
+        });
+    });
+
+    describe('whitelistOrBlacklistAllowsAccess()', () => {
+        it('should allow access if the name is in the whitelist and the blacklist', () => {
+            const file = createFile('test', {
+                'aux.blacklist': '[ABC]',
+                'aux.whitelist': '[ABC]',
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(whitelistOrBlacklistAllowsAccess(calc, file, 'ABC')).toBe(
+                true
+            );
+        });
+
+        it('should allow access if neither list exists', () => {
+            const file = createFile('test', {});
+
+            const calc = createCalculationContext([file]);
+
+            expect(whitelistOrBlacklistAllowsAccess(calc, file, 'DEF')).toBe(
+                true
+            );
+        });
+
+        it('should deny access if the name is not in the whitelist and not in the blacklist', () => {
+            const file = createFile('test', {
+                'aux.blacklist': '[ABC]',
+                'aux.whitelist': '[ABC]',
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(whitelistOrBlacklistAllowsAccess(calc, file, 'DEF')).toBe(
+                false
+            );
+        });
+
+        it('should deny access if the name is in the blacklist and not in the whitelist', () => {
+            const file = createFile('test', {
+                'aux.blacklist': '[ABC]',
+                'aux.whitelist': '[DEF]',
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(whitelistOrBlacklistAllowsAccess(calc, file, 'ABC')).toBe(
+                false
+            );
+        });
+
+        it('should deny access if the name is in the blacklist the whitelist doesnt exist', () => {
+            const file = createFile('test', {
+                'aux.blacklist': '[ABC]',
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(whitelistOrBlacklistAllowsAccess(calc, file, 'ABC')).toBe(
+                false
+            );
+        });
+
+        it('should allow access if the name is not in the blacklist the whitelist doesnt exist', () => {
+            const file = createFile('test', {
+                'aux.blacklist': '[ABC]',
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(whitelistOrBlacklistAllowsAccess(calc, file, 'DEF')).toBe(
+                true
+            );
         });
     });
 });

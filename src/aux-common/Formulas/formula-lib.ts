@@ -15,6 +15,7 @@ import {
     loadSimulation as calcLoadSimulation,
     unloadSimulation as calcUnloadSimulation,
     superShout as calcSuperShout,
+    showQRCode as calcShowQRCode,
 } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
 import { every, find } from 'lodash';
@@ -676,6 +677,21 @@ export function closeQRCodeScanner() {
 }
 
 /**
+ * Shows the given QR Code.
+ * @param code The code to show.
+ */
+export function showQRCode(code: string) {
+    actions.push(calcShowQRCode(true, code));
+}
+
+/**
+ * Hides the QR Code.
+ */
+export function hideQRCode() {
+    actions.push(calcShowQRCode(false));
+}
+
+/**
  * Loads the channel with the given ID.
  * @param id The ID of the channel to load.
  */
@@ -718,6 +734,8 @@ export const player = {
     loadChannel,
     unloadChannel,
     hasFileInInventory,
+    showQRCode,
+    hideQRCode,
 };
 
 /**

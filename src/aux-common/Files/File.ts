@@ -13,9 +13,11 @@ export interface File {
 export interface FileTags {
     // Global file tags
     ['aux.scene.color']?: string;
+    ['aux.whitelist']?: unknown;
+    ['aux.blacklist']?: unknown;
+    ['aux.version']?: unknown;
 
     // Normal file tags
-    ['aux.version']?: unknown;
     ['aux.color']?: unknown;
     ['aux.movable']?: unknown;
     ['aux.mergeable']?: unknown;
@@ -93,6 +95,17 @@ export type SelectionMode = 'single' | 'multi';
  * Defines the possible shapes that a file can appear as.
  */
 export type FileShape = 'cube' | 'sphere' | 'sprite';
+
+/**
+ * Defines the possible drag modes that a file can have.
+ *
+ * "all" means that the file is able to be dragged freely inside and across contexts.
+ * "none" means that the file is not able to be dragged at all.
+ * "clone" means that the file should be cloned whenever dragged.
+ * "pickup" means that the file should be able to be dragged across contexts but not within a context.
+ * "drag" means that the file should be able to be dragged within a context but not across contexts.
+ */
+export type FileDragMode = 'all' | 'none' | 'clone' | 'pickup' | 'drag';
 
 /**
  * Defines the possible anchor positions for a label.

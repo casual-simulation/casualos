@@ -30,6 +30,7 @@ import { TreeView } from 'vue-json-tree-view';
 import { tickStep } from 'd3';
 import { downloadAuxState } from '../download';
 import { storedTree, site } from '@casual-simulation/causal-trees';
+import Cube from '../public/icons/Cube.svg';
 
 @Component({
     components: {
@@ -38,6 +39,7 @@ import { storedTree, site } from '@casual-simulation/causal-trees';
         'tag-editor': TagEditor,
         'file-table-toggle': FileTableToggle,
         'tree-view': TreeView,
+        'cube-icon': Cube,
     },
 })
 export default class FileTable extends Vue {
@@ -163,6 +165,16 @@ export default class FileTable extends Vue {
 
     async toggleFile(file: AuxObject) {
         await this.fileManager.selection.selectFile(file);
+    }
+
+    async deleteFile(file: AuxObject) {
+        await this.fileManager.helper.destroyFile(file);
+    }
+
+    async createFile() {
+        const id = await this.fileManager.helper.createFile();
+        const file = this.fileManager.helper.filesState[id];
+        this.fileManager.selection.selectFile(file, true);
     }
 
     addTag(placement: NewTagPlacement = 'top') {

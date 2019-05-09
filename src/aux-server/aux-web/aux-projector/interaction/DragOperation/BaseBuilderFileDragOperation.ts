@@ -12,6 +12,7 @@ import {
     action,
     calculateActionEvents,
     DESTROY_ACTION_NAME,
+    getFileDragMode,
 } from '@casual-simulation/aux-common';
 
 import { setParent } from '../../../shared/scene/SceneUtils';

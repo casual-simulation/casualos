@@ -199,4 +199,44 @@ describe('FileHelper', () => {
             expect(tree.value['file2']).toBeUndefined();
         });
     });
+
+    describe('destroyFile()', () => {
+        it('should destroy the given file', async () => {
+            await tree.addFile(
+                createFile('file1', {
+                    abc: true,
+                    'aux.channel': 'test',
+                })
+            );
+
+            expect(tree.value['file1']).toBeTruthy();
+
+            await helper.destroyFile(tree.value['file1']);
+
+            expect(tree.value['file1']).toBeUndefined();
+        });
+
+        it('should destroy all children of the file', async () => {
+            await tree.addFile(
+                createFile('file1', {
+                    abc: true,
+                })
+            );
+
+            await tree.addFile(
+                createFile('file2', {
+                    abc: true,
+                    'aux._creator': 'file1',
+                })
+            );
+
+            expect(tree.value['file1']).toBeTruthy();
+            expect(tree.value['file2']).toBeTruthy();
+
+            await helper.destroyFile(tree.value['file1']);
+
+            expect(tree.value['file1']).toBeUndefined();
+            expect(tree.value['file2']).toBeUndefined();
+        });
+    });
 });

@@ -12,6 +12,7 @@ import {
     getFileConfigContexts,
     isMinimized,
     isContextMovable,
+    getFileDragMode,
 } from '@casual-simulation/aux-common';
 import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperation/BaseFileClickOperation';
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
@@ -23,6 +24,7 @@ import GameView from '../../GameView/GameView';
 import { dropWhile } from 'lodash';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { BuilderSimulation3D } from '../../scene/BuilderSimulation3D';
+import { BuilderNewFileDragOperation } from '../DragOperation/BuilderNewFileDragOperation';
 
 /**
  * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
@@ -52,6 +54,11 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
     protected _createDragOperation(
         calc: FileCalculationContext
     ): BaseFileDragOperation {
+        const mode = getFileDragMode(calc, this._file);
+        if (mode === 'clone') {
+            return this._createCloneDragOperation();
+        }
+
         const workspace = this._getWorkspace();
         if (!workspace) {
             const file3D: AuxFile3D = <AuxFile3D>this._file3D;
@@ -93,6 +100,16 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
             [this._file3D.file],
             <BuilderGroup3D>workspace,
             null
+        );
+    }
+
+    protected _createCloneDragOperation(): BaseFileDragOperation {
+        let duplicatedFile = duplicateFile(<File>this._file);
+        return new BuilderNewFileDragOperation(
+            this._simulation3D,
+            this._interaction,
+            duplicatedFile,
+            this._file
         );
     }
 

@@ -80,7 +80,7 @@
                     <md-icon>bug_report</md-icon>
                     <span class="md-list-item-text">Debug</span>
                 </router-link>
-                <md-list-item @click.right="toggleOnlineOffline()">
+                <md-list-item v-if="getUser() != null" @click.right="toggleOnlineOffline()">
                     <md-icon id="forced-offline-error" v-if="forcedOffline()">error</md-icon>
                     <md-icon id="synced-checkmark" v-else-if="synced">cloud_done</md-icon>
                     <md-icon id="not-synced-warning" v-else>cloud_off</md-icon>
@@ -121,11 +121,18 @@
 
         <md-dialog :md-active.sync="showQRCode" class="qr-code-dialog">
             <div class="qr-code-container">
-                <span>{{ url() }}</span>
-                <qr-code :value="url()" :options="{ width: 310 }" />
+                <span>{{ getQRCode() }}</span>
+                <qr-code :value="getQRCode()" :options="{ width: 310 }" />
             </div>
             <md-dialog-actions>
-                <md-button class="md-primary" @click="showQRCode = false">Close</md-button>
+                <md-button
+                    class="md-primary"
+                    @click="
+                        showQRCode = false;
+                        qrCode = null;
+                    "
+                    >Close</md-button
+                >
             </md-dialog-actions>
         </md-dialog>
 
