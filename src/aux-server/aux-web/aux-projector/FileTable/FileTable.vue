@@ -174,7 +174,7 @@
 
                         <!-- Empty tag at bottom -->
                         <div :key="`${file.id}-empty`" class="file-cell delete-item">
-                            <md-button v-if="!isSearch" class="md-dense" @click="deleteFile(file)">
+                            <md-button class="md-dense" @click="deleteFile(file)">
                                 Destroy File
                             </md-button>
                         </div>
