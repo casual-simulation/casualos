@@ -123,11 +123,11 @@ export class BasePlayerFileDragOperation extends BaseFileDragOperation {
         }
     }
 
-    private _canDragWithinContext(mode: FileDragMode) {
+    protected _canDragWithinContext(mode: FileDragMode): boolean {
         return this._isDraggable(mode);
     }
 
-    private _canDragOutOfContext(mode: FileDragMode) {
+    protected _canDragOutOfContext(mode: FileDragMode): boolean {
         return this._isPickupable(mode);
     }
 
