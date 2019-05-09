@@ -1,5 +1,16 @@
 # AUX Changelog
 
+## V0.6.4
+
+### Date: 05/09/2019
+
+### Changes:
+
+-   Changes
+    -   Made cloned files use the creation hierarchy so that deleting the original file causes all child files to be deleted.
+-   Bug Fixes
+    -   Fixed the "Destroy file" button in the file sheet to allow destroying files while searching.
+
 ## V0.6.3
 
 ### Date: 05/09/2019
@@ -128,7 +139,7 @@
     -   Changed the globals file to look like a normal file when created and be labeled as "Global".
     -   Updated all the formula functions to use the new naming scheme.
     -   Added the ability to drag worksurfaces when they are minimized.
-        -                                                     Setting `aux.context.movable` to `false` will prevent this behavior.
+        -                                                       Setting `aux.context.movable` to `false` will prevent this behavior.
     -   Selecting an item in the inventory no longer shows a selection indicator.
 -   Bug Fixes
     -   The inventory placeholders should now always appear square.
