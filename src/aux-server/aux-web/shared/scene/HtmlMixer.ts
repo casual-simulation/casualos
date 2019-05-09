@@ -283,6 +283,7 @@ export namespace HtmlMixerHelpers {
         let domElement = document.createElement('iframe');
         domElement.src = url;
         domElement.style.border = 'none';
+        domElement.style.maxWidth = 'unset';
 
         // IOS workaround for iframe
         let onIos =
