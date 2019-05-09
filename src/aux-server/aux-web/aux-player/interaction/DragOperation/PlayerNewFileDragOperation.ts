@@ -15,6 +15,7 @@ import {
     fileAdded,
     PartialFile,
     CREATE_ACTION_NAME,
+    FileDragMode,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import GameView from '../../GameView/GameView';
@@ -59,5 +60,13 @@ export class PlayerNewFileDragOperation extends BasePlayerFileDragOperation {
             this.simulation.helper.action(CREATE_ACTION_NAME, this._files);
         }
         super._onDragReleased(calc);
+    }
+
+    protected _canDragWithinContext(mode: FileDragMode): boolean {
+        return true;
+    }
+
+    protected _canDragOutOfContext(mode: FileDragMode): boolean {
+        return true;
     }
 }
