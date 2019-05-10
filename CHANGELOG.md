@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.7.0
+
+### Date: TBD
+
+### Changes:
+
+-   Bug Fixes
+    -   Allow for the expansion and shrinking of hexes after they have been raised or lowered.
+
 ## V0.6.4
 
 ### Date: 05/09/2019
@@ -139,7 +148,7 @@
     -   Changed the globals file to look like a normal file when created and be labeled as "Global".
     -   Updated all the formula functions to use the new naming scheme.
     -   Added the ability to drag worksurfaces when they are minimized.
-        -                                                         Setting `aux.context.movable` to `false` will prevent this behavior.
+        -                                                           Setting `aux.context.movable` to `false` will prevent this behavior.
     -   Selecting an item in the inventory no longer shows a selection indicator.
 -   Bug Fixes
     -   The inventory placeholders should now always appear square.
