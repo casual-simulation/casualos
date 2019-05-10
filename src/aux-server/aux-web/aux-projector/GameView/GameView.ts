@@ -791,8 +791,8 @@ export default class GameView extends Vue implements IGameView {
             ? new Color(sceneBackgroundColor)
             : new Color('#263238');
         this._sceneBackgroundUpdate();
+        this.setCameraType('orthographic');
 
-        this.setCameraType('perspective');
         this._setupRenderer();
 
         // Ambient light.

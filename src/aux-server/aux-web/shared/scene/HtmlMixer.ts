@@ -125,9 +125,11 @@ export namespace HtmlMixer {
                     this.mainCamera.far
                 );
 
-                // FIX: Remove the auto-generated perspective css attribute from the context dom element.
-                // This will allow the orthographic camera to render the css scene correctly (without perspective correction).
-                this.rendererCss.domElement.style.perspective = 'unset';
+                if (this.rendererCss) {
+                    // FIX: Remove the auto-generated perspective css attribute from the context dom element.
+                    // This will allow the orthographic camera to render the css scene correctly (without perspective correction).
+                    this.rendererCss.domElement.style.perspective = 'unset';
+                }
             }
         }
 
