@@ -189,9 +189,7 @@ export abstract class BaseInteractionManager {
             // Detect left click.
             if (input.getMouseButtonDown(MouseButtonId.Left)) {
                 if (!this._overHtmlMixerIFrame) {
-                    // Dont allow iframes to capture input.
-                    const webglCanvas = this._gameView.getRenderer().domElement;
-                    webglCanvas.style.pointerEvents = 'auto';
+                    this._disableIFramePointerEvents();
                 }
 
                 if (input.isMouseButtonDownOn(this._gameView.gameView)) {
@@ -253,6 +251,10 @@ export abstract class BaseInteractionManager {
                 input.getMouseButtonDown(MouseButtonId.Middle) ||
                 input.getMouseButtonDown(MouseButtonId.Right)
             ) {
+                if (!this._overHtmlMixerIFrame) {
+                    this._disableIFramePointerEvents();
+                }
+
                 if (input.isMouseButtonDownOn(this._gameView.gameView)) {
                     // Always allow camera control with middle clicks.
                     this._cameraControls.enabled = true;
@@ -302,6 +304,12 @@ export abstract class BaseInteractionManager {
                 }
             }
         }
+    }
+
+    protected _disableIFramePointerEvents(): void {
+        // Dont allow iframes to capture input.
+        const webglCanvas = this._gameView.getRenderer().domElement;
+        webglCanvas.style.pointerEvents = 'auto';
     }
 
     protected _findHoveredFile(input: Input): [File, Simulation] {
