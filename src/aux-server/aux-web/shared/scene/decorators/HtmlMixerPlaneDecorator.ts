@@ -26,10 +26,10 @@ import { IGameView } from '../../IGameView';
 import { HtmlMixer, HtmlMixerHelpers } from '../../../shared/scene/HtmlMixer';
 
 const DEFAULT_IFRAME_PLANE_SIZE = new Vector2(1, 3 / 4);
-const DEFAULT_IFRAME_PLANE_SCALE = 2;
+const DEFAULT_IFRAME_PLANE_SCALE = 1;
 const DEFAULT_IFRAME_ELEMENT_WIDTH = 768;
-const DEFAULT_IFRAME_LOCAL_POSITION = new Vector3(0, 2.0, 0);
-const DEFUALT_IFRAME_LOCAL_ROTATION = new Vector3(0, 90, 0);
+const DEFAULT_IFRAME_LOCAL_POSITION = new Vector3(0, 1.0, 0);
+const DEFUALT_IFRAME_LOCAL_ROTATION = new Vector3(0, 0, 0);
 
 export class HtmlMixerPlaneDecorator extends AuxFile3DDecorator {
     /**
@@ -207,14 +207,14 @@ export class HtmlMixerPlaneDecorator extends AuxFile3DDecorator {
             planeH: this._planeSize.y,
         });
 
-        this.file3D.display.add(this.mixerPlane.object3d);
+        this.file3D.add(this.mixerPlane.object3d);
 
         return this.mixerPlane;
     }
 
     private _destroyMixerPlane(): void {
         if (this.mixerPlane) {
-            this.file3D.display.remove(this.mixerPlane.object3d);
+            this.file3D.remove(this.mixerPlane.object3d);
             this.mixerPlane = null;
         }
     }
@@ -222,7 +222,12 @@ export class HtmlMixerPlaneDecorator extends AuxFile3DDecorator {
     private _updateMixerPlaneTransform(): void {
         if (!this.mixerPlane) return;
 
-        this.mixerPlane.object3d.position.copy(this._localPosition);
+        this.mixerPlane.object3d.position.set(
+            this.file3D.display.position.x + this._localPosition.x,
+            this.file3D.display.position.y + this._localPosition.y,
+            this.file3D.display.position.z + this._localPosition.z
+        );
+
         this.mixerPlane.object3d.rotation.set(
             ThreeMath.degToRad(this._localRotation.x),
             ThreeMath.degToRad(this._localRotation.y),
