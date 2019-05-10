@@ -8,6 +8,7 @@
 
 -   Bug Fixes
     -   Allow for the expansion and shrinking of hexes after they have been raised or lowered.
+    -   Clicking on the diff bursh in builder will now make the sheets appear correctly.
 
 ## V0.6.5
 
