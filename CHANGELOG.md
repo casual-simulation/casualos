@@ -1,13 +1,62 @@
 # AUX Changelog
 
-## V0.6.2
+## V0.7.0
 
 ### Date: TBD
 
 ### Changes:
 
+-   Bug Fixes
+    -   Allow for the expansion and shrinking of hexes after they have been raised or lowered.
+
+## V0.6.4
+
+### Date: 05/09/2019
+
+### Changes:
+
+-   Changes
+    -   Made cloned files **not** use the creation hierarchy so that deleting the original file causes all child files to be deleted.
+-   Bug Fixes
+    -   Fixed the "Destroy file" button in the file sheet to allow destroying files while searching.
+
+## V0.6.3
+
+### Date: 05/09/2019
+
+### Changes:
+
+-   Improvements
+    -   Made cloned files use the creation hierarchy so that deleting the original file causes all child files to be deleted.
+-   Bug Fixes
+    -   Fixed an issue that caused clonable files to not be cloned in AUX Player.
+
+## V0.6.2
+
+### Date: 05/09/2019
+
+### Changes:
+
 -   Improvements
     -   Allow users to determine which side of the file they have clicked on by using `that.face` variable on an `onClick` tag.
+    -   Removed `aux.pickupable` and replaced it with special values for `aux.movable`.
+        -   Setting `aux.movable` to `true` means it can be moved anywhere.
+        -   Setting `aux.movable` to `false` means it cannot be moved.
+        -   Setting `aux.movable` to `clone` means that dragging it will create a clone that can be placed anywhere.
+        -   Setting `aux.movable` to `pickup` means it can be moved into any other context but not moved within the context it is currently in (only applies to AUX Player).
+        -   Setting `aux.movable` to `drag` means it can be moved anywhere within the context it is currently in but not moved to another context. (only applies to AUX Player).
+    -   Added the ability to destroy files from the file sheet.
+    -   Added the ability to display a QR Code from formula actions.
+        -   Use `showQRCode(data)` and `hideQRCode()` from formula actions.
+    -   Added the ability to create a new empty file from the file sheet.
+        -   Doing so will automatically select the new file and kick the user into multi-select mode.
+    -   Added the ability to whitelist or blacklist users by using `aux.whitelist` and `aux.blacklist`.
+        -   For example, setting `aux.whitelist` to `Kal` will ensure that only users named `Kal` can access the session.
+        -   Similarly, setting `aux.blacklist` to `Kal` will ensure that users named `Kal` cannot access the session.
+        -   In the case of a name being listed in both, the whitelist wins.
+-   Bug Fixes
+    -   Fixed an issue where long tapping on a file would register as a click on mobile.
+    -   Dragging a minimized workspace will no longer change its z value for depth, only its x and y.
 
 ## V0.6.1
 

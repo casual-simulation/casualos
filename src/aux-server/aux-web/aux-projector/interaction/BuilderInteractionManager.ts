@@ -236,23 +236,16 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      * @param position The tile position.
      * @param height The new height.
      */
-    updateTileHeightAtGridPosition(
-        file: ContextGroup3D,
-        positions: Axial[],
-        height: number
-    ) {
+    updateTileHeightAtGridPosition(file: ContextGroup3D, height: number) {
         let partial: PartialFile = {
             tags: {
                 [`aux.context.grid`]: {},
             },
         };
 
-        for (let i = 0; i < positions.length; i++) {
-            const key = posToKey(positions[i]);
-            partial.tags[`aux.context.grid`][key] = {
-                height: height,
-            };
-        }
+        partial.tags[`aux.context.grid`]['0:0'] = {
+            height: height,
+        };
 
         this._gameView.simulation3D.simulation.helper.updateFile(
             file.file,
@@ -420,9 +413,10 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     calc,
                     gameObject.file
                 );
-                const currentHeight =
-                    (!!currentTile ? currentTile.height : defaultHeight) ||
-                    DEFAULT_WORKSPACE_HEIGHT;
+                let currentHeight =
+                    (!!currentGrid
+                        ? currentGrid['0:0'].height
+                        : defaultHeight) || DEFAULT_WORKSPACE_HEIGHT;
                 const increment = DEFAULT_WORKSPACE_HEIGHT_INCREMENT; // TODO: Replace with a configurable value.
                 const minHeight = DEFAULT_WORKSPACE_MIN_HEIGHT; // TODO: This too
                 const minimized = isMinimized(calc, gameObject.file);
@@ -433,6 +427,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                         label: 'Raise',
                         onClick: () =>
                             this.SetAllHexHeight(
+                                calc,
                                 gameObject,
                                 currentHeight + increment
                             ),
@@ -442,6 +437,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                             label: 'Lower',
                             onClick: () =>
                                 this.SetAllHexHeight(
+                                    calc,
                                     gameObject,
                                     currentHeight - increment
                                 ),
@@ -504,13 +500,17 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      * On raise or lower, set all hexes in workspace to given height
      * @param file
      */
-    private SetAllHexHeight(gameObject: ContextGroup3D, height: number) {
+    private SetAllHexHeight(
+        calc: FileCalculationContext,
+        gameObject: ContextGroup3D,
+        height: number
+    ) {
         if (gameObject instanceof BuilderGroup3D) {
             let tiles = gameObject.surface.hexGrid.hexes.map(
                 hex => hex.gridPosition
             );
 
-            this.updateTileHeightAtGridPosition(gameObject, tiles, height);
+            this.updateTileHeightAtGridPosition(gameObject, height);
         }
     }
 

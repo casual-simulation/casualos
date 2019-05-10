@@ -15,6 +15,7 @@ import {
     DEFAULT_WORKSPACE_SIZE,
     FileLabelAnchor,
     DEFAULT_LABEL_ANCHOR,
+    FileDragMode,
 } from './File';
 
 import uuid from 'uuid/v4';
@@ -1175,6 +1176,29 @@ export function getFileUsernameList(
 }
 
 /**
+ * Determines if the whitelist and blacklist on the given file allows the given username.
+ * If the username exists in both, then the whitelist wins.
+ */
+export function whitelistOrBlacklistAllowsAccess(
+    calc: FileCalculationContext,
+    file: File,
+    username: string
+): boolean {
+    const whitelist = getFileWhitelist(calc, file);
+
+    if (whitelist) {
+        return isInUsernameList(calc, file, 'aux.whitelist', username);
+    } else {
+        const blacklist = getFileBlacklist(calc, file);
+        if (blacklist) {
+            return !isInUsernameList(calc, file, 'aux.blacklist', username);
+        }
+    }
+
+    return true;
+}
+
+/**
  * Determines if the whitelist on the given file allows the given username.
  * Whitelists work by allowing only the usernames that are explicitly listed.
  * If the whitelist is empty, then everything is allowed.
@@ -1440,6 +1464,26 @@ export function getContextValue(
 }
 
 /**
+ * Gets the drag mode for the file.
+ * @param calc The file calculation context.
+ * @param file The file to check.
+ */
+export function getFileDragMode(
+    calc: FileCalculationContext,
+    file: File
+): FileDragMode {
+    const val = calculateFileValue(calc, file, 'aux.movable');
+    if (typeof val === 'boolean') {
+        return val ? 'all' : 'none';
+    }
+    if (val === 'clone' || val === 'pickup' || val === 'drag') {
+        return val;
+    } else {
+        return 'all';
+    }
+}
+
+/**
  * Gets whether the given file is stackable.
  * @param calc The calculation context.
  * @param file The file to check.
@@ -1697,9 +1741,11 @@ export function isPickupable(
     calc: FileCalculationContext,
     file: File
 ): boolean {
-    return (
-        !!file && calculateBooleanTagValue(calc, file, 'aux.pickupable', true)
-    );
+    if (!!file && isFileMovable(calc, file)) {
+        const mode = getFileDragMode(calc, file);
+        return mode === 'pickup' || mode === 'all';
+    }
+    return false;
 }
 
 /**
