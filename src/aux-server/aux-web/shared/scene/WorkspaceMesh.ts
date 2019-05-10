@@ -20,6 +20,7 @@ import {
     isUserFile,
     DEFAULT_WORKSPACE_COLOR,
     hasValue,
+    getContextGridHeight,
 } from '@casual-simulation/aux-common/Files';
 import { keys, minBy, isEqual } from 'lodash';
 import { GridChecker, GridCheckResults } from './grid/GridChecker';
@@ -214,25 +215,33 @@ export class WorkspaceMesh extends GameObject {
         }
 
         const size = getContextSize(calc, this.workspace);
+        let centerHeight: number = getContextGridHeight(
+            calc,
+            this.workspace,
+            '0:0'
+        );
         const defaultHeight = getContextDefaultHeight(calc, this.workspace);
         const scale = getContextScale(calc, this.workspace);
         this.hexGrid = HexGridMesh.createFilledInHexGrid(
             size,
-            defaultHeight || DEFAULT_WORKSPACE_HEIGHT,
+            centerHeight || DEFAULT_WORKSPACE_HEIGHT,
             scale || DEFAULT_WORKSPACE_SCALE
         );
 
+        // why does this not ge the out ring of hexes, they need to be updated
         const grid = getBuilderContextGrid(calc, this.workspace);
         const positionsKeys = grid ? keys(grid) : [];
         positionsKeys.forEach(key => {
             const position = keyToPos(key);
             const workspaceHex = grid[key];
 
+            if (grid['0:0'] != null) {
+                centerHeight = grid['0:0'].height;
+            }
+
             const hex = this.hexGrid.addAt(position);
             let nextHeight =
-                workspaceHex.height ||
-                defaultHeight ||
-                DEFAULT_WORKSPACE_HEIGHT;
+                centerHeight || defaultHeight || DEFAULT_WORKSPACE_HEIGHT;
             if (nextHeight < 0) {
                 nextHeight = defaultHeight || DEFAULT_WORKSPACE_HEIGHT;
             }

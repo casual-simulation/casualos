@@ -93,7 +93,6 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
             this.file3D.display.quaternion.slerp(q, 0.1);
         }
     }
-
     dispose(): void {}
 }
 
@@ -131,6 +130,7 @@ export function calculateObjectPositionInGrid(
     const totalScales = sumBy(objectsBelowThis, obj =>
         calculateVerticalHeight(context, obj, file.context, gridScale)
     );
+
     const indexOffset = new Vector3(0, totalScales, 0);
     localPosition.add(indexOffset);
 
@@ -146,7 +146,7 @@ export function calculateObjectPositionInGrid(
             let height = getContextGridHeight(
                 context,
                 file.contextGroup.file,
-                key
+                '0:0'
             );
             localPosition.add(new Vector3(0, height, 0));
         }
