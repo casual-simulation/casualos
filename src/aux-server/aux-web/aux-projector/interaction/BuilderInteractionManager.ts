@@ -111,6 +111,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         const vueElement: any = Input.getVueParent(element);
         if (vueElement instanceof MiniFile) {
             const file = <File>vueElement.file;
+            this._gameView.simulation3D.selectRecentFile(file);
             let newFileClickOp = new BuilderNewFileClickOperation(
                 this._gameView.simulation3D,
                 this,
