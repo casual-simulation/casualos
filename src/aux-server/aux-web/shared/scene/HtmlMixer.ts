@@ -21,9 +21,10 @@ import * as THREE from 'three';
 // CSS3DREnderer is required by the THREEx.HtmlMixer
 require('three/examples/js/renderers/CSS3DRenderer');
 
-//
-// This is a port of the THREEx HtmlMixer (https://github.com/jeromeetienne/threex.htmlmixer) to a module friendly Typescript file.
-//
+/**
+ * This is a port of the THREEx HtmlMixer (https://github.com/jeromeetienne/threex.htmlmixer) to a module friendly Typescript file along with
+ * some other modifications and additional features.
+ */
 
 export namespace HtmlMixer {
     /**
@@ -46,7 +47,7 @@ export namespace HtmlMixer {
             camera: PerspectiveCamera | OrthographicCamera
         ) {
             // build cssFactor to workaround bug due to no display
-            this.cssFactor = 1000;
+            this.cssFactor = 1;
 
             this.setupCssCamera(camera);
 
@@ -73,8 +74,27 @@ export namespace HtmlMixer {
 
             this.cssCamera.scale.copy(scale);
 
+            // Copy some properties from main camera that are specifc to camera type.
+            if (
+                this.cssCamera instanceof PerspectiveCamera &&
+                this.mainCamera instanceof PerspectiveCamera
+            ) {
+                this.cssCamera.fov = this.mainCamera.fov;
+                this.cssCamera.aspect = this.mainCamera.aspect;
+            } else if (
+                this.cssCamera instanceof OrthographicCamera &&
+                this.mainCamera instanceof OrthographicCamera
+            ) {
+                this.cssCamera.left = this.mainCamera.left;
+                this.cssCamera.right = this.mainCamera.right;
+                this.cssCamera.top = this.mainCamera.top;
+                this.cssCamera.bottom = this.mainCamera.bottom;
+                this.cssCamera.zoom = this.mainCamera.zoom;
+            }
+
             let projection = this.mainCamera.projectionMatrix.clone();
             this.cssCamera.projectionMatrix = projection;
+
             this.cssCamera.updateProjectionMatrix();
             this.cssCamera.updateMatrixWorld(true);
 
@@ -112,6 +132,10 @@ export namespace HtmlMixer {
                     this.mainCamera.near * this.cssFactor,
                     this.mainCamera.far * this.cssFactor
                 );
+
+                // FIX: Remove the auto-generated perspective css attribute from the context dom element.
+                // This will allow the orthographic camera to render the css scene correctly (without perspective correction).
+                this.rendererCss.domElement.style.perspective = 'unset';
             }
         }
 
