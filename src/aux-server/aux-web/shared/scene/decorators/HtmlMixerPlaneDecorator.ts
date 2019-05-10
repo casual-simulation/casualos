@@ -29,7 +29,7 @@ const DEFAULT_IFRAME_PLANE_SIZE = new Vector2(1, 3 / 4);
 const DEFAULT_IFRAME_PLANE_SCALE = 2;
 const DEFAULT_IFRAME_ELEMENT_WIDTH = 768;
 const DEFAULT_IFRAME_LOCAL_POSITION = new Vector3(0, 2.0, 0);
-const DEFUALT_IFRAME_LOCAL_ROTATION = new Vector3(0, 0, 0);
+const DEFUALT_IFRAME_LOCAL_ROTATION = new Vector3(0, 90, 0);
 
 export class HtmlMixerPlaneDecorator extends AuxFile3DDecorator {
     /**
@@ -201,15 +201,6 @@ export class HtmlMixerPlaneDecorator extends AuxFile3DDecorator {
             'https://casualsimulation.com'
         );
 
-        console.log(
-            'create mixer plane elementW:',
-            this._elementWidth,
-            'planeW:',
-            this._planeSize.x,
-            'planeH:',
-            this._planeSize.y
-        );
-
         this.mixerPlane = new HtmlMixer.Plane(mixerContext, domElement, {
             elementW: this._elementWidth,
             planeW: this._planeSize.x,
@@ -231,14 +222,14 @@ export class HtmlMixerPlaneDecorator extends AuxFile3DDecorator {
     private _updateMixerPlaneTransform(): void {
         if (!this.mixerPlane) return;
 
-        this.mixerPlane.object3d.position = this._localPosition;
-        this.mixerPlane.object3d.rotation = new Euler(
+        this.mixerPlane.object3d.position.copy(this._localPosition);
+        this.mixerPlane.object3d.rotation.set(
             ThreeMath.degToRad(this._localRotation.x),
             ThreeMath.degToRad(this._localRotation.y),
             ThreeMath.degToRad(this._localRotation.z)
         );
 
-        this.mixerPlane.object3d.scale = new Vector3(
+        this.mixerPlane.object3d.scale.set(
             this._planeScale,
             this._planeScale,
             this._planeScale
