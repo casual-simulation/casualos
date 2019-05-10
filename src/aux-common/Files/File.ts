@@ -37,6 +37,16 @@ export interface FileTags {
     ['aux.shape']?: FileShape;
     ['aux.image']?: string;
     ['aux.iframe']?: string;
+    ['aux.iframe.x']?: number;
+    ['aux.iframe.y']?: number;
+    ['aux.iframe.z']?: number;
+    ['aux.iframe.size.x']?: number;
+    ['aux.iframe.size.y']?: number;
+    ['aux.iframe.rotation.x']?: number;
+    ['aux.iframe.rotation.y']?: number;
+    ['aux.iframe.rotation.z']?: number;
+    ['aux.iframe.element.width']?: number;
+    ['aux.iframe.scale']?: number;
     ['aux.channel']?: string;
     ['aux._creator']?: string;
     ['aux._diff']?: boolean;

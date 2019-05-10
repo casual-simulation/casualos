@@ -34,7 +34,6 @@ export namespace HtmlMixer {
      * @param  {THREE.Camera} camera the camera used for the last view
      */
     export class Context {
-        cssFactor: number;
         rendererCss: any; // CSS3DRenderer
         rendererWebgl: WebGLRenderer;
         cssScene: Scene;
@@ -46,9 +45,6 @@ export namespace HtmlMixer {
             rendererWebgl: WebGLRenderer,
             camera: PerspectiveCamera | OrthographicCamera
         ) {
-            // build cssFactor to workaround bug due to no display
-            this.cssFactor = 1;
-
             this.setupCssCamera(camera);
 
             this.rendererCss = new (<any>THREE).CSS3DRenderer();
@@ -67,11 +63,7 @@ export namespace HtmlMixer {
             this.mainCamera.matrixWorld.decompose(position, quaternion, scale);
 
             this.cssCamera.quaternion.copy(quaternion);
-
-            this.cssCamera.position
-                .copy(position)
-                .multiplyScalar(this.cssFactor);
-
+            this.cssCamera.position.copy(position);
             this.cssCamera.scale.copy(scale);
 
             // Copy some properties from main camera that are specifc to camera type.
@@ -120,8 +112,8 @@ export namespace HtmlMixer {
                 this.cssCamera = new PerspectiveCamera(
                     this.mainCamera.fov,
                     this.mainCamera.aspect,
-                    this.mainCamera.near * this.cssFactor,
-                    this.mainCamera.far * this.cssFactor
+                    this.mainCamera.near,
+                    this.mainCamera.far
                 );
             } else {
                 this.cssCamera = new OrthographicCamera(
@@ -129,8 +121,8 @@ export namespace HtmlMixer {
                     this.mainCamera.right,
                     this.mainCamera.top,
                     this.mainCamera.bottom,
-                    this.mainCamera.near * this.cssFactor,
-                    this.mainCamera.far * this.cssFactor
+                    this.mainCamera.near,
+                    this.mainCamera.far
                 );
 
                 // FIX: Remove the auto-generated perspective css attribute from the context dom element.
@@ -171,7 +163,7 @@ export namespace HtmlMixer {
             domElement: HTMLElement,
             opts?: PlaneOptions
         ) {
-            opts = opts = {};
+            opts = opts || {};
             this.elementW = opts.elementW !== undefined ? opts.elementW : 768;
             this.planeW = opts.planeW !== undefined ? opts.planeW : 1;
             this.planeH = opts.planeH !== undefined ? opts.planeH : 3 / 4;
@@ -196,9 +188,7 @@ export namespace HtmlMixer {
             this.cssObject = new (<any>THREE).CSS3DObject(this.domElement);
             this.cssObject.scale
                 .set(1, 1, 1)
-                .multiplyScalar(
-                    mixerContext.cssFactor / (this.elementW / this.planeW)
-                );
+                .multiplyScalar(1.0 / (this.elementW / this.planeW));
 
             // Hook cssObject to mixerPlane.
             this.cssObject.userData.mixerPlane = this;
@@ -226,17 +216,13 @@ export namespace HtmlMixer {
             this.cssObject.quaternion.copy(quaternion);
 
             // handle position
-            this.cssObject.position
-                .copy(position)
-                .multiplyScalar(this.mixerContext.cssFactor);
+            this.cssObject.position.copy(position);
 
             // handle scale
             let scaleFactor =
                 this.elementW /
                 ((<any>this.object3d).geometry.parameters.width * scale.x);
-            this.cssObject.scale
-                .set(1, 1, 1)
-                .multiplyScalar(this.mixerContext.cssFactor / scaleFactor);
+            this.cssObject.scale.set(1, 1, 1).multiplyScalar(1.0 / scaleFactor);
         }
 
         setDomElement(newDomElement: HTMLElement): void {
