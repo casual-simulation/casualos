@@ -9,6 +9,25 @@
 -   Bug Fixes
     -   Allow for the expansion and shrinking of hexes after they have been raised or lowered.
 
+## V0.6.5
+
+### Date: 05/10/2019
+
+-   Improvements
+    -   Added `aux.iframe` tag that allows you to embed HTML pages inside an AUX.
+        -   Related iframe tags:
+            -   `aux.iframe`: URL of the page to embed
+            -   `aux.iframe.x`: X local position
+            -   `aux.iframe.y`: Y local position
+            -   `aux.iframe.z`: Z local position
+            -   `aux.iframe.size.x`: Width of the iframe plane geometry
+            -   `aux.iframe.size.y`: Height of the iframe plane geometry
+            -   `aux.iframe.rotation.x`: X local rotation
+            -   `aux.iframe.rotation.y`: Y local rotation
+            -   `aux.iframe.rotation.z`: Z local rotation
+            -   `aux.iframe.element.width`: The pixel width of the iframe DOM element
+            -   `aux.iframe.scale`: The uniform scale of the iframe plane geometry
+
 ## V0.6.4
 
 ### Date: 05/09/2019
