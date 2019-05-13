@@ -34,7 +34,7 @@ export class TweenCameraToOperation implements IOperation {
         gameView: IGameView,
         interaction: BaseInteractionManager,
         target: Vector3,
-        zoomValue: number = 0
+        zoomValue: number = -1
     ) {
         this._gameView = gameView;
         this._interaction = interaction;
@@ -71,6 +71,8 @@ export class TweenCameraToOperation implements IOperation {
             if (this.zoomNum >= 0) {
                 this._interaction.cameraControls.dollySet(this.zoomNum);
             }
+
+            this.zoomNum = -1;
         }
     }
 
