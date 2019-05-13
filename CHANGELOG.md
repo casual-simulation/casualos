@@ -9,6 +9,7 @@
 -   Bug Fixes
     -   Allow for the expansion and shrinking of hexes after they have been raised or lowered.
     -   Clicking on the diff bursh in builder will now make the sheets appear correctly.
+    -   Selecting the file ID in builder will now no longer change the zoom that sent the camera too far away.
 
 ## V0.6.5
 
