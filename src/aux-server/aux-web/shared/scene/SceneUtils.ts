@@ -32,6 +32,7 @@ import {
     WebGLRenderer,
     PerspectiveCamera,
     OrthographicCamera,
+    Color,
 } from 'three';
 import { flatMap } from 'lodash';
 import {
@@ -79,6 +80,7 @@ export function createSphere(
 ) {
     const geometry = new SphereBufferGeometry(size, 16, 14);
     let material = baseAuxMeshMaterial();
+    material.color = new Color(color);
 
     const sphere = new Mesh(geometry, material.clone());
     sphere.position.copy(position);
