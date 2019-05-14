@@ -649,37 +649,6 @@ export default class GameView extends Vue implements IGameView {
         this._renderUpdate(xrFrame);
         this._time.update();
 
-        // Debug direction light postion with arrow keys + control
-        // const speed = 1;
-        // const dt = this._time.deltaTime;
-        // let dirWorldPos = new Vector3();
-        // this._directional.getWorldPosition(dirWorldPos);
-        // if (this._input.getKeyHeld('ArrowUp')) {
-        //     if (this._input.getKeyHeld('Alt')) {
-        //         dirWorldPos.y += speed * dt;
-        //     } else {
-        //         dirWorldPos.z += speed * dt;
-        //     }
-        //     console.log('direction world position:', dirWorldPos);
-        // }
-        // if (this._input.getKeyHeld('ArrowDown')) {
-        //     if (this._input.getKeyHeld('Alt')) {
-        //         dirWorldPos.y += -speed * dt;
-        //     } else {
-        //         dirWorldPos.z += -speed * dt;
-        //     }
-        //     console.log('direction world position:', dirWorldPos);
-        // }
-        // if (this._input.getKeyHeld('ArrowLeft')) {
-        //     dirWorldPos.x += speed * dt;
-        //     console.log('direction world position:', dirWorldPos);
-        // }
-        // if (this._input.getKeyHeld('ArrowRight')) {
-        //     dirWorldPos.x += -speed * dt;
-        //     console.log('direction world position:', dirWorldPos);
-        // }
-        // this._directional.position.copy(dirWorldPos);
-
         if (this.vrDisplay && this.vrDisplay.isPresenting) {
             this.vrDisplay.requestAnimationFrame(() => this._frameUpdate());
         } else if (this.xrSession) {
