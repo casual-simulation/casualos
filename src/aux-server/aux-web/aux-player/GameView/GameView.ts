@@ -469,18 +469,6 @@ export default class GameView extends Vue implements IGameView {
         if (this._htmlMixerContext) {
             this._htmlMixerContext.update();
         }
-        // if (this._contextGroup) {
-        //     this._contextGroup.frameUpdate(calc);
-        // }
-
-        // TODO: Fix
-        // if (this.inventoryContext) {
-        //     this.inventoryContext.frameUpdate(calc);
-        // }
-
-        // if (this.menuContext) {
-        //     this.menuContext.frameUpdate(calc);
-        // }
 
         this._cameraUpdate();
 
@@ -506,6 +494,14 @@ export default class GameView extends Vue implements IGameView {
         ) {
             this._mainCameraRig.uiWorldCamera.zoom = this._mainCameraRig.mainCamera.zoom;
             this._mainCameraRig.uiWorldCamera.updateProjectionMatrix();
+        }
+
+        if (
+            this._inventoryCameraRig.uiWorldCamera.zoom !==
+            this._inventoryCameraRig.mainCamera.zoom
+        ) {
+            this._inventoryCameraRig.uiWorldCamera.zoom = this._inventoryCameraRig.mainCamera.zoom;
+            this._inventoryCameraRig.uiWorldCamera.updateProjectionMatrix();
         }
     }
 
