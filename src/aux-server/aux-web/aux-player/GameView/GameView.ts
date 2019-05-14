@@ -695,22 +695,23 @@ export default class GameView extends Vue implements IGameView {
 
         // red cube
         cube = createCube(1);
+        cube.position.set(0, 0, 0);
         material = cube.material as MeshToonMaterial;
-        material.color = new Color(0xf00);
+        material.color = new Color('#f00');
         this._inventoryScene.add(cube);
 
         // green cube
         cube = createCube(1);
-        cube.translateX(1);
+        cube.position.set(1, 0, -1);
         material = cube.material as MeshToonMaterial;
-        material.color = new Color(0x0f0);
+        material.color = new Color('#0f0');
         this._inventoryScene.add(cube);
 
         // blue cube
         cube = createCube(1);
-        cube.translateX(2);
+        cube.position.set(2, 0, -2);
         material = cube.material as MeshToonMaterial;
-        material.color = new Color(0x00f);
+        material.color = new Color('#00f');
         this._inventoryScene.add(cube);
 
         //
