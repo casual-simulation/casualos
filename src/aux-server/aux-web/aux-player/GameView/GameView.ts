@@ -525,7 +525,7 @@ export default class GameView extends Vue implements IGameView {
             this._mainCameraRig.mainCamera.matrixAutoUpdate = false;
 
             for (const view of xrFrame.views) {
-                // Each XRView has its own projection matrix, so set the _camera to use that
+                // Each XRView has its own projection matrix, so set the main camera to use that
                 let matrix = new Matrix4();
                 matrix.fromArray(view.viewMatrix);
 
@@ -568,18 +568,42 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _renderCore(): void {
+        //
+        // [Main scene]
+        //
+
+        // Render the main scene with the main camera.
         this._renderer.clear();
         this._renderer.render(this._mainScene, this._mainCameraRig.mainCamera);
 
-        // Set the background color to null when rendering the ui world camera.
+        // Set the background color to null when rendering with the ui world camera.
         this._mainScene.background = null;
 
-        this._renderer.clearDepth(); // Clear depth buffer so that ui objects dont
+        // Render the main scene with the ui world camera.
+        this._renderer.clearDepth(); // Clear depth buffer so that ui objects dont use it.
         this._renderer.render(
             this._mainScene,
             this._mainCameraRig.uiWorldCamera
         );
-        this._sceneBackgroundUpdate();
+
+        this._mainSceneBackgroundUpdate();
+
+        //
+        // [Inventory scene]
+        //
+
+        // Render the inventory scene with the inventory main camera.
+        this._renderer.render(
+            this._inventoryScene,
+            this._inventoryCameraRig.mainCamera
+        );
+
+        // Render the inventory scene with the inventory ui world camera.
+        this._renderer.clearDepth(); // Clear depth buffer so that ui objects dont use it.
+        this._renderer.render(
+            this._inventoryScene,
+            this._inventoryCameraRig.uiWorldCamera
+        );
     }
 
     /**
@@ -596,7 +620,7 @@ export default class GameView extends Vue implements IGameView {
         }
     }
 
-    private _sceneBackgroundUpdate() {
+    private _mainSceneBackgroundUpdate() {
         if (this.background) {
             this._mainScene.background = this.background;
         } else {

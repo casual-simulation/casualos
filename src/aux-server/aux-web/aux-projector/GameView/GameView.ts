@@ -731,10 +731,11 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _renderCore(): void {
+        // Render the main scene with the main camera.
         this._renderer.clear();
         this._renderer.render(this._mainScene, this._mainCameraRig.mainCamera);
 
-        // Set the background color to null when rendering the ui world camera.
+        // Set the background color to null when rendering with the ui world camera.
         this._mainScene.background = null;
 
         this._renderer.clearDepth(); // Clear depth buffer so that ui objects dont
