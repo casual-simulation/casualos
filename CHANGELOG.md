@@ -10,6 +10,8 @@
     -   Allow for the expansion and shrinking of hexes after they have been raised or lowered.
     -   Clicking on the diff bursh in builder will now make the sheets appear correctly.
     -   Selecting the file ID in builder will now no longer change the zoom that sent the camera too far away.
+    -   Upon shrinking the hex grid, hexes will now remain if a file is on top of it.
+    -   Clicking on a non centeral hex did not show correct raise and lower options, now it does.
 
 ## V0.6.5
 
