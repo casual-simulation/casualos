@@ -407,9 +407,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     calc,
                     gameObject.file
                 );
-                const currentTile = currentGrid
-                    ? currentGrid[posToKey(tile)]
-                    : null;
+                const currentTile = currentGrid ? currentGrid['0:0'] : null;
                 const defaultHeight = getContextDefaultHeight(
                     calc,
                     gameObject.file
