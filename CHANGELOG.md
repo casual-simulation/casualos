@@ -6,6 +6,8 @@
 
 ### Changes:
 
+-   Improvements
+    -   Search bar will now always remain across the top of builder.
 -   Bug Fixes
     -   Allow for the expansion and shrinking of hexes after they have been raised or lowered.
     -   Clicking on the diff bursh in builder will now make the sheets appear correctly.
