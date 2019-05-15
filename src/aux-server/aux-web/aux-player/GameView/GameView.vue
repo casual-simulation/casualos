@@ -9,7 +9,7 @@
                     <div ref="inventory">
                         <div v-if="!vrDisplay" class="inventory-layout">
                             <inventory-file
-                                v-for="(item, index) in inventory"
+                                v-for="(item, index) in inventoryItemsFlat"
                                 :key="index"
                                 :item="item"
                                 :slotIndex="index"

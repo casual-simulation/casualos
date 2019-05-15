@@ -14,7 +14,9 @@ import { appManager } from '../shared/AppManager';
 import { Simulation } from '../shared/Simulation';
 import { PlayerSimulation3D } from './scene/PlayerSimulation3D';
 
-export const DEFAULT_INVENTORY_COUNT = 5;
+export const DEFAULT_INVENTORY_SLOTFLAT_COUNT = 5;
+export const DEFAULT_INVENTORY_SLOTGRID_WIDTH = 5;
+export const DEFAULT_INVENTORY_SLOTGRID_HEIGHT = 3;
 
 /**
  * Defines an interface for inventory items.
@@ -45,37 +47,64 @@ export class InventoryContext {
     files: AuxFile[] = [];
 
     /**
-     * The files in this contexts mapped into the inventory slots.
+     * The files in this context mapped into the inventory slots.
      * Files are ordered left to right based on their x position in the context, starting at 0 and incrementing from there.
      */
-    slots: InventoryItem[] = [];
+    slotsFlat: InventoryItem[] = [];
+
+    /** The files in this context mapped into a grid.
+     * Files are placed exactly where they are in the context, except for if they fall outside of the desired grid area.
+     */
+    slotsGrid: InventoryItem[] = [];
 
     /**
      * The file that is currently selected by the user.
      */
     selectedFile: InventoryItem = null;
 
-    private _slotCount: number;
+    private _slotFlatCount: number;
     private _slotsDirty: boolean;
+    private _slotGridWidth: number;
+    private _slotGridHeight: number;
 
     constructor(
         simulation: PlayerSimulation3D,
         context: string,
-        slotCount?: number
+        slotFlatCount?: number,
+        slotGridWidth?: number,
+        slotGridHeight?: number
     ) {
         if (context == null || context == undefined) {
             throw new Error('Inventory context cannot be null or undefined.');
         }
 
-        if (slotCount < 0) {
+        if (slotFlatCount < 0) {
             throw new Error(
                 'Inventory context cannot have slot count less than 0.'
             );
         }
 
+        if (slotGridWidth < 0) {
+            throw new Error(
+                'Inventory context cannot have slot grid width less than 0.'
+            );
+        }
+
+        if (slotGridHeight < 0) {
+            throw new Error(
+                'Inventory context cannot have slot grid height less than 0.'
+            );
+        }
+
         this.simulation = simulation;
         this.context = context;
-        this.setSlotCount(getOptionalValue(slotCount, DEFAULT_INVENTORY_COUNT));
+        this.setSlotFlatCount(
+            getOptionalValue(slotFlatCount, DEFAULT_INVENTORY_SLOTFLAT_COUNT)
+        );
+        this.setSlotGridDimensions(
+            getOptionalValue(slotGridWidth, DEFAULT_INVENTORY_SLOTGRID_WIDTH),
+            getOptionalValue(slotGridHeight, DEFAULT_INVENTORY_SLOTGRID_HEIGHT)
+        );
         this.files = [];
     }
 
@@ -137,11 +166,19 @@ export class InventoryContext {
         this.selectedFile = file;
     }
 
-    getSlotCount(): number {
-        return this._slotCount;
+    getSlotFlatCount(): number {
+        return this._slotFlatCount;
     }
 
-    setSlotCount(count: number): void {
+    getSlotGridWidth(): number {
+        return this._slotGridWidth;
+    }
+
+    getSlotGridHeight(): number {
+        return this._slotGridHeight;
+    }
+
+    setSlotFlatCount(count: number): void {
         if (count == null || count == undefined || count < 0) {
             throw new Error(
                 'Inventory Context cannot set the slot count to a value of:' +
@@ -149,7 +186,27 @@ export class InventoryContext {
             );
         }
 
-        this._slotCount = count;
+        this._slotFlatCount = count;
+        this._slotsDirty = true;
+    }
+
+    setSlotGridDimensions(width: number, height: number): void {
+        if (width == null || width == undefined || width < 0) {
+            throw new Error(
+                'Inventory Context cannot set the slot grid width to a value of:' +
+                    JSON.stringify(width)
+            );
+        }
+
+        if (height == null || height == undefined || height < 0) {
+            throw new Error(
+                'Inventory Context cannot set the slot grid height to a value of:' +
+                    JSON.stringify(height)
+            );
+        }
+
+        this._slotGridWidth = width;
+        this._slotGridHeight = height;
         this._slotsDirty = true;
     }
 
@@ -178,10 +235,10 @@ export class InventoryContext {
     }
 
     private _resortSlots(calc: FileCalculationContext): void {
-        this.slots = new Array(this._slotCount);
+        this.slotsFlat = new Array(this._slotFlatCount);
         const y = 0;
 
-        for (let x = 0; x < this._slotCount; x++) {
+        for (let x = 0; x < this._slotFlatCount; x++) {
             let file = this.files.find(f => {
                 let contextPos = getFilePosition(calc, f, this.context);
                 if (contextPos.x === x && contextPos.y === y) {
@@ -194,7 +251,7 @@ export class InventoryContext {
             });
 
             if (file) {
-                this.slots[x] = {
+                this.slotsFlat[x] = {
                     file,
                     simulation: this.simulation,
                     context: this.context,

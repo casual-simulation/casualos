@@ -145,14 +145,38 @@ export default class GameView extends Vue implements IGameView {
         return false;
     }
 
-    get inventory() {
+    get inventoryItemsFlat() {
         let items: InventoryItem[] = [];
 
         this.simulations.forEach(sim => {
             if (sim.inventoryContext) {
-                for (let i = 0; i < sim.inventoryContext.slots.length; i++) {
-                    if (sim.inventoryContext.slots[i] || !items[i]) {
-                        items[i] = sim.inventoryContext.slots[i];
+                for (
+                    let i = 0;
+                    i < sim.inventoryContext.slotsFlat.length;
+                    i++
+                ) {
+                    if (sim.inventoryContext.slotsFlat[i] || !items[i]) {
+                        items[i] = sim.inventoryContext.slotsFlat[i];
+                    }
+                }
+            }
+        });
+
+        return items;
+    }
+
+    get inventoryItemsGrid() {
+        let items: InventoryItem[] = [];
+
+        this.simulations.forEach(sim => {
+            if (sim.inventoryContext) {
+                for (
+                    let i = 0;
+                    i < sim.inventoryContext.slotsGrid.length;
+                    i++
+                ) {
+                    if (sim.inventoryContext.slotsGrid[i] || !items[i]) {
+                        items[i] = sim.inventoryContext.slotsGrid[i];
                     }
                 }
             }
@@ -218,9 +242,6 @@ export default class GameView extends Vue implements IGameView {
     public getMainCamera(): PerspectiveCamera | OrthographicCamera {
         return this._mainCameraRig.mainCamera;
     }
-    // public getContexts(): ContextGroup3D[] {
-    //     return [this._contextGroup];
-    // }
     public getUIHtmlElements(): HTMLElement[] {
         return [<HTMLElement>this.$refs.inventory];
     }

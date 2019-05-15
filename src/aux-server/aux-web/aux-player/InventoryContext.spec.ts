@@ -1,4 +1,7 @@
-import { InventoryContext, DEFAULT_INVENTORY_COUNT } from './InventoryContext';
+import {
+    InventoryContext,
+    DEFAULT_INVENTORY_SLOTFLAT_COUNT,
+} from './InventoryContext';
 import {
     File,
     createFile,
@@ -28,22 +31,26 @@ describe('InventoryContext', () => {
 
     it('should contain default number of slots if none are specified', () => {
         let inventory = new InventoryContext(null, 'my_inventory');
-        expect(inventory.getSlotCount()).toBe(DEFAULT_INVENTORY_COUNT);
+        expect(inventory.getSlotFlatCount()).toBe(
+            DEFAULT_INVENTORY_SLOTFLAT_COUNT
+        );
 
         let inventory2 = new InventoryContext(null, 'my_inventory_2', null);
-        expect(inventory2.getSlotCount()).toBe(DEFAULT_INVENTORY_COUNT);
+        expect(inventory2.getSlotFlatCount()).toBe(
+            DEFAULT_INVENTORY_SLOTFLAT_COUNT
+        );
     });
 
     it('should contain specified number of slots', () => {
         let inventory = new InventoryContext(null, 'my_inventory', 8);
-        expect(inventory.getSlotCount()).toBe(8);
+        expect(inventory.getSlotFlatCount()).toBe(8);
     });
 
     it('should allow adjustment of slot count after construction', () => {
         let inventory = new InventoryContext(null, 'my_inventory', 5);
-        inventory.setSlotCount(11);
+        inventory.setSlotFlatCount(11);
 
-        expect(inventory.getSlotCount()).toBe(11);
+        expect(inventory.getSlotFlatCount()).toBe(11);
     });
 
     it('should add and remove files that are part of the context', () => {
@@ -125,20 +132,20 @@ describe('InventoryContext', () => {
         }
 
         // Should be empty.
-        expect(inventory.slots).toEqual([]);
+        expect(inventory.slotsFlat).toEqual([]);
 
         inventory.frameUpdate(calc);
 
         // Should not be empty.
-        expect(inventory.slots).not.toEqual([]);
+        expect(inventory.slotsFlat).not.toEqual([]);
         // Should have length of 3.
-        expect(inventory.slots).toHaveLength(3);
+        expect(inventory.slotsFlat).toHaveLength(3);
 
         // Should be sorted like this: testId_4, testId_3, testId_2
-        expect(inventory.slots[0].file.id).toEqual('testId_4');
-        expect(inventory.slots[1].file.id).toEqual('testId_3');
-        expect(inventory.slots[2].file.id).toEqual('testId_2');
-        expect(inventory.slots[3]).toBeUndefined();
+        expect(inventory.slotsFlat[0].file.id).toEqual('testId_4');
+        expect(inventory.slotsFlat[1].file.id).toEqual('testId_3');
+        expect(inventory.slotsFlat[2].file.id).toEqual('testId_2');
+        expect(inventory.slotsFlat[3]).toBeUndefined();
     });
 
     it('should not sort files that have context y position greater or less than 0', () => {
@@ -179,21 +186,21 @@ describe('InventoryContext', () => {
         }
 
         // Should be empty.
-        expect(inventory.slots).toEqual([]);
+        expect(inventory.slotsFlat).toEqual([]);
 
         inventory.frameUpdate(calc);
 
         // Should not be empty.
-        expect(inventory.slots).not.toEqual([]);
+        expect(inventory.slotsFlat).not.toEqual([]);
         // Should have length of 5.
-        expect(inventory.slots).toHaveLength(5);
+        expect(inventory.slotsFlat).toHaveLength(5);
 
         // Should be sorted like this: testId_4, undefined, undefined, undefined, testId_0
-        expect(inventory.slots[0].file.id).toEqual('testId_4');
-        expect(inventory.slots[1]).toBeUndefined();
-        expect(inventory.slots[2]).toBeUndefined();
-        expect(inventory.slots[3]).toBeUndefined();
-        expect(inventory.slots[4].file.id).toEqual('testId_0');
+        expect(inventory.slotsFlat[0].file.id).toEqual('testId_4');
+        expect(inventory.slotsFlat[1]).toBeUndefined();
+        expect(inventory.slotsFlat[2]).toBeUndefined();
+        expect(inventory.slotsFlat[3]).toBeUndefined();
+        expect(inventory.slotsFlat[4].file.id).toEqual('testId_0');
     });
 
     it('should not sort files that have context index greater than 0', () => {
@@ -239,21 +246,21 @@ describe('InventoryContext', () => {
         }
 
         // Should be empty.
-        expect(inventory.slots).toEqual([]);
+        expect(inventory.slotsFlat).toEqual([]);
 
         inventory.frameUpdate(calc);
 
         // Should not be empty.
-        expect(inventory.slots).not.toEqual([]);
+        expect(inventory.slotsFlat).not.toEqual([]);
         // Should have length of 5.
-        expect(inventory.slots).toHaveLength(5);
+        expect(inventory.slotsFlat).toHaveLength(5);
 
         // Should be sorted like this: undefined, testId_3, undefined, testId_1, testId_0
-        expect(inventory.slots[0]).toBeUndefined();
-        expect(inventory.slots[1].file.id).toEqual('testId_3');
-        expect(inventory.slots[2]).toBeUndefined();
-        expect(inventory.slots[3].file.id).toEqual('testId_1');
-        expect(inventory.slots[4].file.id).toEqual('testId_0');
+        expect(inventory.slotsFlat[0]).toBeUndefined();
+        expect(inventory.slotsFlat[1].file.id).toEqual('testId_3');
+        expect(inventory.slotsFlat[2]).toBeUndefined();
+        expect(inventory.slotsFlat[3].file.id).toEqual('testId_1');
+        expect(inventory.slotsFlat[4].file.id).toEqual('testId_0');
     });
 
     it('should update slots as expected after file is added and then moved to another slot.', () => {
@@ -279,11 +286,11 @@ describe('InventoryContext', () => {
         inventory.frameUpdate(calc);
 
         // Slots should be be in initial state.
-        expect(inventory.slots[0].file.id).toEqual('testId_0');
-        expect(inventory.slots[1].file.id).toEqual('testId_1');
-        expect(inventory.slots[2]).toBeUndefined();
-        expect(inventory.slots[3]).toBeUndefined();
-        expect(inventory.slots[4]).toBeUndefined();
+        expect(inventory.slotsFlat[0].file.id).toEqual('testId_0');
+        expect(inventory.slotsFlat[1].file.id).toEqual('testId_1');
+        expect(inventory.slotsFlat[2]).toBeUndefined();
+        expect(inventory.slotsFlat[3]).toBeUndefined();
+        expect(inventory.slotsFlat[4]).toBeUndefined();
 
         // Now lets move testId_1 to the fourth slot.
         let file = files[1];
@@ -299,10 +306,10 @@ describe('InventoryContext', () => {
         expect(inventory.files[1].id).toEqual('testId_1');
 
         // Slots should have updated accordingly.
-        expect(inventory.slots[0].file.id).toEqual('testId_0');
-        expect(inventory.slots[1]).toBeUndefined();
-        expect(inventory.slots[2]).toBeUndefined();
-        expect(inventory.slots[3].file.id).toEqual('testId_1');
-        expect(inventory.slots[4]).toBeUndefined();
+        expect(inventory.slotsFlat[0].file.id).toEqual('testId_0');
+        expect(inventory.slotsFlat[1]).toBeUndefined();
+        expect(inventory.slotsFlat[2]).toBeUndefined();
+        expect(inventory.slotsFlat[3].file.id).toEqual('testId_1');
+        expect(inventory.slotsFlat[4]).toBeUndefined();
     });
 });
