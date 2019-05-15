@@ -152,11 +152,11 @@ export default class GameView extends Vue implements IGameView {
             if (sim.inventoryContext) {
                 for (
                     let i = 0;
-                    i < sim.inventoryContext.slotsFlat.length;
+                    i < sim.inventoryContext.flatSlots.length;
                     i++
                 ) {
-                    if (sim.inventoryContext.slotsFlat[i] || !items[i]) {
-                        items[i] = sim.inventoryContext.slotsFlat[i];
+                    if (sim.inventoryContext.flatSlots[i] || !items[i]) {
+                        items[i] = sim.inventoryContext.flatSlots[i];
                     }
                 }
             }
@@ -172,11 +172,11 @@ export default class GameView extends Vue implements IGameView {
             if (sim.inventoryContext) {
                 for (
                     let i = 0;
-                    i < sim.inventoryContext.slotsGrid.length;
+                    i < sim.inventoryContext.gridSlots.length;
                     i++
                 ) {
-                    if (sim.inventoryContext.slotsGrid[i] || !items[i]) {
-                        items[i] = sim.inventoryContext.slotsGrid[i];
+                    if (sim.inventoryContext.gridSlots[i] || !items[i]) {
+                        items[i] = sim.inventoryContext.gridSlots[i];
                     }
                 }
             }
