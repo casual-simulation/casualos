@@ -592,6 +592,8 @@ export default class GameView extends Vue implements IGameView {
         // [Inventory scene]
         //
 
+        this._renderer.clearDepth(); // Clear depth buffer so that inventory scene always appears above the main scene.
+
         // Render the inventory scene with the inventory main camera.
         this._renderer.render(
             this._inventoryScene,
