@@ -580,7 +580,7 @@ export default class GameView extends Vue implements IGameView {
         this._mainScene.background = null;
 
         // Render the main scene with the ui world camera.
-        this._renderer.clearDepth(); // Clear depth buffer so that ui objects dont use it.
+        this._renderer.clearDepth(); // Clear depth buffer so that ui world appears above objects that were just rendererd.
         this._renderer.render(
             this._mainScene,
             this._mainCameraRig.uiWorldCamera
@@ -639,7 +639,6 @@ export default class GameView extends Vue implements IGameView {
         }));
         webGlRenderer.autoClear = false;
         webGlRenderer.shadowMap.enabled = false;
-        webGlRenderer.shadowMap.type = PCFSoftShadowMap;
 
         this._resizeRenderer();
         this.gameView.appendChild(this._renderer.domElement);
@@ -731,7 +730,6 @@ export default class GameView extends Vue implements IGameView {
             console.log('[GameView] vr on before enter');
 
             this._renderer.vr.enabled = true;
-            this._renderer.shadowMap.enabled = false;
 
             // VR controls
             this._vrControls = new VRControlsModule(
@@ -920,7 +918,6 @@ export default class GameView extends Vue implements IGameView {
         console.log(display);
 
         this._renderer.vr.enabled = false;
-        this._renderer.shadowMap.enabled = false;
 
         this._inputVR.disconnectControllers();
 

@@ -731,6 +731,10 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _renderCore(): void {
+        //
+        // [Main scene]
+        //
+
         // Render the main scene with the main camera.
         this._renderer.clear();
         this._renderer.render(this._mainScene, this._mainCameraRig.mainCamera);
@@ -738,15 +742,17 @@ export default class GameView extends Vue implements IGameView {
         // Set the background color to null when rendering with the ui world camera.
         this._mainScene.background = null;
 
-        this._renderer.clearDepth(); // Clear depth buffer so that ui objects dont use it.
+        // Render the main scene with the ui world camera.
+        this._renderer.clearDepth(); // Clear depth buffer so that ui world appears above objects that were just rendererd.
         this._renderer.render(
             this._mainScene,
             this._mainCameraRig.uiWorldCamera
         );
-        this._sceneBackgroundUpdate();
+
+        this._mainSceneBackgroundUpdate();
     }
 
-    private _sceneBackgroundUpdate() {
+    private _mainSceneBackgroundUpdate() {
         if (this._sceneBackground) {
             this._mainScene.background = this._sceneBackground;
         } else {
@@ -762,6 +768,7 @@ export default class GameView extends Vue implements IGameView {
             alpha: true,
         }));
         webGlRenderer.autoClear = false;
+        webGlRenderer.shadowMap.enabled = false;
 
         this._resizeRenderer();
         this.gameView.appendChild(this._renderer.domElement);
@@ -780,7 +787,7 @@ export default class GameView extends Vue implements IGameView {
         this._sceneBackground = hasValue(sceneBackgroundColor)
             ? new Color(sceneBackgroundColor)
             : new Color('#263238');
-        this._sceneBackgroundUpdate();
+        this._mainSceneBackgroundUpdate();
         this.setCameraType('orthographic');
 
         // Main scene ambient light.
@@ -817,7 +824,6 @@ export default class GameView extends Vue implements IGameView {
             console.log('[GameView] vr on before enter');
 
             this._renderer.vr.enabled = true;
-            this._renderer.shadowMap.enabled = false;
 
             // VR controls
             this._vrControls = new VRControlsModule(this._mainCameraRig);
@@ -1005,7 +1011,6 @@ export default class GameView extends Vue implements IGameView {
         console.log(display);
 
         this._renderer.vr.enabled = false;
-        this._renderer.shadowMap.enabled = false;
 
         this._inputVR.disconnectControllers();
 
