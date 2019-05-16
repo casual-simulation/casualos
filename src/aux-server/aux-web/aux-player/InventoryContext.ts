@@ -62,35 +62,36 @@ export class InventoryContext {
      */
     selectedFile: InventoryItem = null;
 
-    private _flatSlotCount: number;
+    private _flatSlotsCount: number;
     private _flatSlotsDirty: boolean;
     private _gridSlotsWidth: number;
     private _gridSlotsHeight: number;
+    private _gridSlotsDirty: boolean;
 
     constructor(
         simulation: PlayerSimulation3D,
         context: string,
-        slotFlatCount?: number,
-        slotGridWidth?: number,
-        slotGridHeight?: number
+        flatSlotsCount?: number,
+        gridSlotsWidth?: number,
+        gridSlotsHeight?: number
     ) {
         if (context == null || context == undefined) {
             throw new Error('Inventory context cannot be null or undefined.');
         }
 
-        if (slotFlatCount < 0) {
+        if (flatSlotsCount < 0) {
             throw new Error(
                 'Inventory context cannot have slot count less than 0.'
             );
         }
 
-        if (slotGridWidth < 0) {
+        if (gridSlotsWidth < 0) {
             throw new Error(
                 'Inventory context cannot have slot grid width less than 0.'
             );
         }
 
-        if (slotGridHeight < 0) {
+        if (gridSlotsHeight < 0) {
             throw new Error(
                 'Inventory context cannot have slot grid height less than 0.'
             );
@@ -99,11 +100,11 @@ export class InventoryContext {
         this.simulation = simulation;
         this.context = context;
         this.setFlatSlotsCount(
-            getOptionalValue(slotFlatCount, DEFAULT_INVENTORY_SLOTFLAT_COUNT)
+            getOptionalValue(flatSlotsCount, DEFAULT_INVENTORY_SLOTFLAT_COUNT)
         );
         this.setGridSlotsDimensions(
-            getOptionalValue(slotGridWidth, DEFAULT_INVENTORY_SLOTGRID_WIDTH),
-            getOptionalValue(slotGridHeight, DEFAULT_INVENTORY_SLOTGRID_HEIGHT)
+            getOptionalValue(gridSlotsWidth, DEFAULT_INVENTORY_SLOTGRID_WIDTH),
+            getOptionalValue(gridSlotsHeight, DEFAULT_INVENTORY_SLOTGRID_HEIGHT)
         );
         this.files = [];
     }
@@ -139,7 +140,7 @@ export class InventoryContext {
         if (!isInContext && shouldBeInContext) {
             this._addFile(file, calc);
         } else if (isInContext && !shouldBeInContext) {
-            this._removeFile(file.id);
+            this._removeFile(file.id, calc);
         } else if (isInContext && shouldBeInContext) {
             this._updateFile(file, updates, calc);
         }
@@ -152,13 +153,17 @@ export class InventoryContext {
      */
     fileRemoved(id: string, calc: FileCalculationContext) {
         // console.log('[InventoryContext] fileRemoved:', id);
-        this._removeFile(id);
+        this._removeFile(id, calc);
     }
 
     frameUpdate(calc: FileCalculationContext): void {
         if (this._flatSlotsDirty) {
             this._resortFlatSlots(calc);
             this._flatSlotsDirty = false;
+        }
+        if (this._gridSlotsDirty) {
+            this._resortGridSlots(calc);
+            this._gridSlotsDirty = false;
         }
     }
 
@@ -167,7 +172,7 @@ export class InventoryContext {
     }
 
     getFlatSlotsCount(): number {
-        return this._flatSlotCount;
+        return this._flatSlotsCount;
     }
 
     getGridSlotsWidth(): number {
@@ -186,7 +191,7 @@ export class InventoryContext {
             );
         }
 
-        this._flatSlotCount = count;
+        this._flatSlotsCount = count;
         this._flatSlotsDirty = true;
     }
 
@@ -207,7 +212,7 @@ export class InventoryContext {
 
         this._gridSlotsWidth = width;
         this._gridSlotsHeight = height;
-        this._flatSlotsDirty = true;
+        this._gridSlotsDirty = true;
     }
 
     dispose(): void {}
@@ -215,11 +220,13 @@ export class InventoryContext {
     private _addFile(file: AuxFile, calc: FileCalculationContext) {
         this.files.push(file);
         this._flatSlotsDirty = true;
+        this._gridSlotsDirty = true;
     }
 
-    private _removeFile(id: string) {
+    private _removeFile(id: string, calc: FileCalculationContext) {
         remove(this.files, f => f.id === id);
         this._flatSlotsDirty = true;
+        this._gridSlotsDirty = true;
     }
 
     private _updateFile(
@@ -231,18 +238,19 @@ export class InventoryContext {
         if (fileIndex >= 0) {
             this.files[fileIndex] = file;
             this._flatSlotsDirty = true;
+            this._gridSlotsDirty = true;
         }
     }
 
     private _resortFlatSlots(calc: FileCalculationContext): void {
-        this.flatSlots = new Array(this._flatSlotCount);
+        this.flatSlots = new Array(this._flatSlotsCount);
         const y = 0;
 
-        for (let x = 0; x < this._flatSlotCount; x++) {
-            let file = this.files.find(f => {
-                let contextPos = getFilePosition(calc, f, this.context);
+        for (let x = 0; x < this._flatSlotsCount; x++) {
+            const file = this.files.find(f => {
+                const contextPos = getFilePosition(calc, f, this.context);
                 if (contextPos.x === x && contextPos.y === y) {
-                    let index = getFileIndex(calc, f, this.context);
+                    const index = getFileIndex(calc, f, this.context);
                     if (index === 0) {
                         return true;
                     }
@@ -252,11 +260,41 @@ export class InventoryContext {
 
             if (file) {
                 this.flatSlots[x] = {
-                    file,
+                    file: file,
                     simulation: this.simulation,
                     context: this.context,
                 };
             }
         }
+    }
+
+    private _resortGridSlots(calc: FileCalculationContext): void {
+        this.gridSlots = [];
+
+        for (let i = 0; i < this.files.length; i++) {
+            const file = this.files[i];
+            if (this._doesFileFitInGridSlots(file, calc)) {
+                this.gridSlots;
+                this.gridSlots.push({
+                    file: file,
+                    simulation: this.simulation,
+                    context: this.context,
+                });
+            }
+        }
+    }
+
+    private _doesFileFitInGridSlots(
+        file: AuxFile,
+        calc: FileCalculationContext
+    ): boolean {
+        const contextPos = getFilePosition(calc, file, this.context);
+
+        if (contextPos.x < 0 || contextPos.x >= this._gridSlotsWidth)
+            return false;
+        if (contextPos.y < 0 || contextPos.y >= this._gridSlotsHeight)
+            return false;
+
+        return true;
     }
 }
