@@ -62,7 +62,7 @@ import MiniFile from '../MiniFile/MiniFile';
 import FileTag from '../FileTag/FileTag';
 import FileTable from '../FileTable/FileTable';
 import { appManager } from '../../shared/AppManager';
-import { Simulation } from 'aux-web/shared/Simulation';
+import { Simulation } from '../../shared/Simulation';
 
 export class BuilderInteractionManager extends BaseInteractionManager {
     // This overrides the base class IGameView
@@ -549,11 +549,11 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             const files = flatMap(contexts, c => filesInContext(calc, c));
             const deduped = uniqBy(files, f => f.id);
             await appManager.copyFilesFromSimulation(
-                file.simulation.simulation,
+                file.simulation3D.simulation,
                 <AuxObject[]>deduped
             );
 
-            await file.simulation.simulation.helper.transaction(
+            await file.simulation3D.simulation.helper.transaction(
                 toast('Worksurface Copied!')
             );
         }

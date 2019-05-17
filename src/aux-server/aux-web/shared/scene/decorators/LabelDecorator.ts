@@ -17,7 +17,7 @@ import { Color, Camera, Object3D, Mesh, Vector3, Scene, Box3 } from 'three';
 import { FileShapeDecorator } from './FileShapeDecorator';
 import { WordBubbleElement } from '../WordBubbleElement';
 import { appManager } from '../../../shared/AppManager';
-import { IGameView } from 'aux-web/shared/IGameView';
+import { IGameView } from '../../../shared/IGameView';
 
 export class LabelDecorator extends AuxFile3DDecorator
     implements WordBubbleElement {

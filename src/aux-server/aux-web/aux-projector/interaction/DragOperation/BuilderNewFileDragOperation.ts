@@ -32,12 +32,12 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
      * Create a new drag rules.
      */
     constructor(
-        simulation: Simulation3D,
+        simulation3D: Simulation3D,
         interaction: BuilderInteractionManager,
         duplicatedFile: File,
         originalFile: File
     ) {
-        super(simulation, interaction, [duplicatedFile], null);
+        super(simulation3D, interaction, [duplicatedFile], null);
     }
 
     protected _updateFile(file: File, data: PartialFile): FileEvent {

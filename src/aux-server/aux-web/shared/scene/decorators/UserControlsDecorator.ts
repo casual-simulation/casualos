@@ -11,7 +11,7 @@ import {
 import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
 import { AuxFile3D } from '../AuxFile3D';
 import { calculateScale } from '../SceneUtils';
-import { IGameView } from 'aux-web/shared/IGameView';
+import { IGameView } from '../../../shared/IGameView';
 import {
     Orthographic_DefaultZoom,
     Orthographic_MinZoom,
@@ -164,7 +164,7 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
             ) {
                 this._lastPositionUpdateTime = time;
 
-                this.file3D.contextGroup.simulation.simulation.helper.updateFile(
+                this.file3D.contextGroup.simulation3D.simulation.helper.updateFile(
                     file,
                     {
                         tags: {
@@ -203,7 +203,7 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
             timeBetweenChecks > DEFAULT_USER_ACTIVE_CHECK_INTERVAL
         ) {
             this._lastActiveCheckTime = Date.now();
-            this.file3D.contextGroup.simulation.simulation.helper.updateFile(
+            this.file3D.contextGroup.simulation3D.simulation.helper.updateFile(
                 <AuxObject>this.file3D.file,
                 {
                     tags: {

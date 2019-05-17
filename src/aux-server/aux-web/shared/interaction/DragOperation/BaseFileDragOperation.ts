@@ -27,7 +27,7 @@ import {
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
 import { IGameView } from '../../../shared/IGameView';
 import { differenceBy, maxBy } from 'lodash';
-import { Simulation3D } from 'aux-web/shared/scene/Simulation3D';
+import { Simulation3D } from '../../../shared/scene/Simulation3D';
 
 /**
  * Shared class for both FileDragOperation and NewFileDragOperation.
@@ -58,18 +58,18 @@ export abstract class BaseFileDragOperation implements IOperation {
 
     /**
      * Create a new drag rules.
-     * @param simulation The simulation.
+     * @param simulation3D The simulation.
      * @param interaction The interaction manager.
      * @param files The files to drag.
      * @param context The context that the files are currently in.
      */
     constructor(
-        simulation: Simulation3D,
+        simulation3D: Simulation3D,
         interaction: BaseInteractionManager,
         files: File[],
         context: string
     ) {
-        this._simulation3D = simulation;
+        this._simulation3D = simulation3D;
         this._interaction = interaction;
         this._setFiles(files);
         this._lastScreenPos = this._simulation3D.gameView

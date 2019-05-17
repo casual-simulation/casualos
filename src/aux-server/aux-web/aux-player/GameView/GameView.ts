@@ -50,10 +50,7 @@ import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { DebugObjectManager } from '../../shared/scene/DebugObjectManager';
 import { AuxFile3DDecoratorFactory } from '../../shared/scene/decorators/AuxFile3DDecoratorFactory';
 import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
-import InventoryFile from '../InventoryFile/InventoryFile';
 import MenuFile from '../MenuFile/MenuFile';
-import { InventoryContextFlat, InventoryItem } from '../InventoryContextFlat';
-import { doesFileDefinePlayerContext } from '../PlayerUtils';
 import {
     CameraType,
     resizeCameraRig,
@@ -80,7 +77,6 @@ import { InventorySimulation3D } from '../scene/InventorySimulation3D';
 
 @Component({
     components: {
-        'inventory-file': InventoryFile,
         'menu-file': MenuFile,
     },
 })
@@ -148,26 +144,6 @@ export default class GameView extends Vue implements IGameView {
         return false;
     }
 
-    get inventoryItemsFlat() {
-        let items: InventoryItem[] = [];
-
-        this.inventorySimulations.forEach(sim => {
-            if (sim.inventoryContextFlat) {
-                for (
-                    let i = 0;
-                    i < sim.inventoryContextFlat.slots.length;
-                    i++
-                ) {
-                    if (sim.inventoryContextFlat.slots[i] || !items[i]) {
-                        items[i] = sim.inventoryContextFlat.slots[i];
-                    }
-                }
-            }
-        });
-
-        return items;
-    }
-
     get menu() {
         let items: MenuItem[] = [];
         this.playerSimulations.forEach(sim => {
@@ -204,6 +180,22 @@ export default class GameView extends Vue implements IGameView {
         );
     }
 
+    /**
+     * Find Inventory Simulation 3D object that is displaying for the given Simulation.
+     * @param sim The simulation to find a simulation 3d for.
+     */
+    public findInventorySimulation3D(sim: Simulation): InventorySimulation3D {
+        return this.inventorySimulations.find(s => s.simulation === sim);
+    }
+
+    /**
+     * Find Player Simulation 3D object that is displaying for the given Simulation.
+     * @param sim The simulation to find a simulation 3d for.
+     */
+    public findPlayerSimulation3D(sim: Simulation): PlayerSimulation3D {
+        return this.playerSimulations.find(s => s.simulation === sim);
+    }
+
     public getTime() {
         return this._time;
     }
@@ -224,6 +216,9 @@ export default class GameView extends Vue implements IGameView {
     }
     public getMainCamera(): PerspectiveCamera | OrthographicCamera {
         return this._mainCameraRig.mainCamera;
+    }
+    public getInventoryCamera(): PerspectiveCamera | OrthographicCamera {
+        return this._inventoryCameraRig.mainCamera;
     }
     public getUIHtmlElements(): HTMLElement[] {
         return [<HTMLElement>this.$refs.inventory];

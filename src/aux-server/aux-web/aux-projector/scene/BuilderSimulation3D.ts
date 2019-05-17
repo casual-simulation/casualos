@@ -7,6 +7,7 @@ import {
     Object,
 } from '@casual-simulation/aux-common';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
+import { PerspectiveCamera, OrthographicCamera } from 'three';
 
 export class BuilderSimulation3D extends Simulation3D {
     recentFiles: Object[] = [];
@@ -23,6 +24,10 @@ export class BuilderSimulation3D extends Simulation3D {
                 this.selectedRecentFile = this.simulation.recent.selectedRecentFile;
             })
         );
+    }
+
+    getMainCamera(): PerspectiveCamera | OrthographicCamera {
+        return this._gameView.getMainCamera();
     }
 
     clearRecentFiles() {

@@ -10,7 +10,7 @@ import { InventoryContext3D } from './InventoryContext3D';
 import { InventorySimulation3D } from './InventorySimulation3D';
 
 export class InventoryContextGroup3D extends ContextGroup3D {
-    simulation: InventorySimulation3D; // Override base class type.
+    simulation3D: InventorySimulation3D; // Override base class type.
 
     constructor(
         simulation: InventorySimulation3D,
@@ -25,7 +25,7 @@ export class InventoryContextGroup3D extends ContextGroup3D {
         file: AuxFile,
         calc: FileCalculationContext
     ): string[] {
-        return [this.simulation.inventoryContextFlat.context];
+        return [this.simulation3D.inventoryContext];
     }
 
     protected _createContext3d(context: string): Context3D {

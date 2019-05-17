@@ -14,8 +14,6 @@ import { PlayerFileClickOperation } from './ClickOperation/PlayerFileClickOperat
 import { PlayerGrid } from '../PlayerGrid';
 import { Physics } from '../../shared/scene/Physics';
 import { Input } from '../../shared/scene/Input';
-import InventoryFile from '../InventoryFile/InventoryFile';
-import { PlayerInventoryFileClickOperation } from './ClickOperation/PlayerInventoryFileClickOperation';
 import { appManager } from '../../shared/AppManager';
 import { PlayerSimulation3D } from '../scene/PlayerSimulation3D';
 import { Simulation } from '../../shared/Simulation';
@@ -62,7 +60,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             }
 
             let fileClickOp = new PlayerFileClickOperation(
-                <PlayerSimulation3D>gameObject.contextGroup.simulation,
+                gameObject.contextGroup.simulation3D,
                 this,
                 gameObject,
                 faceValue
@@ -93,18 +91,6 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     }
 
     createHtmlElementClickOperation(element: HTMLElement): IOperation {
-        const vueElement: any = Input.getVueParent(element);
-        if (vueElement instanceof InventoryFile) {
-            if (vueElement.item) {
-                let inventoryClickOperation = new PlayerInventoryFileClickOperation(
-                    vueElement.item.simulation,
-                    this,
-                    vueElement.item
-                );
-                return inventoryClickOperation;
-            }
-        }
-
         return null;
     }
 
@@ -136,22 +122,6 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     }
 
     protected _findHoveredFile(input: Input): [File, Simulation] {
-        if (input.isMouseFocusingAny(this._gameView.getUIHtmlElements())) {
-            const element = input.getTargetData().inputOver;
-            const vueElement = Input.getVueParent(element);
-
-            if (vueElement instanceof InventoryFile) {
-                // handle hover
-                if (vueElement.file) {
-                    return [
-                        vueElement.file,
-                        vueElement.item.simulation.simulation,
-                    ];
-                } else {
-                    return [null, null];
-                }
-            }
-        }
         return super._findHoveredFile(input);
     }
 

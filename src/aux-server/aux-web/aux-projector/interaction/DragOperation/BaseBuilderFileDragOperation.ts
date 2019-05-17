@@ -57,12 +57,12 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
      * Create a new drag rules.
      */
     constructor(
-        simulation: Simulation3D,
+        simulation3D: Simulation3D,
         interaction: BuilderInteractionManager,
         files: File[],
         context: string
     ) {
-        super(simulation, interaction, files, context);
+        super(simulation3D, interaction, files, context);
 
         this.gameView.showTrashCan = true;
     }

@@ -13,7 +13,7 @@ import { MenuContext } from '../MenuContext';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { doesFileDefinePlayerContext } from '../PlayerUtils';
 import { SimulationContext } from '../SimulationContext';
-import { Color, Texture } from 'three';
+import { Color, Texture, OrthographicCamera, PerspectiveCamera } from 'three';
 import GameView from '../GameView/GameView';
 
 export class PlayerSimulation3D extends Simulation3D {
@@ -49,6 +49,10 @@ export class PlayerSimulation3D extends Simulation3D {
 
         this.context = context;
         this._fileBackBuffer = new Map();
+    }
+
+    getMainCamera(): PerspectiveCamera | OrthographicCamera {
+        return this._gameView.getMainCamera();
     }
 
     init() {

@@ -8,15 +8,10 @@ import { IGameView } from '../../shared/IGameView';
 import { Simulation } from '../../shared/Simulation';
 import { tap } from 'rxjs/operators';
 import { InventoryContextGroup3D } from './InventoryContextGroup3D';
-import { InventoryContextFlat } from '../InventoryContextFlat';
+import { PerspectiveCamera, OrthographicCamera } from 'three';
+import GameView from '../GameView/GameView';
 
 export class InventorySimulation3D extends Simulation3D {
-    /**
-     * The inventory context that this simulation renders.
-     * NOTE: This is kept around as legacy functionality.
-     */
-    inventoryContextFlat: InventoryContextFlat;
-
     /**
      * The inventory context that this simulation is for.
      */
@@ -32,6 +27,8 @@ export class InventorySimulation3D extends Simulation3D {
      */
     private _contextLoaded: boolean;
 
+    protected _gameView: GameView; // Override base class gameView so that its cast to the Aux Player GameView.
+
     constructor(gameView: IGameView, simulation: Simulation) {
         super(gameView, simulation);
 
@@ -44,6 +41,10 @@ export class InventorySimulation3D extends Simulation3D {
         );
     }
 
+    getMainCamera(): PerspectiveCamera | OrthographicCamera {
+        return this._gameView.getInventoryCamera();
+    }
+
     init() {
         this._subs.push(
             this.simulation.watcher
@@ -54,15 +55,10 @@ export class InventorySimulation3D extends Simulation3D {
                             'aux._userInventoryContext'
                         ];
                         if (
-                            !this.inventoryContextFlat ||
-                            this.inventoryContextFlat.context !==
-                                userInventoryContextValue
+                            !this.inventoryContext ||
+                            this.inventoryContext !== userInventoryContextValue
                         ) {
                             this.inventoryContext = userInventoryContextValue;
-                            this.inventoryContextFlat = new InventoryContextFlat(
-                                this.simulation,
-                                userInventoryContextValue
-                            );
 
                             console.log(
                                 '[InventorySimulation3D] User changed inventory context to: ',
@@ -75,32 +71,6 @@ export class InventorySimulation3D extends Simulation3D {
         );
 
         super.init();
-    }
-
-    protected _frameUpdateCore(calc: FileCalculationContext) {
-        super._frameUpdateCore(calc);
-        this.inventoryContextFlat.frameUpdate(calc);
-    }
-
-    protected async _fileAddedCore(
-        calc: FileCalculationContext,
-        file: AuxObject
-    ): Promise<void> {
-        await super._fileAddedCore(calc, file);
-        await this.inventoryContextFlat.fileAdded(file, calc);
-    }
-
-    protected async _fileUpdatedCore(
-        calc: FileCalculationContext,
-        file: AuxObject
-    ) {
-        await super._fileUpdatedCore(calc, file);
-        await this.inventoryContextFlat.fileUpdated(file, [], calc);
-    }
-
-    protected _fileRemovedCore(calc: FileCalculationContext, file: string) {
-        super._fileRemovedCore(calc, file);
-        this.inventoryContextFlat.fileRemoved(file, calc);
     }
 
     protected _createContext(calc: FileCalculationContext, file: AuxObject) {

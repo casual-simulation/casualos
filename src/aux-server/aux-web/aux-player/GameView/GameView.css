@@ -23,29 +23,6 @@ html.ar-app .webxr-sessions canvas {
     left: 2vw;
 }
 
-.inventory-layout {
-    display: flex;
-    width: 450px;
-    height: 90px;
-    padding: 5px 10px;
-    line-height: 24px;
-    /* background-color: rgba(255,255,255, 1); */
-    color: rgba(0, 0, 0, 0.87);
-    border-radius: 20px;
-    /* box-shadow: 0 3px 1px -2px rgba(0,0,0,.2), 0 2px 2px 0 rgba(0,0,0,.14), 0 1px 5px 0 rgba(0,0,0,.12); */
-}
-
-@media (max-width: 600px) {
-    .inventory-layout {
-        width: 96vw;
-        height: 20vw;
-    }
-}
-
-.inventory-layout > *:not(:first-child) {
-    margin-left: 5px;
-}
-
 .vr-button-container {
     margin-left: 16px;
 }

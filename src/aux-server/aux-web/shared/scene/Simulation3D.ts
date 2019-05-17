@@ -1,4 +1,4 @@
-import { Object3D } from 'three';
+import { Object3D, PerspectiveCamera, OrthographicCamera } from 'three';
 import { ContextGroup3D } from './ContextGroup3D';
 import { Simulation } from '../Simulation';
 import {
@@ -44,6 +44,11 @@ export abstract class Simulation3D extends Object3D
     get gameView() {
         return this._gameView;
     }
+
+    /**
+     * Gets the camera that is used as the primary rendering camera for this simulation.
+     */
+    abstract getMainCamera(): PerspectiveCamera | OrthographicCamera;
 
     /**
      * Creates a new Simulation3D object that can be used to render the given simulation.

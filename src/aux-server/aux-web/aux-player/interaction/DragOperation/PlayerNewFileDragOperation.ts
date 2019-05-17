@@ -22,23 +22,30 @@ import GameView from '../../GameView/GameView';
 import { Intersection, Vector2 } from 'three';
 import { Physics } from '../../../shared/scene/Physics';
 import { Input } from '../../../shared/scene/Input';
-import InventoryFile from '../../InventoryFile/InventoryFile';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
-import { BasePlayerFileDragOperation } from './BasePlayerFileDragOperation';
+import { PlayerFileDragOperation } from './PlayerFileDragOperation';
+import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 
-export class PlayerNewFileDragOperation extends BasePlayerFileDragOperation {
+export class PlayerNewFileDragOperation extends PlayerFileDragOperation {
     private _fileAdded: boolean;
 
     /**
      * Create a new drag rules.
      */
     constructor(
-        simulation: PlayerSimulation3D,
+        playerSimulation: PlayerSimulation3D,
+        inventorySimulation: InventorySimulation3D,
         interaction: PlayerInteractionManager,
         file: File,
         context: string
     ) {
-        super(simulation, interaction, [file], context);
+        super(
+            playerSimulation,
+            inventorySimulation,
+            interaction,
+            [file],
+            context
+        );
     }
 
     protected _updateFile(file: File, data: PartialFile): FileEvent {

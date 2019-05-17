@@ -31,7 +31,6 @@ import {
     Orthographic_MaxZoom,
 } from '../scene/CameraRigFactory';
 import { TapCodeManager } from './TapCodeManager';
-import InventoryFile from 'aux-web/aux-player/InventoryFile/InventoryFile';
 import { Simulation } from '../Simulation';
 
 export abstract class BaseInteractionManager {
@@ -220,7 +219,7 @@ export abstract class BaseInteractionManager {
                         if (gameObject instanceof AuxFile3D) {
                             this.handlePointerDown(
                                 gameObject.file,
-                                gameObject.contextGroup.simulation.simulation
+                                gameObject.contextGroup.simulation3D.simulation
                             );
                         }
                     } else {
@@ -326,7 +325,7 @@ export abstract class BaseInteractionManager {
         if (gameObject instanceof AuxFile3D) {
             return [
                 gameObject.file,
-                gameObject.contextGroup.simulation.simulation,
+                gameObject.contextGroup.simulation3D.simulation,
             ];
         } else {
             return [null, null];
@@ -385,13 +384,13 @@ export abstract class BaseInteractionManager {
     }
 
     async selectFile(file: AuxFile3D) {
-        file.contextGroup.simulation.simulation.filePanel.search = '';
+        file.contextGroup.simulation3D.simulation.filePanel.search = '';
         const shouldMultiSelect = this._gameView
             .getInput()
             .getKeyHeld('Control');
-        file.contextGroup.simulation.simulation.recent.addFileDiff(file.file);
-        file.contextGroup.simulation.simulation.recent.selectedRecentFile = null;
-        await file.contextGroup.simulation.simulation.selection.selectFile(
+        file.contextGroup.simulation3D.simulation.recent.addFileDiff(file.file);
+        file.contextGroup.simulation3D.simulation.recent.selectedRecentFile = null;
+        await file.contextGroup.simulation3D.simulation.selection.selectFile(
             <AuxFile>file.file,
             shouldMultiSelect
         );

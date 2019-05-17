@@ -47,7 +47,7 @@ export class ContextGroup3D extends GameObject {
     /**
      * The simulation the group is for.
      */
-    simulation: Simulation3D;
+    simulation3D: Simulation3D;
 
     protected _childColliders: Object3D[];
     protected _decoratorFactory: AuxFile3DDecoratorFactory;
@@ -79,13 +79,13 @@ export class ContextGroup3D extends GameObject {
      * @param The file that this builder represents.
      */
     constructor(
-        simulation: Simulation3D,
+        simulation3D: Simulation3D,
         file: AuxFile,
         domain: AuxDomain,
         decoratorFactory: AuxFile3DDecoratorFactory
     ) {
         super();
-        this.simulation = simulation;
+        this.simulation3D = simulation3D;
         this.domain = domain;
         this.file = file;
         this.display = new Group();

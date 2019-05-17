@@ -44,12 +44,12 @@ export abstract class BaseFileClickOperation implements IOperation {
     }
 
     constructor(
-        simulation: Simulation3D,
+        simulation3D: Simulation3D,
         interaction: BaseInteractionManager,
         file: File,
         file3D: AuxFile3D | ContextGroup3D | null
     ) {
-        this._simulation3D = simulation;
+        this._simulation3D = simulation3D;
         this._interaction = interaction;
         this._file = file;
         this._file3D = file3D;

@@ -37,14 +37,14 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
      * Create a new drag rules.
      */
     constructor(
-        simulation: Simulation3D,
+        simulation3D: Simulation3D,
         interaction: BuilderInteractionManager,
         hit: Intersection,
         files: File[],
         workspace: BuilderGroup3D,
         context: string
     ) {
-        super(simulation, interaction, files, context);
+        super(simulation3D, interaction, files, context);
 
         this._workspace = workspace;
 
