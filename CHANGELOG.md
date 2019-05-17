@@ -8,6 +8,7 @@
 
 -   Improvements
     -   Search bar will now always remain across the top of builder.
+    -   Make the `aux.context.grid` tag not use objects for hex heights.
 -   Bug Fixes
     -   Allow for the expansion and shrinking of hexes after they have been raised or lowered.
     -   Clicking on the diff bursh in builder will now make the sheets appear correctly.
