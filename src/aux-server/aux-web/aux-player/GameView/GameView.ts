@@ -52,7 +52,7 @@ import { AuxFile3DDecoratorFactory } from '../../shared/scene/decorators/AuxFile
 import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
 import InventoryFile from '../InventoryFile/InventoryFile';
 import MenuFile from '../MenuFile/MenuFile';
-import { InventoryContext, InventoryItem } from '../InventoryContext';
+import { InventoryContextFlat, InventoryItem } from '../InventoryContextFlat';
 import { doesFileDefinePlayerContext } from '../PlayerUtils';
 import {
     CameraType,
@@ -75,6 +75,8 @@ import { Simulation } from '../../shared/Simulation';
 import { MenuItem } from '../MenuContext';
 import SimulationItem from '../SimulationContext';
 import { HtmlMixer } from '../../shared/scene/HtmlMixer';
+import { InventoryContext3D } from '../scene/InventoryContext3D';
+import { InventorySimulation3D } from '../scene/InventorySimulation3D';
 
 @Component({
     components: {
@@ -109,7 +111,8 @@ export default class GameView extends Vue implements IGameView {
         PerspectiveCamera | OrthographicCamera
     > = new ArgEvent<PerspectiveCamera | OrthographicCamera>();
 
-    private simulations: PlayerSimulation3D[] = [];
+    private playerSimulations: PlayerSimulation3D[] = [];
+    private inventorySimulations: InventorySimulation3D[] = [];
 
     private _fileSubs: SubscriptionLike[];
     private _decoratorFactory: AuxFile3DDecoratorFactory;
@@ -148,35 +151,15 @@ export default class GameView extends Vue implements IGameView {
     get inventoryItemsFlat() {
         let items: InventoryItem[] = [];
 
-        this.simulations.forEach(sim => {
-            if (sim.inventoryContext) {
+        this.inventorySimulations.forEach(sim => {
+            if (sim.inventoryContextFlat) {
                 for (
                     let i = 0;
-                    i < sim.inventoryContext.flatSlots.length;
+                    i < sim.inventoryContextFlat.slots.length;
                     i++
                 ) {
-                    if (sim.inventoryContext.flatSlots[i] || !items[i]) {
-                        items[i] = sim.inventoryContext.flatSlots[i];
-                    }
-                }
-            }
-        });
-
-        return items;
-    }
-
-    get inventoryItemsGrid() {
-        let items: InventoryItem[] = [];
-
-        this.simulations.forEach(sim => {
-            if (sim.inventoryContext) {
-                for (
-                    let i = 0;
-                    i < sim.inventoryContext.gridSlots.length;
-                    i++
-                ) {
-                    if (sim.inventoryContext.gridSlots[i] || !items[i]) {
-                        items[i] = sim.inventoryContext.gridSlots[i];
+                    if (sim.inventoryContextFlat.slots[i] || !items[i]) {
+                        items[i] = sim.inventoryContextFlat.slots[i];
                     }
                 }
             }
@@ -187,7 +170,7 @@ export default class GameView extends Vue implements IGameView {
 
     get menu() {
         let items: MenuItem[] = [];
-        this.simulations.forEach(sim => {
+        this.playerSimulations.forEach(sim => {
             if (sim.menuContext) {
                 items.push(...sim.menuContext.items);
             }
@@ -196,8 +179,8 @@ export default class GameView extends Vue implements IGameView {
     }
 
     get background() {
-        for (let i = 0; i < this.simulations.length; i++) {
-            const sim = this.simulations[i];
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
             if (sim.backgroundColor) {
                 return sim.backgroundColor;
             }
@@ -212,11 +195,11 @@ export default class GameView extends Vue implements IGameView {
 
     constructor() {
         super();
-        this.simulations = [];
+        this.playerSimulations = [];
     }
 
     public findFilesById(id: string): AuxFile3D[] {
-        return flatMap(flatMap(this.simulations, s => s.contexts), c =>
+        return flatMap(flatMap(this.playerSimulations, s => s.contexts), c =>
             c.getFiles().filter(f => f.file.id === id)
         );
     }
@@ -255,10 +238,15 @@ export default class GameView extends Vue implements IGameView {
         return null;
     }
     public getSimulations(): Simulation3D[] {
-        return this.simulations;
+        return [...this.playerSimulations, ...this.inventorySimulations];
     }
     public getContexts(): ContextGroup3D[] {
-        return flatMap(this.simulations, s => s.contexts);
+        let playerContexts = flatMap(this.playerSimulations, s => s.contexts);
+        let inventoryContexts = flatMap(
+            this.inventorySimulations,
+            s => s.contexts
+        );
+        return [...playerContexts, ...inventoryContexts];
     }
 
     public setGridsVisible(visible: boolean) {
@@ -335,7 +323,8 @@ export default class GameView extends Vue implements IGameView {
         this._time = new Time();
         this._decoratorFactory = new AuxFile3DDecoratorFactory(this);
         this._fileSubs = [];
-        this.simulations = [];
+        this.playerSimulations = [];
+        this.inventorySimulations = [];
         this._setupRenderer();
         this._setupScenes();
         DebugObjectManager.init(this._time, this._mainScene);
@@ -370,30 +359,48 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _simulationAdded(sim: Simulation) {
-        const sim3D = new PlayerSimulation3D(
+        //
+        // Create Player Simulation
+        //
+        const playerSim3D = new PlayerSimulation3D(
             sim.parsedId.context || this.context,
             this,
             sim
         );
-        sim3D.init();
-        sim3D.onFileAdded.addListener(this.onFileAdded.invoke);
-        sim3D.onFileRemoved.addListener(this.onFileRemoved.invoke);
-        sim3D.onFileUpdated.addListener(this.onFileUpdated.invoke);
+        playerSim3D.init();
+        playerSim3D.onFileAdded.addListener(this.onFileAdded.invoke);
+        playerSim3D.onFileRemoved.addListener(this.onFileRemoved.invoke);
+        playerSim3D.onFileUpdated.addListener(this.onFileUpdated.invoke);
 
-        sim3D.simulationContext.itemsUpdated.subscribe(() => {
+        playerSim3D.simulationContext.itemsUpdated.subscribe(() => {
             this._onSimsUpdated();
         });
 
-        this.simulations.push(sim3D);
-        this._mainScene.add(sim3D);
+        this.playerSimulations.push(playerSim3D);
+        this._mainScene.add(playerSim3D);
+
+        //
+        // Create Inventory Simulation
+        //
+        const inventorySim3D = new InventorySimulation3D(this, sim);
+        inventorySim3D.init();
+        inventorySim3D.onFileAdded.addListener(this.onFileAdded.invoke);
+        inventorySim3D.onFileRemoved.addListener(this.onFileRemoved.invoke);
+        inventorySim3D.onFileUpdated.addListener(this.onFileUpdated.invoke);
+
+        this.inventorySimulations.push(inventorySim3D);
+        this._inventoryScene.add(inventorySim3D);
     }
 
     private _simulationRemoved(sim: Simulation) {
-        const index = this.simulations.findIndex(
+        //
+        // Remove Player Simulation
+        //
+        const playerSimIndex = this.playerSimulations.findIndex(
             s => s.simulation.id === sim.id
         );
-        if (index >= 0) {
-            const removed = this.simulations.splice(index, 1);
+        if (playerSimIndex >= 0) {
+            const removed = this.playerSimulations.splice(playerSimIndex, 1);
             removed.forEach(s => {
                 s.onFileAdded.removeListener(this.onFileAdded.invoke);
                 s.onFileRemoved.removeListener(this.onFileRemoved.invoke);
@@ -402,11 +409,29 @@ export default class GameView extends Vue implements IGameView {
                 this._mainScene.remove(s);
             });
         }
+
+        //
+        // Remove Inventory Simulation
+        //
+        const invSimIndex = this.inventorySimulations.findIndex(
+            s => s.simulation.id == sim.id
+        );
+
+        if (invSimIndex >= 0) {
+            const removed = this.inventorySimulations.splice(invSimIndex, 1);
+            removed.forEach(s => {
+                s.onFileAdded.removeListener(this.onFileAdded.invoke);
+                s.onFileRemoved.removeListener(this.onFileRemoved.invoke);
+                s.onFileUpdated.removeListener(this.onFileUpdated.invoke);
+                s.unsubscribe();
+                this._inventoryScene.remove(s);
+            });
+        }
     }
 
     private _onSimsUpdated() {
         let items: SimulationItem[] = [];
-        this.simulations.forEach(sim => {
+        this.playerSimulations.forEach(sim => {
             if (sim.simulationContext) {
                 for (let i = 0; i < sim.simulationContext.items.length; i++) {
                     items[i] = sim.simulationContext.items[i];
@@ -483,7 +508,10 @@ export default class GameView extends Vue implements IGameView {
         this._inputVR.update();
         this._interaction.update();
 
-        this.simulations.forEach(s => {
+        this.playerSimulations.forEach(s => {
+            s.frameUpdate();
+        });
+        this.inventorySimulations.forEach(s => {
             s.frameUpdate();
         });
 
@@ -710,31 +738,6 @@ export default class GameView extends Vue implements IGameView {
 
         // Inventory ground plane.
         this._invGroundPlane = new Plane(new Vector3(0, 1, 0));
-
-        // TEST: Put some test geometry in the inventory scene.
-        let cube: Mesh;
-        let material: MeshToonMaterial;
-
-        // red cube
-        cube = createCube(1);
-        cube.position.set(0, 0, 0);
-        material = cube.material as MeshToonMaterial;
-        material.color = new Color('#f00');
-        this._inventoryScene.add(cube);
-
-        // green cube
-        cube = createCube(1);
-        cube.position.set(1, 0, -1);
-        material = cube.material as MeshToonMaterial;
-        material.color = new Color('#0f0');
-        this._inventoryScene.add(cube);
-
-        // blue cube
-        cube = createCube(1);
-        cube.position.set(2, 0, -2);
-        material = cube.material as MeshToonMaterial;
-        material.color = new Color('#00f');
-        this._inventoryScene.add(cube);
 
         //
         // [Html Mixer Context]

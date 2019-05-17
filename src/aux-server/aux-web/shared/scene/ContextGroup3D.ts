@@ -24,8 +24,6 @@ import { Simulation3D } from './Simulation3D';
  * Whether or not anything is visualized in the context depends on the file tags.
  */
 export class ContextGroup3D extends GameObject {
-    private _childColliders: Object3D[];
-
     /**
      * The file that this context represents.
      */
@@ -51,7 +49,8 @@ export class ContextGroup3D extends GameObject {
      */
     simulation: Simulation3D;
 
-    private _decoratorFactory: AuxFile3DDecoratorFactory;
+    protected _childColliders: Object3D[];
+    protected _decoratorFactory: AuxFile3DDecoratorFactory;
 
     /**
      * Gets the colliders that should be used for this context group.
@@ -171,11 +170,18 @@ export class ContextGroup3D extends GameObject {
      * @param calc The file calculation context that should be used.
      */
     private _updateContexts(file: AuxFile, calc: FileCalculationContext) {
-        const contexts = getFileConfigContexts(calc, file);
+        const contexts = this._getContextsThatShouldBeDisplayed(file, calc);
         // TODO: Handle scenarios where builder.context is empty or null
         if (contexts) {
             this._addContexts(file, contexts, calc);
         }
+    }
+
+    protected _getContextsThatShouldBeDisplayed(
+        file: AuxFile,
+        calc: FileCalculationContext
+    ): string[] {
+        return getFileConfigContexts(calc, file);
     }
 
     protected async _updateThis(
@@ -200,15 +206,8 @@ export class ContextGroup3D extends GameObject {
             const currentContexts = this.currentContexts();
             const missingContexts = difference(contexts, currentContexts);
             const removedContexts = difference(currentContexts, contexts);
-            const realNewContexts = missingContexts.map(
-                c =>
-                    new Context3D(
-                        c,
-                        this,
-                        this.domain,
-                        this._childColliders,
-                        this._decoratorFactory
-                    )
+            const realNewContexts = missingContexts.map(c =>
+                this._createContext3d(c)
             );
 
             realNewContexts.forEach(c => {
@@ -230,6 +229,16 @@ export class ContextGroup3D extends GameObject {
                 }
             });
         }
+    }
+
+    protected _createContext3d(context: string): Context3D {
+        return new Context3D(
+            context,
+            this,
+            this.domain,
+            this._childColliders,
+            this._decoratorFactory
+        );
     }
 
     private currentContexts(): string[] {

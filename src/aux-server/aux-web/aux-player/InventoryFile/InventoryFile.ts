@@ -4,7 +4,7 @@ import { Inject, Watch, Prop } from 'vue-property-decorator';
 import { Object, AuxFile } from '@casual-simulation/aux-common';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { appManager } from '../../shared/AppManager';
-import { InventoryItem } from '../InventoryContext';
+import { InventoryItem } from '../InventoryContextFlat';
 
 @Component({
     components: {},
@@ -31,19 +31,19 @@ export default class InventoryFile extends Vue {
         if (file) {
             this.image = await this.fileRenderer.render(
                 file,
-                this.item.simulation.simulation.helper.createContext()
+                this.item.simulation.helper.createContext()
             );
             this.showImage = 'flex';
             let label = file.tags['aux.label'];
             if (label) {
-                this.label = this.item.simulation.simulation.helper.calculateFormattedFileValue(
+                this.label = this.item.simulation.helper.calculateFormattedFileValue(
                     file,
                     'aux.label'
                 );
 
                 const labelColor = file.tags['aux.label.color'];
                 if (labelColor) {
-                    this.labelColor = this.item.simulation.simulation.helper.calculateFormattedFileValue(
+                    this.labelColor = this.item.simulation.helper.calculateFormattedFileValue(
                         file,
                         'aux.label.color'
                     );

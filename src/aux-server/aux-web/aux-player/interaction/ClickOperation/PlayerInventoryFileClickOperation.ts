@@ -11,7 +11,7 @@ import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperati
 import GameView from '../../GameView/GameView';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import { PlayerFileDragOperation } from '../DragOperation/PlayerFileDragOperation';
-import { InventoryItem } from 'aux-web/aux-player/InventoryContext';
+import { InventoryItem } from 'aux-web/aux-player/InventoryContextFlat';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 import { PlayerNewFileDragOperation } from '../DragOperation/PlayerNewFileDragOperation';
 
@@ -40,7 +40,7 @@ export class PlayerInventoryFileClickOperation extends BaseFileClickOperation {
     }
 
     protected _performClick(): void {
-        this._item.simulation.simulation.helper.action('onClick', [this._file]);
+        this._item.simulation.helper.action('onClick', [this._file]);
     }
 
     protected _createDragOperation(

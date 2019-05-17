@@ -9,12 +9,12 @@ import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { IGameView } from '../../shared/IGameView';
 import { Simulation } from '../../shared/Simulation';
 import { tap } from 'rxjs/operators';
-import { InventoryContext } from '../InventoryContext';
 import { MenuContext } from '../MenuContext';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { doesFileDefinePlayerContext } from '../PlayerUtils';
 import { SimulationContext } from '../SimulationContext';
 import { Color, Texture } from 'three';
+import GameView from '../GameView/GameView';
 
 export class PlayerSimulation3D extends Simulation3D {
     /**
@@ -31,8 +31,9 @@ export class PlayerSimulation3D extends Simulation3D {
     private _contextBackground: Color | Texture = null;
     private _sceneBackground: Color | Texture = null;
 
+    protected _gameView: GameView; // Override base class gameView so that its cast to the Aux Player GameView.
+
     context: string;
-    inventoryContext: InventoryContext = null;
     menuContext: MenuContext = null;
     simulationContext: SimulationContext = null;
 
@@ -58,24 +59,6 @@ export class PlayerSimulation3D extends Simulation3D {
                 .fileChanged(this.simulation.helper.userFile)
                 .pipe(
                     tap(file => {
-                        const userInventoryContextValue = (<Object>file).tags[
-                            'aux._userInventoryContext'
-                        ];
-                        if (
-                            !this.inventoryContext ||
-                            this.inventoryContext.context !==
-                                userInventoryContextValue
-                        ) {
-                            this.inventoryContext = new InventoryContext(
-                                this,
-                                userInventoryContextValue
-                            );
-                            console.log(
-                                '[PlayerSimulation3D] User changed inventory context to: ',
-                                userInventoryContextValue
-                            );
-                        }
-
                         const userMenuContextValue =
                             file.tags['aux._userMenuContext'];
                         if (
@@ -146,7 +129,6 @@ export class PlayerSimulation3D extends Simulation3D {
 
     protected _frameUpdateCore(calc: FileCalculationContext) {
         super._frameUpdateCore(calc);
-        this.inventoryContext.frameUpdate(calc);
         this.menuContext.frameUpdate(calc);
         this.simulationContext.frameUpdate(calc);
     }
@@ -234,7 +216,6 @@ export class PlayerSimulation3D extends Simulation3D {
             })
         );
 
-        await this.inventoryContext.fileAdded(file, calc);
         await this.menuContext.fileAdded(file, calc);
         await this.simulationContext.fileAdded(file, calc);
 
@@ -258,14 +239,12 @@ export class PlayerSimulation3D extends Simulation3D {
         file: AuxObject
     ) {
         await super._fileUpdatedCore(calc, file);
-        await this.inventoryContext.fileUpdated(file, [], calc);
         await this.menuContext.fileUpdated(file, [], calc);
         await this.simulationContext.fileUpdated(file, [], calc);
     }
 
     protected _fileRemovedCore(calc: FileCalculationContext, file: string) {
         super._fileRemovedCore(calc, file);
-        this.inventoryContext.fileRemoved(file, calc);
         this.menuContext.fileRemoved(file, calc);
         this.simulationContext.fileRemoved(file, calc);
     }
