@@ -540,7 +540,8 @@ export class AppManager {
     }
 
     private async _fetchConfigFromServer(): Promise<WebConfig> {
-        const result = await Axios.get<WebConfig>('/api/config');
+        const path = location.pathname.slice(1);
+        const result = await Axios.get<WebConfig>(`/api/${path}/config`);
         if (result.status === 200) {
             return result.data;
         } else {

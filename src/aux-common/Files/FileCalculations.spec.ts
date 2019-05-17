@@ -59,6 +59,7 @@ import {
     blacklistAllowsAccess,
     getFileDragMode,
     whitelistOrBlacklistAllowsAccess,
+    getBuilderContextGrid,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
@@ -3014,6 +3015,41 @@ describe('FileCalculations', () => {
                     'context.index': null,
                     'context.id': null,
                 },
+            });
+        });
+    });
+
+    describe('getContextGrid()', () => {
+        it('should find all the tags that represent a grid position', () => {
+            const file = createFile('file', {
+                'aux.context.grid.0:1': 1,
+                'aux.context.grid.1:1': 1,
+                'aux.context.grid.2:1': 2,
+                'aux.context.grid.2:2': '=3',
+            });
+
+            const calc = createCalculationContext([file]);
+            const grid = getBuilderContextGrid(calc, file);
+
+            expect(grid).toEqual({
+                '0:1': 1,
+                '1:1': 1,
+                '2:1': 2,
+                '2:2': 3,
+            });
+        });
+
+        it('should not get confused by grid scale', () => {
+            const file = createFile('file', {
+                'aux.context.grid.0:1': 1,
+                'aux.context.grid.scale': 50,
+            });
+
+            const calc = createCalculationContext([file]);
+            const grid = getBuilderContextGrid(calc, file);
+
+            expect(grid).toEqual({
+                '0:1': 1,
             });
         });
     });

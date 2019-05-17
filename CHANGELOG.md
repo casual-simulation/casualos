@@ -6,10 +6,16 @@
 
 ### Changes:
 
+-   Improvements
+    -   Search bar will now always remain across the top of builder.
+    -   Made the `aux.context.grid` tag not use objects for hex heights.
+    -   Made `auxplayer.com/channel` load AUX Builder and `auxplayer.com/channel/context` load AUX Player.
 -   Bug Fixes
     -   Allow for the expansion and shrinking of hexes after they have been raised or lowered.
     -   Clicking on the diff bursh in builder will now make the sheets appear correctly.
     -   Selecting the file ID in builder will now no longer change the zoom that sent the camera too far away.
+    -   Upon shrinking the hex grid, hexes will now remain if a file is on top of it.
+    -   Clicking on a non centeral hex did not show correct raise and lower options, now it does.
 
 ## V0.6.5
 

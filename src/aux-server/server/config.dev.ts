@@ -12,7 +12,8 @@ const config: Config = {
     },
     socketPort: 4567,
     httpPort: 3000,
-    clients: [projectorConfig, playerConfig],
+    builder: projectorConfig,
+    player: playerConfig,
     mongodb: {
         url: 'mongodb://127.0.0.1:27017',
     },
@@ -26,6 +27,7 @@ const config: Config = {
     trees: {
         dbName: 'aux-trees',
     },
+    dist: path.resolve(__dirname, '..', '..', 'aux-web', 'dist'),
 };
 
 export default config;
