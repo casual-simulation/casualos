@@ -1585,8 +1585,20 @@ export function getContextSize(
 export function getBuilderContextGrid(
     calc: FileCalculationContext,
     contextFile: File
-): File['tags']['aux.builder.context.grid'] {
-    return getContextValue(calc, contextFile, 'grid');
+): { [key: string]: number } {
+    const tags = tagsOnFile(contextFile);
+    const gridTags = tags.filter(
+        t => t.indexOf('aux.context.grid.') === 0 && t.indexOf(':') > 0
+    );
+
+    let val: { [key: string]: number } = {};
+    for (let tag of gridTags) {
+        val[
+            tag.substr('aux.context.grid.'.length)
+        ] = calculateNumericalTagValue(calc, contextFile, tag, undefined);
+    }
+
+    return val;
 }
 
 /**
@@ -1600,10 +1612,10 @@ export function getContextGridHeight(
     contextFile: File,
     key: string
 ): number {
-    let contextGrid = getContextValue(calc, contextFile, 'grid');
+    let contextGrid = getBuilderContextGrid(calc, contextFile);
     if (contextGrid && contextGrid[key]) {
-        if (contextGrid[key].height) {
-            return contextGrid[key].height;
+        if (contextGrid[key]) {
+            return contextGrid[key];
         }
     }
 

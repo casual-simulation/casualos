@@ -239,14 +239,10 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      */
     updateTileHeightAtGridPosition(file: ContextGroup3D, height: number) {
         let partial: PartialFile = {
-            tags: {
-                [`aux.context.grid`]: {},
-            },
+            tags: {},
         };
 
-        partial.tags[`aux.context.grid`]['0:0'] = {
-            height: height,
-        };
+        partial.tags[`aux.context.grid.0:0`] = height;
 
         this._gameView.simulation3D.simulation.helper.updateFile(
             file.file,
@@ -413,9 +409,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     gameObject.file
                 );
                 let currentHeight =
-                    (!!currentGrid
-                        ? currentGrid['0:0'].height
-                        : defaultHeight) || DEFAULT_WORKSPACE_HEIGHT;
+                    (!!currentGrid ? currentGrid['0:0'] : defaultHeight) ||
+                    DEFAULT_WORKSPACE_HEIGHT;
                 const increment = DEFAULT_WORKSPACE_HEIGHT_INCREMENT; // TODO: Replace with a configurable value.
                 const minHeight = DEFAULT_WORKSPACE_MIN_HEIGHT; // TODO: This too
                 const minimized = isMinimized(calc, gameObject.file);
