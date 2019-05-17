@@ -131,14 +131,14 @@ module.exports = {
             // inject: false,
             template: path.resolve(__dirname, 'aux-projector', 'index.html'),
             title: 'AUX Builder',
-            filename: 'projector-index.html',
+            filename: 'projector.html',
         }),
         new HtmlWebpackPlugin({
             chunks: ['player', 'vendors'],
             // inject: false,
             template: path.resolve(__dirname, 'aux-player', 'index.html'),
             title: 'AUX Player',
-            filename: 'player-index.html',
+            filename: 'player.html',
         }),
         new webpack.ProvidePlugin({
             THREE: 'three',
@@ -156,15 +156,29 @@ module.exports = {
                 events: true,
                 entry: path.resolve(__dirname, 'shared', 'sw.ts'),
             },
-            rewrites: function(asset) {
-                if (asset.endsWith('projector-index.html')) {
-                    return '/';
-                } else if (asset.endsWith('player-index.html')) {
-                    return '/';
-                }
+            // rewrites: function(asset) {
+            //     if (asset.endsWith('projector-index.html')) {
+            //         return '/';
+            //     } else if (asset.endsWith('player-index.html')) {
+            //         return '/';
+            //     }
 
-                return asset;
-            },
+            //     return asset;
+            // },
+            cacheMaps: [
+                {
+                    match: function(requestUrl) {
+                        let url = new URL(requestUrl);
+                        const parts = url.pathname.slice(1).split('/');
+                        if (parts.length > 1) {
+                            return new URL('/player.html', location);
+                        } else {
+                            return new URL('/projector.html', location);
+                        }
+                    },
+                    requestTypes: ['navigate'],
+                },
+            ],
             externals: [
                 'https://fonts.googleapis.com/css?family=Roboto:400,500,700,400italic|Material+Icons',
             ],

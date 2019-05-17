@@ -3,7 +3,6 @@ import express from 'express';
 import * as bodyParser from 'body-parser';
 import * as path from 'path';
 import SocketIO from 'socket.io';
-import vhost from 'vhost';
 import pify from 'pify';
 import { MongoClient } from 'mongodb';
 import { asyncMiddleware } from './utils';
@@ -41,24 +40,26 @@ export class ClientServer {
     private _app: express.Express;
     private _redisClient: RedisClient;
     private _hgetall: any;
-    private _config: ClientConfig;
+    private _builder: ClientConfig;
+    private _player: ClientConfig;
+    private _config: Config;
     private _cacheExpireSeconds: number;
 
     get app() {
         return this._app;
     }
 
-    get config() {
-        return this._config;
-    }
-
     constructor(
-        config: ClientConfig,
+        config: Config,
+        builder: ClientConfig,
+        player: ClientConfig,
         redisClient: RedisClient,
         redisConfig: RedisConfig
     ) {
         this._app = express();
         this._config = config;
+        this._builder = builder;
+        this._player = player;
         this._redisClient = redisClient;
         this._hgetall = redisClient
             ? util.promisify(this._redisClient.hgetall).bind(this._redisClient)
@@ -92,8 +93,12 @@ export class ClientServer {
             })
         );
 
-        this._app.get('/api/config', (req, res) => {
-            res.send(this._config.web);
+        this._app.get('/api/:channel/:context/config', (req, res) => {
+            res.send(this._player.web);
+        });
+
+        this._app.get('/api/:channel/config', (req, res) => {
+            res.send(this._builder.web);
         });
 
         this._app.use(express.static(this._config.dist));
@@ -234,8 +239,12 @@ export class ClientServer {
             })
         );
 
+        this._app.use('/:channel/:context/*', (req, res) => {
+            res.sendFile(path.join(this._config.dist, this._player.index));
+        });
+
         this._app.use('*', (req, res) => {
-            res.sendFile(path.join(this._config.dist, this._config.index));
+            res.sendFile(path.join(this._config.dist, this._builder.index));
         });
     }
 
@@ -302,7 +311,7 @@ export class Server {
     private _socket: SocketIO.Server;
     private _treeServer: CausalTreeServer;
     private _config: Config;
-    private _clients: ClientServer[];
+    private _client: ClientServer;
     private _mongoClient: MongoClient;
     private _userCount: number;
     private _redisClient: RedisClient;
@@ -319,8 +328,12 @@ export class Server {
                   return_buffers: true,
               })
             : null;
-        this._clients = this._config.clients.map(
-            c => new ClientServer(c, this._redisClient, config.redis)
+        this._client = new ClientServer(
+            config,
+            config.builder,
+            config.player,
+            this._redisClient,
+            config.redis
         );
         this._userCount = 0;
     }
@@ -330,14 +343,17 @@ export class Server {
 
         this._configureSocketServices();
         this._app.use(bodyParser.json());
+        this._client.configure();
 
-        this._clients.forEach(c => {
-            c.configure();
+        this._app.use(this._client.app);
 
-            c.config.domains.forEach(d => {
-                this._app.use(vhost(d, c.app));
-            });
-        });
+        // this._clients.forEach(c => {
+        //     c.configure();
+
+        //     c.config.domains.forEach(d => {
+        //         this._app.use(vhost(d, c.app));
+        //     });
+        // });
     }
 
     start() {

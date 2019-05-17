@@ -12,9 +12,7 @@ let domains = [
 ];
 
 const config: ClientConfig = {
-    dist: path.resolve(__dirname, '..', '..', 'aux-web', 'dist'),
-    index: 'player-index.html',
-    domains,
+    index: 'player.html',
     web: {
         ...webConfig,
         isBuilder: false,

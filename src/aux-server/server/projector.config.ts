@@ -15,9 +15,7 @@ let domains = [
 ];
 
 const config: ClientConfig = {
-    dist: path.resolve(__dirname, '..', '..', 'aux-web', 'dist'),
-    index: 'projector-index.html',
-    domains,
+    index: 'projector.html',
     web: {
         ...webConfig,
         isBuilder: true,
