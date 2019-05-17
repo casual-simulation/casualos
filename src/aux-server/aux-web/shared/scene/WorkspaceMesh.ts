@@ -252,6 +252,9 @@ export class WorkspaceMesh extends GameObject {
         );
 
         files.forEach(file => {
+            if (isUserFile(file.file)) {
+                return;
+            }
             let localPosition = calculateGridTileLocalCenter(
                 calculateFileValue(calc, file.file, file.context + '.x'),
                 calculateFileValue(calc, file.file, file.context + '.y'),
