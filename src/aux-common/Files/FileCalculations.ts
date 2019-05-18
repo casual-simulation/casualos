@@ -451,7 +451,21 @@ export function unwrapProxy(object: any): any {
  * @param object The object to check.
  */
 export function isFile(object: any): object is AuxObject {
-    return !!object && !!object.id && !!object.tags;
+    if (object) {
+        if (object[isProxy]) {
+            const id = object.id.valueOf();
+            const tags = object.tags.valueOf();
+            return (
+                !!id &&
+                !!tags &&
+                typeof tags === 'object' &&
+                typeof id === 'string'
+            );
+        } else {
+            return !!object.id && !!object.tags;
+        }
+    }
+    return false;
 }
 
 /**
@@ -2343,9 +2357,9 @@ class SandboxInterfaceImpl implements SandboxInterface {
     }
 
     listTagValues(tag: string, filter?: FilterFunction, extras?: any) {
-        const tags = flatMap(
-            this.objects.map(o => this._calculateValue(o, tag)).filter(t => t)
-        );
+        const tags = this.objects
+            .map(o => this._calculateValue(o, tag))
+            .filter(t => t);
         const filtered = this._filterValues(tags, filter);
         return _singleOrArray(filtered);
     }
