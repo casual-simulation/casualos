@@ -16,6 +16,10 @@
     -   Selecting the file ID in builder will now no longer change the zoom that sent the camera too far away.
     -   Upon shrinking the hex grid, hexes will now remain if a file is on top of it.
     -   Clicking on a non centeral hex did not show correct raise and lower options, now it does.
+    -   Fixed an issue that would cause a formula to error if evaluating an array which referenced a non-existant tag.
+        -   In the test scenario, this made it appear as if some blocks were able to be moved through and other blocks were not.
+        -   In reality, the filter was breaking before it was able to evaluate the correct block.
+        -   This is why re-creating a file sometimes worked - because the new file might have a lower file ID which would cause it to be evaluated before the broken file was checked.
 
 ## V0.6.5
 
