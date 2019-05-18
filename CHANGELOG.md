@@ -20,6 +20,7 @@
         -   In the test scenario, this made it appear as if some blocks were able to be moved through and other blocks were not.
         -   In reality, the filter was breaking before it was able to evaluate the correct block.
         -   This is why re-creating a file sometimes worked - because the new file might have a lower file ID which would cause it to be evaluated before the broken file was checked.
+    -   Fixed an issue that would cause the formula recursion counter to trigger in non-recursive scenarios.
 
 ## V0.6.5
 
