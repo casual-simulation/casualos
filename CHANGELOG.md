@@ -10,6 +10,9 @@
     -   Search bar will now always remain across the top of builder.
     -   Made the `aux.context.grid` tag not use objects for hex heights.
     -   Made `auxplayer.com/channel` load AUX Builder and `auxplayer.com/channel/context` load AUX Player.
+    -   Added `onConnected()` and `onDisconnected()` events to notify scripts when the user becomes connected for disconnected from the server.
+    -   Added `player.isConnected()` to help formulas easily determine if the player is currently connected.
+        -   Works by checking the `aux.connected` tag on the user's file.
 -   Bug Fixes
     -   Allow for the expansion and shrinking of hexes after they have been raised or lowered.
     -   Clicking on the diff bursh in builder will now make the sheets appear correctly.
