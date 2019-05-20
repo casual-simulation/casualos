@@ -8,6 +8,7 @@
 
 -   Bug Fixes
     -   Fixed an issue where the server would return the wrong HTML page for AUX Player.
+    -   Updated sharp to v0.22.1
 
 ## V0.7.1
 
