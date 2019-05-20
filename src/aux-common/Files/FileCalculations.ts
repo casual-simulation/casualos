@@ -451,7 +451,21 @@ export function unwrapProxy(object: any): any {
  * @param object The object to check.
  */
 export function isFile(object: any): object is AuxObject {
-    return !!object && !!object.id && !!object.tags;
+    if (object) {
+        if (object[isProxy]) {
+            const id = object.id.valueOf();
+            const tags = object.tags.valueOf();
+            return (
+                !!id &&
+                !!tags &&
+                typeof tags === 'object' &&
+                typeof id === 'string'
+            );
+        } else {
+            return !!object.id && !!object.tags;
+        }
+    }
+    return false;
 }
 
 /**
@@ -1585,8 +1599,20 @@ export function getContextSize(
 export function getBuilderContextGrid(
     calc: FileCalculationContext,
     contextFile: File
-): File['tags']['aux.builder.context.grid'] {
-    return getContextValue(calc, contextFile, 'grid');
+): { [key: string]: number } {
+    const tags = tagsOnFile(contextFile);
+    const gridTags = tags.filter(
+        t => t.indexOf('aux.context.grid.') === 0 && t.indexOf(':') > 0
+    );
+
+    let val: { [key: string]: number } = {};
+    for (let tag of gridTags) {
+        val[
+            tag.substr('aux.context.grid.'.length)
+        ] = calculateNumericalTagValue(calc, contextFile, tag, undefined);
+    }
+
+    return val;
 }
 
 /**
@@ -1600,10 +1626,10 @@ export function getContextGridHeight(
     contextFile: File,
     key: string
 ): number {
-    let contextGrid = getContextValue(calc, contextFile, 'grid');
+    let contextGrid = getBuilderContextGrid(calc, contextFile);
     if (contextGrid && contextGrid[key]) {
-        if (contextGrid[key].height) {
-            return contextGrid[key].height;
+        if (contextGrid[key]) {
+            return contextGrid[key];
         }
     }
 
@@ -2331,9 +2357,9 @@ class SandboxInterfaceImpl implements SandboxInterface {
     }
 
     listTagValues(tag: string, filter?: FilterFunction, extras?: any) {
-        const tags = flatMap(
-            this.objects.map(o => this._calculateValue(o, tag)).filter(t => t)
-        );
+        const tags = this.objects
+            .map(o => this._calculateValue(o, tag))
+            .filter(t => t);
         const filtered = this._filterValues(tags, filter);
         return _singleOrArray(filtered);
     }

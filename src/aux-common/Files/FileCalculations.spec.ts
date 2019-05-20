@@ -59,6 +59,7 @@ import {
     blacklistAllowsAccess,
     getFileDragMode,
     whitelistOrBlacklistAllowsAccess,
+    getBuilderContextGrid,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
@@ -67,6 +68,7 @@ import { file } from '../aux-format';
 import uuid from 'uuid/v4';
 import { select } from 'd3';
 import { tsExpressionWithTypeArguments } from '@babel/types';
+import { isProxy, createFileProxy } from './FileProxy';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -153,6 +155,28 @@ describe('FileCalculations', () => {
 
             expect(isFile(null)).toBe(false);
             expect(isFile({})).toBe(false);
+        });
+
+        it('should return false for a non file proxy', () => {
+            const file = createFile('test', {
+                val: 'abc',
+            });
+
+            const calc = createCalculationContext([file]);
+            const proxy = createFileProxy(calc, file);
+
+            expect(isFile(proxy.val)).toBe(false);
+        });
+
+        it('should return true for a file proxy', () => {
+            const file = createFile('test', {
+                val: 'abc',
+            });
+
+            const calc = createCalculationContext([file]);
+            const proxy = createFileProxy(calc, file);
+
+            expect(isFile(proxy)).toBe(true);
         });
     });
 
@@ -828,6 +852,21 @@ describe('FileCalculations', () => {
             expect(value).toEqual(['test(a', 'b', 'c)', 1.23, true]);
         });
 
+        it('should unwrap proxies in arrays', () => {
+            const file = createFile('test', {
+                formula: '=[this.num._1,this.num._2]',
+                'num._1': '1',
+                'num._2': '2',
+            });
+
+            const context = createCalculationContext([file]);
+            const value = calculateFileValue(context, file, 'formula');
+
+            expect(value[isProxy]).toBeFalsy();
+            expect(Array.isArray(value)).toBe(true);
+            expect(value).toEqual([1, 2]);
+        });
+
         describe('filterFilesBySelection()', () => {
             it('should return the files that have the given selection ID set to a truthy value', () => {
                 const selectionId = 'abcdefg1234';
@@ -1054,6 +1093,34 @@ describe('FileCalculations', () => {
                     let value = calculateFileValue(context, file1, 'formula');
 
                     expect(value).toBe(1);
+                });
+
+                it('should support filtering on values that contain arrays', () => {
+                    const file = createFile('test', {
+                        filter: '=#formula(x => x[0] == 1 && x[1] == 2)',
+                        formula: '=[this.num._1,this.num._2]',
+                        'num._1': '1',
+                        'num._2': '2',
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'filter');
+
+                    expect(value[isProxy]).toBeFalsy();
+                    expect(value).toEqual([1, 2]);
+                });
+
+                it('should support filtering on values that contain arrays with elements that dont exist', () => {
+                    const file = createFile('test', {
+                        filter: '=#formula(x => x[0] == 1 && x[1] == 2)',
+                        formula: '=[this.num._1,this.num._2]',
+                        'num._1': '1',
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'filter');
+
+                    expect(value).toEqual([]);
                 });
             });
 
@@ -1282,6 +1349,34 @@ describe('FileCalculations', () => {
                     let value = calculateFileValue(context, file1, 'formula');
 
                     expect(value).toEqual([1, 3]);
+                });
+
+                it('should support filtering on values that contain arrays', () => {
+                    const file = createFile('test', {
+                        filter: '=@formula(x => x[0] == 1 && x[1] == 2)',
+                        formula: '=[this.num._1,this.num._2]',
+                        'num._1': '1',
+                        'num._2': '2',
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'filter');
+
+                    expect(value[isProxy]).toBeFalsy();
+                    expect(value).toEqual(file);
+                });
+
+                it('should support filtering on values that contain arrays with elements that dont exist', () => {
+                    const file = createFile('test', {
+                        filter: '=@formula(x => x[0] == 1 && x[1] == 2)',
+                        formula: '=[this.num._1,this.num._2]',
+                        'num._1': '1',
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'filter');
+
+                    expect(value).toEqual([]);
                 });
             });
         });
@@ -3014,6 +3109,41 @@ describe('FileCalculations', () => {
                     'context.index': null,
                     'context.id': null,
                 },
+            });
+        });
+    });
+
+    describe('getContextGrid()', () => {
+        it('should find all the tags that represent a grid position', () => {
+            const file = createFile('file', {
+                'aux.context.grid.0:1': 1,
+                'aux.context.grid.1:1': 1,
+                'aux.context.grid.2:1': 2,
+                'aux.context.grid.2:2': '=3',
+            });
+
+            const calc = createCalculationContext([file]);
+            const grid = getBuilderContextGrid(calc, file);
+
+            expect(grid).toEqual({
+                '0:1': 1,
+                '1:1': 1,
+                '2:1': 2,
+                '2:2': 3,
+            });
+        });
+
+        it('should not get confused by grid scale', () => {
+            const file = createFile('file', {
+                'aux.context.grid.0:1': 1,
+                'aux.context.grid.scale': 50,
+            });
+
+            const calc = createCalculationContext([file]);
+            const grid = getBuilderContextGrid(calc, file);
+
+            expect(grid).toEqual({
+                '0:1': 1,
             });
         });
     });

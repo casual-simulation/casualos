@@ -72,9 +72,6 @@ export interface FileTags {
     ['aux.context.rotation.y']?: number;
     ['aux.context.rotation.z']?: number;
     ['aux.context.scale']?: number;
-    ['aux.context.grid']?: {
-        [key: string]: WorkspaceHex;
-    } | null;
     ['aux.context.grid.scale']?: number;
     ['aux.context.defaultHeight']?: number;
     ['aux.context.color']?: string;

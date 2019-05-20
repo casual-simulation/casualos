@@ -114,9 +114,8 @@ const routes: RouteConfig[] = [
         redirect: to => {
             if (appManager.config) {
                 console.log('[Router] Redirecting to builder');
-                window.location.href = `${appManager.config.projectorBaseUrl}/${
-                    to.params.id
-                }`;
+                const url = new URL(`/${to.params.id}`, window.location.href);
+                window.location.href = url.href;
             }
 
             return `/${to.params.id}/default`;

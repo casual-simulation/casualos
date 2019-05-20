@@ -2,12 +2,28 @@
 
 ## V0.7.0
 
-### Date: TBD
+### Date: 05/20/2019
 
 ### Changes:
 
+-   Improvements
+    -   Search bar will now always remain across the top of builder.
+    -   Made the `aux.context.grid` tag not use objects for hex heights.
+    -   Made `auxplayer.com/channel` load AUX Builder and `auxplayer.com/channel/context` load AUX Player.
+    -   Added `onConnected()` and `onDisconnected()` events to notify scripts when the user becomes connected for disconnected from the server.
+    -   Added `player.isConnected()` to help formulas easily determine if the player is currently connected.
+        -   Works by checking the `aux.connected` tag on the user's file.
 -   Bug Fixes
     -   Allow for the expansion and shrinking of hexes after they have been raised or lowered.
+    -   Clicking on the diff bursh in builder will now make the sheets appear correctly.
+    -   Selecting the file ID in builder will now no longer change the zoom that sent the camera too far away.
+    -   Upon shrinking the hex grid, hexes will now remain if a file is on top of it.
+    -   Clicking on a non centeral hex did not show correct raise and lower options, now it does.
+    -   Fixed an issue that would cause a formula to error if evaluating an array which referenced a non-existant tag.
+        -   In the test scenario, this made it appear as if some blocks were able to be moved through and other blocks were not.
+        -   In reality, the filter was breaking before it was able to evaluate the correct block.
+        -   This is why re-creating a file sometimes worked - because the new file might have a lower file ID which would cause it to be evaluated before the broken file was checked.
+    -   Fixed an issue that would cause the formula recursion counter to trigger in non-recursive scenarios.
 
 ## V0.6.5
 

@@ -111,6 +111,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         const vueElement: any = Input.getVueParent(element);
         if (vueElement instanceof MiniFile) {
             const file = <File>vueElement.file;
+            this._gameView.simulation3D.selectRecentFile(file);
             let newFileClickOp = new BuilderNewFileClickOperation(
                 this._gameView.simulation3D,
                 this,
@@ -238,14 +239,10 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      */
     updateTileHeightAtGridPosition(file: ContextGroup3D, height: number) {
         let partial: PartialFile = {
-            tags: {
-                [`aux.context.grid`]: {},
-            },
+            tags: {},
         };
 
-        partial.tags[`aux.context.grid`]['0:0'] = {
-            height: height,
-        };
+        partial.tags[`aux.context.grid.0:0`] = height;
 
         this._gameView.simulation3D.simulation.helper.updateFile(
             file.file,
@@ -406,17 +403,14 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     calc,
                     gameObject.file
                 );
-                const currentTile = currentGrid
-                    ? currentGrid[posToKey(tile)]
-                    : null;
+                const currentTile = currentGrid ? currentGrid['0:0'] : null;
                 const defaultHeight = getContextDefaultHeight(
                     calc,
                     gameObject.file
                 );
                 let currentHeight =
-                    (!!currentGrid
-                        ? currentGrid['0:0'].height
-                        : defaultHeight) || DEFAULT_WORKSPACE_HEIGHT;
+                    (!!currentGrid ? currentGrid['0:0'] : defaultHeight) ||
+                    DEFAULT_WORKSPACE_HEIGHT;
                 const increment = DEFAULT_WORKSPACE_HEIGHT_INCREMENT; // TODO: Replace with a configurable value.
                 const minHeight = DEFAULT_WORKSPACE_MIN_HEIGHT; // TODO: This too
                 const minimized = isMinimized(calc, gameObject.file);
@@ -582,18 +576,18 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         let contexts = getFileConfigContexts(calc, file.file);
         let context = contexts[0];
 
-        let url = `${appManager.config.playerBaseUrl}/`;
-
         // https://auxbuilder.com/
         //   ^     |     host    |     path           |
         // simulationId: ''
         const simulationId = window.location.pathname.split('/')[1];
 
-        // open in same tab
-        //window.location.assign(`${url}/${simulationId || 'default'}/${context}`);
+        const url = new URL(
+            `/${simulationId || 'default'}/${context}`,
+            window.location.href
+        );
 
         // open in new tab
-        window.open(`${url}${simulationId || 'default'}/${context}`, '_blank');
+        window.open(url.href, '_blank');
     }
 
     private _worldPosToGridPos(

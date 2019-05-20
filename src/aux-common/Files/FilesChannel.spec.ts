@@ -2175,6 +2175,96 @@ describe('FilesChannel', () => {
                 expect(result.events).toEqual([unloadSimulation('abc')]);
             });
         });
+
+        describe('isConnected()', () => {
+            it('should get the aux.connected property from the current user file', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'this.fun = player.isConnected()',
+                        },
+                    },
+                    userFile: {
+                        id: 'userFile',
+                        tags: {
+                            'aux.connected': true,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            fun: true,
+                        },
+                    }),
+                ]);
+            });
+
+            it('should default to false when there is no user', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'this.fun = player.isConnected()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            fun: false,
+                        },
+                    }),
+                ]);
+            });
+
+            it('should default to false', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'this.fun = player.isConnected()',
+                        },
+                    },
+                    userFile: {
+                        id: 'userFile',
+                        tags: {},
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            fun: false,
+                        },
+                    }),
+                ]);
+            });
+        });
     });
 
     describe('calculateDestroyFileEvents()', () => {

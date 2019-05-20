@@ -41,7 +41,6 @@
                             :file="file"
                             :selected="simulation3D.selectedRecentFile === file"
                             :large="index === 0"
-                            @click="simulation3D.selectRecentFile(file)"
                         ></mini-file>
                     </div>
                 </div>

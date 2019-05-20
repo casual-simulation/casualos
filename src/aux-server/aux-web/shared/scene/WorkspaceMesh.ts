@@ -1,5 +1,12 @@
-import { Object3D, Vector3, Color } from 'three';
-import { HexGridMesh, HexGrid, HexMesh, keyToPos, Axial } from './hex';
+import { Object3D, Vector3, Color, Vector2 } from 'three';
+import {
+    HexGridMesh,
+    HexGrid,
+    HexMesh,
+    keyToPos,
+    Axial,
+    realPosToGridPos,
+} from './hex';
 import { GridMesh } from './grid/GridMesh';
 import {
     DEFAULT_WORKSPACE_HEIGHT,
@@ -21,6 +28,7 @@ import {
     DEFAULT_WORKSPACE_COLOR,
     hasValue,
     getContextGridHeight,
+    calculateGridScale,
 } from '@casual-simulation/aux-common/Files';
 import { keys, minBy, isEqual } from 'lodash';
 import { GridChecker, GridCheckResults } from './grid/GridChecker';
@@ -28,6 +36,8 @@ import { GameObject } from './GameObject';
 import { AuxFile } from '@casual-simulation/aux-common/aux-format';
 import { idEquals } from '@casual-simulation/causal-trees';
 import { disposeMesh } from './SceneUtils';
+import { AuxFile3D } from './AuxFile3D';
+import { calculateGridTileLocalCenter } from './grid/Grid';
 
 /**
  * Defines a mesh that represents a workspace.
@@ -69,6 +79,11 @@ export class WorkspaceMesh extends GameObject {
     domain: AuxDomain;
 
     /**
+     * The number of files on this mesh.
+     */
+    fileCount: number;
+
+    /**
      * Sets the visibility of the grids on this workspace.
      */
     set gridsVisible(visible: boolean) {
@@ -105,6 +120,7 @@ export class WorkspaceMesh extends GameObject {
             id: this.id,
             gridCheckResults: null,
         };
+        this.fileCount = 0;
     }
 
     /**
@@ -146,6 +162,7 @@ export class WorkspaceMesh extends GameObject {
     async update(
         calc: FileCalculationContext,
         workspace?: AuxFile,
+        files?: AuxFile3D[],
         force?: boolean
     ) {
         if (!workspace) {
@@ -160,8 +177,13 @@ export class WorkspaceMesh extends GameObject {
 
         let gridUpdate: GridCheckResults = this._debugInfo.gridCheckResults;
 
+        if (files.length > this.fileCount) {
+            this.fileCount = files.length;
+            force = true;
+        }
+
         if (this._gridChanged(this.workspace, prev, calc) || force) {
-            this.updateHexGrid(calc);
+            this.updateHexGrid(calc, files);
             if (this._checker) {
                 gridUpdate = await this.updateSquareGrids(this._checker, calc);
 
@@ -208,13 +230,14 @@ export class WorkspaceMesh extends GameObject {
     /**
      * Updates the hex grid to match the workspace data.
      */
-    public updateHexGrid(calc: FileCalculationContext) {
+    public updateHexGrid(calc: FileCalculationContext, files: AuxFile3D[]) {
         if (this.hexGrid) {
             this.hexGrid.dispose();
             this.container.remove(this.hexGrid);
         }
 
         const size = getContextSize(calc, this.workspace);
+
         let centerHeight: number = getContextGridHeight(
             calc,
             this.workspace,
@@ -228,7 +251,27 @@ export class WorkspaceMesh extends GameObject {
             scale || DEFAULT_WORKSPACE_SCALE
         );
 
-        // why does this not ge the out ring of hexes, they need to be updated
+        files.forEach(file => {
+            if (isUserFile(file.file)) {
+                return;
+            }
+            let localPosition = calculateGridTileLocalCenter(
+                calculateFileValue(calc, file.file, file.context + '.x'),
+                calculateFileValue(calc, file.file, file.context + '.y'),
+                calculateFileValue(calc, file.file, file.context + '.z'),
+                calculateGridScale(calc, file.contextGroup.file)
+            );
+
+            let axial: Axial = realPosToGridPos(
+                new Vector2(localPosition.x, localPosition.z),
+                scale
+            );
+            const hexgrid = this.hexGrid.addAt(axial);
+            hexgrid.height =
+                centerHeight || defaultHeight || DEFAULT_WORKSPACE_HEIGHT;
+        });
+
+        /*
         const grid = getBuilderContextGrid(calc, this.workspace);
         const positionsKeys = grid ? keys(grid) : [];
         positionsKeys.forEach(key => {
@@ -247,6 +290,7 @@ export class WorkspaceMesh extends GameObject {
             }
             hex.height = nextHeight;
         });
+        */
 
         this.colliders = [...this.hexGrid.hexes, this.miniHex];
         this.container.add(this.hexGrid);
