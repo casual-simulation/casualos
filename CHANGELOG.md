@@ -1,8 +1,46 @@
 # AUX Changelog
 
+## V0.7.4
+
+### Date: 05/20/2019
+
+### Changes:
+
+-   Improvements
+    -   Added the `NODE_PORT` environment variable to determine which port to use for HTTP in production.
+-   Bug Fixes
+    -   Fixed SocketManager to build the connection url correctly.
+
+## V0.7.3
+
+### Date: 05/20/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Updated sharp to v0.22.1
+
+## V0.7.2
+
+### Date: 05/20/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed an issue where the server would return the wrong HTML page for AUX Player.
+
+## V0.7.1
+
+### Date: 05/20/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed an issue with running AUX on a .local domain that required HTTPs.
+
 ## V0.7.0
 
-### Date: TBD
+### Date: 05/20/2019
 
 ### Changes:
 
