@@ -19,6 +19,8 @@ import {
     getFileChannel,
     calculateDestroyFileEvents,
     merge,
+    SimulationIdParseSuccess,
+    simulationIdToString,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard } from '../../shared/SharedUtils';
@@ -417,6 +419,19 @@ export default class App extends Vue {
                         this.qrCode = null;
                         this.showQRCode = false;
                     }
+                } else if (e.name === 'go_to_context') {
+                    if (e.simulation) {
+                        // Go to context and simulation
+                        window.location.pathname = `${e.simulation}/${
+                            e.context
+                        }`;
+                    } else {
+                        simulation.parsedId = {
+                            ...simulation.parsedId,
+                            context: e.context,
+                        };
+                        this._updateQuery();
+                    }
                 }
             }),
             simulation.aux.channel.connectionStateChanged.subscribe(
@@ -495,7 +510,9 @@ export default class App extends Vue {
                                 sim.id !==
                                 appManager.simulationManager.primary.id
                         )
-                        .map(sim => sim.id),
+                        .map(sim =>
+                            simulationIdToString(sim.simulation.parsedId)
+                        ),
                 },
             });
         }

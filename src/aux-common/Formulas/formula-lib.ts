@@ -16,6 +16,7 @@ import {
     unloadSimulation as calcUnloadSimulation,
     superShout as calcSuperShout,
     showQRCode as calcShowQRCode,
+    goToContext as calcGoToContext,
 } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
 import { every, find } from 'lodash';
@@ -422,18 +423,7 @@ export function whisper(file: File | string, eventName: string, arg?: any) {
  * @param context The context to go to. If not provided then the simulation ID will be used as the context.
  */
 export function goToContext(simulationId: string, context?: string) {
-    if (!context) {
-        // Go to context in same simulation
-        context = simulationId;
-
-        // Grab the simulation ID from the current URL.
-        // pathname always starts with a '/' so the first part is actually the second
-        // element.
-        simulationId = window.location.pathname.split('/')[1];
-    }
-
-    // Go to context and simulation
-    window.location.pathname = `${simulationId}/${context}`;
+    actions.push(calcGoToContext(simulationId, context));
 }
 
 /**

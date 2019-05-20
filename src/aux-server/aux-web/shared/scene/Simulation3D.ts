@@ -203,6 +203,8 @@ export abstract class Simulation3D extends Object3D
 
     unsubscribe(): void {
         this._subs.forEach(s => s.unsubscribe());
+        this.remove(...this.children);
+        this.contexts.splice(0, this.contexts.length);
         this.closed = true;
         this._subs = [];
     }

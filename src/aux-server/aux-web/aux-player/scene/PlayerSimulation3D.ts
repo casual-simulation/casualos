@@ -137,11 +137,25 @@ export class PlayerSimulation3D extends Simulation3D {
                                 e.fileId,
                                 e.zoomValue
                             );
+                        } else if (e.name === 'go_to_context') {
+                            if (!e.simulation) {
+                                this._setContext(e.context);
+                            }
                         }
                     })
                 )
                 .subscribe()
         );
+    }
+
+    private _setContext(context: string) {
+        if (this.context === context) {
+            return;
+        }
+        this.context = context;
+        this.unsubscribe();
+        this.closed = false;
+        this.init();
     }
 
     protected _frameUpdateCore(calc: FileCalculationContext) {
@@ -268,5 +282,10 @@ export class PlayerSimulation3D extends Simulation3D {
         this.inventoryContext.fileRemoved(file, calc);
         this.menuContext.fileRemoved(file, calc);
         this.simulationContext.fileRemoved(file, calc);
+    }
+
+    unsubscribe() {
+        this._contextGroup = null;
+        super.unsubscribe();
     }
 }
