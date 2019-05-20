@@ -576,18 +576,18 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         let contexts = getFileConfigContexts(calc, file.file);
         let context = contexts[0];
 
-        let url = `${appManager.config.playerBaseUrl}/`;
-
         // https://auxbuilder.com/
         //   ^     |     host    |     path           |
         // simulationId: ''
         const simulationId = window.location.pathname.split('/')[1];
 
-        // open in same tab
-        //window.location.assign(`${url}/${simulationId || 'default'}/${context}`);
+        const url = new URL(
+            `/${simulationId || 'default'}/${context}`,
+            window.location.href
+        );
 
         // open in new tab
-        window.open(`${url}${simulationId || 'default'}/${context}`, '_blank');
+        window.open(url.href, '_blank');
     }
 
     private _worldPosToGridPos(

@@ -115,9 +115,11 @@ const routes: RouteConfig[] = [
         redirect: to => {
             if (appManager.config) {
                 console.log('[Router] Redirect to player');
-                window.location.href = `${appManager.config.playerBaseUrl}/${
-                    to.params.id
-                }/${to.params.context}`;
+                const url = new URL(
+                    `/${to.params.id}/${to.params.context}`,
+                    window.location.href
+                );
+                window.location.href = url.href;
             }
 
             return `/${to.params.id}`;
