@@ -239,7 +239,7 @@ export class ClientServer {
             })
         );
 
-        this._app.use('/:channel/:context/*', (req, res) => {
+        this._app.use('/:channel/:context', (req, res) => {
             res.sendFile(path.join(this._config.dist, this._player.index));
         });
 
