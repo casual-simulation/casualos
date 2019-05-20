@@ -1,5 +1,16 @@
 # AUX Changelog
 
+## V0.7.4
+
+### Date: 05/20/2019
+
+### Changes:
+
+-   Improvements
+    -   Added the `NODE_PORT` environment variable to determine which port to use for HTTP in production.
+-   Bug Fixes
+    -   Fixed SocketManager to build the connection url correctly.
+
 ## V0.7.3
 
 ### Date: 05/20/2019

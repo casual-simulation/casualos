@@ -20,7 +20,7 @@ export class SocketManager {
     constructor(host?: string) {
         console.log('[SocketManager] Starting...');
         this._socket = io(
-            host ? `${window.location.protocol}://${host}` : undefined
+            host ? `${window.location.protocol}//${host}` : undefined
         );
 
         this._socket.on('connect', () => {
