@@ -227,35 +227,6 @@ export default class App extends Vue {
                 // this.online = fileManager.isOnline;
                 // this.synced = fileManager.isSynced;
 
-                // setTimeout(() => {
-                //     if (!this.online && !this.lostConnection) {
-                //         this.startedOffline = true;
-                //         this._showOffline();
-                //     }
-                // }, 1000);
-
-                // subs.push(
-                //     fileManager.aux.channel.connectionStateChanged.subscribe(
-                //         connected => {
-                //             if (!connected) {
-                //                 this._showConnectionLost();
-                //                 this.online = false;
-                //                 this.synced = false;
-                //                 this.lostConnection = true;
-                //             } else {
-                //                 this.online = true;
-                //                 if (this.lostConnection) {
-                //                     this._showConnectionRegained();
-                //                 }
-                //                 this.lostConnection = false;
-                //                 this.startedOffline = false;
-                //                 this.synced = true;
-                //                 appManager.checkForUpdates();
-                //             }
-                //         }
-                //     )
-                // );
-
                 subs.push(
                     new Subscription(() => {
                         this.loggedIn = false;
@@ -455,6 +426,7 @@ export default class App extends Vue {
                         info.online = false;
                         info.synced = false;
                         info.lostConnection = true;
+                        simulation.helper.action('onDisconnected', null);
                     } else {
                         info.online = true;
                         if (info.lostConnection) {
@@ -467,6 +439,7 @@ export default class App extends Vue {
                         ) {
                             appManager.checkForUpdates();
                         }
+                        simulation.helper.action('onConnected', null);
                     }
                 }
             )

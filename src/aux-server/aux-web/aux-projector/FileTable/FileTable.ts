@@ -17,6 +17,7 @@ import {
     tweenTo,
     AuxCausalTree,
     fileAdded,
+    getAllFileTags,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
 import { appManager } from '../../shared/AppManager';
@@ -76,6 +77,10 @@ export default class FileTable extends Vue {
     viewMode: 'rows' | 'columns' = 'columns';
     showHidden: boolean = false;
 
+    tagBlacklist: string[] = [];
+    blacklistIndex: boolean[] = [];
+    blacklistCount: number[] = [];
+
     uiHtmlElements(): HTMLElement[] {
         if (this.$refs.tags) {
             return (<FileTag[]>this.$refs.tags)
@@ -84,6 +89,18 @@ export default class FileTable extends Vue {
         } else {
             return [];
         }
+    }
+
+    isAllTag(tag: string): boolean {
+        return tag === '*';
+    }
+
+    isBlacklistTagActive(index: number): boolean {
+        return this.blacklistIndex[index];
+    }
+
+    getBlacklistCount(index: number): number {
+        return this.blacklistCount[index];
     }
 
     get fileTableGridStyle() {
@@ -122,6 +139,7 @@ export default class FileTable extends Vue {
 
     @Watch('files')
     filesChanged() {
+        this.setTagBlacklist();
         this._updateTags();
         this.numFilesSelected = this.files.length;
         if (this.focusedFile) {
@@ -293,6 +311,8 @@ export default class FileTable extends Vue {
         if (index >= 0) {
             this.addedTags.splice(index, 1);
         }
+
+        this.setTagBlacklist();
         this._updateTags();
     }
 
@@ -332,6 +352,7 @@ export default class FileTable extends Vue {
     }
 
     async created() {
+        this.setTagBlacklist();
         this._updateTags();
         this.numFilesSelected = this.files.length;
     }
@@ -339,12 +360,89 @@ export default class FileTable extends Vue {
     private _updateTags() {
         const editingTags = this.lastEditedTag ? [this.lastEditedTag] : [];
         const allExtraTags = union(this.extraTags, this.addedTags, editingTags);
+
         this.tags = fileTags(
             this.files,
             this.tags,
             allExtraTags,
-            this.showHidden
+            this.showHidden,
+            this.tagBlacklist,
+            this.blacklistIndex
         );
+    }
+
+    toggleBlacklistIndex(index: number) {
+        this.blacklistIndex[index] = !this.blacklistIndex[index];
+        this._updateTags();
+    }
+
+    setTagBlacklist() {
+        let sortedArray: string[] = getAllFileTags(this.files).sort();
+
+        let newBlacklist: string[] = [];
+        let newTagCount: number[] = [];
+
+        let current = '';
+        let tagCount = 0;
+        for (let i = 0; i < sortedArray.length; i++) {
+            if (!sortedArray[i].includes('.')) {
+                // due to alphabetical order, if there is no dot, then it is portentially the start of a new section
+
+                current = sortedArray[i];
+                tagCount = 1;
+            } else {
+                let currentSection = sortedArray[i].split('.');
+
+                if (current === '') {
+                    current = sortedArray[i];
+                    tagCount = 1;
+                } else if (
+                    !current.includes('.') &&
+                    currentSection[0] != current
+                ) {
+                    current = sortedArray[i];
+                    tagCount = 1;
+                } else if (currentSection[0] != current.split('.')[0]) {
+                    current = sortedArray[i];
+                    tagCount = 1;
+                } else {
+                    current += '.~' + sortedArray[i];
+                    tagCount++;
+
+                    if (tagCount == 3) {
+                        newBlacklist.push(current.split('.')[0]);
+                        newTagCount.push(3);
+                    } else if (tagCount > 3) {
+                        newTagCount[newTagCount.length - 1]++;
+                    }
+                }
+            }
+        }
+
+        if (newBlacklist.length > 0) {
+            newBlacklist.unshift('*');
+            newTagCount.unshift(0);
+        }
+
+        if (
+            (this.blacklistIndex === undefined && newBlacklist.length > 0) ||
+            newBlacklist.length > this.blacklistIndex.length
+        ) {
+            for (let i = 0; i < newBlacklist.length; i++) {
+                if (i === 0) {
+                    this.blacklistIndex.push(true);
+                } else {
+                    this.blacklistIndex.push(false);
+                }
+            }
+        }
+
+        this.tagBlacklist = newBlacklist;
+        this.blacklistCount = newTagCount;
+    }
+
+    getTagBlacklist(): string[] {
+        return this.tagBlacklist;
     }
 }
 

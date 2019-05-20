@@ -3,16 +3,6 @@
  */
 export interface WebConfig {
     /**
-     * Gets the base URL of the projector.
-     */
-    projectorBaseUrl: string;
-
-    /**
-     * Gets the base URL of the player.
-     */
-    playerBaseUrl: string;
-
-    /**
      * Whether the client currently represents an AUX Builder.
      */
     isBuilder: boolean;

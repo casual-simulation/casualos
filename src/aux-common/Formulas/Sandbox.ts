@@ -103,7 +103,7 @@ export class Sandbox {
         // the counter we are recreating the sandbox a lot and that
         // resets the counter. Overall, this should behave as a
         // safeguard against infinite loops.
-        if (__this._recursionCounter > 100) {
+        if (__this._recursionCounter > 1000) {
             return {
                 success: false,
                 extras: __extras,
@@ -160,6 +160,8 @@ export class Sandbox {
                 extras: __extras,
                 error: e,
             };
+        } finally {
+            this._recursionCounter -= 1;
         }
     }
 

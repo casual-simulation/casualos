@@ -252,6 +252,10 @@ export default class App extends Vue {
                                 this.online = false;
                                 this.synced = false;
                                 this.lostConnection = true;
+                                fileManager.helper.action(
+                                    'onDisconnected',
+                                    null
+                                );
                             } else {
                                 this.online = true;
                                 if (this.lostConnection) {
@@ -261,6 +265,7 @@ export default class App extends Vue {
                                 this.startedOffline = false;
                                 this.synced = true;
                                 appManager.checkForUpdates();
+                                fileManager.helper.action('onConnected', null);
                             }
                         }
                     )

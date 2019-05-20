@@ -41,6 +41,7 @@ import {
     startWith,
     first as rxFirst,
     flatMap,
+    tap,
 } from 'rxjs/operators';
 
 import { AppManager, appManager } from './AppManager';
@@ -343,6 +344,20 @@ export class FileManager implements Simulation {
                 this._helper,
                 this._selection,
                 this._recent
+            );
+
+            this._subscriptions.push(
+                this.aux.channel.connectionStateChanged
+                    .pipe(
+                        tap(connected => {
+                            this.helper.updateFile(this.helper.userFile, {
+                                tags: {
+                                    'aux.connected': connected,
+                                },
+                            });
+                        })
+                    )
+                    .subscribe()
             );
 
             this._setStatus('Initialized.');
