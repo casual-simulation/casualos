@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.7.2
+
+### Date: 05/20/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed an issue where the server would return the wrong HTML page for AUX Player.
+
 ## V0.7.1
 
 ### Date: 05/20/2019
