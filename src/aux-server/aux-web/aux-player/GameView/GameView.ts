@@ -611,6 +611,10 @@ export default class GameView extends Vue implements IGameView {
         // [Main scene]
         //
 
+        const { width, height } = this._calculateCameraSize();
+        this._renderer.setSize(width, height);
+        this._renderer.setScissorTest(false);
+
         // Render the main scene with the main camera.
         this._renderer.clear();
         this._renderer.render(this._mainScene, this._mainCameraRig.mainCamera);
@@ -632,12 +636,21 @@ export default class GameView extends Vue implements IGameView {
         //
 
         this._renderer.clearDepth(); // Clear depth buffer so that inventory scene always appears above the main scene.
+        this._inventoryScene.background = new Color('#ff00ff');
+
+        const invWidth = width / 2;
+        const invHeight = height / 2;
+        this._renderer.setViewport(0, 0, invWidth, invHeight);
+        this._renderer.setScissor(0, 0, invWidth, invHeight);
+        this._renderer.setScissorTest(true);
 
         // Render the inventory scene with the inventory main camera.
         this._renderer.render(
             this._inventoryScene,
             this._inventoryCameraRig.mainCamera
         );
+
+        this._inventoryScene.background = null;
 
         // Render the inventory scene with the inventory ui world camera.
         this._renderer.clearDepth(); // Clear depth buffer so that ui objects dont use it.
