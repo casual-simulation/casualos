@@ -7,6 +7,7 @@ import playerConfig from './player.config';
 
 const redisHost = process.env.REDIS_HOST;
 const redisPort = parseInt(process.env.REDIS_PORT);
+const httpPort = parseInt(process.env.NODE_PORT) || 3000;
 
 const config: Config = {
     socket: {
@@ -15,7 +16,7 @@ const config: Config = {
         serveClient: false,
     },
     socketPort: 4567,
-    httpPort: 3000,
+    httpPort: httpPort,
     builder: projectorConfig,
     player: playerConfig,
     mongodb: {
