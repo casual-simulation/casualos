@@ -263,7 +263,9 @@ export function fileTags(
     files: File[],
     currentTags: string[],
     extraTags: string[],
-    includeHidden: boolean = false
+    includeHidden: boolean = false,
+    tagBlacklist: string[] = [],
+    blacklistIndex: boolean[] = []
 ) {
     const fileTags = flatMap(files, f => keys(f.tags));
     // Only keep tags that don't start with an underscore (_)
@@ -275,7 +277,80 @@ export function fileTags(
 
     const onlyTagsToKeep = intersection(allTags, tagsToKeep);
 
-    return onlyTagsToKeep;
+    // if there is a blacklist index and the  first index [all] is not selected
+    if (
+        blacklistIndex != undefined &&
+        blacklistIndex.length > 0 &&
+        tagBlacklist != undefined &&
+        tagBlacklist.length > 0
+    ) {
+        let filteredTags: string[] = [];
+
+        for (let i = onlyTagsToKeep.length - 1; i >= 0; i--) {
+            for (let j = tagBlacklist.length - 1; j >= 0; j--) {
+                if (onlyTagsToKeep[i] != undefined) {
+                    if (!onlyTagsToKeep[i].includes('.')) {
+                        // no section indecator, but matches the blacklist tag, remove it
+                        if (j === 0 && !blacklistIndex[0]) {
+                            // if
+                            let isNotInBlacklist = true;
+                            for (let k = tagBlacklist.length - 1; k >= 0; k--) {
+                                if (onlyTagsToKeep[i] === tagBlacklist[k]) {
+                                    isNotInBlacklist = false;
+                                }
+                            }
+
+                            if (isNotInBlacklist) {
+                                onlyTagsToKeep.splice(i, 1);
+                            }
+                        } else {
+                            if (
+                                onlyTagsToKeep[i] === tagBlacklist[j] &&
+                                !blacklistIndex[j]
+                            ) {
+                                onlyTagsToKeep.splice(i, 1);
+                                //filteredTags.push(onlyTagsToKeep[i]);
+                            }
+                        }
+                    } else {
+                        if (j === 0 && !blacklistIndex[0]) {
+                            let isNotInBlacklist = true;
+                            for (let k = tagBlacklist.length - 1; k >= 0; k--) {
+                                if (
+                                    onlyTagsToKeep[i].split('.')[0] ===
+                                    tagBlacklist[k]
+                                ) {
+                                    isNotInBlacklist = false;
+                                }
+                            }
+
+                            if (isNotInBlacklist) {
+                                onlyTagsToKeep.splice(i, 1);
+                            }
+                        } else {
+                            // if section indecator and it is a block listed tag, remove it
+                            if (
+                                onlyTagsToKeep[i].split('.')[0] ===
+                                    tagBlacklist[j] &&
+                                !blacklistIndex[j]
+                            ) {
+                                onlyTagsToKeep.splice(i, 1);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return onlyTagsToKeep;
+    } else {
+        return onlyTagsToKeep;
+    }
+}
+
+export function getAllFileTags(files: File[]) {
+    const fileTags = flatMap(files, f => keys(f.tags));
+    return fileTags;
 }
 
 /**

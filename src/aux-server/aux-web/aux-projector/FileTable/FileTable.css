@@ -1,5 +1,6 @@
 :root {
     --disabled-cell-color: #f2f2f2;
+    --inactive-cell-color: #9d9d9d;
     --file-cell-border-color: #ccc;
     --file-cell-border: 1px solid var(--file-cell-border-color);
 }
@@ -34,6 +35,44 @@
     background-color: var(--disabled-cell-color);
     padding: 4px;
     /* border-top: var(--file-cell-border); */
+}
+
+.file-section {
+    display: inline-block;
+    margin: 1px 1px 1px 0px;
+    /* border-top: var(--file-cell-border); */
+}
+
+.file-section.active {
+    text-transform: none;
+    background-color: var(--disabled-cell-color);
+    padding: 1px;
+    display: inline-block;
+    border-radius: 3px;
+    font-size: 11px !important;
+    /* border-top: var(--file-cell-border); */
+}
+
+.file-section.inactive {
+    text-transform: none;
+    background-color: var(--inactive-cell-color);
+    padding: 1px;
+    display: inline-block;
+    border-radius: 3px;
+    font-size: 11px !important;
+    /* border-top: var(--file-cell-border); */
+}
+
+.file-section-holderOuter {
+    height: 50px;
+    width: 100%;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    white-space: nowrap;
+}
+
+.file-section-holderInner {
+    white-space: nowrap;
 }
 
 .file-cell.id {
