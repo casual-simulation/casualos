@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.7.1
+
+### Date: 05/20/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed an issue with running AUX on a .local domain that required HTTPs.
+
 ## V0.7.0
 
 ### Date: 05/20/2019
