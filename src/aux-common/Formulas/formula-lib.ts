@@ -708,6 +708,20 @@ export function unloadChannel(id: string) {
 }
 
 /**
+ * Determines if the user is currently connected to the server.
+ */
+export function isConnected(): boolean {
+    const user = getUser();
+    if (user) {
+        const val = user['aux.connected'];
+        if (val) {
+            return val.valueOf() || false;
+        }
+    }
+    return false;
+}
+
+/**
  * Defines a set of functions that are able to make File Diffs.
  */
 export const diff = {
@@ -736,6 +750,7 @@ export const player = {
     hasFileInInventory,
     showQRCode,
     hideQRCode,
+    isConnected,
 };
 
 /**
