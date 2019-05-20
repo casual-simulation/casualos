@@ -8,7 +8,7 @@ import { IGameView } from '../../shared/IGameView';
 import { Simulation } from '../../shared/Simulation';
 import { tap } from 'rxjs/operators';
 import { InventoryContextGroup3D } from './InventoryContextGroup3D';
-import { PerspectiveCamera, OrthographicCamera } from 'three';
+import { PerspectiveCamera, OrthographicCamera, Plane } from 'three';
 import GameView from '../GameView/GameView';
 
 export class InventorySimulation3D extends Simulation3D {

@@ -63,13 +63,11 @@ import FileTag from '../FileTag/FileTag';
 import FileTable from '../FileTable/FileTable';
 import { appManager } from '../../shared/AppManager';
 import { Simulation } from '../../shared/Simulation';
+import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
 
 export class BuilderInteractionManager extends BaseInteractionManager {
     // This overrides the base class IGameView
     protected _gameView: GameView;
-
-    private _surfaceColliders: Object3D[];
-    private _surfaceObjectsDirty: boolean;
 
     mode: UserMode = DEFAULT_USER_MODE;
 
@@ -79,7 +77,6 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
     constructor(gameView: GameView) {
         super(gameView);
-        this._surfaceObjectsDirty = true;
     }
 
     createGameObjectClickOperation(
@@ -148,7 +145,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         return null;
     }
 
-    findGameObjectObjectForHit(hit: Intersection): GameObject {
+    findGameObjectForHit(hit: Intersection): GameObject {
         if (!hit) {
             return null;
         }
@@ -273,6 +270,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     ) {
         let raycaster = new Raycaster();
         raycaster.setFromCamera(screenPos, camera);
+        this._gameView.getSimulations();
         const workspaces = this.getSurfaceObjects(calc);
         const hits = raycaster.intersectObjects(workspaces, true);
         const hit = hits[0];
@@ -372,17 +370,17 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         return this.findWorkspaceForIntersection(hit) === null;
     }
 
-    getSurfaceObjects(calc: FileCalculationContext) {
-        if (this._surfaceObjectsDirty) {
-            this._surfaceColliders = flatMap(
-                (<GameView>this._gameView)
-                    .getContexts()
-                    .filter(f => isContext(calc, f.file)),
-                (f: BuilderGroup3D) => f.surface.colliders
-            );
-            this._surfaceObjectsDirty = false;
+    getSurfaceObjects(calc: FileCalculationContext): Object3D[] {
+        const simulations = this._gameView.getSimulations();
+        let surfaceObjects: Object3D[] = [];
+        for (let i = 0; i < simulations.length; i++) {
+            const simulation = simulations[i];
+            if (simulation instanceof BuilderSimulation3D) {
+                surfaceObjects.push(...simulation.getSurfaceObjects(calc));
+            }
         }
-        return this._surfaceColliders;
+
+        return surfaceObjects.length > 0 ? surfaceObjects : null;
     }
 
     protected _contextMenuActions(
@@ -599,10 +597,5 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         const scale = getContextScale(calc, file.file);
         const localPos = new Vector3().copy(pos).sub(file.position);
         return realPosToGridPos(new Vector2(localPos.x, localPos.z), scale);
-    }
-
-    protected _markDirty() {
-        super._markDirty();
-        this._surfaceObjectsDirty = true;
     }
 }

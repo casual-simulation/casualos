@@ -108,7 +108,6 @@ export default class GameView extends Vue implements IGameView {
     private _vrControls: any;
     private _vrEffect: any;
 
-    private _groundPlane: Plane;
     private _gridMesh: GridHelper;
     private _time: Time;
     private _input: Input;
@@ -219,9 +218,6 @@ export default class GameView extends Vue implements IGameView {
     }
     public getRenderer() {
         return this._renderer;
-    }
-    public getGroundPlane() {
-        return this._groundPlane;
     }
     public getGridChecker() {
         return this._gridChecker;
@@ -503,7 +499,7 @@ export default class GameView extends Vue implements IGameView {
                 );
                 const point = Physics.pointOnPlane(
                     mouseDir,
-                    this.getGroundPlane()
+                    new Plane(new Vector3(0, 1, 0))
                 );
 
                 worksurface.tags['aux.context.x'] = point.x;
@@ -797,9 +793,6 @@ export default class GameView extends Vue implements IGameView {
         // Main scene directional light.
         const directional = baseAuxDirectionalLight();
         this._mainScene.add(directional);
-
-        // Main scene ground plane.
-        this._groundPlane = new Plane(new Vector3(0, 1, 0));
 
         // Main scene grid plane.
         this._gridMesh = new GridHelper(1000, 300, 0xbbbbbb, 0xbbbbbb);

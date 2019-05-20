@@ -99,10 +99,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
      * @param ray The ray to test.
      */
     pointOnGrid(calc: FileCalculationContext, ray: Ray) {
-        let planeHit = Physics.pointOnPlane(
-            ray,
-            this._gameView.getGroundPlane()
-        );
+        let planeHit = Physics.pointOnPlane(ray, Physics.GroundPlane);
         // We need to flip the sign of the z coordinate here.
         planeHit.z = -planeHit.z;
 
@@ -119,10 +116,6 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         return {
             good: false,
         };
-    }
-
-    protected _findHoveredFile(input: Input): [File, Simulation] {
-        return super._findHoveredFile(input);
     }
 
     protected _contextMenuActions(

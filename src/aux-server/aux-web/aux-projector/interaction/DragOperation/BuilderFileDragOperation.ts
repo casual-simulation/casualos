@@ -83,10 +83,7 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
             this.gameView.getInput().getMouseScreenPos(),
             this.gameView.getMainCamera()
         );
-        const point = Physics.pointOnPlane(
-            mouseDir,
-            this.gameView.getGroundPlane()
-        );
+        const point = Physics.pointOnPlane(mouseDir, Physics.GroundPlane);
 
         if (point) {
             // move the center of the workspace to the point

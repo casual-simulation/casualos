@@ -32,11 +32,10 @@ import {
 } from '../scene/CameraRigFactory';
 import { TapCodeManager } from './TapCodeManager';
 import { Simulation } from '../Simulation';
+import { Simulation3D } from '../scene/Simulation3D';
 
 export abstract class BaseInteractionManager {
     protected _gameView: IGameView;
-    protected _draggableColliders: Object3D[];
-    protected _draggableObjectsDirty: boolean;
     protected _cameraControls: CameraControls;
     protected _tapCodeManager: TapCodeManager;
     protected _maxTapCodeLength: number;
@@ -47,7 +46,6 @@ export abstract class BaseInteractionManager {
     private _overHtmlMixerIFrame: boolean;
 
     constructor(gameView: IGameView) {
-        this._draggableObjectsDirty = true;
         this._gameView = gameView;
         this._cameraControls = new CameraControls(
             this._gameView.getMainCamera(),
@@ -61,17 +59,10 @@ export abstract class BaseInteractionManager {
         this._hoveredObject = null;
 
         // Bind event handlers to this instance of the class.
-        this._handleFileAdded = this._handleFileAdded.bind(this);
-        this._handleFileUpdated = this._handleFileUpdated.bind(this);
-        this._handleFileRemoved = this._handleFileRemoved.bind(this);
         this._handleCameraTypeChanged = this._handleCameraTypeChanged.bind(
             this
         );
 
-        // Listen to file events from game view.
-        this._gameView.onFileAdded.addListener(this._handleFileAdded);
-        this._gameView.onFileUpdated.addListener(this._handleFileUpdated);
-        this._gameView.onFileRemoved.addListener(this._handleFileRemoved);
         this._gameView.onCameraTypeChanged.addListener(
             this._handleCameraTypeChanged
         );
@@ -192,28 +183,17 @@ export abstract class BaseInteractionManager {
                 }
 
                 if (input.isMouseButtonDownOn(this._gameView.gameView)) {
-                    const screenPos = input.getMouseScreenPos();
-                    const raycastResult = Physics.raycastAtScreenPos(
-                        screenPos,
-                        new Raycaster(),
-                        this.getDraggableObjects(),
-                        this._gameView.getMainCamera()
-                    );
-                    const hit = Physics.firstRaycastHit(raycastResult);
+                    let { gameObject, hit } = this.findHoveredGameObject();
 
-                    if (hit) {
-                        const gameObject = this.findGameObjectObjectForHit(hit);
-
-                        if (gameObject) {
-                            // Start game object click operation.
-                            let gameObjectClickOperation = this.createGameObjectClickOperation(
-                                gameObject,
-                                hit
-                            );
-                            if (gameObjectClickOperation !== null) {
-                                this._cameraControls.enabled = false;
-                                this._operations.push(gameObjectClickOperation);
-                            }
+                    if (gameObject) {
+                        // Start game object click operation.
+                        let gameObjectClickOperation = this.createGameObjectClickOperation(
+                            gameObject,
+                            hit
+                        );
+                        if (gameObjectClickOperation !== null) {
+                            this._cameraControls.enabled = false;
+                            this._operations.push(gameObjectClickOperation);
                         }
 
                         if (gameObject instanceof AuxFile3D) {
@@ -259,7 +239,7 @@ export abstract class BaseInteractionManager {
                     this._cameraControls.enabled = true;
                 }
             }
-
+            ``;
             this._tapCodeManager.recordTouches(input.getTouchCount());
             if (input.getKeyHeld('Alt')) {
                 for (let i = 1; i <= 9; i++) {
@@ -279,26 +259,30 @@ export abstract class BaseInteractionManager {
             }
 
             if (input.currentInputType === InputType.Mouse) {
-                const [file, simulation] = this._findHoveredFile(input);
+                let { gameObject } = this.findHoveredGameObject();
 
-                const fileId = file ? file.id : null;
-                const hoveredId = this._hoveredObject
-                    ? this._hoveredObject.id
-                    : null;
-                if (fileId !== hoveredId) {
-                    if (this._hoveredObject) {
-                        this.handlePointerExit(
-                            this._hoveredObject,
-                            this._hoveredSimulation
-                        );
-                    }
-                    this._hoveredObject = file;
-                    this._hoveredSimulation = simulation;
-                    if (this._hoveredObject) {
-                        this.handlePointerEnter(
-                            this._hoveredObject,
-                            this._hoveredSimulation
-                        );
+                if (gameObject instanceof AuxFile3D) {
+                    const file = gameObject.file;
+                    const fileId = file ? file.id : null;
+                    const hoveredId = this._hoveredObject
+                        ? this._hoveredObject.id
+                        : null;
+                    if (fileId !== hoveredId) {
+                        if (this._hoveredObject) {
+                            this.handlePointerExit(
+                                this._hoveredObject,
+                                this._hoveredSimulation
+                            );
+                        }
+                        this._hoveredObject = file;
+                        this._hoveredSimulation =
+                            gameObject.contextGroup.simulation3D.simulation;
+                        if (this._hoveredObject) {
+                            this.handlePointerEnter(
+                                this._hoveredObject,
+                                this._hoveredSimulation
+                            );
+                        }
                     }
                 }
             }
@@ -311,59 +295,56 @@ export abstract class BaseInteractionManager {
         webglCanvas.style.pointerEvents = 'auto';
     }
 
-    protected _findHoveredFile(input: Input): [File, Simulation] {
-        const screenPos = input.getMouseScreenPos();
-        const raycastResult = Physics.raycastAtScreenPos(
-            screenPos,
-            new Raycaster(),
-            this.getDraggableObjects(),
-            this._gameView.getMainCamera()
-        );
-        const hit = Physics.firstRaycastHit(raycastResult);
-        const gameObject = hit ? this.findGameObjectObjectForHit(hit) : null;
+    /**
+     * Find the first game object that is underneath the given screen position. If not screen position is given the current 'mouse' screen position will be used.
+     * @param screenPos [Optional] The screen position to test underneath.
+     */
+    findHoveredGameObject(screenPos?: Vector2) {
+        const scrPos: Vector2 = screenPos
+            ? screenPos
+            : this._gameView.getInput().getMouseScreenPos();
 
-        if (gameObject instanceof AuxFile3D) {
-            return [
-                gameObject.file,
-                gameObject.contextGroup.simulation3D.simulation,
-            ];
-        } else {
-            return [null, null];
+        // Iterate through simulations until we hit an object in one of them.
+        const simulations = this._gameView.getSimulations();
+
+        let hit: Intersection = null;
+        let hitObject: GameObject = null;
+
+        for (let i = 0; i < simulations.length; i++) {
+            const draggableObjects = simulations[i].getDraggableObjects();
+            const mainCamera = simulations[i].getMainCamera();
+
+            const raycastResult = Physics.raycastAtScreenPos(
+                scrPos,
+                new Raycaster(),
+                draggableObjects,
+                mainCamera
+            );
+            hit = Physics.firstRaycastHit(raycastResult);
+            hitObject = hit ? this.findGameObjectForHit(hit) : null;
+
+            if (hitObject) {
+                // We hit a game object in this simulation, stop searching through simulations.\
+                break;
+            }
         }
-    }
 
-    showContextMenu(calc: FileCalculationContext) {
-        const input = this._gameView.getInput();
-        const pagePos = input.getMousePagePos();
-        const screenPos = input.getMouseScreenPos();
-        const raycastResult = Physics.raycastAtScreenPos(
-            screenPos,
-            new Raycaster(),
-            this.getDraggableObjects(),
-            this._gameView.getMainCamera()
-        );
-        const hit = Physics.firstRaycastHit(raycastResult);
-
-        this._cameraControls.enabled = false;
-        const gameObject = this.findGameObjectObjectForHit(hit);
-        const actions = this._contextMenuActions(
-            calc,
-            gameObject,
-            hit.point,
-            pagePos
-        );
-
-        if (actions) {
-            // Now send the actual context menu event.
-            let menuEvent: ContextMenuEvent = {
-                pagePos: pagePos,
-                actions: actions,
+        if (hitObject) {
+            return {
+                gameObject: hitObject,
+                hit: hit,
+                screenPos: screenPos,
             };
-            this._gameView.$emit('onContextMenu', menuEvent);
+        } else {
+            return {
+                gameObject: null,
+                hit: null,
+                screenPos: null,
+            };
         }
     }
 
-    findGameObjectObjectForHit(hit: Intersection): GameObject {
+    findGameObjectForHit(hit: Intersection): GameObject {
         if (!hit) {
             return null;
         }
@@ -380,6 +361,29 @@ export abstract class BaseInteractionManager {
             return object;
         } else {
             return this.findGameObjectUpHierarchy(object.parent);
+        }
+    }
+
+    showContextMenu(calc: FileCalculationContext) {
+        const input = this._gameView.getInput();
+        const pagePos = input.getMousePagePos();
+        const { gameObject, hit } = this.findHoveredGameObject();
+        const actions = this._contextMenuActions(
+            calc,
+            gameObject,
+            hit.point,
+            pagePos
+        );
+
+        if (actions) {
+            this._cameraControls.enabled = false;
+
+            // Now send the actual context menu event.
+            let menuEvent: ContextMenuEvent = {
+                pagePos: pagePos,
+                actions: actions,
+            };
+            this._gameView.$emit('onContextMenu', menuEvent);
         }
     }
 
@@ -401,32 +405,9 @@ export abstract class BaseInteractionManager {
         await appManager.simulationManager.primary.selection.clearSelection();
     }
 
-    getDraggableObjects() {
-        if (this._draggableObjectsDirty) {
-            const contexts = this._gameView.getContexts();
-            if (contexts && contexts.length > 0) {
-                this._draggableColliders = flatMap(
-                    contexts.filter(c => !!c),
-                    f => f.colliders
-                ).filter(c => this._isVisible(c));
-            } else {
-                this._draggableColliders = [];
-            }
-            this._draggableObjectsDirty = false;
-        }
-        return this._draggableColliders;
-    }
-
     isEmptySpace(screenPos: Vector2): boolean {
-        const raycastResult = Physics.raycastAtScreenPos(
-            screenPos,
-            new Raycaster(),
-            this.getDraggableObjects(),
-            this._gameView.getMainCamera()
-        );
-        const clickedObject = Physics.firstRaycastHit(raycastResult);
-
-        return clickedObject === undefined || clickedObject === null;
+        const { gameObject } = this.findHoveredGameObject(screenPos);
+        return gameObject == null || gameObject == undefined;
     }
 
     /**
@@ -460,41 +441,12 @@ export abstract class BaseInteractionManager {
         return false;
     }
 
-    protected _isVisible(obj: Object3D) {
-        if (!obj) {
-            return false;
-        }
-        while (obj) {
-            if (!obj.visible) {
-                return false;
-            }
-            obj = obj.parent;
-        }
-        return true;
-    }
-
-    protected _handleFileAdded(file: AuxFile): void {
-        this._markDirty();
-    }
-
-    protected _handleFileUpdated(file: AuxFile): void {
-        this._markDirty();
-    }
-
-    protected _handleFileRemoved(file: AuxFile): void {
-        this._markDirty();
-    }
-
     protected _handleCameraTypeChanged(
         mainCamera: PerspectiveCamera | OrthographicCamera
     ): void {
         this._cameraControls = new CameraControls(mainCamera, this._gameView);
         this._cameraControls.minZoom = Orthographic_MinZoom;
         this._cameraControls.maxZoom = Orthographic_MaxZoom;
-    }
-
-    protected _markDirty() {
-        this._draggableObjectsDirty = true;
     }
 
     //

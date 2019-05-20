@@ -5,13 +5,31 @@ import {
     getFileConfigContexts,
     FileCalculationContext,
     Object,
+    isContext,
 } from '@casual-simulation/aux-common';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
-import { PerspectiveCamera, OrthographicCamera } from 'three';
+import { PerspectiveCamera, OrthographicCamera, Object3D, Plane } from 'three';
+import { Simulation } from '../../shared/Simulation';
+import { IGameView } from '../../shared/IGameView';
+import { flatMap } from 'lodash';
+import GameView from '../GameView/GameView';
 
 export class BuilderSimulation3D extends Simulation3D {
     recentFiles: Object[] = [];
     selectedRecentFile: Object = null;
+
+    protected _surfaceColliders: Object3D[];
+    protected _surfaceObjectsDirty: boolean;
+
+    /**
+     * Creates a new BuilderSimulation3D object that can be used to render the given simulation.
+     * @param gameView The game view.
+     * @param simulation The simulation to render.
+     */
+    constructor(gameView: IGameView, simulation: Simulation) {
+        super(gameView, simulation);
+        this._surfaceObjectsDirty = true;
+    }
 
     init() {
         super.init();
@@ -44,6 +62,19 @@ export class BuilderSimulation3D extends Simulation3D {
         } else {
             this.simulation.recent.selectedRecentFile = null;
         }
+    }
+
+    getSurfaceObjects(calc: FileCalculationContext) {
+        if (this._surfaceObjectsDirty) {
+            this._surfaceColliders = flatMap(
+                (<GameView>this._gameView)
+                    .getContexts()
+                    .filter(f => isContext(calc, f.file)),
+                (f: BuilderGroup3D) => f.surface.colliders
+            );
+            this._surfaceObjectsDirty = false;
+        }
+        return this._surfaceColliders;
     }
 
     protected _createContext(

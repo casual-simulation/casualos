@@ -45,7 +45,6 @@ export interface IGameView extends AuxFile3DFinder, Vue {
     getInputVR(): InputVR;
     getScene(): Scene;
     getRenderer(): WebGLRenderer;
-    getGroundPlane(): Plane;
     getMainCamera(): PerspectiveCamera | OrthographicCamera;
     getHtmlMixerContext(): HtmlMixer.Context;
     getDecoratorFactory(): AuxFile3DDecoratorFactory;

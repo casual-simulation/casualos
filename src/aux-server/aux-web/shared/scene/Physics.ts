@@ -15,6 +15,11 @@ import {
  */
 export namespace Physics {
     /**
+     * Infinite mathematical plane whos normal points up towards the sky.
+     */
+    export const GroundPlane: Plane = new Plane(new Vector3(0, 1, 0));
+
+    /**
      * Defines the result of a raycast.
      */
     export interface RaycastResult {

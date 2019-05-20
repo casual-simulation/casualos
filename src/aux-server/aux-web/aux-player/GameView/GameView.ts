@@ -91,8 +91,6 @@ export default class GameView extends Vue implements IGameView {
     private _vrControls: any;
     private _vrEffect: any;
 
-    private _groundPlane: Plane;
-    private _invGroundPlane: Plane;
     private _time: Time;
     private _input: Input;
     private _inputVR: InputVR;
@@ -210,9 +208,6 @@ export default class GameView extends Vue implements IGameView {
     }
     public getRenderer() {
         return this._renderer;
-    }
-    public getGroundPlane() {
-        return this._groundPlane;
     }
     public getMainCamera(): PerspectiveCamera | OrthographicCamera {
         return this._mainCameraRig.mainCamera;
@@ -705,9 +700,6 @@ export default class GameView extends Vue implements IGameView {
         const directional = baseAuxDirectionalLight();
         this._mainScene.add(directional);
 
-        // Main scene ground plane.
-        this._groundPlane = new Plane(new Vector3(0, 1, 0));
-
         //
         // [Inventory scene]
         //
@@ -730,9 +722,6 @@ export default class GameView extends Vue implements IGameView {
         // Inventory direction light.
         const invDirectional = baseAuxDirectionalLight();
         this._inventoryScene.add(invDirectional);
-
-        // Inventory ground plane.
-        this._invGroundPlane = new Plane(new Vector3(0, 1, 0));
 
         //
         // [Html Mixer Context]
