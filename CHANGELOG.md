@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.7.5
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Tag compression to the table for tags with 3 or more similar starting sections(The series of characters before the first period in the tag).
+
 ## V0.7.4
 
 ### Date: 05/20/2019
