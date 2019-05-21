@@ -1,5 +1,17 @@
 # AUX Changelog
 
+## V0.7.6
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Tag compression now happens when there are at least 2 similar starting sections.
+    -   Tag sections now begin with or are replaced by `#`.
+    -   Tag sections now truncate if they are over 16 characters.
+    -   Tag sections now begin all turned on when opening the sheets.
+
 ## V0.7.5
 
 ### Date: 05/21/2019
