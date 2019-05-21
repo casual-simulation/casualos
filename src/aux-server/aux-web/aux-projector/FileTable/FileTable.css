@@ -50,6 +50,8 @@
     display: inline-block;
     border-radius: 3px;
     font-size: 11px !important;
+    min-width: 30px;
+    height: 25px;
     /* border-top: var(--file-cell-border); */
 }
 
@@ -60,11 +62,13 @@
     display: inline-block;
     border-radius: 3px;
     font-size: 11px !important;
+    min-width: 30px;
+    height: 25px;
     /* border-top: var(--file-cell-border); */
 }
 
 .file-section-holderOuter {
-    height: 50px;
+    height: 40px;
     width: 100%;
     overflow-x: scroll;
     overflow-y: hidden;

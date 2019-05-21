@@ -362,11 +362,9 @@ export default class GameView extends Vue implements IGameView {
         this._fileSubs.push(
             playerSim3D.simulation.helper.localEvents.subscribe(e => {
                 if (e.name === 'go_to_context') {
-                    if (!e.simulation) {
-                        this.playerSimulations.forEach(s => {
-                            s.setContext(e.context);
-                        });
-                    }
+                    this.playerSimulations.forEach(s => {
+                        s.setContext(e.context);
+                    });
                 }
             })
         );

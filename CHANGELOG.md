@@ -7,8 +7,10 @@
 ### Changes:
 
 -   Improvements
+    -   Tag compression to the table for tags with 3 or more similar starting sections(The series of characters before the first period in the tag).
     -   Made switching contexts in AUX Player via `player.goToContext()` fast by not triggering a page reload.
     -   Forced each channel in AUX Player to display the same context as the primary context.
+    -   Added in ability to drag a block out of the sheet's ID value.
 
 ## V0.7.4
 

@@ -157,7 +157,7 @@ describe('FilePanelManager', () => {
                 })
             );
 
-            manager.search = '@hello(true)';
+            manager.search = '@hello(true).first()';
 
             expect(files).toEqual([tree.value['test']]);
             expect(result).toEqual(tree.value['test']);
@@ -195,7 +195,7 @@ describe('FilePanelManager', () => {
                 })
             );
 
-            manager.search = '#hello(true)';
+            manager.search = '#hello(true).first()';
 
             expect(files).toEqual([]);
             expect(result).toEqual(true);
@@ -239,7 +239,7 @@ describe('FilePanelManager', () => {
             expect(files).toEqual([tree.value['test']]);
             expect(result).toEqual(null);
 
-            manager.search = '#hello(true)';
+            manager.search = '#hello(true).first()';
 
             expect(files).toEqual([]);
             expect(result).toEqual(true);

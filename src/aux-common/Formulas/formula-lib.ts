@@ -40,7 +40,11 @@ import {
     CREATE_ACTION_NAME,
     DESTROY_ACTION_NAME,
     isFileInContext,
+    tagsOnFile,
 } from '../Files/FileCalculations';
+
+import '../polyfill/Array.first.polyfill';
+import '../polyfill/Array.last.polyfill';
 
 let actions: FileEvent[] = [];
 let state: FilesState = null;
@@ -418,12 +422,11 @@ export function whisper(file: File | string, eventName: string, arg?: any) {
 }
 
 /**
- * Redirects the user to a context in the given simulation and context.
- * @param simulationId The ID of the simulation to go to.
- * @param context The context to go to. If not provided then the simulation ID will be used as the context.
+ * Redirects the user to the given context.
+ * @param context The context to go to.
  */
-export function goToContext(simulationId: string, context?: string) {
-    actions.push(calcGoToContext(simulationId, context));
+export function goToContext(context: string) {
+    actions.push(calcGoToContext(context));
 }
 
 /**
@@ -431,9 +434,19 @@ export function goToContext(simulationId: string, context?: string) {
  * @param context The context.
  */
 export function isInContext(givenContext: string) {
-    let currentContext = window.location.pathname.split('/')[2];
+    return currentContext() === givenContext;
+}
 
-    return currentContext === givenContext;
+/**
+ * Gets the context that the player is currently in.
+ */
+export function currentContext(): string {
+    const user = getUser();
+    if (user) {
+        const context = user['aux._userContext'];
+        return context.valueOf() || undefined;
+    }
+    return undefined;
 }
 
 /**
@@ -507,6 +520,34 @@ export function getFilesInContext(context: string): FileProxy[] {
     } else {
         return [result];
     }
+}
+
+export function createDiff(file: any, ...tags: (string | RegExp)[]): FileDiff {
+    let diff: FileTags = {};
+
+    let fileTags = tagsOnFile(file);
+    for (let fileTag of fileTags) {
+        let add = false;
+        for (let tag of tags) {
+            if (tag instanceof RegExp) {
+                if (tag.test(fileTag)) {
+                    add = true;
+                    break;
+                }
+            } else {
+                if (tag === fileTag) {
+                    add = true;
+                    break;
+                }
+            }
+        }
+
+        if (add) {
+            diff[fileTag] = file[fileTag];
+        }
+    }
+
+    return diff;
 }
 
 /**
@@ -720,6 +761,7 @@ export const diff = {
     addToMenu: addToMenuDiff,
     removeFromMenu: removeFromMenuDiff,
     setPosition: setPositionDiff,
+    create: createDiff,
 };
 
 /**
@@ -741,6 +783,7 @@ export const player = {
     showQRCode,
     hideQRCode,
     isConnected,
+    currentContext,
 };
 
 /**

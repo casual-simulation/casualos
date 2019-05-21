@@ -88,7 +88,7 @@ export function calculateActionEvents(state: FilesState, action: Action) {
         };
     } = {};
 
-    objects.forEach(o => {
+    context.sandbox.interface.objects.forEach(o => {
         changes[o.id] = {
             changedTags: [],
             newValues: [],
@@ -108,7 +108,7 @@ export function calculateActionEvents(state: FilesState, action: Action) {
     );
     let events = fileEvents;
 
-    const updates = objects.map(o =>
+    const updates = context.sandbox.interface.objects.map(o =>
         calculateFileUpdateFromChanges(o.id, changes[o.id])
     );
     updates.forEach(u => {
@@ -209,15 +209,21 @@ function eventActions(
     setValueHandlerFactory: (file: File) => SetValueHandler,
     argument: any
 ): FileEvent[] {
+    if (file === undefined) {
+        return;
+    }
     const otherObjects = objects.filter(o => o !== file);
     const sortedObjects = sortBy(objects, o => o !== file);
+
     const filters = filtersMatchingArguments(
         context,
         file,
         eventName,
         otherObjects
     );
+
     const scripts = filters.map(f => calculateFileValue(context, file, f.tag));
+
     let previous = getActions();
     let prevContext = getCalculationContext();
     let prevUserId = getUserId();
@@ -489,11 +495,6 @@ export interface GoToContextEvent extends LocalEvent {
      * The context that should be loaded.
      */
     context: string;
-
-    /**
-     * The optional simulation that should be loaded.
-     */
-    simulation?: string;
 }
 
 /**
@@ -700,15 +701,11 @@ export function superShout(eventName: string, arg?: any): SuperShoutEvent {
  * @param simulationOrContext The simulation ID or context to go to. If a simulation ID is being provided, then the context parameter must also be provided.
  * @param context
  */
-export function goToContext(
-    simulationOrContext: string,
-    context?: string
-): GoToContextEvent {
+export function goToContext(context: string): GoToContextEvent {
     return {
         type: 'local',
         name: 'go_to_context',
-        simulation: context ? simulationOrContext : undefined,
-        context: context || simulationOrContext,
+        context: context,
     };
 }
 

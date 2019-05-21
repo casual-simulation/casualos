@@ -345,7 +345,7 @@ export default class App extends Vue {
     removeSimulation(info: SimulationInfo) {
         if (appManager.simulationManager.primary.id === info.id) {
             this.snackbar = {
-                message: `You cannot remove the primary simulation.`,
+                message: `You cannot remove the primary channel.`,
                 visible: true,
             };
         } else {
@@ -419,23 +419,14 @@ export default class App extends Vue {
                         this.showQRCode = false;
                     }
                 } else if (e.name === 'go_to_context') {
-                    if (e.simulation) {
-                        // Go to context and simulation
-                        window.location.pathname = `${e.simulation}/${
-                            e.context
-                        }`;
-                    } else {
-                        appManager.simulationManager.simulations.forEach(
-                            sim => {
-                                sim.parsedId = {
-                                    ...sim.parsedId,
-                                    context: e.context,
-                                };
-                            }
-                        );
+                    appManager.simulationManager.simulations.forEach(sim => {
+                        sim.parsedId = {
+                            ...sim.parsedId,
+                            context: e.context,
+                        };
+                    });
 
-                        this._updateQuery();
-                    }
+                    this._updateQuery();
                 }
             }),
             simulation.aux.channel.connectionStateChanged.subscribe(
@@ -504,7 +495,7 @@ export default class App extends Vue {
             this.$router.replace({
                 name: 'home',
                 params: {
-                    id: channel,
+                    id: channel === 'default' ? null : channel,
                     context: context,
                 },
                 query: {
