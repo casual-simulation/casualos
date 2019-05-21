@@ -2308,6 +2308,49 @@ describe('FilesChannel', () => {
                 expect(result.events).toEqual([goToContext('sim')]);
             });
         });
+
+        describe('diff.create()', () => {
+            it('should create a diff that applies the given tags from the given file', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()':
+                                'applyDiff(this, diff.create(@name("bob"), "val", /test\\..+/))',
+                        },
+                    },
+                    otherFile: {
+                        id: 'otherFile',
+                        tags: {
+                            name: 'bob',
+                            val: 123,
+                            'test.fun': true,
+                            'test.works': 'yes',
+                            'even.test.wow': 456,
+                            'test.': 'no',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            val: 123,
+                            'test.fun': true,
+                            'test.works': 'yes',
+                            'even.test.wow': 456,
+                        },
+                    }),
+                ]);
+            });
+        });
     });
 
     describe('calculateDestroyFileEvents()', () => {

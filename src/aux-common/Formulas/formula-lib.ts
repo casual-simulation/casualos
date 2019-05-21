@@ -40,6 +40,7 @@ import {
     CREATE_ACTION_NAME,
     DESTROY_ACTION_NAME,
     isFileInContext,
+    tagsOnFile,
 } from '../Files/FileCalculations';
 
 let actions: FileEvent[] = [];
@@ -508,6 +509,34 @@ export function getFilesInContext(context: string): FileProxy[] {
     }
 }
 
+export function createDiff(file: any, ...tags: (string | RegExp)[]): FileDiff {
+    let diff: FileTags = {};
+
+    let fileTags = tagsOnFile(file);
+    for (let fileTag of fileTags) {
+        let add = false;
+        for (let tag of tags) {
+            if (tag instanceof RegExp) {
+                if (tag.test(fileTag)) {
+                    add = true;
+                    break;
+                }
+            } else {
+                if (tag === fileTag) {
+                    add = true;
+                    break;
+                }
+            }
+        }
+
+        if (add) {
+            diff[fileTag] = file[fileTag];
+        }
+    }
+
+    return diff;
+}
+
 /**
  * Applies the given diff to the given file.
  * @param file The file.
@@ -719,6 +748,7 @@ export const diff = {
     addToMenu: addToMenuDiff,
     removeFromMenu: removeFromMenuDiff,
     setPosition: setPositionDiff,
+    create: createDiff,
 };
 
 /**
