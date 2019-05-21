@@ -63,6 +63,8 @@ import FileTag from '../FileTag/FileTag';
 import FileTable from '../FileTable/FileTable';
 import { appManager } from '../../shared/AppManager';
 import { Simulation } from 'aux-web/shared/Simulation';
+import FileID from '../FileID/FileID';
+import { BuilderFileDragOperation } from './DragOperation/BuilderFileDragOperation';
 
 export class BuilderInteractionManager extends BaseInteractionManager {
     // This overrides the base class IGameView
@@ -109,6 +111,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
     createHtmlElementClickOperation(element: HTMLElement): IOperation {
         const vueElement: any = Input.getVueParent(element);
+
         if (vueElement instanceof MiniFile) {
             const file = <File>vueElement.file;
             this._gameView.simulation3D.selectRecentFile(file);
@@ -143,6 +146,15 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             } else {
                 console.log('Not table');
             }
+        } else if (vueElement instanceof FileID) {
+            return new BuilderFileDragOperation(
+                this._gameView.simulation3D,
+                this,
+                null,
+                [vueElement.files],
+                null,
+                null
+            );
         }
 
         return null;

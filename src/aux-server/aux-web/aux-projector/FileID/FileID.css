@@ -1,0 +1,11 @@
+.file-id.clonable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.file-id.header {
+    font-weight: 700;
+    overflow-x: hidden;
+    white-space: nowrap;
+    cursor: pointer;
+}

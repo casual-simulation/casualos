@@ -175,13 +175,15 @@
                         </div>
 
                         <!-- File ID -->
-                        <div
+                        <file-id
+                            ref="tags"
                             :key="file.id"
-                            class="file-cell id header"
-                            @click="onFileClicked(file)"
+                            :files="file"
+                            :allowCloning="true"
+                            :shortID="getShortId(file)"
+                            class="file-cell header"
                         >
-                            {{ getShortId(file) }}
-                        </div>
+                        </file-id>
 
                         <!-- File Tags -->
                         <div

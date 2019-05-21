@@ -26,6 +26,7 @@ import FileValue from '../FileValue/FileValue';
 import TagEditor from '../TagEditor/TagEditor';
 import AlertDialogOptions from '../../shared/AlertDialogOptions';
 import FileTag from '../FileTag/FileTag';
+import FileID from '../FileID/FileID';
 import FileTableToggle from '../FileTableToggle/FileTableToggle';
 import { TreeView } from 'vue-json-tree-view';
 import { tickStep } from 'd3';
@@ -36,6 +37,7 @@ import Cube from '../public/icons/Cube.svg';
 @Component({
     components: {
         'file-value': FileValue,
+        'file-id': FileID,
         'file-tag': FileTag,
         'tag-editor': TagEditor,
         'file-table-toggle': FileTableToggle,
@@ -83,9 +85,12 @@ export default class FileTable extends Vue {
 
     uiHtmlElements(): HTMLElement[] {
         if (this.$refs.tags) {
-            return (<FileTag[]>this.$refs.tags)
-                .filter(t => t.allowCloning)
-                .map(t => t.$el);
+            return [
+                ...(<FileTag[]>this.$refs.tags)
+                    .filter(t => t.allowCloning)
+                    .map(t => t.$el),
+                ...(<FileID[]>this.$refs.tags).map(t => t.$el),
+            ];
         } else {
             return [];
         }
