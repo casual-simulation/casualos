@@ -1890,9 +1890,6 @@ export function simulationIdToString(id: SimulationIdParseSuccess): string {
     }
     if (id.channel) {
         str += id.channel;
-        if (id.context) {
-            str += `/${id.context}`;
-        }
     }
     return str;
 }

@@ -60,6 +60,8 @@ import {
     getFileDragMode,
     whitelistOrBlacklistAllowsAccess,
     getBuilderContextGrid,
+    SimulationIdParseSuccess,
+    simulationIdToString,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
@@ -2672,6 +2674,38 @@ describe('FileCalculations', () => {
                 channel: 'sim',
                 context: 'context',
             });
+        });
+    });
+
+    describe('simulationIdToString()', () => {
+        it('should encode the channel', () => {
+            const id: SimulationIdParseSuccess = {
+                success: true,
+                channel: 'test',
+            };
+
+            expect(simulationIdToString(id)).toBe('test');
+        });
+
+        it('should encode the channel without the context', () => {
+            const id: SimulationIdParseSuccess = {
+                success: true,
+                channel: 'test',
+                context: 'abc',
+            };
+
+            expect(simulationIdToString(id)).toBe('test');
+        });
+
+        it('should encode the host', () => {
+            const id: SimulationIdParseSuccess = {
+                success: true,
+                host: 'example.com',
+                channel: 'test',
+                context: 'abc',
+            };
+
+            expect(simulationIdToString(id)).toBe('example.com/test');
         });
     });
 
