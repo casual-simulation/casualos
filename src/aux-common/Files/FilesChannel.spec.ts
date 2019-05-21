@@ -250,7 +250,7 @@ describe('FilesChannel', () => {
                 thisFile: {
                     id: 'thisFile',
                     tags: {
-                        'abcdef()': '@name("test").abc = "def"',
+                        'abcdef()': '@name("test").first().abc = "def"',
                     },
                 },
                 editFile: {
@@ -281,7 +281,7 @@ describe('FilesChannel', () => {
                 thisFile: {
                     id: 'thisFile',
                     tags: {
-                        formula: '=@name("test")',
+                        formula: '=@name("test").first()',
                         'abcdef()': 'this.formula.abc = "def"',
                     },
                 },
@@ -313,7 +313,7 @@ describe('FilesChannel', () => {
                 thisFile: {
                     id: 'thisFile',
                     tags: {
-                        formula: '=@name("test")',
+                        formula: '=@name("test").first()',
                         'abcdef()':
                             'this.formula.num += 1; this.formula.num += 1',
                     },
@@ -575,12 +575,12 @@ describe('FilesChannel', () => {
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    fileUpdated('otherFile', {
                         tags: {
                             hello: true,
                         },
                     }),
-                    fileUpdated('otherFile', {
+                    fileUpdated('thisFile', {
                         tags: {
                             hello: true,
                         },
@@ -625,7 +625,8 @@ describe('FilesChannel', () => {
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
-                            'abcdef()': 'shout("sayHello", @name("other"))',
+                            'abcdef()':
+                                'shout("sayHello", @name("other").first())',
                             'sayHello()': 'this.hello = that.hi',
                         },
                     },
@@ -661,7 +662,8 @@ describe('FilesChannel', () => {
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
-                            'abcdef()': 'shout("sayHello", @name("other"))',
+                            'abcdef()':
+                                'shout("sayHello", @name("other").first())',
                             'sayHello()': 'that.hello = "test"',
                         },
                     },
@@ -697,7 +699,7 @@ describe('FilesChannel', () => {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
                             'abcdef()':
-                                'let o = { other: @name("other") }; shout("sayHello", o)',
+                                'let o = { other: @name("other").first() }; shout("sayHello", o)',
                             'sayHello()': 'that.other.hello = "test"',
                         },
                     },
@@ -762,7 +764,7 @@ describe('FilesChannel', () => {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
                             'abcdef()':
-                                'shout("sayHello", @name("other")); this.value = @name("other").hello',
+                                'shout("sayHello", @name("other").first()); this.value = @name("other").first().hello',
                             'sayHello()': 'that.hello = "test"',
                         },
                     },
@@ -782,14 +784,14 @@ describe('FilesChannel', () => {
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
-                        tags: {
-                            value: 'test',
-                        },
-                    }),
                     fileUpdated('otherFile', {
                         tags: {
                             hello: 'test',
+                        },
+                    }),
+                    fileUpdated('thisFile', {
+                        tags: {
+                            value: 'test',
                         },
                     }),
                 ]);
@@ -1055,7 +1057,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'create(null, { name: "bob" }); this.fileId = @name("bob").id',
+                                'create(null, { name: "bob" }); this.fileId = @name("bob").first().id',
                         },
                     },
                 };
@@ -1314,15 +1316,15 @@ describe('FilesChannel', () => {
                             'test()': 'create("thisFile", @test(true))',
                         },
                     },
-                    thatFile: {
-                        id: 'thatFile',
+                    aFile: {
+                        id: 'aFile',
                         tags: {
                             test: true,
                             hello: true,
                         },
                     },
-                    otherFile: {
-                        id: 'otherFile',
+                    bFile: {
+                        id: 'bFile',
                         tags: {
                             test: true,
                             hello: false,
@@ -1476,7 +1478,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'onDestroy()': '@name("other").num = 100',
+                            'onDestroy()': '@name("other").first().num = 100',
                             'test()': 'destroy(this)',
                         },
                     },
@@ -1547,7 +1549,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'addItem()':
-                                'applyDiff(@name("bob"), diff.addToMenu())',
+                                'applyDiff(@name("bob").first(), diff.addToMenu())',
                         },
                     },
                     userFile: {
@@ -1596,7 +1598,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'addItem()':
-                                'applyDiff(@name("bob"), diff.removeFromMenu())',
+                                'applyDiff(@name("bob").first(), diff.removeFromMenu())',
                         },
                     },
                     userFile: {
@@ -2316,7 +2318,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'applyDiff(this, diff.create(@name("bob"), "val", /test\\..+/))',
+                                'applyDiff(this, diff.create(@name("bob").first(), "val", /test\\..+/))',
                         },
                     },
                     otherFile: {

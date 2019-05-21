@@ -812,7 +812,7 @@ describe('FileCalculations', () => {
             });
             const context = createCalculationContext([obj1]);
 
-            const formula = '=@name("test").num';
+            const formula = '=@name("test").first().num';
             const result = calculateFormulaValue(context, formula);
 
             expect(result.success).toBe(true);
@@ -931,8 +931,8 @@ describe('FileCalculations', () => {
                     ]);
                     const value = calculateFileValue(context, file3, 'formula');
 
-                    // Order is dependent on the position in the context.
-                    expect(value).toEqual(['world', 'hello', '!']);
+                    // Order is based on the file ID
+                    expect(value).toEqual(['hello', 'world', '!']);
                 });
 
                 it('should return all the values that equal the given value', () => {
@@ -1016,7 +1016,7 @@ describe('FileCalculations', () => {
 
                     file3.tags.formula = '=#abc.def';
                     file3.tags.formula1 = '=#abc.def(num => num >= 2)';
-                    file3.tags.formula2 = '=#abc.def(2)';
+                    file3.tags.formula2 = '=#abc.def(2).first()';
 
                     const context = createCalculationContext([
                         file2,
@@ -1026,7 +1026,7 @@ describe('FileCalculations', () => {
                     ]);
                     let value = calculateFileValue(context, file3, 'formula');
 
-                    expect(value).toEqual([2, 1, 3]);
+                    expect(value).toEqual([1, 2, 3]);
 
                     value = calculateFileValue(context, file3, 'formula1');
 
@@ -1057,7 +1057,7 @@ describe('FileCalculations', () => {
                     ]);
                     let value = calculateFileValue(context, file3, 'formula');
 
-                    expect(value).toEqual([2, 1, 3]);
+                    expect(value).toEqual([1, 2, 3]);
                 });
 
                 it('should support tags in strings with filters', () => {
@@ -1090,7 +1090,7 @@ describe('FileCalculations', () => {
                         a: 1,
                     };
 
-                    file1.tags.formula = '=#num(() => true).a';
+                    file1.tags.formula = '=#num(() => true).first().a';
                     const context = createCalculationContext([file1]);
                     let value = calculateFileValue(context, file1, 'formula');
 
@@ -1109,7 +1109,7 @@ describe('FileCalculations', () => {
                     const value = calculateFileValue(context, file, 'filter');
 
                     expect(value[isProxy]).toBeFalsy();
-                    expect(value).toEqual([1, 2]);
+                    expect(value).toEqual([[1, 2]]);
                 });
 
                 it('should support filtering on values that contain arrays with elements that dont exist', () => {
@@ -1148,7 +1148,7 @@ describe('FileCalculations', () => {
                     const value = calculateFileValue(context, file3, 'formula');
 
                     // Order is dependent on the position in the context.
-                    expect(value).toEqual([file2, file1, file3]);
+                    expect(value).toEqual([file1, file2, file3]);
                 });
 
                 it('should get every file that has the given tag which matches the filter', () => {
@@ -1211,7 +1211,7 @@ describe('FileCalculations', () => {
 
                     file3.tags.formula = '=@abc.def';
                     file3.tags.formula1 = '=@abc.def(num => num >= 2)';
-                    file3.tags.formula2 = '=@abc.def(2)';
+                    file3.tags.formula2 = '=@abc.def(2).first()';
 
                     const context = createCalculationContext([
                         file2,
@@ -1221,7 +1221,7 @@ describe('FileCalculations', () => {
                     ]);
                     let value = calculateFileValue(context, file3, 'formula');
 
-                    expect(value).toEqual([file2, file1, file3]);
+                    expect(value).toEqual([file1, file2, file3]);
 
                     value = calculateFileValue(context, file3, 'formula1');
 
@@ -1252,7 +1252,7 @@ describe('FileCalculations', () => {
                     ]);
                     let value = calculateFileValue(context, file3, 'formula');
 
-                    expect(value).toEqual([file2, file1, file3]);
+                    expect(value).toEqual([file1, file2, file3]);
                 });
 
                 it('should support tags in strings with filters', () => {
@@ -1286,7 +1286,7 @@ describe('FileCalculations', () => {
                     };
                     file1.tags.name = 'test';
 
-                    file1.tags.formula = '=@name("test").num.a';
+                    file1.tags.formula = '=@name("test").first().num.a';
                     const context = createCalculationContext([file1]);
                     let value = calculateFileValue(context, file1, 'formula');
 
@@ -1299,7 +1299,7 @@ describe('FileCalculations', () => {
                     file1.tags['num.a'] = 1;
                     file1.tags.name = 'test';
 
-                    file1.tags.formula = '=@name("test").num.a';
+                    file1.tags.formula = '=@name("test").first().num.a';
                     const context = createCalculationContext([file1]);
                     let value = calculateFileValue(context, file1, 'formula');
 
@@ -1355,7 +1355,8 @@ describe('FileCalculations', () => {
 
                 it('should support filtering on values that contain arrays', () => {
                     const file = createFile('test', {
-                        filter: '=@formula(x => x[0] == 1 && x[1] == 2)',
+                        filter:
+                            '=@formula(x => x[0] == 1 && x[1] == 2).first()',
                         formula: '=[this.num._1,this.num._2]',
                         'num._1': '1',
                         'num._2': '2',

@@ -88,7 +88,7 @@ export function calculateActionEvents(state: FilesState, action: Action) {
         };
     } = {};
 
-    objects.forEach(o => {
+    context.sandbox.interface.objects.forEach(o => {
         changes[o.id] = {
             changedTags: [],
             newValues: [],
@@ -108,7 +108,7 @@ export function calculateActionEvents(state: FilesState, action: Action) {
     );
     let events = fileEvents;
 
-    const updates = objects.map(o =>
+    const updates = context.sandbox.interface.objects.map(o =>
         calculateFileUpdateFromChanges(o.id, changes[o.id])
     );
     updates.forEach(u => {

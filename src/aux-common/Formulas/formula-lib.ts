@@ -43,6 +43,9 @@ import {
     tagsOnFile,
 } from '../Files/FileCalculations';
 
+import '../polyfill/Array.first.polyfill';
+import '../polyfill/Array.last.polyfill';
+
 let actions: FileEvent[] = [];
 let state: FilesState = null;
 let calc: FileCalculationContext = null;

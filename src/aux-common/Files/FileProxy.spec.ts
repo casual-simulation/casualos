@@ -275,7 +275,7 @@ describe('FileProxy', () => {
                 ghi: 15,
                 zzz: true,
             };
-            file.tags.second = '=@name("other")';
+            file.tags.second = '=@name("other").first()';
             second.tags.name = 'other';
 
             let files: File[] = [];
@@ -300,7 +300,7 @@ describe('FileProxy', () => {
             proxy.second.def = 2;
             proxy.second.hello = 'abc';
 
-            expect(file.tags.second).toBe('=@name("other")');
+            expect(file.tags.second).toBe('=@name("other").first()');
             expect(second).toEqual({
                 id: 'lalala',
                 tags: {
@@ -319,7 +319,7 @@ describe('FileProxy', () => {
                 ghi: 15,
                 zzz: true,
             };
-            file.tags.second = '=@name("other")';
+            file.tags.second = '=@name("other").first()';
             second.tags.name = 'other';
 
             let files: File[] = [];
