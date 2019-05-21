@@ -418,12 +418,11 @@ export function whisper(file: File | string, eventName: string, arg?: any) {
 }
 
 /**
- * Redirects the user to a context in the given simulation and context.
- * @param simulationId The ID of the simulation to go to.
- * @param context The context to go to. If not provided then the simulation ID will be used as the context.
+ * Redirects the user to the given context.
+ * @param context The context to go to.
  */
-export function goToContext(simulationId: string, context?: string) {
-    actions.push(calcGoToContext(simulationId, context));
+export function goToContext(context: string) {
+    actions.push(calcGoToContext(context));
 }
 
 /**

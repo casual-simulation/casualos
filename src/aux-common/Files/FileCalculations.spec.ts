@@ -2656,23 +2656,23 @@ describe('FileCalculations', () => {
             expect(result).toEqual({
                 success: true,
                 host: 'example.com',
-                channel: 'sim',
+                context: 'sim',
             });
 
             result = parseSimulationId('https://example.com/sim/context');
             expect(result).toEqual({
                 success: true,
                 host: 'example.com',
-                channel: 'sim',
-                context: 'context',
+                context: 'sim',
+                channel: 'context',
             });
 
             result = parseSimulationId('https://example.com:3000/sim/context');
             expect(result).toEqual({
                 success: true,
                 host: 'example.com:3000',
-                channel: 'sim',
-                context: 'context',
+                context: 'sim',
+                channel: 'context',
             });
         });
     });

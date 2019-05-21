@@ -495,7 +495,7 @@ export default class App extends Vue {
             this.$router.replace({
                 name: 'home',
                 params: {
-                    id: channel,
+                    id: channel === 'default' ? null : channel,
                     context: context,
                 },
                 query: {

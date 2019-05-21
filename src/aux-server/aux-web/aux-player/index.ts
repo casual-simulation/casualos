@@ -100,26 +100,26 @@ const routes: RouteConfig[] = [
         component: Welcome,
     },
     {
-        path: '/:id/:context',
+        path: '/\\*/:id',
+        name: 'aux-builder',
+        redirect: to => {
+            if (appManager.config) {
+                console.log('[Router] Redirecting to builder');
+                const url = new URL(`/*/${to.params.id}`, window.location.href);
+                window.location.href = url.href;
+            }
+
+            return `/${to.params.id}`;
+        },
+    },
+    {
+        path: '/:context/:id?',
         name: 'home',
         component: Home,
         props: route => ({
             context: route.params.context,
             channels: route.query.channels,
         }),
-    },
-    {
-        path: '/:id?',
-        name: 'aux-builder',
-        redirect: to => {
-            if (appManager.config) {
-                console.log('[Router] Redirecting to builder');
-                const url = new URL(`/${to.params.id}`, window.location.href);
-                window.location.href = url.href;
-            }
-
-            return `/${to.params.id}/default`;
-        },
     },
 ];
 
@@ -131,7 +131,7 @@ const router = new VueRouter({
 router.beforeEach((to, from, next) => {
     appManager.initPromise.then(
         () => {
-            const channelId = to.params.id || null;
+            const channelId = to.params.id || 'default';
             const contextId = to.params.context || null;
             if (to.path !== '/login') {
                 if (!appManager.user) {

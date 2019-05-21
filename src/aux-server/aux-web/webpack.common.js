@@ -170,11 +170,10 @@ module.exports = {
                     match: function(requestUrl) {
                         let url = new URL(requestUrl);
                         const parts = url.pathname.slice(1).split('/');
-                        if (parts.length > 1) {
-                            return new URL('/player.html', location);
-                        } else {
+                        if (parts.length > 1 && parts[0] === '*') {
                             return new URL('/projector.html', location);
                         }
+                        return new URL('/player.html', location);
                     },
                     requestTypes: ['navigate'],
                 },

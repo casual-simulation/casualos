@@ -1903,7 +1903,7 @@ export function parseSimulationId(id: string): SimulationIdParseSuccess {
                 return {
                     success: true,
                     host: uri.host,
-                    channel: split[0],
+                    context: split[0],
                 };
             } else {
                 return {
@@ -1915,8 +1915,8 @@ export function parseSimulationId(id: string): SimulationIdParseSuccess {
             return {
                 success: true,
                 host: uri.host,
-                channel: split[0],
-                context: split.slice(1).join('/'),
+                context: split[0],
+                channel: split.slice(1).join('/'),
             };
         }
     } catch (ex) {

@@ -105,30 +105,30 @@ const routes: RouteConfig[] = [
         component: Welcome,
     },
     {
-        path: '/:id?/aux-debug',
+        path: '/*/:id?/aux-debug',
         name: 'aux-debug',
         component: AuxDebug,
     },
     {
-        path: '/:id/:context',
+        path: '/\\*/:id?',
+        name: 'home',
+        component: Home,
+    },
+    {
+        path: '/:context/:id?',
         name: 'aux-player',
         redirect: to => {
             if (appManager.config) {
                 console.log('[Router] Redirect to player');
                 const url = new URL(
-                    `/${to.params.id}/${to.params.context}`,
+                    `/${to.params.context}/${to.params.id}`,
                     window.location.href
                 );
                 window.location.href = url.href;
             }
 
-            return `/${to.params.id}`;
+            return `/*/${to.params.id}`;
         },
-    },
-    {
-        path: '/:id?',
-        name: 'home',
-        component: Home,
     },
 ];
 
