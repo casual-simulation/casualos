@@ -97,7 +97,7 @@ export default class FileTable extends Vue {
     }
 
     isAllTag(tag: string): boolean {
-        return tag === '*';
+        return tag === '#';
     }
 
     isBlacklistTagActive(index: number): boolean {
@@ -414,10 +414,10 @@ export default class FileTable extends Vue {
                     current += '.~' + sortedArray[i];
                     tagCount++;
 
-                    if (tagCount == 3) {
+                    if (tagCount == 2) {
                         newBlacklist.push(current.split('.')[0]);
-                        newTagCount.push(3);
-                    } else if (tagCount > 3) {
+                        newTagCount.push(2);
+                    } else if (tagCount > 2) {
                         newTagCount[newTagCount.length - 1]++;
                     }
                 }
@@ -425,7 +425,7 @@ export default class FileTable extends Vue {
         }
 
         if (newBlacklist.length > 0) {
-            newBlacklist.unshift('*');
+            newBlacklist.unshift('#');
             newTagCount.unshift(0);
         }
 
@@ -434,11 +434,7 @@ export default class FileTable extends Vue {
             newBlacklist.length > this.blacklistIndex.length
         ) {
             for (let i = 0; i < newBlacklist.length; i++) {
-                if (i === 0) {
-                    this.blacklistIndex.push(true);
-                } else {
-                    this.blacklistIndex.push(false);
-                }
+                this.blacklistIndex.push(true);
             }
         }
 
@@ -448,6 +444,18 @@ export default class FileTable extends Vue {
 
     getTagBlacklist(): string[] {
         return this.tagBlacklist;
+    }
+
+    getVisualTagBlacklist(index: number): string {
+        let newBlacklist: string;
+
+        if (this.tagBlacklist[index].length > 15) {
+            newBlacklist = this.tagBlacklist[index].substring(0, 15) + '..';
+        } else {
+            newBlacklist = this.tagBlacklist[index].substring(0, 15) + '.*';
+        }
+
+        return '#' + newBlacklist;
     }
 }
 
