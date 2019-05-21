@@ -1174,6 +1174,10 @@ export function filtersMatchingArguments(
     eventName: string,
     args: any[]
 ): FilterParseResult[] {
+    if (file === undefined) {
+        return;
+    }
+
     const tags = keys(file.tags);
     return tags
         .map(t => parseFilterTag(t))

@@ -147,14 +147,19 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 console.log('Not table');
             }
         } else if (vueElement instanceof FileID) {
-            return new BuilderFileDragOperation(
-                this._gameView.simulation3D,
-                this,
-                null,
-                [vueElement.files],
-                null,
-                null
-            );
+            const state = this._gameView.simulation3D.simulation.helper
+                .filesState;
+
+            if (state[vueElement.files.id]) {
+                return new BuilderFileDragOperation(
+                    this._gameView.simulation3D,
+                    this,
+                    null,
+                    [vueElement.files],
+                    null,
+                    null
+                );
+            }
         }
 
         return null;

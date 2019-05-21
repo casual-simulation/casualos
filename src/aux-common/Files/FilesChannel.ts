@@ -209,15 +209,21 @@ function eventActions(
     setValueHandlerFactory: (file: File) => SetValueHandler,
     argument: any
 ): FileEvent[] {
+    if (file === undefined) {
+        return;
+    }
     const otherObjects = objects.filter(o => o !== file);
     const sortedObjects = sortBy(objects, o => o !== file);
+
     const filters = filtersMatchingArguments(
         context,
         file,
         eventName,
         otherObjects
     );
+
     const scripts = filters.map(f => calculateFileValue(context, file, f.tag));
+
     let previous = getActions();
     let prevContext = getCalculationContext();
     let prevUserId = getUserId();
