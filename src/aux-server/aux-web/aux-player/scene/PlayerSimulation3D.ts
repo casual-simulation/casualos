@@ -142,6 +142,21 @@ export class PlayerSimulation3D extends Simulation3D {
                 )
                 .subscribe()
         );
+
+        // Send an event to all files indicating that the given context was loaded.
+        this.simulation.helper.action('onPlayerContextEnter', null, {
+            context: this.context,
+        });
+    }
+
+    setContext(context: string) {
+        if (this.context === context) {
+            return;
+        }
+        this.context = context;
+        this.unsubscribe();
+        this.closed = false;
+        this.init();
     }
 
     protected _frameUpdateCore(calc: FileCalculationContext) {
@@ -268,5 +283,10 @@ export class PlayerSimulation3D extends Simulation3D {
         this.inventoryContext.fileRemoved(file, calc);
         this.menuContext.fileRemoved(file, calc);
         this.simulationContext.fileRemoved(file, calc);
+    }
+
+    unsubscribe() {
+        this._contextGroup = null;
+        super.unsubscribe();
     }
 }

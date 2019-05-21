@@ -31,6 +31,7 @@ import {
     isEqual,
     sortBy,
     cloneDeep,
+    sortedIndexBy,
 } from 'lodash';
 import { Sandbox, SandboxLibrary, SandboxResult } from '../Formulas/Sandbox';
 import {
@@ -263,7 +264,9 @@ export function fileTags(
     files: File[],
     currentTags: string[],
     extraTags: string[],
-    includeHidden: boolean = false
+    includeHidden: boolean = false,
+    tagBlacklist: string[] = [],
+    blacklistIndex: boolean[] = []
 ) {
     const fileTags = flatMap(files, f => keys(f.tags));
     // Only keep tags that don't start with an underscore (_)
@@ -275,7 +278,80 @@ export function fileTags(
 
     const onlyTagsToKeep = intersection(allTags, tagsToKeep);
 
-    return onlyTagsToKeep;
+    // if there is a blacklist index and the  first index [all] is not selected
+    if (
+        blacklistIndex != undefined &&
+        blacklistIndex.length > 0 &&
+        tagBlacklist != undefined &&
+        tagBlacklist.length > 0
+    ) {
+        let filteredTags: string[] = [];
+
+        for (let i = onlyTagsToKeep.length - 1; i >= 0; i--) {
+            for (let j = tagBlacklist.length - 1; j >= 0; j--) {
+                if (onlyTagsToKeep[i] != undefined) {
+                    if (!onlyTagsToKeep[i].includes('.')) {
+                        // no section indecator, but matches the blacklist tag, remove it
+                        if (j === 0 && !blacklistIndex[0]) {
+                            // if
+                            let isNotInBlacklist = true;
+                            for (let k = tagBlacklist.length - 1; k >= 0; k--) {
+                                if (onlyTagsToKeep[i] === tagBlacklist[k]) {
+                                    isNotInBlacklist = false;
+                                }
+                            }
+
+                            if (isNotInBlacklist) {
+                                onlyTagsToKeep.splice(i, 1);
+                            }
+                        } else {
+                            if (
+                                onlyTagsToKeep[i] === tagBlacklist[j] &&
+                                !blacklistIndex[j]
+                            ) {
+                                onlyTagsToKeep.splice(i, 1);
+                                //filteredTags.push(onlyTagsToKeep[i]);
+                            }
+                        }
+                    } else {
+                        if (j === 0 && !blacklistIndex[0]) {
+                            let isNotInBlacklist = true;
+                            for (let k = tagBlacklist.length - 1; k >= 0; k--) {
+                                if (
+                                    onlyTagsToKeep[i].split('.')[0] ===
+                                    tagBlacklist[k]
+                                ) {
+                                    isNotInBlacklist = false;
+                                }
+                            }
+
+                            if (isNotInBlacklist) {
+                                onlyTagsToKeep.splice(i, 1);
+                            }
+                        } else {
+                            // if section indecator and it is a block listed tag, remove it
+                            if (
+                                onlyTagsToKeep[i].split('.')[0] ===
+                                    tagBlacklist[j] &&
+                                !blacklistIndex[j]
+                            ) {
+                                onlyTagsToKeep.splice(i, 1);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return onlyTagsToKeep;
+    } else {
+        return onlyTagsToKeep;
+    }
+}
+
+export function getAllFileTags(files: File[]) {
+    const fileTags = flatMap(files, f => keys(f.tags));
+    return fileTags;
 }
 
 /**
@@ -1098,6 +1174,10 @@ export function filtersMatchingArguments(
     eventName: string,
     args: any[]
 ): FilterParseResult[] {
+    if (file === undefined) {
+        return;
+    }
+
     const tags = keys(file.tags);
     return tags
         .map(t => parseFilterTag(t))
@@ -1808,6 +1888,17 @@ export function getDiffUpdate(file: File): PartialFile {
     return null;
 }
 
+export function simulationIdToString(id: SimulationIdParseSuccess): string {
+    let str = '';
+    if (id.host) {
+        str += `${id.host}/`;
+    }
+    if (id.channel) {
+        str += id.channel;
+    }
+    return str;
+}
+
 export function parseSimulationId(id: string): SimulationIdParseSuccess {
     try {
         let uri = new URL(id);
@@ -1817,7 +1908,7 @@ export function parseSimulationId(id: string): SimulationIdParseSuccess {
                 return {
                     success: true,
                     host: uri.host,
-                    channel: split[0],
+                    context: split[0],
                 };
             } else {
                 return {
@@ -1829,8 +1920,8 @@ export function parseSimulationId(id: string): SimulationIdParseSuccess {
             return {
                 success: true,
                 host: uri.host,
-                channel: split[0],
-                context: split.slice(1).join('/'),
+                context: split[0],
+                channel: split.slice(1).join('/'),
             };
         }
     } catch (ex) {
@@ -2336,7 +2427,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
         userId: string,
         setValueHandlerFactory?: (file: File) => SetValueHandler
     ) {
-        this.objects = context.objects;
+        this.objects = sortBy(context.objects, 'id');
         this.context = context;
         this._userId = userId;
         this.proxies = new Map();
@@ -2351,7 +2442,8 @@ class SandboxInterfaceImpl implements SandboxInterface {
         if (this.proxies.has(file.id)) {
             return this.proxies.get(file.id);
         } else {
-            this.objects.push(file);
+            const index = sortedIndexBy(this.objects, file, f => f.id);
+            this.objects.splice(index, 0, file);
             return this._convertToFormulaObject(file);
         }
     }
@@ -2361,7 +2453,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
             .map(o => this._calculateValue(o, tag))
             .filter(t => t);
         const filtered = this._filterValues(tags, filter);
-        return _singleOrArray(filtered);
+        return filtered;
     }
 
     listObjectsWithTag(tag: string, filter?: FilterFunction, extras?: any) {
@@ -2369,7 +2461,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
             .filter(o => this._calculateValue(o, tag))
             .map(o => this._convertToFormulaObject(o));
         const filtered = this._filterObjects(objs, filter, tag);
-        return _singleOrArray(filtered);
+        return filtered;
     }
 
     list(obj: any, context: string) {

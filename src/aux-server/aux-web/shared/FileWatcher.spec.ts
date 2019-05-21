@@ -56,6 +56,66 @@ describe('FileWatcher', () => {
 
             expect(files).toEqual([tree.value['test'], tree.value['test2']]);
         });
+
+        it('should start with the updated versions of added files', async () => {
+            await tree.addFile(
+                createFile('test', {
+                    hello: true,
+                })
+            );
+
+            await tree.addFile(
+                createFile('test2', {
+                    hello: false,
+                })
+            );
+
+            fileAdded.next([tree.value['test']]);
+            fileAdded.next([tree.value['test2']]);
+
+            await tree.updateFile(tree.value['test'], {
+                tags: {
+                    hello: 'world',
+                },
+            });
+
+            await tree.updateFile(tree.value['test2'], {
+                tags: {
+                    hello: 123,
+                },
+            });
+
+            fileUpdated.next([tree.value['test']]);
+            fileUpdated.next([tree.value['test2']]);
+
+            let files: AuxFile[] = [];
+            watcher.filesDiscovered.subscribe(f => files.push(...f));
+
+            expect(files).toEqual([tree.value['test'], tree.value['test2']]);
+        });
+
+        it('should not start with files that were removed', async () => {
+            await tree.addFile(
+                createFile('test', {
+                    hello: true,
+                })
+            );
+
+            await tree.addFile(
+                createFile('test2', {
+                    hello: false,
+                })
+            );
+
+            fileAdded.next([tree.value['test']]);
+            fileAdded.next([tree.value['test2']]);
+            fileRemoved.next(['test2']);
+
+            let files: AuxFile[] = [];
+            watcher.filesDiscovered.subscribe(f => files.push(...f));
+
+            expect(files).toEqual([tree.value['test']]);
+        });
     });
 
     describe('filesRemoved', () => {

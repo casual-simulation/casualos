@@ -9,6 +9,11 @@ export type FilterFunction = ((value: any) => boolean) | any;
  */
 export default interface SandboxInterface {
     /**
+     * The list of objects contained by the interface.
+     */
+    objects: File[];
+
+    /**
      * Calculates the list of tag values for the given tag.
      * @param tag The tag.
      * @param filter The filter to apply to the tag values.

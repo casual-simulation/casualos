@@ -58,6 +58,35 @@
             </div>
         </div>
         <div>
+            <div class="file-section-holderOuter">
+                <div class="file-section-holderInner">
+                    <div
+                        v-for="(tagBlacklist, index) in getTagBlacklist()"
+                        :key="index"
+                        class="file-section"
+                    >
+                        <md-button
+                            v-if="isBlacklistTagActive(index)"
+                            class="file-section active"
+                            @click="toggleBlacklistIndex(index)"
+                        >
+                            <span v-if="isAllTag(tagBlacklist)"> {{ tagBlacklist }}</span>
+                            <span v-else> {{ tagBlacklist }}.*</span>
+                        </md-button>
+                        <md-button
+                            v-else
+                            class="file-section inactive"
+                            @click="toggleBlacklistIndex(index)"
+                        >
+                            <span v-if="isAllTag(tagBlacklist)"> {{ tagBlacklist }}</span>
+                            <span v-else>
+                                {{ tagBlacklist }}.* [{{ getBlacklistCount(index) }}]</span
+                            >
+                        </md-button>
+                    </div>
+                </div>
+            </div>
+
             <p v-if="isSearch && searchResult === null" class="no-search-results-message">
                 No files found
             </p>
@@ -65,7 +94,6 @@
                 Select a file or search
             </p>
             <div v-else-if="hasFiles" class="file-table-wrapper">
-                <!--   -->
                 <div
                     class="file-table-grid"
                     :class="[viewMode]"
@@ -147,13 +175,15 @@
                         </div>
 
                         <!-- File ID -->
-                        <div
+                        <file-id
+                            ref="tags"
                             :key="file.id"
-                            class="file-cell id header"
-                            @click="onFileClicked(file)"
+                            :files="file"
+                            :allowCloning="true"
+                            :shortID="getShortId(file)"
+                            class="file-cell header"
                         >
-                            {{ getShortId(file) }}
-                        </div>
+                        </file-id>
 
                         <!-- File Tags -->
                         <div
