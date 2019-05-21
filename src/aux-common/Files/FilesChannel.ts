@@ -489,11 +489,6 @@ export interface GoToContextEvent extends LocalEvent {
      * The context that should be loaded.
      */
     context: string;
-
-    /**
-     * The optional simulation that should be loaded.
-     */
-    simulation?: string;
 }
 
 /**
@@ -700,15 +695,11 @@ export function superShout(eventName: string, arg?: any): SuperShoutEvent {
  * @param simulationOrContext The simulation ID or context to go to. If a simulation ID is being provided, then the context parameter must also be provided.
  * @param context
  */
-export function goToContext(
-    simulationOrContext: string,
-    context?: string
-): GoToContextEvent {
+export function goToContext(context: string): GoToContextEvent {
     return {
         type: 'local',
         name: 'go_to_context',
-        simulation: context ? simulationOrContext : undefined,
-        context: context || simulationOrContext,
+        context: context,
     };
 }
 

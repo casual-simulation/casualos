@@ -2288,7 +2288,7 @@ describe('FilesChannel', () => {
                 expect(result.events).toEqual([goToContext('abc')]);
             });
 
-            it('should support passing the simulation ID', () => {
+            it('should ignore extra parameters', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -2305,7 +2305,7 @@ describe('FilesChannel', () => {
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([goToContext('sim', 'abc')]);
+                expect(result.events).toEqual([goToContext('sim')]);
             });
         });
     });
@@ -2350,18 +2350,16 @@ describe('FilesChannel', () => {
                 type: 'local',
                 name: 'go_to_context',
                 context: 'context',
-                simulation: undefined,
             });
         });
 
-        it('should use the first parameter as the simulation two arguments are provided', () => {
-            const event = goToContext('sim', 'context');
+        it('should ignore all other parameters', () => {
+            const event = (<any>goToContext)('context', 'abc');
 
             expect(event).toEqual({
                 type: 'local',
                 name: 'go_to_context',
                 context: 'context',
-                simulation: 'sim',
             });
         });
     });
