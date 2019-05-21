@@ -1,5 +1,15 @@
 # AUX Changelog
 
+## V0.7.5
+
+### Date: 05/21/2019
+
+### Changes:
+
+-   Improvements
+    -   Made switching contexts in AUX Player via `player.goToContext()` fast by not triggering a page reload.
+    -   Forced each channel in AUX Player to display the same context as the primary context.
+
 ## V0.7.4
 
 ### Date: 05/20/2019
