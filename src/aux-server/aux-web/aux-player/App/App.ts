@@ -19,7 +19,6 @@ import {
     getFileChannel,
     calculateDestroyFileEvents,
     merge,
-    SimulationIdParseSuccess,
     simulationIdToString,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
@@ -386,7 +385,7 @@ export default class App extends Vue {
         };
 
         subs.push(
-            simulation.helper.localEvents.subscribe(e => {
+            simulation.helper.localEvents.subscribe(async e => {
                 if (e.name === 'show_toast') {
                     this.snackbar = {
                         message: e.message,
@@ -430,6 +429,31 @@ export default class App extends Vue {
                             ...simulation.parsedId,
                             context: e.context,
                         };
+                        const newId = simulationIdToString(simulation.parsedId);
+                        const files = flatMap(
+                            [
+                                ...appManager.simulationManager.simulations.values(),
+                            ],
+                            sim => {
+                                const files = sim.helper.getSimulationFiles(
+                                    simulation.id
+                                );
+
+                                return files.map(f => ({
+                                    file: f,
+                                    sim: sim,
+                                }));
+                            }
+                        );
+
+                        for (let file of files) {
+                            await file.sim.helper.updateFile(file.file, {
+                                tags: {
+                                    'aux.channel': newId,
+                                },
+                            });
+                        }
+
                         this._updateQuery();
                     }
                 }
@@ -510,9 +534,7 @@ export default class App extends Vue {
                                 sim.id !==
                                 appManager.simulationManager.primary.id
                         )
-                        .map(sim =>
-                            simulationIdToString(sim.simulation.parsedId)
-                        ),
+                        .map(sim => sim.id),
                 },
             });
         }

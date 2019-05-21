@@ -194,8 +194,7 @@ export class FileHelper {
      * @param fileId The ID of the file to create.
      */
     async createSimulation(id: string, fileId?: string) {
-        const calc = this.createContext();
-        const simFiles = this._getSimulationFiles(calc, id);
+        const simFiles = this.getSimulationFiles(id);
 
         if (simFiles.length === 0) {
             await this.createFile(fileId, {
@@ -203,6 +202,16 @@ export class FileHelper {
                 ['aux.channel']: id,
             });
         }
+    }
+
+    /**
+     * Gets the list of files that are loading the simulation with the given ID.
+     * @param id The ID of the simulation.
+     */
+    getSimulationFiles(id: string) {
+        const calc = this.createContext();
+        const simFiles = this._getSimulationFiles(calc, id);
+        return simFiles;
     }
 
     /**
@@ -344,12 +353,12 @@ export class FileHelper {
     private _getSimulationFiles(
         calc: FileCalculationContext,
         id: string
-    ): File[] {
+    ): AuxObject[] {
         const simFiles = filesInContext(
             calc,
             this.userFile.tags['aux._userSimulationsContext']
         ).filter(f => getFileChannel(calc, f) === id);
 
-        return simFiles;
+        return <AuxObject[]>simFiles;
     }
 }
