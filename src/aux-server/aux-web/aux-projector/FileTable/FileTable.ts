@@ -300,6 +300,7 @@ export default class FileTable extends Vue {
 
     toggleHidden() {
         this.showHidden = !this.showHidden;
+        this.setTagBlacklist();
         this._updateTags();
     }
 
@@ -382,7 +383,10 @@ export default class FileTable extends Vue {
     }
 
     setTagBlacklist() {
-        let sortedArray: string[] = getAllFileTags(this.files).sort();
+        let sortedArray: string[] = getAllFileTags(
+            this.files,
+            this.showHidden
+        ).sort();
 
         let newBlacklist: string[] = [];
         let newTagCount: number[] = [];
@@ -433,6 +437,12 @@ export default class FileTable extends Vue {
             (this.blacklistIndex === undefined && newBlacklist.length > 0) ||
             newBlacklist.length > this.blacklistIndex.length
         ) {
+            for (let i = 0; i < newBlacklist.length; i++) {
+                this.blacklistIndex.push(true);
+            }
+        } else if (newBlacklist.length < this.blacklistIndex.length) {
+            this.blacklistIndex = [];
+
             for (let i = 0; i < newBlacklist.length; i++) {
                 this.blacklistIndex.push(true);
             }

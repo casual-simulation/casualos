@@ -349,9 +349,14 @@ export function fileTags(
     }
 }
 
-export function getAllFileTags(files: File[]) {
+export function getAllFileTags(files: File[], includeHidden: boolean) {
     const fileTags = flatMap(files, f => keys(f.tags));
-    return fileTags;
+
+    const nonHiddenTags = fileTags.filter(
+        t => includeHidden || !isHiddenTag(t)
+    );
+
+    return nonHiddenTags;
 }
 
 /**
