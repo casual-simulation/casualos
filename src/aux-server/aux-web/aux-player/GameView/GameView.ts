@@ -232,9 +232,9 @@ export default class GameView extends Vue implements IGameView {
         return null;
     }
     public getSimulations(): Simulation3D[] {
-        // return [...this.playerSimulations, ...this.inventorySimulations];
+        return [...this.playerSimulations, ...this.inventorySimulations];
         // return [...this.playerSimulations];
-        return [...this.inventorySimulations];
+        // return [...this.inventorySimulations];
     }
 
     public setGridsVisible(visible: boolean) {
@@ -642,8 +642,8 @@ export default class GameView extends Vue implements IGameView {
         this._inventoryScene.background = new Color('#ff00ff');
 
         this._inventoryViewport = {
-            x: 0,
-            y: 0,
+            x: 100,
+            y: 250,
             width: width / 2,
             height: height / 2,
         };

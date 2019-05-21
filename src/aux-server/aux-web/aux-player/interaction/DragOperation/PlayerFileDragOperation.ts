@@ -39,6 +39,10 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
 
     protected _originalContext: string;
 
+    protected get gameView(): GameView {
+        return <GameView>this._simulation3D.gameView;
+    }
+
     /**
      * Create a new drag rules.
      */
@@ -61,10 +65,15 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
 
         let nextContext = this._simulation3D.context;
 
-        // TODO: Detect that we are hovering over the inventory simulation scene.
-        // if (vueElement && vueElement instanceof InventoryFile) {
-        //     nextContext = this._simulation3D.inventoryContext.context;
-        // }
+        // Test to see if we are hovering over the inventory simulation view.
+        const pagePos = this.gameView.getInput().getMousePagePos();
+        const inventoryViewport = this.gameView.getInventoryViewport();
+        const view = this.gameView.gameView;
+        if (
+            Input.pagePositionInsideViewport(pagePos, view, inventoryViewport)
+        ) {
+            nextContext = this._inventorySimulation3D.inventoryContext;
+        }
 
         let changingContexts = this._originalContext !== nextContext;
         let canDrag = false;

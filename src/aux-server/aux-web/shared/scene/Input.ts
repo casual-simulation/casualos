@@ -91,6 +91,31 @@ export class Input {
     }
 
     /**
+     * Returns wether or not the page position is inside the viewport.
+     * @param pagePos
+     * @param viewport
+     */
+    public static pagePositionInsideViewport(
+        pagePos: Vector2,
+        view: HTMLElement,
+        viewport: Viewport
+    ) {
+        if (!!pagePos && !!viewport && !!view) {
+            const screenPos = this.screenPositionForViewport(
+                pagePos,
+                view,
+                viewport
+            );
+            if (screenPos.x >= -1 && screenPos.x <= 1) {
+                if (screenPos.y >= -1 && screenPos.y <= 1) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * Measures the distance between the two mouse events in pixels.
      * @param firstPagePos The first page position.
      * @param secondPagePos The second page position.
