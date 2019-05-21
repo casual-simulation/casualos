@@ -11,6 +11,30 @@
     -   Made switching contexts in AUX Player via `player.goToContext()` fast by not triggering a page reload.
     -   Forced each channel in AUX Player to display the same context as the primary context.
     -   Added in ability to drag a block out of the sheet's ID value.
+    -   Added the `diff.create(file, ...tags)` function.
+        -   This creates a diff that takes the specified tags from the given file.
+        -   Tags can be strings or regex.
+        -   The result can be used in `applyDiff()` or in `create()`.
+        -   Example:
+            -   `diff.create(this, /aux\..+/, 'fun')`
+            -   Creates a new diff that copies all the `aux.*` and `fun` tags.
+    -   Added the `player.currentContext()` function.
+        -   This returns the context that is currently loaded into AUX Player.
+    -   Added the `onPlayerContextEnter()` event.
+        -   This is triggered whenever AUX Player loads or changes a context.
+        -   The `that` variable is an object containing the following properties:
+            -   `context` - the context that was loaded.
+    -   Added convenience functions for accessing the first and last elements on an array.
+        -   `array.first()` will get the first element.
+        -   `array.last()` will get the last element.
+-   Changes
+    -   Changed the @ and # formula expressions to always return a list of values.
+        -   The values will always be sorted by the ID of the file that it came from.
+            -   For @ expressions this means that the files will be sorted by ID.
+            -   For # expressions this means that the values will be sorted by which file they came from.
+        -   Because of this change, users should now use the `.first()` function to get the first file returned from a query.
+-   Bug Fixes
+    -   Fixed the wording when adding and removing channels.
 
 ## V0.7.4
 
