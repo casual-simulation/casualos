@@ -18,9 +18,6 @@ export class BuilderSimulation3D extends Simulation3D {
     recentFiles: Object[] = [];
     selectedRecentFile: Object = null;
 
-    protected _surfaceColliders: Object3D[];
-    protected _surfaceObjectsDirty: boolean;
-
     /**
      * Creates a new BuilderSimulation3D object that can be used to render the given simulation.
      * @param gameView The game view.
@@ -28,7 +25,6 @@ export class BuilderSimulation3D extends Simulation3D {
      */
     constructor(gameView: IGameView, simulation: Simulation) {
         super(gameView, simulation);
-        this._surfaceObjectsDirty = true;
     }
 
     init() {
@@ -62,19 +58,6 @@ export class BuilderSimulation3D extends Simulation3D {
         } else {
             this.simulation.recent.selectedRecentFile = null;
         }
-    }
-
-    getSurfaceObjects(calc: FileCalculationContext) {
-        if (this._surfaceObjectsDirty) {
-            this._surfaceColliders = flatMap(
-                (<GameView>this._gameView)
-                    .getContexts()
-                    .filter(f => isContext(calc, f.file)),
-                (f: BuilderGroup3D) => f.surface.colliders
-            );
-            this._surfaceObjectsDirty = false;
-        }
-        return this._surfaceColliders;
     }
 
     protected _createContext(

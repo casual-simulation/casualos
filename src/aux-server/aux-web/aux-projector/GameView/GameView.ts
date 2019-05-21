@@ -233,9 +233,6 @@ export default class GameView extends Vue implements IGameView {
     public getSimulations(): Simulation3D[] {
         return [this.simulation3D];
     }
-    public getContexts() {
-        return this.simulation3D.contexts.filter(c => c.contexts.size > 0);
-    }
 
     public getUIHtmlElements(): HTMLElement[] {
         return [

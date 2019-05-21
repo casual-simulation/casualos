@@ -33,7 +33,11 @@ export class BuilderGroup3D extends ContextGroup3D {
     }
 
     get groupColliders() {
-        return this.surface.colliders;
+        if (this.surface) {
+            return this.surface.colliders;
+        } else {
+            return [];
+        }
     }
 
     set groupColliders(value: Object3D[]) {}

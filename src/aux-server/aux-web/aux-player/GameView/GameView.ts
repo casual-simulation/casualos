@@ -37,7 +37,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { Time } from '../../shared/scene/Time';
-import { Input, InputType } from '../../shared/scene/Input';
+import { Input, InputType, Viewport } from '../../shared/scene/Input';
 import { InputVR } from '../../shared/scene/InputVR';
 import { appManager } from '../../shared/AppManager';
 import { find, flatMap, uniqBy } from 'lodash';
@@ -86,6 +86,7 @@ export default class GameView extends Vue implements IGameView {
     private _inventoryScene: Scene;
     private _inventoryCameraRig: CameraRig;
     private _renderer: WebGLRenderer;
+    private _inventoryViewport: Viewport;
 
     private _enterVr: any;
     private _vrControls: any;
@@ -215,6 +216,9 @@ export default class GameView extends Vue implements IGameView {
     public getInventoryCamera(): PerspectiveCamera | OrthographicCamera {
         return this._inventoryCameraRig.mainCamera;
     }
+    public getInventoryViewport(): Viewport {
+        return this._inventoryViewport;
+    }
     public getUIHtmlElements(): HTMLElement[] {
         return [<HTMLElement>this.$refs.inventory];
     }
@@ -228,15 +232,9 @@ export default class GameView extends Vue implements IGameView {
         return null;
     }
     public getSimulations(): Simulation3D[] {
-        return [...this.playerSimulations, ...this.inventorySimulations];
-    }
-    public getContexts(): ContextGroup3D[] {
-        let playerContexts = flatMap(this.playerSimulations, s => s.contexts);
-        let inventoryContexts = flatMap(
-            this.inventorySimulations,
-            s => s.contexts
-        );
-        return [...playerContexts, ...inventoryContexts];
+        // return [...this.playerSimulations, ...this.inventorySimulations];
+        // return [...this.playerSimulations];
+        return [...this.inventorySimulations];
     }
 
     public setGridsVisible(visible: boolean) {
@@ -645,10 +643,25 @@ export default class GameView extends Vue implements IGameView {
         this._renderer.clearDepth(); // Clear depth buffer so that inventory scene always appears above the main scene.
         this._inventoryScene.background = new Color('#ff00ff');
 
-        const invWidth = width / 2;
-        const invHeight = height / 2;
-        this._renderer.setViewport(0, 0, invWidth, invHeight);
-        this._renderer.setScissor(0, 0, invWidth, invHeight);
+        this._inventoryViewport = {
+            x: 0,
+            y: 0,
+            width: width / 2,
+            height: height / 2,
+        };
+
+        this._renderer.setViewport(
+            this._inventoryViewport.x,
+            this._inventoryViewport.y,
+            this._inventoryViewport.width,
+            this._inventoryViewport.height
+        );
+        this._renderer.setScissor(
+            this._inventoryViewport.x,
+            this._inventoryViewport.y,
+            this._inventoryViewport.width,
+            this._inventoryViewport.height
+        );
         this._renderer.setScissorTest(true);
 
         // Render the inventory scene with the inventory main camera.

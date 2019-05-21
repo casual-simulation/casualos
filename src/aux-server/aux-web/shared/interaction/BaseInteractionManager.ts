@@ -33,6 +33,8 @@ import {
 import { TapCodeManager } from './TapCodeManager';
 import { Simulation } from '../Simulation';
 import { Simulation3D } from '../scene/Simulation3D';
+import { DraggableGroup } from './DraggableGroup';
+import { isObjectVisible } from '../scene/SceneUtils';
 
 export abstract class BaseInteractionManager {
     protected _gameView: IGameView;
@@ -42,10 +44,14 @@ export abstract class BaseInteractionManager {
     protected _hoveredObject: File;
     protected _hoveredSimulation: Simulation;
 
+    protected _draggableGroups: DraggableGroup[];
+    protected _draggableGroupsDirty: boolean;
+
     private _operations: IOperation[];
     private _overHtmlMixerIFrame: boolean;
 
     constructor(gameView: IGameView) {
+        this._draggableGroupsDirty = true;
         this._gameView = gameView;
         this._cameraControls = new CameraControls(
             this._gameView.getMainCamera(),
@@ -59,10 +65,17 @@ export abstract class BaseInteractionManager {
         this._hoveredObject = null;
 
         // Bind event handlers to this instance of the class.
+        this._handleFileAdded = this._handleFileAdded.bind(this);
+        this._handleFileUpdated = this._handleFileUpdated.bind(this);
+        this._handleFileRemoved = this._handleFileRemoved.bind(this);
         this._handleCameraTypeChanged = this._handleCameraTypeChanged.bind(
             this
         );
 
+        // Listen to file events from game view.
+        this._gameView.onFileAdded.addListener(this._handleFileAdded);
+        this._gameView.onFileUpdated.addListener(this._handleFileUpdated);
+        this._gameView.onFileRemoved.addListener(this._handleFileRemoved);
         this._gameView.onCameraTypeChanged.addListener(
             this._handleCameraTypeChanged
         );
@@ -296,34 +309,82 @@ export abstract class BaseInteractionManager {
     }
 
     /**
-     * Find the first game object that is underneath the given screen position. If not screen position is given the current 'mouse' screen position will be used.
-     * @param screenPos [Optional] The screen position to test underneath.
+     * Gets groups of draggables for input testing.
      */
-    findHoveredGameObject(screenPos?: Vector2) {
-        const scrPos: Vector2 = screenPos
-            ? screenPos
-            : this._gameView.getInput().getMouseScreenPos();
+    getDraggableGroups(): DraggableGroup[] {
+        if (this._draggableGroupsDirty) {
+            const contexts = flatMap(
+                this._gameView.getSimulations(),
+                s => s.contexts
+            );
+            if (contexts && contexts.length > 0) {
+                let colliders = flatMap(
+                    contexts.filter(c => !!c),
+                    f => f.colliders
+                ).filter(c => isObjectVisible(c));
 
-        // Iterate through simulations until we hit an object in one of them.
-        const simulations = this._gameView.getSimulations();
+                this._draggableGroups = [
+                    {
+                        objects: colliders,
+                        camera: this._gameView.getMainCamera(),
+                    },
+                ];
+            } else {
+                this._draggableGroups = [];
+            }
+            this._draggableGroupsDirty = false;
+        }
+        return this._draggableGroups;
+    }
+
+    /**
+     * Find the first game object that is underneath the given page position. If page position is not given, the current 'mouse' page position will be used.
+     * @param pagePos [Optional] The page position to test underneath.
+     */
+    findHoveredGameObject(pagePos?: Vector2) {
+        pagePos = !!pagePos
+            ? pagePos
+            : this._gameView.getInput().getMousePagePos();
+
+        const draggableGroups = this.getDraggableGroups();
 
         let hit: Intersection = null;
         let hitObject: GameObject = null;
 
-        for (let i = 0; i < simulations.length; i++) {
-            const draggableObjects = simulations[i].getDraggableObjects();
-            const mainCamera = simulations[i].getMainCamera();
+        // Iterate through draggable groups until we hit and object in one of them.
+        for (let i = 0; i < draggableGroups.length; i++) {
+            const objects = draggableGroups[i].objects;
+            const camera = draggableGroups[i].camera;
+            const viewport = draggableGroups[i].viewport;
+
+            let screenPos: Vector2;
+            if (viewport) {
+                screenPos = Input.screenPositionForViewport(
+                    pagePos,
+                    this._gameView.gameView,
+                    viewport
+                );
+            } else {
+                screenPos = Input.screenPosition(
+                    pagePos,
+                    this._gameView.gameView
+                );
+            }
 
             const raycastResult = Physics.raycastAtScreenPos(
-                scrPos,
+                screenPos,
                 new Raycaster(),
-                draggableObjects,
-                mainCamera
+                objects,
+                camera
             );
             hit = Physics.firstRaycastHit(raycastResult);
             hitObject = hit ? this.findGameObjectForHit(hit) : null;
 
             if (hitObject) {
+                if (hitObject instanceof AuxFile3D) {
+                    hitObject.display.rotateY(0.1);
+                    // console.log('hitObject simulation id:', hitObject.contextGroup.simulation3D.simulation.id);
+                }
                 // We hit a game object in this simulation, stop searching through simulations.\
                 break;
             }
@@ -333,13 +394,11 @@ export abstract class BaseInteractionManager {
             return {
                 gameObject: hitObject,
                 hit: hit,
-                screenPos: screenPos,
             };
         } else {
             return {
                 gameObject: null,
                 hit: null,
-                screenPos: null,
             };
         }
     }
@@ -439,6 +498,22 @@ export abstract class BaseInteractionManager {
             return tags.length > 0;
         }
         return false;
+    }
+
+    protected _handleFileAdded(file: AuxFile): void {
+        this._markDirty();
+    }
+
+    protected _handleFileUpdated(file: AuxFile): void {
+        this._markDirty();
+    }
+
+    protected _handleFileRemoved(file: AuxFile): void {
+        this._markDirty();
+    }
+
+    protected _markDirty() {
+        this._draggableGroupsDirty = true;
     }
 
     protected _handleCameraTypeChanged(

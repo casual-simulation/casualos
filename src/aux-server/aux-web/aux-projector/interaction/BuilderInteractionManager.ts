@@ -64,10 +64,14 @@ import FileTable from '../FileTable/FileTable';
 import { appManager } from '../../shared/AppManager';
 import { Simulation } from '../../shared/Simulation';
 import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
+import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
 
 export class BuilderInteractionManager extends BaseInteractionManager {
     // This overrides the base class IGameView
     protected _gameView: GameView;
+
+    protected _surfaceColliders: DraggableGroup[];
+    protected _surfaceObjectsDirty: boolean;
 
     mode: UserMode = DEFAULT_USER_MODE;
 
@@ -77,6 +81,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
     constructor(gameView: GameView) {
         super(gameView);
+        this._surfaceObjectsDirty = true;
     }
 
     createGameObjectClickOperation(
@@ -189,9 +194,12 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         if (size > 1) {
             if (size === 1) {
                 // Can only shrink to zero size if there are no objects on the workspace.
-                const allObjects = this._gameView.getContexts().map(o => {
-                    return o.file;
-                });
+                const allObjects = flatMap(
+                    this._gameView.getSimulations(),
+                    s => {
+                        return s.contexts.map(c => c.file);
+                    }
+                );
                 const workspaceObjects = objectsAtWorkspace(
                     allObjects,
                     file.file.id
@@ -265,35 +273,60 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      */
     pointOnWorkspaceGrid(
         calc: FileCalculationContext,
-        screenPos: Vector2,
+        pagePos: Vector2,
         camera: Camera
     ) {
-        let raycaster = new Raycaster();
-        raycaster.setFromCamera(screenPos, camera);
-        this._gameView.getSimulations();
-        const workspaces = this.getSurfaceObjects(calc);
-        const hits = raycaster.intersectObjects(workspaces, true);
-        const hit = hits[0];
-        if (hit) {
-            const point = hit.point;
-            const workspace = this.findWorkspaceForIntersection(hit);
-            if (
-                workspace &&
-                isContext(calc, workspace.file) &&
-                !getContextMinimized(calc, workspace.file)
-            ) {
-                const workspaceMesh = workspace.surface;
-                const closest = workspaceMesh.closestTileToPoint(point);
+        const workspaceGroups = this.getSurfaceObjectGroups(calc);
 
-                if (closest) {
-                    return {
-                        good: true,
-                        gridPosition: closest.tile.gridPosition,
-                        workspace,
-                    };
+        for (let i = 0; i < workspaceGroups.length; i++) {
+            const objects = workspaceGroups[i].objects;
+            const camera = workspaceGroups[i].camera;
+            const viewport = workspaceGroups[i].viewport;
+
+            let screenPos: Vector2;
+            if (viewport) {
+                screenPos = Input.screenPositionForViewport(
+                    pagePos,
+                    this._gameView.gameView,
+                    viewport
+                );
+            } else {
+                screenPos = Input.screenPosition(
+                    pagePos,
+                    this._gameView.gameView
+                );
+            }
+
+            const hits = Physics.raycastAtScreenPos(
+                screenPos,
+                new Raycaster(),
+                objects,
+                camera
+            );
+            const hit = Physics.firstRaycastHit(hits);
+
+            if (hit) {
+                const point = hit.point;
+                const workspace = this.findWorkspaceForIntersection(hit);
+                if (
+                    workspace &&
+                    isContext(calc, workspace.file) &&
+                    !getContextMinimized(calc, workspace.file)
+                ) {
+                    const workspaceMesh = workspace.surface;
+                    const closest = workspaceMesh.closestTileToPoint(point);
+
+                    if (closest) {
+                        return {
+                            good: true,
+                            gridPosition: closest.tile.gridPosition,
+                            workspace,
+                        };
+                    }
                 }
             }
         }
+
         return {
             good: false,
         };
@@ -310,14 +343,15 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         point: Vector3,
         exclude?: AuxFile3D | ContextGroup3D
     ) {
-        const workspaceMeshes = this._gameView
-            .getContexts()
-            .filter(
-                context =>
-                    context !== exclude &&
-                    !getContextMinimized(calc, context.file) &&
-                    !!getContextSize(calc, context.file)
-            );
+        const contexts = flatMap(this._gameView.getSimulations(), s => {
+            return s.contexts;
+        });
+        const workspaceMeshes = contexts.filter(
+            context =>
+                context !== exclude &&
+                !getContextMinimized(calc, context.file) &&
+                !!getContextSize(calc, context.file)
+        );
 
         if (!!workspaceMeshes && workspaceMeshes.length > 0) {
             const center = new Axial();
@@ -370,17 +404,31 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         return this.findWorkspaceForIntersection(hit) === null;
     }
 
-    getSurfaceObjects(calc: FileCalculationContext): Object3D[] {
-        const simulations = this._gameView.getSimulations();
-        let surfaceObjects: Object3D[] = [];
-        for (let i = 0; i < simulations.length; i++) {
-            const simulation = simulations[i];
-            if (simulation instanceof BuilderSimulation3D) {
-                surfaceObjects.push(...simulation.getSurfaceObjects(calc));
-            }
+    getSurfaceObjectGroups(calc: FileCalculationContext): DraggableGroup[] {
+        if (this._surfaceObjectsDirty) {
+            const builderSimulations = this._gameView
+                .getSimulations()
+                .filter(s => s instanceof BuilderSimulation3D);
+            const builderContexts = flatMap(
+                builderSimulations,
+                s => s.contexts
+            ).filter(c => isContext(calc, c.file));
+            const surfaceObjects = flatMap(
+                builderContexts,
+                c => (<BuilderGroup3D>c).surface.colliders
+            );
+
+            this._surfaceColliders = [
+                {
+                    objects: surfaceObjects,
+                    camera: this._gameView.getMainCamera(),
+                },
+            ];
+
+            this._surfaceObjectsDirty = false;
         }
 
-        return surfaceObjects.length > 0 ? surfaceObjects : null;
+        return this._surfaceColliders;
     }
 
     protected _contextMenuActions(

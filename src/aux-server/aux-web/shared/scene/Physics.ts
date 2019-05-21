@@ -77,22 +77,23 @@ export namespace Physics {
 
     /**
      * Performs a raycast at the given screen position with the given camera using the given raycaster and against the given objects.
-     * @param pos The screen position to raycast from.
+     * @param screenPos The screen position to raycast from.
      * @param raycaster The raycaster to use.
      * @param objects The objects to raycast against.
      * @param camera The camera to use.
      */
     export function raycastAtScreenPos(
-        pos: Vector2,
+        screenPos: Vector2,
         raycaster: Raycaster,
         objects: Object3D[],
         camera: Camera
     ): RaycastResult {
-        raycaster.setFromCamera(pos, camera);
+        // console.log('raycastAtScreenPos:', pos);
+        raycaster.setFromCamera(screenPos, camera);
         const intersects = raycaster.intersectObjects(objects, true);
 
         return {
-            pointerScreenPos: pos,
+            pointerScreenPos: screenPos,
             intersects,
         };
     }

@@ -39,9 +39,6 @@ export abstract class Simulation3D extends Object3D
      */
     simulation: Simulation;
 
-    protected _draggableColliders: Object3D[];
-    protected _draggableObjectsDirty: boolean;
-
     /**
      * Gets the game view that is for this simulation.
      */
@@ -56,7 +53,6 @@ export abstract class Simulation3D extends Object3D
      */
     constructor(gameView: IGameView, simulation: Simulation) {
         super();
-        this._draggableObjectsDirty = true;
         this._gameView = gameView;
         this.simulation = simulation;
         this.contexts = [];
@@ -118,38 +114,6 @@ export abstract class Simulation3D extends Object3D
      */
     abstract getMainCamera(): PerspectiveCamera | OrthographicCamera;
 
-    /**
-     * Gets the objects from the simulation that are draggable.
-     */
-    getDraggableObjects(): Object3D[] {
-        if (this._draggableObjectsDirty) {
-            const contexts = this._gameView.getContexts();
-            if (contexts && contexts.length > 0) {
-                this._draggableColliders = flatMap(
-                    contexts.filter(c => !!c),
-                    f => f.colliders
-                ).filter(c => this._isObjectVisible(c));
-            } else {
-                this._draggableColliders = [];
-            }
-            this._draggableObjectsDirty = false;
-        }
-        return this._draggableColliders;
-    }
-
-    protected _isObjectVisible(obj: Object3D) {
-        if (!obj) {
-            return false;
-        }
-        while (obj) {
-            if (!obj.visible) {
-                return false;
-            }
-            obj = obj.parent;
-        }
-        return true;
-    }
-
     protected _frameUpdateCore(calc: FileCalculationContext) {
         this.contexts.forEach(context => {
             context.frameUpdate(calc);
@@ -167,7 +131,6 @@ export abstract class Simulation3D extends Object3D
         await this._fileAddedCore(calc, file);
         await this._fileUpdated(file, true);
 
-        this._draggableObjectsDirty = true;
         this.onFileAdded.invoke(file);
     }
 
@@ -182,7 +145,6 @@ export abstract class Simulation3D extends Object3D
         const calc = this.simulation.helper.createContext();
         this._fileRemovedCore(calc, id);
 
-        this._draggableObjectsDirty = true;
         this.onFileRemoved.invoke(null);
     }
 
@@ -220,7 +182,6 @@ export abstract class Simulation3D extends Object3D
 
         await this._fileUpdatedCore(calc, file);
 
-        this._draggableObjectsDirty = true;
         this.onFileUpdated.invoke(file);
 
         if (shouldRemove) {

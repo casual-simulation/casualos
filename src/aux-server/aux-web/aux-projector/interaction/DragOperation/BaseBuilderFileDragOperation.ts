@@ -68,14 +68,14 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     }
 
     protected _onDrag(calc: FileCalculationContext) {
-        const mouseScreenPos = this.gameView.getInput().getMouseScreenPos();
+        const mousePagePos = this.gameView.getInput().getMousePagePos();
         const {
             good,
             gridPosition,
             workspace,
         } = this._interaction.pointOnWorkspaceGrid(
             calc,
-            mouseScreenPos,
+            mousePagePos,
             this.gameView.getMainCamera()
         );
 

@@ -3,6 +3,13 @@ import { Vector2, Vector3 } from 'three';
 import { find, some } from 'lodash';
 import { IGameView } from '../IGameView';
 
+export interface Viewport {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
 export class Input {
     /**
      * Debug level for Input class.
@@ -51,6 +58,35 @@ export class Input {
         return new Vector2(
             (viewPos.x / viewRect.width) * 2 - 1,
             -(viewPos.y / viewRect.height) * 2 + 1
+        );
+    }
+
+    /**
+     * Calculate a screen position for the given viewport inside of a screen. The screen position will be normalized and relative to the viewport.
+     * Screen position is Three.js style where bottom left corner is (-1, -1) and top right corner is (1, 1).
+     * @param fullWidth The full width of the screen (pixels).
+     * @param fullHeight The full height of the screen (pixels).
+     * @param viewX The x starting point of the viewport (pixel).
+     * @param viewY The y start point of the viewport (pixel).
+     * @param viewWidth The width of the viewport (pixels).
+     * @param viewHeight The height of the viewport (pixels).
+     * @param pagePos The current global page position (pixels).
+     */
+    public static screenPositionForViewport(
+        pagePos: Vector2,
+        view: HTMLElement,
+        viewport: Viewport
+    ): Vector2 {
+        const globalPos = new Vector2(pagePos.x, pagePos.y);
+        // console.log('globalScreenPos:', Input.screenPosition(pagePos, view));
+        const viewRect = view.getBoundingClientRect();
+        const left = viewRect.left + viewport.x;
+        const top =
+            viewRect.height - (viewport.y + viewport.height) + viewRect.top;
+        const viewPos = globalPos.sub(new Vector2(left, top));
+        return new Vector2(
+            (viewPos.x / viewport.width) * 2 - 1,
+            -(viewPos.y / viewport.height) * 2 + 1
         );
     }
 

@@ -293,6 +293,19 @@ export function debugLayersToString(obj: Object3D): string {
     return output;
 }
 
+export function isObjectVisible(obj: Object3D) {
+    if (!obj) {
+        return false;
+    }
+    while (obj) {
+        if (!obj.visible) {
+            return false;
+        }
+        obj = obj.parent;
+    }
+    return true;
+}
+
 /**
  * Calculates the scale.x, scale.y, and scale.z values from the given object.
  * @param context The calculation context.

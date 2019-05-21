@@ -56,11 +56,6 @@ export interface IGameView extends AuxFile3DFinder, Vue {
     getSimulations(): Simulation3D[];
 
     /**
-     * Gets the list of contexts that this game view contains.
-     */
-    getContexts(): ContextGroup3D[];
-
-    /**
      * Gets the HTML elements that the interaction manager should be able to handle events for.
      */
     getUIHtmlElements(): HTMLElement[];

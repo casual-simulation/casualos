@@ -1,4 +1,11 @@
-import { Vector2, Vector3, Intersection, Ray, Raycaster } from 'three';
+import {
+    Vector2,
+    Vector3,
+    Intersection,
+    Ray,
+    Raycaster,
+    Object3D,
+} from 'three';
 import { ContextMenuAction } from '../../shared/interaction/ContextMenuEvent';
 import {
     File,
@@ -17,6 +24,10 @@ import { Input } from '../../shared/scene/Input';
 import { appManager } from '../../shared/AppManager';
 import { PlayerSimulation3D } from '../scene/PlayerSimulation3D';
 import { Simulation } from '../../shared/Simulation';
+import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
+import { flatMap } from 'lodash';
+import { InventoryContextGroup3D } from '../scene/InventoryContextGroup3D';
+import { isObjectVisible } from '../../shared/scene/SceneUtils';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class IGameView
@@ -69,6 +80,50 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         } else {
             return null;
         }
+    }
+
+    getDraggableGroups(): DraggableGroup[] {
+        if (this._draggableGroupsDirty) {
+            const contexts = flatMap(
+                this._gameView.getSimulations(),
+                s => s.contexts
+            );
+            if (contexts && contexts.length > 0) {
+                // Sort between inventory colliders and other colliders.
+                let inventoryColliders: Object3D[] = [];
+                let otherColliders: Object3D[] = [];
+
+                for (let i = 0; i < contexts.length; i++) {
+                    const context = contexts[i];
+                    const colliders = context.colliders.filter(c =>
+                        isObjectVisible(c)
+                    );
+
+                    if (context instanceof InventoryContextGroup3D) {
+                        inventoryColliders.push(...colliders);
+                    } else {
+                        otherColliders.push(...colliders);
+                    }
+
+                    // Put inventory colliders in front of other colliders so that they take priority in input testing.
+                    this._draggableGroups = [
+                        {
+                            objects: inventoryColliders,
+                            camera: this._gameView.getInventoryCamera(),
+                            viewport: this._gameView.getInventoryViewport(),
+                        },
+                        {
+                            objects: otherColliders,
+                            camera: this._gameView.getMainCamera(),
+                        },
+                    ];
+                }
+            }
+
+            this._draggableGroupsDirty = false;
+        }
+
+        return this._draggableGroups;
     }
 
     handlePointerEnter(file: File, simulation: Simulation): IOperation {
