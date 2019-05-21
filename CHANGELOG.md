@@ -11,6 +11,7 @@
     -   Tag sections now begin with or are replaced by `#`.
     -   Tag sections now truncate if they are over 16 characters.
     -   Tag sections now begin all turned on when opening the sheets.
+    -   Tag sections now account for hidden tags and only show a tag section button if the amount of visible hidden tags is greater than 2.
 
 ## V0.7.5
 
