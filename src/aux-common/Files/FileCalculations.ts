@@ -1883,6 +1883,17 @@ export function getDiffUpdate(file: File): PartialFile {
     return null;
 }
 
+export function simulationIdToString(id: SimulationIdParseSuccess): string {
+    let str = '';
+    if (id.host) {
+        str += `${id.host}/`;
+    }
+    if (id.channel) {
+        str += id.channel;
+    }
+    return str;
+}
+
 export function parseSimulationId(id: string): SimulationIdParseSuccess {
     try {
         let uri = new URL(id);
