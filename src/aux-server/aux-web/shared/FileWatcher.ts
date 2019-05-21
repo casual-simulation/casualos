@@ -4,6 +4,8 @@ import {
     fileChangeObservables,
     File,
     AuxObject,
+    FilesState,
+    AuxState,
 } from '@casual-simulation/aux-common';
 import { FileHelper } from './FileHelper';
 import {
@@ -15,14 +17,17 @@ import {
     merge,
     from,
 } from 'rxjs';
-import { flatMap, filter, startWith } from 'rxjs/operators';
+import { flatMap, filter, startWith, tap } from 'rxjs/operators';
+import { values } from 'd3';
 
 /**
  * Defines a class that can watch a realtime causal tree.
  */
 export default class FileWatcher implements SubscriptionLike {
-    private _filesDiscoveredObservable: ReplaySubject<AuxFile[]>;
-    private _filesRemovedObservable: ReplaySubject<string[]>;
+    private _updatedState: AuxState = {};
+
+    private _filesDiscoveredObservable: Subject<AuxFile[]>;
+    private _filesRemovedObservable: Subject<string[]>;
     private _filesUpdatedObservable: Subject<AuxFile[]>;
     private _subs: SubscriptionLike[] = [];
 
@@ -33,7 +38,9 @@ export default class FileWatcher implements SubscriptionLike {
      * That is, it was created or added by another user.
      */
     get filesDiscovered(): Observable<AuxFile[]> {
-        return this._filesDiscoveredObservable;
+        return this._filesDiscoveredObservable.pipe(
+            startWith(values(this._updatedState))
+        );
     }
 
     /**
@@ -65,14 +72,38 @@ export default class FileWatcher implements SubscriptionLike {
         filesRemoved: Observable<string[]>,
         filesUpdated: Observable<AuxFile[]>
     ) {
-        this._filesDiscoveredObservable = new ReplaySubject<AuxFile[]>();
-        this._filesRemovedObservable = new ReplaySubject<string[]>();
+        this._filesDiscoveredObservable = new Subject<AuxFile[]>();
+        this._filesRemovedObservable = new Subject<string[]>();
         this._filesUpdatedObservable = new Subject<AuxFile[]>();
 
         this._subs.push(
-            filesAdded.subscribe(this._filesDiscoveredObservable),
-            filesRemoved.subscribe(this._filesRemovedObservable),
-            filesUpdated.subscribe(this._filesUpdatedObservable)
+            filesAdded
+                .pipe(
+                    tap(files => {
+                        for (let file of files) {
+                            this._updatedState[file.id] = file;
+                        }
+                    })
+                )
+                .subscribe(this._filesDiscoveredObservable),
+            filesRemoved
+                .pipe(
+                    tap(fileIds => {
+                        for (let id of fileIds) {
+                            delete this._updatedState[id];
+                        }
+                    })
+                )
+                .subscribe(this._filesRemovedObservable),
+            filesUpdated
+                .pipe(
+                    tap(files => {
+                        for (let file of files) {
+                            this._updatedState[file.id] = file;
+                        }
+                    })
+                )
+                .subscribe(this._filesUpdatedObservable)
         );
     }
 

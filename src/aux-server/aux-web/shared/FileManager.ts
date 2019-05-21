@@ -100,6 +100,10 @@ export class FileManager implements Simulation {
         return this._parsedId;
     }
 
+    set parsedId(id: SimulationIdParseSuccess) {
+        this._parsedId = id;
+    }
+
     /**
      * Gets all the selected files that represent an object.
      */

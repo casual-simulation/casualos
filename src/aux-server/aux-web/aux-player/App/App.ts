@@ -19,6 +19,7 @@ import {
     getFileChannel,
     calculateDestroyFileEvents,
     merge,
+    simulationIdToString,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard } from '../../shared/SharedUtils';
@@ -384,7 +385,7 @@ export default class App extends Vue {
         };
 
         subs.push(
-            simulation.helper.localEvents.subscribe(e => {
+            simulation.helper.localEvents.subscribe(async e => {
                 if (e.name === 'show_toast') {
                     this.snackbar = {
                         message: e.message,
@@ -416,6 +417,24 @@ export default class App extends Vue {
                     } else {
                         this.qrCode = null;
                         this.showQRCode = false;
+                    }
+                } else if (e.name === 'go_to_context') {
+                    if (e.simulation) {
+                        // Go to context and simulation
+                        window.location.pathname = `${e.simulation}/${
+                            e.context
+                        }`;
+                    } else {
+                        appManager.simulationManager.simulations.forEach(
+                            sim => {
+                                sim.parsedId = {
+                                    ...sim.parsedId,
+                                    context: e.context,
+                                };
+                            }
+                        );
+
+                        this._updateQuery();
                     }
                 }
             }),

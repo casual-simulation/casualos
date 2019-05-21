@@ -15,6 +15,7 @@ import {
     unloadSimulation,
     superShout,
     showQRCode,
+    goToContext,
 } from './FilesChannel';
 import { File } from './File';
 import uuid from 'uuid/v4';
@@ -2265,6 +2266,48 @@ describe('FilesChannel', () => {
                 ]);
             });
         });
+
+        describe('goToContext()', () => {
+            it('should issue a GoToContext event', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'player.goToContext("abc")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([goToContext('abc')]);
+            });
+
+            it('should support passing the simulation ID', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'player.goToContext("sim", "abc")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([goToContext('sim', 'abc')]);
+            });
+        });
     });
 
     describe('calculateDestroyFileEvents()', () => {
@@ -2296,6 +2339,30 @@ describe('FilesChannel', () => {
                 fileRemoved('file3'),
                 fileRemoved('file4'),
             ]);
+        });
+    });
+
+    describe('goToContext()', () => {
+        it('should use the first parameter as the context if only one argument is provided', () => {
+            const event = goToContext('context');
+
+            expect(event).toEqual({
+                type: 'local',
+                name: 'go_to_context',
+                context: 'context',
+                simulation: undefined,
+            });
+        });
+
+        it('should use the first parameter as the simulation two arguments are provided', () => {
+            const event = goToContext('sim', 'context');
+
+            expect(event).toEqual({
+                type: 'local',
+                name: 'go_to_context',
+                context: 'context',
+                simulation: 'sim',
+            });
         });
     });
 });
