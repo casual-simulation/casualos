@@ -434,9 +434,19 @@ export function goToContext(context: string) {
  * @param context The context.
  */
 export function isInContext(givenContext: string) {
-    let currentContext = window.location.pathname.split('/')[2];
+    return currentContext() === givenContext;
+}
 
-    return currentContext === givenContext;
+/**
+ * Gets the context that the player is currently in.
+ */
+export function currentContext(): string {
+    const user = getUser();
+    if (user) {
+        const context = user['aux._userContext'];
+        return context.valueOf() || undefined;
+    }
+    return undefined;
 }
 
 /**
@@ -773,6 +783,7 @@ export const player = {
     showQRCode,
     hideQRCode,
     isConnected,
+    currentContext,
 };
 
 /**

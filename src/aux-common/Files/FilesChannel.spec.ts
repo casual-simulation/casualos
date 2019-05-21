@@ -2269,6 +2269,169 @@ describe('FilesChannel', () => {
             });
         });
 
+        describe('player.isInContext()', () => {
+            it('should return true when aux._userContext equals the given value', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()':
+                                'this.inContext = player.isInContext("context")',
+                        },
+                    },
+                    userFile: {
+                        id: 'userFile',
+                        tags: {
+                            'aux._userContext': 'context',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            inContext: true,
+                        },
+                    }),
+                ]);
+            });
+
+            it('should return false when aux._userContext does not equal the given value', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()':
+                                'this.inContext = player.isInContext("abc")',
+                        },
+                    },
+                    userFile: {
+                        id: 'userFile',
+                        tags: {
+                            'aux._userContext': 'context',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            inContext: false,
+                        },
+                    }),
+                ]);
+            });
+
+            it('should return false when aux._userContext is not set', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()':
+                                'this.inContext = player.isInContext("abc")',
+                        },
+                    },
+                    userFile: {
+                        id: 'userFile',
+                        tags: {},
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            inContext: false,
+                        },
+                    }),
+                ]);
+            });
+        });
+
+        describe('player.currentContext()', () => {
+            it('should return aux._userContext', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'this.context = player.currentContext()',
+                        },
+                    },
+                    userFile: {
+                        id: 'userFile',
+                        tags: {
+                            'aux._userContext': 'context',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            context: 'context',
+                        },
+                    }),
+                ]);
+            });
+
+            it('should return undefined when aux._userContext is not set', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'this.context = player.currentContext()',
+                        },
+                    },
+                    userFile: {
+                        id: 'userFile',
+                        tags: {},
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            context: undefined,
+                        },
+                    }),
+                ]);
+            });
+        });
+
         describe('goToContext()', () => {
             it('should issue a GoToContext event', () => {
                 const state: FilesState = {
