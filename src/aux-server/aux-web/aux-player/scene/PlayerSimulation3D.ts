@@ -137,10 +137,6 @@ export class PlayerSimulation3D extends Simulation3D {
                                 e.fileId,
                                 e.zoomValue
                             );
-                        } else if (e.name === 'go_to_context') {
-                            if (!e.simulation) {
-                                this._setContext(e.context);
-                            }
                         }
                     })
                 )
@@ -148,7 +144,7 @@ export class PlayerSimulation3D extends Simulation3D {
         );
     }
 
-    private _setContext(context: string) {
+    setContext(context: string) {
         if (this.context === context) {
             return;
         }

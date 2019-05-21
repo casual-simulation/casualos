@@ -352,9 +352,23 @@ export default class GameView extends Vue implements IGameView {
         sim3D.onFileRemoved.addListener(this.onFileRemoved.invoke);
         sim3D.onFileUpdated.addListener(this.onFileUpdated.invoke);
 
-        sim3D.simulationContext.itemsUpdated.subscribe(() => {
-            this._onSimsUpdated();
-        });
+        this._fileSubs.push(
+            sim3D.simulationContext.itemsUpdated.subscribe(() => {
+                this._onSimsUpdated();
+            })
+        );
+
+        this._fileSubs.push(
+            sim3D.simulation.helper.localEvents.subscribe(e => {
+                if (e.name === 'go_to_context') {
+                    if (!e.simulation) {
+                        this.simulations.forEach(s => {
+                            s.setContext(e.context);
+                        });
+                    }
+                }
+            })
+        );
 
         this.simulations.push(sim3D);
         this._scene.add(sim3D);

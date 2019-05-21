@@ -425,34 +425,14 @@ export default class App extends Vue {
                             e.context
                         }`;
                     } else {
-                        simulation.parsedId = {
-                            ...simulation.parsedId,
-                            context: e.context,
-                        };
-                        const newId = simulationIdToString(simulation.parsedId);
-                        const files = flatMap(
-                            [
-                                ...appManager.simulationManager.simulations.values(),
-                            ],
+                        appManager.simulationManager.simulations.forEach(
                             sim => {
-                                const files = sim.helper.getSimulationFiles(
-                                    simulation.id
-                                );
-
-                                return files.map(f => ({
-                                    file: f,
-                                    sim: sim,
-                                }));
+                                sim.parsedId = {
+                                    ...sim.parsedId,
+                                    context: e.context,
+                                };
                             }
                         );
-
-                        for (let file of files) {
-                            await file.sim.helper.updateFile(file.file, {
-                                tags: {
-                                    'aux.channel': newId,
-                                },
-                            });
-                        }
 
                         this._updateQuery();
                     }
