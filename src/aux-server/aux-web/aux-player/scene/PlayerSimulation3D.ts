@@ -144,6 +144,16 @@ export class PlayerSimulation3D extends Simulation3D {
         );
     }
 
+    setContext(context: string) {
+        if (this.context === context) {
+            return;
+        }
+        this.context = context;
+        this.unsubscribe();
+        this.closed = false;
+        this.init();
+    }
+
     protected _frameUpdateCore(calc: FileCalculationContext) {
         super._frameUpdateCore(calc);
         this.inventoryContext.frameUpdate(calc);
@@ -268,5 +278,10 @@ export class PlayerSimulation3D extends Simulation3D {
         this.inventoryContext.fileRemoved(file, calc);
         this.menuContext.fileRemoved(file, calc);
         this.simulationContext.fileRemoved(file, calc);
+    }
+
+    unsubscribe() {
+        this._contextGroup = null;
+        super.unsubscribe();
     }
 }

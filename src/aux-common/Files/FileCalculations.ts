@@ -1883,6 +1883,17 @@ export function getDiffUpdate(file: File): PartialFile {
     return null;
 }
 
+export function simulationIdToString(id: SimulationIdParseSuccess): string {
+    let str = '';
+    if (id.host) {
+        str += `${id.host}/`;
+    }
+    if (id.channel) {
+        str += id.channel;
+    }
+    return str;
+}
+
 export function parseSimulationId(id: string): SimulationIdParseSuccess {
     try {
         let uri = new URL(id);
@@ -1892,7 +1903,7 @@ export function parseSimulationId(id: string): SimulationIdParseSuccess {
                 return {
                     success: true,
                     host: uri.host,
-                    channel: split[0],
+                    context: split[0],
                 };
             } else {
                 return {
@@ -1904,8 +1915,8 @@ export function parseSimulationId(id: string): SimulationIdParseSuccess {
             return {
                 success: true,
                 host: uri.host,
-                channel: split[0],
-                context: split.slice(1).join('/'),
+                context: split[0],
+                channel: split.slice(1).join('/'),
             };
         }
     } catch (ex) {

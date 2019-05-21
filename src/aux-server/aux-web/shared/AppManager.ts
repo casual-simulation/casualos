@@ -377,6 +377,9 @@ export class AppManager {
                         progress.error
                     );
                 };
+
+                this._user.channelId = this._user.channelId || 'default';
+
                 await this.simulationManager.clear();
                 await this.simulationManager.setPrimary(
                     this._user.channelId,
@@ -462,7 +465,7 @@ export class AppManager {
                 console.log('[AppManager] Login Success!', result);
 
                 this._user = result.data;
-                this._user.channelId = channelId;
+                this._user.channelId = channelId || 'default';
 
                 if (this._user.name.includes('guest_')) {
                     this._user.name = 'Guest';
@@ -483,7 +486,7 @@ export class AppManager {
 
                 await this.simulationManager.clear();
                 await this.simulationManager.setPrimary(
-                    channelId,
+                    this._user.channelId,
                     onFileManagerInitProgress
                 );
                 // await this._fileManager.init(

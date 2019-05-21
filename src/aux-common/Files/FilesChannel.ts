@@ -381,7 +381,8 @@ export type LocalEvents =
     | ShowQRCodeEvent
     | LoadSimulationEvent
     | UnloadSimulationEvent
-    | SuperShoutEvent;
+    | SuperShoutEvent
+    | GoToContextEvent;
 
 /**
  * An event that is used to show a toast message to the user.
@@ -476,6 +477,18 @@ export interface SuperShoutEvent extends LocalEvent {
      * The argument to pass as the "that" variable to scripts.
      */
     argument?: any;
+}
+
+/**
+ * Defines an event that is used to send the player to a context.
+ */
+export interface GoToContextEvent extends LocalEvent {
+    name: 'go_to_context';
+
+    /**
+     * The context that should be loaded.
+     */
+    context: string;
 }
 
 /**
@@ -674,6 +687,19 @@ export function superShout(eventName: string, arg?: any): SuperShoutEvent {
         name: 'super_shout',
         eventName: eventName,
         argument: arg,
+    };
+}
+
+/**
+ * Creates a new GoToContextEvent.
+ * @param simulationOrContext The simulation ID or context to go to. If a simulation ID is being provided, then the context parameter must also be provided.
+ * @param context
+ */
+export function goToContext(context: string): GoToContextEvent {
+    return {
+        type: 'local',
+        name: 'go_to_context',
+        context: context,
     };
 }
 
