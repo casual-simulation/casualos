@@ -116,7 +116,7 @@
 
         <md-dialog-confirm
             :md-active.sync="showRemoveSimulation"
-            md-title="Remove Simulation"
+            md-title="Remove Channel"
             :md-content="`Remove ${simulationToRemove}?`"
             @md-confirm="finishRemoveSimulation()"
         />

@@ -345,7 +345,7 @@ export default class App extends Vue {
     removeSimulation(info: SimulationInfo) {
         if (appManager.simulationManager.primary.id === info.id) {
             this.snackbar = {
-                message: `You cannot remove the primary simulation.`,
+                message: `You cannot remove the primary channel.`,
                 visible: true,
             };
         } else {
