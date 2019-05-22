@@ -1,5 +1,17 @@
 # AUX Changelog
 
+## V0.7.7
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   The show hidden tag button and new tag button have swapped places.
+    -   The sheets section will automatically appear when the search bar is changed.
+-   Bug Fixes
+    -   The tags in sheets will now be sorted aplhabetically on show/hide tag sections.
+
 ## V0.7.6
 
 ### Date: 05/21/2019
