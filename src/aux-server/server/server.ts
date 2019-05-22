@@ -93,12 +93,16 @@ export class ClientServer {
             })
         );
 
+        this._app.use('/api/[\\*]/:channel/config', (req, res) => {
+            res.send(this._builder.web);
+        });
+
         this._app.get('/api/:channel/:context/config', (req, res) => {
             res.send(this._player.web);
         });
 
         this._app.get('/api/:channel/config', (req, res) => {
-            res.send(this._builder.web);
+            res.send(this._player.web);
         });
 
         this._app.use(express.static(this._config.dist));

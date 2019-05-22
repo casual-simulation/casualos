@@ -596,10 +596,10 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         // https://auxbuilder.com/
         //   ^     |     host    |     path           |
         // simulationId: ''
-        const simulationId = window.location.pathname.split('/')[1];
+        const simulationId = window.location.pathname.split('/')[2];
 
         const url = new URL(
-            `/${simulationId || 'default'}/${context}`,
+            `/${context}/${simulationId || 'default'}`,
             window.location.href
         );
 
