@@ -322,8 +322,7 @@ export default class GameView extends Vue implements IGameView {
 
         this._setupWebVR();
         await this._setupWebXR();
-        this._triggerFilesRefresh();
-        this._frameUpdate();
+        this._handleResize();
 
         this._fileSubs.push(
             appManager.simulationManager.simulationAdded
@@ -344,6 +343,8 @@ export default class GameView extends Vue implements IGameView {
                 )
                 .subscribe()
         );
+
+        this._frameUpdate();
     }
 
     private _simulationAdded(sim: Simulation) {
@@ -674,20 +675,6 @@ export default class GameView extends Vue implements IGameView {
         );
     }
 
-    /**
-     * Trigger a refresh of the GameView's file representations.
-     * This will effectively clear all current file representations and create new ones for the current context.
-     */
-    private _triggerFilesRefresh(): void {
-        // Unsubscribe from current file events.
-        if (this._fileSubs) {
-            this._fileSubs.forEach(sub => {
-                sub.unsubscribe();
-            });
-            this._fileSubs = [];
-        }
-    }
-
     private _mainSceneBackgroundUpdate() {
         if (this.background) {
             this._mainScene.background = this.background;
@@ -714,7 +701,6 @@ export default class GameView extends Vue implements IGameView {
         webGlRenderer.autoClear = false;
         webGlRenderer.shadowMap.enabled = false;
 
-        this._resizeRenderer();
         this.gameView.appendChild(this._renderer.domElement);
     }
 
@@ -782,7 +768,6 @@ export default class GameView extends Vue implements IGameView {
 
             // Create VR Effect rendering in stereoscopic mode
             this._vrEffect = new VREffectModule(this._renderer);
-            this._resizeVR();
             this._renderer.setPixelRatio(window.devicePixelRatio);
 
             return new Promise(resolve => {
@@ -984,24 +969,19 @@ export default class GameView extends Vue implements IGameView {
 
     private _handleResize() {
         const { width, height } = this._calculateCameraSize();
-        resizeCameraRig(this._mainCameraRig, width, height);
-        resizeCameraRig(this._inventoryCameraRig, width, height);
 
-        this._resizeRenderer();
-        this._resizeVR();
-    }
-
-    private _resizeRenderer() {
-        const { width, height } = this._calculateCameraSize();
+        // Resize html view and the webgl renderer.
         this._renderer.setPixelRatio(window.devicePixelRatio || 1);
         this._renderer.setSize(width, height);
         this._container.style.height = this.gameView.style.height = this._renderer.domElement.style.height;
         this._container.style.width = this.gameView.style.width = this._renderer.domElement.style.width;
 
+        // Resize html mixer css3d renderer.
         if (this._htmlMixerContext) {
             this._htmlMixerContext.rendererCss.setSize(width, height);
         }
 
+        // Resize inventory viewport.
         if (!this._inventoryViewport) {
             this._inventoryViewport = {
                 x: 0,
@@ -1014,14 +994,25 @@ export default class GameView extends Vue implements IGameView {
         this._inventoryViewport.width = width;
         this._inventoryViewport.height =
             height < 850 ? height * 0.25 : height * 0.2;
-    }
 
-    private _resizeVR() {
-        if (!this._vrEffect) return;
+        // Resize cameras.
+        if (this._mainCameraRig) {
+            resizeCameraRig(this._mainCameraRig, width, height);
+        }
+        if (this._inventoryCameraRig) {
+            resizeCameraRig(
+                this._inventoryCameraRig,
+                this._inventoryViewport.width,
+                this._inventoryViewport.height
+            );
+        }
 
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        this._vrEffect.setSize(width, height);
+        // Resize VR effect.
+        if (this._vrEffect) {
+            const vrWidth = window.innerWidth;
+            const vrHeight = window.innerHeight;
+            this._vrEffect.setSize(vrWidth, vrHeight);
+        }
     }
 
     private _calculateCameraSize() {
