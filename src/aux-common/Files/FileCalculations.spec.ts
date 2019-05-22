@@ -2706,7 +2706,7 @@ describe('FileCalculations', () => {
                 context: 'abc',
             };
 
-            expect(simulationIdToString(id)).toBe('example.com/test');
+            expect(simulationIdToString(id)).toBe('example.com/*/test');
         });
     });
 

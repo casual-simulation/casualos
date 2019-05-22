@@ -104,7 +104,7 @@ export default class App extends Vue {
     /**
      * The simulation to remove.
      */
-    simulationToRemove: string = '';
+    simulationToRemove: SimulationInfo = null;
 
     /**
      * The ID of the simulation to add.
@@ -301,12 +301,16 @@ export default class App extends Vue {
         let options = new ConfirmDialogOptions();
         if (info.simulation.socketManager.forcedOffline) {
             options.title = 'Enable online?';
-            options.body = `Allow ${info.id} to reconnect to the server?`;
+            options.body = `Allow ${
+                info.displayName
+            } to reconnect to the server?`;
             options.okText = 'Go Online';
             options.cancelText = 'Stay Offline';
         } else {
             options.title = 'Force offline mode?';
-            options.body = `Prevent ${info.id} from connecting to the server?`;
+            options.body = `Prevent ${
+                info.displayName
+            } from connecting to the server?`;
             options.okText = 'Go Offline';
             options.cancelText = 'Stay Online';
         }
@@ -350,12 +354,12 @@ export default class App extends Vue {
             };
         } else {
             this.showRemoveSimulation = true;
-            this.simulationToRemove = info.id;
+            this.simulationToRemove = info;
         }
     }
 
     finishRemoveSimulation() {
-        this.removeSimulationById(this.simulationToRemove);
+        this.removeSimulationById(this.simulationToRemove.id);
     }
 
     removeSimulationById(id: string) {
@@ -378,6 +382,7 @@ export default class App extends Vue {
 
         let info: SimulationInfo = {
             id: simulation.id,
+            displayName: simulationIdToString(simulation.parsedId),
             online: false,
             synced: false,
             lostConnection: false,
@@ -526,7 +531,7 @@ export default class App extends Vue {
         this.snackbar = {
             visible: true,
             message: `Connection to ${
-                info.id
+                info.displayName
             } lost. You are now working offline.`,
         };
     }
@@ -553,7 +558,9 @@ export default class App extends Vue {
     private _showConnectionRegained(info: SimulationInfo) {
         this.snackbar = {
             visible: true,
-            message: `Connection to ${info.id} regained. You are back online.`,
+            message: `Connection to ${
+                info.displayName
+            } regained. You are back online.`,
         };
     }
 
@@ -631,6 +638,7 @@ export default class App extends Vue {
 
 export interface SimulationInfo {
     id: string;
+    displayName: string;
     online: boolean;
     synced: boolean;
     lostConnection: boolean;

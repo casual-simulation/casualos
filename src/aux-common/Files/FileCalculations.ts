@@ -1896,10 +1896,10 @@ export function getDiffUpdate(file: File): PartialFile {
 export function simulationIdToString(id: SimulationIdParseSuccess): string {
     let str = '';
     if (id.host) {
-        str += `${id.host}/`;
+        str += `${id.host}/*/`;
     }
     if (id.channel) {
-        str += id.channel;
+        str += `${id.channel}`;
     }
     return str;
 }
