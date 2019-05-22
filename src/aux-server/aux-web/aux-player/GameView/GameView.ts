@@ -734,7 +734,7 @@ export default class GameView extends Vue implements IGameView {
             width,
             height
         );
-        this._inventoryCameraRig.mainCamera.zoom = 35;
+        this._inventoryCameraRig.mainCamera.zoom = 50;
         this._inventoryScene.add(this._inventoryCameraRig.mainCamera);
 
         // Inventory ambient light.
