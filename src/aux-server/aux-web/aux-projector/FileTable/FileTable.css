@@ -26,8 +26,8 @@
     border-spacing: 0;
 }
 
-.file-table .new-tag-button {
-    margin: 0;
+.file-table .hidden-button {
+    margin: 0px 0px 0px 4px;
     text-transform: none;
 }
 
