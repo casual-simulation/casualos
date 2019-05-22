@@ -18,6 +18,7 @@ import {
     AuxCausalTree,
     fileAdded,
     getAllFileTags,
+    toast,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
 import { appManager } from '../../shared/AppManager';
@@ -29,7 +30,6 @@ import FileTag from '../FileTag/FileTag';
 import FileID from '../FileID/FileID';
 import FileTableToggle from '../FileTableToggle/FileTableToggle';
 import { TreeView } from 'vue-json-tree-view';
-import { tickStep } from 'd3';
 import { downloadAuxState } from '../download';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 import Cube from '../public/icons/Cube.svg';
@@ -97,7 +97,7 @@ export default class FileTable extends Vue {
     }
 
     isAllTag(tag: string): boolean {
-        return tag === '*';
+        return tag === '#';
     }
 
     isBlacklistTagActive(index: number): boolean {
@@ -192,6 +192,9 @@ export default class FileTable extends Vue {
 
     async deleteFile(file: AuxObject) {
         await this.fileManager.helper.destroyFile(file);
+        await this.fileManager.helper.transaction(
+            toast(`Destroyed ${getShortId(file)}`)
+        );
     }
 
     async createFile() {
@@ -300,6 +303,7 @@ export default class FileTable extends Vue {
 
     toggleHidden() {
         this.showHidden = !this.showHidden;
+        this.setTagBlacklist();
         this._updateTags();
     }
 
@@ -382,7 +386,10 @@ export default class FileTable extends Vue {
     }
 
     setTagBlacklist() {
-        let sortedArray: string[] = getAllFileTags(this.files).sort();
+        let sortedArray: string[] = getAllFileTags(
+            this.files,
+            this.showHidden
+        ).sort();
 
         let newBlacklist: string[] = [];
         let newTagCount: number[] = [];
@@ -414,10 +421,10 @@ export default class FileTable extends Vue {
                     current += '.~' + sortedArray[i];
                     tagCount++;
 
-                    if (tagCount == 3) {
+                    if (tagCount == 2) {
                         newBlacklist.push(current.split('.')[0]);
-                        newTagCount.push(3);
-                    } else if (tagCount > 3) {
+                        newTagCount.push(2);
+                    } else if (tagCount > 2) {
                         newTagCount[newTagCount.length - 1]++;
                     }
                 }
@@ -425,7 +432,7 @@ export default class FileTable extends Vue {
         }
 
         if (newBlacklist.length > 0) {
-            newBlacklist.unshift('*');
+            newBlacklist.unshift('#');
             newTagCount.unshift(0);
         }
 
@@ -434,11 +441,13 @@ export default class FileTable extends Vue {
             newBlacklist.length > this.blacklistIndex.length
         ) {
             for (let i = 0; i < newBlacklist.length; i++) {
-                if (i === 0) {
-                    this.blacklistIndex.push(true);
-                } else {
-                    this.blacklistIndex.push(false);
-                }
+                this.blacklistIndex.push(true);
+            }
+        } else if (newBlacklist.length < this.blacklistIndex.length) {
+            this.blacklistIndex = [];
+
+            for (let i = 0; i < newBlacklist.length; i++) {
+                this.blacklistIndex.push(true);
             }
         }
 
@@ -448,6 +457,18 @@ export default class FileTable extends Vue {
 
     getTagBlacklist(): string[] {
         return this.tagBlacklist;
+    }
+
+    getVisualTagBlacklist(index: number): string {
+        let newBlacklist: string;
+
+        if (this.tagBlacklist[index].length > 15) {
+            newBlacklist = this.tagBlacklist[index].substring(0, 15) + '..';
+        } else {
+            newBlacklist = this.tagBlacklist[index].substring(0, 15) + '.*';
+        }
+
+        return '#' + newBlacklist;
     }
 }
 

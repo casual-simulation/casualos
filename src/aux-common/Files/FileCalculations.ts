@@ -349,9 +349,14 @@ export function fileTags(
     }
 }
 
-export function getAllFileTags(files: File[]) {
+export function getAllFileTags(files: File[], includeHidden: boolean) {
     const fileTags = flatMap(files, f => keys(f.tags));
-    return fileTags;
+
+    const nonHiddenTags = fileTags.filter(
+        t => includeHidden || !isHiddenTag(t)
+    );
+
+    return nonHiddenTags;
 }
 
 /**
@@ -1891,10 +1896,10 @@ export function getDiffUpdate(file: File): PartialFile {
 export function simulationIdToString(id: SimulationIdParseSuccess): string {
     let str = '';
     if (id.host) {
-        str += `${id.host}/`;
+        str += `${id.host}/*/`;
     }
     if (id.channel) {
-        str += id.channel;
+        str += `${id.channel}`;
     }
     return str;
 }
@@ -1939,14 +1944,14 @@ export function parseSimulationId(id: string): SimulationIdParseSuccess {
                 return {
                     success: true,
                     host: split[0],
-                    channel: split[1],
-                    context: split.slice(2).join('/'),
+                    context: split[1],
+                    channel: split.slice(2).join('/'),
                 };
             } else {
                 return {
                     success: true,
-                    channel: split[0],
-                    context: split.slice(1).join('/'),
+                    context: split[0],
+                    channel: split.slice(1).join('/'),
                 };
             }
         }

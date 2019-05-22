@@ -52,7 +52,7 @@
                         >cloud_done</md-icon
                     >
                     <md-icon class="not-synced-warning" v-else>cloud_off</md-icon>
-                    <span class="md-list-item-text">{{ simulation.id }}</span>
+                    <span class="md-list-item-text">{{ simulation.displayName }}</span>
                 </md-list-item>
                 <md-list-item v-if="updateAvailable" @click="refreshPage()">
                     <md-icon>update</md-icon>
@@ -115,9 +115,10 @@
         />
 
         <md-dialog-confirm
+            v-if="simulationToRemove"
             :md-active.sync="showRemoveSimulation"
             md-title="Remove Channel"
-            :md-content="`Remove ${simulationToRemove}?`"
+            :md-content="`Remove ${simulationToRemove.displayName}?`"
             @md-confirm="finishRemoveSimulation()"
         />
 

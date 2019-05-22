@@ -13,6 +13,8 @@ import {
     calculateActionEvents,
     DESTROY_ACTION_NAME,
     getFileDragMode,
+    toast,
+    getShortId,
 } from '@casual-simulation/aux-common';
 
 import { setParent } from '../../../shared/scene/SceneUtils';
@@ -217,7 +219,10 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
             events.push(...result.events);
             events.push(...calculateDestroyFileEvents(calc, files[i]));
         }
-        this.simulation.helper.transaction(...events);
+        this.simulation.helper.transaction(
+            ...events,
+            toast(`Destroyed ${files.map(f => getShortId(f)).join(', ')}`)
+        );
     }
 
     private _removeFromContext(calc: FileCalculationContext, files: File[]) {
