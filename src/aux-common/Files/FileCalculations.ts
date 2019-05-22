@@ -1944,14 +1944,14 @@ export function parseSimulationId(id: string): SimulationIdParseSuccess {
                 return {
                     success: true,
                     host: split[0],
-                    channel: split[1],
-                    context: split.slice(2).join('/'),
+                    context: split[1],
+                    channel: split.slice(2).join('/'),
                 };
             } else {
                 return {
                     success: true,
-                    channel: split[0],
-                    context: split.slice(1).join('/'),
+                    context: split[0],
+                    channel: split.slice(1).join('/'),
                 };
             }
         }
