@@ -2,7 +2,7 @@
 
 ## V0.7.6
 
-### Date: TBD
+### Date: 05/21/2019
 
 ### Changes:
 
@@ -13,6 +13,7 @@
     -   Tag sections now begin all turned on when opening the sheets.
     -   Tag sections now account for hidden tags and only show a tag section button if the amount of visible hidden tags is greater than 2.
     -   Made the channel ID parsing logic follow the same rules we use for the URLs.
+    -   Added a toast message that will be shown whenever a file is deleted via the file table or the trash can.
 -   Bug Fixes
     -   Fixed the `isBuilder` and `isPlayer` helper variables.
 
