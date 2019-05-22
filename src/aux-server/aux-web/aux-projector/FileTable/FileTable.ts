@@ -18,6 +18,7 @@ import {
     AuxCausalTree,
     fileAdded,
     getAllFileTags,
+    toast,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
 import { appManager } from '../../shared/AppManager';
@@ -29,7 +30,6 @@ import FileTag from '../FileTag/FileTag';
 import FileID from '../FileID/FileID';
 import FileTableToggle from '../FileTableToggle/FileTableToggle';
 import { TreeView } from 'vue-json-tree-view';
-import { tickStep } from 'd3';
 import { downloadAuxState } from '../download';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 import Cube from '../public/icons/Cube.svg';
@@ -192,6 +192,9 @@ export default class FileTable extends Vue {
 
     async deleteFile(file: AuxObject) {
         await this.fileManager.helper.destroyFile(file);
+        await this.fileManager.helper.transaction(
+            toast(`Destroyed ${getShortId(file)}`)
+        );
     }
 
     async createFile() {
