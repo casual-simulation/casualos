@@ -25,6 +25,7 @@ export default class FileSearch extends Vue {
     @Watch('search')
     onSearchChanged() {
         appManager.simulationManager.primary.filePanel.search = this.search;
+        appManager.simulationManager.primary.filePanel.isOpen = true;
     }
 
     get placeholder() {
