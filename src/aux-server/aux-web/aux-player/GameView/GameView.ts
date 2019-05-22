@@ -639,14 +639,10 @@ export default class GameView extends Vue implements IGameView {
         //
 
         this._renderer.clearDepth(); // Clear depth buffer so that inventory scene always appears above the main scene.
-        this._inventoryScene.background = new Color('#ff00ff');
 
-        this._inventoryViewport = {
-            x: 100,
-            y: 250,
-            width: width / 2,
-            height: height / 2,
-        };
+        if (this._mainScene.background instanceof Color) {
+            this._inventorySceneBackgroundUpdate(this._mainScene.background);
+        }
 
         this._renderer.setViewport(
             this._inventoryViewport.x,
@@ -700,6 +696,14 @@ export default class GameView extends Vue implements IGameView {
                 DEFAULT_SCENE_BACKGROUND_COLOR
             );
         }
+    }
+
+    private _inventorySceneBackgroundUpdate(colorToOffset: Color) {
+        if (!colorToOffset) return;
+
+        let invColor = colorToOffset.clone();
+        invColor.offsetHSL(0, -0.02, -0.04);
+        this._inventoryScene.background = invColor;
     }
 
     private _setupRenderer() {
@@ -997,6 +1001,19 @@ export default class GameView extends Vue implements IGameView {
         if (this._htmlMixerContext) {
             this._htmlMixerContext.rendererCss.setSize(width, height);
         }
+
+        if (!this._inventoryViewport) {
+            this._inventoryViewport = {
+                x: 0,
+                y: 0,
+                width: 0,
+                height: 0,
+            };
+        }
+
+        this._inventoryViewport.width = width;
+        this._inventoryViewport.height =
+            height < 850 ? height * 0.25 : height * 0.2;
     }
 
     private _resizeVR() {

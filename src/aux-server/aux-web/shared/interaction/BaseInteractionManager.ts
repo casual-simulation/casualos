@@ -381,10 +381,6 @@ export abstract class BaseInteractionManager {
             hitObject = hit ? this.findGameObjectForHit(hit) : null;
 
             if (hitObject) {
-                if (hitObject instanceof AuxFile3D) {
-                    hitObject.display.rotateY(0.1);
-                    // console.log('hitObject simulation id:', hitObject.contextGroup.simulation3D.simulation.id);
-                }
                 // We hit a game object in this simulation, stop searching through simulations.\
                 break;
             }

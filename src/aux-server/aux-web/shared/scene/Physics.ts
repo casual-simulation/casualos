@@ -39,9 +39,9 @@ export namespace Physics {
      * @pos The screen position that the ray should use for its direction vector.
      * @camera The camera that the ray should point from.
      */
-    export function screenPosToRay(pos: Vector2, camera: Camera) {
+    export function screenPosToRay(screenPos: Vector2, camera: Camera): Ray {
         let raycaster = new Raycaster();
-        raycaster.setFromCamera(pos, camera);
+        raycaster.setFromCamera(screenPos, camera);
         return raycaster.ray;
     }
 
@@ -88,7 +88,6 @@ export namespace Physics {
         objects: Object3D[],
         camera: Camera
     ): RaycastResult {
-        // console.log('raycastAtScreenPos:', pos);
         raycaster.setFromCamera(screenPos, camera);
         const intersects = raycaster.intersectObjects(objects, true);
 

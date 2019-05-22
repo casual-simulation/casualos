@@ -99,7 +99,11 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
         let mouseDir: Ray;
         if (this._context === this._inventorySimulation3D.inventoryContext) {
             mouseDir = Physics.screenPosToRay(
-                this.gameView.getInput().getMouseScreenPos(),
+                Input.screenPositionForViewport(
+                    pagePos,
+                    view,
+                    inventoryViewport
+                ),
                 this._inventorySimulation3D.getMainCamera()
             );
         } else {
