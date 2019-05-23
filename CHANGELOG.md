@@ -9,6 +9,7 @@
 -   Improvements
     -   The show hidden tag button and new tag button have swapped places.
     -   The sheets section will automatically appear when the search bar is changed.
+    -   New create new file button art has been implemented.
 -   Bug Fixes
     -   The tags in sheets will now be sorted aplhabetically on show/hide tag sections.
 
