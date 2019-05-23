@@ -20,6 +20,12 @@
         -   `aux.context.minimized` -> `aux.context.surface.minimized`
     -   Added `aux.context.surface` as a way to determine if a surface should show up in AUX Builder.
         -   Defaults to `false`.
+    -   Changed how contexts are configured
+        -   You can now configure a context by setting `aux.context` to the context.
+        -   Previously, this was done by creating a special tag `{context}.config`.
+    -   Added `aux.context.locked` as a way to determine if a context should be able to be loaded in AUX Player.
+        -   Defaults to `true` for contexts that do not have a file that sets `aux.context` for it.
+        -   Defaults to `false` for contexts that have a file that sets `aux.context` for it and do not have a `aux.context.locked` tag.
 -   Bug Fixes
     -   The tags in sheets will now be sorted aplhabetically on show/hide tag sections.
 
