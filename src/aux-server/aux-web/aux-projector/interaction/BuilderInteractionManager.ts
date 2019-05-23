@@ -448,6 +448,11 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         return this._surfaceColliders;
     }
 
+    protected _markDirty() {
+        super._markDirty();
+        this._surfaceObjectsDirty = true;
+    }
+
     protected _contextMenuActions(
         calc: FileCalculationContext,
         gameObject: GameObject,
