@@ -233,6 +233,8 @@ export default class FileTable extends Vue {
                     inline: 'start',
                 });
             }
+
+            this._updateTags();
         } else {
             this.newTag = '';
             this.newTagPlacement = placement;
