@@ -1,5 +1,15 @@
 # AUX Changelog
 
+## V0.7.8
+
+### Date: 05/23/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Made adding a tag put the new tag in the correct position in the sheet so it doesn't jump when you edit it.
+    -   Fixed the ability to see other players.
+
 ## V0.7.7
 
 ### Date: 05/23/2019
