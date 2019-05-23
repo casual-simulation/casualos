@@ -41,23 +41,25 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             let faceValue: string = 'Unknown Face';
 
             // Based on the normals of the file the raycast hit, determine side of the cube
-            if (hit.face.normal.x != 0) {
-                if (hit.face.normal.x > 0) {
-                    faceValue = 'left';
-                } else {
-                    faceValue = 'right';
-                }
-            } else if (hit.face.normal.y != 0) {
-                if (hit.face.normal.y > 0) {
-                    faceValue = 'top';
-                } else {
-                    faceValue = 'bottom';
-                }
-            } else if (hit.face.normal.z != 0) {
-                if (hit.face.normal.z > 0) {
-                    faceValue = 'front';
-                } else {
-                    faceValue = 'back';
+            if (hit.face) {
+                if (hit.face.normal.x != 0) {
+                    if (hit.face.normal.x > 0) {
+                        faceValue = 'left';
+                    } else {
+                        faceValue = 'right';
+                    }
+                } else if (hit.face.normal.y != 0) {
+                    if (hit.face.normal.y > 0) {
+                        faceValue = 'top';
+                    } else {
+                        faceValue = 'bottom';
+                    }
+                } else if (hit.face.normal.z != 0) {
+                    if (hit.face.normal.z > 0) {
+                        faceValue = 'front';
+                    } else {
+                        faceValue = 'back';
+                    }
                 }
             }
 

@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.8.0
+
+### Date: TBD
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed ability to click on files with `aux.shape` set to `sprite`.
+
 ## V0.7.8
 
 ### Date: 05/23/2019
