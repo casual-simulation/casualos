@@ -1,14 +1,30 @@
-mongo:
-    image: 'mongo:latest'
-    restart: always
-    ports:
-        - '27017:27017'
-    volumes:
-        - './docker/services/data/db:/data/db'
-redis:
-    image: 'redis:latest'
-    restart: always
-    ports:
-        - '6379:6379'
-    volumes:
-        - './docker/services/data/cache:/data'
+version: '3.7'
+services:
+    server:
+        image: 'casual-simulation/aux:latest'
+        restart: always
+        ports:
+            - '80:3000'
+            - '4567:4567'
+        depends_on:
+            - mongo
+            - redis
+        environment:
+            NODE_ENV: production
+            MONGO_URL: 'mongodb://mongo:27017'
+            REDIS_HOST: 'redis'
+            REDIS_PORT: '6379'
+    mongo:
+        image: 'mongo:latest'
+        restart: always
+        ports:
+            - '27017:27017'
+        volumes:
+            - '/data/db:/data/db'
+    redis:
+        image: 'redis:latest'
+        restart: always
+        ports:
+            - '6379:6379'
+        volumes:
+            - '/data/cache:/data'
