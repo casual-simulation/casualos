@@ -194,7 +194,7 @@ export abstract class BaseInteractionManager {
                     this._disableIFramePointerEvents();
                 }
 
-                if (input.isMouseButtonDownOn(this._gameView.gameView)) {
+                if (input.isMouseButtonDownOnElement(this._gameView.gameView)) {
                     let { gameObject, hit } = this.findHoveredGameObject();
 
                     if (gameObject) {
@@ -222,7 +222,7 @@ export abstract class BaseInteractionManager {
                         this.setCameraControlsEnabled(true);
                     }
                 } else if (
-                    input.isMouseButtonDownOnAny(
+                    input.isMouseButtonDownOnAnyElements(
                         this._gameView.getUIHtmlElements()
                     )
                 ) {
@@ -246,7 +246,7 @@ export abstract class BaseInteractionManager {
                     this._disableIFramePointerEvents();
                 }
 
-                if (input.isMouseButtonDownOn(this._gameView.gameView)) {
+                if (input.isMouseButtonDownOnElement(this._gameView.gameView)) {
                     // Always allow camera control with middle clicks.
                     this.setCameraControlsEnabled(true);
                 }
@@ -363,11 +363,7 @@ export abstract class BaseInteractionManager {
 
             let screenPos: Vector2;
             if (viewport) {
-                screenPos = Input.screenPositionForViewport(
-                    pagePos,
-                    this._gameView.gameView,
-                    viewport
-                );
+                screenPos = Input.screenPositionForViewport(pagePos, viewport);
             } else {
                 screenPos = Input.screenPosition(
                     pagePos,
@@ -518,9 +514,11 @@ export abstract class BaseInteractionManager {
         );
 
         if (cameraRigControls) {
+            let viewport = cameraRigControls.controls.viewport;
             cameraRigControls.controls = new CameraControls(
                 newCameraRig.mainCamera,
-                this._gameView
+                this._gameView,
+                viewport
             );
             cameraRigControls.controls.minZoom = Orthographic_MinZoom;
             cameraRigControls.controls.maxZoom = Orthographic_MaxZoom;

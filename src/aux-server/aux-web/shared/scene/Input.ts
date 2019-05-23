@@ -1,14 +1,8 @@
 import Vue from 'vue';
 import { Vector2, Vector3 } from 'three';
-import { find, some } from 'lodash';
+import { find, some, sortBy } from 'lodash';
 import { IGameView } from '../IGameView';
-
-export interface Viewport {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-}
+import { Viewport } from './Viewport';
 
 export class Input {
     /**
@@ -74,12 +68,10 @@ export class Input {
      */
     public static screenPositionForViewport(
         pagePos: Vector2,
-        view: HTMLElement,
         viewport: Viewport
     ): Vector2 {
         const globalPos = new Vector2(pagePos.x, pagePos.y);
-        // console.log('globalScreenPos:', Input.screenPosition(pagePos, view));
-        const viewRect = view.getBoundingClientRect();
+        const viewRect = viewport.getRootElement().getBoundingClientRect();
         const left = viewRect.left + viewport.x;
         const top =
             viewRect.height - (viewport.y + viewport.height) + viewRect.top;
@@ -97,15 +89,10 @@ export class Input {
      */
     public static pagePositionInsideViewport(
         pagePos: Vector2,
-        view: HTMLElement,
         viewport: Viewport
     ) {
-        if (!!pagePos && !!viewport && !!view) {
-            const screenPos = this.screenPositionForViewport(
-                pagePos,
-                view,
-                viewport
-            );
+        if (!!pagePos && !!viewport) {
+            const screenPos = this.screenPositionForViewport(pagePos, viewport);
             if (screenPos.x >= -1 && screenPos.x <= 1) {
                 if (screenPos.y >= -1 && screenPos.y <= 1) {
                     return true;
@@ -237,7 +224,7 @@ export class Input {
      * Determines if the mouse down event happened directly over the given element.
      * @param element The element to test.
      */
-    public isMouseButtonDownOn(element: HTMLElement): boolean {
+    public isMouseButtonDownOnElement(element: HTMLElement): boolean {
         const downElement = this._targetData.inputDown;
         return Input.isElementContainedByOrEqual(downElement, element);
     }
@@ -246,7 +233,7 @@ export class Input {
      * Determines if the mouse down event happened directly over any of the given elements.
      * @param elements The elements to test.
      */
-    public isMouseButtonDownOnAny(elements: HTMLElement[]): boolean {
+    public isMouseButtonDownOnAnyElements(elements: HTMLElement[]): boolean {
         const downElement = this._targetData.inputDown;
         const matchingElement = elements.find(e =>
             Input.isElementContainedByOrEqual(downElement, e)
@@ -255,10 +242,48 @@ export class Input {
     }
 
     /**
+     * Determines if the mouse is on the given viewport. Will check children to make sure that they are not instead being detected.
+     * @param viewport The viewport to test on.
+     */
+    public isMouseOnViewport(viewport: Viewport): boolean {
+        const pagePos = this.getMousePagePos();
+        const isOnViewport = Input.pagePositionInsideViewport(
+            pagePos,
+            viewport
+        );
+
+        if (isOnViewport) {
+            const allViewports = this._gameView.getViewports();
+
+            if (allViewports && allViewports.length > 1) {
+                // Make sure that there are no other view ports that are overlapping this one.
+                const otherViewports = allViewports.filter(
+                    v => v.layer >= viewport.layer && v !== viewport
+                );
+
+                for (let i = 0; i < otherViewports.length; i++) {
+                    if (
+                        Input.pagePositionInsideViewport(
+                            pagePos,
+                            otherViewports[i]
+                        )
+                    ) {
+                        // We are inside a viewport that is equal or higher in layer order.
+                        // This overrides our test for the viewport in question.
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return isOnViewport;
+    }
+
+    /**
      * Determines if the mouse is currently focusing the given html element.
      * @param element The element to test.
      */
-    public isMouseFocusing(element: HTMLElement): boolean {
+    public isMouseFocusingOnElement(element: HTMLElement): boolean {
         const overElement = this._targetData.inputOver;
         return Input.isElementContainedByOrEqual(overElement, element);
     }
@@ -267,7 +292,7 @@ export class Input {
      * Determines if the mouse is currently focusing any of the given html elements.
      * @param elements The elements to test.
      */
-    public isMouseFocusingAny(elements: HTMLElement[]): boolean {
+    public isMouseFocusingOnAnyElements(elements: HTMLElement[]): boolean {
         const overElement = this._targetData.inputOver;
         const matchingElement = elements.find(e =>
             Input.isElementContainedByOrEqual(overElement, e)
@@ -910,7 +935,7 @@ export class Input {
     }
 
     private _handleWheel(event: WheelEvent) {
-        if (this.isMouseFocusing(this._gameView.gameView)) {
+        if (this.isMouseFocusingOnElement(this._gameView.gameView)) {
             event.preventDefault();
         }
 

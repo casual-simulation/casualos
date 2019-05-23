@@ -310,11 +310,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
             let screenPos: Vector2;
             if (viewport) {
-                screenPos = Input.screenPositionForViewport(
-                    pagePos,
-                    this._gameView.gameView,
-                    viewport
-                );
+                screenPos = Input.screenPositionForViewport(pagePos, viewport);
             } else {
                 screenPos = Input.screenPosition(
                     pagePos,
@@ -466,7 +462,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             rig: this._gameView.getMainCameraRig(),
             controls: new CameraControls(
                 this._gameView.getMainCameraRig().mainCamera,
-                this._gameView
+                this._gameView,
+                this._gameView.getMainCameraRig().viewport
             ),
         };
 

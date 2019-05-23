@@ -37,7 +37,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { Time } from '../../shared/scene/Time';
-import { Input, InputType, Viewport } from '../../shared/scene/Input';
+import { Input, InputType } from '../../shared/scene/Input';
 import { InputVR } from '../../shared/scene/InputVR';
 import { appManager } from '../../shared/AppManager';
 import { find, flatMap, uniqBy } from 'lodash';
@@ -72,8 +72,8 @@ import { Simulation } from '../../shared/Simulation';
 import { MenuItem } from '../MenuContext';
 import SimulationItem from '../SimulationContext';
 import { HtmlMixer } from '../../shared/scene/HtmlMixer';
-import { InventoryContext3D } from '../scene/InventoryContext3D';
 import { InventorySimulation3D } from '../scene/InventorySimulation3D';
+import { Viewport } from '../../shared/scene/Viewport';
 
 @Component({
     components: {
@@ -83,10 +83,11 @@ import { InventorySimulation3D } from '../scene/InventorySimulation3D';
 export default class GameView extends Vue implements IGameView {
     private _mainScene: Scene;
     private _mainCameraRig: CameraRig;
+    private _mainViewport: Viewport;
     private _inventoryScene: Scene;
     private _inventoryCameraRig: CameraRig;
-    private _renderer: WebGLRenderer;
     private _inventoryViewport: Viewport;
+    private _renderer: WebGLRenderer;
 
     private _enterVr: any;
     private _vrControls: any;
@@ -213,11 +214,14 @@ export default class GameView extends Vue implements IGameView {
     public getMainCameraRig(): CameraRig {
         return this._mainCameraRig;
     }
-    public getInventoryCameraRig(): CameraRig {
-        return this._inventoryCameraRig;
+    public getMainViewport(): Viewport {
+        return this._mainViewport;
     }
     public getInventoryViewport(): Viewport {
         return this._inventoryViewport;
+    }
+    public getInventoryCameraRig(): CameraRig {
+        return this._inventoryCameraRig;
     }
     public getUIHtmlElements(): HTMLElement[] {
         return [<HTMLElement>this.$refs.inventory];
@@ -230,6 +234,9 @@ export default class GameView extends Vue implements IGameView {
     }
     public getGridChecker(): GridChecker {
         return null;
+    }
+    public getViewports(): Viewport[] {
+        return [this._mainViewport, this._inventoryViewport];
     }
     public getSimulations(): Simulation3D[] {
         return [...this.playerSimulations, ...this.inventorySimulations];
@@ -254,13 +261,11 @@ export default class GameView extends Vue implements IGameView {
 
         this._cameraType = type;
 
-        const { width, height } = this._calculateCameraSize();
         this._mainCameraRig = createCameraRig(
             'main',
             this._cameraType,
             this._mainScene,
-            width,
-            height
+            this._mainViewport
         );
 
         // Update side bar item.
@@ -616,8 +621,10 @@ export default class GameView extends Vue implements IGameView {
         // [Main scene]
         //
 
-        const { width, height } = this._calculateCameraSize();
-        this._renderer.setSize(width, height);
+        this._renderer.setSize(
+            this._mainViewport.width,
+            this._mainViewport.height
+        );
         this._renderer.setScissorTest(false);
 
         // Render the main scene with the main camera.
@@ -702,6 +709,11 @@ export default class GameView extends Vue implements IGameView {
         webGlRenderer.autoClear = false;
         webGlRenderer.shadowMap.enabled = false;
 
+        this._mainViewport = new Viewport('main', null, this._container);
+        this._mainViewport.layer = 0;
+        this._inventoryViewport = new Viewport('inventory', this._mainViewport);
+        this._inventoryViewport.layer = 1;
+
         this.gameView.appendChild(this._renderer.domElement);
     }
 
@@ -728,13 +740,11 @@ export default class GameView extends Vue implements IGameView {
         this._inventoryScene = new Scene();
 
         // Inventory camera.
-        const { width, height } = this._calculateCameraSize();
         this._inventoryCameraRig = createCameraRig(
             'inventory',
             'orthographic',
             this._inventoryScene,
-            width,
-            height
+            this._inventoryViewport
         );
         this._inventoryCameraRig.mainCamera.zoom = 50;
         this._inventoryScene.add(this._inventoryCameraRig.mainCamera);
@@ -971,7 +981,11 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _handleResize() {
-        const { width, height } = this._calculateCameraSize();
+        const width = window.innerWidth;
+        const height =
+            window.innerHeight - this._container.getBoundingClientRect().top;
+
+        this._mainViewport.setSize(width, height);
 
         // Resize html view and the webgl renderer.
         this._renderer.setPixelRatio(window.devicePixelRatio || 1);
@@ -984,30 +998,15 @@ export default class GameView extends Vue implements IGameView {
             this._htmlMixerContext.rendererCss.setSize(width, height);
         }
 
-        // Resize inventory viewport.
-        if (!this._inventoryViewport) {
-            this._inventoryViewport = {
-                x: 0,
-                y: 0,
-                width: 0,
-                height: 0,
-            };
-        }
-
-        this._inventoryViewport.width = width;
-        this._inventoryViewport.height =
-            height < 850 ? height * 0.25 : height * 0.2;
+        const invHeightScale = height < 850 ? 0.25 : 0.2;
+        this._inventoryViewport.setScale(null, invHeightScale);
 
         // Resize cameras.
         if (this._mainCameraRig) {
-            resizeCameraRig(this._mainCameraRig, width, height);
+            resizeCameraRig(this._mainCameraRig);
         }
         if (this._inventoryCameraRig) {
-            resizeCameraRig(
-                this._inventoryCameraRig,
-                this._inventoryViewport.width,
-                this._inventoryViewport.height
-            );
+            resizeCameraRig(this._inventoryCameraRig);
         }
 
         // Resize VR effect.
@@ -1016,13 +1015,6 @@ export default class GameView extends Vue implements IGameView {
             const vrHeight = window.innerHeight;
             this._vrEffect.setSize(vrWidth, vrHeight);
         }
-    }
-
-    private _calculateCameraSize() {
-        const width = window.innerWidth;
-        const height =
-            window.innerHeight - this._container.getBoundingClientRect().top;
-        return { width, height };
     }
 
     private get _container() {

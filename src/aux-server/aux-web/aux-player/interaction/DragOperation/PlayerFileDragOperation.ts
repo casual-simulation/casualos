@@ -69,9 +69,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
         const pagePos = this.gameView.getInput().getMousePagePos();
         const inventoryViewport = this.gameView.getInventoryViewport();
         const view = this.gameView.gameView;
-        if (
-            Input.pagePositionInsideViewport(pagePos, view, inventoryViewport)
-        ) {
+        if (Input.pagePositionInsideViewport(pagePos, inventoryViewport)) {
             nextContext = this._inventorySimulation3D.inventoryContext;
         }
 
@@ -99,11 +97,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
         let mouseDir: Ray;
         if (this._context === this._inventorySimulation3D.inventoryContext) {
             mouseDir = Physics.screenPosToRay(
-                Input.screenPositionForViewport(
-                    pagePos,
-                    view,
-                    inventoryViewport
-                ),
+                Input.screenPositionForViewport(pagePos, inventoryViewport),
                 this._inventorySimulation3D.getMainCameraRig().mainCamera
             );
         } else {

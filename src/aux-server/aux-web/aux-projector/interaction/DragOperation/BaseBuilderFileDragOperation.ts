@@ -192,9 +192,13 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     /**
      * Determines whether the mouse is currently over the trash can.
      */
-    protected _isOverTrashCan() {
+    protected _isOverTrashCan(): boolean {
         const input = this.gameView.getInput();
-        if (input.isMouseFocusingAny(this.gameView.getUIHtmlElements())) {
+        if (
+            input.isMouseButtonDownOnAnyElements(
+                this.gameView.getUIHtmlElements()
+            )
+        ) {
             const element = input.getTargetData().inputOver;
             const vueElement = Input.getVueParent(element, TrashCan);
             return !!vueElement;

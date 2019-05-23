@@ -14,6 +14,7 @@ import { BaseInteractionManager } from './BaseInteractionManager';
 import { InputType, MouseButtonId } from '../../shared/scene/Input';
 import { IGameView } from '../../shared/IGameView';
 import { lerp } from '@casual-simulation/aux-common';
+import { Viewport } from '../scene/Viewport';
 
 export class CameraControls {
     // "target" sets the location of focus, where the object orbits around
@@ -72,6 +73,8 @@ export class CameraControls {
 
     // Offset the apply to the camera this frame.
     public cameraOffset: Vector3 = new Vector3();
+
+    public viewport: Viewport = null;
 
     private _camera: PerspectiveCamera | OrthographicCamera;
     private _gameView: IGameView;
@@ -139,10 +142,15 @@ export class CameraControls {
 
     constructor(
         camera: PerspectiveCamera | OrthographicCamera,
-        gameView: IGameView
+        gameView: IGameView,
+        viewport?: Viewport
     ) {
         this._camera = camera;
         this._gameView = gameView;
+
+        if (!!viewport) {
+            this.viewport = viewport;
+        }
 
         this.target0 = this.target.clone();
         this.position0 = this._camera.position.clone();
@@ -305,8 +313,15 @@ export class CameraControls {
     private updateInput() {
         const input = this._gameView.getInput();
 
+        if (this.viewport) {
+            // Check to make sure we are over the viewport before allowing input.
+            if (!input.isMouseOnViewport(this.viewport)) {
+                return;
+            }
+        }
+
         if (input.currentInputType === InputType.Mouse) {
-            if (input.isMouseButtonDownOn(this._gameView.gameView)) {
+            if (input.isMouseButtonDownOnElement(this._gameView.gameView)) {
                 //
                 // Pan/Dolly/Rotate [Start]
                 //
@@ -395,7 +410,7 @@ export class CameraControls {
 
             if (
                 input.getWheelMoved() &&
-                input.isMouseFocusing(this._gameView.gameView)
+                input.isMouseFocusingOnElement(this._gameView.gameView)
             ) {
                 let wheelData = input.getWheelData();
 
@@ -409,7 +424,7 @@ export class CameraControls {
                 }
             }
         } else if (input.currentInputType === InputType.Touch) {
-            if (input.isMouseButtonDownOn(this._gameView.gameView)) {
+            if (input.isMouseButtonDownOnElement(this._gameView.gameView)) {
                 //
                 // Pan/Dolly/Rotate [Start]
                 //

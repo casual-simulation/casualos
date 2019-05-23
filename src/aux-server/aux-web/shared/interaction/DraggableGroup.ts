@@ -1,5 +1,5 @@
 import { Object3D, PerspectiveCamera, OrthographicCamera } from 'three';
-import { Viewport } from '../scene/Input';
+import { Viewport } from '../scene/Viewport';
 
 export interface DraggableGroup {
     /**

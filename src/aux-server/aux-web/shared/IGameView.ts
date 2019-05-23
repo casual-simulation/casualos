@@ -19,6 +19,7 @@ import { Simulation3D } from './scene/Simulation3D';
 import { GridChecker } from './scene/grid/GridChecker';
 import { AuxFile3DDecoratorFactory } from './scene/decorators/AuxFile3DDecoratorFactory';
 import { CameraRig } from './scene/CameraRigFactory';
+import { Viewport } from './scene/Viewport';
 
 /**
  * Interface that described what properties and functions should be available to a GameView class/component implementation.
@@ -47,9 +48,15 @@ export interface IGameView extends AuxFile3DFinder, Vue {
     getScene(): Scene;
     getRenderer(): WebGLRenderer;
     getMainCameraRig(): CameraRig;
+    getMainViewport(): Viewport;
     getHtmlMixerContext(): HtmlMixer.Context;
     getDecoratorFactory(): AuxFile3DDecoratorFactory;
     getGridChecker(): GridChecker;
+
+    /**
+     * Get all of the current viewports.
+     */
+    getViewports(): Viewport[];
 
     /**
      * Gets the list of simulations that this game view contains.

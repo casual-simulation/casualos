@@ -33,6 +33,7 @@ import { CameraControls } from '../../shared/interaction/CameraControls';
 import {
     Orthographic_MinZoom,
     Orthographic_MaxZoom,
+    CameraRig,
 } from '../../shared/scene/CameraRigFactory';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
@@ -119,7 +120,8 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                             objects: inventoryColliders,
                             camera: this._gameView.getInventoryCameraRig()
                                 .mainCamera,
-                            viewport: this._gameView.getInventoryViewport(),
+                            viewport: this._gameView.getInventoryCameraRig()
+                                .viewport,
                         },
                         {
                             objects: otherColliders,
@@ -184,18 +186,33 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     }
 
     protected _createControlsForCameraRigs(): CameraRigControls[] {
+        // Main camera
         let mainCameraRigControls: CameraRigControls = {
             rig: this._gameView.getMainCameraRig(),
             controls: new CameraControls(
                 this._gameView.getMainCameraRig().mainCamera,
-                this._gameView
+                this._gameView,
+                this._gameView.getMainCameraRig().viewport
             ),
         };
 
         mainCameraRigControls.controls.minZoom = Orthographic_MinZoom;
         mainCameraRigControls.controls.maxZoom = Orthographic_MaxZoom;
 
-        return [mainCameraRigControls];
+        // Inventory camera
+        let invCameraRigControls: CameraRigControls = {
+            rig: this._gameView.getInventoryCameraRig(),
+            controls: new CameraControls(
+                this._gameView.getInventoryCameraRig().mainCamera,
+                this._gameView,
+                this._gameView.getInventoryCameraRig().viewport
+            ),
+        };
+
+        invCameraRigControls.controls.minZoom = Orthographic_MinZoom;
+        invCameraRigControls.controls.maxZoom = Orthographic_MaxZoom;
+
+        return [mainCameraRigControls, invCameraRigControls];
     }
 
     protected _contextMenuActions(
