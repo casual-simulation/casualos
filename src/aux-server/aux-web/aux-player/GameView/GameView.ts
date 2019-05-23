@@ -102,9 +102,9 @@ export default class GameView extends Vue implements IGameView {
     public onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
     public onFileUpdated: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
     public onFileRemoved: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
-    public onCameraTypeChanged: ArgEvent<
-        PerspectiveCamera | OrthographicCamera
-    > = new ArgEvent<PerspectiveCamera | OrthographicCamera>();
+    public onCameraRigTypeChanged: ArgEvent<CameraRig> = new ArgEvent<
+        CameraRig
+    >();
 
     private playerSimulations: PlayerSimulation3D[] = [];
     private inventorySimulations: InventorySimulation3D[] = [];
@@ -210,11 +210,11 @@ export default class GameView extends Vue implements IGameView {
     public getRenderer() {
         return this._renderer;
     }
-    public getMainCamera(): PerspectiveCamera | OrthographicCamera {
-        return this._mainCameraRig.mainCamera;
+    public getMainCameraRig(): CameraRig {
+        return this._mainCameraRig;
     }
-    public getInventoryCamera(): PerspectiveCamera | OrthographicCamera {
-        return this._inventoryCameraRig.mainCamera;
+    public getInventoryCameraRig(): CameraRig {
+        return this._inventoryCameraRig;
     }
     public getInventoryViewport(): Viewport {
         return this._inventoryViewport;
@@ -256,6 +256,7 @@ export default class GameView extends Vue implements IGameView {
 
         const { width, height } = this._calculateCameraSize();
         this._mainCameraRig = createCameraRig(
+            'main',
             this._cameraType,
             this._mainScene,
             width,
@@ -290,7 +291,7 @@ export default class GameView extends Vue implements IGameView {
             );
         }
 
-        this.onCameraTypeChanged.invoke(this._mainCameraRig.mainCamera);
+        this.onCameraRigTypeChanged.invoke(this._mainCameraRig);
     }
 
     public async mounted() {
@@ -729,6 +730,7 @@ export default class GameView extends Vue implements IGameView {
         // Inventory camera.
         const { width, height } = this._calculateCameraSize();
         this._inventoryCameraRig = createCameraRig(
+            'inventory',
             'orthographic',
             this._inventoryScene,
             width,

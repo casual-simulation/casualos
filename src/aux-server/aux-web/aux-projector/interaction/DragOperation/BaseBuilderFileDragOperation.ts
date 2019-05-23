@@ -78,7 +78,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         } = this._interaction.pointOnWorkspaceGrid(
             calc,
             mousePagePos,
-            this.gameView.getMainCamera()
+            this.gameView.getMainCameraRig().mainCamera
         );
 
         if (this._files.length > 0) {
@@ -138,7 +138,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     protected _dragFilesFree(calc: FileCalculationContext): void {
         const mouseDir = Physics.screenPosToRay(
             this.gameView.getInput().getMouseScreenPos(),
-            this.gameView.getMainCamera()
+            this.gameView.getMainCameraRig().mainCamera
         );
         const firstFileExists = true;
 
@@ -159,8 +159,8 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
                     new Vector3()
                 );
                 const cameraWorldPos = this.gameView
-                    .getMainCamera()
-                    .getWorldPosition(new Vector3());
+                    .getMainCameraRig()
+                    .mainCamera.getWorldPosition(new Vector3());
                 this._freeDragDistance = cameraWorldPos.distanceTo(
                     fileWorldPos
                 );

@@ -10,6 +10,7 @@ import { tap } from 'rxjs/operators';
 import { InventoryContextGroup3D } from './InventoryContextGroup3D';
 import { PerspectiveCamera, OrthographicCamera, Plane } from 'three';
 import GameView from '../GameView/GameView';
+import { CameraRig } from 'aux-web/shared/scene/CameraRigFactory';
 
 export class InventorySimulation3D extends Simulation3D {
     /**
@@ -41,8 +42,8 @@ export class InventorySimulation3D extends Simulation3D {
         );
     }
 
-    getMainCamera(): PerspectiveCamera | OrthographicCamera {
-        return this._gameView.getInventoryCamera();
+    getMainCameraRig(): CameraRig {
+        return this._gameView.getInventoryCameraRig();
     }
 
     init() {

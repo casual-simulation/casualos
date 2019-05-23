@@ -84,7 +84,7 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
 
             const mouseDir = Physics.screenPosToRay(
                 this.gameView.getInput().getMouseScreenPos(),
-                this.gameView.getMainCamera()
+                this.gameView.getMainCameraRig().mainCamera
             );
             let worldPos = Physics.pointOnRay(
                 mouseDir,

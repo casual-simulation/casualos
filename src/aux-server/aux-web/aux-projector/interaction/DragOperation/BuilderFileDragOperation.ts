@@ -81,7 +81,7 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
     protected _onDragWorkspace(calc: FileCalculationContext) {
         const mouseDir = Physics.screenPosToRay(
             this.gameView.getInput().getMouseScreenPos(),
-            this.gameView.getMainCamera()
+            this.gameView.getMainCameraRig().mainCamera
         );
         const point = Physics.pointOnPlane(mouseDir, Physics.GroundPlane);
 

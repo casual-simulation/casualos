@@ -6,6 +6,8 @@ import {
     Object3D,
     Ray,
     Camera,
+    PerspectiveCamera,
+    OrthographicCamera,
 } from 'three';
 import {
     ContextMenuEvent,
@@ -67,6 +69,12 @@ import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
 import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
 import FileID from '../FileID/FileID';
 import { BuilderFileDragOperation } from './DragOperation/BuilderFileDragOperation';
+import { CameraControls } from '../../shared/interaction/CameraControls';
+import {
+    Orthographic_MinZoom,
+    Orthographic_MaxZoom,
+} from '../../shared/scene/CameraRigFactory';
+import { CameraRigControls } from 'aux-web/shared/interaction/CameraRigControls';
 
 export class BuilderInteractionManager extends BaseInteractionManager {
     // This overrides the base class IGameView
@@ -438,7 +446,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             this._surfaceColliders = [
                 {
                     objects: surfaceObjects,
-                    camera: this._gameView.getMainCamera(),
+                    camera: this._gameView.getMainCameraRig().mainCamera,
                 },
             ];
 
@@ -451,6 +459,21 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     protected _markDirty() {
         super._markDirty();
         this._surfaceObjectsDirty = true;
+    }
+
+    protected _createControlsForCameraRigs(): CameraRigControls[] {
+        let mainCameraRigControls: CameraRigControls = {
+            rig: this._gameView.getMainCameraRig(),
+            controls: new CameraControls(
+                this._gameView.getMainCameraRig().mainCamera,
+                this._gameView
+            ),
+        };
+
+        mainCameraRigControls.controls.minZoom = Orthographic_MinZoom;
+        mainCameraRigControls.controls.maxZoom = Orthographic_MaxZoom;
+
+        return [mainCameraRigControls];
     }
 
     protected _contextMenuActions(

@@ -13,6 +13,7 @@ import { Simulation } from '../../shared/Simulation';
 import { IGameView } from '../../shared/IGameView';
 import { flatMap } from 'lodash';
 import GameView from '../GameView/GameView';
+import { CameraRig } from '../../shared/scene/CameraRigFactory';
 
 export class BuilderSimulation3D extends Simulation3D {
     recentFiles: Object[] = [];
@@ -40,8 +41,8 @@ export class BuilderSimulation3D extends Simulation3D {
         );
     }
 
-    getMainCamera(): PerspectiveCamera | OrthographicCamera {
-        return this._gameView.getMainCamera();
+    getMainCameraRig(): CameraRig {
+        return this._gameView.getMainCameraRig();
     }
 
     clearRecentFiles() {

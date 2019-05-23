@@ -11,6 +11,7 @@ import { IGameView } from '../IGameView';
 import { concatMap, tap, flatMap as rxFlatMap } from 'rxjs/operators';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { flatMap } from 'lodash';
+import { CameraRig } from './CameraRigFactory';
 
 /**
  * Defines a class that is able to render a simulation.
@@ -112,7 +113,7 @@ export abstract class Simulation3D extends Object3D
     /**
      * Gets the camera that is used as the primary rendering camera for this simulation.
      */
-    abstract getMainCamera(): PerspectiveCamera | OrthographicCamera;
+    abstract getMainCameraRig(): CameraRig;
 
     protected _frameUpdateCore(calc: FileCalculationContext) {
         this.contexts.forEach(context => {

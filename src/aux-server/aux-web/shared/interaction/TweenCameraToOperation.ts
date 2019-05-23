@@ -41,10 +41,15 @@ export class TweenCameraToOperation implements IOperation {
         this._finished = false;
         this.zoomNum = zoomValue;
 
-        const cam = this._gameView.getMainCamera();
-        const currentPivotPoint = this._interaction.cameraControls.target;
+        const rig = this._gameView.getMainCameraRig();
+        const rigControls = this._interaction.cameraRigControllers.find(
+            c => c.rig === rig
+        );
+        const currentPivotPoint = rigControls.controls.target;
         const rayPointToTargetPosition = target.clone().sub(currentPivotPoint);
-        const rayPointToCamera = cam.position.clone().sub(currentPivotPoint);
+        const rayPointToCamera = rigControls.rig.mainCamera.position
+            .clone()
+            .sub(currentPivotPoint);
         const finalPosition = currentPivotPoint
             .clone()
             .add(rayPointToTargetPosition)
@@ -55,8 +60,11 @@ export class TweenCameraToOperation implements IOperation {
     update(calc: FileCalculationContext): void {
         if (this._finished) return;
 
-        const cam = this._gameView.getMainCamera();
-        const camPos = cam.position.clone();
+        const rig = this._gameView.getMainCameraRig();
+        const rigControls = this._interaction.cameraRigControllers.find(
+            c => c.rig === rig
+        );
+        const camPos = rig.mainCamera.position.clone();
         const dist = camPos.distanceToSquared(this._target);
 
         if (dist > 0.001) {
@@ -64,12 +72,12 @@ export class TweenCameraToOperation implements IOperation {
                 .clone()
                 .sub(camPos)
                 .multiplyScalar(0.1);
-            this._interaction.cameraControls.cameraOffset.copy(dir);
+            rigControls.controls.cameraOffset.copy(dir);
         } else {
             // This tween operation is finished.
             this._finished = true;
             if (this.zoomNum >= 0) {
-                this._interaction.cameraControls.dollySet(this.zoomNum);
+                rigControls.controls.dollySet(this.zoomNum);
             }
 
             this.zoomNum = -1;

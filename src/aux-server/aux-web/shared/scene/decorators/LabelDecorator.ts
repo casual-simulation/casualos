@@ -123,7 +123,7 @@ export class LabelDecorator extends AuxFile3DDecorator
         if (this._isInAutoSizeMode(calc)) {
             let labelWorldPos = new Vector3();
             this.label.getWorldPosition(labelWorldPos);
-            const mainCamera = this._gameView.getMainCamera();
+            const mainCamera = this._gameView.getMainCameraRig().mainCamera;
             const distanceToCamera = mainCamera.position.distanceTo(
                 labelWorldPos
             );

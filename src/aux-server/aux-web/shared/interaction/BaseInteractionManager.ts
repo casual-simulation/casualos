@@ -29,16 +29,18 @@ import { GameObject } from '../scene/GameObject';
 import {
     Orthographic_MinZoom,
     Orthographic_MaxZoom,
+    CameraRig,
 } from '../scene/CameraRigFactory';
 import { TapCodeManager } from './TapCodeManager';
 import { Simulation } from '../Simulation';
 import { Simulation3D } from '../scene/Simulation3D';
 import { DraggableGroup } from './DraggableGroup';
 import { isObjectVisible } from '../scene/SceneUtils';
+import { CameraRigControls } from './CameraRigControls';
 
 export abstract class BaseInteractionManager {
     protected _gameView: IGameView;
-    protected _cameraControls: CameraControls;
+    protected _cameraRigControllers: CameraRigControls[];
     protected _tapCodeManager: TapCodeManager;
     protected _maxTapCodeLength: number;
     protected _hoveredObject: File;
@@ -53,12 +55,7 @@ export abstract class BaseInteractionManager {
     constructor(gameView: IGameView) {
         this._draggableGroupsDirty = true;
         this._gameView = gameView;
-        this._cameraControls = new CameraControls(
-            this._gameView.getMainCamera(),
-            this._gameView
-        );
-        this._cameraControls.minZoom = Orthographic_MinZoom;
-        this._cameraControls.maxZoom = Orthographic_MaxZoom;
+        this._cameraRigControllers = this._createControlsForCameraRigs();
         this._operations = [];
         this._tapCodeManager = new TapCodeManager();
         this._maxTapCodeLength = 4;
@@ -68,7 +65,7 @@ export abstract class BaseInteractionManager {
         this._handleFileAdded = this._handleFileAdded.bind(this);
         this._handleFileUpdated = this._handleFileUpdated.bind(this);
         this._handleFileRemoved = this._handleFileRemoved.bind(this);
-        this._handleCameraTypeChanged = this._handleCameraTypeChanged.bind(
+        this._handleCameraRigTypeChanged = this._handleCameraRigTypeChanged.bind(
             this
         );
 
@@ -76,16 +73,16 @@ export abstract class BaseInteractionManager {
         this._gameView.onFileAdded.addListener(this._handleFileAdded);
         this._gameView.onFileUpdated.addListener(this._handleFileUpdated);
         this._gameView.onFileRemoved.addListener(this._handleFileRemoved);
-        this._gameView.onCameraTypeChanged.addListener(
-            this._handleCameraTypeChanged
+        this._gameView.onCameraRigTypeChanged.addListener(
+            this._handleCameraRigTypeChanged
         );
     }
 
     /**
-     * Gets the camera controls.
+     * Gets all the camera rig controls.
      */
-    get cameraControls() {
-        return this._cameraControls;
+    get cameraRigControllers() {
+        return this._cameraRigControllers;
     }
 
     get overHtmlMixerIFrame() {
@@ -103,7 +100,7 @@ export abstract class BaseInteractionManager {
     ) {
         this._operations.push(operation);
         if (disableCameraControls) {
-            this._cameraControls.enabled = false;
+            this.setCameraControlsEnabled(false);
         }
     }
 
@@ -184,10 +181,12 @@ export abstract class BaseInteractionManager {
 
             if (this._operations.length === 0) {
                 // Enable camera controls when there are no more operations.
-                this._cameraControls.enabled = true;
+                this.setCameraControlsEnabled(true);
             }
 
-            this._cameraControls.update();
+            this._cameraRigControllers.forEach(rigControls =>
+                rigControls.controls.update()
+            );
 
             // Detect left click.
             if (input.getMouseButtonDown(MouseButtonId.Left)) {
@@ -205,7 +204,7 @@ export abstract class BaseInteractionManager {
                             hit
                         );
                         if (gameObjectClickOperation !== null) {
-                            this._cameraControls.enabled = false;
+                            this.setCameraControlsEnabled(false);
                             this._operations.push(gameObjectClickOperation);
                         }
 
@@ -220,7 +219,7 @@ export abstract class BaseInteractionManager {
                         if (emptyClickOperation !== null) {
                             this._operations.push(emptyClickOperation);
                         }
-                        this._cameraControls.enabled = true;
+                        this.setCameraControlsEnabled(true);
                     }
                 } else if (
                     input.isMouseButtonDownOnAny(
@@ -249,7 +248,7 @@ export abstract class BaseInteractionManager {
 
                 if (input.isMouseButtonDownOn(this._gameView.gameView)) {
                     // Always allow camera control with middle clicks.
-                    this._cameraControls.enabled = true;
+                    this.setCameraControlsEnabled(true);
                 }
             }
             ``;
@@ -331,7 +330,7 @@ export abstract class BaseInteractionManager {
                 this._draggableGroups = [
                     {
                         objects: colliders,
-                        camera: this._gameView.getMainCamera(),
+                        camera: this._gameView.getMainCameraRig().mainCamera,
                     },
                 ];
             } else {
@@ -436,7 +435,7 @@ export abstract class BaseInteractionManager {
         );
 
         if (actions) {
-            this._cameraControls.enabled = false;
+            this.setCameraControlsEnabled(false);
 
             // Now send the actual context menu event.
             let menuEvent: ContextMenuEvent = {
@@ -513,16 +512,33 @@ export abstract class BaseInteractionManager {
         this._markDirty();
     }
 
-    protected _markDirty() {
-        this._draggableGroupsDirty = true;
+    protected _handleCameraRigTypeChanged(newCameraRig: CameraRig): void {
+        let cameraRigControls = this._cameraRigControllers.find(
+            c => c.rig.id === newCameraRig.id
+        );
+
+        if (cameraRigControls) {
+            cameraRigControls.controls = new CameraControls(
+                newCameraRig.mainCamera,
+                this._gameView
+            );
+            cameraRigControls.controls.minZoom = Orthographic_MinZoom;
+            cameraRigControls.controls.maxZoom = Orthographic_MaxZoom;
+        }
     }
 
-    protected _handleCameraTypeChanged(
-        mainCamera: PerspectiveCamera | OrthographicCamera
-    ): void {
-        this._cameraControls = new CameraControls(mainCamera, this._gameView);
-        this._cameraControls.minZoom = Orthographic_MinZoom;
-        this._cameraControls.maxZoom = Orthographic_MaxZoom;
+    /**
+     * Set the enabled state of all camera controls that are managed by this interaction manager.
+     * @param enabled
+     */
+    protected setCameraControlsEnabled(enabled: boolean): void {
+        this._cameraRigControllers.forEach(
+            rigControls => (rigControls.controls.enabled = enabled)
+        );
+    }
+
+    protected _markDirty() {
+        this._draggableGroupsDirty = true;
     }
 
     //
@@ -539,6 +555,7 @@ export abstract class BaseInteractionManager {
     abstract handlePointerExit(file: File, simulation: Simulation): IOperation;
     abstract handlePointerDown(file: File, simulation: Simulation): IOperation;
 
+    protected abstract _createControlsForCameraRigs(): CameraRigControls[];
     protected abstract _contextMenuActions(
         calc: FileCalculationContext,
         gameObject: GameObject,

@@ -28,6 +28,12 @@ import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
 import { flatMap } from 'lodash';
 import { InventoryContextGroup3D } from '../scene/InventoryContextGroup3D';
 import { isObjectVisible } from '../../shared/scene/SceneUtils';
+import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
+import { CameraControls } from '../../shared/interaction/CameraControls';
+import {
+    Orthographic_MinZoom,
+    Orthographic_MaxZoom,
+} from '../../shared/scene/CameraRigFactory';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class IGameView
@@ -111,12 +117,14 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                     this._draggableGroups = [
                         {
                             objects: inventoryColliders,
-                            camera: this._gameView.getInventoryCamera(),
+                            camera: this._gameView.getInventoryCameraRig()
+                                .mainCamera,
                             viewport: this._gameView.getInventoryViewport(),
                         },
                         {
                             objects: otherColliders,
-                            camera: this._gameView.getMainCamera(),
+                            camera: this._gameView.getMainCameraRig()
+                                .mainCamera,
                         },
                     ];
                 }
@@ -173,6 +181,21 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         return {
             good: false,
         };
+    }
+
+    protected _createControlsForCameraRigs(): CameraRigControls[] {
+        let mainCameraRigControls: CameraRigControls = {
+            rig: this._gameView.getMainCameraRig(),
+            controls: new CameraControls(
+                this._gameView.getMainCameraRig().mainCamera,
+                this._gameView
+            ),
+        };
+
+        mainCameraRigControls.controls.minZoom = Orthographic_MinZoom;
+        mainCameraRigControls.controls.maxZoom = Orthographic_MaxZoom;
+
+        return [mainCameraRigControls];
     }
 
     protected _contextMenuActions(

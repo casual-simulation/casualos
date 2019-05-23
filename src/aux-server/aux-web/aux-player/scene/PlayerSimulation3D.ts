@@ -16,6 +16,7 @@ import { doesFileDefinePlayerContext } from '../PlayerUtils';
 import { SimulationContext } from '../SimulationContext';
 import { Color, Texture, OrthographicCamera, PerspectiveCamera } from 'three';
 import GameView from '../GameView/GameView';
+import { CameraRig } from '../../shared/scene/CameraRigFactory';
 
 export class PlayerSimulation3D extends Simulation3D {
     /**
@@ -52,8 +53,8 @@ export class PlayerSimulation3D extends Simulation3D {
         this._fileBackBuffer = new Map();
     }
 
-    getMainCamera(): PerspectiveCamera | OrthographicCamera {
-        return this._gameView.getMainCamera();
+    getMainCameraRig(): CameraRig {
+        return this._gameView.getMainCameraRig();
     }
 
     init() {

@@ -120,9 +120,9 @@ export default class GameView extends Vue implements IGameView {
     public onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
     public onFileUpdated: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
     public onFileRemoved: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
-    public onCameraTypeChanged: ArgEvent<
-        PerspectiveCamera | OrthographicCamera
-    > = new ArgEvent<PerspectiveCamera | OrthographicCamera>();
+    public onCameraRigTypeChanged: ArgEvent<CameraRig> = new ArgEvent<
+        CameraRig
+    >();
 
     // private _contexts: BuilderGroup3D[];
     private _subs: SubscriptionLike[];
@@ -209,8 +209,8 @@ export default class GameView extends Vue implements IGameView {
     public getGridChecker() {
         return this._gridChecker;
     }
-    public getMainCamera(): PerspectiveCamera | OrthographicCamera {
-        return this._mainCameraRig.mainCamera;
+    public getMainCameraRig(): CameraRig {
+        return this._mainCameraRig;
     }
 
     public getDecoratorFactory(): AuxFile3DDecoratorFactory {
@@ -264,6 +264,7 @@ export default class GameView extends Vue implements IGameView {
 
         const { width, height } = this._calculateCameraSize();
         this._mainCameraRig = createCameraRig(
+            'main',
             this._cameraType,
             this._mainScene,
             width,
@@ -298,7 +299,7 @@ export default class GameView extends Vue implements IGameView {
             );
         }
 
-        this.onCameraTypeChanged.invoke(this._mainCameraRig.mainCamera);
+        this.onCameraRigTypeChanged.invoke(this._mainCameraRig);
     }
 
     /**
@@ -317,8 +318,12 @@ export default class GameView extends Vue implements IGameView {
             this.tweenCameraToPosition(targetPosition);
 
             if (zoomValue != undefined && zoomValue >= 0) {
-                const cam = this.getMainCamera();
-                this._interaction.cameraControls.dollySet(zoomValue);
+                let mainCameraControls = this._interaction.cameraRigControllers.find(
+                    rigControls => rigControls.rig === this._mainCameraRig
+                );
+                if (mainCameraControls) {
+                    mainCameraControls.controls.dollySet(zoomValue);
+                }
             }
         }
     }
@@ -478,7 +483,7 @@ export default class GameView extends Vue implements IGameView {
 
                 const mouseDir = Physics.screenPosToRay(
                     this.getInput().getMouseScreenPos(),
-                    this.getMainCamera()
+                    this._mainCameraRig.mainCamera
                 );
                 const point = Physics.pointOnPlane(
                     mouseDir,

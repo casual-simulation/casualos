@@ -104,12 +104,12 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
                     view,
                     inventoryViewport
                 ),
-                this._inventorySimulation3D.getMainCamera()
+                this._inventorySimulation3D.getMainCameraRig().mainCamera
             );
         } else {
             mouseDir = Physics.screenPosToRay(
                 this.gameView.getInput().getMouseScreenPos(),
-                this._simulation3D.getMainCamera()
+                this._simulation3D.getMainCameraRig().mainCamera
             );
         }
 

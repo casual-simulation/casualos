@@ -71,7 +71,7 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
         const time = Date.now();
 
         if (time > this._lastPositionUpdateTime + TIME_BETWEEN_UPDATES) {
-            const mainCamera = this._gameView.getMainCamera();
+            const mainCamera = this._gameView.getMainCameraRig().mainCamera;
             const camRotation = mainCamera.rotation.clone();
             const camRotationVector = new Vector3(0, 0, 1).applyEuler(
                 camRotation

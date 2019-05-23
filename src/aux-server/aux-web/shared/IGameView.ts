@@ -18,6 +18,7 @@ import { HtmlMixer } from '../shared/scene/HtmlMixer';
 import { Simulation3D } from './scene/Simulation3D';
 import { GridChecker } from './scene/grid/GridChecker';
 import { AuxFile3DDecoratorFactory } from './scene/decorators/AuxFile3DDecoratorFactory';
+import { CameraRig } from './scene/CameraRigFactory';
 
 /**
  * Interface that described what properties and functions should be available to a GameView class/component implementation.
@@ -32,7 +33,7 @@ export interface IGameView extends AuxFile3DFinder, Vue {
     onFileAdded: ArgEvent<AuxFile>;
     onFileUpdated: ArgEvent<AuxFile>;
     onFileRemoved: ArgEvent<AuxFile>;
-    onCameraTypeChanged: ArgEvent<PerspectiveCamera | OrthographicCamera>;
+    onCameraRigTypeChanged: ArgEvent<CameraRig>;
 
     xrCapable: boolean;
     xrDisplay: any;
@@ -45,7 +46,7 @@ export interface IGameView extends AuxFile3DFinder, Vue {
     getInputVR(): InputVR;
     getScene(): Scene;
     getRenderer(): WebGLRenderer;
-    getMainCamera(): PerspectiveCamera | OrthographicCamera;
+    getMainCameraRig(): CameraRig;
     getHtmlMixerContext(): HtmlMixer.Context;
     getDecoratorFactory(): AuxFile3DDecoratorFactory;
     getGridChecker(): GridChecker;
