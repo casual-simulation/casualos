@@ -24,7 +24,33 @@
 
 ## Building an arm32v7 image on a Raspberry PI
 
-Prerequisites:
+### Option 1 (recommended)
+
+Build the project on the dev/ci machine and build the image on the Raspberry PI
+
+**Prerequisites:**
+
+1. Follow the steps above to setup a Raspberry PI with docker.
+
+**Steps:**
+
+1. On your Dev Machine
+    1. Run a build and package it into a `.tar.gz` file.
+        - `npm run build:tar`
+    2. Rsync the tar file into the Raspberry PI
+        - `rsync --progress ./temp/output.tar.gz pi@{your_pi_ip_address}:/home/pi1
+1. On the Raspberry PI
+    1. Unpack the `.tar.gz`
+        - `mkdir output`
+        - `tar xzf ./output.tar.gz -C output`
+    2. Build the docker image
+        - `docker build -t casual-simulation/aux/arm32 -f Dockerfile.arm32 output`
+
+### Option 2
+
+Build the entire project on the Raspberry PI
+
+**Prerequisites:**
 
 1. Follow the steps above to setup a Raspberry PI with docker.
 2. Make sure git is installed
@@ -39,7 +65,7 @@ Prerequisites:
 6. Clone the aux repository
     - `git clone https://github.com/casual-simulation/aux.git`
 
-Steps:
+**Steps:**
 
 1. Pull the latest `master`
     - `git pull`
