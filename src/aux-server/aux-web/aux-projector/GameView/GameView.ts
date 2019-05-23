@@ -482,6 +482,7 @@ export default class GameView extends Vue implements IGameView {
                     let newContext = contextMap.get(c);
                     worksurface.tags[c] = null;
                     worksurface.tags['aux.context'] = newContext;
+                    worksurface.tags['aux.context.surface'] = true;
                     worksurface.tags[newContext] = true;
                 });
 
