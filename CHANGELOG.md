@@ -10,6 +10,16 @@
     -   The show hidden tag button and new tag button have swapped places.
     -   The sheets section will automatically appear when the search bar is changed.
     -   New create new file button art has been implemented.
+    -   Several tags have changed:
+        -   `aux.context.movable` -> `aux.context.surface.movable`
+        -   `aux.context.x` -> `aux.context.surface.x`
+        -   `aux.context.y` -> `aux.context.surface.y`
+        -   `aux.context.z` -> `aux.context.surface.z`
+        -   `aux.context.grid` -> `aux.context.surface.grid`
+        -   `aux.context.scale` -> `aux.context.surface.scale`
+        -   `aux.context.minimized` -> `aux.context.surface.minimized`
+    -   Added `aux.context.surface` as a way to determine if a surface should show up in AUX Builder.
+        -   Defaults to `false`.
 -   Bug Fixes
     -   The tags in sheets will now be sorted aplhabetically on show/hide tag sections.
 
