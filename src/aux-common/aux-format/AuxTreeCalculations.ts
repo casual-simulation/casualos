@@ -23,7 +23,6 @@ import {
     FilesStateDiff,
     getFileConfigContexts,
     tagsOnFile,
-    isConfigTag,
 } from '../Files';
 import uuid from 'uuid/v4';
 
@@ -92,7 +91,8 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
                 diff.addedFiles,
                 f => {
                     let tags = tagsOnFile(f);
-                    return tags.length > 0 && tags.some(t => isConfigTag(t))
+                    return tags.length > 0 &&
+                        tags.some(t => t === 'aux.context')
                         ? 0
                         : 1;
                 },

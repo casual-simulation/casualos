@@ -26,8 +26,8 @@
     border-spacing: 0;
 }
 
-.file-table .new-tag-button {
-    margin: 0;
+.file-table .hidden-button {
+    margin: 0px 0px 0px 4px;
     text-transform: none;
 }
 
@@ -261,6 +261,8 @@ th:last-child {
 }
 
 .create-file svg {
+    /*
     stroke: var(--md-theme-default-icon-on-background, rgba(0, 0, 0, 0.54));
     fill: var(--md-theme-default-icon-on-background, rgba(0, 0, 0, 0.54));
+    */
 }

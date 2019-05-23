@@ -2,19 +2,19 @@
     <div class="file-table" ref="wrapper">
         <div class="top-part">
             <div v-show="!isMakingNewTag && hasFiles" class="file-table-toggle-buttons">
-                <md-button class="md-icon-button new-tag-button" @click="addTag()">
+                <md-button class="md-icon-button hidden-button" @click="toggleHidden()">
+                    <md-icon v-if="showHidden">visibility</md-icon>
+                    <md-icon v-else>visibility_off</md-icon>
+                    <md-tooltip v-if="showHidden">Hide Hidden Tags</md-tooltip>
+                    <md-tooltip v-else>Show Hidden Tags</md-tooltip>
+                </md-button>
+                <md-button class="md-icon-button" @click="addTag()">
                     <picture>
                         <source srcset="../public/icons/tag-add.webp" type="image/webp" />
                         <source srcset="../public/icons/tag-add.png" type="image/png" />
                         <img alt="Add Tag" src="../public/icons/tag-add.png" />
                     </picture>
                     <md-tooltip>Add Tag</md-tooltip>
-                </md-button>
-                <md-button class="md-icon-button" @click="toggleHidden()">
-                    <md-icon v-if="showHidden">visibility</md-icon>
-                    <md-icon v-else>visibility_off</md-icon>
-                    <md-tooltip v-if="showHidden">Hide Hidden Tags</md-tooltip>
-                    <md-tooltip v-else>Show Hidden Tags</md-tooltip>
                 </md-button>
                 <md-button
                     v-if="!isSearch"

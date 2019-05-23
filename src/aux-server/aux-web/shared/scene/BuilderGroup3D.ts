@@ -91,7 +91,8 @@ export class BuilderGroup3D extends ContextGroup3D {
             this.updateMatrixWorld(true);
 
             await this.surface.update(calc, file, this.getFiles());
-            this.display.visible = this.surface.container.visible;
+            this.display.visible =
+                this.surface.visible && this.surface.container.visible;
         }
     }
 }

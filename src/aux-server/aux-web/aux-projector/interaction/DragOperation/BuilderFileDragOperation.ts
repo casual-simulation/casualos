@@ -91,8 +91,8 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
 
             this.simulation.helper.updateFile(this._workspace.file, {
                 tags: {
-                    [`aux.context.x`]: final.x,
-                    [`aux.context.y`]: final.z,
+                    [`aux.context.surface.x`]: final.x,
+                    [`aux.context.surface.y`]: final.z,
                 },
             });
         }

@@ -956,9 +956,7 @@ export function createFile(id = uuid(), tags: Object['tags'] = {}) {
  */
 export function createWorkspace(
     id = uuid(),
-    builderContextId: string = createContextId(),
-    contextFormula: string = '=isBuilder',
-    label: string = null
+    builderContextId: string = createContextId()
 ): Workspace {
     // checks if given context string is empty or just whitespace
     if (builderContextId.length === 0 || /^\s*$/.test(builderContextId)) {
@@ -968,16 +966,12 @@ export function createWorkspace(
     return {
         id: id,
         tags: {
-            'aux.context.x': 0,
-            'aux.context.y': 0,
-            'aux.context.z': 0,
-            [builderContextId]: true,
-            [`${builderContextId}.config`]: contextFormula,
-            [`${builderContextId}.x`]: 0,
-            [`${builderContextId}.y`]: 0,
-            [`${builderContextId}.z`]: 0,
-            'aux.movable': false,
-            'aux.label': label,
+            'aux.context.surface.x': 0,
+            'aux.context.surface.y': 0,
+            'aux.context.surface.z': 0,
+            'aux.context.surface': true,
+            'aux.context.locked': true,
+            'aux.context': builderContextId,
         },
     };
 }
@@ -1030,7 +1024,7 @@ export function calculateGridScale(
         const scale = calculateNumericalTagValue(
             calc,
             workspace,
-            `aux.context.scale`,
+            `aux.context.surface.scale`,
             DEFAULT_WORKSPACE_SCALE
         );
         const gridScale = calculateNumericalTagValue(
@@ -1493,29 +1487,6 @@ export function getFileLabelAnchor(
 }
 
 /**
- * Determines if the given tag represents a context config.
- * @param tag The tag to check.
- */
-export function isConfigTag(tag: string): boolean {
-    if (tag.length <= '.config'.length) {
-        return false;
-    }
-    return /\.config$/g.test(tag);
-}
-
-/**
- * Gets the name of the context that this tag is the config for.
- * If the tag is not a config tag, then returns null.
- * @param tag The tag to check.
- */
-export function getConfigTagContext(tag: string): string {
-    if (isConfigTag(tag)) {
-        return tag.substr(0, tag.length - '.config'.length);
-    }
-    return null;
-}
-
-/**
  * Determines if the given file is a config file for the given context.
  * @param calc The calculation context.
  * @param file The file to check.
@@ -1526,7 +1497,30 @@ export function isConfigForContext(
     file: File,
     context: string
 ) {
-    return calculateBooleanTagValue(calc, file, `${context}.config`, false);
+    const contexts = getFileConfigContexts(calc, file);
+    return contexts.indexOf(context) >= 0;
+}
+
+/**
+ * Gets whether the context(s) that the given file represents are locked.
+ * Uses at the aux.context.locked tag to determine whether it is locked.
+ * Defaults to false if the file is a context. Otherwise it defaults to true.
+ * @param calc The calculation context.
+ * @param file The file.
+ */
+export function isContextLocked(
+    calc: FileCalculationContext,
+    file: File
+): boolean {
+    if (isContext(calc, file)) {
+        return calculateBooleanTagValue(
+            calc,
+            file,
+            'aux.context.locked',
+            false
+        );
+    }
+    return true;
 }
 
 /**
@@ -1538,14 +1532,13 @@ export function getFileConfigContexts(
     calc: FileCalculationContext,
     file: File
 ): string[] {
-    const tags = tagsOnFile(file);
-    return tags
-        .filter(t => {
-            return (
-                isConfigTag(t) && calculateBooleanTagValue(calc, file, t, false)
-            );
-        })
-        .map(t => getConfigTagContext(t));
+    const result = calculateFileValue(calc, file, 'aux.context');
+    if (typeof result === 'string' && hasValue(result)) {
+        return [result];
+    } else if (Array.isArray(result)) {
+        return result;
+    }
+    return [];
 }
 
 /**
@@ -1616,7 +1609,12 @@ export function isContextMovable(
     calc: FileCalculationContext,
     file: File
 ): boolean {
-    return calculateBooleanTagValue(calc, file, 'aux.context.movable', true);
+    return calculateBooleanTagValue(
+        calc,
+        file,
+        'aux.context.surface.movable',
+        true
+    );
 }
 
 /**
@@ -1629,9 +1627,24 @@ export function getContextPosition(
     contextFile: File
 ): { x: number; y: number; z: number } {
     return {
-        x: calculateNumericalTagValue(calc, contextFile, `aux.context.x`, 0),
-        y: calculateNumericalTagValue(calc, contextFile, `aux.context.y`, 0),
-        z: calculateNumericalTagValue(calc, contextFile, `aux.context.z`, 0),
+        x: calculateNumericalTagValue(
+            calc,
+            contextFile,
+            `aux.context.surface.x`,
+            0
+        ),
+        y: calculateNumericalTagValue(
+            calc,
+            contextFile,
+            `aux.context.surface.y`,
+            0
+        ),
+        z: calculateNumericalTagValue(
+            calc,
+            contextFile,
+            `aux.context.surface.z`,
+            0
+        ),
     };
 }
 
@@ -1644,7 +1657,7 @@ export function getContextMinimized(
     calc: FileCalculationContext,
     contextFile: File
 ): boolean {
-    return getContextValue(calc, contextFile, 'minimized');
+    return getContextValue(calc, contextFile, 'surface.minimized');
 }
 
 /**
@@ -1671,9 +1684,22 @@ export function getContextSize(
     return calculateNumericalTagValue(
         calc,
         contextFile,
-        `aux.context.size`,
+        `aux.context.surface.size`,
         isUserFile(contextFile) ? 0 : DEFAULT_WORKSPACE_SIZE
     );
+}
+
+/**
+ * Determines if a context's surface should be visible.
+ * Defaults to false.
+ * @param calc The file calculation context.
+ * @param file The file.
+ */
+export function isContextSurfaceVisible(
+    calc: FileCalculationContext,
+    file: File
+): boolean {
+    return calculateBooleanTagValue(calc, file, 'aux.context.surface', false);
 }
 
 /**
@@ -1687,13 +1713,13 @@ export function getBuilderContextGrid(
 ): { [key: string]: number } {
     const tags = tagsOnFile(contextFile);
     const gridTags = tags.filter(
-        t => t.indexOf('aux.context.grid.') === 0 && t.indexOf(':') > 0
+        t => t.indexOf('aux.context.surface.grid.') === 0 && t.indexOf(':') > 0
     );
 
     let val: { [key: string]: number } = {};
     for (let tag of gridTags) {
         val[
-            tag.substr('aux.context.grid.'.length)
+            tag.substr('aux.context.surface.grid.'.length)
         ] = calculateNumericalTagValue(calc, contextFile, tag, undefined);
     }
 
@@ -1743,7 +1769,8 @@ export function getContextScale(
     contextFile: File
 ): number {
     return (
-        getContextValue(calc, contextFile, 'scale') || DEFAULT_WORKSPACE_SCALE
+        getContextValue(calc, contextFile, 'surface.scale') ||
+        DEFAULT_WORKSPACE_SCALE
     );
 }
 

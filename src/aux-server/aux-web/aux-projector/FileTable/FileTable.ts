@@ -233,6 +233,8 @@ export default class FileTable extends Vue {
                     inline: 'start',
                 });
             }
+
+            this._updateTags();
         } else {
             this.newTag = '';
             this.newTagPlacement = placement;
@@ -377,7 +379,7 @@ export default class FileTable extends Vue {
             this.showHidden,
             this.tagBlacklist,
             this.blacklistIndex
-        );
+        ).sort();
     }
 
     toggleBlacklistIndex(index: number) {

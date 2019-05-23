@@ -35,22 +35,16 @@ import {
     DEFAULT_USER_MODE,
     UserMode,
     DEFAULT_SCENE_BACKGROUND_COLOR,
-    getUserMode,
-    createFile,
-    doFilesAppearEqual,
     AuxFile,
-    getConfigTagContext,
     getFileConfigContexts,
     hasValue,
     createContextId,
     AuxCausalTree,
     AuxOp,
     createWorkspace,
-    addToContextDiff,
     FilesState,
     duplicateFile,
     toast,
-    isConfigForContext,
     createCalculationContext,
     cleanFile,
 } from '@casual-simulation/aux-common';
@@ -176,16 +170,9 @@ export default class GameView extends Vue implements IGameView {
      * Click event from GameView.vue
      */
     private onConfirmDialogOk() {
-        let contextType = '=isBuilder';
-
-        if (this.playerCheck) {
-            contextType = '=isBuilder || isPlayer';
-        }
-
         this.simulation3D.simulation.helper.createWorkspace(
             undefined,
-            this.contextDialog,
-            contextType
+            this.contextDialog
         );
 
         this.showDialog = false;
@@ -481,11 +468,10 @@ export default class GameView extends Vue implements IGameView {
 
                 oldContexts.forEach(c => {
                     let newContext = contextMap.get(c);
-                    let config = oldWorksurface.tags[`${c}.config`];
                     worksurface.tags[c] = null;
-                    worksurface.tags[`${c}.config`] = null;
+                    worksurface.tags['aux.context'] = newContext;
+                    worksurface.tags['aux.context.surface'] = true;
                     worksurface.tags[newContext] = true;
-                    worksurface.tags[`${newContext}.config`] = config;
                 });
 
                 worksurface = cleanFile(worksurface);
@@ -499,9 +485,9 @@ export default class GameView extends Vue implements IGameView {
                     new Plane(new Vector3(0, 1, 0))
                 );
 
-                worksurface.tags['aux.context.x'] = point.x;
-                worksurface.tags['aux.context.y'] = point.z;
-                worksurface.tags['aux.context.z'] = point.y;
+                worksurface.tags['aux.context.surface.x'] = point.x;
+                worksurface.tags['aux.context.surface.y'] = point.z;
+                worksurface.tags['aux.context.surface.z'] = point.y;
 
                 state[worksurface.id] = worksurface;
 

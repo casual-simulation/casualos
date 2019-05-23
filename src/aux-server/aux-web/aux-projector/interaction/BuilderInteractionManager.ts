@@ -264,7 +264,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             tags: {},
         };
 
-        partial.tags[`aux.context.grid.0:0`] = height;
+        partial.tags[`aux.context.surface.grid.0:0`] = height;
 
         this._gameView.simulation3D.simulation.helper.updateFile(
             file.file,
@@ -546,7 +546,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 file.file,
                 {
                     tags: {
-                        [`aux.context.size`]: (size || 0) - 1,
+                        [`aux.context.surface.size`]: (size || 0) - 1,
                     },
                 }
             );
@@ -585,7 +585,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 file.file,
                 {
                     tags: {
-                        [`aux.context.minimized`]: minimized,
+                        [`aux.context.surface.minimized`]: minimized,
                     },
                 }
             );
@@ -625,7 +625,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 file.file,
                 {
                     tags: {
-                        [`aux.context.size`]: (size || 0) + 1,
+                        [`aux.context.surface.size`]: (size || 0) + 1,
                     },
                 }
             );

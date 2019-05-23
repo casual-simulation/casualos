@@ -423,7 +423,8 @@ export class FileManager implements Simulation {
         if (!userFile) {
             await this.helper.createFile(this._appManager.user.id, {
                 [userContext]: true,
-                [`${userContext}.config`]: true,
+                ['aux.context']: userContext,
+                ['aux.context.surface']: true,
                 ['aux._user']: this._appManager.user.username,
                 ['aux._userInventoryContext']: userInventoryContext,
                 ['aux._userMenuContext']: userMenuContext,

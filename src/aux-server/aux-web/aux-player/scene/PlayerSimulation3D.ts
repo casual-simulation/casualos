@@ -4,6 +4,7 @@ import {
     FileCalculationContext,
     hasValue,
     DEFAULT_SCENE_BACKGROUND_COLOR,
+    isContextLocked,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { IGameView } from '../../shared/IGameView';
@@ -158,7 +159,8 @@ export class PlayerSimulation3D extends Simulation3D {
         }
         // We dont have a context group yet. We are in search of a file that defines a player context that matches the user's current context.
         const result = doesFileDefinePlayerContext(file, this.context, calc);
-        if (result.matchFound) {
+        const contextLocked = isContextLocked(calc, file);
+        if (result.matchFound && !contextLocked) {
             // Create ContextGroup3D for this file that we will use to render all files in the context.
             this._contextGroup = new ContextGroup3D(
                 this,

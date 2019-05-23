@@ -37,8 +37,6 @@ import {
     getContextSize,
     addToContextDiff,
     removeFromContextDiff,
-    isConfigTag,
-    getConfigTagContext,
     getFileConfigContexts,
     isContext,
     createContextId,
@@ -62,6 +60,8 @@ import {
     getBuilderContextGrid,
     SimulationIdParseSuccess,
     simulationIdToString,
+    isContextSurfaceVisible,
+    isContextLocked,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
@@ -684,16 +684,12 @@ describe('FileCalculations', () => {
 
         it('should return the property names that are on workspaces', () => {
             expect(tagsOnFile(createWorkspace('test', 'testContext'))).toEqual([
-                'aux.context.x',
-                'aux.context.y',
-                'aux.context.z',
-                'testContext',
-                'testContext.config',
-                'testContext.x',
-                'testContext.y',
-                'testContext.z',
-                'aux.movable',
-                'aux.label',
+                'aux.context.surface.x',
+                'aux.context.surface.y',
+                'aux.context.surface.z',
+                'aux.context.surface',
+                'aux.context.locked',
+                'aux.context',
             ]);
         });
     });
@@ -1524,60 +1520,36 @@ describe('FileCalculations', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', '');
 
-            expect(workspace.tags['context_uuid']).toBe(true);
+            expect(workspace.tags['aux.context']).toEqual('context_uuid');
         });
 
         it('should create new random context id if undefined', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', undefined);
 
-            expect(workspace.tags['context_uuid']).toBe(true);
+            expect(workspace.tags['aux.context']).toEqual('context_uuid');
         });
 
         it('should create new random context id if whitespace', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', ' ');
 
-            expect(workspace.tags['context_uuid']).toBe(true);
+            expect(workspace.tags['aux.context']).toEqual('context_uuid');
         });
 
         it('should use input context id if given', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', 'userSetID');
 
-            expect(workspace.tags['userSetID']).toBe(true);
+            expect(workspace.tags['aux.context']).toEqual('userSetID');
         });
 
         // Test for the context type changes
-        it('context type should be set to isBuilder when type is set to builder', () => {
-            uuidMock.mockReturnValue('uuid');
-            const workspace = createWorkspace(
-                'test',
-                'userSetID',
-                '=isBuilder'
-            );
-
-            expect(workspace.tags['userSetID.config']).toBe('=isBuilder');
-        });
-
-        it('context type should be set to true when type is set to neither', () => {
+        it('should lock the workspace by default', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', 'userSetID');
 
-            expect(workspace.tags['userSetID.config']).toBe('=isBuilder');
-        });
-
-        it('context type should be set to both isPlayer and isBuilder when type is set to both', () => {
-            uuidMock.mockReturnValue('uuid');
-            const workspace = createWorkspace(
-                'test',
-                'userSetID',
-                '=isBuilder || isPlayer'
-            );
-
-            expect(workspace.tags['userSetID.config']).toBe(
-                '=isBuilder || isPlayer'
-            );
+            expect(workspace.tags['aux.context.locked']).toEqual(true);
         });
     });
 
@@ -3148,13 +3120,35 @@ describe('FileCalculations', () => {
         });
     });
 
+    describe('isContextSurfaceVisible()', () => {
+        it('should determine if aux.context.surface is set to true', () => {
+            const file = createFile('file', {
+                'aux.context.surface': true,
+            });
+
+            const calc = createCalculationContext([file]);
+            const visible = isContextSurfaceVisible(calc, file);
+
+            expect(visible).toBe(true);
+        });
+
+        it('should default to false', () => {
+            const file = createFile('file', {});
+
+            const calc = createCalculationContext([file]);
+            const visible = isContextSurfaceVisible(calc, file);
+
+            expect(visible).toBe(false);
+        });
+    });
+
     describe('getContextGrid()', () => {
         it('should find all the tags that represent a grid position', () => {
             const file = createFile('file', {
-                'aux.context.grid.0:1': 1,
-                'aux.context.grid.1:1': 1,
-                'aux.context.grid.2:1': 2,
-                'aux.context.grid.2:2': '=3',
+                'aux.context.surface.grid.0:1': 1,
+                'aux.context.surface.grid.1:1': 1,
+                'aux.context.surface.grid.2:1': 2,
+                'aux.context.surface.grid.2:2': '=3',
             });
 
             const calc = createCalculationContext([file]);
@@ -3170,7 +3164,7 @@ describe('FileCalculations', () => {
 
         it('should not get confused by grid scale', () => {
             const file = createFile('file', {
-                'aux.context.grid.0:1': 1,
+                'aux.context.surface.grid.0:1': 1,
                 'aux.context.grid.scale': 50,
             });
 
@@ -3207,7 +3201,7 @@ describe('FileCalculations', () => {
         it('should still return the user files context size', () => {
             const file = createFile('file', {
                 'aux._user': 'user',
-                'aux.context.size': 10,
+                'aux.context.surface.size': 10,
             });
 
             const calc = createCalculationContext([file]);
@@ -3289,8 +3283,8 @@ describe('FileCalculations', () => {
         it('should return true if movable', () => {
             const file = createFile('test', {
                 abc: true,
-                'abc.config': true,
-                'aux.context.movable': true,
+                'aux.context': 'abc',
+                'aux.context.surface.movable': true,
             });
 
             const calc = createCalculationContext([file]);
@@ -3301,8 +3295,8 @@ describe('FileCalculations', () => {
         it('should return false if not movable', () => {
             const file = createFile('test', {
                 abc: true,
-                'abc.config': true,
-                'aux.context.movable': false,
+                'aux.context': 'abc',
+                'aux.context.surface.movable': false,
             });
 
             const calc = createCalculationContext([file]);
@@ -3320,18 +3314,18 @@ describe('FileCalculations', () => {
     });
 
     describe('isContext()', () => {
-        it('should return true when the given file has a config tag set to true', () => {
+        it('should return true when the given file has aux.context set to something', () => {
             const file = createFile('test', {
-                'test.config': true,
+                'aux.context': 'abc',
             });
 
             const calc = createCalculationContext([file]);
             expect(isContext(calc, file)).toBe(true);
         });
 
-        it('should return false when the given file does not have a config tag set to true', () => {
+        it('should return false when the given file does not have aux.context set to something', () => {
             const file = createFile('test', {
-                'test.config': false,
+                'aux.context': '',
             });
 
             const calc = createCalculationContext([file]);
@@ -3339,61 +3333,62 @@ describe('FileCalculations', () => {
         });
     });
 
-    describe('isConfigTag()', () => {
-        let tags: [string, boolean][] = [
-            ['.config', false],
-            ['a.config', true],
-            ['ab.config', true],
-            ['a.config.config', true],
-            ['😁🦊🎶🎉.config', true],
-            ['😁🦊🎶🎉.config.abc', false],
-        ];
-        it.each(tags)('%s returns %s', (tag, expected) => {
-            expect(isConfigTag(tag)).toBe(expected);
-        });
-    });
-
-    describe('getConfigTagContext()', () => {
-        let tags: [string, string][] = [
-            ['.config', null],
-            ['a.config', 'a'],
-            ['ab.config', 'ab'],
-            ['a.config.config', 'a.config'],
-            ['😁🦊🎶🎉.config', '😁🦊🎶🎉'],
-            ['😁🦊🎶🎉.config.abc', null],
-        ];
-        it.each(tags)('converts %s to %s', (tag, expected) => {
-            expect(getConfigTagContext(tag)).toBe(expected);
-        });
-    });
-
     describe('getFileConfigContexts()', () => {
-        it('should return every context that the file has a .config tag for', () => {
+        it('should return the list of values in aux.context', () => {
             const file = createFile('test', {
                 abc: true,
-                'abc.config': true,
-                'abc.config.config': true,
+                'aux.context': 'abc',
             });
 
             const calc = createCalculationContext([file]);
             const tags = getFileConfigContexts(calc, file);
 
-            expect(tags).toEqual(['abc', 'abc.config']);
+            expect(tags).toEqual(['abc']);
         });
 
         it('should evalulate formulas', () => {
             const file = createFile('test', {
-                'abc.config': '=false',
-                'abc.config.config': '=true',
+                'aux.context': '="abc"',
             });
 
             const calc = createCalculationContext([file]);
             const tags = getFileConfigContexts(calc, file);
 
-            expect(tags).toEqual([
-                // file is config for abc.config context.
-                'abc.config',
-            ]);
+            expect(tags).toEqual(['abc']);
+        });
+    });
+
+    describe('isContextLocked()', () => {
+        it('should default to false when the file is a context', () => {
+            const file = createFile('test', {
+                'aux.context': 'abc',
+            });
+
+            const calc = createCalculationContext([file]);
+            const locked = isContextLocked(calc, file);
+
+            expect(locked).toEqual(false);
+        });
+
+        it('should default to true when the file is not a context', () => {
+            const file = createFile('test', {});
+
+            const calc = createCalculationContext([file]);
+            const locked = isContextLocked(calc, file);
+
+            expect(locked).toEqual(true);
+        });
+
+        it('should evaluate formulas', () => {
+            const file = createFile('test', {
+                'aux.context': 'abc',
+                'aux.context.locked': '=true',
+            });
+
+            const calc = createCalculationContext([file]);
+            const locked = isContextLocked(calc, file);
+
+            expect(locked).toEqual(true);
         });
     });
 

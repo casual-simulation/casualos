@@ -64,20 +64,19 @@ export interface FileTags {
     ['aux._lastEditedBy']?: string;
     ['aux._selectionMode']?: SelectionMode;
 
-    // Builder related tags
-    ['aux.context.x']?: number;
-    ['aux.context.y']?: number;
-    ['aux.context.z']?: number;
-    ['aux.context.rotation.x']?: number;
-    ['aux.context.rotation.y']?: number;
-    ['aux.context.rotation.z']?: number;
-    ['aux.context.scale']?: number;
-    ['aux.context.grid.scale']?: number;
-    ['aux.context.defaultHeight']?: number;
+    // Context related tags
+    ['aux.context']?: string;
     ['aux.context.color']?: string;
-    ['aux.context.size']?: number;
-    ['aux.context.minimized']?: boolean | null;
-    ['aux.context.movable']?: unknown;
+    ['aux.context.locked']?: unknown;
+    ['aux.context.grid.scale']?: number;
+    ['aux.context.surface.x']?: number;
+    ['aux.context.surface.y']?: number;
+    ['aux.context.surface.z']?: number;
+    ['aux.context.surface.scale']?: number;
+    ['aux.context.surface.defaultHeight']?: number;
+    ['aux.context.surface.size']?: number;
+    ['aux.context.surface.minimized']?: boolean | null;
+    ['aux.context.surface.movable']?: unknown;
 
     [key: string]: any;
 }
