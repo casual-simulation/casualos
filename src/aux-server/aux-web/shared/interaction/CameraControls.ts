@@ -135,7 +135,8 @@ export class CameraControls {
             if (this._enabled) {
                 this.reset();
             } else {
-                this.saveState();
+                this.state = STATE.NONE;
+                this.saveCameraState();
             }
         }
     }
@@ -283,7 +284,7 @@ export class CameraControls {
         }
     }
 
-    public saveState() {
+    public saveCameraState() {
         this.target0.copy(this.target);
         this.position0.copy(this._camera.position);
         this.zoom0 = this._camera.zoom;
@@ -313,8 +314,8 @@ export class CameraControls {
     private updateInput() {
         const input = this._gameView.getInput();
 
-        if (this.viewport) {
-            // Check to make sure we are over the viewport before allowing input.
+        if (this.viewport && this.state === STATE.NONE) {
+            // Check to make sure we are over the viewport before allowing input to begin.
             if (!input.isMouseOnViewport(this.viewport)) {
                 return;
             }
@@ -336,9 +337,17 @@ export class CameraControls {
                     input.getMouseButtonDown(MouseButtonId.Middle) &&
                     this.enableZoom
                 ) {
-                    // Alternative dolly start.
+                    console.log('middle click');
+                    // Dolly start.
                     this.dollyStart.copy(input.getMouseClientPos());
                     this.state = STATE.DOLLY;
+                } else if (
+                    input.getWheelMoved() &&
+                    input.getWheelData().ctrl &&
+                    this.enableZoom
+                ) {
+                    // Pinch dolly start.
+                    this.state = STATE.PINCH_DOLLY;
                 } else if (
                     input.getMouseButtonDown(MouseButtonId.Right) &&
                     this.enableRotate
@@ -353,7 +362,8 @@ export class CameraControls {
                 //
                 if (
                     input.getMouseButtonHeld(MouseButtonId.Left) &&
-                    this.enablePan
+                    this.enablePan &&
+                    this.state === STATE.PAN
                 ) {
                     // Pan move.
                     this.panEnd.copy(input.getMouseClientPos());
@@ -364,7 +374,8 @@ export class CameraControls {
                     this.panStart.copy(this.panEnd);
                 } else if (
                     input.getMouseButtonHeld(MouseButtonId.Middle) &&
-                    this.enableZoom
+                    this.enableZoom &&
+                    this.state === STATE.DOLLY
                 ) {
                     // Dolly move.
                     this.dollyEnd.copy(input.getMouseClientPos());
@@ -377,8 +388,22 @@ export class CameraControls {
 
                     this.dollyStart.copy(this.dollyEnd);
                 } else if (
+                    input.getWheelMoved() &&
+                    input.getWheelData().ctrl &&
+                    this.enableZoom &&
+                    this.state === STATE.PINCH_DOLLY
+                ) {
+                    // Pinch dolly move.
+                    let wheelData = input.getWheelData();
+                    let zoomScale =
+                        Math.pow(0.98, Math.abs(wheelData.delta.y)) *
+                        this.zoomSpeed;
+                    if (wheelData.delta.y > 0) this.dollyIn(zoomScale);
+                    else if (wheelData.delta.y < 0) this.dollyOut(zoomScale);
+                } else if (
                     input.getMouseButtonHeld(MouseButtonId.Right) &&
-                    this.enableRotate
+                    this.enableRotate &&
+                    this.state === STATE.ROTATE
                 ) {
                     // Rotate move.
                     this.mouseRotateEnd.copy(input.getMouseClientPos());
@@ -402,25 +427,10 @@ export class CameraControls {
                 if (
                     input.getMouseButtonUp(MouseButtonId.Left) ||
                     input.getMouseButtonUp(MouseButtonId.Middle) ||
-                    input.getMouseButtonUp(MouseButtonId.Right)
+                    input.getMouseButtonUp(MouseButtonId.Right) ||
+                    (!input.getWheelMoved() && this.state === STATE.PINCH_DOLLY)
                 ) {
                     this.state = STATE.NONE;
-                }
-            }
-
-            if (
-                input.getWheelMoved() &&
-                input.isMouseFocusingOnElement(this._gameView.gameView)
-            ) {
-                let wheelData = input.getWheelData();
-
-                if (wheelData.ctrl) {
-                    // This is pinch zooming dolly.
-                    let zoomScale =
-                        Math.pow(0.98, Math.abs(wheelData.delta.y)) *
-                        this.zoomSpeed;
-                    if (wheelData.delta.y > 0) this.dollyIn(zoomScale);
-                    else if (wheelData.delta.y < 0) this.dollyOut(zoomScale);
                 }
             }
         } else if (input.currentInputType === InputType.Touch) {
@@ -721,7 +731,8 @@ enum STATE {
     NONE = -1,
     ROTATE = 0,
     DOLLY = 1,
-    PAN = 2,
+    PINCH_DOLLY = 2,
+    PAN = 3,
 }
 
 interface TouchRotate {
