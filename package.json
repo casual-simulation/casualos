@@ -12,17 +12,21 @@
         "watch:libs": "tsc --build --watch",
         "rebuild": "npm run clean && npm run build",
         "build": "npm run build:libs && npm run build:server",
-        "build:docker": "npm run build && docker build -t casual-simulation/aux .",
-        "build:docker:arm32": "npm run build && docker build -t casual-simulation/aux/arm32 -f Dockerfile.arm32 .",
+        "build:tar": "npm run build && npm run tar",
+        "build:docker": "npm run build && npm run package:docker",
+        "build:docker:arm32": "npm run build:tar && npm run package:docker:arm32",
         "build:libs": "tsc --build",
         "build:server": "lerna exec --scope @casual-simulation/aux-server -- npm run build",
         "build:docs": "npm run clean && lerna exec -- npm run build:docs",
+        "package:docker": "docker build -t casual-simulation/aux .",
+        "package:docker:arm32": "docker build -t casual-simulation/aux/arm32 -f Dockerfile.arm32 .",
         "test:watch": "npm run clean && jest --watchAll",
         "test": "npm run clean && jest --verbose",
         "test:ci": "npm run clean && jest --ci --reporters=default --reporters=jest-junit",
         "test:coverage": "npm test -- --coverage --reporters=default --reporters=jest-html-reporter",
         "clean": "gulp clean",
-        "debug:server:chrome": "node --inspect src/aux-server/server/dist/main.js"
+        "debug:server:chrome": "node --inspect src/aux-server/server/dist/main.js",
+        "tar": "node ./script/make-tar.js"
     },
     "husky": {
         "hooks": {
@@ -96,7 +100,8 @@
         "webpack-cli": "^3.1.2",
         "webpack-merge": "^4.1.4",
         "webpack-node-externals": "^1.7.2",
-        "worker-loader": "^2.0.0"
+        "worker-loader": "^2.0.0",
+        "tar": "4.4.8"
     },
     "dependencies": {}
 }

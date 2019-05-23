@@ -24,10 +24,24 @@
 
 ## Building an arm32v7 image on a Raspberry PI
 
+Prerequisites:
+
 1. Follow the steps above to setup a Raspberry PI with docker.
 2. Make sure git is installed
     - `sudo apt-get install git`
-3. Clone the git repository
+3. Make sure NVM is installed
+    - `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash`
+    - Make sure to run the commands they indicate so bash knows where to find nvm.
+4. Make sure Node.js 10.13.0 or later is installed
+    - `nvm install node`
+5. Make sure lerna is installed
+    - `npm install -g lerna`
+6. Clone the aux repository
     - `git clone https://github.com/casual-simulation/aux.git`
-4. Run a build
-    - `docker build . -f Dockerfile.arm32 -t casual-simulation/aux/arm32`
+
+Steps:
+
+1. Pull the latest `master`
+    - `git pull`
+2. Run a build
+    - `npm run bootstrap && npm run build:docker:arm32`
