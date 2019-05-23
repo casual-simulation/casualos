@@ -956,9 +956,7 @@ export function createFile(id = uuid(), tags: Object['tags'] = {}) {
  */
 export function createWorkspace(
     id = uuid(),
-    builderContextId: string = createContextId(),
-    contextFormula: string = '=isBuilder',
-    label: string = null
+    builderContextId: string = createContextId()
 ): Workspace {
     // checks if given context string is empty or just whitespace
     if (builderContextId.length === 0 || /^\s*$/.test(builderContextId)) {
@@ -972,13 +970,8 @@ export function createWorkspace(
             'aux.context.surface.y': 0,
             'aux.context.surface.z': 0,
             'aux.context.surface': true,
-            [builderContextId]: true,
-            [`${builderContextId}.config`]: contextFormula,
-            [`${builderContextId}.x`]: 0,
-            [`${builderContextId}.y`]: 0,
-            [`${builderContextId}.z`]: 0,
-            'aux.movable': false,
-            'aux.label': label,
+            'aux.context.locked': true,
+            'aux.context': builderContextId,
         },
     };
 }
@@ -1031,7 +1024,7 @@ export function calculateGridScale(
         const scale = calculateNumericalTagValue(
             calc,
             workspace,
-            `aux.context.scale`,
+            `aux.context.surface.scale`,
             DEFAULT_WORKSPACE_SCALE
         );
         const gridScale = calculateNumericalTagValue(
@@ -1494,29 +1487,6 @@ export function getFileLabelAnchor(
 }
 
 /**
- * Determines if the given tag represents a context config.
- * @param tag The tag to check.
- */
-export function isConfigTag(tag: string): boolean {
-    if (tag.length <= '.config'.length) {
-        return false;
-    }
-    return /\.config$/g.test(tag);
-}
-
-/**
- * Gets the name of the context that this tag is the config for.
- * If the tag is not a config tag, then returns null.
- * @param tag The tag to check.
- */
-export function getConfigTagContext(tag: string): string {
-    if (isConfigTag(tag)) {
-        return tag.substr(0, tag.length - '.config'.length);
-    }
-    return null;
-}
-
-/**
  * Determines if the given file is a config file for the given context.
  * @param calc The calculation context.
  * @param file The file to check.
@@ -1527,7 +1497,8 @@ export function isConfigForContext(
     file: File,
     context: string
 ) {
-    return calculateBooleanTagValue(calc, file, `${context}.config`, false);
+    const contexts = getFileConfigContexts(calc, file);
+    return contexts.indexOf(context) >= 0;
 }
 
 /**
@@ -1539,14 +1510,13 @@ export function getFileConfigContexts(
     calc: FileCalculationContext,
     file: File
 ): string[] {
-    const tags = tagsOnFile(file);
-    return tags
-        .filter(t => {
-            return (
-                isConfigTag(t) && calculateBooleanTagValue(calc, file, t, false)
-            );
-        })
-        .map(t => getConfigTagContext(t));
+    const result = calculateFileValue(calc, file, 'aux.context');
+    if (typeof result === 'string') {
+        return [result];
+    } else if (Array.isArray(result)) {
+        return result;
+    }
+    return [];
 }
 
 /**
