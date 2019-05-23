@@ -259,7 +259,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             tags: {},
         };
 
-        partial.tags[`aux.context.grid.0:0`] = height;
+        partial.tags[`aux.context.surface.grid.0:0`] = height;
 
         this._gameView.simulation3D.simulation.helper.updateFile(
             file.file,

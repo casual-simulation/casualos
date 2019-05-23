@@ -62,6 +62,7 @@ import {
     getBuilderContextGrid,
     SimulationIdParseSuccess,
     simulationIdToString,
+    isContextSurfaceVisible,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
@@ -3148,13 +3149,35 @@ describe('FileCalculations', () => {
         });
     });
 
+    describe('isContextSurfaceVisible()', () => {
+        it('should determine if aux.context.surface is set to true', () => {
+            const file = createFile('file', {
+                'aux.context.surface': true,
+            });
+
+            const calc = createCalculationContext([file]);
+            const visible = isContextSurfaceVisible(calc, file);
+
+            expect(visible).toBe(true);
+        });
+
+        it('should default to false', () => {
+            const file = createFile('file', {});
+
+            const calc = createCalculationContext([file]);
+            const visible = isContextSurfaceVisible(calc, file);
+
+            expect(visible).toBe(false);
+        });
+    });
+
     describe('getContextGrid()', () => {
         it('should find all the tags that represent a grid position', () => {
             const file = createFile('file', {
-                'aux.context.grid.0:1': 1,
-                'aux.context.grid.1:1': 1,
-                'aux.context.grid.2:1': 2,
-                'aux.context.grid.2:2': '=3',
+                'aux.context.surface.grid.0:1': 1,
+                'aux.context.surface.grid.1:1': 1,
+                'aux.context.surface.grid.2:1': 2,
+                'aux.context.surface.grid.2:2': '=3',
             });
 
             const calc = createCalculationContext([file]);
@@ -3170,7 +3193,7 @@ describe('FileCalculations', () => {
 
         it('should not get confused by grid scale', () => {
             const file = createFile('file', {
-                'aux.context.grid.0:1': 1,
+                'aux.context.surface.grid.0:1': 1,
                 'aux.context.grid.scale': 50,
             });
 
@@ -3207,7 +3230,7 @@ describe('FileCalculations', () => {
         it('should still return the user files context size', () => {
             const file = createFile('file', {
                 'aux._user': 'user',
-                'aux.context.size': 10,
+                'aux.context.surface.size': 10,
             });
 
             const calc = createCalculationContext([file]);
@@ -3302,7 +3325,7 @@ describe('FileCalculations', () => {
             const file = createFile('test', {
                 abc: true,
                 'abc.config': true,
-                'aux.context.movable': false,
+                'aux.context.surface.movable': false,
             });
 
             const calc = createCalculationContext([file]);

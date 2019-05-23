@@ -968,9 +968,10 @@ export function createWorkspace(
     return {
         id: id,
         tags: {
-            'aux.context.x': 0,
-            'aux.context.y': 0,
-            'aux.context.z': 0,
+            'aux.context.surface.x': 0,
+            'aux.context.surface.y': 0,
+            'aux.context.surface.z': 0,
+            'aux.context.surface': true,
             [builderContextId]: true,
             [`${builderContextId}.config`]: contextFormula,
             [`${builderContextId}.x`]: 0,
@@ -1616,7 +1617,12 @@ export function isContextMovable(
     calc: FileCalculationContext,
     file: File
 ): boolean {
-    return calculateBooleanTagValue(calc, file, 'aux.context.movable', true);
+    return calculateBooleanTagValue(
+        calc,
+        file,
+        'aux.context.surface.movable',
+        true
+    );
 }
 
 /**
@@ -1629,9 +1635,24 @@ export function getContextPosition(
     contextFile: File
 ): { x: number; y: number; z: number } {
     return {
-        x: calculateNumericalTagValue(calc, contextFile, `aux.context.x`, 0),
-        y: calculateNumericalTagValue(calc, contextFile, `aux.context.y`, 0),
-        z: calculateNumericalTagValue(calc, contextFile, `aux.context.z`, 0),
+        x: calculateNumericalTagValue(
+            calc,
+            contextFile,
+            `aux.context.surface.x`,
+            0
+        ),
+        y: calculateNumericalTagValue(
+            calc,
+            contextFile,
+            `aux.context.surface.y`,
+            0
+        ),
+        z: calculateNumericalTagValue(
+            calc,
+            contextFile,
+            `aux.context.surface.z`,
+            0
+        ),
     };
 }
 
@@ -1644,7 +1665,7 @@ export function getContextMinimized(
     calc: FileCalculationContext,
     contextFile: File
 ): boolean {
-    return getContextValue(calc, contextFile, 'minimized');
+    return getContextValue(calc, contextFile, 'surface.minimized');
 }
 
 /**
@@ -1671,9 +1692,22 @@ export function getContextSize(
     return calculateNumericalTagValue(
         calc,
         contextFile,
-        `aux.context.size`,
+        `aux.context.surface.size`,
         isUserFile(contextFile) ? 0 : DEFAULT_WORKSPACE_SIZE
     );
+}
+
+/**
+ * Determines if a context's surface should be visible.
+ * Defaults to false.
+ * @param calc The file calculation context.
+ * @param file The file.
+ */
+export function isContextSurfaceVisible(
+    calc: FileCalculationContext,
+    file: File
+): boolean {
+    return calculateBooleanTagValue(calc, file, 'aux.context.surface', false);
 }
 
 /**
@@ -1687,13 +1721,13 @@ export function getBuilderContextGrid(
 ): { [key: string]: number } {
     const tags = tagsOnFile(contextFile);
     const gridTags = tags.filter(
-        t => t.indexOf('aux.context.grid.') === 0 && t.indexOf(':') > 0
+        t => t.indexOf('aux.context.surface.grid.') === 0 && t.indexOf(':') > 0
     );
 
     let val: { [key: string]: number } = {};
     for (let tag of gridTags) {
         val[
-            tag.substr('aux.context.grid.'.length)
+            tag.substr('aux.context.surface.grid.'.length)
         ] = calculateNumericalTagValue(calc, contextFile, tag, undefined);
     }
 
@@ -1743,7 +1777,8 @@ export function getContextScale(
     contextFile: File
 ): number {
     return (
-        getContextValue(calc, contextFile, 'scale') || DEFAULT_WORKSPACE_SCALE
+        getContextValue(calc, contextFile, 'surface.scale') ||
+        DEFAULT_WORKSPACE_SCALE
     );
 }
 
