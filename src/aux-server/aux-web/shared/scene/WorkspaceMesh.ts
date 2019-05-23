@@ -29,6 +29,7 @@ import {
     hasValue,
     getContextGridHeight,
     calculateGridScale,
+    isContextSurfaceVisible,
 } from '@casual-simulation/aux-common/Files';
 import { keys, minBy, isEqual } from 'lodash';
 import { GridChecker, GridCheckResults } from './grid/GridChecker';
@@ -171,7 +172,9 @@ export class WorkspaceMesh extends GameObject {
         const prev = this.workspace;
         this.workspace = workspace || prev;
 
-        this.visible = isContext(calc, this.workspace);
+        this.visible =
+            isContext(calc, this.workspace) &&
+            isContextSurfaceVisible(calc, this.workspace);
         this.container.visible = !isMinimized(calc, this.workspace);
         this.miniHex.visible = !this.container.visible;
 

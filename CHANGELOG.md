@@ -1,5 +1,39 @@
 # AUX Changelog
 
+## V0.7.7
+
+### Date: 05/23/2019
+
+### Changes:
+
+-   Improvements
+    -   The show hidden tag button and new tag button have swapped places.
+    -   The sheets section will automatically appear when the search bar is changed.
+    -   New create new file button art has been implemented.
+    -   Several tags have changed:
+        -   `aux.context.movable` -> `aux.context.surface.movable`
+        -   `aux.context.x` -> `aux.context.surface.x`
+        -   `aux.context.y` -> `aux.context.surface.y`
+        -   `aux.context.z` -> `aux.context.surface.z`
+        -   `aux.context.grid` -> `aux.context.surface.grid`
+        -   `aux.context.scale` -> `aux.context.surface.scale`
+        -   `aux.context.minimized` -> `aux.context.surface.minimized`
+    -   Added `aux.context.surface` as a way to determine if a surface should show up in AUX Builder.
+        -   Defaults to `false`.
+    -   Changed how contexts are configured:
+        -   You can now configure a context by setting `aux.context` to the context.
+        -   Previously, this was done by creating a special tag `{context}.config`.
+    -   Added `aux.context.locked` as a way to determine if a context should be able to be loaded in AUX Player.
+        -   Defaults to `true` for contexts that do not have a file that sets `aux.context` for it.
+        -   Defaults to `false` for contexts that have a file that sets `aux.context` for it and do not have a `aux.context.locked` tag.
+    -   Changed how the globals file is created:
+        -   It no longer has a label.
+        -   It is now movable by default. (but you have to put it in a context first)
+        -   It now defines the "global" context instead of a random context.
+        -   It is not in the "global" context by default. (so there's just a surface with no files)
+-   Bug Fixes
+    -   The tags in sheets will now be sorted aplhabetically on show/hide tag sections.
+
 ## V0.7.6
 
 ### Date: 05/21/2019

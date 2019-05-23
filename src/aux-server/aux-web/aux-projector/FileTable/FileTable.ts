@@ -377,7 +377,7 @@ export default class FileTable extends Vue {
             this.showHidden,
             this.tagBlacklist,
             this.blacklistIndex
-        );
+        ).sort();
     }
 
     toggleBlacklistIndex(index: number) {

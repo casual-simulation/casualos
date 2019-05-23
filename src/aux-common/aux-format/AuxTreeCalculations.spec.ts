@@ -111,7 +111,7 @@ describe('AuxTreeCalculations', () => {
                 fileAdded(createFile('abc', {})),
                 fileAdded(
                     createFile('def', {
-                        'context.config': true,
+                        'aux.context': 'context',
                     })
                 ),
                 fileAdded(createFile('111', {})),
