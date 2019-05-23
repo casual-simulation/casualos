@@ -25,4 +25,6 @@
 ## Building an arm32v7 image on a Raspberry PI
 
 1. Follow the steps above to setup a Raspberry PI with docker.
-2. `docker -H {your_pi_ip_address} build https://github.com/casual-simulation/aux.git -f Dockerfile.arm32`
+2. `docker -H {your_pi_ip_address} build https://github.com/casual-simulation/aux.git#branch_to_build -f Dockerfile.arm32`
+    - Replace `{your_pi_ip_address}` with the IP Address of the Raspberry PI
+    - Replace `branch_to_build` with the branch that you want to build from the Git repo.

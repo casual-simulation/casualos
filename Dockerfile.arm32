@@ -1,13 +1,20 @@
+FROM arm32v7/node:11 as build-env
+
+WORKDIR /usr/src/app
+COPY . .
+
+RUN npm run bootstrap && npm run build
+
 FROM arm32v7/node:11
 
 WORKDIR /usr/src/app
 
-COPY ./src/aux-server/package*.json ./
+COPY --from=build-env ./src/aux-server/package*.json ./
 
 RUN npm install --only=production
 
-COPY ./src/aux-server/server/dist ./server/dist/
-COPY ./src/aux-server/aux-web/dist ./aux-web/dist/
+COPY --from=build-env ./src/aux-server/server/dist ./server/dist/
+COPY --from=build-env ./src/aux-server/aux-web/dist ./aux-web/dist/
 
 ENV PRODUCTION 1
 
