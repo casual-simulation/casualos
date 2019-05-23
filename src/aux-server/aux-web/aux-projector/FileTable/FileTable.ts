@@ -100,6 +100,10 @@ export default class FileTable extends Vue {
         return tag === '#';
     }
 
+    isActionTag(tag: string): boolean {
+        return tag === 'actions()';
+    }
+
     isBlacklistTagActive(index: number): boolean {
         return this.blacklistIndex[index];
     }
@@ -424,11 +428,26 @@ export default class FileTable extends Vue {
                     tagCount++;
 
                     if (tagCount == 2) {
-                        newBlacklist.push(current.split('.')[0]);
+                        newBlacklist.push(current.split('.')[0] + '.');
                         newTagCount.push(2);
                     } else if (tagCount > 2) {
                         newTagCount[newTagCount.length - 1]++;
                     }
+                }
+            }
+        }
+
+        tagCount = 0;
+        for (let i = 0; i < sortedArray.length; i++) {
+            if (sortedArray[i].includes('()')) {
+                // due to alphabetical order, if there is no dot, then it is portentially the start of a new section
+                tagCount++;
+
+                if (tagCount == 2) {
+                    newBlacklist.unshift('actions()');
+                    newTagCount.unshift(2);
+                } else if (tagCount > 2) {
+                    newTagCount[0]++;
                 }
             }
         }
@@ -467,7 +486,7 @@ export default class FileTable extends Vue {
         if (this.tagBlacklist[index].length > 15) {
             newBlacklist = this.tagBlacklist[index].substring(0, 15) + '..';
         } else {
-            newBlacklist = this.tagBlacklist[index].substring(0, 15) + '.*';
+            newBlacklist = this.tagBlacklist[index].substring(0, 15) + '*';
         }
 
         return '#' + newBlacklist;
