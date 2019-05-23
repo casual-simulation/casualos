@@ -1502,6 +1502,28 @@ export function isConfigForContext(
 }
 
 /**
+ * Gets whether the context(s) that the given file represents are locked.
+ * Uses at the aux.context.locked tag to determine whether it is locked.
+ * Defaults to false if the file is a context. Otherwise it defaults to true.
+ * @param calc The calculation context.
+ * @param file The file.
+ */
+export function isContextLocked(
+    calc: FileCalculationContext,
+    file: File
+): boolean {
+    if (isContext(calc, file)) {
+        return calculateBooleanTagValue(
+            calc,
+            file,
+            'aux.context.locked',
+            false
+        );
+    }
+    return true;
+}
+
+/**
  * Gets the list of contexts that the given file is a config file for.
  * @param calc The calculation context.
  * @param file The file that represents the context.
@@ -1511,7 +1533,7 @@ export function getFileConfigContexts(
     file: File
 ): string[] {
     const result = calculateFileValue(calc, file, 'aux.context');
-    if (typeof result === 'string') {
+    if (typeof result === 'string' && hasValue(result)) {
         return [result];
     } else if (Array.isArray(result)) {
         return result;

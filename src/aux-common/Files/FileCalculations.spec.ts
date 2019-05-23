@@ -61,6 +61,7 @@ import {
     SimulationIdParseSuccess,
     simulationIdToString,
     isContextSurfaceVisible,
+    isContextLocked,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
@@ -3294,7 +3295,7 @@ describe('FileCalculations', () => {
         it('should return false if not movable', () => {
             const file = createFile('test', {
                 abc: true,
-                'abc.config': true,
+                'aux.context': 'abc',
                 'aux.context.surface.movable': false,
             });
 
@@ -3313,7 +3314,7 @@ describe('FileCalculations', () => {
     });
 
     describe('isContext()', () => {
-        it('should return true when the given file has a config tag set to true', () => {
+        it('should return true when the given file has aux.context set to something', () => {
             const file = createFile('test', {
                 'aux.context': 'abc',
             });
@@ -3322,9 +3323,9 @@ describe('FileCalculations', () => {
             expect(isContext(calc, file)).toBe(true);
         });
 
-        it('should return false when the given file does not have a config tag set to true', () => {
+        it('should return false when the given file does not have aux.context set to something', () => {
             const file = createFile('test', {
-                'test.config': false,
+                'aux.context': '',
             });
 
             const calc = createCalculationContext([file]);
@@ -3354,6 +3355,40 @@ describe('FileCalculations', () => {
             const tags = getFileConfigContexts(calc, file);
 
             expect(tags).toEqual(['abc']);
+        });
+    });
+
+    describe('isContextLocked()', () => {
+        it('should default to false when the file is a context', () => {
+            const file = createFile('test', {
+                'aux.context': 'abc',
+            });
+
+            const calc = createCalculationContext([file]);
+            const locked = isContextLocked(calc, file);
+
+            expect(locked).toEqual(false);
+        });
+
+        it('should default to true when the file is not a context', () => {
+            const file = createFile('test', {});
+
+            const calc = createCalculationContext([file]);
+            const locked = isContextLocked(calc, file);
+
+            expect(locked).toEqual(true);
+        });
+
+        it('should evaluate formulas', () => {
+            const file = createFile('test', {
+                'aux.context': 'abc',
+                'aux.context.locked': '=true',
+            });
+
+            const calc = createCalculationContext([file]);
+            const locked = isContextLocked(calc, file);
+
+            expect(locked).toEqual(true);
         });
     });
 

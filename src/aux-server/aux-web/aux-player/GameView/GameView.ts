@@ -51,7 +51,6 @@ import { PlayerInteractionManager } from '../interaction/PlayerInteractionManage
 import InventoryFile from '../InventoryFile/InventoryFile';
 import MenuFile from '../MenuFile/MenuFile';
 import { InventoryContext, InventoryItem } from '../InventoryContext';
-import { doesFileDefinePlayerContext } from '../PlayerUtils';
 import {
     CameraType,
     resizeCameraRig,

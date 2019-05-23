@@ -149,20 +149,13 @@ export class FileHelper {
      */
     async createWorkspace(
         fileId?: string,
-        builderContextId?: string,
-        contextFormula?: string,
-        label?: string
+        builderContextId?: string
     ): Promise<void> {
         if (FileHelper._debug) {
             console.log('[FileManager] Create File');
         }
 
-        const workspace: Workspace = createWorkspace(
-            fileId,
-            builderContextId,
-            contextFormula,
-            label
-        );
+        const workspace: Workspace = createWorkspace(fileId, builderContextId);
 
         await this._tree.addFile(workspace);
     }
@@ -172,12 +165,7 @@ export class FileHelper {
      * @param fileId The ID of the file to create. If not specified a new ID will be generated.
      */
     async createGlobalsFile(fileId?: string) {
-        const workspace: Workspace = createWorkspace(
-            fileId,
-            undefined,
-            undefined,
-            'Global'
-        );
+        const workspace: Workspace = createWorkspace(fileId, undefined);
 
         const final = merge(workspace, {
             tags: {
