@@ -274,28 +274,33 @@ export abstract class BaseInteractionManager {
             if (input.currentInputType === InputType.Mouse) {
                 let { gameObject } = this.findHoveredGameObject();
 
+                let file: File = null;
+                let simulation: Simulation = null;
+
                 if (gameObject instanceof AuxFile3D) {
-                    const file = gameObject.file;
-                    const fileId = file ? file.id : null;
-                    const hoveredId = this._hoveredObject
-                        ? this._hoveredObject.id
-                        : null;
-                    if (fileId !== hoveredId) {
-                        if (this._hoveredObject) {
-                            this.handlePointerExit(
-                                this._hoveredObject,
-                                this._hoveredSimulation
-                            );
-                        }
-                        this._hoveredObject = file;
-                        this._hoveredSimulation =
-                            gameObject.contextGroup.simulation3D.simulation;
-                        if (this._hoveredObject) {
-                            this.handlePointerEnter(
-                                this._hoveredObject,
-                                this._hoveredSimulation
-                            );
-                        }
+                    file = gameObject.file;
+                    simulation =
+                        gameObject.contextGroup.simulation3D.simulation;
+                }
+
+                const fileId = file ? file.id : null;
+                const hoveredId = this._hoveredObject
+                    ? this._hoveredObject.id
+                    : null;
+                if (fileId !== hoveredId) {
+                    if (this._hoveredObject) {
+                        this.handlePointerExit(
+                            this._hoveredObject,
+                            this._hoveredSimulation
+                        );
+                    }
+                    this._hoveredObject = file;
+                    this._hoveredSimulation = simulation;
+                    if (this._hoveredObject) {
+                        this.handlePointerEnter(
+                            this._hoveredObject,
+                            this._hoveredSimulation
+                        );
                     }
                 }
             }
