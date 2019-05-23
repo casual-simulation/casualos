@@ -3,7 +3,7 @@ FROM arm32v7/node:11 as build-env
 WORKDIR /usr/src/app
 COPY . .
 
-RUN npm run bootstrap && npm run build
+RUN npm install -g lerna && npm run bootstrap && npm run build
 
 FROM arm32v7/node:11
 
