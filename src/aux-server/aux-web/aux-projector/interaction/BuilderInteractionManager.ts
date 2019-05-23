@@ -500,7 +500,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 file.file,
                 {
                     tags: {
-                        [`aux.context.size`]: (size || 0) - 1,
+                        [`aux.context.surface.size`]: (size || 0) - 1,
                     },
                 }
             );
@@ -539,7 +539,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 file.file,
                 {
                     tags: {
-                        [`aux.context.minimized`]: minimized,
+                        [`aux.context.surface.minimized`]: minimized,
                     },
                 }
             );
@@ -579,7 +579,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 file.file,
                 {
                     tags: {
-                        [`aux.context.size`]: (size || 0) + 1,
+                        [`aux.context.surface.size`]: (size || 0) + 1,
                     },
                 }
             );
