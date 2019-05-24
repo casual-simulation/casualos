@@ -10,6 +10,7 @@
     -   Added a tag section check fo multiple action tags, will now compress them into the `actions()` section.
 -   Bug Fixes
     -   Fixed ability to click on files with `aux.shape` set to `sprite`.
+    -   Hide the context menu on mobile when clicking the background with it open.
 
 ## V0.7.8
 
