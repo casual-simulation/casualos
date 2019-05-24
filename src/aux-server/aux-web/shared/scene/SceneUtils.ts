@@ -95,12 +95,16 @@ export function createSprite(): Sprite {
     return sprite;
 }
 
-export function createUserCone(radius?: number, height?: number): Mesh {
+export function createUserCone(
+    radius?: number,
+    height?: number,
+    color?: number
+): Mesh {
     radius = getOptionalValue(radius, 0.5);
     height = getOptionalValue(height, 0.7);
     const geometry = new ConeGeometry(radius, height, 4, 1, true);
     let material = baseAuxMeshMaterial();
-    material.color.set(0x00d000);
+    material.color.set(color || 0x00d000);
     material.side = DoubleSide;
     material.flatShading = true;
     material.transparent = true;
