@@ -10,6 +10,7 @@
     -   Replaced 2D slot-based inventory with a full 3D inventory context view on the lower portion of the screen.
         -   You can drag files seamlessly in and out of the inventory and current player context.
         -   Inventory has seperate camera control from the player context.
+        -   Inventory is now unlimited in capacity as it is just another 3d context to place files in and take with you.
     -   Added a tag section check for multiple action tags, will now compress them into the `actions()` section.
 -   Bug Fixes
     -   Fixed ability to click on files with `aux.shape` set to `sprite`.
