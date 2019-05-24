@@ -73,7 +73,8 @@ export class CameraControls {
     // Offset the apply to the camera this frame.
     public cameraOffset: Vector3 = new Vector3();
 
-    public viewport: Viewport = null;
+    // The viewport we are applying control inside of for this camera.
+    public viewport: Viewport;
 
     private _camera: PerspectiveCamera | OrthographicCamera;
     private _gameView: IGameView;
@@ -143,7 +144,7 @@ export class CameraControls {
     constructor(
         camera: PerspectiveCamera | OrthographicCamera,
         gameView: IGameView,
-        viewport?: Viewport
+        viewport: Viewport
     ) {
         this._camera = camera;
         this._gameView = gameView;
@@ -206,7 +207,6 @@ export class CameraControls {
 
     public pan(deltaX: number, deltaY: number) {
         let offset = new Vector3();
-        let element = this._gameView.gameView;
 
         if (this._camera instanceof PerspectiveCamera) {
             // perspective
@@ -218,6 +218,8 @@ export class CameraControls {
             targetDistance *= Math.tan(
                 ((this._camera.fov / 2) * Math.PI) / 180.0
             );
+
+            const element = this._gameView.gameView;
 
             // we use only clientHeight here so aspect ratio does not distort speed
             this.panLeft(
@@ -232,33 +234,15 @@ export class CameraControls {
             this.panLeft(
                 (deltaX * (this._camera.right - this._camera.left)) /
                     this._camera.zoom /
-                    element.clientWidth,
+                    this.viewport.width,
                 this._camera.matrix
             );
             this.panUp(
                 (deltaY * (this._camera.top - this._camera.bottom)) /
                     this._camera.zoom /
-                    element.clientHeight,
+                    this.viewport.height,
                 this._camera.matrix
             );
-
-            // const basePanSpeed = 0.001;
-            // let zoomLevel = normalize(this._camera.zoom, this.minZoom, this.maxZoom);
-            // zoomLevel = Math.max(zoomLevel, 0.01);
-            // const xPanSpeed = basePanSpeed / zoomLevel;
-
-            // this.panLeft(
-            //     deltaX * xPanSpeed,
-            //     this._camera.matrix
-            // );
-
-            // const yPanSpeed = basePanSpeed / zoomLevel
-            // this.panUp(
-            //     deltaY * yPanSpeed,
-            //     this._camera.matrix
-            // );
-
-            // console.log('[CameraControls] deltaX:', deltaX, 'deltaY:', deltaY, 'zoomLevel:', zoomLevel, 'panSpeed:', xPanSpeed);
         }
     }
 
