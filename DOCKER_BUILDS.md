@@ -1,4 +1,6 @@
-# Docker Setup
+# Docker Builds
+
+This document contains instructions on how to produce docker images for the project.
 
 ## Setting up a Raspberry PI
 
@@ -9,18 +11,6 @@
         1. `sudo groupadd docker`
         2. `sudo gpasswd -a $USER docker`
         3. Logout and log back in.
-    3. Setup to run at start ([source](https://docs.docker.com/install/linux/linux-postinstall/#configure-docker-to-start-on-boot)):
-        1. `sudo systemctl enable docker`
-        2. `sudo nano /etc/docker/daemon.json`
-            ```
-            {
-            "hosts": ["unix:///var/run/docker.sock", "tcp://0.0.0.0:2375"]
-            }
-            ```
-        3. `sudo systemctl restart docker.service`
-        4. Test: `sudo netstat -lntp | grep dockerd`
-3. Test that you can run an image on the Raspberry PI from another machine.
-    1. `docker -H {your_pi_ip_address} run hello-world`
 
 ## Building an arm32v7 image on a Raspberry PI
 
@@ -38,7 +28,7 @@ Build the project on the dev/ci machine and build the image on the Raspberry PI
     1. Run a build and package it into a `.tar.gz` file.
         - `npm run build:tar`
     2. Rsync the tar file into the Raspberry PI
-        - `rsync --progress ./temp/output.tar.gz pi@{your_pi_ip_address}:/home/pi1
+        - `rsync --progress ./temp/output.tar.gz pi@{your_pi_ip_address}:/home/pi1`
 1. On the Raspberry PI
     1. Unpack the `.tar.gz`
         - `mkdir output`
