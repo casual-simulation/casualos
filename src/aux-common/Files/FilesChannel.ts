@@ -52,6 +52,13 @@ export type FileEvent =
     | ApplyStateEvent
     | LocalEvent;
 
+interface FileChanges {
+    [key: string]: {
+        changedTags: string[];
+        newValues: string[];
+    };
+}
+
 /**
  * Calculates the set of events that should be run for the given action.
  * @param state The current file state.
@@ -62,18 +69,8 @@ export function calculateActionEvents(state: FilesState, action: Action) {
     const files = !!action.fileIds
         ? action.fileIds.map(id => state[id])
         : objects;
-    const factory = (o: File) => {
-        return (tag: string, value: any) => {
-            if (!changes[o.id]) {
-                changes[o.id] = {
-                    changedTags: [],
-                    newValues: [],
-                };
-            }
-            changes[o.id].changedTags.push(tag);
-            changes[o.id].newValues.push(value);
-        };
-    };
+    let changes: FileChanges = {};
+    const factory = createSetValueFactory(changes);
     const context = createCalculationContext(
         objects,
         action.userId,
@@ -81,19 +78,7 @@ export function calculateActionEvents(state: FilesState, action: Action) {
         factory
     );
 
-    let changes: {
-        [key: string]: {
-            changedTags: string[];
-            newValues: string[];
-        };
-    } = {};
-
-    context.sandbox.interface.objects.forEach(o => {
-        changes[o.id] = {
-            changedTags: [],
-            newValues: [],
-        };
-    });
+    initFileChanges(context, changes);
 
     const fileEvents = flatMap(files, f =>
         eventActions(
@@ -108,19 +93,45 @@ export function calculateActionEvents(state: FilesState, action: Action) {
     );
     let events = fileEvents;
 
-    const updates = context.sandbox.interface.objects.map(o =>
-        calculateFileUpdateFromChanges(o.id, changes[o.id])
-    );
-    updates.forEach(u => {
-        if (u) {
-            events.push(u);
-        }
-    });
+    calculateEventsFromUpdates(context, changes, events);
 
     return {
         events,
         hasUserDefinedEvents: events.length > 0,
     };
+}
+
+/**
+ * Calculates the set of events that should be run for the given formula.
+ * @param state The current file state.
+ * @param formula The formula to run.
+ * @param userId The ID of the user to run the script as.
+ * @param argument The argument to include as the "that" variable.
+ */
+export function calculateFormulaEvents(
+    state: FilesState,
+    formula: string,
+    userId: string = null,
+    argument: any = null
+) {
+    let changes: FileChanges = {};
+    const objects = getActiveObjects(state);
+    const factory = createSetValueFactory(changes);
+    const context = createCalculationContext(
+        objects,
+        userId,
+        formulaLib,
+        factory
+    );
+    initFileChanges(context, changes);
+
+    let fileEvents = formulaActions(state, context, [], factory, null, [
+        formula,
+    ]);
+
+    calculateEventsFromUpdates(context, changes, fileEvents);
+
+    return fileEvents;
 }
 
 /**
@@ -200,6 +211,49 @@ export function cleanFile(file: File): File {
     return cleaned;
 }
 
+function calculateEventsFromUpdates(
+    context: FileCalculationContext,
+    changes: FileChanges,
+    events: FileEvent[]
+) {
+    const updates = context.sandbox.interface.objects.map(o =>
+        calculateFileUpdateFromChanges(o.id, changes[o.id])
+    );
+    updates.forEach(u => {
+        if (u) {
+            events.push(u);
+        }
+    });
+}
+
+function initFileChanges(
+    context: FileCalculationContext,
+    changes: FileChanges
+) {
+    context.sandbox.interface.objects.forEach(o => {
+        changes[o.id] = {
+            changedTags: [],
+            newValues: [],
+        };
+    });
+}
+
+function createSetValueFactory(changes: FileChanges) {
+    const factory = (o: File) => {
+        return (tag: string, value: any) => {
+            if (!changes[o.id]) {
+                changes[o.id] = {
+                    changedTags: [],
+                    newValues: [],
+                };
+            }
+            changes[o.id].changedTags.push(tag);
+            changes[o.id].newValues.push(value);
+        };
+    };
+    return factory;
+}
+
 function eventActions(
     state: FilesState,
     objects: Object[],
@@ -224,28 +278,42 @@ function eventActions(
 
     const scripts = filters.map(f => calculateFileValue(context, file, f.tag));
 
+    return formulaActions(
+        state,
+        context,
+        sortedObjects,
+        setValueHandlerFactory,
+        argument,
+        scripts
+    );
+}
+
+function formulaActions(
+    state: FilesState,
+    context: FileCalculationContext,
+    sortedObjects: File[],
+    setValueHandlerFactory: (file: File) => SetValueHandler,
+    argument: any,
+    scripts: any[]
+) {
     let previous = getActions();
     let prevContext = getCalculationContext();
     let prevUserId = getUserId();
     let actions: FileEvent[] = [];
-
     let vars: {
         [key: string]: any;
     } = {};
     setActions(actions);
     setFileState(state);
     setCalculationContext(context);
-
     let formulaObjects = sortedObjects.map(o =>
         convertToFormulaObject(context, o, setValueHandlerFactory(o))
     );
-
     if (typeof argument === 'undefined') {
         formulaObjects.forEach((obj, index) => {
             if (index === 1) {
                 vars['that'] = obj;
             }
-
             vars[`arg${index}`] = obj;
         });
     } else {
@@ -255,13 +323,10 @@ function eventActions(
             setValueHandlerFactory
         );
     }
-
     scripts.forEach(s => context.sandbox.run(s, {}, formulaObjects[0], vars));
-
     setActions(previous);
     setFileState(null);
     setCalculationContext(prevContext);
-
     return actions;
 }
 

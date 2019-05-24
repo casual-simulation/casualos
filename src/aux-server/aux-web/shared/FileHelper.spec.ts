@@ -5,6 +5,7 @@ import {
     LocalEvent,
     fileAdded,
     createFile,
+    fileUpdated,
 } from '@casual-simulation/aux-common';
 import { FileHelper } from './FileHelper';
 import { storedTree, site } from '@casual-simulation/causal-trees';
@@ -237,6 +238,28 @@ describe('FileHelper', () => {
 
             expect(tree.value['file1']).toBeUndefined();
             expect(tree.value['file2']).toBeUndefined();
+        });
+    });
+
+    describe('formulaEvents()', () => {
+        it('should calculate the list of events that the formula produces', async () => {
+            await tree.addFile(
+                createFile('file1', {
+                    abc: true,
+                })
+            );
+
+            const result = helper.formulaEvents(
+                '@abc(true).first().test = 123'
+            );
+
+            expect(result).toEqual([
+                fileUpdated('file1', {
+                    tags: {
+                        test: 123,
+                    },
+                }),
+            ]);
         });
     });
 });

@@ -27,6 +27,7 @@ import {
     calculateDestroyFileEvents,
     merge,
     AUX_FILE_VERSION,
+    calculateFormulaEvents,
 } from '@casual-simulation/aux-common';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { Subject, Observable } from 'rxjs';
@@ -251,6 +252,25 @@ export class FileHelper {
             console.log('  result: ', result);
         }
 
+        return result;
+    }
+
+    /**
+     * Calculates the list of file events for the given formula.
+     * @param formula The formula to execute.
+     */
+    formulaEvents(formula: string) {
+        if (FileHelper._debug) {
+            console.log('[FileManager] Run formula:', formula);
+        }
+        const result = calculateFormulaEvents(
+            this._tree.value,
+            formula,
+            this._userId
+        );
+        if (FileHelper._debug) {
+            console.log('  result: ', result);
+        }
         return result;
     }
 
