@@ -1,7 +1,12 @@
 <!-- App.vue -->
 <template>
     <div>
-        <game-view class="game-view" @onContextMenu="handleContextMenu" :debug="debug">
+        <game-view
+            class="game-view"
+            @onContextMenu="handleContextMenu"
+            @onContextMenuHide="hideContextMenu"
+            :debug="debug"
+        >
             <div class="ui-container" v-shortkey.once="['ctrl', 'f']" @shortkey="startSearch()">
                 <md-card class="info-card" v-if="isOpen && filesMode">
                     <md-card-content>

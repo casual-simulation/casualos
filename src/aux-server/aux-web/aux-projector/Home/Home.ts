@@ -127,6 +127,10 @@ export default class Home extends Vue {
         });
     }
 
+    hideContextMenu() {
+        this.contextMenuVisible = false;
+    }
+
     tagFocusChanged(file: AuxObject, tag: string, focused: boolean) {
         this.fileManager.helper.setEditingFile(file);
     }
