@@ -99,18 +99,26 @@ export class Viewport {
         }
     }
 
-    setRootElement(rootElement: HTMLElement) {
+    setRootElement(newRootElement: HTMLElement) {
         if (!this._parent) {
-            if (rootElement) {
-                this._rootElement = rootElement;
+            if (this._rootElement) {
+                if (newRootElement) {
+                    // Replacing existing root element.
+                    this._rootElement = newRootElement;
+                }
             } else {
-                console.error(
-                    'Viewport with no parent should provided a valid root html element.',
-                    this
-                );
+                if (newRootElement) {
+                    // Setting root element.
+                    this._rootElement = newRootElement;
+                } else {
+                    console.error(
+                        'Viewport with no parent should provided a valid root html element.',
+                        this
+                    );
+                }
             }
         } else {
-            this._parent.setRootElement(rootElement);
+            this._parent.setRootElement(newRootElement);
         }
     }
 

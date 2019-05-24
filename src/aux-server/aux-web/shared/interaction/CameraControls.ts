@@ -153,6 +153,7 @@ export class CameraControls {
             this.viewport = viewport;
         }
 
+        this.state = STATE.NONE;
         this.target0 = this.target.clone();
         this.position0 = this._camera.position.clone();
         this.zoom0 = this._camera.zoom;
