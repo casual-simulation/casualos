@@ -453,6 +453,7 @@ export class CameraControls {
                             const pagePosB = input.getTouchPagePos(1);
                             const distance = pagePosA.distanceTo(pagePosB);
                             this.dollyStart.set(0, distance);
+                            this.state = STATE.TOUCH_ROTATE_ZOOM;
                         }
 
                         if (this.enableRotate) {
@@ -463,6 +464,7 @@ export class CameraControls {
                             this.touchRotateStart.finger1 = input.getTouchPagePos(
                                 1
                             );
+                            this.state = STATE.TOUCH_ROTATE_ZOOM;
                         }
                     } else if (input.getTouchUp(0) || input.getTouchUp(1)) {
                         // Releasing one of the two fingers.
@@ -479,7 +481,11 @@ export class CameraControls {
                 // Pan/Dolly/Rotate [Move]
                 //
                 if (input.getTouchCount() === 1) {
-                    if (input.getTouchHeld(0) && this.enablePan) {
+                    if (
+                        input.getTouchHeld(0) &&
+                        this.enablePan &&
+                        this.state === STATE.PAN
+                    ) {
                         // Pan move.
                         this.panEnd.copy(input.getTouchClientPos(0));
                         this.panDelta
@@ -489,7 +495,10 @@ export class CameraControls {
                         this.panStart.copy(this.panEnd);
                     }
                 } else if (input.getTouchCount() === 2) {
-                    if (this.enableZoom) {
+                    if (
+                        this.enableZoom &&
+                        this.state === STATE.TOUCH_ROTATE_ZOOM
+                    ) {
                         // Dolly move.
                         const pagePosA = input.getTouchPagePos(0);
                         const pagePosB = input.getTouchPagePos(1);
@@ -507,7 +516,10 @@ export class CameraControls {
                         this.dollyStart.copy(this.dollyEnd);
                     }
 
-                    if (this.enableRotate) {
+                    if (
+                        this.enableRotate &&
+                        this.state === STATE.TOUCH_ROTATE_ZOOM
+                    ) {
                         // Rotate move.
                         this.touchRotateEnd.finger0 = input.getTouchPagePos(0);
                         this.touchRotateEnd.finger1 = input.getTouchPagePos(1);
@@ -563,7 +575,7 @@ export class CameraControls {
                         let yAngle =
                             (2 * Math.PI * midpointDelta.y) /
                             this._gameView.gameView.clientHeight;
-
+                        ``;
                         this.rotateUp(yAngle);
 
                         // Set rotate start positions to the current end positions for the next frame.
@@ -734,6 +746,7 @@ enum STATE {
     DOLLY = 1,
     PINCH_DOLLY = 2,
     PAN = 3,
+    TOUCH_ROTATE_ZOOM = 4,
 }
 
 interface TouchRotate {
