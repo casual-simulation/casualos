@@ -46,7 +46,10 @@ export class AuxFile3DDecoratorFactory {
                 fileShapeDecorator
             );
 
-            let progressBarDecorator = new ProgressBarDecorator(file3d);
+            let progressBarDecorator = new ProgressBarDecorator(
+                file3d,
+                fileShapeDecorator
+            );
 
             decorators.push(
                 fileShapeDecorator,
