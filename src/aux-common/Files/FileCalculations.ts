@@ -2508,14 +2508,14 @@ class SandboxInterfaceImpl implements SandboxInterface {
     listTagValues(tag: string, filter?: FilterFunction, extras?: any) {
         const tags = this.objects
             .map(o => this._calculateValue(o, tag))
-            .filter(t => t);
+            .filter(t => hasValue(t));
         const filtered = this._filterValues(tags, filter);
         return filtered;
     }
 
     listObjectsWithTag(tag: string, filter?: FilterFunction, extras?: any) {
         const objs = this.objects
-            .filter(o => this._calculateValue(o, tag))
+            .filter(o => hasValue(this._calculateValue(o, tag)))
             .map(o => this._convertToFormulaObject(o));
         const filtered = this._filterObjects(objs, filter, tag);
         return filtered;

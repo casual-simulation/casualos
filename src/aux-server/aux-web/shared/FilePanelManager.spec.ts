@@ -285,7 +285,7 @@ describe('FilePanelManager', () => {
             manager.search = '#hello';
 
             expect(files).toEqual([]);
-            expect(result).toEqual([true, true]);
+            expect(result).toEqual([false, true, true]);
             expect(isSearch).toEqual(true);
         });
 

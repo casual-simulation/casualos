@@ -1120,6 +1120,102 @@ describe('FileCalculations', () => {
 
                     expect(value).toEqual([]);
                 });
+
+                it('should include zeroes in results', () => {
+                    const file = createFile('test', {
+                        formula: '=#num',
+                        num: '0',
+                    });
+
+                    const file2 = createFile('test2', {
+                        num: '1',
+                    });
+
+                    const context = createCalculationContext([file, file2]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    expect(value).toEqual([0, 1]);
+                });
+
+                it('should include false in results', () => {
+                    const file = createFile('test', {
+                        formula: '=#bool',
+                        bool: false,
+                    });
+
+                    const file2 = createFile('test2', {
+                        bool: true,
+                    });
+
+                    const context = createCalculationContext([file, file2]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    expect(value).toEqual([false, true]);
+                });
+
+                it('should include NaN in results', () => {
+                    const file = createFile('test', {
+                        formula: '=#num',
+                        num: NaN,
+                    });
+
+                    const file2 = createFile('test2', {
+                        num: 1.23,
+                    });
+
+                    const context = createCalculationContext([file, file2]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    expect(value).toEqual([NaN, 1.23]);
+                });
+
+                it('should not include empty strings in results', () => {
+                    const file = createFile('test', {
+                        formula: '=#val',
+                        val: '',
+                    });
+
+                    const file2 = createFile('test2', {
+                        val: 'Hi',
+                    });
+
+                    const context = createCalculationContext([file, file2]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    expect(value).toEqual(['Hi']);
+                });
+
+                it('should not include null in results', () => {
+                    const file = createFile('test', {
+                        formula: '=#obj',
+                        obj: null,
+                    });
+
+                    const file2 = createFile('test2', {
+                        obj: { test: true },
+                    });
+
+                    const context = createCalculationContext([file, file2]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    expect(value).toEqual([{ test: true }]);
+                });
+
+                it('should not include undefined in results', () => {
+                    const file = createFile('test', {
+                        formula: '=#obj',
+                        obj: undefined,
+                    });
+
+                    const file2 = createFile('test2', {
+                        obj: { test: true },
+                    });
+
+                    const context = createCalculationContext([file, file2]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    expect(value).toEqual([{ test: true }]);
+                });
             });
 
             describe('@ syntax', () => {
@@ -1376,6 +1472,102 @@ describe('FileCalculations', () => {
                     const value = calculateFileValue(context, file, 'filter');
 
                     expect(value).toEqual([]);
+                });
+
+                it('should include zeroes in results', () => {
+                    const file = createFile('test', {
+                        formula: '=@num',
+                        num: '0',
+                    });
+
+                    const file2 = createFile('test2', {
+                        num: '1',
+                    });
+
+                    const context = createCalculationContext([file, file2]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    expect(value).toEqual([file, file2]);
+                });
+
+                it('should include false in results', () => {
+                    const file = createFile('test', {
+                        formula: '=@bool',
+                        bool: false,
+                    });
+
+                    const file2 = createFile('test2', {
+                        bool: true,
+                    });
+
+                    const context = createCalculationContext([file, file2]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    expect(value).toEqual([file, file2]);
+                });
+
+                it('should include NaN in results', () => {
+                    const file = createFile('test', {
+                        formula: '=@num',
+                        num: NaN,
+                    });
+
+                    const file2 = createFile('test2', {
+                        num: 1.23,
+                    });
+
+                    const context = createCalculationContext([file, file2]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    expect(value).toEqual([file, file2]);
+                });
+
+                it('should not include empty strings in results', () => {
+                    const file = createFile('test', {
+                        formula: '=@val',
+                        val: '',
+                    });
+
+                    const file2 = createFile('test2', {
+                        val: 'Hi',
+                    });
+
+                    const context = createCalculationContext([file, file2]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    expect(value).toEqual([file2]);
+                });
+
+                it('should not include null in results', () => {
+                    const file = createFile('test', {
+                        formula: '=@obj',
+                        obj: null,
+                    });
+
+                    const file2 = createFile('test2', {
+                        obj: { test: true },
+                    });
+
+                    const context = createCalculationContext([file, file2]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    expect(value).toEqual([file2]);
+                });
+
+                it('should not include undefined in results', () => {
+                    const file = createFile('test', {
+                        formula: '=@obj',
+                        obj: undefined,
+                    });
+
+                    const file2 = createFile('test2', {
+                        obj: { test: true },
+                    });
+
+                    const context = createCalculationContext([file, file2]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    expect(value).toEqual([file2]);
                 });
             });
         });
