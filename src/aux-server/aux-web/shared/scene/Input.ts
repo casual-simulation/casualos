@@ -84,22 +84,43 @@ export class Input {
 
     /**
      * Returns wether or not the page position is inside the viewport.
-     * @param pagePos
-     * @param viewport
+     * If other viewports are given, will check to make sure none of them are overlapping or otherwise occluding.
+     * @param pagePos Page position to test
+     * @param viewport Viewport to test if page position is on.
+     * @param viewports Other viewports to check if they are occluding the given viewport above.
      */
-    public static pagePositionInsideViewport(
+    public static pagePositionOnViewport(
         pagePos: Vector2,
-        viewport: Viewport
-    ) {
+        viewport: Viewport,
+        otherViewports?: Viewport[]
+    ): boolean {
+        let isOnViewport: boolean = false;
+
         if (!!pagePos && !!viewport) {
             const screenPos = this.screenPositionForViewport(pagePos, viewport);
             if (screenPos.x >= -1 && screenPos.x <= 1) {
                 if (screenPos.y >= -1 && screenPos.y <= 1) {
-                    return true;
+                    isOnViewport = true;
                 }
             }
         }
-        return false;
+
+        if (otherViewports && isOnViewport) {
+            // Make sure that there are no other view ports that are overlapping this one.
+            const viewportsToTest = otherViewports.filter(
+                v => v.layer >= viewport.layer && v !== viewport
+            );
+
+            for (let i = 0; i < viewportsToTest.length; i++) {
+                if (Input.pagePositionOnViewport(pagePos, viewportsToTest[i])) {
+                    // We are inside a viewport that is equal or higher in layer order.
+                    // This overrides our test for the viewport in question.
+                    return false;
+                }
+            }
+        }
+
+        return isOnViewport;
     }
 
     /**
@@ -247,36 +268,8 @@ export class Input {
      */
     public isMouseOnViewport(viewport: Viewport): boolean {
         const pagePos = this.getMousePagePos();
-        const isOnViewport = Input.pagePositionInsideViewport(
-            pagePos,
-            viewport
-        );
-
-        if (isOnViewport) {
-            const allViewports = this._gameView.getViewports();
-
-            if (allViewports && allViewports.length > 1) {
-                // Make sure that there are no other view ports that are overlapping this one.
-                const otherViewports = allViewports.filter(
-                    v => v.layer >= viewport.layer && v !== viewport
-                );
-
-                for (let i = 0; i < otherViewports.length; i++) {
-                    if (
-                        Input.pagePositionInsideViewport(
-                            pagePos,
-                            otherViewports[i]
-                        )
-                    ) {
-                        // We are inside a viewport that is equal or higher in layer order.
-                        // This overrides our test for the viewport in question.
-                        return false;
-                    }
-                }
-            }
-        }
-
-        return isOnViewport;
+        const otherViewports = this._gameView.getViewports();
+        return Input.pagePositionOnViewport(pagePos, viewport, otherViewports);
     }
 
     /**

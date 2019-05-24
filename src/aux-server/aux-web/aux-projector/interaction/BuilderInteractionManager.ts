@@ -443,6 +443,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 {
                     objects: surfaceObjects,
                     camera: this._gameView.getMainCameraRig().mainCamera,
+                    viewport: this._gameView.getMainCameraRig().viewport,
                 },
             ];
 
@@ -469,6 +470,12 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
         mainCameraRigControls.controls.minZoom = Orthographic_MinZoom;
         mainCameraRigControls.controls.maxZoom = Orthographic_MaxZoom;
+
+        if (
+            mainCameraRigControls.rig.mainCamera instanceof OrthographicCamera
+        ) {
+            mainCameraRigControls.controls.screenSpacePanning = true;
+        }
 
         return [mainCameraRigControls];
     }

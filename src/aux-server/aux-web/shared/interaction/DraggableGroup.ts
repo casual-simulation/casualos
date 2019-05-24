@@ -15,5 +15,5 @@ export interface DraggableGroup {
     /**
      * The optional viewport to use to transform the input to.
      */
-    viewport?: Viewport;
+    viewport: Viewport;
 }

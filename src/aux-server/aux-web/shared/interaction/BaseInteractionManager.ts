@@ -331,6 +331,7 @@ export abstract class BaseInteractionManager {
                     {
                         objects: colliders,
                         camera: this._gameView.getMainCameraRig().mainCamera,
+                        viewport: this._gameView.getMainCameraRig().viewport,
                     },
                 ];
             } else {
@@ -351,6 +352,7 @@ export abstract class BaseInteractionManager {
             : this._gameView.getInput().getMousePagePos();
 
         const draggableGroups = this.getDraggableGroups();
+        const viewports = this._gameView.getViewports();
 
         let hit: Intersection = null;
         let hitObject: GameObject = null;
@@ -361,16 +363,16 @@ export abstract class BaseInteractionManager {
             const camera = draggableGroups[i].camera;
             const viewport = draggableGroups[i].viewport;
 
-            let screenPos: Vector2;
-            if (viewport) {
-                screenPos = Input.screenPositionForViewport(pagePos, viewport);
-            } else {
-                screenPos = Input.screenPosition(
-                    pagePos,
-                    this._gameView.gameView
-                );
+            if (!Input.pagePositionOnViewport(pagePos, viewport, viewports)) {
+                // Page position is not on or is being obstructed by other viewports.
+                // Ignore this draggable group.
+                continue;
             }
 
+            const screenPos = Input.screenPositionForViewport(
+                pagePos,
+                viewport
+            );
             const raycastResult = Physics.raycastAtScreenPos(
                 screenPos,
                 new Raycaster(),
@@ -381,7 +383,7 @@ export abstract class BaseInteractionManager {
             hitObject = hit ? this.findGameObjectForHit(hit) : null;
 
             if (hitObject) {
-                // We hit a game object in this simulation, stop searching through simulations.\
+                // We hit a game object in this simulation, stop searching through simulations.
                 break;
             }
         }
@@ -520,8 +522,15 @@ export abstract class BaseInteractionManager {
                 this._gameView,
                 viewport
             );
+
             cameraRigControls.controls.minZoom = Orthographic_MinZoom;
             cameraRigControls.controls.maxZoom = Orthographic_MaxZoom;
+
+            if (
+                cameraRigControls.rig.mainCamera instanceof OrthographicCamera
+            ) {
+                cameraRigControls.controls.screenSpacePanning = true;
+            }
         }
     }
 

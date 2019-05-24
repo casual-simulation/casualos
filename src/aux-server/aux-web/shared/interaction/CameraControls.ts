@@ -13,7 +13,7 @@ import {
 import { BaseInteractionManager } from './BaseInteractionManager';
 import { InputType, MouseButtonId } from '../../shared/scene/Input';
 import { IGameView } from '../../shared/IGameView';
-import { lerp } from '@casual-simulation/aux-common';
+import { lerp, normalize } from '@casual-simulation/aux-common';
 import { Viewport } from '../scene/Viewport';
 
 export class CameraControls {
@@ -56,7 +56,6 @@ export class CameraControls {
     public enablePan: boolean = true;
     public panSpeed: number = 1.0;
     public screenSpacePanning: boolean = false; // if true, pan in screen-space
-    public keyPanSpeed: number = 7.0; // pixels moved per arrow key push
 
     // Set to true to automatically rotate around the target
     // If auto-rotate is enabled, you must call controls.update() in your animation loop
@@ -242,6 +241,24 @@ export class CameraControls {
                     element.clientHeight,
                 this._camera.matrix
             );
+
+            // const basePanSpeed = 0.001;
+            // let zoomLevel = normalize(this._camera.zoom, this.minZoom, this.maxZoom);
+            // zoomLevel = Math.max(zoomLevel, 0.01);
+            // const xPanSpeed = basePanSpeed / zoomLevel;
+
+            // this.panLeft(
+            //     deltaX * xPanSpeed,
+            //     this._camera.matrix
+            // );
+
+            // const yPanSpeed = basePanSpeed / zoomLevel
+            // this.panUp(
+            //     deltaY * yPanSpeed,
+            //     this._camera.matrix
+            // );
+
+            // console.log('[CameraControls] deltaX:', deltaX, 'deltaY:', deltaY, 'zoomLevel:', zoomLevel, 'panSpeed:', xPanSpeed);
         }
     }
 
@@ -338,7 +355,6 @@ export class CameraControls {
                     input.getMouseButtonDown(MouseButtonId.Middle) &&
                     this.enableZoom
                 ) {
-                    console.log('middle click');
                     // Dolly start.
                     this.dollyStart.copy(input.getMouseClientPos());
                     this.state = STATE.DOLLY;

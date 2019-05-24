@@ -69,7 +69,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
         const pagePos = this.gameView.getInput().getMousePagePos();
         const inventoryViewport = this.gameView.getInventoryViewport();
         const view = this.gameView.gameView;
-        if (Input.pagePositionInsideViewport(pagePos, inventoryViewport)) {
+        if (Input.pagePositionOnViewport(pagePos, inventoryViewport)) {
             nextContext = this._inventorySimulation3D.inventoryContext;
         }
 

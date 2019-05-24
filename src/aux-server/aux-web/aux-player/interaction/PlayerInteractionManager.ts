@@ -5,6 +5,7 @@ import {
     Ray,
     Raycaster,
     Object3D,
+    OrthographicCamera,
 } from 'three';
 import { ContextMenuAction } from '../../shared/interaction/ContextMenuEvent';
 import {
@@ -127,6 +128,8 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                             objects: otherColliders,
                             camera: this._gameView.getMainCameraRig()
                                 .mainCamera,
+                            viewport: this._gameView.getMainCameraRig()
+                                .viewport,
                         },
                     ];
                 }
@@ -199,6 +202,12 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         mainCameraRigControls.controls.minZoom = Orthographic_MinZoom;
         mainCameraRigControls.controls.maxZoom = Orthographic_MaxZoom;
 
+        if (
+            mainCameraRigControls.rig.mainCamera instanceof OrthographicCamera
+        ) {
+            mainCameraRigControls.controls.screenSpacePanning = true;
+        }
+
         // Inventory camera
         let invCameraRigControls: CameraRigControls = {
             rig: this._gameView.getInventoryCameraRig(),
@@ -211,6 +220,10 @@ export class PlayerInteractionManager extends BaseInteractionManager {
 
         invCameraRigControls.controls.minZoom = Orthographic_MinZoom;
         invCameraRigControls.controls.maxZoom = Orthographic_MaxZoom;
+
+        if (invCameraRigControls.rig.mainCamera instanceof OrthographicCamera) {
+            invCameraRigControls.controls.screenSpacePanning = true;
+        }
 
         return [mainCameraRigControls, invCameraRigControls];
     }
