@@ -16,6 +16,7 @@ import {
     superShout,
     showQRCode,
     goToContext,
+    calculateFormulaEvents,
 } from './FilesChannel';
 import { File } from './File';
 import uuid from 'uuid/v4';
@@ -2546,6 +2547,83 @@ describe('FilesChannel', () => {
                 fileRemoved('file2'),
                 fileRemoved('file3'),
                 fileRemoved('file4'),
+            ]);
+        });
+    });
+
+    describe('calculateFormulaEvents()', () => {
+        it('should return the list of events that the formula produced', () => {
+            const state: FilesState = {};
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const result = calculateFormulaEvents(
+                state,
+                'create(null, { name: "bob" })'
+            );
+
+            expect(result).toEqual([
+                fileAdded({
+                    id: 'uuid-0',
+                    tags: {
+                        name: 'bob',
+                    },
+                }),
+            ]);
+        });
+
+        it('should support updating files', () => {
+            const state: FilesState = {
+                otherFile: {
+                    id: 'otherFile',
+                    tags: {
+                        name: 'bob',
+                        test: false,
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const result = calculateFormulaEvents(
+                state,
+                '@name("bob").first().test = true'
+            );
+
+            expect(result).toEqual([
+                fileUpdated('otherFile', {
+                    tags: {
+                        test: true,
+                    },
+                }),
+            ]);
+        });
+
+        it('should use the given user id', () => {
+            const state: FilesState = {
+                userFile: {
+                    id: 'userFile',
+                    tags: {
+                        test: true,
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const result = calculateFormulaEvents(
+                state,
+                'create(null, player.getFile())',
+                'userFile'
+            );
+
+            expect(result).toEqual([
+                fileAdded({
+                    id: 'uuid-0',
+                    tags: {
+                        test: true,
+                    },
+                }),
             ]);
         });
     });

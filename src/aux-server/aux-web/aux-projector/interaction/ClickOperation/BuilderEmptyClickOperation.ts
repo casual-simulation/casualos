@@ -58,6 +58,8 @@ export class BuilderEmptyClickOperation implements IOperation {
                         }
                     }
                 } else if (this._interaction.mode === 'files') {
+                    this._gameView.$emit('onContextMenuHide');
+
                     if (this._interaction.selectionMode === 'single') {
                         this._interaction.clearSelection();
                     }

@@ -293,24 +293,44 @@ export function fileTags(
                     if (!onlyTagsToKeep[i].includes('.')) {
                         // no section indecator, but matches the blacklist tag, remove it
                         if (j === 0 && !blacklistIndex[0]) {
-                            // if
+                            if (
+                                tagBlacklist.length > 1 &&
+                                tagBlacklist[1] === 'actions()' &&
+                                onlyTagsToKeep[i].includes('()')
+                            ) {
+                                break;
+                            }
+
                             let isNotInBlacklist = true;
                             for (let k = tagBlacklist.length - 1; k >= 0; k--) {
                                 if (onlyTagsToKeep[i] === tagBlacklist[k]) {
                                     isNotInBlacklist = false;
+                                    break;
                                 }
                             }
 
                             if (isNotInBlacklist) {
                                 onlyTagsToKeep.splice(i, 1);
+                                break;
+                            }
+                        } else if (
+                            j === 1 &&
+                            tagBlacklist[1] === 'actions()' &&
+                            !blacklistIndex[1]
+                        ) {
+                            if (onlyTagsToKeep[i].includes('()')) {
+                                onlyTagsToKeep.splice(i, 1);
+                                break;
                             }
                         } else {
                             if (
-                                onlyTagsToKeep[i] === tagBlacklist[j] &&
+                                tagBlacklist[j].includes('.') &&
+                                onlyTagsToKeep[i] ===
+                                    tagBlacklist[j].split('.')[0] &&
                                 !blacklistIndex[j]
                             ) {
                                 onlyTagsToKeep.splice(i, 1);
-                                //filteredTags.push(onlyTagsToKeep[i]);
+                                break;
                             }
                         }
                     } else {
@@ -318,24 +338,29 @@ export function fileTags(
                             let isNotInBlacklist = true;
                             for (let k = tagBlacklist.length - 1; k >= 0; k--) {
                                 if (
+                                    tagBlacklist[k].includes('.') &&
                                     onlyTagsToKeep[i].split('.')[0] ===
-                                    tagBlacklist[k]
+                                        tagBlacklist[k].split('.')[0]
                                 ) {
                                     isNotInBlacklist = false;
+                                    break;
                                 }
                             }
 
                             if (isNotInBlacklist) {
                                 onlyTagsToKeep.splice(i, 1);
+                                break;
                             }
                         } else {
                             // if section indecator and it is a block listed tag, remove it
                             if (
+                                tagBlacklist[j].includes('.') &&
+                                !blacklistIndex[j] &&
                                 onlyTagsToKeep[i].split('.')[0] ===
-                                    tagBlacklist[j] &&
-                                !blacklistIndex[j]
+                                    tagBlacklist[j].split('.')[0]
                             ) {
                                 onlyTagsToKeep.splice(i, 1);
+                                break;
                             }
                         }
                     }
@@ -2483,14 +2508,14 @@ class SandboxInterfaceImpl implements SandboxInterface {
     listTagValues(tag: string, filter?: FilterFunction, extras?: any) {
         const tags = this.objects
             .map(o => this._calculateValue(o, tag))
-            .filter(t => t);
+            .filter(t => hasValue(t));
         const filtered = this._filterValues(tags, filter);
         return filtered;
     }
 
     listObjectsWithTag(tag: string, filter?: FilterFunction, extras?: any) {
         const objs = this.objects
-            .filter(o => this._calculateValue(o, tag))
+            .filter(o => hasValue(this._calculateValue(o, tag)))
             .map(o => this._convertToFormulaObject(o));
         const filtered = this._filterObjects(objs, filter, tag);
         return filtered;

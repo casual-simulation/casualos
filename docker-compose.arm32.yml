@@ -1,7 +1,7 @@
 version: '3.7'
 services:
     server:
-        image: 'casual-simulation/aux:latest'
+        image: 'casual-simulation/aux/arm32:latest'
         restart: always
         ports:
             - '80:3000'
@@ -15,14 +15,14 @@ services:
             REDIS_HOST: 'redis'
             REDIS_PORT: '6379'
     mongo:
-        image: 'mongo:latest'
+        image: 'andresvidal/rpi3-mongodb3:latest'
         restart: always
         ports:
             - '27017:27017'
         volumes:
             - '/data/db:/data/db'
     redis:
-        image: 'redis:latest'
+        image: 'arm32v7/redis:latest'
         restart: always
         ports:
             - '6379:6379'

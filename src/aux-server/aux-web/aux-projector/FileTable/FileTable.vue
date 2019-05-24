@@ -71,6 +71,7 @@
                             @click="toggleBlacklistIndex(index)"
                         >
                             <span v-if="isAllTag(tagBlacklist)"> {{ tagBlacklist }}</span>
+                            <span v-else-if="isActionTag(tagBlacklist)"> {{ tagBlacklist }}</span>
                             <span v-else>{{ getVisualTagBlacklist(index) }}</span>
                         </md-button>
                         <md-button
@@ -79,6 +80,9 @@
                             @click="toggleBlacklistIndex(index)"
                         >
                             <span v-if="isAllTag(tagBlacklist)"> {{ tagBlacklist }}</span>
+                            <span v-else-if="isActionTag(tagBlacklist)">
+                                {{ tagBlacklist }} [{{ getBlacklistCount(index) }}]</span
+                            >
                             <span v-else
                                 >{{ getVisualTagBlacklist(index) }} [{{
                                     getBlacklistCount(index)

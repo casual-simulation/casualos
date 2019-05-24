@@ -1,2 +1,5 @@
 node_modules
+docker
+docs
+coverage
 npm-debug.log

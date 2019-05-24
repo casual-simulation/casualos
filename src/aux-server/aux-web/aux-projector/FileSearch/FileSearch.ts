@@ -22,6 +22,15 @@ export default class FileSearch extends Vue {
         appManager.simulationManager.primary.filePanel.toggleOpen();
     }
 
+    async executeSearch() {
+        const events = appManager.simulationManager.primary.helper.formulaEvents(
+            this.search
+        );
+        await appManager.simulationManager.primary.helper.transaction(
+            ...events
+        );
+    }
+
     @Watch('search')
     onSearchChanged() {
         appManager.simulationManager.primary.filePanel.search = this.search;

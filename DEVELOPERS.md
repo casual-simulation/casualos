@@ -24,7 +24,7 @@ Make sure you have all the prerequisite tools installed:
 3. Bootstrap the project.
     - `npm run bootstrap`
 4. Start related services:
-    1. `docker-compose up -d`
+    1. `docker-compose -f docker-compose.dev.yml up -d`
 5. Add `projector.localhost` and `player.localhost` to your [hosts file][hosts-file].
     - These are the domains that the projector and player sites are available at in development.
     - Follow these steps:

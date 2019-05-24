@@ -148,7 +148,7 @@ export class Sandbox {
             const __transpiled = this._transpile(__js);
             const result = __context
                 ? __evalWrapper.call(__context, __transpiled)
-                : __evalWrapper(__js);
+                : __evalWrapper(__transpiled);
             return {
                 success: true,
                 extras: __extras,

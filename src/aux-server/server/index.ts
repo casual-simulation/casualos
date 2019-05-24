@@ -41,8 +41,17 @@ if (env === 'production') {
 const server = new Server(config);
 
 async function init() {
-    await server.configure();
+    await configure();
     server.start();
 }
 
 init();
+
+async function configure() {
+    try {
+        await server.configure();
+    } catch (ex) {
+        console.error(ex);
+        process.exit(1);
+    }
+}
