@@ -95,6 +95,7 @@ export abstract class Simulation3D extends Object3D
                     tap(e => {
                         if (e.name === 'tween_to') {
                             this._gameView.tweenCameraToFile(
+                                this.getMainCameraRig(),
                                 e.fileId,
                                 e.zoomValue
                             );

@@ -5,6 +5,7 @@ import {
     Scene,
     Camera,
     OrthographicCamera,
+    Vector3,
 } from 'three';
 import { Time } from './scene/Time';
 import { Input } from './scene/Input';
@@ -80,9 +81,26 @@ export interface IGameView extends AuxFile3DFinder, Vue {
     setWorldGridVisible(visible: boolean): void;
 
     /**
-     * Tweens the user's camera to view the given file.
+     * Tweens the camera to view the file.
+     * @param cameraRig The camera rig to tween.
      * @param fileId The ID of the file to view.
      * @param zoomValue The zoom value to use.
      */
-    tweenCameraToFile(fileId: string, zoomValue: number): void;
+    tweenCameraToFile(
+        cameraRig: CameraRig,
+        fileId: string,
+        zoomValue?: number
+    ): void;
+
+    /**
+     * Animates the main camera to the given position.
+     * @param cameraRig The camera rig to tween.
+     * @param position The position to animate to.
+     * @param zoomValue The zoom value to use.
+     */
+    tweenCameraToPosition(
+        cameraRig: CameraRig,
+        position: Vector3,
+        zoomValue?: number
+    ): void;
 }

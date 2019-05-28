@@ -307,12 +307,12 @@ export default class GameView extends Vue implements IGameView {
         this.onCameraRigTypeChanged.invoke(this._mainCameraRig);
     }
 
-    /**
-     * Animates the main camera into position to view the given file ID.
-     * @param fileId The ID of the file to view.
-     */
-    public tweenCameraToFile(fileId: string, zoomValue?: number) {
-        console.log('[GameView] Tween to: ', fileId);
+    public tweenCameraToFile(
+        cameraRig: CameraRig,
+        fileId: string,
+        zoomValue?: number
+    ) {
+        console.log('[GameView] Tween to file: ', fileId);
 
         // find the file with the given ID
         const files = this.findFilesById(fileId);
@@ -320,26 +320,23 @@ export default class GameView extends Vue implements IGameView {
             const file = files[0];
             const targetPosition = new Vector3();
             file.display.getWorldPosition(targetPosition);
-            this.tweenCameraToPosition(targetPosition);
 
-            if (zoomValue != undefined && zoomValue >= 0) {
-                let mainCameraControls = this._interaction.cameraRigControllers.find(
-                    rigControls => rigControls.rig === this._mainCameraRig
-                );
-                if (mainCameraControls) {
-                    mainCameraControls.controls.dollySet(zoomValue);
-                }
-            }
+            this.tweenCameraToPosition(cameraRig, targetPosition, zoomValue);
         }
     }
 
-    /**
-     * Animates the main camera to the given position.
-     * @param position The position to animate to.
-     */
-    public tweenCameraToPosition(position: Vector3) {
+    public tweenCameraToPosition(
+        cameraRig: CameraRig,
+        position: Vector3,
+        zoomValue?: number
+    ) {
         this._interaction.addOperation(
-            new TweenCameraToOperation(this, this._interaction, position)
+            new TweenCameraToOperation(
+                cameraRig,
+                this._interaction,
+                position,
+                zoomValue
+            )
         );
     }
 

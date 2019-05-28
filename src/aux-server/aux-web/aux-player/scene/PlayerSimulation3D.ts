@@ -123,6 +123,7 @@ export class PlayerSimulation3D extends Simulation3D {
                     tap(e => {
                         if (e.name === 'tween_to') {
                             this._gameView.tweenCameraToFile(
+                                this.getMainCameraRig(),
                                 e.fileId,
                                 e.zoomValue
                             );
