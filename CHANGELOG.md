@@ -8,6 +8,7 @@
 
 -   Improvements
     -   Added the `aux.destroyable` tag that prevents files from being destroyed when set to `false`.
+    -   Made the globals file not destroyable by default.
 -   Bug Fixes
     -   Fixed `tweenTo` function not working after changing the camera type.
 
