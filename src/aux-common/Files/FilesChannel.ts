@@ -9,6 +9,7 @@ import {
     filtersMatchingArguments,
     calculateFormulaValue,
     isFile,
+    isDestroyable,
 } from './FileCalculations';
 import { merge as mergeObj } from '../utils';
 import formulaLib, {
@@ -18,6 +19,7 @@ import formulaLib, {
     setCalculationContext,
     getCalculationContext,
     getUserId,
+    getFileState,
 } from '../Formulas/formula-lib';
 import { SetValueHandler, isProxy } from './FileProxy';
 
@@ -143,6 +145,9 @@ export function calculateDestroyFileEvents(
     calc: FileCalculationContext,
     file: File
 ): FileEvent[] {
+    if (!isDestroyable(calc, file)) {
+        return [];
+    }
     let events: FileEvent[] = [];
     let id: string;
     if (typeof file === 'object') {
@@ -178,6 +183,9 @@ function destroyChildren(
         }
 
         all.forEach(child => {
+            if (!isDestroyable(calc, child)) {
+                return;
+            }
             events.push(fileRemoved(child.id));
             destroyChildren(calc, events, child.id);
         });
@@ -298,6 +306,7 @@ function formulaActions(
 ) {
     let previous = getActions();
     let prevContext = getCalculationContext();
+    let prevState = getFileState();
     let prevUserId = getUserId();
     let actions: FileEvent[] = [];
     let vars: {
@@ -325,7 +334,7 @@ function formulaActions(
     }
     scripts.forEach(s => context.sandbox.run(s, {}, formulaObjects[0], vars));
     setActions(previous);
-    setFileState(null);
+    setFileState(prevState);
     setCalculationContext(prevContext);
     return actions;
 }

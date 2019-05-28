@@ -1718,7 +1718,9 @@ describe('FileCalculations', () => {
             ['a', true],
             [1, true],
             [false, false],
+            ['false', false],
             [true, true],
+            ['true', true],
             ['=1', true],
             ['="hello"', true],
         ];
