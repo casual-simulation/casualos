@@ -860,6 +860,43 @@ describe('FilesChannel', () => {
             });
         });
 
+        describe('removeTags()', () => {
+            it('remove the given tag sections on the fiven file', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'create()':
+                                'let newFile = create(this, { stay: "def" }, { "leave.x": 0 }, { "leave.y": 0 }); removeTags(newFile, "leave");',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('create', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            stay: 'def',
+                            'leave.x': 0,
+                            'leave.y': 0,
+                            'aux._creator': 'thisFile',
+                        },
+                    }),
+                    fileUpdated('uuid-0', {
+                        tags: {
+                            'leave.x': null,
+                            'leave.y': null,
+                        },
+                    }),
+                ]);
+            });
+        });
+
         describe('create()', () => {
             it('should create a new file with aux._creator set to the original id', () => {
                 const state: FilesState = {
