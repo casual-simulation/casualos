@@ -199,7 +199,7 @@
                             :class="getTagCellClass(file, tag)"
                         >
                             <file-value
-                                :readOnly="readOnly"
+                                :readOnly="readOnly || isFileReadOnly(file)"
                                 :file="file"
                                 :tag="tag"
                                 :updateTime="updateTime"

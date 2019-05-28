@@ -19,6 +19,7 @@ import {
     fileAdded,
     getAllFileTags,
     toast,
+    isEditable,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
 import { appManager } from '../../shared/AppManager';
@@ -82,6 +83,7 @@ export default class FileTable extends Vue {
     tagBlacklist: string[] = [];
     blacklistIndex: boolean[] = [];
     blacklistCount: number[] = [];
+    editableMap: Map<string, boolean>;
 
     uiHtmlElements(): HTMLElement[] {
         if (this.$refs.tags) {
@@ -110,6 +112,10 @@ export default class FileTable extends Vue {
 
     getBlacklistCount(index: number): number {
         return this.blacklistCount[index];
+    }
+
+    isFileReadOnly(file: File): boolean {
+        return this.editableMap.get(file.id) === false;
     }
 
     get fileTableGridStyle() {
@@ -154,6 +160,11 @@ export default class FileTable extends Vue {
         if (this.focusedFile) {
             this.focusedFile =
                 this.files.find(f => f.id === this.focusedFile.id) || null;
+        }
+
+        const calc = this.fileManager.helper.createContext();
+        for (let file of this.files) {
+            this.editableMap.set(file.id, isEditable(calc, file));
         }
     }
 
@@ -360,6 +371,7 @@ export default class FileTable extends Vue {
 
     constructor() {
         super();
+        this.editableMap = new Map();
     }
 
     async created() {

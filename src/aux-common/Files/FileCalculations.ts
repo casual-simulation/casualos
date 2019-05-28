@@ -2168,11 +2168,22 @@ export function calculateBooleanTagValue(
 
 /**
  * Determines if the given file is able to be destroyed.
+ * Defaults to true.
  * @param calc The file calculation context.
  * @param file The file to check.
  */
 export function isDestroyable(calc: FileCalculationContext, file: Object) {
     return calculateBooleanTagValue(calc, file, 'aux.destroyable', true);
+}
+
+/**
+ * Determines if the given file is able to be edited by the file sheet.
+ * Defaults to true.
+ * @param calc The file calculation context.
+ * @param file The file to check.
+ */
+export function isEditable(calc: FileCalculationContext, file: Object) {
+    return calculateBooleanTagValue(calc, file, 'aux.editable', true);
 }
 
 /**

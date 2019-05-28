@@ -63,6 +63,7 @@ import {
     isContextSurfaceVisible,
     isContextLocked,
     isDestroyable,
+    isEditable,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
@@ -1709,33 +1710,25 @@ describe('FileCalculations', () => {
     });
 
     describe('isDestroyable()', () => {
-        let cases = [
-            ['', true],
-            [null, true],
-            [0, true],
-            ['=false', false],
-            ['=0', true],
-            ['a', true],
-            [1, true],
-            [false, false],
-            ['false', false],
-            [true, true],
-            ['true', true],
-            ['=1', true],
-            ['="hello"', true],
-        ];
+        booleanTagValueTests(true, (value, expected) => {
+            let file = createFile('test', {
+                'aux.destroyable': value,
+            });
 
-        it.each(cases)(
-            'should map %s to %s',
-            (value: string, expected: boolean) => {
-                let file = createFile('test', {
-                    'aux.destroyable': value,
-                });
+            const calc = createCalculationContext([file]);
+            expect(isDestroyable(calc, file)).toBe(expected);
+        });
+    });
 
-                const calc = createCalculationContext([file]);
-                expect(isDestroyable(calc, file)).toBe(expected);
-            }
-        );
+    describe('isEditable()', () => {
+        booleanTagValueTests(true, (value, expected) => {
+            let file = createFile('test', {
+                'aux.editable': value,
+            });
+
+            const calc = createCalculationContext([file]);
+            expect(isEditable(calc, file)).toBe(expected);
+        });
     });
 
     describe('createWorkspace', () => {
@@ -4037,3 +4030,26 @@ describe('FileCalculations', () => {
         });
     });
 });
+
+function booleanTagValueTests(
+    defaultValue: boolean,
+    testFunc: (given: any, expected: boolean) => void
+) {
+    let cases = [
+        ['', defaultValue],
+        [null, defaultValue],
+        [0, defaultValue],
+        ['=false', false],
+        ['=0', defaultValue],
+        ['a', defaultValue],
+        [1, defaultValue],
+        [false, false],
+        ['false', false],
+        [true, true],
+        ['true', true],
+        ['=1', defaultValue],
+        ['="hello"', defaultValue],
+    ];
+
+    it.each(cases)('should map %s to %s', testFunc);
+}
