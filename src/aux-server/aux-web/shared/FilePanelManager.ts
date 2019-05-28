@@ -16,6 +16,7 @@ import {
     searchFileState,
     SandboxResult,
     isFile,
+    isDiff,
 } from '@casual-simulation/aux-common';
 import { RecentFilesManager } from './RecentFilesManager';
 
@@ -38,6 +39,8 @@ export default class FilePanelManager implements SubscriptionLike {
 
     private _subs: SubscriptionLike[] = [];
     closed: boolean = false;
+
+    newDiff: boolean = false;
 
     /**
      * Gets the current search phrase.
@@ -127,7 +130,12 @@ export default class FilePanelManager implements SubscriptionLike {
                     tap(([, e]) => {
                         if (this._selection.mode === 'single') {
                             if (e.files.length > 0) {
-                                this.isOpen = true;
+                                if (this.newDiff) {
+                                    this.newDiff = false;
+                                    this.isOpen = false;
+                                } else {
+                                    this.isOpen = true;
+                                }
                             } else if (!e.isSearch) {
                                 this.isOpen = false;
                             }
@@ -210,14 +218,31 @@ export default class FilePanelManager implements SubscriptionLike {
                         isSearch: false,
                     };
                 }
-                return {
-                    searchResult: null,
-                    files: this._selection.getSelectedFilesForUser(
-                        this._helper.userFile
-                    ),
-                    isDiff: false,
-                    isSearch: false,
-                };
+
+                let selectedFiles = this._selection.getSelectedFilesForUser(
+                    this._helper.userFile
+                );
+
+                if (selectedFiles.length === 0) {
+                    if (!this.newDiff) {
+                        this.newDiff = true;
+                    }
+
+                    return {
+                        searchResult: null,
+                        files: [<AuxFile>this._recent.files[0]],
+                        isDiff: true,
+                        isSearch: false,
+                    };
+                } else {
+                    this.newDiff = false;
+                    return {
+                        searchResult: null,
+                        files: selectedFiles,
+                        isDiff: false,
+                        isSearch: false,
+                    };
+                }
             })
         );
     }
