@@ -205,7 +205,6 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
     }
 
     private _destroyMeshes(): void {
-        console.log('[ProgressBar] destroy meshes', this.file3D.file);
         if (this.mesh) {
             this.container.remove(this.mesh);
             disposeMesh(this.mesh);
