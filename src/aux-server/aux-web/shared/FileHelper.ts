@@ -171,6 +171,7 @@ export class FileHelper {
         const final = merge(workspace, {
             tags: {
                 'aux.version': AUX_FILE_VERSION,
+                'aux.destroyable': false,
             },
         });
 
