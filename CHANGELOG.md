@@ -13,6 +13,11 @@
     -   Made the globals file not destroyable by default.
     -   Reimplemented ability to click File ID in the sheet to focus the camera on it.
     -   Added the `aux.editable` tag that can be used to prevent editing a file in the file sheet.
+    -   Added events for `onKeyDown()` and `onKeyUp()`.
+        -   These are triggered whenever a key is pressed or released.
+        -   The `that` parameter is an object containing the following fields:
+            -   `keys` The list of keys that were pressed/released at the same time.
+        -   See https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values for a list of possible key values.
 
 -   Bug Fixes
     -   Fixed `tweenTo` function not working after changing the camera type.
