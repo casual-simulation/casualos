@@ -858,6 +858,53 @@ describe('FilesChannel', () => {
                     }),
                 ]);
             });
+
+            it('should send an event only to the given list of files', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            _position: { x: 0, y: 0, z: 0 },
+                            _workspace: 'abc',
+                            'abcdef()': 'whisper(@hello, "sayHello")',
+                        },
+                    },
+                    thatFile: {
+                        id: 'thatFile',
+                        tags: {
+                            hello: true,
+                            'sayHello()': 'this.saidHello = true',
+                        },
+                    },
+                    otherFile: {
+                        id: 'otherFile',
+                        tags: {
+                            hello: true,
+                            'sayHello()': 'this.saidHello = true',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('abcdef', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('otherFile', {
+                        tags: {
+                            saidHello: true,
+                        },
+                    }),
+                    fileUpdated('thatFile', {
+                        tags: {
+                            saidHello: true,
+                        },
+                    }),
+                ]);
+            });
         });
 
         describe('removeTags()', () => {

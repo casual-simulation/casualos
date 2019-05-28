@@ -494,8 +494,16 @@ function superShout(eventName: string, arg?: any) {
  * @param eventName The name of the event to send.
  * @param arg The argument to pass.
  */
-function whisper(file: File | string, eventName: string, arg?: any) {
-    event(eventName, [file], arg);
+function whisper(
+    file: (File | string)[] | File | string,
+    eventName: string,
+    arg?: any
+) {
+    if (Array.isArray(file)) {
+        event(eventName, file, arg);
+    } else {
+        event(eventName, [file], arg);
+    }
 }
 
 /**
