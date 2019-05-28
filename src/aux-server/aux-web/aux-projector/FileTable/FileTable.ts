@@ -303,10 +303,6 @@ export default class FileTable extends Vue {
         this.$emit('tagFocusChanged', file, tag, focused);
     }
 
-    onFileClicked(file: AuxObject) {
-        this.fileManager.helper.transaction(tweenTo(file.id));
-    }
-
     toggleHidden() {
         this.showHidden = !this.showHidden;
         this.setTagBlacklist();
