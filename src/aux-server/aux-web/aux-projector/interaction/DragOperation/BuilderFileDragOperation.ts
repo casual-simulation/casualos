@@ -37,14 +37,14 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
      * Create a new drag rules.
      */
     constructor(
-        simulation: Simulation3D,
+        simulation3D: Simulation3D,
         interaction: BuilderInteractionManager,
         hit: Intersection,
         files: File[],
         workspace: BuilderGroup3D,
         context: string
     ) {
-        super(simulation, interaction, files, context);
+        super(simulation3D, interaction, files, context);
 
         this._workspace = workspace;
 
@@ -81,12 +81,9 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
     protected _onDragWorkspace(calc: FileCalculationContext) {
         const mouseDir = Physics.screenPosToRay(
             this.gameView.getInput().getMouseScreenPos(),
-            this.gameView.getMainCamera()
+            this.gameView.getMainCameraRig().mainCamera
         );
-        const point = Physics.pointOnPlane(
-            mouseDir,
-            this.gameView.getGroundPlane()
-        );
+        const point = Physics.pointOnPlane(mouseDir, Physics.GroundPlane);
 
         if (point) {
             // move the center of the workspace to the point

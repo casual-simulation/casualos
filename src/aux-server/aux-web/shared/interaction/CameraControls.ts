@@ -13,7 +13,8 @@ import {
 import { BaseInteractionManager } from './BaseInteractionManager';
 import { InputType, MouseButtonId } from '../../shared/scene/Input';
 import { IGameView } from '../../shared/IGameView';
-import { lerp } from '@casual-simulation/aux-common';
+import { lerp, normalize } from '@casual-simulation/aux-common';
+import { Viewport } from '../scene/Viewport';
 
 export class CameraControls {
     // "target" sets the location of focus, where the object orbits around
@@ -55,7 +56,6 @@ export class CameraControls {
     public enablePan: boolean = true;
     public panSpeed: number = 1.0;
     public screenSpacePanning: boolean = false; // if true, pan in screen-space
-    public keyPanSpeed: number = 7.0; // pixels moved per arrow key push
 
     // Set to true to automatically rotate around the target
     // If auto-rotate is enabled, you must call controls.update() in your animation loop
@@ -72,6 +72,9 @@ export class CameraControls {
 
     // Offset the apply to the camera this frame.
     public cameraOffset: Vector3 = new Vector3();
+
+    // The viewport we are applying control inside of for this camera.
+    public viewport: Viewport;
 
     private _camera: PerspectiveCamera | OrthographicCamera;
     private _gameView: IGameView;
@@ -132,18 +135,25 @@ export class CameraControls {
             if (this._enabled) {
                 this.reset();
             } else {
-                this.saveState();
+                this.state = STATE.NONE;
+                this.saveCameraState();
             }
         }
     }
 
     constructor(
         camera: PerspectiveCamera | OrthographicCamera,
-        gameView: IGameView
+        gameView: IGameView,
+        viewport: Viewport
     ) {
         this._camera = camera;
         this._gameView = gameView;
 
+        if (!!viewport) {
+            this.viewport = viewport;
+        }
+
+        this.state = STATE.NONE;
         this.target0 = this.target.clone();
         this.position0 = this._camera.position.clone();
         this.zoom0 = this._camera.zoom;
@@ -197,7 +207,6 @@ export class CameraControls {
 
     public pan(deltaX: number, deltaY: number) {
         let offset = new Vector3();
-        let element = this._gameView.gameView;
 
         if (this._camera instanceof PerspectiveCamera) {
             // perspective
@@ -209,6 +218,8 @@ export class CameraControls {
             targetDistance *= Math.tan(
                 ((this._camera.fov / 2) * Math.PI) / 180.0
             );
+
+            const element = this._gameView.gameView;
 
             // we use only clientHeight here so aspect ratio does not distort speed
             this.panLeft(
@@ -223,13 +234,13 @@ export class CameraControls {
             this.panLeft(
                 (deltaX * (this._camera.right - this._camera.left)) /
                     this._camera.zoom /
-                    element.clientWidth,
+                    this.viewport.width,
                 this._camera.matrix
             );
             this.panUp(
                 (deltaY * (this._camera.top - this._camera.bottom)) /
                     this._camera.zoom /
-                    element.clientHeight,
+                    this.viewport.height,
                 this._camera.matrix
             );
         }
@@ -275,7 +286,7 @@ export class CameraControls {
         }
     }
 
-    public saveState() {
+    public saveCameraState() {
         this.target0.copy(this.target);
         this.position0.copy(this._camera.position);
         this.zoom0 = this._camera.zoom;
@@ -305,8 +316,15 @@ export class CameraControls {
     private updateInput() {
         const input = this._gameView.getInput();
 
+        if (this.viewport && this.state === STATE.NONE) {
+            // Check to make sure we are over the viewport before allowing input to begin.
+            if (!input.isMouseOnViewport(this.viewport)) {
+                return;
+            }
+        }
+
         if (input.currentInputType === InputType.Mouse) {
-            if (input.isMouseButtonDownOn(this._gameView.gameView)) {
+            if (input.isMouseButtonDownOnElement(this._gameView.gameView)) {
                 //
                 // Pan/Dolly/Rotate [Start]
                 //
@@ -321,9 +339,16 @@ export class CameraControls {
                     input.getMouseButtonDown(MouseButtonId.Middle) &&
                     this.enableZoom
                 ) {
-                    // Alternative dolly start.
+                    // Dolly start.
                     this.dollyStart.copy(input.getMouseClientPos());
                     this.state = STATE.DOLLY;
+                } else if (
+                    input.getWheelMoved() &&
+                    input.getWheelData().ctrl &&
+                    this.enableZoom
+                ) {
+                    // Pinch dolly start.
+                    this.state = STATE.PINCH_DOLLY;
                 } else if (
                     input.getMouseButtonDown(MouseButtonId.Right) &&
                     this.enableRotate
@@ -338,7 +363,8 @@ export class CameraControls {
                 //
                 if (
                     input.getMouseButtonHeld(MouseButtonId.Left) &&
-                    this.enablePan
+                    this.enablePan &&
+                    this.state === STATE.PAN
                 ) {
                     // Pan move.
                     this.panEnd.copy(input.getMouseClientPos());
@@ -349,7 +375,8 @@ export class CameraControls {
                     this.panStart.copy(this.panEnd);
                 } else if (
                     input.getMouseButtonHeld(MouseButtonId.Middle) &&
-                    this.enableZoom
+                    this.enableZoom &&
+                    this.state === STATE.DOLLY
                 ) {
                     // Dolly move.
                     this.dollyEnd.copy(input.getMouseClientPos());
@@ -362,8 +389,22 @@ export class CameraControls {
 
                     this.dollyStart.copy(this.dollyEnd);
                 } else if (
+                    input.getWheelMoved() &&
+                    input.getWheelData().ctrl &&
+                    this.enableZoom &&
+                    this.state === STATE.PINCH_DOLLY
+                ) {
+                    // Pinch dolly move.
+                    let wheelData = input.getWheelData();
+                    let zoomScale =
+                        Math.pow(0.98, Math.abs(wheelData.delta.y)) *
+                        this.zoomSpeed;
+                    if (wheelData.delta.y > 0) this.dollyIn(zoomScale);
+                    else if (wheelData.delta.y < 0) this.dollyOut(zoomScale);
+                } else if (
                     input.getMouseButtonHeld(MouseButtonId.Right) &&
-                    this.enableRotate
+                    this.enableRotate &&
+                    this.state === STATE.ROTATE
                 ) {
                     // Rotate move.
                     this.mouseRotateEnd.copy(input.getMouseClientPos());
@@ -387,29 +428,14 @@ export class CameraControls {
                 if (
                     input.getMouseButtonUp(MouseButtonId.Left) ||
                     input.getMouseButtonUp(MouseButtonId.Middle) ||
-                    input.getMouseButtonUp(MouseButtonId.Right)
+                    input.getMouseButtonUp(MouseButtonId.Right) ||
+                    (!input.getWheelMoved() && this.state === STATE.PINCH_DOLLY)
                 ) {
                     this.state = STATE.NONE;
                 }
             }
-
-            if (
-                input.getWheelMoved() &&
-                input.isMouseFocusing(this._gameView.gameView)
-            ) {
-                let wheelData = input.getWheelData();
-
-                if (wheelData.ctrl) {
-                    // This is pinch zooming dolly.
-                    let zoomScale =
-                        Math.pow(0.98, Math.abs(wheelData.delta.y)) *
-                        this.zoomSpeed;
-                    if (wheelData.delta.y > 0) this.dollyIn(zoomScale);
-                    else if (wheelData.delta.y < 0) this.dollyOut(zoomScale);
-                }
-            }
         } else if (input.currentInputType === InputType.Touch) {
-            if (input.isMouseButtonDownOn(this._gameView.gameView)) {
+            if (input.isMouseButtonDownOnElement(this._gameView.gameView)) {
                 //
                 // Pan/Dolly/Rotate [Start]
                 //
@@ -427,6 +453,7 @@ export class CameraControls {
                             const pagePosB = input.getTouchPagePos(1);
                             const distance = pagePosA.distanceTo(pagePosB);
                             this.dollyStart.set(0, distance);
+                            this.state = STATE.TOUCH_ROTATE_ZOOM;
                         }
 
                         if (this.enableRotate) {
@@ -437,6 +464,7 @@ export class CameraControls {
                             this.touchRotateStart.finger1 = input.getTouchPagePos(
                                 1
                             );
+                            this.state = STATE.TOUCH_ROTATE_ZOOM;
                         }
                     } else if (input.getTouchUp(0) || input.getTouchUp(1)) {
                         // Releasing one of the two fingers.
@@ -453,7 +481,11 @@ export class CameraControls {
                 // Pan/Dolly/Rotate [Move]
                 //
                 if (input.getTouchCount() === 1) {
-                    if (input.getTouchHeld(0) && this.enablePan) {
+                    if (
+                        input.getTouchHeld(0) &&
+                        this.enablePan &&
+                        this.state === STATE.PAN
+                    ) {
                         // Pan move.
                         this.panEnd.copy(input.getTouchClientPos(0));
                         this.panDelta
@@ -463,7 +495,10 @@ export class CameraControls {
                         this.panStart.copy(this.panEnd);
                     }
                 } else if (input.getTouchCount() === 2) {
-                    if (this.enableZoom) {
+                    if (
+                        this.enableZoom &&
+                        this.state === STATE.TOUCH_ROTATE_ZOOM
+                    ) {
                         // Dolly move.
                         const pagePosA = input.getTouchPagePos(0);
                         const pagePosB = input.getTouchPagePos(1);
@@ -481,7 +516,10 @@ export class CameraControls {
                         this.dollyStart.copy(this.dollyEnd);
                     }
 
-                    if (this.enableRotate) {
+                    if (
+                        this.enableRotate &&
+                        this.state === STATE.TOUCH_ROTATE_ZOOM
+                    ) {
                         // Rotate move.
                         this.touchRotateEnd.finger0 = input.getTouchPagePos(0);
                         this.touchRotateEnd.finger1 = input.getTouchPagePos(1);
@@ -537,7 +575,7 @@ export class CameraControls {
                         let yAngle =
                             (2 * Math.PI * midpointDelta.y) /
                             this._gameView.gameView.clientHeight;
-
+                        ``;
                         this.rotateUp(yAngle);
 
                         // Set rotate start positions to the current end positions for the next frame.
@@ -706,7 +744,9 @@ enum STATE {
     NONE = -1,
     ROTATE = 0,
     DOLLY = 1,
-    PAN = 2,
+    PINCH_DOLLY = 2,
+    PAN = 3,
+    TOUCH_ROTATE_ZOOM = 4,
 }
 
 interface TouchRotate {

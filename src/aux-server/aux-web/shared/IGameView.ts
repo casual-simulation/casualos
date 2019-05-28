@@ -5,6 +5,7 @@ import {
     Scene,
     Camera,
     OrthographicCamera,
+    Vector3,
 } from 'three';
 import { Time } from './scene/Time';
 import { Input } from './scene/Input';
@@ -18,6 +19,8 @@ import { HtmlMixer } from '../shared/scene/HtmlMixer';
 import { Simulation3D } from './scene/Simulation3D';
 import { GridChecker } from './scene/grid/GridChecker';
 import { AuxFile3DDecoratorFactory } from './scene/decorators/AuxFile3DDecoratorFactory';
+import { CameraRig } from './scene/CameraRigFactory';
+import { Viewport } from './scene/Viewport';
 
 /**
  * Interface that described what properties and functions should be available to a GameView class/component implementation.
@@ -32,7 +35,7 @@ export interface IGameView extends AuxFile3DFinder, Vue {
     onFileAdded: ArgEvent<AuxFile>;
     onFileUpdated: ArgEvent<AuxFile>;
     onFileRemoved: ArgEvent<AuxFile>;
-    onCameraTypeChanged: ArgEvent<PerspectiveCamera | OrthographicCamera>;
+    onCameraRigTypeChanged: ArgEvent<CameraRig>;
 
     xrCapable: boolean;
     xrDisplay: any;
@@ -45,21 +48,21 @@ export interface IGameView extends AuxFile3DFinder, Vue {
     getInputVR(): InputVR;
     getScene(): Scene;
     getRenderer(): WebGLRenderer;
-    getGroundPlane(): Plane;
-    getMainCamera(): PerspectiveCamera | OrthographicCamera;
+    getMainCameraRig(): CameraRig;
+    getMainViewport(): Viewport;
     getHtmlMixerContext(): HtmlMixer.Context;
     getDecoratorFactory(): AuxFile3DDecoratorFactory;
     getGridChecker(): GridChecker;
 
     /**
+     * Get all of the current viewports.
+     */
+    getViewports(): Viewport[];
+
+    /**
      * Gets the list of simulations that this game view contains.
      */
     getSimulations(): Simulation3D[];
-
-    /**
-     * Gets the list of contexts that this game view contains.
-     */
-    getContexts(): ContextGroup3D[];
 
     /**
      * Gets the HTML elements that the interaction manager should be able to handle events for.
@@ -78,9 +81,26 @@ export interface IGameView extends AuxFile3DFinder, Vue {
     setWorldGridVisible(visible: boolean): void;
 
     /**
-     * Tweens the user's camera to view the given file.
+     * Tweens the camera to view the file.
+     * @param cameraRig The camera rig to tween.
      * @param fileId The ID of the file to view.
      * @param zoomValue The zoom value to use.
      */
-    tweenCameraToFile(fileId: string, zoomValue: number): void;
+    tweenCameraToFile(
+        cameraRig: CameraRig,
+        fileId: string,
+        zoomValue?: number
+    ): void;
+
+    /**
+     * Animates the main camera to the given position.
+     * @param cameraRig The camera rig to tween.
+     * @param position The position to animate to.
+     * @param zoomValue The zoom value to use.
+     */
+    tweenCameraToPosition(
+        cameraRig: CameraRig,
+        position: Vector3,
+        zoomValue?: number
+    ): void;
 }

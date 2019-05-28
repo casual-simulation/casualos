@@ -1,7 +1,8 @@
 import Vue from 'vue';
 import { Vector2, Vector3 } from 'three';
-import { find, some } from 'lodash';
+import { find, some, sortBy } from 'lodash';
 import { IGameView } from '../IGameView';
+import { Viewport } from './Viewport';
 
 export class Input {
     /**
@@ -52,6 +53,74 @@ export class Input {
             (viewPos.x / viewRect.width) * 2 - 1,
             -(viewPos.y / viewRect.height) * 2 + 1
         );
+    }
+
+    /**
+     * Calculate a screen position for the given viewport inside of a screen. The screen position will be normalized and relative to the viewport.
+     * Screen position is Three.js style where bottom left corner is (-1, -1) and top right corner is (1, 1).
+     * @param fullWidth The full width of the screen (pixels).
+     * @param fullHeight The full height of the screen (pixels).
+     * @param viewX The x starting point of the viewport (pixel).
+     * @param viewY The y start point of the viewport (pixel).
+     * @param viewWidth The width of the viewport (pixels).
+     * @param viewHeight The height of the viewport (pixels).
+     * @param pagePos The current global page position (pixels).
+     */
+    public static screenPositionForViewport(
+        pagePos: Vector2,
+        viewport: Viewport
+    ): Vector2 {
+        const globalPos = new Vector2(pagePos.x, pagePos.y);
+        const viewRect = viewport.getRootElement().getBoundingClientRect();
+        const left = viewRect.left + viewport.x;
+        const top =
+            viewRect.height - (viewport.y + viewport.height) + viewRect.top;
+        const viewPos = globalPos.sub(new Vector2(left, top));
+        return new Vector2(
+            (viewPos.x / viewport.width) * 2 - 1,
+            -(viewPos.y / viewport.height) * 2 + 1
+        );
+    }
+
+    /**
+     * Returns wether or not the page position is inside the viewport.
+     * If other viewports are given, will check to make sure none of them are overlapping or otherwise occluding.
+     * @param pagePos Page position to test
+     * @param viewport Viewport to test if page position is on.
+     * @param viewports Other viewports to check if they are occluding the given viewport above.
+     */
+    public static pagePositionOnViewport(
+        pagePos: Vector2,
+        viewport: Viewport,
+        otherViewports?: Viewport[]
+    ): boolean {
+        let isOnViewport: boolean = false;
+
+        if (!!pagePos && !!viewport) {
+            const screenPos = this.screenPositionForViewport(pagePos, viewport);
+            if (screenPos.x >= -1 && screenPos.x <= 1) {
+                if (screenPos.y >= -1 && screenPos.y <= 1) {
+                    isOnViewport = true;
+                }
+            }
+        }
+
+        if (otherViewports && isOnViewport) {
+            // Make sure that there are no other view ports that are overlapping this one.
+            const viewportsToTest = otherViewports.filter(
+                v => v.layer >= viewport.layer && v !== viewport
+            );
+
+            for (let i = 0; i < viewportsToTest.length; i++) {
+                if (Input.pagePositionOnViewport(pagePos, viewportsToTest[i])) {
+                    // We are inside a viewport that is equal or higher in layer order.
+                    // This overrides our test for the viewport in question.
+                    return false;
+                }
+            }
+        }
+
+        return isOnViewport;
     }
 
     /**
@@ -176,7 +245,7 @@ export class Input {
      * Determines if the mouse down event happened directly over the given element.
      * @param element The element to test.
      */
-    public isMouseButtonDownOn(element: HTMLElement): boolean {
+    public isMouseButtonDownOnElement(element: HTMLElement): boolean {
         const downElement = this._targetData.inputDown;
         return Input.isElementContainedByOrEqual(downElement, element);
     }
@@ -185,7 +254,7 @@ export class Input {
      * Determines if the mouse down event happened directly over any of the given elements.
      * @param elements The elements to test.
      */
-    public isMouseButtonDownOnAny(elements: HTMLElement[]): boolean {
+    public isMouseButtonDownOnAnyElements(elements: HTMLElement[]): boolean {
         const downElement = this._targetData.inputDown;
         const matchingElement = elements.find(e =>
             Input.isElementContainedByOrEqual(downElement, e)
@@ -194,10 +263,20 @@ export class Input {
     }
 
     /**
+     * Determines if the mouse is on the given viewport. Will check children to make sure that they are not instead being detected.
+     * @param viewport The viewport to test on.
+     */
+    public isMouseOnViewport(viewport: Viewport): boolean {
+        const pagePos = this.getMousePagePos();
+        const otherViewports = this._gameView.getViewports();
+        return Input.pagePositionOnViewport(pagePos, viewport, otherViewports);
+    }
+
+    /**
      * Determines if the mouse is currently focusing the given html element.
      * @param element The element to test.
      */
-    public isMouseFocusing(element: HTMLElement): boolean {
+    public isMouseFocusingOnElement(element: HTMLElement): boolean {
         const overElement = this._targetData.inputOver;
         return Input.isElementContainedByOrEqual(overElement, element);
     }
@@ -206,7 +285,7 @@ export class Input {
      * Determines if the mouse is currently focusing any of the given html elements.
      * @param elements The elements to test.
      */
-    public isMouseFocusingAny(elements: HTMLElement[]): boolean {
+    public isMouseFocusingOnAnyElements(elements: HTMLElement[]): boolean {
         const overElement = this._targetData.inputOver;
         const matchingElement = elements.find(e =>
             Input.isElementContainedByOrEqual(overElement, e)
@@ -849,7 +928,7 @@ export class Input {
     }
 
     private _handleWheel(event: WheelEvent) {
-        if (this.isMouseFocusing(this._gameView.gameView)) {
+        if (this.isMouseFocusingOnElement(this._gameView.gameView)) {
             event.preventDefault();
         }
 

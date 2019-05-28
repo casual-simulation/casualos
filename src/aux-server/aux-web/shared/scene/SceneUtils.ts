@@ -32,6 +32,7 @@ import {
     WebGLRenderer,
     PerspectiveCamera,
     OrthographicCamera,
+    Color,
 } from 'three';
 import { flatMap } from 'lodash';
 import {
@@ -79,6 +80,7 @@ export function createSphere(
 ) {
     const geometry = new SphereBufferGeometry(size, 16, 14);
     let material = baseAuxMeshMaterial();
+    material.color = new Color(color);
 
     const sphere = new Mesh(geometry, material.clone());
     sphere.position.copy(position);
@@ -95,12 +97,16 @@ export function createSprite(): Sprite {
     return sprite;
 }
 
-export function createUserCone(radius?: number, height?: number): Mesh {
+export function createUserCone(
+    radius?: number,
+    height?: number,
+    color?: number
+): Mesh {
     radius = getOptionalValue(radius, 0.5);
     height = getOptionalValue(height, 0.7);
     const geometry = new ConeGeometry(radius, height, 4, 1, true);
     let material = baseAuxMeshMaterial();
-    material.color.set(0x00d000);
+    material.color.set(color || 0x00d000);
     material.side = DoubleSide;
     material.flatShading = true;
     material.transparent = true;
@@ -289,6 +295,19 @@ export function debugLayersToString(obj: Object3D): string {
     }
 
     return output;
+}
+
+export function isObjectVisible(obj: Object3D) {
+    if (!obj) {
+        return false;
+    }
+    while (obj) {
+        if (!obj.visible) {
+            return false;
+        }
+        obj = obj.parent;
+    }
+    return true;
 }
 
 /**

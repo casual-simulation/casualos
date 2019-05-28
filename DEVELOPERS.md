@@ -50,9 +50,9 @@ Most of them are NPM scripts, so they're easy to run.
     -   `npm run build`
     -   This will trigger Webpack in production mode.
     -   The output files will be in the `dist` folders of each project.
--   Test In Watch Mode
+-   Run tests In Watch Mode
     -   `npm run test:watch`
--   Test
+-   Run tests
     -   `npm test`
 
 You can find other scripts in the `package.json` file at the root of the repository.

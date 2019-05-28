@@ -1,16 +1,37 @@
 # AUX Changelog
 
-## V0.8.0
+## V0.8.1
 
 ### Date: TBD
 
 ### Changes:
 
+-   Bug Fixes
+    -   Fixed `tweenTo` function not working after changing the camera type.
+
+## V0.8.0
+
+### Date: 05/25/2019
+
+### Changes:
+
 -   Improvements
-    -   Added a tag section check fo multiple action tags, will now compress them into the `actions()` section.
+    -   Replaced 2D slot-based inventory with a full 3D inventory context view on the lower portion of the screen.
+        -   You can drag files seamlessly in and out of the inventory and current player context.
+        -   Inventory has seperate camera control from the player context.
+        -   Inventory is now unlimited in capacity as it is just another 3d context to place files in and take with you.
+    -   Added a tag section check for multiple action tags, will now compress them into the `actions()` section.
+    -   Add a docker-compose file for arm32 devices.
+    -   Add the ability to execute a formula and get file events out of it.
+    -   Add a play button to the search bar that executes the script.
 -   Bug Fixes
     -   Fixed ability to click on files with `aux.shape` set to `sprite`.
     -   Hide the context menu on mobile when clicking the background with it open.
+    -   Refactored progress bars to be more performant.
+    -   Progress bars no longer interfere with input.
+    -   Allow queries to return values that are not null or empty strings.
+    -   Remove context menu on mobile when clicking on background.
+    -   Make users that are in AUX Player appear blue.
 
 ## V0.7.8
 

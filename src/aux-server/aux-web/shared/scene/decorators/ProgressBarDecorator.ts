@@ -7,163 +7,160 @@ import {
     getFileShape,
     FileShape,
     FileLabelAnchor,
+    clamp,
+    hasValue,
 } from '@casual-simulation/aux-common';
 import {
     Mesh,
     MeshStandardMaterial,
     Color,
-    LineSegments,
-    LineBasicMaterial,
     Group,
     Vector3,
     MeshToonMaterial,
-    Sprite,
     Euler,
     Math as ThreeMath,
 } from 'three';
-import {
-    createCube,
-    createCubeStrokeGeometry,
-    isTransparent,
-    disposeMesh,
-    createSphere,
-    createSprite,
-    createPlane,
-    setLayer,
-    calculateAnchorPosition,
-} from '../SceneUtils';
+import { isTransparent, disposeMesh, createPlane } from '../SceneUtils';
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
-import { LayersHelper } from '../LayersHelper';
 
 export class ProgressBarDecorator extends AuxFile3DDecorator
     implements IMeshDecorator {
-    private _shape: FileShape = 'sprite';
-
     container: Group;
     mesh: Mesh;
     meshBackground: Mesh;
 
+    progressValue: number;
+    progressBarHeight = 0.2;
+    color: any;
+    bgColor: any;
+
     onMeshUpdated: ArgEvent<IMeshDecorator> = new ArgEvent<IMeshDecorator>();
 
-    progressNum: number;
-    progressBarHeight = 0.2;
-
     private _anchor: FileLabelAnchor = 'top';
+    private _targetMeshDecorator: IMeshDecorator;
 
-    constructor(file3D: AuxFile3D) {
+    constructor(file3D: AuxFile3D, targetMeshDecorator: IMeshDecorator) {
         super(file3D);
+        this._targetMeshDecorator = targetMeshDecorator;
 
-        this._rebuildBar();
+        this._handleTargetMeshUpdated = this._handleTargetMeshUpdated.bind(
+            this
+        );
+
+        this._targetMeshDecorator.onMeshUpdated.addListener(
+            this._handleTargetMeshUpdated
+        );
     }
 
     fileUpdated(calc: FileCalculationContext): void {
-        if (this.mesh) {
-            this.dispose();
+        let barTagValue = calculateNumericalTagValue(
+            calc,
+            this.file3D.file,
+            'aux.progressBar',
+            null
+        );
+
+        if (barTagValue === null || barTagValue === undefined) {
+            if (this.mesh) {
+                this.dispose();
+            }
+            return;
         }
 
-        // for cleanup purposes we'll stop the update, maybe remove/hide it if no progressbar tag
-        if (!this.file3D.file.tags['aux.progressBar']) {
-            return;
-        } else {
-            this.progressNum = calculateNumericalTagValue(
+        barTagValue = clamp(barTagValue, 0, 1);
+
+        if (this.progressValue !== barTagValue) {
+            this.progressValue = barTagValue;
+
+            if (!this.mesh) {
+                this._rebuildBarMeshes();
+            }
+
+            this._updateFill();
+        }
+
+        // Flag that detected if the color values have changed.
+        let colorsChanged = false;
+
+        let colorTagValue: any;
+        if (hasValue(this.file3D.file.tags['aux.progressBar.color'])) {
+            colorTagValue = calculateFileValue(
                 calc,
                 this.file3D.file,
-                'aux.progressBar',
-                null
+                'aux.progressBar.color'
             );
 
-            if (this.progressNum === null) {
-                return;
-            } else {
-                if (this.progressNum > 1) {
-                    this.progressNum = 1;
-                } else if (this.progressNum < 0) {
-                    this.progressNum = 0;
-                }
+            if (this.color != colorTagValue) {
+                this.color = colorTagValue;
+                colorsChanged = true;
             }
         }
 
-        const shape = getFileShape(calc, this.file3D.file);
-        if (this._shape !== shape) {
-            this._rebuildBar();
+        let bgColorTagValue: any;
+        if (
+            hasValue(this.file3D.file.tags['aux.progressBar.backgroundColor'])
+        ) {
+            bgColorTagValue = calculateFileValue(
+                calc,
+                this.file3D.file,
+                'aux.progressBar.backgroundColor'
+            );
+
+            if (this.bgColor != bgColorTagValue) {
+                this.bgColor = bgColorTagValue;
+                colorsChanged = true;
+            }
         }
 
-        this._updateColor(calc);
-        this._updateFill(calc);
-
-        // this.file3D.display.updateMatrixWorld(false);
+        if (colorsChanged) {
+            this._updateColor();
+        }
     }
 
     frameUpdate(calc: FileCalculationContext): void {}
 
     dispose(): void {
-        const index = this.file3D.colliders.indexOf(this.mesh);
-        if (index >= 0) {
-            this.file3D.colliders.splice(index, 1);
+        this._destroyMeshes();
+
+        if (this.container) {
+            this.file3D.display.remove(this.container);
         }
-
-        this.file3D.display.remove(this.container);
-        disposeMesh(this.mesh);
-
-        this.mesh = null;
         this.container = null;
+
+        this.progressValue = undefined;
+        this.color = undefined;
+        this.bgColor = undefined;
     }
 
-    private _updateColor(calc: FileCalculationContext) {
-        let color: any = null;
-        if (this.file3D.file.tags['aux.progressBar.color']) {
-            color = calculateFileValue(
-                calc,
-                this.file3D.file,
-                'aux.progressBar.color'
-            );
-        }
-
-        let colorBackground: any = null;
-        if (this.file3D.file.tags['aux.progressBar.backgroundColor']) {
-            colorBackground = calculateFileValue(
-                calc,
-                this.file3D.file,
-                'aux.progressBar.backgroundColor'
-            );
-        }
-
-        this._setColor(color, colorBackground);
-    }
-
-    private _updateFill(calc: FileCalculationContext) {
-        // width, height. unused depth
-
-        this.mesh.scale.set(this.progressNum, this.progressBarHeight, 1);
-        //this.mesh.position.set(0,4,2);
-        this.mesh.position.set((-1 + this.progressNum) / 2, 0, 0.001);
-
-        this.meshBackground.scale.set(1, this.progressBarHeight, 1);
-    }
-
-    private _setColor(color: any, colorBackground: any) {
+    private _updateColor() {
+        //
+        // Progress bar color
+        //
         const shapeMat = <MeshStandardMaterial | MeshToonMaterial>(
             this.mesh.material
         );
-        if (color) {
-            shapeMat.visible = !isTransparent(color);
+        if (this.color) {
+            shapeMat.visible = !isTransparent(this.color);
             if (shapeMat.visible) {
-                shapeMat.color = new Color(color);
+                shapeMat.color = new Color(this.color);
             }
         } else {
             shapeMat.visible = true;
             shapeMat.color = new Color(0x000000);
         }
 
+        //
+        // Progress bar background color
+        //
         const shapeMatBackground = <MeshStandardMaterial | MeshToonMaterial>(
             this.meshBackground.material
         );
 
-        if (colorBackground) {
-            shapeMatBackground.visible = !isTransparent(colorBackground);
+        if (this.bgColor) {
+            shapeMatBackground.visible = !isTransparent(this.bgColor);
             if (shapeMatBackground.visible) {
-                shapeMatBackground.color = new Color(colorBackground);
+                shapeMatBackground.color = new Color(this.bgColor);
             }
         } else {
             shapeMatBackground.visible = true;
@@ -171,9 +168,17 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
         }
     }
 
-    private _rebuildBar() {
+    private _updateFill() {
+        // width, height. unused depth
+        this.mesh.scale.set(this.progressValue, this.progressBarHeight, 1);
+        this.mesh.position.set((-1 + this.progressValue) / 2, 0, 0.001);
+
+        this.meshBackground.scale.set(1, this.progressBarHeight, 1);
+    }
+
+    private _rebuildBarMeshes() {
         if (this.mesh) {
-            this.dispose();
+            this._destroyMeshes();
         }
 
         // Container
@@ -186,12 +191,10 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
 
         this.meshBackground = createPlane(1);
         this.container.add(this.meshBackground);
-        this.file3D.colliders.push(this.meshBackground);
 
         // Sprite Mesh if a sprite mesh is actually a plane geometrically
         this.mesh = createPlane(1);
         this.container.add(this.mesh);
-        this.file3D.colliders.push(this.mesh);
 
         const [pos, rotation] = this.calculateProgressAnchorPosition();
 
@@ -199,6 +202,27 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
         this.container.rotation.copy(rotation);
 
         this.onMeshUpdated.invoke(this);
+    }
+
+    private _destroyMeshes(): void {
+        console.log('[ProgressBar] destroy meshes', this.file3D.file);
+        if (this.mesh) {
+            this.container.remove(this.mesh);
+            disposeMesh(this.mesh);
+        }
+        if (this.meshBackground) {
+            this.container.remove(this.meshBackground);
+            disposeMesh(this.meshBackground);
+        }
+
+        this.mesh = null;
+        this.meshBackground = null;
+    }
+
+    private _handleTargetMeshUpdated(meshDecorator: IMeshDecorator): void {
+        this._rebuildBarMeshes();
+        this._updateColor();
+        this._updateFill();
     }
 
     private calculateProgressAnchorPosition(): [Vector3, Euler] {
@@ -266,6 +290,5 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
 
             return [pos, new Euler(0, ThreeMath.degToRad(0), 0)];
         }
-        return [targetCenter, new Euler()];
     }
 }

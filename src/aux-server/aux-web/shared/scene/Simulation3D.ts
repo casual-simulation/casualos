@@ -1,4 +1,4 @@
-import { Object3D } from 'three';
+import { Object3D, PerspectiveCamera, OrthographicCamera, Plane } from 'three';
 import { ContextGroup3D } from './ContextGroup3D';
 import { Simulation } from '../Simulation';
 import {
@@ -10,6 +10,8 @@ import { SubscriptionLike } from 'rxjs';
 import { IGameView } from '../IGameView';
 import { concatMap, tap, flatMap as rxFlatMap } from 'rxjs/operators';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
+import { flatMap } from 'lodash';
+import { CameraRig } from './CameraRigFactory';
 
 /**
  * Defines a class that is able to render a simulation.
@@ -93,6 +95,7 @@ export abstract class Simulation3D extends Object3D
                     tap(e => {
                         if (e.name === 'tween_to') {
                             this._gameView.tweenCameraToFile(
+                                this.getMainCameraRig(),
                                 e.fileId,
                                 e.zoomValue
                             );
@@ -107,6 +110,11 @@ export abstract class Simulation3D extends Object3D
         const calc = this.simulation.helper.createContext();
         this._frameUpdateCore(calc);
     }
+
+    /**
+     * Gets the camera that is used as the primary rendering camera for this simulation.
+     */
+    abstract getMainCameraRig(): CameraRig;
 
     protected _frameUpdateCore(calc: FileCalculationContext) {
         this.contexts.forEach(context => {
@@ -123,8 +131,8 @@ export abstract class Simulation3D extends Object3D
         }
 
         await this._fileAddedCore(calc, file);
-
         await this._fileUpdated(file, true);
+
         this.onFileAdded.invoke(file);
     }
 
@@ -175,6 +183,7 @@ export abstract class Simulation3D extends Object3D
         );
 
         await this._fileUpdatedCore(calc, file);
+
         this.onFileUpdated.invoke(file);
 
         if (shouldRemove) {

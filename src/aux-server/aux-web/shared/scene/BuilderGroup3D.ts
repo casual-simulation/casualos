@@ -33,7 +33,11 @@ export class BuilderGroup3D extends ContextGroup3D {
     }
 
     get groupColliders() {
-        return this.surface.colliders;
+        if (this.surface) {
+            return this.surface.colliders;
+        } else {
+            return [];
+        }
     }
 
     set groupColliders(value: Object3D[]) {}
@@ -41,16 +45,16 @@ export class BuilderGroup3D extends ContextGroup3D {
     /**
      * Creates a new BuilderGroup3D. That is, a group of contexts that are visualized
      * using a worksurface.
-     * @param simulation The simulation that this group is in.
+     * @param simulation3D The simulation that this group is in.
      * @param file The file that this group represents.
      * @param decoratorFactory The decorator factory that should be used to decorate AuxFile3D objects.
      */
     constructor(
-        simulation: Simulation3D,
+        simulation3D: Simulation3D,
         file: AuxFile,
         decoratorFactory: AuxFile3DDecoratorFactory
     ) {
-        super(simulation, file, 'builder', decoratorFactory);
+        super(simulation3D, file, 'builder', decoratorFactory);
     }
 
     protected async _updateThis(

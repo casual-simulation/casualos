@@ -124,7 +124,7 @@ export class Context3D extends GameObject {
         }
     }
 
-    private _addFile(file: AuxFile, calc: FileCalculationContext) {
+    protected _addFile(file: AuxFile, calc: FileCalculationContext) {
         if (Context3D.debug) {
             console.log('[Context3D] Add', file.id, 'to context', this.context);
         }
@@ -142,7 +142,7 @@ export class Context3D extends GameObject {
         mesh.fileUpdated(file, [], calc);
     }
 
-    private _removeFile(id: string) {
+    protected _removeFile(id: string) {
         if (Context3D.debug) {
             console.log('[Context3D] Remove', id, 'from context', this.context);
         }
@@ -154,7 +154,7 @@ export class Context3D extends GameObject {
         }
     }
 
-    private _updateFile(
+    protected _updateFile(
         file: AuxFile,
         updates: TagUpdatedEvent[],
         calc: FileCalculationContext

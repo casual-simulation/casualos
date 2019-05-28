@@ -57,7 +57,13 @@ export class UserMeshDecorator extends AuxFile3DDecorator
         this.label.position.add(new Vector3(1.55, 0.7, 0)); // This is hardcoded. To lazy to figure out that math.
 
         // User Mesh
-        this.mesh = createUserCone();
+        const isInAuxPlayer =
+            this.file3D.contextGroup.file.id !== this.file3D.file.id;
+        this.mesh = createUserCone(
+            undefined,
+            undefined,
+            isInAuxPlayer ? 0x0000dd : undefined
+        );
         this.container.add(this.mesh);
         this.mesh.rotation.x = ThreeMath.degToRad(90.0);
         this.mesh.rotation.y = ThreeMath.degToRad(45.0);

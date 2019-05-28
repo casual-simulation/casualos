@@ -74,6 +74,7 @@ import {
     CameraType,
     resizeCameraRig,
     createCameraRig,
+    CameraRig,
 } from '../../shared/scene/CameraRigFactory';
 import {
     baseAuxAmbientLight,
@@ -85,6 +86,7 @@ import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
 import { HtmlMixer } from '../../shared/scene/HtmlMixer';
 import { copyToClipboard } from '../../shared/SharedUtils';
+import { Viewport } from '../../shared/scene/Viewport';
 
 @Component({
     components: {
@@ -93,19 +95,15 @@ import { copyToClipboard } from '../../shared/SharedUtils';
     },
 })
 export default class GameView extends Vue implements IGameView {
-    private _scene: Scene;
-    private _mainCamera: OrthographicCamera | PerspectiveCamera;
-    private _uiWorldCamera: OrthographicCamera | PerspectiveCamera;
+    private _mainScene: Scene;
+    private _mainCameraRig: CameraRig;
+    private _mainViewport: Viewport;
     private _renderer: WebGLRenderer;
 
     private _enterVr: any;
     private _vrControls: any;
     private _vrEffect: any;
 
-    private _directional: DirectionalLight;
-    private _ambient: AmbientLight;
-
-    private _groundPlane: Plane;
     private _gridMesh: GridHelper;
     private _time: Time;
     private _input: Input;
@@ -124,9 +122,9 @@ export default class GameView extends Vue implements IGameView {
     public onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
     public onFileUpdated: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
     public onFileRemoved: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
-    public onCameraTypeChanged: ArgEvent<
-        PerspectiveCamera | OrthographicCamera
-    > = new ArgEvent<PerspectiveCamera | OrthographicCamera>();
+    public onCameraRigTypeChanged: ArgEvent<CameraRig> = new ArgEvent<
+        CameraRig
+    >();
 
     // private _contexts: BuilderGroup3D[];
     private _subs: SubscriptionLike[];
@@ -205,30 +203,29 @@ export default class GameView extends Vue implements IGameView {
         return this._inputVR;
     }
     public getScene() {
-        return this._scene;
+        return this._mainScene;
     }
     public getRenderer() {
         return this._renderer;
     }
-    public getGroundPlane() {
-        return this._groundPlane;
-    }
     public getGridChecker() {
         return this._gridChecker;
     }
-    public getMainCamera(): PerspectiveCamera | OrthographicCamera {
-        return this._mainCamera;
+    public getMainCameraRig(): CameraRig {
+        return this._mainCameraRig;
     }
-
+    public getMainViewport(): Viewport {
+        return this._mainViewport;
+    }
     public getDecoratorFactory(): AuxFile3DDecoratorFactory {
         return this._decoratorFactory;
+    }
+    public getViewports(): Viewport[] {
+        return [this._mainViewport];
     }
 
     public getSimulations(): Simulation3D[] {
         return [this.simulation3D];
-    }
-    public getContexts() {
-        return this.simulation3D.contexts.filter(c => c.contexts.size > 0);
     }
 
     public getUIHtmlElements(): HTMLElement[] {
@@ -265,24 +262,19 @@ export default class GameView extends Vue implements IGameView {
         if (this._cameraType === type) return;
 
         // Clean up current cameras if they exists.
-        if (this._mainCamera) {
-            this._scene.remove(this._mainCamera);
-            this._mainCamera = null;
-            this._uiWorldCamera = null;
+        if (this._mainCameraRig) {
+            this._mainScene.remove(this._mainCameraRig.mainCamera);
+            this._mainCameraRig = null;
         }
 
         this._cameraType = type;
 
-        const { width, height } = this._calculateCameraSize();
-        const rig = createCameraRig(
+        this._mainCameraRig = createCameraRig(
+            'main',
             this._cameraType,
-            this._scene,
-            width,
-            height
+            this._mainScene,
+            this._mainViewport
         );
-
-        this._mainCamera = rig.mainCamera;
-        this._uiWorldCamera = rig.uiWorldCamera;
 
         // Update side bar item.
         this.removeSidebarItem('toggle_camera_type');
@@ -307,18 +299,20 @@ export default class GameView extends Vue implements IGameView {
         }
 
         if (this._htmlMixerContext) {
-            this._htmlMixerContext.setupCssCamera(this._mainCamera);
+            this._htmlMixerContext.setupCssCamera(
+                this._mainCameraRig.mainCamera
+            );
         }
 
-        this.onCameraTypeChanged.invoke(this._mainCamera);
+        this.onCameraRigTypeChanged.invoke(this._mainCameraRig);
     }
 
-    /**
-     * Animates the main camera into position to view the given file ID.
-     * @param fileId The ID of the file to view.
-     */
-    public tweenCameraToFile(fileId: string, zoomValue?: number) {
-        console.log('[GameView] Tween to: ', fileId);
+    public tweenCameraToFile(
+        cameraRig: CameraRig,
+        fileId: string,
+        zoomValue?: number
+    ) {
+        console.log('[GameView] Tween to file: ', fileId);
 
         // find the file with the given ID
         const files = this.findFilesById(fileId);
@@ -326,22 +320,23 @@ export default class GameView extends Vue implements IGameView {
             const file = files[0];
             const targetPosition = new Vector3();
             file.display.getWorldPosition(targetPosition);
-            this.tweenCameraToPosition(targetPosition);
 
-            if (zoomValue != undefined && zoomValue >= 0) {
-                const cam = this.getMainCamera();
-                this._interaction.cameraControls.dollySet(zoomValue);
-            }
+            this.tweenCameraToPosition(cameraRig, targetPosition, zoomValue);
         }
     }
 
-    /**
-     * Animates the main camera to the given position.
-     * @param position The position to animate to.
-     */
-    public tweenCameraToPosition(position: Vector3) {
+    public tweenCameraToPosition(
+        cameraRig: CameraRig,
+        position: Vector3,
+        zoomValue?: number
+    ) {
         this._interaction.addOperation(
-            new TweenCameraToOperation(this, this._interaction, position)
+            new TweenCameraToOperation(
+                cameraRig,
+                this._interaction,
+                position,
+                zoomValue
+            )
         );
     }
 
@@ -490,11 +485,11 @@ export default class GameView extends Vue implements IGameView {
 
                 const mouseDir = Physics.screenPosToRay(
                     this.getInput().getMouseScreenPos(),
-                    this.getMainCamera()
+                    this._mainCameraRig.mainCamera
                 );
                 const point = Physics.pointOnPlane(
                     mouseDir,
-                    this.getGroundPlane()
+                    new Plane(new Vector3(0, 1, 0))
                 );
 
                 worksurface.tags['aux.context.surface.x'] = point.x;
@@ -582,8 +577,9 @@ export default class GameView extends Vue implements IGameView {
             this,
             appManager.simulationManager.primary
         );
-        this._setupScene();
-        DebugObjectManager.init(this._time, this._scene);
+        this._setupRenderer();
+        this._setupScenes();
+        DebugObjectManager.init(this._time, this._mainScene);
         this._input = new Input(this);
         this._inputVR = new InputVR(this);
         this._interaction = new BuilderInteractionManager(this);
@@ -602,6 +598,7 @@ export default class GameView extends Vue implements IGameView {
 
         this._setupWebVR();
         await this._setupWebXR();
+        this._handleResize();
         this._frameUpdate();
     }
 
@@ -639,37 +636,6 @@ export default class GameView extends Vue implements IGameView {
         this._renderUpdate(xrFrame);
         this._time.update();
 
-        // Debug direction light postion with arrow keys + control
-        // const speed = 1;
-        // const dt = this._time.deltaTime;
-        // let dirWorldPos = new Vector3();
-        // this._directional.getWorldPosition(dirWorldPos);
-        // if (this._input.getKeyHeld('ArrowUp')) {
-        //     if (this._input.getKeyHeld('Alt')) {
-        //         dirWorldPos.y += speed * dt;
-        //     } else {
-        //         dirWorldPos.z += speed * dt;
-        //     }
-        //     console.log('direction world position:', dirWorldPos);
-        // }
-        // if (this._input.getKeyHeld('ArrowDown')) {
-        //     if (this._input.getKeyHeld('Alt')) {
-        //         dirWorldPos.y += -speed * dt;
-        //     } else {
-        //         dirWorldPos.z += -speed * dt;
-        //     }
-        //     console.log('direction world position:', dirWorldPos);
-        // }
-        // if (this._input.getKeyHeld('ArrowLeft')) {
-        //     dirWorldPos.x += speed * dt;
-        //     console.log('direction world position:', dirWorldPos);
-        // }
-        // if (this._input.getKeyHeld('ArrowRight')) {
-        //     dirWorldPos.x += -speed * dt;
-        //     console.log('direction world position:', dirWorldPos);
-        // }
-        // this._directional.position.copy(dirWorldPos);
-
         if (this.vrDisplay && this.vrDisplay.isPresenting) {
             this.vrDisplay.requestAnimationFrame(() => this._frameUpdate());
         } else if (this.xrSession) {
@@ -683,9 +649,12 @@ export default class GameView extends Vue implements IGameView {
 
     private _cameraUpdate() {
         // Keep camera zoom levels in sync.
-        if (this._uiWorldCamera.zoom !== this._mainCamera.zoom) {
-            this._uiWorldCamera.zoom = this._mainCamera.zoom;
-            this._uiWorldCamera.updateProjectionMatrix();
+        if (
+            this._mainCameraRig.uiWorldCamera.zoom !==
+            this._mainCameraRig.mainCamera.zoom
+        ) {
+            this._mainCameraRig.uiWorldCamera.zoom = this._mainCameraRig.mainCamera.zoom;
+            this._mainCameraRig.uiWorldCamera.updateProjectionMatrix();
         }
     }
 
@@ -693,9 +662,9 @@ export default class GameView extends Vue implements IGameView {
         if (this.vrDisplay && this.vrDisplay.isPresenting) {
             this._vrControls.update();
             this._renderCore();
-            this._vrEffect.render(this._scene, this._mainCamera);
+            this._vrEffect.render(this._mainScene, this._mainCameraRig);
         } else if (this.xrSession && xrFrame) {
-            this._scene.background = null;
+            this._mainScene.background = null;
             this._renderer.setSize(
                 this.xrSession.baseLayer.framebufferWidth,
                 this.xrSession.baseLayer.framebufferHeight,
@@ -703,7 +672,7 @@ export default class GameView extends Vue implements IGameView {
             );
             this._renderer.setClearColor('#000', 0);
 
-            this._mainCamera.matrixAutoUpdate = false;
+            this._mainCameraRig.mainCamera.matrixAutoUpdate = false;
 
             for (const view of xrFrame.views) {
                 // Each XRView has its own projection matrix, so set the _camera to use that
@@ -716,16 +685,18 @@ export default class GameView extends Vue implements IGameView {
 
                 // Move the player up about a foot above the world.
                 position.add(new Vector3(0, 2, 3));
-                this._mainCamera.position.copy(position);
+                this._mainCameraRig.mainCamera.position.copy(position);
 
                 let rotation = new Quaternion();
                 rotation.setFromRotationMatrix(matrix);
-                this._mainCamera.setRotationFromQuaternion(rotation);
+                this._mainCameraRig.mainCamera.setRotationFromQuaternion(
+                    rotation
+                );
 
-                this._mainCamera.updateMatrix();
-                this._mainCamera.updateMatrixWorld(false);
+                this._mainCameraRig.mainCamera.updateMatrix();
+                this._mainCameraRig.mainCamera.updateMatrixWorld(false);
 
-                this._mainCamera.projectionMatrix.fromArray(
+                this._mainCameraRig.mainCamera.projectionMatrix.fromArray(
                     view.projectionMatrix
                 );
 
@@ -741,71 +712,41 @@ export default class GameView extends Vue implements IGameView {
                 this._renderCore();
             }
         } else {
-            this._mainCamera.matrixAutoUpdate = true;
+            this._mainCameraRig.mainCamera.matrixAutoUpdate = true;
             this._renderCore();
         }
     }
 
     private _renderCore(): void {
+        //
+        // [Main scene]
+        //
+
+        // Render the main scene with the main camera.
         this._renderer.clear();
-        this._renderer.render(this._scene, this._mainCamera);
+        this._renderer.render(this._mainScene, this._mainCameraRig.mainCamera);
 
-        // Set the background color to null when rendering the ui world camera.
-        this._scene.background = null;
+        // Set the background color to null when rendering with the ui world camera.
+        this._mainScene.background = null;
 
-        this._renderer.clearDepth(); // Clear depth buffer so that ui objects dont
-        this._renderer.render(this._scene, this._uiWorldCamera);
-        this._sceneBackgroundUpdate();
-    }
-
-    private _sceneBackgroundUpdate() {
-        if (this._sceneBackground) {
-            this._scene.background = this._sceneBackground;
-        } else {
-            this._scene.background = new Color(DEFAULT_SCENE_BACKGROUND_COLOR);
-        }
-    }
-
-    private _setupScene() {
-        this._scene = new Scene();
-
-        let globalsFile = this.simulation3D.simulation.helper.globalsFile;
-
-        // Scene background color.
-        let sceneBackgroundColor = globalsFile.tags['aux.scene.color'];
-        this._sceneBackground = hasValue(sceneBackgroundColor)
-            ? new Color(sceneBackgroundColor)
-            : new Color('#263238');
-        this._sceneBackgroundUpdate();
-        this.setCameraType('orthographic');
-
-        this._setupRenderer();
-
-        // Ambient light.
-        this._ambient = baseAuxAmbientLight();
-        this._scene.add(this._ambient);
-
-        // Directional light.
-        this._directional = baseAuxDirectionalLight();
-        this._scene.add(this._directional);
-
-        // Ground plane.
-        this._groundPlane = new Plane(new Vector3(0, 1, 0));
-
-        // Grid plane.
-        this._gridMesh = new GridHelper(1000, 300, 0xbbbbbb, 0xbbbbbb);
-        this._gridMesh.visible = false;
-        this._scene.add(this._gridMesh);
-
-        // Simulations.
-        this._scene.add(this.simulation3D);
-
-        // Html Mixer Context.
-        this._htmlMixerContext = createHtmlMixerContext(
-            this._renderer,
-            this._mainCamera,
-            this.gameView
+        // Render the main scene with the ui world camera.
+        this._renderer.clearDepth(); // Clear depth buffer so that ui world appears above objects that were just rendererd.
+        this._renderer.render(
+            this._mainScene,
+            this._mainCameraRig.uiWorldCamera
         );
+
+        this._mainSceneBackgroundUpdate();
+    }
+
+    private _mainSceneBackgroundUpdate() {
+        if (this._sceneBackground) {
+            this._mainScene.background = this._sceneBackground;
+        } else {
+            this._mainScene.background = new Color(
+                DEFAULT_SCENE_BACKGROUND_COLOR
+            );
+        }
     }
 
     private _setupRenderer() {
@@ -814,9 +755,53 @@ export default class GameView extends Vue implements IGameView {
             alpha: true,
         }));
         webGlRenderer.autoClear = false;
+        webGlRenderer.shadowMap.enabled = false;
 
-        this._resizeRenderer();
+        this._mainViewport = new Viewport('main', null, this._container);
+
         this.gameView.appendChild(this._renderer.domElement);
+    }
+
+    private _setupScenes() {
+        //
+        // [Main scene]
+        //
+        this._mainScene = new Scene();
+
+        let globalsFile = this.simulation3D.simulation.helper.globalsFile;
+
+        // Main scene background color.
+        let sceneBackgroundColor = globalsFile.tags['aux.scene.color'];
+        this._sceneBackground = hasValue(sceneBackgroundColor)
+            ? new Color(sceneBackgroundColor)
+            : new Color('#263238');
+        this._mainSceneBackgroundUpdate();
+        this.setCameraType('orthographic');
+
+        // Main scene ambient light.
+        const ambient = baseAuxAmbientLight();
+        this._mainScene.add(ambient);
+
+        // Main scene directional light.
+        const directional = baseAuxDirectionalLight();
+        this._mainScene.add(directional);
+
+        // Main scene grid plane.
+        this._gridMesh = new GridHelper(1000, 300, 0xbbbbbb, 0xbbbbbb);
+        this._gridMesh.visible = false;
+        this._mainScene.add(this._gridMesh);
+
+        // Main scene simulations.
+        this._mainScene.add(this.simulation3D);
+
+        //
+        // [Html Mixer Context]
+        //
+        this._htmlMixerContext = createHtmlMixerContext(
+            this._renderer,
+            this._mainCameraRig.mainCamera,
+            this.gameView
+        );
     }
 
     private _setupWebVR() {
@@ -824,15 +809,13 @@ export default class GameView extends Vue implements IGameView {
             console.log('[GameView] vr on before enter');
 
             this._renderer.vr.enabled = true;
-            this._renderer.shadowMap.enabled = false;
 
             // VR controls
-            this._vrControls = new VRControlsModule(this._mainCamera);
+            this._vrControls = new VRControlsModule(this._mainCameraRig);
             this._vrControls.standing = true;
 
             // Create VR Effect rendering in stereoscopic mode
             this._vrEffect = new VREffectModule(this._renderer);
-            this._resizeVR();
             this._renderer.setPixelRatio(window.devicePixelRatio);
 
             return new Promise((resolve, reject) => {
@@ -1012,7 +995,6 @@ export default class GameView extends Vue implements IGameView {
         console.log(display);
 
         this._renderer.vr.enabled = false;
-        this._renderer.shadowMap.enabled = false;
 
         this._inputVR.disconnectControllers();
 
@@ -1023,10 +1005,10 @@ export default class GameView extends Vue implements IGameView {
         this._vrEffect = null;
 
         // reset camera back to default position.
-        this._mainCamera.position.z = 5;
-        this._mainCamera.position.y = 3;
-        this._mainCamera.rotation.x = ThreeMath.degToRad(-30);
-        this._mainCamera.updateMatrixWorld(false);
+        this._mainCameraRig.mainCamera.position.z = 5;
+        this._mainCameraRig.mainCamera.position.y = 3;
+        this._mainCameraRig.mainCamera.rotation.x = ThreeMath.degToRad(-30);
+        this._mainCameraRig.mainCamera.updateMatrixWorld(false);
     }
 
     private _handleErrorVR(error: any) {
@@ -1035,45 +1017,34 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _handleResize() {
-        const { width, height } = this._calculateCameraSize();
-        resizeCameraRig(
-            {
-                mainCamera: this._mainCamera,
-                uiWorldCamera: this._uiWorldCamera,
-            },
-            width,
-            height
-        );
+        const width = window.innerWidth;
+        const height =
+            window.innerHeight - this._container.getBoundingClientRect().top;
 
-        this._resizeRenderer();
-        this._resizeVR();
-    }
+        this._mainViewport.setSize(width, height);
 
-    private _resizeRenderer() {
-        const { width, height } = this._calculateCameraSize();
+        // Resize html view and the webgl renderer.
         this._renderer.setPixelRatio(window.devicePixelRatio || 1);
         this._renderer.setSize(width, height);
         this._container.style.height = this.gameView.style.height = this._renderer.domElement.style.height;
         this._container.style.width = this.gameView.style.width = this._renderer.domElement.style.width;
 
+        // Resize html mixer css3d renderer.
         if (this._htmlMixerContext) {
             this._htmlMixerContext.rendererCss.setSize(width, height);
         }
-    }
 
-    private _resizeVR() {
-        if (!this._vrEffect) return;
+        // Resize cameras.
+        if (this._mainCameraRig) {
+            resizeCameraRig(this._mainCameraRig);
+        }
 
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        this._vrEffect.setSize(width, height);
-    }
-
-    private _calculateCameraSize() {
-        const width = window.innerWidth;
-        const height =
-            window.innerHeight - this._container.getBoundingClientRect().top;
-        return { width, height };
+        // Resize VR effect.
+        if (this._vrEffect) {
+            const vrWidth = window.innerWidth;
+            const vrHeight = window.innerHeight;
+            this._vrEffect.setSize(vrWidth, vrHeight);
+        }
     }
 
     private get _container() {

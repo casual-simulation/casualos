@@ -6,6 +6,8 @@ import {
     Object3D,
     Ray,
     Camera,
+    PerspectiveCamera,
+    OrthographicCamera,
 } from 'three';
 import {
     ContextMenuEvent,
@@ -62,16 +64,24 @@ import MiniFile from '../MiniFile/MiniFile';
 import FileTag from '../FileTag/FileTag';
 import FileTable from '../FileTable/FileTable';
 import { appManager } from '../../shared/AppManager';
-import { Simulation } from 'aux-web/shared/Simulation';
+import { Simulation } from '../../shared/Simulation';
+import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
+import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
 import FileID from '../FileID/FileID';
 import { BuilderFileDragOperation } from './DragOperation/BuilderFileDragOperation';
+import { CameraControls } from '../../shared/interaction/CameraControls';
+import {
+    Orthographic_MinZoom,
+    Orthographic_MaxZoom,
+} from '../../shared/scene/CameraRigFactory';
+import { CameraRigControls } from 'aux-web/shared/interaction/CameraRigControls';
 
 export class BuilderInteractionManager extends BaseInteractionManager {
     // This overrides the base class IGameView
     protected _gameView: GameView;
 
-    private _surfaceColliders: Object3D[];
-    private _surfaceObjectsDirty: boolean;
+    protected _surfaceColliders: DraggableGroup[];
+    protected _surfaceObjectsDirty: boolean;
 
     mode: UserMode = DEFAULT_USER_MODE;
 
@@ -165,7 +175,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         return null;
     }
 
-    findGameObjectObjectForHit(hit: Intersection): GameObject {
+    findGameObjectForHit(hit: Intersection): GameObject {
         if (!hit) {
             return null;
         }
@@ -209,9 +219,12 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         if (size > 1) {
             if (size === 1) {
                 // Can only shrink to zero size if there are no objects on the workspace.
-                const allObjects = this._gameView.getContexts().map(o => {
-                    return o.file;
-                });
+                const allObjects = flatMap(
+                    this._gameView.getSimulations(),
+                    s => {
+                        return s.contexts.map(c => c.file);
+                    }
+                );
                 const workspaceObjects = objectsAtWorkspace(
                     allObjects,
                     file.file.id
@@ -285,34 +298,56 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      */
     pointOnWorkspaceGrid(
         calc: FileCalculationContext,
-        screenPos: Vector2,
+        pagePos: Vector2,
         camera: Camera
     ) {
-        let raycaster = new Raycaster();
-        raycaster.setFromCamera(screenPos, camera);
-        const workspaces = this.getSurfaceObjects(calc);
-        const hits = raycaster.intersectObjects(workspaces, true);
-        const hit = hits[0];
-        if (hit) {
-            const point = hit.point;
-            const workspace = this.findWorkspaceForIntersection(hit);
-            if (
-                workspace &&
-                isContext(calc, workspace.file) &&
-                !getContextMinimized(calc, workspace.file)
-            ) {
-                const workspaceMesh = workspace.surface;
-                const closest = workspaceMesh.closestTileToPoint(point);
+        const workspaceGroups = this.getSurfaceObjectGroups(calc);
 
-                if (closest) {
-                    return {
-                        good: true,
-                        gridPosition: closest.tile.gridPosition,
-                        workspace,
-                    };
+        for (let i = 0; i < workspaceGroups.length; i++) {
+            const objects = workspaceGroups[i].objects;
+            const camera = workspaceGroups[i].camera;
+            const viewport = workspaceGroups[i].viewport;
+
+            let screenPos: Vector2;
+            if (viewport) {
+                screenPos = Input.screenPositionForViewport(pagePos, viewport);
+            } else {
+                screenPos = Input.screenPosition(
+                    pagePos,
+                    this._gameView.gameView
+                );
+            }
+
+            const hits = Physics.raycastAtScreenPos(
+                screenPos,
+                new Raycaster(),
+                objects,
+                camera
+            );
+            const hit = Physics.firstRaycastHit(hits);
+
+            if (hit) {
+                const point = hit.point;
+                const workspace = this.findWorkspaceForIntersection(hit);
+                if (
+                    workspace &&
+                    isContext(calc, workspace.file) &&
+                    !getContextMinimized(calc, workspace.file)
+                ) {
+                    const workspaceMesh = workspace.surface;
+                    const closest = workspaceMesh.closestTileToPoint(point);
+
+                    if (closest) {
+                        return {
+                            good: true,
+                            gridPosition: closest.tile.gridPosition,
+                            workspace,
+                        };
+                    }
                 }
             }
         }
+
         return {
             good: false,
         };
@@ -329,14 +364,15 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         point: Vector3,
         exclude?: AuxFile3D | ContextGroup3D
     ) {
-        const workspaceMeshes = this._gameView
-            .getContexts()
-            .filter(
-                context =>
-                    context !== exclude &&
-                    !getContextMinimized(calc, context.file) &&
-                    !!getContextSize(calc, context.file)
-            );
+        const contexts = flatMap(this._gameView.getSimulations(), s => {
+            return s.contexts;
+        });
+        const workspaceMeshes = contexts.filter(
+            context =>
+                context !== exclude &&
+                !getContextMinimized(calc, context.file) &&
+                !!getContextSize(calc, context.file)
+        );
 
         if (!!workspaceMeshes && workspaceMeshes.length > 0) {
             const center = new Axial();
@@ -389,17 +425,59 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         return this.findWorkspaceForIntersection(hit) === null;
     }
 
-    getSurfaceObjects(calc: FileCalculationContext) {
+    getSurfaceObjectGroups(calc: FileCalculationContext): DraggableGroup[] {
         if (this._surfaceObjectsDirty) {
-            this._surfaceColliders = flatMap(
-                (<GameView>this._gameView)
-                    .getContexts()
-                    .filter(f => isContext(calc, f.file)),
-                (f: BuilderGroup3D) => f.surface.colliders
+            const builderSimulations = this._gameView
+                .getSimulations()
+                .filter(s => s instanceof BuilderSimulation3D);
+            const builderContexts = flatMap(
+                builderSimulations,
+                s => s.contexts
+            ).filter(c => isContext(calc, c.file));
+            const surfaceObjects = flatMap(
+                builderContexts,
+                c => (<BuilderGroup3D>c).surface.colliders
             );
+
+            this._surfaceColliders = [
+                {
+                    objects: surfaceObjects,
+                    camera: this._gameView.getMainCameraRig().mainCamera,
+                    viewport: this._gameView.getMainCameraRig().viewport,
+                },
+            ];
+
             this._surfaceObjectsDirty = false;
         }
+
         return this._surfaceColliders;
+    }
+
+    protected _markDirty() {
+        super._markDirty();
+        this._surfaceObjectsDirty = true;
+    }
+
+    protected _createControlsForCameraRigs(): CameraRigControls[] {
+        let mainCameraRigControls: CameraRigControls = {
+            rig: this._gameView.getMainCameraRig(),
+            controls: new CameraControls(
+                this._gameView.getMainCameraRig().mainCamera,
+                this._gameView,
+                this._gameView.getMainCameraRig().viewport
+            ),
+        };
+
+        mainCameraRigControls.controls.minZoom = Orthographic_MinZoom;
+        mainCameraRigControls.controls.maxZoom = Orthographic_MaxZoom;
+
+        if (
+            mainCameraRigControls.rig.mainCamera instanceof OrthographicCamera
+        ) {
+            mainCameraRigControls.controls.screenSpacePanning = true;
+        }
+
+        return [mainCameraRigControls];
     }
 
     protected _contextMenuActions(
@@ -559,11 +637,11 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             const files = flatMap(contexts, c => filesInContext(calc, c));
             const deduped = uniqBy(files, f => f.id);
             await appManager.copyFilesFromSimulation(
-                file.simulation.simulation,
+                file.simulation3D.simulation,
                 <AuxObject[]>deduped
             );
 
-            await file.simulation.simulation.helper.transaction(
+            await file.simulation3D.simulation.helper.transaction(
                 toast('Worksurface Copied!')
             );
         }
@@ -616,10 +694,5 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         const scale = getContextScale(calc, file.file);
         const localPos = new Vector3().copy(pos).sub(file.position);
         return realPosToGridPos(new Vector2(localPos.x, localPos.z), scale);
-    }
-
-    protected _markDirty() {
-        super._markDirty();
-        this._surfaceObjectsDirty = true;
     }
 }

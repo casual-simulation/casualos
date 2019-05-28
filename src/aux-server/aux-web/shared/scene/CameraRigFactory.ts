@@ -1,5 +1,6 @@
 import { PerspectiveCamera, OrthographicCamera, Scene, Vector3 } from 'three';
 import { LayersHelper } from './LayersHelper';
+import { Viewport } from './Viewport';
 
 export const Orthographic_FrustrumSize: number = 100;
 export const Orthographic_DefaultZoom: number = 8;
@@ -16,17 +17,21 @@ export const Perspective_DefaultPosition = { x: 5, y: 5, z: 5 };
 export declare type CameraType = 'perspective' | 'orthographic';
 
 export interface CameraRig {
+    id: string;
+    viewport: Viewport;
     mainCamera: PerspectiveCamera | OrthographicCamera;
     uiWorldCamera: PerspectiveCamera | OrthographicCamera;
 }
 
 export function createCameraRig(
+    id: string,
     type: CameraType,
     scene: Scene,
-    windowWidth: number,
-    windowHeight: number
+    viewport: Viewport
 ): CameraRig {
     let rig: CameraRig = {
+        id: id,
+        viewport: viewport,
         mainCamera: null,
         uiWorldCamera: null,
     };
@@ -93,17 +98,13 @@ export function createCameraRig(
 
     rig.mainCamera.updateMatrixWorld(true);
 
-    resizeCameraRig(rig, windowWidth, windowHeight);
+    resizeCameraRig(rig);
 
     return rig;
 }
 
-export function resizeCameraRig(
-    rig: CameraRig,
-    windowWidth: number,
-    windowHeight: number
-): void {
-    let aspect = windowWidth / windowHeight;
+export function resizeCameraRig(rig: CameraRig): void {
+    let aspect = rig.viewport.width / rig.viewport.height;
 
     if (rig.mainCamera instanceof OrthographicCamera) {
         rig.mainCamera.left = (-Orthographic_FrustrumSize * aspect) / 2;

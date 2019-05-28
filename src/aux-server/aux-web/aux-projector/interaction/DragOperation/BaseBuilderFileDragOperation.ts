@@ -59,26 +59,26 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
      * Create a new drag rules.
      */
     constructor(
-        simulation: Simulation3D,
+        simulation3D: Simulation3D,
         interaction: BuilderInteractionManager,
         files: File[],
         context: string
     ) {
-        super(simulation, interaction, files, context);
+        super(simulation3D, interaction, files, context);
 
         this.gameView.showTrashCan = true;
     }
 
     protected _onDrag(calc: FileCalculationContext) {
-        const mouseScreenPos = this.gameView.getInput().getMouseScreenPos();
+        const mousePagePos = this.gameView.getInput().getMousePagePos();
         const {
             good,
             gridPosition,
             workspace,
         } = this._interaction.pointOnWorkspaceGrid(
             calc,
-            mouseScreenPos,
-            this.gameView.getMainCamera()
+            mousePagePos,
+            this.gameView.getMainCameraRig().mainCamera
         );
 
         if (this._files.length > 0) {
@@ -138,7 +138,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     protected _dragFilesFree(calc: FileCalculationContext): void {
         const mouseDir = Physics.screenPosToRay(
             this.gameView.getInput().getMouseScreenPos(),
-            this.gameView.getMainCamera()
+            this.gameView.getMainCameraRig().mainCamera
         );
         const firstFileExists = true;
 
@@ -159,8 +159,8 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
                     new Vector3()
                 );
                 const cameraWorldPos = this.gameView
-                    .getMainCamera()
-                    .getWorldPosition(new Vector3());
+                    .getMainCameraRig()
+                    .mainCamera.getWorldPosition(new Vector3());
                 this._freeDragDistance = cameraWorldPos.distanceTo(
                     fileWorldPos
                 );
@@ -192,9 +192,13 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     /**
      * Determines whether the mouse is currently over the trash can.
      */
-    protected _isOverTrashCan() {
+    protected _isOverTrashCan(): boolean {
         const input = this.gameView.getInput();
-        if (input.isMouseFocusingAny(this.gameView.getUIHtmlElements())) {
+        if (
+            input.isMouseButtonDownOnAnyElements(
+                this.gameView.getUIHtmlElements()
+            )
+        ) {
             const element = input.getTargetData().inputOver;
             const vueElement = Input.getVueParent(element, TrashCan);
             return !!vueElement;

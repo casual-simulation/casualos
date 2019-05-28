@@ -2,23 +2,74 @@
 
 ![GitHub issues](https://img.shields.io/github/issues/casual-simulation/aux.svg) ![GitHub](https://img.shields.io/github/license/casual-simulation/aux.svg)
 
-A monorepo that contains the AUX (Ambient User Experience) packages.
+AUX (Ambient User Experience) is a set of tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
 
-## Packages
+This repository is a monorepo that contains the code which makes the AUX web platform work.
 
-This repository contains the following packages:
+## Installation
 
--   AUX Common
-    -   Library of common code for AUX projects.
-    -   Contains the AUX file format and basic primitives to enable realtime-web applications.
--   AUX Server
-    -   Web application containing the AUX Projector and AUX Player.
-    -   Uses a Node.js server to distribute the files and WebSockets for realtime communication.
-    -   Built on top of AUX Common.
+Installing the AUX platform is actually quite simple. All you need is Docker.
+
+### Prerequisites
+
+First, you need a computer that has [Docker][docker] installed on it.
+This means any Linux, MacOS, or Windows based machine.
+
+Currently, we support any x86, x64 or ARMv32 based machine.
+
+Follow [these instructions][docker-install] to get Docker installed on your machine.
+
+Second, you need to install [Docker Compose][docker-compose].
+
+If you are running a Mac or Windows machine, then Docker Compose is included in your Docker installation. If you are running a Linux system, then you need to follow the instructions [on their website][docker-compose-install].
+
+### Installation
+
+Once you have Docker installed, you can install AUX.
+
+First, download the correct `docker-compose.yml` file.
+
+#### If you are running an x64 or x86 machine, download `docker-compose.yml`:
+
+Linux/Mac:
+
+```bash
+$ curl https://raw.githubusercontent.com/casual-simulation/aux/master/docker-compose.yml --output docker-compose.yml
+```
+
+Or on Windows using PowerShell:
+
+```powershell
+Invoke-WebRequest -OutFile docker-compose.yml https://raw.githubusercontent.com/casual-simulation/aux/master/docker-compose.yml
+```
+
+#### If you are running an ARM machine, download `docker-compose.arm32.yml`:
+
+Linux/Mac:
+
+```bash
+$ curl https://github.com/casual-simulation/aux/blob/master/docker-compose.arm32.yml -- output docker-compose.yml
+```
+
+Windows:
+
+```powershell
+Invoke-WebRequest -OutFile docker-compose.yml https://github.com/casual-simulation/aux/blob/master/docker-compose.arm32.yml
+```
+
+Next, load the compose file into docker. This will download the applications and services and run them.
+
+```bash
+$ docker-compose up -d
+```
+
+You're done!
+
+To access your AUX, simply visit `http://{your_ip_address}/hello/world` in a web browser.
 
 ## Developing
 
-See [DEVELOPERS.md](./DEVELOPERS.md) for dev environment setup instructions.
+See [DEVELOPERS.md](./DEVELOPERS.md) for development environment setup instructions.
 
 ## License
 
@@ -45,3 +96,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+[docker]: https://www.docker.com/
+[docker-install]: https://docs.docker.com/install/
+[docker-compose]: https://docs.docker.com/compose/install/
+[docker-compose-install]: https://docs.docker.com/compose/install/

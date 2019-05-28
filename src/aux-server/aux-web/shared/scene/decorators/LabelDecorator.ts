@@ -17,7 +17,7 @@ import { Color, Camera, Object3D, Mesh, Vector3, Scene, Box3 } from 'three';
 import { FileShapeDecorator } from './FileShapeDecorator';
 import { WordBubbleElement } from '../WordBubbleElement';
 import { appManager } from '../../../shared/AppManager';
-import { IGameView } from 'aux-web/shared/IGameView';
+import { IGameView } from '../../../shared/IGameView';
 
 export class LabelDecorator extends AuxFile3DDecorator
     implements WordBubbleElement {
@@ -123,7 +123,7 @@ export class LabelDecorator extends AuxFile3DDecorator
         if (this._isInAutoSizeMode(calc)) {
             let labelWorldPos = new Vector3();
             this.label.getWorldPosition(labelWorldPos);
-            const mainCamera = this._gameView.getMainCamera();
+            const mainCamera = this._gameView.getMainCameraRig().mainCamera;
             const distanceToCamera = mainCamera.position.distanceTo(
                 labelWorldPos
             );

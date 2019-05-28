@@ -6,17 +6,6 @@
         <div class="ui-container">
             <div class="toolbar">
                 <div>
-                    <div ref="inventory">
-                        <div v-if="!vrDisplay" class="inventory-layout">
-                            <inventory-file
-                                v-for="(item, index) in inventory"
-                                :key="index"
-                                :item="item"
-                                :slotIndex="index"
-                            >
-                            </inventory-file>
-                        </div>
-                    </div>
                     <md-card v-if="!vrDisplay && menu.length > 0" class="menu-layout md-dense">
                         <md-list class="md-dense">
                             <md-list-item md-expand :md-expanded.sync="menuExpanded">

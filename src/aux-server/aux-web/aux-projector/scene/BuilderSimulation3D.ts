@@ -5,12 +5,28 @@ import {
     getFileConfigContexts,
     FileCalculationContext,
     Object,
+    isContext,
 } from '@casual-simulation/aux-common';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
+import { PerspectiveCamera, OrthographicCamera, Object3D, Plane } from 'three';
+import { Simulation } from '../../shared/Simulation';
+import { IGameView } from '../../shared/IGameView';
+import { flatMap } from 'lodash';
+import GameView from '../GameView/GameView';
+import { CameraRig } from '../../shared/scene/CameraRigFactory';
 
 export class BuilderSimulation3D extends Simulation3D {
     recentFiles: Object[] = [];
     selectedRecentFile: Object = null;
+
+    /**
+     * Creates a new BuilderSimulation3D object that can be used to render the given simulation.
+     * @param gameView The game view.
+     * @param simulation The simulation to render.
+     */
+    constructor(gameView: IGameView, simulation: Simulation) {
+        super(gameView, simulation);
+    }
 
     init() {
         super.init();
@@ -23,6 +39,10 @@ export class BuilderSimulation3D extends Simulation3D {
                 this.selectedRecentFile = this.simulation.recent.selectedRecentFile;
             })
         );
+    }
+
+    getMainCameraRig(): CameraRig {
+        return this._gameView.getMainCameraRig();
     }
 
     clearRecentFiles() {

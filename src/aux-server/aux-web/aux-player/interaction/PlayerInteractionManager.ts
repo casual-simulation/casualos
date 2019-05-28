@@ -1,4 +1,12 @@
-import { Vector2, Vector3, Intersection, Ray, Raycaster } from 'three';
+import {
+    Vector2,
+    Vector3,
+    Intersection,
+    Ray,
+    Raycaster,
+    Object3D,
+    OrthographicCamera,
+} from 'three';
 import { ContextMenuAction } from '../../shared/interaction/ContextMenuEvent';
 import {
     File,
@@ -14,11 +22,20 @@ import { PlayerFileClickOperation } from './ClickOperation/PlayerFileClickOperat
 import { PlayerGrid } from '../PlayerGrid';
 import { Physics } from '../../shared/scene/Physics';
 import { Input } from '../../shared/scene/Input';
-import InventoryFile from '../InventoryFile/InventoryFile';
-import { PlayerInventoryFileClickOperation } from './ClickOperation/PlayerInventoryFileClickOperation';
 import { appManager } from '../../shared/AppManager';
 import { PlayerSimulation3D } from '../scene/PlayerSimulation3D';
 import { Simulation } from '../../shared/Simulation';
+import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
+import { flatMap } from 'lodash';
+import { InventoryContextGroup3D } from '../scene/InventoryContextGroup3D';
+import { isObjectVisible } from '../../shared/scene/SceneUtils';
+import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
+import { CameraControls } from '../../shared/interaction/CameraControls';
+import {
+    Orthographic_MinZoom,
+    Orthographic_MaxZoom,
+    CameraRig,
+} from '../../shared/scene/CameraRigFactory';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class IGameView
@@ -64,7 +81,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             }
 
             let fileClickOp = new PlayerFileClickOperation(
-                <PlayerSimulation3D>gameObject.contextGroup.simulation,
+                gameObject.contextGroup.simulation3D,
                 this,
                 gameObject,
                 faceValue
@@ -73,6 +90,55 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         } else {
             return null;
         }
+    }
+
+    getDraggableGroups(): DraggableGroup[] {
+        if (this._draggableGroupsDirty) {
+            const contexts = flatMap(
+                this._gameView.getSimulations(),
+                s => s.contexts
+            );
+            if (contexts && contexts.length > 0) {
+                // Sort between inventory colliders and other colliders.
+                let inventoryColliders: Object3D[] = [];
+                let otherColliders: Object3D[] = [];
+
+                for (let i = 0; i < contexts.length; i++) {
+                    const context = contexts[i];
+                    const colliders = context.colliders.filter(c =>
+                        isObjectVisible(c)
+                    );
+
+                    if (context instanceof InventoryContextGroup3D) {
+                        inventoryColliders.push(...colliders);
+                    } else {
+                        otherColliders.push(...colliders);
+                    }
+
+                    // Put inventory colliders in front of other colliders so that they take priority in input testing.
+                    this._draggableGroups = [
+                        {
+                            objects: inventoryColliders,
+                            camera: this._gameView.getInventoryCameraRig()
+                                .mainCamera,
+                            viewport: this._gameView.getInventoryCameraRig()
+                                .viewport,
+                        },
+                        {
+                            objects: otherColliders,
+                            camera: this._gameView.getMainCameraRig()
+                                .mainCamera,
+                            viewport: this._gameView.getMainCameraRig()
+                                .viewport,
+                        },
+                    ];
+                }
+            }
+
+            this._draggableGroupsDirty = false;
+        }
+
+        return this._draggableGroups;
     }
 
     handlePointerEnter(file: File, simulation: Simulation): IOperation {
@@ -95,18 +161,6 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     }
 
     createHtmlElementClickOperation(element: HTMLElement): IOperation {
-        const vueElement: any = Input.getVueParent(element);
-        if (vueElement instanceof InventoryFile) {
-            if (vueElement.item) {
-                let inventoryClickOperation = new PlayerInventoryFileClickOperation(
-                    vueElement.item.simulation,
-                    this,
-                    vueElement.item
-                );
-                return inventoryClickOperation;
-            }
-        }
-
         return null;
     }
 
@@ -115,10 +169,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
      * @param ray The ray to test.
      */
     pointOnGrid(calc: FileCalculationContext, ray: Ray) {
-        let planeHit = Physics.pointOnPlane(
-            ray,
-            this._gameView.getGroundPlane()
-        );
+        let planeHit = Physics.pointOnPlane(ray, Physics.GroundPlane);
         // We need to flip the sign of the z coordinate here.
         planeHit.z = -planeHit.z;
 
@@ -137,24 +188,44 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         };
     }
 
-    protected _findHoveredFile(input: Input): [File, Simulation] {
-        if (input.isMouseFocusingAny(this._gameView.getUIHtmlElements())) {
-            const element = input.getTargetData().inputOver;
-            const vueElement = Input.getVueParent(element);
+    protected _createControlsForCameraRigs(): CameraRigControls[] {
+        // Main camera
+        let mainCameraRigControls: CameraRigControls = {
+            rig: this._gameView.getMainCameraRig(),
+            controls: new CameraControls(
+                this._gameView.getMainCameraRig().mainCamera,
+                this._gameView,
+                this._gameView.getMainCameraRig().viewport
+            ),
+        };
 
-            if (vueElement instanceof InventoryFile) {
-                // handle hover
-                if (vueElement.file) {
-                    return [
-                        vueElement.file,
-                        vueElement.item.simulation.simulation,
-                    ];
-                } else {
-                    return [null, null];
-                }
-            }
+        mainCameraRigControls.controls.minZoom = Orthographic_MinZoom;
+        mainCameraRigControls.controls.maxZoom = Orthographic_MaxZoom;
+
+        if (
+            mainCameraRigControls.rig.mainCamera instanceof OrthographicCamera
+        ) {
+            mainCameraRigControls.controls.screenSpacePanning = true;
         }
-        return super._findHoveredFile(input);
+
+        // Inventory camera
+        let invCameraRigControls: CameraRigControls = {
+            rig: this._gameView.getInventoryCameraRig(),
+            controls: new CameraControls(
+                this._gameView.getInventoryCameraRig().mainCamera,
+                this._gameView,
+                this._gameView.getInventoryCameraRig().viewport
+            ),
+        };
+
+        invCameraRigControls.controls.minZoom = Orthographic_MinZoom;
+        invCameraRigControls.controls.maxZoom = Orthographic_MaxZoom;
+
+        if (invCameraRigControls.rig.mainCamera instanceof OrthographicCamera) {
+            invCameraRigControls.controls.screenSpacePanning = true;
+        }
+
+        return [mainCameraRigControls, invCameraRigControls];
     }
 
     protected _contextMenuActions(

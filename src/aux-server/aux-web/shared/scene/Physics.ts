@@ -15,6 +15,11 @@ import {
  */
 export namespace Physics {
     /**
+     * Infinite mathematical plane whos normal points up towards the sky.
+     */
+    export const GroundPlane: Plane = new Plane(new Vector3(0, 1, 0));
+
+    /**
      * Defines the result of a raycast.
      */
     export interface RaycastResult {
@@ -34,9 +39,9 @@ export namespace Physics {
      * @pos The screen position that the ray should use for its direction vector.
      * @camera The camera that the ray should point from.
      */
-    export function screenPosToRay(pos: Vector2, camera: Camera) {
+    export function screenPosToRay(screenPos: Vector2, camera: Camera): Ray {
         let raycaster = new Raycaster();
-        raycaster.setFromCamera(pos, camera);
+        raycaster.setFromCamera(screenPos, camera);
         return raycaster.ray;
     }
 
@@ -72,22 +77,22 @@ export namespace Physics {
 
     /**
      * Performs a raycast at the given screen position with the given camera using the given raycaster and against the given objects.
-     * @param pos The screen position to raycast from.
+     * @param screenPos The screen position to raycast from.
      * @param raycaster The raycaster to use.
      * @param objects The objects to raycast against.
      * @param camera The camera to use.
      */
     export function raycastAtScreenPos(
-        pos: Vector2,
+        screenPos: Vector2,
         raycaster: Raycaster,
         objects: Object3D[],
         camera: Camera
     ): RaycastResult {
-        raycaster.setFromCamera(pos, camera);
+        raycaster.setFromCamera(screenPos, camera);
         const intersects = raycaster.intersectObjects(objects, true);
 
         return {
-            pointerScreenPos: pos,
+            pointerScreenPos: screenPos,
             intersects,
         };
     }
