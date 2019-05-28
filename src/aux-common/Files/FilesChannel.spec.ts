@@ -1960,6 +1960,106 @@ describe('FilesChannel', () => {
             });
         });
 
+        describe('getFilesInStack()', () => {
+            it('should return the list of files that are in the same position as the given file in the given context', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            abc: true,
+                            'abc.x': 1,
+                            'abc.y': 2,
+                            'abc.index': 2,
+                            'test()':
+                                'this.length = getFilesInStack(this, "abc").length',
+                        },
+                    },
+                    thatFile: {
+                        id: 'thatFile',
+                        tags: {
+                            abc: true,
+                            'abc.x': 1,
+                            'abc.y': 2,
+                            'abc.index': 1,
+                        },
+                    },
+                    otherFile: {
+                        id: 'otherFile',
+                        tags: {
+                            abc: true,
+                            'abc.x': 1,
+                            'abc.y': 3,
+                            'abc.index': 0,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            length: 2,
+                        },
+                    }),
+                ]);
+            });
+
+            it('should sort the returned files by their index', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            abc: true,
+                            'abc.x': 1,
+                            'abc.y': 2,
+                            'abc.index': 2,
+                            'test()':
+                                'this.ids = getFilesInStack(this, "abc").map(f => f.id.valueOf())',
+                        },
+                    },
+                    thatFile: {
+                        id: 'thatFile',
+                        tags: {
+                            abc: true,
+                            'abc.x': 1,
+                            'abc.y': 2,
+                            'abc.index': 1,
+                        },
+                    },
+                    otherFile: {
+                        id: 'otherFile',
+                        tags: {
+                            abc: true,
+                            'abc.x': 1,
+                            'abc.y': 2,
+                            'abc.index': 3,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            ids: ['thatFile', 'thisFile', 'otherFile'],
+                        },
+                    }),
+                ]);
+            });
+        });
+
         describe('setPositionDiff()', () => {
             it('should return a diff that sets the file position in a context when applied', () => {
                 const state: FilesState = {

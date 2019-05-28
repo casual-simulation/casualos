@@ -19,7 +19,7 @@ import {
     goToContext as calcGoToContext,
 } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
-import { every, find } from 'lodash';
+import { every, find, sortBy } from 'lodash';
 import { isProxy, proxyObject, FileProxy } from '../Files/FileProxy';
 import {
     FileCalculationContext,
@@ -356,7 +356,7 @@ function destroyChildren(id: string) {
  * Creates a new file that contains the given tags.
  * @param diffs The diffs that specify what tags to set on the file.
  */
-export function create(...diffs: (FileDiff | FileDiff[])[]) {
+function create(...diffs: (FileDiff | FileDiff[])[]) {
     let variants: FileDiff[][] = new Array<FileDiff[]>(1);
     variants[0] = [];
 
@@ -416,7 +416,7 @@ export function create(...diffs: (FileDiff | FileDiff[])[]) {
  * Gets the file ID from the given file.
  * @param file The file or string.
  */
-export function getFileId(file: FileProxy | string): string {
+function getFileId(file: FileProxy | string): string {
     if (typeof file === 'string') {
         return file;
     } else if (file) {
@@ -430,7 +430,7 @@ export function getFileId(file: FileProxy | string): string {
  * @param parent The file that should be the parent of the new file.
  * @param data The object that specifies the new file's tag values.
  */
-export function createFrom(parent: FileProxy | string, ...datas: FileDiff[]) {
+function createFrom(parent: FileProxy | string, ...datas: FileDiff[]) {
     let parentId = getFileId(parent);
     let parentDiff = parentId
         ? {
@@ -445,7 +445,7 @@ export function createFrom(parent: FileProxy | string, ...datas: FileDiff[]) {
  * @param first The first file.
  * @param second The second file.
  */
-export function combine(first: File | string, second: File | string) {
+function combine(first: File | string, second: File | string) {
     event(COMBINE_ACTION_NAME, [first, second]);
 }
 
@@ -455,7 +455,7 @@ export function combine(first: File | string, second: File | string) {
  * @param files The files that the event should be executed on. If null, then the event will be run on every file.
  * @param arg The argument to pass.
  */
-export function event(name: string, files: (File | string)[], arg?: any) {
+function event(name: string, files: (File | string)[], arg?: any) {
     if (!!state) {
         let ids = !!files
             ? files.map(f => {
@@ -475,7 +475,7 @@ export function event(name: string, files: (File | string)[], arg?: any) {
  * Shouts the given event to every file.
  * @param name The event name.
  */
-export function shout(name: string, arg?: any) {
+function shout(name: string, arg?: any) {
     event(name, null, arg);
 }
 
@@ -484,7 +484,7 @@ export function shout(name: string, arg?: any) {
  * @param eventName The name of the event to shout.
  * @param arg The argument to shout. This gets passed as the `that` variable to the other scripts.
  */
-export function superShout(eventName: string, arg?: any) {
+function superShout(eventName: string, arg?: any) {
     actions.push(calcSuperShout(eventName, arg));
 }
 
@@ -494,7 +494,7 @@ export function superShout(eventName: string, arg?: any) {
  * @param eventName The name of the event to send.
  * @param arg The argument to pass.
  */
-export function whisper(file: File | string, eventName: string, arg?: any) {
+function whisper(file: File | string, eventName: string, arg?: any) {
     event(eventName, [file], arg);
 }
 
@@ -502,7 +502,7 @@ export function whisper(file: File | string, eventName: string, arg?: any) {
  * Redirects the user to the given context.
  * @param context The context to go to.
  */
-export function goToContext(context: string) {
+function goToContext(context: string) {
     actions.push(calcGoToContext(context));
 }
 
@@ -510,14 +510,14 @@ export function goToContext(context: string) {
  * Derermines whether the player is in the given context.
  * @param context The context.
  */
-export function isInContext(givenContext: string) {
+function isInContext(givenContext: string) {
     return currentContext() === givenContext;
 }
 
 /**
  * Gets the context that the player is currently in.
  */
-export function currentContext(): string {
+function currentContext(): string {
     const user = getUser();
     if (user) {
         const context = user['aux._userContext'];
@@ -530,7 +530,7 @@ export function currentContext(): string {
  * Determines whether the player has the given file in their inventory.
  * @param files The file or files to check.
  */
-export function hasFileInInventory(files: FileProxy | FileProxy[]): boolean {
+function hasFileInInventory(files: FileProxy | FileProxy[]): boolean {
     if (!Array.isArray(files)) {
         files = [files];
     }
@@ -547,7 +547,7 @@ export function hasFileInInventory(files: FileProxy | FileProxy[]): boolean {
 /**
  * Gets the current user's file.
  */
-export function getUser() {
+function getUser() {
     if (!getUserId()) {
         return null;
     }
@@ -565,7 +565,7 @@ export function getUser() {
 /**
  * Gets the name of the context that is used for the current user's menu.
  */
-export function getUserMenuContext(): string {
+function getUserMenuContext(): string {
     const user = getUser();
     if (user) {
         return user['aux._userMenuContext'];
@@ -577,7 +577,7 @@ export function getUserMenuContext(): string {
 /**
  * Gets the name of the context that is used for the current user's inventory.
  */
-export function getUserInventoryContext(): string {
+function getUserInventoryContext(): string {
     const user = getUser();
     if (user) {
         return user['aux._userInventoryContext'];
@@ -590,7 +590,7 @@ export function getUserInventoryContext(): string {
  * Gets the list of files that are in the given context.
  * @param context The context.
  */
-export function getFilesInContext(context: string): FileProxy[] {
+function getFilesInContext(context: string): FileProxy[] {
     const result = calc.sandbox.interface.listObjectsWithTag(context, true);
     if (Array.isArray(result)) {
         return result;
@@ -599,7 +599,28 @@ export function getFilesInContext(context: string): FileProxy[] {
     }
 }
 
-export function createDiff(file: any, ...tags: (string | RegExp)[]): FileDiff {
+/**
+ * Gets the list of files that are at the same position in the given context as the given file.
+ * @param file A file in the stack of files.
+ * @param context The context that the stack of files exists in.
+ */
+function getFilesInStack(file: FileProxy, context: string): FileProxy[] {
+    const result = <FileProxy[]>(
+        calc.sandbox.interface.listObjectsWithTag(context, true)
+    );
+    const filtered = result.filter(f => {
+        return (
+            f[`${context}.x`].valueOf() === file[`${context}.x`].valueOf() &&
+            f[`${context}.y`].valueOf() === file[`${context}.y`].valueOf()
+        );
+    });
+
+    return <FileProxy[]>(
+        sortBy(filtered, f => f[`${context}.index`].valueOf() || 0)
+    );
+}
+
+function createDiff(file: any, ...tags: (string | RegExp)[]): FileDiff {
     let diff: FileTags = {};
 
     let fileTags = tagsOnFile(file);
@@ -632,7 +653,7 @@ export function createDiff(file: any, ...tags: (string | RegExp)[]): FileDiff {
  * @param file The file.
  * @param diff The diff to apply.
  */
-export function applyDiff(file: any, ...diffs: FileDiff[]) {
+function applyDiff(file: any, ...diffs: FileDiff[]) {
     diffs.forEach(diff => {
         if (!diff) {
             return;
@@ -655,7 +676,7 @@ export function applyDiff(file: any, ...diffs: FileDiff[]) {
  * @param y The Y position that the file should be added at.
  * @param index The index that the file should be added at.
  */
-export function addToContextDiff(
+function addToContextDiff(
     context: string,
     x: number = 0,
     y: number = 0,
@@ -668,7 +689,7 @@ export function addToContextDiff(
  * Gets a diff that removes a file from the given context.
  * @param context The context.
  */
-export function removeFromContextDiff(context: string) {
+function removeFromContextDiff(context: string) {
     return calcRemoveFromContextDiff(calc, context);
 }
 
@@ -680,7 +701,7 @@ export function removeFromContextDiff(context: string) {
  * @param y The Y position that the file should be added at.
  * @param index The index that the file should be added at.
  */
-export function addToContext(
+function addToContext(
     file: FileProxy,
     context: string,
     x: number = 0,
@@ -695,7 +716,7 @@ export function addToContext(
  * @param file The file.
  * @param context The context.
  */
-export function removeFromContext(file: FileProxy, context: string) {
+function removeFromContext(file: FileProxy, context: string) {
     applyDiff(file, removeFromContextDiff(context));
 }
 
@@ -706,7 +727,7 @@ export function removeFromContext(file: FileProxy, context: string) {
  * @param y The Y position.
  * @param index The index.
  */
-export function setPositionDiff(
+function setPositionDiff(
     context: string,
     x?: number,
     y?: number,
@@ -718,7 +739,7 @@ export function setPositionDiff(
 /**
  * Gets a diff that adds a file to the current user's menu.
  */
-export function addToMenuDiff(): FileTags {
+function addToMenuDiff(): FileTags {
     const context = getUserMenuContext();
     return {
         ...addToContextDiff(context),
@@ -730,14 +751,14 @@ export function addToMenuDiff(): FileTags {
  * Adds the given file to the current user's menu.
  * @param file The file to add to the menu.
  */
-export function addToMenu(file: FileProxy) {
+function addToMenu(file: FileProxy) {
     applyDiff(file, addToMenuDiff());
 }
 
 /**
  * Gets a diff that removes a file from the current user's menu.
  */
-export function removeFromMenuDiff(): FileTags {
+function removeFromMenuDiff(): FileTags {
     const context = getUserMenuContext();
     return {
         ...removeFromContextDiff(context),
@@ -749,7 +770,7 @@ export function removeFromMenuDiff(): FileTags {
  * Removes the given file from the current user's menu.
  * @param file The file to remove from the menu.
  */
-export function removeFromMenu(file: FileProxy) {
+function removeFromMenu(file: FileProxy) {
     applyDiff(file, removeFromMenuDiff());
 }
 
@@ -757,7 +778,7 @@ export function removeFromMenu(file: FileProxy) {
  * Shows a toast message to the user.
  * @param message The message to show.
  */
-export function toast(message: string) {
+function toast(message: string) {
     actions.push(toastMessage(message));
 }
 
@@ -766,21 +787,21 @@ export function toast(message: string) {
  * @param file The file to view.
  * @param zoomValue The zoom value to use.
  */
-export function tweenTo(file: FileProxy | string, zoomValue?: number) {
+function tweenTo(file: FileProxy | string, zoomValue?: number) {
     actions.push(calcTweenTo(getFileId(file), zoomValue));
 }
 
 /**
  * Opens the QR Code Scanner.
  */
-export function openQRCodeScanner() {
+function openQRCodeScanner() {
     actions.push(calcOpenQRCodeScanner(true));
 }
 
 /**
  * Closes the QR Code Scanner.
  */
-export function closeQRCodeScanner() {
+function closeQRCodeScanner() {
     actions.push(calcOpenQRCodeScanner(false));
 }
 
@@ -788,14 +809,14 @@ export function closeQRCodeScanner() {
  * Shows the given QR Code.
  * @param code The code to show.
  */
-export function showQRCode(code: string) {
+function showQRCode(code: string) {
     actions.push(calcShowQRCode(true, code));
 }
 
 /**
  * Hides the QR Code.
  */
-export function hideQRCode() {
+function hideQRCode() {
     actions.push(calcShowQRCode(false));
 }
 
@@ -803,7 +824,7 @@ export function hideQRCode() {
  * Loads the channel with the given ID.
  * @param id The ID of the channel to load.
  */
-export function loadChannel(id: string) {
+function loadChannel(id: string) {
     actions.push(calcLoadSimulation(id));
 }
 
@@ -811,14 +832,14 @@ export function loadChannel(id: string) {
  * Unloads the channel with the given ID.
  * @param id The ID of the channel to unload.
  */
-export function unloadChannel(id: string) {
+function unloadChannel(id: string) {
     actions.push(calcUnloadSimulation(id));
 }
 
 /**
  * Determines if the user is currently connected to the server.
  */
-export function isConnected(): boolean {
+function isConnected(): boolean {
     const user = getUser();
     if (user) {
         const val = user['aux.connected'];
@@ -898,6 +919,7 @@ export default {
     destroy,
     event,
     getFilesInContext,
+    getFilesInStack,
     shout,
     superShout,
     whisper,
