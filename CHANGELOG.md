@@ -7,7 +7,12 @@
 ### Changes:
 
 -   Improvements
+
     -   Added in the `RemoveTags(files, tagSection)` function to remove any tag on the given files that fall into the specified tag section. So triggering a `RemoveTags(this, "position")` will remove all tags such as `position.x` and `position.random.words` on this file.
+    -   Added the `aux.destroyable` tag that prevents files from being destroyed when set to `false`.
+    -   Made the globals file not destroyable by default.
+    -   Reimplemented ability to click File ID in the sheet to focus the camera on it.
+
 -   Bug Fixes
     -   Fixed `tweenTo` function not working after changing the camera type.
 

@@ -41,6 +41,7 @@ import {
     DESTROY_ACTION_NAME,
     isFileInContext,
     tagsOnFile,
+    isDestroyable,
 } from '../Files/FileCalculations';
 
 import '../polyfill/Array.first.polyfill';
@@ -235,6 +236,19 @@ export function destroyFile(file: FileProxy | string) {
         id = file;
     }
 
+    if (typeof id === 'object') {
+        id = (<any>id).valueOf();
+    }
+
+    const realFile = getFileState()[id];
+    if (!realFile) {
+        return;
+    }
+
+    if (!isDestroyable(calc, realFile)) {
+        return;
+    }
+
     if (id) {
         event(DESTROY_ACTION_NAME, [id]);
         actions.push(fileRemoved(id));
@@ -329,6 +343,9 @@ function destroyChildren(id: string) {
         }
 
         all.forEach(child => {
+            if (!isDestroyable(calc, child)) {
+                return;
+            }
             actions.push(fileRemoved(child.id));
             destroyChildren(child.id);
         });
