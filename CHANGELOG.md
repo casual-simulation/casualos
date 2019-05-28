@@ -6,6 +6,8 @@
 
 ### Changes:
 
+-   Improvements
+    -   Added the `aux.destroyable` tag that prevents files from being destroyed when set to `false`.
 -   Bug Fixes
     -   Fixed `tweenTo` function not working after changing the camera type.
 
