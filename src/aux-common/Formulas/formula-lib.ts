@@ -605,19 +605,80 @@ function getFilesInContext(context: string): FileProxy[] {
  * @param context The context that the stack of files exists in.
  */
 function getFilesInStack(file: FileProxy, context: string): FileProxy[] {
-    const result = <FileProxy[]>(
-        calc.sandbox.interface.listObjectsWithTag(context, true)
+    return getFilesAtPosition(
+        context,
+        file[`${context}.x`].valueOf(),
+        file[`${context}.y`].valueOf()
     );
+}
+
+/**
+ * Gets the stack of files in the given context at the given position.
+ * @param context The context that the files are in.
+ * @param x The X position of the stack.
+ * @param y The Y position of the stack.
+ */
+function getFilesAtPosition(context: string, x: number, y: number) {
+    const result = getFilesInContext(context);
     const filtered = result.filter(f => {
         return (
-            f[`${context}.x`].valueOf() === file[`${context}.x`].valueOf() &&
-            f[`${context}.y`].valueOf() === file[`${context}.y`].valueOf()
+            f[`${context}.x`].valueOf() === x &&
+            f[`${context}.y`].valueOf() === y
         );
     });
-
     return <FileProxy[]>(
         sortBy(filtered, f => f[`${context}.index`].valueOf() || 0)
     );
+}
+
+/**
+ * Gets the list of files that are in a stack next to the given file in the given context.
+ * @param file The file.
+ * @param context The context that the stack of files exists in.
+ * @param position The position next to the given file to search for the stack.
+ */
+function getNeighboringFiles(
+    file: FileProxy,
+    context: string
+): {
+    front: FileProxy[];
+    back: FileProxy[];
+    left: FileProxy[];
+    right: FileProxy[];
+};
+function getNeighboringFiles(
+    file: FileProxy,
+    context: string,
+    position: 'left' | 'right' | 'front' | 'back'
+): FileProxy[];
+function getNeighboringFiles(
+    file: FileProxy,
+    context: string,
+    position?: 'left' | 'right' | 'front' | 'back'
+):
+    | FileProxy[]
+    | {
+          front: FileProxy[];
+          back: FileProxy[];
+          left: FileProxy[];
+          right: FileProxy[];
+      } {
+    if (!position) {
+        return {
+            front: getNeighboringFiles(file, context, 'front'),
+            back: getNeighboringFiles(file, context, 'back'),
+            left: getNeighboringFiles(file, context, 'left'),
+            right: getNeighboringFiles(file, context, 'right'),
+        };
+    }
+
+    const offsetX = position === 'left' ? -1 : position === 'right' ? 1 : 0;
+    const offsetY = position === 'back' ? -1 : position === 'front' ? 1 : 0;
+
+    const x = file[`${context}.x`].valueOf();
+    const y = file[`${context}.y`].valueOf();
+
+    return getFilesAtPosition(context, x + offsetX, y + offsetY);
 }
 
 function createDiff(file: any, ...tags: (string | RegExp)[]): FileDiff {
@@ -920,6 +981,7 @@ export default {
     event,
     getFilesInContext,
     getFilesInStack,
+    getNeighboringFiles,
     shout,
     superShout,
     whisper,

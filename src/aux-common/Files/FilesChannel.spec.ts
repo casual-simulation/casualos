@@ -2060,6 +2060,159 @@ describe('FilesChannel', () => {
             });
         });
 
+        describe('getNeighboringFiles()', () => {
+            const cases = [
+                ['left', -1, 0],
+                ['right', 1, 0],
+                ['front', 0, 1],
+                ['back', 0, -1],
+            ];
+
+            describe.each(cases)(
+                '%s',
+                (position: string, x: number, y: number) => {
+                    it('should get the list of files in a stack next to the given file', () => {
+                        const state: FilesState = {
+                            thisFile: {
+                                id: 'thisFile',
+                                tags: {
+                                    abc: true,
+                                    'abc.x': 1,
+                                    'abc.y': 2,
+                                    'abc.index': 2,
+                                    'test()': `this.ids = getNeighboringFiles(this, "abc", "${position}").map(f => f.id.valueOf())`,
+                                },
+                            },
+                            sameStackFile: {
+                                id: 'sameStackFile',
+                                tags: {
+                                    abc: true,
+                                    'abc.y': 2,
+                                    'abc.x': 1,
+                                    'abc.index': 1,
+                                },
+                            },
+                            thatFile: {
+                                id: 'thatFile',
+                                tags: {
+                                    abc: true,
+                                    'abc.x': 1 + x,
+                                    'abc.y': 2 + y,
+                                    'abc.index': 1,
+                                },
+                            },
+                            otherFile: {
+                                id: 'otherFile',
+                                tags: {
+                                    abc: true,
+                                    'abc.x': 1 + x,
+                                    'abc.y': 2 + y,
+                                    'abc.index': 3,
+                                },
+                            },
+                        };
+
+                        // specify the UUID to use next
+                        uuidMock.mockReturnValue('uuid-0');
+                        const fileAction = action('test', ['thisFile']);
+                        const result = calculateActionEvents(state, fileAction);
+
+                        expect(result.hasUserDefinedEvents).toBe(true);
+
+                        expect(result.events).toEqual([
+                            fileUpdated('thisFile', {
+                                tags: {
+                                    ids: ['thatFile', 'otherFile'],
+                                },
+                            }),
+                        ]);
+                    });
+                }
+            );
+
+            it('should return an object containing all of the neighboring stacks', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            abc: true,
+                            'abc.x': 1,
+                            'abc.y': 2,
+                            'abc.index': 2,
+                            'test()': `let map = getNeighboringFiles(this, "abc");
+                                 this.front = map.front.map(f => f.id.valueOf());
+                                 this.back = map.back.map(f => f.id.valueOf());
+                                 this.left = map.left.map(f => f.id.valueOf());
+                                 this.right = map.right.map(f => f.id.valueOf());`,
+                        },
+                    },
+                    sameStackFile: {
+                        id: 'sameStackFile',
+                        tags: {
+                            abc: true,
+                            'abc.x': 1,
+                            'abc.y': 2,
+                            'abc.index': 1,
+                        },
+                    },
+                    leftFile: {
+                        id: 'leftFile',
+                        tags: {
+                            abc: true,
+                            'abc.x': 0, // left
+                            'abc.y': 2,
+                            'abc.index': 1,
+                        },
+                    },
+                    rightFile: {
+                        id: 'rightFile',
+                        tags: {
+                            abc: true,
+                            'abc.x': 2, // right
+                            'abc.y': 2,
+                            'abc.index': 3,
+                        },
+                    },
+                    backFile: {
+                        id: 'backFile',
+                        tags: {
+                            abc: true,
+                            'abc.x': 1,
+                            'abc.y': 1, // back
+                            'abc.index': 3,
+                        },
+                    },
+                    frontFile: {
+                        id: 'frontFile',
+                        tags: {
+                            abc: true,
+                            'abc.x': 1,
+                            'abc.y': 3, // front
+                            'abc.index': 3,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            front: ['frontFile'],
+                            back: ['backFile'],
+                            left: ['leftFile'],
+                            right: ['rightFile'],
+                        },
+                    }),
+                ]);
+            });
+        });
+
         describe('setPositionDiff()', () => {
             it('should return a diff that sets the file position in a context when applied', () => {
                 const state: FilesState = {
