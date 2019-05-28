@@ -18,6 +18,12 @@
         -   The `that` parameter is an object containing the following fields:
             -   `keys` The list of keys that were pressed/released at the same time.
         -   See https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values for a list of possible key values.
+    -   Added new formula functions:
+        -   `getFilesInStack(file, context)` gets the list of files that are in the same position as the given file.
+        -   `getNeighboringFiles(file, context, direction)` gets the list of files that are next to the given file in the given direction.
+            -   Possible directions: `left`, `right`, `front`, `back`.
+            -   If a direction is not specified, then the function returns an object containing every possible direction and the corresponding list of files.
+    -   Improved the `whisper()` function to support giving it an array of files to whisper to.
 
 -   Bug Fixes
     -   Fixed `tweenTo` function not working after changing the camera type.
