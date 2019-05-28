@@ -167,6 +167,12 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     this,
                     vueElement.files
                 );
+            } else {
+                return new BuilderNewFileClickOperation(
+                    this._gameView.simulation3D,
+                    this,
+                    vueElement.files
+                );
             }
         }
 
