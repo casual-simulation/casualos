@@ -2109,10 +2109,10 @@ describe('FilesChannel', () => {
 
         describe('getNeighboringFiles()', () => {
             const cases = [
-                ['left', -1, 0],
-                ['right', 1, 0],
-                ['front', 0, 1],
-                ['back', 0, -1],
+                ['left', 1, 0],
+                ['right', -1, 0],
+                ['front', 0, -1],
+                ['back', 0, 1],
             ];
 
             describe.each(cases)(
@@ -2206,7 +2206,7 @@ describe('FilesChannel', () => {
                         id: 'leftFile',
                         tags: {
                             abc: true,
-                            'abc.x': 0, // left
+                            'abc.x': 2, // left
                             'abc.y': 2,
                             'abc.index': 1,
                         },
@@ -2215,7 +2215,7 @@ describe('FilesChannel', () => {
                         id: 'rightFile',
                         tags: {
                             abc: true,
-                            'abc.x': 2, // right
+                            'abc.x': 0, // right
                             'abc.y': 2,
                             'abc.index': 3,
                         },
@@ -2225,7 +2225,7 @@ describe('FilesChannel', () => {
                         tags: {
                             abc: true,
                             'abc.x': 1,
-                            'abc.y': 1, // back
+                            'abc.y': 3, // back
                             'abc.index': 3,
                         },
                     },
@@ -2234,7 +2234,7 @@ describe('FilesChannel', () => {
                         tags: {
                             abc: true,
                             'abc.x': 1,
-                            'abc.y': 3, // front
+                            'abc.y': 1, // front
                             'abc.index': 3,
                         },
                     },

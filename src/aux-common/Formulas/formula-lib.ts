@@ -680,8 +680,8 @@ function getNeighboringFiles(
         };
     }
 
-    const offsetX = position === 'left' ? -1 : position === 'right' ? 1 : 0;
-    const offsetY = position === 'back' ? -1 : position === 'front' ? 1 : 0;
+    const offsetX = position === 'left' ? 1 : position === 'right' ? -1 : 0;
+    const offsetY = position === 'back' ? 1 : position === 'front' ? -1 : 0;
 
     const x = file[`${context}.x`].valueOf();
     const y = file[`${context}.y`].valueOf();
