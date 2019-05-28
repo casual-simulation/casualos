@@ -50,6 +50,36 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         this._grid = new PlayerGrid(gridScale);
     }
 
+    protected _updateAdditionalNormalInputs(input: Input) {
+        super._updateAdditionalNormalInputs(input);
+
+        const frame = this._gameView.getTime().frameCount;
+        const simulations = appManager.simulationManager.simulations.values();
+
+        let keysDown: string[] = [];
+        let keysUp: string[] = [];
+        for (let key of input.getKeys()) {
+            if (key.state.isDownOnFrame(frame)) {
+                keysDown.push(key.key);
+            } else if (key.state.isUpOnFrame(frame)) {
+                keysUp.push(key.key);
+            }
+        }
+
+        for (let sim of simulations) {
+            if (keysDown.length > 0) {
+                sim.helper.action('onKeyDown', null, {
+                    keys: keysDown,
+                });
+            }
+            if (keysUp.length > 0) {
+                sim.helper.action('onKeyUp', null, {
+                    keys: keysUp,
+                });
+            }
+        }
+    }
+
     createGameObjectClickOperation(
         gameObject: GameObject,
         hit: Intersection
