@@ -41,6 +41,7 @@ import {
     DESTROY_ACTION_NAME,
     isFileInContext,
     tagsOnFile,
+    isDestroyable,
 } from '../Files/FileCalculations';
 
 import '../polyfill/Array.first.polyfill';
@@ -235,6 +236,19 @@ export function destroyFile(file: FileProxy | string) {
         id = file;
     }
 
+    if (typeof id === 'object') {
+        id = (<any>id).valueOf();
+    }
+
+    const realFile = getFileState()[id];
+    if (!realFile) {
+        return;
+    }
+
+    if (!isDestroyable(calc, realFile)) {
+        return;
+    }
+
     if (id) {
         event(DESTROY_ACTION_NAME, [id]);
         actions.push(fileRemoved(id));
@@ -255,6 +269,66 @@ export function destroy(file: FileProxy | string | FileProxy[]) {
     }
 }
 
+/**
+ * Destroys the given file section, file ID, or list of files.
+ * @param file The file, file ID, or list of files to destroy the tag sections of.
+ * @param tagSection The tag section to remove on the file.
+ */
+export function removeTags(file: FileProxy | FileProxy[], tagSection: string) {
+    if (typeof file === 'object' && Array.isArray(file)) {
+        let fileList: any[] = file;
+
+        for (let h = 0; h < file.length; h++) {
+            let tags = tagsOnFile(fileList[h]);
+
+            for (let i = tags.length - 1; i >= 0; i--) {
+                if (tags[i].includes(tagSection)) {
+                    let doRemoveTag = false;
+
+                    if (tags[i].includes('.')) {
+                        if (tags[i].split('.')[0] === tagSection) {
+                            doRemoveTag = true;
+                        }
+                    } else {
+                        if (tags[i] === tagSection) {
+                            doRemoveTag = true;
+                        }
+                    }
+
+                    if (doRemoveTag) {
+                        fileList[h][tags[i]] = null;
+                    }
+                }
+            }
+        }
+    } else {
+        let tags = tagsOnFile(file);
+
+        for (let i = tags.length - 1; i >= 0; i--) {
+            // if the tag section is relevant to the curretn tag at all
+            if (tags[i].includes(tagSection)) {
+                let doRemoveTag = false;
+                // if this tag has a period in it, check for first word to match
+                if (tags[i].includes('.')) {
+                    if (tags[i].split('.')[0] === tagSection) {
+                        doRemoveTag = true;
+                    }
+                } else {
+                    // check if tag is equal to the tag section and that it doesn't just have the tagsection as a part of its
+                    if (tags[i] === tagSection) {
+                        doRemoveTag = true;
+                    }
+                }
+
+                // if it has been verified that the tag matches the tag section for removal
+                if (doRemoveTag) {
+                    file[tags[i]] = null;
+                }
+            }
+        }
+    }
+}
+
 function destroyChildren(id: string) {
     const result = calculateFormulaValue(calc, `@aux._creator("${id}")`);
     if (result.success) {
@@ -269,6 +343,9 @@ function destroyChildren(id: string) {
         }
 
         all.forEach(child => {
+            if (!isDestroyable(calc, child)) {
+                return;
+            }
             actions.push(fileRemoved(child.id));
             destroyChildren(child.id);
         });
@@ -824,4 +901,5 @@ export default {
     shout,
     superShout,
     whisper,
+    removeTags,
 };

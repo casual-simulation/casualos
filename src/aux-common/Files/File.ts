@@ -22,6 +22,7 @@ export interface FileTags {
     ['aux.movable']?: unknown;
     ['aux.mergeable']?: unknown;
     ['aux.stackable']?: unknown;
+    ['aux.destroyable']?: unknown;
     ['aux.stroke.color']?: unknown;
     ['aux.stroke.width']?: unknown;
     ['aux.line.to']?: unknown;

@@ -6,6 +6,9 @@
 
 ### Changes:
 
+-   Improvements
+    -   Added the `aux.destroyable` tag that prevents files from being destroyed when set to `false`.
+    -   Made the globals file not destroyable by default.
 -   Bug Fixes
     -   Fixed `tweenTo` function not working after changing the camera type.
 
@@ -26,6 +29,7 @@
     -   Add a play button to the search bar that executes the script.
 -   Bug Fixes
     -   Fixed ability to click on files with `aux.shape` set to `sprite`.
+    -   Hide the context menu on mobile when clicking the background with it open.
     -   Refactored progress bars to be more performant.
     -   Progress bars no longer interfere with input.
     -   Allow queries to return values that are not null or empty strings.

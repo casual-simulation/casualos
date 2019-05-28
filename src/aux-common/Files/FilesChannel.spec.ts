@@ -860,6 +860,43 @@ describe('FilesChannel', () => {
             });
         });
 
+        describe('removeTags()', () => {
+            it('remove the given tag sections on the fiven file', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'create()':
+                                'let newFile = create(this, { stay: "def" }, { "leave.x": 0 }, { "leave.y": 0 }); removeTags(newFile, "leave");',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('create', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            stay: 'def',
+                            'leave.x': 0,
+                            'leave.y': 0,
+                            'aux._creator': 'thisFile',
+                        },
+                    }),
+                    fileUpdated('uuid-0', {
+                        tags: {
+                            'leave.x': null,
+                            'leave.y': null,
+                        },
+                    }),
+                ]);
+            });
+        });
+
         describe('create()', () => {
             it('should create a new file with aux._creator set to the original id', () => {
                 const state: FilesState = {
@@ -1504,6 +1541,67 @@ describe('FilesChannel', () => {
                     }),
                     fileRemoved('thisFile'),
                 ]);
+            });
+
+            it('should not destroy files that are not destroyable', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'destroy(this)',
+                            'onDestroy()': '@abc("def").name = "bob"',
+                            'aux.destroyable': false,
+                        },
+                    },
+                    otherFile: {
+                        id: 'otherFile',
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                    childFile: {
+                        id: 'childFile',
+                        tags: {
+                            'aux._creator': 'thisFile',
+                        },
+                    },
+                };
+
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(false);
+                expect(result.events).toEqual([]);
+            });
+
+            it('should short-circut destroying child files', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'destroy(this)',
+                        },
+                    },
+                    childFile: {
+                        id: 'childFile',
+                        tags: {
+                            'aux._creator': 'thisFile',
+                            'aux.destroyable': false,
+                        },
+                    },
+                    grandChildFile: {
+                        id: 'grandChildFile',
+                        tags: {
+                            'aux._creator': 'childFile',
+                        },
+                    },
+                };
+
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.events).toEqual([fileRemoved('thisFile')]);
             });
         });
 
@@ -2546,6 +2644,36 @@ describe('FilesChannel', () => {
                 fileRemoved('file1'),
                 fileRemoved('file2'),
                 fileRemoved('file3'),
+                fileRemoved('file4'),
+            ]);
+        });
+
+        it('should not return a destroy event for files that are not destroyable', () => {
+            const file1 = createFile('file1');
+            const file2 = createFile('file2', {
+                'aux._creator': 'file1',
+                'aux.destroyable': false,
+            });
+            const file3 = createFile('file3', {
+                'aux._creator': 'file2',
+            });
+            const file4 = createFile('file4', {
+                'aux._creator': 'file1',
+            });
+            const file5 = createFile('file5');
+
+            const calc = createCalculationContext([
+                file1,
+                file2,
+                file3,
+                file4,
+                file5,
+            ]);
+            const events = calculateDestroyFileEvents(calc, file1);
+
+            expect(events).toEqual([
+                fileRemoved('file1'),
+                // file2 and file3 are not destroyed because they are not destroyable
                 fileRemoved('file4'),
             ]);
         });
