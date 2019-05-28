@@ -162,10 +162,7 @@ export default class FileTable extends Vue {
                 this.files.find(f => f.id === this.focusedFile.id) || null;
         }
 
-        const calc = this.fileManager.helper.createContext();
-        for (let file of this.files) {
-            this.editableMap.set(file.id, isEditable(calc, file));
-        }
+        this._updateEditable();
     }
 
     @Watch('multilineValue')
@@ -378,6 +375,7 @@ export default class FileTable extends Vue {
         this.setTagBlacklist();
         this._updateTags();
         this.numFilesSelected = this.files.length;
+        this._updateEditable();
     }
 
     private _updateTags() {
@@ -498,6 +496,13 @@ export default class FileTable extends Vue {
         }
 
         return '#' + newBlacklist;
+    }
+
+    private _updateEditable() {
+        const calc = this.fileManager.helper.createContext();
+        for (let file of this.files) {
+            this.editableMap.set(file.id, isEditable(calc, file));
+        }
     }
 }
 

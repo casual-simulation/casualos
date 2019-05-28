@@ -223,7 +223,10 @@
                     :options="{ limitRenderDepth: true, maxDepth: 1 }"
                 ></tree-view>
             </div>
-            <div v-if="focusedFile && focusedTag" class="multi-line-tag-value-wrapper">
+            <div
+                v-if="focusedFile && focusedTag && !isFileReadOnly(focusedFile)"
+                class="multi-line-tag-value-wrapper"
+            >
                 <md-field>
                     <label><file-tag :tag="focusedTag"></file-tag></label>
                     <md-textarea
