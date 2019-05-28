@@ -12,6 +12,7 @@
     -   Added the `aux.destroyable` tag that prevents files from being destroyed when set to `false`.
     -   Made the globals file not destroyable by default.
     -   Reimplemented ability to click File ID in the sheet to focus the camera on it.
+    -   Added the `aux.editable` tag that can be used to prevent editing a file in the file sheet.
 
 -   Bug Fixes
     -   Fixed `tweenTo` function not working after changing the camera type.
