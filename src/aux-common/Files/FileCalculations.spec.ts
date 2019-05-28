@@ -62,6 +62,7 @@ import {
     simulationIdToString,
     isContextSurfaceVisible,
     isContextLocked,
+    isDestroyable,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
@@ -1703,6 +1704,34 @@ describe('FileCalculations', () => {
 
                 const calc = createCalculationContext([file]);
                 expect(isSimulation(calc, file)).toBe(expected);
+            }
+        );
+    });
+
+    describe('isDestroyable()', () => {
+        let cases = [
+            ['', true],
+            [null, true],
+            [0, true],
+            ['=false', false],
+            ['=0', true],
+            ['a', true],
+            [1, true],
+            [false, false],
+            [true, true],
+            ['=1', true],
+            ['="hello"', true],
+        ];
+
+        it.each(cases)(
+            'should map %s to %s',
+            (value: string, expected: boolean) => {
+                let file = createFile('test', {
+                    'aux.destroyable': value,
+                });
+
+                const calc = createCalculationContext([file]);
+                expect(isDestroyable(calc, file)).toBe(expected);
             }
         );
     });

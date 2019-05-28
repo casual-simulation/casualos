@@ -2167,6 +2167,15 @@ export function calculateBooleanTagValue(
 }
 
 /**
+ * Determines if the given file is able to be destroyed.
+ * @param calc The file calculation context.
+ * @param file The file to check.
+ */
+export function isDestroyable(calc: FileCalculationContext, file: Object) {
+    return calculateBooleanTagValue(calc, file, 'aux.destroyable', true);
+}
+
+/**
  * Determines if the given file is trying to load a simulation.
  * @param calc The calculation context.
  * @param file The file to check.
