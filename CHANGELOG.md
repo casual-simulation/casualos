@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.8.1
+
+### Date: TBD
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed `tweenTo` function not working after changing the camera type.
+
 ## V0.8.0
 
 ### Date: 05/25/2019
