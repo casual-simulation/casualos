@@ -511,12 +511,14 @@ export abstract class BaseInteractionManager {
     }
 
     protected _handleCameraRigTypeChanged(newCameraRig: CameraRig): void {
-        let cameraRigControls = this._cameraRigControllers.find(
+        const cameraRigControls = this._cameraRigControllers.find(
             c => c.rig.id === newCameraRig.id
         );
 
         if (cameraRigControls) {
-            let viewport = cameraRigControls.controls.viewport;
+            cameraRigControls.rig = newCameraRig;
+
+            const viewport = cameraRigControls.controls.viewport;
             cameraRigControls.controls = new CameraControls(
                 newCameraRig.mainCamera,
                 this._gameView,
