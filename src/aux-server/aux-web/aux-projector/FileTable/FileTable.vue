@@ -24,6 +24,14 @@
                     <cube-icon></cube-icon>
                     <md-tooltip>Create Empty File</md-tooltip>
                 </md-button>
+                <md-button
+                    v-if="!isSearch"
+                    class="md-icon-button create-surface"
+                    @click="createSurface()"
+                >
+                    <hex-icon></hex-icon>
+                    <md-tooltip>Create Worksurface</md-tooltip>
+                </md-button>
             </div>
             <div class="file-table-actions">
                 <div v-if="isMakingNewTag">
@@ -240,6 +248,29 @@
                 </md-field>
             </div>
         </div>
+
+        <md-dialog :md-active.sync="showCreateWorksurfaceDialog">
+            <md-dialog-title>Create Workspace</md-dialog-title>
+
+            <md-dialog-content>
+                <md-field>
+                    <label>Context</label>
+                    <md-input
+                        ref="input"
+                        v-model="worksurfaceContext"
+                        maxlength="40"
+                        @keydown.enter.native="onConfirmCreateWorksurface"
+                    />
+                </md-field>
+
+                <md-checkbox v-model="worksurfaceAllowPlayer">Make available in player</md-checkbox>
+            </md-dialog-content>
+
+            <md-dialog-actions>
+                <md-button class="md-primary" @click="onCancelCreateWorksurface">Cancel</md-button>
+                <md-button class="md-primary" @click="onConfirmCreateWorksurface">Save</md-button>
+            </md-dialog-actions>
+        </md-dialog>
     </div>
 </template>
 <script src="./FileTable.ts"></script>

@@ -189,7 +189,7 @@ th:last-child {
 }
 
 .file-table-toggle-buttons {
-    flex: 1;
+    flex: 2;
 }
 
 .file-table-actions .tag-editor .md-field {
@@ -258,4 +258,8 @@ th:last-child {
 .md-button.create-file .md-button-content {
     width: 24px;
     height: 24px;
+}
+
+.create-surface svg {
+    color: #888;
 }

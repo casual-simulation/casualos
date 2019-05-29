@@ -20,6 +20,7 @@ import {
     getAllFileTags,
     toast,
     isEditable,
+    createContextId,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
 import { appManager } from '../../shared/AppManager';
@@ -34,6 +35,7 @@ import { TreeView } from 'vue-json-tree-view';
 import { downloadAuxState } from '../download';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 import Cube from '../public/icons/Cube.svg';
+import Hexagon from '../public/icons/Hexagon.svg';
 
 @Component({
     components: {
@@ -44,6 +46,7 @@ import Cube from '../public/icons/Cube.svg';
         'file-table-toggle': FileTableToggle,
         'tree-view': TreeView,
         'cube-icon': Cube,
+        'hex-icon': Hexagon,
     },
 })
 export default class FileTable extends Vue {
@@ -84,6 +87,10 @@ export default class FileTable extends Vue {
     blacklistIndex: boolean[] = [];
     blacklistCount: number[] = [];
     editableMap: Map<string, boolean>;
+
+    showCreateWorksurfaceDialog: boolean = false;
+    worksurfaceContext: string = '';
+    worksurfaceAllowPlayer: boolean = true;
 
     uiHtmlElements(): HTMLElement[] {
         if (this.$refs.tags) {
@@ -288,6 +295,37 @@ export default class FileTable extends Vue {
 
             downloadAuxState(tree, `selection-${Date.now()}`);
         }
+    }
+
+    public createSurface(): void {
+        this.worksurfaceContext = createContextId();
+        this.worksurfaceAllowPlayer = true;
+        this.showCreateWorksurfaceDialog = true;
+    }
+
+    /**
+     * Confirm event from the create worksurface dialog.
+     */
+    onConfirmCreateWorksurface() {
+        this.fileManager.helper.createWorkspace(
+            undefined,
+            this.worksurfaceContext,
+            !this.worksurfaceAllowPlayer
+        );
+
+        this.resetCreateWorksurfaceDialog();
+    }
+
+    /**
+     * Cancel event from the create worksurface dialog.
+     */
+    onCancelCreateWorksurface() {
+        this.resetCreateWorksurfaceDialog();
+    }
+
+    resetCreateWorksurfaceDialog() {
+        this.showCreateWorksurfaceDialog = false;
+        this.worksurfaceAllowPlayer = true;
     }
 
     onTagChanged(file: AuxObject, tag: string, value: string) {
