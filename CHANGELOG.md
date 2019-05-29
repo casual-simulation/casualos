@@ -1,5 +1,19 @@
 # AUX Changelog
 
+## V0.8.2
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Added `onGridClick()`
+        -   Triggered when the user clicks on an empty grid space in AUX Player.
+        -   Runs on every simulaiton.
+        -   The `that` parameter is an object with the following properties:
+            -   `context`: The context that the click happened inside of. If the click occurred in the main viewport then this will equal `player.currentContext()`. If the click happened inside the inventory then it will equal `player.getInventoryContext()`.
+            -   `position`: The grid position that was clicked. Contains `x` and `y` properties.
+
 ## V0.8.1
 
 ### Date: 05/29/2019
