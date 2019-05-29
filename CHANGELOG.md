@@ -32,6 +32,10 @@
         -   The worksurface will use the given context name and can be locked from access in AUX Player.
         -   The new worksurface file will automatically be selected.
         -   The system will find an empty spot to place the new worksurface.
+    -   Added camera center and camera type buttons to lower right corner of AUX Builder and AUX Player.
+        -   Inventory in AUX Player also has a camera center button.
+        -   Camera center will tween the camera back to looking at the world origin (0,0,0).
+        -   Camera type will toggle between perspective and orthographic cameras. The toggle button that used to do this has been removed from the main menus.
 
 -   Bug Fixes
     -   Fixed `tweenTo` function not working after changing the camera type.
