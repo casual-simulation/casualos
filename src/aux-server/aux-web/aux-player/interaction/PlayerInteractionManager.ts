@@ -36,6 +36,7 @@ import {
     Orthographic_MaxZoom,
     CameraRig,
 } from '../../shared/scene/CameraRigFactory';
+import { PlayerEmptyClickOperation } from './ClickOperation/PlayerEmptyClickOperation';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class IGameView
@@ -187,7 +188,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     }
 
     createEmptyClickOperation(): IOperation {
-        return null;
+        return new PlayerEmptyClickOperation(this._gameView, this);
     }
 
     createHtmlElementClickOperation(element: HTMLElement): IOperation {
