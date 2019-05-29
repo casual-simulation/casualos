@@ -13,6 +13,10 @@
         -   The `that` parameter is an object with the following properties:
             -   `context`: The context that the click happened inside of. If the click occurred in the main viewport then this will equal `player.currentContext()`. If the click happened inside the inventory then it will equal `player.getInventoryContext()`.
             -   `position`: The grid position that was clicked. Contains `x` and `y` properties.
+    -   Added the `aux.builders` tag which allows setting a whitelist for AUX Builder.
+        -   `aux.whitelist` and `aux.blacklist` still exist and can be used to whitelist/blacklist users across both AUX Builder and AUX Player.
+        -   If `aux.builders` is present then only users in the builder list can access AUX Builder.
+        -   If `aux.builders` is not present then AUX Builder falls back to checking the whitelist and blacklist.
 
 ## V0.8.1
 
