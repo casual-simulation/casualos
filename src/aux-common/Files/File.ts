@@ -15,6 +15,7 @@ export interface FileTags {
     ['aux.scene.color']?: string;
     ['aux.whitelist']?: unknown;
     ['aux.blacklist']?: unknown;
+    ['aux.builders']?: unknown;
     ['aux.version']?: unknown;
 
     // Normal file tags
