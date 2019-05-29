@@ -28,10 +28,26 @@ import {
     merge,
     AUX_FILE_VERSION,
     calculateFormulaEvents,
+    isContext,
+    isContextSurfaceVisible,
+    getContextPosition,
+    getContextScale,
+    DEFAULT_WORKSPACE_SCALE,
+    getContextSize,
 } from '@casual-simulation/aux-common';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { Subject, Observable } from 'rxjs';
-import { flatMap } from 'lodash';
+import { flatMap, sortBy } from 'lodash';
+import {
+    realPosToGridPos,
+    Axial,
+    hexRing,
+    gridDistance,
+    gridPosToRealPos,
+    posToKey,
+    hexesInRadius,
+} from './scene/hex';
+import { Vector2 } from 'three';
 
 /**
  * Defines an class that contains a simple set of functions
@@ -145,20 +161,36 @@ export class FileHelper {
      * Creates a new workspace file.
      * @param fileId The ID of the file to create. If not specified a new ID will be generated.
      * @param builderContextId The ID of the context to create for the file. If not specified a new context ID will be generated.
-     * @param contextFormula The formula that should be used to determine whether the workspace is allowed to be a context.
-     * @param label The label that should be added to the created file.
+     * @param locked Whether the context should be accessible in AUX Player.
      */
     async createWorkspace(
         fileId?: string,
-        builderContextId?: string
+        builderContextId?: string,
+        locked?: boolean
     ): Promise<void> {
         if (FileHelper._debug) {
-            console.log('[FileManager] Create File');
+            console.log('[FileManager] Create Workspace');
         }
 
-        const workspace: Workspace = createWorkspace(fileId, builderContextId);
+        const nextPosition = this._nextAvailableWorkspacePosition();
+        const finalPosition = gridPosToRealPos(
+            nextPosition,
+            DEFAULT_WORKSPACE_SCALE * 1.1
+        );
+        const workspace: Workspace = createWorkspace(
+            fileId,
+            builderContextId,
+            locked
+        );
 
-        await this._tree.addFile(workspace);
+        const updated = merge(workspace, {
+            tags: {
+                'aux.context.surface.x': finalPosition.x,
+                'aux.context.surface.y': finalPosition.y,
+            },
+        });
+
+        await this._tree.addFile(updated);
     }
 
     /**
@@ -369,5 +401,53 @@ export class FileHelper {
         ).filter(f => getFileChannel(calc, f) === id);
 
         return <AuxObject[]>simFiles;
+    }
+
+    private _nextAvailableWorkspacePosition() {
+        const calc = this.createContext();
+        const visibleWorkspacePositions = flatMap(
+            this.objects.filter(
+                f => isContext(calc, f) && isContextSurfaceVisible(calc, f)
+            ),
+            f => {
+                const position = getContextPosition(calc, f);
+                const scale = getContextScale(calc, f);
+                const positions = hexesInRadius(getContextSize(calc, f));
+                const centerPosition = realPosToGridPos(
+                    new Vector2(position.x, position.y),
+                    scale
+                );
+
+                return positions.map(hex => {
+                    return new Axial(
+                        hex.q + centerPosition.q,
+                        hex.r + centerPosition.r
+                    );
+                });
+            }
+        );
+
+        const mappedPositions = new Map<string, Axial>();
+
+        for (let pos of visibleWorkspacePositions) {
+            mappedPositions.set(posToKey(pos), pos);
+        }
+
+        let radius = 1;
+        let nextPosition: Axial = null;
+        while (!nextPosition) {
+            const positions = hexRing(radius);
+            for (let i = 0; i < positions.length; i++) {
+                const pos = positions[i];
+                if (!mappedPositions.has(posToKey(pos))) {
+                    nextPosition = pos;
+                    break;
+                }
+            }
+
+            radius += 1;
+        }
+
+        return nextPosition;
     }
 }
