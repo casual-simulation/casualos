@@ -23,6 +23,7 @@ import {
 } from './CacheHelpers';
 import { Request } from 'express';
 import useragent from 'useragent';
+import { CausalTreeStore } from '../../causal-trees';
 
 const connect = pify(MongoClient.connect);
 
@@ -44,6 +45,7 @@ export class ClientServer {
     private _player: ClientConfig;
     private _config: Config;
     private _cacheExpireSeconds: number;
+    private _store: CausalTreeStore;
 
     get app() {
         return this._app;
@@ -54,6 +56,7 @@ export class ClientServer {
         builder: ClientConfig,
         player: ClientConfig,
         redisClient: RedisClient,
+        store: CausalTreeStore,
         redisConfig: RedisConfig
     ) {
         this._app = express();
@@ -61,6 +64,7 @@ export class ClientServer {
         this._builder = builder;
         this._player = player;
         this._redisClient = redisClient;
+        this._store = store;
         this._hgetall = redisClient
             ? util.promisify(this._redisClient.hgetall).bind(this._redisClient)
             : null;
@@ -243,6 +247,36 @@ export class ClientServer {
             })
         );
 
+        this._app.use(
+            '/[\\*]/:channel[.]aux',
+            asyncMiddleware(async (req, res) => {
+                const channel = `aux-${req.params.channel || 'default'}`;
+                console.log('[Server] Getting .aux file for channel:', channel);
+                const stored = await this._store.get(channel);
+                if (stored) {
+                    res.contentType('application/json');
+                    res.send(stored);
+                } else {
+                    res.sendStatus(404);
+                }
+            })
+        );
+
+        this._app.use(
+            '/:context/:channel?[.]aux',
+            asyncMiddleware(async (req, res) => {
+                const channel = `aux-${req.params.channel || 'default'}`;
+                console.log('[Server] Getting .aux file for channel:', channel);
+                const stored = await this._store.get(channel);
+                if (stored) {
+                    res.contentType('application/json');
+                    res.send(stored);
+                } else {
+                    res.sendStatus(404);
+                }
+            })
+        );
+
         this._app.use('/[\\*]/:channel', (req, res) => {
             res.sendFile(path.join(this._config.dist, this._builder.index));
         });
@@ -323,6 +357,7 @@ export class Server {
     private _mongoClient: MongoClient;
     private _userCount: number;
     private _redisClient: RedisClient;
+    private _store: CausalTreeStore;
 
     constructor(config: Config) {
         this._config = config;
@@ -336,18 +371,23 @@ export class Server {
                   return_buffers: true,
               })
             : null;
-        this._client = new ClientServer(
-            config,
-            config.builder,
-            config.player,
-            this._redisClient,
-            config.redis
-        );
         this._userCount = 0;
     }
 
     async configure() {
         this._mongoClient = await connect(this._config.mongodb.url);
+        this._store = new MongoDBTreeStore(
+            this._mongoClient,
+            this._config.trees.dbName
+        );
+        this._client = new ClientServer(
+            this._config,
+            this._config.builder,
+            this._config.player,
+            this._redisClient,
+            this._store,
+            this._config.redis
+        );
 
         this._configureSocketServices();
         this._app.use(bodyParser.json());
@@ -371,14 +411,10 @@ export class Server {
     }
 
     private async _configureSocketServices() {
-        const store = new MongoDBTreeStore(
-            this._mongoClient,
-            this._config.trees.dbName
-        );
-        await store.init();
+        await this._store.init();
         this._treeServer = new CausalTreeServer(
             this._socket,
-            store,
+            this._store,
             auxCausalTreeFactory()
         );
 

@@ -12,6 +12,7 @@ import {
     Object,
     getUserMode,
     AuxObject,
+    getFilesStateFromStoredTree,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard } from '../../shared/SharedUtils';
@@ -26,6 +27,7 @@ import FileSearch from '../FileSearch/FileSearch';
 
 import vueFilePond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
+import { Simulation } from '../../shared/Simulation';
 
 const FilePond = vueFilePond();
 
@@ -299,6 +301,8 @@ export default class App extends Vue {
                                 this.qrCode = null;
                                 this.showQRCode = false;
                             }
+                        } else if (e.name === 'import_aux') {
+                            this._importAUX(fileManager, e.url);
                         }
                     })
                 );
@@ -457,6 +461,12 @@ export default class App extends Vue {
             EventBus.$off(options.okEvent);
         });
         EventBus.$emit('showConfirmDialog', options);
+    }
+
+    private async _importAUX(sim: Simulation, url: string) {
+        const stored = await appManager.loadAUX(url);
+        const state = await getFilesStateFromStoredTree(stored);
+        await sim.helper.addState(state);
     }
 
     private _showConnectionLost() {

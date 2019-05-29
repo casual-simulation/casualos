@@ -34,6 +34,7 @@ import {
     AuxFile,
     AuxObject,
     hasValue,
+    getFilesStateFromStoredTree,
 } from '@casual-simulation/aux-common';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { Time } from '../../shared/scene/Time';
@@ -372,6 +373,8 @@ export default class GameView extends Vue implements IGameView {
                     this.playerSimulations.forEach(s => {
                         s.setContext(e.context);
                     });
+                } else if (e.name === 'import_aux') {
+                    this._importAUX(sim, e.url);
                 }
             })
         );
@@ -427,6 +430,12 @@ export default class GameView extends Vue implements IGameView {
                 this._inventoryScene.remove(s);
             });
         }
+    }
+
+    private async _importAUX(sim: Simulation, url: string) {
+        const stored = await appManager.loadAUX(url);
+        const state = await getFilesStateFromStoredTree(stored);
+        await sim.helper.addState(state);
     }
 
     private _onSimsUpdated() {
