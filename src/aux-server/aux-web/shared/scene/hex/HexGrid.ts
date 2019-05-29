@@ -69,6 +69,26 @@ export function hexesInRadius(radius: number): Axial[] {
 }
 
 /**
+ * Calculates a list of hex grid positions that are in a ring at the given radius.
+ * @param radius
+ */
+export function hexRing(radius: number): Axial[] {
+    radius -= 1;
+    let positions: Axial[] = [];
+    const zero = new Axial(0, 0);
+    for (let q = -radius; q <= radius; q++) {
+        for (let r = -q - radius; r <= radius - q; r++) {
+            const pos = new Axial(q, r);
+            if (gridDistance(zero, pos) === radius) {
+                positions.push(pos);
+            }
+        }
+    }
+
+    return positions;
+}
+
+/**
  * Calculates the storage key for a hex at the given grid position.
  */
 export function posToKey(pos: Axial): string {

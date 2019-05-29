@@ -147,7 +147,11 @@ export abstract class BaseFileDragOperation implements IOperation {
         gridPosition: Vector2,
         index: number
     ) {
+        if (!this._context) {
+            return;
+        }
         this._inContext = true;
+
         let events: FileEvent[] = [];
         for (let i = 0; i < files.length; i++) {
             let tags = {
@@ -169,6 +173,9 @@ export abstract class BaseFileDragOperation implements IOperation {
 
     protected _updateFileContexts(files: File[], inContext: boolean) {
         this._inContext = inContext;
+        if (!this._context) {
+            return;
+        }
         let events: FileEvent[] = [];
         for (let i = 0; i < files.length; i++) {
             let tags = {

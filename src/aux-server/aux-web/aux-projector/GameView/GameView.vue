@@ -63,29 +63,6 @@
             <div v-shortkey.once="['ctrl', 'v']" @shortkey="pasteClipboardNormal"></div>
             <div v-shortkey.push="['meta', 'v']" @shortkey="pasteClipboardMac"></div>
         </div>
-
-        <md-dialog :md-active.sync="showDialog">
-            <md-dialog-title>Set Workspace Context</md-dialog-title>
-
-            <md-dialog-content>
-                <md-field>
-                    <md-input
-                        ref="input"
-                        v-model="contextDialog"
-                        maxlength="40"
-                        @keydown.enter.native="onConfirm"
-                    />
-                </md-field>
-
-                <!--md-checkbox v-model="builderCheck">Make Builder Context</md-checkbox-->
-                <md-checkbox v-model="playerCheck">Make available in player</md-checkbox>
-            </md-dialog-content>
-
-            <md-dialog-actions>
-                <md-button class="md-primary" @click="onConfirmDialogCancel">Cancel</md-button>
-                <md-button class="md-primary" @click="onConfirmDialogOk">Save</md-button>
-            </md-dialog-actions>
-        </md-dialog>
     </div>
 </template>
 <script src="./GameView.ts"></script>

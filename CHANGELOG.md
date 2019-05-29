@@ -18,9 +18,25 @@
         -   The `that` parameter is an object containing the following fields:
             -   `keys` The list of keys that were pressed/released at the same time.
         -   See https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values for a list of possible key values.
+    -   Added new formula functions:
+        -   `getFilesInStack(file, context)` gets the list of files that are in the same position as the given file.
+        -   `getNeighboringFiles(file, context, direction)` gets the list of files that are next to the given file in the given direction.
+            -   Possible directions: `left`, `right`, `front`, `back`.
+            -   If a direction is not specified, then the function returns an object containing every possible direction and the corresponding list of files.
+        -   `player.importAUX(url)` loads an .aux file from the given URL and imports it into the current channel.
+    -   Improved the `whisper()` function to support giving it an array of files to whisper to.
+    -   Set an empty diff file as the selected file if no other files are selected, this will allow new files to be dragged out drom this diff's id as a new file.
+        -   Selection count is set to 0 in this instance as not files are meant to be shown as selected.
+    -   Added a "Create Worksurface" button to the file sheet.
+        -   This will create a new worksurface and place all the selected files on it.
+        -   The worksurface will use the given context name and can be locked from access in AUX Player.
+        -   The new worksurface file will automatically be selected.
+        -   The system will find an empty spot to place the new worksurface.
 
 -   Bug Fixes
     -   Fixed `tweenTo` function not working after changing the camera type.
+    -   Fixed the file sheet to not have a double scroll bar when the tags list becomes longer than the max height of the sheet.
+    -   Fixed an issue that would add a file to the "null" context when dragging it out by it's ID.
 
 ## V0.8.0
 

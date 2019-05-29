@@ -24,6 +24,10 @@
                     <cube-icon></cube-icon>
                     <md-tooltip>Create Empty File</md-tooltip>
                 </md-button>
+                <md-button class="md-icon-button create-surface" @click="createSurface()">
+                    <hex-icon></hex-icon>
+                    <md-tooltip>Create Worksurface</md-tooltip>
+                </md-button>
             </div>
             <div class="file-table-actions">
                 <div v-if="isMakingNewTag">
@@ -58,41 +62,6 @@
             </div>
         </div>
         <div>
-            <div class="file-section-holderOuter">
-                <div class="file-section-holderInner">
-                    <div
-                        v-for="(tagBlacklist, index) in getTagBlacklist()"
-                        :key="index"
-                        class="file-section"
-                    >
-                        <md-button
-                            v-if="isBlacklistTagActive(index)"
-                            class="file-section active"
-                            @click="toggleBlacklistIndex(index)"
-                        >
-                            <span v-if="isAllTag(tagBlacklist)"> {{ tagBlacklist }}</span>
-                            <span v-else-if="isActionTag(tagBlacklist)"> {{ tagBlacklist }}</span>
-                            <span v-else>{{ getVisualTagBlacklist(index) }}</span>
-                        </md-button>
-                        <md-button
-                            v-else
-                            class="file-section inactive"
-                            @click="toggleBlacklistIndex(index)"
-                        >
-                            <span v-if="isAllTag(tagBlacklist)"> {{ tagBlacklist }}</span>
-                            <span v-else-if="isActionTag(tagBlacklist)">
-                                {{ tagBlacklist }} [{{ getBlacklistCount(index) }}]</span
-                            >
-                            <span v-else
-                                >{{ getVisualTagBlacklist(index) }} [{{
-                                    getBlacklistCount(index)
-                                }}]</span
-                            >
-                        </md-button>
-                    </div>
-                </div>
-            </div>
-
             <p v-if="isSearch && searchResult === null" class="no-search-results-message">
                 No files found
             </p>
@@ -100,6 +69,42 @@
                 Select a file or search
             </p>
             <div v-else-if="hasFiles" class="file-table-wrapper">
+                <div class="file-section-holder-outer" v-if="getTagBlacklist().length > 0">
+                    <div class="file-section-holder-inner">
+                        <div
+                            v-for="(tagBlacklist, index) in getTagBlacklist()"
+                            :key="index"
+                            class="file-section"
+                        >
+                            <md-button
+                                v-if="isBlacklistTagActive(index)"
+                                class="file-section active"
+                                @click="toggleBlacklistIndex(index)"
+                            >
+                                <span v-if="isAllTag(tagBlacklist)"> {{ tagBlacklist }}</span>
+                                <span v-else-if="isActionTag(tagBlacklist)">
+                                    {{ tagBlacklist }}</span
+                                >
+                                <span v-else>{{ getVisualTagBlacklist(index) }}</span>
+                            </md-button>
+                            <md-button
+                                v-else
+                                class="file-section inactive"
+                                @click="toggleBlacklistIndex(index)"
+                            >
+                                <span v-if="isAllTag(tagBlacklist)"> {{ tagBlacklist }}</span>
+                                <span v-else-if="isActionTag(tagBlacklist)">
+                                    {{ tagBlacklist }} [{{ getBlacklistCount(index) }}]</span
+                                >
+                                <span v-else
+                                    >{{ getVisualTagBlacklist(index) }} [{{
+                                        getBlacklistCount(index)
+                                    }}]</span
+                                >
+                            </md-button>
+                        </div>
+                    </div>
+                </div>
                 <div
                     class="file-table-grid"
                     :class="[viewMode]"
@@ -239,6 +244,29 @@
                 </md-field>
             </div>
         </div>
+
+        <md-dialog :md-active.sync="showCreateWorksurfaceDialog">
+            <md-dialog-title>Create Workspace</md-dialog-title>
+
+            <md-dialog-content>
+                <md-field>
+                    <label>Context</label>
+                    <md-input
+                        ref="input"
+                        v-model="worksurfaceContext"
+                        maxlength="40"
+                        @keydown.enter.native="onConfirmCreateWorksurface"
+                    />
+                </md-field>
+
+                <md-checkbox v-model="worksurfaceAllowPlayer">Make available in player</md-checkbox>
+            </md-dialog-content>
+
+            <md-dialog-actions>
+                <md-button class="md-primary" @click="onCancelCreateWorksurface">Cancel</md-button>
+                <md-button class="md-primary" @click="onConfirmCreateWorksurface">Save</md-button>
+            </md-dialog-actions>
+        </md-dialog>
     </div>
 </template>
 <script src="./FileTable.ts"></script>

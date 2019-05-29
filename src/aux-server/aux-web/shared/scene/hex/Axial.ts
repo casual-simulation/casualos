@@ -28,9 +28,9 @@ export class Axial {
         return this._r;
     }
 
-    constructor(x: number = 0, y: number = 0) {
-        this._q = x;
-        this._r = y;
+    constructor(q: number = 0, r: number = 0) {
+        this._q = q;
+        this._r = r;
     }
 
     /**

@@ -67,15 +67,15 @@
     /* border-top: var(--file-cell-border); */
 }
 
-.file-section-holderOuter {
+.file-section-holder-outer {
     height: 40px;
     width: 100%;
-    overflow-x: scroll;
+    overflow-x: auto;
     overflow-y: hidden;
     white-space: nowrap;
 }
 
-.file-section-holderInner {
+.file-section-holder-inner {
     white-space: nowrap;
 }
 
@@ -189,7 +189,7 @@ th:last-child {
 }
 
 .file-table-toggle-buttons {
-    flex: 1;
+    flex: 2;
 }
 
 .file-table-actions .tag-editor .md-field {
@@ -258,4 +258,8 @@ th:last-child {
 .md-button.create-file .md-button-content {
     width: 24px;
     height: 24px;
+}
+
+.create-surface svg {
+    color: #888;
 }

@@ -26,7 +26,7 @@
 } */
 
 .info-card .md-card-content {
-    max-height: 550px;
+    max-height: 560px;
     overflow-y: auto;
     padding: 8px 0;
 }

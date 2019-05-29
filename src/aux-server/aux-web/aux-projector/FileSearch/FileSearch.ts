@@ -49,6 +49,23 @@ export default class FileSearch extends Vue {
         super();
     }
 
+    get filesLength() {
+        let num = 0;
+        let temp = this.files.length;
+
+        if (temp != 1) {
+            num = this.files.length;
+        } else {
+            if (this.files[0].id == 'empty') {
+                num = 0;
+            } else {
+                num = 1;
+            }
+        }
+
+        return num;
+    }
+
     mounted() {
         appManager.whileLoggedIn((user, fileManager) => {
             let subs: SubscriptionLike[] = [];

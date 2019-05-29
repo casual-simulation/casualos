@@ -118,11 +118,6 @@ export default class GameView extends Vue implements IGameView {
     private _cameraType: CameraType;
     private _htmlMixerContext: HtmlMixer.Context;
 
-    showDialog: boolean = false;
-    contextDialog: string = '';
-    builderCheck: boolean = false;
-    playerCheck: boolean = false;
-
     public onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
     public onFileUpdated: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
     public onFileRemoved: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
@@ -171,25 +166,6 @@ export default class GameView extends Vue implements IGameView {
 
     constructor() {
         super();
-    }
-
-    /**
-     * Click event from GameView.vue
-     */
-    private onConfirmDialogOk() {
-        this.simulation3D.simulation.helper.createWorkspace(
-            undefined,
-            this.contextDialog
-        );
-
-        this.showDialog = false;
-    }
-
-    /**
-     * Click event from GameView.vue
-     */
-    private onConfirmDialogCancel() {
-        this.showDialog = false;
     }
 
     public findFilesById(id: string): AuxFile3D[] {
@@ -258,12 +234,6 @@ export default class GameView extends Vue implements IGameView {
 
     public setWorldGridVisible(visible: boolean) {
         this._gridMesh.visible = visible;
-    }
-
-    public addNewWorkspace(): void {
-        this.contextDialog = createContextId();
-        this.playerCheck = false;
-        this.showDialog = true;
     }
 
     public setCameraType(type: CameraType) {
@@ -557,9 +527,6 @@ export default class GameView extends Vue implements IGameView {
         this._handleResize = this._handleResize.bind(this);
         window.addEventListener('resize', this._handleResize);
         window.addEventListener('vrdisplaypresentchange', this._handleResize);
-
-        this.showDialog = false;
-        this.contextDialog = '';
 
         this._time = new Time();
         this._decoratorFactory = new AuxFile3DDecoratorFactory(this);
