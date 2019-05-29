@@ -17,20 +17,20 @@ export const Perspective_DefaultPosition = { x: 5, y: 5, z: 5 };
 export declare type CameraType = 'perspective' | 'orthographic';
 
 export interface CameraRig {
-    id: string;
+    name: string;
     viewport: Viewport;
     mainCamera: PerspectiveCamera | OrthographicCamera;
     uiWorldCamera: PerspectiveCamera | OrthographicCamera;
 }
 
 export function createCameraRig(
-    id: string,
+    name: string,
     type: CameraType,
     scene: Scene,
     viewport: Viewport
 ): CameraRig {
     let rig: CameraRig = {
-        id: id,
+        name: name,
         viewport: viewport,
         mainCamera: null,
         uiWorldCamera: null,

@@ -19,6 +19,9 @@ import {
     fileAdded,
     getAllFileTags,
     toast,
+    isEditable,
+    createContextId,
+    addToContextDiff,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
 import { appManager } from '../../shared/AppManager';
@@ -33,6 +36,7 @@ import { TreeView } from 'vue-json-tree-view';
 import { downloadAuxState } from '../download';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 import Cube from '../public/icons/Cube.svg';
+import Hexagon from '../public/icons/Hexagon.svg';
 
 @Component({
     components: {
@@ -43,6 +47,7 @@ import Cube from '../public/icons/Cube.svg';
         'file-table-toggle': FileTableToggle,
         'tree-view': TreeView,
         'cube-icon': Cube,
+        'hex-icon': Hexagon,
     },
 })
 export default class FileTable extends Vue {
@@ -82,6 +87,11 @@ export default class FileTable extends Vue {
     tagBlacklist: string[] = [];
     blacklistIndex: boolean[] = [];
     blacklistCount: number[] = [];
+    editableMap: Map<string, boolean>;
+
+    showCreateWorksurfaceDialog: boolean = false;
+    worksurfaceContext: string = '';
+    worksurfaceAllowPlayer: boolean = true;
 
     uiHtmlElements(): HTMLElement[] {
         if (this.$refs.tags) {
@@ -110,6 +120,10 @@ export default class FileTable extends Vue {
 
     getBlacklistCount(index: number): number {
         return this.blacklistCount[index];
+    }
+
+    isFileReadOnly(file: File): boolean {
+        return this.editableMap.get(file.id) === false;
     }
 
     get fileTableGridStyle() {
@@ -155,6 +169,8 @@ export default class FileTable extends Vue {
             this.focusedFile =
                 this.files.find(f => f.id === this.focusedFile.id) || null;
         }
+
+        this._updateEditable();
     }
 
     @Watch('multilineValue')
@@ -282,6 +298,58 @@ export default class FileTable extends Vue {
         }
     }
 
+    public createSurface(): void {
+        this.worksurfaceContext = createContextId();
+        this.worksurfaceAllowPlayer = true;
+        this.showCreateWorksurfaceDialog = true;
+    }
+
+    /**
+     * Confirm event from the create worksurface dialog.
+     */
+    async onConfirmCreateWorksurface() {
+        this.showCreateWorksurfaceDialog = false;
+        const workspace = await this.fileManager.helper.createWorkspace(
+            undefined,
+            this.worksurfaceContext,
+            !this.worksurfaceAllowPlayer
+        );
+
+        if (!this.diffSelected) {
+            const calc = this.fileManager.helper.createContext();
+            for (let i = 0; i < this.files.length; i++) {
+                const file = this.files[i];
+                await this.fileManager.helper.updateFile(file, {
+                    tags: {
+                        ...addToContextDiff(
+                            calc,
+                            this.worksurfaceContext,
+                            0,
+                            0,
+                            i
+                        ),
+                    },
+                });
+            }
+        }
+
+        await this.fileManager.selection.selectFile(workspace, true);
+
+        this.resetCreateWorksurfaceDialog();
+    }
+
+    /**
+     * Cancel event from the create worksurface dialog.
+     */
+    onCancelCreateWorksurface() {
+        this.resetCreateWorksurfaceDialog();
+    }
+
+    resetCreateWorksurfaceDialog() {
+        this.showCreateWorksurfaceDialog = false;
+        this.worksurfaceAllowPlayer = true;
+    }
+
     onTagChanged(file: AuxObject, tag: string, value: string) {
         this.lastEditedTag = this.focusedTag = tag;
         this.focusedFile = file;
@@ -301,10 +369,6 @@ export default class FileTable extends Vue {
             });
         }
         this.$emit('tagFocusChanged', file, tag, focused);
-    }
-
-    onFileClicked(file: AuxObject) {
-        this.fileManager.helper.transaction(tweenTo(file.id));
     }
 
     toggleHidden() {
@@ -359,17 +423,18 @@ export default class FileTable extends Vue {
 
     async clearDiff() {
         await this.fileManager.recent.clear();
-        this.fileManager.recent.selectedRecentFile = this.fileManager.recent.files[0];
     }
 
     constructor() {
         super();
+        this.editableMap = new Map();
     }
 
     async created() {
         this.setTagBlacklist();
         this._updateTags();
         this.numFilesSelected = this.files.length;
+        this._updateEditable();
     }
 
     private _updateTags() {
@@ -490,6 +555,13 @@ export default class FileTable extends Vue {
         }
 
         return '#' + newBlacklist;
+    }
+
+    private _updateEditable() {
+        const calc = this.fileManager.helper.createContext();
+        for (let file of this.files) {
+            this.editableMap.set(file.id, isEditable(calc, file));
+        }
     }
 }
 

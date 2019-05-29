@@ -403,7 +403,7 @@ describe('FilePanelManager', () => {
 
             fileUpdated.next([tree.value['test']]);
 
-            expect(files).toEqual([]);
+            expect(files).toEqual([createFile('empty', {})]);
             expect(isOpen).toBe(true);
         });
 

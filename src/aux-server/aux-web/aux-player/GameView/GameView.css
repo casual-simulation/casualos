@@ -19,8 +19,25 @@ html.ar-app .webxr-sessions canvas {
 
 .toolbar {
     position: absolute;
-    bottom: 2vh;
-    left: 2vw;
+    bottom: 0.75vh;
+    left: 1vw;
+}
+
+.viewport {
+    position: absolute;
+    pointer-events: none;
+}
+
+.toolbar.right {
+    left: auto;
+    right: 8px;
+    bottom: 8px;
+    user-select: none;
+    pointer-events: auto;
+}
+
+.toolbar.right > * {
+    padding-bottom: 5px;
 }
 
 .vr-button-container {

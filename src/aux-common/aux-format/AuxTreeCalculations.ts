@@ -5,6 +5,7 @@ import {
     precalculatedOp,
     RealtimeCausalTree,
     Weave,
+    StoredCausalTree,
 } from '@casual-simulation/causal-trees';
 import { AuxFile, AuxTagMetadata, AuxObject, AuxState } from './AuxState';
 import { InsertOp, DeleteOp, AuxOp, AuxOpType, FileOp } from './AuxOpTypes';
@@ -110,6 +111,31 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
         filesRemoved,
         filesUpdated,
     };
+}
+
+/**
+ * Gets the file state from the given stored causal tree.
+ * @param stored The stored tree to load.
+ */
+export async function getFilesStateFromStoredTree(
+    stored: StoredCausalTree<AuxOp>
+) {
+    let value: FilesState;
+    if (stored.site && stored.knownSites && stored.weave) {
+        console.log('[AppManager] Importing Weave.');
+
+        // Don't try to import the tree because it's like trying to
+        // import an unrelated Git repo. Git handles this by allowing
+        // multiple root nodes but we dont allow multiple roots.
+        const tree = <AuxCausalTree>new AuxCausalTree(stored);
+        await tree.import(stored);
+        value = tree.value;
+    } else {
+        console.log('[AppManager] Old file detected, adding state.');
+        value = <FilesState>(<unknown>stored);
+    }
+
+    return value;
 }
 
 /**

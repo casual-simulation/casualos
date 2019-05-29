@@ -62,6 +62,9 @@ import {
     simulationIdToString,
     isContextSurfaceVisible,
     isContextLocked,
+    isDestroyable,
+    isEditable,
+    normalizeAUXFileURL,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
@@ -1707,7 +1710,29 @@ describe('FileCalculations', () => {
         );
     });
 
-    describe('createWorkspace', () => {
+    describe('isDestroyable()', () => {
+        booleanTagValueTests(true, (value, expected) => {
+            let file = createFile('test', {
+                'aux.destroyable': value,
+            });
+
+            const calc = createCalculationContext([file]);
+            expect(isDestroyable(calc, file)).toBe(expected);
+        });
+    });
+
+    describe('isEditable()', () => {
+        booleanTagValueTests(true, (value, expected) => {
+            let file = createFile('test', {
+                'aux.editable': value,
+            });
+
+            const calc = createCalculationContext([file]);
+            expect(isEditable(calc, file)).toBe(expected);
+        });
+    });
+
+    describe('createWorkspace()', () => {
         it('should create new random context id if empty', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', '');
@@ -1742,6 +1767,13 @@ describe('FileCalculations', () => {
             const workspace = createWorkspace('test', 'userSetID');
 
             expect(workspace.tags['aux.context.locked']).toEqual(true);
+        });
+
+        it('should allow setting the workspace to be unlocked', () => {
+            uuidMock.mockReturnValue('uuid');
+            const workspace = createWorkspace('test', 'userSetID', false);
+
+            expect(workspace.tags['aux.context.locked']).toEqual(false);
         });
     });
 
@@ -2874,6 +2906,28 @@ describe('FileCalculations', () => {
         });
     });
 
+    describe('normalizeAUXFileURL()', () => {
+        const cases = [
+            ['http://example.com/path', 'http://example.com/path.aux'],
+            ['http://example.com/', 'http://example.com/.aux'],
+            ['http://example.com', 'http://example.com/.aux'],
+            ['https://example.com/*/test', 'https://example.com/*/test.aux'],
+            [
+                'http://example.com/context/channel',
+                'http://example.com/context/channel.aux',
+            ],
+            [
+                'http://example.com/context/channel.aux',
+                'http://example.com/context/channel.aux',
+            ],
+            ['http://example.com/.aux', 'http://example.com/.aux'],
+        ];
+
+        it.each(cases)('should map %s to %s', (given, expected) => {
+            expect(normalizeAUXFileURL(given)).toBe(expected);
+        });
+    });
+
     describe('validateTag()', () => {
         it('should return invalid when tag is empty or null', () => {
             let errors = validateTag('');
@@ -3193,6 +3247,31 @@ describe('FileCalculations', () => {
                 '_hiddenTag4',
                 'other',
             ]);
+        });
+    });
+
+    describe('getFileShape()', () => {
+        const cases = [['cube'], ['sphere'], ['sprite']];
+        it.each(cases)('should return %s', (shape: string) => {
+            const file = createFile('test', {
+                'aux.shape': <any>shape,
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(getFileShape(calc, file)).toBe(shape);
+        });
+
+        it('should return sphere when the file is a diff', () => {
+            const file = createFile('test', {
+                'aux.shape': 'cube',
+                'aux._diff': true,
+                'aux._diffTags': ['aux.shape'],
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(getFileShape(calc, file)).toBe('sphere');
         });
     });
 
@@ -4006,3 +4085,26 @@ describe('FileCalculations', () => {
         });
     });
 });
+
+function booleanTagValueTests(
+    defaultValue: boolean,
+    testFunc: (given: any, expected: boolean) => void
+) {
+    let cases = [
+        ['', defaultValue],
+        [null, defaultValue],
+        [0, defaultValue],
+        ['=false', false],
+        ['=0', defaultValue],
+        ['a', defaultValue],
+        [1, defaultValue],
+        [false, false],
+        ['false', false],
+        [true, true],
+        ['true', true],
+        ['=1', defaultValue],
+        ['="hello"', defaultValue],
+    ];
+
+    it.each(cases)('should map %s to %s', testFunc);
+}

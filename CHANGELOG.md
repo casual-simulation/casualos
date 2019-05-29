@@ -1,5 +1,47 @@
 # AUX Changelog
 
+## V0.8.1
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+
+    -   Added in the `RemoveTags(files, tagSection)` function to remove any tag on the given files that fall into the specified tag section. So triggering a `RemoveTags(this, "position")` will remove all tags such as `position.x` and `position.random.words` on this file.
+    -   Added the `aux.destroyable` tag that prevents files from being destroyed when set to `false`.
+    -   Made the globals file not destroyable by default.
+    -   Reimplemented ability to click File ID in the sheet to focus the camera on it.
+    -   Added the `aux.editable` tag that can be used to prevent editing a file in the file sheet.
+    -   Added events for `onKeyDown()` and `onKeyUp()`.
+        -   These are triggered whenever a key is pressed or released.
+        -   The `that` parameter is an object containing the following fields:
+            -   `keys` The list of keys that were pressed/released at the same time.
+        -   See https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values for a list of possible key values.
+    -   Added new formula functions:
+        -   `getFilesInStack(file, context)` gets the list of files that are in the same position as the given file.
+        -   `getNeighboringFiles(file, context, direction)` gets the list of files that are next to the given file in the given direction.
+            -   Possible directions: `left`, `right`, `front`, `back`.
+            -   If a direction is not specified, then the function returns an object containing every possible direction and the corresponding list of files.
+        -   `player.importAUX(url)` loads an .aux file from the given URL and imports it into the current channel.
+    -   Improved the `whisper()` function to support giving it an array of files to whisper to.
+    -   Set an empty diff file as the selected file if no other files are selected, this will allow new files to be dragged out drom this diff's id as a new file.
+        -   Selection count is set to 0 in this instance as not files are meant to be shown as selected.
+    -   Added a "Create Worksurface" button to the file sheet.
+        -   This will create a new worksurface and place all the selected files on it.
+        -   The worksurface will use the given context name and can be locked from access in AUX Player.
+        -   The new worksurface file will automatically be selected.
+        -   The system will find an empty spot to place the new worksurface.
+    -   Added camera center and camera type buttons to lower right corner of AUX Builder and AUX Player.
+        -   Inventory in AUX Player also has a camera center button.
+        -   Camera center will tween the camera back to looking at the world origin (0,0,0).
+        -   Camera type will toggle between perspective and orthographic cameras. The toggle button that used to do this has been removed from the main menus.
+
+-   Bug Fixes
+    -   Fixed `tweenTo` function not working after changing the camera type.
+    -   Fixed the file sheet to not have a double scroll bar when the tags list becomes longer than the max height of the sheet.
+    -   Fixed an issue that would add a file to the "null" context when dragging it out by it's ID.
+
 ## V0.8.0
 
 ### Date: 05/25/2019
@@ -17,6 +59,7 @@
     -   Add a play button to the search bar that executes the script.
 -   Bug Fixes
     -   Fixed ability to click on files with `aux.shape` set to `sprite`.
+    -   Hide the context menu on mobile when clicking the background with it open.
     -   Refactored progress bars to be more performant.
     -   Progress bars no longer interfere with input.
     -   Allow queries to return values that are not null or empty strings.

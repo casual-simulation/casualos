@@ -977,11 +977,12 @@ export function createFile(id = uuid(), tags: Object['tags'] = {}) {
  * Creates a new Workspace with default values.
  * @param id The ID of the new workspace.
  * @param builderContextId The tag that should be used for contexts stored on this workspace.
- * @param contextFormula The formula that should be used to determine whether the workspace is allowed to be a context.
+ * @param locked Whether the context is allowed to be accessed via AUX Player.
  */
 export function createWorkspace(
     id = uuid(),
-    builderContextId: string = createContextId()
+    builderContextId: string = createContextId(),
+    locked: boolean = true
 ): Workspace {
     // checks if given context string is empty or just whitespace
     if (builderContextId.length === 0 || /^\s*$/.test(builderContextId)) {
@@ -995,7 +996,7 @@ export function createWorkspace(
             'aux.context.surface.y': 0,
             'aux.context.surface.z': 0,
             'aux.context.surface': true,
-            'aux.context.locked': true,
+            'aux.context.locked': locked,
             'aux.context': builderContextId,
         },
     };
@@ -1477,6 +1478,9 @@ export function getFileShape(
     calc: FileCalculationContext,
     file: File
 ): FileShape {
+    if (isDiff(file)) {
+        return 'sphere';
+    }
     const shape: FileShape = calculateFileValue(calc, file, 'aux.shape');
     if (shape === 'cube' || shape === 'sphere' || shape === 'sprite') {
         return shape;
@@ -2011,6 +2015,24 @@ export function parseSimulationId(id: string): SimulationIdParseSuccess {
 }
 
 /**
+ * Normalizes the given URL so that it will load the AUX file instead of the web application.
+ * @param url The URL.
+ */
+export function normalizeAUXFileURL(url: string): string {
+    const parsed = new URL(url);
+
+    if (
+        parsed.pathname.indexOf('.aux') !==
+        parsed.pathname.length - '.aux'.length
+    ) {
+        parsed.pathname = `${parsed.pathname}.aux`;
+        return parsed.href;
+    }
+
+    return url;
+}
+
+/**
  * Parses the given tag filter into its components.
  * @param tag
  */
@@ -2164,6 +2186,26 @@ export function calculateBooleanTagValue(
         }
     }
     return defaultValue;
+}
+
+/**
+ * Determines if the given file is able to be destroyed.
+ * Defaults to true.
+ * @param calc The file calculation context.
+ * @param file The file to check.
+ */
+export function isDestroyable(calc: FileCalculationContext, file: Object) {
+    return calculateBooleanTagValue(calc, file, 'aux.destroyable', true);
+}
+
+/**
+ * Determines if the given file is able to be edited by the file sheet.
+ * Defaults to true.
+ * @param calc The file calculation context.
+ * @param file The file to check.
+ */
+export function isEditable(calc: FileCalculationContext, file: Object) {
+    return calculateBooleanTagValue(calc, file, 'aux.editable', true);
 }
 
 /**

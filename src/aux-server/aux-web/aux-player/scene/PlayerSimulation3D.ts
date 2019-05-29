@@ -117,21 +117,6 @@ export class PlayerSimulation3D extends Simulation3D {
                 .subscribe()
         );
 
-        this._subs.push(
-            this.simulation.helper.localEvents
-                .pipe(
-                    tap(e => {
-                        if (e.name === 'tween_to') {
-                            this._gameView.tweenCameraToFile(
-                                e.fileId,
-                                e.zoomValue
-                            );
-                        }
-                    })
-                )
-                .subscribe()
-        );
-
         // Send an event to all files indicating that the given context was loaded.
         this.simulation.helper.action('onPlayerContextEnter', null, {
             context: this.context,

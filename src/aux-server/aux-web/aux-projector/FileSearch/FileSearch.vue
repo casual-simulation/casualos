@@ -10,7 +10,7 @@
             <md-tooltip md-direction="bottom">Run Script</md-tooltip>
         </md-button>
         <md-button class="md-icon-button num-files" @click="toggleOpen()">
-            {{ files.length || 0 }}
+            {{ filesLength || 0 }}
         </md-button>
     </div>
 </template>

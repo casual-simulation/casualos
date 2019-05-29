@@ -16,6 +16,8 @@ import {
     lerp,
     auxCausalTreeFactory,
     AuxObject,
+    normalizeAUXFileURL,
+    getFilesStateFromStoredTree,
 } from '@casual-simulation/aux-common';
 import Dexie from 'dexie';
 import { difference } from 'lodash';
@@ -178,23 +180,19 @@ export class AppManager {
      */
     async uploadState(file: File): Promise<void> {
         const json = await readFileJson(file);
-        const state: StoredCausalTree<AuxOp> = JSON.parse(json);
-        let value: FilesState;
-        if (state.site && state.knownSites && state.weave) {
-            console.log('[AppManager] Importing Weave.');
-
-            // Don't try to import the tree because it's like trying to
-            // import an unrelated Git repo. Git handles this by allowing
-            // multiple root nodes but we dont allow multiple roots.
-            const tree = <AuxCausalTree>new AuxCausalTree(state);
-            await tree.import(state);
-            value = tree.value;
-        } else {
-            console.log('[AppManager] Old file detected, adding state.');
-            value = <FilesState>(<unknown>state);
-        }
-
+        const stored: StoredCausalTree<AuxOp> = JSON.parse(json);
+        const value = await getFilesStateFromStoredTree(stored);
         await this.simulationManager.primary.helper.addState(value);
+    }
+
+    /**
+     * Loads a .aux file from the given URL.
+     * @param url The url to load.
+     */
+    async loadAUX(url: string): Promise<StoredCausalTree<AuxOp>> {
+        const normalized = normalizeAUXFileURL(url);
+        const result = await Axios.get(normalized);
+        return result.data;
     }
 
     /**

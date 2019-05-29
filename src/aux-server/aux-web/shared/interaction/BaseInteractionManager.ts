@@ -303,6 +303,8 @@ export abstract class BaseInteractionManager {
                     }
                 }
             }
+
+            this._updateAdditionalNormalInputs(input);
         }
     }
 
@@ -311,6 +313,12 @@ export abstract class BaseInteractionManager {
         const webglCanvas = this._gameView.getRenderer().domElement;
         webglCanvas.style.pointerEvents = 'auto';
     }
+
+    /**
+     * Handles any additional input events that the input manager might want to process.
+     * @param input The input.
+     */
+    protected _updateAdditionalNormalInputs(input: Input) {}
 
     /**
      * Gets groups of draggables for input testing.
@@ -511,12 +519,14 @@ export abstract class BaseInteractionManager {
     }
 
     protected _handleCameraRigTypeChanged(newCameraRig: CameraRig): void {
-        let cameraRigControls = this._cameraRigControllers.find(
-            c => c.rig.id === newCameraRig.id
+        const cameraRigControls = this._cameraRigControllers.find(
+            c => c.rig.name === newCameraRig.name
         );
 
         if (cameraRigControls) {
-            let viewport = cameraRigControls.controls.viewport;
+            cameraRigControls.rig = newCameraRig;
+
+            const viewport = cameraRigControls.controls.viewport;
             cameraRigControls.controls = new CameraControls(
                 newCameraRig.mainCamera,
                 this._gameView,

@@ -75,6 +75,7 @@ import {
     Orthographic_MaxZoom,
 } from '../../shared/scene/CameraRigFactory';
 import { CameraRigControls } from 'aux-web/shared/interaction/CameraRigControls';
+import { BuilderFileIDClickOperation } from './ClickOperation/BuilderFileIDClickOperation';
 
 export class BuilderInteractionManager extends BaseInteractionManager {
     // This overrides the base class IGameView
@@ -161,13 +162,16 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 .filesState;
 
             if (state[vueElement.files.id]) {
-                return new BuilderFileDragOperation(
+                return new BuilderFileIDClickOperation(
                     this._gameView.simulation3D,
                     this,
-                    null,
-                    [vueElement.files],
-                    null,
-                    null
+                    vueElement.files
+                );
+            } else {
+                return new BuilderNewFileClickOperation(
+                    this._gameView.simulation3D,
+                    this,
+                    vueElement.files
                 );
             }
         }

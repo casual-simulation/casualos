@@ -649,6 +649,14 @@ export class Input {
     }
 
     /**
+     * Gets the iterable list of keys that have been used in the application.
+     * Useful to check if any keys have been pressed or released.
+     */
+    public getKeys(): Iterable<KeyData> {
+        return this._keyData.values();
+    }
+
+    /**
      * Gets the information about what HTML elements are currently being targeted.
      * Note that this only stores information about the last targeted elements.
      * As such, it should only be used to tell whether touch/mouse events
@@ -915,14 +923,18 @@ export class Input {
             this._keyData.set(keyData.key, keyData);
         }
 
-        keyData.state.setDownFrame(this._gameView.getTime().frameCount);
+        if (!event.repeat) {
+            keyData.state.setDownFrame(this._gameView.getTime().frameCount);
+        }
 
         if (this.debugLevel >= 1) {
             console.log(
                 'key ' +
                     event.key +
                     ' down. fireInputOnFrame: ' +
-                    this._gameView.getTime().frameCount
+                    this._gameView.getTime().frameCount +
+                    '. repeating: ' +
+                    event.repeat
             );
         }
     }
