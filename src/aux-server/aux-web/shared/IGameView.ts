@@ -60,6 +60,11 @@ export interface IGameView extends AuxFile3DFinder, Vue {
     getViewports(): Viewport[];
 
     /**
+     * Get all of the current camera rigs.
+     */
+    getCameraRigs(): CameraRig[];
+
+    /**
      * Gets the list of simulations that this game view contains.
      */
     getSimulations(): Simulation3D[];

@@ -65,6 +65,10 @@ html.ar-app .webxr-sessions canvas {
     user-select: none;
 }
 
+.toolbar.right > * {
+    padding-bottom: 5px;
+}
+
 .toolbar-layout {
     display: flex;
     align-items: flex-end;

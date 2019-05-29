@@ -33,6 +33,40 @@
                     class="vr-button-container"
                 ></span>
             </div>
+
+            <!-- Inventory viewport -->
+            <div
+                v-if="inventoryViewport"
+                class="viewport"
+                :style="{
+                    bottom: inventoryViewport.y + 'px',
+                    left: inventoryViewport.x + 'px',
+                    width: inventoryViewport.width + 'px',
+                    height: inventoryViewport.height + 'px',
+                }"
+            >
+                <div class="toolbar right">
+                    <camera-home :cameraRig="inventoryCameraRig"></camera-home>
+                    <!-- <camera-type :cameraRig="inventoryCameraRig"></camera-type> -->
+                </div>
+            </div>
+
+            <!-- Main viewport -->
+            <div
+                v-if="mainViewport"
+                class="viewport"
+                :style="{
+                    bottom: inventoryViewport.height + 'px',
+                    left: mainViewport.x + 'px',
+                    width: mainViewport.width + 'px',
+                    height: mainViewport.height - inventoryViewport.height + 'px',
+                }"
+            >
+                <div class="toolbar right">
+                    <camera-home :cameraRig="mainCameraRig"></camera-home>
+                    <camera-type :cameraRig="mainCameraRig"></camera-type>
+                </div>
+            </div>
         </div>
     </div>
 </template>

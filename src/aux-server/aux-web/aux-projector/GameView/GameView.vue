@@ -17,6 +17,9 @@
                     <p class="upload-files-text">Drop to upload</p>
                 </div>
             </div>
+
+            <div></div>
+
             <div class="toolbar">
                 <!--md-button
                     v-if="workspacesMode"
@@ -45,8 +48,10 @@
                     </div>
                 </div>
             </div>
+            <trash-can v-if="showTrashCan" ref="trashCan"></trash-can>
             <div class="toolbar right">
-                <trash-can v-if="showTrashCan" ref="trashCan"></trash-can>
+                <camera-home :cameraRig="mainCameraRig"></camera-home>
+                <camera-type :cameraRig="mainCameraRig"></camera-type>
             </div>
             <div v-shortkey.once="['ctrl', 'c']" @shortkey="copySelectionNormal"></div>
 

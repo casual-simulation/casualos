@@ -1,0 +1,31 @@
+import Component from 'vue-class-component';
+import Vue from 'vue';
+import { CameraRig } from '../../scene/CameraRigFactory';
+import { Prop } from 'vue-property-decorator';
+import { EventBus } from '../../../shared/EventBus';
+import { PerspectiveCamera } from 'three';
+
+@Component({})
+export default class CameraType extends Vue {
+    /**
+     * The camera rig that this button is for.
+     */
+    @Prop() cameraRig: CameraRig;
+
+    get isPerspective(): boolean {
+        if (!this.cameraRig) return undefined;
+        return this.cameraRig.mainCamera instanceof PerspectiveCamera;
+    }
+
+    created() {}
+
+    toggle() {
+        if (this.isPerspective) {
+            EventBus.$emit('changeCameraType', 'orthographic');
+        } else {
+            EventBus.$emit('changeCameraType', 'perspective');
+        }
+    }
+
+    beforeDestroy() {}
+}

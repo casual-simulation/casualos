@@ -520,7 +520,7 @@ export abstract class BaseInteractionManager {
 
     protected _handleCameraRigTypeChanged(newCameraRig: CameraRig): void {
         const cameraRigControls = this._cameraRigControllers.find(
-            c => c.rig.id === newCameraRig.id
+            c => c.rig.name === newCameraRig.name
         );
 
         if (cameraRigControls) {

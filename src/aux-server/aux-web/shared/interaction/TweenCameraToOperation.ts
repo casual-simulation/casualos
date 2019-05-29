@@ -39,7 +39,7 @@ export class TweenCameraToOperation implements IOperation {
         this._zoomValue = zoomValue;
 
         this._rigControls = this._interaction.cameraRigControllers.find(
-            c => c.rig.id === cameraRig.id
+            c => c.rig.name === cameraRig.name
         );
 
         // If rig controls could not be found for the given camera, just exit this operation early.

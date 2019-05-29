@@ -182,10 +182,12 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         files: File[]
     ) {
         if (this._isOverTrashCan()) {
+            console.log('destroy file');
             this._destroyFiles(calc, files);
             return;
         }
 
+        console.log('remove file from context');
         this._removeFromContext(calc, files);
     }
 
@@ -195,14 +197,16 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     protected _isOverTrashCan(): boolean {
         const input = this.gameView.getInput();
         if (
-            input.isMouseButtonDownOnAnyElements(
+            input.isMouseFocusingOnAnyElements(
                 this.gameView.getUIHtmlElements()
             )
         ) {
+            console.log('isOverTrashCan() mouse is over ui elements');
             const element = input.getTargetData().inputOver;
             const vueElement = Input.getVueParent(element, TrashCan);
             return !!vueElement;
         }
+        console.log('isOverTrashCan() mouse is NOT over ui elements');
         return false;
     }
 

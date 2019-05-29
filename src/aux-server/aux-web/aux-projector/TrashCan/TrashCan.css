@@ -1,6 +1,9 @@
 .delete-file-layout {
-    width: 120px;
-    height: 120px;
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    width: 150px;
+    height: 180px;
     display: flex;
     justify-content: center;
     align-items: center;
