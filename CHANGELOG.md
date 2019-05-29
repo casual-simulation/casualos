@@ -23,6 +23,7 @@
         -   `getNeighboringFiles(file, context, direction)` gets the list of files that are next to the given file in the given direction.
             -   Possible directions: `left`, `right`, `front`, `back`.
             -   If a direction is not specified, then the function returns an object containing every possible direction and the corresponding list of files.
+        -   `player.importAUX(url)` loads an .aux file from the given URL and imports it into the current channel.
     -   Improved the `whisper()` function to support giving it an array of files to whisper to.
     -   Set an empty diff file as the selected file if no other files are selected, this will allow new files to be dragged out drom this diff's id as a new file.
         -   Selection count is set to 0 in this instance as not files are meant to be shown as selected.
