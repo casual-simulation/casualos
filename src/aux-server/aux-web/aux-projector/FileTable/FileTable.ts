@@ -309,7 +309,7 @@ export default class FileTable extends Vue {
      */
     async onConfirmCreateWorksurface() {
         this.showCreateWorksurfaceDialog = false;
-        await this.fileManager.helper.createWorkspace(
+        const workspace = await this.fileManager.helper.createWorkspace(
             undefined,
             this.worksurfaceContext,
             !this.worksurfaceAllowPlayer
@@ -332,6 +332,8 @@ export default class FileTable extends Vue {
                 });
             }
         }
+
+        await this.fileManager.selection.selectFile(workspace, true);
 
         this.resetCreateWorksurfaceDialog();
     }
