@@ -24,11 +24,7 @@
                     <cube-icon></cube-icon>
                     <md-tooltip>Create Empty File</md-tooltip>
                 </md-button>
-                <md-button
-                    v-if="!isSearch"
-                    class="md-icon-button create-surface"
-                    @click="createSurface()"
-                >
+                <md-button class="md-icon-button create-surface" @click="createSurface()">
                     <hex-icon></hex-icon>
                     <md-tooltip>Create Worksurface</md-tooltip>
                 </md-button>
