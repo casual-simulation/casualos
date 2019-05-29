@@ -67,15 +67,15 @@
     /* border-top: var(--file-cell-border); */
 }
 
-.file-section-holderOuter {
+.file-section-holder-outer {
     height: 40px;
     width: 100%;
-    overflow-x: scroll;
+    overflow-x: auto;
     overflow-y: hidden;
     white-space: nowrap;
 }
 
-.file-section-holderInner {
+.file-section-holder-inner {
     white-space: nowrap;
 }
 
