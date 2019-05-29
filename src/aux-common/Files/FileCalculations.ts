@@ -1477,6 +1477,9 @@ export function getFileShape(
     calc: FileCalculationContext,
     file: File
 ): FileShape {
+    if (isDiff(file)) {
+        return 'sphere';
+    }
     const shape: FileShape = calculateFileValue(calc, file, 'aux.shape');
     if (shape === 'cube' || shape === 'sphere' || shape === 'sprite') {
         return shape;

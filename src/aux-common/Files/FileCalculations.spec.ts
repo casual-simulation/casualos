@@ -3220,6 +3220,31 @@ describe('FileCalculations', () => {
         });
     });
 
+    describe('getFileShape()', () => {
+        const cases = [['cube'], ['sphere'], ['sprite']];
+        it.each(cases)('should return %s', (shape: string) => {
+            const file = createFile('test', {
+                'aux.shape': <any>shape,
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(getFileShape(calc, file)).toBe(shape);
+        });
+
+        it('should return sphere when the file is a diff', () => {
+            const file = createFile('test', {
+                'aux.shape': 'cube',
+                'aux._diff': true,
+                'aux._diffTags': ['aux.shape'],
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(getFileShape(calc, file)).toBe('sphere');
+        });
+    });
+
     describe('getUserMenuId()', () => {
         it('should return the value from aux._userMenuContext', () => {
             const user = createFile('user', {
