@@ -26,9 +26,15 @@
     -   Improved the `whisper()` function to support giving it an array of files to whisper to.
     -   Set an empty diff file as the selected file if no other files are selected, this will allow new files to be dragged out drom this diff's id as a new file.
         -   Selection count is set to 0 in this instance as not files are meant to be shown as selected.
+    -   Added a "Create Worksurface" button to the file sheet.
+        -   This will create a new worksurface and place all the selected files on it.
+        -   The worksurface will use the given context name and can be locked from access in AUX Player.
+        -   The system will find an empty spot to place the new worksurface.
 
 -   Bug Fixes
     -   Fixed `tweenTo` function not working after changing the camera type.
+    -   Fixed the file sheet to not have a double scroll bar when the tags list becomes longer than the max height of the sheet.
+    -   Fixed an issue that would add a file to the "null" context when dragging it out by it's ID.
 
 ## V0.8.0
 
