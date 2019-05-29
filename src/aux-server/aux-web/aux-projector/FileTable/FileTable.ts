@@ -423,7 +423,6 @@ export default class FileTable extends Vue {
 
     async clearDiff() {
         await this.fileManager.recent.clear();
-        this.fileManager.recent.selectedRecentFile = this.fileManager.recent.files[0];
     }
 
     constructor() {
