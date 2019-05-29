@@ -17,6 +17,7 @@ import {
     superShout as calcSuperShout,
     showQRCode as calcShowQRCode,
     goToContext as calcGoToContext,
+    importAUX as calcImportAUX,
 } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
 import { every, find, sortBy } from 'lodash';
@@ -906,6 +907,14 @@ function unloadChannel(id: string) {
 }
 
 /**
+ * Imports the AUX at the given URL.
+ * @param url The URL to load.
+ */
+function importAUX(url: string) {
+    actions.push(calcImportAUX(url));
+}
+
+/**
  * Determines if the user is currently connected to the server.
  */
 function isConnected(): boolean {
@@ -946,6 +955,7 @@ export const player = {
     closeQRCodeScanner,
     loadChannel,
     unloadChannel,
+    importAUX,
     hasFileInInventory,
     showQRCode,
     hideQRCode,

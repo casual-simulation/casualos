@@ -2015,6 +2015,24 @@ export function parseSimulationId(id: string): SimulationIdParseSuccess {
 }
 
 /**
+ * Normalizes the given URL so that it will load the AUX file instead of the web application.
+ * @param url The URL.
+ */
+export function normalizeAUXFileURL(url: string): string {
+    const parsed = new URL(url);
+
+    if (
+        parsed.pathname.indexOf('.aux') !==
+        parsed.pathname.length - '.aux'.length
+    ) {
+        parsed.pathname = `${parsed.pathname}.aux`;
+        return parsed.href;
+    }
+
+    return url;
+}
+
+/**
  * Parses the given tag filter into its components.
  * @param tag
  */

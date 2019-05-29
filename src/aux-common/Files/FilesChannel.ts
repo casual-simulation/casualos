@@ -462,7 +462,8 @@ export type LocalEvents =
     | LoadSimulationEvent
     | UnloadSimulationEvent
     | SuperShoutEvent
-    | GoToContextEvent;
+    | GoToContextEvent
+    | ImportAUXEvent;
 
 /**
  * An event that is used to show a toast message to the user.
@@ -540,6 +541,18 @@ export interface UnloadSimulationEvent extends LocalEvent {
      * The ID of the simulation to unload.
      */
     id: string;
+}
+
+/**
+ * An event that is used to load an AUX from a remote location.
+ */
+export interface ImportAUXEvent extends LocalEvent {
+    name: 'import_aux';
+
+    /**
+     * The URL to load.
+     */
+    url: string;
 }
 
 /**
@@ -780,6 +793,18 @@ export function goToContext(context: string): GoToContextEvent {
         type: 'local',
         name: 'go_to_context',
         context: context,
+    };
+}
+
+/**
+ * Creates a new ImportAUXEvent.
+ * @param url The URL that should be loaded.
+ */
+export function importAUX(url: string): ImportAUXEvent {
+    return {
+        type: 'local',
+        name: 'import_aux',
+        url: url,
     };
 }
 

@@ -64,6 +64,7 @@ import {
     isContextLocked,
     isDestroyable,
     isEditable,
+    normalizeAUXFileURL,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
@@ -2902,6 +2903,28 @@ describe('FileCalculations', () => {
             };
 
             expect(simulationIdToString(id)).toBe('example.com/*/test');
+        });
+    });
+
+    describe('normalizeAUXFileURL()', () => {
+        const cases = [
+            ['http://example.com/path', 'http://example.com/path.aux'],
+            ['http://example.com/', 'http://example.com/.aux'],
+            ['http://example.com', 'http://example.com/.aux'],
+            ['https://example.com/*/test', 'https://example.com/*/test.aux'],
+            [
+                'http://example.com/context/channel',
+                'http://example.com/context/channel.aux',
+            ],
+            [
+                'http://example.com/context/channel.aux',
+                'http://example.com/context/channel.aux',
+            ],
+            ['http://example.com/.aux', 'http://example.com/.aux'],
+        ];
+
+        it.each(cases)('should map %s to %s', (given, expected) => {
+            expect(normalizeAUXFileURL(given)).toBe(expected);
         });
     });
 
