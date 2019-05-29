@@ -29,6 +29,7 @@
     -   Added a "Create Worksurface" button to the file sheet.
         -   This will create a new worksurface and place all the selected files on it.
         -   The worksurface will use the given context name and can be locked from access in AUX Player.
+        -   The new worksurface file will automatically be selected.
         -   The system will find an empty spot to place the new worksurface.
 
 -   Bug Fixes
