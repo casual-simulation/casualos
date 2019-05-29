@@ -21,6 +21,7 @@ import {
     toast,
     isEditable,
     createContextId,
+    addToContextDiff,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
 import { appManager } from '../../shared/AppManager';
@@ -306,12 +307,31 @@ export default class FileTable extends Vue {
     /**
      * Confirm event from the create worksurface dialog.
      */
-    onConfirmCreateWorksurface() {
-        this.fileManager.helper.createWorkspace(
+    async onConfirmCreateWorksurface() {
+        this.showCreateWorksurfaceDialog = false;
+        await this.fileManager.helper.createWorkspace(
             undefined,
             this.worksurfaceContext,
             !this.worksurfaceAllowPlayer
         );
+
+        if (!this.diffSelected) {
+            const calc = this.fileManager.helper.createContext();
+            for (let i = 0; i < this.files.length; i++) {
+                const file = this.files[i];
+                await this.fileManager.helper.updateFile(file, {
+                    tags: {
+                        ...addToContextDiff(
+                            calc,
+                            this.worksurfaceContext,
+                            0,
+                            0,
+                            i
+                        ),
+                    },
+                });
+            }
+        }
 
         this.resetCreateWorksurfaceDialog();
     }

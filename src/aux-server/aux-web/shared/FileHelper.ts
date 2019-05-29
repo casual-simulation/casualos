@@ -167,7 +167,7 @@ export class FileHelper {
         fileId?: string,
         builderContextId?: string,
         locked?: boolean
-    ): Promise<void> {
+    ): Promise<AuxObject> {
         if (FileHelper._debug) {
             console.log('[FileManager] Create Workspace');
         }
@@ -191,6 +191,8 @@ export class FileHelper {
         });
 
         await this._tree.addFile(updated);
+
+        return this.filesState[workspace.id];
     }
 
     /**
