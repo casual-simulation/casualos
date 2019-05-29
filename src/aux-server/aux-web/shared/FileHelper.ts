@@ -200,7 +200,7 @@ export class FileHelper {
      * @param fileId The ID of the file to create. If not specified a new ID will be generated.
      */
     async createGlobalsFile(fileId?: string) {
-        const workspace: Workspace = createWorkspace(fileId, 'global');
+        const workspace: Workspace = createFile(fileId, {});
 
         const final = merge(workspace, {
             tags: {
