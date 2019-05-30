@@ -183,6 +183,9 @@ export default class GameView extends Vue implements IGameView {
     public getInputVR() {
         return this._inputVR;
     }
+    public getInteraction() {
+        return this._interaction;
+    }
     public getScene() {
         return this._mainScene;
     }

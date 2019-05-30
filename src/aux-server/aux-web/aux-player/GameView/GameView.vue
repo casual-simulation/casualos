@@ -46,7 +46,7 @@
                 }"
             >
                 <div class="toolbar right">
-                    <camera-home :cameraRig="inventoryCameraRig"></camera-home>
+                    <camera-home :showDistance="5" :cameraRig="inventoryCameraRig"></camera-home>
                     <!-- <camera-type :cameraRig="inventoryCameraRig"></camera-type> -->
                 </div>
             </div>

@@ -21,6 +21,7 @@ import { GridChecker } from './scene/grid/GridChecker';
 import { AuxFile3DDecoratorFactory } from './scene/decorators/AuxFile3DDecoratorFactory';
 import { CameraRig } from './scene/CameraRigFactory';
 import { Viewport } from './scene/Viewport';
+import { BaseInteractionManager } from './interaction/BaseInteractionManager';
 
 /**
  * Interface that described what properties and functions should be available to a GameView class/component implementation.
@@ -46,6 +47,7 @@ export interface IGameView extends AuxFile3DFinder, Vue {
     getTime(): Time;
     getInput(): Input;
     getInputVR(): InputVR;
+    getInteraction(): BaseInteractionManager;
     getScene(): Scene;
     getRenderer(): WebGLRenderer;
     getMainCameraRig(): CameraRig;

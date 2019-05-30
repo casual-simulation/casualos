@@ -3,15 +3,15 @@
         <md-button class="md-icon-button md-raised" @click="toggle()">
             <div v-if="isPerspective">
                 <md-icon>videocam</md-icon>
-                <md-tooltip md-delay="300" md-direction="left"
+                <!-- <md-tooltip md-delay="300" md-direction="left"
                     >Enable Perspective Camera</md-tooltip
-                >
+                > -->
             </div>
             <div v-else>
                 <md-icon>videocam_off</md-icon>
-                <md-tooltip md-delay="300" md-direction="left"
+                <!-- <md-tooltip md-delay="300" md-direction="left"
                     >Disable Perspective Camera</md-tooltip
-                >
+                > -->
             </div>
         </md-button>
     </div>

@@ -213,8 +213,6 @@ export class Viewport {
         this._size.x *= this._scale.x;
         this._size.y *= this._scale.y;
 
-        console.log('[Viewport] updateViewport:', this);
-
         this.onUpdated.invoke(this);
     }
 
