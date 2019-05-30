@@ -1,5 +1,5 @@
 import VRController from 'three-vrcontroller-module';
-import { IGameView } from '../IGameView';
+import { IGameView } from '../vue-components/IGameView';
 import {
     MeshStandardMaterial,
     Mesh,

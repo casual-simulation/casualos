@@ -22,7 +22,7 @@ import {
 import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
 import { AuxFile3D } from '../AuxFile3D';
 import { EventBus } from '../../EventBus';
-import { IGameView } from '../../IGameView';
+import { IGameView } from '../../vue-components/IGameView';
 import { HtmlMixer, HtmlMixerHelpers } from '../../../shared/scene/HtmlMixer';
 
 const DEFAULT_IFRAME_PLANE_SIZE = new Vector2(1, 3 / 4);

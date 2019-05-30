@@ -10,7 +10,7 @@ import {
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { PerspectiveCamera, OrthographicCamera, Object3D, Plane } from 'three';
 import { Simulation } from '../../shared/Simulation';
-import { IGameView } from '../../shared/IGameView';
+import { IGameView } from '../../shared/vue-components/IGameView';
 import { flatMap } from 'lodash';
 import GameView from '../GameView/GameView';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';

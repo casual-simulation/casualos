@@ -11,7 +11,7 @@ import {
 import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
 import { AuxFile3D } from '../AuxFile3D';
 import { calculateScale } from '../SceneUtils';
-import { IGameView } from '../../../shared/IGameView';
+import { IGameView } from '../../vue-components/IGameView';
 import {
     Orthographic_DefaultZoom,
     Orthographic_MinZoom,

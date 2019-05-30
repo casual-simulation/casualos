@@ -7,7 +7,7 @@ import {
     isContextLocked,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
-import { IGameView } from '../../shared/IGameView';
+import { IGameView } from '../../shared/vue-components/IGameView';
 import { Simulation } from '../../shared/Simulation';
 import { tap } from 'rxjs/operators';
 import { MenuContext } from '../MenuContext';

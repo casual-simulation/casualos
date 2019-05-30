@@ -9,21 +9,21 @@ import {
     Texture,
     Color,
 } from 'three';
-import { Time } from './scene/Time';
-import { Input } from './scene/Input';
-import { InputVR } from './scene/InputVR';
+import { Time } from '../scene/Time';
+import { Input } from '../scene/Input';
+import { InputVR } from '../scene/InputVR';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { AuxFile } from '@casual-simulation/aux-common/aux-format';
-import { ContextGroup3D } from './scene/ContextGroup3D';
-import { AuxFile3DFinder } from './AuxFile3DFinder';
+import { ContextGroup3D } from '../scene/ContextGroup3D';
+import { AuxFile3DFinder } from '../AuxFile3DFinder';
 import Vue from 'vue';
-import { HtmlMixer } from '../shared/scene/HtmlMixer';
-import { Simulation3D } from './scene/Simulation3D';
-import { GridChecker } from './scene/grid/GridChecker';
-import { AuxFile3DDecoratorFactory } from './scene/decorators/AuxFile3DDecoratorFactory';
-import { CameraRig } from './scene/CameraRigFactory';
-import { Viewport } from './scene/Viewport';
-import { BaseInteractionManager } from './interaction/BaseInteractionManager';
+import { HtmlMixer } from '../scene/HtmlMixer';
+import { Simulation3D } from '../scene/Simulation3D';
+import { GridChecker } from '../scene/grid/GridChecker';
+import { AuxFile3DDecoratorFactory } from '../scene/decorators/AuxFile3DDecoratorFactory';
+import { CameraRig } from '../scene/CameraRigFactory';
+import { Viewport } from '../scene/Viewport';
+import { BaseInteractionManager } from '../interaction/BaseInteractionManager';
 
 /**
  * Interface that described what properties and functions should be available to a GameView class/component implementation.

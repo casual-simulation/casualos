@@ -25,7 +25,7 @@ import {
 } from '@casual-simulation/aux-common';
 
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
-import { IGameView } from '../../../shared/IGameView';
+import { IGameView } from '../../vue-components/IGameView';
 import { differenceBy, maxBy } from 'lodash';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 

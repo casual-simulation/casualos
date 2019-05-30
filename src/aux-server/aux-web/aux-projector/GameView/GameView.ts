@@ -60,7 +60,7 @@ import { flatMap, find, findIndex, debounce, keys } from 'lodash';
 import App from '../App/App';
 import MiniFile from '../MiniFile/MiniFile';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
-import { IGameView } from '../../shared/IGameView';
+import { IGameView } from '../../shared/vue-components/IGameView';
 import { LayersHelper } from '../../shared/scene/LayersHelper';
 import { AuxFile3DDecoratorFactory } from '../../shared/scene/decorators/AuxFile3DDecoratorFactory';
 import { DebugObjectManager } from '../../shared/scene/DebugObjectManager';

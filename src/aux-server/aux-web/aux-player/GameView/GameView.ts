@@ -44,7 +44,7 @@ import { appManager } from '../../shared/AppManager';
 import { find, flatMap, uniqBy } from 'lodash';
 import App from '../App/App';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
-import { IGameView } from '../../shared/IGameView';
+import { IGameView } from '../../shared/vue-components/IGameView';
 import { LayersHelper } from '../../shared/scene/LayersHelper';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { AuxFile3D } from '../../shared/scene/AuxFile3D';

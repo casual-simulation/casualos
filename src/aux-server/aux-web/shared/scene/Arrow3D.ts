@@ -24,7 +24,7 @@ import {
     FileCalculationContext,
 } from '@casual-simulation/aux-common';
 import { WorkspaceMesh } from './WorkspaceMesh';
-import { IGameView } from '../IGameView';
+import { IGameView } from '../vue-components/IGameView';
 import { AuxFile3D } from './AuxFile3D';
 import { ContextGroup3D } from './ContextGroup3D';
 import { BuilderGroup3D } from './BuilderGroup3D';

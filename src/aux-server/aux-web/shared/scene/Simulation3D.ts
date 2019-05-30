@@ -15,7 +15,7 @@ import {
     hasValue,
 } from '@casual-simulation/aux-common';
 import { SubscriptionLike } from 'rxjs';
-import { IGameView } from '../IGameView';
+import { IGameView } from '../vue-components/IGameView';
 import { concatMap, tap, flatMap as rxFlatMap } from 'rxjs/operators';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { flatMap } from 'lodash';
