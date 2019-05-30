@@ -1,7 +1,3 @@
-import groovy.xml.XmlUtil 
-
-def gitTag
-def remote
 
 pipeline {
     agent any
@@ -33,9 +29,11 @@ pipeline {
                     remote.allowAnyHosts = true
                     remote.identityFile = RPI_SSH_KEY_FILE
 
-                    gitTag = sh(returnStdout: true, script: """
+                    env.gitTag = sh(returnStdout: true, script: """
                         echo `git describe --abbrev=0 --tags`
                     """)
+
+                    println("Tag: ${gitTag}")
                 }
 
                 InstallNPMPackages()
@@ -43,6 +41,7 @@ pipeline {
         }
         stage('Test') {
             steps {
+                println("Tag: ${gitTag}")
                 Tests()
             }
         }
