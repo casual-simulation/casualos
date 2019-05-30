@@ -126,7 +126,7 @@ def BuildDockerArm32(remote) {
     """
 
     def piip = sh(returnStdout: true, script: """
-        echo `ping -c1 $RPI_HOSTNAME | sed -nE 's/^PING[^(]+\(([^)]+)\).*/\1/p'`
+        echo `ping -c1 $RPI_HOSTNAME | sed -nE \'s/^PING[^(]+\\(([^)]+)\\).*/\\1/p\'`
         """)
     
     def tag = "casualsimulation/aux/arm32"
