@@ -22,6 +22,7 @@
     -   Added autofill feature to the add tag input box for improved tag adding.
     -   Center camera button is only shown when at a specified distance from the world center.
     -   Placed camera type toggle back inside the menu for both AUX Builder and AUX Player.
+    -   Changed hexagon image to include a plus sign to make is match with other 'add item' buttons.
 
 ## V0.8.1
 
