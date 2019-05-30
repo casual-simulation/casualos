@@ -20,7 +20,6 @@ import { Intersection, Vector2, Ray } from 'three';
 import { Physics } from '../../../shared/scene/Physics';
 import { Input } from '../../../shared/scene/Input';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
-import next from 'vhost';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 
 export class PlayerFileDragOperation extends BaseFileDragOperation {

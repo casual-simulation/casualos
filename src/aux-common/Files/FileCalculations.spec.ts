@@ -49,8 +49,6 @@ import {
     parseSimulationId,
     getFileVersion,
     isFileInContext,
-    getFileWhitelist,
-    getFileBlacklist,
     getFileUsernameList,
     isInUsernameList,
     whitelistAllowsAccess,

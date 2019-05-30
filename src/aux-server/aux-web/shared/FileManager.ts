@@ -24,6 +24,8 @@ import {
     whitelistAllowsAccess,
     blacklistAllowsAccess,
     whitelistOrBlacklistAllowsAccess,
+    isInUsernameList,
+    getFileBuilderList,
 } from '@casual-simulation/aux-common';
 import { keys, union, values } from 'lodash';
 import {
@@ -390,6 +392,18 @@ export class FileManager implements Simulation {
         const calc = this.helper.createContext();
         const username = this.helper.userFile.tags['aux._user'];
         const file = this.helper.globalsFile;
+
+        if (this._config.isBuilder) {
+            const builders = getFileBuilderList(calc, file);
+            if (builders) {
+                if (!isInUsernameList(calc, file, 'aux.builders', username)) {
+                    throw new Error(`You are denied access to this channel.`);
+                } else {
+                    return;
+                }
+            }
+        }
+
         if (!whitelistOrBlacklistAllowsAccess(calc, file, username)) {
             throw new Error(`You are denied access to this channel.`);
         }

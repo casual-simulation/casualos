@@ -1,7 +1,7 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Inject, Prop, Watch } from 'vue-property-decorator';
-import { validateTag } from '@casual-simulation/aux-common';
+import { validateTag, value, KNOWN_TAGS } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import CombineIcon from '../public/icons/combine_icon.svg';
 
@@ -25,12 +25,26 @@ export default class TagEditor extends Vue {
     changed: boolean = false;
     focused: boolean = false;
 
+    isOpen: boolean = true;
+    isLoading: boolean = false;
+
+    results: string[] = [];
+
     get fileManager() {
         return appManager.simulationManager.primary;
     }
 
     get showMenu() {
-        return !!(this.focused && this.changed && this.errorMessage);
+        if (value.length > 0) {
+            // call the sort applicable tags function here
+            this.results = this.sortTags();
+        }
+
+        return !!(
+            this.focused &&
+            this.changed &&
+            (this.errorMessage || value.length > 0)
+        );
     }
 
     get placeholder() {
@@ -78,6 +92,27 @@ export default class TagEditor extends Vue {
             const error = this.errorMessage;
             this.$emit('valid', !error);
         });
+    }
+
+    sortTags(): string[] {
+        let tagsToSort = KNOWN_TAGS; // and tags on files
+
+        let finalTags = [];
+
+        for (let i = 0; i < tagsToSort.length; i++) {
+            if (
+                tagsToSort[i].toLowerCase().includes(this.value.toLowerCase())
+            ) {
+                finalTags.push(tagsToSort[i]);
+            }
+        }
+
+        return finalTags;
+    }
+
+    onAutoFill(fillValue: string) {
+        this.$emit('input', this._convertToFinalValue(fillValue));
+        this.changed = true;
     }
 
     // onInput(event: string) {

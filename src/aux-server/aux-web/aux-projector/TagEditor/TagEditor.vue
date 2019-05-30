@@ -49,7 +49,12 @@
             <md-menu-item v-if="errorMessage" class="tag-editor-error">
                 {{ errorMessage }}
             </md-menu-item>
-            <!-- <md-menu-item>Test</md-menu-item> -->
+
+            <template v-else-if="isOpen" class="tag-editor-autofill-holder">
+                <md-menu-item v-for="(result, i) in results" :key="i" @click="onAutoFill(result)">
+                    {{ result }}
+                </md-menu-item>
+            </template>
         </md-menu-content>
     </md-menu>
 </template>
