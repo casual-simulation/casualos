@@ -32,6 +32,7 @@ pipeline {
         }
         stage('Test') {
             steps {
+                BuildDocker()
                 Tests()
             }
         }
@@ -110,7 +111,7 @@ def BuildDocker() {
     
     echo "Building..."
 
-    /usr/local/bin/docker build -t casualsimulation/aux:${gitTag} -t casualsimulation/aux:latest .
+    /usr/local/bin/docker build -t "casualsimulation/aux:${gitTag}" -t "casualsimulation/aux:latest" .
     """
 }
 
