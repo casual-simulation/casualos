@@ -34,7 +34,7 @@ Build the project on the dev/ci machine and build the image on the Raspberry PI
         - `mkdir output`
         - `tar xzf ./output.tar.gz -C output`
     2. Build the docker image
-        - `docker build -t casual-simulation/aux/arm32 -f Dockerfile.arm32 output`
+        - `docker build -t casual-simulation/aux-arm32 -f Dockerfile.arm32 output`
 
 ### Option 2
 
