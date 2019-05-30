@@ -23,11 +23,11 @@ pipeline {
                     """)
 
                     env.remote = [:]
-                    remote.name = RPI_HOST
-                    remote.host = piip
-                    remote.user = RPI_USER
-                    remote.allowAnyHosts = true
-                    remote.identityFile = RPI_SSH_KEY_FILE
+                    env.remote.name = RPI_HOST
+                    env.remote.host = piip
+                    env.remote.user = RPI_USER
+                    env.remote.allowAnyHosts = true
+                    env.remote.identityFile = RPI_SSH_KEY_FILE
 
                     env.gitTag = sh(returnStdout: true, script: """
                         echo `git describe --abbrev=0 --tags`
