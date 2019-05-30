@@ -24,6 +24,7 @@
     -   Placed camera type toggle back inside the menu for both AUX Builder and AUX Player.
     -   Changed hexagon image to include a plus sign to make is match with other 'add item' buttons.
     -   Added ability to remove files from a search, will convert any remaining files into a multiselected format.
+    -   Removed bottom left diff brush from builder. Diffs need to be dragged from their file ID in the sheets menu now.
 
 ## V0.8.1
 
