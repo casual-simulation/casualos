@@ -7,7 +7,6 @@ pipeline {
     agent any
 
     environment { 
-        commitMessage = 'Jenkins Build Number'
         NPM_TOKEN = credentials('jenkins-npm-token')
         RPI_HOST = credentials('jenkins-rpi-host')
         RPI_USER = credentials('jenkins-rpi-user')
@@ -23,11 +22,11 @@ pipeline {
                     """)
 
                     remote = [:]
-                    remote.name = $RPI_HOST
-                    remote.host = $piip
-                    remote.user = $RPI_USER
+                    remote.name = RPI_HOST
+                    remote.host = piip
+                    remote.user = RPI_USER
                     remote.allowAnyHosts = true
-                    remote.identityFile = $RPI_SSH_KEY_FILE
+                    remote.identityFile = RPI_SSH_KEY_FILE
 
                     gitTag = sh(returnStdout: true, script: """
                         echo `git describe --abbrev=0 --tags`
