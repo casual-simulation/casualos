@@ -57,7 +57,7 @@ import { InputVR } from '../../shared/scene/InputVR';
 import { appManager } from '../../shared/AppManager';
 import { GridChecker } from '../../shared/scene/grid/GridChecker';
 import { flatMap, find, findIndex, debounce, keys } from 'lodash';
-import App from '../App/App';
+import BuilderApp from '../BuilderApp/BuilderApp';
 import MiniFile from '../MiniFile/MiniFile';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { IGameView } from '../../shared/vue-components/IGameView';
@@ -141,8 +141,8 @@ export default class BuilderGameView extends Vue implements IGameView {
     showTrashCan: boolean = false;
     showUploadFiles: boolean = false;
 
-    @Inject() addSidebarItem: App['addSidebarItem'];
-    @Inject() removeSidebarItem: App['removeSidebarItem'];
+    @Inject() addSidebarItem: BuilderApp['addSidebarItem'];
+    @Inject() removeSidebarItem: BuilderApp['removeSidebarItem'];
 
     // TODO: Find a better way to refactor this
     @Inject() home: Home;
@@ -293,7 +293,7 @@ export default class BuilderGameView extends Vue implements IGameView {
         fileId: string,
         zoomValue?: number
     ) {
-        console.log('[GameView] Tween to file: ', fileId);
+        console.log('[BuilderGameView] Tween to file: ', fileId);
 
         // find the file with the given ID
         const files = this.findFilesById(fileId);
@@ -366,7 +366,7 @@ export default class BuilderGameView extends Vue implements IGameView {
 
         if (auxFiles.length > 0) {
             console.log(
-                `[GameView] Uploading ${auxFiles.length} ${
+                `[BuilderGameView] Uploading ${auxFiles.length} ${
                     auxFiles.length === 1 ? 'file' : 'files'
                 }`
             );
@@ -527,7 +527,7 @@ export default class BuilderGameView extends Vue implements IGameView {
                     )
                 );
             } catch (ex) {
-                console.error('[GameView] Paste failed', ex);
+                console.error('[BuilderGameView] Paste failed', ex);
                 appManager.simulationManager.primary.helper.transaction(
                     toast(
                         "Couldn't paste your clipboard. Have you copied a selection or worksurface?"
@@ -535,7 +535,9 @@ export default class BuilderGameView extends Vue implements IGameView {
                 );
             }
         } else {
-            console.error("[GameView] Browser doesn't support clipboard API!");
+            console.error(
+                "[BuilderGameView] Browser doesn't support clipboard API!"
+            );
             appManager.simulationManager.primary.helper.transaction(
                 toast(
                     "Sorry, but your browser doesn't support pasting files from a selection or worksurface."
@@ -789,7 +791,7 @@ export default class BuilderGameView extends Vue implements IGameView {
 
     private _setupWebVR() {
         let onBeforeEnter = () => {
-            console.log('[GameView] vr on before enter');
+            console.log('[BuilderGameView] vr on before enter');
 
             this._renderer.vr.enabled = true;
 
@@ -844,7 +846,7 @@ export default class BuilderGameView extends Vue implements IGameView {
         const xr = navigator.XR;
 
         if (typeof xr === 'undefined') {
-            console.log('[GameView] WebXR Not Supported.');
+            console.log('[BuilderGameView] WebXR Not Supported.');
             return;
         }
 
@@ -865,7 +867,7 @@ export default class BuilderGameView extends Vue implements IGameView {
             this.addSidebarItem('enable_xr', 'Enable AR', () => {
                 this.toggleXR();
             });
-            console.log('[GameView] WebXR Supported!');
+            console.log('[BuilderGameView] WebXR Supported!');
         }
     }
 
@@ -958,7 +960,7 @@ export default class BuilderGameView extends Vue implements IGameView {
     }
 
     private _handleReadyVR(display: VRDisplay) {
-        console.log('[GameView] vr display is ready.');
+        console.log('[BuilderGameView] vr display is ready.');
         console.log(display);
         this.vrDisplay = display;
 
@@ -968,13 +970,13 @@ export default class BuilderGameView extends Vue implements IGameView {
     }
 
     private _handleEnterVR(display: any) {
-        console.log('[GameView] enter vr.');
+        console.log('[BuilderGameView] enter vr.');
         console.log(display);
         this.vrDisplay = display;
     }
 
     private _handleExitVR(display: any) {
-        console.log('[GameView] exit vr.');
+        console.log('[BuilderGameView] exit vr.');
         console.log(display);
 
         this._renderer.vr.enabled = false;

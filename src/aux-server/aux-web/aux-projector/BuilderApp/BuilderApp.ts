@@ -40,7 +40,7 @@ export interface SidebarItem {
 
 @Component({
     components: {
-        app: App,
+        app: BuilderApp,
         'qr-code': QRCode,
         'file-pond': FilePond,
         'fork-icon': ForkIcon,
@@ -49,7 +49,7 @@ export interface SidebarItem {
         'file-table-toggle': FileTableToggle,
     },
 })
-export default class App extends Vue {
+export default class BuilderApp extends Vue {
     loadingProgress: LoadingProgress = null;
     showNavigation: boolean = false;
     showConfirmDialog: boolean = false;
@@ -523,19 +523,19 @@ export default class App extends Vue {
     private onShowNavigation(show: boolean) {
         if (show == undefined) {
             console.error(
-                '[App] Missing expected boolean argument for showNavigation event.'
+                '[BuilderApp] Missing expected boolean argument for showNavigation event.'
             );
             return;
         }
 
-        console.log('[App] handleShowNavigation: ' + show);
+        console.log('[BuilderApp] handleShowNavigation: ' + show);
         this.showNavigation = show;
     }
 
     private onShowConfirmDialog(options: ConfirmDialogOptions) {
         if (options == undefined) {
             console.error(
-                '[App] Missing expected ConfirmDialogOptions argument for showConfirmDialog event.'
+                '[BuilderApp] Missing expected ConfirmDialogOptions argument for showConfirmDialog event.'
             );
             return;
         }
@@ -543,7 +543,7 @@ export default class App extends Vue {
         this.confirmDialogOptions = options;
         this.showConfirmDialog = true;
         console.log(
-            '[App] handleShowConfirmDialog ' +
+            '[BuilderApp] handleShowConfirmDialog ' +
                 this.showConfirmDialog +
                 ' ' +
                 JSON.stringify(this.confirmDialogOptions)
@@ -553,7 +553,7 @@ export default class App extends Vue {
     private onShowAlertDialog(options: AlertDialogOptions) {
         if (options == undefined) {
             console.error(
-                '[App] Missing expected AlertDialogOptions argument for showAlertDialog event.'
+                '[BuilderApp] Missing expected AlertDialogOptions argument for showAlertDialog event.'
             );
             return;
         }
@@ -561,7 +561,7 @@ export default class App extends Vue {
         this.alertDialogOptions = options;
         this.showAlertDialog = true;
         console.log(
-            '[App] handleShowAlertDialog ' +
+            '[BuilderApp] handleShowAlertDialog ' +
                 this.showAlertDialog +
                 ' ' +
                 JSON.stringify(this.alertDialogOptions)

@@ -153,5 +153,5 @@
         </md-content>
     </div>
 </template>
-<script src="./App.ts"></script>
-<style src="./App.css"></style>
+<script src="./PlayerApp.ts"></script>
+<style src="./PlayerApp.css"></style>

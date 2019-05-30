@@ -602,7 +602,5 @@ export function createHtmlMixerContext(
     webglCanvas.style.pointerEvents = 'none';
     css3dElement.appendChild(webglCanvas);
 
-    console.log('[SceneUtils] created html mixer context:', mixerContext);
-
     return mixerContext;
 }

@@ -15,10 +15,8 @@ export default class Loading extends Vue {
 
     get show(): boolean {
         if (this.hasError) {
-            console.log('[Loading] hasError show:', this.showError);
             return this.showError;
         } else {
-            console.log('[Loading] !hasError show:', this.showLoading);
             return this.showLoading;
         }
     }

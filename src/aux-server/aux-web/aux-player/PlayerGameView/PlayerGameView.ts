@@ -42,7 +42,7 @@ import { Input, InputType } from '../../shared/scene/Input';
 import { InputVR } from '../../shared/scene/InputVR';
 import { appManager } from '../../shared/AppManager';
 import { find, flatMap, uniqBy } from 'lodash';
-import App from '../App/App';
+import PlayerApp from '../PlayerApp/PlayerApp';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { IGameView } from '../../shared/vue-components/IGameView';
 import { LayersHelper } from '../../shared/scene/LayersHelper';
@@ -128,9 +128,9 @@ export default class PlayerGameView extends Vue implements IGameView {
 
     menuExpanded: boolean = true;
 
-    @Inject() addSidebarItem: App['addSidebarItem'];
-    @Inject() removeSidebarItem: App['removeSidebarItem'];
-    @Inject() removeSidebarGroup: App['removeSidebarGroup'];
+    @Inject() addSidebarItem: PlayerApp['addSidebarItem'];
+    @Inject() removeSidebarItem: PlayerApp['removeSidebarItem'];
+    @Inject() removeSidebarGroup: PlayerApp['removeSidebarGroup'];
     @Prop() context: string;
 
     @Provide() fileRenderer: FileRenderer = new FileRenderer();
@@ -501,7 +501,7 @@ export default class PlayerGameView extends Vue implements IGameView {
         fileId: string,
         zoomValue?: number
     ) {
-        console.log('[GameView] Tween to file: ', fileId);
+        console.log('[PlayerGameView] Tween to file: ', fileId);
 
         // find the file with the given ID
         const files = this.findFilesById(fileId);
@@ -800,7 +800,7 @@ export default class PlayerGameView extends Vue implements IGameView {
 
     private _setupWebVR() {
         let onBeforeEnter = () => {
-            console.log('[GameView] vr on before enter');
+            console.log('[PlayerGameView] vr on before enter');
 
             this._renderer.vr.enabled = true;
 
@@ -857,7 +857,7 @@ export default class PlayerGameView extends Vue implements IGameView {
         const xr = navigator.XR;
 
         if (typeof xr === 'undefined') {
-            console.log('[GameView] WebXR Not Supported.');
+            console.log('[PlayerGameView] WebXR Not Supported.');
             return;
         }
 
@@ -878,7 +878,7 @@ export default class PlayerGameView extends Vue implements IGameView {
             this.addSidebarItem('enable_xr', 'Enable AR', () => {
                 this._toggleXR();
             });
-            console.log('[GameView] WebXR Supported!');
+            console.log('[PlayerGameView] WebXR Supported!');
         }
     }
 
@@ -970,7 +970,7 @@ export default class PlayerGameView extends Vue implements IGameView {
     }
 
     private _handleReadyVR(display: VRDisplay) {
-        console.log('[GameView] vr display is ready.');
+        console.log('[PlayerGameView] vr display is ready.');
         console.log(display);
         this.vrDisplay = display;
 
@@ -980,13 +980,13 @@ export default class PlayerGameView extends Vue implements IGameView {
     }
 
     private _handleEnterVR(display: any) {
-        console.log('[GameView] enter vr.');
+        console.log('[PlayerGameView] enter vr.');
         console.log(display);
         this.vrDisplay = display;
     }
 
     private _handleExitVR(display: any) {
-        console.log('[GameView] exit vr.');
+        console.log('[PlayerGameView] exit vr.');
         console.log(display);
 
         this._renderer.vr.enabled = false;

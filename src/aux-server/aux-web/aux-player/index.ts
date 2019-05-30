@@ -59,7 +59,7 @@ import { polyfill } from 'es6-promise';
 import 'offline-plugin/runtime';
 
 import { appManager, AppType } from '../shared/AppManager';
-import App from './App/App';
+import PlayerApp from './PlayerApp/PlayerApp';
 import Welcome from './Welcome/Welcome';
 import Home from './Home/Home';
 import Loading from '../shared/vue-components/Loading/Loading';
@@ -205,7 +205,7 @@ async function start() {
 
     const app = new Vue({
         router,
-        render: createEle => createEle(App),
+        render: createEle => createEle(PlayerApp),
     }).$mount('#app');
 }
 

@@ -59,7 +59,7 @@ import 'pepjs'; // Polyfill for pointer events
 import { polyfill } from 'es6-promise';
 
 import { appManager, AppType } from '../shared/AppManager';
-import App from './App/App';
+import BuilderApp from './BuilderApp/BuilderApp';
 import Welcome from './Welcome/Welcome';
 import Home from './Home/Home';
 import AuxDebug from './AuxDebug/AuxDebug';
@@ -204,7 +204,7 @@ async function start() {
     await appManager.initPromise;
     const app = new Vue({
         router,
-        render: createEle => createEle(App),
+        render: createEle => createEle(BuilderApp),
     }).$mount('#app');
 }
 

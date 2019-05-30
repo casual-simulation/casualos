@@ -226,7 +226,6 @@ export class AppManager {
         return this.userObservable
             .pipe(
                 scan((subs: SubscriptionLike[], user: User, index) => {
-                    console.log('user', user, index);
                     if (subs) {
                         subs.forEach(s => s.unsubscribe());
                     }

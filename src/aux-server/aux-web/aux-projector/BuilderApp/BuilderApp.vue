@@ -206,5 +206,5 @@
         </md-content>
     </div>
 </template>
-<script src="./App.ts"></script>
-<style src="./App.css"></style>
+<script src="./BuilderApp.ts"></script>
+<style src="./BuilderApp.css"></style>

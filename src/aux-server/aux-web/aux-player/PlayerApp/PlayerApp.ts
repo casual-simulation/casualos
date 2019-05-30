@@ -41,12 +41,12 @@ export interface SidebarItem {
 
 @Component({
     components: {
-        app: App,
+        app: PlayerApp,
         'qr-code': QRCode,
         'qrcode-stream': QrcodeStream,
     },
 })
-export default class App extends Vue {
+export default class PlayerApp extends Vue {
     showNavigation: boolean = false;
     showConfirmDialog: boolean = false;
     showAlertDialog: boolean = false;
@@ -342,7 +342,7 @@ export default class App extends Vue {
     }
 
     async finishAddSimulation(id: string) {
-        console.log('[App] Add simulation!');
+        console.log('[PlayerApp] Add simulation!');
         await appManager.simulationManager.primary.helper.createSimulation(id);
     }
 
@@ -574,19 +574,19 @@ export default class App extends Vue {
     private onShowNavigation(show: boolean) {
         if (show == undefined) {
             console.error(
-                '[App] Missing expected boolean argument for showNavigation event.'
+                '[PlayerApp] Missing expected boolean argument for showNavigation event.'
             );
             return;
         }
 
-        console.log('[App] handleShowNavigation: ' + show);
+        console.log('[PlayerApp] handleShowNavigation: ' + show);
         this.showNavigation = show;
     }
 
     private onShowConfirmDialog(options: ConfirmDialogOptions) {
         if (options == undefined) {
             console.error(
-                '[App] Missing expected ConfirmDialogOptions argument for showConfirmDialog event.'
+                '[PlayerApp] Missing expected ConfirmDialogOptions argument for showConfirmDialog event.'
             );
             return;
         }
@@ -594,7 +594,7 @@ export default class App extends Vue {
         this.confirmDialogOptions = options;
         this.showConfirmDialog = true;
         console.log(
-            '[App] handleShowConfirmDialog ' +
+            '[PlayerApp] handleShowConfirmDialog ' +
                 this.showConfirmDialog +
                 ' ' +
                 JSON.stringify(this.confirmDialogOptions)
@@ -604,7 +604,7 @@ export default class App extends Vue {
     private onShowAlertDialog(options: AlertDialogOptions) {
         if (options == undefined) {
             console.error(
-                '[App] Missing expected AlertDialogOptions argument for showAlertDialog event.'
+                '[PlayerApp] Missing expected AlertDialogOptions argument for showAlertDialog event.'
             );
             return;
         }
@@ -612,7 +612,7 @@ export default class App extends Vue {
         this.alertDialogOptions = options;
         this.showAlertDialog = true;
         console.log(
-            '[App] handleShowAlertDialog ' +
+            '[PlayerApp] handleShowAlertDialog ' +
                 this.showAlertDialog +
                 ' ' +
                 JSON.stringify(this.alertDialogOptions)
