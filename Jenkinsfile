@@ -22,7 +22,7 @@ pipeline {
                     echo `ping -c1 $RPI_HOST | sed -nE \'s/^PING[^(]+\\(([^)]+)\\).*/\\1/p\'`
                     """)
 
-                    remote = [:]
+                    env.remote = [:]
                     remote.name = RPI_HOST
                     remote.host = piip
                     remote.user = RPI_USER
@@ -33,7 +33,7 @@ pipeline {
                         echo `git describe --abbrev=0 --tags`
                     """)
 
-                    println("Tag: ${gitTag}")
+                    println("Remote: ${remote.name}")
                 }
 
                 InstallNPMPackages()
@@ -41,7 +41,7 @@ pipeline {
         }
         stage('Test') {
             steps {
-                println("Tag: ${gitTag}")
+                println("Remote: ${remote.name}")
                 Tests()
             }
         }
