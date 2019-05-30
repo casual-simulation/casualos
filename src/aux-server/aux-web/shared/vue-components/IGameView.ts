@@ -24,6 +24,7 @@ import { AuxFile3DDecoratorFactory } from '../scene/decorators/AuxFile3DDecorato
 import { CameraRig } from '../scene/CameraRigFactory';
 import { Viewport } from '../scene/Viewport';
 import { BaseInteractionManager } from '../interaction/BaseInteractionManager';
+import { AuxFile3D } from '../scene/AuxFile3D';
 
 /**
  * Interface that described what properties and functions should be available to a GameView class/component implementation.
@@ -78,6 +79,8 @@ export interface IGameView extends AuxFile3DFinder, Vue {
      * Gets the HTML elements that the interaction manager should be able to handle events for.
      */
     getUIHtmlElements(): HTMLElement[];
+
+    findFilesById(id: string): AuxFile3D[];
 
     /**
      * Sets the visibility of the file grids.

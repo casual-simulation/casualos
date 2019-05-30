@@ -30,14 +30,7 @@ import CubeIcon from '../public/icons/Cube.svg';
 import HexIcon from '../public/icons/Hexagon.svg';
 import { QrcodeStream } from 'vue-qrcode-reader';
 import { Simulation } from '../../shared/Simulation';
-
-export interface SidebarItem {
-    id: string;
-    group: string;
-    text: string;
-    icon: string;
-    click: () => void;
-}
+import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 
 @Component({
     components: {
