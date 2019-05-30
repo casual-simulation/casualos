@@ -43,6 +43,8 @@ import {
     isFileInContext,
     tagsOnFile,
     isDestroyable,
+    isInUsernameList,
+    getFileUsernameList,
 } from '../Files/FileCalculations';
 
 import '../polyfill/Array.first.polyfill';
@@ -516,6 +518,27 @@ function goToContext(context: string) {
 }
 
 /**
+ * Determines whether the current player is allowed to load AUX Builder.
+ */
+function isBuilder(): boolean {
+    const globals = getGlobals();
+    const user = getUser();
+    if (globals && user) {
+        const globalsFile = globals[proxyObject];
+        const list = getFileUsernameList(calc, globalsFile, 'aux.builders');
+        if (list) {
+            return isInUsernameList(
+                calc,
+                globalsFile,
+                'aux.builders',
+                user[proxyObject].tags['aux._user']
+            );
+        }
+    }
+    return true;
+}
+
+/**
  * Derermines whether the player is in the given context.
  * @param context The context.
  */
@@ -569,6 +592,21 @@ function getUser() {
         }
     }
     return user || null;
+}
+
+/**
+ * Gets the current globals file.
+ */
+function getGlobals() {
+    const globals = calc.sandbox.interface.listObjectsWithTag('id', 'globals');
+    if (Array.isArray(globals)) {
+        if (globals.length === 1) {
+            return globals[0];
+        } else {
+            return null;
+        }
+    }
+    return globals || null;
 }
 
 /**
@@ -961,6 +999,7 @@ export const player = {
     hideQRCode,
     isConnected,
     currentContext,
+    isBuilder,
 };
 
 /**
