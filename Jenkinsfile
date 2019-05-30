@@ -29,6 +29,7 @@ pipeline {
                     """).trim()
                 }
 
+                PublishDocker()
                 InstallNPMPackages()
             }
         }
