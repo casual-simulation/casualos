@@ -51,7 +51,6 @@
             <trash-can v-if="showTrashCan" ref="trashCan"></trash-can>
             <div class="toolbar right">
                 <camera-home :cameraRig="mainCameraRig"></camera-home>
-                <camera-type :cameraRig="mainCameraRig"></camera-type>
             </div>
             <div v-shortkey.once="['ctrl', 'c']" @shortkey="copySelectionNormal"></div>
 

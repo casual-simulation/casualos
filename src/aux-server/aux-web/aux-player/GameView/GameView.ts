@@ -280,6 +280,28 @@ export default class GameView extends Vue implements IGameView {
             this.mainViewport
         );
 
+        // Update side bar item.
+        this.removeSidebarItem('toggle_camera_type');
+        if (this._cameraType === 'orthographic') {
+            this.addSidebarItem(
+                'toggle_camera_type',
+                'Enable Perspective Camera',
+                () => {
+                    this.setCameraType('perspective');
+                },
+                'videocam'
+            );
+        } else {
+            this.addSidebarItem(
+                'toggle_camera_type',
+                'Disable Perspective Camera',
+                () => {
+                    this.setCameraType('orthographic');
+                },
+                'videocam_off'
+            );
+        }
+
         if (this._htmlMixerContext) {
             this._htmlMixerContext.setupCssCamera(
                 this.mainCameraRig.mainCamera

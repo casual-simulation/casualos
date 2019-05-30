@@ -47,7 +47,6 @@
             >
                 <div class="toolbar right">
                     <camera-home :showDistance="5" :cameraRig="inventoryCameraRig"></camera-home>
-                    <!-- <camera-type :cameraRig="inventoryCameraRig"></camera-type> -->
                 </div>
             </div>
 
@@ -61,12 +60,7 @@
                     width: mainViewport.width + 'px',
                     height: mainViewport.height - inventoryViewport.height + 'px',
                 }"
-            >
-                <div class="toolbar right">
-                    <camera-home :cameraRig="mainCameraRig"></camera-home>
-                    <camera-type :cameraRig="mainCameraRig"></camera-type>
-                </div>
-            </div>
+            ></div>
         </div>
     </div>
 </template>
