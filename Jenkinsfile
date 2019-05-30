@@ -27,40 +27,38 @@ pipeline {
                     """).trim()
                 }
 
-                // InstallNPMPackages()
-
+                InstallNPMPackages()
+            }
+        }
+        stage('Test') {
+            steps {
+                // BuildDocker()
+                Tests()
+            }
+        }
+        stage('Build Packages') {
+            steps {
+                // Webpack Build
+                BuildWebpack()
+            }
+        }
+        stage('Publish Packages') {
+            steps {
+                PublishNPM()
+            }
+        }
+        stage('Build Docker') {
+            steps {
+                BuildDocker()
                 BuildDockerArm32()
             }
         }
-        // stage('Test') {
-        //     steps {
-        //         // BuildDocker()
-        //         Tests()
-        //     }
-        // }
-        // stage('Build Packages') {
-        //     steps {
-        //         // Webpack Build
-        //         BuildWebpack()
-        //     }
-        // }
-        // stage('Publish Packages') {
-        //     steps {
-        //         PublishNPM()
-        //     }
-        // }
-        // stage('Build Docker') {
-        //     steps {
-        //         BuildDocker()
-        //         BuildDockerArm32()
-        //     }
-        // }
-        // stage('Publish Docker') {
-        //     steps {
-        //         PublishDocker()
-        //         PublishDockerArm32()
-        //     }
-        // }
+        stage('Publish Docker') {
+            steps {
+                PublishDocker()
+                PublishDockerArm32()
+            }
+        }
     }
     post {
         success {
