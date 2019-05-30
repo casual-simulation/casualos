@@ -17,16 +17,18 @@ pipeline {
     stages {
         stage('Setup') {
             steps {
-                remote = [:]
-                remote.name = ${RPI_HOST}
-                remote.host = ${piip}
-                remote.user = ${RPI_USER}
-                remote.allowAnyHosts = true
-                remote.identityFile = ${RPI_SSH_KEY_FILE}
+                script {
+                    remote = [:]
+                    remote.name = ${RPI_HOST}
+                    remote.host = ${piip}
+                    remote.user = ${RPI_USER}
+                    remote.allowAnyHosts = true
+                    remote.identityFile = ${RPI_SSH_KEY_FILE}
 
-                gitTag = sh(returnStdout: true, script: """
-                    echo `git describe --abbrev=0 --tags`
-                """)
+                    gitTag = sh(returnStdout: true, script: """
+                        echo `git describe --abbrev=0 --tags`
+                    """)
+                }
 
                 nodejs('Node10.13.0') {
                     // some block
