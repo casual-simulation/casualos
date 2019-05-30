@@ -60,7 +60,7 @@ import { polyfill } from 'es6-promise';
 
 import { appManager, AppType } from '../shared/AppManager';
 import BuilderApp from './BuilderApp/BuilderApp';
-import Welcome from './Welcome/Welcome';
+import BuilderWelcome from './BuilderWelcome/BuilderWelcome';
 import BuilderHome from './BuilderHome/BuilderHome';
 import AuxDebug from './AuxDebug/AuxDebug';
 import Loading from '../shared/vue-components/Loading/Loading';
@@ -102,7 +102,7 @@ const routes: RouteConfig[] = [
     {
         path: '/login',
         name: 'login',
-        component: Welcome,
+        component: BuilderWelcome,
     },
     {
         path: '/*/:id?/aux-debug',

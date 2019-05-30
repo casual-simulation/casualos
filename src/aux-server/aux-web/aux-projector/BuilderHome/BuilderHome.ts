@@ -197,6 +197,6 @@ export default class BuilderHome extends Vue {
 
     private _setStatus(status: string) {
         this.status = status;
-        console.log('[Home] Status:', status);
+        console.log('[BuilderHome] Status:', status);
     }
 }
