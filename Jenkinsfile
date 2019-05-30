@@ -18,6 +18,7 @@ pipeline {
         stage('Setup') {
             steps {
                 script {
+                    println("Private Key: ${RPI_SSH_KEY_FILE}");
                     env.PI_IP = sh(returnStdout: true, script: """
                     echo `ping -c1 $RPI_HOST | sed -nE \'s/^PING[^(]+\\(([^)]+)\\).*/\\1/p\'`
                     """).trim()
@@ -30,35 +31,35 @@ pipeline {
                 InstallNPMPackages()
             }
         }
-        stage('Test') {
-            steps {
-                // BuildDocker()
-                Tests()
-            }
-        }
-        stage('Build Packages') {
-            steps {
-                // Webpack Build
-                BuildWebpack()
-            }
-        }
-        stage('Publish Packages') {
-            steps {
-                PublishNPM()
-            }
-        }
-        stage('Build Docker') {
-            steps {
-                BuildDocker()
-                BuildDockerArm32()
-            }
-        }
-        stage('Publish Docker') {
-            steps {
-                PublishDocker()
-                PublishDockerArm32()
-            }
-        }
+        // stage('Test') {
+        //     steps {
+        //         // BuildDocker()
+        //         Tests()
+        //     }
+        // }
+        // stage('Build Packages') {
+        //     steps {
+        //         // Webpack Build
+        //         BuildWebpack()
+        //     }
+        // }
+        // stage('Publish Packages') {
+        //     steps {
+        //         PublishNPM()
+        //     }
+        // }
+        // stage('Build Docker') {
+        //     steps {
+        //         BuildDocker()
+        //         BuildDockerArm32()
+        //     }
+        // }
+        // stage('Publish Docker') {
+        //     steps {
+        //         PublishDocker()
+        //         PublishDockerArm32()
+        //     }
+        // }
     }
     post {
         success {
