@@ -18,12 +18,16 @@ pipeline {
         stage('Setup') {
             steps {
                 script {
+                    def piip = sh(returnStdout: true, script: """
+                    echo `ping -c1 $RPI_HOST | sed -nE \'s/^PING[^(]+\\(([^)]+)\\).*/\\1/p\'`
+                    """)
+
                     remote = [:]
-                    remote.name = ${RPI_HOST}
-                    remote.host = ${piip}
-                    remote.user = ${RPI_USER}
+                    remote.name = $RPI_HOST
+                    remote.host = $piip
+                    remote.user = $RPI_USER
                     remote.allowAnyHosts = true
-                    remote.identityFile = ${RPI_SSH_KEY_FILE}
+                    remote.identityFile = $RPI_SSH_KEY_FILE
 
                     gitTag = sh(returnStdout: true, script: """
                         echo `git describe --abbrev=0 --tags`
@@ -128,10 +132,6 @@ def BuildDockerArm32(remote) {
     echo "Building..."
     npm run tar
     """
-
-    def piip = sh(returnStdout: true, script: """
-        echo `ping -c1 $RPI_HOSTNAME | sed -nE \'s/^PING[^(]+\\(([^)]+)\\).*/\\1/p\'`
-        """)
     
     def tag = "casualsimulation/aux/arm32"
 
