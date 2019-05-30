@@ -121,7 +121,7 @@ def BuildDocker() {
     
     echo "Building..."
 
-    docker build -t casualsimulation/aux:$gitTag -t casualsimulation/aux:latest .
+    docker build -t casualsimulation/aux:${gitTag} -t casualsimulation/aux:latest .
     """
 }
 
