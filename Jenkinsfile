@@ -18,22 +18,13 @@ pipeline {
         stage('Setup') {
             steps {
                 script {
-                    def piip = sh(returnStdout: true, script: """
+                    env.PI_IP = sh(returnStdout: true, script: """
                     echo `ping -c1 $RPI_HOST | sed -nE \'s/^PING[^(]+\\(([^)]+)\\).*/\\1/p\'`
                     """)
-
-                    env.remote = [:]
-                    env.remote.name = RPI_HOST
-                    env.remote.host = piip
-                    env.remote.user = RPI_USER
-                    env.remote.allowAnyHosts = true
-                    env.remote.identityFile = RPI_SSH_KEY_FILE
 
                     env.gitTag = sh(returnStdout: true, script: """
                         echo `git describe --abbrev=0 --tags`
                     """)
-
-                    println("Remote: ${remote.name}")
                 }
 
                 InstallNPMPackages()
@@ -41,7 +32,6 @@ pipeline {
         }
         stage('Test') {
             steps {
-                println("Remote: ${remote.name}")
                 Tests()
             }
         }
@@ -59,13 +49,13 @@ pipeline {
         stage('Build Docker') {
             steps {
                 BuildDocker()
-                BuildDockerArm32(remote)
+                BuildDockerArm32()
             }
         }
         stage('Publish Docker') {
             steps {
                 PublishDocker()
-                PublishDockerArm32(remote)
+                PublishDockerArm32()
             }
         }
     }
@@ -124,7 +114,7 @@ def BuildDocker() {
     """
 }
 
-def BuildDockerArm32(remote) {
+def BuildDockerArm32() {
     sh """#!/bin/bash
     set -e
     . ~/.bashrc
@@ -132,6 +122,13 @@ def BuildDockerArm32(remote) {
     echo "Building..."
     npm run tar
     """
+
+    def remote = [:]
+    remote.name = RPI_HOST
+    remote.host = PI_IP
+    remote.user = RPI_USER
+    remote.allowAnyHosts = true
+    remote.identityFile = RPI_SSH_KEY_FILE
 
     sshPut remote: remote, from: './temp/output.tar.gz', into: '/home/pi'
     sshCommand remote: remote, command: "cd /home/pi; mkdir output; tar xzf ./output.tar.gz -C output; docker build -t ${DOCKER_ARM32_TAG}:${gitTag} -t ${DOCKER_ARM32_TAG}:latest -f Dockerfile.arm32 output"
@@ -164,7 +161,14 @@ def PublishDocker() {
     """
 }
 
-def PublishDockerArm32(remote) {
+def PublishDockerArm32() {
+    def remote = [:]
+    remote.name = RPI_HOST
+    remote.host = PI_IP
+    remote.user = RPI_USER
+    remote.allowAnyHosts = true
+    remote.identityFile = RPI_SSH_KEY_FILE
+
     sshCommand remote: remote, command: "docker push ${DOCKER_ARM32_TAG}:${gitTag}"
 }
 
