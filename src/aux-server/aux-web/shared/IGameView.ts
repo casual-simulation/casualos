@@ -6,6 +6,8 @@ import {
     Camera,
     OrthographicCamera,
     Vector3,
+    Texture,
+    Color,
 } from 'three';
 import { Time } from './scene/Time';
 import { Input } from './scene/Input';
@@ -55,6 +57,7 @@ export interface IGameView extends AuxFile3DFinder, Vue {
     getHtmlMixerContext(): HtmlMixer.Context;
     getDecoratorFactory(): AuxFile3DDecoratorFactory;
     getGridChecker(): GridChecker;
+    getBackground(): Color | Texture;
 
     /**
      * Get all of the current viewports.

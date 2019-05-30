@@ -160,17 +160,6 @@ export default class GameView extends Vue implements IGameView {
         return items;
     }
 
-    get background() {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-            if (sim.backgroundColor) {
-                return sim.backgroundColor;
-            }
-        }
-
-        return null;
-    }
-
     // get fileManager() {
     //     return appManager.simulationManager.primary;
     // }
@@ -254,6 +243,16 @@ export default class GameView extends Vue implements IGameView {
         return [...this.playerSimulations, ...this.inventorySimulations];
         // return [...this.playerSimulations];
         // return [...this.inventorySimulations];
+    }
+    public getBackground(): Color | Texture {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+            if (sim.backgroundColor) {
+                return sim.backgroundColor;
+            }
+        }
+
+        return null;
     }
 
     public setGridsVisible(visible: boolean) {
@@ -715,8 +714,9 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _mainSceneBackgroundUpdate() {
-        if (this.background) {
-            this._mainScene.background = this.background;
+        const background = this.getBackground();
+        if (background) {
+            this._mainScene.background = background;
         } else {
             this._mainScene.background = new Color(
                 DEFAULT_SCENE_BACKGROUND_COLOR

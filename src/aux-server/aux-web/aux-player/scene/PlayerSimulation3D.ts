@@ -31,7 +31,6 @@ export class PlayerSimulation3D extends Simulation3D {
     private _contextGroup: ContextGroup3D;
 
     private _contextBackground: Color | Texture = null;
-    private _sceneBackground: Color | Texture = null;
 
     protected _gameView: GameView; // Override base class gameView so that its cast to the Aux Player GameView.
 
@@ -43,7 +42,11 @@ export class PlayerSimulation3D extends Simulation3D {
      * Gets the background color that the simulation defines.
      */
     get backgroundColor() {
-        return this._contextBackground || this._sceneBackground;
+        if (this._contextBackground) {
+            return this._contextBackground;
+        } else {
+            return super.backgroundColor;
+        }
     }
 
     constructor(context: string, gameView: IGameView, simulation: Simulation) {
@@ -97,21 +100,6 @@ export class PlayerSimulation3D extends Simulation3D {
                                 userSimulationContextValue
                             );
                         }
-                    })
-                )
-                .subscribe()
-        );
-
-        this._subs.push(
-            this.simulation.watcher
-                .fileChanged(this.simulation.helper.globalsFile)
-                .pipe(
-                    tap(file => {
-                        // Scene background color.
-                        let sceneBackgroundColor = file.tags['aux.scene.color'];
-                        this._sceneBackground = hasValue(sceneBackgroundColor)
-                            ? new Color(sceneBackgroundColor)
-                            : null;
                     })
                 )
                 .subscribe()

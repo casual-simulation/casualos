@@ -210,11 +210,12 @@ export default class GameView extends Vue implements IGameView {
     public getCameraRigs(): CameraRig[] {
         return [this.mainCameraRig];
     }
-
     public getSimulations(): Simulation3D[] {
         return [this.simulation3D];
     }
-
+    public getBackground(): Color | Texture {
+        return this.simulation3D.backgroundColor;
+    }
     public getUIHtmlElements(): HTMLElement[] {
         return [
             ...this.home.getUIHtmlElements(),
@@ -222,7 +223,6 @@ export default class GameView extends Vue implements IGameView {
             this.$refs.trashCan ? (<TrashCan>this.$refs.trashCan).$el : null,
         ].filter(el => el);
     }
-
     public getHtmlMixerContext(): HtmlMixer.Context {
         return this._htmlMixerContext;
     }
@@ -729,8 +729,9 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _mainSceneBackgroundUpdate() {
-        if (this._sceneBackground) {
-            this._mainScene.background = this._sceneBackground;
+        const background = this.getBackground();
+        if (background) {
+            this._mainScene.background = background;
         } else {
             this._mainScene.background = new Color(
                 DEFAULT_SCENE_BACKGROUND_COLOR
@@ -757,14 +758,7 @@ export default class GameView extends Vue implements IGameView {
         //
         this._mainScene = new Scene();
 
-        let globalsFile = this.simulation3D.simulation.helper.globalsFile;
-
-        // Main scene background color.
-        let sceneBackgroundColor = globalsFile.tags['aux.scene.color'];
-        this._sceneBackground = hasValue(sceneBackgroundColor)
-            ? new Color(sceneBackgroundColor)
-            : new Color('#263238');
-        this._mainSceneBackgroundUpdate();
+        // Main scene camera.
         this.setCameraType('orthographic');
 
         // Main scene ambient light.
