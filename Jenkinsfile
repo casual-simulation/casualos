@@ -14,9 +14,7 @@ pipeline {
     }
 
     tools {
-        nodejs('Node10.13.0') {
-            // some block
-        }
+        nodejs('Node10.13.0')
     }
 
     stages {
