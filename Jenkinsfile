@@ -7,7 +7,7 @@ pipeline {
         RPI_HOST = credentials('jenkins-rpi-host')
         RPI_USER = credentials('jenkins-rpi-user')
         RPI_SSH_KEY_FILE = credentials('jenkins-rpi-ssh-key-file')
-        DOCKER_ARM32_TAG = "casualsimulation/aux/arm32"
+        DOCKER_ARM32_TAG = "casualsimulation/aux-arm32"
         DOCKER_USERNAME = credentials('jenkins-docker-username')
         DOCKER_PASSWORD = credentials('jenkins-docker-password')
     }
@@ -29,7 +29,6 @@ pipeline {
                     """).trim()
                 }
 
-                PublishDocker()
                 InstallNPMPackages()
             }
         }
