@@ -77,8 +77,6 @@ def InstallNPMPackages() {
     sh """#!/bin/bash
     set -e
     . ~/.bashrc
-    
-    BUILD_DIR=$(pwd)
 
     echo "Installing NPM Packages..."
     npm ci
