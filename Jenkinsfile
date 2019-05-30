@@ -20,11 +20,11 @@ pipeline {
                 script {
                     env.PI_IP = sh(returnStdout: true, script: """
                     echo `ping -c1 $RPI_HOST | sed -nE \'s/^PING[^(]+\\(([^)]+)\\).*/\\1/p\'`
-                    """)
+                    """).trim()
 
                     env.gitTag = sh(returnStdout: true, script: """
                         echo `git describe --abbrev=0 --tags`
-                    """)
+                    """).trim()
                 }
 
                 InstallNPMPackages()
@@ -32,7 +32,7 @@ pipeline {
         }
         stage('Test') {
             steps {
-                BuildDocker()
+                // BuildDocker()
                 Tests()
             }
         }
