@@ -8,6 +8,8 @@ pipeline {
         RPI_USER = credentials('jenkins-rpi-user')
         RPI_SSH_KEY_FILE = credentials('jenkins-rpi-ssh-key-file')
         DOCKER_ARM32_TAG = "casualsimulation/aux/arm32"
+        DOCKER_USERNAME = credentials('jenkins-docker-username')
+        DOCKER_PASSWORD = credentials('jenkins-docker-password')
     }
 
     tools {
@@ -158,6 +160,8 @@ def PublishDocker() {
     set -e
     . ~/.bashrc
     
+    echo "Publishing the x64 Docker Image...."
+    /usr/local/bin/docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
     /usr/local/bin/docker push casualsimulation/aux:${gitTag}
     """
 }
