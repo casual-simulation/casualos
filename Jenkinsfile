@@ -13,6 +13,12 @@ pipeline {
         RPI_SSH_KEY_FILE = credentials('jenkins-rpi-ssh-key-file')
     }
 
+    tools {
+        nodejs('Node10.13.0') {
+            // some block
+        }
+    }
+
     stages {
         stage('Setup') {
             steps {
@@ -33,9 +39,6 @@ pipeline {
                     """)
                 }
 
-                nodejs('Node10.13.0') {
-                    // some block
-                }
                 InstallNPMPackages()
             }
         }
