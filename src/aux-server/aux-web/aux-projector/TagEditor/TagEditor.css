@@ -16,3 +16,8 @@
     /* TODO: Replace with variable */
     color: #fe772f;
 }
+
+.tag-editor-autofill-holder {
+    /* TODO: Replace with variable */
+    max-height: 30%;
+}
