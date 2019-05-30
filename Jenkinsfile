@@ -131,7 +131,7 @@ def BuildDockerArm32() {
     remote.host = PI_IP
     remote.user = RPI_USER
     remote.allowAnyHosts = true
-    remote.identity = RPI_SSH_KEY_FILE
+    remote.identityFile = RPI_SSH_KEY_FILE
 
     sshPut remote: remote, from: './temp/output.tar.gz', into: '/home/pi'
     sshCommand remote: remote, command: "cd /home/pi; mkdir output; tar xzf ./output.tar.gz -C output; docker build -t ${DOCKER_ARM32_TAG}:${gitTag} -t ${DOCKER_ARM32_TAG}:latest -f Dockerfile.arm32 output"
@@ -170,7 +170,7 @@ def PublishDockerArm32() {
     remote.host = PI_IP
     remote.user = RPI_USER
     remote.allowAnyHosts = true
-    remote.identity = RPI_SSH_KEY_FILE
+    remote.identityFile = RPI_SSH_KEY_FILE
 
     sshCommand remote: remote, command: "docker push ${DOCKER_ARM32_TAG}:${gitTag}"
 }
