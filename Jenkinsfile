@@ -1,5 +1,8 @@
 import groovy.xml.XmlUtil 
 
+def gitTag
+def remote
+
 pipeline {
     agent any
 
@@ -9,23 +12,22 @@ pipeline {
         RPI_HOST = credentials('jenkins-rpi-host')
         RPI_USER = credentials('jenkins-rpi-user')
         RPI_SSH_KEY_FILE = credentials('jenkins-rpi-ssh-key-file')
-
-
-        def remote = [:]
-        remote.name = ${RPI_HOST}
-        remote.host = ${piip}
-        remote.user = ${RPI_USER}
-        remote.allowAnyHosts = true
-        remote.identityFile = ${RPI_SSH_KEY_FILE}
-
-        def gitTag = sh(returnStdout: true, script: """
-        echo `git describe --abbrev=0 --tags`
-        """)
     }
 
     stages {
         stage('Setup') {
             steps {
+                remote = [:]
+                remote.name = ${RPI_HOST}
+                remote.host = ${piip}
+                remote.user = ${RPI_USER}
+                remote.allowAnyHosts = true
+                remote.identityFile = ${RPI_SSH_KEY_FILE}
+
+                gitTag = sh(returnStdout: true, script: """
+                    echo `git describe --abbrev=0 --tags`
+                """)
+
                 nodejs('Node10.13.0') {
                     // some block
                 }
