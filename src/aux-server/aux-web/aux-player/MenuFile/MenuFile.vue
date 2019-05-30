@@ -1,4 +1,3 @@
-<!-- App.vue -->
 <template>
     <md-list-item
         class="menu-file"

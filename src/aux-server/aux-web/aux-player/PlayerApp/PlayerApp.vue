@@ -1,4 +1,3 @@
-<!-- App.vue -->
 <template>
     <div id="app">
         <md-button class="show-navigation-button md-icon-button md-raised" @click="menuClicked()">

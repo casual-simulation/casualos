@@ -61,7 +61,7 @@ import 'offline-plugin/runtime';
 import { appManager, AppType } from '../shared/AppManager';
 import PlayerApp from './PlayerApp/PlayerApp';
 import Welcome from './Welcome/Welcome';
-import Home from './Home/Home';
+import PlayerHome from './PlayerHome/PlayerHome';
 import Loading from '../shared/vue-components/Loading/Loading';
 import uuid from 'uuid/v4';
 
@@ -115,7 +115,7 @@ const routes: RouteConfig[] = [
     {
         path: '/:context/:id?',
         name: 'home',
-        component: Home,
+        component: PlayerHome,
         props: route => ({
             context: route.params.context,
             channels: route.query.channels,

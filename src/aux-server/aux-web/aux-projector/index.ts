@@ -61,7 +61,7 @@ import { polyfill } from 'es6-promise';
 import { appManager, AppType } from '../shared/AppManager';
 import BuilderApp from './BuilderApp/BuilderApp';
 import Welcome from './Welcome/Welcome';
-import Home from './Home/Home';
+import BuilderHome from './BuilderHome/BuilderHome';
 import AuxDebug from './AuxDebug/AuxDebug';
 import Loading from '../shared/vue-components/Loading/Loading';
 import uuid from 'uuid/v4';
@@ -112,7 +112,7 @@ const routes: RouteConfig[] = [
     {
         path: '/\\*/:id?',
         name: 'home',
-        component: Home,
+        component: BuilderHome,
     },
     {
         path: '/:context/:id?',

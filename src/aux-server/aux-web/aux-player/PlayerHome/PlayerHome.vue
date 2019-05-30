@@ -1,4 +1,3 @@
-<!-- App.vue -->
 <template>
     <div>
         <game-view class="game-view" :debug="debug" :context="context">
@@ -6,5 +5,5 @@
         </game-view>
     </div>
 </template>
-<script src="./Home.ts"></script>
-<style src="./Home.css"></style>
+<script src="./PlayerHome.ts"></script>
+<style src="./PlayerHome.css"></style>

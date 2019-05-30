@@ -1,4 +1,3 @@
-<!-- App.vue -->
 <template>
     <div class="delete-file-layout">
         <div>

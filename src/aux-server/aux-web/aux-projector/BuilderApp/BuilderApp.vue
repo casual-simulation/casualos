@@ -1,4 +1,3 @@
-<!-- App.vue -->
 <template>
     <div id="app">
         <md-toolbar>

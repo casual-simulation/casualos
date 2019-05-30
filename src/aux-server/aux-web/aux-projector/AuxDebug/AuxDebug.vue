@@ -1,4 +1,3 @@
-<!-- App.vue -->
 <template>
     <div class="aux-debug">
         <md-button @click="download">

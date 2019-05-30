@@ -68,7 +68,7 @@ import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { BuilderInteractionManager } from '../interaction/BuilderInteractionManager';
 import { TweenCameraToOperation } from '../../shared/interaction/TweenCameraToOperation';
-import Home from '../Home/Home';
+import BuilderHome from '../BuilderHome/BuilderHome';
 import TrashCan from '../TrashCan/TrashCan';
 import {
     CameraType,
@@ -145,7 +145,7 @@ export default class BuilderGameView extends Vue implements IGameView {
     @Inject() removeSidebarItem: BuilderApp['removeSidebarItem'];
 
     // TODO: Find a better way to refactor this
-    @Inject() home: Home;
+    @Inject() home: BuilderHome;
     @Provide() fileRenderer: FileRenderer = new FileRenderer();
 
     get gameView(): HTMLElement {

@@ -35,7 +35,7 @@ import { EventBus } from '../../shared/EventBus';
         'file-table-toggle': FileTableToggle,
     },
 })
-export default class Home extends Vue {
+export default class BuilderHome extends Vue {
     @Provide() home = this;
 
     debug: boolean = false;

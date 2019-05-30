@@ -1,4 +1,3 @@
-<!-- App.vue -->
 <template>
     <div>
         <form novalidate class="md-layout login-form" @submit.prevent="createUser">

@@ -1,4 +1,3 @@
-<!-- App.vue -->
 <template>
     <span class="tag-color" :style="tagStyle"> </span>
 </template>

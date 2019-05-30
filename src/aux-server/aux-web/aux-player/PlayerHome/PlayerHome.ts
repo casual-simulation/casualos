@@ -22,7 +22,7 @@ import { difference } from 'lodash';
         'game-view': PlayerGameView,
     },
 })
-export default class Home extends Vue {
+export default class PlayerHome extends Vue {
     @Prop() context: string;
     @Prop() channels: string | string[];
 
