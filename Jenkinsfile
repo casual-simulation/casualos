@@ -163,6 +163,7 @@ def PublishDocker() {
     echo "Publishing the x64 Docker Image...."
     /usr/local/bin/docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
     /usr/local/bin/docker push casualsimulation/aux:${gitTag}
+    /usr/local/bin/docker push casualsimulation/aux:latest
     """
 }
 
@@ -174,7 +175,7 @@ def PublishDockerArm32() {
     remote.allowAnyHosts = true
     remote.identityFile = RPI_SSH_KEY_FILE
 
-    sshCommand remote: remote, command: "docker push ${DOCKER_ARM32_TAG}:${gitTag}"
+    sshCommand remote: remote, command: "docker push ${DOCKER_ARM32_TAG}:${gitTag} && docker push ${DOCKER_ARM32_TAG}:latest"
 }
 
 
