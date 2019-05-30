@@ -100,7 +100,6 @@ export class AppManager {
 
     constructor() {
         this.loadingProgress = new LoadingProgress();
-        this._initSentry();
         this._initOffline();
         this._simulationManager = new SimulationManager(id => {
             return new FileManager(this, id, this._config);
@@ -244,6 +243,7 @@ export class AppManager {
         this.loadingProgress.show = true;
         this.loadingProgress.set(0, 'Fetching configuration...', null);
         await this._initConfig();
+        this._initSentry();
         this.loadingProgress.status = 'Initializing user...';
         await this._initUser();
         this.loadingProgress.show = false;
@@ -263,13 +263,12 @@ export class AppManager {
     private _initSentry() {
         const sentryEnv = PRODUCTION ? 'prod' : 'dev';
 
-        if (SENTRY_DSN) {
+        if (this._config && this._config.sentryDsn) {
             Sentry.init({
-                dsn: SENTRY_DSN,
+                dsn: this._config.sentryDsn,
                 integrations: [new Sentry.Integrations.Vue({ Vue: Vue })],
                 release: GIT_HASH,
                 environment: sentryEnv,
-                enabled: ENABLE_SENTRY,
             });
         } else {
             console.log('Skipping Sentry Initialization');
