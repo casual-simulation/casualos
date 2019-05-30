@@ -23,6 +23,7 @@
     -   Center camera button is only shown when at a specified distance from the world center.
     -   Placed camera type toggle back inside the menu for both AUX Builder and AUX Player.
     -   Changed hexagon image to include a plus sign to make is match with other 'add item' buttons.
+    -   Added ability to remove files from a search, will convert any remaining files into a multiselected format.
 
 ## V0.8.1
 
