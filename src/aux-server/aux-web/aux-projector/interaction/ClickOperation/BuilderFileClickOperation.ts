@@ -20,7 +20,7 @@ import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
 import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
 import { BuilderGroup3D } from '../../../shared/scene/BuilderGroup3D';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
-import GameView from '../../GameView/GameView';
+import BuilderGameView from '../../BuilderGameView/BuilderGameView';
 import { dropWhile } from 'lodash';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { BuilderSimulation3D } from '../../scene/BuilderSimulation3D';

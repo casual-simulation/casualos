@@ -15,7 +15,7 @@ import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { doesFileDefinePlayerContext } from '../PlayerUtils';
 import { SimulationContext } from '../SimulationContext';
 import { Color, Texture, OrthographicCamera, PerspectiveCamera } from 'three';
-import GameView from '../GameView/GameView';
+import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 
 export class PlayerSimulation3D extends Simulation3D {
@@ -32,7 +32,7 @@ export class PlayerSimulation3D extends Simulation3D {
 
     private _contextBackground: Color | Texture = null;
 
-    protected _gameView: GameView; // Override base class gameView so that its cast to the Aux Player GameView.
+    protected _gameView: PlayerGameView; // Override base class gameView so that its cast to the Aux Player GameView.
 
     context: string;
     menuContext: MenuContext = null;

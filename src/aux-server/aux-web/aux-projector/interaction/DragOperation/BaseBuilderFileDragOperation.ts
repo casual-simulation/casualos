@@ -24,7 +24,7 @@ import { AuxFile3DDecoratorFactory } from '../../../shared/scene/decorators/AuxF
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import { Input } from '../../../shared/scene/Input';
-import GameView from '../../GameView/GameView';
+import BuilderGameView from '../../BuilderGameView/BuilderGameView';
 import TrashCan from '../../TrashCan/TrashCan';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { BuilderSimulation3D } from '../../scene/BuilderSimulation3D';
@@ -51,8 +51,8 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         return !this._freeDragGroup;
     }
 
-    protected get gameView(): GameView {
-        return <GameView>super.gameView;
+    protected get gameView(): BuilderGameView {
+        return <BuilderGameView>super.gameView;
     }
 
     /**

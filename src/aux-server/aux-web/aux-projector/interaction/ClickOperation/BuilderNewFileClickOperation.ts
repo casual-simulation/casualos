@@ -9,7 +9,7 @@ import { BuilderNewFileDragOperation } from '../DragOperation/BuilderNewFileDrag
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
 import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperation/BaseFileClickOperation';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
-import GameView from '../../GameView/GameView';
+import BuilderGameView from '../../BuilderGameView/BuilderGameView';
 import { BuilderSimulation3D } from '../../scene/BuilderSimulation3D';
 
 /**

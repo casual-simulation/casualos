@@ -64,5 +64,5 @@
         </div>
     </div>
 </template>
-<script src="./GameView.ts"></script>
-<style src="./GameView.css"></style>
+<script src="./BuilderGameView.ts"></script>
+<style src="./BuilderGameView.css"></style>

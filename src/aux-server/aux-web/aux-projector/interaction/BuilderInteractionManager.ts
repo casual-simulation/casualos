@@ -58,7 +58,7 @@ import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
-import GameView from '../GameView/GameView';
+import BuilderGameView from '../BuilderGameView/BuilderGameView';
 import { GameObject } from '../../shared/scene/GameObject';
 import MiniFile from '../MiniFile/MiniFile';
 import FileTag from '../FileTag/FileTag';
@@ -79,7 +79,7 @@ import { BuilderFileIDClickOperation } from './ClickOperation/BuilderFileIDClick
 
 export class BuilderInteractionManager extends BaseInteractionManager {
     // This overrides the base class IGameView
-    protected _gameView: GameView;
+    protected _gameView: BuilderGameView;
 
     protected _surfaceColliders: DraggableGroup[];
     protected _surfaceObjectsDirty: boolean;
@@ -90,7 +90,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         return this._gameView.simulation3D.simulation.selection.mode;
     }
 
-    constructor(gameView: GameView) {
+    constructor(gameView: BuilderGameView) {
         super(gameView);
         this._surfaceObjectsDirty = true;
     }

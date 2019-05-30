@@ -18,7 +18,7 @@ import {
     FileDragMode,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
-import GameView from '../../GameView/GameView';
+import PlayerGameView from '../../PlayerGameView/PlayerGameView';
 import { Intersection, Vector2 } from 'three';
 import { Physics } from '../../../shared/scene/Physics';
 import { Input } from '../../../shared/scene/Input';

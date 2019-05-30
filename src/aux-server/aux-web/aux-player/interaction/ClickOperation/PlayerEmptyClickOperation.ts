@@ -3,7 +3,7 @@ import { Vector2, Vector3, Ray } from 'three';
 import { IOperation } from '../../../shared/interaction/IOperation';
 import { appManager } from '../../../shared/AppManager';
 import { EventBus } from '../../../shared/EventBus';
-import GameView from '../../GameView/GameView';
+import PlayerGameView from '../../PlayerGameView/PlayerGameView';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
@@ -18,7 +18,7 @@ export class PlayerEmptyClickOperation implements IOperation {
 
     protected _interaction: PlayerInteractionManager;
 
-    private _gameView: GameView;
+    private _gameView: PlayerGameView;
     private _finished: boolean;
     private _startScreenPos: Vector2;
 
@@ -26,7 +26,10 @@ export class PlayerEmptyClickOperation implements IOperation {
         return appManager.simulationManager.primary;
     }
 
-    constructor(gameView: GameView, interaction: PlayerInteractionManager) {
+    constructor(
+        gameView: PlayerGameView,
+        interaction: PlayerInteractionManager
+    ) {
         this._gameView = gameView;
         this._interaction = interaction;
 

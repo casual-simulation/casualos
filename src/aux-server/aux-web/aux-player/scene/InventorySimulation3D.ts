@@ -9,7 +9,7 @@ import { Simulation } from '../../shared/Simulation';
 import { tap } from 'rxjs/operators';
 import { InventoryContextGroup3D } from './InventoryContextGroup3D';
 import { PerspectiveCamera, OrthographicCamera, Plane } from 'three';
-import GameView from '../GameView/GameView';
+import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import { CameraRig } from 'aux-web/shared/scene/CameraRigFactory';
 
 export class InventorySimulation3D extends Simulation3D {
@@ -28,7 +28,7 @@ export class InventorySimulation3D extends Simulation3D {
      */
     private _contextLoaded: boolean;
 
-    protected _gameView: GameView; // Override base class gameView so that its cast to the Aux Player GameView.
+    protected _gameView: PlayerGameView; // Override base class gameView so that its cast to the Aux Player GameView.
 
     constructor(gameView: IGameView, simulation: Simulation) {
         super(gameView, simulation);

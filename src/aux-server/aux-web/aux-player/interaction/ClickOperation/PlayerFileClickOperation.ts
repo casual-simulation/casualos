@@ -1,5 +1,5 @@
 import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperation/BaseFileClickOperation';
-import GameView from '../../GameView/GameView';
+import PlayerGameView from '../../PlayerGameView/PlayerGameView';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
 import { Intersection } from 'three';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
@@ -106,11 +106,11 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
 
         if (this._simulation3D instanceof PlayerSimulation3D) {
             playerSimulation3D = this._simulation3D;
-            inventorySimulation3D = (<GameView>(
+            inventorySimulation3D = (<PlayerGameView>(
                 this.gameView
             )).findInventorySimulation3D(this._simulation3D.simulation);
         } else if (this._simulation3D instanceof InventorySimulation3D) {
-            playerSimulation3D = (<GameView>(
+            playerSimulation3D = (<PlayerGameView>(
                 this.gameView
             )).findPlayerSimulation3D(this._simulation3D.simulation);
             inventorySimulation3D = this._simulation3D;

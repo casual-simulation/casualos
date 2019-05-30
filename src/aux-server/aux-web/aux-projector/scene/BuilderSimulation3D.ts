@@ -12,7 +12,7 @@ import { PerspectiveCamera, OrthographicCamera, Object3D, Plane } from 'three';
 import { Simulation } from '../../shared/Simulation';
 import { IGameView } from '../../shared/vue-components/IGameView';
 import { flatMap } from 'lodash';
-import GameView from '../GameView/GameView';
+import BuilderGameView from '../BuilderGameView/BuilderGameView';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 
 export class BuilderSimulation3D extends Simulation3D {

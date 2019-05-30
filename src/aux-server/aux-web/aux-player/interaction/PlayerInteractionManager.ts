@@ -15,7 +15,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
-import GameView from '../GameView/GameView';
+import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import { GameObject } from '../../shared/scene/GameObject';
 import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { PlayerFileClickOperation } from './ClickOperation/PlayerFileClickOperation';
@@ -40,11 +40,11 @@ import { PlayerEmptyClickOperation } from './ClickOperation/PlayerEmptyClickOper
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class IGameView
-    protected _gameView: GameView;
+    protected _gameView: PlayerGameView;
 
     private _grid: PlayerGrid;
 
-    constructor(gameView: GameView) {
+    constructor(gameView: PlayerGameView) {
         super(gameView);
         let calc = appManager.simulationManager.primary.helper.createContext();
         let gridScale = calculateGridScale(calc, null);

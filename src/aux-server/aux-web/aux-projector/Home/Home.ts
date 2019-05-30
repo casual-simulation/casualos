@@ -15,7 +15,7 @@ import {
     getSelectionMode,
     isFile,
 } from '@casual-simulation/aux-common';
-import GameView from '../GameView/GameView';
+import BuilderGameView from '../BuilderGameView/BuilderGameView';
 import { appManager } from '../../shared/AppManager';
 import FileTable from '../FileTable/FileTable';
 import ColorPicker from '../ColorPicker/ColorPicker';
@@ -28,7 +28,7 @@ import { EventBus } from '../../shared/EventBus';
 
 @Component({
     components: {
-        'game-view': GameView,
+        'game-view': BuilderGameView,
         'file-table': FileTable,
         'color-picker': ColorPicker,
         'tag-editor': TagEditor,

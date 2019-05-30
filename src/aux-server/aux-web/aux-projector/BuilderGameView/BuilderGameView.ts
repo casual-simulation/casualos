@@ -2,6 +2,7 @@ import {
     Scene,
     Color,
     PerspectiveCamera,
+    OrthographicCamera,
     WebGLRenderer,
     AmbientLight,
     DirectionalLight,
@@ -10,12 +11,12 @@ import {
     HemisphereLight,
     Plane,
     Vector3,
+    GridHelper,
     Quaternion,
     Matrix4,
     Texture,
-    OrthographicCamera,
-    MeshToonMaterial,
-    Mesh,
+    Vector2,
+    Camera,
 } from 'three';
 
 import VRControlsModule from 'three-vrcontrols-module';
@@ -24,34 +25,51 @@ import * as webvrui from 'webvr-ui';
 
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Inject, Provide, Prop, Watch } from 'vue-property-decorator';
+import { Inject, Provide } from 'vue-property-decorator';
 import { SubscriptionLike } from 'rxjs';
 import { concatMap, tap, flatMap as rxFlatMap } from 'rxjs/operators';
 
 import {
     Object,
+    DEFAULT_WORKSPACE_HEIGHT_INCREMENT,
+    DEFAULT_USER_MODE,
+    UserMode,
     DEFAULT_SCENE_BACKGROUND_COLOR,
     AuxFile,
-    AuxObject,
+    getFileConfigContexts,
     hasValue,
-    getFilesStateFromStoredTree,
+    createContextId,
+    AuxCausalTree,
+    AuxOp,
+    createWorkspace,
+    FilesState,
+    duplicateFile,
+    toast,
+    createCalculationContext,
+    cleanFile,
 } from '@casual-simulation/aux-common';
+import { storedTree, StoredCausalTree } from '@casual-simulation/causal-trees';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { Time } from '../../shared/scene/Time';
 import { Input, InputType } from '../../shared/scene/Input';
 import { InputVR } from '../../shared/scene/InputVR';
+
 import { appManager } from '../../shared/AppManager';
-import { find, flatMap, uniqBy } from 'lodash';
+import { GridChecker } from '../../shared/scene/grid/GridChecker';
+import { flatMap, find, findIndex, debounce, keys } from 'lodash';
 import App from '../App/App';
+import MiniFile from '../MiniFile/MiniFile';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { IGameView } from '../../shared/vue-components/IGameView';
 import { LayersHelper } from '../../shared/scene/LayersHelper';
-import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
-import { AuxFile3D } from '../../shared/scene/AuxFile3D';
-import { DebugObjectManager } from '../../shared/scene/DebugObjectManager';
 import { AuxFile3DDecoratorFactory } from '../../shared/scene/decorators/AuxFile3DDecoratorFactory';
-import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
-import MenuFile from '../MenuFile/MenuFile';
+import { DebugObjectManager } from '../../shared/scene/DebugObjectManager';
+import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
+import { AuxFile3D } from '../../shared/scene/AuxFile3D';
+import { BuilderInteractionManager } from '../interaction/BuilderInteractionManager';
+import { TweenCameraToOperation } from '../../shared/interaction/TweenCameraToOperation';
+import Home from '../Home/Home';
+import TrashCan from '../TrashCan/TrashCan';
 import {
     CameraType,
     resizeCameraRig,
@@ -62,43 +80,41 @@ import {
     baseAuxAmbientLight,
     baseAuxDirectionalLight,
     createHtmlMixerContext,
-    createCube,
-    createSphere,
 } from '../../shared/scene/SceneUtils';
-import { TweenCameraToOperation } from '../../shared/interaction/TweenCameraToOperation';
+import { Physics } from '../../shared/scene/Physics';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
-import { GridChecker } from '../../shared/scene/grid/GridChecker';
-import { PlayerSimulation3D } from '../scene/PlayerSimulation3D';
-import { Simulation } from '../../shared/Simulation';
-import { MenuItem } from '../MenuContext';
-import SimulationItem from '../SimulationContext';
+import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
 import { HtmlMixer } from '../../shared/scene/HtmlMixer';
-import { InventorySimulation3D } from '../scene/InventorySimulation3D';
+import { copyToClipboard } from '../../shared/SharedUtils';
 import { Viewport } from '../../shared/scene/Viewport';
 import CameraHome from '../../shared/vue-components/CameraHome/CameraHome';
-import { default as CameraTypeVue } from '../../shared/vue-components/CameraType/CameraType';
 import { EventBus } from '../../shared/EventBus';
+import { default as CameraTypeVue } from '../../shared/vue-components/CameraType/CameraType';
 
 @Component({
     components: {
-        'menu-file': MenuFile,
-        'camera-home': CameraHome,
+        'mini-file': MiniFile,
+        'trash-can': TrashCan,
         'camera-type': CameraTypeVue,
+        'camera-home': CameraHome,
     },
 })
-export default class GameView extends Vue implements IGameView {
+export default class BuilderGameView extends Vue implements IGameView {
     private _mainScene: Scene;
-    private _inventoryScene: Scene;
+    private _mainViewport: Viewport;
     private _renderer: WebGLRenderer;
 
     private _enterVr: any;
     private _vrControls: any;
     private _vrEffect: any;
 
+    private _gridMesh: GridHelper;
     private _time: Time;
     private _input: Input;
     private _inputVR: InputVR;
-    private _interaction: PlayerInteractionManager;
+    private _interaction: BuilderInteractionManager;
+    private _gridChecker: GridChecker;
+    private _sceneBackground: Color | Texture;
     private _cameraType: CameraType;
     private _htmlMixerContext: HtmlMixer.Context;
 
@@ -109,86 +125,53 @@ export default class GameView extends Vue implements IGameView {
         CameraRig
     >();
 
-    private playerSimulations: PlayerSimulation3D[] = [];
-    private inventorySimulations: InventorySimulation3D[] = [];
-
-    private _fileSubs: SubscriptionLike[];
+    // private _contexts: BuilderGroup3D[];
+    private _subs: SubscriptionLike[];
     private _decoratorFactory: AuxFile3DDecoratorFactory;
 
+    simulation3D: BuilderSimulation3D = null;
     mainCameraRig: CameraRig = null;
-    mainViewport: Viewport = null;
-    inventoryCameraRig: CameraRig = null;
-    inventoryViewport: Viewport = null;
+    mode: UserMode = DEFAULT_USER_MODE;
     xrCapable: boolean = false;
     xrDisplay: any = null;
     xrSession: any = null;
     xrSessionInitParameters: any = null;
     vrDisplay: VRDisplay = null;
     vrCapable: boolean = false;
-
-    menuExpanded: boolean = true;
+    showTrashCan: boolean = false;
+    showUploadFiles: boolean = false;
 
     @Inject() addSidebarItem: App['addSidebarItem'];
     @Inject() removeSidebarItem: App['removeSidebarItem'];
-    @Inject() removeSidebarGroup: App['removeSidebarGroup'];
-    @Prop() context: string;
 
+    // TODO: Find a better way to refactor this
+    @Inject() home: Home;
     @Provide() fileRenderer: FileRenderer = new FileRenderer();
 
     get gameView(): HTMLElement {
         return <HTMLElement>this.$refs.gameView;
     }
-    get dev(): boolean {
+    get dev() {
         return !PRODUCTION;
     }
-    get filesMode(): boolean {
-        console.error('AUX Player does not implement filesMode.');
-        return false;
+    get filesMode() {
+        return this.mode === 'files';
     }
-    get workspacesMode(): boolean {
-        console.error('AUX Player does not implement workspacesMode.');
-        return false;
+    get workspacesMode() {
+        return this.mode === 'worksurfaces';
     }
-
-    get menu() {
-        let items: MenuItem[] = [];
-        this.playerSimulations.forEach(sim => {
-            if (sim.menuContext) {
-                items.push(...sim.menuContext.items);
-            }
-        });
-        return items;
-    }
-
     // get fileManager() {
     //     return appManager.simulationManager.primary;
     // }
 
     constructor() {
         super();
-        this.playerSimulations = [];
     }
 
     public findFilesById(id: string): AuxFile3D[] {
-        return flatMap(flatMap(this.playerSimulations, s => s.contexts), c =>
+        return flatMap(this.simulation3D.contexts, c =>
             c.getFiles().filter(f => f.file.id === id)
         );
-    }
-
-    /**
-     * Find Inventory Simulation 3D object that is displaying for the given Simulation.
-     * @param sim The simulation to find a simulation 3d for.
-     */
-    public findInventorySimulation3D(sim: Simulation): InventorySimulation3D {
-        return this.inventorySimulations.find(s => s.simulation === sim);
-    }
-
-    /**
-     * Find Player Simulation 3D object that is displaying for the given Simulation.
-     * @param sim The simulation to find a simulation 3d for.
-     */
-    public findPlayerSimulation3D(sim: Simulation): PlayerSimulation3D {
-        return this.playerSimulations.find(s => s.simulation === sim);
     }
 
     public getTime() {
@@ -209,57 +192,52 @@ export default class GameView extends Vue implements IGameView {
     public getRenderer() {
         return this._renderer;
     }
+    public getGridChecker() {
+        return this._gridChecker;
+    }
     public getMainCameraRig(): CameraRig {
         return this.mainCameraRig;
     }
     public getMainViewport(): Viewport {
-        return this.mainViewport;
-    }
-    public getInventoryViewport(): Viewport {
-        return this.inventoryViewport;
-    }
-    public getInventoryCameraRig(): CameraRig {
-        return this.inventoryCameraRig;
-    }
-    public getUIHtmlElements(): HTMLElement[] {
-        return [<HTMLElement>this.$refs.inventory];
-    }
-    public getHtmlMixerContext(): HtmlMixer.Context {
-        return this._htmlMixerContext;
+        return this._mainViewport;
     }
     public getDecoratorFactory(): AuxFile3DDecoratorFactory {
         return this._decoratorFactory;
     }
-    public getGridChecker(): GridChecker {
-        return null;
-    }
     public getViewports(): Viewport[] {
-        return [this.mainViewport, this.inventoryViewport];
+        return [this._mainViewport];
     }
     public getCameraRigs(): CameraRig[] {
-        return [this.mainCameraRig, this.inventoryCameraRig];
+        return [this.mainCameraRig];
     }
     public getSimulations(): Simulation3D[] {
-        return [...this.playerSimulations, ...this.inventorySimulations];
-        // return [...this.playerSimulations];
-        // return [...this.inventorySimulations];
+        return [this.simulation3D];
     }
     public getBackground(): Color | Texture {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-            if (sim.backgroundColor) {
-                return sim.backgroundColor;
-            }
-        }
-
-        return null;
+        return this.simulation3D.backgroundColor;
+    }
+    public getUIHtmlElements(): HTMLElement[] {
+        return [
+            ...this.home.getUIHtmlElements(),
+            <HTMLElement>this.$refs.fileQueue,
+            this.$refs.trashCan ? (<TrashCan>this.$refs.trashCan).$el : null,
+        ].filter(el => el);
+    }
+    public getHtmlMixerContext(): HtmlMixer.Context {
+        return this._htmlMixerContext;
     }
 
     public setGridsVisible(visible: boolean) {
-        // This currently does nothing for AUX Player, we dont really show any grids right now.
+        this.simulation3D.contexts.forEach((c: BuilderGroup3D) => {
+            if (c.surface) {
+                c.surface.gridsVisible = visible;
+            }
+        });
     }
 
-    public setWorldGridVisible(visible: boolean) {}
+    public setWorldGridVisible(visible: boolean) {
+        this._gridMesh.visible = visible;
+    }
 
     public setCameraType(type: CameraType) {
         if (this._cameraType === type) return;
@@ -276,7 +254,7 @@ export default class GameView extends Vue implements IGameView {
             'main',
             this._cameraType,
             this._mainScene,
-            this.mainViewport
+            this._mainViewport
         );
 
         // Update side bar item.
@@ -308,192 +286,6 @@ export default class GameView extends Vue implements IGameView {
         }
 
         this.onCameraRigTypeChanged.invoke(this.mainCameraRig);
-    }
-
-    public async mounted() {
-        this._handleResize = this._handleResize.bind(this);
-        window.addEventListener('resize', this._handleResize);
-        window.addEventListener('vrdisplaypresentchange', this._handleResize);
-
-        this.onFileAdded.invoke = this.onFileAdded.invoke.bind(
-            this.onFileAdded
-        );
-        this.onFileRemoved.invoke = this.onFileRemoved.invoke.bind(
-            this.onFileRemoved
-        );
-        this.onFileUpdated.invoke = this.onFileUpdated.invoke.bind(
-            this.onFileUpdated
-        );
-
-        this._time = new Time();
-        this._decoratorFactory = new AuxFile3DDecoratorFactory(this);
-        this._fileSubs = [];
-        this.playerSimulations = [];
-        this.inventorySimulations = [];
-        this._setupRenderer();
-        this._setupScenes();
-        DebugObjectManager.init(this._time, this._mainScene);
-        this._input = new Input(this);
-        this._inputVR = new InputVR(this);
-        this._interaction = new PlayerInteractionManager(this);
-
-        this._setupWebVR();
-        await this._setupWebXR();
-        this._handleResize();
-
-        this._fileSubs.push(
-            appManager.simulationManager.simulationAdded
-                .pipe(
-                    tap(sim => {
-                        this._simulationAdded(sim);
-                    })
-                )
-                .subscribe()
-        );
-
-        this._fileSubs.push(
-            appManager.simulationManager.simulationRemoved
-                .pipe(
-                    tap(sim => {
-                        this._simulationRemoved(sim);
-                    })
-                )
-                .subscribe()
-        );
-
-        this._frameUpdate();
-
-        EventBus.$on('centerCamera', this.onCenterCamera);
-        EventBus.$on('changeCameraType', this.setCameraType);
-    }
-
-    private _simulationAdded(sim: Simulation) {
-        const playerSim3D = new PlayerSimulation3D(this.context, this, sim);
-        playerSim3D.init();
-        playerSim3D.onFileAdded.addListener(this.onFileAdded.invoke);
-        playerSim3D.onFileRemoved.addListener(this.onFileRemoved.invoke);
-        playerSim3D.onFileUpdated.addListener(this.onFileUpdated.invoke);
-
-        this._fileSubs.push(
-            playerSim3D.simulationContext.itemsUpdated.subscribe(() => {
-                this._onSimsUpdated();
-            })
-        );
-
-        this._fileSubs.push(
-            playerSim3D.simulation.helper.localEvents.subscribe(e => {
-                if (e.name === 'go_to_context') {
-                    this.playerSimulations.forEach(s => {
-                        s.setContext(e.context);
-                    });
-                } else if (e.name === 'import_aux') {
-                    this._importAUX(sim, e.url);
-                }
-            })
-        );
-
-        this.playerSimulations.push(playerSim3D);
-        this._mainScene.add(playerSim3D);
-
-        //
-        // Create Inventory Simulation
-        //
-        const inventorySim3D = new InventorySimulation3D(this, sim);
-        inventorySim3D.init();
-        inventorySim3D.onFileAdded.addListener(this.onFileAdded.invoke);
-        inventorySim3D.onFileRemoved.addListener(this.onFileRemoved.invoke);
-        inventorySim3D.onFileUpdated.addListener(this.onFileUpdated.invoke);
-
-        this.inventorySimulations.push(inventorySim3D);
-        this._inventoryScene.add(inventorySim3D);
-    }
-
-    private _simulationRemoved(sim: Simulation) {
-        //
-        // Remove Player Simulation
-        //
-        const playerSimIndex = this.playerSimulations.findIndex(
-            s => s.simulation.id === sim.id
-        );
-        if (playerSimIndex >= 0) {
-            const removed = this.playerSimulations.splice(playerSimIndex, 1);
-            removed.forEach(s => {
-                s.onFileAdded.removeListener(this.onFileAdded.invoke);
-                s.onFileRemoved.removeListener(this.onFileRemoved.invoke);
-                s.onFileUpdated.removeListener(this.onFileUpdated.invoke);
-                s.unsubscribe();
-                this._mainScene.remove(s);
-            });
-        }
-
-        //
-        // Remove Inventory Simulation
-        //
-        const invSimIndex = this.inventorySimulations.findIndex(
-            s => s.simulation.id == sim.id
-        );
-
-        if (invSimIndex >= 0) {
-            const removed = this.inventorySimulations.splice(invSimIndex, 1);
-            removed.forEach(s => {
-                s.onFileAdded.removeListener(this.onFileAdded.invoke);
-                s.onFileRemoved.removeListener(this.onFileRemoved.invoke);
-                s.onFileUpdated.removeListener(this.onFileUpdated.invoke);
-                s.unsubscribe();
-                this._inventoryScene.remove(s);
-            });
-        }
-    }
-
-    private async _importAUX(sim: Simulation, url: string) {
-        const stored = await appManager.loadAUX(url);
-        const state = await getFilesStateFromStoredTree(stored);
-        await sim.helper.addState(state);
-    }
-
-    private _onSimsUpdated() {
-        let items: SimulationItem[] = [];
-        this.playerSimulations.forEach(sim => {
-            if (sim.simulationContext) {
-                for (let i = 0; i < sim.simulationContext.items.length; i++) {
-                    items[i] = sim.simulationContext.items[i];
-                }
-            }
-        });
-
-        items = uniqBy(items, i => i.simulationToLoad);
-        appManager.simulationManager.updateSimulations([
-            appManager.user.channelId,
-            ...items.map(i => i.simulationToLoad),
-        ]);
-    }
-
-    public beforeDestroy() {
-        window.removeEventListener('resize', this._handleResize);
-        window.removeEventListener(
-            'vrdisplaypresentchange',
-            this._handleResize
-        );
-        this.removeSidebarItem('enable_xr');
-        this.removeSidebarItem('disable_xr');
-        this.removeSidebarItem('debug_mode');
-        this.removeSidebarGroup('simulations');
-        this._input.dispose();
-
-        if (this._fileSubs) {
-            this._fileSubs.forEach(sub => {
-                sub.unsubscribe();
-            });
-            this._fileSubs = [];
-        }
-
-        EventBus.$off('centerCamera', this.onCenterCamera);
-        EventBus.$off('changeCameraType', this.setCameraType);
-    }
-
-    onCenterCamera(cameraRig: CameraRig): void {
-        if (!cameraRig) return;
-        this.tweenCameraToPosition(cameraRig, new Vector3(0, 0, 0));
     }
 
     public tweenCameraToFile(
@@ -529,28 +321,307 @@ export default class GameView extends Vue implements IGameView {
         );
     }
 
+    onDragEnter(event: DragEvent) {
+        if (event.dataTransfer.types.indexOf('Files') >= 0) {
+            this.showUploadFiles = true;
+            event.dataTransfer.dropEffect = 'copy';
+            event.preventDefault();
+        }
+    }
+
+    onDragOver(event: DragEvent) {
+        if (event.dataTransfer.types.indexOf('Files') >= 0) {
+            this.showUploadFiles = true;
+            event.dataTransfer.dropEffect = 'copy';
+            event.preventDefault();
+        }
+    }
+
+    onDragLeave(event: DragEvent) {
+        this.showUploadFiles = false;
+    }
+
+    async onDrop(event: DragEvent) {
+        this.showUploadFiles = false;
+        event.preventDefault();
+        let auxFiles: File[] = [];
+        if (event.dataTransfer.items) {
+            for (let i = 0; i < event.dataTransfer.items.length; i++) {
+                const item = event.dataTransfer.items[i];
+                if (item.kind === 'file') {
+                    const file = item.getAsFile();
+                    if (file.name.endsWith('.aux')) {
+                        auxFiles.push(file);
+                    }
+                }
+            }
+        } else {
+            for (let i = 0; i < event.dataTransfer.files.length; i++) {
+                const file = event.dataTransfer.files.item(i);
+                if (file.name.endsWith('.aux')) {
+                    auxFiles.push(file);
+                }
+            }
+        }
+
+        if (auxFiles.length > 0) {
+            console.log(
+                `[GameView] Uploading ${auxFiles.length} ${
+                    auxFiles.length === 1 ? 'file' : 'files'
+                }`
+            );
+            await Promise.all(
+                auxFiles.map(file => appManager.uploadState(file))
+            );
+        }
+    }
+
+    onCenterCamera(cameraRig: CameraRig): void {
+        if (!cameraRig) return;
+        this.tweenCameraToPosition(cameraRig, new Vector3(0, 0, 0));
+    }
+
+    copySelectionMac() {
+        if (this._isMac()) {
+            this._copySelection();
+        }
+    }
+
+    copySelectionNormal() {
+        if (!this._isMac()) {
+            this._copySelection();
+        }
+    }
+
+    pasteClipboardMac() {
+        if (this._isMac()) {
+            this._pasteClipboard();
+        }
+    }
+
+    pasteClipboardNormal() {
+        if (!this._isMac()) {
+            this._pasteClipboard();
+        }
+    }
+
+    private async _copySelection() {
+        const sim = appManager.simulationManager.primary;
+        const files = sim.selection.getSelectedFilesForUser(
+            sim.helper.userFile
+        );
+        if (files.length === 0) {
+            appManager.simulationManager.primary.helper.transaction(
+                toast('Nothing selected to copy!')
+            );
+            return;
+        }
+
+        await appManager.copyFilesFromSimulation(sim, files);
+
+        appManager.simulationManager.primary.helper.transaction(
+            toast('Selection Copied!')
+        );
+    }
+
+    private async _pasteClipboard() {
+        if (navigator.clipboard) {
+            try {
+                // TODO: Cleanup this function
+                const json = await navigator.clipboard.readText();
+                const stored: StoredCausalTree<AuxOp> = JSON.parse(json);
+                let tree = new AuxCausalTree(stored);
+                await tree.import(stored);
+
+                const value = tree.value;
+                const fileIds = keys(value);
+                let state: FilesState = {};
+
+                const oldFiles = fileIds.map(id => value[id]);
+                const calc = createCalculationContext(
+                    oldFiles,
+                    appManager.simulationManager.primary.helper.userFile.id,
+                    appManager.simulationManager.primary.helper.lib
+                );
+                const oldWorksurface =
+                    oldFiles.find(
+                        f => getFileConfigContexts(calc, f).length > 0
+                    ) || createWorkspace();
+                const oldContexts = getFileConfigContexts(calc, oldWorksurface);
+
+                const contextMap: Map<string, string> = new Map();
+                let newContexts: string[] = [];
+                oldContexts.forEach(c => {
+                    const context = createContextId();
+                    newContexts.push(context);
+                    contextMap.set(c, context);
+                });
+
+                let worksurface = duplicateFile(oldWorksurface);
+
+                oldContexts.forEach(c => {
+                    let newContext = contextMap.get(c);
+                    worksurface.tags[c] = null;
+                    worksurface.tags['aux.context'] = newContext;
+                    worksurface.tags['aux.context.surface'] = true;
+                    worksurface.tags[newContext] = true;
+                });
+
+                worksurface = cleanFile(worksurface);
+
+                const mouseDir = Physics.screenPosToRay(
+                    this.getInput().getMouseScreenPos(),
+                    this.mainCameraRig.mainCamera
+                );
+                const point = Physics.pointOnPlane(
+                    mouseDir,
+                    new Plane(new Vector3(0, 1, 0))
+                );
+
+                worksurface.tags['aux.context.surface.x'] = point.x;
+                worksurface.tags['aux.context.surface.y'] = point.z;
+                worksurface.tags['aux.context.surface.z'] = point.y;
+
+                state[worksurface.id] = worksurface;
+
+                for (let i = 0; i < fileIds.length; i++) {
+                    const file = value[fileIds[i]];
+
+                    if (file.id === oldWorksurface.id) {
+                        continue;
+                    }
+
+                    let newFile = duplicateFile(file);
+
+                    oldContexts.forEach(c => {
+                        let newContext = contextMap.get(c);
+                        newFile.tags[c] = null;
+
+                        let x = file.tags[`${c}.x`];
+                        let y = file.tags[`${c}.y`];
+                        let z = file.tags[`${c}.z`];
+                        let index = file.tags[`${c}.index`];
+                        newFile.tags[`${c}.x`] = null;
+                        newFile.tags[`${c}.y`] = null;
+                        newFile.tags[`${c}.z`] = null;
+                        newFile.tags[`${c}.index`] = null;
+
+                        newFile.tags[newContext] = true;
+                        newFile.tags[`${newContext}.x`] = x;
+                        newFile.tags[`${newContext}.y`] = y;
+                        newFile.tags[`${newContext}.z`] = z;
+                        newFile.tags[`${newContext}.index`] = index;
+                    });
+
+                    state[newFile.id] = cleanFile(newFile);
+                }
+
+                await appManager.simulationManager.primary.helper.addState(
+                    state
+                );
+                appManager.simulationManager.primary.helper.transaction(
+                    toast(
+                        `${fileIds.length} ${
+                            fileIds.length === 1 ? 'file' : 'files'
+                        } pasted!`
+                    )
+                );
+            } catch (ex) {
+                console.error('[GameView] Paste failed', ex);
+                appManager.simulationManager.primary.helper.transaction(
+                    toast(
+                        "Couldn't paste your clipboard. Have you copied a selection or worksurface?"
+                    )
+                );
+            }
+        } else {
+            console.error("[GameView] Browser doesn't support clipboard API!");
+            appManager.simulationManager.primary.helper.transaction(
+                toast(
+                    "Sorry, but your browser doesn't support pasting files from a selection or worksurface."
+                )
+            );
+        }
+    }
+
+    private _isMac(): boolean {
+        return /(Mac)/i.test(navigator.platform);
+    }
+
+    public async mounted() {
+        this._handleResize = this._handleResize.bind(this);
+        window.addEventListener('resize', this._handleResize);
+        window.addEventListener('vrdisplaypresentchange', this._handleResize);
+
+        this._time = new Time();
+        this._decoratorFactory = new AuxFile3DDecoratorFactory(this);
+        this._subs = [];
+        this.simulation3D = new BuilderSimulation3D(
+            this,
+            appManager.simulationManager.primary
+        );
+        this._setupRenderer();
+        this._setupScenes();
+        DebugObjectManager.init(this._time, this._mainScene);
+        this._input = new Input(this);
+        this._inputVR = new InputVR(this);
+        this._interaction = new BuilderInteractionManager(this);
+        this._gridChecker = new GridChecker(DEFAULT_WORKSPACE_HEIGHT_INCREMENT);
+
+        this.simulation3D.init();
+        this.simulation3D.onFileAdded.addListener(obj =>
+            this.onFileAdded.invoke(obj)
+        );
+        this.simulation3D.onFileRemoved.addListener(obj =>
+            this.onFileRemoved.invoke(obj)
+        );
+        this.simulation3D.onFileUpdated.addListener(obj =>
+            this.onFileUpdated.invoke(obj)
+        );
+
+        this._setupWebVR();
+        await this._setupWebXR();
+        this._handleResize();
+        this._frameUpdate();
+
+        EventBus.$on('centerCamera', this.onCenterCamera);
+        EventBus.$on('changeCameraType', this.setCameraType);
+    }
+
+    public beforeDestroy() {
+        window.removeEventListener('resize', this._handleResize);
+        window.removeEventListener(
+            'vrdisplaypresentchange',
+            this._handleResize
+        );
+        this.removeSidebarItem('enable_xr');
+        this.removeSidebarItem('disable_xr');
+        this._input.dispose();
+
+        if (this._subs) {
+            this._subs.forEach(sub => {
+                sub.unsubscribe();
+            });
+            this._subs = [];
+        }
+
+        EventBus.$off('centerCamera', this.onCenterCamera);
+        EventBus.$off('changeCameraType', this.setCameraType);
+    }
+
     private _frameUpdate(xrFrame?: any) {
         DebugObjectManager.update();
-
-        // let calc = this.fileManager.helper.createContext();
 
         this._input.update();
         this._inputVR.update();
         this._interaction.update();
 
-        this.playerSimulations.forEach(s => {
-            s.frameUpdate();
-        });
-        this.inventorySimulations.forEach(s => {
-            s.frameUpdate();
-        });
+        this.simulation3D.frameUpdate();
 
         if (this._htmlMixerContext) {
             this._htmlMixerContext.update();
         }
-
         this._cameraUpdate();
-
         this._renderUpdate(xrFrame);
         this._time.update();
 
@@ -574,24 +645,13 @@ export default class GameView extends Vue implements IGameView {
             this.mainCameraRig.uiWorldCamera.zoom = this.mainCameraRig.mainCamera.zoom;
             this.mainCameraRig.uiWorldCamera.updateProjectionMatrix();
         }
-
-        if (
-            this.inventoryCameraRig.uiWorldCamera.zoom !==
-            this.inventoryCameraRig.mainCamera.zoom
-        ) {
-            this.inventoryCameraRig.uiWorldCamera.zoom = this.inventoryCameraRig.mainCamera.zoom;
-            this.inventoryCameraRig.uiWorldCamera.updateProjectionMatrix();
-        }
     }
 
     private _renderUpdate(xrFrame?: any) {
         if (this.vrDisplay && this.vrDisplay.isPresenting) {
             this._vrControls.update();
             this._renderCore();
-            this._vrEffect.render(
-                this._mainScene,
-                this.mainCameraRig.mainCamera
-            );
+            this._vrEffect.render(this._mainScene, this.mainCameraRig);
         } else if (this.xrSession && xrFrame) {
             this._mainScene.background = null;
             this._renderer.setSize(
@@ -604,7 +664,7 @@ export default class GameView extends Vue implements IGameView {
             this.mainCameraRig.mainCamera.matrixAutoUpdate = false;
 
             for (const view of xrFrame.views) {
-                // Each XRView has its own projection matrix, so set the main camera to use that
+                // Each XRView has its own projection matrix, so set the _camera to use that
                 let matrix = new Matrix4();
                 matrix.fromArray(view.viewMatrix);
 
@@ -651,12 +711,6 @@ export default class GameView extends Vue implements IGameView {
         // [Main scene]
         //
 
-        this._renderer.setSize(
-            this.mainViewport.width,
-            this.mainViewport.height
-        );
-        this._renderer.setScissorTest(false);
-
         // Render the main scene with the main camera.
         this._renderer.clear();
         this._renderer.render(this._mainScene, this.mainCameraRig.mainCamera);
@@ -672,45 +726,6 @@ export default class GameView extends Vue implements IGameView {
         );
 
         this._mainSceneBackgroundUpdate();
-
-        //
-        // [Inventory scene]
-        //
-
-        this._renderer.clearDepth(); // Clear depth buffer so that inventory scene always appears above the main scene.
-
-        if (this._mainScene.background instanceof Color) {
-            this._inventorySceneBackgroundUpdate(this._mainScene.background);
-        }
-
-        this._renderer.setViewport(
-            this.inventoryViewport.x,
-            this.inventoryViewport.y,
-            this.inventoryViewport.width,
-            this.inventoryViewport.height
-        );
-        this._renderer.setScissor(
-            this.inventoryViewport.x,
-            this.inventoryViewport.y,
-            this.inventoryViewport.width,
-            this.inventoryViewport.height
-        );
-        this._renderer.setScissorTest(true);
-
-        // Render the inventory scene with the inventory main camera.
-        this._renderer.render(
-            this._inventoryScene,
-            this.inventoryCameraRig.mainCamera
-        );
-
-        this._inventoryScene.background = null;
-
-        // Render the inventory scene with the inventory ui world camera.
-        this._renderer.clearDepth(); // Clear depth buffer so that ui objects dont use it.
-        this._renderer.render(
-            this._inventoryScene,
-            this.inventoryCameraRig.uiWorldCamera
-        );
     }
 
     private _mainSceneBackgroundUpdate() {
@@ -724,14 +739,6 @@ export default class GameView extends Vue implements IGameView {
         }
     }
 
-    private _inventorySceneBackgroundUpdate(colorToOffset: Color) {
-        if (!colorToOffset) return;
-
-        let invColor = colorToOffset.clone();
-        invColor.offsetHSL(0, -0.02, -0.04);
-        this._inventoryScene.background = invColor;
-    }
-
     private _setupRenderer() {
         const webGlRenderer = (this._renderer = new WebGLRenderer({
             antialias: true,
@@ -740,10 +747,7 @@ export default class GameView extends Vue implements IGameView {
         webGlRenderer.autoClear = false;
         webGlRenderer.shadowMap.enabled = false;
 
-        this.mainViewport = new Viewport('main', null, this._container);
-        this.mainViewport.layer = 0;
-        this.inventoryViewport = new Viewport('inventory', this.mainViewport);
-        this.inventoryViewport.layer = 1;
+        this._mainViewport = new Viewport('main', null, this._container);
 
         this.gameView.appendChild(this._renderer.domElement);
     }
@@ -765,28 +769,13 @@ export default class GameView extends Vue implements IGameView {
         const directional = baseAuxDirectionalLight();
         this._mainScene.add(directional);
 
-        //
-        // [Inventory scene]
-        //
-        this._inventoryScene = new Scene();
+        // Main scene grid plane.
+        this._gridMesh = new GridHelper(1000, 300, 0xbbbbbb, 0xbbbbbb);
+        this._gridMesh.visible = false;
+        this._mainScene.add(this._gridMesh);
 
-        // Inventory camera.
-        this.inventoryCameraRig = createCameraRig(
-            'inventory',
-            'orthographic',
-            this._inventoryScene,
-            this.inventoryViewport
-        );
-        this.inventoryCameraRig.mainCamera.zoom = 50;
-        this._inventoryScene.add(this.inventoryCameraRig.mainCamera);
-
-        // Inventory ambient light.
-        const invAmbient = baseAuxAmbientLight();
-        this._inventoryScene.add(invAmbient);
-
-        // Inventory direction light.
-        const invDirectional = baseAuxDirectionalLight();
-        this._inventoryScene.add(invDirectional);
+        // Main scene simulations.
+        this._mainScene.add(this.simulation3D);
 
         //
         // [Html Mixer Context]
@@ -805,16 +794,14 @@ export default class GameView extends Vue implements IGameView {
             this._renderer.vr.enabled = true;
 
             // VR controls
-            this._vrControls = new VRControlsModule(
-                this.mainCameraRig.mainCamera
-            );
+            this._vrControls = new VRControlsModule(this.mainCameraRig);
             this._vrControls.standing = true;
 
             // Create VR Effect rendering in stereoscopic mode
             this._vrEffect = new VREffectModule(this._renderer);
             this._renderer.setPixelRatio(window.devicePixelRatio);
 
-            return new Promise(resolve => {
+            return new Promise((resolve, reject) => {
                 resolve(null);
             });
         };
@@ -876,19 +863,19 @@ export default class GameView extends Vue implements IGameView {
             this.xrCapable = true;
             this.xrDisplay = matchingDisplay;
             this.addSidebarItem('enable_xr', 'Enable AR', () => {
-                this._toggleXR();
+                this.toggleXR();
             });
             console.log('[GameView] WebXR Supported!');
         }
     }
 
-    private async _toggleXR() {
+    async toggleXR() {
         console.log('toggle XR');
         if (this.xrDisplay) {
             if (this.xrSession) {
                 this.removeSidebarItem('disable_xr');
                 this.addSidebarItem('enable_xr', 'Enable AR', () => {
-                    this._toggleXR();
+                    this.toggleXR();
                 });
 
                 await this.xrSession.end();
@@ -897,7 +884,7 @@ export default class GameView extends Vue implements IGameView {
             } else {
                 this.removeSidebarItem('enable_xr');
                 this.addSidebarItem('disable_xr', 'Disable AR', () => {
-                    this._toggleXR();
+                    this.toggleXR();
                 });
 
                 document.documentElement.classList.add('ar-app');
@@ -908,13 +895,13 @@ export default class GameView extends Vue implements IGameView {
                 this.xrSession.far = 1000;
 
                 this.xrSession.addEventListener('focus', (ev: any) =>
-                    this._handleXRSessionFocus()
+                    this._handleXRSessionFocus(ev)
                 );
                 this.xrSession.addEventListener('blur', (ev: any) =>
-                    this._handleXRSessionBlur()
+                    this._handleXRSessionBlur(ev)
                 );
                 this.xrSession.addEventListener('end', (ev: any) =>
-                    this._handleXRSessionEnded()
+                    this._handleXRSessionEnded(ev)
                 );
 
                 this._startXR();
@@ -928,6 +915,7 @@ export default class GameView extends Vue implements IGameView {
 
     private _startXR() {
         const win = <any>window;
+        const navigator = win.navigator;
         if (this.xrSession === null) {
             throw new Error('Can not start presenting without a xrSession');
         }
@@ -940,24 +928,24 @@ export default class GameView extends Vue implements IGameView {
 
         // Handle layer focus events
         this.xrSession.baseLayer.addEventListener('focus', (ev: any) => {
-            this._handleXRLayerFocus();
+            this._handleXRLayerFocus(ev);
         });
         this.xrSession.baseLayer.addEventListener('blur', (ev: any) => {
-            this._handleXRLayerBlur();
+            this._handleXRLayerBlur(ev);
         });
 
         // this.xrSession.requestFrame(this._boundHandleFrame)
     }
 
-    private _handleXRSessionFocus() {}
+    private _handleXRSessionFocus(event: any) {}
 
-    private _handleXRSessionBlur() {}
+    private _handleXRSessionBlur(event: any) {}
 
-    private _handleXRSessionEnded() {}
+    private _handleXRSessionEnded(event: any) {}
 
-    private _handleXRLayerFocus() {}
+    private _handleXRLayerFocus(event: any) {}
 
-    private _handleXRLayerBlur() {}
+    private _handleXRLayerBlur(event: any) {}
 
     private _isRealAR(xrDisplay: any): boolean {
         // The worst hack of all time.
@@ -1006,7 +994,7 @@ export default class GameView extends Vue implements IGameView {
         this.mainCameraRig.mainCamera.updateMatrixWorld(false);
     }
 
-    private _handleErrorVR() {
+    private _handleErrorVR(error: any) {
         // console.error('error vr');
         // console.error(error);
     }
@@ -1016,7 +1004,7 @@ export default class GameView extends Vue implements IGameView {
         const height =
             window.innerHeight - this._container.getBoundingClientRect().top;
 
-        this.mainViewport.setSize(width, height);
+        this._mainViewport.setSize(width, height);
 
         // Resize html view and the webgl renderer.
         this._renderer.setPixelRatio(window.devicePixelRatio || 1);
@@ -1029,15 +1017,9 @@ export default class GameView extends Vue implements IGameView {
             this._htmlMixerContext.rendererCss.setSize(width, height);
         }
 
-        const invHeightScale = height < 850 ? 0.25 : 0.2;
-        this.inventoryViewport.setScale(null, invHeightScale);
-
         // Resize cameras.
         if (this.mainCameraRig) {
             resizeCameraRig(this.mainCameraRig);
-        }
-        if (this.inventoryCameraRig) {
-            resizeCameraRig(this.inventoryCameraRig);
         }
 
         // Resize VR effect.

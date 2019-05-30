@@ -15,7 +15,7 @@ import {
 import { merge } from '@casual-simulation/aux-common/utils';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
 import { BaseBuilderFileDragOperation } from './BaseBuilderFileDragOperation';
-import GameView from '../../GameView/GameView';
+import BuilderGameView from '../../BuilderGameView/BuilderGameView';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 
