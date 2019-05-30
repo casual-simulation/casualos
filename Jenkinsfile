@@ -11,6 +11,7 @@ pipeline {
         RPI_HOST = credentials('jenkins-rpi-host')
         RPI_USER = credentials('jenkins-rpi-user')
         RPI_SSH_KEY_FILE = credentials('jenkins-rpi-ssh-key-file')
+        DOCKER_ARM32_TAG = "casualsimulation/aux/arm32"
     }
 
     tools {
@@ -132,11 +133,9 @@ def BuildDockerArm32(remote) {
     echo "Building..."
     npm run tar
     """
-    
-    def tag = "casualsimulation/aux/arm32"
 
     sshPut remote: remote, from: './temp/output.tar.gz', into: '/home/pi'
-    sshCommand remote: remote, command: "cd /home/pi; mkdir output; tar xzf ./output.tar.gz -C output; docker build -t ${tag}:${gitTag} -t ${tag}:latest -f Dockerfile.arm32 output"
+    sshCommand remote: remote, command: "cd /home/pi; mkdir output; tar xzf ./output.tar.gz -C output; docker build -t ${DOCKER_ARM32_TAG}:${gitTag} -t ${DOCKER_ARM32_TAG}:latest -f Dockerfile.arm32 output"
     
 }
 
@@ -162,12 +161,12 @@ def PublishDocker() {
     set -e
     . ~/.bashrc
     
-    docker push casualsimulation/aux:$gitTag
+    docker push casualsimulation/aux:${gitTag}
     """
 }
 
 def PublishDockerArm32(remote) {
-    sshCommand remote: remote, command: "docker push ${tag}:${gitTag}"
+    sshCommand remote: remote, command: "docker push ${DOCKER_ARM32_TAG}:${gitTag}"
 }
 
 
