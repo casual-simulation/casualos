@@ -110,7 +110,7 @@ def BuildDocker() {
     
     echo "Building..."
 
-    docker build -t casualsimulation/aux:${gitTag} -t casualsimulation/aux:latest .
+    /usr/local/bin/docker build -t casualsimulation/aux:${gitTag} -t casualsimulation/aux:latest .
     """
 }
 
@@ -157,7 +157,7 @@ def PublishDocker() {
     set -e
     . ~/.bashrc
     
-    docker push casualsimulation/aux:${gitTag}
+    /usr/local/bin/docker push casualsimulation/aux:${gitTag}
     """
 }
 
