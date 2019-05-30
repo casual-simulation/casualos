@@ -20,6 +20,7 @@
     -   Added `player.isBuilder()` function for AUX Script.
         -   Determines if the current player is able to load AUX Builder without being denied. For all intents and purposes, this means that their name is in the `aux.builders` list or that there is no `aux.builders` list in the globals file.
     -   Added autofill feature to the add tag input box for improved tag adding.
+    -   Center camera button is only shown when at a specified distance from the world center.
 
 ## V0.8.1
 
