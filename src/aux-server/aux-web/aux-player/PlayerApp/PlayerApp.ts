@@ -541,14 +541,14 @@ export default class PlayerApp extends Vue {
         tag: string,
         options: Partial<ShowInputOptions>
     ) {
-        if (typeof options.label !== 'undefined') {
-            this.inputDialogLabel = options.label;
+        if (typeof options.title !== 'undefined') {
+            this.inputDialogLabel = options.title;
         } else {
             this.inputDialogLabel = tag;
         }
 
-        if (typeof options.labelColor !== 'undefined') {
-            this.inputDialogLabelColor = options.labelColor;
+        if (typeof options.foregroundColor !== 'undefined') {
+            this.inputDialogLabelColor = options.foregroundColor;
         } else {
             this.inputDialogLabelColor = '#000';
         }
