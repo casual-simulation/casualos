@@ -612,9 +612,9 @@ export interface ShowInputForTagEvent extends LocalEvent {
  */
 export interface ShowInputOptions {
     /**
-     * The label that should be used for the input.
+     * The title that should be used for the input.
      */
-    label: string;
+    title: string;
 
     /**
      * The placeholder for the value.
@@ -627,9 +627,9 @@ export interface ShowInputOptions {
     backgroundColor: string;
 
     /**
-     * The label color to use.
+     * The foreground color to use.
      */
-    labelColor: string;
+    foregroundColor: string;
 }
 
 /**

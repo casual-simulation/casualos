@@ -3018,7 +3018,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'player.showInputForTag("test", "abc", { backgroundColor: "red", labelColor: "green" })',
+                                'player.showInputForTag("test", "abc", { backgroundColor: "red", foregroundColor: "green" })',
                         },
                     },
                 };
@@ -3033,7 +3033,7 @@ describe('FilesChannel', () => {
                 expect(result.events).toEqual([
                     showInputForTag('test', 'abc', {
                         backgroundColor: 'red',
-                        labelColor: 'green',
+                        foregroundColor: 'green',
                     }),
                 ]);
             });
