@@ -18,6 +18,8 @@ import {
     showQRCode as calcShowQRCode,
     goToContext as calcGoToContext,
     importAUX as calcImportAUX,
+    showInputForTag as calcShowInputForTag,
+    ShowInputOptions,
 } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
 import { every, find, sortBy } from 'lodash';
@@ -526,6 +528,15 @@ function goToContext(context: string) {
     actions.push(calcGoToContext(context));
 }
 
+function showInputForTag(
+    file: FileProxy | string,
+    tag: string,
+    options?: Partial<ShowInputOptions>
+) {
+    const id = typeof file === 'string' ? file : file.id;
+    actions.push(calcShowInputForTag(id, tag, options));
+}
+
 /**
  * Determines whether the current player is allowed to load AUX Builder.
  */
@@ -1009,6 +1020,7 @@ export const player = {
     isConnected,
     currentContext,
     isBuilder,
+    showInputForTag,
 };
 
 /**

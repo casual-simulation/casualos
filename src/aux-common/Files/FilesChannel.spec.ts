@@ -18,6 +18,7 @@ import {
     goToContext,
     calculateFormulaEvents,
     importAUX,
+    showInputForTag,
 } from './FilesChannel';
 import { File } from './File';
 import uuid from 'uuid/v4';
@@ -2963,6 +2964,76 @@ describe('FilesChannel', () => {
                         tags: {
                             isBuilder: true,
                         },
+                    }),
+                ]);
+            });
+        });
+
+        describe('player.showInputForTag()', () => {
+            it('should emit a ShowInputForTagEvent', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'player.showInputForTag(this, "abc")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    showInputForTag('thisFile', 'abc'),
+                ]);
+            });
+
+            it('should support passing a file ID', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'player.showInputForTag("test", "abc")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([showInputForTag('test', 'abc')]);
+            });
+
+            it('should support extra options', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()':
+                                'player.showInputForTag("test", "abc", { backgroundColor: "red", labelColor: "green" })',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    showInputForTag('test', 'abc', {
+                        backgroundColor: 'red',
+                        labelColor: 'green',
                     }),
                 ]);
             });

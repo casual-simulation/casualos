@@ -190,6 +190,36 @@
             v-bind:md-confirm-text="alertDialogOptions.confirmText"
         />
 
+        <md-dialog
+            :md-active.sync="showInputDialog"
+            @md-closed="closeInputDialog()"
+            :style="{
+                'background-color': inputDialogBackgroundColor,
+                color: inputDialogLabelColor,
+            }"
+        >
+            <md-dialog-title>{{ inputDialogLabel }}</md-dialog-title>
+            <md-dialog-content>
+                <md-field>
+                    <label :style="{ color: inputDialogLabelColor }">{{
+                        inputDialogPlaceholder
+                    }}</label>
+                    <md-input
+                        v-model="inputDialogInputValue"
+                        @keyup.enter="saveInputDialog()"
+                        style="-webkit-text-fill-color: inherit;"
+                        :style="{ color: inputDialogLabelColor }"
+                    ></md-input>
+                </md-field>
+            </md-dialog-content>
+            <md-dialog-actions>
+                <md-button @click="closeInputDialog()" :style="{ color: inputDialogLabelColor }"
+                    >Cancel</md-button
+                >
+                <md-button @click="saveInputDialog()" class="md-primary">Save</md-button>
+            </md-dialog-actions>
+        </md-dialog>
+
         <md-snackbar md-position="center" :md-duration="6000" :md-active.sync="snackbar.visible">
             <span>{{ snackbar.message }}</span>
             <md-button
