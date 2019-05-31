@@ -49,8 +49,6 @@ import {
     parseSimulationId,
     getFileVersion,
     isFileInContext,
-    getFileWhitelist,
-    getFileBlacklist,
     getFileUsernameList,
     isInUsernameList,
     whitelistAllowsAccess,
@@ -1780,13 +1778,15 @@ describe('FileCalculations', () => {
     describe('getDiffUpdate()', () => {
         it('should return null if the file is not a diff', () => {
             const file1 = createFile();
-            const update1 = getDiffUpdate(file1);
+            const calc1 = createCalculationContext([file1]);
+            const update1 = getDiffUpdate(calc1, file1);
 
             // not a diff because it doesn't have any tags
             const file2 = createFile(undefined, {
                 tags: { 'aux._diff': true },
             });
-            const update2 = getDiffUpdate(file2);
+            const calc2 = createCalculationContext([file2]);
+            const update2 = getDiffUpdate(calc2, file2);
 
             expect(update1).toBe(null);
             expect(update2).toBe(null);
@@ -1813,7 +1813,8 @@ describe('FileCalculations', () => {
             file1.tags['null'] = null;
             file1.tags['other'] = 'heheh';
 
-            const update = getDiffUpdate(file1);
+            const calc = createCalculationContext([file1]);
+            const update = getDiffUpdate(calc, file1);
 
             expect(update).toEqual({
                 tags: {
@@ -1821,6 +1822,39 @@ describe('FileCalculations', () => {
                     name: 'test',
                     zero: 0,
                     false: false,
+                },
+            });
+        });
+
+        it('should use the list of tags from aux.movable.diffTags before falling back to aux._diffTags', () => {
+            let file1 = createFile();
+            file1.tags['aux._diff'] = true;
+            file1.tags['aux.movable.diffTags'] = '[abc]';
+            file1.tags['aux._diffTags'] = [
+                'aux.label',
+                'name',
+                'zero',
+                'false',
+                'gone',
+                'empty',
+                'null',
+            ];
+
+            file1.tags.name = 'test';
+            file1.tags['aux.label'] = 'label';
+            file1.tags['zero'] = 0;
+            file1.tags['false'] = false;
+            file1.tags['empty'] = '';
+            file1.tags['null'] = null;
+            file1.tags['other'] = 'heheh';
+            file1.tags['abc'] = 'def';
+
+            const calc = createCalculationContext([file1]);
+            const update = getDiffUpdate(calc, file1);
+
+            expect(update).toEqual({
+                tags: {
+                    abc: 'def',
                 },
             });
         });
@@ -2446,6 +2480,7 @@ describe('FileCalculations', () => {
             ['clone', 'clone'],
             ['pickup', 'pickup'],
             ['drag', 'drag'],
+            ['diff', 'diff'],
             ['none', false],
         ];
 

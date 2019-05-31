@@ -15,7 +15,7 @@ import {
     getSelectionMode,
     isFile,
 } from '@casual-simulation/aux-common';
-import GameView from '../GameView/GameView';
+import BuilderGameView from '../BuilderGameView/BuilderGameView';
 import { appManager } from '../../shared/AppManager';
 import FileTable from '../FileTable/FileTable';
 import ColorPicker from '../ColorPicker/ColorPicker';
@@ -28,14 +28,14 @@ import { EventBus } from '../../shared/EventBus';
 
 @Component({
     components: {
-        'game-view': GameView,
+        'game-view': BuilderGameView,
         'file-table': FileTable,
         'color-picker': ColorPicker,
         'tag-editor': TagEditor,
         'file-table-toggle': FileTableToggle,
     },
 })
-export default class Home extends Vue {
+export default class BuilderHome extends Vue {
     @Provide() home = this;
 
     debug: boolean = false;
@@ -197,6 +197,6 @@ export default class Home extends Vue {
 
     private _setStatus(status: string) {
         this.status = status;
-        console.log('[Home] Status:', status);
+        console.log('[BuilderHome] Status:', status);
     }
 }

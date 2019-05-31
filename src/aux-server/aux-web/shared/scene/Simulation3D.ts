@@ -1,13 +1,21 @@
-import { Object3D, PerspectiveCamera, OrthographicCamera, Plane } from 'three';
+import {
+    Object3D,
+    PerspectiveCamera,
+    OrthographicCamera,
+    Plane,
+    Texture,
+    Color,
+} from 'three';
 import { ContextGroup3D } from './ContextGroup3D';
 import { Simulation } from '../Simulation';
 import {
     AuxObject,
     AuxFile,
     FileCalculationContext,
+    hasValue,
 } from '@casual-simulation/aux-common';
 import { SubscriptionLike } from 'rxjs';
-import { IGameView } from '../IGameView';
+import { IGameView } from '../vue-components/IGameView';
 import { concatMap, tap, flatMap as rxFlatMap } from 'rxjs/operators';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { flatMap } from 'lodash';
@@ -40,11 +48,20 @@ export abstract class Simulation3D extends Object3D
      */
     simulation: Simulation;
 
+    private _sceneBackground: Color | Texture = null;
+
     /**
      * Gets the game view that is for this simulation.
      */
     get gameView() {
         return this._gameView;
+    }
+
+    /**
+     * Gets the background color for the simulation.
+     */
+    get backgroundColor(): Color | Texture {
+        return this._sceneBackground;
     }
 
     /**
@@ -100,6 +117,20 @@ export abstract class Simulation3D extends Object3D
                                 e.zoomValue
                             );
                         }
+                    })
+                )
+                .subscribe()
+        );
+        this._subs.push(
+            this.simulation.watcher
+                .fileChanged(this.simulation.helper.globalsFile)
+                .pipe(
+                    tap(file => {
+                        // Scene background color.
+                        let sceneBackgroundColor = file.tags['aux.scene.color'];
+                        this._sceneBackground = hasValue(sceneBackgroundColor)
+                            ? new Color(sceneBackgroundColor)
+                            : null;
                     })
                 )
                 .subscribe()

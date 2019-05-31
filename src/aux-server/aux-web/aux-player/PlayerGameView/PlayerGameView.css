@@ -34,6 +34,7 @@ html.ar-app .webxr-sessions canvas {
     bottom: 8px;
     user-select: none;
     pointer-events: auto;
+    z-index: 0;
 }
 
 .toolbar.right > * {

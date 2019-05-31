@@ -18,6 +18,7 @@ import {
     goToContext,
     calculateFormulaEvents,
     importAUX,
+    showInputForTag,
 } from './FilesChannel';
 import { File } from './File';
 import uuid from 'uuid/v4';
@@ -2849,6 +2850,190 @@ describe('FilesChannel', () => {
                         tags: {
                             context: undefined,
                         },
+                    }),
+                ]);
+            });
+        });
+
+        describe('player.isBuilder()', () => {
+            it('should return true when the player is apart of the global file builder list', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'this.isBuilder = player.isBuilder()',
+                        },
+                    },
+                    globals: {
+                        id: 'globals',
+                        tags: {
+                            'aux.builders': 'bob',
+                        },
+                    },
+                    userFile: {
+                        id: 'userFile',
+                        tags: {
+                            'aux._user': 'bob',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            isBuilder: true,
+                        },
+                    }),
+                ]);
+            });
+
+            it('should return false when the player is not apart of the global file builder list', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'this.isBuilder = player.isBuilder()',
+                        },
+                    },
+                    globals: {
+                        id: 'globals',
+                        tags: {
+                            'aux.builders': 'otherUser',
+                        },
+                    },
+                    userFile: {
+                        id: 'userFile',
+                        tags: {
+                            'aux._user': 'bob',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            isBuilder: false,
+                        },
+                    }),
+                ]);
+            });
+
+            it('should return true when there are no builders', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'this.isBuilder = player.isBuilder()',
+                        },
+                    },
+                    globals: {
+                        id: 'globals',
+                        tags: {},
+                    },
+                    userFile: {
+                        id: 'userFile',
+                        tags: {
+                            'aux._user': 'bob',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            isBuilder: true,
+                        },
+                    }),
+                ]);
+            });
+        });
+
+        describe('player.showInputForTag()', () => {
+            it('should emit a ShowInputForTagEvent', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'player.showInputForTag(this, "abc")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    showInputForTag('thisFile', 'abc'),
+                ]);
+            });
+
+            it('should support passing a file ID', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'player.showInputForTag("test", "abc")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([showInputForTag('test', 'abc')]);
+            });
+
+            it('should support extra options', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()':
+                                'player.showInputForTag("test", "abc", { backgroundColor: "red", foregroundColor: "green" })',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    showInputForTag('test', 'abc', {
+                        backgroundColor: 'red',
+                        foregroundColor: 'green',
                     }),
                 ]);
             });

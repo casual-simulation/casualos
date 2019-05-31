@@ -15,12 +15,11 @@ import {
     FileDragMode,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
-import GameView from '../../GameView/GameView';
+import PlayerGameView from '../../PlayerGameView/PlayerGameView';
 import { Intersection, Vector2, Ray } from 'three';
 import { Physics } from '../../../shared/scene/Physics';
 import { Input } from '../../../shared/scene/Input';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
-import next from 'vhost';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 
 export class PlayerFileDragOperation extends BaseFileDragOperation {
@@ -39,8 +38,8 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
 
     protected _originalContext: string;
 
-    protected get gameView(): GameView {
-        return <GameView>this._simulation3D.gameView;
+    protected get gameView(): PlayerGameView {
+        return <PlayerGameView>this._simulation3D.gameView;
     }
 
     /**
@@ -122,6 +121,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
 
             this._combine = result.combine;
             this._other = result.other;
+            this._merge = result.merge;
 
             if (result.stackable || result.index === 0) {
                 this._updateFilesPositions(

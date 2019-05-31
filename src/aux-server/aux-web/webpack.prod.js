@@ -44,7 +44,6 @@ module.exports = merge.smart(common, {
     plugins: [
         new webpack.DefinePlugin({
             PRODUCTION: JSON.stringify(true),
-            ENABLE_SENTRY: JSON.stringify(true),
         }),
         new MiniCssExtractPlugin({
             filename: '[name].[contenthash].css',

@@ -42,9 +42,9 @@ import { Input, InputType } from '../../shared/scene/Input';
 import { InputVR } from '../../shared/scene/InputVR';
 import { appManager } from '../../shared/AppManager';
 import { find, flatMap, uniqBy } from 'lodash';
-import App from '../App/App';
+import PlayerApp from '../PlayerApp/PlayerApp';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
-import { IGameView } from '../../shared/IGameView';
+import { IGameView } from '../../shared/vue-components/IGameView';
 import { LayersHelper } from '../../shared/scene/LayersHelper';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { AuxFile3D } from '../../shared/scene/AuxFile3D';
@@ -86,7 +86,7 @@ import { EventBus } from '../../shared/EventBus';
         'camera-type': CameraTypeVue,
     },
 })
-export default class GameView extends Vue implements IGameView {
+export default class PlayerGameView extends Vue implements IGameView {
     private _mainScene: Scene;
     private _inventoryScene: Scene;
     private _renderer: WebGLRenderer;
@@ -128,9 +128,9 @@ export default class GameView extends Vue implements IGameView {
 
     menuExpanded: boolean = true;
 
-    @Inject() addSidebarItem: App['addSidebarItem'];
-    @Inject() removeSidebarItem: App['removeSidebarItem'];
-    @Inject() removeSidebarGroup: App['removeSidebarGroup'];
+    @Inject() addSidebarItem: PlayerApp['addSidebarItem'];
+    @Inject() removeSidebarItem: PlayerApp['removeSidebarItem'];
+    @Inject() removeSidebarGroup: PlayerApp['removeSidebarGroup'];
     @Prop() context: string;
 
     @Provide() fileRenderer: FileRenderer = new FileRenderer();
@@ -158,17 +158,6 @@ export default class GameView extends Vue implements IGameView {
             }
         });
         return items;
-    }
-
-    get background() {
-        for (let i = 0; i < this.playerSimulations.length; i++) {
-            const sim = this.playerSimulations[i];
-            if (sim.backgroundColor) {
-                return sim.backgroundColor;
-            }
-        }
-
-        return null;
     }
 
     // get fileManager() {
@@ -211,6 +200,9 @@ export default class GameView extends Vue implements IGameView {
     public getInputVR() {
         return this._inputVR;
     }
+    public getInteraction() {
+        return this._interaction;
+    }
     public getScene() {
         return this._mainScene;
     }
@@ -252,6 +244,16 @@ export default class GameView extends Vue implements IGameView {
         // return [...this.playerSimulations];
         // return [...this.inventorySimulations];
     }
+    public getBackground(): Color | Texture {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+            if (sim.backgroundColor) {
+                return sim.backgroundColor;
+            }
+        }
+
+        return null;
+    }
 
     public setGridsVisible(visible: boolean) {
         // This currently does nothing for AUX Player, we dont really show any grids right now.
@@ -276,6 +278,28 @@ export default class GameView extends Vue implements IGameView {
             this._mainScene,
             this.mainViewport
         );
+
+        // Update side bar item.
+        this.removeSidebarItem('toggle_camera_type');
+        if (this._cameraType === 'orthographic') {
+            this.addSidebarItem(
+                'toggle_camera_type',
+                'Enable Perspective Camera',
+                () => {
+                    this.setCameraType('perspective');
+                },
+                'videocam'
+            );
+        } else {
+            this.addSidebarItem(
+                'toggle_camera_type',
+                'Disable Perspective Camera',
+                () => {
+                    this.setCameraType('orthographic');
+                },
+                'videocam_off'
+            );
+        }
 
         if (this._htmlMixerContext) {
             this._htmlMixerContext.setupCssCamera(
@@ -477,7 +501,7 @@ export default class GameView extends Vue implements IGameView {
         fileId: string,
         zoomValue?: number
     ) {
-        console.log('[GameView] Tween to file: ', fileId);
+        console.log('[PlayerGameView] Tween to file: ', fileId);
 
         // find the file with the given ID
         const files = this.findFilesById(fileId);
@@ -690,8 +714,9 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _mainSceneBackgroundUpdate() {
-        if (this.background) {
-            this._mainScene.background = this.background;
+        const background = this.getBackground();
+        if (background) {
+            this._mainScene.background = background;
         } else {
             this._mainScene.background = new Color(
                 DEFAULT_SCENE_BACKGROUND_COLOR
@@ -775,7 +800,7 @@ export default class GameView extends Vue implements IGameView {
 
     private _setupWebVR() {
         let onBeforeEnter = () => {
-            console.log('[GameView] vr on before enter');
+            console.log('[PlayerGameView] vr on before enter');
 
             this._renderer.vr.enabled = true;
 
@@ -832,7 +857,7 @@ export default class GameView extends Vue implements IGameView {
         const xr = navigator.XR;
 
         if (typeof xr === 'undefined') {
-            console.log('[GameView] WebXR Not Supported.');
+            console.log('[PlayerGameView] WebXR Not Supported.');
             return;
         }
 
@@ -853,7 +878,7 @@ export default class GameView extends Vue implements IGameView {
             this.addSidebarItem('enable_xr', 'Enable AR', () => {
                 this._toggleXR();
             });
-            console.log('[GameView] WebXR Supported!');
+            console.log('[PlayerGameView] WebXR Supported!');
         }
     }
 
@@ -945,7 +970,7 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _handleReadyVR(display: VRDisplay) {
-        console.log('[GameView] vr display is ready.');
+        console.log('[PlayerGameView] vr display is ready.');
         console.log(display);
         this.vrDisplay = display;
 
@@ -955,13 +980,13 @@ export default class GameView extends Vue implements IGameView {
     }
 
     private _handleEnterVR(display: any) {
-        console.log('[GameView] enter vr.');
+        console.log('[PlayerGameView] enter vr.');
         console.log(display);
         this.vrDisplay = display;
     }
 
     private _handleExitVR(display: any) {
-        console.log('[GameView] exit vr.');
+        console.log('[PlayerGameView] exit vr.');
         console.log(display);
 
         this._renderer.vr.enabled = false;

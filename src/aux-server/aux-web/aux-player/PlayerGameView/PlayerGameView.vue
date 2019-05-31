@@ -1,4 +1,3 @@
-<!-- App.vue -->
 <template>
     <div ref="container" class="game-container">
         <div class="game-canvas" ref="gameView"></div>
@@ -46,8 +45,7 @@
                 }"
             >
                 <div class="toolbar right">
-                    <camera-home :cameraRig="inventoryCameraRig"></camera-home>
-                    <!-- <camera-type :cameraRig="inventoryCameraRig"></camera-type> -->
+                    <camera-home :showDistance="5" :cameraRig="inventoryCameraRig"></camera-home>
                 </div>
             </div>
 
@@ -61,14 +59,9 @@
                     width: mainViewport.width + 'px',
                     height: mainViewport.height - inventoryViewport.height + 'px',
                 }"
-            >
-                <div class="toolbar right">
-                    <camera-home :cameraRig="mainCameraRig"></camera-home>
-                    <camera-type :cameraRig="mainCameraRig"></camera-type>
-                </div>
-            </div>
+            ></div>
         </div>
     </div>
 </template>
-<script src="./GameView.ts"></script>
-<style src="./GameView.css"></style>
+<script src="./PlayerGameView.ts"></script>
+<style src="./PlayerGameView.css"></style>

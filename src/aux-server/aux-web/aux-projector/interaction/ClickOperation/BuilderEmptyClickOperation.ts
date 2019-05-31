@@ -6,7 +6,7 @@ import { appManager } from '../../../shared/AppManager';
 import { ColorPickerEvent } from '../ColorPickerEvent';
 import { EventBus } from '../../../shared/EventBus';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
-import GameView from '../../GameView/GameView';
+import BuilderGameView from '../../BuilderGameView/BuilderGameView';
 
 /**
  * Empty Click Operation handles clicking of empty space for mouse and touch input with the primary (left/first finger) interaction button.
@@ -17,7 +17,7 @@ export class BuilderEmptyClickOperation implements IOperation {
 
     protected _interaction: BuilderInteractionManager;
 
-    private _gameView: GameView;
+    private _gameView: BuilderGameView;
     private _finished: boolean;
     private _startScreenPos: Vector2;
 
@@ -25,7 +25,10 @@ export class BuilderEmptyClickOperation implements IOperation {
         return appManager.simulationManager.primary;
     }
 
-    constructor(gameView: GameView, interaction: BuilderInteractionManager) {
+    constructor(
+        gameView: BuilderGameView,
+        interaction: BuilderInteractionManager
+    ) {
         this._gameView = gameView;
         this._interaction = interaction;
 

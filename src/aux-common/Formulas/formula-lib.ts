@@ -18,6 +18,8 @@ import {
     showQRCode as calcShowQRCode,
     goToContext as calcGoToContext,
     importAUX as calcImportAUX,
+    showInputForTag as calcShowInputForTag,
+    ShowInputOptions,
 } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
 import { every, find, sortBy } from 'lodash';
@@ -43,6 +45,8 @@ import {
     isFileInContext,
     tagsOnFile,
     isDestroyable,
+    isInUsernameList,
+    getFileUsernameList,
 } from '../Files/FileCalculations';
 
 import '../polyfill/Array.first.polyfill';
@@ -275,7 +279,10 @@ export function destroy(file: FileProxy | string | FileProxy[]) {
  * @param file The file, file ID, or list of files to destroy the tag sections of.
  * @param tagSection The tag section to remove on the file.
  */
-export function removeTags(file: FileProxy | FileProxy[], tagSection: string) {
+export function removeTags(
+    file: FileProxy | FileProxy[],
+    tagSection: string | RegExp
+) {
     if (typeof file === 'object' && Array.isArray(file)) {
         let fileList: any[] = file;
 
@@ -283,7 +290,11 @@ export function removeTags(file: FileProxy | FileProxy[], tagSection: string) {
             let tags = tagsOnFile(fileList[h]);
 
             for (let i = tags.length - 1; i >= 0; i--) {
-                if (tags[i].includes(tagSection)) {
+                if (tagSection instanceof RegExp) {
+                    if (tagSection.test(tags[i])) {
+                        fileList[h][tags[i]] = null;
+                    }
+                } else if (tags[i].includes(tagSection)) {
                     let doRemoveTag = false;
 
                     if (tags[i].includes('.')) {
@@ -307,7 +318,11 @@ export function removeTags(file: FileProxy | FileProxy[], tagSection: string) {
 
         for (let i = tags.length - 1; i >= 0; i--) {
             // if the tag section is relevant to the curretn tag at all
-            if (tags[i].includes(tagSection)) {
+            if (tagSection instanceof RegExp) {
+                if (tagSection.test(tags[i])) {
+                    file[tags[i]] = null;
+                }
+            } else if (tags[i].includes(tagSection)) {
                 let doRemoveTag = false;
                 // if this tag has a period in it, check for first word to match
                 if (tags[i].includes('.')) {
@@ -515,6 +530,36 @@ function goToContext(context: string) {
     actions.push(calcGoToContext(context));
 }
 
+function showInputForTag(
+    file: FileProxy | string,
+    tag: string,
+    options?: Partial<ShowInputOptions>
+) {
+    const id = typeof file === 'string' ? file : file.id;
+    actions.push(calcShowInputForTag(id, tag, options));
+}
+
+/**
+ * Determines whether the current player is allowed to load AUX Builder.
+ */
+function isBuilder(): boolean {
+    const globals = getGlobals();
+    const user = getUser();
+    if (globals && user) {
+        const globalsFile = globals[proxyObject];
+        const list = getFileUsernameList(calc, globalsFile, 'aux.builders');
+        if (list) {
+            return isInUsernameList(
+                calc,
+                globalsFile,
+                'aux.builders',
+                user[proxyObject].tags['aux._user']
+            );
+        }
+    }
+    return true;
+}
+
 /**
  * Derermines whether the player is in the given context.
  * @param context The context.
@@ -569,6 +614,21 @@ function getUser() {
         }
     }
     return user || null;
+}
+
+/**
+ * Gets the current globals file.
+ */
+function getGlobals() {
+    const globals = calc.sandbox.interface.listObjectsWithTag('id', 'globals');
+    if (Array.isArray(globals)) {
+        if (globals.length === 1) {
+            return globals[0];
+        } else {
+            return null;
+        }
+    }
+    return globals || null;
 }
 
 /**
@@ -961,6 +1021,8 @@ export const player = {
     hideQRCode,
     isConnected,
     currentContext,
+    isBuilder,
+    showInputForTag,
 };
 
 /**

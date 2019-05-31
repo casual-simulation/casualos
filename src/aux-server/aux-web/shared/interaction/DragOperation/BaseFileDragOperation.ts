@@ -25,7 +25,7 @@ import {
 } from '@casual-simulation/aux-common';
 
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
-import { IGameView } from '../../../shared/IGameView';
+import { IGameView } from '../../vue-components/IGameView';
 import { differenceBy, maxBy } from 'lodash';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 
@@ -113,7 +113,8 @@ export abstract class BaseFileDragOperation implements IOperation {
     protected _disposeCore() {
         // Combine files.
         if (this._merge && this._other) {
-            const update = getDiffUpdate(this._file);
+            const calc = this.simulation.helper.createContext();
+            const update = getDiffUpdate(calc, this._file);
             this.simulation.helper.transaction(
                 fileUpdated(this._other.id, update),
                 fileRemoved(this._file.id)

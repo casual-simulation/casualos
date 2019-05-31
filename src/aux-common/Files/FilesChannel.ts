@@ -463,7 +463,8 @@ export type LocalEvents =
     | UnloadSimulationEvent
     | SuperShoutEvent
     | GoToContextEvent
-    | ImportAUXEvent;
+    | ImportAUXEvent
+    | ShowInputForTagEvent;
 
 /**
  * An event that is used to show a toast message to the user.
@@ -583,6 +584,73 @@ export interface GoToContextEvent extends LocalEvent {
      */
     context: string;
 }
+
+/**
+ * Defines an event that is used to show an input box to edit a tag on a file.
+ */
+export interface ShowInputForTagEvent extends LocalEvent {
+    name: 'show_input_for_tag';
+
+    /**
+     * The ID of the file to edit.
+     */
+    fileId: string;
+
+    /**
+     * The tag that should be edited on the file.
+     */
+    tag: string;
+
+    /**
+     * The options for the input box.
+     */
+    options: Partial<ShowInputOptions>;
+}
+
+/**
+ * Defines an interface for options that a show input event can use.
+ */
+export interface ShowInputOptions {
+    /**
+     * The type of input box to show.
+     */
+    type: ShowInputType;
+
+    /**
+     * The subtype of input box to show.
+     */
+    subtype: ShowInputSubtype;
+
+    /**
+     * The title that should be used for the input.
+     */
+    title: string;
+
+    /**
+     * The placeholder for the value.
+     */
+    placeholder: string;
+
+    /**
+     * The background color to use.
+     */
+    backgroundColor: string;
+
+    /**
+     * The foreground color to use.
+     */
+    foregroundColor: string;
+}
+
+/**
+ * Defines the possible input types.
+ */
+export type ShowInputType = 'text' | 'color';
+
+/**
+ * Defines the possible input types.
+ */
+export type ShowInputSubtype = 'basic' | 'swatch' | 'advanced';
 
 /**
  * Defines an event for actions.
@@ -805,6 +873,25 @@ export function importAUX(url: string): ImportAUXEvent {
         type: 'local',
         name: 'import_aux',
         url: url,
+    };
+}
+
+/**
+ * Creates a new ShowInputForTagEvent.
+ * @param fileId The ID of the file to edit.
+ * @param tag The tag to edit.
+ */
+export function showInputForTag(
+    fileId: string,
+    tag: string,
+    options?: Partial<ShowInputOptions>
+): ShowInputForTagEvent {
+    return {
+        type: 'local',
+        name: 'show_input_for_tag',
+        fileId: fileId,
+        tag: tag,
+        options: options || {},
     };
 }
 

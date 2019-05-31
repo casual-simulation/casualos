@@ -2,7 +2,7 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { appManager } from '../../shared/AppManager';
 import { Prop, Watch } from 'vue-property-decorator';
-import App from '../App/App';
+import BuilderApp from '../BuilderApp/BuilderApp';
 import { SubscriptionLike } from 'rxjs';
 import { TreeView } from 'vue-json-tree-view';
 import {
@@ -30,7 +30,7 @@ export default class AuxDebug extends Vue {
     }
 
     get app() {
-        return <App>this.$parent.$parent;
+        return <BuilderApp>this.$parent.$parent;
     }
 
     constructor() {

@@ -1,4 +1,3 @@
-<!-- App.vue -->
 <template>
     <div
         ref="container"
@@ -35,23 +34,10 @@
                     id="vr-button-container"
                     class="vr-button-container"
                 ></span>
-
-                <div ref="fileQueue">
-                    <div v-if="!vrDisplay && filesMode && simulation3D" class="toolbar-layout">
-                        <mini-file
-                            v-for="(file, index) in simulation3D.recentFiles"
-                            :key="index"
-                            :file="file"
-                            :selected="simulation3D.selectedRecentFile === file"
-                            :large="index === 0"
-                        ></mini-file>
-                    </div>
-                </div>
             </div>
             <trash-can v-if="showTrashCan" ref="trashCan"></trash-can>
             <div class="toolbar right">
                 <camera-home :cameraRig="mainCameraRig"></camera-home>
-                <camera-type :cameraRig="mainCameraRig"></camera-type>
             </div>
             <div v-shortkey.once="['ctrl', 'c']" @shortkey="copySelectionNormal"></div>
 
@@ -65,5 +51,5 @@
         </div>
     </div>
 </template>
-<script src="./GameView.ts"></script>
-<style src="./GameView.css"></style>
+<script src="./BuilderGameView.ts"></script>
+<style src="./BuilderGameView.css"></style>

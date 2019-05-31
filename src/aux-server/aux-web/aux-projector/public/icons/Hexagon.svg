@@ -1,1 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M16.839 4l4.857 8.5-4.857 8.5h-9.678l-4.857-8.5 4.857-8.5h9.678zm1.161-2h-12l-6 10.5 6 10.5h12l6-10.5-6-10.5z"/></svg>
+<?xml version="1.0"?>
+<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+ <g class="layer">
+  <title>Layer 1</title>
+  <path d="m16.839,4l4.857,8.5l-4.857,8.5l-9.678,0l-4.857,-8.5l4.857,-8.5l9.678,0zm1.161,-2l-12,0l-6,10.5l6,10.5l12,0l6,-10.5l-6,-10.5z" id="svg_1"/>
+  <ellipse cx="5" cy="19.75" fill="#000000" id="svg_2" rx="3.71875" ry="3.71875" stroke="#ffffff"/>
+  <line fill="none" id="svg_6" stroke="#ffffff" stroke-dasharray="null" stroke-linecap="round" stroke-linejoin="null" x1="4.953125" x2="4.953125" y1="17.921875" y2="21.798891"/>
+  <line fill="none" id="svg_7" stroke="#ffffff" stroke-dasharray="null" stroke-linecap="round" stroke-linejoin="null" transform="rotate(90 4.96094 19.8594)" x1="4.960938" x2="4.960938" y1="17.920867" y2="21.797883"/>
+ </g></svg>

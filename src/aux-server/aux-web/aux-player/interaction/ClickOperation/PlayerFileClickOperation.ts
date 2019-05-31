@@ -1,5 +1,5 @@
 import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperation/BaseFileClickOperation';
-import GameView from '../../GameView/GameView';
+import PlayerGameView from '../../PlayerGameView/PlayerGameView';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
 import { Intersection } from 'three';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
@@ -11,6 +11,7 @@ import {
     duplicateFile,
     File,
     getFileDragMode,
+    tagsOnFile,
 } from '@casual-simulation/aux-common';
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
 import { PlayerFileDragOperation } from '../DragOperation/PlayerFileDragOperation';
@@ -50,6 +51,8 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
         const mode = getFileDragMode(calc, this._file);
         if (mode === 'clone') {
             return this._createCloneDragOperation();
+        } else if (mode === 'diff') {
+            return this._createDiffDragOperation();
         }
 
         const file3D: AuxFile3D = <AuxFile3D>this._file3D;
@@ -100,17 +103,38 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
         );
     }
 
+    protected _createDiffDragOperation(): BaseFileDragOperation {
+        const tags = tagsOnFile(this._file);
+        let duplicatedFile = duplicateFile(<File>this._file, {
+            tags: {
+                'aux._diff': true,
+                'aux._diffTags': tags,
+            },
+        });
+        const {
+            playerSimulation3D,
+            inventorySimulation3D,
+        } = this._getSimulationsForDragOp();
+        return new PlayerNewFileDragOperation(
+            playerSimulation3D,
+            inventorySimulation3D,
+            this._interaction,
+            duplicatedFile,
+            (<AuxFile3D>this._file3D).context
+        );
+    }
+
     private _getSimulationsForDragOp() {
         let playerSimulation3D: PlayerSimulation3D;
         let inventorySimulation3D: InventorySimulation3D;
 
         if (this._simulation3D instanceof PlayerSimulation3D) {
             playerSimulation3D = this._simulation3D;
-            inventorySimulation3D = (<GameView>(
+            inventorySimulation3D = (<PlayerGameView>(
                 this.gameView
             )).findInventorySimulation3D(this._simulation3D.simulation);
         } else if (this._simulation3D instanceof InventorySimulation3D) {
-            playerSimulation3D = (<GameView>(
+            playerSimulation3D = (<PlayerGameView>(
                 this.gameView
             )).findPlayerSimulation3D(this._simulation3D.simulation);
             inventorySimulation3D = this._simulation3D;

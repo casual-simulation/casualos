@@ -1,5 +1,5 @@
 import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
-import { IGameView } from '../../../shared/IGameView';
+import { IGameView } from '../../vue-components/IGameView';
 import { File, file, hasValue } from '@casual-simulation/aux-common';
 import { ScaleDecorator } from './ScaleDecorator';
 import { ContextPositionDecorator } from './ContextPositionDecorator';

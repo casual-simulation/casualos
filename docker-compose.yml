@@ -1,7 +1,7 @@
 version: '3.7'
 services:
     server:
-        image: 'casual-simulation/aux:latest'
+        image: 'casualsimulation/aux:latest'
         restart: always
         ports:
             - '80:3000'

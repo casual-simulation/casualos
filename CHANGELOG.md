@@ -1,5 +1,49 @@
 # AUX Changelog
 
+## V0.8.2
+
+### Date: 05/31/2019
+
+### Changes:
+
+-   Improvements
+    -   Added `onGridClick()`
+        -   Triggered when the user clicks on an empty grid space in AUX Player.
+        -   Runs on every simulaiton.
+        -   The `that` parameter is an object with the following properties:
+            -   `context`: The context that the click happened inside of. If the click occurred in the main viewport then this will equal `player.currentContext()`. If the click happened inside the inventory then it will equal `player.getInventoryContext()`.
+            -   `position`: The grid position that was clicked. Contains `x` and `y` properties.
+    -   Added the `aux.builders` tag which allows setting a whitelist for AUX Builder.
+        -   `aux.whitelist` and `aux.blacklist` still exist and can be used to whitelist/blacklist users across both AUX Builder and AUX Player.
+        -   If `aux.builders` is present then only users in the builder list can access AUX Builder.
+        -   If `aux.builders` is not present then AUX Builder falls back to checking the whitelist and blacklist.
+    -   Added support for `aux.movable=diff`.
+        -   This mode acts like `clone` but the cloned file is a diff.
+        -   You can control the tags that are applied from the diff by setting the `aux.movable.diffTags` tag.
+    -   Added `player.isBuilder()` function for AUX Script.
+        -   Determines if the current player is able to load AUX Builder without being denied. For all intents and purposes, this means that their name is in the `aux.builders` list or that there is no `aux.builders` list in the globals file.
+    -   Added `player.showInputForTag(file, tag, options)` function for AUX Script.
+        -   Shows an input dialog for the given file and tag using the given options.
+        -   Options are not required, but when specified the following values can be used:
+            -   `type`: The type of input dialog to show.
+                -   Supported options are `text` and `color`.
+                -   If not specified it will default to `text`.
+            -   `subtype`: The specific version of the input type to use.
+                -   Supported options are `basic`, `advanced`, and `swatch` for the `color` type.
+                -   If not specified it will default to `basic`.
+            -   `title`: The text that will be shown as the title of the input box.
+            -   `foregroundColor`: The color of the text in the input box.
+            -   `backgroundColor`: The color of the background of the input box.
+            -   `placeholder`: The placeholder text to use for the input box value.
+    -   Added autofill feature to the add tag input box for improved tag adding.
+    -   Center camera button is only shown when at a specified distance from the world center.
+    -   Placed camera type toggle back inside the menu for both AUX Builder and AUX Player.
+    -   Changed hexagon image to include a plus sign to make is match with other 'add item' buttons.
+    -   Added ability to remove files from a search, will convert any remaining files into a multiselected format.
+    -   Removed bottom left diff brush from builder. Diffs need to be dragged from their file ID in the sheets menu now.
+    -   Changed the default placholder in the search bar from `search`, `[empty]`, and `[diff-]` to just be `search / run`.
+    -   Edited the `RemoveTags()` function to allow it to use Regular Expressions to search for the tag sections to remove.
+
 ## V0.8.1
 
 ### Date: 05/29/2019

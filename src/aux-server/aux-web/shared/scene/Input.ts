@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import { Vector2, Vector3 } from 'three';
 import { find, some, sortBy } from 'lodash';
-import { IGameView } from '../IGameView';
+import { IGameView } from '../vue-components/IGameView';
 import { Viewport } from './Viewport';
 
 export class Input {

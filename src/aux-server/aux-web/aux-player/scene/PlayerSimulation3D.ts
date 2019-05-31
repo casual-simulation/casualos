@@ -7,7 +7,7 @@ import {
     isContextLocked,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
-import { IGameView } from '../../shared/IGameView';
+import { IGameView } from '../../shared/vue-components/IGameView';
 import { Simulation } from '../../shared/Simulation';
 import { tap } from 'rxjs/operators';
 import { MenuContext } from '../MenuContext';
@@ -15,7 +15,7 @@ import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { doesFileDefinePlayerContext } from '../PlayerUtils';
 import { SimulationContext } from '../SimulationContext';
 import { Color, Texture, OrthographicCamera, PerspectiveCamera } from 'three';
-import GameView from '../GameView/GameView';
+import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 
 export class PlayerSimulation3D extends Simulation3D {
@@ -31,9 +31,8 @@ export class PlayerSimulation3D extends Simulation3D {
     private _contextGroup: ContextGroup3D;
 
     private _contextBackground: Color | Texture = null;
-    private _sceneBackground: Color | Texture = null;
 
-    protected _gameView: GameView; // Override base class gameView so that its cast to the Aux Player GameView.
+    protected _gameView: PlayerGameView; // Override base class gameView so that its cast to the Aux Player GameView.
 
     context: string;
     menuContext: MenuContext = null;
@@ -43,7 +42,11 @@ export class PlayerSimulation3D extends Simulation3D {
      * Gets the background color that the simulation defines.
      */
     get backgroundColor() {
-        return this._contextBackground || this._sceneBackground;
+        if (this._contextBackground) {
+            return this._contextBackground;
+        } else {
+            return super.backgroundColor;
+        }
     }
 
     constructor(context: string, gameView: IGameView, simulation: Simulation) {
@@ -97,21 +100,6 @@ export class PlayerSimulation3D extends Simulation3D {
                                 userSimulationContextValue
                             );
                         }
-                    })
-                )
-                .subscribe()
-        );
-
-        this._subs.push(
-            this.simulation.watcher
-                .fileChanged(this.simulation.helper.globalsFile)
-                .pipe(
-                    tap(file => {
-                        // Scene background color.
-                        let sceneBackgroundColor = file.tags['aux.scene.color'];
-                        this._sceneBackground = hasValue(sceneBackgroundColor)
-                            ? new Color(sceneBackgroundColor)
-                            : null;
                     })
                 )
                 .subscribe()

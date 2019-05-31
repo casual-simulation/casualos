@@ -24,7 +24,7 @@ import { MouseButtonId, InputType, Input, TargetData } from '../scene/Input';
 import { appManager } from '../AppManager';
 import { IOperation } from './IOperation';
 import { AuxFile3D } from '../scene/AuxFile3D';
-import { IGameView } from '../IGameView';
+import { IGameView } from '../vue-components/IGameView';
 import { GameObject } from '../scene/GameObject';
 import {
     Orthographic_MinZoom,

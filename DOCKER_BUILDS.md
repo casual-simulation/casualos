@@ -28,13 +28,13 @@ Build the project on the dev/ci machine and build the image on the Raspberry PI
     1. Run a build and package it into a `.tar.gz` file.
         - `npm run build:tar`
     2. Rsync the tar file into the Raspberry PI
-        - `rsync --progress ./temp/output.tar.gz pi@{your_pi_ip_address}:/home/pi1`
+        - `rsync --progress ./temp/output.tar.gz pi@{your_pi_ip_address}:/home/pi`
 1. On the Raspberry PI
     1. Unpack the `.tar.gz`
         - `mkdir output`
         - `tar xzf ./output.tar.gz -C output`
     2. Build the docker image
-        - `docker build -t casual-simulation/aux/arm32 -f Dockerfile.arm32 output`
+        - `docker build -t casual-simulation/aux-arm32 -f Dockerfile.arm32 output`
 
 ### Option 2
 

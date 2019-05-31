@@ -8,12 +8,11 @@ import {
     FileCalculationContext,
     AuxFile,
     isFileMovable,
-    getFileDragMode,
 } from '@casual-simulation/aux-common';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
 import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
-import { IGameView } from '../../../shared/IGameView';
+import { IGameView } from '../../vue-components/IGameView';
 import { Simulation3D } from '../../scene/Simulation3D';
 
 /**

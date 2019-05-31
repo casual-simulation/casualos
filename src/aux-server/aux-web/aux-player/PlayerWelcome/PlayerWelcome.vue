@@ -1,4 +1,3 @@
-<!-- App.vue -->
 <template>
     <div>
         <form novalidate class="md-layout login-form" @submit.prevent="createUser">
@@ -42,5 +41,5 @@
         </form>
     </div>
 </template>
-<script src="./Welcome.ts"></script>
-<style src="./Welcome.css" scoped></style>
+<script src="./PlayerWelcome.ts"></script>
+<style src="./PlayerWelcome.css" scoped></style>

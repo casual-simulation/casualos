@@ -12,7 +12,7 @@ import {
 } from 'three';
 import { BaseInteractionManager } from './BaseInteractionManager';
 import { InputType, MouseButtonId } from '../../shared/scene/Input';
-import { IGameView } from '../../shared/IGameView';
+import { IGameView } from '../vue-components/IGameView';
 import { lerp, normalize } from '@casual-simulation/aux-common';
 import { Viewport } from '../scene/Viewport';
 

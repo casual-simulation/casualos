@@ -59,9 +59,9 @@ import { polyfill } from 'es6-promise';
 import 'offline-plugin/runtime';
 
 import { appManager, AppType } from '../shared/AppManager';
-import App from './App/App';
-import Welcome from './Welcome/Welcome';
-import Home from './Home/Home';
+import PlayerApp from './PlayerApp/PlayerApp';
+import PlayerWelcome from './PlayerWelcome/PlayerWelcome';
+import PlayerHome from './PlayerHome/PlayerHome';
 import Loading from '../shared/vue-components/Loading/Loading';
 import uuid from 'uuid/v4';
 
@@ -97,7 +97,7 @@ const routes: RouteConfig[] = [
     {
         path: '/login',
         name: 'login',
-        component: Welcome,
+        component: PlayerWelcome,
     },
     {
         path: '/\\*/:id',
@@ -115,7 +115,7 @@ const routes: RouteConfig[] = [
     {
         path: '/:context/:id?',
         name: 'home',
-        component: Home,
+        component: PlayerHome,
         props: route => ({
             context: route.params.context,
             channels: route.query.channels,
@@ -205,7 +205,7 @@ async function start() {
 
     const app = new Vue({
         router,
-        render: createEle => createEle(App),
+        render: createEle => createEle(PlayerApp),
     }).$mount('#app');
 }
 

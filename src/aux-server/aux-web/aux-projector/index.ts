@@ -59,9 +59,9 @@ import 'pepjs'; // Polyfill for pointer events
 import { polyfill } from 'es6-promise';
 
 import { appManager, AppType } from '../shared/AppManager';
-import App from './App/App';
-import Welcome from './Welcome/Welcome';
-import Home from './Home/Home';
+import BuilderApp from './BuilderApp/BuilderApp';
+import BuilderWelcome from './BuilderWelcome/BuilderWelcome';
+import BuilderHome from './BuilderHome/BuilderHome';
 import AuxDebug from './AuxDebug/AuxDebug';
 import Loading from '../shared/vue-components/Loading/Loading';
 import uuid from 'uuid/v4';
@@ -102,7 +102,7 @@ const routes: RouteConfig[] = [
     {
         path: '/login',
         name: 'login',
-        component: Welcome,
+        component: BuilderWelcome,
     },
     {
         path: '/*/:id?/aux-debug',
@@ -112,7 +112,7 @@ const routes: RouteConfig[] = [
     {
         path: '/\\*/:id?',
         name: 'home',
-        component: Home,
+        component: BuilderHome,
     },
     {
         path: '/:context/:id?',
@@ -204,7 +204,7 @@ async function start() {
     await appManager.initPromise;
     const app = new Vue({
         router,
-        render: createEle => createEle(App),
+        render: createEle => createEle(BuilderApp),
     }).$mount('#app');
 }
 

@@ -20,6 +20,16 @@ import {
     calculateDestroyFileEvents,
     merge,
     simulationIdToString,
+    FileCalculationContext,
+    AuxFile,
+    calculateFileValue,
+    calculateFormattedFileValue,
+    getFileInputTarget,
+    getFileInputPlaceholder,
+    ShowInputForTagEvent,
+    ShowInputOptions,
+    ShowInputType,
+    ShowInputSubtype,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard } from '../../shared/SharedUtils';
@@ -30,6 +40,7 @@ import CubeIcon from '../public/icons/Cube.svg';
 import HexIcon from '../public/icons/Hexagon.svg';
 import { QrcodeStream } from 'vue-qrcode-reader';
 import { Simulation } from '../../shared/Simulation';
+import { Swatches, Chrome, Compact } from 'vue-color';
 
 export interface SidebarItem {
     id: string;
@@ -41,12 +52,15 @@ export interface SidebarItem {
 
 @Component({
     components: {
-        app: App,
+        app: PlayerApp,
         'qr-code': QRCode,
         'qrcode-stream': QrcodeStream,
+        'color-picker-swatches': Swatches,
+        'color-picker-advanced': Chrome,
+        'color-picker-basic': Compact,
     },
 })
-export default class App extends Vue {
+export default class PlayerApp extends Vue {
     showNavigation: boolean = false;
     showConfirmDialog: boolean = false;
     showAlertDialog: boolean = false;
@@ -115,6 +129,18 @@ export default class App extends Vue {
      * The QR Code to show.
      */
     qrCode: string = '';
+
+    inputDialogLabel: string = '';
+    inputDialogPlaceholder: string = '';
+    inputDialogInput: string = '';
+    inputDialogType: ShowInputType = 'text';
+    inputDialogSubtype: ShowInputSubtype = 'basic';
+    inputDialogInputValue: any = '';
+    inputDialogTarget: AuxFile = null;
+    inputDialogLabelColor: string = '#000';
+    inputDialogBackgroundColor: string = '#FFF';
+    showInputDialog: boolean = false;
+    inputDialogSimulation: Simulation = null;
 
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
@@ -342,7 +368,7 @@ export default class App extends Vue {
     }
 
     async finishAddSimulation(id: string) {
-        console.log('[App] Add simulation!');
+        console.log('[PlayerApp] Add simulation!');
         await appManager.simulationManager.primary.helper.createSimulation(id);
     }
 
@@ -432,6 +458,8 @@ export default class App extends Vue {
                     });
 
                     this._updateQuery();
+                } else if (e.name === 'show_input_for_tag') {
+                    this._showInputDialog(simulation, e);
                 }
             }),
             simulation.aux.channel.connectionStateChanged.subscribe(
@@ -464,6 +492,114 @@ export default class App extends Vue {
         this.simulations.push(info);
 
         this._updateQuery();
+    }
+
+    // TODO: Move to a shared class/component
+    _showInputDialog(simulation: Simulation, event: ShowInputForTagEvent) {
+        const calc = simulation.helper.createContext();
+        const file = simulation.helper.filesState[event.fileId];
+        this._updateLabel(calc, file, event.tag, event.options);
+        this._updateColor(calc, file, event.options);
+        this._updateInput(calc, file, event.tag, event.options);
+        this.inputDialogSimulation = simulation;
+        this.showInputDialog = true;
+    }
+
+    updateInputDialogColor(newColor: any) {
+        if (typeof newColor === 'object') {
+            this.inputDialogInputValue = newColor.hex;
+        } else {
+            this.inputDialogInputValue = newColor;
+        }
+    }
+
+    async closeInputDialog() {
+        if (this.showInputDialog) {
+            await this.inputDialogSimulation.helper.action('onClose', [
+                this.inputDialogTarget,
+            ]);
+            this.showInputDialog = false;
+        }
+    }
+
+    async saveInputDialog() {
+        if (this.showInputDialog) {
+            let value: any;
+            if (
+                this.inputDialogType === 'color' &&
+                typeof this.inputDialogInputValue === 'object'
+            ) {
+                value = this.inputDialogInputValue.hex;
+            } else {
+                value = this.inputDialogInputValue;
+            }
+            await this.inputDialogSimulation.helper.updateFile(
+                this.inputDialogTarget,
+                {
+                    tags: {
+                        [this.inputDialogInput]: value,
+                    },
+                }
+            );
+            await this.inputDialogSimulation.helper.action('onSave', [
+                this.inputDialogTarget,
+            ]);
+            await this.closeInputDialog();
+        }
+    }
+
+    private _updateColor(
+        calc: FileCalculationContext,
+        file: AuxFile,
+        options: Partial<ShowInputOptions>
+    ) {
+        if (typeof options.backgroundColor !== 'undefined') {
+            this.inputDialogBackgroundColor = options.backgroundColor;
+        } else {
+            this.inputDialogBackgroundColor = '#FFF';
+        }
+    }
+
+    private _updateLabel(
+        calc: FileCalculationContext,
+        file: AuxFile,
+        tag: string,
+        options: Partial<ShowInputOptions>
+    ) {
+        if (typeof options.title !== 'undefined') {
+            this.inputDialogLabel = options.title;
+        } else {
+            this.inputDialogLabel = tag;
+        }
+
+        if (typeof options.foregroundColor !== 'undefined') {
+            this.inputDialogLabelColor = options.foregroundColor;
+        } else {
+            this.inputDialogLabelColor = '#000';
+        }
+    }
+
+    private _updateInput(
+        calc: FileCalculationContext,
+        file: AuxFile,
+        tag: string,
+        options: Partial<ShowInputOptions>
+    ) {
+        this.inputDialogInput = tag;
+        this.inputDialogType = options.type || 'text';
+        this.inputDialogSubtype = options.subtype || 'basic';
+        this.inputDialogTarget = file;
+        this.inputDialogInputValue = calculateFormattedFileValue(
+            calc,
+            this.inputDialogTarget,
+            this.inputDialogInput
+        );
+
+        if (typeof options.placeholder !== 'undefined') {
+            this.inputDialogPlaceholder = options.placeholder;
+        } else {
+            this.inputDialogPlaceholder = this.inputDialogInput;
+        }
     }
 
     private _simulationRemoved(simulation: Simulation) {
@@ -574,19 +710,19 @@ export default class App extends Vue {
     private onShowNavigation(show: boolean) {
         if (show == undefined) {
             console.error(
-                '[App] Missing expected boolean argument for showNavigation event.'
+                '[PlayerApp] Missing expected boolean argument for showNavigation event.'
             );
             return;
         }
 
-        console.log('[App] handleShowNavigation: ' + show);
+        console.log('[PlayerApp] handleShowNavigation: ' + show);
         this.showNavigation = show;
     }
 
     private onShowConfirmDialog(options: ConfirmDialogOptions) {
         if (options == undefined) {
             console.error(
-                '[App] Missing expected ConfirmDialogOptions argument for showConfirmDialog event.'
+                '[PlayerApp] Missing expected ConfirmDialogOptions argument for showConfirmDialog event.'
             );
             return;
         }
@@ -594,7 +730,7 @@ export default class App extends Vue {
         this.confirmDialogOptions = options;
         this.showConfirmDialog = true;
         console.log(
-            '[App] handleShowConfirmDialog ' +
+            '[PlayerApp] handleShowConfirmDialog ' +
                 this.showConfirmDialog +
                 ' ' +
                 JSON.stringify(this.confirmDialogOptions)
@@ -604,7 +740,7 @@ export default class App extends Vue {
     private onShowAlertDialog(options: AlertDialogOptions) {
         if (options == undefined) {
             console.error(
-                '[App] Missing expected AlertDialogOptions argument for showAlertDialog event.'
+                '[PlayerApp] Missing expected AlertDialogOptions argument for showAlertDialog event.'
             );
             return;
         }
@@ -612,7 +748,7 @@ export default class App extends Vue {
         this.alertDialogOptions = options;
         this.showAlertDialog = true;
         console.log(
-            '[App] handleShowAlertDialog ' +
+            '[PlayerApp] handleShowAlertDialog ' +
                 this.showAlertDialog +
                 ' ' +
                 JSON.stringify(this.alertDialogOptions)

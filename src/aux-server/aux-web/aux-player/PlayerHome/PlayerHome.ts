@@ -10,7 +10,7 @@ import {
     DEFAULT_USER_MODE,
     Workspace,
 } from '@casual-simulation/aux-common';
-import GameView from '../GameView/GameView';
+import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import { appManager } from '../../shared/AppManager';
 import { SubscriptionLike } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -19,10 +19,10 @@ import { difference } from 'lodash';
 
 @Component({
     components: {
-        'game-view': GameView,
+        'game-view': PlayerGameView,
     },
 })
-export default class Home extends Vue {
+export default class PlayerHome extends Vue {
     @Prop() context: string;
     @Prop() channels: string | string[];
 

@@ -18,7 +18,7 @@ import {
 } from '@casual-simulation/aux-common/Files/FileCalculations';
 import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
 import { BuilderGroup3D } from '../../../shared/scene/BuilderGroup3D';
-import GameView from '../../GameView/GameView';
+import BuilderGameView from '../../BuilderGameView/BuilderGameView';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import { BaseBuilderFileDragOperation } from './BaseBuilderFileDragOperation';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';

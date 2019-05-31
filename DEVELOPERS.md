@@ -25,15 +25,14 @@ Make sure you have all the prerequisite tools installed:
     - `npm run bootstrap`
 4. Start related services:
     1. `docker-compose -f docker-compose.dev.yml up -d`
-5. Add `projector.localhost` and `player.localhost` to your [hosts file][hosts-file].
-    - These are the domains that the projector and player sites are available at in development.
+5. (Optional) Add `player.localhost` to your [hosts file][hosts-file].
+    - You can use this domain to prevent the service worker from installing.
     - Follow these steps:
         1. Open the hosts file as Sudo/Admin.
             - On Max/Linux it's at `/etc/hosts`
             - On Windows it's at `C:\Windows\System32\drivers\etc\hosts`
-        2. Add entries to route `projector.localhost` and `player.localhost` to `127.0.0.1`:
+        2. Add entries to route `player.localhost` to `127.0.0.1`:
             ```
-            127.0.0.1 projector.localhost
             127.0.0.1 player.localhost
             ```
 
@@ -78,7 +77,7 @@ Additionally, the CI server will publish the `aux-common` NPM package whenever t
     - In most cases all you need to do is select **patch**.
     - After confirmation lerna will update the `package.json` version numbers, add a git tag, and push the branch.
 6. You're done.
-    - Sit back and watch the build.
+    - GitHub will send a webhook to the CI server which will make a build and publish everything.
 
 ## Tools we use
 

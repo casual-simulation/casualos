@@ -5,7 +5,7 @@ import { appManager } from '../../shared/AppManager';
 import uuid from 'uuid/v4';
 
 @Component
-export default class Welcome extends Vue {
+export default class BuilderWelcome extends Vue {
     email: string = '';
     showProgress: boolean = false;
 
@@ -14,7 +14,7 @@ export default class Welcome extends Vue {
     }
 
     createUser() {
-        console.log('[Welcome] Email submitted: ' + this.email);
+        console.log('[BuilderWelcome] Email submitted: ' + this.email);
         this._login(this.email);
     }
 
