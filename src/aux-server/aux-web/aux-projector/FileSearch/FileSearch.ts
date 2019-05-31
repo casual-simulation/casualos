@@ -39,9 +39,15 @@ export default class FileSearch extends Vue {
 
     get placeholder() {
         if (this.files.length > 0) {
-            return formatValue(this.files);
+            let val = formatValue(this.files);
+
+            if (val != '[empty]' && val != '[diff-]') {
+                return formatValue(this.files);
+            } else {
+                return 'Search / Run';
+            }
         } else {
-            return 'Search';
+            return 'Search / Run';
         }
     }
 
@@ -56,7 +62,11 @@ export default class FileSearch extends Vue {
         if (temp != 1) {
             num = this.files.length;
         } else {
-            if (this.files[0].id == 'empty') {
+            let id = this.files[0].id;
+            if (
+                id == 'empty' ||
+                (id.includes('-') && id.split('-')[0] == 'diff')
+            ) {
                 num = 0;
             } else {
                 num = 1;
