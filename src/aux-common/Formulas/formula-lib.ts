@@ -283,8 +283,6 @@ export function removeTags(
     file: FileProxy | FileProxy[],
     tagSection: string | RegExp
 ) {
-    let reg = new RegExp(tagSection);
-
     if (typeof file === 'object' && Array.isArray(file)) {
         let fileList: any[] = file;
 
@@ -320,7 +318,11 @@ export function removeTags(
 
         for (let i = tags.length - 1; i >= 0; i--) {
             // if the tag section is relevant to the curretn tag at all
-            if (tags[i].includes(tagSection)) {
+            if (tagSection instanceof RegExp) {
+                if (tagSection.test(tags[i])) {
+                    file[tags[i]] = null;
+                }
+            } else if (tags[i].includes(tagSection)) {
                 let doRemoveTag = false;
                 // if this tag has a period in it, check for first word to match
                 if (tags[i].includes('.')) {
