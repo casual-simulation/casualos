@@ -277,7 +277,12 @@ export function destroy(file: FileProxy | string | FileProxy[]) {
  * @param file The file, file ID, or list of files to destroy the tag sections of.
  * @param tagSection The tag section to remove on the file.
  */
-export function removeTags(file: FileProxy | FileProxy[], tagSection: string) {
+export function removeTags(
+    file: FileProxy | FileProxy[],
+    tagSection: string | RegExp
+) {
+    let reg = new RegExp(tagSection);
+
     if (typeof file === 'object' && Array.isArray(file)) {
         let fileList: any[] = file;
 
@@ -285,7 +290,11 @@ export function removeTags(file: FileProxy | FileProxy[], tagSection: string) {
             let tags = tagsOnFile(fileList[h]);
 
             for (let i = tags.length - 1; i >= 0; i--) {
-                if (tags[i].includes(tagSection)) {
+                if (tagSection instanceof RegExp) {
+                    if (tagSection.test(tags[i])) {
+                        fileList[h][tags[i]] = null;
+                    }
+                } else if (tags[i].includes(tagSection)) {
                     let doRemoveTag = false;
 
                     if (tags[i].includes('.')) {
