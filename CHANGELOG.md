@@ -29,6 +29,7 @@
     -   Added ability to remove files from a search, will convert any remaining files into a multiselected format.
     -   Removed bottom left diff brush from builder. Diffs need to be dragged from their file ID in the sheets menu now.
     -   Changed the default placholder in the search bar from `search`, `[empty]`, and `[diff-]` to just be `search / run`.
+    -   Exited the `RemoveTags()` function to allow it to use Regular Expressions to search for the tag sections to remove.
 
 ## V0.8.1
 
