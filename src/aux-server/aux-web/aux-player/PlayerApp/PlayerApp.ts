@@ -28,6 +28,8 @@ import {
     getFileInputPlaceholder,
     ShowInputForTagEvent,
     ShowInputOptions,
+    ShowInputType,
+    ShowInputSubtype,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard } from '../../shared/SharedUtils';
@@ -38,6 +40,7 @@ import CubeIcon from '../public/icons/Cube.svg';
 import HexIcon from '../public/icons/Hexagon.svg';
 import { QrcodeStream } from 'vue-qrcode-reader';
 import { Simulation } from '../../shared/Simulation';
+import { Swatches, Chrome, Compact } from 'vue-color';
 
 export interface SidebarItem {
     id: string;
@@ -52,6 +55,9 @@ export interface SidebarItem {
         app: PlayerApp,
         'qr-code': QRCode,
         'qrcode-stream': QrcodeStream,
+        'color-picker-swatches': Swatches,
+        'color-picker-advanced': Chrome,
+        'color-picker-basic': Compact,
     },
 })
 export default class PlayerApp extends Vue {
@@ -127,7 +133,9 @@ export default class PlayerApp extends Vue {
     inputDialogLabel: string = '';
     inputDialogPlaceholder: string = '';
     inputDialogInput: string = '';
-    inputDialogInputValue: string = '';
+    inputDialogType: ShowInputType = 'text';
+    inputDialogSubtype: ShowInputSubtype = 'basic';
+    inputDialogInputValue: any = '';
     inputDialogTarget: AuxFile = null;
     inputDialogLabelColor: string = '#000';
     inputDialogBackgroundColor: string = '#FFF';
@@ -497,6 +505,14 @@ export default class PlayerApp extends Vue {
         this.showInputDialog = true;
     }
 
+    updateInputDialogColor(newColor: any) {
+        if (typeof newColor === 'object') {
+            this.inputDialogInputValue = newColor.hex;
+        } else {
+            this.inputDialogInputValue = newColor;
+        }
+    }
+
     async closeInputDialog() {
         if (this.showInputDialog) {
             await this.inputDialogSimulation.helper.action('onClose', [
@@ -508,11 +524,20 @@ export default class PlayerApp extends Vue {
 
     async saveInputDialog() {
         if (this.showInputDialog) {
+            let value: any;
+            if (
+                this.inputDialogType === 'color' &&
+                typeof this.inputDialogInputValue === 'object'
+            ) {
+                value = this.inputDialogInputValue.hex;
+            } else {
+                value = this.inputDialogInputValue;
+            }
             await this.inputDialogSimulation.helper.updateFile(
                 this.inputDialogTarget,
                 {
                     tags: {
-                        [this.inputDialogInput]: this.inputDialogInputValue,
+                        [this.inputDialogInput]: value,
                     },
                 }
             );
@@ -561,6 +586,8 @@ export default class PlayerApp extends Vue {
         options: Partial<ShowInputOptions>
     ) {
         this.inputDialogInput = tag;
+        this.inputDialogType = options.type || 'text';
+        this.inputDialogSubtype = options.subtype || 'basic';
         this.inputDialogTarget = file;
         this.inputDialogInputValue = calculateFormattedFileValue(
             calc,

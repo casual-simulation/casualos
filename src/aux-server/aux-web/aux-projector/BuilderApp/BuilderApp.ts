@@ -19,6 +19,8 @@ import {
     AuxFile,
     calculateFormattedFileValue,
     getFileInputPlaceholder,
+    ShowInputType,
+    ShowInputSubtype,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard } from '../../shared/SharedUtils';
@@ -34,6 +36,7 @@ import FileSearch from '../FileSearch/FileSearch';
 import vueFilePond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
 import { Simulation } from '../../shared/Simulation';
+import { Swatches, Chrome, Compact } from 'vue-color';
 
 const FilePond = vueFilePond();
 
@@ -53,6 +56,9 @@ export interface SidebarItem {
         'qr-icon': QRAuxBuilder,
         'file-search': FileSearch,
         'file-table-toggle': FileTableToggle,
+        'color-picker-swatches': Swatches,
+        'color-picker-advanced': Chrome,
+        'color-picker-basic': Compact,
     },
 })
 export default class BuilderApp extends Vue {
@@ -139,7 +145,9 @@ export default class BuilderApp extends Vue {
     inputDialogLabel: string = '';
     inputDialogPlaceholder: string = '';
     inputDialogInput: string = '';
-    inputDialogInputValue: string = '';
+    inputDialogType: ShowInputType = 'text';
+    inputDialogSubtype: ShowInputSubtype = 'basic';
+    inputDialogInputValue: any = '';
     inputDialogTarget: AuxFile = null;
     inputDialogLabelColor: string = '#000';
     inputDialogBackgroundColor: string = '#FFF';
@@ -492,6 +500,14 @@ export default class BuilderApp extends Vue {
         this.showInputDialog = true;
     }
 
+    updateInputDialogColor(newColor: any) {
+        if (typeof newColor === 'object') {
+            this.inputDialogInputValue = newColor.hex;
+        } else {
+            this.inputDialogInputValue = newColor;
+        }
+    }
+
     async closeInputDialog() {
         if (this.showInputDialog) {
             await this.inputDialogSimulation.helper.action('onClose', [
@@ -556,6 +572,8 @@ export default class BuilderApp extends Vue {
         options: Partial<ShowInputOptions>
     ) {
         this.inputDialogInput = tag;
+        this.inputDialogType = options.type || 'text';
+        this.inputDialogSubtype = options.subtype || 'basic';
         this.inputDialogTarget = file;
         this.inputDialogInputValue = calculateFormattedFileValue(
             calc,

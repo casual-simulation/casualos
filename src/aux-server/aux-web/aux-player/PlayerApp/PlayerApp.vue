@@ -158,6 +158,27 @@
                         :style="{ color: inputDialogLabelColor }"
                     ></md-input>
                 </md-field>
+                <div v-if="inputDialogType === 'color'">
+                    <color-picker-swatches
+                        v-if="inputDialogSubtype === 'swatch'"
+                        :value="inputDialogInputValue"
+                        @input="updateInputDialogColor"
+                        :disableAlpha="true"
+                    ></color-picker-swatches>
+                    <color-picker-advanced
+                        v-else-if="inputDialogSubtype === 'advanced'"
+                        :value="inputDialogInputValue"
+                        @input="updateInputDialogColor"
+                        class="color-picker-advanced"
+                        :disableAlpha="true"
+                    ></color-picker-advanced>
+                    <color-picker-basic
+                        v-else
+                        :value="inputDialogInputValue"
+                        @input="updateInputDialogColor"
+                        :disableAlpha="true"
+                    ></color-picker-basic>
+                </div>
             </md-dialog-content>
             <md-dialog-actions>
                 <md-button @click="closeInputDialog()" :style="{ color: inputDialogLabelColor }"

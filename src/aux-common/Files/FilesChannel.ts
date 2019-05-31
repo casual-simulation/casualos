@@ -612,6 +612,16 @@ export interface ShowInputForTagEvent extends LocalEvent {
  */
 export interface ShowInputOptions {
     /**
+     * The type of input box to show.
+     */
+    type: ShowInputType;
+
+    /**
+     * The subtype of input box to show.
+     */
+    subtype: ShowInputSubtype;
+
+    /**
      * The title that should be used for the input.
      */
     title: string;
@@ -631,6 +641,16 @@ export interface ShowInputOptions {
      */
     foregroundColor: string;
 }
+
+/**
+ * Defines the possible input types.
+ */
+export type ShowInputType = 'text' | 'color';
+
+/**
+ * Defines the possible input types.
+ */
+export type ShowInputSubtype = 'basic' | 'swatch' | 'advanced';
 
 /**
  * Defines an event for actions.
