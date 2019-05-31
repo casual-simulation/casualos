@@ -25,6 +25,12 @@
     -   Added `player.showInputForTag(file, tag, options)` function for AUX Script.
         -   Shows an input dialog for the given file and tag using the given options.
         -   Options are not required, but when specified the following values can be used:
+            -   `type`: The type of input dialog to show.
+                -   Supported options are `text` and `color`.
+                -   If not specified it will default to `text`.
+            -   `subtype`: The specific version of the input type to use.
+                -   Supported options are `basic`, `advanced`, and `swatch` for the `color` type.
+                -   If not specified it will default to `basic`.
             -   `title`: The text that will be shown as the title of the input box.
             -   `foregroundColor`: The color of the text in the input box.
             -   `backgroundColor`: The color of the background of the input box.
