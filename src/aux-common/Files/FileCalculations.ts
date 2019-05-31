@@ -1611,7 +1611,12 @@ export function getFileDragMode(
     if (typeof val === 'boolean') {
         return val ? 'all' : 'none';
     }
-    if (val === 'clone' || val === 'pickup' || val === 'drag') {
+    if (
+        val === 'clone' ||
+        val === 'pickup' ||
+        val === 'drag' ||
+        val === 'diff'
+    ) {
         return val;
     } else {
         return 'all';
@@ -1932,21 +1937,28 @@ export function isPickupable(
 /**
  * Gets a partial file that can be used to apply the diff that the given file represents.
  * A diff file is any file that has `aux._diff` set to `true` and `aux._diffTags` set to a list of tag names.
+ * @param calc The file calculation context.
  * @param file The file that represents the diff.
  */
-export function getDiffUpdate(file: File): PartialFile {
+export function getDiffUpdate(
+    calc: FileCalculationContext,
+    file: File
+): PartialFile {
     if (isDiff(file)) {
         let update: PartialFile = {
             tags: {},
         };
 
         let tags = tagsOnFile(file);
-        let diffTags = file.tags['aux._diffTags'];
+        let diffTags =
+            calculateFileValue(calc, file, 'aux.movable.diffTags') ||
+            file.tags['aux._diffTags'];
         for (let i = 0; i < tags.length; i++) {
             let tag = tags[i];
             if (
                 tag === 'aux._diff' ||
                 tag === 'aux._diffTags' ||
+                tag === 'aux.movable.diffTags' ||
                 diffTags.indexOf(tag) < 0
             ) {
                 continue;

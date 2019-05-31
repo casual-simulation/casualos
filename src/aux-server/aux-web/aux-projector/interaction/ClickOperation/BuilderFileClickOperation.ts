@@ -13,6 +13,7 @@ import {
     isMinimized,
     isContextMovable,
     getFileDragMode,
+    tagsOnFile,
 } from '@casual-simulation/aux-common';
 import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperation/BaseFileClickOperation';
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
@@ -57,6 +58,8 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
         const mode = getFileDragMode(calc, this._file);
         if (mode === 'clone') {
             return this._createCloneDragOperation();
+        } else if (mode === 'diff') {
+            return this._createDiffDragOperation();
         }
 
         const workspace = this._getWorkspace();
@@ -105,6 +108,22 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
 
     protected _createCloneDragOperation(): BaseFileDragOperation {
         let duplicatedFile = duplicateFile(<File>this._file);
+        return new BuilderNewFileDragOperation(
+            this._simulation3D,
+            this._interaction,
+            duplicatedFile,
+            this._file
+        );
+    }
+
+    protected _createDiffDragOperation(): BaseFileDragOperation {
+        const tags = tagsOnFile(this._file);
+        let duplicatedFile = duplicateFile(<File>this._file, {
+            tags: {
+                'aux._diff': true,
+                'aux._diffTags': tags,
+            },
+        });
         return new BuilderNewFileDragOperation(
             this._simulation3D,
             this._interaction,

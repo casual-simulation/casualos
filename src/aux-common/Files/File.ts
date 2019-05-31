@@ -114,8 +114,15 @@ export type FileShape = 'cube' | 'sphere' | 'sprite';
  * "clone" means that the file should be cloned whenever dragged.
  * "pickup" means that the file should be able to be dragged across contexts but not within a context.
  * "drag" means that the file should be able to be dragged within a context but not across contexts.
+ * "diff" means that the file should be cloned as a diff when dragged.
  */
-export type FileDragMode = 'all' | 'none' | 'clone' | 'pickup' | 'drag';
+export type FileDragMode =
+    | 'all'
+    | 'none'
+    | 'clone'
+    | 'pickup'
+    | 'drag'
+    | 'diff';
 
 /**
  * Defines the possible anchor positions for a label.
@@ -220,6 +227,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.scene.color',
     'aux.color',
     'aux.movable',
+    'aux.movable.diffTags',
     'aux.stackable',
     'aux.mergable',
     'aux.destroyable',

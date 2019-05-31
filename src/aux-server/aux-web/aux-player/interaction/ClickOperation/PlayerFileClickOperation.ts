@@ -11,6 +11,7 @@ import {
     duplicateFile,
     File,
     getFileDragMode,
+    tagsOnFile,
 } from '@casual-simulation/aux-common';
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
 import { PlayerFileDragOperation } from '../DragOperation/PlayerFileDragOperation';
@@ -50,6 +51,8 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
         const mode = getFileDragMode(calc, this._file);
         if (mode === 'clone') {
             return this._createCloneDragOperation();
+        } else if (mode === 'diff') {
+            return this._createDiffDragOperation();
         }
 
         const file3D: AuxFile3D = <AuxFile3D>this._file3D;
@@ -87,6 +90,27 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
 
     protected _createCloneDragOperation(): BaseFileDragOperation {
         let duplicatedFile = duplicateFile(<File>this._file);
+        const {
+            playerSimulation3D,
+            inventorySimulation3D,
+        } = this._getSimulationsForDragOp();
+        return new PlayerNewFileDragOperation(
+            playerSimulation3D,
+            inventorySimulation3D,
+            this._interaction,
+            duplicatedFile,
+            (<AuxFile3D>this._file3D).context
+        );
+    }
+
+    protected _createDiffDragOperation(): BaseFileDragOperation {
+        const tags = tagsOnFile(this._file);
+        let duplicatedFile = duplicateFile(<File>this._file, {
+            tags: {
+                'aux._diff': true,
+                'aux._diffTags': tags,
+            },
+        });
         const {
             playerSimulation3D,
             inventorySimulation3D,
