@@ -22,6 +22,13 @@
         -   You can control the tags that are applied from the diff by setting the `aux.movable.diffTags` tag.
     -   Added `player.isBuilder()` function for AUX Script.
         -   Determines if the current player is able to load AUX Builder without being denied. For all intents and purposes, this means that their name is in the `aux.builders` list or that there is no `aux.builders` list in the globals file.
+    -   Added `player.showInputForTag(file, tag, options)` function for AUX Script.
+        -   Shows an input dialog for the given file and tag using the given options.
+        -   Options are not required, but when specified the following values can be used:
+            -   `title`: The text that will be shown as the title of the input box.
+            -   `foregroundColor`: The color of the text in the input box.
+            -   `backgroundColor`: The color of the background of the input box.
+            -   `placeholder`: The placeholder text to use for the input box value.
     -   Added autofill feature to the add tag input box for improved tag adding.
     -   Center camera button is only shown when at a specified distance from the world center.
     -   Placed camera type toggle back inside the menu for both AUX Builder and AUX Player.
