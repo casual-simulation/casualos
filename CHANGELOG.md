@@ -17,6 +17,9 @@
         -   `aux.whitelist` and `aux.blacklist` still exist and can be used to whitelist/blacklist users across both AUX Builder and AUX Player.
         -   If `aux.builders` is present then only users in the builder list can access AUX Builder.
         -   If `aux.builders` is not present then AUX Builder falls back to checking the whitelist and blacklist.
+    -   Added support for `aux.movable=diff`.
+        -   This mode acts like `clone` but the cloned file is a diff.
+        -   You can control the tags that are applied from the diff by setting the `aux.movable.diffTags` tag.
     -   Added `player.isBuilder()` function for AUX Script.
         -   Determines if the current player is able to load AUX Builder without being denied. For all intents and purposes, this means that their name is in the `aux.builders` list or that there is no `aux.builders` list in the globals file.
     -   Added autofill feature to the add tag input box for improved tag adding.
