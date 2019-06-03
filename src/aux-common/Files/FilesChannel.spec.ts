@@ -3151,6 +3151,49 @@ describe('FilesChannel', () => {
                 ]);
             });
 
+            it('should create a diff with all tags if no filters are given', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()':
+                                'applyDiff(this, diff.load(@name("bob").first()))',
+                        },
+                    },
+                    otherFile: {
+                        id: 'otherFile',
+                        tags: {
+                            name: 'bob',
+                            val: 123,
+                            'test.fun': true,
+                            'test.works': 'yes',
+                            'even.test.wow': 456,
+                            'test.': 'no',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            name: 'bob',
+                            val: 123,
+                            'test.fun': true,
+                            'test.works': 'yes',
+                            'even.test.wow': 456,
+                            'test.': 'no',
+                        },
+                    }),
+                ]);
+            });
+
             it('should create a diff from another diff', () => {
                 const state: FilesState = {
                     thisFile: {

@@ -760,18 +760,22 @@ function loadDiff(file: any, ...tags: (string | RegExp)[]): FileDiff {
     let fileTags = isFile(file) ? tagsOnFile(file) : Object.keys(file);
     for (let fileTag of fileTags) {
         let add = false;
-        for (let tag of tags) {
-            if (tag instanceof RegExp) {
-                if (tag.test(fileTag)) {
-                    add = true;
-                    break;
-                }
-            } else {
-                if (tag === fileTag) {
-                    add = true;
-                    break;
+        if (tags.length > 0) {
+            for (let tag of tags) {
+                if (tag instanceof RegExp) {
+                    if (tag.test(fileTag)) {
+                        add = true;
+                        break;
+                    }
+                } else {
+                    if (tag === fileTag) {
+                        add = true;
+                        break;
+                    }
                 }
             }
+        } else {
+            add = true;
         }
 
         if (add) {
