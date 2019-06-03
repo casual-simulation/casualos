@@ -15,6 +15,11 @@
         -   `diff.load(diffToLoad)`: Renamed from `diff.create()`, `diff.load()` is now able to take some JSON and returns a diff that can be applied to a file using `applyDiff()`.
     -   Numbers in tags can now start with a decimal instead of having to start with a digit.
         -   For example, `.0123` is now allowed and equals `0.0123`.
+    -   Added the ability to customize user colors via the following tags:
+        -   `aux.color`: Setting this tag on a user's file will cause that user to be the given color.
+        -   `aux.scene.user.player.color`: Setting this tag on the globals file will cause all users in AUX Player to appear as the given color.
+        -   `aux.scene.user.builder.color`: Setting this tag on the globals file will cause all users in AUX Builder to appear with the given color.
+    -   Made AUX Player users default to a yellow color instead of blue.
 
 ## V0.8.3
 
