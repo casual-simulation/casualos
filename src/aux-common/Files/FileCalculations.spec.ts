@@ -87,24 +87,30 @@ describe('FileCalculations', () => {
     });
 
     describe('isNumber()', () => {
-        it('should be true if the value is a number without symbols', () => {
-            expect(isNumber('123')).toBeTruthy();
-            expect(isNumber('0')).toBeTruthy();
-            expect(isNumber('-12')).toBeTruthy();
-            expect(isNumber('19.325')).toBeTruthy();
-            expect(isNumber('-27.981')).toBeTruthy();
-            expect(isNumber('27.0')).toBeTruthy();
-            expect(isNumber('1.')).toBeTruthy();
-            expect(isNumber('infinity')).toBeTruthy();
-            expect(isNumber('Infinity')).toBeTruthy();
-            expect(isNumber('InFIniTy')).toBeTruthy();
-        });
+        const cases = [
+            [true, '123'],
+            [true, '0'],
+            [true, '-12'],
+            [true, '19.325'],
+            [true, '-27.981'],
+            [true, '27.0'],
+            [false, '1.'],
+            [true, '.01'],
+            [true, '.567'],
+            [true, 'infinity'],
+            [true, 'Infinity'],
+            [true, 'InFIniTy'],
+            [false, '$123'],
+            [false, 'abc'],
+            [false, '.'],
+        ];
 
-        it('should be false if the value is not a number or has symbols', () => {
-            expect(isNumber('$123')).toBeFalsy();
-            expect(isNumber('abc')).toBeFalsy();
-            expect(isNumber('.')).toBeFalsy();
-        });
+        it.each(cases)(
+            'be %s when given %s',
+            (expected: boolean, value: string) => {
+                expect(isNumber(value)).toBe(expected);
+            }
+        );
     });
 
     describe('isArray()', () => {
@@ -823,6 +829,15 @@ describe('FileCalculations', () => {
             const value = calculateFileValue(context, file, 'tag');
 
             expect(value).toBeCloseTo(123.145);
+        });
+
+        it('should parse numbers that dont start with a digit', () => {
+            const file = createFile();
+            file.tags.tag = '.145';
+            const context = createCalculationContext([file]);
+            const value = calculateFileValue(context, file, 'tag');
+
+            expect(value).toBeCloseTo(0.145);
         });
 
         it('should convert to a boolean if it is a boolean', () => {

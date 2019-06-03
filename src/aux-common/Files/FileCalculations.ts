@@ -524,8 +524,10 @@ export function parseArray(value: string): string[] {
  */
 export function isNumber(value: string): boolean {
     return (
-        /^-?\d+\.?\d*$/.test(value) ||
-        (typeof value === 'string' && 'infinity' === value.toLowerCase())
+        typeof value === 'string' &&
+        value.length > 0 &&
+        (/^-?\d*(?:\.?\d+)?$/.test(value) ||
+            (typeof value === 'string' && 'infinity' === value.toLowerCase()))
     );
 }
 
