@@ -18,7 +18,7 @@ Make sure you have all the prerequisite tools installed:
 ## First Time Setup
 
 1. Clone the repository.
-    - `git clone https://github.com/yeticgi/aux`
+    - `git clone https://github.com/casual-simulation/aux.git`
 2. Make sure Lerna is installed.
     - `npm install -g lerna`
 3. Bootstrap the project.

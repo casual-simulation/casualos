@@ -1,5 +1,20 @@
 # AUX Changelog
 
+## V0.8.3
+
+### Date: 06/03/2019
+
+### Changes:
+
+-   Improvements
+    -   Replaced `aux.context.surface` with `aux.context.visualize`
+        -   This allows specifying how a context should be visualized in AUX Builder.
+        -   The previous option only allowed specifying whether a context is visualized, not how.
+        -   There are currently 3 possible options:
+            -   `false`: Means that the context will not be visible in AUX Builder. (default)
+            -   `true`: Means that the context will be visible in AUX Builder but won't have a surface.
+            -   `surface`: Means that the context will be visible with a surface in AUX Builder.
+
 ## V0.8.2
 
 ### Date: 05/31/2019

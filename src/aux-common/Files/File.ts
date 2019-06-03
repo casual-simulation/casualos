@@ -72,6 +72,7 @@ export interface FileTags {
     ['aux.context.color']?: string;
     ['aux.context.locked']?: unknown;
     ['aux.context.grid.scale']?: number;
+    ['aux.context.visualize']?: ContextVisualizeMode;
     ['aux.context.surface.x']?: number;
     ['aux.context.surface.y']?: number;
     ['aux.context.surface.z']?: number;
@@ -134,6 +135,15 @@ export type FileLabelAnchor =
     | 'left'
     | 'right'
     | 'floating';
+
+/**
+ * Defines the possible context visualize modes.
+ *
+ * true means that the context is visible.
+ * false means the context is not visible.
+ * "surface" means the context is visible and renders a worksurface.
+ */
+export type ContextVisualizeMode = true | false | 'surface';
 
 /**
  * The default user mode.
@@ -272,7 +282,6 @@ export const KNOWN_TAGS: string[] = [
     'aux.context.color',
     'aux.context.grid.scale',
     'aux.context.surface.grid',
-    'aux.context.surface',
     'aux.context.surface.x',
     'aux.context.surface.y',
     'aux.context.surface.z',
@@ -284,6 +293,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.context.surface.size',
     'aux.context.surface.minimized',
     'aux.context.surface.movable',
+    'aux.context.visualize',
     'onClick()',
     'onCombine()',
     'onSave()',

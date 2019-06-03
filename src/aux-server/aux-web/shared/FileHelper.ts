@@ -29,11 +29,11 @@ import {
     AUX_FILE_VERSION,
     calculateFormulaEvents,
     isContext,
-    isContextSurfaceVisible,
     getContextPosition,
     getContextScale,
     DEFAULT_WORKSPACE_SCALE,
     getContextSize,
+    getContextVisualizeMode,
 } from '@casual-simulation/aux-common';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { Subject, Observable } from 'rxjs';
@@ -409,7 +409,9 @@ export class FileHelper {
         const calc = this.createContext();
         const visibleWorkspacePositions = flatMap(
             this.objects.filter(
-                f => isContext(calc, f) && isContextSurfaceVisible(calc, f)
+                f =>
+                    isContext(calc, f) &&
+                    getContextVisualizeMode(calc, f) === 'surface'
             ),
             f => {
                 const position = getContextPosition(calc, f);

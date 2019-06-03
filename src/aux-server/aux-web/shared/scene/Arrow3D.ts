@@ -23,7 +23,6 @@ import {
     isMinimized,
     FileCalculationContext,
 } from '@casual-simulation/aux-common';
-import { WorkspaceMesh } from './WorkspaceMesh';
 import { IGameView } from '../vue-components/IGameView';
 import { AuxFile3D } from './AuxFile3D';
 import { ContextGroup3D } from './ContextGroup3D';

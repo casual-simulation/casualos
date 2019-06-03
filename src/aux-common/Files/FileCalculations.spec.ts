@@ -58,19 +58,17 @@ import {
     getBuilderContextGrid,
     SimulationIdParseSuccess,
     simulationIdToString,
-    isContextSurfaceVisible,
     isContextLocked,
     isDestroyable,
     isEditable,
     normalizeAUXFileURL,
+    getContextVisualizeMode,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import { File, Object, PartialFile } from './File';
 import { FilesState, cleanFile, fileRemoved } from './FilesChannel';
 import { file } from '../aux-format';
 import uuid from 'uuid/v4';
-import { select } from 'd3';
-import { tsExpressionWithTypeArguments } from '@babel/types';
 import { isProxy, createFileProxy } from './FileProxy';
 
 const uuidMock: jest.Mock = <any>uuid;
@@ -688,7 +686,7 @@ describe('FileCalculations', () => {
                 'aux.context.surface.x',
                 'aux.context.surface.y',
                 'aux.context.surface.z',
-                'aux.context.surface',
+                'aux.context.visualize',
                 'aux.context.locked',
                 'aux.context',
             ]);
@@ -3426,25 +3424,25 @@ describe('FileCalculations', () => {
         });
     });
 
-    describe('isContextSurfaceVisible()', () => {
-        it('should determine if aux.context.surface is set to true', () => {
+    describe('getContextVisualizeMode()', () => {
+        const cases = [
+            ['surface', 'surface'],
+            ['true', true],
+            ['false', false],
+            [0, false],
+            [1, false],
+            ['anything', false],
+        ];
+
+        it.each(cases)('should map %s to %s', (given: any, expected: any) => {
             const file = createFile('file', {
-                'aux.context.surface': true,
+                'aux.context.visualize': given,
             });
 
             const calc = createCalculationContext([file]);
-            const visible = isContextSurfaceVisible(calc, file);
+            const visible = getContextVisualizeMode(calc, file);
 
-            expect(visible).toBe(true);
-        });
-
-        it('should default to false', () => {
-            const file = createFile('file', {});
-
-            const calc = createCalculationContext([file]);
-            const visible = isContextSurfaceVisible(calc, file);
-
-            expect(visible).toBe(false);
+            expect(visible).toBe(expected);
         });
     });
 
@@ -3485,7 +3483,9 @@ describe('FileCalculations', () => {
 
     describe('getContextSize()', () => {
         it('should return the default size if none exists', () => {
-            const file = createFile('file');
+            const file = createFile('file', {
+                'aux.context.visualize': 'surface',
+            });
 
             const calc = createCalculationContext([file]);
             const size = getContextSize(calc, file);
@@ -3493,20 +3493,22 @@ describe('FileCalculations', () => {
             expect(size).toBe(1);
         });
 
-        it('should default to 0 if the file is a user file', () => {
+        it('should return the default if the file is a user file', () => {
             const file = createFile('file', {
                 'aux._user': 'user',
+                'aux.context.visualize': 'surface',
             });
 
             const calc = createCalculationContext([file]);
             const size = getContextSize(calc, file);
 
-            expect(size).toBe(0);
+            expect(size).toBe(1);
         });
 
         it('should still return the user files context size', () => {
             const file = createFile('file', {
                 'aux._user': 'user',
+                'aux.context.visualize': 'surface',
                 'aux.context.surface.size': 10,
             });
 
@@ -3514,6 +3516,18 @@ describe('FileCalculations', () => {
             const size = getContextSize(calc, file);
 
             expect(size).toBe(10);
+        });
+
+        it('should return 0 if the file is not a surface', () => {
+            const file = createFile('file', {
+                'aux.context.visualize': true,
+                'aux.context.surface.size': 10,
+            });
+
+            const calc = createCalculationContext([file]);
+            const size = getContextSize(calc, file);
+
+            expect(size).toBe(0);
         });
     });
 

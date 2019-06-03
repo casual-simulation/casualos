@@ -16,6 +16,7 @@ import {
     FileLabelAnchor,
     DEFAULT_LABEL_ANCHOR,
     FileDragMode,
+    ContextVisualizeMode,
 } from './File';
 
 import uuid from 'uuid/v4';
@@ -995,7 +996,7 @@ export function createWorkspace(
             'aux.context.surface.x': 0,
             'aux.context.surface.y': 0,
             'aux.context.surface.z': 0,
-            'aux.context.surface': true,
+            'aux.context.visualize': 'surface',
             'aux.context.locked': locked,
             'aux.context': builderContextId,
         },
@@ -1729,25 +1730,35 @@ export function getContextSize(
     calc: FileCalculationContext,
     contextFile: File
 ): number {
-    return calculateNumericalTagValue(
-        calc,
-        contextFile,
-        `aux.context.surface.size`,
-        isUserFile(contextFile) ? 0 : DEFAULT_WORKSPACE_SIZE
-    );
+    if (getContextVisualizeMode(calc, contextFile) === 'surface') {
+        return calculateNumericalTagValue(
+            calc,
+            contextFile,
+            `aux.context.surface.size`,
+            DEFAULT_WORKSPACE_SIZE
+        );
+    }
+    return 0;
 }
 
 /**
- * Determines if a context's surface should be visible.
- * Defaults to false.
- * @param calc The file calculation context.
+ * Gets the aux.context.visualize mode from the given file.
+ * @param calc The calculation context.
  * @param file The file.
  */
-export function isContextSurfaceVisible(
+export function getContextVisualizeMode(
     calc: FileCalculationContext,
     file: File
-): boolean {
-    return calculateBooleanTagValue(calc, file, 'aux.context.surface', false);
+): ContextVisualizeMode {
+    const val = calculateFileValue(calc, file, 'aux.context.visualize');
+    if (typeof val === 'boolean') {
+        return val;
+    }
+    if (val === 'surface') {
+        return val;
+    } else {
+        return false;
+    }
 }
 
 /**
