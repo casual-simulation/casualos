@@ -750,10 +750,14 @@ function getNeighboringFiles(
     return getFilesAtPosition(context, x + offsetX, y + offsetY);
 }
 
-function createDiff(file: any, ...tags: (string | RegExp)[]): FileDiff {
+function loadDiff(file: any, ...tags: (string | RegExp)[]): FileDiff {
+    if (typeof file === 'string') {
+        file = JSON.parse(file);
+    }
+
     let diff: FileTags = {};
 
-    let fileTags = tagsOnFile(file);
+    let fileTags = isFile(file) ? tagsOnFile(file) : Object.keys(file);
     for (let fileTag of fileTags) {
         let add = false;
         for (let tag of tags) {
@@ -776,6 +780,14 @@ function createDiff(file: any, ...tags: (string | RegExp)[]): FileDiff {
     }
 
     return diff;
+}
+
+/**
+ * Saves the given diff to a string of JSON.
+ * @param file The diff to save.
+ */
+function saveDiff(file: any): string {
+    return JSON.stringify(file);
 }
 
 /**
@@ -997,7 +1009,8 @@ export const diff = {
     addToMenu: addToMenuDiff,
     removeFromMenu: removeFromMenuDiff,
     setPosition: setPositionDiff,
-    create: createDiff,
+    load: loadDiff,
+    save: saveDiff,
 };
 
 /**

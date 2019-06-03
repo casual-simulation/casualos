@@ -3081,14 +3081,42 @@ describe('FilesChannel', () => {
             });
         });
 
-        describe('diff.create()', () => {
+        describe('diff.save()', () => {
+            it('should serialize the given object to JSON', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'this.json = diff.save({ abc: "def" })',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            json: '{"abc":"def"}',
+                        },
+                    }),
+                ]);
+            });
+        });
+
+        describe('diff.load()', () => {
             it('should create a diff that applies the given tags from the given file', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'applyDiff(this, diff.create(@name("bob").first(), "val", /test\\..+/))',
+                                'applyDiff(this, diff.load(@name("bob").first(), "val", /test\\..+/))',
                         },
                     },
                     otherFile: {
@@ -3118,6 +3146,59 @@ describe('FilesChannel', () => {
                             'test.fun': true,
                             'test.works': 'yes',
                             'even.test.wow': 456,
+                        },
+                    }),
+                ]);
+            });
+
+            it('should create a diff from another diff', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()':
+                                'applyDiff(this, diff.load({abc: true, val: 123}, "val"))',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            val: 123,
+                        },
+                    }),
+                ]);
+            });
+
+            it('should create a diff from JSON', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': `applyDiff(this, diff.load('{"abc": true, "val": 123}', "val"))`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            val: 123,
                         },
                     }),
                 ]);
