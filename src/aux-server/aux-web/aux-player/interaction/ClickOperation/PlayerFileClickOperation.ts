@@ -107,8 +107,8 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
         const tags = tagsOnFile(this._file);
         let duplicatedFile = duplicateFile(<File>this._file, {
             tags: {
-                'aux._diff': true,
-                'aux._diffTags': tags,
+                'aux.diff': true,
+                'aux.diffTags': tags,
             },
         });
         const {

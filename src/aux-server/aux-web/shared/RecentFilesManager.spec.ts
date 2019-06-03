@@ -31,8 +31,8 @@ describe('RecentFilesManager', () => {
                     id: 'testFileId',
                     tags: {
                         testTag: 'newValue',
-                        'aux._diff': true,
-                        'aux._diffTags': ['testTag'],
+                        'aux.diff': true,
+                        'aux.diffTags': ['testTag'],
                     },
                 },
             ]);
@@ -51,8 +51,8 @@ describe('RecentFilesManager', () => {
                     id: 'testFileId6',
                     tags: {
                         testTag6: 'newValue',
-                        'aux._diff': true,
-                        'aux._diffTags': ['testTag6'],
+                        'aux.diff': true,
+                        'aux.diffTags': ['testTag6'],
                     },
                 },
             ]);
@@ -80,8 +80,8 @@ describe('RecentFilesManager', () => {
                     id: 'testFileId1',
                     tags: {
                         testTag4: 'newValue4',
-                        'aux._diff': true,
-                        'aux._diffTags': ['testTag4'],
+                        'aux.diff': true,
+                        'aux.diffTags': ['testTag4'],
                     },
                 },
             ]);
@@ -106,8 +106,8 @@ describe('RecentFilesManager', () => {
                 id: 'abc',
                 tags: {
                     deg: 'zzz',
-                    'aux._diff': true,
-                    'aux._diffTags': ['deg'],
+                    'aux.diff': true,
+                    'aux.diffTags': ['deg'],
                 },
             });
         });
@@ -126,8 +126,8 @@ describe('RecentFilesManager', () => {
                     id: 'diff-testId',
                     tags: {
                         ...file.tags,
-                        'aux._diff': true,
-                        'aux._diffTags': ['test', 'aux.color'],
+                        'aux.diff': true,
+                        'aux.diffTags': ['test', 'aux.color'],
                     },
                 },
             ]);
@@ -163,8 +163,8 @@ describe('RecentFilesManager', () => {
             let file2 = createFile('diff-testId1', {
                 test1: 'abc',
                 'aux.color': 'red',
-                'aux._diff': true,
-                'aux._diffTags': ['test1', 'aux.color'],
+                'aux.diff': true,
+                'aux.diffTags': ['test1', 'aux.color'],
             });
 
             recent.addFileDiff(file2);
@@ -174,8 +174,8 @@ describe('RecentFilesManager', () => {
                 tags: {
                     test1: 'abc',
                     'aux.color': 'red',
-                    'aux._diff': true,
-                    'aux._diffTags': ['test1', 'aux.color'],
+                    'aux.diff': true,
+                    'aux.diffTags': ['test1', 'aux.color'],
                 },
             });
         });
@@ -195,8 +195,8 @@ describe('RecentFilesManager', () => {
                     tags: {
                         test: 'abc',
                         'aux._destroyed': true,
-                        'aux._diff': true,
-                        'aux._diffTags': ['test', 'aux._destroyed'],
+                        'aux.diff': true,
+                        'aux.diffTags': ['test'],
                     },
                 },
             ]);
@@ -214,8 +214,8 @@ describe('RecentFilesManager', () => {
             let file2 = createFile('diff-testId1', {
                 test1: 'abc',
                 'aux.color': 'red',
-                'aux._diff': true,
-                'aux._diffTags': ['test1', 'aux.color'],
+                'aux.diff': true,
+                'aux.diffTags': ['test1', 'aux.color'],
             });
 
             recent.addFileDiff(file2, true);
@@ -225,8 +225,8 @@ describe('RecentFilesManager', () => {
                 tags: {
                     test1: 'abc',
                     'aux.color': 'red',
-                    'aux._diff': true,
-                    'aux._diffTags': ['test1', 'aux.color'],
+                    'aux.diff': true,
+                    'aux.diffTags': ['test1', 'aux.color'],
                 },
             });
         });
@@ -283,8 +283,8 @@ describe('RecentFilesManager', () => {
                     id: 'diff-testId6',
                     tags: {
                         ...file6.tags,
-                        'aux._diff': true,
-                        'aux._diffTags': ['test', 'aux.color'],
+                        'aux.diff': true,
+                        'aux.diffTags': ['test', 'aux.color'],
                     },
                 },
             ]);
@@ -318,8 +318,8 @@ describe('RecentFilesManager', () => {
                     id: 'diff-testId1',
                     tags: {
                         ...file1_2.tags,
-                        'aux._diff': true,
-                        'aux._diffTags': ['test1', 'aux.color'],
+                        'aux.diff': true,
+                        'aux.diffTags': ['test1', 'aux.color'],
                     },
                 },
             ]);
@@ -353,8 +353,8 @@ describe('RecentFilesManager', () => {
                     id: 'diff-testId4',
                     tags: {
                         ...file4.tags,
-                        'aux._diff': true,
-                        'aux._diffTags': ['test', 'aux.color'],
+                        'aux.diff': true,
+                        'aux.diffTags': ['test', 'aux.color'],
                     },
                 },
             ]);

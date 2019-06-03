@@ -16,7 +16,6 @@ import {
     searchFileState,
     SandboxResult,
     isFile,
-    isDiff,
 } from '@casual-simulation/aux-common';
 import { RecentFilesManager } from './RecentFilesManager';
 

@@ -591,35 +591,12 @@ export function isFilterTag(tag: string) {
     return parsed.success;
 }
 
-export const WELL_KNOWN_TAGS = [
-    /_hidden$/,
-    /\.index$/,
-    /^aux\._lastEditedBy$/,
-    /\._lastActiveTime/,
-    /^aux\._context_/,
-    /^context_/,
-];
-
 /**
  * Determines if the given tag is "well known".
  * @param tag The tag.
- * @param includeSelectionTags Whether to include selection tags.
  */
-export function isTagWellKnown(
-    tag: string,
-    includeSelectionTags: boolean = true
-): boolean {
-    for (let i = 0; i < WELL_KNOWN_TAGS.length; i++) {
-        if (WELL_KNOWN_TAGS[i].test(tag)) {
-            return true;
-        }
-    }
-
-    if (includeSelectionTags && tag.indexOf('aux._selection_') === 0) {
-        return true;
-    }
-
-    return false;
+export function isTagWellKnown(tag: string): boolean {
+    return isHiddenTag(tag);
 }
 
 /**
@@ -660,9 +637,7 @@ export function doFilesAppearEqual(
     }
 
     const tags = union(keys(first.tags), keys(second.tags));
-    const usableTags = tags.filter(
-        t => !isTagWellKnown(t, options.ignoreSelectionTags)
-    );
+    const usableTags = tags.filter(t => !isTagWellKnown(t));
 
     let allEqual = true;
     for (let t of usableTags) {
@@ -676,7 +651,6 @@ export function doFilesAppearEqual(
 }
 
 export interface FileAppearanceEqualityOptions {
-    ignoreSelectionTags?: boolean;
     ignoreId?: boolean;
 }
 
@@ -1493,7 +1467,7 @@ export function getFileShape(
     calc: FileCalculationContext,
     file: File
 ): FileShape {
-    if (isDiff(file)) {
+    if (isDiff(calc, file)) {
         return 'sphere';
     }
     const shape: FileShape = calculateFileValue(calc, file, 'aux.shape');
@@ -1916,8 +1890,16 @@ export function duplicateFile(file: Object, data?: PartialFile): Object {
  * Determines if the given file represents a diff.
  * @param file The file to check.
  */
-export function isDiff(file: File): boolean {
-    return !!file && !!file.tags['aux._diff'] && !!file.tags['aux._diffTags'];
+export function isDiff(calc: FileCalculationContext, file: File): boolean {
+    if (calc) {
+        return (
+            !!file &&
+            calculateBooleanTagValue(calc, file, 'aux.diff', false) &&
+            !!file.tags['aux.diffTags']
+        );
+    } else {
+        return !!file && !!file.tags['aux.diff'] && !!file.tags['aux.diffTags'];
+    }
 }
 
 /**
@@ -1947,7 +1929,7 @@ export function isPickupable(
 
 /**
  * Gets a partial file that can be used to apply the diff that the given file represents.
- * A diff file is any file that has `aux._diff` set to `true` and `aux._diffTags` set to a list of tag names.
+ * A diff file is any file that has `aux.diff` set to `true` and `aux.diffTags` set to a list of tag names.
  * @param calc The file calculation context.
  * @param file The file that represents the diff.
  */
@@ -1955,20 +1937,19 @@ export function getDiffUpdate(
     calc: FileCalculationContext,
     file: File
 ): PartialFile {
-    if (isDiff(file)) {
+    if (isDiff(calc, file)) {
         let update: PartialFile = {
             tags: {},
         };
 
         let tags = tagsOnFile(file);
-        let diffTags =
-            calculateFileValue(calc, file, 'aux.movable.diffTags') ||
-            file.tags['aux._diffTags'];
+        let diffTags = getDiffTags(calc, file);
+
         for (let i = 0; i < tags.length; i++) {
             let tag = tags[i];
             if (
-                tag === 'aux._diff' ||
-                tag === 'aux._diffTags' ||
+                tag === 'aux.diff' ||
+                tag === 'aux.diffTags' ||
                 tag === 'aux.movable.diffTags' ||
                 diffTags.indexOf(tag) < 0
             ) {
@@ -1984,6 +1965,29 @@ export function getDiffUpdate(
         return update;
     }
     return null;
+}
+
+export function getDiffTags(
+    calc: FileCalculationContext,
+    file: File
+): string[] {
+    let diffTags =
+        calculateFileValue(calc, file, 'aux.movable.diffTags') ||
+        calculateFileValue(calc, file, 'aux.diffTags');
+
+    if (!Array.isArray(diffTags)) {
+        diffTags = [diffTags];
+    }
+
+    return diffTags
+        .filter((a: any) => a !== null && typeof a !== 'undefined')
+        .map((a: any) => {
+            if (typeof a !== 'string') {
+                return a.toString();
+            } else {
+                return a;
+            }
+        });
 }
 
 export function simulationIdToString(id: SimulationIdParseSuccess): string {

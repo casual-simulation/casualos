@@ -51,9 +51,9 @@ export interface FileTags {
     ['aux.iframe.element.width']?: number;
     ['aux.iframe.scale']?: number;
     ['aux.channel']?: string;
+    ['aux.diff']?: unknown;
+    ['aux.diffTags']?: unknown;
     ['aux._creator']?: string;
-    ['aux._diff']?: boolean;
-    ['aux._diffTags']?: string[];
 
     // User tags
     ['aux._selection']?: string;
