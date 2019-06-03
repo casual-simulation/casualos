@@ -1,5 +1,4 @@
 import { AuxFile } from '@casual-simulation/aux-common/aux-format';
-import { WorkspaceMesh } from './WorkspaceMesh';
 import { GameObject } from './GameObject';
 import {
     FileCalculationContext,

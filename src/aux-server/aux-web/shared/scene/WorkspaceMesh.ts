@@ -24,12 +24,12 @@ import {
     isMinimized,
     isContext,
     getContextColor,
-    isUserFile,
     DEFAULT_WORKSPACE_COLOR,
     hasValue,
     getContextGridHeight,
     calculateGridScale,
-    isContextSurfaceVisible,
+    getContextVisualizeMode,
+    isUserFile,
 } from '@casual-simulation/aux-common/Files';
 import { keys, minBy, isEqual } from 'lodash';
 import { GridChecker, GridCheckResults } from './grid/GridChecker';
@@ -174,7 +174,7 @@ export class WorkspaceMesh extends GameObject {
 
         this.visible =
             isContext(calc, this.workspace) &&
-            isContextSurfaceVisible(calc, this.workspace);
+            getContextVisualizeMode(calc, this.workspace) === 'surface';
         this.container.visible = !isMinimized(calc, this.workspace);
         this.miniHex.visible = !this.container.visible;
 
@@ -186,9 +186,9 @@ export class WorkspaceMesh extends GameObject {
         }
 
         if (this._gridChanged(this.workspace, prev, calc) || force) {
-            this.updateHexGrid(calc, files);
+            this._updateHexGrid(calc, files);
             if (this._checker) {
-                gridUpdate = await this.updateSquareGrids(this._checker, calc);
+                gridUpdate = await this._updateSquareGrids(this._checker, calc);
 
                 if (this._debugMesh) {
                     this.remove(this._debugMesh);
@@ -233,7 +233,7 @@ export class WorkspaceMesh extends GameObject {
     /**
      * Updates the hex grid to match the workspace data.
      */
-    public updateHexGrid(calc: FileCalculationContext, files: AuxFile3D[]) {
+    private _updateHexGrid(calc: FileCalculationContext, files: AuxFile3D[]) {
         if (this.hexGrid) {
             this.hexGrid.dispose();
             this.container.remove(this.hexGrid);
@@ -303,7 +303,7 @@ export class WorkspaceMesh extends GameObject {
      * Updates the square grid to match the workspace data.
      * @param checker The grid checker to use.
      */
-    async updateSquareGrids(
+    private async _updateSquareGrids(
         checker: GridChecker,
         calc: FileCalculationContext
     ) {
