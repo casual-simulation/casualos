@@ -457,7 +457,7 @@ export default class BuilderGameView extends Vue implements IGameView {
                     contextMap.set(c, context);
                 });
 
-                let worksurface = duplicateFile(oldWorksurface);
+                let worksurface = duplicateFile(calc, oldWorksurface);
 
                 oldContexts.forEach(c => {
                     let newContext = contextMap.get(c);
@@ -491,7 +491,7 @@ export default class BuilderGameView extends Vue implements IGameView {
                         continue;
                     }
 
-                    let newFile = duplicateFile(file);
+                    let newFile = duplicateFile(calc, file);
 
                     oldContexts.forEach(c => {
                         let newContext = contextMap.get(c);

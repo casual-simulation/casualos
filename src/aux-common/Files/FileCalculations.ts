@@ -54,7 +54,6 @@ import { FilesState, cleanFile, hasValue } from './FilesChannel';
 import { merge, shortUuid } from '../utils';
 import { AuxFile, AuxObject, AuxOp, AuxState } from '../aux-format';
 import { Atom } from '@casual-simulation/causal-trees';
-import { TorusGeometry } from 'three';
 
 export var ShortId_Length: number = 5;
 
@@ -1869,13 +1868,23 @@ export function objectsAtWorkspace(objects: Object[], workspaceId: string) {
  * First, it will have a different ID.
  * Second, it will never be marked as destroyed.
  * Third, it will not have any well known tags. (see isTagWellKnown())
+ * @param calc The file calculation context.
  * @param file The file to duplicate.
  * @param data The optional data that should override the existing file data.
  */
-export function duplicateFile(file: Object, data?: PartialFile): Object {
+export function duplicateFile(
+    calc: FileCalculationContext,
+    file: Object,
+    data?: PartialFile
+): Object {
     let copy = cloneDeep(file);
     const tags = tagsOnFile(copy);
-    const tagsToRemove = tags.filter(t => isTagWellKnown(t));
+    const contextsToRemove = union(
+        ...calc.objects.map(o => getFileConfigContexts(calc, o))
+    );
+    const tagsToRemove = tags.filter(
+        t => isTagWellKnown(t) || contextsToRemove.some(c => t.indexOf(c) === 0)
+    );
     tagsToRemove.forEach(t => {
         delete copy.tags[t];
     });

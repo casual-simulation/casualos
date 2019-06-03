@@ -50,9 +50,9 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
     ): BaseFileDragOperation {
         const mode = getFileDragMode(calc, this._file);
         if (mode === 'clone') {
-            return this._createCloneDragOperation();
+            return this._createCloneDragOperation(calc);
         } else if (mode === 'diff') {
-            return this._createDiffDragOperation();
+            return this._createDiffDragOperation(calc);
         }
 
         const file3D: AuxFile3D = <AuxFile3D>this._file3D;
@@ -88,8 +88,10 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
         return null;
     }
 
-    protected _createCloneDragOperation(): BaseFileDragOperation {
-        let duplicatedFile = duplicateFile(<File>this._file);
+    protected _createCloneDragOperation(
+        calc: FileCalculationContext
+    ): BaseFileDragOperation {
+        let duplicatedFile = duplicateFile(calc, <File>this._file);
         const {
             playerSimulation3D,
             inventorySimulation3D,
@@ -103,9 +105,11 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
         );
     }
 
-    protected _createDiffDragOperation(): BaseFileDragOperation {
+    protected _createDiffDragOperation(
+        calc: FileCalculationContext
+    ): BaseFileDragOperation {
         const tags = tagsOnFile(this._file);
-        let duplicatedFile = duplicateFile(<File>this._file, {
+        let duplicatedFile = duplicateFile(calc, <File>this._file, {
             tags: {
                 'aux.diff': true,
                 'aux.diffTags': tags,

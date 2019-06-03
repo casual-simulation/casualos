@@ -2291,7 +2291,9 @@ describe('FileCalculations', () => {
         it('should return a copy with a different ID', () => {
             const first: Object = createFile('id');
             first.tags.fun = 'abc';
-            const second = duplicateFile(first);
+
+            const calc = createCalculationContext([first]);
+            const second = duplicateFile(calc, first);
 
             expect(second.id).not.toEqual(first.id);
             expect(second.id).toBe('test');
@@ -2304,7 +2306,8 @@ describe('FileCalculations', () => {
             first.tags._workspace = 'abc';
 
             uuidMock.mockReturnValue('test');
-            const second = duplicateFile(first);
+            const calc = createCalculationContext([first]);
+            const second = duplicateFile(calc, first);
 
             expect(second.id).not.toEqual(first.id);
             expect(second.tags['aux._destroyed']).toBeUndefined();
@@ -2321,7 +2324,8 @@ describe('FileCalculations', () => {
             first.tags[`aux._context_1234567.z`] = 3;
             first.tags[`aux._selection_99999`] = true;
 
-            const second = duplicateFile(first);
+            const calc = createCalculationContext([first]);
+            const second = duplicateFile(calc, first);
 
             expect(second.id).not.toEqual(first.id);
             expect(second.tags).toEqual({
@@ -2345,7 +2349,8 @@ describe('FileCalculations', () => {
             first.tags[`aux.other`] = 100;
             first.tags[`myTag`] = 'Hello';
 
-            const second = duplicateFile(first, {
+            const calc = createCalculationContext([first]);
+            const second = duplicateFile(calc, first, {
                 tags: {
                     [`aux._selection_99999`]: true,
                     [`aux._context_abcdefg`]: true,
@@ -2366,7 +2371,8 @@ describe('FileCalculations', () => {
                 testTag: 'abcdefg',
                 name: 'ken',
             });
-            const second = duplicateFile(first, {
+            const calc = createCalculationContext([first]);
+            const second = duplicateFile(calc, first, {
                 tags: {
                     name: 'abcdef',
                 },
@@ -2382,8 +2388,8 @@ describe('FileCalculations', () => {
         it('should not modify the original file', () => {
             let first: Object = createFile('id');
             first.tags['aux._destroyed'] = true;
-
-            const second = duplicateFile(first);
+            const calc = createCalculationContext([first]);
+            const second = duplicateFile(calc, first);
 
             expect(first.tags['aux._destroyed']).toBe(true);
         });
@@ -2393,10 +2399,30 @@ describe('FileCalculations', () => {
             first.tags['aux.diff'] = true;
             first.tags['aux.diffTags'] = ['abvc'];
 
-            const second = duplicateFile(first);
+            const calc = createCalculationContext([first]);
+            const second = duplicateFile(calc, first);
 
             expect(second.tags['aux.diff']).toBe(true);
             expect(second.tags['aux.diffTags']).toEqual(['abvc']);
+        });
+
+        it('should not have any contexts', () => {
+            let first: Object = createFile('id', {
+                abc: true,
+                'abc.x': 1,
+                'abc.y': 2,
+                def: true,
+            });
+            let context: Object = createFile('context', {
+                'aux.context': 'abc',
+            });
+
+            const calc = createCalculationContext([context, first]);
+            const second = duplicateFile(calc, first);
+
+            expect(second.tags).toEqual({
+                def: true,
+            });
         });
     });
 
