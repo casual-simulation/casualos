@@ -13,6 +13,14 @@ import {
     getUserMode,
     AuxObject,
     getFilesStateFromStoredTree,
+    ShowInputForTagEvent,
+    ShowInputOptions,
+    FileCalculationContext,
+    AuxFile,
+    calculateFormattedFileValue,
+    getFileInputPlaceholder,
+    ShowInputType,
+    ShowInputSubtype,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard } from '../../shared/SharedUtils';
@@ -29,6 +37,7 @@ import vueFilePond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
 import { Simulation } from '../../shared/Simulation';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
+import { Swatches, Chrome, Compact } from 'vue-color';
 
 const FilePond = vueFilePond();
 
@@ -41,6 +50,9 @@ const FilePond = vueFilePond();
         'qr-icon': QRAuxBuilder,
         'file-search': FileSearch,
         'file-table-toggle': FileTableToggle,
+        'color-picker-swatches': Swatches,
+        'color-picker-advanced': Chrome,
+        'color-picker-basic': Compact,
     },
 })
 export default class BuilderApp extends Vue {
@@ -123,6 +135,18 @@ export default class BuilderApp extends Vue {
      * The QR Code to display.
      */
     qrCode: string = '';
+
+    inputDialogLabel: string = '';
+    inputDialogPlaceholder: string = '';
+    inputDialogInput: string = '';
+    inputDialogType: ShowInputType = 'text';
+    inputDialogSubtype: ShowInputSubtype = 'basic';
+    inputDialogInputValue: any = '';
+    inputDialogTarget: AuxFile = null;
+    inputDialogLabelColor: string = '#000';
+    inputDialogBackgroundColor: string = '#FFF';
+    showInputDialog: boolean = false;
+    inputDialogSimulation: Simulation = null;
 
     /**
      * Gets whether we're in developer mode.
@@ -324,6 +348,8 @@ export default class BuilderApp extends Vue {
                             }
                         } else if (e.name === 'import_aux') {
                             this._importAUX(fileManager, e.url);
+                        } else if (e.name === 'show_input_for_tag') {
+                            this._showInputDialog(fileManager, e);
                         }
                     })
                 );
@@ -482,6 +508,105 @@ export default class BuilderApp extends Vue {
             EventBus.$off(options.okEvent);
         });
         EventBus.$emit('showConfirmDialog', options);
+    }
+
+    // TODO: Move to a shared class/component
+    _showInputDialog(simulation: Simulation, event: ShowInputForTagEvent) {
+        const calc = simulation.helper.createContext();
+        const file = simulation.helper.filesState[event.fileId];
+        this._updateLabel(calc, file, event.tag, event.options);
+        this._updateColor(calc, file, event.options);
+        this._updateInput(calc, file, event.tag, event.options);
+        this.inputDialogSimulation = simulation;
+        this.showInputDialog = true;
+    }
+
+    updateInputDialogColor(newColor: any) {
+        if (typeof newColor === 'object') {
+            this.inputDialogInputValue = newColor.hex;
+        } else {
+            this.inputDialogInputValue = newColor;
+        }
+    }
+
+    async closeInputDialog() {
+        if (this.showInputDialog) {
+            await this.inputDialogSimulation.helper.action('onClose', [
+                this.inputDialogTarget,
+            ]);
+            this.showInputDialog = false;
+        }
+    }
+
+    async saveInputDialog() {
+        if (this.showInputDialog) {
+            await this.inputDialogSimulation.helper.updateFile(
+                this.inputDialogTarget,
+                {
+                    tags: {
+                        [this.inputDialogInput]: this.inputDialogInputValue,
+                    },
+                }
+            );
+            await this.inputDialogSimulation.helper.action('onSave', [
+                this.inputDialogTarget,
+            ]);
+            await this.closeInputDialog();
+        }
+    }
+
+    private _updateColor(
+        calc: FileCalculationContext,
+        file: AuxFile,
+        options: Partial<ShowInputOptions>
+    ) {
+        if (typeof options.backgroundColor !== 'undefined') {
+            this.inputDialogBackgroundColor = options.backgroundColor;
+        } else {
+            this.inputDialogBackgroundColor = '#FFF';
+        }
+    }
+
+    private _updateLabel(
+        calc: FileCalculationContext,
+        file: AuxFile,
+        tag: string,
+        options: Partial<ShowInputOptions>
+    ) {
+        if (typeof options.title !== 'undefined') {
+            this.inputDialogLabel = options.title;
+        } else {
+            this.inputDialogLabel = tag;
+        }
+
+        if (typeof options.foregroundColor !== 'undefined') {
+            this.inputDialogLabelColor = options.foregroundColor;
+        } else {
+            this.inputDialogLabelColor = '#000';
+        }
+    }
+
+    private _updateInput(
+        calc: FileCalculationContext,
+        file: AuxFile,
+        tag: string,
+        options: Partial<ShowInputOptions>
+    ) {
+        this.inputDialogInput = tag;
+        this.inputDialogType = options.type || 'text';
+        this.inputDialogSubtype = options.subtype || 'basic';
+        this.inputDialogTarget = file;
+        this.inputDialogInputValue = calculateFormattedFileValue(
+            calc,
+            this.inputDialogTarget,
+            this.inputDialogInput
+        );
+
+        if (typeof options.placeholder !== 'undefined') {
+            this.inputDialogPlaceholder = options.placeholder;
+        } else {
+            this.inputDialogPlaceholder = this.inputDialogInput;
+        }
     }
 
     private async _importAUX(sim: Simulation, url: string) {

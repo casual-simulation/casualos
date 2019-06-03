@@ -8,7 +8,6 @@ import {
     FileCalculationContext,
     AuxFile,
     isFileMovable,
-    getFileDragMode,
 } from '@casual-simulation/aux-common';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';

@@ -72,6 +72,7 @@ export interface FileTags {
     ['aux.context.color']?: string;
     ['aux.context.locked']?: unknown;
     ['aux.context.grid.scale']?: number;
+    ['aux.context.visualize']?: ContextVisualizeMode;
     ['aux.context.surface.x']?: number;
     ['aux.context.surface.y']?: number;
     ['aux.context.surface.z']?: number;
@@ -114,8 +115,15 @@ export type FileShape = 'cube' | 'sphere' | 'sprite';
  * "clone" means that the file should be cloned whenever dragged.
  * "pickup" means that the file should be able to be dragged across contexts but not within a context.
  * "drag" means that the file should be able to be dragged within a context but not across contexts.
+ * "diff" means that the file should be cloned as a diff when dragged.
  */
-export type FileDragMode = 'all' | 'none' | 'clone' | 'pickup' | 'drag';
+export type FileDragMode =
+    | 'all'
+    | 'none'
+    | 'clone'
+    | 'pickup'
+    | 'drag'
+    | 'diff';
 
 /**
  * Defines the possible anchor positions for a label.
@@ -127,6 +135,15 @@ export type FileLabelAnchor =
     | 'left'
     | 'right'
     | 'floating';
+
+/**
+ * Defines the possible context visualize modes.
+ *
+ * true means that the context is visible.
+ * false means the context is not visible.
+ * "surface" means the context is visible and renders a worksurface.
+ */
+export type ContextVisualizeMode = true | false | 'surface';
 
 /**
  * The default user mode.
@@ -220,6 +237,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.scene.color',
     'aux.color',
     'aux.movable',
+    'aux.movable.diffTags',
     'aux.stackable',
     'aux.mergable',
     'aux.destroyable',
@@ -264,7 +282,6 @@ export const KNOWN_TAGS: string[] = [
     'aux.context.color',
     'aux.context.grid.scale',
     'aux.context.surface.grid',
-    'aux.context.surface',
     'aux.context.surface.x',
     'aux.context.surface.y',
     'aux.context.surface.z',
@@ -276,6 +293,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.context.surface.size',
     'aux.context.surface.minimized',
     'aux.context.surface.movable',
+    'aux.context.visualize',
     'onClick()',
     'onCombine()',
     'onSave()',

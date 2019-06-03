@@ -8,7 +8,6 @@ import {
 import {
     createFile,
     FileCalculationContext,
-    getDiffUpdate,
     isDiff,
     CREATE_ACTION_NAME,
 } from '@casual-simulation/aux-common/Files/FileCalculations';

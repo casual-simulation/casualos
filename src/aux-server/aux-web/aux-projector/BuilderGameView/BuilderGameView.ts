@@ -339,7 +339,7 @@ export default class BuilderGameView extends BaseGameView {
                     let newContext = contextMap.get(c);
                     worksurface.tags[c] = null;
                     worksurface.tags['aux.context'] = newContext;
-                    worksurface.tags['aux.context.surface'] = true;
+                    worksurface.tags['aux.context.visualize'] = 'surface';
                     worksurface.tags[newContext] = true;
                 });
 

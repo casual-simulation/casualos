@@ -8,7 +8,6 @@ module.exports = merge(common, {
     plugins: [
         new webpack.DefinePlugin({
             PRODUCTION: JSON.stringify(false),
-            ENABLE_SENTRY: JSON.stringify(false),
         }),
     ],
 });

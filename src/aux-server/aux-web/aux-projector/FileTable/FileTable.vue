@@ -173,11 +173,7 @@
                     <template v-for="file in files">
                         <!-- deselect button -->
                         <div :key="`${file.id}-remove`" class="file-cell remove-item">
-                            <md-button
-                                v-if="!isSearch"
-                                class="md-icon-button md-dense"
-                                @click="toggleFile(file)"
-                            >
+                            <md-button class="md-icon-button md-dense" @click="toggleFile(file)">
                                 <md-icon>remove</md-icon>
                                 <md-tooltip md-delay="1000" md-direction="top"
                                     >Unselect Item</md-tooltip

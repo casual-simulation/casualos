@@ -121,6 +121,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
 
             this._combine = result.combine;
             this._other = result.other;
+            this._merge = result.merge;
 
             if (result.stackable || result.index === 0) {
                 this._updateFilesPositions(

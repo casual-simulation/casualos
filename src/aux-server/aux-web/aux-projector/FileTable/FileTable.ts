@@ -207,7 +207,22 @@ export default class FileTable extends Vue {
     }
 
     async toggleFile(file: AuxObject) {
-        await this.fileManager.selection.selectFile(file);
+        if (this.isSearch) {
+            if (this.files.length > 1) {
+                for (let i = this.files.length - 1; i >= 0; i--) {
+                    if (this.files[i] === file) {
+                        this.files.splice(i, 1);
+                        break;
+                    }
+                }
+
+                await this.fileManager.selection.setSelectedFiles(this.files);
+            }
+
+            this.fileManager.filePanel.search = '';
+        } else {
+            await this.fileManager.selection.selectFile(file);
+        }
     }
 
     async deleteFile(file: AuxObject) {

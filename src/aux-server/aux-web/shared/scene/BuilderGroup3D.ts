@@ -8,6 +8,8 @@ import {
     TagUpdatedEvent,
     FileCalculationContext,
     isContext,
+    getContextVisualizeMode,
+    isMinimized,
 } from '@casual-simulation/aux-common';
 import { Object3D } from 'three';
 import { Simulation3D } from './Simulation3D';
@@ -91,8 +93,10 @@ export class BuilderGroup3D extends ContextGroup3D {
             this.updateMatrixWorld(true);
 
             await this.surface.update(calc, file, this.getFiles());
+            const mode = getContextVisualizeMode(calc, this.file);
             this.display.visible =
-                this.surface.visible && this.surface.container.visible;
+                (mode === 'surface' || mode === true) &&
+                !isMinimized(calc, this.file);
         }
     }
 }

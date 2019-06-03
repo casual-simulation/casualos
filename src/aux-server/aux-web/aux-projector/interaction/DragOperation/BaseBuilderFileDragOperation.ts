@@ -12,7 +12,6 @@ import {
     action,
     calculateActionEvents,
     DESTROY_ACTION_NAME,
-    getFileDragMode,
     toast,
     getShortId,
 } from '@casual-simulation/aux-common';
