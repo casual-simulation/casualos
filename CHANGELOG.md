@@ -1,5 +1,21 @@
 # AUX Changelog
 
+## V0.8.4
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Made AUX Builder remove any context-related tags when cloning/duplicating a file.
+        -   This prevents diff files from magically appearing in other contexts when dragging them.
+        -   It is accomplished by deleting any tag that is hidden (starts with an underscore) or is related to a context made by an `aux.context` tag in another file.
+    -   Added `diff.save()` and `diff.load()` AUX Script functions.
+        -   `diff.save(diffToSave)`: Takes the given diff and returns JSON that can be stored in a tag.
+        -   `diff.load(diffToLoad)`: Renamed from `diff.create()`, `diff.load()` is now able to take some JSON and returns a diff that can be applied to a file using `applyDiff()`.
+    -   Numbers in tags can now start with a decimal instead of having to start with a digit.
+        -   For example, `.0123` is now allowed and equals `0.0123`.
+
 ## V0.8.3
 
 ### Date: 06/03/2019
