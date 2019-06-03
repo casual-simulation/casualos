@@ -6,6 +6,9 @@ import {
     DEFAULT_WORKSPACE_HEIGHT,
     DEFAULT_WORKSPACE_GRID_SCALE,
     DEFAULT_USER_MODE,
+    DEFAULT_BUILDER_USER_COLOR,
+    DEFAULT_PLAYER_USER_COLOR,
+    AuxDomain,
     UserMode,
     SelectionMode,
     DEFAULT_SELECTION_MODE,
@@ -749,6 +752,42 @@ export function toggleFileSelection(
  */
 export function newSelectionId() {
     return `aux._selection_${shortUuid()}`;
+}
+
+/**
+ * Gets the color that the given user file should appear as.
+ * @param calc The file calculation context.
+ * @param userFile The user file.
+ * @param globalsFile The globals file.
+ * @param domain The domain.
+ */
+export function getUserFileColor(
+    calc: FileCalculationContext,
+    userFile: File,
+    globalsFile: File,
+    domain: AuxDomain
+): string {
+    if (userFile.tags['aux.color']) {
+        return calculateFileValue(calc, userFile, 'aux.color');
+    }
+
+    if (domain === 'builder') {
+        return (
+            calculateFileValue(
+                calc,
+                globalsFile,
+                'aux.scene.user.builder.color'
+            ) || DEFAULT_BUILDER_USER_COLOR
+        );
+    } else {
+        return (
+            calculateFileValue(
+                calc,
+                globalsFile,
+                'aux.scene.user.player.color'
+            ) || DEFAULT_PLAYER_USER_COLOR
+        );
+    }
 }
 
 /**

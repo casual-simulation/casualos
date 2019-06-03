@@ -1,8 +1,16 @@
-import { Vector3, Group, Mesh, Math as ThreeMath } from 'three';
+import {
+    Vector3,
+    Group,
+    Mesh,
+    Math as ThreeMath,
+    MeshToonMaterial,
+    Color,
+} from 'three';
 import { Text3D } from '../Text3D';
 import {
     FileCalculationContext,
     AuxObject,
+    getUserFileColor,
 } from '@casual-simulation/aux-common';
 import { setLayer, disposeMesh, createUserCone } from '../SceneUtils';
 import { LayersHelper } from '../LayersHelper';
@@ -57,13 +65,7 @@ export class UserMeshDecorator extends AuxFile3DDecorator
         this.label.position.add(new Vector3(1.55, 0.7, 0)); // This is hardcoded. To lazy to figure out that math.
 
         // User Mesh
-        const isInAuxPlayer =
-            this.file3D.contextGroup.file.id !== this.file3D.file.id;
-        this.mesh = createUserCone(
-            undefined,
-            undefined,
-            isInAuxPlayer ? 0x0000dd : undefined
-        );
+        this.mesh = createUserCone();
         this.container.add(this.mesh);
         this.mesh.rotation.x = ThreeMath.degToRad(90.0);
         this.mesh.rotation.y = ThreeMath.degToRad(45.0);
@@ -72,6 +74,7 @@ export class UserMeshDecorator extends AuxFile3DDecorator
     }
 
     fileUpdated(calc: FileCalculationContext): void {
+        this._updateColor(calc);
         this.file3D.display.updateMatrixWorld(false);
     }
 
@@ -102,5 +105,19 @@ export class UserMeshDecorator extends AuxFile3DDecorator
         } else {
             return false;
         }
+    }
+
+    private _updateColor(calc: FileCalculationContext) {
+        const isInAuxPlayer =
+            this.file3D.contextGroup.file.id !== this.file3D.file.id;
+        const color = getUserFileColor(
+            calc,
+            this.file3D.file,
+            this.file3D.contextGroup.simulation3D.simulation.helper.globalsFile,
+            isInAuxPlayer ? 'player' : 'builder'
+        );
+
+        const material: MeshToonMaterial = <MeshToonMaterial>this.mesh.material;
+        material.color.set(new Color(color));
     }
 }

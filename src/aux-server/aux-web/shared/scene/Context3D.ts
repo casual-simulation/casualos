@@ -8,6 +8,7 @@ import {
     isFileInContext,
     getFileConfigContexts,
     isConfigForContext,
+    GLOBALS_FILE_ID,
 } from '@casual-simulation/aux-common';
 import { Object3D, SceneUtils } from 'three';
 import { AuxFile3D } from './AuxFile3D';
@@ -91,12 +92,17 @@ export class Context3D extends GameObject {
         const isInContext3D = typeof this.files.get(file.id) !== 'undefined';
         const isInContext = isFileInContext(calc, file, this.context);
         const isForContext = isConfigForContext(calc, file, this.context);
+        const isGlobalsFile = file.id === GLOBALS_FILE_ID;
 
         if (!isInContext3D && isInContext) {
             this._addFile(file, calc);
         } else if (isInContext3D && !isInContext) {
             this._removeFile(file.id);
-        } else if ((isInContext3D && isInContext) || isForContext) {
+        } else if (
+            (isInContext3D && isInContext) ||
+            isForContext ||
+            isGlobalsFile
+        ) {
             this._updateFile(file, updates, calc);
         }
     }

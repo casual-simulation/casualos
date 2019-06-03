@@ -63,9 +63,17 @@ import {
     isEditable,
     normalizeAUXFileURL,
     getContextVisualizeMode,
+    getUserFileColor,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
-import { File, Object, PartialFile } from './File';
+import {
+    File,
+    Object,
+    PartialFile,
+    DEFAULT_BUILDER_USER_COLOR,
+    DEFAULT_PLAYER_USER_COLOR,
+    AuxDomain,
+} from './File';
 import { FilesState, cleanFile, fileRemoved } from './FilesChannel';
 import { file } from '../aux-format';
 import uuid from 'uuid/v4';
@@ -4185,6 +4193,66 @@ describe('FileCalculations', () => {
 
             expect(whitelistOrBlacklistAllowsAccess(calc, file, 'DEF')).toBe(
                 true
+            );
+        });
+
+        describe('getUserFileColor()', () => {
+            const defaultCases = [
+                [DEFAULT_BUILDER_USER_COLOR, 'builder'],
+                [DEFAULT_PLAYER_USER_COLOR, 'player'],
+            ];
+
+            it.each(defaultCases)(
+                'should default to %s when in %s',
+                (expected: any, domain: AuxDomain) => {
+                    const file = createFile('test', {});
+                    const globals = createFile('globals', {});
+
+                    const calc = createCalculationContext([globals, file]);
+
+                    expect(getUserFileColor(calc, file, globals, domain)).toBe(
+                        expected
+                    );
+                }
+            );
+
+            const globalsCases = [
+                ['aux.scene.user.player.color', 'player', '#40A287'],
+                ['aux.scene.user.builder.color', 'builder', '#AAAAAA'],
+            ];
+
+            it.each(globalsCases)(
+                'should use %s when in %s',
+                (tag: string, domain: AuxDomain, value: any) => {
+                    const file = createFile('test', {});
+                    const globals = createFile('globals', {
+                        [tag]: value,
+                    });
+
+                    const calc = createCalculationContext([globals, file]);
+
+                    expect(getUserFileColor(calc, file, globals, domain)).toBe(
+                        value
+                    );
+                }
+            );
+
+            const userCases = [['player'], ['builder']];
+
+            it.each(userCases)(
+                'should use aux.color from the user file',
+                (domain: AuxDomain) => {
+                    const file = createFile('test', {
+                        'aux.color': 'red',
+                    });
+                    const globals = createFile('globals', {});
+
+                    const calc = createCalculationContext([globals, file]);
+
+                    expect(getUserFileColor(calc, file, globals, domain)).toBe(
+                        'red'
+                    );
+                }
             );
         });
     });

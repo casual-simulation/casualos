@@ -13,6 +13,8 @@ export interface File {
 export interface FileTags {
     // Global file tags
     ['aux.scene.color']?: string;
+    ['aux.scene.user.player.color']?: unknown;
+    ['aux.scene.user.builder.color']?: unknown;
     ['aux.whitelist']?: unknown;
     ['aux.blacklist']?: unknown;
     ['aux.builders']?: unknown;
@@ -211,6 +213,21 @@ export const DEFAULT_WORKSPACE_COLOR = '#999999';
 export const DEFAULT_SCENE_BACKGROUND_COLOR = '#263238';
 
 /**
+ * The default color for users in AUX Builder.
+ */
+export const DEFAULT_BUILDER_USER_COLOR = '#00D000';
+
+/**
+ * The default color for users in AUX Player.
+ */
+export const DEFAULT_PLAYER_USER_COLOR = '#DDDD00';
+
+/**
+ * The ID of the global configuration file.
+ */
+export const GLOBALS_FILE_ID = 'globals';
+
+/**
  * The current file format version for AUX Files.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's files
@@ -235,6 +252,8 @@ export const KNOWN_TAGS: string[] = [
     'aux._creator',
     'aux._lastEditedBy',
     'aux.scene.color',
+    'aux.scene.user.player.color',
+    'aux.scene.user.builder.color',
     'aux.color',
     'aux.movable',
     'aux.movable.diffTags',

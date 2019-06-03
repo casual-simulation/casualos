@@ -100,13 +100,13 @@ export function createSprite(): Sprite {
 export function createUserCone(
     radius?: number,
     height?: number,
-    color?: number
+    color?: string | number
 ): Mesh {
     radius = getOptionalValue(radius, 0.5);
     height = getOptionalValue(height, 0.7);
     const geometry = new ConeGeometry(radius, height, 4, 1, true);
     let material = baseAuxMeshMaterial();
-    material.color.set(color || 0x00d000);
+    material.color.set(new Color(color || 0x00d000));
     material.side = DoubleSide;
     material.flatShading = true;
     material.transparent = true;
