@@ -1,7 +1,7 @@
 import { Plane, Vector3 } from 'three';
 
 import Component from 'vue-class-component';
-import { Inject, Provide } from 'vue-property-decorator';
+import { Inject, Provide, Prop } from 'vue-property-decorator';
 
 import {
     getFileConfigContexts,
@@ -46,10 +46,8 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
     @Inject() removeSidebarItem: BuilderApp['removeSidebarItem'];
     @Inject() removeSidebarGroup: BuilderApp['removeSidebarGroup'];
 
-    // TODO: Find a better way to refactor this
     @Inject() home: BuilderHome;
     @Inject() buildApp: BuilderApp;
-    @Provide() fileRenderer: FileRenderer = new FileRenderer();
 
     protected createGame(): Game {
         return new BuilderGame(this);
@@ -71,7 +69,7 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
         }
     }
 
-    onDragLeave() {
+    onDragLeave(event: DragEvent) {
         this.showUploadFiles = false;
     }
 
