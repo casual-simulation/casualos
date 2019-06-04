@@ -55,7 +55,7 @@ export interface FileTags {
     ['aux.channel']?: string;
     ['aux.diff']?: unknown;
     ['aux.diffTags']?: unknown;
-    ['aux._creator']?: string;
+    ['aux.creator']?: string;
 
     // User tags
     ['aux._selection']?: string;
@@ -249,12 +249,12 @@ export const KNOWN_TAGS: string[] = [
     'aux._mode',
     'aux._editingFile',
     'aux._selectionMode',
-    'aux._creator',
     'aux._lastEditedBy',
     'aux.scene.color',
     'aux.scene.user.player.color',
     'aux.scene.user.builder.color',
     'aux.color',
+    'aux.creator',
     'aux.movable',
     'aux.movable.diffTags',
     'aux.stackable',

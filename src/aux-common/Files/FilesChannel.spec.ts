@@ -933,7 +933,7 @@ describe('FilesChannel', () => {
                             stay: 'def',
                             'leave.x': 0,
                             'leave.y': 0,
-                            'aux._creator': 'thisFile',
+                            'aux.creator': 'thisFile',
                         },
                     }),
                     fileUpdated('uuid-0', {
@@ -947,7 +947,7 @@ describe('FilesChannel', () => {
         });
 
         describe('create()', () => {
-            it('should create a new file with aux._creator set to the original id', () => {
+            it('should create a new file with aux.creator set to the original id', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -969,13 +969,13 @@ describe('FilesChannel', () => {
                         id: 'uuid-0',
                         tags: {
                             abc: 'def',
-                            'aux._creator': 'thisFile',
+                            'aux.creator': 'thisFile',
                         },
                     }),
                 ]);
             });
 
-            it('should create a new file with aux._creator set to the given id', () => {
+            it('should create a new file with aux.creator set to the given id', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -997,7 +997,7 @@ describe('FilesChannel', () => {
                         id: 'uuid-0',
                         tags: {
                             abc: 'def',
-                            'aux._creator': 'thisFile',
+                            'aux.creator': 'thisFile',
                         },
                     }),
                 ]);
@@ -1027,7 +1027,7 @@ describe('FilesChannel', () => {
                         tags: {
                             abc: 'def',
                             ghi: 123,
-                            'aux._creator': 'thisFile',
+                            'aux.creator': 'thisFile',
                         },
                     }),
                 ]);
@@ -1065,7 +1065,7 @@ describe('FilesChannel', () => {
                             abc: 'def',
                             name: 'that',
                             formula: '=this.abc',
-                            'aux._creator': 'thisFile',
+                            'aux.creator': 'thisFile',
                         },
                     }),
                 ]);
@@ -1228,14 +1228,14 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-0',
                         tags: {
-                            'aux._creator': 'thisFile',
+                            'aux.creator': 'thisFile',
                             abc: 100,
                         },
                     }),
                 ]);
 
                 const event = result.events[0] as FileAddedEvent;
-                const parent = event.file.tags['aux._creator'] as any;
+                const parent = event.file.tags['aux.creator'] as any;
                 const abc = event.file.tags['abc'] as any;
                 expect(parent[isProxy]).toBeFalsy();
                 expect(abc[isProxy]).toBeFalsy();
@@ -1264,7 +1264,7 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-0',
                         tags: {
-                            'aux._creator': 'thisFile',
+                            'aux.creator': 'thisFile',
                             abc: 1,
                             'onCreate()': 'this.num = 100',
                         },
@@ -1300,14 +1300,14 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-0',
                         tags: {
-                            'aux._creator': 'thisFile',
+                            'aux.creator': 'thisFile',
                             hello: true,
                         },
                     }),
                     fileAdded({
                         id: 'uuid-1',
                         tags: {
-                            'aux._creator': 'thisFile',
+                            'aux.creator': 'thisFile',
                             hello: false,
                         },
                     }),
@@ -1342,7 +1342,7 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-0',
                         tags: {
-                            'aux._creator': 'thisFile',
+                            'aux.creator': 'thisFile',
                             hello: true,
                             wow: 1,
                         },
@@ -1350,7 +1350,7 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-1',
                         tags: {
-                            'aux._creator': 'thisFile',
+                            'aux.creator': 'thisFile',
                             hello: false,
                             wow: 1,
                         },
@@ -1358,7 +1358,7 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-2',
                         tags: {
-                            'aux._creator': 'thisFile',
+                            'aux.creator': 'thisFile',
                             hello: true,
                             oh: 'haha',
                         },
@@ -1366,7 +1366,7 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-3',
                         tags: {
-                            'aux._creator': 'thisFile',
+                            'aux.creator': 'thisFile',
                             hello: false,
                             oh: 'haha',
                         },
@@ -1374,7 +1374,7 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-4',
                         tags: {
-                            'aux._creator': 'thisFile',
+                            'aux.creator': 'thisFile',
                             hello: true,
                             test: 'a',
                         },
@@ -1382,7 +1382,7 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-5',
                         tags: {
-                            'aux._creator': 'thisFile',
+                            'aux.creator': 'thisFile',
                             hello: false,
                             test: 'a',
                         },
@@ -1431,7 +1431,7 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-0',
                         tags: {
-                            'aux._creator': 'thisFile',
+                            'aux.creator': 'thisFile',
                             test: true,
                             hello: true,
                         },
@@ -1439,7 +1439,7 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-1',
                         tags: {
-                            'aux._creator': 'thisFile',
+                            'aux.creator': 'thisFile',
                             test: true,
                             hello: false,
                         },
@@ -1449,7 +1449,7 @@ describe('FilesChannel', () => {
         });
 
         describe('destroy()', () => {
-            it('should destroy and files that have aux._creator set to the file ID', () => {
+            it('should destroy and files that have aux.creator set to the file ID', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -1460,7 +1460,7 @@ describe('FilesChannel', () => {
                     childFile: {
                         id: 'childFile',
                         tags: {
-                            'aux._creator': 'thisFile',
+                            'aux.creator': 'thisFile',
                         },
                     },
                 };
@@ -1476,7 +1476,7 @@ describe('FilesChannel', () => {
                 ]);
             });
 
-            it('should recursively destroy files that have aux._creator set to the file ID', () => {
+            it('should recursively destroy files that have aux.creator set to the file ID', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -1487,25 +1487,25 @@ describe('FilesChannel', () => {
                     childFile: {
                         id: 'childFile',
                         tags: {
-                            'aux._creator': 'thisFile',
+                            'aux.creator': 'thisFile',
                         },
                     },
                     childChildFile: {
                         id: 'childChildFile',
                         tags: {
-                            'aux._creator': 'childFile',
+                            'aux.creator': 'childFile',
                         },
                     },
                     otherChildFile: {
                         id: 'otherChildFile',
                         tags: {
-                            'aux._creator': 'thisFile',
+                            'aux.creator': 'thisFile',
                         },
                     },
                     otherChildChildFile: {
                         id: 'otherChildChildFile',
                         tags: {
-                            'aux._creator': 'otherChildFile',
+                            'aux.creator': 'otherChildFile',
                         },
                     },
                 };
@@ -1611,7 +1611,7 @@ describe('FilesChannel', () => {
                     childFile: {
                         id: 'childFile',
                         tags: {
-                            'aux._creator': 'thisFile',
+                            'aux.creator': 'thisFile',
                         },
                     },
                 };
@@ -1634,14 +1634,14 @@ describe('FilesChannel', () => {
                     childFile: {
                         id: 'childFile',
                         tags: {
-                            'aux._creator': 'thisFile',
+                            'aux.creator': 'thisFile',
                             'aux.destroyable': false,
                         },
                     },
                     grandChildFile: {
                         id: 'grandChildFile',
                         tags: {
-                            'aux._creator': 'childFile',
+                            'aux.creator': 'childFile',
                         },
                     },
                 };
@@ -3253,13 +3253,13 @@ describe('FilesChannel', () => {
         it('should return a list of events needed to destroy the given file', () => {
             const file1 = createFile('file1');
             const file2 = createFile('file2', {
-                'aux._creator': 'file1',
+                'aux.creator': 'file1',
             });
             const file3 = createFile('file3', {
-                'aux._creator': 'file2',
+                'aux.creator': 'file2',
             });
             const file4 = createFile('file4', {
-                'aux._creator': 'file1',
+                'aux.creator': 'file1',
             });
             const file5 = createFile('file5');
 
@@ -3283,14 +3283,14 @@ describe('FilesChannel', () => {
         it('should not return a destroy event for files that are not destroyable', () => {
             const file1 = createFile('file1');
             const file2 = createFile('file2', {
-                'aux._creator': 'file1',
+                'aux.creator': 'file1',
                 'aux.destroyable': false,
             });
             const file3 = createFile('file3', {
-                'aux._creator': 'file2',
+                'aux.creator': 'file2',
             });
             const file4 = createFile('file4', {
-                'aux._creator': 'file1',
+                'aux.creator': 'file1',
             });
             const file5 = createFile('file5');
 

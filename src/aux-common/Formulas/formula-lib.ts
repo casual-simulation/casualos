@@ -346,7 +346,7 @@ export function removeTags(
 }
 
 function destroyChildren(id: string) {
-    const result = calculateFormulaValue(calc, `@aux._creator("${id}")`);
+    const result = calculateFormulaValue(calc, `@aux.creator("${id}")`);
     if (result.success) {
         const children = result.result;
         let all: File[] = [];
@@ -450,7 +450,7 @@ function createFrom(parent: FileProxy | string, ...datas: FileDiff[]) {
     let parentId = getFileId(parent);
     let parentDiff = parentId
         ? {
-              'aux._creator': parentId,
+              'aux.creator': parentId,
           }
         : {};
     return create(parentDiff, ...datas);

@@ -228,7 +228,7 @@ describe('FileHelper', () => {
             await tree.addFile(
                 createFile('file2', {
                     abc: true,
-                    'aux._creator': 'file1',
+                    'aux.creator': 'file1',
                 })
             );
 

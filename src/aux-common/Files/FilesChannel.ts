@@ -170,7 +170,7 @@ function destroyChildren(
     events: FileEvent[],
     id: string
 ) {
-    const result = calculateFormulaValue(calc, `@aux._creator("${id}")`);
+    const result = calculateFormulaValue(calc, `@aux.creator("${id}")`);
     if (result.success) {
         const children = result.result;
         let all: File[] = [];
