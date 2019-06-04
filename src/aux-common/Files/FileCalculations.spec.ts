@@ -697,9 +697,9 @@ describe('FileCalculations', () => {
 
         it('should return the property names that are on workspaces', () => {
             expect(tagsOnFile(createWorkspace('test', 'testContext'))).toEqual([
-                'aux.context.surface.x',
-                'aux.context.surface.y',
-                'aux.context.surface.z',
+                'aux.context.x',
+                'aux.context.y',
+                'aux.context.z',
                 'aux.context.visualize',
                 'aux.context.locked',
                 'aux.context',

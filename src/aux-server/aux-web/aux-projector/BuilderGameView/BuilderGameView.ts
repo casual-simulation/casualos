@@ -478,9 +478,9 @@ export default class BuilderGameView extends Vue implements IGameView {
                     new Plane(new Vector3(0, 1, 0))
                 );
 
-                worksurface.tags['aux.context.surface.x'] = point.x;
-                worksurface.tags['aux.context.surface.y'] = point.z;
-                worksurface.tags['aux.context.surface.z'] = point.y;
+                worksurface.tags['aux.context.x'] = point.x;
+                worksurface.tags['aux.context.y'] = point.z;
+                worksurface.tags['aux.context.z'] = point.y;
 
                 state[worksurface.id] = worksurface;
 

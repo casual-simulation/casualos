@@ -75,9 +75,9 @@ export interface FileTags {
     ['aux.context.locked']?: unknown;
     ['aux.context.grid.scale']?: number;
     ['aux.context.visualize']?: ContextVisualizeMode;
-    ['aux.context.surface.x']?: number;
-    ['aux.context.surface.y']?: number;
-    ['aux.context.surface.z']?: number;
+    ['aux.context.x']?: number;
+    ['aux.context.y']?: number;
+    ['aux.context.z']?: number;
     ['aux.context.surface.scale']?: number;
     ['aux.context.surface.defaultHeight']?: number;
     ['aux.context.surface.size']?: number;
@@ -301,12 +301,12 @@ export const KNOWN_TAGS: string[] = [
     'aux.context.color',
     'aux.context.grid.scale',
     'aux.context.surface.grid',
-    'aux.context.surface.x',
-    'aux.context.surface.y',
-    'aux.context.surface.z',
-    'aux.context.surface.rotation.x',
-    'aux.context.surface.rotation.y',
-    'aux.context.surface.rotation.z',
+    'aux.context.x',
+    'aux.context.y',
+    'aux.context.z',
+    'aux.context.rotation.x',
+    'aux.context.rotation.y',
+    'aux.context.rotation.z',
     'aux.context.surface.scale',
     'aux.context.surface.defaultHeight',
     'aux.context.surface.size',

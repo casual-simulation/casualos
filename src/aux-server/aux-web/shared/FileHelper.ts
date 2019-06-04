@@ -185,8 +185,8 @@ export class FileHelper {
 
         const updated = merge(workspace, {
             tags: {
-                'aux.context.surface.x': finalPosition.x,
-                'aux.context.surface.y': finalPosition.y,
+                'aux.context.x': finalPosition.x,
+                'aux.context.y': finalPosition.y,
             },
         });
 
