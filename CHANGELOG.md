@@ -32,6 +32,7 @@
 -   Bug Fixes
     -   Fixed the color picker input to not error when the edited tag doesn't have a value.
     -   Fixed the color picker basic input subtype to have the correct width so that the colors line up properly.
+    -   Fixed an issue with showing an input box during the `onSaveInput()` or `onCloseInput()` callback from another input.
 
 ## V0.8.3
 
