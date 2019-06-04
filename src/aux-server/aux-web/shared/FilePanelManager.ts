@@ -80,7 +80,7 @@ export default class FilePanelManager implements SubscriptionLike {
     /**
      * Gets whether the file panel has open set to false on drag.
      */
-    HideOnDrag(value: boolean) {
+    hideOnDrag(value: boolean) {
         if (value) {
             if (this._isOpen) {
                 this._changedOnDrag = true;
