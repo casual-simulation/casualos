@@ -40,6 +40,7 @@
     -   Changed `Create Workspace` button tooltip to `Create Surface from Selection`.
     -   Removed the `Destroy File` and `Clear Diff` buttons from an empty diff sheet.
     -   Removed the `Destroy File` and replaced it with the `Clear Diff` button on a non-empty diff sheet.
+    -   Fixed `player.tweenTo()` from affecting the inventory camera if the target file doesnt exist in it.
 
 ## V0.8.3
 
