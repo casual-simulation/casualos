@@ -63,9 +63,18 @@ import {
     isEditable,
     normalizeAUXFileURL,
     getContextVisualizeMode,
+    getUserFileColor,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
-import { File, Object, PartialFile } from './File';
+import {
+    File,
+    Object,
+    PartialFile,
+    DEFAULT_BUILDER_USER_COLOR,
+    DEFAULT_PLAYER_USER_COLOR,
+    AuxDomain,
+    GLOBALS_FILE_ID,
+} from './File';
 import { FilesState, cleanFile, fileRemoved } from './FilesChannel';
 import { file } from '../aux-format';
 import uuid from 'uuid/v4';
@@ -87,24 +96,30 @@ describe('FileCalculations', () => {
     });
 
     describe('isNumber()', () => {
-        it('should be true if the value is a number without symbols', () => {
-            expect(isNumber('123')).toBeTruthy();
-            expect(isNumber('0')).toBeTruthy();
-            expect(isNumber('-12')).toBeTruthy();
-            expect(isNumber('19.325')).toBeTruthy();
-            expect(isNumber('-27.981')).toBeTruthy();
-            expect(isNumber('27.0')).toBeTruthy();
-            expect(isNumber('1.')).toBeTruthy();
-            expect(isNumber('infinity')).toBeTruthy();
-            expect(isNumber('Infinity')).toBeTruthy();
-            expect(isNumber('InFIniTy')).toBeTruthy();
-        });
+        const cases = [
+            [true, '123'],
+            [true, '0'],
+            [true, '-12'],
+            [true, '19.325'],
+            [true, '-27.981'],
+            [true, '27.0'],
+            [false, '1.'],
+            [true, '.01'],
+            [true, '.567'],
+            [true, 'infinity'],
+            [true, 'Infinity'],
+            [true, 'InFIniTy'],
+            [false, '$123'],
+            [false, 'abc'],
+            [false, '.'],
+        ];
 
-        it('should be false if the value is not a number or has symbols', () => {
-            expect(isNumber('$123')).toBeFalsy();
-            expect(isNumber('abc')).toBeFalsy();
-            expect(isNumber('.')).toBeFalsy();
-        });
+        it.each(cases)(
+            'be %s when given %s',
+            (expected: boolean, value: string) => {
+                expect(isNumber(value)).toBe(expected);
+            }
+        );
     });
 
     describe('isArray()', () => {
@@ -683,9 +698,9 @@ describe('FileCalculations', () => {
 
         it('should return the property names that are on workspaces', () => {
             expect(tagsOnFile(createWorkspace('test', 'testContext'))).toEqual([
-                'aux.context.surface.x',
-                'aux.context.surface.y',
-                'aux.context.surface.z',
+                'aux.context.x',
+                'aux.context.y',
+                'aux.context.z',
                 'aux.context.visualize',
                 'aux.context.locked',
                 'aux.context',
@@ -713,9 +728,9 @@ describe('FileCalculations', () => {
             expect(shape).toBe('sphere');
         });
 
-        it('should return value when aux._diff is true', () => {
+        it('should return value when aux.diff is true', () => {
             let file = createFile();
-            file.tags['aux._diff'] = true;
+            file.tags['aux.diff'] = true;
             file.tags['aux.shape'] = 'cube';
 
             const calc = createCalculationContext([file]);
@@ -823,6 +838,15 @@ describe('FileCalculations', () => {
             const value = calculateFileValue(context, file, 'tag');
 
             expect(value).toBeCloseTo(123.145);
+        });
+
+        it('should parse numbers that dont start with a digit', () => {
+            const file = createFile();
+            file.tags.tag = '.145';
+            const context = createCalculationContext([file]);
+            const value = calculateFileValue(context, file, 'tag');
+
+            expect(value).toBeCloseTo(0.145);
         });
 
         it('should convert to a boolean if it is a boolean', () => {
@@ -1781,7 +1805,7 @@ describe('FileCalculations', () => {
 
             // not a diff because it doesn't have any tags
             const file2 = createFile(undefined, {
-                tags: { 'aux._diff': true },
+                tags: { 'aux.diff': true },
             });
             const calc2 = createCalculationContext([file2]);
             const update2 = getDiffUpdate(calc2, file2);
@@ -1792,8 +1816,8 @@ describe('FileCalculations', () => {
 
         it('should return a partial file that contains the specified tags', () => {
             let file1 = createFile();
-            file1.tags['aux._diff'] = true;
-            file1.tags['aux._diffTags'] = [
+            file1.tags['aux.diff'] = true;
+            file1.tags['aux.diffTags'] = [
                 'aux.label',
                 'name',
                 'zero',
@@ -1824,11 +1848,38 @@ describe('FileCalculations', () => {
             });
         });
 
-        it('should use the list of tags from aux.movable.diffTags before falling back to aux._diffTags', () => {
+        it('should return a partial file that contains the specified tags from the formula', () => {
             let file1 = createFile();
-            file1.tags['aux._diff'] = true;
+            file1.tags['aux.diff'] = true;
+            file1.tags['aux.diffTags'] =
+                '[aux.label,name,zero,false,gone,empty,null]';
+
+            file1.tags.name = 'test';
+            file1.tags['aux.label'] = 'label';
+            file1.tags['zero'] = 0;
+            file1.tags['false'] = false;
+            file1.tags['empty'] = '';
+            file1.tags['null'] = null;
+            file1.tags['other'] = 'heheh';
+
+            const calc = createCalculationContext([file1]);
+            const update = getDiffUpdate(calc, file1);
+
+            expect(update).toEqual({
+                tags: {
+                    'aux.label': 'label',
+                    name: 'test',
+                    zero: 0,
+                    false: false,
+                },
+            });
+        });
+
+        it('should use the list of tags from aux.movable.diffTags before falling back to aux.diffTags', () => {
+            let file1 = createFile();
+            file1.tags['aux.diff'] = true;
             file1.tags['aux.movable.diffTags'] = '[abc]';
-            file1.tags['aux._diffTags'] = [
+            file1.tags['aux.diffTags'] = [
                 'aux.label',
                 'name',
                 'zero',
@@ -2090,31 +2141,29 @@ describe('FileCalculations', () => {
         uuidMock.mockReturnValue('test');
 
         const builtinTagCases = [
-            ['abc.index'],
+            ['abc._index'],
             ['_hidden'],
             ['aux._lastEditedBy'],
             ['abc._lastActiveTime'],
+            ['aux._context_test'],
+            ['aux._context_ something else'],
+            ['aux._context_ 😊😜😢'],
+            ['_context_test'],
+            ['_context_ something else'],
+            ['_context_ 😊😜😢'],
         ];
         it.each(builtinTagCases)(
-            'should return true for some builtin tag %s',
+            'should return true for some hidden tag %s',
             tag => {
                 expect(isTagWellKnown(tag)).toBe(true);
             }
         );
 
-        const contextCases = [
-            [createContextId()],
-            ['aux._context_test'],
-            ['aux._context_ something else'],
-            ['aux._context_ 😊😜😢'],
-            ['context_test'],
-            ['context_ something else'],
-            ['context_ 😊😜😢'],
-        ];
+        const contextCases = [[createContextId()]];
         it.each(contextCases)(
-            'should return true for autogenerated context tag %s',
+            'should return false for autogenerated context tag %s',
             tag => {
-                expect(isTagWellKnown(tag)).toBe(true);
+                expect(isTagWellKnown(tag)).toBe(false);
             }
         );
 
@@ -2130,40 +2179,31 @@ describe('FileCalculations', () => {
             }
         );
 
-        const ingoreSelectionCases = [
-            ['aux._selection_09a1ee66-bb0f-4f9e-81d2-d8d4da5683b8'],
-            ['aux._selection_6a7aa1c5-807c-4390-9982-ff8b2dd5b54e'],
-            ['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'],
+        const normalCases = [
+            [false, 'aux.movable'],
+            [false, 'aux.stackable'],
+            [false, 'aux.color'],
+            [false, 'aux.label.color'],
+            [false, 'aux.line'],
+            [false, 'aux.scale.x'],
+            [false, 'aux.scale.y'],
+            [false, 'aux.scale.z'],
+            [false, 'aux.scale'],
+            [true, 'aux._destroyed'],
+            [false, '+(#tag:"value")'],
+            [false, 'onCombine(#tag:"value")'],
+            [true, '_context_test'],
+            [true, '_context_ something else'],
+            [true, '_context_ 😊😜😢'],
+            [true, '_selection_09a1ee66-bb0f-4f9e-81d2-d8d4da5683b8'],
+            [false, '📦'],
         ];
-        it.each(ingoreSelectionCases)(
-            'should return false for selection tag %s when they should be ignored',
-            tag => {
-                expect(isTagWellKnown(tag, false)).toBe(false);
+        it.each(normalCases)(
+            'should return %s for %',
+            (expected: boolean, tag: string) => {
+                expect(isTagWellKnown(tag)).toBe(expected);
             }
         );
-
-        const normalCases = [
-            ['aux.movable'],
-            ['aux.stackable'],
-            ['aux.color'],
-            ['aux.label.color'],
-            ['aux.line'],
-            ['aux.scale.x'],
-            ['aux.scale.y'],
-            ['aux.scale.z'],
-            ['aux.scale'],
-            ['aux._destroyed'],
-            ['+(#tag:"value")'],
-            ['onCombine(#tag:"value")'],
-            ['_context_test'],
-            ['_context_ something else'],
-            ['_context_ 😊😜😢'],
-            ['_selection_09a1ee66-bb0f-4f9e-81d2-d8d4da5683b8'],
-            ['📦'],
-        ];
-        it.each(normalCases)('should return false for %', tag => {
-            expect(isTagWellKnown(tag)).toBe(false);
-        });
     });
 
     describe('doFilesAppearEqual()', () => {
@@ -2215,7 +2255,7 @@ describe('FileCalculations', () => {
             expect(result).toBe(true);
         });
 
-        it('should use selection tags if specified', () => {
+        it('should ignore selection tags', () => {
             let first = createFile('id1');
             let second = createFile('id2');
 
@@ -2224,11 +2264,9 @@ describe('FileCalculations', () => {
             second.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] =
                 'b';
 
-            const result = doFilesAppearEqual(first, second, {
-                ignoreSelectionTags: false,
-            });
+            const result = doFilesAppearEqual(first, second);
 
-            expect(result).toBe(false);
+            expect(result).toBe(true);
         });
 
         it('should use the ignoreId option for checking file IDs', () => {
@@ -2276,8 +2314,10 @@ describe('FileCalculations', () => {
 
         it('should return a copy with a different ID', () => {
             const first: Object = createFile('id');
-            first.tags._workspace = 'abc';
-            const second = duplicateFile(first);
+            first.tags.fun = 'abc';
+
+            const calc = createCalculationContext([first]);
+            const second = duplicateFile(calc, first);
 
             expect(second.id).not.toEqual(first.id);
             expect(second.id).toBe('test');
@@ -2290,10 +2330,11 @@ describe('FileCalculations', () => {
             first.tags._workspace = 'abc';
 
             uuidMock.mockReturnValue('test');
-            const second = duplicateFile(first);
+            const calc = createCalculationContext([first]);
+            const second = duplicateFile(calc, first);
 
             expect(second.id).not.toEqual(first.id);
-            expect(second.tags['aux._destroyed']).toBe(true);
+            expect(second.tags['aux._destroyed']).toBeUndefined();
         });
 
         it('should not have any auto-generated contexts or selections', () => {
@@ -2307,7 +2348,8 @@ describe('FileCalculations', () => {
             first.tags[`aux._context_1234567.z`] = 3;
             first.tags[`aux._selection_99999`] = true;
 
-            const second = duplicateFile(first);
+            const calc = createCalculationContext([first]);
+            const second = duplicateFile(calc, first);
 
             expect(second.id).not.toEqual(first.id);
             expect(second.tags).toEqual({
@@ -2331,7 +2373,8 @@ describe('FileCalculations', () => {
             first.tags[`aux.other`] = 100;
             first.tags[`myTag`] = 'Hello';
 
-            const second = duplicateFile(first, {
+            const calc = createCalculationContext([first]);
+            const second = duplicateFile(calc, first, {
                 tags: {
                     [`aux._selection_99999`]: true,
                     [`aux._context_abcdefg`]: true,
@@ -2352,7 +2395,8 @@ describe('FileCalculations', () => {
                 testTag: 'abcdefg',
                 name: 'ken',
             });
-            const second = duplicateFile(first, {
+            const calc = createCalculationContext([first]);
+            const second = duplicateFile(calc, first, {
                 tags: {
                     name: 'abcdef',
                 },
@@ -2368,21 +2412,41 @@ describe('FileCalculations', () => {
         it('should not modify the original file', () => {
             let first: Object = createFile('id');
             first.tags['aux._destroyed'] = true;
-
-            const second = duplicateFile(first);
+            const calc = createCalculationContext([first]);
+            const second = duplicateFile(calc, first);
 
             expect(first.tags['aux._destroyed']).toBe(true);
         });
 
-        it('should not clear aux._diff', () => {
+        it('should not clear aux.diff', () => {
             let first: Object = createFile('id');
-            first.tags['aux._diff'] = true;
-            first.tags['aux._diffTags'] = ['abvc'];
+            first.tags['aux.diff'] = true;
+            first.tags['aux.diffTags'] = ['abvc'];
 
-            const second = duplicateFile(first);
+            const calc = createCalculationContext([first]);
+            const second = duplicateFile(calc, first);
 
-            expect(second.tags['aux._diff']).toBe(true);
-            expect(second.tags['aux._diffTags']).toEqual(['abvc']);
+            expect(second.tags['aux.diff']).toBe(true);
+            expect(second.tags['aux.diffTags']).toEqual(['abvc']);
+        });
+
+        it('should not have any contexts', () => {
+            let first: Object = createFile('id', {
+                abc: true,
+                'abc.x': 1,
+                'abc.y': 2,
+                def: true,
+            });
+            let context: Object = createFile('context', {
+                'aux.context': 'abc',
+            });
+
+            const calc = createCalculationContext([context, first]);
+            const second = duplicateFile(calc, first);
+
+            expect(second.tags).toEqual({
+                def: true,
+            });
         });
     });
 
@@ -3298,8 +3362,8 @@ describe('FileCalculations', () => {
         it('should return sphere when the file is a diff', () => {
             const file = createFile('test', {
                 'aux.shape': 'cube',
-                'aux._diff': true,
-                'aux._diffTags': ['aux.shape'],
+                'aux.diff': true,
+                'aux.diffTags': ['aux.shape'],
             });
 
             const calc = createCalculationContext([file]);
@@ -3908,7 +3972,7 @@ describe('FileCalculations', () => {
     });
 
     describe('getFileUsernameList()', () => {
-        const cases = [['aux.whitelist'], ['aux.blacklist']];
+        const cases = [['aux.whitelist'], ['aux.blacklist'], ['aux.designers']];
 
         describe.each(cases)('%s', tag => {
             it(`should return the ${tag}`, () => {
@@ -4130,6 +4194,66 @@ describe('FileCalculations', () => {
 
             expect(whitelistOrBlacklistAllowsAccess(calc, file, 'DEF')).toBe(
                 true
+            );
+        });
+
+        describe('getUserFileColor()', () => {
+            const defaultCases = [
+                [DEFAULT_BUILDER_USER_COLOR, 'builder'],
+                [DEFAULT_PLAYER_USER_COLOR, 'player'],
+            ];
+
+            it.each(defaultCases)(
+                'should default to %s when in %s',
+                (expected: any, domain: AuxDomain) => {
+                    const file = createFile('test', {});
+                    const globals = createFile(GLOBALS_FILE_ID, {});
+
+                    const calc = createCalculationContext([globals, file]);
+
+                    expect(getUserFileColor(calc, file, globals, domain)).toBe(
+                        expected
+                    );
+                }
+            );
+
+            const globalsCases = [
+                ['aux.scene.user.player.color', 'player', '#40A287'],
+                ['aux.scene.user.builder.color', 'builder', '#AAAAAA'],
+            ];
+
+            it.each(globalsCases)(
+                'should use %s when in %s',
+                (tag: string, domain: AuxDomain, value: any) => {
+                    const file = createFile('test', {});
+                    const globals = createFile(GLOBALS_FILE_ID, {
+                        [tag]: value,
+                    });
+
+                    const calc = createCalculationContext([globals, file]);
+
+                    expect(getUserFileColor(calc, file, globals, domain)).toBe(
+                        value
+                    );
+                }
+            );
+
+            const userCases = [['player'], ['builder']];
+
+            it.each(userCases)(
+                'should use aux.color from the user file',
+                (domain: AuxDomain) => {
+                    const file = createFile('test', {
+                        'aux.color': 'red',
+                    });
+                    const globals = createFile(GLOBALS_FILE_ID, {});
+
+                    const calc = createCalculationContext([globals, file]);
+
+                    expect(getUserFileColor(calc, file, globals, domain)).toBe(
+                        'red'
+                    );
+                }
             );
         });
     });

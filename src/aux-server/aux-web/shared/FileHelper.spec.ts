@@ -6,6 +6,7 @@ import {
     fileAdded,
     createFile,
     fileUpdated,
+    GLOBALS_FILE_ID,
 } from '@casual-simulation/aux-common';
 import { FileHelper } from './FileHelper';
 import { storedTree, site } from '@casual-simulation/causal-trees';
@@ -34,9 +35,9 @@ describe('FileHelper', () => {
 
     describe('globalsFile', () => {
         it('should return the file with the globals ID', async () => {
-            await tree.file('globals');
+            await tree.file(GLOBALS_FILE_ID);
 
-            const file = tree.value['globals'];
+            const file = tree.value[GLOBALS_FILE_ID];
             const globals = helper.globalsFile;
 
             expect(globals).toBe(file);
@@ -227,7 +228,7 @@ describe('FileHelper', () => {
             await tree.addFile(
                 createFile('file2', {
                     abc: true,
-                    'aux._creator': 'file1',
+                    'aux.creator': 'file1',
                 })
             );
 

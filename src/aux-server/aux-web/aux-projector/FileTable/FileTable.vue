@@ -26,7 +26,7 @@
                 </md-button>
                 <md-button class="md-icon-button create-surface" @click="createSurface()">
                     <hex-icon></hex-icon>
-                    <md-tooltip>Create Worksurface</md-tooltip>
+                    <md-tooltip>Create Surface from Selection</md-tooltip>
                 </md-button>
             </div>
             <div class="file-table-actions">
@@ -123,9 +123,7 @@
                         >
                             Unselect All
                         </md-button>
-                        <md-button v-else-if="diffSelected" class="md-dense" @click="clearDiff()">
-                            Clear Diff
-                        </md-button>
+                        <div v-else-if="diffSelected" class="md-dense"></div>
                         <md-button v-else class="md-dense" @click="multiSelect()">
                             Multi Select
                         </md-button>
@@ -200,6 +198,7 @@
                             :class="getTagCellClass(file, tag)"
                         >
                             <file-value
+                                ref="tagValues"
                                 :readOnly="readOnly || isFileReadOnly(file)"
                                 :file="file"
                                 :tag="tag"
@@ -211,7 +210,15 @@
 
                         <!-- Empty tag at bottom -->
                         <div :key="`${file.id}-empty`" class="file-cell delete-item">
-                            <md-button class="md-dense" @click="deleteFile(file)">
+                            <div v-if="isEmptyDiff()" class="md-dense"></div>
+                            <md-button
+                                v-else-if="diffSelected"
+                                class="md-dense"
+                                @click="clearDiff()"
+                            >
+                                Clear Diff
+                            </md-button>
+                            <md-button v-else class="md-dense" @click="deleteFile(file)">
                                 Destroy File
                             </md-button>
                         </div>
@@ -242,7 +249,7 @@
         </div>
 
         <md-dialog :md-active.sync="showCreateWorksurfaceDialog">
-            <md-dialog-title>Create Workspace</md-dialog-title>
+            <md-dialog-title>Create Surface from Selection</md-dialog-title>
 
             <md-dialog-content>
                 <md-field>

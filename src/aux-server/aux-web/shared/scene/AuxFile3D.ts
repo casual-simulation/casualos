@@ -19,6 +19,7 @@ import {
     isFileInContext,
     getBuilderContextGrid,
     calculateGridScale,
+    GLOBALS_FILE_ID,
 } from '@casual-simulation/aux-common';
 import { createCube, calculateScale, findParentScene } from './SceneUtils';
 import { AuxFile3DDecorator } from './AuxFile3DDecorator';
@@ -183,7 +184,8 @@ export class AuxFile3D extends GameObject {
         return (
             file.id === this.file.id ||
             isFileInContext(calc, file, this.context) ||
-            (this.contextGroup && this.contextGroup.file.id === file.id)
+            (this.contextGroup && this.contextGroup.file.id === file.id) ||
+            file.id === GLOBALS_FILE_ID
         );
     }
 }

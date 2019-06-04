@@ -73,8 +73,8 @@ export class RecentFilesManager {
             id: fileId,
             tags: {
                 [tag]: value,
-                'aux._diff': true,
-                'aux._diffTags': [tag],
+                'aux.diff': true,
+                'aux.diffTags': [tag],
             },
         });
         this._trimList();
@@ -89,19 +89,19 @@ export class RecentFilesManager {
      */
     addFileDiff(file: File, updateTags: boolean = false) {
         let id: string;
-        if (isDiff(file)) {
+        if (isDiff(null, file)) {
             id = file.id;
         } else {
             id = `diff-${file.id}`;
         }
         this._cleanFiles(id, file);
-        let { 'aux._diff': diff, 'aux._diffTags': t, ...others } = file.tags;
+        let { 'aux.diff': diff, 'aux.diffTags': t, ...others } = file.tags;
 
         const f = merge(file, {
             id: id,
             tags: {
-                'aux._diff': true,
-                'aux._diffTags':
+                'aux.diff': true,
+                'aux.diffTags':
                     updateTags || !t
                         ? keys(others).filter(t => !isTagWellKnown(t))
                         : t,

@@ -144,8 +144,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     const file = table.files[0];
                     const newFile = createFile(file.id, {
                         [tag]: file.tags[tag],
-                        'aux._diff': true,
-                        'aux._diffTags': [tag],
+                        'aux.diff': true,
+                        'aux.diffTags': [tag],
                     });
                     return new BuilderNewFileClickOperation(
                         this._game.simulation3D,
@@ -560,7 +560,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 });
 
                 actions.push({
-                    label: 'Switch to Player',
+                    label: 'Open Context in New Tab',
                     onClick: () => this._switchToPlayer(calc, gameObject),
                 });
             }

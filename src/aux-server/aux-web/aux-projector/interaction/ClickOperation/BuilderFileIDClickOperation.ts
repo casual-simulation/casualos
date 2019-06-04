@@ -26,6 +26,8 @@ export class BuilderFileIDClickOperation extends BaseFileClickOperation {
     protected _createDragOperation(
         calc: FileCalculationContext
     ): BaseFileDragOperation {
+        this._simulation3D.simulation.filePanel.hideOnDrag(true);
+
         return new BuilderFileDragOperation(
             this._simulation3D,
             <BuilderInteractionManager>this._interaction,
