@@ -40,6 +40,7 @@ import CubeIcon from '../public/icons/Cube.svg';
 import HexIcon from '../public/icons/Hexagon.svg';
 import { QrcodeStream } from 'vue-qrcode-reader';
 import { Simulation } from '../../shared/Simulation';
+import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import { Swatches, Chrome, Compact } from 'vue-color';
 
 export interface SidebarItem {
@@ -459,7 +460,9 @@ export default class PlayerApp extends Vue {
 
                     this._updateQuery();
                 } else if (e.name === 'show_input_for_tag') {
-                    this._showInputDialog(simulation, e);
+                    setTimeout(() => {
+                        this._showInputDialog(simulation, e);
+                    });
                 }
             }),
             simulation.aux.channel.connectionStateChanged.subscribe(
@@ -515,7 +518,7 @@ export default class PlayerApp extends Vue {
 
     async closeInputDialog() {
         if (this.showInputDialog) {
-            await this.inputDialogSimulation.helper.action('onClose', [
+            await this.inputDialogSimulation.helper.action('onCloseInput', [
                 this.inputDialogTarget,
             ]);
             this.showInputDialog = false;
@@ -541,7 +544,7 @@ export default class PlayerApp extends Vue {
                     },
                 }
             );
-            await this.inputDialogSimulation.helper.action('onSave', [
+            await this.inputDialogSimulation.helper.action('onSaveInput', [
                 this.inputDialogTarget,
             ]);
             await this.closeInputDialog();
@@ -589,11 +592,12 @@ export default class PlayerApp extends Vue {
         this.inputDialogType = options.type || 'text';
         this.inputDialogSubtype = options.subtype || 'basic';
         this.inputDialogTarget = file;
-        this.inputDialogInputValue = calculateFormattedFileValue(
-            calc,
-            this.inputDialogTarget,
-            this.inputDialogInput
-        );
+        this.inputDialogInputValue =
+            calculateFormattedFileValue(
+                calc,
+                this.inputDialogTarget,
+                this.inputDialogInput
+            ) || '';
 
         if (typeof options.placeholder !== 'undefined') {
             this.inputDialogPlaceholder = options.placeholder;

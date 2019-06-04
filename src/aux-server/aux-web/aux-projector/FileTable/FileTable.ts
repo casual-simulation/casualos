@@ -160,6 +160,16 @@ export default class FileTable extends Vue {
         return this.tagExists(this.newTag);
     }
 
+    isEmptyDiff(): boolean {
+        if (this.diffSelected) {
+            if (this.files[0].id === 'empty') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     @Watch('files')
     filesChanged() {
         this.setTagBlacklist();
@@ -176,7 +186,7 @@ export default class FileTable extends Vue {
     @Watch('multilineValue')
     multilineValueChanged() {
         if (this.focusedFile && this.focusedTag) {
-            if (isDiff(this.focusedFile)) {
+            if (isDiff(null, this.focusedFile)) {
                 const updated = merge(this.focusedFile, {
                     tags: {
                         [this.focusedTag]: this.multilineValue,
@@ -261,15 +271,18 @@ export default class FileTable extends Vue {
                 this.tags.push(this.newTag);
             }
 
-            const table = this.$refs.table as HTMLElement;
-            if (table) {
-                table.scrollIntoView({
-                    block: this.newTagPlacement === 'top' ? 'start' : 'end',
-                    inline: 'start',
-                });
-            }
+            const addedTag = this.newTag;
 
             this._updateTags();
+            this.$nextTick(() => {
+                const tags = this.$refs.tagValues as FileValue[];
+                for (let tag of tags) {
+                    if (tag.tag === addedTag) {
+                        tag.$el.focus();
+                        break;
+                    }
+                }
+            });
         } else {
             this.newTag = '';
             this.newTagPlacement = placement;
@@ -380,7 +393,9 @@ export default class FileTable extends Vue {
             this.isFocusedTagFormula = isFormula(this.multilineValue);
 
             this.$nextTick(() => {
-                (<any>this.$refs.multiLineEditor).applyStyles();
+                if (this.$refs.multiLineEditor) {
+                    (<any>this.$refs.multiLineEditor).applyStyles();
+                }
             });
         }
         this.$emit('tagFocusChanged', file, tag, focused);

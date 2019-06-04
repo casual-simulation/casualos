@@ -20,6 +20,7 @@ import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 import { PlayerNewFileDragOperation } from '../DragOperation/PlayerNewFileDragOperation';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
+import { PlayerGame } from '../../scene/PlayerGame';
 
 export class PlayerFileClickOperation extends BaseFileClickOperation {
     // This overrides the base class.
@@ -50,9 +51,9 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
     ): BaseFileDragOperation {
         const mode = getFileDragMode(calc, this._file);
         if (mode === 'clone') {
-            return this._createCloneDragOperation();
+            return this._createCloneDragOperation(calc);
         } else if (mode === 'diff') {
-            return this._createDiffDragOperation();
+            return this._createDiffDragOperation(calc);
         }
 
         const file3D: AuxFile3D = <AuxFile3D>this._file3D;
@@ -88,8 +89,10 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
         return null;
     }
 
-    protected _createCloneDragOperation(): BaseFileDragOperation {
-        let duplicatedFile = duplicateFile(<File>this._file);
+    protected _createCloneDragOperation(
+        calc: FileCalculationContext
+    ): BaseFileDragOperation {
+        let duplicatedFile = duplicateFile(calc, <File>this._file);
         const {
             playerSimulation3D,
             inventorySimulation3D,
@@ -103,12 +106,14 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
         );
     }
 
-    protected _createDiffDragOperation(): BaseFileDragOperation {
+    protected _createDiffDragOperation(
+        calc: FileCalculationContext
+    ): BaseFileDragOperation {
         const tags = tagsOnFile(this._file);
-        let duplicatedFile = duplicateFile(<File>this._file, {
+        let duplicatedFile = duplicateFile(calc, <File>this._file, {
             tags: {
-                'aux._diff': true,
-                'aux._diffTags': tags,
+                'aux.diff': true,
+                'aux.diffTags': tags,
             },
         });
         const {
@@ -130,13 +135,13 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
 
         if (this._simulation3D instanceof PlayerSimulation3D) {
             playerSimulation3D = this._simulation3D;
-            inventorySimulation3D = (<PlayerGameView>(
-                this.gameView
+            inventorySimulation3D = (<PlayerGame>(
+                this.game
             )).findInventorySimulation3D(this._simulation3D.simulation);
         } else if (this._simulation3D instanceof InventorySimulation3D) {
-            playerSimulation3D = (<PlayerGameView>(
-                this.gameView
-            )).findPlayerSimulation3D(this._simulation3D.simulation);
+            playerSimulation3D = (<PlayerGame>this.game).findPlayerSimulation3D(
+                this._simulation3D.simulation
+            );
             inventorySimulation3D = this._simulation3D;
         } else {
             console.error(

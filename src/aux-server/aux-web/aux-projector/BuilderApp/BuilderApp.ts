@@ -36,16 +36,10 @@ import FileSearch from '../FileSearch/FileSearch';
 import vueFilePond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
 import { Simulation } from '../../shared/Simulation';
+import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import { Swatches, Chrome, Compact } from 'vue-color';
 
 const FilePond = vueFilePond();
-
-export interface SidebarItem {
-    id: string;
-    text: string;
-    icon: string;
-    click: () => void;
-}
 
 @Component({
     components: {
@@ -62,6 +56,8 @@ export interface SidebarItem {
     },
 })
 export default class BuilderApp extends Vue {
+    @Provide() buildApp = this;
+
     loadingProgress: LoadingProgress = null;
     showNavigation: boolean = false;
     showConfirmDialog: boolean = false;
@@ -195,14 +191,27 @@ export default class BuilderApp extends Vue {
         id: string,
         text: string,
         click: () => void,
-        icon: string = null
+        icon: string = null,
+        group: string = null
     ) {
-        this.extraItems.push({
-            id: id,
-            text: text,
-            icon: icon,
-            click: click,
-        });
+        const index = findIndex(this.extraItems, i => i.id === id);
+        if (index >= 0) {
+            this.extraItems[index] = {
+                id: id,
+                group: group,
+                text: text,
+                icon: icon,
+                click: click,
+            };
+        } else {
+            this.extraItems.push({
+                id: id,
+                group: group,
+                text: text,
+                icon: icon,
+                click: click,
+            });
+        }
     }
 
     /**
@@ -214,6 +223,20 @@ export default class BuilderApp extends Vue {
         const index = findIndex(this.extraItems, i => i.id === id);
         if (index >= 0) {
             this.extraItems.splice(index, 1);
+        }
+    }
+
+    /**
+     * Removes all the sidebar items with the given group.
+     * @param id
+     */
+    @Provide()
+    removeSidebarGroup(group: string) {
+        for (let i = this.extraItems.length - 1; i >= 0; i--) {
+            const item = this.extraItems[i];
+            if (item.group === group) {
+                this.extraItems.splice(i, 1);
+            }
         }
     }
 
@@ -328,7 +351,9 @@ export default class BuilderApp extends Vue {
                         } else if (e.name === 'import_aux') {
                             this._importAUX(fileManager, e.url);
                         } else if (e.name === 'show_input_for_tag') {
-                            this._showInputDialog(fileManager, e);
+                            setTimeout(() => {
+                                this._showInputDialog(fileManager, e);
+                            });
                         }
                     })
                 );
@@ -435,6 +460,15 @@ export default class BuilderApp extends Vue {
         this.showNavigation = !this.showNavigation;
     }
 
+    getUIHtmlElements(): HTMLElement[] {
+        let queue = <FileSearch>this.$refs.searchBar;
+
+        if (queue) {
+            return queue.uiHtmlElements();
+        }
+        return [];
+    }
+
     nukeSite() {
         if (this.online && this.synced) {
             let options = new ConfirmDialogOptions();
@@ -510,7 +544,7 @@ export default class BuilderApp extends Vue {
 
     async closeInputDialog() {
         if (this.showInputDialog) {
-            await this.inputDialogSimulation.helper.action('onClose', [
+            await this.inputDialogSimulation.helper.action('onCloseInput', [
                 this.inputDialogTarget,
             ]);
             this.showInputDialog = false;
@@ -527,7 +561,7 @@ export default class BuilderApp extends Vue {
                     },
                 }
             );
-            await this.inputDialogSimulation.helper.action('onSave', [
+            await this.inputDialogSimulation.helper.action('onSaveInput', [
                 this.inputDialogTarget,
             ]);
             await this.closeInputDialog();
@@ -575,11 +609,12 @@ export default class BuilderApp extends Vue {
         this.inputDialogType = options.type || 'text';
         this.inputDialogSubtype = options.subtype || 'basic';
         this.inputDialogTarget = file;
-        this.inputDialogInputValue = calculateFormattedFileValue(
-            calc,
-            this.inputDialogTarget,
-            this.inputDialogInput
-        );
+        this.inputDialogInputValue =
+            calculateFormattedFileValue(
+                calc,
+                this.inputDialogTarget,
+                this.inputDialogInput
+            ) || '';
 
         if (typeof options.placeholder !== 'undefined') {
             this.inputDialogPlaceholder = options.placeholder;

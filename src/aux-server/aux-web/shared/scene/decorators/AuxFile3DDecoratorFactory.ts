@@ -1,6 +1,5 @@
 import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
-import { IGameView } from '../../vue-components/IGameView';
-import { File, file, hasValue } from '@casual-simulation/aux-common';
+import { hasValue } from '@casual-simulation/aux-common';
 import { ScaleDecorator } from './ScaleDecorator';
 import { ContextPositionDecorator } from './ContextPositionDecorator';
 import { FileShapeDecorator } from './FileShapeDecorator';
@@ -12,16 +11,16 @@ import { LineToDecorator } from './LineToDecorator';
 import { WordBubbleDecorator } from './WordBubbleDecorator';
 import { appManager } from '../../../shared/AppManager';
 import { UserControlsDecorator } from './UserControlsDecorator';
-import { OutlineDecorator } from './OutlineDecorator';
 import { TextureDecorator } from './TextureDecorator';
 import { HtmlMixerPlaneDecorator } from './HtmlMixerPlaneDecorator';
 import { UpdateMaxtrixDecorator } from './UpdateMatrixDecorator';
+import { Game } from '../Game';
 
 export class AuxFile3DDecoratorFactory {
-    public gameView: IGameView;
+    public game: Game;
 
-    constructor(gameView?: IGameView) {
-        this.gameView = gameView;
+    constructor(game?: Game) {
+        this.game = game;
     }
 
     loadDecorators(file3d: AuxFile3D): AuxFile3DDecorator[] {
@@ -32,9 +31,7 @@ export class AuxFile3DDecoratorFactory {
         if (isUser) {
             if (isLocalUser) {
                 // Local user gets controls for changing their user position in contexts.
-                decorators.push(
-                    new UserControlsDecorator(file3d, this.gameView)
-                );
+                decorators.push(new UserControlsDecorator(file3d, this.game));
             } else {
                 // Remote user gets mesh to visualize where it is in contexts.
                 decorators.push(new UserMeshDecorator(file3d));
@@ -63,8 +60,8 @@ export class AuxFile3DDecoratorFactory {
             new ContextPositionDecorator(file3d, { lerp: isUser })
         );
 
-        if (!!this.gameView) {
-            let labelDecorator = new LabelDecorator(file3d, this.gameView);
+        if (!!this.game) {
+            let labelDecorator = new LabelDecorator(file3d, this.game);
             let wordBubbleDecorator = new WordBubbleDecorator(
                 file3d,
                 labelDecorator
@@ -74,8 +71,8 @@ export class AuxFile3DDecoratorFactory {
                 new UpdateMaxtrixDecorator(file3d),
                 labelDecorator,
                 wordBubbleDecorator,
-                new LineToDecorator(file3d, this.gameView),
-                new HtmlMixerPlaneDecorator(file3d, this.gameView)
+                new LineToDecorator(file3d, this.game),
+                new HtmlMixerPlaneDecorator(file3d, this.game)
             );
         }
 

@@ -1,29 +1,10 @@
-import {
-    Math as ThreeMath,
-    Mesh,
-    Object3D,
-    DoubleSide,
-    Color,
-    TextureLoader,
-    Texture,
-    SceneUtils,
-    Vector3,
-    Box3,
-    RawShaderMaterial,
-    LinearFilter,
-    ArrowHelper,
-    Sphere,
-    Ray,
-    Vector2,
-} from 'three';
+import { Object3D, Color, Vector3, ArrowHelper, Sphere } from 'three';
 
 import {
     Object,
-    Workspace,
     isMinimized,
     FileCalculationContext,
 } from '@casual-simulation/aux-common';
-import { IGameView } from '../vue-components/IGameView';
 import { AuxFile3D } from './AuxFile3D';
 import { ContextGroup3D } from './ContextGroup3D';
 import { BuilderGroup3D } from './BuilderGroup3D';
@@ -103,9 +84,6 @@ export class Arrow3D extends Object3D {
 
     public update(calc: FileCalculationContext) {
         if (!this._arrowHelper) return;
-
-        let sourceFile = <Object>this._sourceFile3d.file;
-        let targetFile = <Object>this._targetFile3d.file;
 
         let sourceWorkspace = this._getWorkspace(this._sourceFile3d);
         let targetWorkspace = this._getWorkspace(this._targetFile3d);

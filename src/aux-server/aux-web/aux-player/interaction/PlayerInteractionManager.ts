@@ -37,15 +37,16 @@ import {
     CameraRig,
 } from '../../shared/scene/CameraRigFactory';
 import { PlayerEmptyClickOperation } from './ClickOperation/PlayerEmptyClickOperation';
+import { PlayerGame } from '../scene/PlayerGame';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
-    // This overrides the base class IGameView
-    protected _gameView: PlayerGameView;
+    // This overrides the base class Game.
+    protected _game: PlayerGame;
 
     private _grid: PlayerGrid;
 
-    constructor(gameView: PlayerGameView) {
-        super(gameView);
+    constructor(game: PlayerGame) {
+        super(game);
         let calc = appManager.simulationManager.primary.helper.createContext();
         let gridScale = calculateGridScale(calc, null);
         this._grid = new PlayerGrid(gridScale);
@@ -54,7 +55,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     protected _updateAdditionalNormalInputs(input: Input) {
         super._updateAdditionalNormalInputs(input);
 
-        const frame = this._gameView.getTime().frameCount;
+        const frame = this._game.getTime().frameCount;
         const simulations = appManager.simulationManager.simulations.values();
 
         let keysDown: string[] = [];
@@ -126,7 +127,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     getDraggableGroups(): DraggableGroup[] {
         if (this._draggableGroupsDirty) {
             const contexts = flatMap(
-                this._gameView.getSimulations(),
+                this._game.getSimulations(),
                 s => s.contexts
             );
             if (contexts && contexts.length > 0) {
@@ -150,17 +151,15 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                     this._draggableGroups = [
                         {
                             objects: inventoryColliders,
-                            camera: this._gameView.getInventoryCameraRig()
+                            camera: this._game.getInventoryCameraRig()
                                 .mainCamera,
-                            viewport: this._gameView.getInventoryCameraRig()
+                            viewport: this._game.getInventoryCameraRig()
                                 .viewport,
                         },
                         {
                             objects: otherColliders,
-                            camera: this._gameView.getMainCameraRig()
-                                .mainCamera,
-                            viewport: this._gameView.getMainCameraRig()
-                                .viewport,
+                            camera: this._game.getMainCameraRig().mainCamera,
+                            viewport: this._game.getMainCameraRig().viewport,
                         },
                     ];
                 }
@@ -188,7 +187,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     }
 
     createEmptyClickOperation(): IOperation {
-        return new PlayerEmptyClickOperation(this._gameView, this);
+        return new PlayerEmptyClickOperation(this._game, this);
     }
 
     createHtmlElementClickOperation(element: HTMLElement): IOperation {
@@ -222,11 +221,11 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     protected _createControlsForCameraRigs(): CameraRigControls[] {
         // Main camera
         let mainCameraRigControls: CameraRigControls = {
-            rig: this._gameView.getMainCameraRig(),
+            rig: this._game.getMainCameraRig(),
             controls: new CameraControls(
-                this._gameView.getMainCameraRig().mainCamera,
-                this._gameView,
-                this._gameView.getMainCameraRig().viewport
+                this._game.getMainCameraRig().mainCamera,
+                this._game,
+                this._game.getMainCameraRig().viewport
             ),
         };
 
@@ -241,11 +240,11 @@ export class PlayerInteractionManager extends BaseInteractionManager {
 
         // Inventory camera
         let invCameraRigControls: CameraRigControls = {
-            rig: this._gameView.getInventoryCameraRig(),
+            rig: this._game.getInventoryCameraRig(),
             controls: new CameraControls(
-                this._gameView.getInventoryCameraRig().mainCamera,
-                this._gameView,
-                this._gameView.getInventoryCameraRig().viewport
+                this._game.getInventoryCameraRig().mainCamera,
+                this._game,
+                this._game.getInventoryCameraRig().viewport
             ),
         };
 

@@ -130,7 +130,7 @@ module.exports = {
             chunks: ['projector', 'vendors'],
             // inject: false,
             template: path.resolve(__dirname, 'aux-projector', 'index.html'),
-            title: 'AUX Builder',
+            title: 'Channel Designer',
             filename: 'projector.html',
         }),
         new HtmlWebpackPlugin({

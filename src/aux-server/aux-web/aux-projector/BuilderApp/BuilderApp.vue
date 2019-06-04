@@ -5,7 +5,7 @@
                 <md-button class="md-icon-button" @click="menuClicked()">
                     <md-icon>menu</md-icon>
                 </md-button>
-                <file-search v-if="loggedIn"></file-search>
+                <file-search v-if="loggedIn" :mode="userMode" ref="searchBar"></file-search>
                 <md-button
                     class="md-icon-button user-mode-toggle"
                     v-if="userMode === false"
@@ -18,7 +18,7 @@
 
         <md-drawer :md-active.sync="showNavigation">
             <div class="menu-header">
-                <span class="md-title">{{ session || 'AUX Builder' }}</span
+                <span class="md-title">{{ session || 'Channel Designer' }}</span
                 ><br />
                 <span class="md-body-1" v-if="getUser() != null"
                     >Logged In: {{ getUser().name }}</span

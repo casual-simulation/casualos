@@ -26,6 +26,11 @@
     width: 64px;
 }
 
+.mini-file-search {
+    width: 45px;
+    margin-top: -4px;
+}
+
 .mini-file-cube .mini-file-img {
     background-color: transparent;
     /* border: 1px solid #000; */

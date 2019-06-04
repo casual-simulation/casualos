@@ -49,7 +49,7 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
         this._workspace = workspace;
 
         if (this._workspace) {
-            this.gameView.setWorldGridVisible(true);
+            this.game.setWorldGridVisible(true);
 
             // calculate the delta needed to be applied to the pointer
             // positions to have the pointer drag around the originally tapped point
@@ -63,7 +63,7 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
 
     protected _disposeCore() {
         if (this._workspace) {
-            this.gameView.setWorldGridVisible(false);
+            this.game.setWorldGridVisible(false);
         }
         super._disposeCore();
     }
@@ -80,8 +80,8 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
 
     protected _onDragWorkspace(calc: FileCalculationContext) {
         const mouseDir = Physics.screenPosToRay(
-            this.gameView.getInput().getMouseScreenPos(),
-            this.gameView.getMainCameraRig().mainCamera
+            this.game.getInput().getMouseScreenPos(),
+            this.game.getMainCameraRig().mainCamera
         );
         const point = Physics.pointOnPlane(mouseDir, Physics.GroundPlane);
 
@@ -91,8 +91,8 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
 
             this.simulation.helper.updateFile(this._workspace.file, {
                 tags: {
-                    [`aux.context.surface.x`]: final.x,
-                    [`aux.context.surface.y`]: final.z,
+                    [`aux.context.x`]: final.x,
+                    [`aux.context.y`]: final.z,
                 },
             });
         }

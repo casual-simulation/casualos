@@ -114,3 +114,7 @@
 .color-picker-advanced {
     margin: auto;
 }
+
+.color-picker-basic.vc-compact {
+    width: 245px;
+}

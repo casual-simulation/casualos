@@ -57,9 +57,9 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
     ): BaseFileDragOperation {
         const mode = getFileDragMode(calc, this._file);
         if (mode === 'clone') {
-            return this._createCloneDragOperation();
+            return this._createCloneDragOperation(calc);
         } else if (mode === 'diff') {
-            return this._createDiffDragOperation();
+            return this._createDiffDragOperation(calc);
         }
 
         const workspace = this._getWorkspace();
@@ -106,8 +106,10 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
         );
     }
 
-    protected _createCloneDragOperation(): BaseFileDragOperation {
-        let duplicatedFile = duplicateFile(<File>this._file);
+    protected _createCloneDragOperation(
+        calc: FileCalculationContext
+    ): BaseFileDragOperation {
+        let duplicatedFile = duplicateFile(calc, <File>this._file);
         return new BuilderNewFileDragOperation(
             this._simulation3D,
             this._interaction,
@@ -116,12 +118,14 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
         );
     }
 
-    protected _createDiffDragOperation(): BaseFileDragOperation {
+    protected _createDiffDragOperation(
+        calc: FileCalculationContext
+    ): BaseFileDragOperation {
         const tags = tagsOnFile(this._file);
-        let duplicatedFile = duplicateFile(<File>this._file, {
+        let duplicatedFile = duplicateFile(calc, <File>this._file, {
             tags: {
-                'aux._diff': true,
-                'aux._diffTags': tags,
+                'aux.diff': true,
+                'aux.diffTags': tags,
             },
         });
         return new BuilderNewFileDragOperation(
@@ -156,6 +160,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
                         workspace
                     );
                     let newFile = duplicateFile(
+                        calc,
                         this.simulation.recent.selectedRecentFile,
                         {
                             tags: {

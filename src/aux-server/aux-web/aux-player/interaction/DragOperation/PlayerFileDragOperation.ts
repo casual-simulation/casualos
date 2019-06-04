@@ -21,11 +21,12 @@ import { Physics } from '../../../shared/scene/Physics';
 import { Input } from '../../../shared/scene/Input';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
+import { PlayerGame } from '../../scene/PlayerGame';
 
 export class PlayerFileDragOperation extends BaseFileDragOperation {
     // This overrides the base class BaseInteractionManager
     protected _interaction: PlayerInteractionManager;
-    // This overrides the base class IGameView
+    // This overrides the base class Simulation3D
     protected _simulation3D: PlayerSimulation3D;
 
     protected _inventorySimulation3D: InventorySimulation3D;
@@ -38,8 +39,8 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
 
     protected _originalContext: string;
 
-    protected get gameView(): PlayerGameView {
-        return <PlayerGameView>this._simulation3D.gameView;
+    protected get game(): PlayerGame {
+        return <PlayerGame>this._simulation3D.game;
     }
 
     /**
@@ -65,9 +66,9 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
         let nextContext = this._simulation3D.context;
 
         // Test to see if we are hovering over the inventory simulation view.
-        const pagePos = this.gameView.getInput().getMousePagePos();
-        const inventoryViewport = this.gameView.getInventoryViewport();
-        const view = this.gameView.gameView;
+        const pagePos = this.game.getInput().getMousePagePos();
+        const inventoryViewport = this.game.getInventoryViewport();
+        const view = this.game.gameView;
         if (Input.pagePositionOnViewport(pagePos, inventoryViewport)) {
             nextContext = this._inventorySimulation3D.inventoryContext;
         }
@@ -101,7 +102,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
             );
         } else {
             mouseDir = Physics.screenPosToRay(
-                this.gameView.getInput().getMouseScreenPos(),
+                this.game.getInput().getMouseScreenPos(),
                 this._simulation3D.getMainCameraRig().mainCamera
             );
         }

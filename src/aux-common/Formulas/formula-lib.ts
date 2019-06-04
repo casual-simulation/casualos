@@ -1,4 +1,4 @@
-import { File, FileTags } from '../Files/File';
+import { File, FileTags, GLOBALS_FILE_ID } from '../Files/File';
 import {
     FileUpdatedEvent,
     FileEvent,
@@ -47,6 +47,7 @@ import {
     isDestroyable,
     isInUsernameList,
     getFileUsernameList,
+    DIFF_ACTION_NAME,
 } from '../Files/FileCalculations';
 
 import '../polyfill/Array.first.polyfill';
@@ -346,7 +347,7 @@ export function removeTags(
 }
 
 function destroyChildren(id: string) {
-    const result = calculateFormulaValue(calc, `@aux._creator("${id}")`);
+    const result = calculateFormulaValue(calc, `@aux.creator("${id}")`);
     if (result.success) {
         const children = result.result;
         let all: File[] = [];
@@ -450,7 +451,7 @@ function createFrom(parent: FileProxy | string, ...datas: FileDiff[]) {
     let parentId = getFileId(parent);
     let parentDiff = parentId
         ? {
-              'aux._creator': parentId,
+              'aux.creator': parentId,
           }
         : {};
     return create(parentDiff, ...datas);
@@ -547,12 +548,12 @@ function isBuilder(): boolean {
     const user = getUser();
     if (globals && user) {
         const globalsFile = globals[proxyObject];
-        const list = getFileUsernameList(calc, globalsFile, 'aux.builders');
+        const list = getFileUsernameList(calc, globalsFile, 'aux.designers');
         if (list) {
             return isInUsernameList(
                 calc,
                 globalsFile,
-                'aux.builders',
+                'aux.designers',
                 user[proxyObject].tags['aux._user']
             );
         }
@@ -620,7 +621,10 @@ function getUser() {
  * Gets the current globals file.
  */
 function getGlobals() {
-    const globals = calc.sandbox.interface.listObjectsWithTag('id', 'globals');
+    const globals = calc.sandbox.interface.listObjectsWithTag(
+        'id',
+        GLOBALS_FILE_ID
+    );
     if (Array.isArray(globals)) {
         if (globals.length === 1) {
             return globals[0];
@@ -750,24 +754,32 @@ function getNeighboringFiles(
     return getFilesAtPosition(context, x + offsetX, y + offsetY);
 }
 
-function createDiff(file: any, ...tags: (string | RegExp)[]): FileDiff {
+function loadDiff(file: any, ...tags: (string | RegExp)[]): FileDiff {
+    if (typeof file === 'string') {
+        file = JSON.parse(file);
+    }
+
     let diff: FileTags = {};
 
-    let fileTags = tagsOnFile(file);
+    let fileTags = isFile(file) ? tagsOnFile(file) : Object.keys(file);
     for (let fileTag of fileTags) {
         let add = false;
-        for (let tag of tags) {
-            if (tag instanceof RegExp) {
-                if (tag.test(fileTag)) {
-                    add = true;
-                    break;
-                }
-            } else {
-                if (tag === fileTag) {
-                    add = true;
-                    break;
+        if (tags.length > 0) {
+            for (let tag of tags) {
+                if (tag instanceof RegExp) {
+                    if (tag.test(fileTag)) {
+                        add = true;
+                        break;
+                    }
+                } else {
+                    if (tag === fileTag) {
+                        add = true;
+                        break;
+                    }
                 }
             }
+        } else {
+            add = true;
         }
 
         if (add) {
@@ -779,11 +791,20 @@ function createDiff(file: any, ...tags: (string | RegExp)[]): FileDiff {
 }
 
 /**
+ * Saves the given diff to a string of JSON.
+ * @param file The diff to save.
+ */
+function saveDiff(file: any): string {
+    return JSON.stringify(file);
+}
+
+/**
  * Applies the given diff to the given file.
  * @param file The file.
  * @param diff The diff to apply.
  */
 function applyDiff(file: any, ...diffs: FileDiff[]) {
+    let appliedDiffs: FileDiff[] = [];
     diffs.forEach(diff => {
         if (!diff) {
             return;
@@ -793,10 +814,17 @@ function applyDiff(file: any, ...diffs: FileDiff[]) {
         } else {
             diff = unwrapProxy(diff);
         }
+        appliedDiffs.push(diff);
         for (let key in diff) {
             file[key] = unwrapProxy(diff[key]);
         }
     });
+
+    if (isFile(file)) {
+        event(DIFF_ACTION_NAME, [file], {
+            diffs: appliedDiffs,
+        });
+    }
 }
 
 /**
@@ -821,33 +849,6 @@ function addToContextDiff(
  */
 function removeFromContextDiff(context: string) {
     return calcRemoveFromContextDiff(calc, context);
-}
-
-/**
- * Adds the given file to the given context.
- * @param file The file.
- * @param context The context.
- * @param x The X position that the file should be added at.
- * @param y The Y position that the file should be added at.
- * @param index The index that the file should be added at.
- */
-function addToContext(
-    file: FileProxy,
-    context: string,
-    x: number = 0,
-    y: number = 0,
-    index?: number
-) {
-    applyDiff(file, addToContextDiff(context, x, y, index));
-}
-
-/**
- * Removes the given file from the given context.
- * @param file The file.
- * @param context The context.
- */
-function removeFromContext(file: FileProxy, context: string) {
-    applyDiff(file, removeFromContextDiff(context));
 }
 
 /**
@@ -878,14 +879,6 @@ function addToMenuDiff(): FileTags {
 }
 
 /**
- * Adds the given file to the current user's menu.
- * @param file The file to add to the menu.
- */
-function addToMenu(file: FileProxy) {
-    applyDiff(file, addToMenuDiff());
-}
-
-/**
  * Gets a diff that removes a file from the current user's menu.
  */
 function removeFromMenuDiff(): FileTags {
@@ -894,14 +887,6 @@ function removeFromMenuDiff(): FileTags {
         ...removeFromContextDiff(context),
         [`${context}.id`]: null,
     };
-}
-
-/**
- * Removes the given file from the current user's menu.
- * @param file The file to remove from the menu.
- */
-function removeFromMenu(file: FileProxy) {
-    applyDiff(file, removeFromMenuDiff());
 }
 
 /**
@@ -997,7 +982,8 @@ export const diff = {
     addToMenu: addToMenuDiff,
     removeFromMenu: removeFromMenuDiff,
     setPosition: setPositionDiff,
-    create: createDiff,
+    load: loadDiff,
+    save: saveDiff,
 };
 
 /**

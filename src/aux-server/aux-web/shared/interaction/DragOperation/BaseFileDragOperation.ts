@@ -18,14 +18,12 @@ import {
     isMergeable,
     DRAG_OUT_OF_CONTEXT_ACTION_NAME,
     DROP_IN_CONTEXT_ACTION_NAME,
-    action,
-    calculateActionEvents,
     DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME,
     DROP_ANY_IN_CONTEXT_ACTION_NAME,
+    DIFF_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
-import { IGameView } from '../../vue-components/IGameView';
 import { differenceBy, maxBy } from 'lodash';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 
@@ -48,8 +46,8 @@ export abstract class BaseFileDragOperation implements IOperation {
 
     private _inContext: boolean;
 
-    protected get gameView() {
-        return this._simulation3D.gameView;
+    protected get game() {
+        return this._simulation3D.game;
     }
 
     get simulation() {
@@ -72,7 +70,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         this._simulation3D = simulation3D;
         this._interaction = interaction;
         this._setFiles(files);
-        this._lastScreenPos = this._simulation3D.gameView
+        this._lastScreenPos = this._simulation3D.game
             .getInput()
             .getMouseScreenPos();
         this._originalContext = this._context = context;
@@ -83,8 +81,8 @@ export abstract class BaseFileDragOperation implements IOperation {
     update(calc: FileCalculationContext): void {
         if (this._finished) return;
 
-        if (this.gameView.getInput().getMouseButtonHeld(0)) {
-            const curScreenPos = this.gameView.getInput().getMouseScreenPos();
+        if (this.game.getInput().getMouseButtonHeld(0)) {
+            const curScreenPos = this.game.getInput().getMouseScreenPos();
 
             if (!curScreenPos.equals(this._lastScreenPos)) {
                 this._onDrag(calc);
@@ -105,7 +103,7 @@ export abstract class BaseFileDragOperation implements IOperation {
 
     dispose(): void {
         this._disposeCore();
-        this.gameView.setGridsVisible(false);
+        this.game.setGridsVisible(false);
         this._files = null;
         this._file = null;
     }
@@ -115,21 +113,29 @@ export abstract class BaseFileDragOperation implements IOperation {
         if (this._merge && this._other) {
             const calc = this.simulation.helper.createContext();
             const update = getDiffUpdate(calc, this._file);
+            const result = this.simulation.helper.actionEvents(
+                DIFF_ACTION_NAME,
+                [this._other],
+                {
+                    diffs: update.tags,
+                }
+            );
             this.simulation.helper.transaction(
                 fileUpdated(this._other.id, update),
-                fileRemoved(this._file.id)
+                fileRemoved(this._file.id),
+                ...result.events
             );
         } else if (this._combine && this._other) {
             this.simulation.helper.action(COMBINE_ACTION_NAME, [
                 this._file,
                 this._other,
             ]);
-        } else if (isDiff(this._file)) {
+        } else if (isDiff(null, this._file)) {
             this.simulation.helper.transaction(
                 fileUpdated(this._file.id, {
                     tags: {
-                        'aux._diff': null,
-                        'aux._diffTags': null,
+                        'aux.diff': null,
+                        'aux.diffTags': null,
                     },
                 })
             );
@@ -221,7 +227,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         const canMerge =
             objs.length >= 1 &&
             files.length === 1 &&
-            isDiff(files[0]) &&
+            isDiff(calc, files[0]) &&
             isMergeable(calc, files[0]) &&
             isMergeable(calc, objs[0]);
 

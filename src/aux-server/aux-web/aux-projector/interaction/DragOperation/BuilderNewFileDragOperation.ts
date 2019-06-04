@@ -8,7 +8,6 @@ import {
 import {
     createFile,
     FileCalculationContext,
-    isDiff,
     CREATE_ACTION_NAME,
 } from '@casual-simulation/aux-common/Files/FileCalculations';
 import { merge } from '@casual-simulation/aux-common/utils';
@@ -82,8 +81,8 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
             }
 
             const mouseDir = Physics.screenPosToRay(
-                this.gameView.getInput().getMouseScreenPos(),
-                this.gameView.getMainCameraRig().mainCamera
+                this.game.getInput().getMouseScreenPos(),
+                this.game.getMainCameraRig().mainCamera
             );
             let worldPos = Physics.pointOnRay(
                 mouseDir,
@@ -100,7 +99,7 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
     private _releaseDragMesh(mesh: AuxFile3D): void {
         if (mesh) {
             mesh.dispose();
-            this.gameView.getScene().remove(mesh);
+            this.game.getScene().remove(mesh);
         }
     }
 }

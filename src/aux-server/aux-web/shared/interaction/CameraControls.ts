@@ -1,4 +1,3 @@
-import { IOperation } from './IOperation';
 import {
     PerspectiveCamera,
     Vector3,
@@ -7,14 +6,12 @@ import {
     Quaternion,
     Matrix4,
     Math as ThreeMath,
-    InterpolationEndingModes,
     OrthographicCamera,
 } from 'three';
-import { BaseInteractionManager } from './BaseInteractionManager';
 import { InputType, MouseButtonId } from '../../shared/scene/Input';
-import { IGameView } from '../vue-components/IGameView';
 import { lerp, normalize } from '@casual-simulation/aux-common';
 import { Viewport } from '../scene/Viewport';
+import { Game } from '../scene/Game';
 
 export class CameraControls {
     // "target" sets the location of focus, where the object orbits around
@@ -77,7 +74,7 @@ export class CameraControls {
     public viewport: Viewport;
 
     private _camera: PerspectiveCamera | OrthographicCamera;
-    private _gameView: IGameView;
+    private _game: Game;
     private _enabled = true;
 
     private state: STATE;
@@ -143,11 +140,11 @@ export class CameraControls {
 
     constructor(
         camera: PerspectiveCamera | OrthographicCamera,
-        gameView: IGameView,
+        game: Game,
         viewport: Viewport
     ) {
         this._camera = camera;
-        this._gameView = gameView;
+        this._game = game;
 
         if (!!viewport) {
             this.viewport = viewport;
@@ -219,7 +216,7 @@ export class CameraControls {
                 ((this._camera.fov / 2) * Math.PI) / 180.0
             );
 
-            const element = this._gameView.gameView;
+            const element = this._game.gameView.gameView;
 
             // we use only clientHeight here so aspect ratio does not distort speed
             this.panLeft(
@@ -314,7 +311,7 @@ export class CameraControls {
     public dispose() {}
 
     private updateInput() {
-        const input = this._gameView.getInput();
+        const input = this._game.getInput();
 
         if (this.viewport && this.state === STATE.NONE) {
             // Check to make sure we are over the viewport before allowing input to begin.
@@ -324,7 +321,9 @@ export class CameraControls {
         }
 
         if (input.currentInputType === InputType.Mouse) {
-            if (input.isMouseButtonDownOnElement(this._gameView.gameView)) {
+            if (
+                input.isMouseButtonDownOnElement(this._game.gameView.gameView)
+            ) {
                 //
                 // Pan/Dolly/Rotate [Start]
                 //
@@ -413,10 +412,10 @@ export class CameraControls {
                         .multiplyScalar(this.rotateSpeed);
                     const xAngle =
                         (2 * Math.PI * this.mouseRotateDelta.x) /
-                        this._gameView.gameView.clientHeight;
+                        this._game.gameView.gameView.clientHeight;
                     const yAngle =
                         (2 * Math.PI * this.mouseRotateDelta.y) /
-                        this._gameView.gameView.clientHeight;
+                        this._game.gameView.gameView.clientHeight;
                     this.rotateLeft(xAngle);
                     this.rotateUp(yAngle);
                     this.mouseRotateStart.copy(this.mouseRotateEnd);
@@ -435,7 +434,9 @@ export class CameraControls {
                 }
             }
         } else if (input.currentInputType === InputType.Touch) {
-            if (input.isMouseButtonDownOnElement(this._gameView.gameView)) {
+            if (
+                input.isMouseButtonDownOnElement(this._game.gameView.gameView)
+            ) {
                 //
                 // Pan/Dolly/Rotate [Start]
                 //
@@ -574,7 +575,7 @@ export class CameraControls {
                             .multiplyScalar(this.rotateSpeed);
                         let yAngle =
                             (2 * Math.PI * midpointDelta.y) /
-                            this._gameView.gameView.clientHeight;
+                            this._game.gameView.gameView.clientHeight;
                         ``;
                         this.rotateUp(yAngle);
 

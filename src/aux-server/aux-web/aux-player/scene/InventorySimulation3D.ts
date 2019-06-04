@@ -4,13 +4,12 @@ import {
     FileCalculationContext,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
-import { IGameView } from '../../shared/vue-components/IGameView';
 import { Simulation } from '../../shared/Simulation';
 import { tap } from 'rxjs/operators';
 import { InventoryContextGroup3D } from './InventoryContextGroup3D';
-import { PerspectiveCamera, OrthographicCamera, Plane } from 'three';
-import PlayerGameView from '../PlayerGameView/PlayerGameView';
-import { CameraRig } from 'aux-web/shared/scene/CameraRigFactory';
+import { CameraRig } from '../../shared/scene/CameraRigFactory';
+import { Game } from '../../shared/scene/Game';
+import { PlayerGame } from './PlayerGame';
 
 export class InventorySimulation3D extends Simulation3D {
     /**
@@ -28,22 +27,22 @@ export class InventorySimulation3D extends Simulation3D {
      */
     private _contextLoaded: boolean;
 
-    protected _gameView: PlayerGameView; // Override base class gameView so that its cast to the Aux Player GameView.
+    protected _game: PlayerGame; // Override base class game so that its cast to the Aux Player Game.
 
-    constructor(gameView: IGameView, simulation: Simulation) {
-        super(gameView, simulation);
+    constructor(game: Game, simulation: Simulation) {
+        super(game, simulation);
 
         // Generate a context group that will render the user's inventory for this simulation.
         this._contextGroup = new InventoryContextGroup3D(
             this,
             this.simulation.helper.userFile,
             'player',
-            this._gameView.getDecoratorFactory()
+            this._game.getDecoratorFactory()
         );
     }
 
     getMainCameraRig(): CameraRig {
-        return this._gameView.getInventoryCameraRig();
+        return this._game.getInventoryCameraRig();
     }
 
     init() {
