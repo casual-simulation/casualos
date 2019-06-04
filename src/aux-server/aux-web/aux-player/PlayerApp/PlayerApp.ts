@@ -589,11 +589,12 @@ export default class PlayerApp extends Vue {
         this.inputDialogType = options.type || 'text';
         this.inputDialogSubtype = options.subtype || 'basic';
         this.inputDialogTarget = file;
-        this.inputDialogInputValue = calculateFormattedFileValue(
-            calc,
-            this.inputDialogTarget,
-            this.inputDialogInput
-        );
+        this.inputDialogInputValue =
+            calculateFormattedFileValue(
+                calc,
+                this.inputDialogTarget,
+                this.inputDialogInput
+            ) || '';
 
         if (typeof options.placeholder !== 'undefined') {
             this.inputDialogPlaceholder = options.placeholder;
