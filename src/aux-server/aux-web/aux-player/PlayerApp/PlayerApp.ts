@@ -459,7 +459,9 @@ export default class PlayerApp extends Vue {
 
                     this._updateQuery();
                 } else if (e.name === 'show_input_for_tag') {
-                    this._showInputDialog(simulation, e);
+                    setTimeout(() => {
+                        this._showInputDialog(simulation, e);
+                    });
                 }
             }),
             simulation.aux.channel.connectionStateChanged.subscribe(

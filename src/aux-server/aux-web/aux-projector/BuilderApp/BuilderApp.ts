@@ -328,7 +328,9 @@ export default class BuilderApp extends Vue {
                         } else if (e.name === 'import_aux') {
                             this._importAUX(fileManager, e.url);
                         } else if (e.name === 'show_input_for_tag') {
-                            this._showInputDialog(fileManager, e);
+                            setTimeout(() => {
+                                this._showInputDialog(fileManager, e);
+                            });
                         }
                     })
                 );
