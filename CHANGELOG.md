@@ -29,6 +29,9 @@
         -   `onSave()` -> `onSaveInput()`
         -   `onClose()` -> `onCloseInput()`
     -   Changed the `"Switch to Player"` button text to be `"Open Context in New Tab"`.
+-   Bug Fixes
+    -   Fixed the color picker input to not error when the edited tag doesn't have a value.
+    -   Fixed the color picker basic input subtype to have the correct width so that the colors line up properly.
 
 ## V0.8.3
 
