@@ -319,4 +319,5 @@ export const KNOWN_TAGS: string[] = [
     'onPlayerContextEnter()',
     'onKeyDown()',
     'onKeyUp()',
+    'onGridClick()',
 ];

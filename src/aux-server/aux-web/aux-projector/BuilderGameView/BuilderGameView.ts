@@ -146,6 +146,7 @@ export default class BuilderGameView extends Vue implements IGameView {
 
     // TODO: Find a better way to refactor this
     @Inject() home: BuilderHome;
+    @Inject() buildApp: BuilderApp;
     @Provide() fileRenderer: FileRenderer = new FileRenderer();
 
     get gameView(): HTMLElement {
@@ -219,6 +220,7 @@ export default class BuilderGameView extends Vue implements IGameView {
     public getUIHtmlElements(): HTMLElement[] {
         return [
             ...this.home.getUIHtmlElements(),
+            ...this.buildApp.getUIHtmlElements(),
             <HTMLElement>this.$refs.fileQueue,
             this.$refs.trashCan ? (<TrashCan>this.$refs.trashCan).$el : null,
         ].filter(el => el);

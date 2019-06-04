@@ -35,6 +35,9 @@ export class BuilderNewFileClickOperation extends BaseFileClickOperation {
 
     protected _createDragOperation(): BaseFileDragOperation {
         let duplicatedFile = duplicateFile(<Object>this._file);
+
+        this._simulation3D.simulation.filePanel.HideOnDrag(true);
+
         return new BuilderNewFileDragOperation(
             this._simulation3D,
             this._interaction,

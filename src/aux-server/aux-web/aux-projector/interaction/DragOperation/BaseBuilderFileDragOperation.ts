@@ -92,6 +92,8 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     protected _onDragReleased(calc: FileCalculationContext): void {
         super._onDragReleased(calc);
 
+        this._simulation3D.simulation.filePanel.HideOnDrag(false);
+
         // Button has been released.
         if (this._freeDragGroup) {
             this._releaseFreeDragGroup(this._freeDragGroup);

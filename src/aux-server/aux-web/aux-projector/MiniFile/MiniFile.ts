@@ -28,6 +28,9 @@ export default class MiniFile extends Vue {
     @Prop({ default: false })
     diffball: boolean;
 
+    @Prop({ default: false })
+    isSearch: boolean;
+
     image: string = '';
     label: string = '';
     labelColor: string = '#000';
@@ -45,7 +48,7 @@ export default class MiniFile extends Vue {
         this.image = await this.fileRenderer.render(
             file,
             appManager.simulationManager.primary.helper.createContext(),
-            this.diffball
+            true
         );
         let label = file.tags['aux.label'];
         if (label) {

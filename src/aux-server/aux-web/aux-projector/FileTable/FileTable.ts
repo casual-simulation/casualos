@@ -160,6 +160,16 @@ export default class FileTable extends Vue {
         return this.tagExists(this.newTag);
     }
 
+    isEmptyDiff(): boolean {
+        if (this.diffSelected) {
+            if (this.files[0].id === 'empty') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     @Watch('files')
     filesChanged() {
         this.setTagBlacklist();

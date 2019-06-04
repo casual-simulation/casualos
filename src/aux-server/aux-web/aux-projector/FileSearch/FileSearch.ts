@@ -1,22 +1,40 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
-import { Prop, Inject, Watch } from 'vue-property-decorator';
+import { Prop, Inject, Watch, Provide } from 'vue-property-decorator';
 import { EventBus } from '../../shared/EventBus';
 import {
     AuxObject,
     getShortId,
     formatValue,
+    UserMode,
+    DEFAULT_USER_MODE,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import { SubscriptionLike } from 'rxjs';
+import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
+import BuilderGameView from '../BuilderGameView/BuilderGameView';
+import MiniFile from '../MiniFile/MiniFile';
+import { FileRenderer } from '../../shared/scene/FileRenderer';
+import Cube from '../public/icons/Cube.svg';
+import CubeSearch from '../public/icons/CubeSearch.svg';
 
 @Component({
-    components: {},
+    components: {
+        'mini-file': MiniFile,
+        'cube-icon': Cube,
+        'cubeSearch-icon': CubeSearch,
+    },
 })
 export default class FileSearch extends Vue {
     isOpen: boolean = false;
     files: AuxObject[] = [];
     search: string = '';
+
+    protected _gameView: BuilderGameView;
+
+    @Provide() fileRenderer: FileRenderer = new FileRenderer();
+
+    mode: UserMode = DEFAULT_USER_MODE;
 
     toggleOpen() {
         appManager.simulationManager.primary.filePanel.toggleOpen();
@@ -29,6 +47,10 @@ export default class FileSearch extends Vue {
         await appManager.simulationManager.primary.helper.transaction(
             ...events
         );
+    }
+
+    get simulation() {
+        return appManager.simulationManager.primary.recent;
     }
 
     @Watch('search')
@@ -58,7 +80,6 @@ export default class FileSearch extends Vue {
     get filesLength() {
         let num = 0;
         let temp = this.files.length;
-
         if (temp != 1) {
             num = this.files.length;
         } else {
@@ -74,6 +95,14 @@ export default class FileSearch extends Vue {
         }
 
         return num;
+    }
+
+    get filesMode() {
+        return this.mode === 'files';
+    }
+
+    uiHtmlElements(): HTMLElement[] {
+        return [<HTMLElement>this.$refs.fileQueue];
     }
 
     mounted() {

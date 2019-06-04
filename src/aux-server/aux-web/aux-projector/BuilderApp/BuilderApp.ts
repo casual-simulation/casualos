@@ -62,6 +62,8 @@ export interface SidebarItem {
     },
 })
 export default class BuilderApp extends Vue {
+    @Provide() buildApp = this;
+
     loadingProgress: LoadingProgress = null;
     showNavigation: boolean = false;
     showConfirmDialog: boolean = false;
@@ -433,6 +435,15 @@ export default class BuilderApp extends Vue {
 
     menuClicked() {
         this.showNavigation = !this.showNavigation;
+    }
+
+    getUIHtmlElements(): HTMLElement[] {
+        let queue = <FileSearch>this.$refs.searchBar;
+
+        if (queue) {
+            return queue.uiHtmlElements();
+        }
+        return [];
     }
 
     nukeSite() {

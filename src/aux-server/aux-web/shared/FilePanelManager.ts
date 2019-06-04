@@ -32,6 +32,8 @@ export default class FilePanelManager implements SubscriptionLike {
     private _isOpen: boolean = false;
     private _openChanged: BehaviorSubject<boolean>;
 
+    private _changedOnDrag: boolean = false;
+
     private _filesUpdated: BehaviorSubject<FilesUpdatedEvent>;
 
     private _search: string = '';
@@ -73,6 +75,24 @@ export default class FilePanelManager implements SubscriptionLike {
         if (value !== this.isOpen) {
             this._isOpen = value;
             this._openChanged.next(this._isOpen);
+        }
+    }
+
+    /**
+     * Gets whether the file panel has open set to false on drag.
+     */
+    HideOnDrag(value: boolean) {
+        if (value) {
+            if (this._isOpen) {
+                this._changedOnDrag = true;
+                this.isOpen = false;
+            }
+        } else {
+            if (this._changedOnDrag) {
+                this.isOpen = true;
+            }
+
+            this._changedOnDrag = false;
         }
     }
 
