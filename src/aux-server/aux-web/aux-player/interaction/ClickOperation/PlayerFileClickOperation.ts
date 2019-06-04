@@ -20,6 +20,7 @@ import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 import { PlayerNewFileDragOperation } from '../DragOperation/PlayerNewFileDragOperation';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
+import { PlayerGame } from '../../scene/PlayerGame';
 
 export class PlayerFileClickOperation extends BaseFileClickOperation {
     // This overrides the base class.
@@ -130,13 +131,13 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
 
         if (this._simulation3D instanceof PlayerSimulation3D) {
             playerSimulation3D = this._simulation3D;
-            inventorySimulation3D = (<PlayerGameView>(
-                this.gameView
+            inventorySimulation3D = (<PlayerGame>(
+                this.game
             )).findInventorySimulation3D(this._simulation3D.simulation);
         } else if (this._simulation3D instanceof InventorySimulation3D) {
-            playerSimulation3D = (<PlayerGameView>(
-                this.gameView
-            )).findPlayerSimulation3D(this._simulation3D.simulation);
+            playerSimulation3D = (<PlayerGame>this.game).findPlayerSimulation3D(
+                this._simulation3D.simulation
+            );
             inventorySimulation3D = this._simulation3D;
         } else {
             console.error(

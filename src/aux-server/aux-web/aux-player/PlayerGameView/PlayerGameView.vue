@@ -5,7 +5,7 @@
         <div class="ui-container">
             <div class="toolbar">
                 <div>
-                    <md-card v-if="!vrDisplay && menu.length > 0" class="menu-layout md-dense">
+                    <md-card v-if="game.vrDisplay && menu.length > 0" class="menu-layout md-dense">
                         <md-list class="md-dense">
                             <md-list-item md-expand :md-expanded.sync="menuExpanded">
                                 <md-icon>menu</md-icon>
@@ -27,7 +27,7 @@
                     </md-card>
                 </div>
                 <span
-                    v-show="vrDisplay"
+                    v-show="game.vrDisplay"
                     id="vr-button-container"
                     class="vr-button-container"
                 ></span>
@@ -35,29 +35,32 @@
 
             <!-- Inventory viewport -->
             <div
-                v-if="inventoryViewport"
+                v-if="game.inventoryViewport"
                 class="viewport"
                 :style="{
-                    bottom: inventoryViewport.y + 'px',
-                    left: inventoryViewport.x + 'px',
-                    width: inventoryViewport.width + 'px',
-                    height: inventoryViewport.height + 'px',
+                    bottom: game.inventoryViewport.y + 'px',
+                    left: game.inventoryViewport.x + 'px',
+                    width: game.inventoryViewport.width + 'px',
+                    height: game.inventoryViewport.height + 'px',
                 }"
             >
                 <div class="toolbar right">
-                    <camera-home :showDistance="5" :cameraRig="inventoryCameraRig"></camera-home>
+                    <camera-home
+                        :showDistance="5"
+                        :cameraRig="game.inventoryCameraRig"
+                    ></camera-home>
                 </div>
             </div>
 
             <!-- Main viewport -->
             <div
-                v-if="mainViewport"
+                v-if="game.mainViewport"
                 class="viewport"
                 :style="{
-                    bottom: inventoryViewport.height + 'px',
-                    left: mainViewport.x + 'px',
-                    width: mainViewport.width + 'px',
-                    height: mainViewport.height - inventoryViewport.height + 'px',
+                    bottom: game.inventoryViewport.height + 'px',
+                    left: game.mainViewport.x + 'px',
+                    width: game.mainViewport.width + 'px',
+                    height: game.mainViewport.height - game.inventoryViewport.height + 'px',
                 }"
             ></div>
         </div>

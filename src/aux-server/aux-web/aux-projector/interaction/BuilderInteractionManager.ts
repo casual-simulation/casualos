@@ -74,12 +74,13 @@ import {
     Orthographic_MinZoom,
     Orthographic_MaxZoom,
 } from '../../shared/scene/CameraRigFactory';
-import { CameraRigControls } from 'aux-web/shared/interaction/CameraRigControls';
+import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
 import { BuilderFileIDClickOperation } from './ClickOperation/BuilderFileIDClickOperation';
+import { BuilderGame } from '../scene/BuilderGame';
 
 export class BuilderInteractionManager extends BaseInteractionManager {
-    // This overrides the base class IGameView
-    protected _gameView: BuilderGameView;
+    // This overrides the base class Game.
+    protected _game: BuilderGame;
 
     protected _surfaceColliders: DraggableGroup[];
     protected _surfaceObjectsDirty: boolean;
@@ -87,11 +88,11 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     mode: UserMode = DEFAULT_USER_MODE;
 
     get selectionMode() {
-        return this._gameView.simulation3D.simulation.selection.mode;
+        return this._game.simulation3D.simulation.selection.mode;
     }
 
-    constructor(gameView: BuilderGameView) {
-        super(gameView);
+    constructor(game: BuilderGame) {
+        super(game);
         this._surfaceObjectsDirty = true;
     }
 
@@ -104,7 +105,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             gameObject instanceof ContextGroup3D
         ) {
             let fileClickOp = new BuilderFileClickOperation(
-                this._gameView.simulation3D,
+                this._game.simulation3D,
                 this,
                 gameObject,
                 hit
@@ -116,7 +117,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     }
 
     createEmptyClickOperation(): IOperation {
-        let emptyClickOp = new BuilderEmptyClickOperation(this._gameView, this);
+        let emptyClickOp = new BuilderEmptyClickOperation(this._game, this);
         return emptyClickOp;
     }
 
@@ -125,9 +126,9 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
         if (vueElement instanceof MiniFile) {
             const file = <File>vueElement.file;
-            this._gameView.simulation3D.selectRecentFile(file);
+            this._game.simulation3D.selectRecentFile(file);
             let newFileClickOp = new BuilderNewFileClickOperation(
-                this._gameView.simulation3D,
+                this._game.simulation3D,
                 this,
                 file
             );
@@ -147,7 +148,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                         'aux._diffTags': [tag],
                     });
                     return new BuilderNewFileClickOperation(
-                        this._gameView.simulation3D,
+                        this._game.simulation3D,
                         this,
                         newFile
                     );
@@ -158,18 +159,17 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 console.log('Not table');
             }
         } else if (vueElement instanceof FileID) {
-            const state = this._gameView.simulation3D.simulation.helper
-                .filesState;
+            const state = this._game.simulation3D.simulation.helper.filesState;
 
             if (state[vueElement.files.id]) {
                 return new BuilderFileIDClickOperation(
-                    this._gameView.simulation3D,
+                    this._game.simulation3D,
                     this,
                     vueElement.files
                 );
             } else {
                 return new BuilderNewFileClickOperation(
-                    this._gameView.simulation3D,
+                    this._game.simulation3D,
                     this,
                     vueElement.files
                 );
@@ -223,12 +223,9 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         if (size > 1) {
             if (size === 1) {
                 // Can only shrink to zero size if there are no objects on the workspace.
-                const allObjects = flatMap(
-                    this._gameView.getSimulations(),
-                    s => {
-                        return s.contexts.map(c => c.file);
-                    }
-                );
+                const allObjects = flatMap(this._game.getSimulations(), s => {
+                    return s.contexts.map(c => c.file);
+                });
                 const workspaceObjects = objectsAtWorkspace(
                     allObjects,
                     file.file.id
@@ -278,7 +275,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
         partial.tags[`aux.context.surface.grid.0:0`] = height;
 
-        this._gameView.simulation3D.simulation.helper.updateFile(
+        this._game.simulation3D.simulation.helper.updateFile(
             file.file,
             partial
         );
@@ -318,7 +315,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             } else {
                 screenPos = Input.screenPosition(
                     pagePos,
-                    this._gameView.gameView
+                    this._game.gameView.gameView
                 );
             }
 
@@ -368,7 +365,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         point: Vector3,
         exclude?: AuxFile3D | ContextGroup3D
     ) {
-        const contexts = flatMap(this._gameView.getSimulations(), s => {
+        const contexts = flatMap(this._game.getSimulations(), s => {
             return s.contexts;
         });
         const workspaceMeshes = contexts.filter(
@@ -431,7 +428,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
     getSurfaceObjectGroups(calc: FileCalculationContext): DraggableGroup[] {
         if (this._surfaceObjectsDirty) {
-            const builderSimulations = this._gameView
+            const builderSimulations = this._game
                 .getSimulations()
                 .filter(s => s instanceof BuilderSimulation3D);
             const builderContexts = flatMap(
@@ -446,8 +443,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             this._surfaceColliders = [
                 {
                     objects: surfaceObjects,
-                    camera: this._gameView.getMainCameraRig().mainCamera,
-                    viewport: this._gameView.getMainCameraRig().viewport,
+                    camera: this._game.getMainCameraRig().mainCamera,
+                    viewport: this._game.getMainCameraRig().viewport,
                 },
             ];
 
@@ -464,11 +461,11 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
     protected _createControlsForCameraRigs(): CameraRigControls[] {
         let mainCameraRigControls: CameraRigControls = {
-            rig: this._gameView.getMainCameraRig(),
+            rig: this._game.getMainCameraRig(),
             controls: new CameraControls(
-                this._gameView.getMainCameraRig().mainCamera,
-                this._gameView,
-                this._gameView.getMainCameraRig().viewport
+                this._game.getMainCameraRig().mainCamera,
+                this._game,
+                this._game.getMainCameraRig().viewport
             ),
         };
 
@@ -578,14 +575,11 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     ) {
         if (file && isContext(calc, file.file)) {
             const size = getContextSize(calc, file.file);
-            this._gameView.simulation3D.simulation.helper.updateFile(
-                file.file,
-                {
-                    tags: {
-                        [`aux.context.surface.size`]: (size || 0) - 1,
-                    },
-                }
-            );
+            this._game.simulation3D.simulation.helper.updateFile(file.file, {
+                tags: {
+                    [`aux.context.surface.size`]: (size || 0) - 1,
+                },
+            });
         }
     }
 
@@ -617,14 +611,11 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     ) {
         if (file && isContext(calc, file.file)) {
             const minimized = !isMinimized(calc, file.file);
-            this._gameView.simulation3D.simulation.helper.updateFile(
-                file.file,
-                {
-                    tags: {
-                        [`aux.context.surface.minimized`]: minimized,
-                    },
-                }
-            );
+            this._game.simulation3D.simulation.helper.updateFile(file.file, {
+                tags: {
+                    [`aux.context.surface.minimized`]: minimized,
+                },
+            });
         }
     }
 
@@ -657,14 +648,11 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     ) {
         if (file) {
             const size = getContextSize(calc, file.file);
-            this._gameView.simulation3D.simulation.helper.updateFile(
-                file.file,
-                {
-                    tags: {
-                        [`aux.context.surface.size`]: (size || 0) + 1,
-                    },
-                }
-            );
+            this._game.simulation3D.simulation.helper.updateFile(file.file, {
+                tags: {
+                    [`aux.context.surface.size`]: (size || 0) + 1,
+                },
+            });
         }
     }
 

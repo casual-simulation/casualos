@@ -7,6 +7,7 @@ import { ColorPickerEvent } from '../ColorPickerEvent';
 import { EventBus } from '../../../shared/EventBus';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import BuilderGameView from '../../BuilderGameView/BuilderGameView';
+import { BuilderGame } from '../../scene/BuilderGame';
 
 /**
  * Empty Click Operation handles clicking of empty space for mouse and touch input with the primary (left/first finger) interaction button.
@@ -17,7 +18,7 @@ export class BuilderEmptyClickOperation implements IOperation {
 
     protected _interaction: BuilderInteractionManager;
 
-    private _gameView: BuilderGameView;
+    private _game: BuilderGame;
     private _finished: boolean;
     private _startScreenPos: Vector2;
 
@@ -25,43 +26,38 @@ export class BuilderEmptyClickOperation implements IOperation {
         return appManager.simulationManager.primary;
     }
 
-    constructor(
-        gameView: BuilderGameView,
-        interaction: BuilderInteractionManager
-    ) {
-        this._gameView = gameView;
+    constructor(game: BuilderGame, interaction: BuilderInteractionManager) {
+        this._game = game;
         this._interaction = interaction;
 
         // Store the screen position of the input when the click occured.
-        this._startScreenPos = this._gameView.getInput().getMouseScreenPos();
+        this._startScreenPos = this._game.getInput().getMouseScreenPos();
     }
 
     public update(): void {
         if (this._finished) return;
 
-        if (!this._gameView.getInput().getMouseButtonHeld(0)) {
-            const curScreenPos = this._gameView.getInput().getMouseScreenPos();
+        if (!this._game.getInput().getMouseButtonHeld(0)) {
+            const curScreenPos = this._game.getInput().getMouseScreenPos();
             const distance = curScreenPos.distanceTo(this._startScreenPos);
 
             if (distance < BuilderEmptyClickOperation.DragThreshold) {
                 if (this._interaction.mode === 'worksurfaces') {
                     // When we release the empty click, make sure we are still over nothing.
-                    const screenPos = this._gameView
-                        .getInput()
-                        .getMouseScreenPos();
+                    const screenPos = this._game.getInput().getMouseScreenPos();
                     if (this._interaction.isEmptySpace(screenPos)) {
                         // Still not clicking on anything.
                         if (
                             BuilderEmptyClickOperation.CanOpenColorPicker &&
-                            !this._gameView.xrSession
+                            !this._game.xrSession
                         ) {
                             this.sceneBackgroundColorPicker(
-                                this._gameView.getInput().getMousePagePos()
+                                this._game.getInput().getMousePagePos()
                             );
                         }
                     }
                 } else if (this._interaction.mode === 'files') {
-                    this._gameView.$emit('onContextMenuHide');
+                    this._game.gameView.$emit('onContextMenuHide');
 
                     if (this._interaction.selectionMode === 'single') {
                         this._interaction.clearSelection();
@@ -109,7 +105,7 @@ export class BuilderEmptyClickOperation implements IOperation {
         let pickerClosed = (inputPagePos: Vector2) => {
             let screenPos = Input.screenPosition(
                 inputPagePos,
-                this._gameView.gameView
+                this._game.gameView.gameView
             );
             if (this._interaction.isEmptySpace(screenPos)) {
                 // temporarily disable color picker opening, until the next empty click.

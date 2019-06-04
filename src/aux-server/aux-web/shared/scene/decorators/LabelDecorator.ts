@@ -2,22 +2,19 @@ import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
 import { AuxFile3D } from '../AuxFile3D';
 import {
     FileCalculationContext,
-    AuxFile,
     calculateFileValue,
     isFormula,
     calculateFormattedFileValue,
     calculateNumericalTagValue,
-    hasValue,
     getFileLabelAnchor,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
-import { setLayer, findParentScene } from '../SceneUtils';
+import { setLayer } from '../SceneUtils';
 import { LayersHelper } from '../LayersHelper';
-import { Color, Camera, Object3D, Mesh, Vector3, Scene, Box3 } from 'three';
-import { FileShapeDecorator } from './FileShapeDecorator';
+import { Color, Vector3, Box3 } from 'three';
 import { WordBubbleElement } from '../WordBubbleElement';
 import { appManager } from '../../../shared/AppManager';
-import { IGameView } from '../../vue-components/IGameView';
+import { Game } from '../Game';
 
 export class LabelDecorator extends AuxFile3DDecorator
     implements WordBubbleElement {
@@ -26,11 +23,11 @@ export class LabelDecorator extends AuxFile3DDecorator
      */
     label: Text3D | null;
 
-    private _gameView: IGameView;
+    private _game: Game;
 
-    constructor(file3D: AuxFile3D, gameView: IGameView) {
+    constructor(file3D: AuxFile3D, game: Game) {
         super(file3D);
-        this._gameView = gameView;
+        this._game = game;
 
         this.label = new Text3D();
         setLayer(this.label, LayersHelper.Layer_UIWorld, true);
@@ -123,7 +120,7 @@ export class LabelDecorator extends AuxFile3DDecorator
         if (this._isInAutoSizeMode(calc)) {
             let labelWorldPos = new Vector3();
             this.label.getWorldPosition(labelWorldPos);
-            const mainCamera = this._gameView.getMainCameraRig().mainCamera;
+            const mainCamera = this._game.getMainCameraRig().mainCamera;
             const distanceToCamera = mainCamera.position.distanceTo(
                 labelWorldPos
             );

@@ -18,14 +18,11 @@ import {
     isMergeable,
     DRAG_OUT_OF_CONTEXT_ACTION_NAME,
     DROP_IN_CONTEXT_ACTION_NAME,
-    action,
-    calculateActionEvents,
     DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME,
     DROP_ANY_IN_CONTEXT_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
-import { IGameView } from '../../vue-components/IGameView';
 import { differenceBy, maxBy } from 'lodash';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 
@@ -48,8 +45,8 @@ export abstract class BaseFileDragOperation implements IOperation {
 
     private _inContext: boolean;
 
-    protected get gameView() {
-        return this._simulation3D.gameView;
+    protected get game() {
+        return this._simulation3D.game;
     }
 
     get simulation() {
@@ -72,7 +69,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         this._simulation3D = simulation3D;
         this._interaction = interaction;
         this._setFiles(files);
-        this._lastScreenPos = this._simulation3D.gameView
+        this._lastScreenPos = this._simulation3D.game
             .getInput()
             .getMouseScreenPos();
         this._originalContext = this._context = context;
@@ -83,8 +80,8 @@ export abstract class BaseFileDragOperation implements IOperation {
     update(calc: FileCalculationContext): void {
         if (this._finished) return;
 
-        if (this.gameView.getInput().getMouseButtonHeld(0)) {
-            const curScreenPos = this.gameView.getInput().getMouseScreenPos();
+        if (this.game.getInput().getMouseButtonHeld(0)) {
+            const curScreenPos = this.game.getInput().getMouseScreenPos();
 
             if (!curScreenPos.equals(this._lastScreenPos)) {
                 this._onDrag(calc);
@@ -105,7 +102,7 @@ export abstract class BaseFileDragOperation implements IOperation {
 
     dispose(): void {
         this._disposeCore();
-        this.gameView.setGridsVisible(false);
+        this.game.setGridsVisible(false);
         this._files = null;
         this._file = null;
     }

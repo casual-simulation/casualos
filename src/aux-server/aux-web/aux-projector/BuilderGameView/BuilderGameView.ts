@@ -1,43 +1,10 @@
-import {
-    Scene,
-    Color,
-    PerspectiveCamera,
-    OrthographicCamera,
-    WebGLRenderer,
-    AmbientLight,
-    DirectionalLight,
-    Math as ThreeMath,
-    PCFSoftShadowMap,
-    HemisphereLight,
-    Plane,
-    Vector3,
-    GridHelper,
-    Quaternion,
-    Matrix4,
-    Texture,
-    Vector2,
-    Camera,
-} from 'three';
+import { Plane, Vector3 } from 'three';
 
-import VRControlsModule from 'three-vrcontrols-module';
-import VREffectModule from 'three-vreffect-module';
-import * as webvrui from 'webvr-ui';
-
-import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Inject, Provide } from 'vue-property-decorator';
-import { SubscriptionLike } from 'rxjs';
-import { concatMap, tap, flatMap as rxFlatMap } from 'rxjs/operators';
+import { Inject } from 'vue-property-decorator';
 
 import {
-    Object,
-    DEFAULT_WORKSPACE_HEIGHT_INCREMENT,
-    DEFAULT_USER_MODE,
-    UserMode,
-    DEFAULT_SCENE_BACKGROUND_COLOR,
-    AuxFile,
     getFileConfigContexts,
-    hasValue,
     createContextId,
     AuxCausalTree,
     AuxOp,
@@ -48,63 +15,29 @@ import {
     createCalculationContext,
     cleanFile,
 } from '@casual-simulation/aux-common';
-import { storedTree, StoredCausalTree } from '@casual-simulation/causal-trees';
-import { ArgEvent } from '@casual-simulation/aux-common/Events';
-import { Time } from '../../shared/scene/Time';
-import { Input, InputType } from '../../shared/scene/Input';
-import { InputVR } from '../../shared/scene/InputVR';
+import { StoredCausalTree } from '@casual-simulation/causal-trees';
 
 import { appManager } from '../../shared/AppManager';
-import { GridChecker } from '../../shared/scene/grid/GridChecker';
-import { flatMap, find, findIndex, debounce, keys } from 'lodash';
+import { keys } from 'lodash';
 import BuilderApp from '../BuilderApp/BuilderApp';
 import MiniFile from '../MiniFile/MiniFile';
-import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { IGameView } from '../../shared/vue-components/IGameView';
-import { LayersHelper } from '../../shared/scene/LayersHelper';
-import { AuxFile3DDecoratorFactory } from '../../shared/scene/decorators/AuxFile3DDecoratorFactory';
-import { DebugObjectManager } from '../../shared/scene/DebugObjectManager';
-import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
-import { AuxFile3D } from '../../shared/scene/AuxFile3D';
-import { BuilderInteractionManager } from '../interaction/BuilderInteractionManager';
-import { TweenCameraToOperation } from '../../shared/interaction/TweenCameraToOperation';
 import BuilderHome from '../BuilderHome/BuilderHome';
 import TrashCan from '../TrashCan/TrashCan';
-import {
-    CameraType,
-    resizeCameraRig,
-    createCameraRig,
-    CameraRig,
-} from '../../shared/scene/CameraRigFactory';
-import {
-    baseAuxAmbientLight,
-    baseAuxDirectionalLight,
-    createHtmlMixerContext,
-} from '../../shared/scene/SceneUtils';
 import { Physics } from '../../shared/scene/Physics';
-import { Simulation3D } from '../../shared/scene/Simulation3D';
-import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
-import { HtmlMixer } from '../../shared/scene/HtmlMixer';
-import { copyToClipboard } from '../../shared/SharedUtils';
-import { Viewport } from '../../shared/scene/Viewport';
-import CameraHome from '../../shared/vue-components/CameraHome/CameraHome';
-import { EventBus } from '../../shared/EventBus';
-import { default as CameraTypeVue } from '../../shared/vue-components/CameraType/CameraType';
+import { isMac } from '../../shared/SharedUtils';
 import BaseGameView from '../../shared/vue-components/BaseGameView';
-import { BaseInteractionManager } from 'aux-web/shared/interaction/BaseInteractionManager';
+import { BuilderGame } from '../scene/BuilderGame';
+import { Game } from '../../shared/scene/Game';
 
 @Component({
-    extends: BaseGameView,
     components: {
         'mini-file': MiniFile,
         'trash-can': TrashCan,
     },
 })
-export default class BuilderGameView extends BaseGameView {
-    private gridMesh: GridHelper;
-
-    simulation3D: BuilderSimulation3D = null;
-    mode: UserMode = DEFAULT_USER_MODE;
+export default class BuilderGameView extends BaseGameView implements IGameView {
+    game: BuilderGame = null;
     showTrashCan: boolean = false;
     showUploadFiles: boolean = false;
 
@@ -115,91 +48,8 @@ export default class BuilderGameView extends BaseGameView {
     // TODO: Find a better way to refactor this
     @Inject() home: BuilderHome;
 
-    get filesMode() {
-        return this.mode === 'files';
-    }
-    get workspacesMode() {
-        return this.mode === 'worksurfaces';
-    }
-
-    protected async onBeforeMountedComplete() {
-        this.gridChecker = new GridChecker(DEFAULT_WORKSPACE_HEIGHT_INCREMENT);
-
-        this.simulation3D = new BuilderSimulation3D(
-            this,
-            appManager.simulationManager.primary
-        );
-
-        this.simulation3D.init();
-        this.simulation3D.onFileAdded.addListener(obj =>
-            this.onFileAdded.invoke(obj)
-        );
-        this.simulation3D.onFileRemoved.addListener(obj =>
-            this.onFileRemoved.invoke(obj)
-        );
-        this.simulation3D.onFileUpdated.addListener(obj =>
-            this.onFileUpdated.invoke(obj)
-        );
-    }
-
-    findFilesById(id: string): AuxFile3D[] {
-        return flatMap(this.simulation3D.contexts, c =>
-            c.getFiles().filter(f => f.file.id === id)
-        );
-    }
-
-    baseAddSidebarItem(
-        id: string,
-        text: string,
-        click: () => void,
-        icon?: string,
-        group?: string
-    ): void {
-        this.addSidebarItem(id, text, click, icon, group);
-    }
-
-    baseRemoveSidebarItem(id: string): void {
-        this.removeSidebarItem(id);
-    }
-
-    baseRemoveSidebarGroup(group: string): void {
-        this.removeSidebarGroup(group);
-    }
-
-    getViewports(): Viewport[] {
-        return [this.mainViewport];
-    }
-    getCameraRigs(): CameraRig[] {
-        return [this.mainCameraRig];
-    }
-    getSimulations(): Simulation3D[] {
-        return [this.simulation3D];
-    }
-    getBackground(): Color | Texture {
-        return this.simulation3D.backgroundColor;
-    }
-    getUIHtmlElements(): HTMLElement[] {
-        return [
-            ...this.home.getUIHtmlElements(),
-            <HTMLElement>this.$refs.fileQueue,
-            this.$refs.trashCan ? (<TrashCan>this.$refs.trashCan).$el : null,
-        ].filter(el => el);
-    }
-
-    setGridsVisible(visible: boolean) {
-        this.simulation3D.contexts.forEach((c: BuilderGroup3D) => {
-            if (c.surface) {
-                c.surface.gridsVisible = visible;
-            }
-        });
-    }
-
-    setWorldGridVisible(visible: boolean) {
-        this.gridMesh.visible = visible;
-    }
-
-    setupInteraction(): BaseInteractionManager {
-        return new BuilderInteractionManager(this);
+    protected createGame(): Game {
+        return new BuilderGame(this);
     }
 
     onDragEnter(event: DragEvent) {
@@ -218,7 +68,7 @@ export default class BuilderGameView extends BaseGameView {
         }
     }
 
-    onDragLeave(event: DragEvent) {
+    onDragLeave() {
         this.showUploadFiles = false;
     }
 
@@ -258,25 +108,25 @@ export default class BuilderGameView extends BaseGameView {
     }
 
     copySelectionMac() {
-        if (this.isMac()) {
+        if (isMac()) {
             this._copySelection();
         }
     }
 
     copySelectionNormal() {
-        if (!this.isMac()) {
+        if (!isMac()) {
             this._copySelection();
         }
     }
 
     pasteClipboardMac() {
-        if (this.isMac()) {
+        if (isMac()) {
             this._pasteClipboard();
         }
     }
 
     pasteClipboardNormal() {
-        if (!this.isMac()) {
+        if (!isMac()) {
             this._pasteClipboard();
         }
     }
@@ -346,8 +196,8 @@ export default class BuilderGameView extends BaseGameView {
                 worksurface = cleanFile(worksurface);
 
                 const mouseDir = Physics.screenPosToRay(
-                    this.getInput().getMouseScreenPos(),
-                    this.mainCameraRig.mainCamera
+                    this.game.getInput().getMouseScreenPos(),
+                    this.game.mainCameraRig.mainCamera
                 );
                 const point = Physics.pointOnPlane(
                     mouseDir,
@@ -420,37 +270,5 @@ export default class BuilderGameView extends BaseGameView {
                 )
             );
         }
-    }
-
-    protected renderCore(): void {
-        super.renderCore();
-        //
-        // [Main scene]
-        //
-
-        // Render the main scene with the main camera.
-        this.renderer.clear();
-        this.renderer.render(this.mainScene, this.mainCameraRig.mainCamera);
-
-        // Set the background color to null when rendering with the ui world camera.
-        this.mainScene.background = null;
-
-        // Render the main scene with the ui world camera.
-        this.renderer.clearDepth(); // Clear depth buffer so that ui world appears above objects that were just rendererd.
-        this.renderer.render(this.mainScene, this.mainCameraRig.uiWorldCamera);
-
-        this.mainSceneBackgroundUpdate();
-    }
-
-    protected setupScenes() {
-        super.setupScenes();
-
-        // Main scene grid plane.
-        this.gridMesh = new GridHelper(1000, 300, 0xbbbbbb, 0xbbbbbb);
-        this.gridMesh.visible = false;
-        this.mainScene.add(this.gridMesh);
-
-        // Main scene simulations.
-        this.mainScene.add(this.simulation3D);
     }
 }

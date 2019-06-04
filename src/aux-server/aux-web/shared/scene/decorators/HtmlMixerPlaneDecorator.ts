@@ -1,29 +1,14 @@
-import {
-    Math as ThreeMath,
-    MeshBasicMaterial,
-    Texture,
-    MeshToonMaterial,
-    MeshStandardMaterial,
-    SpriteMaterial,
-    Plane,
-    Vector3,
-    AxesHelper,
-    Vector2,
-    Euler,
-} from 'three';
+import { Math as ThreeMath, Vector3, Vector2 } from 'three';
 import {
     FileCalculationContext,
     calculateFileValue,
     hasValue,
-    FileLabelAnchor,
-    getFileLabelAnchor,
     calculateNumericalTagValue,
 } from '@casual-simulation/aux-common';
 import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
 import { AuxFile3D } from '../AuxFile3D';
-import { EventBus } from '../../EventBus';
-import { IGameView } from '../../vue-components/IGameView';
 import { HtmlMixer, HtmlMixerHelpers } from '../../../shared/scene/HtmlMixer';
+import { Game } from '../Game';
 
 const DEFAULT_IFRAME_PLANE_SIZE = new Vector2(1, 3 / 4);
 const DEFAULT_IFRAME_PLANE_SCALE = 1;
@@ -42,7 +27,7 @@ export class HtmlMixerPlaneDecorator extends AuxFile3DDecorator {
      */
     mixerPlane: HtmlMixer.Plane;
 
-    private _gameView: IGameView = null;
+    private _game: Game = null;
 
     private _localPosition: Vector3 = DEFAULT_IFRAME_LOCAL_POSITION;
     private _localRotation: Vector3 = DEFUALT_IFRAME_LOCAL_ROTATION;
@@ -50,9 +35,9 @@ export class HtmlMixerPlaneDecorator extends AuxFile3DDecorator {
     private _planeScale: number = DEFAULT_IFRAME_PLANE_SCALE;
     private _elementWidth: number = DEFAULT_IFRAME_ELEMENT_WIDTH;
 
-    constructor(file3D: AuxFile3D, gameView: IGameView) {
+    constructor(file3D: AuxFile3D, game: Game) {
         super(file3D);
-        this._gameView = gameView;
+        this._game = game;
     }
 
     fileUpdated(calc: FileCalculationContext): void {
@@ -196,7 +181,7 @@ export class HtmlMixerPlaneDecorator extends AuxFile3DDecorator {
             this._destroyMixerPlane();
         }
 
-        const mixerContext = this._gameView.getHtmlMixerContext();
+        const mixerContext = this._game.getHtmlMixerContext();
         const domElement = HtmlMixerHelpers.createIframeDomElement(
             'https://casualsimulation.com'
         );

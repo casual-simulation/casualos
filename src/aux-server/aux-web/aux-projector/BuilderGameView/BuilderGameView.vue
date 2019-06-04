@@ -30,14 +30,14 @@
                     <md-tooltip md-direction="bottom">New Worksurface</md-tooltip>
                 </md-button-->
                 <span
-                    v-show="vrDisplay"
+                    v-show="game.vrDisplay"
                     id="vr-button-container"
                     class="vr-button-container"
                 ></span>
             </div>
             <trash-can v-if="showTrashCan" ref="trashCan"></trash-can>
             <div class="toolbar right">
-                <camera-home :cameraRig="mainCameraRig"></camera-home>
+                <camera-home :cameraRig="game.mainCameraRig"></camera-home>
             </div>
             <div v-shortkey.once="['ctrl', 'c']" @shortkey="copySelectionNormal"></div>
 

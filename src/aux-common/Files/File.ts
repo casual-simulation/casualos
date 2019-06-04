@@ -280,6 +280,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.iframe.scale',
     'aux.context',
     'aux.context.color',
+    'aux.context.locked',
     'aux.context.grid.scale',
     'aux.context.surface.grid',
     'aux.context.surface.x',

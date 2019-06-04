@@ -1,11 +1,4 @@
-import {
-    Object3D,
-    PerspectiveCamera,
-    OrthographicCamera,
-    Plane,
-    Texture,
-    Color,
-} from 'three';
+import { Object3D, Texture, Color } from 'three';
 import { ContextGroup3D } from './ContextGroup3D';
 import { Simulation } from '../Simulation';
 import {
@@ -15,11 +8,10 @@ import {
     hasValue,
 } from '@casual-simulation/aux-common';
 import { SubscriptionLike } from 'rxjs';
-import { IGameView } from '../vue-components/IGameView';
 import { concatMap, tap, flatMap as rxFlatMap } from 'rxjs/operators';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
-import { flatMap } from 'lodash';
 import { CameraRig } from './CameraRigFactory';
+import { Game } from './Game';
 
 /**
  * Defines a class that is able to render a simulation.
@@ -31,7 +23,7 @@ export abstract class Simulation3D extends Object3D
     /**
      * The game view.
      */
-    protected _gameView: IGameView;
+    protected _game: Game;
 
     closed: boolean;
     onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
@@ -53,8 +45,8 @@ export abstract class Simulation3D extends Object3D
     /**
      * Gets the game view that is for this simulation.
      */
-    get gameView() {
-        return this._gameView;
+    get game() {
+        return this._game;
     }
 
     /**
@@ -66,12 +58,12 @@ export abstract class Simulation3D extends Object3D
 
     /**
      * Creates a new Simulation3D object that can be used to render the given simulation.
-     * @param gameView The game view.
+     * @param game The game.
      * @param simulation The simulation to render.
      */
-    constructor(gameView: IGameView, simulation: Simulation) {
+    constructor(game: Game, simulation: Simulation) {
         super();
-        this._gameView = gameView;
+        this._game = game;
         this.simulation = simulation;
         this.contexts = [];
         this._subs = [];
@@ -111,11 +103,16 @@ export abstract class Simulation3D extends Object3D
                 .pipe(
                     tap(e => {
                         if (e.name === 'tween_to') {
-                            this._gameView.tweenCameraToFile(
-                                this.getMainCameraRig(),
-                                e.fileId,
-                                e.zoomValue
+                            const foundFileIn3D = this.contexts.some(c =>
+                                c.getFiles().some(f => f.file.id === e.fileId)
                             );
+                            if (foundFileIn3D) {
+                                this.game.tweenCameraToFile(
+                                    this.getMainCameraRig(),
+                                    e.fileId,
+                                    e.zoomValue
+                                );
+                            }
                         }
                     })
                 )

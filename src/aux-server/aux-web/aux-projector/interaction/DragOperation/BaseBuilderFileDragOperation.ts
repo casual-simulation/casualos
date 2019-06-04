@@ -27,13 +27,12 @@ import BuilderGameView from '../../BuilderGameView/BuilderGameView';
 import TrashCan from '../../TrashCan/TrashCan';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { BuilderSimulation3D } from '../../scene/BuilderSimulation3D';
+import { BuilderGame } from '../../scene/BuilderGame';
 
 /**
  * Shared class for both BuilderFileDragOperation and BuilderNewFileDragOperation.
  */
 export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation {
-    // Override base class IGameView
-    // protected _gameView: GameView;
     // Override base class BaseInteractionManager
     protected _interaction: BuilderInteractionManager;
 
@@ -50,8 +49,8 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         return !this._freeDragGroup;
     }
 
-    protected get gameView(): BuilderGameView {
-        return <BuilderGameView>super.gameView;
+    protected get game(): BuilderGame {
+        return <BuilderGame>super.game;
     }
 
     /**
@@ -65,11 +64,11 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     ) {
         super(simulation3D, interaction, files, context);
 
-        this.gameView.showTrashCan = true;
+        this.game.gameView.showTrashCan = true;
     }
 
     protected _onDrag(calc: FileCalculationContext) {
-        const mousePagePos = this.gameView.getInput().getMousePagePos();
+        const mousePagePos = this.game.getInput().getMousePagePos();
         const {
             good,
             gridPosition,
@@ -77,7 +76,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         } = this._interaction.pointOnWorkspaceGrid(
             calc,
             mousePagePos,
-            this.gameView.getMainCameraRig().mainCamera
+            this.game.getMainCameraRig().mainCamera
         );
 
         if (this._files.length > 0) {
@@ -100,7 +99,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
             // Destroy files if free dragging them (trash can)!
             this._destroyOrRemoveFiles(calc, this._files);
         }
-        this.gameView.showTrashCan = false;
+        this.game.gameView.showTrashCan = false;
     }
 
     protected _dragFilesOnWorkspace(
@@ -136,8 +135,8 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
 
     protected _dragFilesFree(calc: FileCalculationContext): void {
         const mouseDir = Physics.screenPosToRay(
-            this.gameView.getInput().getMouseScreenPos(),
-            this.gameView.getMainCameraRig().mainCamera
+            this.game.getInput().getMouseScreenPos(),
+            this.game.getMainCameraRig().mainCamera
         );
         const firstFileExists = true;
 
@@ -157,7 +156,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
                 const fileWorldPos = this._freeDragMeshes[0].getWorldPosition(
                     new Vector3()
                 );
-                const cameraWorldPos = this.gameView
+                const cameraWorldPos = this.game
                     .getMainCameraRig()
                     .mainCamera.getWorldPosition(new Vector3());
                 this._freeDragDistance = cameraWorldPos.distanceTo(
@@ -194,12 +193,8 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
      * Determines whether the mouse is currently over the trash can.
      */
     protected _isOverTrashCan(): boolean {
-        const input = this.gameView.getInput();
-        if (
-            input.isMouseFocusingOnAnyElements(
-                this.gameView.getUIHtmlElements()
-            )
-        ) {
+        const input = this.game.getInput();
+        if (input.isMouseFocusingOnAnyElements(this.game.getUIHtmlElements())) {
             console.log('isOverTrashCan() mouse is over ui elements');
             const element = input.getTargetData().inputOver;
             const vueElement = Input.getVueParent(element, TrashCan);
@@ -280,11 +275,11 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
 
         // Parent all the files to the group.
         for (let i = 0; i < fileMeshes.length; i++) {
-            setParent(fileMeshes[i], group, this.gameView.getScene());
+            setParent(fileMeshes[i], group, this.game.getScene());
         }
 
         // Add the group the scene.
-        this.gameView.getScene().add(group);
+        this.game.getScene().add(group);
 
         return group;
     }
@@ -297,7 +292,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
             m.dispose();
         });
         // Remove the group object from the scene.
-        this.gameView.getScene().remove(group);
+        this.game.getScene().remove(group);
     }
 
     /**
@@ -316,17 +311,17 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
             null,
             null,
             [],
-            new AuxFile3DDecoratorFactory(this.gameView)
+            new AuxFile3DDecoratorFactory(this.game)
         );
 
         mesh.fileUpdated(file, [], calc);
 
         if (!mesh.parent) {
-            this.gameView.getScene().add(mesh);
+            this.game.getScene().add(mesh);
         } else {
             // KLUDGE: FileMesh will reparent the object to a workspace if the the file has a workspace assigned.
             // Setting the parent here will force the FileMesh to be in world space again.
-            setParent(mesh, this.gameView.getScene(), this.gameView.getScene());
+            setParent(mesh, this.game.getScene(), this.game.getScene());
         }
 
         return mesh;
