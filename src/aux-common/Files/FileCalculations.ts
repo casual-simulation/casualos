@@ -1401,17 +1401,17 @@ export function getFileBlacklist(
 }
 
 /**
- * Gets the aux.builders tag from the given file.
+ * Gets the aux.designers tag from the given file.
  * Always returns an array of strings.
  * If any files returned by the formula, then the aux._user tag will be used from the file.
  * @param calc The file calculation context.
  * @param file The file.
  */
-export function getFileBuilderList(
+export function getFileDesignerList(
     calc: FileCalculationContext,
     file: File
 ): string[] {
-    return getFileUsernameList(calc, file, 'aux.builders');
+    return getFileUsernameList(calc, file, 'aux.designers');
 }
 
 /**

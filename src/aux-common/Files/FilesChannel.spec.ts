@@ -2867,7 +2867,7 @@ describe('FilesChannel', () => {
                     config: {
                         id: 'config',
                         tags: {
-                            'aux.builders': 'bob',
+                            'aux.designers': 'bob',
                         },
                     },
                     userFile: {
@@ -2905,7 +2905,7 @@ describe('FilesChannel', () => {
                     config: {
                         id: 'config',
                         tags: {
-                            'aux.builders': 'otherUser',
+                            'aux.designers': 'otherUser',
                         },
                     },
                     userFile: {
@@ -2932,7 +2932,7 @@ describe('FilesChannel', () => {
                 ]);
             });
 
-            it('should return true when there are no builders', () => {
+            it('should return true when there are no designers', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',

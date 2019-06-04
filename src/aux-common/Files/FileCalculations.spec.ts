@@ -3972,7 +3972,7 @@ describe('FileCalculations', () => {
     });
 
     describe('getFileUsernameList()', () => {
-        const cases = [['aux.whitelist'], ['aux.blacklist']];
+        const cases = [['aux.whitelist'], ['aux.blacklist'], ['aux.designers']];
 
         describe.each(cases)('%s', tag => {
             it(`should return the ${tag}`, () => {

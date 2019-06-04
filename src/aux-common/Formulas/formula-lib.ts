@@ -547,12 +547,12 @@ function isBuilder(): boolean {
     const user = getUser();
     if (globals && user) {
         const globalsFile = globals[proxyObject];
-        const list = getFileUsernameList(calc, globalsFile, 'aux.builders');
+        const list = getFileUsernameList(calc, globalsFile, 'aux.designers');
         if (list) {
             return isInUsernameList(
                 calc,
                 globalsFile,
-                'aux.builders',
+                'aux.designers',
                 user[proxyObject].tags['aux._user']
             );
         }
