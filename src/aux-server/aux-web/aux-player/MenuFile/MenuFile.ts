@@ -67,9 +67,10 @@ export default class MenuFile extends Vue {
 
     async closeDialog() {
         if (this.showDialog) {
-            await this.item.simulation.simulation.helper.action('onClose', [
-                this.item.file,
-            ]);
+            await this.item.simulation.simulation.helper.action(
+                'onCloseInput',
+                [this.item.file]
+            );
             this.showDialog = false;
         }
     }
@@ -84,7 +85,7 @@ export default class MenuFile extends Vue {
                     },
                 }
             );
-            await this.item.simulation.simulation.helper.action('onSave', [
+            await this.item.simulation.simulation.helper.action('onSaveInput', [
                 this.item.file,
             ]);
             await this.closeDialog();

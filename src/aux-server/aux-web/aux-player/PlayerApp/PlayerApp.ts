@@ -515,7 +515,7 @@ export default class PlayerApp extends Vue {
 
     async closeInputDialog() {
         if (this.showInputDialog) {
-            await this.inputDialogSimulation.helper.action('onClose', [
+            await this.inputDialogSimulation.helper.action('onCloseInput', [
                 this.inputDialogTarget,
             ]);
             this.showInputDialog = false;
@@ -541,7 +541,7 @@ export default class PlayerApp extends Vue {
                     },
                 }
             );
-            await this.inputDialogSimulation.helper.action('onSave', [
+            await this.inputDialogSimulation.helper.action('onSaveInput', [
                 this.inputDialogTarget,
             ]);
             await this.closeInputDialog();
