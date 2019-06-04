@@ -20,6 +20,7 @@ import {
     DROP_IN_CONTEXT_ACTION_NAME,
     DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME,
     DROP_ANY_IN_CONTEXT_ACTION_NAME,
+    DIFF_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
@@ -112,9 +113,17 @@ export abstract class BaseFileDragOperation implements IOperation {
         if (this._merge && this._other) {
             const calc = this.simulation.helper.createContext();
             const update = getDiffUpdate(calc, this._file);
+            const result = this.simulation.helper.actionEvents(
+                DIFF_ACTION_NAME,
+                [this._other],
+                {
+                    diffs: update.tags,
+                }
+            );
             this.simulation.helper.transaction(
                 fileUpdated(this._other.id, update),
-                fileRemoved(this._file.id)
+                fileRemoved(this._file.id),
+                ...result.events
             );
         } else if (this._combine && this._other) {
             this.simulation.helper.action(COMBINE_ACTION_NAME, [

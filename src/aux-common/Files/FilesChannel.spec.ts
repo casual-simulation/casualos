@@ -1878,6 +1878,42 @@ describe('FilesChannel', () => {
                     }),
                 ]);
             });
+
+            it('should send a onDiff() event to the affected file', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            abc: 123,
+                            'onDiff()': 'this.diffed = true',
+                            'test()':
+                                'applyDiff(this, { abc: "def", ghi: true, num: 1 });',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            diffed: true,
+                        },
+                    }),
+                    fileUpdated('thisFile', {
+                        tags: {
+                            abc: 'def',
+                            ghi: true,
+                            num: 1,
+                        },
+                    }),
+                ]);
+            });
         });
 
         describe('addToContextDiff()', () => {

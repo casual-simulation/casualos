@@ -393,7 +393,9 @@ export default class FileTable extends Vue {
             this.isFocusedTagFormula = isFormula(this.multilineValue);
 
             this.$nextTick(() => {
-                (<any>this.$refs.multiLineEditor).applyStyles();
+                if (this.$refs.multiLineEditor) {
+                    (<any>this.$refs.multiLineEditor).applyStyles();
+                }
             });
         }
         this.$emit('tagFocusChanged', file, tag, focused);

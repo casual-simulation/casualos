@@ -316,6 +316,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.context.visualize',
     'onClick()',
     'onCombine()',
+    'onDiff()',
     'onSaveInput()',
     'onCloseInput()',
     'onCreate()',

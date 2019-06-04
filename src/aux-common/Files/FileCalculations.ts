@@ -66,6 +66,11 @@ export var ShortId_Length: number = 5;
 export const COMBINE_ACTION_NAME: string = 'onCombine';
 
 /**
+ * The name of the event that represents a file being diffed into another file.
+ */
+export const DIFF_ACTION_NAME: string = 'onDiff';
+
+/**
  * The name of the event that represents a file being created.
  */
 export const CREATE_ACTION_NAME: string = 'onCreate';
