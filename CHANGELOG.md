@@ -20,6 +20,15 @@
         -   `aux.scene.user.player.color`: Setting this tag on the globals file will cause all users in AUX Player to appear as the given color.
         -   `aux.scene.user.builder.color`: Setting this tag on the globals file will cause all users in AUX Builder to appear with the given color.
     -   Made AUX Player users default to a yellow color instead of blue.
+    -   Renamed the `globals` file to `config`.
+    -   Renamed the following tags/actions:
+        -   `aux.context.surface.{x,y,z}` -> `aux.context.{x,y,z}`
+        -   `aux.context.surface.rotation.{x,y,z}` -> `aux.context.rotation.{x,y,z}`
+        -   `aux._creator` -> `aux.creator`
+        -   `aux.builders` -> `aux.designers`
+        -   `onSave()` -> `onSaveInput()`
+        -   `onClose()` -> `onCloseInput()`
+    -   Changed the `"Switch to Player"` button text to be `"Open Context in New Tab"`.
 
 ## V0.8.3
 
