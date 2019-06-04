@@ -26,6 +26,7 @@ import {
     whitelistOrBlacklistAllowsAccess,
     isInUsernameList,
     getFileBuilderList,
+    GLOBALS_FILE_ID,
 } from '@casual-simulation/aux-common';
 import { keys, union, values } from 'lodash';
 import {
@@ -224,7 +225,7 @@ export class FileManager implements Simulation {
         const fileIds = keys(state);
         const files = fileIds.map(id => state[id]);
         const nonUserOrGlobalFiles = files.filter(
-            f => !f.tags['aux._user'] && f.id !== 'globals'
+            f => !f.tags['aux._user'] && f.id !== GLOBALS_FILE_ID
         );
         const deleteOps = nonUserOrGlobalFiles.map(f => fileRemoved(f.id));
         await this.helper.transaction(...deleteOps);
@@ -474,7 +475,15 @@ export class FileManager implements Simulation {
         this._setStatus('Updating globals file...');
         let globalsFile = this.helper.globalsFile;
         if (!globalsFile) {
-            await this._helper.createGlobalsFile('globals');
+            const oldGlobalsFile = this.helper.filesState['globals'];
+            if (oldGlobalsFile) {
+                await this._helper.createFile(
+                    GLOBALS_FILE_ID,
+                    oldGlobalsFile.tags
+                );
+            } else {
+                await this._helper.createGlobalsFile(GLOBALS_FILE_ID);
+            }
         }
     }
 

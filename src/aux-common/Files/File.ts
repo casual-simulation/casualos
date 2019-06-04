@@ -225,7 +225,7 @@ export const DEFAULT_PLAYER_USER_COLOR = '#DDDD00';
 /**
  * The ID of the global configuration file.
  */
-export const GLOBALS_FILE_ID = 'globals';
+export const GLOBALS_FILE_ID = 'config';
 
 /**
  * The current file format version for AUX Files.

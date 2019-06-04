@@ -73,6 +73,7 @@ import {
     DEFAULT_BUILDER_USER_COLOR,
     DEFAULT_PLAYER_USER_COLOR,
     AuxDomain,
+    GLOBALS_FILE_ID,
 } from './File';
 import { FilesState, cleanFile, fileRemoved } from './FilesChannel';
 import { file } from '../aux-format';
@@ -4206,7 +4207,7 @@ describe('FileCalculations', () => {
                 'should default to %s when in %s',
                 (expected: any, domain: AuxDomain) => {
                     const file = createFile('test', {});
-                    const globals = createFile('globals', {});
+                    const globals = createFile(GLOBALS_FILE_ID, {});
 
                     const calc = createCalculationContext([globals, file]);
 
@@ -4225,7 +4226,7 @@ describe('FileCalculations', () => {
                 'should use %s when in %s',
                 (tag: string, domain: AuxDomain, value: any) => {
                     const file = createFile('test', {});
-                    const globals = createFile('globals', {
+                    const globals = createFile(GLOBALS_FILE_ID, {
                         [tag]: value,
                     });
 
@@ -4245,7 +4246,7 @@ describe('FileCalculations', () => {
                     const file = createFile('test', {
                         'aux.color': 'red',
                     });
-                    const globals = createFile('globals', {});
+                    const globals = createFile(GLOBALS_FILE_ID, {});
 
                     const calc = createCalculationContext([globals, file]);
 

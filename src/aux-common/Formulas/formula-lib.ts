@@ -1,4 +1,4 @@
-import { File, FileTags } from '../Files/File';
+import { File, FileTags, GLOBALS_FILE_ID } from '../Files/File';
 import {
     FileUpdatedEvent,
     FileEvent,
@@ -620,7 +620,10 @@ function getUser() {
  * Gets the current globals file.
  */
 function getGlobals() {
-    const globals = calc.sandbox.interface.listObjectsWithTag('id', 'globals');
+    const globals = calc.sandbox.interface.listObjectsWithTag(
+        'id',
+        GLOBALS_FILE_ID
+    );
     if (Array.isArray(globals)) {
         if (globals.length === 1) {
             return globals[0];

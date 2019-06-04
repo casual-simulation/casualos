@@ -2864,8 +2864,8 @@ describe('FilesChannel', () => {
                             'test()': 'this.isBuilder = player.isBuilder()',
                         },
                     },
-                    globals: {
-                        id: 'globals',
+                    config: {
+                        id: 'config',
                         tags: {
                             'aux.builders': 'bob',
                         },
@@ -2902,8 +2902,8 @@ describe('FilesChannel', () => {
                             'test()': 'this.isBuilder = player.isBuilder()',
                         },
                     },
-                    globals: {
-                        id: 'globals',
+                    config: {
+                        id: 'config',
                         tags: {
                             'aux.builders': 'otherUser',
                         },
@@ -2940,8 +2940,8 @@ describe('FilesChannel', () => {
                             'test()': 'this.isBuilder = player.isBuilder()',
                         },
                     },
-                    globals: {
-                        id: 'globals',
+                    config: {
+                        id: 'config',
                         tags: {},
                     },
                     userFile: {

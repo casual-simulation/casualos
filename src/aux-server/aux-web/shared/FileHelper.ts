@@ -34,6 +34,7 @@ import {
     DEFAULT_WORKSPACE_SCALE,
     getContextSize,
     getContextVisualizeMode,
+    GLOBALS_FILE_ID,
 } from '@casual-simulation/aux-common';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { Subject, Observable } from 'rxjs';
@@ -109,7 +110,7 @@ export class FileHelper {
      * Gets the globals file for the simulation.
      */
     get globalsFile(): AuxObject {
-        let objs = this.objects.filter(o => o.id === 'globals');
+        let objs = this.objects.filter(o => o.id === GLOBALS_FILE_ID);
         if (objs.length > 0) {
             return objs[0];
         }
