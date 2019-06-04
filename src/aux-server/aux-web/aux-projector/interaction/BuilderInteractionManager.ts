@@ -563,7 +563,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 });
 
                 actions.push({
-                    label: 'Switch to Player',
+                    label: 'Open Context in New Tab',
                     onClick: () => this._switchToPlayer(calc, gameObject),
                 });
             }
