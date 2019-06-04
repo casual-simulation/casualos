@@ -29,6 +29,7 @@
         -   `onSave()` -> `onSaveInput()`
         -   `onClose()` -> `onCloseInput()`
     -   Changed the `"Switch to Player"` button text to be `"Open Context in New Tab"`.
+    -   Changed the title of AUX Builder to `"Channel Designer"`.
 -   Bug Fixes
     -   Fixed the color picker input to not error when the edited tag doesn't have a value.
     -   Fixed the color picker basic input subtype to have the correct width so that the colors line up properly.
