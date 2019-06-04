@@ -5,7 +5,6 @@ import {
     Object,
     AuxFile,
     tagsOnFile,
-    isTagWellKnown,
     fileTags,
 } from '@casual-simulation/aux-common';
 import { FileRenderer } from '../../shared/scene/FileRenderer';

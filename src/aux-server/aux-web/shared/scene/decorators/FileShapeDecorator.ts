@@ -5,7 +5,6 @@ import {
     calculateFileValue,
     getFileShape,
     FileShape,
-    isDiff,
 } from '@casual-simulation/aux-common';
 import {
     Mesh,

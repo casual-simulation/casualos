@@ -459,7 +459,7 @@ export default class BuilderGameView extends Vue implements IGameView {
                     contextMap.set(c, context);
                 });
 
-                let worksurface = duplicateFile(oldWorksurface);
+                let worksurface = duplicateFile(calc, oldWorksurface);
 
                 oldContexts.forEach(c => {
                     let newContext = contextMap.get(c);
@@ -480,9 +480,9 @@ export default class BuilderGameView extends Vue implements IGameView {
                     new Plane(new Vector3(0, 1, 0))
                 );
 
-                worksurface.tags['aux.context.surface.x'] = point.x;
-                worksurface.tags['aux.context.surface.y'] = point.z;
-                worksurface.tags['aux.context.surface.z'] = point.y;
+                worksurface.tags['aux.context.x'] = point.x;
+                worksurface.tags['aux.context.y'] = point.z;
+                worksurface.tags['aux.context.z'] = point.y;
 
                 state[worksurface.id] = worksurface;
 
@@ -493,7 +493,7 @@ export default class BuilderGameView extends Vue implements IGameView {
                         continue;
                     }
 
-                    let newFile = duplicateFile(file);
+                    let newFile = duplicateFile(calc, file);
 
                     oldContexts.forEach(c => {
                         let newContext = contextMap.get(c);

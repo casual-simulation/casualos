@@ -25,7 +25,8 @@ import {
     blacklistAllowsAccess,
     whitelistOrBlacklistAllowsAccess,
     isInUsernameList,
-    getFileBuilderList,
+    getFileDesignerList,
+    GLOBALS_FILE_ID,
 } from '@casual-simulation/aux-common';
 import { keys, union, values } from 'lodash';
 import {
@@ -224,7 +225,7 @@ export class FileManager implements Simulation {
         const fileIds = keys(state);
         const files = fileIds.map(id => state[id]);
         const nonUserOrGlobalFiles = files.filter(
-            f => !f.tags['aux._user'] && f.id !== 'globals'
+            f => !f.tags['aux._user'] && f.id !== GLOBALS_FILE_ID
         );
         const deleteOps = nonUserOrGlobalFiles.map(f => fileRemoved(f.id));
         await this.helper.transaction(...deleteOps);
@@ -394,9 +395,9 @@ export class FileManager implements Simulation {
         const file = this.helper.globalsFile;
 
         if (this._config.isBuilder) {
-            const builders = getFileBuilderList(calc, file);
-            if (builders) {
-                if (!isInUsernameList(calc, file, 'aux.builders', username)) {
+            const designers = getFileDesignerList(calc, file);
+            if (designers) {
+                if (!isInUsernameList(calc, file, 'aux.designers', username)) {
                     throw new Error(`You are denied access to this channel.`);
                 } else {
                     return;
@@ -474,7 +475,15 @@ export class FileManager implements Simulation {
         this._setStatus('Updating globals file...');
         let globalsFile = this.helper.globalsFile;
         if (!globalsFile) {
-            await this._helper.createGlobalsFile('globals');
+            const oldGlobalsFile = this.helper.filesState['globals'];
+            if (oldGlobalsFile) {
+                await this._helper.createFile(
+                    GLOBALS_FILE_ID,
+                    oldGlobalsFile.tags
+                );
+            } else {
+                await this._helper.createGlobalsFile(GLOBALS_FILE_ID);
+            }
         }
     }
 

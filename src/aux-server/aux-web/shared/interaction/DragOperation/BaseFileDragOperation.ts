@@ -124,12 +124,12 @@ export abstract class BaseFileDragOperation implements IOperation {
                 this._file,
                 this._other,
             ]);
-        } else if (isDiff(this._file)) {
+        } else if (isDiff(null, this._file)) {
             this.simulation.helper.transaction(
                 fileUpdated(this._file.id, {
                     tags: {
-                        'aux._diff': null,
-                        'aux._diffTags': null,
+                        'aux.diff': null,
+                        'aux.diffTags': null,
                     },
                 })
             );
@@ -221,7 +221,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         const canMerge =
             objs.length >= 1 &&
             files.length === 1 &&
-            isDiff(files[0]) &&
+            isDiff(calc, files[0]) &&
             isMergeable(calc, files[0]) &&
             isMergeable(calc, objs[0]);
 

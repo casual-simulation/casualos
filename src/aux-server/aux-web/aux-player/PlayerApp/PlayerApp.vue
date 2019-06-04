@@ -176,6 +176,7 @@
                         v-else
                         :value="inputDialogInputValue"
                         @input="updateInputDialogColor"
+                        class="color-picker-basic"
                         :disableAlpha="true"
                     ></color-picker-basic>
                 </div>

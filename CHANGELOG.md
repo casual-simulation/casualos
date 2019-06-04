@@ -1,5 +1,38 @@
 # AUX Changelog
 
+## V0.8.4
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Made AUX Builder remove any context-related tags when cloning/duplicating a file.
+        -   This prevents diff files from magically appearing in other contexts when dragging them.
+        -   It is accomplished by deleting any tag that is hidden (starts with an underscore) or is related to a context made by an `aux.context` tag in another file.
+    -   Added `diff.save()` and `diff.load()` AUX Script functions.
+        -   `diff.save(diffToSave)`: Takes the given diff and returns JSON that can be stored in a tag.
+        -   `diff.load(diffToLoad)`: Renamed from `diff.create()`, `diff.load()` is now able to take some JSON and returns a diff that can be applied to a file using `applyDiff()`.
+    -   Numbers in tags can now start with a decimal instead of having to start with a digit.
+        -   For example, `.0123` is now allowed and equals `0.0123`.
+    -   Added the ability to customize user colors via the following tags:
+        -   `aux.color`: Setting this tag on a user's file will cause that user to be the given color.
+        -   `aux.scene.user.player.color`: Setting this tag on the globals file will cause all users in AUX Player to appear as the given color.
+        -   `aux.scene.user.builder.color`: Setting this tag on the globals file will cause all users in AUX Builder to appear with the given color.
+    -   Made AUX Player users default to a yellow color instead of blue.
+    -   Renamed the `globals` file to `config`.
+    -   Renamed the following tags/actions:
+        -   `aux.context.surface.{x,y,z}` -> `aux.context.{x,y,z}`
+        -   `aux.context.surface.rotation.{x,y,z}` -> `aux.context.rotation.{x,y,z}`
+        -   `aux._creator` -> `aux.creator`
+        -   `aux.builders` -> `aux.designers`
+        -   `onSave()` -> `onSaveInput()`
+        -   `onClose()` -> `onCloseInput()`
+    -   Changed the `"Switch to Player"` button text to be `"Open Context in New Tab"`.
+-   Bug Fixes
+    -   Fixed the color picker input to not error when the edited tag doesn't have a value.
+    -   Fixed the color picker basic input subtype to have the correct width so that the colors line up properly.
+
 ## V0.8.3
 
 ### Date: 06/03/2019

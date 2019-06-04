@@ -330,7 +330,9 @@ export default class BuilderApp extends Vue {
                         } else if (e.name === 'import_aux') {
                             this._importAUX(fileManager, e.url);
                         } else if (e.name === 'show_input_for_tag') {
-                            this._showInputDialog(fileManager, e);
+                            setTimeout(() => {
+                                this._showInputDialog(fileManager, e);
+                            });
                         }
                     })
                 );
@@ -521,7 +523,7 @@ export default class BuilderApp extends Vue {
 
     async closeInputDialog() {
         if (this.showInputDialog) {
-            await this.inputDialogSimulation.helper.action('onClose', [
+            await this.inputDialogSimulation.helper.action('onCloseInput', [
                 this.inputDialogTarget,
             ]);
             this.showInputDialog = false;
@@ -538,7 +540,7 @@ export default class BuilderApp extends Vue {
                     },
                 }
             );
-            await this.inputDialogSimulation.helper.action('onSave', [
+            await this.inputDialogSimulation.helper.action('onSaveInput', [
                 this.inputDialogTarget,
             ]);
             await this.closeInputDialog();
@@ -586,11 +588,12 @@ export default class BuilderApp extends Vue {
         this.inputDialogType = options.type || 'text';
         this.inputDialogSubtype = options.subtype || 'basic';
         this.inputDialogTarget = file;
-        this.inputDialogInputValue = calculateFormattedFileValue(
-            calc,
-            this.inputDialogTarget,
-            this.inputDialogInput
-        );
+        this.inputDialogInputValue =
+            calculateFormattedFileValue(
+                calc,
+                this.inputDialogTarget,
+                this.inputDialogInput
+            ) || '';
 
         if (typeof options.placeholder !== 'undefined') {
             this.inputDialogPlaceholder = options.placeholder;

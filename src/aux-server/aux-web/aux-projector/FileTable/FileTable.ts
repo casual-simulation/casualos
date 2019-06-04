@@ -186,7 +186,7 @@ export default class FileTable extends Vue {
     @Watch('multilineValue')
     multilineValueChanged() {
         if (this.focusedFile && this.focusedTag) {
-            if (isDiff(this.focusedFile)) {
+            if (isDiff(null, this.focusedFile)) {
                 const updated = merge(this.focusedFile, {
                     tags: {
                         [this.focusedTag]: this.multilineValue,

@@ -1,4 +1,4 @@
-import { File, FileTags } from '../Files/File';
+import { File, FileTags, GLOBALS_FILE_ID } from '../Files/File';
 import {
     FileUpdatedEvent,
     FileEvent,
@@ -346,7 +346,7 @@ export function removeTags(
 }
 
 function destroyChildren(id: string) {
-    const result = calculateFormulaValue(calc, `@aux._creator("${id}")`);
+    const result = calculateFormulaValue(calc, `@aux.creator("${id}")`);
     if (result.success) {
         const children = result.result;
         let all: File[] = [];
@@ -450,7 +450,7 @@ function createFrom(parent: FileProxy | string, ...datas: FileDiff[]) {
     let parentId = getFileId(parent);
     let parentDiff = parentId
         ? {
-              'aux._creator': parentId,
+              'aux.creator': parentId,
           }
         : {};
     return create(parentDiff, ...datas);
@@ -547,12 +547,12 @@ function isBuilder(): boolean {
     const user = getUser();
     if (globals && user) {
         const globalsFile = globals[proxyObject];
-        const list = getFileUsernameList(calc, globalsFile, 'aux.builders');
+        const list = getFileUsernameList(calc, globalsFile, 'aux.designers');
         if (list) {
             return isInUsernameList(
                 calc,
                 globalsFile,
-                'aux.builders',
+                'aux.designers',
                 user[proxyObject].tags['aux._user']
             );
         }
@@ -620,7 +620,10 @@ function getUser() {
  * Gets the current globals file.
  */
 function getGlobals() {
-    const globals = calc.sandbox.interface.listObjectsWithTag('id', 'globals');
+    const globals = calc.sandbox.interface.listObjectsWithTag(
+        'id',
+        GLOBALS_FILE_ID
+    );
     if (Array.isArray(globals)) {
         if (globals.length === 1) {
             return globals[0];
@@ -750,24 +753,32 @@ function getNeighboringFiles(
     return getFilesAtPosition(context, x + offsetX, y + offsetY);
 }
 
-function createDiff(file: any, ...tags: (string | RegExp)[]): FileDiff {
+function loadDiff(file: any, ...tags: (string | RegExp)[]): FileDiff {
+    if (typeof file === 'string') {
+        file = JSON.parse(file);
+    }
+
     let diff: FileTags = {};
 
-    let fileTags = tagsOnFile(file);
+    let fileTags = isFile(file) ? tagsOnFile(file) : Object.keys(file);
     for (let fileTag of fileTags) {
         let add = false;
-        for (let tag of tags) {
-            if (tag instanceof RegExp) {
-                if (tag.test(fileTag)) {
-                    add = true;
-                    break;
-                }
-            } else {
-                if (tag === fileTag) {
-                    add = true;
-                    break;
+        if (tags.length > 0) {
+            for (let tag of tags) {
+                if (tag instanceof RegExp) {
+                    if (tag.test(fileTag)) {
+                        add = true;
+                        break;
+                    }
+                } else {
+                    if (tag === fileTag) {
+                        add = true;
+                        break;
+                    }
                 }
             }
+        } else {
+            add = true;
         }
 
         if (add) {
@@ -776,6 +787,14 @@ function createDiff(file: any, ...tags: (string | RegExp)[]): FileDiff {
     }
 
     return diff;
+}
+
+/**
+ * Saves the given diff to a string of JSON.
+ * @param file The diff to save.
+ */
+function saveDiff(file: any): string {
+    return JSON.stringify(file);
 }
 
 /**
@@ -997,7 +1016,8 @@ export const diff = {
     addToMenu: addToMenuDiff,
     removeFromMenu: removeFromMenuDiff,
     setPosition: setPositionDiff,
-    create: createDiff,
+    load: loadDiff,
+    save: saveDiff,
 };
 
 /**
