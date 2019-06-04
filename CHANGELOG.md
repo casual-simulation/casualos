@@ -33,6 +33,11 @@
     -   Fixed the color picker input to not error when the edited tag doesn't have a value.
     -   Fixed the color picker basic input subtype to have the correct width so that the colors line up properly.
     -   Fixed an issue with showing an input box during the `onSaveInput()` or `onCloseInput()` callback from another input.
+    -   Added in ability to drag file or diff out of file selection dropdown button.
+    -   The sheet section will now hide itself when dragging a file from it and reopen itself when the drag is completed.
+    -   Changed `Create Workspace` button tooltip to `Create Surface from Selection`.
+    -   Removed the `Destroy File` and `Clear Diff` buttons from an empty diff sheet.
+    -   Removed the `Destroy File` and replaced it with the `Clear Diff` button on a non-empty diff sheet.
 
 ## V0.8.3
 
