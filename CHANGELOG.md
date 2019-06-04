@@ -2,7 +2,7 @@
 
 ## V0.8.4
 
-### Date: TBD
+### Date: 06/04/2019
 
 ### Changes:
 
