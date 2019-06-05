@@ -8,6 +8,7 @@
         "**/*.js": { "when": "$(basename).ts" },
         "**/*.js.map": true,
         "src/aux-common/**/*.d.ts": { "when": "$(basename).ts" },
+        "src/aux-vm/**/*.d.ts": { "when": "$(basename).ts" },
         "src/causal-trees/**/*.d.ts": { "when": "$(basename).ts" },
         "src/causal-tree-server-socketio/**/*.d.ts": {
             "when": "$(basename).ts"

@@ -39,16 +39,6 @@ import {
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { Subject, Observable } from 'rxjs';
 import { flatMap, sortBy } from 'lodash';
-import {
-    realPosToGridPos,
-    Axial,
-    hexRing,
-    gridDistance,
-    gridPosToRealPos,
-    posToKey,
-    hexesInRadius,
-} from './scene/hex';
-import { Vector2 } from 'three';
 
 /**
  * Defines an class that contains a simple set of functions
@@ -167,17 +157,14 @@ export class FileHelper {
     async createWorkspace(
         fileId?: string,
         builderContextId?: string,
-        locked?: boolean
+        locked?: boolean,
+        x?: number,
+        y?: number
     ): Promise<AuxObject> {
         if (FileHelper._debug) {
             console.log('[FileManager] Create Workspace');
         }
 
-        const nextPosition = this._nextAvailableWorkspacePosition();
-        const finalPosition = gridPosToRealPos(
-            nextPosition,
-            DEFAULT_WORKSPACE_SCALE * 1.1
-        );
         const workspace: Workspace = createWorkspace(
             fileId,
             builderContextId,
@@ -186,8 +173,8 @@ export class FileHelper {
 
         const updated = merge(workspace, {
             tags: {
-                'aux.context.x': finalPosition.x,
-                'aux.context.y': finalPosition.y,
+                'aux.context.x': x || 0,
+                'aux.context.y': y || 0,
             },
         });
 
@@ -404,55 +391,5 @@ export class FileHelper {
         ).filter(f => getFileChannel(calc, f) === id);
 
         return <AuxObject[]>simFiles;
-    }
-
-    private _nextAvailableWorkspacePosition() {
-        const calc = this.createContext();
-        const visibleWorkspacePositions = flatMap(
-            this.objects.filter(
-                f =>
-                    isContext(calc, f) &&
-                    getContextVisualizeMode(calc, f) === 'surface'
-            ),
-            f => {
-                const position = getContextPosition(calc, f);
-                const scale = getContextScale(calc, f);
-                const positions = hexesInRadius(getContextSize(calc, f));
-                const centerPosition = realPosToGridPos(
-                    new Vector2(position.x, position.y),
-                    scale
-                );
-
-                return positions.map(hex => {
-                    return new Axial(
-                        hex.q + centerPosition.q,
-                        hex.r + centerPosition.r
-                    );
-                });
-            }
-        );
-
-        const mappedPositions = new Map<string, Axial>();
-
-        for (let pos of visibleWorkspacePositions) {
-            mappedPositions.set(posToKey(pos), pos);
-        }
-
-        let radius = 1;
-        let nextPosition: Axial = null;
-        while (!nextPosition) {
-            const positions = hexRing(radius);
-            for (let i = 0; i < positions.length; i++) {
-                const pos = positions[i];
-                if (!mappedPositions.has(posToKey(pos))) {
-                    nextPosition = pos;
-                    break;
-                }
-            }
-
-            radius += 1;
-        }
-
-        return nextPosition;
     }
 }

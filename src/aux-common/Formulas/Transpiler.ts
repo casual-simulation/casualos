@@ -1,6 +1,6 @@
 import * as Acorn from 'acorn';
 import { generate, baseGenerator } from 'astring';
-import { replace } from 'estraverse';
+import { replace, traverse, VisitorOption } from 'estraverse';
 import { assign } from 'lodash';
 import LRU from 'lru-cache';
 
@@ -180,6 +180,11 @@ function exJsParser(parser: typeof Acorn.Parser) {
 
 const exJsGenerator = assign({}, baseGenerator, {});
 
+export interface TranspilerMacro {
+    test: RegExp;
+    replacement: (val: string) => string;
+}
+
 /**
  * Defines a class that is able to compile code from AUX's custom JavaScript dialect
  * into pure ES6 JavaScript. Does not preserve spacing or comments.
@@ -189,6 +194,24 @@ const exJsGenerator = assign({}, baseGenerator, {});
 export class Transpiler {
     private _parser: typeof Acorn.Parser;
     private _cache: LRU.Cache<string, string>;
+
+    /**
+     * The list of macros that the sandbox uses on the input code before transpiling it.
+     */
+    macros: TranspilerMacro[] = [
+        {
+            test: /^(?:\=|\:\=)/g,
+            replacement: val => '',
+        },
+        {
+            test: /(?:[“”])/g,
+            replacement: val => '"',
+        },
+        {
+            test: /(?:[‘’])/g,
+            replacement: val => "'",
+        },
+    ];
 
     constructor() {
         this._cache = new LRU<string, string>({
@@ -205,11 +228,44 @@ export class Transpiler {
         if (cached) {
             return cached;
         }
-        const node = this._parser.parse(code);
+        const macroed = this._replaceMacros(code);
+        const node = this._parser.parse(macroed);
         const replaced = this._replace(node);
         const final = this._toJs(replaced);
         this._cache.set(code, final);
         return final;
+    }
+
+    /**
+     * Gets the list of dependencies that the given code has.
+     * @param code
+     */
+    dependencies(code: string): AuxScriptDependencies {
+        const macroed = this._replaceMacros(code);
+        const node = this._parser.parse(macroed);
+        return {
+            code: code,
+            tags: this._tagDependencies(node),
+        };
+    }
+
+    /**
+     * Adds the given macro to the list of macros that are run on the code
+     * before execution.
+     */
+    addMacro(macro: TranspilerMacro) {
+        this.macros.push(macro);
+    }
+
+    private _replaceMacros(formula: string) {
+        if (!formula) {
+            return formula;
+        }
+        this.macros.forEach(m => {
+            formula = formula.replace(m.test, m.replacement);
+        });
+
+        return formula;
     }
 
     private _replace(node: Acorn.Node): Acorn.Node {
@@ -223,35 +279,15 @@ export class Transpiler {
                 ) {
                     // _listTagValues('tag', filter)
 
-                    let currentNode = n.identifier;
-                    let identifier: any;
-                    let args: any[] = [];
-                    let nodes: any[] = [];
-
-                    while (currentNode.type === 'MemberExpression') {
-                        currentNode = currentNode.object;
-                    }
-
-                    if (currentNode.type === 'CallExpression') {
-                        identifier = currentNode.callee;
-                        args = currentNode.arguments;
-
-                        currentNode = n.identifier;
-
-                        while (currentNode.type === 'MemberExpression') {
-                            nodes.unshift(currentNode);
-                            currentNode = currentNode.object;
-                        }
-                    } else {
-                        identifier = n.identifier;
-                    }
-
-                    let tag: string;
-                    if (identifier.type === 'MemberExpression') {
-                        tag = this._toJs(identifier);
-                    } else {
-                        tag = identifier.name || identifier.value;
-                    }
+                    let {
+                        tag,
+                        args,
+                        nodes,
+                    }: {
+                        tag: string;
+                        args: any[];
+                        nodes: any[];
+                    } = this._getNodeValues(n);
 
                     const funcName =
                         n.type === 'TagValue'
@@ -302,9 +338,162 @@ export class Transpiler {
         });
     }
 
+    private _tagDependencies(node: Acorn.Node): AuxScriptDependency[] {
+        let tags: AuxScriptDependency[] = [];
+        let lastTag: AuxScriptDependency = null;
+        let members: string[] = [];
+
+        traverse(<any>node, {
+            enter: (node: any) => {
+                if (node.type === 'TagValue' || node.type === 'ObjectValue') {
+                    const { tag, args, nodes } = this._getNodeValues(node);
+
+                    lastTag = <
+                        AuxScriptTagDependency | AuxScriptFileDependency
+                    >{
+                        type: node.type === 'TagValue' ? 'tag' : 'file',
+                        name: tag,
+                        args: args.map(a => this._toJs(a)),
+                        members: nodes.map(n => this._toJs(n)),
+                    };
+
+                    tags.push(lastTag);
+
+                    return VisitorOption.Skip;
+                } else if (node.type === 'MemberExpression') {
+                    if (node.object.type === 'ThisExpression') {
+                        lastTag = {
+                            type: 'this',
+                            members: [],
+                        };
+
+                        tags.push(lastTag);
+                    }
+                }
+            },
+            leave: (node: any, parent: any) => {
+                if (lastTag) {
+                    if (node.type === 'MemberExpression') {
+                        if (
+                            node.property.type === 'Identifier' &&
+                            !node.computed
+                        ) {
+                            members.push(node.property.name);
+                        } else if (node.property.type === 'Literal') {
+                            members.push(node.property.value);
+                        } else {
+                            members.push('*');
+                        }
+
+                        if (parent.type !== 'MemberExpression') {
+                            lastTag.members = members;
+                            lastTag = null;
+                            members = [];
+                        }
+                    }
+                }
+            },
+
+            keys: {
+                ObjectValue: ['identifier'],
+                TagValue: ['identifier'],
+            },
+        });
+
+        return tags;
+    }
+
+    private _getNodeValues(n: any) {
+        let currentNode = n.identifier;
+        let identifier: any;
+        let args: any[] = [];
+        let nodes: any[] = [];
+        while (currentNode.type === 'MemberExpression') {
+            currentNode = currentNode.object;
+        }
+        if (currentNode.type === 'CallExpression') {
+            identifier = currentNode.callee;
+            args = currentNode.arguments;
+            currentNode = n.identifier;
+            while (currentNode.type === 'MemberExpression') {
+                nodes.unshift(currentNode);
+                currentNode = currentNode.object;
+            }
+        } else {
+            identifier = n.identifier;
+        }
+        let tag: string;
+        if (identifier.type === 'MemberExpression') {
+            tag = this._toJs(identifier);
+        } else {
+            tag = identifier.name || identifier.value;
+        }
+        return { tag, args, nodes };
+    }
+
     private _toJs(node: Acorn.Node): string {
         return generate(<any>node, {
             generator: exJsGenerator,
         });
     }
+}
+
+/**
+ * Defines an interface that represents the dependencies that an AUX Script might have.
+ */
+export interface AuxScriptDependencies {
+    code: string;
+    tags: AuxScriptDependency[];
+}
+
+export type AuxScriptDependency =
+    | AuxScriptThisDependency
+    | AuxScriptTagDependency
+    | AuxScriptFileDependency;
+
+export interface AuxScriptThisDependency {
+    type: 'this';
+
+    /**
+     * The members that are accessed on the dependency.
+     */
+    members: string[];
+}
+
+export interface AuxScriptTagDependency {
+    type: 'tag';
+
+    /**
+     * The name of the tag.
+     */
+    name: string;
+
+    /**
+     * The arguments that were used in the tag query.
+     */
+    args: string[];
+
+    /**
+     * The members that are accessed on the dependency.
+     */
+    members: string[];
+}
+
+export interface AuxScriptFileDependency {
+    type: 'file';
+
+    /**
+     * The name of the tag.
+     */
+    name: string;
+
+    /**
+     * The arguments that were used in the tag query.
+     */
+    args: string[];
+
+    /**
+     * The members that are accessed on the dependency.
+     */
+    members: string[];
 }

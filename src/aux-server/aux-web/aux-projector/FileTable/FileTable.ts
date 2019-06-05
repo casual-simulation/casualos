@@ -22,6 +22,7 @@ import {
     isEditable,
     createContextId,
     addToContextDiff,
+    DEFAULT_WORKSPACE_SCALE,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
 import { appManager } from '../../shared/AppManager';
@@ -37,6 +38,8 @@ import { downloadAuxState } from '../download';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 import Cube from '../public/icons/Cube.svg';
 import Hexagon from '../public/icons/Hexagon.svg';
+import { nextAvailableWorkspacePosition } from '../../shared/SharedUtils';
+import { gridPosToRealPos } from '../../shared/scene/hex';
 
 @Component({
     components: {
@@ -345,10 +348,20 @@ export default class FileTable extends Vue {
      */
     async onConfirmCreateWorksurface() {
         this.showCreateWorksurfaceDialog = false;
+
+        const nextPosition = nextAvailableWorkspacePosition(
+            this.fileManager.helper.createContext()
+        );
+        const finalPosition = gridPosToRealPos(
+            nextPosition,
+            DEFAULT_WORKSPACE_SCALE * 1.1
+        );
         const workspace = await this.fileManager.helper.createWorkspace(
             undefined,
             this.worksurfaceContext,
-            !this.worksurfaceAllowPlayer
+            !this.worksurfaceAllowPlayer,
+            finalPosition.x,
+            finalPosition.y
         );
 
         if (!this.diffSelected) {

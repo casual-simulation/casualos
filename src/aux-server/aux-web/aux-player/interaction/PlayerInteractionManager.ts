@@ -24,7 +24,7 @@ import { Physics } from '../../shared/scene/Physics';
 import { Input } from '../../shared/scene/Input';
 import { appManager } from '../../shared/AppManager';
 import { PlayerSimulation3D } from '../scene/PlayerSimulation3D';
-import { Simulation } from '../../shared/Simulation';
+import { Simulation } from '@casual-simulation/aux-vm';
 import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
 import { flatMap } from 'lodash';
 import { InventoryContextGroup3D } from '../scene/InventoryContextGroup3D';

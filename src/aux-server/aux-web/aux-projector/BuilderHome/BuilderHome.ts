@@ -172,7 +172,8 @@ export default class BuilderHome extends Vue {
             this.fileManager.watcher
                 .fileChanged(this.fileManager.helper.userFile)
                 .pipe(
-                    tap(file => {
+                    tap(update => {
+                        const file = update.file;
                         this.mode = getUserMode(file);
 
                         let previousSelectionMode = this.selectionMode;

@@ -1,0 +1,55 @@
+{
+    "name": "@casual-simulation/aux-vm",
+    "version": "0.8.7",
+    "description": "A set of utilities required to security run an AUX in a web browser.",
+    "keywords": [
+        "aux"
+    ],
+    "author": "Casual Simulation, Inc.",
+    "homepage": "https://casualsimulation.com/",
+    "license": "MIT",
+    "main": "index.js",
+    "types": "index.d.ts",
+    "module": "index.js",
+    "directories": {
+        "lib": "."
+    },
+    "files": [
+        "/README.md",
+        "/LICENSE.txt",
+        "**/*.js",
+        "**/*.js.map",
+        "**/*.d.ts"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/casual-simulation/aux.git"
+    },
+    "scripts": {
+        "watch": "tsc --watch",
+        "watch:player": "npm run watch",
+        "build": "echo \"Nothing to do.\"",
+        "build:docs": "typedoc --mode file --excludeNotExported --out ../../docs/aux-vm .",
+        "test": "jest",
+        "test:watch": "jest --watchAll"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "bugs": {
+        "url": "https://github.com/casual-simulation/aux/issues"
+    },
+    "dependencies": {
+        "@casual-simulation/aux-common": "^0.8.7",
+        "@casual-simulation/causal-tree-client-socketio": "^0.8.0",
+        "@casual-simulation/causal-tree-store-browser": "^0.8.0",
+        "@casual-simulation/causal-trees": "^0.8.0",
+        "@casual-simulation/crypto": "^0.8.0",
+        "@casual-simulation/crypto-browser": "^0.8.0",
+        "socket.io-client": "2.2.0",
+        "uuid": "^3.3.2"
+    },
+    "devDependencies": {
+        "worker-loader": "^2.0.0"
+    }
+}

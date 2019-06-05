@@ -8,7 +8,14 @@ import {
     StoredCausalTree,
 } from '@casual-simulation/causal-trees';
 import { AuxFile, AuxTagMetadata, AuxObject, AuxState } from './AuxState';
-import { InsertOp, DeleteOp, AuxOp, AuxOpType, FileOp } from './AuxOpTypes';
+import {
+    InsertOp,
+    DeleteOp,
+    AuxOp,
+    AuxOpType,
+    FileOp,
+    TagOp,
+} from './AuxOpTypes';
 import { calculateSequenceRef, calculateSequenceRefs } from './AuxReducer';
 import { insert, del } from './AuxAtoms';
 import { AuxCausalTree } from './AuxCausalTree';
@@ -30,7 +37,7 @@ import uuid from 'uuid/v4';
 export interface AuxStateDiff {
     addedFiles: AuxFile[];
     removedFiles: string[];
-    updatedFiles: AuxFile[];
+    updatedFiles: UpdatedFile[];
 }
 
 /**
@@ -43,7 +50,7 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
         map(events => {
             let addedIds: { [key: string]: boolean } = {};
             let addedFiles: AuxFile[] = [];
-            let updatedFiles: AuxState = {};
+            let updatedFiles: Map<string, UpdatedFile> = new Map();
             let deletedFiles: string[] = [];
             events.forEach((e: Atom<AuxOp>) => {
                 if (e.value.type === AuxOpType.file) {
@@ -69,8 +76,19 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
                 if (file) {
                     const id = file.value.id;
                     const val = tree.tree.value[id];
-                    if (!updatedFiles[id] && val) {
-                        updatedFiles[id] = val;
+                    const tag = getAtomTag(tree.tree.weave, e);
+                    if (tag) {
+                        const update = updatedFiles.get(id);
+                        if (update) {
+                            if (update.tags.indexOf(tag.value.name) < 0) {
+                                update.tags.push(tag.value.name);
+                            }
+                        } else {
+                            updatedFiles.set(id, {
+                                file: val,
+                                tags: [tag.value.name],
+                            });
+                        }
                     }
                 }
             });
@@ -78,7 +96,7 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
             let diff: AuxStateDiff = {
                 addedFiles: addedFiles,
                 removedFiles: deletedFiles,
-                updatedFiles: values(updatedFiles),
+                updatedFiles: [...updatedFiles.values()],
             };
 
             return diff;
@@ -136,6 +154,20 @@ export async function getFilesStateFromStoredTree(
     }
 
     return value;
+}
+
+/**
+ * Gets the File Atom that the given atom is childed under.
+ */
+export function getAtomTag(weave: Weave<AuxOp>, ref: Atom<AuxOp>): Atom<TagOp> {
+    if (ref.value.type === AuxOpType.tag) {
+        return <Atom<TagOp>>ref;
+    }
+    if (!ref.cause) {
+        return null;
+    }
+    const cause = weave.getAtom(ref.cause);
+    return getAtomTag(weave, cause);
 }
 
 /**
@@ -263,4 +295,9 @@ export function deleteFromTagName(
     } else {
         return null;
     }
+}
+
+export interface UpdatedFile {
+    file: AuxObject;
+    tags: string[];
 }
