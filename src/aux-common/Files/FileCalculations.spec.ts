@@ -2465,6 +2465,28 @@ describe('FileCalculations', () => {
                 def: true,
             });
         });
+
+        it('should keep tags that are in diff tags', () => {
+            let first: Object = createFile('id', {
+                abc: true,
+                'abc.x': 1,
+                'abc.y': 2,
+                def: true,
+                'aux.diffTags': ['abc'],
+            });
+            let context: Object = createFile('context', {
+                'aux.context': 'abc',
+            });
+
+            const calc = createCalculationContext([context, first]);
+            const second = duplicateFile(calc, first);
+
+            expect(second.tags).toEqual({
+                abc: true,
+                def: true,
+                'aux.diffTags': ['abc'],
+            });
+        });
     });
 
     describe('cleanFile()', () => {

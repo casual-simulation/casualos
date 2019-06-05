@@ -7,6 +7,12 @@
 ### Changes:
 
 -   Improvements
+    -   Improved how diffs are created from files so that they don't contain any tags which are for contexts.
+        -   This means that moving a file will only give you a diff of tags that are not related to a context.
+        -   Examples are `aux.color`, `aux.label`, etc.
+        -   As a result, applying the diff to a file won't cause it to be moved.
+-   Bug Fixes
+    -   Fixed an issue that would cause file diffs to apply their context positions to other files.
 
 ## V0.8.7
 
