@@ -7,7 +7,7 @@ import {
     SubscriptionLike,
 } from 'rxjs';
 import { map, flatMap, tap, withLatestFrom, startWith } from 'rxjs/operators';
-import FileWatcher from './FIleWatcher';
+import { FileWatcher } from './FileWatcher';
 import { FileHelper } from './FileHelper';
 import SelectionManager from './SelectionManager';
 import {
@@ -22,7 +22,7 @@ import { RecentFilesManager } from './RecentFilesManager';
 /**
  * Defines a class that manages the file panel.
  */
-export default class FilePanelManager implements SubscriptionLike {
+export class FilePanelManager implements SubscriptionLike {
     private _helper: FileHelper;
     private _watcher: FileWatcher;
     private _selection: SelectionManager;
@@ -195,7 +195,7 @@ export default class FilePanelManager implements SubscriptionLike {
             ),
             this._watcher.filesUpdated.pipe(
                 flatMap(files => files),
-                map(f => f.id)
+                map(u => u.file.id)
             ),
             this._watcher.filesRemoved,
             this._recent.onUpdated,

@@ -7,9 +7,12 @@ import {
     tagsOnFile,
     isDiff,
     isTagWellKnown,
+    filterWellKnownAndContextTags,
+    getContexts,
+    isWellKnownOrContext,
 } from '@casual-simulation/aux-common';
 import { Subject, Observable } from 'rxjs';
-import { keys } from 'd3';
+import { keys, pick } from 'lodash';
 
 /**
  * Defines a class that helps manage recent files.
@@ -88,25 +91,34 @@ export class RecentFilesManager {
      * @param updateTags Whether to update the diff tags.
      */
     addFileDiff(file: File, updateTags: boolean = false) {
+        const calc = this._helper.createContext();
+        const contexts = getContexts(calc);
         let id: string;
-        if (isDiff(null, file)) {
+        if (isDiff(null, file) && file.id.indexOf('diff-') === 0) {
             id = file.id;
         } else {
             id = `diff-${file.id}`;
         }
         this._cleanFiles(id, file);
+
         let { 'aux.diff': diff, 'aux.diffTags': t, ...others } = file.tags;
 
-        const f = merge(file, {
-            id: id,
-            tags: {
-                'aux.diff': true,
-                'aux.diffTags':
-                    updateTags || !t
-                        ? keys(others).filter(t => !isTagWellKnown(t))
-                        : t,
-            },
-        });
+        let diffTags: string[] =
+            updateTags || !t
+                ? keys(others).filter(t => !isWellKnownOrContext(t, contexts))
+                : <string[]>t;
+
+        const f =
+            diffTags.length > 0
+                ? {
+                      id: id,
+                      tags: {
+                          'aux.diff': true,
+                          'aux.diffTags': diffTags,
+                          ...pick(file.tags, diffTags),
+                      },
+                  }
+                : createFile('empty');
         this.files.unshift(f);
         this._trimList();
         this._updateSelectedRecentFile();

@@ -11,6 +11,7 @@
     "references": [
         { "path": "./src/crypto" },
         { "path": "./src/aux-common" },
+        { "path": "./src/aux-vm" },
         { "path": "./src/causal-trees" },
         { "path": "./src/causal-tree-server-socketio" },
         { "path": "./src/causal-tree-client-socketio" },

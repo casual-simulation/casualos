@@ -1,6 +1,6 @@
 import { Object3D, Texture, Color } from 'three';
 import { ContextGroup3D } from './ContextGroup3D';
-import { Simulation } from '../Simulation';
+import { Simulation } from '@casual-simulation/aux-vm';
 import {
     AuxObject,
     AuxFile,
@@ -94,7 +94,7 @@ export abstract class Simulation3D extends Object3D
             this.simulation.watcher.filesUpdated
                 .pipe(
                     rxFlatMap(files => files),
-                    concatMap(file => this._fileUpdated(file, false))
+                    concatMap(update => this._fileUpdated(update.file, false))
                 )
                 .subscribe()
         );
@@ -122,7 +122,8 @@ export abstract class Simulation3D extends Object3D
             this.simulation.watcher
                 .fileChanged(this.simulation.helper.globalsFile)
                 .pipe(
-                    tap(file => {
+                    tap(update => {
+                        const file = update.file;
                         // Scene background color.
                         let sceneBackgroundColor = file.tags['aux.scene.color'];
                         this._sceneBackground = hasValue(sceneBackgroundColor)

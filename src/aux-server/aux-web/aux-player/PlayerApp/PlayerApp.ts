@@ -39,7 +39,7 @@ import QRCode from '@chenfengyuan/vue-qrcode';
 import CubeIcon from '../public/icons/Cube.svg';
 import HexIcon from '../public/icons/Hexagon.svg';
 import { QrcodeStream } from 'vue-qrcode-reader';
-import { Simulation } from '../../shared/Simulation';
+import { Simulation } from '@casual-simulation/aux-vm';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import { Swatches, Chrome, Compact } from 'vue-color';
 

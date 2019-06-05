@@ -22,6 +22,7 @@ import {
     isEditable,
     createContextId,
     addToContextDiff,
+    DEFAULT_WORKSPACE_SCALE,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
 import { appManager } from '../../shared/AppManager';
@@ -37,6 +38,8 @@ import { downloadAuxState } from '../download';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 import Cube from '../public/icons/Cube.svg';
 import Hexagon from '../public/icons/Hexagon.svg';
+import { nextAvailableWorkspacePosition } from '../../shared/SharedUtils';
+import { gridPosToRealPos } from '../../shared/scene/hex';
 
 @Component({
     components: {
@@ -111,7 +114,7 @@ export default class FileTable extends Vue {
     }
 
     isSpecialTag(tag: string): boolean {
-        if (tag === 'actions()' || tag === 'aux._') {
+        if (tag === 'actions()' || tag === 'hidden') {
             return true;
         } else {
             return false;
@@ -235,7 +238,11 @@ export default class FileTable extends Vue {
 
             this.fileManager.filePanel.search = '';
         } else {
-            await this.fileManager.selection.selectFile(file);
+            if (this.files.length === 1) {
+                await this.fileManager.selection.clearSelection();
+            } else {
+                await this.fileManager.selection.selectFile(file);
+            }
         }
     }
 
@@ -341,10 +348,20 @@ export default class FileTable extends Vue {
      */
     async onConfirmCreateWorksurface() {
         this.showCreateWorksurfaceDialog = false;
+
+        const nextPosition = nextAvailableWorkspacePosition(
+            this.fileManager.helper.createContext()
+        );
+        const finalPosition = gridPosToRealPos(
+            nextPosition,
+            DEFAULT_WORKSPACE_SCALE * 1.1
+        );
         const workspace = await this.fileManager.helper.createWorkspace(
             undefined,
             this.worksurfaceContext,
-            !this.worksurfaceAllowPlayer
+            !this.worksurfaceAllowPlayer,
+            finalPosition.x,
+            finalPosition.y
         );
 
         if (!this.diffSelected) {
@@ -565,7 +582,7 @@ export default class FileTable extends Vue {
             }
         }
 
-        if (actionList.length > 1) {
+        if (actionList.length > 0) {
             let activeCheck = true;
 
             if (this.tagBlacklist.length > 0) {
@@ -585,19 +602,19 @@ export default class FileTable extends Vue {
             });
         }
 
-        if (hiddenList.length > 1) {
+        if (hiddenList.length > 0) {
             let activeCheck = false;
 
             if (this.tagBlacklist.length > 0) {
                 this.tagBlacklist.forEach(element => {
-                    if (element[0] === 'aux._') {
+                    if (element[0] === 'hidden') {
                         activeCheck = <boolean>element[1];
                     }
                 });
             }
 
             hiddenList.unshift(activeCheck);
-            hiddenList.unshift('aux._');
+            hiddenList.unshift('hidden');
             blacklist.unshift(hiddenList);
         } else {
             hiddenList.forEach(hiddenTags => {

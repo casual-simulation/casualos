@@ -35,7 +35,7 @@ import FileSearch from '../FileSearch/FileSearch';
 
 import vueFilePond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
-import { Simulation } from '../../shared/Simulation';
+import { Simulation } from '@casual-simulation/aux-vm';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import { Swatches, Chrome, Compact } from 'vue-color';
 
@@ -324,10 +324,10 @@ export default class BuilderApp extends Vue {
                     fileManager.watcher
                         .fileChanged(fileManager.helper.userFile)
                         .pipe(
-                            tap(file => {
-                                this.userMode = this._calculateUserMode(<
-                                    Object
-                                >file);
+                            tap(update => {
+                                this.userMode = this._calculateUserMode(
+                                    update.file
+                                );
                             })
                         )
                         .subscribe()

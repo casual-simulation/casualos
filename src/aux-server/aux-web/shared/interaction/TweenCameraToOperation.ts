@@ -2,7 +2,7 @@ import { IOperation } from './IOperation';
 import { BaseInteractionManager } from './BaseInteractionManager';
 import { Vector3 } from 'three';
 import { FileCalculationContext } from '@casual-simulation/aux-common';
-import { Simulation } from '../Simulation';
+import { Simulation } from '@casual-simulation/aux-vm';
 import { CameraRig } from '../scene/CameraRigFactory';
 import { CameraRigControls } from './CameraRigControls';
 

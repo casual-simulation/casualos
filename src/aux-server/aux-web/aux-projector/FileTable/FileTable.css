@@ -89,6 +89,7 @@
 .file-cell.remove-item {
     text-align: center;
     background-color: var(--disabled-cell-color);
+    min-height: 30px;
 }
 
 .file-cell.remove-item .md-button {

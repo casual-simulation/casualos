@@ -1,8 +1,30 @@
 # AUX Changelog
 
+## V0.8.8
+
+### Date: 06/05/2019
+
+### Changes:
+
+-   Improvements
+    -   Improved how diffs are created from files so that they don't contain any tags which are for contexts.
+        -   This means that moving a file will only give you a diff of tags that are not related to a context.
+        -   Examples are `aux.color`, `aux.label`, etc.
+        -   As a result, applying the diff to a file won't cause it to be moved.
+    -   The hidden tag section has been changed from `aux._` to `hidden`.
+    -   The action and hidden tag sections will now appear when only one tag meets the criteria for the section.
+    -   The add tag auto complete will now check for a match of the start if the string and not a substring.
+    -   The add tag autocomplete will hide the `aux._` tags until `aux._` is input.
+    -   When clicking the background in multi-file selection mode, it will deselect the files and keep a diff of the last selected.
+    -   Improved file diffs to keep the existing diff selected after merging it into a file.
+    -   Added tag `aux.inventory.color` to global file that allows the user to set the inventory background color in player.
+-   Bug Fixes
+    -   Fixed an issue that would cause file diffs to apply their context positions to other files.
+    -   Clicking the `minus` button of the final file in sheets will now switch to diff without the `minus` or `unselect all` buttons that don't do anything.
+
 ## V0.8.7
 
-### Date: TBD
+### Date: 06/05/2019
 
 ### Changes:
 
