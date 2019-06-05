@@ -1,5 +1,16 @@
 # AUX Changelog
 
+## V0.8.5
+
+### Date: 06/04/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed an issue that caused diffs to not be draggable from the mini file in the upper right hand corner of the screen.
+    -   Fixed some conflicts between the default panel opening logic and the new dragging logic on mobile.
+    -   Fixed an issue that prevented users from dragging file IDs out from the file panel on mobile.
+
 ## V0.8.4
 
 ### Date: 06/04/2019
