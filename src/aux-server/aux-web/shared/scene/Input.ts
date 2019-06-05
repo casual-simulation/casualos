@@ -15,6 +15,7 @@ export class Input {
     private _mouseData: MouseData;
     private _touchData: TouchData[];
     private _keyData: Map<string, KeyData>;
+    private _touchListenerCounts: Map<EventTarget, number>;
     private _wheelData: WheelData;
     private _targetData: TargetData;
 
@@ -176,6 +177,7 @@ export class Input {
         };
         this._touchData = [];
         this._keyData = new Map();
+        this._touchListenerCounts = new Map();
         this._wheelData = new WheelData();
         this._lastPrimaryTouchData = {
             fingerIndex: 0,
@@ -204,9 +206,6 @@ export class Input {
         element.addEventListener('mouseup', this._handleMouseUp);
         element.addEventListener('wheel', this._handleWheel);
         element.addEventListener('touchstart', this._handleTouchStart);
-        element.addEventListener('touchmove', this._handleTouchMove);
-        element.addEventListener('touchend', this._handleTouchEnd);
-        element.addEventListener('touchcancel', this._handleTouchCancel);
         document.addEventListener('keydown', this._handleKeyDown);
         document.addEventListener('keyup', this._handleKeyUp);
 
@@ -226,9 +225,6 @@ export class Input {
         element.removeEventListener('mouseup', this._handleMouseUp);
         element.removeEventListener('wheel', this._handleWheel);
         element.removeEventListener('touchstart', this._handleTouchStart);
-        element.removeEventListener('touchmove', this._handleTouchMove);
-        element.removeEventListener('touchend', this._handleTouchEnd);
-        element.removeEventListener('touchcancel', this._handleTouchCancel);
         document.removeEventListener('keydown', this._handleKeyDown);
         document.removeEventListener('keyup', this._handleKeyUp);
 
@@ -965,6 +961,32 @@ export class Input {
             this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch) return;
 
+        const count = this._touchListenerCounts.get(event.target) || 0;
+        if (count === 0) {
+            event.target.addEventListener('touchmove', this._handleTouchMove);
+            event.target.addEventListener('touchend', this._handleTouchEnd);
+            event.target.addEventListener(
+                'touchcancel',
+                this._handleTouchCancel
+            );
+            this._touchListenerCounts.set(
+                event.target,
+                event.changedTouches.length
+            );
+
+            if (this.debugLevel >= 1) {
+                console.log('adding touch listeners for ', event.target);
+            }
+        } else if (count >= 0) {
+            this._touchListenerCounts.set(
+                event.target,
+                count + event.changedTouches.length
+            );
+            if (this.debugLevel >= 1) {
+                console.log(count + 1, ' touch events left for', event.target);
+            }
+        }
+
         if (
             this.isEventForAnyElement(event, [
                 this._game.gameView.gameView,
@@ -1000,6 +1022,8 @@ export class Input {
             if (this.debugLevel >= 1) {
                 console.log(
                     'touch finger ' +
+                        data.identifier +
+                        ' ' +
                         data.fingerIndex +
                         ' start. fireInputOnFrame: ' +
                         this._game.getTime().frameCount
@@ -1073,6 +1097,32 @@ export class Input {
             this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch) return;
 
+        const count = this._touchListenerCounts.get(event.target) || 0;
+        if (count <= event.changedTouches.length) {
+            event.target.removeEventListener(
+                'touchmove',
+                this._handleTouchMove
+            );
+            event.target.removeEventListener('touchend', this._handleTouchEnd);
+            event.target.removeEventListener(
+                'touchcancel',
+                this._handleTouchCancel
+            );
+            this._touchListenerCounts.set(event.target, 0);
+
+            if (this.debugLevel >= 1) {
+                console.log('removing touch listeners for ', event.target);
+            }
+        } else if (count > 0) {
+            this._touchListenerCounts.set(
+                event.target,
+                count - event.changedTouches.length
+            );
+            if (this.debugLevel >= 1) {
+                console.log(count - 1, ' touch events left for', event.target);
+            }
+        }
+
         if (
             this.isEventForAnyElement(event, [
                 this._game.gameView.gameView,
@@ -1111,6 +1161,8 @@ export class Input {
             if (this.debugLevel >= 1) {
                 console.log(
                     'touch finger ' +
+                        existingTouch.identifier +
+                        ' ' +
                         existingTouch.fingerIndex +
                         ' end. fireInputOnFrame: ' +
                         this._game.getTime().frameCount
@@ -1123,6 +1175,32 @@ export class Input {
         if (this._inputType == InputType.Undefined)
             this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch) return;
+
+        const count = this._touchListenerCounts.get(event.target) || 0;
+        if (count <= event.changedTouches.length) {
+            event.target.removeEventListener(
+                'touchmove',
+                this._handleTouchMove
+            );
+            event.target.removeEventListener('touchend', this._handleTouchEnd);
+            event.target.removeEventListener(
+                'touchcancel',
+                this._handleTouchCancel
+            );
+            this._touchListenerCounts.set(event.target, 0);
+
+            if (this.debugLevel >= 1) {
+                console.log('removing touch listeners for ', event.target);
+            }
+        } else if (count > 0) {
+            this._touchListenerCounts.set(
+                event.target,
+                count - event.changedTouches.length
+            );
+            if (this.debugLevel >= 1) {
+                console.log(count - 1, ' touch events left for', event.target);
+            }
+        }
 
         let changed = event.changedTouches;
 
