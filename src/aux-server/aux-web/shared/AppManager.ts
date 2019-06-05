@@ -3,8 +3,6 @@ import * as OfflinePluginRuntime from 'offline-plugin/runtime';
 import Axios from 'axios';
 import Vue from 'vue';
 import { BehaviorSubject, Observable, using, SubscriptionLike } from 'rxjs';
-import { FileManager } from './FileManager';
-import { SocketManager } from './SocketManager';
 import { flatMap, map, scan } from 'rxjs/operators';
 import { downloadAuxState, readFileJson } from '../aux-projector/download';
 import { CausalTreeManager } from '@casual-simulation/causal-tree-client-socketio';
@@ -27,8 +25,12 @@ import {
     LoadingProgress,
     LoadingProgressCallback,
 } from '@casual-simulation/aux-common/LoadingProgress';
-import { Simulation } from './Simulation';
-import SimulationManager from './SimulationManager';
+import {
+    Simulation,
+    SimulationManager,
+    SocketManager,
+    FileManager,
+} from '@casual-simulation/aux-vm';
 import { copyToClipboard } from './SharedUtils';
 
 export interface User {
@@ -102,7 +104,7 @@ export class AppManager {
         this.loadingProgress = new LoadingProgress();
         this._initOffline();
         this._simulationManager = new SimulationManager(id => {
-            return new FileManager(this, id, this._config);
+            return new FileManager(this._user, id, this._config);
         });
         // this._fileManager = new FileManager(this, this._treeManager);
         this._userSubject = new BehaviorSubject<User>(null);
@@ -192,25 +194,6 @@ export class AppManager {
         const normalized = normalizeAUXFileURL(url);
         const result = await Axios.get(normalized);
         return result.data;
-    }
-
-    /**
-     * Copies the given list of files as an AUX to the user's clipboard.
-     * @param files The files to copy.
-     */
-    async copyFilesFromSimulation(simulation: Simulation, files: AuxObject[]) {
-        const atoms = files.map(f => f.metadata.ref);
-        const weave = simulation.aux.tree.weave.subweave(...atoms);
-        const stored = storedTree(
-            simulation.aux.tree.site,
-            simulation.aux.tree.knownSites,
-            weave.atoms
-        );
-        let tree = new AuxCausalTree(stored);
-        await tree.import(stored);
-
-        const json = JSON.stringify(tree.export());
-        copyToClipboard(json);
     }
 
     /**

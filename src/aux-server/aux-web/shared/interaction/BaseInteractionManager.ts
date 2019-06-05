@@ -31,7 +31,7 @@ import {
     CameraRig,
 } from '../scene/CameraRigFactory';
 import { TapCodeManager } from './TapCodeManager';
-import { Simulation } from '../Simulation';
+import { Simulation } from '@casual-simulation/aux-vm';
 import { Simulation3D } from '../scene/Simulation3D';
 import { DraggableGroup } from './DraggableGroup';
 import { isObjectVisible } from '../scene/SceneUtils';

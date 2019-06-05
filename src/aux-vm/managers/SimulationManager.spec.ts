@@ -1,4 +1,4 @@
-import SimulationManager from './SimulationManager';
+import { SimulationManager } from './SimulationManager';
 import { Initable } from './Initable';
 
 describe('SimulationManager', () => {

@@ -9,7 +9,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { PerspectiveCamera, OrthographicCamera, Object3D, Plane } from 'three';
-import { Simulation } from '../../shared/Simulation';
+import { Simulation } from '@casual-simulation/aux-vm';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
 

@@ -1,8 +1,9 @@
-import FileWatcher from './FileWatcher';
+import { FileWatcher } from './FileWatcher';
 import {
     AuxFile,
     AuxCausalTree,
     createFile,
+    UpdatedFile,
 } from '@casual-simulation/aux-common';
 import { Subject } from 'rxjs';
 import { FileHelper } from './FileHelper';
@@ -14,7 +15,7 @@ describe('FileWatcher', () => {
     let helper: FileHelper;
     let selection: SelectionManager;
     let tree: AuxCausalTree;
-    let fileUpdated: Subject<AuxFile[]>;
+    let fileUpdated: Subject<UpdatedFile[]>;
     let fileRemoved: Subject<string[]>;
     let fileAdded: Subject<AuxFile[]>;
     let userId = 'user';
@@ -22,7 +23,7 @@ describe('FileWatcher', () => {
     beforeEach(async () => {
         fileAdded = new Subject<AuxFile[]>();
         fileRemoved = new Subject<string[]>();
-        fileUpdated = new Subject<AuxFile[]>();
+        fileUpdated = new Subject<UpdatedFile[]>();
         tree = new AuxCausalTree(storedTree(site(1)));
         helper = new FileHelper(tree, userId);
         selection = new SelectionManager(helper);
@@ -85,8 +86,18 @@ describe('FileWatcher', () => {
                 },
             });
 
-            fileUpdated.next([tree.value['test']]);
-            fileUpdated.next([tree.value['test2']]);
+            fileUpdated.next([
+                {
+                    file: tree.value['test'],
+                    tags: [],
+                },
+            ]);
+            fileUpdated.next([
+                {
+                    file: tree.value['test2'],
+                    tags: [],
+                },
+            ]);
 
             let files: AuxFile[] = [];
             watcher.filesDiscovered.subscribe(f => files.push(...f));
@@ -133,7 +144,7 @@ describe('FileWatcher', () => {
 
     describe('filesUpdated', () => {
         it('should resolve with the updated files', async () => {
-            let files: AuxFile[] = [];
+            let files: UpdatedFile[] = [];
             watcher.filesUpdated.subscribe(f => files.push(...f));
 
             await tree.addFile(
@@ -148,11 +159,19 @@ describe('FileWatcher', () => {
                 })
             );
 
-            fileUpdated.next([tree.value['test']]);
+            fileUpdated.next([
+                {
+                    file: tree.value['test'],
+                    tags: [],
+                },
+            ]);
 
-            fileUpdated.next([tree.value['test2']]);
+            fileUpdated.next([{ file: tree.value['test2'], tags: [] }]);
 
-            expect(files).toEqual([tree.value['test'], tree.value['test2']]);
+            expect(files).toEqual([
+                { file: tree.value['test'], tags: [] },
+                { file: tree.value['test2'], tags: [] },
+            ]);
         });
     });
 
@@ -170,16 +189,19 @@ describe('FileWatcher', () => {
                 })
             );
 
-            let files: AuxFile[] = [];
+            let files: UpdatedFile[] = [];
             watcher
                 .fileChanged(tree.value['test'])
                 .subscribe(f => files.push(f));
 
-            fileUpdated.next([tree.value['test2']]);
-            fileUpdated.next([tree.value['test']]);
-            fileUpdated.next([tree.value['test2']]);
+            fileUpdated.next([{ file: tree.value['test2'], tags: [] }]);
+            fileUpdated.next([{ file: tree.value['test'], tags: [] }]);
+            fileUpdated.next([{ file: tree.value['test2'], tags: [] }]);
 
-            expect(files).toEqual([tree.value['test'], tree.value['test']]);
+            expect(files).toEqual([
+                { file: tree.value['test'], tags: ['hello'] },
+                { file: tree.value['test'], tags: [] },
+            ]);
         });
     });
 });

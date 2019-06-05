@@ -25,7 +25,7 @@ import { IGameView } from '../../shared/vue-components/IGameView';
 import BuilderHome from '../BuilderHome/BuilderHome';
 import TrashCan from '../TrashCan/TrashCan';
 import { Physics } from '../../shared/scene/Physics';
-import { isMac } from '../../shared/SharedUtils';
+import { isMac, copyFilesFromSimulation } from '../../shared/SharedUtils';
 import BaseGameView from '../../shared/vue-components/BaseGameView';
 import { BuilderGame } from '../scene/BuilderGame';
 import { Game } from '../../shared/scene/Game';
@@ -144,7 +144,7 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
             return;
         }
 
-        await appManager.copyFilesFromSimulation(sim, files);
+        await copyFilesFromSimulation(sim, files);
 
         appManager.simulationManager.primary.helper.transaction(
             toast('Selection Copied!')

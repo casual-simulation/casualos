@@ -6,7 +6,7 @@ import { Subject, ReplaySubject, Observable } from 'rxjs';
  * Defines a class that it able to manage multiple simulations that are loaded at the same time.
  * @param TSimulation The type of objects that represent a simulation.
  */
-export default class SimulationManager<TSimulation extends Initable> {
+export class SimulationManager<TSimulation extends Initable> {
     private _factory: SimulationFactory<TSimulation>;
     private _simulationAdded: ReplaySubject<TSimulation>;
     private _simulationRemoved: ReplaySubject<TSimulation>;

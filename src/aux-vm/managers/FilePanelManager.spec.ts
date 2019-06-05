@@ -1,4 +1,4 @@
-import FilePanelManager from './FilePanelManager';
+import { FilePanelManager } from './FilePanelManager';
 import { FileHelper } from './FileHelper';
 import SelectionManager from './SelectionManager';
 import {
@@ -9,7 +9,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { Subject } from 'rxjs';
 import { storedTree, site } from '@casual-simulation/causal-trees';
-import FileWatcher from './FileWatcher';
+import { FileWatcher } from './FileWatcher';
 import { RecentFilesManager } from './RecentFilesManager';
 
 describe('FilePanelManager', () => {

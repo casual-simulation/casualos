@@ -64,7 +64,7 @@ import MiniFile from '../MiniFile/MiniFile';
 import FileTag from '../FileTag/FileTag';
 import FileTable from '../FileTable/FileTable';
 import { appManager } from '../../shared/AppManager';
-import { Simulation } from '../../shared/Simulation';
+import { Simulation } from '@casual-simulation/aux-vm';
 import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
 import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
 import FileID from '../FileID/FileID';
@@ -78,6 +78,7 @@ import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
 import { BuilderFileIDClickOperation } from './ClickOperation/BuilderFileIDClickOperation';
 import { BuilderGame } from '../scene/BuilderGame';
 import { BuilderMiniFileClickOperation } from './ClickOperation/BuilderMiniFileClickOperation';
+import { copyFilesFromSimulation } from '../../shared/SharedUtils';
 
 export class BuilderInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -630,10 +631,9 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             const contexts = getFileConfigContexts(calc, file.file);
             const files = flatMap(contexts, c => filesInContext(calc, c));
             const deduped = uniqBy(files, f => f.id);
-            await appManager.copyFilesFromSimulation(
-                file.simulation3D.simulation,
-                <AuxObject[]>deduped
-            );
+            await copyFilesFromSimulation(file.simulation3D.simulation, <
+                AuxObject[]
+            >deduped);
 
             await file.simulation3D.simulation.helper.transaction(
                 toast('Worksurface Copied!')

@@ -16,7 +16,7 @@ import { appManager } from '../../shared/AppManager';
 import { tap } from 'rxjs/operators';
 import { flatMap } from 'lodash';
 import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
-import { Simulation } from '../../shared/Simulation';
+import { Simulation } from '@casual-simulation/aux-vm';
 import SimulationItem from '../SimulationContext';
 import { uniqBy } from 'lodash';
 import { getFilesStateFromStoredTree } from '@casual-simulation/aux-common';

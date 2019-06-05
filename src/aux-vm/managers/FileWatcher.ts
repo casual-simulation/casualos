@@ -6,6 +6,8 @@ import {
     AuxObject,
     FilesState,
     AuxState,
+    UpdatedFile,
+    tagsOnFile,
 } from '@casual-simulation/aux-common';
 import { FileHelper } from './FileHelper';
 import {
@@ -18,17 +20,17 @@ import {
     from,
 } from 'rxjs';
 import { flatMap, filter, startWith, tap } from 'rxjs/operators';
-import { values } from 'd3';
+import { values } from 'lodash';
 
 /**
  * Defines a class that can watch a realtime causal tree.
  */
-export default class FileWatcher implements SubscriptionLike {
+export class FileWatcher implements SubscriptionLike {
     private _updatedState: AuxState = {};
 
     private _filesDiscoveredObservable: Subject<AuxFile[]>;
     private _filesRemovedObservable: Subject<string[]>;
-    private _filesUpdatedObservable: Subject<AuxFile[]>;
+    private _filesUpdatedObservable: Subject<UpdatedFile[]>;
     private _subs: SubscriptionLike[] = [];
 
     closed: boolean = false;
@@ -55,7 +57,7 @@ export default class FileWatcher implements SubscriptionLike {
     /**
      * Gets an observable that resolves whenever a file is updated.
      */
-    get filesUpdated(): Observable<AuxFile[]> {
+    get filesUpdated(): Observable<UpdatedFile[]> {
         return this._filesUpdatedObservable;
     }
 
@@ -70,11 +72,11 @@ export default class FileWatcher implements SubscriptionLike {
     constructor(
         filesAdded: Observable<AuxFile[]>,
         filesRemoved: Observable<string[]>,
-        filesUpdated: Observable<AuxFile[]>
+        filesUpdated: Observable<UpdatedFile[]>
     ) {
         this._filesDiscoveredObservable = new Subject<AuxFile[]>();
         this._filesRemovedObservable = new Subject<string[]>();
-        this._filesUpdatedObservable = new Subject<AuxFile[]>();
+        this._filesUpdatedObservable = new Subject<UpdatedFile[]>();
 
         this._subs.push(
             filesAdded
@@ -98,7 +100,8 @@ export default class FileWatcher implements SubscriptionLike {
             filesUpdated
                 .pipe(
                     tap(files => {
-                        for (let file of files) {
+                        for (let update of files) {
+                            const file = update.file;
                             this._updatedState[file.id] = file;
                         }
                     })
@@ -111,11 +114,14 @@ export default class FileWatcher implements SubscriptionLike {
      * Creates an observable that resolves whenever the given file changes.
      * @param file The file to watch.
      */
-    fileChanged(file: AuxObject): Observable<AuxObject> {
+    fileChanged(file: AuxObject): Observable<UpdatedFile> {
         return this.filesUpdated.pipe(
             flatMap(files => files),
-            filter(f => f.id === file.id),
-            startWith(file)
+            filter(u => u.file.id === file.id),
+            startWith({
+                file,
+                tags: tagsOnFile(file),
+            })
         );
     }
 
