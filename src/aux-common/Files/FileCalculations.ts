@@ -36,6 +36,7 @@ import {
     sortBy,
     cloneDeep,
     sortedIndexBy,
+    difference,
 } from 'lodash';
 import { Sandbox, SandboxLibrary, SandboxResult } from '../Formulas/Sandbox';
 import {
@@ -1918,11 +1919,10 @@ export function duplicateFile(
 ): Object {
     let copy = cloneDeep(file);
     const tags = tagsOnFile(copy);
-    const contextsToRemove = union(
-        ...calc.objects.map(o => getFileConfigContexts(calc, o))
-    );
-    const tagsToRemove = tags.filter(
-        t => isTagWellKnown(t) || contextsToRemove.some(c => t.indexOf(c) === 0)
+    const tagsToKeep = getDiffTags(calc, file);
+    const tagsToRemove = difference(
+        filterWellKnownAndContextTags(calc, tags),
+        tagsToKeep
     );
     tagsToRemove.forEach(t => {
         delete copy.tags[t];
@@ -1932,6 +1932,39 @@ export function duplicateFile(
     newFile.id = uuid();
 
     return <Object>cleanFile(newFile);
+}
+
+/**
+ * Filters the given list of tags by whether they are well known or used in a context.
+ * @param calc The file calculation context.
+ * @param tags The list of tags to filter.
+ */
+export function filterWellKnownAndContextTags(
+    calc: FileCalculationContext,
+    tags: string[]
+) {
+    const contextsToRemove = getContexts(calc);
+    const tagsToRemove = tags.filter(t =>
+        isWellKnownOrContext(t, contextsToRemove)
+    );
+    return tagsToRemove;
+}
+
+/**
+ * Gets the list of contexts that the given calculation context contains.
+ * @param calc The file calculation context.
+ */
+export function getContexts(calc: FileCalculationContext) {
+    return union(...calc.objects.map(o => getFileConfigContexts(calc, o)));
+}
+
+/**
+ * Determines if the given tag is well known or in one of the given contexts.
+ * @param tag The tag to check.
+ * @param contexts The contexts to check the tag against.
+ */
+export function isWellKnownOrContext(tag: string, contexts: string[]): any {
+    return isTagWellKnown(tag) || contexts.some(c => tag.indexOf(c) === 0);
 }
 
 /**
@@ -2022,6 +2055,10 @@ export function getDiffTags(
     let diffTags =
         calculateFileValue(calc, file, 'aux.movable.diffTags') ||
         calculateFileValue(calc, file, 'aux.diffTags');
+
+    if (!diffTags) {
+        return [];
+    }
 
     if (!Array.isArray(diffTags)) {
         diffTags = [diffTags];

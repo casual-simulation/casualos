@@ -7,10 +7,13 @@ describe('RecentFilesManager', () => {
     let tree: AuxCausalTree;
     let helper: FileHelper;
     let recent: RecentFilesManager;
-    beforeEach(() => {
+    beforeEach(async () => {
         tree = new AuxCausalTree(storedTree(site(1)));
         helper = new FileHelper(tree, 'user');
         recent = new RecentFilesManager(helper);
+
+        await tree.root();
+        await helper.createFile('user');
     });
 
     it('should start with an empty file', () => {
@@ -194,10 +197,59 @@ describe('RecentFilesManager', () => {
                     id: 'diff-testId1',
                     tags: {
                         test: 'abc',
-                        'aux._destroyed': true,
                         'aux.diff': true,
                         'aux.diffTags': ['test'],
                     },
+                },
+            ]);
+        });
+
+        it('should ignore context tags', async () => {
+            await helper.createFile('context', {
+                'aux.context': 'abc',
+            });
+            let file1 = createFile('testId1', {
+                abc: true,
+                'abc.x': 1,
+                'abc.y': 2,
+                'abc.index': 100,
+                def: true,
+            });
+
+            recent.addFileDiff(file1);
+            recent.selectedRecentFile = recent.files[0];
+
+            expect(recent.files).toEqual([
+                {
+                    id: 'diff-testId1',
+                    tags: {
+                        def: true,
+                        'aux.diff': true,
+                        'aux.diffTags': ['def'],
+                    },
+                },
+            ]);
+        });
+
+        it('should be an empty file if no tags can be used as a diff', async () => {
+            await helper.createFile('context', {
+                'aux.context': 'abc',
+            });
+            let file1 = createFile('testId1', {
+                abc: true,
+                'abc.x': 1,
+                'abc.y': 2,
+                'abc.index': 100,
+                'aux._user': 'abc',
+            });
+
+            recent.addFileDiff(file1);
+            recent.selectedRecentFile = recent.files[0];
+
+            expect(recent.files).toEqual([
+                {
+                    id: 'empty',
+                    tags: {},
                 },
             ]);
         });
