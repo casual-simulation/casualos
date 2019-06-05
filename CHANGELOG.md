@@ -1,5 +1,17 @@
 # AUX Changelog
 
+## V0.8.6
+
+### Date: 06/05/2019
+
+### Changes:
+
+-   Improvements
+    -   Added the ability to automatically convert curly quotes (`U+2018`, `U+2019`, `U+201C`, `U+201D`) into normal quotes (`U+0008`, `U+0003`).
+-   Bug Fixes
+    -   Fixed an issue where tag diffs would appear like normal files.
+    -   Fixed an issue that prevented users from moving the camera when tapping/clicking on a worksurface.
+
 ## V0.8.5
 
 ### Date: 06/04/2019
