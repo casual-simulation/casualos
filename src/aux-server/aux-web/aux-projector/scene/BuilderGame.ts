@@ -42,6 +42,7 @@ export class BuilderGame extends Game {
     getUIHtmlElements(): HTMLElement[] {
         return [
             ...this.gameView.home.getUIHtmlElements(),
+            ...this.gameView.buildApp.getUIHtmlElements(),
             <HTMLElement>this.gameView.$refs.fileQueue,
             this.gameView.$refs.trashCan
                 ? (<TrashCan>this.gameView.$refs.trashCan).$el
