@@ -241,7 +241,7 @@ describe('AuxTreeCalculations', () => {
             filesUpdated
                 .pipe(
                     flatMap(files => files),
-                    tap(file => updatedFiles.push(file.id))
+                    tap(file => updatedFiles.push(file.file.id))
                 )
                 .subscribe(null, errorHandler);
 
@@ -295,7 +295,7 @@ describe('AuxTreeCalculations', () => {
             filesUpdated
                 .pipe(
                     flatMap(files => files),
-                    tap(file => updatedFiles.push(file.id))
+                    tap(file => updatedFiles.push(file.file.id))
                 )
                 .subscribe(null, errorHandler);
             filesRemoved

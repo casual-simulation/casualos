@@ -6,6 +6,7 @@ import {
     AuxFile,
     createFile,
     SandboxResult,
+    UpdatedFile,
 } from '@casual-simulation/aux-common';
 import { Subject } from 'rxjs';
 import { storedTree, site } from '@casual-simulation/causal-trees';
@@ -19,7 +20,7 @@ describe('FilePanelManager', () => {
     let selection: SelectionManager;
     let recent: RecentFilesManager;
     let tree: AuxCausalTree;
-    let fileUpdated: Subject<AuxFile[]>;
+    let fileUpdated: Subject<UpdatedFile[]>;
     let fileRemoved: Subject<string[]>;
     let fileAdded: Subject<AuxFile[]>;
     let userId = 'user';
@@ -27,7 +28,7 @@ describe('FilePanelManager', () => {
     beforeEach(async () => {
         fileAdded = new Subject<AuxFile[]>();
         fileRemoved = new Subject<string[]>();
-        fileUpdated = new Subject<AuxFile[]>();
+        fileUpdated = new Subject<UpdatedFile[]>();
         tree = new AuxCausalTree(storedTree(site(1)));
         helper = new FileHelper(tree, userId);
         selection = new SelectionManager(helper);
@@ -80,10 +81,20 @@ describe('FilePanelManager', () => {
             );
 
             await selection.selectFile(tree.value['test']);
-            fileUpdated.next([tree.value['test']]);
+            fileUpdated.next([
+                {
+                    file: tree.value['test'],
+                    tags: [],
+                },
+            ]);
 
             await selection.selectFile(tree.value['test2'], true);
-            fileUpdated.next([tree.value['test2']]);
+            fileUpdated.next([
+                {
+                    file: tree.value['test2'],
+                    tags: [],
+                },
+            ]);
 
             expect(files).toEqual([tree.value['test2'], tree.value['test']]);
             expect(isDiff).toBeFalsy();
@@ -116,10 +127,10 @@ describe('FilePanelManager', () => {
             );
 
             await selection.selectFile(tree.value['test']);
-            fileUpdated.next([tree.value['test']]);
+            fileUpdated.next([{ file: tree.value['test'], tags: [] }]);
 
             await selection.selectFile(tree.value['test2'], true);
-            fileUpdated.next([tree.value['test2']]);
+            fileUpdated.next([{ file: tree.value['test2'], tags: [] }]);
 
             recent.selectedRecentFile = tree.value['recent'];
 
@@ -157,10 +168,10 @@ describe('FilePanelManager', () => {
                 })
             );
 
-            manager.search = '@hello(true).first()';
+            manager.search = '@hello(true)';
 
             expect(files).toEqual([tree.value['test']]);
-            expect(result).toEqual(tree.value['test']);
+            expect(result).toEqual([tree.value['test']]);
             expect(isSearch).toBe(true);
             expect(isDiff).toBeFalsy();
         });
@@ -234,15 +245,15 @@ describe('FilePanelManager', () => {
             );
 
             await selection.selectFile(tree.value['test']);
-            fileUpdated.next([tree.value['test']]);
+            fileUpdated.next([{ file: tree.value['test'], tags: [] }]);
 
             expect(files).toEqual([tree.value['test']]);
             expect(result).toEqual(null);
 
-            manager.search = '#hello(true).first()';
+            manager.search = '#hello(true)';
 
             expect(files).toEqual([]);
-            expect(result).toEqual(true);
+            expect(result).toEqual([true]);
             expect(isSearch).toEqual(true);
 
             manager.search = '';
@@ -319,7 +330,7 @@ describe('FilePanelManager', () => {
             );
 
             await selection.selectFile(tree.value['test']);
-            fileUpdated.next([tree.value['test']]);
+            fileUpdated.next([{ file: tree.value['test'], tags: [] }]);
 
             // Need to re-trigger the selection changed event
             // because the file update doesn't trigger the refresh.
@@ -401,7 +412,7 @@ describe('FilePanelManager', () => {
 
             manager.isOpen = true;
 
-            fileUpdated.next([tree.value['test']]);
+            fileUpdated.next([{ file: tree.value['test'], tags: [] }]);
 
             expect(files).toEqual([createFile('empty', {})]);
             expect(isOpen).toBe(true);
