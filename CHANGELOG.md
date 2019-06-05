@@ -1,8 +1,31 @@
 # AUX Changelog
 
+## V0.8.6
+
+### Date: 06/05/2019
+
+### Changes:
+
+-   Improvements
+    -   Added the ability to automatically convert curly quotes (`U+2018`, `U+2019`, `U+201C`, `U+201D`) into normal quotes (`U+0008`, `U+0003`).
+-   Bug Fixes
+    -   Fixed an issue where tag diffs would appear like normal files.
+    -   Fixed an issue that prevented users from moving the camera when tapping/clicking on a worksurface.
+
+## V0.8.5
+
+### Date: 06/04/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed an issue that caused diffs to not be draggable from the mini file in the upper right hand corner of the screen.
+    -   Fixed some conflicts between the default panel opening logic and the new dragging logic on mobile.
+    -   Fixed an issue that prevented users from dragging file IDs out from the file panel on mobile.
+
 ## V0.8.4
 
-### Date: TBD
+### Date: 06/04/2019
 
 ### Changes:
 
@@ -30,6 +53,10 @@
         -   `onClose()` -> `onCloseInput()`
     -   Changed the `"Switch to Player"` button text to be `"Open Context in New Tab"`.
     -   Changed the title of AUX Builder to `"Channel Designer"`.
+    -   Improved the file table to automatically focus the first input for newly added tags.
+    -   Added an `onDiff()` event that is triggered on the file that a diff was applied to.
+        -   The `that` parameter is an object with the following properties:
+            -   `diffs`: The array of diffs that were applied to the file.
 -   Bug Fixes
     -   Fixed the color picker input to not error when the edited tag doesn't have a value.
     -   Fixed the color picker basic input subtype to have the correct width so that the colors line up properly.
@@ -39,6 +66,7 @@
     -   Changed `Create Workspace` button tooltip to `Create Surface from Selection`.
     -   Removed the `Destroy File` and `Clear Diff` buttons from an empty diff sheet.
     -   Removed the `Destroy File` and replaced it with the `Clear Diff` button on a non-empty diff sheet.
+    -   Fixed `player.tweenTo()` from affecting the inventory camera if the target file doesnt exist in it.
 
 ## V0.8.3
 

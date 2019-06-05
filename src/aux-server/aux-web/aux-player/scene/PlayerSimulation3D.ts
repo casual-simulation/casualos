@@ -7,7 +7,6 @@ import {
     isContextLocked,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
-import { IGameView } from '../../shared/vue-components/IGameView';
 import { Simulation } from '../../shared/Simulation';
 import { tap } from 'rxjs/operators';
 import { MenuContext } from '../MenuContext';
@@ -17,6 +16,8 @@ import { SimulationContext } from '../SimulationContext';
 import { Color, Texture, OrthographicCamera, PerspectiveCamera } from 'three';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
+import { Game } from '../../shared/scene/Game';
+import { PlayerGame } from './PlayerGame';
 
 export class PlayerSimulation3D extends Simulation3D {
     /**
@@ -32,7 +33,7 @@ export class PlayerSimulation3D extends Simulation3D {
 
     private _contextBackground: Color | Texture = null;
 
-    protected _gameView: PlayerGameView; // Override base class gameView so that its cast to the Aux Player GameView.
+    protected _game: PlayerGame; // Override base class game so that its cast to the Aux Player Game.
 
     context: string;
     menuContext: MenuContext = null;
@@ -49,15 +50,15 @@ export class PlayerSimulation3D extends Simulation3D {
         }
     }
 
-    constructor(context: string, gameView: IGameView, simulation: Simulation) {
-        super(gameView, simulation);
+    constructor(context: string, game: Game, simulation: Simulation) {
+        super(game, simulation);
 
         this.context = context;
         this._fileBackBuffer = new Map();
     }
 
     getMainCameraRig(): CameraRig {
-        return this._gameView.getMainCameraRig();
+        return this._game.getMainCameraRig();
     }
 
     init() {
@@ -140,7 +141,7 @@ export class PlayerSimulation3D extends Simulation3D {
                 this,
                 file,
                 'player',
-                this._gameView.getDecoratorFactory()
+                this._game.getDecoratorFactory()
             );
 
             // Subscribe to file change updates for this context file so that we can do things like change the background color to match the context color, etc.

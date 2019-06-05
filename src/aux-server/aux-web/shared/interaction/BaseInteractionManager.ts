@@ -24,7 +24,6 @@ import { MouseButtonId, InputType, Input, TargetData } from '../scene/Input';
 import { appManager } from '../AppManager';
 import { IOperation } from './IOperation';
 import { AuxFile3D } from '../scene/AuxFile3D';
-import { IGameView } from '../vue-components/IGameView';
 import { GameObject } from '../scene/GameObject';
 import {
     Orthographic_MinZoom,
@@ -37,9 +36,10 @@ import { Simulation3D } from '../scene/Simulation3D';
 import { DraggableGroup } from './DraggableGroup';
 import { isObjectVisible } from '../scene/SceneUtils';
 import { CameraRigControls } from './CameraRigControls';
+import { Game } from '../scene/Game';
 
 export abstract class BaseInteractionManager {
-    protected _gameView: IGameView;
+    protected _game: Game;
     protected _cameraRigControllers: CameraRigControls[];
     protected _tapCodeManager: TapCodeManager;
     protected _maxTapCodeLength: number;
@@ -52,9 +52,9 @@ export abstract class BaseInteractionManager {
     private _operations: IOperation[];
     private _overHtmlMixerIFrame: boolean;
 
-    constructor(gameView: IGameView) {
+    constructor(game: Game) {
         this._draggableGroupsDirty = true;
-        this._gameView = gameView;
+        this._game = game;
         this._cameraRigControllers = this._createControlsForCameraRigs();
         this._operations = [];
         this._tapCodeManager = new TapCodeManager();
@@ -70,10 +70,10 @@ export abstract class BaseInteractionManager {
         );
 
         // Listen to file events from game view.
-        this._gameView.onFileAdded.addListener(this._handleFileAdded);
-        this._gameView.onFileUpdated.addListener(this._handleFileUpdated);
-        this._gameView.onFileRemoved.addListener(this._handleFileRemoved);
-        this._gameView.onCameraRigTypeChanged.addListener(
+        this._game.onFileAdded.addListener(this._handleFileAdded);
+        this._game.onFileUpdated.addListener(this._handleFileUpdated);
+        this._game.onFileRemoved.addListener(this._handleFileRemoved);
+        this._game.onCameraRigTypeChanged.addListener(
             this._handleCameraRigTypeChanged
         );
     }
@@ -121,8 +121,8 @@ export abstract class BaseInteractionManager {
             return true;
         });
 
-        if (this._gameView.vrDisplay && this._gameView.vrDisplay.isPresenting) {
-            const inputVR = this._gameView.getInputVR();
+        if (this._game.vrDisplay && this._game.vrDisplay.isPresenting) {
+            const inputVR = this._game.getInputVR();
 
             // VR Mode interaction.
             for (let i = 0; i < 5; i++) {
@@ -131,7 +131,7 @@ export abstract class BaseInteractionManager {
                         '[InteractionManager] VR button ' +
                             i +
                             ' down. frame: ' +
-                            this._gameView.getTime().frameCount
+                            this._game.getTime().frameCount
                     );
                 }
 
@@ -140,7 +140,7 @@ export abstract class BaseInteractionManager {
                         '[InteractionManager] VR button ' +
                             i +
                             ' held. frame: ' +
-                            this._gameView.getTime().frameCount
+                            this._game.getTime().frameCount
                     );
                 }
 
@@ -149,20 +149,20 @@ export abstract class BaseInteractionManager {
                         '[InteractionManager] VR button ' +
                             i +
                             ' up. frame: ' +
-                            this._gameView.getTime().frameCount
+                            this._game.getTime().frameCount
                     );
                 }
             }
         } else {
             // Normal browser interaction.
 
-            const input = this._gameView.getInput();
+            const input = this._game.getInput();
 
             // Detect if we are over any html mixer iframe element.
             this._overHtmlMixerIFrame = false;
             const clientPos = input.getMouseClientPos();
             if (clientPos) {
-                const htmlMixerContext = this._gameView.getHtmlMixerContext();
+                const htmlMixerContext = this._game.getHtmlMixerContext();
                 this._overHtmlMixerIFrame = htmlMixerContext.isOverAnyIFrameElement(
                     clientPos
                 );
@@ -175,7 +175,7 @@ export abstract class BaseInteractionManager {
 
             if (noMouseInput && input.getTouchCount() === 0) {
                 // Always allow the iframes to recieve input when no inputs are being held.
-                const webglCanvas = this._gameView.getRenderer().domElement;
+                const webglCanvas = this._game.getRenderer().domElement;
                 webglCanvas.style.pointerEvents = 'none';
             }
 
@@ -194,7 +194,11 @@ export abstract class BaseInteractionManager {
                     this._disableIFramePointerEvents();
                 }
 
-                if (input.isMouseButtonDownOnElement(this._gameView.gameView)) {
+                if (
+                    input.isMouseButtonDownOnElement(
+                        this._game.gameView.gameView
+                    )
+                ) {
                     let { gameObject, hit } = this.findHoveredGameObject();
 
                     if (gameObject) {
@@ -223,7 +227,7 @@ export abstract class BaseInteractionManager {
                     }
                 } else if (
                     input.isMouseButtonDownOnAnyElements(
-                        this._gameView.getUIHtmlElements()
+                        this._game.getUIHtmlElements()
                     )
                 ) {
                     const element = input.getTargetData().inputDown;
@@ -246,7 +250,11 @@ export abstract class BaseInteractionManager {
                     this._disableIFramePointerEvents();
                 }
 
-                if (input.isMouseButtonDownOnElement(this._gameView.gameView)) {
+                if (
+                    input.isMouseButtonDownOnElement(
+                        this._game.gameView.gameView
+                    )
+                ) {
                     // Always allow camera control with middle clicks.
                     this.setCameraControlsEnabled(true);
                 }
@@ -310,7 +318,7 @@ export abstract class BaseInteractionManager {
 
     protected _disableIFramePointerEvents(): void {
         // Dont allow iframes to capture input.
-        const webglCanvas = this._gameView.getRenderer().domElement;
+        const webglCanvas = this._game.getRenderer().domElement;
         webglCanvas.style.pointerEvents = 'auto';
     }
 
@@ -326,7 +334,7 @@ export abstract class BaseInteractionManager {
     getDraggableGroups(): DraggableGroup[] {
         if (this._draggableGroupsDirty) {
             const contexts = flatMap(
-                this._gameView.getSimulations(),
+                this._game.getSimulations(),
                 s => s.contexts
             );
             if (contexts && contexts.length > 0) {
@@ -338,8 +346,8 @@ export abstract class BaseInteractionManager {
                 this._draggableGroups = [
                     {
                         objects: colliders,
-                        camera: this._gameView.getMainCameraRig().mainCamera,
-                        viewport: this._gameView.getMainCameraRig().viewport,
+                        camera: this._game.getMainCameraRig().mainCamera,
+                        viewport: this._game.getMainCameraRig().viewport,
                     },
                 ];
             } else {
@@ -355,12 +363,10 @@ export abstract class BaseInteractionManager {
      * @param pagePos [Optional] The page position to test underneath.
      */
     findHoveredGameObject(pagePos?: Vector2) {
-        pagePos = !!pagePos
-            ? pagePos
-            : this._gameView.getInput().getMousePagePos();
+        pagePos = !!pagePos ? pagePos : this._game.getInput().getMousePagePos();
 
         const draggableGroups = this.getDraggableGroups();
-        const viewports = this._gameView.getViewports();
+        const viewports = this._game.getViewports();
 
         let hit: Intersection = null;
         let hitObject: GameObject = null;
@@ -430,7 +436,7 @@ export abstract class BaseInteractionManager {
     }
 
     showContextMenu(calc: FileCalculationContext) {
-        const input = this._gameView.getInput();
+        const input = this._game.getInput();
         const pagePos = input.getMousePagePos();
         const { gameObject, hit } = this.findHoveredGameObject();
         const actions = this._contextMenuActions(
@@ -448,15 +454,13 @@ export abstract class BaseInteractionManager {
                 pagePos: pagePos,
                 actions: actions,
             };
-            this._gameView.$emit('onContextMenu', menuEvent);
+            this._game.gameView.$emit('onContextMenu', menuEvent);
         }
     }
 
     async selectFile(file: AuxFile3D) {
         file.contextGroup.simulation3D.simulation.filePanel.search = '';
-        const shouldMultiSelect = this._gameView
-            .getInput()
-            .getKeyHeld('Control');
+        const shouldMultiSelect = this._game.getInput().getKeyHeld('Control');
         file.contextGroup.simulation3D.simulation.recent.addFileDiff(file.file);
         file.contextGroup.simulation3D.simulation.recent.selectedRecentFile = null;
         await file.contextGroup.simulation3D.simulation.selection.selectFile(
@@ -529,7 +533,7 @@ export abstract class BaseInteractionManager {
             const viewport = cameraRigControls.controls.viewport;
             cameraRigControls.controls = new CameraControls(
                 newCameraRig.mainCamera,
-                this._gameView,
+                this._game,
                 viewport
             );
 

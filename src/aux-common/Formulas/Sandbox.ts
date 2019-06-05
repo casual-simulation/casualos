@@ -55,6 +55,14 @@ export class Sandbox {
             test: /^(?:\=|\:\=)/g,
             replacement: val => '',
         },
+        {
+            test: /(?:[“”])/g,
+            replacement: val => '"',
+        },
+        {
+            test: /(?:[‘’])/g,
+            replacement: val => "'",
+        },
     ];
 
     /**

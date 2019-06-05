@@ -8,6 +8,7 @@ import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 import { Physics } from '../../../shared/scene/Physics';
+import { PlayerGame } from '../../scene/PlayerGame';
 
 /**
  * Empty Click Operation handles clicking of empty space for mouse and touch input with the primary (left/first finger) interaction button.
@@ -18,7 +19,7 @@ export class PlayerEmptyClickOperation implements IOperation {
 
     protected _interaction: PlayerInteractionManager;
 
-    private _gameView: PlayerGameView;
+    private _game: PlayerGame;
     private _finished: boolean;
     private _startScreenPos: Vector2;
 
@@ -26,22 +27,19 @@ export class PlayerEmptyClickOperation implements IOperation {
         return appManager.simulationManager.primary;
     }
 
-    constructor(
-        gameView: PlayerGameView,
-        interaction: PlayerInteractionManager
-    ) {
-        this._gameView = gameView;
+    constructor(game: PlayerGame, interaction: PlayerInteractionManager) {
+        this._game = game;
         this._interaction = interaction;
 
         // Store the screen position of the input when the click occured.
-        this._startScreenPos = this._gameView.getInput().getMouseScreenPos();
+        this._startScreenPos = this._game.getInput().getMouseScreenPos();
     }
 
     public update(): void {
         if (this._finished) return;
 
-        if (!this._gameView.getInput().getMouseButtonHeld(0)) {
-            const curScreenPos = this._gameView.getInput().getMouseScreenPos();
+        if (!this._game.getInput().getMouseButtonHeld(0)) {
+            const curScreenPos = this._game.getInput().getMouseScreenPos();
             const distance = curScreenPos.distanceTo(this._startScreenPos);
 
             if (distance < PlayerEmptyClickOperation.DragThreshold) {
@@ -60,18 +58,18 @@ export class PlayerEmptyClickOperation implements IOperation {
     public dispose(): void {}
 
     private _sendOnGridClickEvent() {
-        const pagePos = this._gameView.getInput().getMousePagePos();
-        const inventoryViewport = this._gameView.getInventoryViewport();
+        const pagePos = this._game.getInput().getMousePagePos();
+        const inventoryViewport = this._game.getInventoryViewport();
 
         const isInventory = Input.pagePositionOnViewport(
             pagePos,
             inventoryViewport
         );
-        const simulations = this._gameView.getSimulations();
+        const simulations = this._game.getSimulations();
 
         for (let sim of simulations) {
             if (sim instanceof PlayerSimulation3D) {
-                const inventory = this._gameView.findInventorySimulation3D(
+                const inventory = this._game.findInventorySimulation3D(
                     sim.simulation
                 );
                 let mouseDir: Ray;
@@ -85,7 +83,7 @@ export class PlayerEmptyClickOperation implements IOperation {
                     );
                 } else {
                     mouseDir = Physics.screenPosToRay(
-                        this._gameView.getInput().getMouseScreenPos(),
+                        this._game.getInput().getMouseScreenPos(),
                         sim.getMainCameraRig().mainCamera
                     );
                 }

@@ -1,5 +1,4 @@
 import VRController from 'three-vrcontroller-module';
-import { IGameView } from '../vue-components/IGameView';
 import {
     MeshStandardMaterial,
     Mesh,
@@ -7,10 +6,10 @@ import {
     BoxGeometry,
     Object3D,
     Ray,
-    Vector3,
 } from 'three';
 import { InputState } from './Input';
 import { find, remove } from 'lodash';
+import { Game } from './Game';
 
 export class InputVR {
     /**
@@ -20,10 +19,10 @@ export class InputVR {
     public debugLevel: number = 0;
 
     private _controllerMeshes: ControllerMesh[];
-    private _gameView: IGameView;
+    private _game: Game;
 
-    constructor(gameView: IGameView) {
-        this._gameView = gameView;
+    constructor(game: Game) {
+        this._game = game;
         this._controllerMeshes = [];
 
         // VRController.verbosity = 1.0;
@@ -46,7 +45,7 @@ export class InputVR {
         VRController.update();
 
         this._controllerMeshes.forEach(mesh => {
-            mesh.update(this._gameView.getTime().frameCount);
+            mesh.update(this._game.getTime().frameCount);
         });
     }
 
@@ -64,9 +63,7 @@ export class InputVR {
     getButtonDown(controllerIndex: number, buttonIndex: number): boolean {
         let buttonState = this._getButtonState(controllerIndex, buttonIndex);
         if (buttonState) {
-            return buttonState.isDownOnFrame(
-                this._gameView.getTime().frameCount
-            );
+            return buttonState.isDownOnFrame(this._game.getTime().frameCount);
         }
 
         return false;
@@ -78,9 +75,7 @@ export class InputVR {
     getButtonHeld(controllerIndex: number, buttonIndex: number): boolean {
         let buttonState = this._getButtonState(controllerIndex, buttonIndex);
         if (buttonState) {
-            return buttonState.isHeldOnFrame(
-                this._gameView.getTime().frameCount
-            );
+            return buttonState.isHeldOnFrame(this._game.getTime().frameCount);
         }
 
         return false;
@@ -92,7 +87,7 @@ export class InputVR {
     getButtonUp(controllerIndex: number, buttonIndex: number): boolean {
         let buttonState = this._getButtonState(controllerIndex, buttonIndex);
         if (buttonState) {
-            return buttonState.isUpOnFrame(this._gameView.getTime().frameCount);
+            return buttonState.isUpOnFrame(this._game.getTime().frameCount);
         }
 
         return false;
@@ -101,7 +96,7 @@ export class InputVR {
     /**
      * Returns the pointer ray for the specified controller.
      */
-    getPointerRay(controllerIndex: number): Ray {
+    getPointerRay(): Ray {
         // let controllerMesh = this._getControllerMesh(controllerIndex);
 
         // if (controllerMesh) {
@@ -147,9 +142,9 @@ export class InputVR {
 
         let controller = event.detail;
         controller.standingMatrix = (<any>(
-            this._gameView.getRenderer().vr
+            this._game.getRenderer().vr
         )).getStandingMatrix();
-        controller.head = this._gameView.getMainCameraRig();
+        controller.head = this._game.getMainCameraRig();
 
         let controllerMesh = new ControllerMesh(controller, this);
         this._controllerMeshes.push(controllerMesh);
@@ -158,7 +153,7 @@ export class InputVR {
         controller.add(controllerMesh);
 
         // Add controller to the scene.
-        this._gameView.getScene().add(controller);
+        this._game.getScene().add(controller);
 
         controller.addEventListener(
             'disconnected',
@@ -185,7 +180,7 @@ export class InputVR {
             });
         }
 
-        this._gameView.getScene().remove(controller);
+        this._game.getScene().remove(controller);
     }
 }
 

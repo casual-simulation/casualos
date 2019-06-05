@@ -1,18 +1,15 @@
-import { Input, InputType, MouseButtonId } from '../../../shared/scene/Input';
-import { Vector2, Vector3, Intersection } from 'three';
+import { InputType } from '../../../shared/scene/Input';
+import { Vector2 } from 'three';
 import { IOperation } from '../IOperation';
 import { BaseInteractionManager } from '../BaseInteractionManager';
 import {
-    UserMode,
     File,
     FileCalculationContext,
-    AuxFile,
     isFileMovable,
 } from '@casual-simulation/aux-common';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
 import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
-import { IGameView } from '../../vue-components/IGameView';
 import { Simulation3D } from '../../scene/Simulation3D';
 
 /**
@@ -34,8 +31,8 @@ export abstract class BaseFileClickOperation implements IOperation {
     protected heldTime: number;
     protected isMobile: boolean;
 
-    protected get gameView() {
-        return this._simulation3D.gameView;
+    protected get game() {
+        return this._simulation3D.game;
     }
 
     get simulation() {
@@ -54,9 +51,9 @@ export abstract class BaseFileClickOperation implements IOperation {
         this._file3D = file3D;
 
         // Store the screen position of the input when the click occured.
-        this._startScreenPos = this.gameView.getInput().getMouseScreenPos();
+        this._startScreenPos = this.game.getInput().getMouseScreenPos();
 
-        this.isMobile = this.gameView.getInput().getTouchCount() > 0;
+        this.isMobile = this.game.getInput().getTouchCount() > 0;
         this.heldTime = 0;
     }
 
@@ -75,19 +72,17 @@ export abstract class BaseFileClickOperation implements IOperation {
 
         // If using touch, need to make sure we are only ever using one finger at a time.
         // If a second finger is detected then we cancel this click operation.
-        if (this.gameView.getInput().currentInputType === InputType.Touch) {
-            if (this.gameView.getInput().getTouchCount() >= 2) {
+        if (this.game.getInput().currentInputType === InputType.Touch) {
+            if (this.game.getInput().getTouchCount() >= 2) {
                 this._finished = true;
                 return;
             }
         }
 
-        if (this.gameView.getInput().getMouseButtonHeld(0)) {
+        if (this.game.getInput().getMouseButtonHeld(0)) {
             this.heldTime++;
             if (!this._dragOperation) {
-                const curScreenPos = this.gameView
-                    .getInput()
-                    .getMouseScreenPos();
+                const curScreenPos = this.game.getInput().getMouseScreenPos();
                 const distance = curScreenPos.distanceTo(this._startScreenPos);
 
                 if (distance >= BaseFileClickOperation.DragThreshold) {

@@ -36,7 +36,7 @@ export default class CameraHome extends Vue {
     update(): void {
         if (this.cameraRig) {
             if (!this.rigControls || this.rigControls.rig !== this.cameraRig) {
-                this.rigControls = this.gameView
+                this.rigControls = this.gameView.game
                     .getInteraction()
                     .cameraRigControllers.find(
                         rigControls => rigControls.rig === this.cameraRig

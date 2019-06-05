@@ -36,16 +36,10 @@ import FileSearch from '../FileSearch/FileSearch';
 import vueFilePond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
 import { Simulation } from '../../shared/Simulation';
+import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import { Swatches, Chrome, Compact } from 'vue-color';
 
 const FilePond = vueFilePond();
-
-export interface SidebarItem {
-    id: string;
-    text: string;
-    icon: string;
-    click: () => void;
-}
 
 @Component({
     components: {
@@ -197,14 +191,27 @@ export default class BuilderApp extends Vue {
         id: string,
         text: string,
         click: () => void,
-        icon: string = null
+        icon: string = null,
+        group: string = null
     ) {
-        this.extraItems.push({
-            id: id,
-            text: text,
-            icon: icon,
-            click: click,
-        });
+        const index = findIndex(this.extraItems, i => i.id === id);
+        if (index >= 0) {
+            this.extraItems[index] = {
+                id: id,
+                group: group,
+                text: text,
+                icon: icon,
+                click: click,
+            };
+        } else {
+            this.extraItems.push({
+                id: id,
+                group: group,
+                text: text,
+                icon: icon,
+                click: click,
+            });
+        }
     }
 
     /**
@@ -216,6 +223,20 @@ export default class BuilderApp extends Vue {
         const index = findIndex(this.extraItems, i => i.id === id);
         if (index >= 0) {
             this.extraItems.splice(index, 1);
+        }
+    }
+
+    /**
+     * Removes all the sidebar items with the given group.
+     * @param id
+     */
+    @Provide()
+    removeSidebarGroup(group: string) {
+        for (let i = this.extraItems.length - 1; i >= 0; i--) {
+            const item = this.extraItems[i];
+            if (item.group === group) {
+                this.extraItems.splice(i, 1);
+            }
         }
     }
 

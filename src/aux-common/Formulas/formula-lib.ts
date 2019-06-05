@@ -47,6 +47,7 @@ import {
     isDestroyable,
     isInUsernameList,
     getFileUsernameList,
+    DIFF_ACTION_NAME,
 } from '../Files/FileCalculations';
 
 import '../polyfill/Array.first.polyfill';
@@ -803,6 +804,7 @@ function saveDiff(file: any): string {
  * @param diff The diff to apply.
  */
 function applyDiff(file: any, ...diffs: FileDiff[]) {
+    let appliedDiffs: FileDiff[] = [];
     diffs.forEach(diff => {
         if (!diff) {
             return;
@@ -812,10 +814,17 @@ function applyDiff(file: any, ...diffs: FileDiff[]) {
         } else {
             diff = unwrapProxy(diff);
         }
+        appliedDiffs.push(diff);
         for (let key in diff) {
             file[key] = unwrapProxy(diff[key]);
         }
     });
+
+    if (isFile(file)) {
+        event(DIFF_ACTION_NAME, [file], {
+            diffs: appliedDiffs,
+        });
+    }
 }
 
 /**
@@ -840,33 +849,6 @@ function addToContextDiff(
  */
 function removeFromContextDiff(context: string) {
     return calcRemoveFromContextDiff(calc, context);
-}
-
-/**
- * Adds the given file to the given context.
- * @param file The file.
- * @param context The context.
- * @param x The X position that the file should be added at.
- * @param y The Y position that the file should be added at.
- * @param index The index that the file should be added at.
- */
-function addToContext(
-    file: FileProxy,
-    context: string,
-    x: number = 0,
-    y: number = 0,
-    index?: number
-) {
-    applyDiff(file, addToContextDiff(context, x, y, index));
-}
-
-/**
- * Removes the given file from the given context.
- * @param file The file.
- * @param context The context.
- */
-function removeFromContext(file: FileProxy, context: string) {
-    applyDiff(file, removeFromContextDiff(context));
 }
 
 /**
@@ -897,14 +879,6 @@ function addToMenuDiff(): FileTags {
 }
 
 /**
- * Adds the given file to the current user's menu.
- * @param file The file to add to the menu.
- */
-function addToMenu(file: FileProxy) {
-    applyDiff(file, addToMenuDiff());
-}
-
-/**
  * Gets a diff that removes a file from the current user's menu.
  */
 function removeFromMenuDiff(): FileTags {
@@ -913,14 +887,6 @@ function removeFromMenuDiff(): FileTags {
         ...removeFromContextDiff(context),
         [`${context}.id`]: null,
     };
-}
-
-/**
- * Removes the given file from the current user's menu.
- * @param file The file to remove from the menu.
- */
-function removeFromMenu(file: FileProxy) {
-    applyDiff(file, removeFromMenuDiff());
 }
 
 /**

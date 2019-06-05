@@ -192,6 +192,7 @@
                             :class="getTagCellClass(file, tag)"
                         >
                             <file-value
+                                ref="tagValues"
                                 :readOnly="readOnly || isFileReadOnly(file)"
                                 :file="file"
                                 :tag="tag"

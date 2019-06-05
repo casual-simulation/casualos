@@ -929,6 +929,23 @@ describe('FileCalculations', () => {
         });
 
         describe('formulas', () => {
+            const quoteCases = [['‘', '’'], ['“', '”']];
+
+            it.each(quoteCases)(
+                'should support curly quotes by converting them to normal quotes',
+                (openQuote: string, closeQuote: string) => {
+                    const file1 = createFile('test1');
+
+                    file1.tags.formula = `=${openQuote}Hello, World${closeQuote}`;
+
+                    const context = createCalculationContext([file1]);
+                    const value = calculateFileValue(context, file1, 'formula');
+
+                    // Order is based on the file ID
+                    expect(value).toEqual('Hello, World');
+                }
+            );
+
             describe('# syntax', () => {
                 it('should get every tag value', () => {
                     const file1 = createFile('test1');

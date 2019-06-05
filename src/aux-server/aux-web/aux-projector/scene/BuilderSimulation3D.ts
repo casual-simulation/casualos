@@ -10,10 +10,8 @@ import {
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { PerspectiveCamera, OrthographicCamera, Object3D, Plane } from 'three';
 import { Simulation } from '../../shared/Simulation';
-import { IGameView } from '../../shared/vue-components/IGameView';
-import { flatMap } from 'lodash';
-import BuilderGameView from '../BuilderGameView/BuilderGameView';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
+import { Game } from '../../shared/scene/Game';
 
 export class BuilderSimulation3D extends Simulation3D {
     recentFiles: Object[] = [];
@@ -21,11 +19,11 @@ export class BuilderSimulation3D extends Simulation3D {
 
     /**
      * Creates a new BuilderSimulation3D object that can be used to render the given simulation.
-     * @param gameView The game view.
+     * @param game The game view.
      * @param simulation The simulation to render.
      */
-    constructor(gameView: IGameView, simulation: Simulation) {
-        super(gameView, simulation);
+    constructor(game: Game, simulation: Simulation) {
+        super(game, simulation);
     }
 
     init() {
@@ -42,7 +40,7 @@ export class BuilderSimulation3D extends Simulation3D {
     }
 
     getMainCameraRig(): CameraRig {
-        return this._gameView.getMainCameraRig();
+        return this.game.getMainCameraRig();
     }
 
     clearRecentFiles() {
@@ -68,9 +66,9 @@ export class BuilderSimulation3D extends Simulation3D {
         const context = new BuilderGroup3D(
             this,
             file,
-            this._gameView.getDecoratorFactory()
+            this._game.getDecoratorFactory()
         );
-        context.setGridChecker(this._gameView.getGridChecker());
+        context.setGridChecker(this._game.getGridChecker());
         return context;
     }
 

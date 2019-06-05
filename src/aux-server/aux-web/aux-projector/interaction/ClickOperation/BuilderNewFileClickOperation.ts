@@ -29,8 +29,8 @@ export class BuilderNewFileClickOperation extends BaseFileClickOperation {
         super(simulation, interaction, file, null);
     }
 
-    protected _performClick(): void {
-        // Do nothing by default.
+    protected _performClick(calc: FileCalculationContext): void {
+        // Do nothing by default
     }
 
     protected _createDragOperation(

@@ -1,4 +1,4 @@
-import { Vector3, Euler, PerspectiveCamera, OrthographicCamera } from 'three';
+import { Vector3, Euler, OrthographicCamera } from 'three';
 import {
     FileCalculationContext,
     AuxObject,
@@ -11,12 +11,12 @@ import {
 import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
 import { AuxFile3D } from '../AuxFile3D';
 import { calculateScale } from '../SceneUtils';
-import { IGameView } from '../../vue-components/IGameView';
 import {
     Orthographic_DefaultZoom,
     Orthographic_MinZoom,
     Orthographic_MaxZoom,
 } from '../CameraRigFactory';
+import { Game } from '../Game';
 
 /**
  * The amount of time between checking a user's mouse for activity.
@@ -55,11 +55,11 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
      */
     file3D: AuxFile3D;
 
-    private _gameView: IGameView;
+    private _game: Game;
 
-    constructor(file3D: AuxFile3D, gameView: IGameView) {
+    constructor(file3D: AuxFile3D, game: Game) {
         super(file3D);
-        this._gameView = gameView;
+        this._game = game;
     }
 
     fileUpdated(calc: FileCalculationContext): void {
@@ -71,7 +71,7 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
         const time = Date.now();
 
         if (time > this._lastPositionUpdateTime + TIME_BETWEEN_UPDATES) {
-            const mainCamera = this._gameView.getMainCameraRig().mainCamera;
+            const mainCamera = this._game.getMainCameraRig().mainCamera;
             const camRotation = mainCamera.rotation.clone();
             const camRotationVector = new Vector3(0, 0, 1).applyEuler(
                 camRotation

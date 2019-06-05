@@ -44,3 +44,7 @@ export function copyToClipboard(text: string) {
 export function getOptionalValue(obj: any, defaultValue: any): any {
     return obj !== undefined && obj !== null ? obj : defaultValue;
 }
+
+export function isMac(): boolean {
+    return /(Mac)/i.test(navigator.platform);
+}
