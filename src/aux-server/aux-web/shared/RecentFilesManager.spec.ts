@@ -411,6 +411,50 @@ describe('RecentFilesManager', () => {
                 },
             ]);
         });
+
+        it('should ensure that diff IDs start with diff-', () => {
+            let file1 = createFile('testId1', {
+                test: 'abc',
+                'aux.color': 'red',
+                'aux.diff': true,
+                'aux.diffTags': ['aux.color'],
+            });
+
+            recent.addFileDiff(file1);
+
+            expect(recent.files).toEqual([
+                {
+                    id: 'diff-testId1',
+                    tags: {
+                        'aux.color': 'red',
+                        'aux.diff': true,
+                        'aux.diffTags': ['aux.color'],
+                    },
+                },
+            ]);
+        });
+
+        it('should reuse the diff ID if it is correct', () => {
+            let file1 = createFile('diff-testId1', {
+                test: 'abc',
+                'aux.color': 'red',
+                'aux.diff': true,
+                'aux.diffTags': ['aux.color'],
+            });
+
+            recent.addFileDiff(file1);
+
+            expect(recent.files).toEqual([
+                {
+                    id: 'diff-testId1',
+                    tags: {
+                        'aux.color': 'red',
+                        'aux.diff': true,
+                        'aux.diffTags': ['aux.color'],
+                    },
+                },
+            ]);
+        });
     });
 
     describe('clear()', () => {
