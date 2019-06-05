@@ -235,7 +235,11 @@ export default class FileTable extends Vue {
 
             this.fileManager.filePanel.search = '';
         } else {
-            await this.fileManager.selection.selectFile(file);
+            if (this.files.length === 1) {
+                await this.fileManager.selection.clearSelection();
+            } else {
+                await this.fileManager.selection.selectFile(file);
+            }
         }
     }
 
