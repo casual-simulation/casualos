@@ -298,7 +298,17 @@ export class PlayerGame extends Game {
         if (!colorToOffset) return;
 
         let invColor = colorToOffset.clone();
-        invColor.offsetHSL(0, -0.02, -0.04);
+        let tagColor =
+            appManager.simulationManager.primary.helper.globalsFile.tags[
+                'aux.inventory.color'
+            ];
+
+        if (tagColor != undefined && tagColor.trim().length > 0) {
+            invColor = new Color(tagColor);
+        } else {
+            invColor.offsetHSL(0, -0.02, -0.04);
+        }
+
         this.inventoryScene.background = invColor;
     }
 

@@ -13,6 +13,7 @@ export interface File {
 export interface FileTags {
     // Global file tags
     ['aux.scene.color']?: string;
+    ['aux.inventory.color']?: string;
     ['aux.scene.user.player.color']?: unknown;
     ['aux.scene.user.builder.color']?: unknown;
     ['aux.whitelist']?: unknown;
@@ -250,6 +251,7 @@ export const KNOWN_TAGS: string[] = [
     'aux._editingFile',
     'aux._selectionMode',
     'aux._lastEditedBy',
+    'aux.inventory.color',
     'aux.scene.color',
     'aux.scene.user.player.color',
     'aux.scene.user.builder.color',
