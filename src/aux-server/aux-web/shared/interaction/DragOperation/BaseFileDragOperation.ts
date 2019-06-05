@@ -131,14 +131,22 @@ export abstract class BaseFileDragOperation implements IOperation {
                 this._other,
             ]);
         } else if (isDiff(null, this._file)) {
-            this.simulation.helper.transaction(
-                fileUpdated(this._file.id, {
-                    tags: {
-                        'aux.diff': null,
-                        'aux.diffTags': null,
-                    },
-                })
-            );
+            const id = this._file.id;
+            this.simulation.helper
+                .transaction(
+                    fileUpdated(this._file.id, {
+                        tags: {
+                            'aux.diff': null,
+                            'aux.diffTags': null,
+                        },
+                    })
+                )
+                .then(() => {
+                    const file = this.simulation.helper.filesState[id];
+                    if (file) {
+                        this.simulation.recent.addFileDiff(file);
+                    }
+                });
         }
     }
 

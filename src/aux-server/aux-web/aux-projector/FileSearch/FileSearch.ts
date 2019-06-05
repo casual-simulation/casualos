@@ -8,6 +8,8 @@ import {
     formatValue,
     UserMode,
     DEFAULT_USER_MODE,
+    isDiff,
+    tagsOnFile,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import { SubscriptionLike } from 'rxjs';
@@ -63,8 +65,8 @@ export default class FileSearch extends Vue {
         if (this.files.length > 0) {
             let val = formatValue(this.files);
 
-            if (val != '[empty]' && val != '[diff-]') {
-                return formatValue(this.files);
+            if (!this.files.every(f => this.isEmptyOrDiff(f))) {
+                return val;
             } else {
                 return 'Search / Run';
             }
@@ -80,14 +82,10 @@ export default class FileSearch extends Vue {
     get filesLength() {
         let num = 0;
         let temp = this.files.length;
-        if (temp != 1) {
+        if (temp !== 1) {
             num = this.files.length;
         } else {
-            let id = this.files[0].id;
-            if (
-                id == 'empty' ||
-                (id.includes('-') && id.split('-')[0] == 'diff')
-            ) {
+            if (this.isEmptyOrDiff(this.files[0])) {
                 num = 0;
             } else {
                 num = 1;
@@ -121,5 +119,9 @@ export default class FileSearch extends Vue {
             );
             return subs;
         });
+    }
+
+    isEmptyOrDiff(f: AuxObject): boolean {
+        return isDiff(null, f) || tagsOnFile(f).length === 0;
     }
 }
