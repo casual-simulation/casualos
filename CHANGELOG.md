@@ -19,6 +19,7 @@
     -   Improved file diffs to keep the existing diff selected after merging it into a file.
 -   Bug Fixes
     -   Fixed an issue that would cause file diffs to apply their context positions to other files.
+    -   Clicking the `minus` button of the final file in sheets will now switch to diff without the `minus` or `unselect all` buttons that don't do anything.
 
 ## V0.8.7
 
