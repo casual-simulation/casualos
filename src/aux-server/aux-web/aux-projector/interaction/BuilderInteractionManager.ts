@@ -77,6 +77,7 @@ import {
 import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
 import { BuilderFileIDClickOperation } from './ClickOperation/BuilderFileIDClickOperation';
 import { BuilderGame } from '../scene/BuilderGame';
+import { BuilderMiniFileClickOperation } from './ClickOperation/BuilderMiniFileClickOperation';
 
 export class BuilderInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -125,14 +126,12 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         const vueElement: any = Input.getVueParent(element);
 
         if (vueElement instanceof MiniFile) {
-            const file = <File>vueElement.file;
-            this._game.simulation3D.selectRecentFile(file);
-            let newFileClickOp = new BuilderNewFileClickOperation(
+            const file = vueElement.file;
+            return new BuilderMiniFileClickOperation(
                 this._game.simulation3D,
                 this,
                 file
             );
-            return newFileClickOp;
         } else if (vueElement instanceof FileTag && vueElement.allowCloning) {
             const tag = vueElement.tag;
             const table = vueElement.$parent;

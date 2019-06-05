@@ -11,7 +11,8 @@
         </md-button>
 
         <div v-if="placeholder === 'Search / Run'" class="search-count">
-            <md-button class="md-icon-button num-files" @click="toggleOpen()">
+            <!-- Toggle open is handled by the MiniFileClickOperation -->
+            <md-button class="md-icon-button num-files">
                 <div ref="fileQueue">
                     <div v-if="filesMode && simulation" class="toolbar-layout">
                         <mini-file
