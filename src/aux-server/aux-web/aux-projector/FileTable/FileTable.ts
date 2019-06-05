@@ -111,7 +111,7 @@ export default class FileTable extends Vue {
     }
 
     isSpecialTag(tag: string): boolean {
-        if (tag === 'actions()' || tag === 'aux._') {
+        if (tag === 'actions()' || tag === 'hidden') {
             return true;
         } else {
             return false;
@@ -565,7 +565,7 @@ export default class FileTable extends Vue {
             }
         }
 
-        if (actionList.length > 1) {
+        if (actionList.length > 0) {
             let activeCheck = true;
 
             if (this.tagBlacklist.length > 0) {
@@ -585,19 +585,19 @@ export default class FileTable extends Vue {
             });
         }
 
-        if (hiddenList.length > 1) {
+        if (hiddenList.length > 0) {
             let activeCheck = false;
 
             if (this.tagBlacklist.length > 0) {
                 this.tagBlacklist.forEach(element => {
-                    if (element[0] === 'aux._') {
+                    if (element[0] === 'hidden') {
                         activeCheck = <boolean>element[1];
                     }
                 });
             }
 
             hiddenList.unshift(activeCheck);
-            hiddenList.unshift('aux._');
+            hiddenList.unshift('hidden');
             blacklist.unshift(hiddenList);
         } else {
             hiddenList.forEach(hiddenTags => {
