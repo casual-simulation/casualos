@@ -84,7 +84,7 @@ export default class FileTable extends Vue {
     viewMode: 'rows' | 'columns' = 'columns';
     showHidden: boolean = false;
 
-    tagBlacklist: string[] = [];
+    tagBlacklist: (string | boolean)[][] = [];
     blacklistIndex: boolean[] = [];
     blacklistCount: number[] = [];
     editableMap: Map<string, boolean>;
@@ -110,16 +110,20 @@ export default class FileTable extends Vue {
         return tag === '#';
     }
 
-    isActionTag(tag: string): boolean {
-        return tag === 'actions()';
+    isSpecialTag(tag: string): boolean {
+        if (tag === 'actions()' || tag === 'aux._') {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     isBlacklistTagActive(index: number): boolean {
-        return this.blacklistIndex[index];
+        return <boolean>this.tagBlacklist[index][1];
     }
 
     getBlacklistCount(index: number): number {
-        return this.blacklistCount[index];
+        return this.tagBlacklist[index].length - 2;
     }
 
     isFileReadOnly(file: File): boolean {
@@ -470,113 +474,175 @@ export default class FileTable extends Vue {
             this.files,
             this.tags,
             allExtraTags,
-            this.showHidden,
-            this.tagBlacklist,
-            this.blacklistIndex
+            true,
+            this.tagBlacklist
         ).sort();
     }
 
     toggleBlacklistIndex(index: number) {
-        this.blacklistIndex[index] = !this.blacklistIndex[index];
+        this.tagBlacklist[index][1] = !this.tagBlacklist[index][1];
         this._updateTags();
     }
 
     setTagBlacklist() {
-        let sortedArray: string[] = getAllFileTags(
-            this.files,
-            this.showHidden
-        ).sort();
+        let sortedArray: string[] = getAllFileTags(this.files, true).sort();
 
-        let newBlacklist: string[] = [];
-        let newTagCount: number[] = [];
+        let blacklist: (string | boolean)[][] = [];
+
+        let actionList: (string | boolean)[] = [];
+        let hiddenList: (string | boolean)[] = [];
+        let generalList: (string | boolean)[] = [];
+
+        for (let i = sortedArray.length - 1; i >= 0; i--) {
+            if (sortedArray[i].includes('()')) {
+                actionList.push(sortedArray[i]);
+                sortedArray.splice(i, 1);
+            } else if (sortedArray[i].startsWith('aux._')) {
+                hiddenList.push(sortedArray[i]);
+                sortedArray.splice(i, 1);
+            }
+        }
 
         let current = '';
+        let tempArray: (string | boolean)[] = [];
         let tagCount = 0;
-        for (let i = 0; i < sortedArray.length; i++) {
-            if (!sortedArray[i].includes('.')) {
-                // due to alphabetical order, if there is no dot, then it is portentially the start of a new section
-
-                current = sortedArray[i];
-                tagCount = 1;
-            } else {
-                let currentSection = sortedArray[i].split('.');
-
-                if (current === '') {
-                    current = sortedArray[i];
-                    tagCount = 1;
-                } else if (
-                    !current.includes('.') &&
-                    currentSection[0] != current
-                ) {
-                    current = sortedArray[i];
-                    tagCount = 1;
-                } else if (currentSection[0] != current.split('.')[0]) {
-                    current = sortedArray[i];
-                    tagCount = 1;
-                } else {
-                    current += '.~' + sortedArray[i];
-                    tagCount++;
-
-                    if (tagCount == 2) {
-                        newBlacklist.push(current.split('.')[0] + '.');
-                        newTagCount.push(2);
-                    } else if (tagCount > 2) {
-                        newTagCount[newTagCount.length - 1]++;
+        for (let i = sortedArray.length - 1; i >= 0; i--) {
+            if (current.split('.')[0] != sortedArray[i].split('.')[0]) {
+                if (tempArray.length > 0) {
+                    if (blacklist.length === 0) {
+                        blacklist = [tempArray];
+                    } else {
+                        blacklist.push(tempArray);
                     }
                 }
-            }
-        }
 
-        tagCount = 0;
-        for (let i = 0; i < sortedArray.length; i++) {
-            if (sortedArray[i].includes('()')) {
-                // due to alphabetical order, if there is no dot, then it is portentially the start of a new section
-                tagCount++;
+                current = sortedArray[i];
+                tempArray = [];
+            } else {
+                // if new tag matces the current tag section
+                if (tempArray.length === 0) {
+                    // if the temp array has been reset
 
-                if (tagCount == 2) {
-                    newBlacklist.unshift('actions()');
-                    newTagCount.unshift(2);
-                } else if (tagCount > 2) {
-                    newTagCount[0]++;
+                    // add the section name in slot 0
+                    tempArray.push(current.split('.')[0]);
+
+                    let activeCheck = true;
+                    // add the section visibility in slot 1
+                    if (this.tagBlacklist.length > 0) {
+                        this.tagBlacklist.forEach(element => {
+                            if (element[0] === tempArray[0]) {
+                                activeCheck = <boolean>element[1];
+                            }
+                        });
+                    }
+                    tempArray.push(activeCheck);
+
+                    // add the current tag that started the match in slot 2
+                    tempArray.push(current);
+
+                    // add the new tag that matched in slot 3
+                    tempArray.push(sortedArray[i]);
+
+                    sortedArray.splice(i, 2);
+                } else {
+                    tempArray.push(sortedArray[i]);
+                    sortedArray.splice(i, 1);
                 }
             }
         }
 
-        if (newBlacklist.length > 0) {
-            newBlacklist.unshift('#');
-            newTagCount.unshift(0);
-        }
-
-        if (
-            (this.blacklistIndex === undefined && newBlacklist.length > 0) ||
-            newBlacklist.length > this.blacklistIndex.length
-        ) {
-            for (let i = 0; i < newBlacklist.length; i++) {
-                this.blacklistIndex.push(true);
-            }
-        } else if (newBlacklist.length < this.blacklistIndex.length) {
-            this.blacklistIndex = [];
-
-            for (let i = 0; i < newBlacklist.length; i++) {
-                this.blacklistIndex.push(true);
+        // makes sure if the loop ends on an array it will add in the temp array correctly to the blacklist
+        if (tempArray.length > 0) {
+            if (blacklist.length === 0) {
+                blacklist = [tempArray];
+            } else {
+                blacklist.push(tempArray);
             }
         }
 
-        this.tagBlacklist = newBlacklist;
-        this.blacklistCount = newTagCount;
+        if (actionList.length > 1) {
+            let activeCheck = true;
+
+            if (this.tagBlacklist.length > 0) {
+                this.tagBlacklist.forEach(element => {
+                    if (element[0] === 'actions()') {
+                        activeCheck = <boolean>element[1];
+                    }
+                });
+            }
+
+            actionList.unshift(activeCheck);
+            actionList.unshift('actions()');
+            blacklist.unshift(actionList);
+        } else {
+            actionList.forEach(actionTags => {
+                sortedArray.push(<string>actionTags);
+            });
+        }
+
+        if (hiddenList.length > 1) {
+            let activeCheck = false;
+
+            if (this.tagBlacklist.length > 0) {
+                this.tagBlacklist.forEach(element => {
+                    if (element[0] === 'aux._') {
+                        activeCheck = <boolean>element[1];
+                    }
+                });
+            }
+
+            hiddenList.unshift(activeCheck);
+            hiddenList.unshift('aux._');
+            blacklist.unshift(hiddenList);
+        } else {
+            hiddenList.forEach(hiddenTags => {
+                sortedArray.push(<string>hiddenTags);
+            });
+        }
+
+        if (sortedArray.length > 0) {
+            let activeCheck = true;
+
+            if (this.tagBlacklist.length > 0) {
+                this.tagBlacklist.forEach(element => {
+                    if (element[0] === '#') {
+                        activeCheck = <boolean>element[1];
+                    }
+                });
+            }
+
+            generalList.unshift(activeCheck);
+            generalList.unshift('#');
+
+            sortedArray.forEach(generalTags => {
+                generalList.push(<string>generalTags);
+            });
+
+            blacklist.unshift(generalList);
+        }
+
+        this.tagBlacklist = blacklist;
     }
 
     getTagBlacklist(): string[] {
-        return this.tagBlacklist;
+        let tagList: string[] = [];
+
+        this.tagBlacklist.forEach(element => {
+            tagList.push(<string>element[0]);
+        });
+
+        return tagList;
     }
 
     getVisualTagBlacklist(index: number): string {
         let newBlacklist: string;
 
-        if (this.tagBlacklist[index].length > 15) {
-            newBlacklist = this.tagBlacklist[index].substring(0, 15) + '..';
+        if ((<string>this.tagBlacklist[index][0]).length > 15) {
+            newBlacklist =
+                (<string>this.tagBlacklist[index][0]).substring(0, 15) + '..';
         } else {
-            newBlacklist = this.tagBlacklist[index].substring(0, 15) + '*';
+            newBlacklist =
+                (<string>this.tagBlacklist[index][0]).substring(0, 15) + '.*';
         }
 
         return '#' + newBlacklist;
