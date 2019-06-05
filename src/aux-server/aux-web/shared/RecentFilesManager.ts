@@ -94,7 +94,7 @@ export class RecentFilesManager {
         const calc = this._helper.createContext();
         const contexts = getContexts(calc);
         let id: string;
-        if (isDiff(null, file)) {
+        if (isDiff(null, file) && file.id.indexOf('diff-') === 0) {
             id = file.id;
         } else {
             id = `diff-${file.id}`;

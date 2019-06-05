@@ -120,11 +120,18 @@ export abstract class BaseFileDragOperation implements IOperation {
                     diffs: update.tags,
                 }
             );
-            this.simulation.helper.transaction(
-                fileUpdated(this._other.id, update),
-                fileRemoved(this._file.id),
-                ...result.events
-            );
+            const file = this._file;
+            this.simulation.helper
+                .transaction(
+                    fileUpdated(this._other.id, update),
+                    fileRemoved(this._file.id),
+                    ...result.events
+                )
+                .then(() => {
+                    if (file) {
+                        this.simulation.recent.addFileDiff(file, true);
+                    }
+                });
         } else if (this._combine && this._other) {
             this.simulation.helper.action(COMBINE_ACTION_NAME, [
                 this._file,
@@ -144,7 +151,7 @@ export abstract class BaseFileDragOperation implements IOperation {
                 .then(() => {
                     const file = this.simulation.helper.filesState[id];
                     if (file) {
-                        this.simulation.recent.addFileDiff(file);
+                        this.simulation.recent.addFileDiff(file, true);
                     }
                 });
         }
