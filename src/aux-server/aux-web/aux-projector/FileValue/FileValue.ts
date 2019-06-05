@@ -55,7 +55,11 @@ export default class FileRow extends Vue {
     valueChanged(file: AuxFile, tag: string, value: string) {
         this.$emit('tagChanged', file, tag, value);
         if (!isDiff(null, file)) {
-            this.fileManager.recent.addTagDiff(`${file.id}_${tag}`, tag, value);
+            this.fileManager.recent.addTagDiff(
+                `diff-${file.id}_${tag}`,
+                tag,
+                value
+            );
             this.fileManager.helper.updateFile(file, {
                 tags: {
                     [tag]: value,
