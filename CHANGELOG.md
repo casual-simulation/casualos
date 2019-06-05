@@ -1,5 +1,17 @@
 # AUX Changelog
 
+## V0.8.7
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Added the ability to show hidden tags by toglging hidden tag section instead of the hidden tags button which has been removed.
+    -   Edited hexagon button to be filled and have a larger plus icon to improve uniformity.
+-   Bug Fixes
+    -   Tag `#` section will no longer remain if there are no tags fitting the criteria.
+
 ## V0.8.6
 
 ### Date: 06/05/2019

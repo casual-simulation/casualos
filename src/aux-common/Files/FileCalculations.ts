@@ -273,8 +273,7 @@ export function fileTags(
     currentTags: string[],
     extraTags: string[],
     includeHidden: boolean = false,
-    tagBlacklist: string[] = [],
-    blacklistIndex: boolean[] = []
+    tagBlacklist: (string | boolean)[][] = []
 ) {
     const fileTags = flatMap(files, f => keys(f.tags));
     // Only keep tags that don't start with an underscore (_)
@@ -287,14 +286,23 @@ export function fileTags(
     const onlyTagsToKeep = intersection(allTags, tagsToKeep);
 
     // if there is a blacklist index and the  first index [all] is not selected
-    if (
-        blacklistIndex != undefined &&
-        blacklistIndex.length > 0 &&
-        tagBlacklist != undefined &&
-        tagBlacklist.length > 0
-    ) {
+    if (tagBlacklist != undefined && tagBlacklist.length > 0) {
         let filteredTags: string[] = [];
 
+        for (let i = tagBlacklist.length - 1; i >= 0; i--) {
+            if (!tagBlacklist[i][1]) {
+                for (let j = 2; j < tagBlacklist[i].length; j++) {
+                    for (let k = onlyTagsToKeep.length - 1; k >= 0; k--) {
+                        if (onlyTagsToKeep[k] === <string>tagBlacklist[i][j]) {
+                            onlyTagsToKeep.splice(k, 1);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        /*
         for (let i = onlyTagsToKeep.length - 1; i >= 0; i--) {
             for (let j = tagBlacklist.length - 1; j >= 0; j--) {
                 if (onlyTagsToKeep[i] != undefined) {
@@ -346,9 +354,9 @@ export function fileTags(
                             let isNotInBlacklist = true;
                             for (let k = tagBlacklist.length - 1; k >= 0; k--) {
                                 if (
+                                    !onlyTagsToKeep[i].includes('aux._') &&
                                     tagBlacklist[k].includes('.') &&
-                                    onlyTagsToKeep[i].split('.')[0] ===
-                                        tagBlacklist[k].split('.')[0]
+                                    onlyTagsToKeep[i].split('.')[0] === tagBlacklist[k].split('.')[0]
                                 ) {
                                     isNotInBlacklist = false;
                                     break;
@@ -375,7 +383,7 @@ export function fileTags(
                 }
             }
         }
-
+        */
         return onlyTagsToKeep;
     } else {
         return onlyTagsToKeep;

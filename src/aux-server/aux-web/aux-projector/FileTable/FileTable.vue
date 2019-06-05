@@ -2,12 +2,6 @@
     <div class="file-table" ref="wrapper">
         <div class="top-part">
             <div v-show="!isMakingNewTag && hasFiles" class="file-table-toggle-buttons">
-                <md-button class="md-icon-button hidden-button" @click="toggleHidden()">
-                    <md-icon v-if="showHidden">visibility</md-icon>
-                    <md-icon v-else>visibility_off</md-icon>
-                    <md-tooltip v-if="showHidden">Hide Hidden Tags</md-tooltip>
-                    <md-tooltip v-else>Show Hidden Tags</md-tooltip>
-                </md-button>
                 <md-button class="md-icon-button" @click="addTag()">
                     <picture>
                         <source srcset="../public/icons/tag-add.webp" type="image/webp" />
@@ -82,7 +76,7 @@
                                 @click="toggleBlacklistIndex(index)"
                             >
                                 <span v-if="isAllTag(tagBlacklist)"> {{ tagBlacklist }}</span>
-                                <span v-else-if="isActionTag(tagBlacklist)">
+                                <span v-else-if="isSpecialTag(tagBlacklist)">
                                     {{ tagBlacklist }}</span
                                 >
                                 <span v-else>{{ getVisualTagBlacklist(index) }}</span>
@@ -93,7 +87,7 @@
                                 @click="toggleBlacklistIndex(index)"
                             >
                                 <span v-if="isAllTag(tagBlacklist)"> {{ tagBlacklist }}</span>
-                                <span v-else-if="isActionTag(tagBlacklist)">
+                                <span v-else-if="isSpecialTag(tagBlacklist)">
                                     {{ tagBlacklist }} [{{ getBlacklistCount(index) }}]</span
                                 >
                                 <span v-else

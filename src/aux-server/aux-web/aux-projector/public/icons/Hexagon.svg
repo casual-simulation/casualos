@@ -1,9 +1,23 @@
 <?xml version="1.0"?>
-<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <!-- Created with SVG-edit - https://github.com/SVG-Edit/svgedit-->
+ <defs>
+  <symbol height="24" id="svg_5" width="24" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+   <g class="layer">
+    <title>Layer 1</title>
+    <path d="m16.839001,4l4.856998,8.5l-4.856998,8.5l-9.678001,0l-4.857,-8.5l4.857,-8.5l9.678001,0zm1.160999,-2l-12,0l-6,10.5l6,10.5l12,0l6,-10.5l-6,-10.5z" id="svg_4"/>
+    <ellipse cx="5" cy="19.75" fill="#000000" id="svg_3" rx="3.71875" ry="3.71875" stroke="#ffffff"/>
+    <line fill="none" id="svg_2" stroke="#ffffff" stroke-dasharray="null" stroke-linecap="round" stroke-linejoin="null" x1="4.953125" x2="4.953125" y1="17.921875" y2="21.798891"/>
+    <line fill="none" id="svg_1" stroke="#ffffff" stroke-dasharray="null" stroke-linecap="round" stroke-linejoin="null" transform="rotate(90 4.96094 19.8594)" x1="4.960938" x2="4.960938" y1="17.920867" y2="21.797883"/>
+   </g>
+  </symbol>
+ </defs>
  <g class="layer">
   <title>Layer 1</title>
-  <path d="m16.839,4l4.857,8.5l-4.857,8.5l-9.678,0l-4.857,-8.5l4.857,-8.5l9.678,0zm1.161,-2l-12,0l-6,10.5l6,10.5l12,0l6,-10.5l-6,-10.5z" id="svg_1"/>
-  <ellipse cx="5" cy="19.75" fill="#000000" id="svg_2" rx="3.71875" ry="3.71875" stroke="#ffffff"/>
-  <line fill="none" id="svg_6" stroke="#ffffff" stroke-dasharray="null" stroke-linecap="round" stroke-linejoin="null" x1="4.953125" x2="4.953125" y1="17.921875" y2="21.798891"/>
-  <line fill="none" id="svg_7" stroke="#ffffff" stroke-dasharray="null" stroke-linecap="round" stroke-linejoin="null" transform="rotate(90 4.96094 19.8594)" x1="4.960938" x2="4.960938" y1="17.920867" y2="21.797883"/>
- </g></svg>
+  <g id="svg_7"/>
+  <polygon cx="209.75" cy="83.25" edge="198.660654" fill="#000000" id="svg_8" orient="x" points="23.031355712497174,12.49763759348184 17.555953692390943,21.981361389160156 6.6050182980078205,21.981361389160156 1.1295770406723022,12.49763759348184 6.6050182980078205,3.013887961597163 17.555953692390943,3.013887961597163 23.031355712497174,12.49763759348184 " shape="regularPoly" sides="6" stroke="#888888" stroke-width="2" strokeWidth="5" strokecolor="none"/>
+  <ellipse cx="5.475576" cy="19.760057" fill="#000000" id="svg_9" rx="4.155173" ry="4.155173" stroke="#ffffff" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null"/>
+  <rect fill="#ffffff" height="7.422414" id="svg_12" rx="1" ry="1" stroke="#ffffff" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="6" transform="matrix(0 0.165815 -0.420216 0 18.0447 22.6441)" width="0.241379" x="-17.045415" y="26.140784"/>
+  <rect fill="#ffffff" height="7.422414" id="svg_13" rx="1" ry="1" stroke="#ffffff" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="6" transform="translate(2.95415 15.2448) scale(0.822832 1) translate(-2.95415 -15.2448) matrix(6.12323e-17 1 -1 6.12323e-17 25.8696 13.8261) matrix(0 0.199797 -0.420216 0 18.0447 22.6597)" width="0.241379" x="-14.194126" y="24.900177"/>
+ </g>
+</svg>
