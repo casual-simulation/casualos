@@ -16,6 +16,7 @@
     -   The add tag auto complete will now check for a match of the start if the string and not a substring.
     -   The add tag autocomplete will hide the `aux._` tags until `aux._` is input.
     -   When clicking the background in multi-file selection mode, it will deselect the files and keep a diff of the last selected.
+    -   Improved file diffs to keep the existing diff selected after merging it into a file.
 -   Bug Fixes
     -   Fixed an issue that would cause file diffs to apply their context positions to other files.
 
