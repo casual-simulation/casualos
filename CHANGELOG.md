@@ -2,10 +2,14 @@
 
 ## V0.8.9
 
-### Date: TBD
+### Date: 06/06/2019
 
 ### Changes:
 
+-   Improvements
+    -   Changed `diff.save` and `diff.load` to `diff.export` and `diff.import` respectfully.
+    -   Changed function `saveDiff` to automatically include the `loadDiff` function within it to clean up the resulting output.
+    -   `diff.save` will now return a cleaner JSON than it was before.
 -   Bug Fixes
     -   Duplicate tags will now not show up in a closed tag section's tag count.
     -   Stopped additon of extra whitespace on left side of screen when multi selecting too many files.
