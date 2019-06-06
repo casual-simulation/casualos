@@ -3117,13 +3117,13 @@ describe('FilesChannel', () => {
             });
         });
 
-        describe('diff.save()', () => {
+        describe('diff.export()', () => {
             it('should serialize the given object to JSON', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.json = diff.save({ abc: "def" })',
+                            'test()': 'this.json = diff.export({ abc: "def" })',
                         },
                     },
                 };
@@ -3145,14 +3145,14 @@ describe('FilesChannel', () => {
             });
         });
 
-        describe('diff.load()', () => {
+        describe('diff.import()', () => {
             it('should create a diff that applies the given tags from the given file', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'applyDiff(this, diff.load(@name("bob").first(), "val", /test\\..+/))',
+                                'applyDiff(this, diff.import(@name("bob").first(), "val", /test\\..+/))',
                         },
                     },
                     otherFile: {
@@ -3193,7 +3193,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'applyDiff(this, diff.load(@name("bob").first()))',
+                                'applyDiff(this, diff.import(@name("bob").first()))',
                         },
                     },
                     otherFile: {
@@ -3236,7 +3236,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'applyDiff(this, diff.load({abc: true, val: 123}, "val"))',
+                                'applyDiff(this, diff.import({abc: true, val: 123}, "val"))',
                         },
                     },
                 };
@@ -3262,7 +3262,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': `applyDiff(this, diff.load('{"abc": true, "val": 123}', "val"))`,
+                            'test()': `applyDiff(this, diff.import('{"abc": true, "val": 123}', "val"))`,
                         },
                     },
                 };

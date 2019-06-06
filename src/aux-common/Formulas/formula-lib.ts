@@ -795,7 +795,25 @@ function loadDiff(file: any, ...tags: (string | RegExp)[]): FileDiff {
  * @param file The diff to save.
  */
 function saveDiff(file: any): string {
-    return JSON.stringify(file);
+    let newDiff: FileDiff = loadDiff(file);
+    let cleanObject: any = {};
+    let temp;
+
+    if (!newDiff) {
+        return;
+    }
+
+    if (isFormulaObject(newDiff)) {
+        temp = unwrapProxy(tagsOnFile).tags;
+    } else {
+        temp = unwrapProxy(newDiff);
+    }
+
+    for (let key in temp) {
+        cleanObject[key] = unwrapProxy(temp[key]);
+    }
+
+    return JSON.stringify(cleanObject);
 }
 
 /**
@@ -982,8 +1000,8 @@ export const diff = {
     addToMenu: addToMenuDiff,
     removeFromMenu: removeFromMenuDiff,
     setPosition: setPositionDiff,
-    load: loadDiff,
-    save: saveDiff,
+    import: loadDiff,
+    export: saveDiff,
 };
 
 /**
