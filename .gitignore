@@ -10,5 +10,5 @@ junit.xml
 ecosystem.json
 .npmrc
 *.tsbuildinfo
-
+*.d.ts.map
 .DS_Store

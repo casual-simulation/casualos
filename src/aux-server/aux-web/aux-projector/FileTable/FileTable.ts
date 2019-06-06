@@ -509,6 +509,11 @@ export default class FileTable extends Vue {
     setTagBlacklist() {
         let sortedArray: string[] = getAllFileTags(this.files, true).sort();
 
+        // remove any duplicates from the array to fix multiple files adding in duplicate tags
+        sortedArray = sortedArray.filter(function(elem, index, self) {
+            return index === self.indexOf(elem);
+        });
+
         let blacklist: (string | boolean)[][] = [];
 
         let actionList: (string | boolean)[] = [];

@@ -66,6 +66,9 @@ export default class FileSearch extends Vue {
             let val = formatValue(this.files);
 
             if (!this.files.every(f => this.isEmptyOrDiff(f))) {
+                if (val.length > 50) {
+                    val = val.substring(0, 50) + '..';
+                }
                 return val;
             } else {
                 return 'Search / Run';
