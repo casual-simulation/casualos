@@ -8,6 +8,7 @@
 
 -   Bug Fixes
     -   Duplicate tags will now not show up in a closed tag section's tag count.
+    -   Stopped additon of extra whitespace on left side of screen when multi selecting too many files.
 
 ## V0.8.8
 
