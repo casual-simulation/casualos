@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.8.9
+
+### Date: TBD
+
+### Changes:
+
+-   Bug Fixes
+    -   Duplicate tags will now not show up in a closed tag section's tag count.
+
 ## V0.8.8
 
 ### Date: 06/05/2019
