@@ -24,7 +24,8 @@
         },
         "src/crypto/**/*.d.ts": { "when": "$(basename).ts" },
         "src/crypto-browser/**/*.d.ts": { "when": "$(basename).ts" },
-        "src/crypto-node/**/*.d.ts": { "when": "$(basename).ts" }
+        "src/crypto-node/**/*.d.ts": { "when": "$(basename).ts" },
+        "src/**/*.d.ts.map": true
     },
     "editor.insertSpaces": true,
     "editor.tabSize": 4,
