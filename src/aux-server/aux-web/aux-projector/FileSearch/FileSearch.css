@@ -22,6 +22,11 @@
     width: 40px;
 }
 
+label {
+    max-width: 99%;
+    overflow: hidden;
+}
+
 svg {
     width: 30px;
     height: 30px;
