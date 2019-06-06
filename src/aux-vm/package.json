@@ -47,7 +47,10 @@
         "@casual-simulation/crypto": "^0.8.0",
         "@casual-simulation/crypto-browser": "^0.8.0",
         "socket.io-client": "2.2.0",
-        "uuid": "^3.3.2"
+        "uuid": "^3.3.2",
+        "lodash": "^4.17.11",
+        "comlink": "^4.0.1",
+        "rxjs": "^6.5.2"
     },
     "devDependencies": {
         "worker-loader": "^2.0.0"

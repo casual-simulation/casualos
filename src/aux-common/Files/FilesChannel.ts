@@ -1,5 +1,5 @@
 import { sortBy, flatMap, mapValues } from 'lodash';
-import { File, Object, PartialFile } from './File';
+import { File, Object, PartialFile, PrecalculatedFile } from './File';
 import {
     createCalculationContext,
     FileCalculationContext,
@@ -28,6 +28,13 @@ import { SetValueHandler, isProxy } from './FileProxy';
  */
 export interface FilesState {
     [id: string]: File;
+}
+
+/**
+ * Defines an interface for a set of files that have precalculated formulas.
+ */
+export interface PrecalculatedFilesState {
+    [id: string]: PrecalculatedFile;
 }
 
 /**

@@ -5,6 +5,10 @@ export type AuxDomain = 'builder' | 'player';
 export type Object = File;
 export type Workspace = File;
 
+export interface PrecalculatedFile extends File {
+    precalculated: true;
+}
+
 export interface File {
     id: string;
     tags: FileTags;

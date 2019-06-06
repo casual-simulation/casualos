@@ -96,4 +96,10 @@ export interface Simulation extends Initable {
      * @param forkName The ID of the new session.
      */
     forkAux(forkName: string): Promise<void>;
+
+    new (
+        user: User,
+        id: string,
+        config: { isBuilder: boolean; isPlayer: boolean }
+    ): Simulation;
 }
