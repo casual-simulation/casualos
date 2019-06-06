@@ -775,7 +775,7 @@ describe('DependencyManager', () => {
             });
         });
 
-        it.skip('should handle nested dependencies', async () => {
+        it('should handle nested dependencies', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -832,7 +832,7 @@ describe('DependencyManager', () => {
             });
         });
 
-        it.skip('should handle nested dependencies and this references', async () => {
+        it('should handle nested dependencies and this references', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));

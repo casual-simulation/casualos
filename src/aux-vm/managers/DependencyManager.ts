@@ -243,6 +243,11 @@ export class DependencyManager {
             const fileTags = [...update[key]];
 
             const dependents = fileTags.map(t => this.getDependents(t, key));
+            for (let dep of dependents) {
+                for (let tag in dep) {
+                    deepTags.push(tag);
+                }
+            }
             finalUpdate = reduce(
                 dependents,
                 (first, second) => this._mergeDependents(first, second),
