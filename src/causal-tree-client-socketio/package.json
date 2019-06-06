@@ -48,7 +48,7 @@
         "@casual-simulation/crypto": "^0.8.0",
         "@casual-simulation/crypto-browser": "^0.8.0",
         "@types/socket.io-client": "^1.4.32",
-        "rxjs": "^6.5.1",
+        "rxjs": "^6.5.2",
         "socket.io-client": "2.2.0"
     }
 }
