@@ -5,6 +5,7 @@ const path = require('path');
 
 let folders = [
     `${__dirname}/src/aux-common`,
+    `${__dirname}/src/aux-vm`,
     `${__dirname}/src/causal-trees`,
     `${__dirname}/src/causal-tree-server-socketio`,
     `${__dirname}/src/causal-tree-client-socketio`,
