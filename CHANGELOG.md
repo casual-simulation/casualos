@@ -1,5 +1,20 @@
 # AUX Changelog
 
+## V0.8.11
+
+### Date: 06/07/2019
+
+### Changes:
+
+-   Improvements
+    -   Removed unused top grid spaces of empty an empty file.
+    -   The tag autocomplete is now in alphabetical order.
+    -   The id tag value is now centered in the sheets.
+    -   The `Clear Diff` section of the sheets has been renamed `Clear Tags`.
+    -   The tooltip for the surface button has been changed from `create surface from selection` to `create surface` in mergeBall mode.
+-   Bug Fixes
+    -   Changed the resulting `diff-` id of file to `merge` when adding tag to empty file.
+
 ## V0.8.10
 
 ### Date: 06/07/2019
