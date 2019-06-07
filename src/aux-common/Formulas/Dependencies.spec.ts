@@ -666,9 +666,9 @@ describe('Dependencies', () => {
         });
     });
 
-    describe('dependentTagsAndFunctions()', () => {
+    describe('simplify()', () => {
         it('should return the list of tags that an expression is dependent on', () => {
-            const result = dependencies.dependentTagsAndFunctions({
+            const result = dependencies.simplify({
                 type: 'expression',
                 dependencies: [
                     {
@@ -711,7 +711,7 @@ describe('Dependencies', () => {
         });
 
         it('should include functions that the tree is dependent on', () => {
-            const result = dependencies.dependentTagsAndFunctions({
+            const result = dependencies.simplify({
                 type: 'expression',
                 dependencies: [
                     {
@@ -740,7 +740,7 @@ describe('Dependencies', () => {
         });
 
         it('should include dependencies for functions', () => {
-            const result = dependencies.dependentTagsAndFunctions({
+            const result = dependencies.simplify({
                 type: 'expression',
                 dependencies: [
                     {
@@ -805,7 +805,7 @@ describe('Dependencies', () => {
         });
 
         it('should handle nested dependencies for functions', () => {
-            const result = dependencies.dependentTagsAndFunctions({
+            const result = dependencies.simplify({
                 type: 'expression',
                 dependencies: [
                     {
@@ -869,7 +869,7 @@ describe('Dependencies', () => {
         });
 
         it('should break up functions that have tag dependencies in their identifier', () => {
-            const result = dependencies.dependentTagsAndFunctions({
+            const result = dependencies.simplify({
                 type: 'expression',
                 dependencies: [
                     {
@@ -908,7 +908,7 @@ describe('Dependencies', () => {
         });
 
         it('should include members that the tree is dependent on', () => {
-            const result = dependencies.dependentTagsAndFunctions(<
+            const result = dependencies.simplify(<
                 AuxScriptExpressionDependencies
             >{
                 type: 'expression',
@@ -939,7 +939,7 @@ describe('Dependencies', () => {
         ];
         describe.each(cases)('%s', (desc, type, symbol) => {
             it('should ignore member nodes when they are for tag/file expressions', () => {
-                const result = dependencies.dependentTagsAndFunctions({
+                const result = dependencies.simplify({
                     type: 'expression',
                     dependencies: [
                         {
@@ -968,7 +968,7 @@ describe('Dependencies', () => {
             });
 
             it('should include dependencies', () => {
-                const result = dependencies.dependentTagsAndFunctions({
+                const result = dependencies.simplify({
                     type: 'expression',
                     dependencies: [
                         {
@@ -1214,7 +1214,7 @@ describe('Dependencies', () => {
             const tree = dependencies.dependencyTree(
                 '#name().filter(a => a == "bob" || a == "alice").length + (player.isDesigner() ? 0 : 1)'
             );
-            const simple = dependencies.dependentTagsAndFunctions(tree);
+            const simple = dependencies.simplify(tree);
             const replacements: AuxScriptReplacements = {
                 'player.isDesigner': (
                     node: AuxScriptSimpleFunctionDependency
@@ -1265,6 +1265,136 @@ describe('Dependencies', () => {
                 {
                     type: 'literal',
                     value: 1,
+                },
+            ]);
+        });
+    });
+
+    describe('flatten()', () => {
+        it('should flatten the given list of simplified dependencies', () => {
+            const result = dependencies.flatten([
+                {
+                    type: 'member',
+                    name: 'abc',
+                },
+                {
+                    type: 'function',
+                    name: 'func',
+                    dependencies: [
+                        {
+                            type: 'file',
+                            name: 'bob',
+                            dependencies: [],
+                        },
+                    ],
+                },
+                {
+                    type: 'tag',
+                    name: 'online',
+                    dependencies: [
+                        {
+                            type: 'literal',
+                            value: 123,
+                        },
+                    ],
+                },
+                {
+                    type: 'file',
+                    name: 'online',
+                    dependencies: [
+                        {
+                            type: 'function',
+                            name: 'def',
+                            dependencies: [
+                                {
+                                    type: 'member',
+                                    name: 'this',
+                                },
+                            ],
+                        },
+                        {
+                            type: 'tag',
+                            name: 'qwerty',
+                            dependencies: [],
+                        },
+                    ],
+                },
+            ]);
+
+            expect(result).toEqual([
+                {
+                    type: 'member',
+                    name: 'abc',
+                },
+                {
+                    type: 'function',
+                    name: 'func',
+                    dependencies: [
+                        {
+                            type: 'file',
+                            name: 'bob',
+                            dependencies: [],
+                        },
+                    ],
+                },
+                {
+                    type: 'file',
+                    name: 'bob',
+                    dependencies: [],
+                },
+                {
+                    type: 'tag',
+                    name: 'online',
+                    dependencies: [
+                        {
+                            type: 'literal',
+                            value: 123,
+                        },
+                    ],
+                },
+                {
+                    type: 'literal',
+                    value: 123,
+                },
+                {
+                    type: 'file',
+                    name: 'online',
+                    dependencies: [
+                        {
+                            type: 'function',
+                            name: 'def',
+                            dependencies: [
+                                {
+                                    type: 'member',
+                                    name: 'this',
+                                },
+                            ],
+                        },
+                        {
+                            type: 'tag',
+                            name: 'qwerty',
+                            dependencies: [],
+                        },
+                    ],
+                },
+                {
+                    type: 'function',
+                    name: 'def',
+                    dependencies: [
+                        {
+                            type: 'member',
+                            name: 'this',
+                        },
+                    ],
+                },
+                {
+                    type: 'member',
+                    name: 'this',
+                },
+                {
+                    type: 'tag',
+                    name: 'qwerty',
+                    dependencies: [],
                 },
             ]);
         });

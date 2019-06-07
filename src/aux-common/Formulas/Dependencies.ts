@@ -19,9 +19,7 @@ export class Dependencies {
      * Useful to reduce the amount of information that the tree contains and make it easier to process.
      * @param node The root node of the dependency tree.
      */
-    dependentTagsAndFunctions(
-        node: AuxScriptDependency
-    ): AuxScriptSimpleDependency[] {
+    simplify(node: AuxScriptDependency): AuxScriptSimpleDependency[] {
         if (node.type === 'expression') {
             return this._simpleExpressionDependencies(node);
         } else if (node.type === 'file' || node.type === 'tag') {
@@ -35,6 +33,23 @@ export class Dependencies {
         }
 
         return [];
+    }
+
+    /**
+     * Flattens the given list to make it easy to de-duplicate dependencies.
+     * @param nodes The nodes to flatten.
+     */
+    flatten(nodes: AuxScriptSimpleDependency[]): AuxScriptSimpleDependency[] {
+        return flatMap(nodes, n => {
+            if (
+                n.type === 'file' ||
+                n.type === 'tag' ||
+                n.type === 'function'
+            ) {
+                return [n, ...this.flatten(n.dependencies)];
+            }
+            return n;
+        });
     }
 
     /**
@@ -131,9 +146,7 @@ export class Dependencies {
         if (current) {
             return [
                 ...this._simpleRootDependencies(current),
-                ...flatMap(node.dependencies, d =>
-                    this.dependentTagsAndFunctions(d)
-                ),
+                ...flatMap(node.dependencies, d => this.simplify(d)),
             ];
         }
 
@@ -141,9 +154,7 @@ export class Dependencies {
             {
                 type: 'function',
                 name: this.getMemberName(node.identifier),
-                dependencies: flatMap(node.dependencies, d =>
-                    this.dependentTagsAndFunctions(d)
-                ),
+                dependencies: flatMap(node.dependencies, d => this.simplify(d)),
             },
         ];
     }
@@ -155,9 +166,7 @@ export class Dependencies {
             <AuxScriptSimpleFileDependency | AuxScriptSimpleTagDependency>{
                 type: node.type,
                 name: this.getMemberName(node),
-                dependencies: flatMap(node.dependencies, d =>
-                    this.dependentTagsAndFunctions(d)
-                ),
+                dependencies: flatMap(node.dependencies, d => this.simplify(d)),
             },
         ];
     }
@@ -165,9 +174,7 @@ export class Dependencies {
     private _simpleExpressionDependencies(
         node: AuxScriptExpressionDependencies
     ): AuxScriptSimpleDependency[] {
-        return flatMap(node.dependencies, d =>
-            this.dependentTagsAndFunctions(d)
-        );
+        return flatMap(node.dependencies, d => this.simplify(d));
     }
 
     private _simpleLiteralDependencies(
