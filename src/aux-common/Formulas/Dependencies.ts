@@ -47,7 +47,9 @@ export class Dependencies {
     ): AuxScriptSimpleDependency[] {
         return [...iterator.call(this)];
 
-        function* iterator(): IterableIterator<AuxScriptSimpleDependency> {
+        function* iterator(
+            this: Dependencies
+        ): IterableIterator<AuxScriptSimpleDependency> {
             for (let node of nodes) {
                 let replaced = false;
                 if (node.type !== 'literal') {
@@ -66,7 +68,7 @@ export class Dependencies {
                     ) {
                         yield {
                             ...node,
-                            dependencies: this.expandDependencies(
+                            dependencies: this.replaceDependencies(
                                 node.dependencies,
                                 replacements
                             ),
@@ -82,10 +84,7 @@ export class Dependencies {
     private _simpleMemberDependencies(
         node: AuxScriptMemberDependency
     ): AuxScriptSimpleDependency[] {
-        let current: AuxScriptObjectDependency = node;
-        while (current && current.type === 'member') {
-            current = current.object;
-        }
+        let current: AuxScriptObjectDependency = this._rootMember(node);
         if (current && (current.type === 'file' || current.type === 'tag')) {
             return this._simpleTagDependencies(current);
         }
@@ -97,9 +96,33 @@ export class Dependencies {
         ];
     }
 
+    private _rootMember(node: AuxScriptObjectDependency) {
+        let current: AuxScriptObjectDependency = node;
+        while (current) {
+            if (current.type === 'member') {
+                current = current.object;
+            } else if (current.type === 'call') {
+                current = current.identifier;
+            } else {
+                break;
+            }
+        }
+        return current;
+    }
+
     private _simpleFunctionDependencies(
         node: AuxScriptFunctionDependency
     ): AuxScriptSimpleDependency[] {
+        let current = this._rootMember(node.identifier);
+        if (current && (current.type === 'file' || current.type === 'tag')) {
+            return [
+                ...this._simpleTagDependencies(current),
+                ...flatMap(node.dependencies, d =>
+                    this.dependentTagsAndFunctions(d)
+                ),
+            ];
+        }
+
         return [
             {
                 type: 'function',
@@ -117,7 +140,7 @@ export class Dependencies {
         return [
             <AuxScriptSimpleFileDependency | AuxScriptSimpleTagDependency>{
                 type: node.type,
-                name: node.name,
+                name: this.getMemberName(node),
                 dependencies: flatMap(node.dependencies, d =>
                     this.dependentTagsAndFunctions(d)
                 ),
@@ -154,8 +177,7 @@ export class Dependencies {
                 stack.unshift('()');
                 current = current.identifier;
             } else {
-                const symbol = current.type === 'file' ? '@' : '#';
-                stack.unshift(`${symbol}${current.name}()`);
+                stack.unshift(`${current.name}`);
                 current = null;
             }
         }

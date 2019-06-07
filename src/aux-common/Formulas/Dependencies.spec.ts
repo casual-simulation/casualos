@@ -704,7 +704,7 @@ describe('Dependencies', () => {
                 },
                 {
                     type: 'tag',
-                    name: 'ghi',
+                    name: `ghi`,
                     dependencies: [],
                 },
             ]);
@@ -804,6 +804,109 @@ describe('Dependencies', () => {
             ]);
         });
 
+        it('should handle nested dependencies for functions', () => {
+            const result = dependencies.dependentTagsAndFunctions({
+                type: 'expression',
+                dependencies: [
+                    {
+                        type: 'call',
+                        identifier: {
+                            type: 'member',
+                            identifier: 'toast',
+                            object: null,
+                        },
+                        dependencies: [
+                            {
+                                type: 'expression',
+                                dependencies: [
+                                    {
+                                        type: 'literal',
+                                        value: 'literal',
+                                    },
+                                    {
+                                        type: 'file',
+                                        name: 'tag',
+                                        dependencies: [],
+                                    },
+                                    {
+                                        type: 'call',
+                                        identifier: {
+                                            type: 'member',
+                                            identifier: 'func',
+                                            object: null,
+                                        },
+                                        dependencies: [],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            });
+
+            expect(result).toEqual([
+                {
+                    type: 'function',
+                    name: 'toast',
+                    dependencies: [
+                        {
+                            type: 'literal',
+                            value: 'literal',
+                        },
+                        {
+                            type: 'file',
+                            name: 'tag',
+                            dependencies: [],
+                        },
+                        {
+                            type: 'function',
+                            name: 'func',
+                            dependencies: [],
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should break up functions that have tag dependencies in their identifier', () => {
+            const result = dependencies.dependentTagsAndFunctions({
+                type: 'expression',
+                dependencies: [
+                    {
+                        type: 'call',
+                        identifier: {
+                            type: 'member',
+                            identifier: 'abc',
+                            object: {
+                                type: 'tag',
+                                name: 'test',
+                                dependencies: [],
+                            },
+                        },
+                        dependencies: [
+                            {
+                                type: 'member',
+                                identifier: 'def',
+                                object: null,
+                            },
+                        ],
+                    },
+                ],
+            });
+
+            expect(result).toEqual([
+                {
+                    type: 'tag',
+                    name: 'test',
+                    dependencies: [],
+                },
+                {
+                    type: 'member',
+                    name: 'def',
+                },
+            ]);
+        });
+
         it('should include members that the tree is dependent on', () => {
             const result = dependencies.dependentTagsAndFunctions(<
                 AuxScriptExpressionDependencies
@@ -858,7 +961,7 @@ describe('Dependencies', () => {
                 expect(result).toEqual([
                     {
                         type: type,
-                        name: 'hello',
+                        name: `hello`,
                         dependencies: [],
                     },
                 ]);
@@ -898,7 +1001,7 @@ describe('Dependencies', () => {
                 expect(result).toEqual([
                     {
                         type: type,
-                        name: 'hello',
+                        name: `hello`,
                         dependencies: [
                             {
                                 type: 'member',
@@ -941,6 +1044,24 @@ describe('Dependencies', () => {
             expect(result).toBe('def.abc');
         });
 
+        it('should handle call expressions', () => {
+            const result = dependencies.getMemberName({
+                type: 'member',
+                identifier: 'abc',
+                object: {
+                    type: 'call',
+                    identifier: {
+                        type: 'member',
+                        identifier: 'def',
+                        object: null,
+                    },
+                    dependencies: [],
+                },
+            });
+
+            expect(result).toBe('def.().abc');
+        });
+
         const cases = [
             ['@ expressions', 'file', '@'],
             ['# expressions', 'tag', '#'],
@@ -962,7 +1083,7 @@ describe('Dependencies', () => {
                     },
                 });
 
-                expect(result).toBe(`${symbol}tag.abc().def.abc`);
+                expect(result).toBe(`tag.abc.def.abc`);
             });
         });
     });
@@ -976,6 +1097,47 @@ describe('Dependencies', () => {
                     {
                         type: 'file',
                         name: 'test',
+                        dependencies: [],
+                    },
+                ],
+            };
+
+            const result = dependencies.replaceDependencies(
+                [
+                    {
+                        type: 'function',
+                        name: 'getFilesInContext',
+                        dependencies: [],
+                    },
+                ],
+                replacements
+            );
+
+            expect(result).toEqual([
+                {
+                    type: 'file',
+                    name: 'test',
+                    dependencies: [],
+                },
+            ]);
+        });
+
+        it('should not do any replacements on a replacement node', () => {
+            let replacements: AuxScriptReplacements = {
+                getFilesInContext: (
+                    node: AuxScriptSimpleFunctionDependency
+                ) => [
+                    {
+                        type: 'file',
+                        name: 'test',
+                        dependencies: [],
+                    },
+                ],
+
+                test: node => [
+                    {
+                        type: 'tag',
+                        name: 'qwerty',
                         dependencies: [],
                     },
                 ],
@@ -1047,5 +1209,48 @@ describe('Dependencies', () => {
                 ]);
             }
         );
+
+        it('should work on complicated formulas', () => {
+            const tree = dependencies.dependencyTree(
+                '#name().filter(a => a == "bob" || a == "alice").length + (player.isDesigner() ? 0 : 1)'
+            );
+            const simple = dependencies.dependentTagsAndFunctions(tree);
+            const replacements: AuxScriptReplacements = {
+                'player.isDesigner': (
+                    node: AuxScriptSimpleFunctionDependency
+                ) => [
+                    {
+                        type: 'tag',
+                        name: 'aux.designers',
+                        dependencies: [],
+                    },
+                ],
+            };
+            const replaced = dependencies.replaceDependencies(
+                simple,
+                replacements
+            );
+
+            expect(replaced).toEqual([
+                {
+                    type: 'tag',
+                    name: 'name',
+                    dependencies: [],
+                },
+                {
+                    type: 'tag',
+                    name: 'aux.designers',
+                    dependencies: [],
+                },
+                {
+                    type: 'literal',
+                    value: 0,
+                },
+                {
+                    type: 'literal',
+                    value: 1,
+                },
+            ]);
+        });
     });
 });
