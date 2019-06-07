@@ -2891,13 +2891,13 @@ describe('FilesChannel', () => {
             });
         });
 
-        describe('player.isBuilder()', () => {
+        describe('player.isDesigner()', () => {
             it('should return true when the player is apart of the global file builder list', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.isBuilder = player.isBuilder()',
+                            'test()': 'this.isBuilder = player.isDesigner()',
                         },
                     },
                     config: {
@@ -2935,7 +2935,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.isBuilder = player.isBuilder()',
+                            'test()': 'this.isBuilder = player.isDesigner()',
                         },
                     },
                     config: {
@@ -2973,7 +2973,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.isBuilder = player.isBuilder()',
+                            'test()': 'this.isBuilder = player.isDesigner()',
                         },
                     },
                     config: {
