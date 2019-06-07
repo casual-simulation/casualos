@@ -20,7 +20,8 @@
                 </md-button>
                 <md-button class="md-icon-button create-surface" @click="createSurface()">
                     <hex-icon></hex-icon>
-                    <md-tooltip>Create Surface from Selection</md-tooltip>
+                    <md-tooltip v-if="diffSelected">Create Surface</md-tooltip>
+                    <md-tooltip v-else>Create Surface from Selection</md-tooltip>
                 </md-button>
             </div>
             <div class="file-table-actions">
@@ -106,7 +107,7 @@
                     :style="fileTableGridStyle"
                 >
                     <!-- Remove all button -->
-                    <div class="file-cell remove-item">
+                    <div class="file-cell remove-item" v-if="!diffSelected">
                         <md-button v-if="isSearch" class="md-dense" @click="clearSearch()">
                             Clear Search
                         </md-button>
@@ -117,7 +118,6 @@
                         >
                             Unselect All
                         </md-button>
-                        <div v-else-if="diffSelected" class="md-dense"></div>
                         <md-button v-else class="md-dense" @click="multiSelect()">
                             Multi Select
                         </md-button>
@@ -164,12 +164,12 @@
                     <!-- Files -->
                     <template v-for="file in files">
                         <!-- deselect button -->
-                        <div :key="`${file.id}-remove`" class="file-cell remove-item">
-                            <md-button
-                                v-if="!diffSelected"
-                                class="md-icon-button md-dense"
-                                @click="toggleFile(file)"
-                            >
+                        <div
+                            :key="`${file.id}-remove`"
+                            class="file-cell remove-item"
+                            v-if="!diffSelected"
+                        >
+                            <md-button class="md-icon-button md-dense" @click="toggleFile(file)">
                                 <md-icon>remove</md-icon>
                                 <md-tooltip md-delay="1000" md-direction="top"
                                     >Unselect Item</md-tooltip
@@ -214,7 +214,7 @@
                                 class="md-dense"
                                 @click="clearDiff()"
                             >
-                                Clear Diff
+                                Clear Tags
                             </md-button>
                             <md-button v-else class="md-dense" @click="deleteFile(file)">
                                 Destroy File

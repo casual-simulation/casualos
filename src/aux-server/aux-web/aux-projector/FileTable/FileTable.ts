@@ -137,14 +137,22 @@ export default class FileTable extends Vue {
         const sizeType = this.viewMode === 'rows' ? 'columns' : 'rows';
         if (this.tags.length === 0) {
             return {
-                [`grid-template-${sizeType}`]: `auto auto auto`,
+                [`grid-template-${sizeType}`]: `auto auto`,
             };
         }
-        return {
-            [`grid-template-${sizeType}`]: `auto auto repeat(${
-                this.tags.length
-            }, auto) auto`,
-        };
+
+        if (this.diffSelected) {
+            return {
+                [`grid-template-${sizeType}`]: `auto auto repeat(${this.tags
+                    .length - 1}, auto) auto`,
+            };
+        } else {
+            return {
+                [`grid-template-${sizeType}`]: `auto auto repeat(${
+                    this.tags.length
+                }, auto) auto`,
+            };
+        }
     }
 
     get fileManager() {
@@ -202,7 +210,7 @@ export default class FileTable extends Vue {
                 this.fileManager.recent.addFileDiff(updated, true);
             } else {
                 this.fileManager.recent.addTagDiff(
-                    `diff-${this.focusedFile.id}_${this.focusedTag}`,
+                    `merge-${this.focusedFile.id}_${this.focusedTag}`,
                     this.focusedTag,
                     this.multilineValue
                 );
