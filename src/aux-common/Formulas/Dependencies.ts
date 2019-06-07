@@ -84,9 +84,9 @@ export class Dependencies {
     private _simpleMemberDependencies(
         node: AuxScriptMemberDependency
     ): AuxScriptSimpleDependency[] {
-        let current: AuxScriptObjectDependency = this._rootMember(node);
-        if (current && (current.type === 'file' || current.type === 'tag')) {
-            return this._simpleTagDependencies(current);
+        let root = this._rootMembers(node);
+        if (root) {
+            return this._simpleRootDependencies(root);
         }
         return [
             <AuxScriptSimpleMemberDependency>{
@@ -96,27 +96,41 @@ export class Dependencies {
         ];
     }
 
-    private _rootMember(node: AuxScriptObjectDependency) {
+    private _rootMembers(
+        node: AuxScriptObjectDependency
+    ): AuxScriptObjectDependency {
         let current: AuxScriptObjectDependency = node;
         while (current) {
             if (current.type === 'member') {
                 current = current.object;
             } else if (current.type === 'call') {
-                current = current.identifier;
+                return current;
             } else {
-                break;
+                return current;
             }
         }
-        return current;
+        return null;
+    }
+
+    private _simpleRootDependencies(
+        root: AuxScriptObjectDependency
+    ): AuxScriptSimpleDependency[] {
+        if (root.type === 'file' || root.type === 'tag') {
+            return this._simpleTagDependencies(root);
+        } else if (root.type === 'call') {
+            return this._simpleFunctionDependencies(root);
+        } else {
+            return [];
+        }
     }
 
     private _simpleFunctionDependencies(
         node: AuxScriptFunctionDependency
     ): AuxScriptSimpleDependency[] {
-        let current = this._rootMember(node.identifier);
-        if (current && (current.type === 'file' || current.type === 'tag')) {
+        let current = this._rootMembers(node.identifier);
+        if (current) {
             return [
-                ...this._simpleTagDependencies(current),
+                ...this._simpleRootDependencies(current),
                 ...flatMap(node.dependencies, d =>
                     this.dependentTagsAndFunctions(d)
                 ),

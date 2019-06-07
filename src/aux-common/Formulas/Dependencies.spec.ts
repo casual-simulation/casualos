@@ -1238,6 +1238,22 @@ describe('Dependencies', () => {
                     dependencies: [],
                 },
                 {
+                    type: 'member',
+                    name: 'a',
+                },
+                {
+                    type: 'literal',
+                    value: 'bob',
+                },
+                {
+                    type: 'member',
+                    name: 'a',
+                },
+                {
+                    type: 'literal',
+                    value: 'alice',
+                },
+                {
                     type: 'tag',
                     name: 'aux.designers',
                     dependencies: [],
