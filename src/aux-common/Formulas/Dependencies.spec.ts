@@ -268,6 +268,31 @@ describe('Dependencies', () => {
                 });
             });
 
+            it('should handle function calls after the expression', () => {
+                const result = dependencies.dependencyTree(
+                    `${symbol}tag().filter()`
+                );
+
+                expect(result).toEqual({
+                    type: 'expression',
+                    dependencies: [
+                        {
+                            type: 'call',
+                            identifier: {
+                                type: 'member',
+                                identifier: 'filter',
+                                object: {
+                                    type: type,
+                                    name: 'tag',
+                                    dependencies: [],
+                                },
+                            },
+                            dependencies: [],
+                        },
+                    ],
+                });
+            });
+
             it('should include dependencies in filters', () => {
                 const result = dependencies.dependencyTree(
                     `${symbol}tag(x => x == this.val)`
@@ -552,6 +577,86 @@ describe('Dependencies', () => {
                                     type: 'member',
                                     identifier: 'abc',
                                     object: null,
+                                },
+                            ],
+                        },
+                    ],
+                });
+            });
+
+            it(`should handle member expressions after the function call`, () => {
+                const result = dependencies.dependencyTree(
+                    `player.toast(abc).test`
+                );
+
+                expect(result).toEqual({
+                    type: 'expression',
+                    dependencies: [
+                        {
+                            type: 'member',
+                            identifier: 'test',
+                            object: {
+                                type: 'call',
+                                identifier: {
+                                    type: 'member',
+                                    identifier: 'toast',
+                                    object: {
+                                        type: 'member',
+                                        identifier: 'player',
+                                        object: null,
+                                    },
+                                },
+                                dependencies: [
+                                    {
+                                        type: 'member',
+                                        identifier: 'abc',
+                                        object: null,
+                                    },
+                                ],
+                            },
+                        },
+                    ],
+                });
+            });
+
+            it(`should include dependencies from nested functions`, () => {
+                const result = dependencies.dependencyTree(
+                    `toast(x => "literal" + @tag + func())`
+                );
+
+                expect(result).toEqual({
+                    type: 'expression',
+                    dependencies: [
+                        {
+                            type: 'call',
+                            identifier: {
+                                type: 'member',
+                                identifier: 'toast',
+                                object: null,
+                            },
+                            dependencies: [
+                                {
+                                    type: 'expression',
+                                    dependencies: [
+                                        {
+                                            type: 'literal',
+                                            value: 'literal',
+                                        },
+                                        {
+                                            type: 'file',
+                                            name: 'tag',
+                                            dependencies: [],
+                                        },
+                                        {
+                                            type: 'call',
+                                            identifier: {
+                                                type: 'member',
+                                                identifier: 'func',
+                                                object: null,
+                                            },
+                                            dependencies: [],
+                                        },
+                                    ],
                                 },
                             ],
                         },

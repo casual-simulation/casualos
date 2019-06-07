@@ -150,6 +150,9 @@ export class Dependencies {
             if (current.type === 'member') {
                 stack.unshift(current.identifier);
                 current = current.object;
+            } else if (current.type === 'call') {
+                stack.unshift('()');
+                current = current.identifier;
             } else {
                 const symbol = current.type === 'file' ? '@' : '#';
                 stack.unshift(`${symbol}${current.name}()`);
@@ -223,7 +226,11 @@ export class Dependencies {
             type: 'call',
             identifier: this._objectDependency(node.callee, node),
             dependencies: node.arguments
-                .map((arg: any) => this._nodeDependency(arg, node))
+                .map(
+                    (arg: any) =>
+                        this._nodeDependency(arg, node) ||
+                        this._expressionDependencies(arg)
+                )
                 .filter((arg: any) => !!arg),
         };
     }
@@ -266,7 +273,8 @@ export class Dependencies {
             if (
                 dependency.type === 'member' ||
                 dependency.type === 'tag' ||
-                dependency.type === 'file'
+                dependency.type === 'file' ||
+                dependency.type === 'call'
             ) {
                 return dependency;
             }
@@ -312,7 +320,8 @@ export type AuxScriptDependency =
 export type AuxScriptObjectDependency =
     | AuxScriptMemberDependency
     | AuxScriptTagDependency
-    | AuxScriptFileDependency;
+    | AuxScriptFileDependency
+    | AuxScriptFunctionDependency;
 
 export interface AuxScriptExpressionDependencies {
     type: 'expression';
