@@ -79,7 +79,16 @@ describe('Dependencies', () => {
                         {
                             type: type,
                             name: 'tag',
-                            dependencies: [],
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: 'hello, world',
+                                },
+                                {
+                                    type: 'literal',
+                                    value: 123,
+                                },
+                            ],
                         },
                     ],
                 });
@@ -111,9 +120,53 @@ describe('Dependencies', () => {
                                                     object: null,
                                                 },
                                             },
-                                            dependencies: [],
+                                            dependencies: [
+                                                {
+                                                    type: 'literal',
+                                                    value: 'hi',
+                                                },
+                                            ],
+                                        },
+                                        {
+                                            type: 'literal',
+                                            value: 0,
                                         },
                                     ],
+                                },
+                            ],
+                        },
+                    ],
+                });
+            });
+
+            it('should try to parse each argument as a non-expression first', () => {
+                const result = dependencies.dependencyTree(
+                    `${symbol}tag("test", true, false, isBuilder)`
+                );
+
+                expect(result).toEqual({
+                    type: 'expression',
+                    dependencies: [
+                        {
+                            type: type,
+                            name: 'tag',
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: 'test',
+                                },
+                                {
+                                    type: 'literal',
+                                    value: true,
+                                },
+                                {
+                                    type: 'literal',
+                                    value: false,
+                                },
+                                {
+                                    type: 'member',
+                                    identifier: 'isBuilder',
+                                    object: null,
                                 },
                             ],
                         },
@@ -227,6 +280,48 @@ describe('Dependencies', () => {
                                     dependencies: [
                                         {
                                             type: 'member',
+                                            identifier: 'x',
+                                            object: null,
+                                        },
+                                        {
+                                            type: 'member',
+                                            identifier: 'val',
+                                            object: {
+                                                type: 'member',
+                                                identifier: 'this',
+                                                object: null,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                });
+            });
+
+            it('should reject parameters from function expressions', () => {
+                const result = dependencies.dependencyTree(
+                    `${symbol}tag(function(x) { return x == this.val; })`
+                );
+
+                expect(result).toEqual({
+                    type: 'expression',
+                    dependencies: [
+                        {
+                            type: type,
+                            name: 'tag',
+                            dependencies: [
+                                {
+                                    type: 'expression',
+                                    dependencies: [
+                                        {
+                                            type: 'member',
+                                            identifier: 'x',
+                                            object: null,
+                                        },
+                                        {
+                                            type: 'member',
                                             identifier: 'val',
                                             object: {
                                                 type: 'member',
@@ -316,6 +411,23 @@ describe('Dependencies', () => {
             });
         });
 
+        describe('members', () => {
+            it('should return dependencies for identifiers', () => {
+                const result = dependencies.dependencyTree(`abc`);
+
+                expect(result).toEqual({
+                    type: 'expression',
+                    dependencies: [
+                        {
+                            type: 'member',
+                            identifier: 'abc',
+                            object: null,
+                        },
+                    ],
+                });
+            });
+        });
+
         describe('functions', () => {
             it(`should return dependencies for functions`, () => {
                 const result = dependencies.dependencyTree(
@@ -332,7 +444,12 @@ describe('Dependencies', () => {
                                 identifier: 'getFilesInContext',
                                 object: null,
                             },
-                            dependencies: [],
+                            dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: 'wow',
+                                },
+                            ],
                         },
                     ],
                 });
@@ -340,7 +457,7 @@ describe('Dependencies', () => {
 
             it(`should handle nested dependencies`, () => {
                 const result = dependencies.dependencyTree(
-                    `getFilesInContext(this.abc)`
+                    `getFilesInContext(this.abc, "fun")`
                 );
 
                 expect(result).toEqual({
@@ -362,6 +479,10 @@ describe('Dependencies', () => {
                                         identifier: 'this',
                                         object: null,
                                     },
+                                },
+                                {
+                                    type: 'literal',
+                                    value: 'fun',
                                 },
                             ],
                         },
@@ -397,6 +518,35 @@ describe('Dependencies', () => {
                                         identifier: 'this',
                                         object: null,
                                     },
+                                },
+                            ],
+                        },
+                    ],
+                });
+            });
+
+            it(`should allow identifiers`, () => {
+                const result = dependencies.dependencyTree(`player.toast(abc)`);
+
+                expect(result).toEqual({
+                    type: 'expression',
+                    dependencies: [
+                        {
+                            type: 'call',
+                            identifier: {
+                                type: 'member',
+                                identifier: 'toast',
+                                object: {
+                                    type: 'member',
+                                    identifier: 'player',
+                                    object: null,
+                                },
+                            },
+                            dependencies: [
+                                {
+                                    type: 'member',
+                                    identifier: 'abc',
+                                    object: null,
                                 },
                             ],
                         },
@@ -643,4 +793,15 @@ describe('Dependencies', () => {
             });
         });
     });
+
+    // describe('expandDependencies()', () => {
+    //     it('should replace function dependencies with the given expansions', () => {
+    //         dependencies.expandDependencies([
+    //             {
+    //                 type: 'function',
+    //                 name: 'getFilesInContext'
+    //             }
+    //         ])
+    //     });
+    // });
 });

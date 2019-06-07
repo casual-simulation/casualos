@@ -111,8 +111,8 @@ export class Dependencies {
         let tags: AuxScriptDependency[] = [];
 
         traverse(<any>node, {
-            enter: (node: any) => {
-                const dep = this._nodeDependency(node);
+            enter: (node: any, parent: any) => {
+                const dep = this._nodeDependency(node, parent);
                 if (dep) {
                     tags.push(dep);
                     return VisitorOption.Skip;
@@ -131,7 +131,14 @@ export class Dependencies {
         };
     }
 
-    private _nodeDependency(node: any) {
+    private _nodeDependency(node: any, parent: any): AuxScriptDependency {
+        if (
+            parent &&
+            (parent.type === 'ArrowFunctionExpression' ||
+                parent.type === 'FunctionExpression')
+        ) {
+            return null;
+        }
         if (node.type === 'MemberExpression') {
             return this._memberDependency(node);
         } else if (node.type === 'ThisExpression') {
@@ -140,17 +147,28 @@ export class Dependencies {
             return this._tagDependency(node);
         } else if (node.type === 'CallExpression') {
             return this._callDependency(node);
+        } else if (node.type === 'Literal') {
+            return this._literalDependency(node);
+        } else if (node.type === 'Identifier') {
+            return this._identifierDependency(node);
         }
 
         return null;
     }
 
+    private _literalDependency(node: any): AuxScriptLiteralDependency {
+        return {
+            type: 'literal',
+            value: node.value,
+        };
+    }
+
     private _callDependency(node: any): AuxScriptFunctionDependency {
         return {
             type: 'call',
-            identifier: this._objectDependency(node.callee),
+            identifier: this._objectDependency(node.callee, node),
             dependencies: node.arguments
-                .map((arg: any) => this._nodeDependency(arg))
+                .map((arg: any) => this._nodeDependency(arg, node))
                 .filter((arg: any) => !!arg),
         };
     }
@@ -161,8 +179,16 @@ export class Dependencies {
             type: node.type === 'TagValue' ? 'tag' : 'file',
             name: tag,
             dependencies: args
-                .map(a => this._expressionDependencies(a))
-                .filter(e => e.dependencies.length > 0),
+                .map(a => {
+                    const dep = this._nodeDependency(a, node);
+                    if (dep) {
+                        return dep;
+                    }
+                    return this._expressionDependencies(a);
+                })
+                .filter(e =>
+                    e.type === 'expression' ? e.dependencies.length > 0 : true
+                ),
         };
     }
 
@@ -170,19 +196,18 @@ export class Dependencies {
         return {
             type: 'member',
             identifier: this._getIdentifier(node),
-            object: this._objectDependency(node.object),
+            object: this._objectDependency(node.object, node),
         };
     }
 
-    private _objectDependency(node: any): AuxScriptObjectDependency {
+    private _objectDependency(
+        node: any,
+        parent: any
+    ): AuxScriptObjectDependency {
         if (node.type === 'Identifier') {
-            return {
-                type: 'member',
-                identifier: node.name,
-                object: null,
-            };
+            return this._identifierDependency(node);
         } else {
-            const dependency = this._nodeDependency(node);
+            const dependency = this._nodeDependency(node, parent);
             if (
                 dependency.type === 'member' ||
                 dependency.type === 'tag' ||
@@ -192,6 +217,14 @@ export class Dependencies {
             }
         }
         return null;
+    }
+
+    private _identifierDependency(node: any): AuxScriptObjectDependency {
+        return {
+            type: 'member',
+            identifier: node.name,
+            object: null,
+        };
     }
 
     private _thisDependency(node: any): AuxScriptMemberDependency {
@@ -218,7 +251,8 @@ export type AuxScriptDependency =
     | AuxScriptFileDependency
     | AuxScriptFunctionDependency
     | AuxScriptMemberDependency
-    | AuxScriptExpressionDependencies;
+    | AuxScriptExpressionDependencies
+    | AuxScriptLiteralDependency;
 
 export type AuxScriptObjectDependency =
     | AuxScriptMemberDependency
@@ -275,6 +309,11 @@ export interface AuxScriptFunctionDependency {
     type: 'call';
     identifier: AuxScriptObjectDependency;
     dependencies: AuxScriptDependency[];
+}
+
+export interface AuxScriptLiteralDependency {
+    type: 'literal';
+    value: string | number | boolean | null;
 }
 
 export type AuxScriptSimpleDependency =
