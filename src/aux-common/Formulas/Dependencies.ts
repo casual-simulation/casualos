@@ -7,13 +7,18 @@ export class Dependencies {
 
     /**
      * Gets a dependency tree for the given code.
-     * @param code
+     * @param code The code to parse into a dependency tree.
      */
     dependencyTree(code: string): AuxScriptExpressionDependencies {
         const node = this._transpiler.parse(code);
         return this._expressionDependencies(node);
     }
 
+    /**
+     * Reduces the given Dependency Tree to a list of simplified dependencies.
+     * Useful to reduce the amount of information that the tree contains and make it easier to process.
+     * @param node The root node of the dependency tree.
+     */
     dependentTagsAndFunctions(
         node: AuxScriptDependency
     ): AuxScriptSimpleDependency[] {
@@ -25,12 +30,14 @@ export class Dependencies {
             return this._simpleFunctionDependencies(node);
         } else if (node.type === 'member') {
             return this._simpleMemberDependencies(node);
+        } else if (node.type === 'literal') {
+            return this._simpleLiteralDependencies(node);
         }
 
         return [];
     }
 
-    _simpleMemberDependencies(
+    private _simpleMemberDependencies(
         node: AuxScriptMemberDependency
     ): AuxScriptSimpleDependency[] {
         let current: AuxScriptObjectDependency = node;
@@ -48,17 +55,17 @@ export class Dependencies {
         ];
     }
 
-    _simpleFunctionDependencies(
+    private _simpleFunctionDependencies(
         node: AuxScriptFunctionDependency
     ): AuxScriptSimpleDependency[] {
         return [
-            <AuxScriptSimpleFunctionDependency>{
+            {
                 type: 'function',
                 name: this.getMemberName(node.identifier),
+                dependencies: flatMap(node.dependencies, d =>
+                    this.dependentTagsAndFunctions(d)
+                ),
             },
-            ...flatMap(node.dependencies, d =>
-                this.dependentTagsAndFunctions(d)
-            ),
         ];
     }
 
@@ -66,13 +73,13 @@ export class Dependencies {
         node: AuxScriptTagDependency | AuxScriptFileDependency
     ): AuxScriptSimpleDependency[] {
         return [
-            <AuxScriptTagDependency | AuxScriptFileDependency>{
+            <AuxScriptSimpleFileDependency | AuxScriptSimpleTagDependency>{
                 type: node.type,
                 name: node.name,
+                dependencies: flatMap(node.dependencies, d =>
+                    this.dependentTagsAndFunctions(d)
+                ),
             },
-            ...flatMap(node.dependencies, d =>
-                this.dependentTagsAndFunctions(d)
-            ),
         ];
     }
 
@@ -82,6 +89,12 @@ export class Dependencies {
         return flatMap(node.dependencies, d =>
             this.dependentTagsAndFunctions(d)
         );
+    }
+
+    private _simpleLiteralDependencies(
+        node: AuxScriptLiteralDependency
+    ): AuxScriptSimpleDependency[] {
+        return [node];
     }
 
     /**
@@ -320,24 +333,30 @@ export type AuxScriptSimpleDependency =
     | AuxScriptSimpleFileDependency
     | AuxScriptSimpleTagDependency
     | AuxScriptSimpleFunctionDependency
-    | AuxScriptSimpleMemberDependency;
+    | AuxScriptSimpleMemberDependency
+    | AuxScriptSimpleLiteralDependency;
 
 export interface AuxScriptSimpleFileDependency {
     type: 'file';
     name: string;
+    dependencies: AuxScriptSimpleDependency[];
 }
 
 export interface AuxScriptSimpleTagDependency {
     type: 'tag';
     name: string;
+    dependencies: AuxScriptSimpleDependency[];
 }
 
 export interface AuxScriptSimpleFunctionDependency {
     type: 'function';
     name: string;
+    dependencies: AuxScriptSimpleDependency[];
 }
 
 export interface AuxScriptSimpleMemberDependency {
     type: 'member';
     name: string;
 }
+
+export type AuxScriptSimpleLiteralDependency = AuxScriptLiteralDependency;

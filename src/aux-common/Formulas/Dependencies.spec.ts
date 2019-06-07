@@ -2,6 +2,8 @@ import {
     Dependencies,
     AuxScriptMemberDependency,
     AuxScriptExpressionDependencies,
+    AuxScriptFunctionDependency,
+    AuxScriptFileDependency,
 } from './Dependencies';
 
 describe('Dependencies', () => {
@@ -558,9 +560,7 @@ describe('Dependencies', () => {
 
     describe('dependentTagsAndFunctions()', () => {
         it('should return the list of tags that an expression is dependent on', () => {
-            const result = dependencies.dependentTagsAndFunctions(<
-                AuxScriptExpressionDependencies
-            >{
+            const result = dependencies.dependentTagsAndFunctions({
                 type: 'expression',
                 dependencies: [
                     {
@@ -570,6 +570,7 @@ describe('Dependencies', () => {
                             {
                                 type: 'tag',
                                 name: 'test',
+                                dependencies: [],
                             },
                         ],
                     },
@@ -585,22 +586,24 @@ describe('Dependencies', () => {
                 {
                     type: 'file',
                     name: 'abc.def',
-                },
-                {
-                    type: 'tag',
-                    name: 'test',
+                    dependencies: [
+                        {
+                            type: 'tag',
+                            name: 'test',
+                            dependencies: [],
+                        },
+                    ],
                 },
                 {
                     type: 'tag',
                     name: 'ghi',
+                    dependencies: [],
                 },
             ]);
         });
 
         it('should include functions that the tree is dependent on', () => {
-            const result = dependencies.dependentTagsAndFunctions(<
-                AuxScriptExpressionDependencies
-            >{
+            const result = dependencies.dependentTagsAndFunctions({
                 type: 'expression',
                 dependencies: [
                     {
@@ -614,6 +617,7 @@ describe('Dependencies', () => {
                                 object: null,
                             },
                         },
+                        dependencies: [],
                     },
                 ],
             });
@@ -622,6 +626,72 @@ describe('Dependencies', () => {
                 {
                     type: 'function',
                     name: 'test.abc',
+                    dependencies: [],
+                },
+            ]);
+        });
+
+        it('should include dependencies for functions', () => {
+            const result = dependencies.dependentTagsAndFunctions({
+                type: 'expression',
+                dependencies: [
+                    {
+                        type: 'call',
+                        identifier: {
+                            type: 'member',
+                            identifier: 'abc',
+                            object: {
+                                type: 'member',
+                                identifier: 'test',
+                                object: null,
+                            },
+                        },
+                        dependencies: [
+                            {
+                                type: 'member',
+                                identifier: 'xyz',
+                                object: {
+                                    type: 'member',
+                                    identifier: 'this',
+                                    object: null,
+                                },
+                            },
+                            {
+                                type: 'member',
+                                identifier: 'def',
+                                object: {
+                                    type: 'member',
+                                    identifier: 'this',
+                                    object: null,
+                                },
+                            },
+                            {
+                                type: 'literal',
+                                value: 1234,
+                            },
+                        ],
+                    },
+                ],
+            });
+
+            expect(result).toEqual([
+                {
+                    type: 'function',
+                    name: 'test.abc',
+                    dependencies: [
+                        {
+                            type: 'member',
+                            name: 'this.xyz',
+                        },
+                        {
+                            type: 'member',
+                            name: 'this.def',
+                        },
+                        {
+                            type: 'literal',
+                            value: 1234,
+                        },
+                    ],
                 },
             ]);
         });
@@ -658,9 +728,7 @@ describe('Dependencies', () => {
         ];
         describe.each(cases)('%s', (desc, type, symbol) => {
             it('should ignore member nodes when they are for tag/file expressions', () => {
-                const result = dependencies.dependentTagsAndFunctions(<
-                    AuxScriptExpressionDependencies
-                >{
+                const result = dependencies.dependentTagsAndFunctions({
                     type: 'expression',
                     dependencies: [
                         {
@@ -683,14 +751,13 @@ describe('Dependencies', () => {
                     {
                         type: type,
                         name: 'hello',
+                        dependencies: [],
                     },
                 ]);
             });
 
             it('should include dependencies', () => {
-                const result = dependencies.dependentTagsAndFunctions(<
-                    AuxScriptExpressionDependencies
-                >{
+                const result = dependencies.dependentTagsAndFunctions({
                     type: 'expression',
                     dependencies: [
                         {
@@ -713,6 +780,7 @@ describe('Dependencies', () => {
                                             object: null,
                                         },
                                     },
+                                    dependencies: [],
                                 },
                             ],
                         },
@@ -723,14 +791,17 @@ describe('Dependencies', () => {
                     {
                         type: type,
                         name: 'hello',
-                    },
-                    {
-                        type: 'member',
-                        name: 'isBuilder',
-                    },
-                    {
-                        type: 'function',
-                        name: 'player.isBuilder',
+                        dependencies: [
+                            {
+                                type: 'member',
+                                name: 'isBuilder',
+                            },
+                            {
+                                type: 'function',
+                                name: 'player.isBuilder',
+                                dependencies: [],
+                            },
+                        ],
                     },
                 ]);
             });
