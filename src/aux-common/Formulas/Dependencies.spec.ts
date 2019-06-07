@@ -1,4 +1,8 @@
-import { Dependencies, AuxScriptMemberDependency } from './Dependencies';
+import {
+    Dependencies,
+    AuxScriptMemberDependency,
+    AuxScriptExpressionDependencies,
+} from './Dependencies';
 
 describe('Dependencies', () => {
     let dependencies: Dependencies;
@@ -398,6 +402,187 @@ describe('Dependencies', () => {
                         },
                     ],
                 });
+            });
+        });
+    });
+
+    describe('dependentTagsAndFunctions()', () => {
+        it('should return the list of tags that an expression is dependent on', () => {
+            const result = dependencies.dependentTagsAndFunctions(<
+                AuxScriptExpressionDependencies
+            >{
+                type: 'expression',
+                dependencies: [
+                    {
+                        type: 'file',
+                        name: 'abc.def',
+                        dependencies: [
+                            {
+                                type: 'tag',
+                                name: 'test',
+                            },
+                        ],
+                    },
+                    {
+                        type: 'tag',
+                        name: 'ghi',
+                        dependencies: [],
+                    },
+                ],
+            });
+
+            expect(result).toEqual([
+                {
+                    type: 'file',
+                    name: 'abc.def',
+                },
+                {
+                    type: 'tag',
+                    name: 'test',
+                },
+                {
+                    type: 'tag',
+                    name: 'ghi',
+                },
+            ]);
+        });
+
+        it('should include functions that the tree is dependent on', () => {
+            const result = dependencies.dependentTagsAndFunctions(<
+                AuxScriptExpressionDependencies
+            >{
+                type: 'expression',
+                dependencies: [
+                    {
+                        type: 'call',
+                        identifier: {
+                            type: 'member',
+                            identifier: 'abc',
+                            object: {
+                                type: 'member',
+                                identifier: 'test',
+                                object: null,
+                            },
+                        },
+                    },
+                ],
+            });
+
+            expect(result).toEqual([
+                {
+                    type: 'function',
+                    name: 'test.abc',
+                },
+            ]);
+        });
+
+        it('should include members that the tree is dependent on', () => {
+            const result = dependencies.dependentTagsAndFunctions(<
+                AuxScriptExpressionDependencies
+            >{
+                type: 'expression',
+                dependencies: [
+                    {
+                        type: 'member',
+                        identifier: 'abc',
+                        object: {
+                            type: 'member',
+                            identifier: 'test',
+                            object: null,
+                        },
+                    },
+                ],
+            });
+
+            expect(result).toEqual([
+                {
+                    type: 'member',
+                    name: 'test.abc',
+                },
+            ]);
+        });
+
+        const cases = [
+            ['@ expressions', 'file', '@'],
+            ['# expressions', 'tag', '#'],
+        ];
+        describe.each(cases)('%s', (desc, type, symbol) => {
+            it('should ignore member nodes when they are for tag/file expressions', () => {
+                const result = dependencies.dependentTagsAndFunctions(<
+                    AuxScriptExpressionDependencies
+                >{
+                    type: 'expression',
+                    dependencies: [
+                        {
+                            type: 'member',
+                            identifier: 'abc',
+                            object: {
+                                type: 'member',
+                                identifier: 'test',
+                                object: {
+                                    type: type,
+                                    name: 'hello',
+                                    dependencies: [],
+                                },
+                            },
+                        },
+                    ],
+                });
+
+                expect(result).toEqual([
+                    {
+                        type: type,
+                        name: 'hello',
+                    },
+                ]);
+            });
+
+            it('should include dependencies', () => {
+                const result = dependencies.dependentTagsAndFunctions(<
+                    AuxScriptExpressionDependencies
+                >{
+                    type: 'expression',
+                    dependencies: [
+                        {
+                            type: type,
+                            name: 'hello',
+                            dependencies: [
+                                {
+                                    type: 'member',
+                                    identifier: 'isBuilder',
+                                    object: null,
+                                },
+                                {
+                                    type: 'call',
+                                    identifier: {
+                                        type: 'member',
+                                        identifier: 'isBuilder',
+                                        object: {
+                                            type: 'member',
+                                            identifier: 'player',
+                                            object: null,
+                                        },
+                                    },
+                                },
+                            ],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual([
+                    {
+                        type: type,
+                        name: 'hello',
+                    },
+                    {
+                        type: 'member',
+                        name: 'isBuilder',
+                    },
+                    {
+                        type: 'function',
+                        name: 'player.isBuilder',
+                    },
+                ]);
             });
         });
     });

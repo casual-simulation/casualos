@@ -1,5 +1,6 @@
 import { Transpiler } from './Transpiler';
 import { traverse, VisitorOption } from 'estraverse';
+import { flatMap } from 'lodash';
 
 export class Dependencies {
     private _transpiler: Transpiler = new Transpiler();
@@ -13,16 +14,83 @@ export class Dependencies {
         return this._expressionDependencies(node);
     }
 
+    dependentTagsAndFunctions(
+        node: AuxScriptDependency
+    ): AuxScriptSimpleDependency[] {
+        if (node.type === 'expression') {
+            return this._simpleExpressionDependencies(node);
+        } else if (node.type === 'file' || node.type === 'tag') {
+            return this._simpleTagDependencies(node);
+        } else if (node.type === 'call') {
+            return this._simpleFunctionDependencies(node);
+        } else if (node.type === 'member') {
+            return this._simpleMemberDependencies(node);
+        }
+
+        return [];
+    }
+
+    _simpleMemberDependencies(
+        node: AuxScriptMemberDependency
+    ): AuxScriptSimpleDependency[] {
+        let current: AuxScriptObjectDependency = node;
+        while (current && current.type === 'member') {
+            current = current.object;
+        }
+        if (current && (current.type === 'file' || current.type === 'tag')) {
+            return this._simpleTagDependencies(current);
+        }
+        return [
+            <AuxScriptSimpleMemberDependency>{
+                type: 'member',
+                name: this.getMemberName(node),
+            },
+        ];
+    }
+
+    _simpleFunctionDependencies(
+        node: AuxScriptFunctionDependency
+    ): AuxScriptSimpleDependency[] {
+        return [
+            <AuxScriptSimpleFunctionDependency>{
+                type: 'function',
+                name: this.getMemberName(node.identifier),
+            },
+            ...flatMap(node.dependencies, d =>
+                this.dependentTagsAndFunctions(d)
+            ),
+        ];
+    }
+
+    private _simpleTagDependencies(
+        node: AuxScriptTagDependency | AuxScriptFileDependency
+    ): AuxScriptSimpleDependency[] {
+        return [
+            <AuxScriptTagDependency | AuxScriptFileDependency>{
+                type: node.type,
+                name: node.name,
+            },
+            ...flatMap(node.dependencies, d =>
+                this.dependentTagsAndFunctions(d)
+            ),
+        ];
+    }
+
+    private _simpleExpressionDependencies(
+        node: AuxScriptExpressionDependencies
+    ): AuxScriptSimpleDependency[] {
+        return flatMap(node.dependencies, d =>
+            this.dependentTagsAndFunctions(d)
+        );
+    }
+
     /**
      * Gets the full name of the given member node.
      * @param node The node.
      */
-    getMemberName(node: AuxScriptMemberDependency): string {
+    getMemberName(node: AuxScriptObjectDependency): string {
         let stack: string[] = [];
-        let current:
-            | AuxScriptMemberDependency
-            | AuxScriptFileDependency
-            | AuxScriptTagDependency = node;
+        let current: AuxScriptObjectDependency = node;
         while (current) {
             if (current.type === 'member') {
                 stack.unshift(current.identifier);
@@ -106,12 +174,7 @@ export class Dependencies {
         };
     }
 
-    private _objectDependency(
-        node: any
-    ):
-        | AuxScriptMemberDependency
-        | AuxScriptTagDependency
-        | AuxScriptFileDependency {
+    private _objectDependency(node: any): AuxScriptObjectDependency {
         if (node.type === 'Identifier') {
             return {
                 type: 'member',
@@ -157,6 +220,11 @@ export type AuxScriptDependency =
     | AuxScriptMemberDependency
     | AuxScriptExpressionDependencies;
 
+export type AuxScriptObjectDependency =
+    | AuxScriptMemberDependency
+    | AuxScriptTagDependency
+    | AuxScriptFileDependency;
+
 export interface AuxScriptExpressionDependencies {
     type: 'expression';
 
@@ -166,10 +234,7 @@ export interface AuxScriptExpressionDependencies {
 export interface AuxScriptMemberDependency {
     type: 'member';
     identifier: string;
-    object:
-        | AuxScriptMemberDependency
-        | AuxScriptTagDependency
-        | AuxScriptFileDependency;
+    object: AuxScriptObjectDependency;
 }
 
 export interface AuxScriptVariableDependency {
@@ -208,6 +273,32 @@ export interface AuxScriptFileDependency {
 
 export interface AuxScriptFunctionDependency {
     type: 'call';
-    identifier: AuxScriptDependency;
+    identifier: AuxScriptObjectDependency;
     dependencies: AuxScriptDependency[];
+}
+
+export type AuxScriptSimpleDependency =
+    | AuxScriptSimpleFileDependency
+    | AuxScriptSimpleTagDependency
+    | AuxScriptSimpleFunctionDependency
+    | AuxScriptSimpleMemberDependency;
+
+export interface AuxScriptSimpleFileDependency {
+    type: 'file';
+    name: string;
+}
+
+export interface AuxScriptSimpleTagDependency {
+    type: 'tag';
+    name: string;
+}
+
+export interface AuxScriptSimpleFunctionDependency {
+    type: 'function';
+    name: string;
+}
+
+export interface AuxScriptSimpleMemberDependency {
+    type: 'member';
+    name: string;
 }
