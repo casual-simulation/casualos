@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.8.12 - or are we on 0.9 now?
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Changed the function tag `player.isBuilder()` to `player.isDesigner()`;
+
 ## V0.8.11
 
 ### Date: 06/07/2019
