@@ -994,7 +994,7 @@ function isConnected(): boolean {
 /**
  * Defines a set of functions that are able to make File Diffs.
  */
-export const diff = {
+export const tags = {
     addToContext: addToContextDiff,
     removeFromContext: removeFromContextDiff,
     addToMenu: addToMenuDiff,
@@ -1002,6 +1002,8 @@ export const diff = {
     setPosition: setPositionDiff,
     import: loadDiff,
     export: saveDiff,
+    remove: removeTags,
+    apply: applyDiff,
 };
 
 /**
@@ -1053,12 +1055,11 @@ export const data = {
 export default {
     // Namespaces
     data,
-    diff,
+    tags,
     math,
     player,
 
     // Global functions
-    applyDiff,
     combine,
     create: createFrom,
     destroy,
@@ -1069,5 +1070,4 @@ export default {
     shout,
     superShout,
     whisper,
-    removeTags,
 };

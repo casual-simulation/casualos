@@ -909,14 +909,14 @@ describe('FilesChannel', () => {
             });
         });
 
-        describe('removeTags()', () => {
+        describe('tags.remove()', () => {
             it('remove the given tag sections on the fiven file', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
                             'create()':
-                                'let newFile = create(this, { stay: "def" }, { "leave.x": 0 }, { "leave.y": 0 }); removeTags(newFile, "leave");',
+                                'let newFile = create(this, { stay: "def" }, { "leave.x": 0 }, { "leave.y": 0 }); tags.remove(newFile, "leave");',
                         },
                     },
                 };
@@ -1697,7 +1697,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'addItem()':
-                                'applyDiff(@name("bob").first(), diff.addToMenu())',
+                                'tags.apply(@name("bob").first(), tags.addToMenu())',
                         },
                     },
                     userFile: {
@@ -1746,7 +1746,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'addItem()':
-                                'applyDiff(@name("bob").first(), diff.removeFromMenu())',
+                                'tags.apply(@name("bob").first(), tags.removeFromMenu())',
                         },
                     },
                     userFile: {
@@ -1790,14 +1790,14 @@ describe('FilesChannel', () => {
             });
         });
 
-        describe('applyDiff()', () => {
+        describe('tags.apply()', () => {
             it('should update the given file with the given diff', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'applyDiff(this, { abc: "def", ghi: true, num: 1 })',
+                                'tags.apply(this, { abc: "def", ghi: true, num: 1 })',
                         },
                     },
                 };
@@ -1826,7 +1826,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'applyDiff(this, { abc: "def", ghi: true, num: 1 }, { abc: "xyz" });',
+                                'tags.apply(this, { abc: "def", ghi: true, num: 1 }, { abc: "xyz" });',
                         },
                     },
                 };
@@ -1856,7 +1856,7 @@ describe('FilesChannel', () => {
                         tags: {
                             abc: 123,
                             'test()':
-                                'applyDiff(this, { abc: "def", ghi: true, num: 1 }); applyDiff(this, { "abc": this.abc })',
+                                'tags.apply(this, { abc: "def", ghi: true, num: 1 }); tags.apply(this, { "abc": this.abc })',
                         },
                     },
                 };
@@ -1879,15 +1879,15 @@ describe('FilesChannel', () => {
                 ]);
             });
 
-            it('should send a onDiff() event to the affected file', () => {
+            it('should send a onMerge() event to the affected file', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
                             abc: 123,
-                            'onDiff()': 'this.diffed = true',
+                            'onMerge()': 'this.diffed = true',
                             'test()':
-                                'applyDiff(this, { abc: "def", ghi: true, num: 1 });',
+                                'tags.apply(this, { abc: "def", ghi: true, num: 1 });',
                         },
                     },
                 };
@@ -1923,7 +1923,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'applyDiff(this, diff.addToContext("abc"))',
+                                'tags.apply(this, tags.addToContext("abc"))',
                         },
                     },
                 };
@@ -1956,7 +1956,7 @@ describe('FilesChannel', () => {
                         tags: {
                             abc: true,
                             'test()':
-                                'applyDiff(this, diff.removeFromContext("abc"))',
+                                'tags.apply(this, tags.removeFromContext("abc"))',
                         },
                     },
                 };
@@ -2305,7 +2305,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'applyDiff(this, diff.setPosition("abc", 1, 2))',
+                                'tags.apply(this, tags.setPosition("abc", 1, 2))',
                         },
                     },
                 };
@@ -2333,7 +2333,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'applyDiff(this, diff.setPosition("abc", undefined, 2))',
+                                'tags.apply(this, tags.setPosition("abc", undefined, 2))',
                         },
                     },
                 };
@@ -2360,7 +2360,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'applyDiff(this, diff.setPosition("abc", undefined, undefined, 2))',
+                                'tags.apply(this, tags.setPosition("abc", undefined, undefined, 2))',
                         },
                     },
                 };
@@ -3117,13 +3117,13 @@ describe('FilesChannel', () => {
             });
         });
 
-        describe('diff.export()', () => {
+        describe('tags.export()', () => {
             it('should serialize the given object to JSON', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.json = diff.export({ abc: "def" })',
+                            'test()': 'this.json = tags.export({ abc: "def" })',
                         },
                     },
                 };
@@ -3145,14 +3145,14 @@ describe('FilesChannel', () => {
             });
         });
 
-        describe('diff.import()', () => {
+        describe('tags.import()', () => {
             it('should create a diff that applies the given tags from the given file', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'applyDiff(this, diff.import(@name("bob").first(), "val", /test\\..+/))',
+                                'tags.apply(this, tags.import(@name("bob").first(), "val", /test\\..+/))',
                         },
                     },
                     otherFile: {
@@ -3193,7 +3193,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'applyDiff(this, diff.import(@name("bob").first()))',
+                                'tags.apply(this, tags.import(@name("bob").first()))',
                         },
                     },
                     otherFile: {
@@ -3236,7 +3236,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'applyDiff(this, diff.import({abc: true, val: 123}, "val"))',
+                                'tags.apply(this, tags.import({abc: true, val: 123}, "val"))',
                         },
                     },
                 };
@@ -3262,7 +3262,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': `applyDiff(this, diff.import('{"abc": true, "val": 123}', "val"))`,
+                            'test()': `tags.apply(this, tags.import('{"abc": true, "val": 123}', "val"))`,
                         },
                     },
                 };
