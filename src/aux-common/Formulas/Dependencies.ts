@@ -13,6 +13,30 @@ export class Dependencies {
         return this._expressionDependencies(node);
     }
 
+    /**
+     * Gets the full name of the given member node.
+     * @param node The node.
+     */
+    getMemberName(node: AuxScriptMemberDependency): string {
+        let stack: string[] = [];
+        let current:
+            | AuxScriptMemberDependency
+            | AuxScriptFileDependency
+            | AuxScriptTagDependency = node;
+        while (current) {
+            if (current.type === 'member') {
+                stack.unshift(current.identifier);
+                current = current.object;
+            } else {
+                const symbol = current.type === 'file' ? '@' : '#';
+                stack.unshift(`${symbol}${current.name}()`);
+                current = null;
+            }
+        }
+
+        return stack.join('.');
+    }
+
     private _expressionDependencies(
         node: any
     ): AuxScriptExpressionDependencies {
@@ -82,7 +106,12 @@ export class Dependencies {
         };
     }
 
-    private _objectDependency(node: any): AuxScriptDependency {
+    private _objectDependency(
+        node: any
+    ):
+        | AuxScriptMemberDependency
+        | AuxScriptTagDependency
+        | AuxScriptFileDependency {
         if (node.type === 'Identifier') {
             return {
                 type: 'member',
@@ -90,8 +119,16 @@ export class Dependencies {
                 object: null,
             };
         } else {
-            return this._nodeDependency(node);
+            const dependency = this._nodeDependency(node);
+            if (
+                dependency.type === 'member' ||
+                dependency.type === 'tag' ||
+                dependency.type === 'file'
+            ) {
+                return dependency;
+            }
         }
+        return null;
     }
 
     private _thisDependency(node: any): AuxScriptMemberDependency {
@@ -129,7 +166,10 @@ export interface AuxScriptExpressionDependencies {
 export interface AuxScriptMemberDependency {
     type: 'member';
     identifier: string;
-    object: AuxScriptDependency;
+    object:
+        | AuxScriptMemberDependency
+        | AuxScriptTagDependency
+        | AuxScriptFileDependency;
 }
 
 export interface AuxScriptVariableDependency {

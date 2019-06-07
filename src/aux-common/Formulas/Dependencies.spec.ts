@@ -1,6 +1,11 @@
-import { Dependencies } from './Dependencies';
+import { Dependencies, AuxScriptMemberDependency } from './Dependencies';
 
 describe('Dependencies', () => {
+    let dependencies: Dependencies;
+    beforeEach(() => {
+        dependencies = new Dependencies();
+    });
+
     describe('dependencyTree()', () => {
         const cases = [
             ['@ expressions', 'file', '@'],
@@ -9,8 +14,6 @@ describe('Dependencies', () => {
 
         describe.each(cases)('%s', (desc, type, symbol) => {
             it(`should return the tags`, () => {
-                const dependencies = new Dependencies();
-
                 const result = dependencies.dependencyTree(
                     `${symbol}tag().num + ${symbol}other().num`
                 );
@@ -41,8 +44,6 @@ describe('Dependencies', () => {
             });
 
             it('should support dots in tag names', () => {
-                const dependencies = new Dependencies();
-
                 const result = dependencies.dependencyTree(
                     `${symbol}tag.test().num`
                 );
@@ -64,8 +65,6 @@ describe('Dependencies', () => {
             });
 
             it('should contain the simple arguments used in the expression', () => {
-                const dependencies = new Dependencies();
-
                 const result = dependencies.dependencyTree(
                     `${symbol}tag("hello, world", 123)`
                 );
@@ -83,8 +82,6 @@ describe('Dependencies', () => {
             });
 
             it('should contain the complex arguments used in the expression', () => {
-                const dependencies = new Dependencies();
-
                 const result = dependencies.dependencyTree(
                     `${symbol}tag(x => x.indexOf("hi") >= 0)`
                 );
@@ -121,8 +118,6 @@ describe('Dependencies', () => {
             });
 
             it('should parse the tags after the expression', () => {
-                const dependencies = new Dependencies();
-
                 const result = dependencies.dependencyTree(
                     `${symbol}tag().aux.color`
                 );
@@ -148,8 +143,6 @@ describe('Dependencies', () => {
             });
 
             it('should support indexers after the expression', () => {
-                const dependencies = new Dependencies();
-
                 const result = dependencies.dependencyTree(
                     `${symbol}tag()['funny']`
                 );
@@ -171,8 +164,6 @@ describe('Dependencies', () => {
             });
 
             it('should fail on expressions that use variables in indexer expressions', () => {
-                const dependencies = new Dependencies();
-
                 expect(() => {
                     const result = dependencies.dependencyTree(
                         `${symbol}tag()[myVar]`
@@ -181,8 +172,6 @@ describe('Dependencies', () => {
             });
 
             it('should handle members in other function calls', () => {
-                const dependencies = new Dependencies();
-
                 const result = dependencies.dependencyTree(
                     `math.sum(${symbol}tag().length)`
                 );
@@ -218,8 +207,6 @@ describe('Dependencies', () => {
             });
 
             it('should include dependencies in filters', () => {
-                const dependencies = new Dependencies();
-
                 const result = dependencies.dependencyTree(
                     `${symbol}tag(x => x == this.val)`
                 );
@@ -254,8 +241,6 @@ describe('Dependencies', () => {
 
         describe('this', () => {
             it(`should return dependencies on this`, () => {
-                const dependencies = new Dependencies();
-
                 const result = dependencies.dependencyTree(
                     `this.num + this.index * this.something.else - this['other']['thing']`
                 );
@@ -312,8 +297,6 @@ describe('Dependencies', () => {
             });
 
             it(`should handle just the keyword without members`, () => {
-                const dependencies = new Dependencies();
-
                 const result = dependencies.dependencyTree(`this`);
 
                 expect(result).toEqual({
@@ -331,8 +314,6 @@ describe('Dependencies', () => {
 
         describe('functions', () => {
             it(`should return dependencies for functions`, () => {
-                const dependencies = new Dependencies();
-
                 const result = dependencies.dependencyTree(
                     `getFilesInContext("wow")`
                 );
@@ -354,8 +335,6 @@ describe('Dependencies', () => {
             });
 
             it(`should handle nested dependencies`, () => {
-                const dependencies = new Dependencies();
-
                 const result = dependencies.dependencyTree(
                     `getFilesInContext(this.abc)`
                 );
@@ -384,6 +363,98 @@ describe('Dependencies', () => {
                         },
                     ],
                 });
+            });
+
+            it(`should properly handle namespaces`, () => {
+                const result = dependencies.dependencyTree(
+                    `player.toast(this.abc)`
+                );
+
+                expect(result).toEqual({
+                    type: 'expression',
+                    dependencies: [
+                        {
+                            type: 'call',
+                            identifier: {
+                                type: 'member',
+                                identifier: 'toast',
+                                object: {
+                                    type: 'member',
+                                    identifier: 'player',
+                                    object: null,
+                                },
+                            },
+                            dependencies: [
+                                {
+                                    type: 'member',
+                                    identifier: 'abc',
+                                    object: {
+                                        type: 'member',
+                                        identifier: 'this',
+                                        object: null,
+                                    },
+                                },
+                            ],
+                        },
+                    ],
+                });
+            });
+        });
+    });
+
+    describe('getMemberName()', () => {
+        it('should return the identifier', () => {
+            const result = dependencies.getMemberName(<
+                AuxScriptMemberDependency
+            >{
+                type: 'member',
+                identifier: 'abc',
+                object: null,
+            });
+
+            expect(result).toBe('abc');
+        });
+
+        it('should return the identifiers joined by dots', () => {
+            const result = dependencies.getMemberName(<
+                AuxScriptMemberDependency
+            >{
+                type: 'member',
+                identifier: 'abc',
+                object: {
+                    type: 'member',
+                    identifier: 'def',
+                    object: null,
+                },
+            });
+
+            expect(result).toBe('def.abc');
+        });
+
+        const cases = [
+            ['@ expressions', 'file', '@'],
+            ['# expressions', 'tag', '#'],
+        ];
+
+        describe.each(cases)('%s', (desc, type, symbol) => {
+            it('should handle expressions', () => {
+                const result = dependencies.getMemberName(<
+                    AuxScriptMemberDependency
+                >{
+                    type: 'member',
+                    identifier: 'abc',
+                    object: {
+                        type: 'member',
+                        identifier: 'def',
+                        object: {
+                            type: type,
+                            name: 'tag.abc',
+                            dependencies: [],
+                        },
+                    },
+                });
+
+                expect(result).toBe(`${symbol}tag.abc().def.abc`);
             });
         });
     });
