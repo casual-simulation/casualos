@@ -58,8 +58,8 @@ export interface FileTags {
     ['aux.iframe.element.width']?: number;
     ['aux.iframe.scale']?: number;
     ['aux.channel']?: string;
-    ['aux.diff']?: unknown;
-    ['aux.diffTags']?: unknown;
+    ['aux.mergeBall']?: unknown;
+    ['aux.mergeBall.tags']?: unknown;
     ['aux.creator']?: string;
 
     // User tags
@@ -122,7 +122,7 @@ export type FileShape = 'cube' | 'sphere' | 'sprite';
  * "clone" means that the file should be cloned whenever dragged.
  * "pickup" means that the file should be able to be dragged across contexts but not within a context.
  * "drag" means that the file should be able to be dragged within a context but not across contexts.
- * "diff" means that the file should be cloned as a diff when dragged.
+ * "mergeBall" means that the file should be cloned as a diff when dragged.
  */
 export type FileDragMode =
     | 'all'
@@ -130,7 +130,7 @@ export type FileDragMode =
     | 'clone'
     | 'pickup'
     | 'drag'
-    | 'diff';
+    | 'mergeBall';
 
 /**
  * Defines the possible anchor positions for a label.
@@ -262,7 +262,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.color',
     'aux.creator',
     'aux.movable',
-    'aux.movable.diffTags',
+    'aux.movable.mergeBall.tags',
     'aux.stackable',
     'aux.mergable',
     'aux.destroyable',
@@ -322,7 +322,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.context.visualize',
     'onClick()',
     'onCombine()',
-    'onDiff()',
+    'onMerge()',
     'onSaveInput()',
     'onCloseInput()',
     'onCreate()',

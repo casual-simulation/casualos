@@ -76,8 +76,8 @@ export class RecentFilesManager {
             id: fileId,
             tags: {
                 [tag]: value,
-                'aux.diff': true,
-                'aux.diffTags': [tag],
+                'aux.mergeBall': true,
+                'aux.mergeBall.tags': [tag],
             },
         });
         this._trimList();
@@ -94,14 +94,18 @@ export class RecentFilesManager {
         const calc = this._helper.createContext();
         const contexts = getContexts(calc);
         let id: string;
-        if (isDiff(null, file) && file.id.indexOf('diff-') === 0) {
+        if (isDiff(null, file) && file.id.indexOf('merge-') === 0) {
             id = file.id;
         } else {
-            id = `diff-${file.id}`;
+            id = `merge-${file.id}`;
         }
         this._cleanFiles(id, file);
 
-        let { 'aux.diff': diff, 'aux.diffTags': t, ...others } = file.tags;
+        let {
+            'aux.mergeBall': diff,
+            'aux.mergeBall.tags': t,
+            ...others
+        } = file.tags;
 
         let diffTags: string[] =
             updateTags || !t
@@ -113,8 +117,8 @@ export class RecentFilesManager {
                 ? {
                       id: id,
                       tags: {
-                          'aux.diff': true,
-                          'aux.diffTags': diffTags,
+                          'aux.mergeBall': true,
+                          'aux.mergeBall.tags': diffTags,
                           ...pick(file.tags, diffTags),
                       },
                   }

@@ -58,7 +58,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
         const mode = getFileDragMode(calc, this._file);
         if (mode === 'clone') {
             return this._createCloneDragOperation(calc);
-        } else if (mode === 'diff') {
+        } else if (mode === 'mergeBall') {
             return this._createDiffDragOperation(calc);
         }
 
@@ -124,8 +124,8 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
         const tags = tagsOnFile(this._file);
         let duplicatedFile = duplicateFile(calc, <File>this._file, {
             tags: {
-                'aux.diff': true,
-                'aux.diffTags': tags,
+                'aux.mergeBall': true,
+                'aux.mergeBall.tags': tags,
             },
         });
         return new BuilderNewFileDragOperation(

@@ -69,7 +69,7 @@ export const COMBINE_ACTION_NAME: string = 'onCombine';
 /**
  * The name of the event that represents a file being diffed into another file.
  */
-export const DIFF_ACTION_NAME: string = 'onDiff';
+export const DIFF_ACTION_NAME: string = 'onMerge';
 
 /**
  * The name of the event that represents a file being created.
@@ -1893,11 +1893,15 @@ export function isDiff(calc: FileCalculationContext, file: File): boolean {
     if (calc) {
         return (
             !!file &&
-            calculateBooleanTagValue(calc, file, 'aux.diff', false) &&
-            !!file.tags['aux.diffTags']
+            calculateBooleanTagValue(calc, file, 'aux.mergeBall', false) &&
+            !!file.tags['aux.mergeBall.tags']
         );
     } else {
-        return !!file && !!file.tags['aux.diff'] && !!file.tags['aux.diffTags'];
+        return (
+            !!file &&
+            !!file.tags['aux.mergeBall'] &&
+            !!file.tags['aux.mergeBall.tags']
+        );
     }
 }
 
@@ -1928,7 +1932,7 @@ export function isPickupable(
 
 /**
  * Gets a partial file that can be used to apply the diff that the given file represents.
- * A diff file is any file that has `aux.diff` set to `true` and `aux.diffTags` set to a list of tag names.
+ * A diff file is any file that has `aux.mergeBall` set to `true` and `aux.mergeBall.tags` set to a list of tag names.
  * @param calc The file calculation context.
  * @param file The file that represents the diff.
  */
@@ -1947,9 +1951,9 @@ export function getDiffUpdate(
         for (let i = 0; i < tags.length; i++) {
             let tag = tags[i];
             if (
-                tag === 'aux.diff' ||
-                tag === 'aux.diffTags' ||
-                tag === 'aux.movable.diffTags' ||
+                tag === 'aux.mergeBall' ||
+                tag === 'aux.mergeBall.tags' ||
+                tag === 'aux.movable.mergeBall.tags' ||
                 diffTags.indexOf(tag) < 0
             ) {
                 continue;
@@ -1971,8 +1975,8 @@ export function getDiffTags(
     file: File
 ): string[] {
     let diffTags =
-        calculateFileValue(calc, file, 'aux.movable.diffTags') ||
-        calculateFileValue(calc, file, 'aux.diffTags');
+        calculateFileValue(calc, file, 'aux.movable.mergeBall.tags') ||
+        calculateFileValue(calc, file, 'aux.mergeBall.tags');
 
     if (!diffTags) {
         return [];

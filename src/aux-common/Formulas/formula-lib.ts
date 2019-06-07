@@ -795,7 +795,25 @@ function loadDiff(file: any, ...tags: (string | RegExp)[]): FileDiff {
  * @param file The diff to save.
  */
 function saveDiff(file: any): string {
-    return JSON.stringify(file);
+    let newDiff: FileDiff = loadDiff(file);
+    let cleanObject: any = {};
+    let temp;
+
+    if (!newDiff) {
+        return;
+    }
+
+    if (isFormulaObject(newDiff)) {
+        temp = unwrapProxy(tagsOnFile).tags;
+    } else {
+        temp = unwrapProxy(newDiff);
+    }
+
+    for (let key in temp) {
+        cleanObject[key] = unwrapProxy(temp[key]);
+    }
+
+    return JSON.stringify(cleanObject);
 }
 
 /**
@@ -976,14 +994,16 @@ function isConnected(): boolean {
 /**
  * Defines a set of functions that are able to make File Diffs.
  */
-export const diff = {
+export const tags = {
     addToContext: addToContextDiff,
     removeFromContext: removeFromContextDiff,
     addToMenu: addToMenuDiff,
     removeFromMenu: removeFromMenuDiff,
     setPosition: setPositionDiff,
-    load: loadDiff,
-    save: saveDiff,
+    import: loadDiff,
+    export: saveDiff,
+    remove: removeTags,
+    apply: applyDiff,
 };
 
 /**
@@ -1035,12 +1055,11 @@ export const data = {
 export default {
     // Namespaces
     data,
-    diff,
+    tags,
     math,
     player,
 
     // Global functions
-    applyDiff,
     combine,
     create: createFrom,
     destroy,
@@ -1051,5 +1070,4 @@ export default {
     shout,
     superShout,
     whisper,
-    removeTags,
 };
