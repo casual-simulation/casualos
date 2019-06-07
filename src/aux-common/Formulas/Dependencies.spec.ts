@@ -4,6 +4,9 @@ import {
     AuxScriptExpressionDependencies,
     AuxScriptFunctionDependency,
     AuxScriptFileDependency,
+    AuxScriptSimpleFunctionDependency,
+    AuxScriptReplacements,
+    AuxScriptSimpleMemberDependency,
 } from './Dependencies';
 
 describe('Dependencies', () => {
@@ -810,9 +813,7 @@ describe('Dependencies', () => {
 
     describe('getMemberName()', () => {
         it('should return the identifier', () => {
-            const result = dependencies.getMemberName(<
-                AuxScriptMemberDependency
-            >{
+            const result = dependencies.getMemberName({
                 type: 'member',
                 identifier: 'abc',
                 object: null,
@@ -822,9 +823,7 @@ describe('Dependencies', () => {
         });
 
         it('should return the identifiers joined by dots', () => {
-            const result = dependencies.getMemberName(<
-                AuxScriptMemberDependency
-            >{
+            const result = dependencies.getMemberName({
                 type: 'member',
                 identifier: 'abc',
                 object: {
@@ -844,9 +843,7 @@ describe('Dependencies', () => {
 
         describe.each(cases)('%s', (desc, type, symbol) => {
             it('should handle expressions', () => {
-                const result = dependencies.getMemberName(<
-                    AuxScriptMemberDependency
-                >{
+                const result = dependencies.getMemberName({
                     type: 'member',
                     identifier: 'abc',
                     object: {
@@ -865,14 +862,85 @@ describe('Dependencies', () => {
         });
     });
 
-    // describe('expandDependencies()', () => {
-    //     it('should replace function dependencies with the given expansions', () => {
-    //         dependencies.expandDependencies([
-    //             {
-    //                 type: 'function',
-    //                 name: 'getFilesInContext'
-    //             }
-    //         ])
-    //     });
-    // });
+    describe('replaceDependencies()', () => {
+        it('should replace functions with the given expansions', () => {
+            let replacements: AuxScriptReplacements = {
+                getFilesInContext: (
+                    node: AuxScriptSimpleFunctionDependency
+                ) => [
+                    {
+                        type: 'file',
+                        name: 'test',
+                        dependencies: [],
+                    },
+                ],
+            };
+
+            const result = dependencies.replaceDependencies(
+                [
+                    {
+                        type: 'function',
+                        name: 'getFilesInContext',
+                        dependencies: [],
+                    },
+                ],
+                replacements
+            );
+
+            expect(result).toEqual([
+                {
+                    type: 'file',
+                    name: 'test',
+                    dependencies: [],
+                },
+            ]);
+        });
+
+        const nestedReplacementCases = [['function'], ['file'], ['tag']];
+
+        it.each(nestedReplacementCases)(
+            'should replace dependencies in %s when it doesnt have a replacement',
+            type => {
+                let replacements: AuxScriptReplacements = {
+                    myVar: (node: AuxScriptSimpleMemberDependency) => [
+                        {
+                            type: 'file',
+                            name: 'test',
+                            dependencies: [],
+                        },
+                    ],
+                };
+
+                const result = dependencies.replaceDependencies(
+                    [
+                        {
+                            type: type,
+                            name: 'abc',
+                            dependencies: [
+                                {
+                                    type: 'member',
+                                    name: 'myVar',
+                                },
+                            ],
+                        },
+                    ],
+                    replacements
+                );
+
+                expect(result).toEqual([
+                    {
+                        type: type,
+                        name: 'abc',
+                        dependencies: [
+                            {
+                                type: 'file',
+                                name: 'test',
+                                dependencies: [],
+                            },
+                        ],
+                    },
+                ]);
+            }
+        );
+    });
 });

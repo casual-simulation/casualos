@@ -37,6 +37,48 @@ export class Dependencies {
         return [];
     }
 
+    /**
+     * Replaces matching function calls in the given list of simplified dependencies with their actual dependencies.
+     * This is useful to be able to match functions like getFilesInContext("context_a") to the actual dependency.
+     */
+    replaceDependencies(
+        nodes: AuxScriptSimpleDependency[],
+        replacements: AuxScriptReplacements
+    ): AuxScriptSimpleDependency[] {
+        return [...iterator.call(this)];
+
+        function* iterator(): IterableIterator<AuxScriptSimpleDependency> {
+            for (let node of nodes) {
+                let replaced = false;
+                if (node.type !== 'literal') {
+                    const replacement = replacements[node.name];
+                    if (replacement) {
+                        yield* replacement(node);
+                        replaced = true;
+                    }
+                }
+
+                if (!replaced) {
+                    if (
+                        node.type === 'function' ||
+                        node.type === 'file' ||
+                        node.type === 'tag'
+                    ) {
+                        yield {
+                            ...node,
+                            dependencies: this.expandDependencies(
+                                node.dependencies,
+                                replacements
+                            ),
+                        };
+                    } else {
+                        yield node;
+                    }
+                }
+            }
+        }
+    }
+
     private _simpleMemberDependencies(
         node: AuxScriptMemberDependency
     ): AuxScriptSimpleDependency[] {
@@ -360,3 +402,11 @@ export interface AuxScriptSimpleMemberDependency {
 }
 
 export type AuxScriptSimpleLiteralDependency = AuxScriptLiteralDependency;
+
+export interface AuxScriptReplacements {
+    [key: string]: AuxScriptReplacement;
+}
+
+export type AuxScriptReplacement = (
+    node: AuxScriptSimpleDependency
+) => AuxScriptSimpleDependency[];
