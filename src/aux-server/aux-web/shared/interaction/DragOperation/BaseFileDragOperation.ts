@@ -143,8 +143,8 @@ export abstract class BaseFileDragOperation implements IOperation {
                 .transaction(
                     fileUpdated(this._file.id, {
                         tags: {
-                            'aux.diff': null,
-                            'aux.diffTags': null,
+                            'aux.mergeBall': null,
+                            'aux.mergeBall.tags': null,
                         },
                     })
                 )

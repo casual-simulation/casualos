@@ -728,9 +728,9 @@ describe('FileCalculations', () => {
             expect(shape).toBe('sphere');
         });
 
-        it('should return value when aux.diff is true', () => {
+        it('should return value when aux.mergeBall is true', () => {
             let file = createFile();
-            file.tags['aux.diff'] = true;
+            file.tags['aux.mergeBall'] = true;
             file.tags['aux.shape'] = 'cube';
 
             const calc = createCalculationContext([file]);
@@ -1822,7 +1822,7 @@ describe('FileCalculations', () => {
 
             // not a diff because it doesn't have any tags
             const file2 = createFile(undefined, {
-                tags: { 'aux.diff': true },
+                tags: { 'aux.mergeBall': true },
             });
             const calc2 = createCalculationContext([file2]);
             const update2 = getDiffUpdate(calc2, file2);
@@ -1833,8 +1833,8 @@ describe('FileCalculations', () => {
 
         it('should return a partial file that contains the specified tags', () => {
             let file1 = createFile();
-            file1.tags['aux.diff'] = true;
-            file1.tags['aux.diffTags'] = [
+            file1.tags['aux.mergeBall'] = true;
+            file1.tags['aux.mergeBall.tags'] = [
                 'aux.label',
                 'name',
                 'zero',
@@ -1867,8 +1867,8 @@ describe('FileCalculations', () => {
 
         it('should return a partial file that contains the specified tags from the formula', () => {
             let file1 = createFile();
-            file1.tags['aux.diff'] = true;
-            file1.tags['aux.diffTags'] =
+            file1.tags['aux.mergeBall'] = true;
+            file1.tags['aux.mergeBall.tags'] =
                 '[aux.label,name,zero,false,gone,empty,null]';
 
             file1.tags.name = 'test';
@@ -1892,11 +1892,11 @@ describe('FileCalculations', () => {
             });
         });
 
-        it('should use the list of tags from aux.movable.diffTags before falling back to aux.diffTags', () => {
+        it('should use the list of tags from aux.movable.mergeBall.tags before falling back to aux.mergeBall.tags', () => {
             let file1 = createFile();
-            file1.tags['aux.diff'] = true;
-            file1.tags['aux.movable.diffTags'] = '[abc]';
-            file1.tags['aux.diffTags'] = [
+            file1.tags['aux.mergeBall'] = true;
+            file1.tags['aux.movable.mergeBall.tags'] = '[abc]';
+            file1.tags['aux.mergeBall.tags'] = [
                 'aux.label',
                 'name',
                 'zero',
@@ -2435,16 +2435,16 @@ describe('FileCalculations', () => {
             expect(first.tags['aux._destroyed']).toBe(true);
         });
 
-        it('should not clear aux.diff', () => {
+        it('should not clear aux.mergeBall', () => {
             let first: Object = createFile('id');
-            first.tags['aux.diff'] = true;
-            first.tags['aux.diffTags'] = ['abvc'];
+            first.tags['aux.mergeBall'] = true;
+            first.tags['aux.mergeBall.tags'] = ['abvc'];
 
             const calc = createCalculationContext([first]);
             const second = duplicateFile(calc, first);
 
-            expect(second.tags['aux.diff']).toBe(true);
-            expect(second.tags['aux.diffTags']).toEqual(['abvc']);
+            expect(second.tags['aux.mergeBall']).toBe(true);
+            expect(second.tags['aux.mergeBall.tags']).toEqual(['abvc']);
         });
 
         it('should not have any contexts', () => {
@@ -2472,7 +2472,7 @@ describe('FileCalculations', () => {
                 'abc.x': 1,
                 'abc.y': 2,
                 def: true,
-                'aux.diffTags': ['abc'],
+                'aux.mergeBall.tags': ['abc'],
             });
             let context: Object = createFile('context', {
                 'aux.context': 'abc',
@@ -2484,7 +2484,7 @@ describe('FileCalculations', () => {
             expect(second.tags).toEqual({
                 abc: true,
                 def: true,
-                'aux.diffTags': ['abc'],
+                'aux.mergeBall.tags': ['abc'],
             });
         });
     });
@@ -3401,8 +3401,8 @@ describe('FileCalculations', () => {
         it('should return sphere when the file is a diff', () => {
             const file = createFile('test', {
                 'aux.shape': 'cube',
-                'aux.diff': true,
-                'aux.diffTags': ['aux.shape'],
+                'aux.mergeBall': true,
+                'aux.mergeBall.tags': ['aux.shape'],
             });
 
             const calc = createCalculationContext([file]);

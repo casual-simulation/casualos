@@ -1,5 +1,15 @@
 # AUX Changelog
 
+## V0.8.10
+
+### Date: 06/07/2019
+
+### Changes:
+
+-   Improvements
+    -   Change `diff` key word to `merge` or `mergeBall`.
+        -   EX: The tag function `aux.diff` has been changed to `aux.mergeBall` and `aux.diffTags` has been changed to `aux.mergeBall.tags` and the `diff` id tag value has been changed to `merge`.
+
 ## V0.8.9
 
 ### Date: 06/06/2019

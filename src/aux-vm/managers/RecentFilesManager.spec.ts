@@ -34,8 +34,8 @@ describe('RecentFilesManager', () => {
                     id: 'testFileId',
                     tags: {
                         testTag: 'newValue',
-                        'aux.diff': true,
-                        'aux.diffTags': ['testTag'],
+                        'aux.mergeBall': true,
+                        'aux.mergeBall.tags': ['testTag'],
                     },
                 },
             ]);
@@ -54,8 +54,8 @@ describe('RecentFilesManager', () => {
                     id: 'testFileId6',
                     tags: {
                         testTag6: 'newValue',
-                        'aux.diff': true,
-                        'aux.diffTags': ['testTag6'],
+                        'aux.mergeBall': true,
+                        'aux.mergeBall.tags': ['testTag6'],
                     },
                 },
             ]);
@@ -83,8 +83,8 @@ describe('RecentFilesManager', () => {
                     id: 'testFileId1',
                     tags: {
                         testTag4: 'newValue4',
-                        'aux.diff': true,
-                        'aux.diffTags': ['testTag4'],
+                        'aux.mergeBall': true,
+                        'aux.mergeBall.tags': ['testTag4'],
                     },
                 },
             ]);
@@ -109,8 +109,8 @@ describe('RecentFilesManager', () => {
                 id: 'abc',
                 tags: {
                     deg: 'zzz',
-                    'aux.diff': true,
-                    'aux.diffTags': ['deg'],
+                    'aux.mergeBall': true,
+                    'aux.mergeBall.tags': ['deg'],
                 },
             });
         });
@@ -126,11 +126,11 @@ describe('RecentFilesManager', () => {
 
             expect(recent.files).toEqual([
                 {
-                    id: 'diff-testId',
+                    id: 'merge-testId',
                     tags: {
                         ...file.tags,
-                        'aux.diff': true,
-                        'aux.diffTags': ['test', 'aux.color'],
+                        'aux.mergeBall': true,
+                        'aux.mergeBall.tags': ['test', 'aux.color'],
                     },
                 },
             ]);
@@ -163,22 +163,22 @@ describe('RecentFilesManager', () => {
             recent.addFileDiff(file1);
             recent.selectedRecentFile = recent.files[0];
 
-            let file2 = createFile('diff-testId1', {
+            let file2 = createFile('merge-testId1', {
                 test1: 'abc',
                 'aux.color': 'red',
-                'aux.diff': true,
-                'aux.diffTags': ['test1', 'aux.color'],
+                'aux.mergeBall': true,
+                'aux.mergeBall.tags': ['test1', 'aux.color'],
             });
 
             recent.addFileDiff(file2);
 
             expect(recent.selectedRecentFile).toEqual({
-                id: 'diff-testId1',
+                id: 'merge-testId1',
                 tags: {
                     test1: 'abc',
                     'aux.color': 'red',
-                    'aux.diff': true,
-                    'aux.diffTags': ['test1', 'aux.color'],
+                    'aux.mergeBall': true,
+                    'aux.mergeBall.tags': ['test1', 'aux.color'],
                 },
             });
         });
@@ -194,11 +194,11 @@ describe('RecentFilesManager', () => {
 
             expect(recent.files).toEqual([
                 {
-                    id: 'diff-testId1',
+                    id: 'merge-testId1',
                     tags: {
                         test: 'abc',
-                        'aux.diff': true,
-                        'aux.diffTags': ['test'],
+                        'aux.mergeBall': true,
+                        'aux.mergeBall.tags': ['test'],
                     },
                 },
             ]);
@@ -221,11 +221,11 @@ describe('RecentFilesManager', () => {
 
             expect(recent.files).toEqual([
                 {
-                    id: 'diff-testId1',
+                    id: 'merge-testId1',
                     tags: {
                         def: true,
-                        'aux.diff': true,
-                        'aux.diffTags': ['def'],
+                        'aux.mergeBall': true,
+                        'aux.mergeBall.tags': ['def'],
                     },
                 },
             ]);
@@ -263,22 +263,22 @@ describe('RecentFilesManager', () => {
             recent.addFileDiff(file1);
             recent.selectedRecentFile = recent.files[0];
 
-            let file2 = createFile('diff-testId1', {
+            let file2 = createFile('merge-testId1', {
                 test1: 'abc',
                 'aux.color': 'red',
-                'aux.diff': true,
-                'aux.diffTags': ['test1', 'aux.color'],
+                'aux.mergeBall': true,
+                'aux.mergeBall.tags': ['test1', 'aux.color'],
             });
 
             recent.addFileDiff(file2, true);
 
             expect(recent.selectedRecentFile).toEqual({
-                id: 'diff-testId1',
+                id: 'merge-testId1',
                 tags: {
                     test1: 'abc',
                     'aux.color': 'red',
-                    'aux.diff': true,
-                    'aux.diffTags': ['test1', 'aux.color'],
+                    'aux.mergeBall': true,
+                    'aux.mergeBall.tags': ['test1', 'aux.color'],
                 },
             });
         });
@@ -332,11 +332,11 @@ describe('RecentFilesManager', () => {
 
             expect(recent.files).toEqual([
                 {
-                    id: 'diff-testId6',
+                    id: 'merge-testId6',
                     tags: {
                         ...file6.tags,
-                        'aux.diff': true,
-                        'aux.diffTags': ['test', 'aux.color'],
+                        'aux.mergeBall': true,
+                        'aux.mergeBall.tags': ['test', 'aux.color'],
                     },
                 },
             ]);
@@ -367,11 +367,11 @@ describe('RecentFilesManager', () => {
 
             expect(recent.files).toEqual([
                 {
-                    id: 'diff-testId1',
+                    id: 'merge-testId1',
                     tags: {
                         ...file1_2.tags,
-                        'aux.diff': true,
-                        'aux.diffTags': ['test1', 'aux.color'],
+                        'aux.mergeBall': true,
+                        'aux.mergeBall.tags': ['test1', 'aux.color'],
                     },
                 },
             ]);
@@ -402,55 +402,55 @@ describe('RecentFilesManager', () => {
 
             expect(recent.files).toEqual([
                 {
-                    id: 'diff-testId4',
+                    id: 'merge-testId4',
                     tags: {
                         ...file4.tags,
-                        'aux.diff': true,
-                        'aux.diffTags': ['test', 'aux.color'],
+                        'aux.mergeBall': true,
+                        'aux.mergeBall.tags': ['test', 'aux.color'],
                     },
                 },
             ]);
         });
 
-        it('should ensure that diff IDs start with diff-', () => {
+        it('should ensure that diff IDs start with merge-', () => {
             let file1 = createFile('testId1', {
                 test: 'abc',
                 'aux.color': 'red',
-                'aux.diff': true,
-                'aux.diffTags': ['aux.color'],
+                'aux.mergeBall': true,
+                'aux.mergeBall.tags': ['aux.color'],
             });
 
             recent.addFileDiff(file1);
 
             expect(recent.files).toEqual([
                 {
-                    id: 'diff-testId1',
+                    id: 'merge-testId1',
                     tags: {
                         'aux.color': 'red',
-                        'aux.diff': true,
-                        'aux.diffTags': ['aux.color'],
+                        'aux.mergeBall': true,
+                        'aux.mergeBall.tags': ['aux.color'],
                     },
                 },
             ]);
         });
 
         it('should reuse the diff ID if it is correct', () => {
-            let file1 = createFile('diff-testId1', {
+            let file1 = createFile('merge-testId1', {
                 test: 'abc',
                 'aux.color': 'red',
-                'aux.diff': true,
-                'aux.diffTags': ['aux.color'],
+                'aux.mergeBall': true,
+                'aux.mergeBall.tags': ['aux.color'],
             });
 
             recent.addFileDiff(file1);
 
             expect(recent.files).toEqual([
                 {
-                    id: 'diff-testId1',
+                    id: 'merge-testId1',
                     tags: {
                         'aux.color': 'red',
-                        'aux.diff': true,
-                        'aux.diffTags': ['aux.color'],
+                        'aux.mergeBall': true,
+                        'aux.mergeBall.tags': ['aux.color'],
                     },
                 },
             ]);

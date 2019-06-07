@@ -144,8 +144,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     const file = table.files[0];
                     const newFile = createFile(file.id, {
                         [tag]: file.tags[tag],
-                        'aux.diff': true,
-                        'aux.diffTags': [tag],
+                        'aux.mergeBall': true,
+                        'aux.mergeBall.tags': [tag],
                     });
                     return new BuilderNewFileClickOperation(
                         this._game.simulation3D,
