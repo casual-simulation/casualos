@@ -5,8 +5,7 @@
             "node_modules/@types",
             "src/aux-server/typings",
             "src/crypto-node/typings"
-        ],
-        "declarationMap": true
+        ]
     },
     "files": [],
     "references": [
