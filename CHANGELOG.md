@@ -27,6 +27,7 @@
     -   The tooltip for the surface button has been changed from `create surface from selection` to `create surface` in mergeBall mode.
 -   Bug Fixes
     -   Changed the resulting `diff-` id of file to `merge` when adding tag to empty file.
+    -   Changed header of the create worspace popup from `Create Surface from Selection` to `Create Surface` when opened on a merge file.
 
 ## V0.8.10
 
