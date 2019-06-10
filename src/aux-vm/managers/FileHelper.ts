@@ -66,7 +66,7 @@ export class FileHelper {
         this._localEvents = new Subject<LocalEvents>();
         this._lib = {
             ...formulaLib,
-            isBuilder,
+            isDesigner: isBuilder,
             isPlayer,
         };
     }

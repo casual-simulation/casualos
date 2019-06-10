@@ -71,7 +71,7 @@ describe('FileHelper', () => {
 
             const context = helper.createContext();
 
-            expect(context.sandbox.library.isBuilder).toBe(true);
+            expect(context.sandbox.library.isDesigner).toBe(true);
             expect(context.sandbox.library.isPlayer).toBe(false);
         });
 
@@ -83,7 +83,7 @@ describe('FileHelper', () => {
 
             const context = helper.createContext();
 
-            expect(context.sandbox.library.isBuilder).toBe(false);
+            expect(context.sandbox.library.isDesigner).toBe(false);
             expect(context.sandbox.library.isPlayer).toBe(true);
         });
 
@@ -95,7 +95,7 @@ describe('FileHelper', () => {
 
             const context = helper.createContext();
 
-            expect(context.sandbox.library.isBuilder).toBe(false);
+            expect(context.sandbox.library.isDesigner).toBe(false);
             expect(context.sandbox.library.isPlayer).toBe(false);
         });
     });
