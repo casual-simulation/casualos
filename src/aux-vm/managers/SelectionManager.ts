@@ -13,6 +13,7 @@ import {
     fileUpdated,
 } from '@casual-simulation/aux-common';
 import { Subject, Observable } from 'rxjs';
+import { FilePanelManager } from './FilePanelManager';
 
 /**
  * Defines a class that is able to manage selections for users.
@@ -51,8 +52,25 @@ export default class SelectionManager {
      * @param file The file to select.
      * @param multiSelect Whether to put the user into multi-select mode. (Default false)
      */
-    async selectFile(file: AuxObject, multiSelect: boolean = false) {
-        await this._selectFileForUser(file, this._helper.userFile, multiSelect);
+    async selectFile(
+        file: AuxObject,
+        multiSelect: boolean = false,
+        fileManager: FilePanelManager = null
+    ) {
+        if (
+            multiSelect ||
+            this._helper.userFile.tags['aux._selection'] != file.id
+        ) {
+            await this._selectFileForUser(
+                file,
+                this._helper.userFile,
+                multiSelect
+            );
+        } else {
+            if (fileManager != null) {
+                fileManager.keepSheetsOpen();
+            }
+        }
     }
 
     /**
@@ -142,6 +160,7 @@ export default class SelectionManager {
         }
 
         const mode = getSelectionMode(user);
+
         if (mode === 'multi') {
             const { id, newId } = selectionIdForUser(user);
             if (newId) {
@@ -181,8 +200,8 @@ export default class SelectionManager {
                     },
                 });
             } else {
-                const selection =
-                    user.tags['aux._selection'] === file.id ? null : file.id;
+                const selection = file.id;
+
                 const update = updateUserSelection(selection, file.id);
                 await this._helper.updateFile(user, update);
                 await this._helper.updateFile(file, { tags: {} });

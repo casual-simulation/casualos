@@ -63,7 +63,6 @@ import { GameObject } from '../../shared/scene/GameObject';
 import MiniFile from '../MiniFile/MiniFile';
 import FileTag from '../FileTag/FileTag';
 import FileTable from '../FileTable/FileTable';
-import { appManager } from '../../shared/AppManager';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
 import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
@@ -558,7 +557,10 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     label: 'Copy',
                     onClick: () => this._copyWorkspace(calc, gameObject),
                 });
-
+                actions.push({
+                    label: 'Select Context File',
+                    onClick: () => this._SelectContextFile(calc, gameObject),
+                });
                 actions.push({
                     label: 'Open Context in New Tab',
                     onClick: () => this._switchToPlayer(calc, gameObject),
@@ -653,6 +655,17 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 },
             });
         }
+    }
+
+    private _SelectContextFile(
+        calc: FileCalculationContext,
+        file: ContextGroup3D
+    ) {
+        this._game.simulation3D.simulation.selection.selectFile(
+            file.file,
+            false,
+            this._game.simulation3D.simulation.filepanel
+        );
     }
 
     private _switchToPlayer(

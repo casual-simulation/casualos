@@ -465,7 +465,8 @@ export abstract class BaseInteractionManager {
         file.contextGroup.simulation3D.simulation.recent.selectedRecentFile = null;
         await file.contextGroup.simulation3D.simulation.selection.selectFile(
             <AuxFile>file.file,
-            shouldMultiSelect
+            shouldMultiSelect,
+            file.contextGroup.simulation3D.simulation.filePanel
         );
     }
 

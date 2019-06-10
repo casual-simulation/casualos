@@ -249,7 +249,11 @@ export default class FileTable extends Vue {
             if (this.files.length === 1) {
                 await this.fileManager.selection.clearSelection();
             } else {
-                await this.fileManager.selection.selectFile(file);
+                await this.fileManager.selection.selectFile(
+                    file,
+                    false,
+                    this.fileManager.filePanel
+                );
             }
         }
     }
@@ -264,7 +268,11 @@ export default class FileTable extends Vue {
     async createFile() {
         const id = await this.fileManager.helper.createFile();
         const file = this.fileManager.helper.filesState[id];
-        this.fileManager.selection.selectFile(file, true);
+        this.fileManager.selection.selectFile(
+            file,
+            true,
+            this.fileManager.filePanel
+        );
     }
 
     addTag(placement: NewTagPlacement = 'top') {
@@ -390,7 +398,11 @@ export default class FileTable extends Vue {
             }
         }
 
-        await this.fileManager.selection.selectFile(workspace, true);
+        await this.fileManager.selection.selectFile(
+            workspace,
+            true,
+            this.fileManager.filePanel
+        );
 
         this.resetCreateWorksurfaceDialog();
     }

@@ -96,6 +96,13 @@ export class FilePanelManager implements SubscriptionLike {
     }
 
     /**
+     * Makes sure the sheets is open when it needs to be on reselecting
+     */
+    keepSheetsOpen() {
+        this.isOpen = true;
+    }
+
+    /**
      * Gets an observable that resolves when the file panel is opened or closed.
      */
     get isOpenChanged(): Observable<boolean> {
