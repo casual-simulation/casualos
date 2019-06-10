@@ -9,6 +9,7 @@
 -   Improvements
     -   Changed the function tag `player.isBuilder()` to `player.isDesigner()`;
     -   Clicking on the same file as the selected file will now open the sheet if it has been closed;
+    -   Added a `Select Context File` seciton in the workspace dropdown. This will select the file responsible for the workspace and open up it's sheet.
 -   Bug Fixes
     -   Clicking on the same file as the selected file will no longer deselect the file in single selection mode.
 
