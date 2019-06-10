@@ -247,7 +247,8 @@
         </div>
 
         <md-dialog :md-active.sync="showCreateWorksurfaceDialog">
-            <md-dialog-title>Create Surface from Selection</md-dialog-title>
+            <md-dialog-title v-if="diffSelected">Create Surface</md-dialog-title>
+            <md-dialog-title v-else>Create Surface from Selection</md-dialog-title>
 
             <md-dialog-content>
                 <md-field>
