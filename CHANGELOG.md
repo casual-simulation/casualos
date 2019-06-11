@@ -1,6 +1,6 @@
 # AUX Changelog
 
-## V0.8.12 - or are we on 0.9 now?
+## V0.9.0
 
 ### Date: TBD
 
@@ -12,6 +12,9 @@
     -   Added a `Select Context File` seciton in the workspace dropdown. This will select the file responsible for the workspace and open up it's sheet.
 -   Bug Fixes
     -   Clicking on the same file as the selected file will no longer deselect the file in single selection mode.
+    -   Fixed accidental double render when running in AUX Builder.
+    -   VR mode is back to its previous working state (controllers are detected and displayed but no input is used).
+    -   AR mode is back to its previous working state (along with inventory!).
 
 ## V0.8.11
 
