@@ -24,6 +24,7 @@ import {
     baseAuxAmbientLight,
     baseAuxDirectionalLight,
 } from '../../shared/scene/SceneUtils';
+import { WebVRDisplays } from '../../shared/WebVRDisplays';
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
@@ -254,44 +255,46 @@ export class PlayerGame extends Game {
     protected renderCore(): void {
         super.renderCore();
 
-        //
-        // [Inventory scene]
-        //
+        if (!WebVRDisplays.isPresenting()) {
+            //
+            // [Inventory scene]
+            //
 
-        this.renderer.clearDepth(); // Clear depth buffer so that inventory scene always appears above the main scene.
+            this.renderer.clearDepth(); // Clear depth buffer so that inventory scene always appears above the main scene.
 
-        if (this.mainScene.background instanceof Color) {
-            this.inventorySceneBackgroundUpdate(this.mainScene.background);
+            if (this.mainScene.background instanceof Color) {
+                this.inventorySceneBackgroundUpdate(this.mainScene.background);
+            }
+
+            this.renderer.setViewport(
+                this.inventoryViewport.x,
+                this.inventoryViewport.y,
+                this.inventoryViewport.width,
+                this.inventoryViewport.height
+            );
+            this.renderer.setScissor(
+                this.inventoryViewport.x,
+                this.inventoryViewport.y,
+                this.inventoryViewport.width,
+                this.inventoryViewport.height
+            );
+            this.renderer.setScissorTest(true);
+
+            // Render the inventory scene with the inventory main camera.
+            this.renderer.render(
+                this.inventoryScene,
+                this.inventoryCameraRig.mainCamera
+            );
+
+            this.inventoryScene.background = null;
+
+            // Render the inventory scene with the inventory ui world camera.
+            this.renderer.clearDepth(); // Clear depth buffer so that ui objects dont use it.
+            this.renderer.render(
+                this.inventoryScene,
+                this.inventoryCameraRig.uiWorldCamera
+            );
         }
-
-        this.renderer.setViewport(
-            this.inventoryViewport.x,
-            this.inventoryViewport.y,
-            this.inventoryViewport.width,
-            this.inventoryViewport.height
-        );
-        this.renderer.setScissor(
-            this.inventoryViewport.x,
-            this.inventoryViewport.y,
-            this.inventoryViewport.width,
-            this.inventoryViewport.height
-        );
-        this.renderer.setScissorTest(true);
-
-        // Render the inventory scene with the inventory main camera.
-        this.renderer.render(
-            this.inventoryScene,
-            this.inventoryCameraRig.mainCamera
-        );
-
-        this.inventoryScene.background = null;
-
-        // Render the inventory scene with the inventory ui world camera.
-        this.renderer.clearDepth(); // Clear depth buffer so that ui objects dont use it.
-        this.renderer.render(
-            this.inventoryScene,
-            this.inventoryCameraRig.uiWorldCamera
-        );
     }
 
     private inventorySceneBackgroundUpdate(colorToOffset: Color) {

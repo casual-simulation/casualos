@@ -76,9 +76,7 @@
         "socket.io-client": "2.2.0",
         "three": "^0.105.2",
         "three-bmfont-text": "^2.3.0",
-        "three-vrcontroller-module": "^1.0.3",
-        "three-vrcontrols-module": "^2.2.1",
-        "three-vreffect-module": "^2.2.0",
+        "three-vrcontroller-module": "^1.0.5",
         "useragent": "^2.3.0",
         "uuid": "^3.3.2",
         "vhost": "^3.0.2",
@@ -91,7 +89,6 @@
         "vue-qrcode-reader": "^1.4.2",
         "vue-router": "^3.0.1",
         "vue-shortkey": "^3.1.6",
-        "webvr-polyfill": "^0.10.10",
-        "webvr-ui": "^0.10.0"
+        "webvr-polyfill": "^0.10.10"
     }
 }

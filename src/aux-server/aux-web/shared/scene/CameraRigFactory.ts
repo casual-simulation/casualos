@@ -46,12 +46,6 @@ export function createCameraRig(
             Orthographic_NearClip,
             Orthographic_FarClip
         );
-        rig.mainCamera.position.set(
-            Orthographic_FrustrumSize,
-            Orthographic_FrustrumSize,
-            Orthographic_FrustrumSize
-        );
-        rig.mainCamera.zoom = Orthographic_DefaultZoom;
     } else {
         rig.mainCamera = new PerspectiveCamera(
             Perspective_FOV,
@@ -59,14 +53,8 @@ export function createCameraRig(
             Perspective_NearClip,
             Perspective_FarClip
         );
-        rig.mainCamera.position.set(
-            Perspective_DefaultPosition.x,
-            Perspective_DefaultPosition.y,
-            Perspective_DefaultPosition.z
-        );
     }
 
-    rig.mainCamera.lookAt(new Vector3(0, 0, 0));
     rig.mainCamera.layers.enable(LayersHelper.Layer_Default);
     scene.add(rig.mainCamera);
 
@@ -89,18 +77,38 @@ export function createCameraRig(
             rig.mainCamera.far
         );
     }
-    rig.mainCamera.add(rig.uiWorldCamera);
+
     rig.uiWorldCamera.position.set(0, 0, 0);
     rig.uiWorldCamera.rotation.set(0, 0, 0);
+    rig.mainCamera.add(rig.uiWorldCamera);
 
     // Ui World camera only draws objects on the 'UI World Layer'.
     rig.uiWorldCamera.layers.set(LayersHelper.Layer_UIWorld);
 
-    rig.mainCamera.updateMatrixWorld(true);
-
+    resetCameraRigToDefaultPosition(rig);
     resizeCameraRig(rig);
 
     return rig;
+}
+
+export function resetCameraRigToDefaultPosition(rig: CameraRig): void {
+    if (rig.mainCamera instanceof OrthographicCamera) {
+        rig.mainCamera.position.set(
+            Orthographic_FrustrumSize,
+            Orthographic_FrustrumSize,
+            Orthographic_FrustrumSize
+        );
+        rig.mainCamera.zoom = Orthographic_DefaultZoom;
+    } else {
+        rig.mainCamera.position.set(
+            Perspective_DefaultPosition.x,
+            Perspective_DefaultPosition.y,
+            Perspective_DefaultPosition.z
+        );
+    }
+
+    rig.mainCamera.lookAt(new Vector3(0, 0, 0));
+    rig.mainCamera.updateMatrixWorld(true);
 }
 
 export function resizeCameraRig(rig: CameraRig): void {
