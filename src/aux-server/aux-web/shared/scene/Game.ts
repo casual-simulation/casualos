@@ -632,11 +632,18 @@ export abstract class Game implements AuxFile3DFinder {
 
                 // Restart the regular animation update loop.
                 this.renderer.setAnimationLoop(this.frameUpdate);
+                // Go back to the orthographic camera type when exiting XR.
+                this.setCameraType('orthographic');
             } else {
                 this.removeSidebarItem('enable_xr');
                 this.addSidebarItem('disable_xr', 'Disable AR', () => {
                     this.toggleXR();
                 });
+
+                // XR requires that we be using a perspective camera.
+                this.setCameraType('perspective');
+                // Remove the camera toggle from the menu while in XR.
+                this.removeSidebarItem('toggle_camera_type');
 
                 document.documentElement.classList.add('ar-app');
                 this.xrSession = await this.xrDisplay.requestSession(
