@@ -20,6 +20,17 @@ export namespace WebVRDisplays {
     }
 
     /**
+     * Is a VR display currently presenting?
+     */
+    export function isPresenting(): boolean {
+        if (vrDisplays && vrDisplays.length > 0) {
+            return vrDisplays.some(display => display.isPresenting === true);
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * This is fired when a compatible VR display is connected to the computer.
      */
     export var onVRDisplayConnect: ArgEvent<VRDisplay> = new ArgEvent<

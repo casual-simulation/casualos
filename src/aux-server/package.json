@@ -76,7 +76,7 @@
         "socket.io-client": "2.2.0",
         "three": "^0.105.2",
         "three-bmfont-text": "^2.3.0",
-        "three-vrcontroller-module": "^1.0.3",
+        "three-vrcontroller-module": "^1.0.5",
         "useragent": "^2.3.0",
         "uuid": "^3.3.2",
         "vhost": "^3.0.2",

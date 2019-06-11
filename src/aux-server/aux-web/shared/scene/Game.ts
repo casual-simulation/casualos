@@ -597,10 +597,12 @@ export abstract class Game implements AuxFile3DFinder {
         // [Main scene]
         //
 
-        this.renderer.setSize(
-            this.mainViewport.width,
-            this.mainViewport.height
-        );
+        if (!WebVRDisplays.isPresenting()) {
+            this.renderer.setSize(
+                this.mainViewport.width,
+                this.mainViewport.height
+            );
+        }
 
         this.renderer.setScissorTest(false);
 
@@ -745,23 +747,15 @@ export abstract class Game implements AuxFile3DFinder {
     protected handleVRDisplayPresentChange(display: VRDisplay): void {
         this.updateVRToggle();
 
-        if (!WebVRDisplays.mainVRDisplay().isPresenting) {
-            this.renderer.vr.enabled = false;
-            this.renderer.vr.setDevice(null);
-        } else {
+        if (WebVRDisplays.mainVRDisplay().isPresenting) {
             this.renderer.vr.enabled = true;
             this.renderer.vr.setDevice(WebVRDisplays.mainVRDisplay());
+        } else {
+            this.renderer.vr.enabled = false;
+            this.renderer.vr.setDevice(null);
+            this.inputVR.disconnectControllers();
+            // reset camera back to default position.
+            resetCameraRigToDefaultPosition(this.mainCameraRig);
         }
-    }
-
-    protected handleExitVR(display: any) {
-        console.log('[Game] exit vr.');
-
-        this.renderer.vr.enabled = false;
-
-        this.inputVR.disconnectControllers();
-
-        // reset camera back to default position.
-        resetCameraRigToDefaultPosition(this.mainCameraRig);
     }
 }

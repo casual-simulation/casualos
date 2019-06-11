@@ -136,9 +136,8 @@ export class InputVR {
     }
 
     private _handleVRControllerConnected(event: any) {
-        console.log('[InputVR] VR Controller connected:');
+        console.log('[InputVR] VR Controller connected:', event);
         VRController.inspect();
-        console.log(event);
 
         let controller = event.detail;
         controller.standingMatrix = (<any>(
@@ -162,8 +161,7 @@ export class InputVR {
     }
 
     private _handleVRControllerDisconnected(event: any) {
-        console.log('[InputVR] VR controller disconnected:');
-        console.log(event);
+        console.log('[InputVR] VR controller disconnected:', event);
 
         let controller = event.controller;
 
@@ -211,7 +209,7 @@ class ControllerMesh extends Object3D {
         // Create input states for all buttons found on the controller.
         let buttons = <any[]>this._controller.gamepad.buttons;
         for (let i = 0; i < buttons.length; i++) {
-            console.log('created input state for button ' + i);
+            console.log('created input state for button', i);
             this.buttonStates[i] = new InputState();
         }
     }
