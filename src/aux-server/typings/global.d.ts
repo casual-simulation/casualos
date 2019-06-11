@@ -28,9 +28,6 @@ declare module '*.json' {
 }
 
 declare module 'monaco-editor/esm/vs/editor/standalone/browser/simpleServices';
-declare module 'three-vrcontrols-module';
-declare module 'three-vreffect-module';
-declare module 'webvr-ui';
 
 declare module 'downloadjs' {
     function download(data: any, fileName: string, mimeType: string): void;

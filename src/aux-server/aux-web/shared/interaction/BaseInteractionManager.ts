@@ -37,6 +37,7 @@ import { DraggableGroup } from './DraggableGroup';
 import { isObjectVisible } from '../scene/SceneUtils';
 import { CameraRigControls } from './CameraRigControls';
 import { Game } from '../scene/Game';
+import { WebVRDisplays } from '../WebVRDisplays';
 
 export abstract class BaseInteractionManager {
     protected _game: Game;
@@ -121,7 +122,10 @@ export abstract class BaseInteractionManager {
             return true;
         });
 
-        if (this._game.vrDisplay && this._game.vrDisplay.isPresenting) {
+        if (
+            WebVRDisplays.mainVRDisplay() &&
+            WebVRDisplays.mainVRDisplay().isPresenting
+        ) {
             const inputVR = this._game.getInputVR();
 
             // VR Mode interaction.
