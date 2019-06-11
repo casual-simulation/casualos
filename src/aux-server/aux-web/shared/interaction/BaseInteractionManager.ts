@@ -38,6 +38,11 @@ import { isObjectVisible } from '../scene/SceneUtils';
 import { CameraRigControls } from './CameraRigControls';
 import { Game } from '../scene/Game';
 import { WebVRDisplays } from '../WebVRDisplays';
+import {
+    VRController3D,
+    VRController_ClickColor,
+    VRController_DefaultColor,
+} from '../scene/vr/VRController3D';
 
 export abstract class BaseInteractionManager {
     protected _game: Game;
@@ -122,39 +127,18 @@ export abstract class BaseInteractionManager {
             return true;
         });
 
-        if (
-            WebVRDisplays.mainVRDisplay() &&
-            WebVRDisplays.mainVRDisplay().isPresenting
-        ) {
+        if (WebVRDisplays.isPresenting()) {
             const inputVR = this._game.getInputVR();
 
             // VR Mode interaction.
-            for (let i = 0; i < 5; i++) {
-                if (inputVR.getButtonDown(0, i)) {
-                    console.log(
-                        '[InteractionManager] VR button ' +
-                            i +
-                            ' down. frame: ' +
-                            this._game.getTime().frameCount
-                    );
-                }
+            for (let i = 0; i < inputVR.controllerCount; i++) {
+                const controller3D = inputVR.getController3D(i);
 
-                if (inputVR.getButtonHeld(0, i)) {
-                    console.log(
-                        '[InteractionManager] VR button ' +
-                            i +
-                            ' held. frame: ' +
-                            this._game.getTime().frameCount
-                    );
-                }
-
-                if (inputVR.getButtonUp(0, i)) {
-                    console.log(
-                        '[InteractionManager] VR button ' +
-                            i +
-                            ' up. frame: ' +
-                            this._game.getTime().frameCount
-                    );
+                // Change color of controller to indicate that primary button is being pressed.
+                if (controller3D.getPrimaryButtonDown()) {
+                    controller3D.setColor(VRController_ClickColor);
+                } else if (controller3D.getPrimaryButtonUp()) {
+                    controller3D.setColor(VRController_DefaultColor);
                 }
             }
         } else {

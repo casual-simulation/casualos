@@ -23,7 +23,7 @@ import {
 } from './CameraRigFactory';
 import { Time } from './Time';
 import { Input, InputType } from './Input';
-import { InputVR } from './InputVR';
+import { InputVR } from './vr/InputVR';
 import { BaseInteractionManager } from '../interaction/BaseInteractionManager';
 import { Viewport } from './Viewport';
 import { HtmlMixer } from './HtmlMixer';
