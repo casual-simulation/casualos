@@ -120,7 +120,6 @@ export abstract class Game implements AuxFile3DFinder {
 
         await this.onBeforeSetupComplete();
 
-        // this.frameUpdate();
         this.frameUpdate = this.frameUpdate.bind(this);
         this.renderer.setAnimationLoop(this.frameUpdate);
     }
@@ -514,13 +513,11 @@ export abstract class Game implements AuxFile3DFinder {
         this.renderUpdate(xrFrame);
         this.time.update();
 
-        // if (this.xrSession) {
-        //     this.xrSession.requestFrame((nextXRFrame: any) =>
-        //         this.frameUpdate(nextXRFrame)
-        //     );
-        // } else {
-        //     requestAnimationFrame(() => this.frameUpdate());
-        // }
+        if (this.xrSession) {
+            this.xrSession.requestFrame((nextXRFrame: any) =>
+                this.frameUpdate(nextXRFrame)
+            );
+        }
     }
 
     protected cameraUpdate() {
@@ -632,6 +629,9 @@ export abstract class Game implements AuxFile3DFinder {
                 await this.xrSession.end();
                 this.xrSession = null;
                 document.documentElement.classList.remove('ar-app');
+
+                // Restart the regular animation update loop.
+                this.renderer.setAnimationLoop(this.frameUpdate);
             } else {
                 this.removeSidebarItem('enable_xr');
                 this.addSidebarItem('disable_xr', 'Disable AR', () => {
@@ -656,6 +656,12 @@ export abstract class Game implements AuxFile3DFinder {
                 );
 
                 this.startXR();
+
+                // Stop regular animation update loop and use the one from the xr session.
+                this.renderer.setAnimationLoop(null);
+                this.xrSession.requestFrame((nextXRFrame: any) =>
+                    this.frameUpdate(nextXRFrame)
+                );
 
                 setTimeout(() => {
                     this.gameView.resize();
