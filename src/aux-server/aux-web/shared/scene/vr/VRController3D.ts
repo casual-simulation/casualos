@@ -6,11 +6,13 @@ import {
     Ray,
     Color,
     MeshToonMaterial,
+    Vector3,
 } from 'three';
 import { InputState } from '../Input';
 import { baseAuxMeshMaterial, disposeMesh } from '../SceneUtils';
 import { InputVR } from './InputVR';
 import { Game } from '../Game';
+import { PointerRay3D } from './PointerRay3D';
 
 export const VRController_DefaultColor: Color = new Color('#db3236');
 export const VRController_ClickColor: Color = new Color('#e5b94e');
@@ -30,22 +32,34 @@ export class VRController3D extends Object3D {
     /**
      * This is the VRController from VRController.js
      */
-    private _controller: any;
+    private _controller: Object3D;
 
     private _game: Game;
     private _arrowMesh: Mesh;
     private _arrowHandleMesh: Mesh;
+    private _pointerRay: Ray;
+    private _pointerRay3D: PointerRay3D;
 
     get controller() {
         return this._controller;
     }
 
     get controllerIndex(): number {
-        return this.controller.gamepad.index;
+        return (<any>this.controller).gamepad.index;
     }
 
     get primaryButtonIndex(): number {
+        // This could easily be extended later to check for specific controller models and return a different
+        // button index for the 'primary' if or when we run into the need.
         return 1;
+    }
+
+    get pointerRay(): Ray {
+        return this._pointerRay;
+    }
+
+    get pointerRay3D(): PointerRay3D {
+        return this._pointerRay3D;
     }
 
     constructor(controller: any, game: Game) {
@@ -53,7 +67,10 @@ export class VRController3D extends Object3D {
 
         this._controller = controller;
         this._game = game;
-        console.log('controller:', controller);
+        this._pointerRay = new Ray();
+        this._pointerRay3D = new PointerRay3D();
+        this._pointerRay3D.ray = this._pointerRay;
+        this.add(this.pointerRay3D);
 
         // Create the meshes.
         const controllerMaterial = baseAuxMeshMaterial();
@@ -74,7 +91,7 @@ export class VRController3D extends Object3D {
         this.add(this._arrowMesh);
 
         // Create input states for all buttons found on the controller.
-        let buttons = <any[]>this._controller.gamepad.buttons;
+        let buttons = <any[]>(<any>this.controller).gamepad.buttons;
         for (let i = 0; i < buttons.length; i++) {
             this._buttonStates[i] = new InputState();
         }
@@ -152,25 +169,21 @@ export class VRController3D extends Object3D {
         return false;
     }
 
-    /**
-     * Returns the pointer ray for the specified controller.
-     */
-    getPointerRay(): Ray {
-        // let controllerMesh = this._getControllerMesh(controllerIndex);
-
-        // if (controllerMesh) {
-        //     let origin = new Vector3();
-        //     let direction = new Vector3();
-        //     let ray = new Ray(origin, direction);
-
-        //     return ray;
-        // }
-
-        return null;
-    }
-
     update(curFrame: number) {
-        let buttons = <any[]>this._controller.gamepad.buttons;
+        // Update pointer ray.
+        const pointerDirection = new Vector3();
+        this.controller.getWorldDirection(pointerDirection);
+        pointerDirection.multiplyScalar(-1);
+
+        const pointerOrigin = new Vector3();
+        this.controller.getWorldPosition(pointerOrigin);
+
+        this._pointerRay.set(pointerOrigin, pointerDirection);
+
+        this.pointerRay3D.update();
+
+        // Update button input.
+        let buttons = <any[]>(<any>this.controller).gamepad.buttons;
 
         for (let i = 0; i < buttons.length; i++) {
             let button = buttons[i];

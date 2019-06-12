@@ -128,9 +128,11 @@ export abstract class BaseInteractionManager {
         });
 
         if (WebVRDisplays.isPresenting()) {
+            //
+            // VR Mode interaction.
+            //
             const inputVR = this._game.getInputVR();
 
-            // VR Mode interaction.
             for (let i = 0; i < inputVR.controllerCount; i++) {
                 const controller3D = inputVR.getController3D(i);
 
@@ -140,10 +142,19 @@ export abstract class BaseInteractionManager {
                 } else if (controller3D.getPrimaryButtonUp()) {
                     controller3D.setColor(VRController_DefaultColor);
                 }
+
+                // Update pointer ray stop distance.
+                const { gameObject, hit } = this.findHoveredGameObjectVR(
+                    controller3D
+                );
+                controller3D.pointerRay3D.stopDistance = hit
+                    ? hit.distance
+                    : undefined;
             }
         } else {
+            //
             // Normal browser interaction.
-
+            //
             const input = this._game.getInput();
 
             // Detect if we are over any html mixer iframe element.
@@ -187,11 +198,11 @@ export abstract class BaseInteractionManager {
                         this._game.gameView.gameView
                     )
                 ) {
-                    let { gameObject, hit } = this.findHoveredGameObject();
+                    const { gameObject, hit } = this.findHoveredGameObject();
 
                     if (gameObject) {
                         // Start game object click operation.
-                        let gameObjectClickOperation = this.createGameObjectClickOperation(
+                        const gameObjectClickOperation = this.createGameObjectClickOperation(
                             gameObject,
                             hit
                         );
@@ -207,7 +218,7 @@ export abstract class BaseInteractionManager {
                             );
                         }
                     } else {
-                        let emptyClickOperation = this.createEmptyClickOperation();
+                        const emptyClickOperation = this.createEmptyClickOperation();
                         if (emptyClickOperation !== null) {
                             this._operations.push(emptyClickOperation);
                         }
@@ -220,7 +231,7 @@ export abstract class BaseInteractionManager {
                 ) {
                     const element = input.getTargetData().inputDown;
 
-                    let elementClickOperation = this.createHtmlElementClickOperation(
+                    const elementClickOperation = this.createHtmlElementClickOperation(
                         element
                     );
                     if (elementClickOperation !== null) {
@@ -267,7 +278,7 @@ export abstract class BaseInteractionManager {
             }
 
             if (input.currentInputType === InputType.Mouse) {
-                let { gameObject } = this.findHoveredGameObject();
+                const { gameObject } = this.findHoveredGameObject();
 
                 let file: File = null;
                 let simulation: Simulation = null;
@@ -359,7 +370,7 @@ export abstract class BaseInteractionManager {
         let hit: Intersection = null;
         let hitObject: GameObject = null;
 
-        // Iterate through draggable groups until we hit and object in one of them.
+        // Iterate through draggable groups until we hit an object in one of them.
         for (let i = 0; i < draggableGroups.length; i++) {
             const objects = draggableGroups[i].objects;
             const camera = draggableGroups[i].camera;
@@ -377,9 +388,48 @@ export abstract class BaseInteractionManager {
             );
             const raycastResult = Physics.raycastAtScreenPos(
                 screenPos,
-                new Raycaster(),
                 objects,
                 camera
+            );
+            hit = Physics.firstRaycastHit(raycastResult);
+            hitObject = hit ? this.findGameObjectForHit(hit) : null;
+
+            if (hitObject) {
+                // We hit a game object in this simulation, stop searching through simulations.
+                break;
+            }
+        }
+
+        if (hitObject) {
+            return {
+                gameObject: hitObject,
+                hit: hit,
+            };
+        } else {
+            return {
+                gameObject: null,
+                hit: null,
+            };
+        }
+    }
+
+    /**
+     * Find the first game object that is being pointed at by the given vr controller.
+     * @param controller The vr controller to test with.
+     */
+    findHoveredGameObjectVR(controller: VRController3D) {
+        const draggableGroups = this.getDraggableGroups();
+
+        let hit: Intersection = null;
+        let hitObject: GameObject = null;
+
+        // Iterate through draggable groups until we hit an object in one of them.
+        for (let i = 0; i < draggableGroups.length; i++) {
+            const objects = draggableGroups[i].objects;
+
+            const raycastResult = Physics.raycast(
+                controller.pointerRay,
+                objects
             );
             hit = Physics.firstRaycastHit(raycastResult);
             hitObject = hit ? this.findGameObjectForHit(hit) : null;

@@ -318,12 +318,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 );
             }
 
-            const hits = Physics.raycastAtScreenPos(
-                screenPos,
-                new Raycaster(),
-                objects,
-                camera
-            );
+            const hits = Physics.raycastAtScreenPos(screenPos, objects, camera);
             const hit = Physics.firstRaycastHit(hits);
 
             if (hit) {

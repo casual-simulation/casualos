@@ -62,7 +62,6 @@ export class InputVR {
 
     private _handleVRControllerConnected(event: any) {
         console.log('[InputVR] VR Controller connected:', event);
-        VRController.inspect();
 
         const controller = event.detail;
         controller.standingMatrix = (<any>(
