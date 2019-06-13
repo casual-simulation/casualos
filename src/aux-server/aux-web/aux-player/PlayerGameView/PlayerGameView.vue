@@ -28,6 +28,18 @@
                 </div>
             </div>
 
+            <div class="slider-visible"></div>
+
+            <div
+                class="slider-hidden"
+                @mousedown="game.mouseDownSlider()"
+                @mouseup="game.mouseUpSlider()"
+                @mousemove="game.mouseMoveSlider($event)"
+                @touchstart="game.mouseDownSlider()"
+                @touchend="game.mouseUpSlider()"
+                @touchmove="game.touchMoveSlider($event)"
+            ></div>
+
             <!-- Inventory viewport -->
             <div
                 v-if="game.inventoryViewport"
