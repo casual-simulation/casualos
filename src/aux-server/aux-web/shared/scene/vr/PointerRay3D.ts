@@ -20,6 +20,7 @@ import { Physics } from '../Physics';
 
 export const PointerRay_DefaultColor: Color = new Color('#ffffff');
 export const PointerRay_DefaultStopDistance: number = 10000;
+export const PointerRay_DefaultCursorVisible: boolean = false;
 
 export class PointerRay3D extends Object3D {
     /**
@@ -31,6 +32,11 @@ export class PointerRay3D extends Object3D {
      * The distance down the ray that the 3d line should stop.
      */
     stopDistance: number;
+
+    /**
+     * Wether or not the cursor is visible.
+     */
+    showCursor: boolean;
 
     // Pointer line
     private _lineGeometry: BufferGeometry;
@@ -65,7 +71,7 @@ export class PointerRay3D extends Object3D {
         const cursorMaterial = new MeshBasicMaterial({
             color: PointerRay_DefaultColor,
         });
-        const cursorGeometry = new SphereBufferGeometry(0.01, 16, 16);
+        const cursorGeometry = new SphereBufferGeometry(0.015, 16, 16);
         this._cursor = new Mesh(cursorGeometry, cursorMaterial);
 
         this.add(this._cursor);
@@ -94,6 +100,12 @@ export class PointerRay3D extends Object3D {
 
         // Update cursor position to end point.
         this._cursor.position.copy(localStopPoint);
+
+        if (this.showCursor === undefined || this.showCursor === null) {
+            this._cursor.visible = PointerRay_DefaultCursorVisible;
+        } else {
+            this._cursor.visible = this.showCursor;
+        }
     }
 
     dispose(): void {
