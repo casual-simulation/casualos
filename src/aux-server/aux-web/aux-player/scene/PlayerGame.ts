@@ -410,8 +410,8 @@ export class PlayerGame extends Game {
         }
 
         if (this.inventoryCameraRig) {
-            resizeCameraRig(this.inventoryCameraRig);
             this.overrideOrthographicViewportZoom(this.inventoryCameraRig);
+            resizeCameraRig(this.inventoryCameraRig);
         }
     }
 
@@ -455,8 +455,8 @@ export class PlayerGame extends Game {
         this.inventoryViewport.setScale(null, invHeightScale);
 
         if (this.inventoryCameraRig) {
-            resizeCameraRig(this.inventoryCameraRig);
             this.overrideOrthographicViewportZoom(this.inventoryCameraRig);
+            resizeCameraRig(this.inventoryCameraRig);
         }
 
         (<HTMLElement>this.sliderVis).style.top =
@@ -474,6 +474,7 @@ export class PlayerGame extends Game {
     private overrideOrthographicViewportZoom(cameraRig: CameraRig) {
         if (cameraRig.mainCamera instanceof OrthographicCamera) {
             const aspect = cameraRig.viewport.width / cameraRig.viewport.height;
+
             // found that 50 is the preset zoom of the rig.maincamera.zoom so I am using this as the base zoom
             const newZoom = 50 - (49 - aspect * 7);
             cameraRig.mainCamera.zoom = newZoom;
