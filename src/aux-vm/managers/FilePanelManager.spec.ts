@@ -329,12 +329,12 @@ describe('FilePanelManager', () => {
                 })
             );
 
-            await selection.selectFile(tree.value['test']);
+            await selection.selectFile(tree.value['test'], false, manager);
             fileUpdated.next([{ file: tree.value['test'], tags: [] }]);
 
             // Need to re-trigger the selection changed event
             // because the file update doesn't trigger the refresh.
-            await selection.selectFile(tree.value['test']);
+            await selection.selectFile(tree.value['test'], false, manager);
 
             expect(files).toEqual([tree.value['test']]);
             expect(isOpen).toBe(true);
@@ -407,8 +407,8 @@ describe('FilePanelManager', () => {
                 })
             );
 
-            await selection.selectFile(tree.value['test']);
-            await selection.selectFile(tree.value['test']);
+            await selection.selectFile(tree.value['test'], true, manager);
+            await selection.selectFile(tree.value['test'], true, manager);
 
             manager.isOpen = true;
 
