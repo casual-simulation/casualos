@@ -26,6 +26,7 @@ import { dropWhile } from 'lodash';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { BuilderSimulation3D } from '../../scene/BuilderSimulation3D';
 import { BuilderNewFileDragOperation } from '../DragOperation/BuilderNewFileDragOperation';
+import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 
 /**
  * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
@@ -42,9 +43,10 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
         simulation: BuilderSimulation3D,
         interaction: BuilderInteractionManager,
         file: AuxFile3D | ContextGroup3D,
-        hit: Intersection
+        hit: Intersection,
+        vrController: VRController3D
     ) {
-        super(simulation, interaction, file.file, file);
+        super(simulation, interaction, file.file, file, vrController);
         this._hit = hit;
     }
 
@@ -92,7 +94,8 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
                     this._hit,
                     draggedObjects,
                     <BuilderGroup3D>workspace,
-                    file3D.context
+                    file3D.context,
+                    this._vrController
                 );
             }
         }
@@ -102,7 +105,8 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
             this._hit,
             [this._file3D.file],
             <BuilderGroup3D>workspace,
-            null
+            null,
+            this._vrController
         );
     }
 
@@ -114,7 +118,8 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
             this._simulation3D,
             this._interaction,
             duplicatedFile,
-            this._file
+            this._file,
+            this._vrController
         );
     }
 
@@ -132,7 +137,8 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
             this._simulation3D,
             this._interaction,
             duplicatedFile,
-            this._file
+            this._file,
+            this._vrController
         );
     }
 

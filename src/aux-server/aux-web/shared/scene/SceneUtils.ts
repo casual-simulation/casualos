@@ -33,6 +33,7 @@ import {
     PerspectiveCamera,
     OrthographicCamera,
     Color,
+    Ray,
 } from 'three';
 import { flatMap } from 'lodash';
 import {

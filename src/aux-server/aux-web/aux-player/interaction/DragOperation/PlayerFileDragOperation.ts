@@ -22,6 +22,7 @@ import { Input } from '../../../shared/scene/Input';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
+import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 
 export class PlayerFileDragOperation extends BaseFileDragOperation {
     // This overrides the base class BaseInteractionManager
@@ -51,9 +52,10 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
         inventorySimulation3D: InventorySimulation3D,
         interaction: PlayerInteractionManager,
         files: File[],
-        context: string
+        context: string,
+        vrController: VRController3D | null
     ) {
-        super(playerSimulation3D, interaction, files, context);
+        super(playerSimulation3D, interaction, files, context, vrController);
         this._inventorySimulation3D = inventorySimulation3D;
         this._originalContext = context;
         this._originallyInInventory = this._inInventory =
@@ -65,12 +67,13 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
 
         let nextContext = this._simulation3D.context;
 
-        // Test to see if we are hovering over the inventory simulation view.
-        const pagePos = this.game.getInput().getMousePagePos();
-        const inventoryViewport = this.game.getInventoryViewport();
-        const view = this.game.gameView;
-        if (Input.pagePositionOnViewport(pagePos, inventoryViewport)) {
-            nextContext = this._inventorySimulation3D.inventoryContext;
+        if (!this._vrController) {
+            // Test to see if we are hovering over the inventory simulation view.
+            const pagePos = this.game.getInput().getMousePagePos();
+            const inventoryViewport = this.game.getInventoryViewport();
+            if (Input.pagePositionOnViewport(pagePos, inventoryViewport)) {
+                nextContext = this._inventorySimulation3D.inventoryContext;
+            }
         }
 
         let changingContexts = this._originalContext !== nextContext;
@@ -93,23 +96,33 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
                 nextContext === this._inventorySimulation3D.inventoryContext;
         }
 
-        // Get input ray from correct camera based on which context we are in.
-        let mouseDir: Ray;
-        if (this._context === this._inventorySimulation3D.inventoryContext) {
-            mouseDir = Physics.screenPosToRay(
-                Input.screenPositionForViewport(pagePos, inventoryViewport),
-                this._inventorySimulation3D.getMainCameraRig().mainCamera
-            );
+        // Get input ray for grid ray cast.
+        let inputRay: Ray;
+        if (this._vrController) {
+            inputRay = this._vrController.pointerRay.clone();
         } else {
-            mouseDir = Physics.screenPosToRay(
-                this.game.getInput().getMouseScreenPos(),
-                this._simulation3D.getMainCameraRig().mainCamera
-            );
+            // Get input ray from correct camera based on which context we are in.
+            const pagePos = this.game.getInput().getMousePagePos();
+            const inventoryViewport = this.game.getInventoryViewport();
+
+            if (
+                this._context === this._inventorySimulation3D.inventoryContext
+            ) {
+                inputRay = Physics.screenPosToRay(
+                    Input.screenPositionForViewport(pagePos, inventoryViewport),
+                    this._inventorySimulation3D.getMainCameraRig().mainCamera
+                );
+            } else {
+                inputRay = Physics.screenPosToRay(
+                    this.game.getInput().getMouseScreenPos(),
+                    this._simulation3D.getMainCameraRig().mainCamera
+                );
+            }
         }
 
         const { good, gridTile } = this._interaction.pointOnGrid(
             calc,
-            mouseDir
+            inputRay
         );
 
         if (good) {

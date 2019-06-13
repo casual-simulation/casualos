@@ -18,7 +18,7 @@ import {
     File,
 } from '@casual-simulation/aux-common';
 import { Physics } from '../scene/Physics';
-import { flatMap, union, debounce } from 'lodash';
+import { flatMap, union, debounce, remove } from 'lodash';
 import { CameraControls } from './CameraControls';
 import { MouseButtonId, InputType, Input, TargetData } from '../scene/Input';
 import { appManager } from '../AppManager';
@@ -37,14 +37,37 @@ import { DraggableGroup } from './DraggableGroup';
 import { isObjectVisible } from '../scene/SceneUtils';
 import { CameraRigControls } from './CameraRigControls';
 import { Game } from '../scene/Game';
+import { WebVRDisplays } from '../WebVRDisplays';
+import {
+    VRController3D,
+    VRController_ClickColor,
+    VRController_DefaultColor,
+} from '../scene/vr/VRController3D';
+
+interface HoveredFile {
+    /**
+     * The file that is being hovered on.
+     */
+    file: File;
+
+    /**
+     * The simulation that the hover is occuring in.
+     */
+    simulation: Simulation;
+
+    /**
+     * The last frame that this object was being hovered on.
+     */
+    frame: number;
+}
 
 export abstract class BaseInteractionManager {
     protected _game: Game;
     protected _cameraRigControllers: CameraRigControls[];
     protected _tapCodeManager: TapCodeManager;
     protected _maxTapCodeLength: number;
-    protected _hoveredObject: File;
-    protected _hoveredSimulation: Simulation;
+    protected _hoveredFiles: HoveredFile[];
+    protected _activeVRController: VRController3D;
 
     protected _draggableGroups: DraggableGroup[];
     protected _draggableGroupsDirty: boolean;
@@ -59,7 +82,7 @@ export abstract class BaseInteractionManager {
         this._operations = [];
         this._tapCodeManager = new TapCodeManager();
         this._maxTapCodeLength = 4;
-        this._hoveredObject = null;
+        this._hoveredFiles = [];
 
         // Bind event handlers to this instance of the class.
         this._handleFileAdded = this._handleFileAdded.bind(this);
@@ -121,41 +144,87 @@ export abstract class BaseInteractionManager {
             return true;
         });
 
-        if (this._game.vrDisplay && this._game.vrDisplay.isPresenting) {
+        if (WebVRDisplays.isPresenting()) {
+            //
+            // VR Mode interaction.
+            //
             const inputVR = this._game.getInputVR();
 
-            // VR Mode interaction.
-            for (let i = 0; i < 5; i++) {
-                if (inputVR.getButtonDown(0, i)) {
-                    console.log(
-                        '[InteractionManager] VR button ' +
-                            i +
-                            ' down. frame: ' +
-                            this._game.getTime().frameCount
+            if (this._activeVRController) {
+                // Detect when the 'active' vr controller is no longer providing primary input.
+                // If primary input is released by this controller, then it is no longer 'active'.
+                if (!this._activeVRController.getPrimaryButtonHeld()) {
+                    this._activeVRController.setColor(
+                        VRController_DefaultColor
                     );
+                    this._activeVRController = null;
+                }
+            }
+
+            for (let i = 0; i < inputVR.controllerCount; i++) {
+                const controller3D = inputVR.getController3D(i);
+
+                if (!this._activeVRController) {
+                    // Detect first controller to provide primary input.
+                    // This becomes the 'active' vr controller for input.
+                    if (controller3D.getPrimaryButtonDown()) {
+                        this._activeVRController = controller3D;
+                        // Change color of controller to indicate that it is active.
+                        controller3D.setColor(VRController_ClickColor);
+                    }
                 }
 
-                if (inputVR.getButtonHeld(0, i)) {
-                    console.log(
-                        '[InteractionManager] VR button ' +
-                            i +
-                            ' held. frame: ' +
-                            this._game.getTime().frameCount
-                    );
+                const { gameObject, hit } = this.findHoveredGameObjectVR(
+                    controller3D
+                );
+
+                if (hit) {
+                    // Update pointer ray stop distance.
+                    controller3D.pointerRay3D.stopDistance = hit.distance;
+                    controller3D.pointerRay3D.showCursor = true;
+
+                    // Set file has being hovered on.
+                    this._setHoveredFile(gameObject);
+                } else {
+                    controller3D.pointerRay3D.stopDistance = 10;
+                    controller3D.pointerRay3D.showCursor = false;
                 }
 
-                if (inputVR.getButtonUp(0, i)) {
-                    console.log(
-                        '[InteractionManager] VR button ' +
-                            i +
-                            ' up. frame: ' +
-                            this._game.getTime().frameCount
-                    );
+                if (this._activeVRController === controller3D) {
+                    if (this._activeVRController.getPrimaryButtonDown()) {
+                        if (gameObject) {
+                            // Start game object click operation.
+                            const gameObjectClickOperation = this.createGameObjectClickOperation(
+                                gameObject,
+                                hit,
+                                this._activeVRController
+                            );
+                            if (gameObjectClickOperation !== null) {
+                                this._operations.push(gameObjectClickOperation);
+                            }
+
+                            if (gameObject instanceof AuxFile3D) {
+                                this.handlePointerDown(
+                                    gameObject.file,
+                                    gameObject.contextGroup.simulation3D
+                                        .simulation
+                                );
+                            }
+                        } else {
+                            const emptyClickOperation = this.createEmptyClickOperation(
+                                this._activeVRController
+                            );
+                            if (emptyClickOperation !== null) {
+                                this._operations.push(emptyClickOperation);
+                            }
+                        }
+                    }
                 }
             }
         } else {
+            //
             // Normal browser interaction.
-
+            //
             const input = this._game.getInput();
 
             // Detect if we are over any html mixer iframe element.
@@ -199,13 +268,14 @@ export abstract class BaseInteractionManager {
                         this._game.gameView.gameView
                     )
                 ) {
-                    let { gameObject, hit } = this.findHoveredGameObject();
+                    const { gameObject, hit } = this.findHoveredGameObject();
 
                     if (gameObject) {
                         // Start game object click operation.
-                        let gameObjectClickOperation = this.createGameObjectClickOperation(
+                        const gameObjectClickOperation = this.createGameObjectClickOperation(
                             gameObject,
-                            hit
+                            hit,
+                            null
                         );
                         if (gameObjectClickOperation !== null) {
                             this.setCameraControlsEnabled(false);
@@ -219,7 +289,9 @@ export abstract class BaseInteractionManager {
                             );
                         }
                     } else {
-                        let emptyClickOperation = this.createEmptyClickOperation();
+                        const emptyClickOperation = this.createEmptyClickOperation(
+                            null
+                        );
                         if (emptyClickOperation !== null) {
                             this._operations.push(emptyClickOperation);
                         }
@@ -232,8 +304,9 @@ export abstract class BaseInteractionManager {
                 ) {
                     const element = input.getTargetData().inputDown;
 
-                    let elementClickOperation = this.createHtmlElementClickOperation(
-                        element
+                    const elementClickOperation = this.createHtmlElementClickOperation(
+                        element,
+                        null
                     );
                     if (elementClickOperation !== null) {
                         this._operations.push(elementClickOperation);
@@ -271,7 +344,7 @@ export abstract class BaseInteractionManager {
 
             if (this._tapCodeManager.code.length >= this._maxTapCodeLength) {
                 const code = this._tapCodeManager.code;
-                console.log('[InteractionManager] TapCode: ', code);
+                console.log('[BaseInteractionManager] tap code: ', code);
                 appManager.simulationManager.simulations.forEach(sim => {
                     sim.helper.action('onTapCode', null, code);
                 });
@@ -279,41 +352,73 @@ export abstract class BaseInteractionManager {
             }
 
             if (input.currentInputType === InputType.Mouse) {
-                let { gameObject } = this.findHoveredGameObject();
-
-                let file: File = null;
-                let simulation: Simulation = null;
-
-                if (gameObject instanceof AuxFile3D) {
-                    file = gameObject.file;
-                    simulation =
-                        gameObject.contextGroup.simulation3D.simulation;
-                }
-
-                const fileId = file ? file.id : null;
-                const hoveredId = this._hoveredObject
-                    ? this._hoveredObject.id
-                    : null;
-                if (fileId !== hoveredId) {
-                    if (this._hoveredObject) {
-                        this.handlePointerExit(
-                            this._hoveredObject,
-                            this._hoveredSimulation
-                        );
-                    }
-                    this._hoveredObject = file;
-                    this._hoveredSimulation = simulation;
-                    if (this._hoveredObject) {
-                        this.handlePointerEnter(
-                            this._hoveredObject,
-                            this._hoveredSimulation
-                        );
-                    }
+                const { gameObject } = this.findHoveredGameObject();
+                if (gameObject) {
+                    // Set file as being hovered on.
+                    this._setHoveredFile(gameObject);
                 }
             }
 
             this._updateAdditionalNormalInputs(input);
         }
+
+        this._updateHoveredFiles();
+    }
+
+    /**
+     * Hover on the given game object if it represents an AuxFile3D.
+     * @param gameObject GameObject for file to start hover on.
+     */
+    protected _setHoveredFile(gameObject: GameObject): void {
+        if (gameObject instanceof AuxFile3D) {
+            const file: File = gameObject.file;
+            const simulation: Simulation =
+                gameObject.contextGroup.simulation3D.simulation;
+
+            let hoveredFile: HoveredFile = this._hoveredFiles.find(
+                hoveredFile => {
+                    return (
+                        hoveredFile.file.id === file.id &&
+                        hoveredFile.simulation.id === simulation.id
+                    );
+                }
+            );
+
+            if (hoveredFile) {
+                // Update the frame of the hovered file to the current frame.
+                hoveredFile.frame = this._game.getTime().frameCount;
+            } else {
+                // Create a new hovered file object and add it to the list.
+                hoveredFile = {
+                    file,
+                    simulation,
+                    frame: this._game.getTime().frameCount,
+                };
+                this._hoveredFiles.push(hoveredFile);
+                this.handlePointerEnter(file, simulation);
+            }
+        }
+    }
+
+    /**
+     * Check all hovered files and release any that are no longer being hovered on.
+     */
+    protected _updateHoveredFiles(): void {
+        const curFrame = this._game.getTime().frameCount;
+
+        this._hoveredFiles = this._hoveredFiles.filter(hoveredFile => {
+            if (hoveredFile.frame < curFrame) {
+                // No longer hovering on this file.
+                this.handlePointerExit(
+                    hoveredFile.file,
+                    hoveredFile.simulation
+                );
+                return false;
+            }
+
+            // Still hovering on this file.
+            return true;
+        });
     }
 
     protected _disableIFramePointerEvents(): void {
@@ -371,7 +476,7 @@ export abstract class BaseInteractionManager {
         let hit: Intersection = null;
         let hitObject: GameObject = null;
 
-        // Iterate through draggable groups until we hit and object in one of them.
+        // Iterate through draggable groups until we hit an object in one of them.
         for (let i = 0; i < draggableGroups.length; i++) {
             const objects = draggableGroups[i].objects;
             const camera = draggableGroups[i].camera;
@@ -389,9 +494,48 @@ export abstract class BaseInteractionManager {
             );
             const raycastResult = Physics.raycastAtScreenPos(
                 screenPos,
-                new Raycaster(),
                 objects,
                 camera
+            );
+            hit = Physics.firstRaycastHit(raycastResult);
+            hitObject = hit ? this.findGameObjectForHit(hit) : null;
+
+            if (hitObject) {
+                // We hit a game object in this simulation, stop searching through simulations.
+                break;
+            }
+        }
+
+        if (hitObject) {
+            return {
+                gameObject: hitObject,
+                hit: hit,
+            };
+        } else {
+            return {
+                gameObject: null,
+                hit: null,
+            };
+        }
+    }
+
+    /**
+     * Find the first game object that is being pointed at by the given vr controller.
+     * @param controller The vr controller to test with.
+     */
+    findHoveredGameObjectVR(controller: VRController3D) {
+        const draggableGroups = this.getDraggableGroups();
+
+        let hit: Intersection = null;
+        let hitObject: GameObject = null;
+
+        // Iterate through draggable groups until we hit an object in one of them.
+        for (let i = 0; i < draggableGroups.length; i++) {
+            const objects = draggableGroups[i].objects;
+
+            const raycastResult = Physics.raycast(
+                controller.pointerRay,
+                objects
             );
             hit = Physics.firstRaycastHit(raycastResult);
             hitObject = hit ? this.findGameObjectForHit(hit) : null;
@@ -436,15 +580,18 @@ export abstract class BaseInteractionManager {
     }
 
     showContextMenu(calc: FileCalculationContext) {
+        if (WebVRDisplays.isPresenting()) {
+            // Context menu does nothing in VR yet...
+            console.log(
+                '[BaseInteractionManager] Context menu is not currently supported while in VR.'
+            );
+            return;
+        }
+
         const input = this._game.getInput();
         const pagePos = input.getMousePagePos();
         const { gameObject, hit } = this.findHoveredGameObject();
-        const actions = this._contextMenuActions(
-            calc,
-            gameObject,
-            hit.point,
-            pagePos
-        );
+        const actions = this._contextMenuActions(calc, gameObject, hit.point);
 
         if (actions) {
             this.setCameraControlsEnabled(false);
@@ -569,19 +716,24 @@ export abstract class BaseInteractionManager {
 
     abstract createGameObjectClickOperation(
         gameObject: GameObject,
-        hit: Intersection
+        hit: Intersection,
+        vrController: VRController3D | null
     ): IOperation;
-    abstract createEmptyClickOperation(): IOperation;
-    abstract createHtmlElementClickOperation(element: HTMLElement): IOperation;
-    abstract handlePointerEnter(file: File, simulation: Simulation): IOperation;
-    abstract handlePointerExit(file: File, simulation: Simulation): IOperation;
-    abstract handlePointerDown(file: File, simulation: Simulation): IOperation;
+    abstract createEmptyClickOperation(
+        vrController: VRController3D | null
+    ): IOperation;
+    abstract createHtmlElementClickOperation(
+        element: HTMLElement,
+        vrController: VRController3D | null
+    ): IOperation;
+    abstract handlePointerEnter(file: File, simulation: Simulation): void;
+    abstract handlePointerExit(file: File, simulation: Simulation): void;
+    abstract handlePointerDown(file: File, simulation: Simulation): void;
 
     protected abstract _createControlsForCameraRigs(): CameraRigControls[];
     protected abstract _contextMenuActions(
         calc: FileCalculationContext,
         gameObject: GameObject,
-        point: Vector3,
-        pagePos: Vector2
+        point: Vector3
     ): ContextMenuAction[];
 }

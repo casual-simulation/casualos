@@ -5,7 +5,7 @@
         <div class="ui-container">
             <div class="toolbar">
                 <div>
-                    <md-card v-if="game.vrDisplay && menu.length > 0" class="menu-layout md-dense">
+                    <md-card v-if="menu.length > 0" class="menu-layout md-dense">
                         <md-list class="md-dense">
                             <md-list-item md-expand :md-expanded.sync="menuExpanded">
                                 <md-icon>menu</md-icon>
@@ -26,11 +26,6 @@
                         </md-list>
                     </md-card>
                 </div>
-                <span
-                    v-show="game.vrDisplay"
-                    id="vr-button-container"
-                    class="vr-button-container"
-                ></span>
             </div>
 
             <div class="slider-visible"></div>

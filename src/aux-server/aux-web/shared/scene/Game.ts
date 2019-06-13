@@ -19,10 +19,11 @@ import {
     CameraType,
     resizeCameraRig,
     createCameraRig,
+    resetCameraRigToDefaultPosition,
 } from './CameraRigFactory';
 import { Time } from './Time';
 import { Input, InputType } from './Input';
-import { InputVR } from './InputVR';
+import { InputVR } from './vr/InputVR';
 import { BaseInteractionManager } from '../interaction/BaseInteractionManager';
 import { Viewport } from './Viewport';
 import { HtmlMixer } from './HtmlMixer';
@@ -37,13 +38,12 @@ import {
     baseAuxDirectionalLight,
     createHtmlMixerContext,
 } from './SceneUtils';
-import VRControlsModule from 'three-vrcontrols-module';
-import VREffectModule from 'three-vreffect-module';
-import * as webvrui from 'webvr-ui';
 import { find, flatMap } from 'lodash';
 import { DebugObjectManager } from './DebugObjectManager';
 import { EventBus } from '../EventBus';
 import { AuxFile3DFinder } from '../AuxFile3DFinder';
+import { WebVRDisplays } from '../WebVRDisplays';
+import { Renderer } from 'marked';
 
 /**
  * The Game class is the root of all Three Js activity for the current AUX session.
@@ -66,9 +66,6 @@ export abstract class Game implements AuxFile3DFinder {
     protected htmlMixerContext: HtmlMixer.Context;
     protected decoratorFactory: AuxFile3DDecoratorFactory;
     protected currentCameraType: CameraType;
-    protected enterVr: any;
-    protected vrControls: any;
-    protected vrEffect: any;
     protected subs: SubscriptionLike[];
 
     mainCameraRig: CameraRig = null;
@@ -78,8 +75,6 @@ export abstract class Game implements AuxFile3DFinder {
     xrDisplay: any = null;
     xrSession: any = null;
     xrSessionInitParameters: any = null;
-    vrDisplay: VRDisplay = null;
-    vrCapable: boolean = false;
 
     onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
     onFileUpdated: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
@@ -114,7 +109,7 @@ export abstract class Game implements AuxFile3DFinder {
         this.inputVR = new InputVR(this);
         this.interaction = this.setupInteraction();
 
-        this.setupWebVR();
+        await this.setupWebVR();
         await this.setupWebXR();
 
         this.onCenterCamera = this.onCenterCamera.bind(this);
@@ -125,7 +120,8 @@ export abstract class Game implements AuxFile3DFinder {
 
         await this.onBeforeSetupComplete();
 
-        this.frameUpdate();
+        this.frameUpdate = this.frameUpdate.bind(this);
+        this.renderer.setAnimationLoop(this.frameUpdate);
     }
 
     protected async onBeforeSetupComplete() {}
@@ -261,11 +257,11 @@ export abstract class Game implements AuxFile3DFinder {
         }
 
         // Resize VR effect.
-        if (this.vrEffect) {
-            const vrWidth = window.innerWidth;
-            const vrHeight = window.innerHeight;
-            this.vrEffect.setSize(vrWidth, vrHeight);
-        }
+        // if (this.vrEffect) {
+        //     const vrWidth = window.innerWidth;
+        //     const vrHeight = window.innerHeight;
+        //     this.vrEffect.setSize(vrWidth, vrHeight);
+        // }
     }
 
     setCameraType(type: CameraType) {
@@ -429,53 +425,46 @@ export abstract class Game implements AuxFile3DFinder {
         );
     }
 
-    protected setupWebVR() {
-        let onBeforeEnter = () => {
-            console.log('[Game] vr on before enter');
-
-            this.renderer.vr.enabled = true;
-
-            // VR controls
-            this.vrControls = new VRControlsModule(
-                this.mainCameraRig.mainCamera
-            );
-            this.vrControls.standing = true;
-
-            // Create VR Effect rendering in stereoscopic mode
-            this.vrEffect = new VREffectModule(this.renderer);
-            this.renderer.setPixelRatio(window.devicePixelRatio);
-
-            return new Promise(resolve => {
-                resolve(null);
-            });
-        };
-
-        this.vrDisplay = null;
-
-        // WebVR enable button.
-        let vrButtonOptions = {
-            color: 'black',
-            beforeEnter: onBeforeEnter,
-        };
-
-        this.enterVr = new webvrui.EnterVRButton(
-            this.renderer.domElement,
-            vrButtonOptions
+    protected async setupWebVR() {
+        this.handleVRDisplayConnect = this.handleVRDisplayConnect.bind(this);
+        this.handleVRDisplayDisconnect = this.handleVRDisplayDisconnect.bind(
+            this
+        );
+        this.handleVRDisplayActivate = this.handleVRDisplayActivate.bind(this);
+        this.handleVRDisplayDeactivate = this.handleVRDisplayDeactivate.bind(
+            this
+        );
+        this.handleVRDisplayBlur = this.handleVRDisplayBlur.bind(this);
+        this.handleVRDisplayFocus = this.handleVRDisplayFocus.bind(this);
+        this.handleVRDisplayPresentChange = this.handleVRDisplayPresentChange.bind(
+            this
         );
 
-        // Event handlers for the vr button.
-        this.handleReadyVR = this.handleReadyVR.bind(this);
-        this.handleEnterVR = this.handleEnterVR.bind(this);
-        this.handleExitVR = this.handleExitVR.bind(this);
-        this.handleErrorVR = this.handleErrorVR.bind(this);
+        WebVRDisplays.onVRDisplayConnect.addListener(
+            this.handleVRDisplayConnect
+        );
+        WebVRDisplays.onVRDisplayDisconnect.addListener(
+            this.handleVRDisplayDisconnect
+        );
+        WebVRDisplays.onVRDisplayActivate.addListener(
+            this.handleVRDisplayActivate
+        );
+        WebVRDisplays.onVRDisplayDeactivate.addListener(
+            this.handleVRDisplayDeactivate
+        );
+        WebVRDisplays.onVRDisplayBlur.addListener(this.handleVRDisplayBlur);
+        WebVRDisplays.onVRDisplayFocus.addListener(this.handleVRDisplayFocus);
+        WebVRDisplays.onVRDisplayPresentChange.addListener(
+            this.handleVRDisplayPresentChange
+        );
 
-        this.enterVr.on('ready', this.handleReadyVR);
-        this.enterVr.on('enter', this.handleEnterVR);
-        this.enterVr.on('exit', this.handleExitVR);
-        this.enterVr.on('error', this.handleErrorVR);
+        await WebVRDisplays.init();
 
-        let vrButtonContainer = document.getElementById('vr-button-container');
-        vrButtonContainer.appendChild(this.enterVr.domElement);
+        if (WebVRDisplays.mainVRDisplay()) {
+            // When being used on a vr headset, force the normal input module to use touch instead of mouse.
+            // Touch seems to work better for 2d browsers on vr headsets (like the Oculus Go).
+            this.input.currentInputType = InputType.Touch;
+        }
     }
 
     // TODO: All this needs to be reworked to use the right WebXR polyfill
@@ -534,14 +523,10 @@ export abstract class Game implements AuxFile3DFinder {
         this.renderUpdate(xrFrame);
         this.time.update();
 
-        if (this.vrDisplay && this.vrDisplay.isPresenting) {
-            this.vrDisplay.requestAnimationFrame(() => this.frameUpdate());
-        } else if (this.xrSession) {
+        if (this.xrSession) {
             this.xrSession.requestFrame((nextXRFrame: any) =>
                 this.frameUpdate(nextXRFrame)
             );
-        } else {
-            requestAnimationFrame(() => this.frameUpdate());
         }
     }
 
@@ -560,11 +545,7 @@ export abstract class Game implements AuxFile3DFinder {
     }
 
     protected renderUpdate(xrFrame?: any) {
-        if (this.vrDisplay && this.vrDisplay.isPresenting) {
-            this.vrControls.update();
-            this.renderCore();
-            this.vrEffect.render(this.mainScene, this.mainCameraRig.mainCamera);
-        } else if (this.xrSession && xrFrame) {
+        if (this.xrSession && xrFrame) {
             this.mainScene.background = null;
             this.renderer.setSize(
                 this.xrSession.baseLayer.framebufferWidth,
@@ -623,10 +604,12 @@ export abstract class Game implements AuxFile3DFinder {
         // [Main scene]
         //
 
-        this.renderer.setSize(
-            this.mainViewport.width,
-            this.mainViewport.height
-        );
+        if (!WebVRDisplays.isPresenting()) {
+            this.renderer.setSize(
+                this.mainViewport.width,
+                this.mainViewport.height
+            );
+        }
 
         this.renderer.setScissorTest(false);
 
@@ -656,11 +639,21 @@ export abstract class Game implements AuxFile3DFinder {
                 await this.xrSession.end();
                 this.xrSession = null;
                 document.documentElement.classList.remove('ar-app');
+
+                // Restart the regular animation update loop.
+                this.renderer.setAnimationLoop(this.frameUpdate);
+                // Go back to the orthographic camera type when exiting XR.
+                this.setCameraType('orthographic');
             } else {
                 this.removeSidebarItem('enable_xr');
                 this.addSidebarItem('disable_xr', 'Disable AR', () => {
                     this.toggleXR();
                 });
+
+                // XR requires that we be using a perspective camera.
+                this.setCameraType('perspective');
+                // Remove the camera toggle from the menu while in XR.
+                this.removeSidebarItem('toggle_camera_type');
 
                 document.documentElement.classList.add('ar-app');
                 this.xrSession = await this.xrDisplay.requestSession(
@@ -680,6 +673,12 @@ export abstract class Game implements AuxFile3DFinder {
                 );
 
                 this.startXR();
+
+                // Stop regular animation update loop and use the one from the xr session.
+                this.renderer.setAnimationLoop(null);
+                this.xrSession.requestFrame((nextXRFrame: any) =>
+                    this.frameUpdate(nextXRFrame)
+                );
 
                 setTimeout(() => {
                     this.gameView.resize();
@@ -731,45 +730,66 @@ export abstract class Game implements AuxFile3DFinder {
         );
     }
 
-    protected handleReadyVR(display: VRDisplay) {
-        console.log('[Game] vr display is ready.');
-        console.log(display);
-        this.vrDisplay = display;
+    protected updateVRToggle(): void {
+        this.removeSidebarItem('toggle_vr');
 
-        // When being used on a vr headset, force the normal input module to use touch instead of mouse.
-        // Touch seems to work better for 2d browsers on vr headsets (like the Oculus Go).
-        this.input.currentInputType = InputType.Touch;
+        if (WebVRDisplays.vrCapable && WebVRDisplays.mainVRDisplay()) {
+            const buttonText: string = WebVRDisplays.mainVRDisplay()
+                .isPresenting
+                ? 'Exit VR'
+                : 'Enter VR';
+            const buttonIcon: string = undefined;
+
+            const onClick = () => {
+                if (WebVRDisplays.mainVRDisplay().isPresenting) {
+                    this.renderer.vr.enabled = false;
+                    this.renderer.vr.setDevice(null);
+                    WebVRDisplays.mainVRDisplay().exitPresent();
+                } else {
+                    this.renderer.vr.enabled = true;
+                    this.renderer.vr.setDevice(WebVRDisplays.mainVRDisplay());
+                    WebVRDisplays.mainVRDisplay().requestPresent([
+                        { source: this.renderer.domElement },
+                    ]);
+                }
+            };
+
+            this.addSidebarItem('toggle_vr', buttonText, onClick, buttonIcon);
+        }
     }
 
-    protected handleEnterVR(display: any) {
-        console.log('[Game] enter vr.');
-        console.log(display);
-        this.vrDisplay = display;
+    protected handleVRDisplayConnect(display: VRDisplay): void {
+        this.updateVRToggle();
     }
-
-    protected handleExitVR(display: any) {
-        console.log('[Game] exit vr.');
-        console.log(display);
-
-        this.renderer.vr.enabled = false;
-
+    protected handleVRDisplayDisconnect(display: VRDisplay): void {
+        this.updateVRToggle();
         this.inputVR.disconnectControllers();
-
-        this.vrControls.dispose();
-        this.vrControls = null;
-
-        this.vrEffect.dispose();
-        this.vrEffect = null;
-
-        // reset camera back to default position.
-        this.mainCameraRig.mainCamera.position.z = 5;
-        this.mainCameraRig.mainCamera.position.y = 3;
-        this.mainCameraRig.mainCamera.rotation.x = ThreeMath.degToRad(-30);
-        this.mainCameraRig.mainCamera.updateMatrixWorld(false);
     }
+    protected handleVRDisplayActivate(display: VRDisplay): void {
+        this.updateVRToggle();
+    }
+    protected handleVRDisplayDeactivate(display: VRDisplay): void {
+        this.updateVRToggle();
+        this.inputVR.disconnectControllers();
+    }
+    protected handleVRDisplayBlur(display: VRDisplay): void {
+        this.updateVRToggle();
+    }
+    protected handleVRDisplayFocus(display: VRDisplay): void {
+        this.updateVRToggle();
+    }
+    protected handleVRDisplayPresentChange(display: VRDisplay): void {
+        this.updateVRToggle();
 
-    protected handleErrorVR() {
-        // console.error('error vr');
-        // console.error(error);
+        if (WebVRDisplays.mainVRDisplay().isPresenting) {
+            this.renderer.vr.enabled = true;
+            this.renderer.vr.setDevice(WebVRDisplays.mainVRDisplay());
+        } else {
+            this.renderer.vr.enabled = false;
+            this.renderer.vr.setDevice(null);
+            this.inputVR.disconnectControllers();
+            // reset camera back to default position.
+            resetCameraRigToDefaultPosition(this.mainCameraRig);
+        }
     }
 }

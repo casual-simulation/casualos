@@ -107,22 +107,6 @@ export class BuilderGame extends Game {
 
     protected renderCore(): void {
         super.renderCore();
-        //
-        // [Main scene]
-        //
-
-        // Render the main scene with the main camera.
-        this.renderer.clear();
-        this.renderer.render(this.mainScene, this.mainCameraRig.mainCamera);
-
-        // Set the background color to null when rendering with the ui world camera.
-        this.mainScene.background = null;
-
-        // Render the main scene with the ui world camera.
-        this.renderer.clearDepth(); // Clear depth buffer so that ui world appears above objects that were just rendererd.
-        this.renderer.render(this.mainScene, this.mainCameraRig.uiWorldCamera);
-
-        this.mainSceneBackgroundUpdate();
     }
 
     protected setupScenes() {

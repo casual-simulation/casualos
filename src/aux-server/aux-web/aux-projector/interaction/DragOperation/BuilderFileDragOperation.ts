@@ -22,6 +22,7 @@ import BuilderGameView from '../../BuilderGameView/BuilderGameView';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import { BaseBuilderFileDragOperation } from './BaseBuilderFileDragOperation';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
+import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 
 /**
  * File Drag Operation handles dragging of files for mouse and touch input.
@@ -42,9 +43,10 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
         hit: Intersection,
         files: File[],
         workspace: BuilderGroup3D,
-        context: string
+        context: string,
+        vrController: VRController3D | null
     ) {
-        super(simulation3D, interaction, files, context);
+        super(simulation3D, interaction, files, context, vrController);
 
         this._workspace = workspace;
 

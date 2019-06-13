@@ -8,14 +8,16 @@ import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperati
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
 import { BuilderFileDragOperation } from '../DragOperation/BuilderFileDragOperation';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
+import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 
 export class BuilderFileIDClickOperation extends BaseFileClickOperation {
     constructor(
         simulation3D: Simulation3D,
         interaction: BuilderInteractionManager,
-        file: File
+        file: File,
+        vrController: VRController3D | null
     ) {
-        super(simulation3D, interaction, file, null);
+        super(simulation3D, interaction, file, null, vrController);
     }
 
     protected _performClick(calc: FileCalculationContext): void {
@@ -34,7 +36,8 @@ export class BuilderFileIDClickOperation extends BaseFileClickOperation {
             null,
             [this._file],
             null,
-            null
+            null,
+            this._vrController
         );
     }
 }

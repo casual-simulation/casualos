@@ -1,17 +1,22 @@
 # AUX Changelog
 
-## V0.8.12 - or are we on 0.9 now?
+## V0.9.0
 
-### Date: TBD
+### Date: 06/13/2019
 
 ### Changes:
 
 -   Improvements
-    -   Changed the function tag `player.isBuilder()` to `player.isDesigner()`;
-    -   Clicking on the same file as the selected file will now open the sheet if it has been closed;
+    -   VR mode is reimplemented.
+        -   VR controllers can be used to click on files as well as drag them around in both AUX Player and AUX Builder.
+        -   `onPointerEnter()` and `onPointerExit()` work for VR controllers in AUX Player.
+    -   AR mode is back to its previous working state (along with inventory!)
+    -   Changed the function tag `player.isBuilder()` to `player.isDesigner()`.
+    -   Clicking on the same file as the selected file will now open the sheet if it has been closed.
     -   Added a `Select Context File` seciton in the workspace dropdown. This will select the file responsible for the workspace and open up it's sheet.
 -   Bug Fixes
     -   Clicking on the same file as the selected file will no longer deselect the file in single selection mode.
+    -   Fixed accidental double render when running in AUX Builder.
 
 ## V0.8.11
 

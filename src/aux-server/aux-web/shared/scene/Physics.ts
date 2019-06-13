@@ -29,6 +29,11 @@ export namespace Physics {
         pointerScreenPos: Vector2;
 
         /**
+         * The ray used to perform this raycast.
+         */
+        ray: Ray;
+
+        /**
          * The list of intersections from the raycast.
          */
         intersects: Intersection[];
@@ -78,21 +83,37 @@ export namespace Physics {
     /**
      * Performs a raycast at the given screen position with the given camera using the given raycaster and against the given objects.
      * @param screenPos The screen position to raycast from.
-     * @param raycaster The raycaster to use.
      * @param objects The objects to raycast against.
      * @param camera The camera to use.
      */
     export function raycastAtScreenPos(
         screenPos: Vector2,
-        raycaster: Raycaster,
         objects: Object3D[],
         camera: Camera
     ): RaycastResult {
+        const raycaster = new Raycaster();
         raycaster.setFromCamera(screenPos, camera);
         const intersects = raycaster.intersectObjects(objects, true);
 
         return {
             pointerScreenPos: screenPos,
+            ray: raycaster.ray.clone(),
+            intersects,
+        };
+    }
+
+    /**
+     * Performs a raycast with the given ray against the given objects.
+     * @param ray The ray to use.
+     * @param objects The objects to raycast against.
+     */
+    export function raycast(ray: Ray, objects: Object3D[]): RaycastResult {
+        const raycaster = new Raycaster(ray.origin, ray.direction);
+        const intersects = raycaster.intersectObjects(objects, true);
+
+        return {
+            pointerScreenPos: null,
+            ray: raycaster.ray.clone(),
             intersects,
         };
     }
