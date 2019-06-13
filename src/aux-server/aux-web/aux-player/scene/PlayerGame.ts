@@ -429,51 +429,12 @@ export class PlayerGame extends Game {
             ).toString() + 'px';
     }
 
-    async mouseMoveSlider(e: MouseEvent) {
+    frameUpdate() {
+        super.frameUpdate();
+
         if (!this.sliderPressed) return false;
 
-        e.preventDefault();
-        e.stopPropagation();
-
-        let sliderPos = e.pageY;
-
-        //prevent the slider from being positioned outside the window bounds
-        if (sliderPos < 0) sliderPos = 0;
-        if (sliderPos > window.innerHeight) sliderPos = window.innerHeight;
-
-        (<HTMLElement>this.slider).style.top = sliderPos - 20 + 'px';
-
-        this.inventoryHeightOverride = window.innerHeight - sliderPos;
-
-        let invHeightScale = this.inventoryHeightOverride / window.innerHeight;
-
-        if (invHeightScale < 0.1) {
-            invHeightScale = 0.1;
-        } else if (invHeightScale > 1) {
-            invHeightScale = 1;
-        }
-
-        this.inventoryViewport.setScale(null, invHeightScale);
-
-        if (this.inventoryCameraRig) {
-            resizeCameraRigCustom(this.inventoryCameraRig);
-        }
-
-        (<HTMLElement>this.sliderVis).style.top =
-            (
-                window.innerHeight -
-                this.inventoryViewport.height +
-                16
-            ).toString() + 'px';
-    }
-
-    async touchMoveSlider(e: TouchEvent) {
-        if (!this.sliderPressed) return false;
-
-        e.preventDefault();
-        e.stopPropagation();
-
-        let sliderPos = e.touches[0].pageY;
+        let sliderPos = this.input.getMousePagePos().y;
 
         //prevent the slider from being positioned outside the window bounds
         if (sliderPos < 0) sliderPos = 0;
