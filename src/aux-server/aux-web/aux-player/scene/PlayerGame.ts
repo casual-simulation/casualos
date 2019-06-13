@@ -4,9 +4,8 @@ import {
     CameraRig,
     createCameraRig,
     resizeCameraRig,
-    resizeCameraRigCustom,
 } from '../../shared/scene/CameraRigFactory';
-import { Scene, Color, Texture } from 'three';
+import { Scene, Color, Texture, OrthographicCamera } from 'three';
 import { PlayerSimulation3D } from './PlayerSimulation3D';
 import { InventorySimulation3D } from './InventorySimulation3D';
 import { Viewport } from '../../shared/scene/Viewport';
@@ -411,7 +410,8 @@ export class PlayerGame extends Game {
         }
 
         if (this.inventoryCameraRig) {
-            resizeCameraRigCustom(this.inventoryCameraRig);
+            resizeCameraRig(this.inventoryCameraRig);
+            this.overrideOrthographicViewportZoom(this.inventoryCameraRig);
         }
     }
 
@@ -455,7 +455,8 @@ export class PlayerGame extends Game {
         this.inventoryViewport.setScale(null, invHeightScale);
 
         if (this.inventoryCameraRig) {
-            resizeCameraRigCustom(this.inventoryCameraRig);
+            resizeCameraRig(this.inventoryCameraRig);
+            this.overrideOrthographicViewportZoom(this.inventoryCameraRig);
         }
 
         (<HTMLElement>this.sliderVis).style.top =
@@ -464,5 +465,18 @@ export class PlayerGame extends Game {
                 this.inventoryViewport.height +
                 16
             ).toString() + 'px';
+    }
+
+    /**
+     * This is a hacky function that gets us a more pleasent orthographic zoom level
+     * as we change the aspect ratio of the viewport that has an orthographic camera.
+     */
+    private overrideOrthographicViewportZoom(cameraRig: CameraRig) {
+        if (cameraRig.mainCamera instanceof OrthographicCamera) {
+            const aspect = cameraRig.viewport.width / cameraRig.viewport.height;
+            // found that 50 is the preset zoom of the rig.maincamera.zoom so I am using this as the base zoom
+            const newZoom = 50 - (49 - aspect * 7);
+            cameraRig.mainCamera.zoom = newZoom;
+        }
     }
 }

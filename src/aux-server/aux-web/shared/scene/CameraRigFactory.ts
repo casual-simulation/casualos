@@ -135,37 +135,3 @@ export function resizeCameraRig(rig: CameraRig): void {
     }
     rig.uiWorldCamera.updateProjectionMatrix();
 }
-
-export function resizeCameraRigCustom(rig: CameraRig): void {
-    let aspect = rig.viewport.width / rig.viewport.height;
-
-    let num = 7;
-    //if(aspect <= 7){
-    num = aspect;
-    //}
-
-    // found that 50 is the preset zoom of the rig.maincamera.zoom so I am using this as the base zoom
-    let newZoom = 50 - (49 - num * 7);
-
-    if (rig.mainCamera instanceof OrthographicCamera) {
-        rig.mainCamera.left = (-Orthographic_FrustrumSize * aspect) / 2;
-        rig.mainCamera.right = (Orthographic_FrustrumSize * aspect) / 2;
-        rig.mainCamera.top = Orthographic_FrustrumSize / 2;
-        rig.mainCamera.bottom = -Orthographic_FrustrumSize / 2;
-        rig.mainCamera.zoom = newZoom;
-    } else {
-        rig.mainCamera.aspect = aspect;
-    }
-    rig.mainCamera.updateProjectionMatrix();
-
-    if (rig.uiWorldCamera instanceof OrthographicCamera) {
-        let mainOrtho = <OrthographicCamera>rig.mainCamera;
-        rig.uiWorldCamera.left = mainOrtho.left;
-        rig.uiWorldCamera.right = mainOrtho.right;
-        rig.uiWorldCamera.top = mainOrtho.top;
-        rig.uiWorldCamera.bottom = mainOrtho.bottom;
-    } else {
-        rig.uiWorldCamera.aspect = aspect;
-    }
-    rig.uiWorldCamera.updateProjectionMatrix();
-}

@@ -8,6 +8,7 @@
 
 -   Improvements
     -   VR mode is reimplemented.
+        -   On a VR device, you can enter VR mode by clicking on `Enter VR` in the menu.
         -   VR controllers can be used to click on files as well as drag them around in both AUX Player and AUX Builder.
         -   `onPointerEnter()` and `onPointerExit()` work for VR controllers in AUX Player.
     -   AR mode is back to its previous working state (along with inventory!)
