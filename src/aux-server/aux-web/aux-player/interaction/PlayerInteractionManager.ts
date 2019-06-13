@@ -38,6 +38,7 @@ import {
 } from '../../shared/scene/CameraRigFactory';
 import { PlayerEmptyClickOperation } from './ClickOperation/PlayerEmptyClickOperation';
 import { PlayerGame } from '../scene/PlayerGame';
+import { VRController3D } from 'aux-web/shared/scene/vr/VRController3D';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -84,7 +85,8 @@ export class PlayerInteractionManager extends BaseInteractionManager {
 
     createGameObjectClickOperation(
         gameObject: GameObject,
-        hit: Intersection
+        hit: Intersection,
+        vrController: VRController3D | null
     ): IOperation {
         if (gameObject instanceof AuxFile3D) {
             let faceValue: string = 'Unknown Face';
@@ -116,19 +118,13 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 gameObject.contextGroup.simulation3D,
                 this,
                 gameObject,
-                faceValue
+                faceValue,
+                vrController
             );
             return fileClickOp;
         } else {
             return null;
         }
-    }
-
-    createGameObjectVRClickOperation(
-        gameObject: GameObject,
-        hit: Intersection
-    ): IOperation {
-        return null;
     }
 
     getDraggableGroups(): DraggableGroup[] {
@@ -190,12 +186,8 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         simulation.helper.action('onPointerDown', [file]);
     }
 
-    createEmptyClickOperation(): IOperation {
+    createEmptyClickOperation(vrController: VRController3D | null): IOperation {
         return new PlayerEmptyClickOperation(this._game, this);
-    }
-
-    createEmptyVRClickOperation(): IOperation {
-        return null;
     }
 
     createHtmlElementClickOperation(element: HTMLElement): IOperation {
@@ -208,10 +200,11 @@ export class PlayerInteractionManager extends BaseInteractionManager {
      */
     pointOnGrid(calc: FileCalculationContext, ray: Ray) {
         let planeHit = Physics.pointOnPlane(ray, Physics.GroundPlane);
-        // We need to flip the sign of the z coordinate here.
-        planeHit.z = -planeHit.z;
 
         if (planeHit) {
+            // We need to flip the sign of the z coordinate here.
+            planeHit.z = -planeHit.z;
+
             let gridTile = this._grid.getTileFromPosition(planeHit);
             if (gridTile) {
                 return {

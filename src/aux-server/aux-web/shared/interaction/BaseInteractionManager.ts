@@ -178,17 +178,47 @@ export abstract class BaseInteractionManager {
                     controller3D
                 );
 
-                if (gameObject) {
-                    this._setHoveredFile(gameObject);
-                }
-
-                // Update pointer ray stop distance.
                 if (hit) {
+                    // Update pointer ray stop distance.
                     controller3D.pointerRay3D.stopDistance = hit.distance;
                     controller3D.pointerRay3D.showCursor = true;
+
+                    // Set file has being hovered on.
+                    this._setHoveredFile(gameObject);
                 } else {
                     controller3D.pointerRay3D.stopDistance = 10;
                     controller3D.pointerRay3D.showCursor = false;
+                }
+
+                if (this._activeVRController === controller3D) {
+                    if (this._activeVRController.getPrimaryButtonDown()) {
+                        if (gameObject) {
+                            // Start game object click operation.
+                            const gameObjectClickOperation = this.createGameObjectClickOperation(
+                                gameObject,
+                                hit,
+                                this._activeVRController
+                            );
+                            if (gameObjectClickOperation !== null) {
+                                this._operations.push(gameObjectClickOperation);
+                            }
+
+                            if (gameObject instanceof AuxFile3D) {
+                                this.handlePointerDown(
+                                    gameObject.file,
+                                    gameObject.contextGroup.simulation3D
+                                        .simulation
+                                );
+                            }
+                        } else {
+                            const emptyClickOperation = this.createEmptyClickOperation(
+                                this._activeVRController
+                            );
+                            if (emptyClickOperation !== null) {
+                                this._operations.push(emptyClickOperation);
+                            }
+                        }
+                    }
                 }
             }
         } else {
@@ -244,7 +274,8 @@ export abstract class BaseInteractionManager {
                         // Start game object click operation.
                         const gameObjectClickOperation = this.createGameObjectClickOperation(
                             gameObject,
-                            hit
+                            hit,
+                            null
                         );
                         if (gameObjectClickOperation !== null) {
                             this.setCameraControlsEnabled(false);
@@ -258,7 +289,9 @@ export abstract class BaseInteractionManager {
                             );
                         }
                     } else {
-                        const emptyClickOperation = this.createEmptyClickOperation();
+                        const emptyClickOperation = this.createEmptyClickOperation(
+                            null
+                        );
                         if (emptyClickOperation !== null) {
                             this._operations.push(emptyClickOperation);
                         }
@@ -272,7 +305,8 @@ export abstract class BaseInteractionManager {
                     const element = input.getTargetData().inputDown;
 
                     const elementClickOperation = this.createHtmlElementClickOperation(
-                        element
+                        element,
+                        null
                     );
                     if (elementClickOperation !== null) {
                         this._operations.push(elementClickOperation);
@@ -320,6 +354,7 @@ export abstract class BaseInteractionManager {
             if (input.currentInputType === InputType.Mouse) {
                 const { gameObject } = this.findHoveredGameObject();
                 if (gameObject) {
+                    // Set file as being hovered on.
                     this._setHoveredFile(gameObject);
                 }
             }
@@ -678,15 +713,16 @@ export abstract class BaseInteractionManager {
 
     abstract createGameObjectClickOperation(
         gameObject: GameObject,
-        hit: Intersection
+        hit: Intersection,
+        vrController: VRController3D | null
     ): IOperation;
-    abstract createGameObjectVRClickOperation(
-        gameObject: GameObject,
-        hit: Intersection
+    abstract createEmptyClickOperation(
+        vrController: VRController3D | null
     ): IOperation;
-    abstract createEmptyClickOperation(): IOperation;
-    abstract createEmptyVRClickOperation(): IOperation;
-    abstract createHtmlElementClickOperation(element: HTMLElement): IOperation;
+    abstract createHtmlElementClickOperation(
+        element: HTMLElement,
+        vrController: VRController3D | null
+    ): IOperation;
     abstract handlePointerEnter(file: File, simulation: Simulation): void;
     abstract handlePointerExit(file: File, simulation: Simulation): void;
     abstract handlePointerDown(file: File, simulation: Simulation): void;

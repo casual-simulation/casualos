@@ -11,6 +11,7 @@ import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperati
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import BuilderGameView from '../../BuilderGameView/BuilderGameView';
 import { BuilderSimulation3D } from '../../scene/BuilderSimulation3D';
+import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 
 /**
  * New File Click Operation handles clicking of files that are in the file queue.
@@ -24,9 +25,10 @@ export class BuilderNewFileClickOperation extends BaseFileClickOperation {
     constructor(
         simulation: BuilderSimulation3D,
         interaction: BuilderInteractionManager,
-        file: File
+        file: File,
+        vrController: VRController3D | null
     ) {
-        super(simulation, interaction, file, null);
+        super(simulation, interaction, file, null, vrController);
     }
 
     protected _performClick(calc: FileCalculationContext): void {

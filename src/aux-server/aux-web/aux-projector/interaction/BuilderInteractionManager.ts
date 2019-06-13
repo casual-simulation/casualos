@@ -78,6 +78,7 @@ import { BuilderFileIDClickOperation } from './ClickOperation/BuilderFileIDClick
 import { BuilderGame } from '../scene/BuilderGame';
 import { BuilderMiniFileClickOperation } from './ClickOperation/BuilderMiniFileClickOperation';
 import { copyFilesFromSimulation } from '../../shared/SharedUtils';
+import { VRController3D } from 'aux-web/shared/scene/vr/VRController3D';
 
 export class BuilderInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -99,7 +100,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
     createGameObjectClickOperation(
         gameObject: GameObject,
-        hit: Intersection
+        hit: Intersection,
+        vrController: VRController3D | null
     ): IOperation {
         if (
             gameObject instanceof AuxFile3D ||
@@ -109,7 +111,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 this._game.simulation3D,
                 this,
                 gameObject,
-                hit
+                hit,
+                vrController
             );
             return fileClickOp;
         } else {
@@ -117,23 +120,19 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         }
     }
 
-    createGameObjectVRClickOperation(
-        gameObject: GameObject,
-        hit: Intersection
-    ): IOperation {
-        return null;
-    }
-
-    createEmptyClickOperation(): IOperation {
-        let emptyClickOp = new BuilderEmptyClickOperation(this._game, this);
+    createEmptyClickOperation(vrController: VRController3D | null): IOperation {
+        let emptyClickOp = new BuilderEmptyClickOperation(
+            this._game,
+            this,
+            vrController
+        );
         return emptyClickOp;
     }
 
-    createEmptyVRClickOperation(): IOperation {
-        return null;
-    }
-
-    createHtmlElementClickOperation(element: HTMLElement): IOperation {
+    createHtmlElementClickOperation(
+        element: HTMLElement,
+        vrController: VRController3D | null
+    ): IOperation {
         const vueElement: any = Input.getVueParent(element);
 
         if (vueElement instanceof MiniFile) {
@@ -141,7 +140,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             return new BuilderMiniFileClickOperation(
                 this._game.simulation3D,
                 this,
-                file
+                file,
+                vrController
             );
         } else if (vueElement instanceof FileTag && vueElement.allowCloning) {
             const tag = vueElement.tag;
@@ -160,7 +160,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     return new BuilderNewFileClickOperation(
                         this._game.simulation3D,
                         this,
-                        newFile
+                        newFile,
+                        vrController
                     );
                 } else {
                     console.log('not valid');
@@ -175,13 +176,15 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 return new BuilderFileIDClickOperation(
                     this._game.simulation3D,
                     this,
-                    vueElement.files
+                    vueElement.files,
+                    vrController
                 );
             } else {
                 return new BuilderNewFileClickOperation(
                     this._game.simulation3D,
                     this,
-                    vueElement.files
+                    vueElement.files,
+                    vrController
                 );
             }
         }

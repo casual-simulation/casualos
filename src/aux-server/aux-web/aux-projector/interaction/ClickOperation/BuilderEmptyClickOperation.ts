@@ -8,6 +8,7 @@ import { EventBus } from '../../../shared/EventBus';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import BuilderGameView from '../../BuilderGameView/BuilderGameView';
 import { BuilderGame } from '../../scene/BuilderGame';
+import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 
 /**
  * Empty Click Operation handles clicking of empty space for mouse and touch input with the primary (left/first finger) interaction button.
@@ -26,7 +27,11 @@ export class BuilderEmptyClickOperation implements IOperation {
         return appManager.simulationManager.primary;
     }
 
-    constructor(game: BuilderGame, interaction: BuilderInteractionManager) {
+    constructor(
+        game: BuilderGame,
+        interaction: BuilderInteractionManager,
+        vrController: VRController3D | null
+    ) {
         this._game = game;
         this._interaction = interaction;
 

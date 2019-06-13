@@ -7,15 +7,64 @@ import {
     Color,
     MeshToonMaterial,
     Vector3,
+    Quaternion,
 } from 'three';
 import { InputState } from '../Input';
 import { baseAuxMeshMaterial, disposeMesh } from '../SceneUtils';
 import { InputVR } from './InputVR';
 import { Game } from '../Game';
 import { PointerRay3D } from './PointerRay3D';
+import { clone } from '@babel/types';
 
 export const VRController_DefaultColor: Color = new Color('#db3236');
 export const VRController_ClickColor: Color = new Color('#e5b94e');
+
+export class Pose {
+    /**
+     * Are the values in this pose in world space or not?
+     */
+    isWorldSpace: boolean;
+
+    /**
+     * Position of this pose.
+     */
+    position: Vector3 = new Vector3();
+
+    /**
+     * The quaternion (rotation) of this pose.
+     */
+    quaternion: Quaternion = new Quaternion();
+
+    constructor(isWorldSpace: boolean) {
+        this.isWorldSpace = isWorldSpace;
+    }
+
+    clone(): Pose {
+        let clone = new Pose(this.isWorldSpace);
+        clone.position = this.position.clone();
+        clone.quaternion = this.quaternion.clone();
+
+        return clone;
+    }
+
+    equals(pose: Pose): boolean {
+        if (this.isWorldSpace !== pose.isWorldSpace) return false;
+        if (!this.position.equals(pose.position)) return false;
+        if (!this.quaternion.equals(pose.quaternion)) return false;
+
+        return true;
+    }
+
+    setFromObject(object: Object3D): void {
+        if (this.isWorldSpace) {
+            object.getWorldPosition(this.position);
+            object.getWorldQuaternion(this.quaternion);
+        } else {
+            this.position.copy(object.position);
+            this.quaternion.copy(object.quaternion);
+        }
+    }
+}
 
 export class VRController3D extends Object3D {
     /**
@@ -37,7 +86,9 @@ export class VRController3D extends Object3D {
     private _game: Game;
     private _arrowMesh: Mesh;
     private _arrowHandleMesh: Mesh;
-    private _pointerRay: Ray;
+    private _worldPose = new Pose(true);
+    private _localPose = new Pose(false);
+    private _pointerRay: Ray = new Ray();
     private _pointerRay3D: PointerRay3D;
 
     get controller() {
@@ -62,6 +113,18 @@ export class VRController3D extends Object3D {
         return this._pointerRay3D;
     }
 
+    get handedness(): string {
+        return (<any>this._controller).getHandedness();
+    }
+
+    get worldPose(): Pose {
+        return this._worldPose;
+    }
+
+    get localPose(): Pose {
+        return this._localPose;
+    }
+
     constructor(controller: any, game: Game) {
         super();
 
@@ -71,6 +134,8 @@ export class VRController3D extends Object3D {
         this._pointerRay3D = new PointerRay3D();
         this._pointerRay3D.ray = this._pointerRay;
         this.add(this.pointerRay3D);
+
+        console.log('[VRController3D] handedness:', this.handedness);
 
         // Create the meshes.
         const controllerMaterial = baseAuxMeshMaterial();
@@ -170,20 +235,24 @@ export class VRController3D extends Object3D {
     }
 
     update(curFrame: number) {
+        // Update local and world pose.
+        this._localPose.setFromObject(this.controller);
+        this._worldPose.setFromObject(this.controller);
+
         // Update pointer ray.
         const pointerDirection = new Vector3();
-        this.controller.getWorldDirection(pointerDirection);
+        this._controller.getWorldDirection(pointerDirection);
         pointerDirection.multiplyScalar(-1);
 
-        const pointerOrigin = new Vector3();
-        this.controller.getWorldPosition(pointerOrigin);
-
-        this._pointerRay.set(pointerOrigin, pointerDirection);
+        this._pointerRay.set(
+            this._worldPose.position.clone(),
+            pointerDirection
+        );
 
         this.pointerRay3D.update();
 
         // Update button input.
-        let buttons = <any[]>(<any>this.controller).gamepad.buttons;
+        let buttons = <any[]>(<any>this._controller).gamepad.buttons;
 
         for (let i = 0; i < buttons.length; i++) {
             let button = buttons[i];

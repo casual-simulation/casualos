@@ -21,6 +21,7 @@ import { PlayerNewFileDragOperation } from '../DragOperation/PlayerNewFileDragOp
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
+import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 
 export class PlayerFileClickOperation extends BaseFileClickOperation {
     // This overrides the base class.
@@ -32,9 +33,10 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
         simulation3D: Simulation3D,
         interaction: PlayerInteractionManager,
         file: AuxFile3D,
-        faceValue: string
+        faceValue: string,
+        vrController: VRController3D | null
     ) {
-        super(simulation3D, interaction, file.file, file);
+        super(simulation3D, interaction, file.file, file, vrController);
         this.faceClicked = { face: faceValue };
     }
 
@@ -82,7 +84,8 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
                 inventorySimulation3D,
                 this._interaction,
                 draggedObjects,
-                file3D.context
+                file3D.context,
+                this._vrController
             );
         }
 

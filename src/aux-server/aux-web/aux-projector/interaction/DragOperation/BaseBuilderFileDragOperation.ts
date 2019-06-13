@@ -28,6 +28,7 @@ import TrashCan from '../../TrashCan/TrashCan';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { BuilderSimulation3D } from '../../scene/BuilderSimulation3D';
 import { BuilderGame } from '../../scene/BuilderGame';
+import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 
 /**
  * Shared class for both BuilderFileDragOperation and BuilderNewFileDragOperation.
@@ -60,9 +61,10 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         simulation3D: Simulation3D,
         interaction: BuilderInteractionManager,
         files: File[],
-        context: string
+        context: string,
+        vrController: VRController3D | null
     ) {
-        super(simulation3D, interaction, files, context);
+        super(simulation3D, interaction, files, context, vrController);
 
         this.game.gameView.showTrashCan = true;
     }

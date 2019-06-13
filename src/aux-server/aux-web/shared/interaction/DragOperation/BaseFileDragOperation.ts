@@ -26,6 +26,7 @@ import {
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
 import { differenceBy, maxBy } from 'lodash';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
+import { VRController3D, Pose } from '../../../shared/scene/vr/VRController3D';
 
 /**
  * Shared class for both FileDragOperation and NewFileDragOperation.
@@ -37,12 +38,14 @@ export abstract class BaseFileDragOperation implements IOperation {
     protected _file: File;
     protected _finished: boolean;
     protected _lastScreenPos: Vector2;
+    protected _lastVRControllerPose: Pose;
     protected _combine: boolean;
     protected _merge: boolean;
     protected _other: File;
     protected _context: string;
     protected _previousContext: string;
     protected _originalContext: string;
+    protected _vrController: VRController3D;
 
     private _inContext: boolean;
 
@@ -65,29 +68,48 @@ export abstract class BaseFileDragOperation implements IOperation {
         simulation3D: Simulation3D,
         interaction: BaseInteractionManager,
         files: File[],
-        context: string
+        context: string,
+        vrController: VRController3D | null
     ) {
         this._simulation3D = simulation3D;
         this._interaction = interaction;
         this._setFiles(files);
-        this._lastScreenPos = this._simulation3D.game
-            .getInput()
-            .getMouseScreenPos();
         this._originalContext = this._context = context;
         this._previousContext = null;
         this._inContext = true;
+        this._vrController = vrController;
+
+        if (this._vrController) {
+            this._lastVRControllerPose = this._vrController.worldPose.clone();
+        } else {
+            this._lastScreenPos = this._simulation3D.game
+                .getInput()
+                .getMouseScreenPos();
+        }
     }
 
     update(calc: FileCalculationContext): void {
         if (this._finished) return;
 
-        if (this.game.getInput().getMouseButtonHeld(0)) {
-            const curScreenPos = this.game.getInput().getMouseScreenPos();
+        const buttonHeld: boolean = this._vrController
+            ? this._vrController.getPrimaryButtonHeld()
+            : this.game.getInput().getMouseButtonHeld(0);
 
-            if (!curScreenPos.equals(this._lastScreenPos)) {
-                this._onDrag(calc);
+        if (buttonHeld) {
+            let shouldUpdateDrag: boolean;
 
+            if (this._vrController) {
+                const curPose = this._vrController.worldPose.clone();
+                shouldUpdateDrag = !curPose.equals(this._lastVRControllerPose);
+                this._lastVRControllerPose = curPose;
+            } else {
+                const curScreenPos = this.game.getInput().getMouseScreenPos();
+                shouldUpdateDrag = !curScreenPos.equals(this._lastScreenPos);
                 this._lastScreenPos = curScreenPos;
+            }
+
+            if (shouldUpdateDrag) {
+                this._onDrag(calc);
             }
         } else {
             this._onDragReleased(calc);
