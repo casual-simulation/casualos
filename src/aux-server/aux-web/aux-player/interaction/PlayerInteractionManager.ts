@@ -262,8 +262,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     protected _contextMenuActions(
         calc: FileCalculationContext,
         gameObject: GameObject,
-        point: Vector3,
-        pagePos: Vector2
+        point: Vector3
     ): ContextMenuAction[] {
         return null;
     }

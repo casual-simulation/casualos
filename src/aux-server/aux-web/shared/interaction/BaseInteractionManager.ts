@@ -591,12 +591,7 @@ export abstract class BaseInteractionManager {
         const input = this._game.getInput();
         const pagePos = input.getMousePagePos();
         const { gameObject, hit } = this.findHoveredGameObject();
-        const actions = this._contextMenuActions(
-            calc,
-            gameObject,
-            hit.point,
-            pagePos
-        );
+        const actions = this._contextMenuActions(calc, gameObject, hit.point);
 
         if (actions) {
             this.setCameraControlsEnabled(false);
@@ -739,7 +734,6 @@ export abstract class BaseInteractionManager {
     protected abstract _contextMenuActions(
         calc: FileCalculationContext,
         gameObject: GameObject,
-        point: Vector3,
-        pagePos: Vector2
+        point: Vector3
     ): ContextMenuAction[];
 }

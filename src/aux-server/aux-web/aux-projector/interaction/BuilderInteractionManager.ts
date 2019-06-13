@@ -486,8 +486,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     protected _contextMenuActions(
         calc: FileCalculationContext,
         gameObject: GameObject,
-        point: Vector3,
-        pagePos: Vector2
+        point: Vector3
     ): ContextMenuAction[] {
         let actions: ContextMenuAction[] = [];
 
