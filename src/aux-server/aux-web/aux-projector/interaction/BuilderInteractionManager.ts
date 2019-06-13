@@ -117,9 +117,20 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         }
     }
 
+    createGameObjectVRClickOperation(
+        gameObject: GameObject,
+        hit: Intersection
+    ): IOperation {
+        return null;
+    }
+
     createEmptyClickOperation(): IOperation {
         let emptyClickOp = new BuilderEmptyClickOperation(this._game, this);
         return emptyClickOp;
+    }
+
+    createEmptyVRClickOperation(): IOperation {
+        return null;
     }
 
     createHtmlElementClickOperation(element: HTMLElement): IOperation {
@@ -280,17 +291,11 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         );
     }
 
-    handlePointerEnter(file: File, simulation: Simulation): IOperation {
-        return null;
-    }
+    handlePointerEnter(file: File, simulation: Simulation): void {}
 
-    handlePointerExit(file: File, simulation: Simulation): IOperation {
-        return null;
-    }
+    handlePointerExit(file: File, simulation: Simulation): void {}
 
-    handlePointerDown(file: File, simulation: Simulation): IOperation {
-        return null;
-    }
+    handlePointerDown(file: File, simulation: Simulation): void {}
 
     /**
      * Calculates the grid location and workspace that the given ray intersects with.

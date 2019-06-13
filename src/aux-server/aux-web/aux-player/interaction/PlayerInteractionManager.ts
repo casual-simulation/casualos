@@ -124,6 +124,13 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         }
     }
 
+    createGameObjectVRClickOperation(
+        gameObject: GameObject,
+        hit: Intersection
+    ): IOperation {
+        return null;
+    }
+
     getDraggableGroups(): DraggableGroup[] {
         if (this._draggableGroupsDirty) {
             const contexts = flatMap(
@@ -171,23 +178,24 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         return this._draggableGroups;
     }
 
-    handlePointerEnter(file: File, simulation: Simulation): IOperation {
+    handlePointerEnter(file: File, simulation: Simulation): void {
         simulation.helper.action('onPointerEnter', [file]);
-        return null;
     }
 
-    handlePointerExit(file: File, simulation: Simulation): IOperation {
+    handlePointerExit(file: File, simulation: Simulation): void {
         simulation.helper.action('onPointerExit', [file]);
-        return null;
     }
 
-    handlePointerDown(file: File, simulation: Simulation): IOperation {
+    handlePointerDown(file: File, simulation: Simulation): void {
         simulation.helper.action('onPointerDown', [file]);
-        return null;
     }
 
     createEmptyClickOperation(): IOperation {
         return new PlayerEmptyClickOperation(this._game, this);
+    }
+
+    createEmptyVRClickOperation(): IOperation {
+        return null;
     }
 
     createHtmlElementClickOperation(element: HTMLElement): IOperation {
