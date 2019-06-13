@@ -45,18 +45,29 @@ export class InputVR {
         });
     }
 
+    /**
+     * Force all controllers to disconnect from the VR session.
+     */
     disconnectControllers() {
         console.log('[InputVR] disconnect controllers');
-        let controllers = <any[]>VRController.controllers;
-        controllers.forEach(controller => {
-            VRController.onGamepadDisconnect(controller.gamepad);
+
+        // Force all controllers to 'disconnect' from the VRController system
+        // by clearing out the static list of currently tracked controllers.
+        VRController.controllers = [];
+
+        // Clear out all of the 3d vr controllers.
+        this._controller3Ds.forEach(controller3D => {
+            controller3D.dispose();
+            this._game.getScene().remove(controller3D.controller);
         });
+
+        this._controller3Ds = [];
     }
 
     getController3D(controllerIndex: number): VRController3D {
         // Find matching controller 3d.
-        return find(this._controller3Ds, (c: VRController3D) => {
-            return c.controllerIndex === controllerIndex;
+        return find(this._controller3Ds, (c3D: VRController3D) => {
+            return c3D.controllerIndex === controllerIndex;
         });
     }
 
@@ -88,6 +99,10 @@ export class InputVR {
         console.log('[InputVR] VR controller disconnected:', event);
 
         const controller = event.controller;
+        controller.removeEventListener(
+            'disconnected',
+            this._handleVRControllerDisconnected
+        );
 
         // Remove controller 3D.
         const removed = remove(this._controller3Ds, (m: VRController3D) => {
@@ -96,9 +111,8 @@ export class InputVR {
         if (removed) {
             removed.forEach((m: VRController3D) => {
                 m.dispose();
+                this._game.getScene().remove(m.controller);
             });
         }
-
-        this._game.getScene().remove(controller);
     }
 }

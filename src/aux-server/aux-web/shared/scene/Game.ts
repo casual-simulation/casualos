@@ -431,6 +431,11 @@ export abstract class Game implements AuxFile3DFinder {
             this
         );
         this.handleVRDisplayActivate = this.handleVRDisplayActivate.bind(this);
+        this.handleVRDisplayDeactivate = this.handleVRDisplayDeactivate.bind(
+            this
+        );
+        this.handleVRDisplayBlur = this.handleVRDisplayBlur.bind(this);
+        this.handleVRDisplayFocus = this.handleVRDisplayFocus.bind(this);
         this.handleVRDisplayPresentChange = this.handleVRDisplayPresentChange.bind(
             this
         );
@@ -444,6 +449,11 @@ export abstract class Game implements AuxFile3DFinder {
         WebVRDisplays.onVRDisplayActivate.addListener(
             this.handleVRDisplayActivate
         );
+        WebVRDisplays.onVRDisplayDeactivate.addListener(
+            this.handleVRDisplayDeactivate
+        );
+        WebVRDisplays.onVRDisplayBlur.addListener(this.handleVRDisplayBlur);
+        WebVRDisplays.onVRDisplayFocus.addListener(this.handleVRDisplayFocus);
         WebVRDisplays.onVRDisplayPresentChange.addListener(
             this.handleVRDisplayPresentChange
         );
@@ -753,8 +763,19 @@ export abstract class Game implements AuxFile3DFinder {
     }
     protected handleVRDisplayDisconnect(display: VRDisplay): void {
         this.updateVRToggle();
+        this.inputVR.disconnectControllers();
     }
     protected handleVRDisplayActivate(display: VRDisplay): void {
+        this.updateVRToggle();
+    }
+    protected handleVRDisplayDeactivate(display: VRDisplay): void {
+        this.updateVRToggle();
+        this.inputVR.disconnectControllers();
+    }
+    protected handleVRDisplayBlur(display: VRDisplay): void {
+        this.updateVRToggle();
+    }
+    protected handleVRDisplayFocus(display: VRDisplay): void {
         this.updateVRToggle();
     }
     protected handleVRDisplayPresentChange(display: VRDisplay): void {

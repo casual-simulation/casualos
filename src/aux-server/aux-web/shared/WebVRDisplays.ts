@@ -53,6 +53,28 @@ export namespace WebVRDisplays {
     >();
 
     /**
+     * This event is fired when a VR display can no longer be presented to,
+     * for example if an HMD has gone into standby or sleep mode due to a period of inactivity.
+     * */
+    export var onVRDisplayDeactivate: ArgEvent<VRDisplay> = new ArgEvent<
+        VRDisplay
+    >();
+
+    /**
+     * This event is fired when presentation to a VR display has been paused for some reason by
+     * the browser, OS, or VR hardware — for example, while the user is interacting with a system
+     * menu or browser, to prevent tracking or loss of experience.
+     */
+    export var onVRDisplayBlur: ArgEvent<VRDisplay> = new ArgEvent<VRDisplay>();
+
+    /**
+     * This event is fired when presentation to a VR display has resumed after being blurred.
+     */
+    export var onVRDisplayFocus: ArgEvent<VRDisplay> = new ArgEvent<
+        VRDisplay
+    >();
+
+    /**
      * This event is fired when the presenting state of a VR display changes
      * i.e. goes from presenting to not presenting, or vice versa.
      */
@@ -87,6 +109,27 @@ export namespace WebVRDisplays {
             );
 
             window.addEventListener(
+                'vrdisplaydeactivate',
+                (event: VRDisplayEvent) => {
+                    handleVRDisplayBlur(event.display);
+                }
+            );
+
+            window.addEventListener(
+                'vrdisplayfocus',
+                (event: VRDisplayEvent) => {
+                    handleVRDisplayFocus(event.display);
+                }
+            );
+
+            window.addEventListener(
+                'vrdisplayblur',
+                (event: VRDisplayEvent) => {
+                    handleVRDisplayDeactivate(event.display);
+                }
+            );
+
+            window.addEventListener(
                 'vrdisplaypresentchange',
                 (event: VRDisplayEvent) => {
                     handleVRDisplayPresentChange(event.display);
@@ -114,7 +157,6 @@ export namespace WebVRDisplays {
         // Add display to array.
         vrDisplays.push(display);
 
-        // Fire the manager's connect event.
         onVRDisplayConnect.invoke(display);
     }
 
@@ -126,21 +168,31 @@ export namespace WebVRDisplays {
             vrDisplays = vrDisplays.filter(display => display !== display);
         }
 
-        // Fire the manager's disconnect event.
         onVRDisplayDisconnect.invoke(display);
     }
 
     function handleVRDisplayActivate(display: VRDisplay): void {
         console.log('[WebVRDisplays] VR display activate:', display);
-
-        // Fire the manager's activate event.
         onVRDisplayActivate.invoke(display);
+    }
+
+    function handleVRDisplayDeactivate(display: VRDisplay): void {
+        console.log('[WebVRDisplays] VR display deactivate:', display);
+        onVRDisplayDeactivate.invoke(display);
+    }
+
+    function handleVRDisplayBlur(display: VRDisplay): void {
+        console.log('[WebVRDisplays] VR display blur:', display);
+        onVRDisplayBlur.invoke(display);
+    }
+
+    function handleVRDisplayFocus(display: VRDisplay): void {
+        console.log('[WebVRDisplays] VR display focus:', display);
+        onVRDisplayFocus.invoke(display);
     }
 
     function handleVRDisplayPresentChange(display: VRDisplay): void {
         console.log('[WebVRDisplays] VR display present change:', display);
-
-        // fire the manager's present change event.
         onVRDisplayPresentChange.invoke(display);
     }
 }

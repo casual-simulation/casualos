@@ -25,6 +25,7 @@ import { Input } from '../../../shared/scene/Input';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 import { PlayerFileDragOperation } from './PlayerFileDragOperation';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
+import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 
 export class PlayerNewFileDragOperation extends PlayerFileDragOperation {
     private _fileAdded: boolean;
@@ -37,14 +38,16 @@ export class PlayerNewFileDragOperation extends PlayerFileDragOperation {
         inventorySimulation: InventorySimulation3D,
         interaction: PlayerInteractionManager,
         file: File,
-        context: string
+        context: string,
+        vrController: VRController3D | null
     ) {
         super(
             playerSimulation,
             inventorySimulation,
             interaction,
             [file],
-            context
+            context,
+            vrController
         );
     }
 

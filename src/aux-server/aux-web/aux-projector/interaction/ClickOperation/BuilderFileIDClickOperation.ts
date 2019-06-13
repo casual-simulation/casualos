@@ -36,7 +36,8 @@ export class BuilderFileIDClickOperation extends BaseFileClickOperation {
             null,
             [this._file],
             null,
-            null
+            null,
+            this._vrController
         );
     }
 }

@@ -46,7 +46,8 @@ export class BuilderNewFileClickOperation extends BaseFileClickOperation {
             this._simulation3D,
             this._interaction,
             duplicatedFile,
-            this._file
+            this._file,
+            this._vrController
         );
     }
 

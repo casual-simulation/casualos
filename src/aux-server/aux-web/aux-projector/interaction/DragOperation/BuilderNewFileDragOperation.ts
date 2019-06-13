@@ -16,6 +16,7 @@ import { BaseBuilderFileDragOperation } from './BaseBuilderFileDragOperation';
 import BuilderGameView from '../../BuilderGameView/BuilderGameView';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
+import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 
 /**
  * New File Drag Operation handles dragging of new files from the file queue.
@@ -33,9 +34,10 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
         simulation3D: Simulation3D,
         interaction: BuilderInteractionManager,
         duplicatedFile: File,
-        originalFile: File
+        originalFile: File,
+        vrController: VRController3D | null
     ) {
-        super(simulation3D, interaction, [duplicatedFile], null);
+        super(simulation3D, interaction, [duplicatedFile], null, vrController);
     }
 
     protected _updateFile(file: File, data: PartialFile): FileEvent {

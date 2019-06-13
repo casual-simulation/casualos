@@ -105,7 +105,8 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
             inventorySimulation3D,
             this._interaction,
             duplicatedFile,
-            (<AuxFile3D>this._file3D).context
+            (<AuxFile3D>this._file3D).context,
+            this._vrController
         );
     }
 
@@ -128,7 +129,8 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
             inventorySimulation3D,
             this._interaction,
             duplicatedFile,
-            (<AuxFile3D>this._file3D).context
+            (<AuxFile3D>this._file3D).context,
+            this._vrController
         );
     }
 

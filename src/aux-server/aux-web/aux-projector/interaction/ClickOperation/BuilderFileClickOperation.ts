@@ -94,7 +94,8 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
                     this._hit,
                     draggedObjects,
                     <BuilderGroup3D>workspace,
-                    file3D.context
+                    file3D.context,
+                    this._vrController
                 );
             }
         }
@@ -104,7 +105,8 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
             this._hit,
             [this._file3D.file],
             <BuilderGroup3D>workspace,
-            null
+            null,
+            this._vrController
         );
     }
 
@@ -116,7 +118,8 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
             this._simulation3D,
             this._interaction,
             duplicatedFile,
-            this._file
+            this._file,
+            this._vrController
         );
     }
 
@@ -134,7 +137,8 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
             this._simulation3D,
             this._interaction,
             duplicatedFile,
-            this._file
+            this._file,
+            this._vrController
         );
     }
 
