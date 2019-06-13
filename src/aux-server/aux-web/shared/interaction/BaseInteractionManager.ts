@@ -580,6 +580,14 @@ export abstract class BaseInteractionManager {
     }
 
     showContextMenu(calc: FileCalculationContext) {
+        if (WebVRDisplays.isPresenting()) {
+            // Context menu does nothing in VR yet...
+            console.log(
+                '[BaseInteractionManager] Context menu is not currently supported while in VR.'
+            );
+            return;
+        }
+
         const input = this._game.getInput();
         const pagePos = input.getMousePagePos();
         const { gameObject, hit } = this.findHoveredGameObject();
