@@ -60,10 +60,6 @@ export abstract class BaseFileClickOperation implements IOperation {
         if (this._vrController) {
             // Store the pose of the vr controller when the click occured.
             this._startVRControllerPose = this._vrController.worldPose.clone();
-            console.log(
-                '[BaseFileClickOperation] start vr controller pose:',
-                this._startVRControllerPose
-            );
         } else {
             // Store the screen position of the input when the click occured.
             this._startScreenPos = this.game.getInput().getMouseScreenPos();

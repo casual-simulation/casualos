@@ -1,4 +1,4 @@
-import { Vector2, Vector3, Group } from 'three';
+import { Vector2, Vector3, Group, Ray } from 'three';
 import { Physics } from '../../../shared/scene/Physics';
 import { WorkspaceMesh } from '../../../shared/scene/WorkspaceMesh';
 import {
@@ -70,16 +70,19 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     }
 
     protected _onDrag(calc: FileCalculationContext) {
-        const mousePagePos = this.game.getInput().getMousePagePos();
+        let input: Vector2 | Ray;
+
+        if (this._vrController) {
+            input = this._vrController.pointerRay;
+        } else {
+            input = this.game.getInput().getMousePagePos();
+        }
+
         const {
             good,
             gridPosition,
             workspace,
-        } = this._interaction.pointOnWorkspaceGrid(
-            calc,
-            mousePagePos,
-            this.game.getMainCameraRig().mainCamera
-        );
+        } = this._interaction.pointOnWorkspaceGrid(calc, input);
 
         if (this._files.length > 0) {
             if (good) {
@@ -138,45 +141,45 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     }
 
     protected _dragFilesFree(calc: FileCalculationContext): void {
-        const mouseDir = Physics.screenPosToRay(
-            this.game.getInput().getMouseScreenPos(),
-            this.game.getMainCameraRig().mainCamera
-        );
-        const firstFileExists = true;
-
-        if (firstFileExists) {
-            // Move the file freely in space at the distance the file is currently from the camera.
-            if (!this._freeDragGroup) {
-                this._freeDragMeshes = this._files.map(f =>
-                    this._createDragMesh(calc, f)
-                );
-                this._freeDragGroup = this._createFreeDragGroup(
-                    this._freeDragMeshes
-                );
-
-                this._updateFileContexts(this._files, false);
-
-                // Calculate the distance to perform free drag at.
-                const fileWorldPos = this._freeDragMeshes[0].getWorldPosition(
-                    new Vector3()
-                );
-                const cameraWorldPos = this.game
-                    .getMainCameraRig()
-                    .mainCamera.getWorldPosition(new Vector3());
-                this._freeDragDistance = cameraWorldPos.distanceTo(
-                    fileWorldPos
-                );
-            }
-
-            this._freeDragMeshes.forEach(m => {
-                m.fileUpdated(m.file, [], calc);
-                // m.frameUpdate(calc);
-            });
-
-            let worldPos = Physics.pointOnRay(mouseDir, this._freeDragDistance);
-            this._freeDragGroup.position.copy(worldPos);
-            this._freeDragGroup.updateMatrixWorld(true);
+        let inputRay: Ray;
+        if (this._vrController) {
+            inputRay = this._vrController.pointerRay;
+        } else {
+            inputRay = Physics.screenPosToRay(
+                this.game.getInput().getMouseScreenPos(),
+                this.game.getMainCameraRig().mainCamera
+            );
         }
+
+        // Move the file freely in space at the distance the file is currently from the camera.
+        if (!this._freeDragGroup) {
+            this._freeDragMeshes = this._files.map(f =>
+                this._createDragMesh(calc, f)
+            );
+            this._freeDragGroup = this._createFreeDragGroup(
+                this._freeDragMeshes
+            );
+
+            this._updateFileContexts(this._files, false);
+
+            // Calculate the distance to perform free drag at.
+            const fileWorldPos = this._freeDragMeshes[0].getWorldPosition(
+                new Vector3()
+            );
+            const cameraWorldPos = this.game
+                .getMainCameraRig()
+                .mainCamera.getWorldPosition(new Vector3());
+            this._freeDragDistance = cameraWorldPos.distanceTo(fileWorldPos);
+        }
+
+        this._freeDragMeshes.forEach(m => {
+            m.fileUpdated(m.file, [], calc);
+            // m.frameUpdate(calc);
+        });
+
+        let worldPos = Physics.pointOnRay(inputRay, this._freeDragDistance);
+        this._freeDragGroup.position.copy(worldPos);
+        this._freeDragGroup.updateMatrixWorld(true);
     }
 
     protected _destroyOrRemoveFiles(
