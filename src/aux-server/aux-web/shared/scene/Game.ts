@@ -746,6 +746,7 @@ export abstract class Game implements AuxFile3DFinder {
                     this.renderer.vr.setDevice(null);
                     WebVRDisplays.mainVRDisplay().exitPresent();
                 } else {
+                    this.setCameraType('perspective'); // Setting camera to perspective allows the VR user to be properly displayed in scene.
                     this.renderer.vr.enabled = true;
                     this.renderer.vr.setDevice(WebVRDisplays.mainVRDisplay());
                     WebVRDisplays.mainVRDisplay().requestPresent([
