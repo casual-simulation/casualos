@@ -1027,7 +1027,7 @@ export const player = {
     hideQRCode,
     isConnected,
     currentContext,
-    isBuilder,
+    isDesigner: isBuilder,
     showInputForTag,
 };
 

@@ -18,6 +18,7 @@ export interface FileTags {
     // Global file tags
     ['aux.scene.color']?: string;
     ['aux.inventory.color']?: string;
+    ['aux.inventory.height']?: number;
     ['aux.scene.user.player.color']?: unknown;
     ['aux.scene.user.builder.color']?: unknown;
     ['aux.whitelist']?: unknown;
@@ -256,6 +257,7 @@ export const KNOWN_TAGS: string[] = [
     'aux._selectionMode',
     'aux._lastEditedBy',
     'aux.inventory.color',
+    'aux.inventory.height',
     'aux.scene.color',
     'aux.scene.user.player.color',
     'aux.scene.user.builder.color',

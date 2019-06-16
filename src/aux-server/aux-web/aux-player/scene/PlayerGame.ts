@@ -5,7 +5,7 @@ import {
     createCameraRig,
     resizeCameraRig,
 } from '../../shared/scene/CameraRigFactory';
-import { Scene, Color, Texture } from 'three';
+import { Scene, Color, Texture, OrthographicCamera } from 'three';
 import { PlayerSimulation3D } from './PlayerSimulation3D';
 import { InventorySimulation3D } from './InventorySimulation3D';
 import { Viewport } from '../../shared/scene/Viewport';
@@ -24,6 +24,7 @@ import {
     baseAuxAmbientLight,
     baseAuxDirectionalLight,
 } from '../../shared/scene/SceneUtils';
+import { WebVRDisplays } from '../../shared/WebVRDisplays';
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
@@ -36,6 +37,12 @@ export class PlayerGame extends Game {
     inventoryViewport: Viewport = null;
 
     private inventoryScene: Scene;
+
+    inventoryHeightOverride: number = null;
+
+    private slider: Element;
+    private sliderVis: Element;
+    private sliderPressed: boolean = false;
 
     constructor(gameView: PlayerGameView) {
         super(gameView);
@@ -254,44 +261,46 @@ export class PlayerGame extends Game {
     protected renderCore(): void {
         super.renderCore();
 
-        //
-        // [Inventory scene]
-        //
+        if (!WebVRDisplays.isPresenting()) {
+            //
+            // [Inventory scene]
+            //
 
-        this.renderer.clearDepth(); // Clear depth buffer so that inventory scene always appears above the main scene.
+            this.renderer.clearDepth(); // Clear depth buffer so that inventory scene always appears above the main scene.
 
-        if (this.mainScene.background instanceof Color) {
-            this.inventorySceneBackgroundUpdate(this.mainScene.background);
+            if (this.mainScene.background instanceof Color) {
+                this.inventorySceneBackgroundUpdate(this.mainScene.background);
+            }
+
+            this.renderer.setViewport(
+                this.inventoryViewport.x,
+                this.inventoryViewport.y,
+                this.inventoryViewport.width,
+                this.inventoryViewport.height
+            );
+            this.renderer.setScissor(
+                this.inventoryViewport.x,
+                this.inventoryViewport.y,
+                this.inventoryViewport.width,
+                this.inventoryViewport.height
+            );
+            this.renderer.setScissorTest(true);
+
+            // Render the inventory scene with the inventory main camera.
+            this.renderer.render(
+                this.inventoryScene,
+                this.inventoryCameraRig.mainCamera
+            );
+
+            this.inventoryScene.background = null;
+
+            // Render the inventory scene with the inventory ui world camera.
+            this.renderer.clearDepth(); // Clear depth buffer so that ui objects dont use it.
+            this.renderer.render(
+                this.inventoryScene,
+                this.inventoryCameraRig.uiWorldCamera
+            );
         }
-
-        this.renderer.setViewport(
-            this.inventoryViewport.x,
-            this.inventoryViewport.y,
-            this.inventoryViewport.width,
-            this.inventoryViewport.height
-        );
-        this.renderer.setScissor(
-            this.inventoryViewport.x,
-            this.inventoryViewport.y,
-            this.inventoryViewport.width,
-            this.inventoryViewport.height
-        );
-        this.renderer.setScissorTest(true);
-
-        // Render the inventory scene with the inventory main camera.
-        this.renderer.render(
-            this.inventoryScene,
-            this.inventoryCameraRig.mainCamera
-        );
-
-        this.inventoryScene.background = null;
-
-        // Render the inventory scene with the inventory ui world camera.
-        this.renderer.clearDepth(); // Clear depth buffer so that ui objects dont use it.
-        this.renderer.render(
-            this.inventoryScene,
-            this.inventoryCameraRig.uiWorldCamera
-        );
     }
 
     private inventorySceneBackgroundUpdate(colorToOffset: Color) {
@@ -316,6 +325,9 @@ export class PlayerGame extends Game {
         super.setupRenderer();
 
         this.inventoryViewport = new Viewport('inventory', this.mainViewport);
+        console.log(
+            'Set height initial value: ' + this.inventoryViewport.height
+        );
         this.inventoryViewport.layer = 1;
     }
 
@@ -349,11 +361,123 @@ export class PlayerGame extends Game {
     onWindowResize(width: number, height: number) {
         super.onWindowResize(width, height);
 
-        const invHeightScale = height < 850 ? 0.25 : 0.2;
+        let invHeightScale = height < 850 ? 0.25 : 0.2;
+
+        let defaultHeight =
+            appManager.simulationManager.primary.helper.globalsFile.tags[
+                'aux.inventory.height'
+            ];
+
+        if (defaultHeight != null && defaultHeight != 0) {
+            if (defaultHeight < 0.1) {
+                invHeightScale = 0.1;
+            } else if (defaultHeight > 1) {
+                invHeightScale = 1;
+            } else {
+                invHeightScale = defaultHeight;
+            }
+        }
+
+        // if there is no existing height set by the slider then
+        if (this.inventoryHeightOverride === null) {
+            // get a new reference to the slider object in the html
+            this.slider = document.querySelector('.slider-hidden');
+            this.sliderVis = document.querySelector('.slider-visible');
+
+            this.inventoryViewport.setScale(null, invHeightScale);
+
+            // set the new slider's top position to the top of the viewport
+            (<HTMLElement>this.slider).style.top =
+                (height - this.inventoryViewport.height - 20).toString() + 'px';
+            (<HTMLElement>this.sliderVis).style.top =
+                (height - this.inventoryViewport.height).toString() + 'px';
+
+            this.inventoryHeightOverride =
+                height -
+                +(<HTMLElement>this.slider).style.top.replace('px', '');
+        } else {
+            invHeightScale = this.inventoryHeightOverride / height;
+            this.inventoryViewport.setScale(null, invHeightScale);
+
+            (<HTMLElement>this.slider).style.top =
+                (height - this.inventoryViewport.height - 20).toString() + 'px';
+            (<HTMLElement>this.sliderVis).style.top =
+                (
+                    window.innerHeight -
+                    this.inventoryViewport.height +
+                    16
+                ).toString() + 'px';
+        }
+
+        if (this.inventoryCameraRig) {
+            this.overrideOrthographicViewportZoom(this.inventoryCameraRig);
+            resizeCameraRig(this.inventoryCameraRig);
+        }
+    }
+
+    async mouseDownSlider() {
+        this.sliderPressed = true;
+    }
+
+    async mouseUpSlider() {
+        this.sliderPressed = false;
+        (<HTMLElement>this.slider).style.top =
+            (
+                window.innerHeight -
+                this.inventoryViewport.height -
+                20
+            ).toString() + 'px';
+    }
+
+    frameUpdate() {
+        super.frameUpdate();
+
+        if (!this.sliderPressed) return false;
+
+        let sliderPos = this.input.getMousePagePos().y;
+
+        //prevent the slider from being positioned outside the window bounds
+        if (sliderPos < 0) sliderPos = 0;
+        if (sliderPos > window.innerHeight) sliderPos = window.innerHeight;
+
+        (<HTMLElement>this.slider).style.top = sliderPos - 20 + 'px';
+
+        this.inventoryHeightOverride = window.innerHeight - sliderPos;
+
+        let invHeightScale = this.inventoryHeightOverride / window.innerHeight;
+
+        if (invHeightScale < 0.1) {
+            invHeightScale = 0.1;
+        } else if (invHeightScale > 1) {
+            invHeightScale = 1;
+        }
+
         this.inventoryViewport.setScale(null, invHeightScale);
 
         if (this.inventoryCameraRig) {
+            this.overrideOrthographicViewportZoom(this.inventoryCameraRig);
             resizeCameraRig(this.inventoryCameraRig);
+        }
+
+        (<HTMLElement>this.sliderVis).style.top =
+            (
+                window.innerHeight -
+                this.inventoryViewport.height +
+                16
+            ).toString() + 'px';
+    }
+
+    /**
+     * This is a hacky function that gets us a more pleasent orthographic zoom level
+     * as we change the aspect ratio of the viewport that has an orthographic camera.
+     */
+    private overrideOrthographicViewportZoom(cameraRig: CameraRig) {
+        if (cameraRig.mainCamera instanceof OrthographicCamera) {
+            const aspect = cameraRig.viewport.width / cameraRig.viewport.height;
+
+            // found that 50 is the preset zoom of the rig.maincamera.zoom so I am using this as the base zoom
+            const newZoom = 50 - (49 - aspect * 7);
+            cameraRig.mainCamera.zoom = newZoom;
         }
     }
 }

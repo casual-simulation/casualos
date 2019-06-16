@@ -29,11 +29,6 @@
                     <span class="sr-only">New Worksurface</span>
                     <md-tooltip md-direction="bottom">New Worksurface</md-tooltip>
                 </md-button-->
-                <span
-                    v-show="game.vrDisplay"
-                    id="vr-button-container"
-                    class="vr-button-container"
-                ></span>
             </div>
             <trash-can v-if="showTrashCan" ref="trashCan"></trash-can>
             <div class="toolbar right">

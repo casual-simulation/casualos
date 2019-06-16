@@ -1,5 +1,42 @@
 # AUX Changelog
 
+## V0.9.1
+
+### Date: 06/13/2019
+
+### Changes:
+
+-   Improvements
+    -   VR mode is reimplemented.
+        -   On a VR device, you can enter VR mode by clicking on `Enter VR` in the menu.
+        -   VR controllers can be used to click on files as well as drag them around in both AUX Player and AUX Builder.
+        -   `onPointerEnter()` and `onPointerExit()` work for VR controllers in AUX Player.
+    -   AR mode is back to its previous working state (along with inventory!)
+    -   Changed the function tag `player.isBuilder()` to `player.isDesigner()`.
+    -   Clicking on the same file as the selected file will now open the sheet if it has been closed.
+    -   Added a `Select Context File` seciton in the workspace dropdown. This will select the file responsible for the workspace and open up it's sheet.
+    -   Added ability to drag to change the height of the inventory viewport in the player.
+    -   Added a new `aux.inventory.height` tag that when applied to the config file will set a default height of the player's inventory.
+-   Bug Fixes
+    -   Clicking on the same file as the selected file will no longer deselect the file in single selection mode.
+    -   Fixed accidental double render when running in AUX Builder.
+
+## V0.8.11
+
+### Date: 06/07/2019
+
+### Changes:
+
+-   Improvements
+    -   Removed unused top grid spaces of empty an empty file.
+    -   The tag autocomplete is now in alphabetical order.
+    -   The id tag value is now centered in the sheets.
+    -   The `Clear Diff` section of the sheets has been renamed `Clear Tags`.
+    -   The tooltip for the surface button has been changed from `create surface from selection` to `create surface` in mergeBall mode.
+-   Bug Fixes
+    -   Changed the resulting `diff-` id of file to `merge` when adding tag to empty file.
+    -   Changed header of the create worspace popup from `Create Surface from Selection` to `Create Surface` when opened on a merge file.
+
 ## V0.8.10
 
 ### Date: 06/07/2019

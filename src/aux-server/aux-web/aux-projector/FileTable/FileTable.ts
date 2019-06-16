@@ -137,14 +137,22 @@ export default class FileTable extends Vue {
         const sizeType = this.viewMode === 'rows' ? 'columns' : 'rows';
         if (this.tags.length === 0) {
             return {
-                [`grid-template-${sizeType}`]: `auto auto auto`,
+                [`grid-template-${sizeType}`]: `auto auto`,
             };
         }
-        return {
-            [`grid-template-${sizeType}`]: `auto auto repeat(${
-                this.tags.length
-            }, auto) auto`,
-        };
+
+        if (this.diffSelected) {
+            return {
+                [`grid-template-${sizeType}`]: `auto auto repeat(${this.tags
+                    .length - 1}, auto) auto`,
+            };
+        } else {
+            return {
+                [`grid-template-${sizeType}`]: `auto auto repeat(${
+                    this.tags.length
+                }, auto) auto`,
+            };
+        }
     }
 
     get fileManager() {
@@ -202,7 +210,7 @@ export default class FileTable extends Vue {
                 this.fileManager.recent.addFileDiff(updated, true);
             } else {
                 this.fileManager.recent.addTagDiff(
-                    `diff-${this.focusedFile.id}_${this.focusedTag}`,
+                    `merge-${this.focusedFile.id}_${this.focusedTag}`,
                     this.focusedTag,
                     this.multilineValue
                 );
@@ -241,7 +249,11 @@ export default class FileTable extends Vue {
             if (this.files.length === 1) {
                 await this.fileManager.selection.clearSelection();
             } else {
-                await this.fileManager.selection.selectFile(file);
+                await this.fileManager.selection.selectFile(
+                    file,
+                    false,
+                    this.fileManager.filePanel
+                );
             }
         }
     }
@@ -256,7 +268,11 @@ export default class FileTable extends Vue {
     async createFile() {
         const id = await this.fileManager.helper.createFile();
         const file = this.fileManager.helper.filesState[id];
-        this.fileManager.selection.selectFile(file, true);
+        this.fileManager.selection.selectFile(
+            file,
+            true,
+            this.fileManager.filePanel
+        );
     }
 
     addTag(placement: NewTagPlacement = 'top') {
@@ -382,7 +398,11 @@ export default class FileTable extends Vue {
             }
         }
 
-        await this.fileManager.selection.selectFile(workspace, true);
+        await this.fileManager.selection.selectFile(
+            workspace,
+            true,
+            this.fileManager.filePanel
+        );
 
         this.resetCreateWorksurfaceDialog();
     }

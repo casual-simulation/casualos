@@ -63,7 +63,6 @@ import { GameObject } from '../../shared/scene/GameObject';
 import MiniFile from '../MiniFile/MiniFile';
 import FileTag from '../FileTag/FileTag';
 import FileTable from '../FileTable/FileTable';
-import { appManager } from '../../shared/AppManager';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
 import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
@@ -79,6 +78,7 @@ import { BuilderFileIDClickOperation } from './ClickOperation/BuilderFileIDClick
 import { BuilderGame } from '../scene/BuilderGame';
 import { BuilderMiniFileClickOperation } from './ClickOperation/BuilderMiniFileClickOperation';
 import { copyFilesFromSimulation } from '../../shared/SharedUtils';
+import { VRController3D } from 'aux-web/shared/scene/vr/VRController3D';
 
 export class BuilderInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -100,7 +100,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
     createGameObjectClickOperation(
         gameObject: GameObject,
-        hit: Intersection
+        hit: Intersection,
+        vrController: VRController3D | null
     ): IOperation {
         if (
             gameObject instanceof AuxFile3D ||
@@ -110,7 +111,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 this._game.simulation3D,
                 this,
                 gameObject,
-                hit
+                hit,
+                vrController
             );
             return fileClickOp;
         } else {
@@ -118,12 +120,19 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         }
     }
 
-    createEmptyClickOperation(): IOperation {
-        let emptyClickOp = new BuilderEmptyClickOperation(this._game, this);
+    createEmptyClickOperation(vrController: VRController3D | null): IOperation {
+        let emptyClickOp = new BuilderEmptyClickOperation(
+            this._game,
+            this,
+            vrController
+        );
         return emptyClickOp;
     }
 
-    createHtmlElementClickOperation(element: HTMLElement): IOperation {
+    createHtmlElementClickOperation(
+        element: HTMLElement,
+        vrController: VRController3D | null
+    ): IOperation {
         const vueElement: any = Input.getVueParent(element);
 
         if (vueElement instanceof MiniFile) {
@@ -131,7 +140,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             return new BuilderMiniFileClickOperation(
                 this._game.simulation3D,
                 this,
-                file
+                file,
+                vrController
             );
         } else if (vueElement instanceof FileTag && vueElement.allowCloning) {
             const tag = vueElement.tag;
@@ -150,7 +160,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     return new BuilderNewFileClickOperation(
                         this._game.simulation3D,
                         this,
-                        newFile
+                        newFile,
+                        vrController
                     );
                 } else {
                     console.log('not valid');
@@ -165,13 +176,15 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 return new BuilderFileIDClickOperation(
                     this._game.simulation3D,
                     this,
-                    vueElement.files
+                    vueElement.files,
+                    vrController
                 );
             } else {
                 return new BuilderNewFileClickOperation(
                     this._game.simulation3D,
                     this,
-                    vueElement.files
+                    vueElement.files,
+                    vrController
                 );
             }
         }
@@ -281,27 +294,17 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         );
     }
 
-    handlePointerEnter(file: File, simulation: Simulation): IOperation {
-        return null;
-    }
+    handlePointerEnter(file: File, simulation: Simulation): void {}
 
-    handlePointerExit(file: File, simulation: Simulation): IOperation {
-        return null;
-    }
+    handlePointerExit(file: File, simulation: Simulation): void {}
 
-    handlePointerDown(file: File, simulation: Simulation): IOperation {
-        return null;
-    }
+    handlePointerDown(file: File, simulation: Simulation): void {}
 
     /**
-     * Calculates the grid location and workspace that the given ray intersects with.
-     * @param ray The ray to test.
+     * Calculates the grid location and workspace that the given page position intersects with.
+     * @param input The input to find the grid position under. This can be either a Vector2 page position (Browser) or a ray (VR).
      */
-    pointOnWorkspaceGrid(
-        calc: FileCalculationContext,
-        pagePos: Vector2,
-        camera: Camera
-    ) {
+    pointOnWorkspaceGrid(calc: FileCalculationContext, input: Vector2 | Ray) {
         const workspaceGroups = this.getSurfaceObjectGroups(calc);
 
         for (let i = 0; i < workspaceGroups.length; i++) {
@@ -309,22 +312,31 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             const camera = workspaceGroups[i].camera;
             const viewport = workspaceGroups[i].viewport;
 
-            let screenPos: Vector2;
-            if (viewport) {
-                screenPos = Input.screenPositionForViewport(pagePos, viewport);
+            let hits: Physics.RaycastResult;
+
+            if (input instanceof Vector2) {
+                let screenPos: Vector2;
+                if (viewport) {
+                    screenPos = Input.screenPositionForViewport(
+                        input,
+                        viewport
+                    );
+                } else {
+                    screenPos = Input.screenPosition(
+                        input,
+                        this._game.gameView.gameView
+                    );
+                }
+
+                hits = Physics.raycastAtScreenPos(screenPos, objects, camera);
+            } else if (input instanceof Ray) {
+                hits = Physics.raycast(input, objects);
             } else {
-                screenPos = Input.screenPosition(
-                    pagePos,
-                    this._game.gameView.gameView
-                );
+                return {
+                    good: false,
+                };
             }
 
-            const hits = Physics.raycastAtScreenPos(
-                screenPos,
-                new Raycaster(),
-                objects,
-                camera
-            );
             const hit = Physics.firstRaycastHit(hits);
 
             if (hit) {
@@ -345,6 +357,10 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                             workspace,
                         };
                     }
+                } else {
+                    return {
+                        good: false,
+                    };
                 }
             }
         }
@@ -352,63 +368,6 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         return {
             good: false,
         };
-    }
-
-    /**
-     * Finds the closest non-minimized workspace to the given point.
-     * Returns undefined if there is no workspace.
-     * @param point The point.
-     * @param exclude The optional workspace to exclude from the search.
-     */
-    closestWorkspace(
-        calc: FileCalculationContext,
-        point: Vector3,
-        exclude?: AuxFile3D | ContextGroup3D
-    ) {
-        const contexts = flatMap(this._game.getSimulations(), s => {
-            return s.contexts;
-        });
-        const workspaceMeshes = contexts.filter(
-            context =>
-                context !== exclude &&
-                !getContextMinimized(calc, context.file) &&
-                !!getContextSize(calc, context.file)
-        );
-
-        if (!!workspaceMeshes && workspaceMeshes.length > 0) {
-            const center = new Axial();
-
-            const gridPositions = workspaceMeshes.map(mesh => {
-                const w = <Workspace>mesh.file;
-                const gridPos = this._worldPosToGridPos(calc, mesh, point);
-                const grid = getBuilderContextGrid(calc, w);
-                const tilePositions = grid ? keys(grid).map(keyToPos) : [];
-                const distToCenter = gridDistance(center, gridPos);
-                const size = getContextSize(calc, w);
-                const scaledDistance = distToCenter - (size - 1);
-                const distances = [
-                    { position: center, distance: scaledDistance },
-                    ...tilePositions.map(pos => ({
-                        position: pos,
-                        distance: gridDistance(pos, gridPos),
-                    })),
-                ];
-
-                // never null because distances always has at least one element.
-                const closest = minBy(distances, d => d.distance);
-
-                return {
-                    mesh,
-                    gridPosition: gridPos,
-                    distance: closest.distance,
-                };
-            });
-
-            const closest = minBy(gridPositions, g => g.distance);
-            return closest;
-        } else {
-            return null;
-        }
     }
 
     /**
@@ -420,10 +379,6 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             return contexts[0];
         }
         return null;
-    }
-
-    isFile(hit: Intersection): boolean {
-        return this.findWorkspaceForIntersection(hit) === null;
     }
 
     getSurfaceObjectGroups(calc: FileCalculationContext): DraggableGroup[] {
@@ -453,6 +408,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
         return this._surfaceColliders;
     }
+
+    protected findWorkspaceForHit(hit: Intersection) {}
 
     protected _markDirty() {
         super._markDirty();
@@ -484,8 +441,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     protected _contextMenuActions(
         calc: FileCalculationContext,
         gameObject: GameObject,
-        point: Vector3,
-        pagePos: Vector2
+        point: Vector3
     ): ContextMenuAction[] {
         let actions: ContextMenuAction[] = [];
 
@@ -516,7 +472,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     actions.push({
                         label: 'Raise',
                         onClick: () =>
-                            this.SetAllHexHeight(
+                            this._setAllHexHeight(
                                 calc,
                                 gameObject,
                                 currentHeight + increment
@@ -526,7 +482,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                         actions.push({
                             label: 'Lower',
                             onClick: () =>
-                                this.SetAllHexHeight(
+                                this._setAllHexHeight(
                                     calc,
                                     gameObject,
                                     currentHeight - increment
@@ -558,7 +514,10 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     label: 'Copy',
                     onClick: () => this._copyWorkspace(calc, gameObject),
                 });
-
+                actions.push({
+                    label: 'Select Context File',
+                    onClick: () => this._selectContextFile(calc, gameObject),
+                });
                 actions.push({
                     label: 'Open Context in New Tab',
                     onClick: () => this._switchToPlayer(calc, gameObject),
@@ -587,7 +546,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      * On raise or lower, set all hexes in workspace to given height
      * @param file
      */
-    private SetAllHexHeight(
+    private _setAllHexHeight(
         calc: FileCalculationContext,
         gameObject: ContextGroup3D,
         height: number
@@ -653,6 +612,17 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 },
             });
         }
+    }
+
+    private _selectContextFile(
+        calc: FileCalculationContext,
+        file: ContextGroup3D
+    ) {
+        this._game.simulation3D.simulation.selection.selectFile(
+            file.file,
+            false,
+            this._game.simulation3D.simulation.filePanel
+        );
     }
 
     private _switchToPlayer(

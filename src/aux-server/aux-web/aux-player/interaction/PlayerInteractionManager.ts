@@ -38,6 +38,7 @@ import {
 } from '../../shared/scene/CameraRigFactory';
 import { PlayerEmptyClickOperation } from './ClickOperation/PlayerEmptyClickOperation';
 import { PlayerGame } from '../scene/PlayerGame';
+import { VRController3D } from 'aux-web/shared/scene/vr/VRController3D';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -84,7 +85,8 @@ export class PlayerInteractionManager extends BaseInteractionManager {
 
     createGameObjectClickOperation(
         gameObject: GameObject,
-        hit: Intersection
+        hit: Intersection,
+        vrController: VRController3D | null
     ): IOperation {
         if (gameObject instanceof AuxFile3D) {
             let faceValue: string = 'Unknown Face';
@@ -116,7 +118,8 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 gameObject.contextGroup.simulation3D,
                 this,
                 gameObject,
-                faceValue
+                faceValue,
+                vrController
             );
             return fileClickOp;
         } else {
@@ -171,22 +174,19 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         return this._draggableGroups;
     }
 
-    handlePointerEnter(file: File, simulation: Simulation): IOperation {
+    handlePointerEnter(file: File, simulation: Simulation): void {
         simulation.helper.action('onPointerEnter', [file]);
-        return null;
     }
 
-    handlePointerExit(file: File, simulation: Simulation): IOperation {
+    handlePointerExit(file: File, simulation: Simulation): void {
         simulation.helper.action('onPointerExit', [file]);
-        return null;
     }
 
-    handlePointerDown(file: File, simulation: Simulation): IOperation {
+    handlePointerDown(file: File, simulation: Simulation): void {
         simulation.helper.action('onPointerDown', [file]);
-        return null;
     }
 
-    createEmptyClickOperation(): IOperation {
+    createEmptyClickOperation(vrController: VRController3D | null): IOperation {
         return new PlayerEmptyClickOperation(this._game, this);
     }
 
@@ -200,10 +200,11 @@ export class PlayerInteractionManager extends BaseInteractionManager {
      */
     pointOnGrid(calc: FileCalculationContext, ray: Ray) {
         let planeHit = Physics.pointOnPlane(ray, Physics.GroundPlane);
-        // We need to flip the sign of the z coordinate here.
-        planeHit.z = -planeHit.z;
 
         if (planeHit) {
+            // We need to flip the sign of the z coordinate here.
+            planeHit.z = -planeHit.z;
+
             let gridTile = this._grid.getTileFromPosition(planeHit);
             if (gridTile) {
                 return {
@@ -261,8 +262,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     protected _contextMenuActions(
         calc: FileCalculationContext,
         gameObject: GameObject,
-        point: Vector3,
-        pagePos: Vector2
+        point: Vector3
     ): ContextMenuAction[] {
         return null;
     }
