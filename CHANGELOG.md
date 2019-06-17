@@ -1,5 +1,34 @@
 # AUX Changelog
 
+## V0.9.2
+
+### Date: TBD
+
+### Changes:
+
+-   **Breaking Changes**
+    -   We changed how tags are used in formulas. Now, instead of using the dot (`.`) operator to access a tag in a file, you must use the new `getTag(file, tag)` and `setTag(file, tag)` functions.
+        -   For example, instead of:
+            -   `this.aux.color = "red"`
+        -   You would use:
+            -   `setTag(this, "#aux.color", "red")`
+        -   Likewise for getting tags:
+            -   `alert(this.aux.color)`
+        -   You should now use:
+            -   `alert(getTag(this, "#aux.color"))`
+-   Improvements
+    -   Added several functions indended to replace the @ and # expression syntax.
+        -   `getBot(tag, value)`, Gets the first file with the given tag and value.
+        -   `getBots(tag, value (optional))`, Gets all files with the given tag and optional value. This replaces the `@tag(value)` syntax.
+        -   `getBotTagValues(tag)`, Gets all the values of the given tag. This replaces the `#tag` syntax.
+        -   `getTag(file, tag)`, Gets the value stored in the given tag from the given file. This replaces using dots (`.`) to access tags.
+        -   `setTag(file, tag, value)` Sets the value stored in the given tag in the given file. This replaces using dots (`.`) to set tag values.
+    -   Renamed several functions to use the "bots" terminology instead of "files".
+        -   `getFilesInContext() -> getBotsInContext()`
+        -   `getFilesInStack() -> getBotsInStack()`
+        -   `getNeighboringFiles() -> getNeighboringBots()`
+        -   `player.getFile() -> player.getBot()`
+
 ## V0.9.1
 
 ### Date: 06/13/2019
