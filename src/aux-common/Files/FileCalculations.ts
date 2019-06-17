@@ -54,10 +54,18 @@ import formulaLib, {
 } from '../Formulas/formula-lib';
 import SandboxInterface, { FilterFunction } from '../Formulas/SandboxInterface';
 import { PartialFile } from '../Files';
-import { FilesState, cleanFile, hasValue } from './FilesChannel';
+import {
+    FilesState,
+    cleanFile,
+    hasValue,
+    FileUpdatedEvent,
+    fileUpdated,
+} from './FilesChannel';
 import { merge, shortUuid } from '../utils';
 import { AuxFile, AuxObject, AuxOp, AuxState } from '../aux-format';
 import { Atom } from '@casual-simulation/causal-trees';
+
+export var isFormulaObjectSymbol: symbol = Symbol('isFormulaObject');
 
 export var ShortId_Length: number = 5;
 
@@ -378,9 +386,6 @@ export function calculateFileValue(
 ) {
     if (tag === 'id') {
         return object.id;
-    } else if (isFormulaObject(object)) {
-        const o: any = object;
-        return o[tag];
     } else {
         return calculateValue(
             context,
@@ -470,24 +475,24 @@ export function isNumber(value: string): boolean {
  * Determines whether the given object is a proxy object.
  * @param object The object.
  */
-export function isFormulaObject(object: any): object is FileProxy {
-    return object[isProxy];
-}
+// export function isFormulaObject(object: any): object is FileProxy {
+//     return object[isFormulaObjectSymbol];
+// }
 
 /**
  * Unwraps the given object if it is in a proxy.
  * @param object The object to unwrap.
  */
-export function unwrapProxy(object: any): any {
-    if (typeof object === 'undefined' || object === null) {
-        return object;
-    }
-    if (isFormulaObject(object)) {
-        return object[proxyObject];
-    } else {
-        return object;
-    }
-}
+// export function unwrapProxy(object: any): any {
+//     if (typeof object === 'undefined' || object === null) {
+//         return object;
+//     }
+//     if (isFormulaObject(object)) {
+//         return object[proxyObject];
+//     } else {
+//         return object;
+//     }
+// }
 
 /**
  * Determines if the given object is a file.
@@ -1087,16 +1092,20 @@ export function calculateStateDiff(
  * Creates a new object that contains the tags that the given object has
  * and is usable in a formula.
  */
-export function convertToFormulaObject(
-    context: FileCalculationContext,
-    object: File,
-    setValue?: SetValueHandler
-) {
-    if (isFormulaObject(object)) {
-        return object;
-    }
-    return createFileProxy(context, object, setValue);
-}
+// export function convertToFormulaObject(
+//     context: FileCalculationContext,
+//     object: File,
+//     setValue?: SetValueHandler
+// ) {
+//     if (isFormulaObject(object)) {
+//         return object;
+//     }
+//     return {
+//         id: object.id,
+//         tags: object.tags,
+//         [isFormulaObjectSymbol]: true
+//     };
+// }
 
 /**
  * Creates a new file calculation context from the given files state.
@@ -1119,18 +1128,13 @@ export function createCalculationContextFromState(
 export function createCalculationContext(
     objects: Object[],
     userId: string = null,
-    lib: SandboxLibrary = formulaLib,
-    setValueHandlerFactory?: (file: File) => SetValueHandler
+    lib: SandboxLibrary = formulaLib
 ): FileCalculationContext {
     const context = {
         sandbox: new Sandbox(lib),
         objects: objects,
     };
-    context.sandbox.interface = new SandboxInterfaceImpl(
-        context,
-        userId,
-        setValueHandlerFactory
-    );
+    context.sandbox.interface = new SandboxInterfaceImpl(context, userId);
     return context;
 }
 
@@ -2516,7 +2520,7 @@ function _calculateFormulaValue(
             tag,
             context,
         },
-        convertToFormulaObject(context, object)
+        object
     );
 
     setCalculationContext(prevCalc);
@@ -2566,36 +2570,24 @@ class SandboxInterfaceImpl implements SandboxInterface {
     private _userId: string;
     objects: Object[];
     context: FileCalculationContext;
-    setValueHandlerFactory: (file: File) => SetValueHandler;
-    proxies: Map<string, FileProxy>;
 
-    private _valueMap: Map<string, any>;
+    private _fileMap: Map<string, FileTags>;
 
-    constructor(
-        context: FileCalculationContext,
-        userId: string,
-        setValueHandlerFactory?: (file: File) => SetValueHandler
-    ) {
+    constructor(context: FileCalculationContext, userId: string) {
         this.objects = sortBy(context.objects, 'id');
         this.context = context;
         this._userId = userId;
-        this.proxies = new Map();
-        this._valueMap = new Map();
-        this.setValueHandlerFactory = setValueHandlerFactory;
+        this._fileMap = new Map();
     }
 
     /**
      * Adds the given file to the calculation context and returns a proxy for it.
      * @param file The file to add.
      */
-    addFile(file: File): FileProxy {
-        if (this.proxies.has(file.id)) {
-            return this.proxies.get(file.id);
-        } else {
-            const index = sortedIndexBy(this.objects, file, f => f.id);
-            this.objects.splice(index, 0, file);
-            return this._convertToFormulaObject(file);
-        }
+    addFile(file: File): File {
+        const index = sortedIndexBy(this.objects, file, f => f.id);
+        this.objects.splice(index, 0, file);
+        return file;
     }
 
     listTagValues(tag: string, filter?: FilterFunction, extras?: any) {
@@ -2607,9 +2599,9 @@ class SandboxInterfaceImpl implements SandboxInterface {
     }
 
     listObjectsWithTag(tag: string, filter?: FilterFunction, extras?: any) {
-        const objs = this.objects
-            .filter(o => hasValue(this._calculateValue(o, tag)))
-            .map(o => this._convertToFormulaObject(o));
+        const objs = this.objects.filter(o =>
+            hasValue(this._calculateValue(o, tag))
+        );
         const filtered = this._filterObjects(objs, filter, tag);
         return filtered;
     }
@@ -2641,21 +2633,32 @@ class SandboxInterfaceImpl implements SandboxInterface {
     }
 
     getTag(file: File, tag: string): any {
-        const key = this._getTagKey(file.id, tag);
-        if (this._valueMap.has(key)) {
-            return this._valueMap.get(key);
+        const tags = this._getFileTags(file.id);
+        if (tags.hasOwnProperty(tag)) {
+            return tags[tag];
         }
         return calculateFileValue(this.context, file, tag);
     }
 
     setTag(file: File, tag: string, value: any): any {
-        const key = this._getTagKey(file.id, tag);
-        this._valueMap.set(key, value);
+        const tags = this._getFileTags(file.id);
+        tags[tag] = value;
         return value;
     }
 
-    private _getTagKey(id: string, tag: string) {
-        return `${id}:${tag}`;
+    getFileUpdates(): FileUpdatedEvent[] {
+        const files = [...this._fileMap.entries()];
+        const updates = files
+            .filter(f => {
+                return Object.keys(f[1]).length > 0;
+            })
+            .map(f =>
+                fileUpdated(f[0], {
+                    tags: f[1],
+                })
+            );
+
+        return sortBy(updates, u => u.id);
     }
 
     private _filterValues(values: any[], filter: FilterFunction) {
@@ -2686,20 +2689,12 @@ class SandboxInterfaceImpl implements SandboxInterface {
         return calculateFileValue(this.context, object, tag);
     }
 
-    private _convertToFormulaObject(file: File) {
-        let proxy = this.proxies.get(file.id);
-        if (!proxy) {
-            if (this.setValueHandlerFactory) {
-                proxy = convertToFormulaObject(
-                    this.context,
-                    file,
-                    this.setValueHandlerFactory(file)
-                );
-            } else {
-                proxy = convertToFormulaObject(this.context, file);
-            }
-            this.proxies.set(file.id, proxy);
+    private _getFileTags(id: string): FileTags {
+        if (this._fileMap.has(id)) {
+            return this._fileMap.get(id);
         }
-        return proxy;
+        const tags = {};
+        this._fileMap.set(id, tags);
+        return tags;
     }
 }

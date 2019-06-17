@@ -822,7 +822,7 @@ describe('FileCalculations', () => {
             });
             const context = createCalculationContext([obj1]);
 
-            const formula = '=@name("test").first().num';
+            const formula = '=getTag(@name("test").first(), "#num")';
             const result = calculateFormulaValue(context, formula);
 
             expect(result.success).toBe(true);
@@ -875,7 +875,7 @@ describe('FileCalculations', () => {
 
         it('should unwrap proxies in arrays', () => {
             const file = createFile('test', {
-                formula: '=[this.num._1,this.num._2]',
+                formula: '=[getTag(this, "#num._1"),getTag(this, "#num._2")]',
                 'num._1': '1',
                 'num._2': '2',
             });
@@ -946,6 +946,7 @@ describe('FileCalculations', () => {
                 }
             );
 
+            // TODO: We're gonna remove this syntax in the future.
             describe('# syntax', () => {
                 it('should get every tag value', () => {
                     const file1 = createFile('test1');
@@ -1136,7 +1137,8 @@ describe('FileCalculations', () => {
                 it('should support filtering on values that contain arrays', () => {
                     const file = createFile('test', {
                         filter: '=#formula(x => x[0] == 1 && x[1] == 2)',
-                        formula: '=[this.num._1,this.num._2]',
+                        formula:
+                            '=[getTag(this, "#num._1"),getTag(this, "#num._2")]',
                         'num._1': '1',
                         'num._2': '2',
                     });
@@ -1258,6 +1260,7 @@ describe('FileCalculations', () => {
                 });
             });
 
+            // TODO: We're gonna remove this syntax in the future.
             describe('@ syntax', () => {
                 it('should get every file that has the given tag', () => {
                     const file1 = createFile('test1');
@@ -1410,7 +1413,9 @@ describe('FileCalculations', () => {
                     expect(value).toEqual([file2, file3]);
                 });
 
-                it('should work with dots after the filter args', () => {
+                // These should fail because we're no longer supporting the
+                // proxy syntax.
+                it.skip('should work with dots after the filter args', () => {
                     const file1 = createFile('test1');
 
                     file1.tags.num = {
@@ -1425,7 +1430,7 @@ describe('FileCalculations', () => {
                     expect(value).toBe(1);
                 });
 
-                it('should be able to use proxy magic after the filter args', () => {
+                it.skip('should be able to use proxy magic after the filter args', () => {
                     const file1 = createFile('test1');
 
                     file1.tags['num.a'] = 1;
@@ -1438,7 +1443,7 @@ describe('FileCalculations', () => {
                     expect(value).toBe(1);
                 });
 
-                it('should be able to use indexer expressions after the filter args', () => {
+                it.skip('should be able to use indexer expressions after the filter args', () => {
                     const file1 = createFile('test1');
                     const file2 = createFile('test2');
 
@@ -1453,7 +1458,7 @@ describe('FileCalculations', () => {
                     expect(value).toBe(1);
                 });
 
-                it('should be able to use expressions in indexers after filter args', () => {
+                it.skip('should be able to use expressions in indexers after filter args', () => {
                     const file1 = createFile('test1');
                     const file2 = createFile('test2');
 
@@ -1469,7 +1474,7 @@ describe('FileCalculations', () => {
                     expect(value).toBe(1);
                 });
 
-                it('should be able to use functions on returned lists', () => {
+                it.skip('should be able to use functions on returned lists', () => {
                     const file1 = createFile('test1');
                     const file2 = createFile('test2');
 
@@ -1485,7 +1490,7 @@ describe('FileCalculations', () => {
                     expect(value).toEqual([1, 3]);
                 });
 
-                it('should support filtering on values that contain arrays', () => {
+                it.skip('should support filtering on values that contain arrays', () => {
                     const file = createFile('test', {
                         filter:
                             '=@formula(x => x[0] == 1 && x[1] == 2).first()',
@@ -1919,6 +1924,37 @@ describe('FileCalculations', () => {
 
                     expect(result).toEqual('bob');
                 });
+
+                it('should be able to get a chain of tags', () => {
+                    const fileA = createFile('a', {
+                        file: '=getBot("#name", "bob")',
+                        formula: '=getTag(this, "#file", "#file", "#name")',
+                    });
+
+                    const fileB = createFile('b', {
+                        name: 'bob',
+                        file: '=getBot("#name", "alice")',
+                    });
+
+                    const fileC = createFile('c', {
+                        name: 'alice',
+                    });
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const context = createCalculationContext([
+                        fileC,
+                        fileB,
+                        fileA,
+                    ]);
+                    const result = calculateFileValue(
+                        context,
+                        fileA,
+                        'formula'
+                    );
+
+                    expect(result).toEqual('alice');
+                });
             });
         });
     });
@@ -1973,7 +2009,7 @@ describe('FileCalculations', () => {
 
             let newData: any = {
                 tags: {
-                    sum: ':=this.num + 5',
+                    sum: ':=getTag(this, "#num") + 5',
                 },
             };
 
@@ -1982,7 +2018,7 @@ describe('FileCalculations', () => {
             );
 
             expect(newData.tags.sum.value).toBe(10);
-            expect(newData.tags.sum.formula).toBe(':=this.num + 5');
+            expect(newData.tags.sum.formula).toBe(':=getTag(this, "#num") + 5');
         });
     });
 
@@ -2399,7 +2435,7 @@ describe('FileCalculations', () => {
 
         it('should evaluate the value filters', () => {
             let other = createFile();
-            other.tags.name = '=this.cool';
+            other.tags.name = '=getTag(this, "#cool")';
             other.tags.cool = 'Test';
 
             const context = createCalculationContext([other, other]);
@@ -2450,7 +2486,7 @@ describe('FileCalculations', () => {
 
             let newData: PartialFile = {
                 tags: {
-                    assign: ':=this.cool',
+                    assign: ':=getTag(this, "#cool")',
                 },
             };
             updateFile(other, 'testId', newData, () => context);
