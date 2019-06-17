@@ -20,6 +20,8 @@ import {
     importAUX as calcImportAUX,
     showInputForTag as calcShowInputForTag,
     ShowInputOptions,
+    fileUpdated,
+    calculateActionEventsUsingContext,
 } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
 import { every, find, sortBy } from 'lodash';
@@ -38,8 +40,8 @@ import {
     removeFromContextDiff as calcRemoveFromContextDiff,
     setPositionDiff as calcSetPositionDiff,
     isFile,
-    isFormulaObject,
-    unwrapProxy,
+    // isFormulaObject,
+    // unwrapProxy,
     CREATE_ACTION_NAME,
     DESTROY_ACTION_NAME,
     isFileInContext,
@@ -97,7 +99,7 @@ export function getUserId(): string {
  * Defines a type that represents a file diff.
  * That is, a set of tags that can be applied to another file.
  */
-export type FileDiff = FileTags | FileProxy;
+export type FileDiff = FileTags | File;
 
 /**
  * Sums the given array of numbers and returns the result.
@@ -280,10 +282,7 @@ export function destroy(file: FileProxy | string | FileProxy[]) {
  * @param file The file, file ID, or list of files to destroy the tag sections of.
  * @param tagSection The tag section to remove on the file.
  */
-export function removeTags(
-    file: FileProxy | FileProxy[],
-    tagSection: string | RegExp
-) {
+export function removeTags(file: File | File[], tagSection: string | RegExp) {
     if (typeof file === 'object' && Array.isArray(file)) {
         let fileList: any[] = file;
 
@@ -321,7 +320,7 @@ export function removeTags(
             // if the tag section is relevant to the curretn tag at all
             if (tagSection instanceof RegExp) {
                 if (tagSection.test(tags[i])) {
-                    file[tags[i]] = null;
+                    setTag(file, tags[i], null);
                 }
             } else if (tags[i].includes(tagSection)) {
                 let doRemoveTag = false;
@@ -339,7 +338,7 @@ export function removeTags(
 
                 // if it has been verified that the tag matches the tag section for removal
                 if (doRemoveTag) {
-                    file[tags[i]] = null;
+                    setTag(file, tags[i], null);
                 }
             }
         }
@@ -412,7 +411,7 @@ function create(...diffs: (FileDiff | FileDiff[])[]) {
 
     actions.push(...files.map(f => fileAdded(f)));
 
-    let ret = new Array<FileProxy>(files.length);
+    let ret = new Array<File>(files.length);
     for (let i = 0; i < files.length; i++) {
         ret[i] = calc.sandbox.interface.addFile(files[i]);
         state = Object.assign({}, state, {
@@ -433,12 +432,11 @@ function create(...diffs: (FileDiff | FileDiff[])[]) {
  * Gets the file ID from the given file.
  * @param file The file or string.
  */
-function getFileId(file: FileProxy | string): string {
+function getFileId(file: File | string): string {
     if (typeof file === 'string') {
         return file;
     } else if (file) {
-        let original = file[isProxy] ? file[proxyObject] : file;
-        return original.id;
+        return file.id;
     }
 }
 
@@ -447,7 +445,7 @@ function getFileId(file: FileProxy | string): string {
  * @param parent The file that should be the parent of the new file.
  * @param data The object that specifies the new file's tag values.
  */
-function createFrom(parent: FileProxy | string, ...datas: FileDiff[]) {
+function createFrom(parent: File | string, ...datas: FileDiff[]) {
     let parentId = getFileId(parent);
     let parentDiff = parentId
         ? {
@@ -475,16 +473,18 @@ function combine(first: File | string, second: File | string) {
 function event(name: string, files: (File | string)[], arg?: any) {
     if (!!state) {
         let ids = !!files
-            ? files.map(f => {
-                  const file = unwrapProxy(f);
+            ? files.map(file => {
                   return typeof file === 'string' ? file : file.id;
               })
             : null;
-        let results = calculateActionEvents(
+
+        let events = calculateActionEventsUsingContext(
             state,
-            action(name, ids, getUserId(), arg)
+            action(name, ids, getUserId(), arg),
+            getCalculationContext()
         );
-        actions.push(...results.events);
+
+        actions.push(...events);
     }
 }
 
@@ -547,14 +547,13 @@ function isBuilder(): boolean {
     const globals = getGlobals();
     const user = getUser();
     if (globals && user) {
-        const globalsFile = globals[proxyObject];
-        const list = getFileUsernameList(calc, globalsFile, 'aux.designers');
+        const list = getFileUsernameList(calc, globals, 'aux.designers');
         if (list) {
             return isInUsernameList(
                 calc,
-                globalsFile,
+                globals,
                 'aux.designers',
-                user[proxyObject].tags['aux._user']
+                getTag(user, 'aux._user')
             );
         }
     }
@@ -575,8 +574,8 @@ function isInContext(givenContext: string) {
 function currentContext(): string {
     const user = getUser();
     if (user) {
-        const context = user['aux._userContext'];
-        return context.valueOf() || undefined;
+        const context = getTag(user, 'aux._userContext');
+        return context || undefined;
     }
     return undefined;
 }
@@ -602,7 +601,7 @@ function hasFileInInventory(files: FileProxy | FileProxy[]): boolean {
 /**
  * Gets the current user's file.
  */
-function getUser() {
+function getUser(): File {
     if (!getUserId()) {
         return null;
     }
@@ -620,7 +619,7 @@ function getUser() {
 /**
  * Gets the current globals file.
  */
-function getGlobals() {
+function getGlobals(): File {
     const globals = calc.sandbox.interface.listObjectsWithTag(
         'id',
         GLOBALS_FILE_ID
@@ -641,7 +640,7 @@ function getGlobals() {
 function getUserMenuContext(): string {
     const user = getUser();
     if (user) {
-        return user['aux._userMenuContext'];
+        return getTag(user, 'aux._userMenuContext');
     } else {
         return null;
     }
@@ -653,17 +652,92 @@ function getUserMenuContext(): string {
 function getUserInventoryContext(): string {
     const user = getUser();
     if (user) {
-        return user['aux._userInventoryContext'];
+        return getTag(user, 'aux._userInventoryContext');
     } else {
         return null;
     }
 }
 
 /**
+ * Gets the first bot that has the given tag which matches the given filter value.
+ * @param tag The tag.
+ * @param filter The optional filter.
+ */
+function getBot(tag: string, filter?: any | Function): FileProxy {
+    return calc.sandbox.interface
+        .listObjectsWithTag(trimTag(tag), filter)
+        .first();
+}
+
+/**
+ * Gets the list of bots that have the given tag matching the given filter value.
+ * @param tag The tag.
+ * @param filter The optional filter.
+ */
+function getBots(tag: string, filter?: any | Function): FileProxy[] {
+    return calc.sandbox.interface.listObjectsWithTag(trimTag(tag), filter);
+}
+
+/**
+ * Gets the list of tag values from bots that have the given tag.
+ * @param tag The tag.
+ * @param filter THe optional filter to use for the values.
+ */
+function getBotTagValues(tag: string, filter?: any | Function): any[] {
+    return calc.sandbox.interface.listTagValues(trimTag(tag), filter);
+}
+
+/**
+ * Gets the value of the given tag stored in the given file.
+ * @param file The file.
+ * @param tag The tag.
+ */
+function getTag(file: File, ...tags: string[]): any {
+    let current: any = file;
+    for (let i = 0; i < tags.length; i++) {
+        if (isFile(current)) {
+            const tag = trimTag(tags[i]);
+            if (calc) {
+                current = calc.sandbox.interface.getTag(current, tag);
+            } else {
+                current = file.tags[tag];
+            }
+        } else {
+            return current;
+        }
+    }
+
+    return current;
+}
+
+/**
+ * Sets the value of the given tag stored in the given file.
+ * @param file The file.
+ * @param tag The tag to set.
+ * @param value The value to set.
+ */
+function setTag(file: File | FileTags, tag: string, value: any): any {
+    tag = trimTag(tag);
+    if (isFile(file)) {
+        return calc.sandbox.interface.setTag(file, tag, value);
+    } else {
+        (<FileTags>file)[tag] = value;
+        return value;
+    }
+}
+
+function trimTag(tag: string): string {
+    if (tag.indexOf('#') === 0) {
+        return tag.substring(1);
+    }
+    return tag;
+}
+
+/**
  * Gets the list of files that are in the given context.
  * @param context The context.
  */
-function getFilesInContext(context: string): FileProxy[] {
+function getBotsInContext(context: string): File[] {
     const result = calc.sandbox.interface.listObjectsWithTag(context, true);
     if (Array.isArray(result)) {
         return result;
@@ -677,11 +751,11 @@ function getFilesInContext(context: string): FileProxy[] {
  * @param file A file in the stack of files.
  * @param context The context that the stack of files exists in.
  */
-function getFilesInStack(file: FileProxy, context: string): FileProxy[] {
+function getBotsInStack(file: File, context: string): File[] {
     return getFilesAtPosition(
         context,
-        file[`${context}.x`].valueOf(),
-        file[`${context}.y`].valueOf()
+        getTag(file, `${context}.x`),
+        getTag(file, `${context}.y`)
     );
 }
 
@@ -692,16 +766,13 @@ function getFilesInStack(file: FileProxy, context: string): FileProxy[] {
  * @param y The Y position of the stack.
  */
 function getFilesAtPosition(context: string, x: number, y: number) {
-    const result = getFilesInContext(context);
+    const result = getBotsInContext(context);
     const filtered = result.filter(f => {
         return (
-            f[`${context}.x`].valueOf() === x &&
-            f[`${context}.y`].valueOf() === y
+            getTag(f, `${context}.x`) === x && getTag(f, `${context}.y`) === y
         );
     });
-    return <FileProxy[]>(
-        sortBy(filtered, f => f[`${context}.index`].valueOf() || 0)
-    );
+    return <File[]>sortBy(filtered, f => getTag(f, `${context}.index`) || 0);
 }
 
 /**
@@ -710,46 +781,46 @@ function getFilesAtPosition(context: string, x: number, y: number) {
  * @param context The context that the stack of files exists in.
  * @param position The position next to the given file to search for the stack.
  */
-function getNeighboringFiles(
-    file: FileProxy,
+function getNeighboringBots(
+    file: File,
     context: string
 ): {
-    front: FileProxy[];
-    back: FileProxy[];
-    left: FileProxy[];
-    right: FileProxy[];
+    front: File[];
+    back: File[];
+    left: File[];
+    right: File[];
 };
-function getNeighboringFiles(
-    file: FileProxy,
+function getNeighboringBots(
+    file: File,
     context: string,
     position: 'left' | 'right' | 'front' | 'back'
-): FileProxy[];
-function getNeighboringFiles(
-    file: FileProxy,
+): File[];
+function getNeighboringBots(
+    file: File,
     context: string,
     position?: 'left' | 'right' | 'front' | 'back'
 ):
-    | FileProxy[]
+    | File[]
     | {
-          front: FileProxy[];
-          back: FileProxy[];
-          left: FileProxy[];
-          right: FileProxy[];
+          front: File[];
+          back: File[];
+          left: File[];
+          right: File[];
       } {
     if (!position) {
         return {
-            front: getNeighboringFiles(file, context, 'front'),
-            back: getNeighboringFiles(file, context, 'back'),
-            left: getNeighboringFiles(file, context, 'left'),
-            right: getNeighboringFiles(file, context, 'right'),
+            front: getNeighboringBots(file, context, 'front'),
+            back: getNeighboringBots(file, context, 'back'),
+            left: getNeighboringBots(file, context, 'left'),
+            right: getNeighboringBots(file, context, 'right'),
         };
     }
 
     const offsetX = position === 'left' ? 1 : position === 'right' ? -1 : 0;
     const offsetY = position === 'back' ? 1 : position === 'front' ? -1 : 0;
 
-    const x = file[`${context}.x`].valueOf();
-    const y = file[`${context}.y`].valueOf();
+    const x = getTag(file, `${context}.x`);
+    const y = getTag(file, `${context}.y`);
 
     return getFilesAtPosition(context, x + offsetX, y + offsetY);
 }
@@ -761,6 +832,7 @@ function loadDiff(file: any, ...tags: (string | RegExp)[]): FileDiff {
 
     let diff: FileTags = {};
 
+    let tagsObj = isFile(file) ? file.tags : file;
     let fileTags = isFile(file) ? tagsOnFile(file) : Object.keys(file);
     for (let fileTag of fileTags) {
         let add = false;
@@ -783,7 +855,7 @@ function loadDiff(file: any, ...tags: (string | RegExp)[]): FileDiff {
         }
 
         if (add) {
-            diff[fileTag] = file[fileTag];
+            diff[fileTag] = tagsObj[fileTag];
         }
     }
 
@@ -795,25 +867,11 @@ function loadDiff(file: any, ...tags: (string | RegExp)[]): FileDiff {
  * @param file The diff to save.
  */
 function saveDiff(file: any): string {
-    let newDiff: FileDiff = loadDiff(file);
-    let cleanObject: any = {};
-    let temp;
-
-    if (!newDiff) {
-        return;
-    }
-
-    if (isFormulaObject(newDiff)) {
-        temp = unwrapProxy(tagsOnFile).tags;
+    if (isFile(file)) {
+        return JSON.stringify(file.tags);
     } else {
-        temp = unwrapProxy(newDiff);
+        return JSON.stringify(file);
     }
-
-    for (let key in temp) {
-        cleanObject[key] = unwrapProxy(temp[key]);
-    }
-
-    return JSON.stringify(cleanObject);
 }
 
 /**
@@ -822,19 +880,20 @@ function saveDiff(file: any): string {
  * @param diff The diff to apply.
  */
 function applyDiff(file: any, ...diffs: FileDiff[]) {
-    let appliedDiffs: FileDiff[] = [];
+    let appliedDiffs: FileTags[] = [];
     diffs.forEach(diff => {
         if (!diff) {
             return;
         }
-        if (isFormulaObject(diff)) {
-            diff = unwrapProxy(diff).tags;
+        let tags: FileTags;
+        if (isFile(diff)) {
+            tags = diff.tags;
         } else {
-            diff = unwrapProxy(diff);
+            tags = diff;
         }
-        appliedDiffs.push(diff);
-        for (let key in diff) {
-            file[key] = unwrapProxy(diff[key]);
+        appliedDiffs.push(tags);
+        for (let key in tags) {
+            setTag(file, key, tags[key]);
         }
     });
 
@@ -920,7 +979,7 @@ function toast(message: string) {
  * @param file The file to view.
  * @param zoomValue The zoom value to use.
  */
-function tweenTo(file: FileProxy | string, zoomValue?: number) {
+function tweenTo(file: File | string, zoomValue?: number) {
     actions.push(calcTweenTo(getFileId(file), zoomValue));
 }
 
@@ -983,7 +1042,7 @@ function importAUX(url: string) {
 function isConnected(): boolean {
     const user = getUser();
     if (user) {
-        const val = user['aux.connected'];
+        const val = getTag(user, 'aux.connected');
         if (val) {
             return val.valueOf() || false;
         }
@@ -1012,7 +1071,7 @@ export const tags = {
 export const player = {
     isInContext,
     goToContext,
-    getFile: getUser,
+    getBot: getUser,
     getMenuContext: getUserMenuContext,
     getInventoryContext: getUserInventoryContext,
     toast,
@@ -1064,10 +1123,16 @@ export default {
     create: createFrom,
     destroy,
     event,
-    getFilesInContext,
-    getFilesInStack,
-    getNeighboringFiles,
+    getBotsInContext,
+    getBotsInStack,
+    getNeighboringBots,
     shout,
     superShout,
     whisper,
+
+    getBot,
+    getBots,
+    getBotTagValues,
+    getTag,
+    setTag,
 };

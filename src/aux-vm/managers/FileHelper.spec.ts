@@ -251,7 +251,7 @@ describe('FileHelper', () => {
             );
 
             const result = helper.formulaEvents(
-                '@abc(true).first().test = 123'
+                'setTag(@abc(true).first(), "#test", 123)'
             );
 
             expect(result).toEqual([
