@@ -2378,22 +2378,20 @@ export function searchFileState(
  * @param formula The formula to use.
  * @param extras The extra data to include in callbacks to the interface implementation.
  * @param thisObj The object that should be used for the this keyword in the formula.
- * @param unwrapProxy Whether the proxy objects should be unwrapped before being returned. (plumbing command, only use if you know what you're doing)
  */
 export function calculateFormulaValue(
     context: FileCalculationContext,
     formula: string,
     extras: any = {},
-    thisObj: any = null,
-    unwrapProxy: boolean = true
+    thisObj: any = null
 ) {
+    const prevCalc = getCalculationContext();
+    setCalculationContext(context);
+
     const result = context.sandbox.run(formula, extras, context);
 
-    if (unwrapProxy) {
-        return _unwrapProxy(result);
-    } else {
-        return result;
-    }
+    setCalculationContext(prevCalc);
+    return result;
 }
 
 function _parseFilterValue(value: string): any {
@@ -2524,13 +2522,7 @@ function _calculateFormulaValue(
     );
 
     setCalculationContext(prevCalc);
-
-    if (unwrapProxy) {
-        // Unwrap the proxy object
-        return _unwrapProxy(result);
-    } else {
-        return result;
-    }
+    return result;
 }
 
 function _unwrapProxy<T>(result: SandboxResult<T>): SandboxResult<T> {

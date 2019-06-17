@@ -828,6 +828,20 @@ describe('FileCalculations', () => {
             expect(result.success).toBe(true);
             expect(result.result).toBeCloseTo(123);
         });
+
+        it('should calculate formulas in tags', () => {
+            const obj1 = createFile('test1', {
+                name: 'test',
+                formula: '=getTag(this, "#name")',
+            });
+            const context = createCalculationContext([obj1]);
+
+            const formula = '=getTag(getBot("#name", "test"), "#formula")';
+            const result = calculateFormulaValue(context, formula);
+
+            expect(result.success).toBe(true);
+            expect(result.result).toEqual('test');
+        });
     });
 
     describe('calculateFileValue()', () => {
