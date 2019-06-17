@@ -50,4 +50,19 @@ export default interface SandboxInterface {
      * Gets the ID of the current user.
      */
     userId(): string;
+
+    /**
+     * Gets the given tag for the given file.
+     * @param file
+     * @param tag
+     */
+    getTag(file: File, tag: string): any;
+
+    /**
+     * Sets the given tag on the given file.
+     * @param file
+     * @param tag
+     * @param value
+     */
+    setTag(file: File, tag: string, value: any): any;
 }

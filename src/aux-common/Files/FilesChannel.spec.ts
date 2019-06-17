@@ -3283,6 +3283,66 @@ describe('FilesChannel', () => {
                 ]);
             });
         });
+
+        describe('setTag()', () => {
+            it('should issue a file update for the given tag', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'setTag(this, "#name", "bob")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            name: 'bob',
+                        },
+                    }),
+                ]);
+            });
+
+            it('should make future getTag() calls use the set value', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()':
+                                'setTag(this, "#name", "bob"); setTag(this, "#abc", getTag(this, "#name"))',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            name: 'bob',
+                        },
+                    }),
+                    fileUpdated('thisFile', {
+                        tags: {
+                            abc: 'bob',
+                        },
+                    }),
+                ]);
+            });
+        });
     });
 
     describe('calculateDestroyFileEvents()', () => {

@@ -2569,6 +2569,8 @@ class SandboxInterfaceImpl implements SandboxInterface {
     setValueHandlerFactory: (file: File) => SetValueHandler;
     proxies: Map<string, FileProxy>;
 
+    private _valueMap: Map<string, any>;
+
     constructor(
         context: FileCalculationContext,
         userId: string,
@@ -2578,6 +2580,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
         this.context = context;
         this._userId = userId;
         this.proxies = new Map();
+        this._valueMap = new Map();
         this.setValueHandlerFactory = setValueHandlerFactory;
     }
 
@@ -2635,6 +2638,24 @@ class SandboxInterfaceImpl implements SandboxInterface {
 
     userId(): string {
         return this._userId;
+    }
+
+    getTag(file: File, tag: string): any {
+        const key = this._getTagKey(file.id, tag);
+        if (this._valueMap.has(key)) {
+            return this._valueMap.get(key);
+        }
+        return calculateFileValue(this.context, file, tag);
+    }
+
+    setTag(file: File, tag: string, value: any): any {
+        const key = this._getTagKey(file.id, tag);
+        this._valueMap.set(key, value);
+        return value;
+    }
+
+    private _getTagKey(id: string, tag: string) {
+        return `${id}:${tag}`;
     }
 
     private _filterValues(values: any[], filter: FilterFunction) {

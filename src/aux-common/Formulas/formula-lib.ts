@@ -20,6 +20,7 @@ import {
     importAUX as calcImportAUX,
     showInputForTag as calcShowInputForTag,
     ShowInputOptions,
+    fileUpdated,
 } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
 import { every, find, sortBy } from 'lodash';
@@ -694,7 +695,25 @@ function getBotTagValues(tag: string, filter?: any | Function): any[] {
  * @param tag The tag.
  */
 function getTag(file: File, tag: string): any {
-    return calculateFileValue(calc, file, trimTag(tag));
+    return calc.sandbox.interface.getTag(file, trimTag(tag));
+}
+
+/**
+ * Sets the value of the given tag stored in the given file.
+ * @param file The file.
+ * @param tag The tag to set.
+ * @param value The value to set.
+ */
+function setTag(file: File, tag: string, value: any): any {
+    tag = trimTag(tag);
+    actions.push(
+        fileUpdated(file.id, {
+            tags: {
+                [tag]: value,
+            },
+        })
+    );
+    return calc.sandbox.interface.setTag(file, tag, value);
 }
 
 function trimTag(tag: string): string {
@@ -1120,4 +1139,5 @@ export default {
     getBots,
     getBotTagValues,
     getTag,
+    setTag,
 };
