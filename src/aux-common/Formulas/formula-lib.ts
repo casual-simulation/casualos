@@ -660,6 +660,51 @@ function getUserInventoryContext(): string {
 }
 
 /**
+ * Gets the first bot that has the given tag which matches the given filter value.
+ * @param tag The tag.
+ * @param filter The optional filter.
+ */
+function getBot(tag: string, filter?: any | Function): FileProxy {
+    return calc.sandbox.interface
+        .listObjectsWithTag(trimTag(tag), filter)
+        .first();
+}
+
+/**
+ * Gets the list of bots that have the given tag matching the given filter value.
+ * @param tag The tag.
+ * @param filter The optional filter.
+ */
+function getBots(tag: string, filter?: any | Function): FileProxy[] {
+    return calc.sandbox.interface.listObjectsWithTag(trimTag(tag), filter);
+}
+
+/**
+ * Gets the list of tag values from bots that have the given tag.
+ * @param tag The tag.
+ * @param filter THe optional filter to use for the values.
+ */
+function getBotTagValues(tag: string, filter?: any | Function): any[] {
+    return calc.sandbox.interface.listTagValues(trimTag(tag), filter);
+}
+
+/**
+ * Gets the value of the given tag stored in the given file.
+ * @param file The file.
+ * @param tag The tag.
+ */
+function getTag(file: File, tag: string): any {
+    return calculateFileValue(calc, file, trimTag(tag));
+}
+
+function trimTag(tag: string): string {
+    if (tag.indexOf('#') === 0) {
+        return tag.substring(1);
+    }
+    return tag;
+}
+
+/**
  * Gets the list of files that are in the given context.
  * @param context The context.
  */
@@ -1070,4 +1115,9 @@ export default {
     shout,
     superShout,
     whisper,
+
+    getBot,
+    getBots,
+    getBotTagValues,
+    getTag,
 };

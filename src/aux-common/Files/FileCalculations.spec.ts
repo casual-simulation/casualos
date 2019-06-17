@@ -1610,6 +1610,316 @@ describe('FileCalculations', () => {
                     expect(value).toEqual([file2]);
                 });
             });
+
+            describe('getBot()', () => {
+                it('should get the first file with the given tag', () => {
+                    const fileA = createFile('a', {
+                        name: 'bob',
+                        formula: '=getBot("#name")',
+                    });
+                    const fileB = createFile('b', {
+                        name: 'alice',
+                    });
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const context = createCalculationContext([fileB, fileA]);
+                    const result = calculateFileValue(
+                        context,
+                        fileA,
+                        'formula'
+                    );
+
+                    expect(result).toEqual(fileA);
+                });
+
+                it('should get the first file matching the given value', () => {
+                    const fileA = createFile('a', {
+                        name: 'bob',
+                        formula: '=getBot("#name", "bob")',
+                    });
+                    const fileB = createFile('b', {
+                        name: 'alice',
+                    });
+                    const fileC = createFile('c', {
+                        name: 'bob',
+                    });
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const context = createCalculationContext([
+                        fileB,
+                        fileA,
+                        fileC,
+                    ]);
+                    const result = calculateFileValue(
+                        context,
+                        fileA,
+                        'formula'
+                    );
+
+                    expect(result).toEqual(fileA);
+                });
+
+                it('should remove the first hashtag but not the second', () => {
+                    const fileA = createFile('a', {
+                        '#name': 'bob',
+                        formula: '=getBot("##name")',
+                    });
+                    const fileB = createFile('b', {
+                        '#name': 'bob',
+                    });
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const context = createCalculationContext([fileA, fileB]);
+                    const result = calculateFileValue(
+                        context,
+                        fileA,
+                        'formula'
+                    );
+
+                    expect(result).toEqual(fileA);
+                });
+
+                it('should get the first file matching the given filter function', () => {
+                    const fileA = createFile('a', {
+                        name: 'bob',
+                        formula: '=getBot("#name", x => x == "bob")',
+                    });
+                    const fileB = createFile('b', {
+                        name: 'alice',
+                    });
+                    const fileC = createFile('c', {
+                        name: 'bob',
+                    });
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const context = createCalculationContext([
+                        fileB,
+                        fileA,
+                        fileC,
+                    ]);
+                    const result = calculateFileValue(
+                        context,
+                        fileA,
+                        'formula'
+                    );
+
+                    expect(result).toEqual(fileA);
+                });
+            });
+
+            describe('getBots()', () => {
+                it('should get the list of files with the given tag', () => {
+                    const fileA = createFile('a', {
+                        name: 'bob',
+                        formula: '=getBots("#name")',
+                    });
+                    const fileB = createFile('b', {
+                        name: 'alice',
+                    });
+                    const fileC = createFile('c', {
+                        name: 'bob',
+                    });
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const context = createCalculationContext([
+                        fileB,
+                        fileA,
+                        fileC,
+                    ]);
+                    const result = calculateFileValue(
+                        context,
+                        fileA,
+                        'formula'
+                    );
+
+                    expect(result).toEqual([fileA, fileB, fileC]);
+                });
+
+                it('should get the list of files with the given tag matching the given value', () => {
+                    const fileA = createFile('a', {
+                        name: 'bob',
+                        formula: '=getBots("#name", "bob")',
+                    });
+                    const fileB = createFile('b', {
+                        name: 'alice',
+                    });
+                    const fileC = createFile('c', {
+                        name: 'bob',
+                    });
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const context = createCalculationContext([
+                        fileB,
+                        fileA,
+                        fileC,
+                    ]);
+                    const result = calculateFileValue(
+                        context,
+                        fileA,
+                        'formula'
+                    );
+
+                    expect(result).toEqual([fileA, fileC]);
+                });
+
+                it('should get the list of files with the given tag matching the given predicate', () => {
+                    const fileA = createFile('a', {
+                        name: 'bob',
+                        formula: '=getBots("#name", x => x == "bob")',
+                    });
+                    const fileB = createFile('b', {
+                        name: 'alice',
+                    });
+                    const fileC = createFile('c', {
+                        name: 'bob',
+                    });
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const context = createCalculationContext([
+                        fileB,
+                        fileA,
+                        fileC,
+                    ]);
+                    const result = calculateFileValue(
+                        context,
+                        fileA,
+                        'formula'
+                    );
+
+                    expect(result).toEqual([fileA, fileC]);
+                });
+            });
+
+            describe('getBotTagValues()', () => {
+                it('should get the list of values with the given tag', () => {
+                    const fileA = createFile('a', {
+                        name: 'bob',
+                        formula: '=getBotTagValues("#name")',
+                    });
+                    const fileB = createFile('b', {
+                        name: 'alice',
+                    });
+                    const fileC = createFile('c', {
+                        name: 'bob',
+                    });
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const context = createCalculationContext([
+                        fileB,
+                        fileA,
+                        fileC,
+                    ]);
+                    const result = calculateFileValue(
+                        context,
+                        fileA,
+                        'formula'
+                    );
+
+                    expect(result).toEqual(['bob', 'alice', 'bob']);
+                });
+
+                it('should get the list of files with the given tag matching the given value', () => {
+                    const fileA = createFile('a', {
+                        name: 'bob',
+                        formula: '=getBotTagValues("#name", "bob")',
+                    });
+                    const fileB = createFile('b', {
+                        name: 'alice',
+                    });
+                    const fileC = createFile('c', {
+                        name: 'bob',
+                    });
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const context = createCalculationContext([
+                        fileB,
+                        fileA,
+                        fileC,
+                    ]);
+                    const result = calculateFileValue(
+                        context,
+                        fileA,
+                        'formula'
+                    );
+
+                    expect(result).toEqual(['bob', 'bob']);
+                });
+
+                it('should get the list of files with the given tag matching the given predicate', () => {
+                    const fileA = createFile('a', {
+                        name: 'bob',
+                        formula: '=getBotTagValues("#name", x => x == "bob")',
+                    });
+                    const fileB = createFile('b', {
+                        name: 'alice',
+                    });
+                    const fileC = createFile('c', {
+                        name: 'bob',
+                    });
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const context = createCalculationContext([
+                        fileB,
+                        fileA,
+                        fileC,
+                    ]);
+                    const result = calculateFileValue(
+                        context,
+                        fileA,
+                        'formula'
+                    );
+
+                    expect(result).toEqual(['bob', 'bob']);
+                });
+            });
+
+            describe('getTag()', () => {
+                it('should get the specified tag value', () => {
+                    const fileA = createFile('a', {
+                        name: 'bob',
+                        formula: '=getTag(this, "#name")',
+                    });
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const context = createCalculationContext([fileA]);
+                    const result = calculateFileValue(
+                        context,
+                        fileA,
+                        'formula'
+                    );
+
+                    expect(result).toEqual('bob');
+                });
+
+                it('should calculate formulas', () => {
+                    const fileA = createFile('a', {
+                        name: '="bob"',
+                        formula: '=getTag(this, "#name")',
+                    });
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const context = createCalculationContext([fileA]);
+                    const result = calculateFileValue(
+                        context,
+                        fileA,
+                        'formula'
+                    );
+
+                    expect(result).toEqual('bob');
+                });
+            });
         });
     });
 
