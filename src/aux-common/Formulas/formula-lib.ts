@@ -737,7 +737,7 @@ function trimTag(tag: string): string {
  * Gets the list of files that are in the given context.
  * @param context The context.
  */
-function getFilesInContext(context: string): File[] {
+function getBotsInContext(context: string): File[] {
     const result = calc.sandbox.interface.listObjectsWithTag(context, true);
     if (Array.isArray(result)) {
         return result;
@@ -751,7 +751,7 @@ function getFilesInContext(context: string): File[] {
  * @param file A file in the stack of files.
  * @param context The context that the stack of files exists in.
  */
-function getFilesInStack(file: File, context: string): File[] {
+function getBotsInStack(file: File, context: string): File[] {
     return getFilesAtPosition(
         context,
         getTag(file, `${context}.x`),
@@ -766,7 +766,7 @@ function getFilesInStack(file: File, context: string): File[] {
  * @param y The Y position of the stack.
  */
 function getFilesAtPosition(context: string, x: number, y: number) {
-    const result = getFilesInContext(context);
+    const result = getBotsInContext(context);
     const filtered = result.filter(f => {
         return (
             getTag(f, `${context}.x`) === x && getTag(f, `${context}.y`) === y
@@ -781,7 +781,7 @@ function getFilesAtPosition(context: string, x: number, y: number) {
  * @param context The context that the stack of files exists in.
  * @param position The position next to the given file to search for the stack.
  */
-function getNeighboringFiles(
+function getNeighboringBots(
     file: File,
     context: string
 ): {
@@ -790,12 +790,12 @@ function getNeighboringFiles(
     left: File[];
     right: File[];
 };
-function getNeighboringFiles(
+function getNeighboringBots(
     file: File,
     context: string,
     position: 'left' | 'right' | 'front' | 'back'
 ): File[];
-function getNeighboringFiles(
+function getNeighboringBots(
     file: File,
     context: string,
     position?: 'left' | 'right' | 'front' | 'back'
@@ -809,10 +809,10 @@ function getNeighboringFiles(
       } {
     if (!position) {
         return {
-            front: getNeighboringFiles(file, context, 'front'),
-            back: getNeighboringFiles(file, context, 'back'),
-            left: getNeighboringFiles(file, context, 'left'),
-            right: getNeighboringFiles(file, context, 'right'),
+            front: getNeighboringBots(file, context, 'front'),
+            back: getNeighboringBots(file, context, 'back'),
+            left: getNeighboringBots(file, context, 'left'),
+            right: getNeighboringBots(file, context, 'right'),
         };
     }
 
@@ -1071,7 +1071,7 @@ export const tags = {
 export const player = {
     isInContext,
     goToContext,
-    getFile: getUser,
+    getBot: getUser,
     getMenuContext: getUserMenuContext,
     getInventoryContext: getUserInventoryContext,
     toast,
@@ -1123,9 +1123,9 @@ export default {
     create: createFrom,
     destroy,
     event,
-    getFilesInContext,
-    getFilesInStack,
-    getNeighboringFiles,
+    getBotsInContext,
+    getBotsInStack,
+    getNeighboringBots,
     shout,
     superShout,
     whisper,

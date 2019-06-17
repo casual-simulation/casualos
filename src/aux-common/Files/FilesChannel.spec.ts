@@ -359,7 +359,7 @@ describe('FilesChannel', () => {
                     tags: {
                         'abcdef()': 'shout("sayHello")',
                         'sayHello()':
-                            'setTag(this, "#userId", player.getFile().id)',
+                            'setTag(this, "#userId", player.getBot().id)',
                     },
                 },
             };
@@ -1639,14 +1639,14 @@ describe('FilesChannel', () => {
             });
         });
 
-        describe('getUser()', () => {
+        describe('player.getBot()', () => {
             it('should get the current users file', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'setTag(player.getFile(), "#name", "Test")',
+                                'setTag(player.getBot(), "#name", "Test")',
                         },
                     },
                     userFile: {
@@ -1963,7 +1963,7 @@ describe('FilesChannel', () => {
             });
         });
 
-        describe('getFilesInContext()', () => {
+        describe('getBotsInContext()', () => {
             it('should return the list of files that are in the given context', () => {
                 const state: FilesState = {
                     thisFile: {
@@ -1971,7 +1971,7 @@ describe('FilesChannel', () => {
                         tags: {
                             abc: true,
                             'test()':
-                                'setTag(this, "#length", getFilesInContext("abc").length)',
+                                'setTag(this, "#length", getBotsInContext("abc").length)',
                         },
                     },
                     thatFile: {
@@ -2005,7 +2005,7 @@ describe('FilesChannel', () => {
                         tags: {
                             abc: true,
                             'test()':
-                                'setTag(this, "#length", getFilesInContext("abc").length)',
+                                'setTag(this, "#length", getBotsInContext("abc").length)',
                         },
                     },
                 };
@@ -2027,7 +2027,7 @@ describe('FilesChannel', () => {
             });
         });
 
-        describe('getFilesInStack()', () => {
+        describe('getBotsInStack()', () => {
             it('should return the list of files that are in the same position as the given file in the given context', () => {
                 const state: FilesState = {
                     thisFile: {
@@ -2038,7 +2038,7 @@ describe('FilesChannel', () => {
                             'abc.y': 2,
                             'abc.index': 2,
                             'test()':
-                                'setTag(this, "#length", getFilesInStack(this, "abc").length)',
+                                'setTag(this, "#length", getBotsInStack(this, "abc").length)',
                         },
                     },
                     thatFile: {
@@ -2087,7 +2087,7 @@ describe('FilesChannel', () => {
                             'abc.y': 2,
                             'abc.index': 2,
                             'test()':
-                                'setTag(this, "#ids", getFilesInStack(this, "abc").map(f => f.id.valueOf()))',
+                                'setTag(this, "#ids", getBotsInStack(this, "abc").map(f => f.id.valueOf()))',
                         },
                     },
                     thatFile: {
@@ -2127,7 +2127,7 @@ describe('FilesChannel', () => {
             });
         });
 
-        describe('getNeighboringFiles()', () => {
+        describe('getNeighboringBots()', () => {
             const cases = [
                 ['left', 1, 0],
                 ['right', -1, 0],
@@ -2147,7 +2147,7 @@ describe('FilesChannel', () => {
                                     'abc.x': 1,
                                     'abc.y': 2,
                                     'abc.index': 2,
-                                    'test()': `setTag(this, "#ids", getNeighboringFiles(this, "abc", "${position}").map(f => f.id.valueOf()))`,
+                                    'test()': `setTag(this, "#ids", getNeighboringBots(this, "abc", "${position}").map(f => f.id.valueOf()))`,
                                 },
                             },
                             sameStackFile: {
@@ -2206,7 +2206,7 @@ describe('FilesChannel', () => {
                             'abc.x': 1,
                             'abc.y': 2,
                             'abc.index': 2,
-                            'test()': `let map = getNeighboringFiles(this, "abc");
+                            'test()': `let map = getNeighboringBots(this, "abc");
                                  setTag(this, "#front", map.front.map(f => f.id.valueOf()));
                                  setTag(this, "#back", map.back.map(f => f.id.valueOf()));
                                  setTag(this, "#left", map.left.map(f => f.id.valueOf()));
@@ -3457,7 +3457,7 @@ describe('FilesChannel', () => {
             uuidMock.mockReturnValue('uuid-0');
             const result = calculateFormulaEvents(
                 state,
-                'create(null, player.getFile())',
+                'create(null, player.getBot())',
                 'userFile'
             );
 
