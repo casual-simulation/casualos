@@ -1,6 +1,6 @@
 import { File } from '../Files/File';
 import { FileProxy } from '../Files/FileProxy';
-import { FileUpdatedEvent } from 'Files';
+import { FileUpdatedEvent } from '../Files';
 
 export type FilterFunction = ((value: any) => boolean) | any;
 

@@ -4,7 +4,6 @@ import {
     createCalculationContext,
     FileCalculationContext,
     calculateFileValue,
-    // convertToFormulaObject,
     getActiveObjects,
     filtersMatchingArguments,
     calculateFormulaValue,
@@ -329,9 +328,6 @@ function formulaActions(
     setActions(actions);
     setFileState(state);
     setCalculationContext(context);
-    // let formulaObjects = sortedObjects.map(o =>
-    //     convertToFormulaObject(context, o, setValueHandlerFactory(o))
-    // );
     if (typeof argument === 'undefined') {
         sortedObjects.forEach((obj, index) => {
             if (index === 1) {
@@ -348,46 +344,6 @@ function formulaActions(
     setCalculationContext(prevContext);
     return actions;
 }
-
-// function mapToFormulaObjects(
-//     context: FileCalculationContext,
-//     argument: any,
-//     setValueHandlerFactory: (file: File) => SetValueHandler
-// ): any {
-//     if (isFile(argument)) {
-//         return convertToFormulaObject(
-//             context,
-//             argument,
-//             setValueHandlerFactory(argument)
-//         );
-//     } else if (argument && typeof argument === 'object' && !argument[isProxy]) {
-//         if (Array.isArray(argument)) {
-//             return argument.map(v => {
-//                 if (isFile(v)) {
-//                     return convertToFormulaObject(
-//                         context,
-//                         v,
-//                         setValueHandlerFactory(v)
-//                     );
-//                 }
-//                 return v;
-//             });
-//         } else {
-//             return mapValues(argument, v => {
-//                 if (isFile(v)) {
-//                     return convertToFormulaObject(
-//                         context,
-//                         v,
-//                         setValueHandlerFactory(v)
-//                     );
-//                 }
-//                 return mapToFormulaObjects(context, v, setValueHandlerFactory);
-//             });
-//         }
-//     } else {
-//         return argument;
-//     }
-// }
 
 function calculateFileUpdateFromChanges(
     id: string,

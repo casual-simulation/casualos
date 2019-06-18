@@ -1089,25 +1089,6 @@ export function calculateStateDiff(
 }
 
 /**
- * Creates a new object that contains the tags that the given object has
- * and is usable in a formula.
- */
-// export function convertToFormulaObject(
-//     context: FileCalculationContext,
-//     object: File,
-//     setValue?: SetValueHandler
-// ) {
-//     if (isFormulaObject(object)) {
-//         return object;
-//     }
-//     return {
-//         id: object.id,
-//         tags: object.tags,
-//         [isFormulaObjectSymbol]: true
-//     };
-// }
-
-/**
  * Creates a new file calculation context from the given files state.
  * @param state The state to use.
  * @param includeDestroyed Whether to include destroyed files in the context.
