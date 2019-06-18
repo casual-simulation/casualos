@@ -1,7 +1,5 @@
 import { Vector3, Vector2, Color } from 'three';
 import { getOptionalValue } from '../shared/SharedUtils';
-import { DEFAULT_WORKSPACE_GRID_SCALE } from '@casual-simulation/aux-common';
-import { DebugObjectManager } from '../shared/scene/DebugObjectManager';
 /**
  * A grid for Aux Player to help position objects in a context.
  */
@@ -55,60 +53,60 @@ export class PlayerGrid {
     /**
      * Draw corners for tiles in given coordinate range for duration.
      */
-    debugDrawTiles(
-        xStart: number,
-        xEnd: number,
-        yStart: number,
-        yEnd: number,
-        duration: number
-    ) {
-        // Debug all tile corner points.
-        for (let x = xStart; x <= xEnd; x++) {
-            for (let y = yStart; y <= yEnd; y++) {
-                let tile = this.getTileFromCoordinate(x, y);
-                DebugObjectManager.debugPoint(
-                    tile.corners[0],
-                    null,
-                    0.05,
-                    false,
-                    new Color('green'),
-                    duration
-                );
-                DebugObjectManager.debugPoint(
-                    tile.corners[1],
-                    null,
-                    0.05,
-                    false,
-                    new Color('green'),
-                    duration
-                );
-                DebugObjectManager.debugPoint(
-                    tile.corners[2],
-                    null,
-                    0.05,
-                    false,
-                    new Color('green'),
-                    duration
-                );
-                DebugObjectManager.debugPoint(
-                    tile.corners[3],
-                    null,
-                    0.05,
-                    false,
-                    new Color('green'),
-                    duration
-                );
-                DebugObjectManager.debugPoint(
-                    tile.center,
-                    null,
-                    0.05,
-                    false,
-                    new Color('yellow'),
-                    duration
-                );
-            }
-        }
-    }
+    // debugDrawTiles(
+    //     xStart: number,
+    //     xEnd: number,
+    //     yStart: number,
+    //     yEnd: number,
+    //     duration: number
+    // ) {
+    //     // Debug all tile corner points.
+    //     for (let x = xStart; x <= xEnd; x++) {
+    //         for (let y = yStart; y <= yEnd; y++) {
+    //             let tile = this.getTileFromCoordinate(x, y);
+    //             DebugObjectManager.debugPoint(
+    //                 tile.corners[0],
+    //                 null,
+    //                 0.05,
+    //                 false,
+    //                 new Color('green'),
+    //                 duration
+    //             );
+    //             DebugObjectManager.debugPoint(
+    //                 tile.corners[1],
+    //                 null,
+    //                 0.05,
+    //                 false,
+    //                 new Color('green'),
+    //                 duration
+    //             );
+    //             DebugObjectManager.debugPoint(
+    //                 tile.corners[2],
+    //                 null,
+    //                 0.05,
+    //                 false,
+    //                 new Color('green'),
+    //                 duration
+    //             );
+    //             DebugObjectManager.debugPoint(
+    //                 tile.corners[3],
+    //                 null,
+    //                 0.05,
+    //                 false,
+    //                 new Color('green'),
+    //                 duration
+    //             );
+    //             DebugObjectManager.debugPoint(
+    //                 tile.center,
+    //                 null,
+    //                 0.05,
+    //                 false,
+    //                 new Color('yellow'),
+    //                 duration
+    //             );
+    //         }
+    //     }
+    // }
 
     private _snapToTileCoord(num: number): number {
         // We need to snap the number to a tile coordinate.

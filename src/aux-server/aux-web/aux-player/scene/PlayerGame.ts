@@ -291,15 +291,6 @@ export class PlayerGame extends Game {
                 this.inventoryScene,
                 this.inventoryCameraRig.mainCamera
             );
-
-            this.inventoryScene.background = null;
-
-            // Render the inventory scene with the inventory ui world camera.
-            this.renderer.clearDepth(); // Clear depth buffer so that ui objects dont use it.
-            this.renderer.render(
-                this.inventoryScene,
-                this.inventoryCameraRig.uiWorldCamera
-            );
         }
     }
 
