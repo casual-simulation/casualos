@@ -432,131 +432,131 @@ export function disposeObject3D(
 
 /**
  * Calculates the position and rotation that the given object should be placed at for the given anchor and position.
- * @param bounds The bounds to anchor to.
- * @param position The position to anchor to.
+ * @param anchorBounds The bounds being anchored to.
+ * @param anchorType The anchor type that will be calculated.
  * @param obj The object to anchor.
- * @param boundingBox The bounding box of the object to anchor.
+ * @param objBoundingBox The bounding box of the object to anchor.
  * @param defaultScale The default scale of the object.
- * @param extraSpacing The extra spacing to use.
+ * @param extraSpace The extra spacing to use as padding away from the anchor position.
  */
 export function calculateAnchorPosition(
-    bounds: Box3,
-    position: FileLabelAnchor,
+    anchorBounds: Box3,
+    anchorType: FileLabelAnchor,
     obj: Object3D,
-    boundingBox: Box3,
+    objBoundingBox: Box3,
     defaultScale: number,
-    extraSpacing: number
+    extraSpace: number
 ): [Vector3, Euler] {
-    let myMax = boundingBox.max.clone();
-    let myMin = boundingBox.min.clone();
+    const myMax = objBoundingBox.max.clone();
+    const myMin = objBoundingBox.min.clone();
 
     // // Position the mesh some distance above the given object's bounding box.
-    let targetSize = new Vector3();
-    bounds.getSize(targetSize);
-    let targetCenter = new Vector3();
-    bounds.getCenter(targetCenter);
+    const targetSize = new Vector3();
+    anchorBounds.getSize(targetSize);
+    const targetCenter = new Vector3();
+    anchorBounds.getCenter(targetCenter);
 
-    let paddingScalar = obj.scale.x / defaultScale;
-
-    if (position === 'floating') {
-        let bottomCenter = new Vector3(
+    if (anchorType === 'floating') {
+        const paddingScalar = obj.scale.x / defaultScale;
+        const bottomCenter = new Vector3(
             (myMax.x - myMin.x) / 2 + myMin.x,
             myMin.y,
             (myMax.z - myMin.z) / 2 + myMin.z
         );
 
-        let posOffset = obj.position.clone().sub(bottomCenter);
-        let pos = new Vector3(
+        const objOffset = obj.position.clone().sub(bottomCenter);
+        const pos = new Vector3(
             targetCenter.x,
-            targetCenter.y + targetSize.y * 0.5 + extraSpacing * paddingScalar,
+            targetCenter.y + targetSize.y * 0.5 + extraSpace * paddingScalar,
             targetCenter.z
         );
-        pos.add(posOffset);
+        pos.add(objOffset);
+
         return [pos, new Euler(ThreeMath.degToRad(90), 0, 0)];
-    } else if (position === 'top') {
-        let center = new Vector3(
+    } else if (anchorType === 'top') {
+        const center = new Vector3(
             (myMax.x - myMin.x) / 2 + myMin.x,
             (myMax.y - myMin.y) / 2 + myMin.y,
             (myMax.z - myMin.z) / 2 + myMin.z
         );
 
-        let posOffset = obj.position.clone().sub(center);
-        let pos = new Vector3(
+        const objOffset = obj.position.clone().sub(center);
+        const pos = new Vector3(
             targetCenter.x,
-            targetCenter.y + targetSize.y * 0.5,
+            targetCenter.y + targetSize.y * 0.5 + extraSpace,
             targetCenter.z
         );
-        pos.add(posOffset);
+        pos.add(objOffset);
 
         return [pos, new Euler(ThreeMath.degToRad(0), 0, 0)];
-    } else if (position === 'front') {
-        let center = new Vector3(
+    } else if (anchorType === 'front') {
+        const center = new Vector3(
             (myMax.x - myMin.x) / 2 + myMin.x,
             (myMax.y - myMin.y) / 2 + myMin.y,
             (myMax.z - myMin.z) / 2 + myMin.z
         );
 
-        let posOffset = obj.position.clone().sub(center);
-        let pos = new Vector3(
+        const objOffset = obj.position.clone().sub(center);
+        const pos = new Vector3(
             targetCenter.x,
             targetCenter.y,
-            targetCenter.z + targetSize.z * 0.5
+            targetCenter.z + targetSize.z * 0.5 + extraSpace
         );
-        pos.add(posOffset);
+        pos.add(objOffset);
 
         return [pos, new Euler(ThreeMath.degToRad(90), 0, 0)];
-    } else if (position === 'back') {
-        let center = new Vector3(
+    } else if (anchorType === 'back') {
+        const center = new Vector3(
             (myMax.x - myMin.x) / 2 + myMin.x,
             (myMax.y - myMin.y) / 2 + myMin.y,
             (myMax.z - myMin.z) / 2 + myMin.z
         );
 
-        let posOffset = obj.position.clone().sub(center);
-        let pos = new Vector3(
+        const objOffset = obj.position.clone().sub(center);
+        const pos = new Vector3(
             targetCenter.x,
             targetCenter.y,
-            targetCenter.z - targetSize.z * 0.5
+            targetCenter.z - targetSize.z * 0.5 - extraSpace
         );
-        pos.add(posOffset);
+        pos.add(objOffset);
 
         return [
             pos,
             new Euler(ThreeMath.degToRad(90), ThreeMath.degToRad(180), 0),
         ];
-    } else if (position === 'left') {
-        let center = new Vector3(
+    } else if (anchorType === 'left') {
+        const center = new Vector3(
             (myMax.x - myMin.x) / 2 + myMin.x,
             (myMax.y - myMin.y) / 2 + myMin.y,
             (myMax.z - myMin.z) / 2 + myMin.z
         );
 
-        let posOffset = obj.position.clone().sub(center);
-        let pos = new Vector3(
-            targetCenter.x - targetSize.x * 0.5,
+        const objOffset = obj.position.clone().sub(center);
+        const pos = new Vector3(
+            targetCenter.x - targetSize.x * 0.5 - extraSpace,
             targetCenter.y,
             targetCenter.z
         );
-        pos.add(posOffset);
+        pos.add(objOffset);
 
         return [
             pos,
             new Euler(ThreeMath.degToRad(90), ThreeMath.degToRad(90), 0),
         ];
-    } else if (position === 'right') {
-        let center = new Vector3(
+    } else if (anchorType === 'right') {
+        const center = new Vector3(
             (myMax.x - myMin.x) / 2 + myMin.x,
             (myMax.y - myMin.y) / 2 + myMin.y,
             (myMax.z - myMin.z) / 2 + myMin.z
         );
 
-        let posOffset = obj.position.clone().sub(center);
-        let pos = new Vector3(
-            targetCenter.x + targetSize.x * 0.5,
+        const objOffset = obj.position.clone().sub(center);
+        const pos = new Vector3(
+            targetCenter.x + targetSize.x * 0.5 + extraSpace,
             targetCenter.y,
             targetCenter.z
         );
-        pos.add(posOffset);
+        pos.add(objOffset);
 
         return [
             pos,
