@@ -1,5 +1,6 @@
 import { File } from '../Files/File';
 import { FileProxy } from '../Files/FileProxy';
+import { FileUpdatedEvent } from '../Files';
 
 export type FilterFunction = ((value: any) => boolean) | any;
 
@@ -44,10 +45,30 @@ export default interface SandboxInterface {
      * Adds the given file to the interface.
      * @param file
      */
-    addFile(file: File): FileProxy;
+    addFile(file: File): File;
 
     /**
      * Gets the ID of the current user.
      */
     userId(): string;
+
+    /**
+     * Gets the given tag for the given file.
+     * @param file
+     * @param tag
+     */
+    getTag(file: File, tag: string): any;
+
+    /**
+     * Sets the given tag on the given file.
+     * @param file
+     * @param tag
+     * @param value
+     */
+    setTag(file: File, tag: string, value: any): any;
+
+    /**
+     * Gets the list of file updates that happened.
+     */
+    getFileUpdates(): FileUpdatedEvent[];
 }

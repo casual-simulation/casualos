@@ -12,8 +12,6 @@ import {
     LinearFilter,
     Euler,
     Matrix4,
-    Box3Helper,
-    FontLoader,
 } from 'three';
 
 import robotoFont from '../public/bmfonts/Roboto.json';
@@ -22,9 +20,7 @@ import createBMFont, {
     TextGeometry,
     TextGeometryOptions,
 } from 'three-bmfont-text';
-import { findParentScene, calculateAnchorPosition } from './SceneUtils';
-import { DebugObjectManager } from './DebugObjectManager';
-import { Debug } from '@sentry/core/dist/integrations';
+import { calculateAnchorPosition } from './SceneUtils';
 import { FileLabelAnchor } from '@casual-simulation/aux-common';
 
 var sdfShader = require('three-bmfont-text/shaders/sdf');
@@ -48,7 +44,8 @@ export class Text3D extends Object3D {
     } = {};
 
     public static readonly defaultWidth: number = 200;
-    public static readonly extraSpacing: number = 0.12;
+    public static readonly extraSpace: number = 0.01;
+    public static readonly floatingExtraSpace: number = 0.12;
     public static readonly defaultScale: number = 0.004;
 
     /**
@@ -146,7 +143,6 @@ export class Text3D extends Object3D {
 
     /**
      * Sets the position of the text based on the size of the given bounding box.
-     * The text will appear above the given bounding box.
      */
     public setPositionForBounds(bounds: Box3) {
         if (!bounds || bounds.isEmpty()) return;
@@ -157,7 +153,9 @@ export class Text3D extends Object3D {
             this,
             this._boundingBox,
             Text3D.defaultScale,
-            Text3D.extraSpacing
+            this._anchor === 'floating'
+                ? Text3D.floatingExtraSpace
+                : Text3D.extraSpace
         );
         this.position.copy(pos);
         this._mesh.rotation.copy(

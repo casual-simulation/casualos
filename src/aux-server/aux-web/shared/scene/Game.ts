@@ -7,6 +7,8 @@ import {
     Matrix4,
     Quaternion,
     Math as ThreeMath,
+    PerspectiveCamera,
+    ArrayCamera,
 } from 'three';
 import { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -39,7 +41,6 @@ import {
     createHtmlMixerContext,
 } from './SceneUtils';
 import { find, flatMap } from 'lodash';
-import { DebugObjectManager } from './DebugObjectManager';
 import { EventBus } from '../EventBus';
 import { AuxFile3DFinder } from '../AuxFile3DFinder';
 import { WebVRDisplays } from '../WebVRDisplays';
@@ -104,7 +105,6 @@ export abstract class Game implements AuxFile3DFinder {
         this.subs = [];
         this.setupRenderer();
         this.setupScenes();
-        DebugObjectManager.init(this.time, this.mainScene);
         this.input = new Input(this);
         this.inputVR = new InputVR(this);
         this.interaction = this.setupInteraction();
@@ -502,8 +502,6 @@ export abstract class Game implements AuxFile3DFinder {
     }
 
     protected frameUpdate(xrFrame?: any) {
-        DebugObjectManager.update();
-
         this.input.update();
         this.inputVR.update();
         this.interaction.update();
@@ -519,7 +517,6 @@ export abstract class Game implements AuxFile3DFinder {
             this.htmlMixerContext.update();
         }
 
-        this.cameraUpdate();
         this.renderUpdate(xrFrame);
         this.time.update();
 
@@ -527,20 +524,6 @@ export abstract class Game implements AuxFile3DFinder {
             this.xrSession.requestFrame((nextXRFrame: any) =>
                 this.frameUpdate(nextXRFrame)
             );
-        }
-    }
-
-    protected cameraUpdate() {
-        // Keep camera zoom levels in sync.
-        let cameraRigs = this.getCameraRigs();
-        if (cameraRigs) {
-            for (let i = 0; i < cameraRigs.length; i++) {
-                const rig = cameraRigs[i];
-                if (rig.uiWorldCamera.zoom !== rig.mainCamera.zoom) {
-                    rig.uiWorldCamera.zoom = rig.mainCamera.zoom;
-                    rig.uiWorldCamera.updateProjectionMatrix();
-                }
-            }
         }
     }
 
@@ -615,16 +598,8 @@ export abstract class Game implements AuxFile3DFinder {
 
         // Render the main scene with the main camera.
         this.renderer.clear();
-        this.renderer.render(this.mainScene, this.mainCameraRig.mainCamera);
-
-        // Set the background color to null when rendering with the ui world camera.
-        this.mainScene.background = null;
-
-        // Render the main scene with the ui world camera.
-        this.renderer.clearDepth(); // Clear depth buffer so that ui world appears above objects that were just rendererd.
-        this.renderer.render(this.mainScene, this.mainCameraRig.uiWorldCamera);
-
         this.mainSceneBackgroundUpdate();
+        this.renderer.render(this.mainScene, this.mainCameraRig.mainCamera);
     }
 
     protected async toggleXR() {

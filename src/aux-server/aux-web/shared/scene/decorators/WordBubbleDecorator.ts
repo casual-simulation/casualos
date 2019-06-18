@@ -7,9 +7,7 @@ import {
 import { WordBubble3D } from '../WordBubble3D';
 import { WordBubbleElement } from '../WordBubbleElement';
 import { setLayer, convertToBox2 } from '../SceneUtils';
-import { LayersHelper } from '../LayersHelper';
 import { Scene, Box3, Vector3, Color } from 'three';
-import { DebugObjectManager } from '../DebugObjectManager';
 
 export class WordBubbleDecorator extends AuxFile3DDecorator {
     /**
@@ -24,7 +22,6 @@ export class WordBubbleDecorator extends AuxFile3DDecorator {
         this._elements = elements;
 
         this.wordBubble = new WordBubble3D();
-        setLayer(this.wordBubble, LayersHelper.Layer_UIWorld, true);
         this.file3D.add(this.wordBubble);
         this.wordBubble.visible = false;
     }

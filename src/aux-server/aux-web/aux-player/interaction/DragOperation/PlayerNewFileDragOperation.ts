@@ -6,7 +6,6 @@ import {
     DROP_IN_INVENTORY_ACTION_NAME,
     FileEvent,
     DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME,
-    convertToFormulaObject,
     DROP_ANY_IN_INVENTORY_ACTION_NAME,
     DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME,
     isFileMovable,

@@ -53,7 +53,7 @@ describe('SelectionManager', () => {
                 expect(file.tags['aux._lastEditedBy']).toBe(helper.userFile.id);
             });
 
-            it('should clear the user aux._selection tag if the given files ID matches the current selection', async () => {
+            it('should not clear the user aux._selection tag if the given files ID matches the current selection', async () => {
                 let user = tree.value['user'];
                 await tree.updateFile(user, {
                     tags: {
@@ -64,7 +64,7 @@ describe('SelectionManager', () => {
                 const file = tree.value['file1'];
                 await manager.selectFile(file);
 
-                expect(helper.userFile.tags['aux._selection']).toBeFalsy();
+                expect(helper.userFile.tags['aux._selection']).toBe('file1');
             });
 
             it('should kick the user into multi select mode if specified', async () => {

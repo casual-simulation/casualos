@@ -1,38 +1,17 @@
 import { GameObject } from './GameObject';
 import { AuxFile } from '@casual-simulation/aux-common/aux-format';
-import {
-    Object3D,
-    Mesh,
-    SceneUtils,
-    Box3,
-    Sphere,
-    Group,
-    Vector3,
-    Box3Helper,
-    Color,
-} from 'three';
+import { Object3D, Box3, Sphere, Group } from 'three';
 import {
     File,
     TagUpdatedEvent,
     FileCalculationContext,
     AuxDomain,
     isFileInContext,
-    getBuilderContextGrid,
-    calculateGridScale,
     GLOBALS_FILE_ID,
 } from '@casual-simulation/aux-common';
-import { createCube, calculateScale, findParentScene } from './SceneUtils';
 import { AuxFile3DDecorator } from './AuxFile3DDecorator';
-import { ContextPositionDecorator } from './decorators/ContextPositionDecorator';
-import { FileShapeDecorator } from './decorators/FileShapeDecorator';
 import { ContextGroup3D } from './ContextGroup3D';
-import { ScaleDecorator } from './decorators/ScaleDecorator';
-import { LabelDecorator } from './decorators/LabelDecorator';
-import { UserMeshDecorator } from './decorators/UserMeshDecorator';
 import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
-import { appManager } from '../AppManager';
-import { DebugObjectManager } from './DebugObjectManager';
-import { Simulation3D } from './Simulation3D';
 
 /**
  * Defines a class that is able to display Aux files.

@@ -9,8 +9,6 @@ import {
     getFileLabelAnchor,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
-import { setLayer } from '../SceneUtils';
-import { LayersHelper } from '../LayersHelper';
 import { Color, Vector3, Box3 } from 'three';
 import { WordBubbleElement } from '../WordBubbleElement';
 import { appManager } from '../../../shared/AppManager';
@@ -30,7 +28,6 @@ export class LabelDecorator extends AuxFile3DDecorator
         this._game = game;
 
         this.label = new Text3D();
-        setLayer(this.label, LayersHelper.Layer_UIWorld, true);
 
         // Parent the labels directly to the file.
         // Labels do all kinds of weird stuff with their transforms, so this makes it easier to let them do that

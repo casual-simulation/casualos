@@ -515,7 +515,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     onClick: () => this._copyWorkspace(calc, gameObject),
                 });
                 actions.push({
-                    label: 'Select Context File',
+                    label: 'Select Context Bot',
                     onClick: () => this._selectContextFile(calc, gameObject),
                 });
                 actions.push({
