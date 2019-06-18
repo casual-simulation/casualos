@@ -50,6 +50,7 @@ import {
     isInUsernameList,
     getFileUsernameList,
     DIFF_ACTION_NAME,
+    trimTag,
 } from '../Files/FileCalculations';
 
 import '../polyfill/Array.first.polyfill';
@@ -724,13 +725,6 @@ function setTag(file: File | FileTags, tag: string, value: any): any {
         (<FileTags>file)[tag] = value;
         return value;
     }
-}
-
-function trimTag(tag: string): string {
-    if (tag.indexOf('#') === 0) {
-        return tag.substring(1);
-    }
-    return tag;
 }
 
 /**

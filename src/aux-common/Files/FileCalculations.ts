@@ -1089,6 +1089,16 @@ export function calculateStateDiff(
 }
 
 /**
+ * Trims the leading # symbol off the given tag.
+ */
+export function trimTag(tag: string): string {
+    if (tag.indexOf('#') === 0) {
+        return tag.substring(1);
+    }
+    return tag;
+}
+
+/**
  * Creates a new file calculation context from the given files state.
  * @param state The state to use.
  * @param includeDestroyed Whether to include destroyed files in the context.
