@@ -12,8 +12,6 @@ import {
     LinearFilter,
     Euler,
     Matrix4,
-    Box3Helper,
-    FontLoader,
 } from 'three';
 
 import robotoFont from '../public/bmfonts/Roboto.json';
@@ -22,9 +20,7 @@ import createBMFont, {
     TextGeometry,
     TextGeometryOptions,
 } from 'three-bmfont-text';
-import { findParentScene, calculateAnchorPosition } from './SceneUtils';
-import { DebugObjectManager } from './DebugObjectManager';
-import { Debug } from '@sentry/core/dist/integrations';
+import { calculateAnchorPosition } from './SceneUtils';
 import { FileLabelAnchor } from '@casual-simulation/aux-common';
 
 var sdfShader = require('three-bmfont-text/shaders/sdf');
