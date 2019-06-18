@@ -1399,4 +1399,132 @@ describe('Dependencies', () => {
             ]);
         });
     });
+
+    describe('replaceAuxDependencies()', () => {
+        const fileDependencyCases = [
+            ['getBot()', 'getBot'],
+            ['getBots()', 'getBot'],
+        ];
+
+        describe.each(fileDependencyCases)('%s', (desc, name) => {
+            it('should replace with a file dependency on the given tag', () => {
+                const tree = dependencies.dependencyTree(
+                    `${name}("#name", "value")`
+                );
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'file',
+                        name: 'name',
+                        dependencies: [
+                            {
+                                type: 'literal',
+                                value: 'value',
+                            },
+                        ],
+                    },
+                ]);
+            });
+
+            it('should fail when unable to determine what tag to use for the name', () => {
+                const tree = dependencies.dependencyTree(
+                    `${name}(myVar, "value")`
+                );
+                const simple = dependencies.simplify(tree);
+
+                expect(() => {
+                    const replaced = dependencies.replaceAuxDependencies(
+                        simple
+                    );
+                }).toThrow();
+            });
+
+            it('should replace inner dependencies', () => {
+                const tree = dependencies.dependencyTree(
+                    `${name}("#abc", ${name}("#def"))`
+                );
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'file',
+                        name: 'abc',
+                        dependencies: [
+                            {
+                                type: 'file',
+                                name: 'def',
+                                dependencies: [],
+                            },
+                        ],
+                    },
+                ]);
+            });
+        });
+
+        describe('getBotsInContext()', () => {
+            it('should replace with a file dependency on the given context', () => {
+                const tree = dependencies.dependencyTree(
+                    `getBotsInContext("name")`
+                );
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'file',
+                        name: 'name',
+                        dependencies: [],
+                    },
+                ]);
+            });
+
+            it('should not trim the tag name', () => {
+                const tree = dependencies.dependencyTree(
+                    `getBotsInContext("#name")`
+                );
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'file',
+                        name: '#name',
+                        dependencies: [],
+                    },
+                ]);
+            });
+
+            it('should fail when unable to determine what tag to use for the name', () => {
+                const tree = dependencies.dependencyTree(
+                    `getBotsInContext(myVar)`
+                );
+                const simple = dependencies.simplify(tree);
+
+                expect(() => {
+                    const replaced = dependencies.replaceAuxDependencies(
+                        simple
+                    );
+                }).toThrow();
+            });
+
+            it('should remove inner dependencies', () => {
+                const tree = dependencies.dependencyTree(
+                    `getBotsInContext("abc", getBotsInContext("#def"))`
+                );
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'file',
+                        name: 'abc',
+                        dependencies: [],
+                    },
+                ]);
+            });
+        });
+    });
 });

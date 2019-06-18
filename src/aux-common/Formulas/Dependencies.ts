@@ -1,6 +1,7 @@
 import { Transpiler } from './Transpiler';
 import { traverse, VisitorOption } from 'estraverse';
 import { flatMap } from 'lodash';
+import { getTag, trimTag } from '../Files';
 
 export class Dependencies {
     private _transpiler: Transpiler = new Transpiler();
@@ -50,6 +51,16 @@ export class Dependencies {
             }
             return n;
         });
+    }
+
+    /**
+     * Replaces all dependencies on AUX functions with their related dependencies on files/tags.
+     * @param nodes The nodes to perform the replacements on.
+     */
+    replaceAuxDependencies(
+        nodes: AuxScriptSimpleDependency[]
+    ): AuxScriptSimpleDependency[] {
+        return this.replaceDependencies(nodes, auxDependencies(this));
     }
 
     /**
@@ -350,6 +361,90 @@ export class Dependencies {
             throw new Error('Unable to calculate dependencies for script');
         }
     }
+}
+
+function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
+    function replace(nodes: AuxScriptSimpleDependency[]) {
+        return dependencies.replaceDependencies(
+            nodes,
+            auxDependencies(dependencies)
+        );
+    }
+
+    return {
+        getBot: (node: AuxScriptSimpleFunctionDependency) => {
+            if (node.dependencies.length >= 1) {
+                const name = getTagName(node.dependencies[0]);
+                if (name) {
+                    return [
+                        {
+                            type: 'file',
+                            name: name,
+                            dependencies: replace(node.dependencies.slice(1)),
+                        },
+                    ];
+                } else {
+                    throw new Error(
+                        '[Dependencies] Unable to determine which tag the getBot() call is dependent on.'
+                    );
+                }
+            }
+            return [];
+        },
+        getBots: (node: AuxScriptSimpleFunctionDependency) => {
+            if (node.dependencies.length >= 1) {
+                const name = getTagName(node.dependencies[0]);
+                if (name) {
+                    return [
+                        {
+                            type: 'file',
+                            name: name,
+                            dependencies: replace(node.dependencies.slice(1)),
+                        },
+                    ];
+                } else {
+                    throw new Error(
+                        '[Dependencies] Unable to determine which tag the getBots() call is dependent on.'
+                    );
+                }
+            }
+            return [];
+        },
+        getBotsInContext: (node: AuxScriptSimpleFunctionDependency) => {
+            if (node.dependencies.length >= 1) {
+                const name = getNodeValue(node.dependencies[0]);
+                if (name) {
+                    return [
+                        {
+                            type: 'file',
+                            name: name,
+                            dependencies: [],
+                        },
+                    ];
+                } else {
+                    throw new Error(
+                        '[Dependencies] Unable to determine which tag the getBotsInContext() call is dependent on.'
+                    );
+                }
+            }
+            return [];
+        },
+    };
+}
+
+function getTagName(node: AuxScriptSimpleDependency): string {
+    const val = getNodeValue(node);
+    if (val) {
+        return trimTag(val);
+    }
+    return null;
+}
+
+function getNodeValue(node: AuxScriptSimpleDependency): string {
+    if (node.type === 'literal') {
+        return node.value.toString();
+    }
+    return null;
 }
 
 export type AuxScriptDependency =
