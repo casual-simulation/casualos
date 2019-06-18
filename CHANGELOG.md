@@ -1,5 +1,18 @@
 # AUX Changelog
 
+## V0.9.4
+
+### Date: 06/18/2019
+
+### Changes:
+
+-   Improvements
+    -   Label rendering is now longer overdrawn on the main scene.
+        -   This fixes issues with rendering labels in VR.
+-   Bug Fixes
+    -   Labels are now rendered in both the left and right eye in VR.
+    -   Fixed flickering labels due to z-fighting with the geometry it was anchored to
+
 ## V0.9.3
 
 ### Date: 06/18/2019
