@@ -226,7 +226,8 @@ describe('FilesChannel', () => {
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'abcdef()': 'this.val = 10; this.nested.value = true',
+                        'abcdef()':
+                            'setTag(this, "#val", 10); setTag(this, "#nested.value", true)',
                     },
                 },
             };
@@ -253,7 +254,8 @@ describe('FilesChannel', () => {
                 thisFile: {
                     id: 'thisFile',
                     tags: {
-                        'abcdef()': '@name("test").first().abc = "def"',
+                        'abcdef()':
+                            'setTag(getBot("#name", "test"), "#abc", "def")',
                     },
                 },
                 editFile: {
@@ -284,8 +286,9 @@ describe('FilesChannel', () => {
                 thisFile: {
                     id: 'thisFile',
                     tags: {
-                        formula: '=@name("test").first()',
-                        'abcdef()': 'this.formula.abc = "def"',
+                        formula: '=getBot("#name", "test")',
+                        'abcdef()':
+                            'setTag(getTag(this, "#formula"), "#abc", "def")',
                     },
                 },
                 editFile: {
@@ -318,7 +321,7 @@ describe('FilesChannel', () => {
                     tags: {
                         formula: '=@name("test").first()',
                         'abcdef()':
-                            'this.formula.num += 1; this.formula.num += 1',
+                            'setTag(getTag(this, "#formula"), "#num", getTag(this, "#formula", "#num") + 2);',
                     },
                 },
                 editFile: {
@@ -355,7 +358,8 @@ describe('FilesChannel', () => {
                     id: 'thisFile',
                     tags: {
                         'abcdef()': 'shout("sayHello")',
-                        'sayHello()': 'this.userId = player.getFile().id',
+                        'sayHello()':
+                            'setTag(this, "#userId", player.getBot().id)',
                     },
                 },
             };
@@ -377,7 +381,7 @@ describe('FilesChannel', () => {
         });
 
         describe('arguments', () => {
-            it('should convert the argument to a proxy object if it is a file', () => {
+            it('should not convert the argument to a proxy object if it is a file', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -404,18 +408,12 @@ describe('FilesChannel', () => {
                 );
                 const result = calculateActionEvents(state, fileAction);
 
-                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.hasUserDefinedEvents).toBe(false);
 
-                expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
-                        tags: {
-                            hi: 'test',
-                        },
-                    }),
-                ]);
+                expect(result.events).toEqual([]);
             });
 
-            it('should convert the argument to a list of proxy objects if it is a list of files', () => {
+            it('should not convert the argument to a list of proxy objects if it is a list of files', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -440,19 +438,12 @@ describe('FilesChannel', () => {
                 ]);
                 const result = calculateActionEvents(state, fileAction);
 
-                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.hasUserDefinedEvents).toBe(false);
 
-                expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
-                        tags: {
-                            hi: 'test',
-                            l: 1,
-                        },
-                    }),
-                ]);
+                expect(result.events).toEqual([]);
             });
 
-            it('should convert the argument fields to proxy objects if they are files', () => {
+            it('should not convert the argument fields to proxy objects if they are files', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -477,18 +468,12 @@ describe('FilesChannel', () => {
                 });
                 const result = calculateActionEvents(state, fileAction);
 
-                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.hasUserDefinedEvents).toBe(false);
 
-                expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
-                        tags: {
-                            hi: 'test',
-                        },
-                    }),
-                ]);
+                expect(result.events).toEqual([]);
             });
 
-            it('should convert nested fields to proxy objects', () => {
+            it('should not convert nested fields to proxy objects', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -512,15 +497,9 @@ describe('FilesChannel', () => {
                 });
                 const result = calculateActionEvents(state, fileAction);
 
-                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.hasUserDefinedEvents).toBe(false);
 
-                expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
-                        tags: {
-                            hi: 'test',
-                        },
-                    }),
-                ]);
+                expect(result.events).toEqual([]);
             });
 
             it('should handle null arguments', () => {
@@ -528,7 +507,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.hi = "test"',
+                            'test()': 'setTag(this, "#hi", "test")',
                         },
                     },
                 };
@@ -559,13 +538,13 @@ describe('FilesChannel', () => {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
                             'abcdef()': 'shout("sayHello")',
-                            'sayHello()': 'this.hello = true',
+                            'sayHello()': 'setTag(this, "#hello", true)',
                         },
                     },
                     otherFile: {
                         id: 'otherFile',
                         tags: {
-                            'sayHello()': 'this.hello = true',
+                            'sayHello()': 'setTag(this, "#hello", true)',
                         },
                     },
                 };
@@ -600,7 +579,7 @@ describe('FilesChannel', () => {
                             _workspace: 'abc',
                             'abcdef()':
                                 'let o = { hi: "test" }; shout("sayHello", o)',
-                            'sayHello()': 'this.hello = that.hi',
+                            'sayHello()': 'setTag(this, "#hello", that.hi)',
                         },
                     },
                 };
@@ -629,8 +608,9 @@ describe('FilesChannel', () => {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
                             'abcdef()':
-                                'shout("sayHello", @name("other").first())',
-                            'sayHello()': 'this.hello = that.hi',
+                                'shout("sayHello", getBot("#name", "other"))',
+                            'sayHello()':
+                                'setTag(this, "#hello", getTag(that, "#hi"))',
                         },
                     },
                     otherFile: {
@@ -666,8 +646,8 @@ describe('FilesChannel', () => {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
                             'abcdef()':
-                                'shout("sayHello", @name("other").first())',
-                            'sayHello()': 'that.hello = "test"',
+                                'shout("sayHello", getBot("#name", "other"))',
+                            'sayHello()': 'setTag(that, "#hello", "test")',
                         },
                     },
                     otherFile: {
@@ -702,8 +682,9 @@ describe('FilesChannel', () => {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
                             'abcdef()':
-                                'let o = { other: @name("other").first() }; shout("sayHello", o)',
-                            'sayHello()': 'that.other.hello = "test"',
+                                'let o = { other: getBot("#name", "other") }; shout("sayHello", o)',
+                            'sayHello()':
+                                'setTag(that.other, "#hello", "test")',
                         },
                     },
                     otherFile: {
@@ -738,7 +719,7 @@ describe('FilesChannel', () => {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
                             'abcdef()': 'shout("sayHello", true)',
-                            'sayHello()': 'this.hello = that',
+                            'sayHello()': 'setTag(this, "#hello", that)',
                         },
                     },
                 };
@@ -767,8 +748,8 @@ describe('FilesChannel', () => {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
                             'abcdef()':
-                                'shout("sayHello", @name("other").first()); this.value = @name("other").first().hello',
-                            'sayHello()': 'that.hello = "test"',
+                                'shout("sayHello", getBot("#name", "other")); setTag(this, "#value", getTag(getBot("#name", "other"), "#hello"))',
+                            'sayHello()': 'setTag(that, "#hello", "test")',
                         },
                     },
                     otherFile: {
@@ -834,13 +815,13 @@ describe('FilesChannel', () => {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
                             'abcdef()': 'whisper(this, "sayHello")',
-                            'sayHello()': 'this.hello = true',
+                            'sayHello()': 'setTag(this, "#hello", true)',
                         },
                     },
                     otherFile: {
                         id: 'otherFile',
                         tags: {
-                            'sayHello()': 'this.hello = true',
+                            'sayHello()': 'setTag(this, "#hello", true)',
                         },
                     },
                 };
@@ -868,21 +849,22 @@ describe('FilesChannel', () => {
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
-                            'abcdef()': 'whisper(@hello, "sayHello")',
+                            'abcdef()':
+                                'whisper(getBots("#hello"), "sayHello")',
                         },
                     },
                     thatFile: {
                         id: 'thatFile',
                         tags: {
                             hello: true,
-                            'sayHello()': 'this.saidHello = true',
+                            'sayHello()': 'setTag(this, "#saidHello", true)',
                         },
                     },
                     otherFile: {
                         id: 'otherFile',
                         tags: {
                             hello: true,
-                            'sayHello()': 'this.saidHello = true',
+                            'sayHello()': 'setTag(this, "#saidHello", true)',
                         },
                     },
                 };
@@ -910,13 +892,13 @@ describe('FilesChannel', () => {
         });
 
         describe('tags.remove()', () => {
-            it('remove the given tag sections on the fiven file', () => {
+            it('should remove the given tag sections on the given file', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
                             'create()':
-                                'let newFile = create(this, { stay: "def" }, { "leave.x": 0 }, { "leave.y": 0 }); tags.remove(newFile, "leave");',
+                                'let newFile = create(this, { stay: "def", "leave.x": 0, "leave.y": 0 }); tags.remove(newFile, "leave");',
                         },
                     },
                 };
@@ -1077,7 +1059,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'this.newFileId = create(null, { abc: "def" }).id',
+                                'setTag(this, "#newFileId", create(null, { abc: "def" }).id)',
                         },
                     },
                 };
@@ -1110,7 +1092,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'let newFile = create(null, { abc: "def" }); newFile.fun = true; newFile.num = 123;',
+                                'let newFile = create(null, { abc: "def" }); setTag(newFile, "#fun", true); setTag(newFile, "#num", 123);',
                         },
                     },
                 };
@@ -1144,7 +1126,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'create(null, { name: "bob" }); this.fileId = @name("bob").first().id',
+                                'create(null, { name: "bob" }); setTag(this, "#fileId", getBot("#name", "bob").id)',
                         },
                     },
                 };
@@ -1177,7 +1159,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'let newFile = create(null, { formula: "=this.num", num: 100 }); this.result = newFile.formula;',
+                                'let newFile = create(null, { formula: "=getTag(this, \\"#num\\")", num: 100 }); setTag(this, "#result", getTag(newFile, "#formula"));',
                         },
                     },
                 };
@@ -1193,7 +1175,7 @@ describe('FilesChannel', () => {
                     fileAdded({
                         id: 'uuid-0',
                         tags: {
-                            formula: '=this.num',
+                            formula: '=getTag(this, "#num")',
                             num: 100,
                         },
                     }),
@@ -1212,7 +1194,7 @@ describe('FilesChannel', () => {
                         tags: {
                             num: 100,
                             'test()':
-                                'let newFile = create(this, { abc: this.num });',
+                                'let newFile = create(this, { abc: getTag(this, "#num") });',
                         },
                     },
                 };
@@ -1248,7 +1230,7 @@ describe('FilesChannel', () => {
                         tags: {
                             num: 1,
                             'test()':
-                                'create(this, { abc: this.num, "onCreate()": "this.num = 100" });',
+                                'create(this, { abc: getTag(this, "#num"), "onCreate()": "setTag(this, \\"#num\\", 100)" });',
                         },
                     },
                 };
@@ -1266,7 +1248,7 @@ describe('FilesChannel', () => {
                         tags: {
                             'aux.creator': 'thisFile',
                             abc: 1,
-                            'onCreate()': 'this.num = 100',
+                            'onCreate()': 'setTag(this, "#num", 100)',
                         },
                     }),
                     fileUpdated('uuid-0', {
@@ -1283,7 +1265,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'this.num = create("thisFile", [ { hello: true }, { hello: false } ]).length',
+                                'setTag(this, "#num", create("thisFile", [ { hello: true }, { hello: false } ]).length)',
                         },
                     },
                 };
@@ -1325,7 +1307,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'this.num = create("thisFile", [ { hello: true }, { hello: false } ], [ { wow: 1 }, { oh: "haha" }, { test: "a" } ]).length',
+                                'setTag(this, "#num", create("thisFile", [ { hello: true }, { hello: false } ], [ { wow: 1 }, { oh: "haha" }, { test: "a" } ]).length)',
                         },
                     },
                 };
@@ -1565,7 +1547,8 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'onDestroy()': '@name("other").first().num = 100',
+                            'onDestroy()':
+                                'setTag(getBot("#name", "other"), "#num", 100)',
                             'test()': 'destroy(this)',
                         },
                     },
@@ -1583,12 +1566,14 @@ describe('FilesChannel', () => {
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
+                    // This is weird because it means that an update for a file could happen
+                    // after it gets removed but I currently don't have a great solution for it at the moment.
+                    fileRemoved('thisFile'),
                     fileUpdated('otherFile', {
                         tags: {
                             num: 100,
                         },
                     }),
-                    fileRemoved('thisFile'),
                 ]);
             });
 
@@ -1654,13 +1639,14 @@ describe('FilesChannel', () => {
             });
         });
 
-        describe('getUser()', () => {
+        describe('player.getBot()', () => {
             it('should get the current users file', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'player.getFile().name = "Test"',
+                            'test()':
+                                'setTag(player.getBot(), "#name", "Test")',
                         },
                     },
                     userFile: {
@@ -1697,7 +1683,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'addItem()':
-                                'tags.apply(@name("bob").first(), tags.addToMenu())',
+                                'tags.apply(getBot("#name", "bob"), tags.addToMenu())',
                         },
                     },
                     userFile: {
@@ -1856,7 +1842,7 @@ describe('FilesChannel', () => {
                         tags: {
                             abc: 123,
                             'test()':
-                                'tags.apply(this, { abc: "def", ghi: true, num: 1 }); tags.apply(this, { "abc": this.abc })',
+                                'tags.apply(this, { abc: "def", ghi: true, num: 1 }); tags.apply(this, { "abc": getTag(this, "#abc") })',
                         },
                     },
                 };
@@ -1885,7 +1871,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             abc: 123,
-                            'onMerge()': 'this.diffed = true',
+                            'onMerge()': 'setTag(this, "#diffed", true)',
                             'test()':
                                 'tags.apply(this, { abc: "def", ghi: true, num: 1 });',
                         },
@@ -1903,10 +1889,6 @@ describe('FilesChannel', () => {
                     fileUpdated('thisFile', {
                         tags: {
                             diffed: true,
-                        },
-                    }),
-                    fileUpdated('thisFile', {
-                        tags: {
                             abc: 'def',
                             ghi: true,
                             num: 1,
@@ -1981,7 +1963,7 @@ describe('FilesChannel', () => {
             });
         });
 
-        describe('getFilesInContext()', () => {
+        describe('getBotsInContext()', () => {
             it('should return the list of files that are in the given context', () => {
                 const state: FilesState = {
                     thisFile: {
@@ -1989,7 +1971,7 @@ describe('FilesChannel', () => {
                         tags: {
                             abc: true,
                             'test()':
-                                'this.length = getFilesInContext("abc").length',
+                                'setTag(this, "#length", getBotsInContext("abc").length)',
                         },
                     },
                     thatFile: {
@@ -2023,7 +2005,7 @@ describe('FilesChannel', () => {
                         tags: {
                             abc: true,
                             'test()':
-                                'this.length = getFilesInContext("abc").length',
+                                'setTag(this, "#length", getBotsInContext("abc").length)',
                         },
                     },
                 };
@@ -2045,7 +2027,7 @@ describe('FilesChannel', () => {
             });
         });
 
-        describe('getFilesInStack()', () => {
+        describe('getBotsInStack()', () => {
             it('should return the list of files that are in the same position as the given file in the given context', () => {
                 const state: FilesState = {
                     thisFile: {
@@ -2056,7 +2038,7 @@ describe('FilesChannel', () => {
                             'abc.y': 2,
                             'abc.index': 2,
                             'test()':
-                                'this.length = getFilesInStack(this, "abc").length',
+                                'setTag(this, "#length", getBotsInStack(this, "abc").length)',
                         },
                     },
                     thatFile: {
@@ -2105,7 +2087,7 @@ describe('FilesChannel', () => {
                             'abc.y': 2,
                             'abc.index': 2,
                             'test()':
-                                'this.ids = getFilesInStack(this, "abc").map(f => f.id.valueOf())',
+                                'setTag(this, "#ids", getBotsInStack(this, "abc").map(f => f.id.valueOf()))',
                         },
                     },
                     thatFile: {
@@ -2145,7 +2127,7 @@ describe('FilesChannel', () => {
             });
         });
 
-        describe('getNeighboringFiles()', () => {
+        describe('getNeighboringBots()', () => {
             const cases = [
                 ['left', 1, 0],
                 ['right', -1, 0],
@@ -2165,7 +2147,7 @@ describe('FilesChannel', () => {
                                     'abc.x': 1,
                                     'abc.y': 2,
                                     'abc.index': 2,
-                                    'test()': `this.ids = getNeighboringFiles(this, "abc", "${position}").map(f => f.id.valueOf())`,
+                                    'test()': `setTag(this, "#ids", getNeighboringBots(this, "abc", "${position}").map(f => f.id.valueOf()))`,
                                 },
                             },
                             sameStackFile: {
@@ -2224,11 +2206,11 @@ describe('FilesChannel', () => {
                             'abc.x': 1,
                             'abc.y': 2,
                             'abc.index': 2,
-                            'test()': `let map = getNeighboringFiles(this, "abc");
-                                 this.front = map.front.map(f => f.id.valueOf());
-                                 this.back = map.back.map(f => f.id.valueOf());
-                                 this.left = map.left.map(f => f.id.valueOf());
-                                 this.right = map.right.map(f => f.id.valueOf());`,
+                            'test()': `let map = getNeighboringBots(this, "abc");
+                                 setTag(this, "#front", map.front.map(f => f.id.valueOf()));
+                                 setTag(this, "#back", map.back.map(f => f.id.valueOf()));
+                                 setTag(this, "#left", map.left.map(f => f.id.valueOf()));
+                                 setTag(this, "#right", map.right.map(f => f.id.valueOf()));`,
                         },
                     },
                     sameStackFile: {
@@ -2388,7 +2370,8 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.context = player.getMenuContext()',
+                            'test()':
+                                'setTag(this, "#context", player.getMenuContext())',
                         },
                     },
                     userFile: {
@@ -2644,7 +2627,8 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.fun = player.isConnected()',
+                            'test()':
+                                'setTag(this, "#fun", player.isConnected())',
                         },
                     },
                     userFile: {
@@ -2676,7 +2660,8 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.fun = player.isConnected()',
+                            'test()':
+                                'setTag(this, "#fun", player.isConnected())',
                         },
                     },
                 };
@@ -2702,7 +2687,8 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.fun = player.isConnected()',
+                            'test()':
+                                'setTag(this, "#fun", player.isConnected())',
                         },
                     },
                     userFile: {
@@ -2735,7 +2721,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'this.inContext = player.isInContext("context")',
+                                'setTag(this, "#inContext", player.isInContext("context"))',
                         },
                     },
                     userFile: {
@@ -2768,7 +2754,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'this.inContext = player.isInContext("abc")',
+                                'setTag(this, "#inContext", player.isInContext("abc"))',
                         },
                     },
                     userFile: {
@@ -2801,7 +2787,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'this.inContext = player.isInContext("abc")',
+                                'setTag(this, "#inContext", player.isInContext("abc"))',
                         },
                     },
                     userFile: {
@@ -2833,7 +2819,8 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.context = player.currentContext()',
+                            'test()':
+                                'setTag(this, "#context", player.currentContext())',
                         },
                     },
                     userFile: {
@@ -2865,7 +2852,8 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.context = player.currentContext()',
+                            'test()':
+                                'setTag(this, "#context", player.currentContext())',
                         },
                     },
                     userFile: {
@@ -2897,7 +2885,8 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.isBuilder = player.isDesigner()',
+                            'test()':
+                                'setTag(this, "#isBuilder", player.isDesigner())',
                         },
                     },
                     config: {
@@ -2935,7 +2924,8 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.isBuilder = player.isDesigner()',
+                            'test()':
+                                'setTag(this, "#isBuilder", player.isDesigner())',
                         },
                     },
                     config: {
@@ -2973,7 +2963,8 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.isBuilder = player.isDesigner()',
+                            'test()':
+                                'setTag(this, "#isBuilder", player.isDesigner())',
                         },
                     },
                     config: {
@@ -3123,7 +3114,8 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.json = tags.export({ abc: "def" })',
+                            'test()':
+                                'setTag(this, "#json", tags.export({ abc: "def" }))',
                         },
                     },
                 };
@@ -3152,7 +3144,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'tags.apply(this, tags.import(@name("bob").first(), "val", /test\\..+/))',
+                                'tags.apply(this, tags.import(getBot("#name", "bob"), "val", /test\\..+/))',
                         },
                     },
                     otherFile: {
@@ -3283,6 +3275,62 @@ describe('FilesChannel', () => {
                 ]);
             });
         });
+
+        describe('setTag()', () => {
+            it('should issue a file update for the given tag', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'setTag(this, "#name", "bob")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            name: 'bob',
+                        },
+                    }),
+                ]);
+            });
+
+            it('should make future getTag() calls use the set value', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()':
+                                'setTag(this, "#name", "bob"); setTag(this, "#abc", getTag(this, "#name"))',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thisFile', {
+                        tags: {
+                            name: 'bob',
+                            abc: 'bob',
+                        },
+                    }),
+                ]);
+            });
+        });
     });
 
     describe('calculateDestroyFileEvents()', () => {
@@ -3383,7 +3431,7 @@ describe('FilesChannel', () => {
             uuidMock.mockReturnValue('uuid-0');
             const result = calculateFormulaEvents(
                 state,
-                '@name("bob").first().test = true'
+                'setTag(getBot("#name", "bob"), "#test", true)'
             );
 
             expect(result).toEqual([
@@ -3409,7 +3457,7 @@ describe('FilesChannel', () => {
             uuidMock.mockReturnValue('uuid-0');
             const result = calculateFormulaEvents(
                 state,
-                'create(null, player.getFile())',
+                'create(null, player.getBot())',
                 'userFile'
             );
 
