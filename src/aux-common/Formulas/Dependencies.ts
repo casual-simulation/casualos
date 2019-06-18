@@ -78,7 +78,7 @@ export class Dependencies {
         ): IterableIterator<AuxScriptSimpleDependency> {
             for (let node of nodes) {
                 let replaced = false;
-                if (node.type !== 'literal') {
+                if (node.type !== 'literal' && node.type !== 'all') {
                     const replacement = replacements[node.name];
                     if (replacement) {
                         yield* replacement(node);
@@ -410,6 +410,25 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             }
             return [];
         },
+        getBotTagValues: (node: AuxScriptSimpleFunctionDependency) => {
+            if (node.dependencies.length >= 1) {
+                const name = getTagName(node.dependencies[0]);
+                if (name) {
+                    return [
+                        {
+                            type: 'tag',
+                            name: name,
+                            dependencies: replace(node.dependencies.slice(1)),
+                        },
+                    ];
+                } else {
+                    throw new Error(
+                        '[Dependencies] Unable to determine which tag the getBots() call is dependent on.'
+                    );
+                }
+            }
+            return [];
+        },
         getBotsInContext: (node: AuxScriptSimpleFunctionDependency) => {
             if (node.dependencies.length >= 1) {
                 const name = getNodeValue(node.dependencies[0]);
@@ -423,11 +442,116 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                     ];
                 } else {
                     throw new Error(
-                        '[Dependencies] Unable to determine which tag the getBotsInContext() call is dependent on.'
+                        '[Dependencies] Unable to determine which context the getBotsInContext() call is dependent on.'
                     );
                 }
             }
             return [];
+        },
+        getBotsInStack: (node: AuxScriptSimpleFunctionDependency) => {
+            if (node.dependencies.length >= 2) {
+                const name = getNodeValue(node.dependencies[1]);
+                if (name) {
+                    return [
+                        {
+                            type: 'file',
+                            name: name,
+                            dependencies: [],
+                        },
+                        {
+                            type: 'file',
+                            name: name + '.x',
+                            dependencies: [],
+                        },
+                        {
+                            type: 'file',
+                            name: name + '.y',
+                            dependencies: [],
+                        },
+                    ];
+                } else {
+                    throw new Error(
+                        '[Dependencies] Unable to determine which context the getBotsInStack() call is dependent on.'
+                    );
+                }
+            }
+            return [];
+        },
+        getNeighboringBots: (node: AuxScriptSimpleFunctionDependency) => {
+            if (node.dependencies.length >= 2) {
+                const name = getNodeValue(node.dependencies[1]);
+                if (name) {
+                    return [
+                        {
+                            type: 'file',
+                            name: name,
+                            dependencies: [],
+                        },
+                        {
+                            type: 'file',
+                            name: name + '.x',
+                            dependencies: [],
+                        },
+                        {
+                            type: 'file',
+                            name: name + '.y',
+                            dependencies: [],
+                        },
+                    ];
+                } else {
+                    throw new Error(
+                        '[Dependencies] Unable to determine which context the getBotsInStack() call is dependent on.'
+                    );
+                }
+            }
+            return [];
+        },
+        'player.isDesigner': (node: AuxScriptSimpleFunctionDependency) => {
+            return [
+                {
+                    type: 'tag',
+                    name: 'aux.designers',
+                    dependencies: [],
+                },
+            ];
+        },
+        'player.currentContext': (node: AuxScriptSimpleFunctionDependency) => {
+            return [
+                {
+                    type: 'tag',
+                    name: 'aux._userContext',
+                    dependencies: [],
+                },
+            ];
+        },
+        'player.getMenuContext': (node: AuxScriptSimpleFunctionDependency) => {
+            return [
+                {
+                    type: 'tag',
+                    name: 'aux._userMenuContext',
+                    dependencies: [],
+                },
+            ];
+        },
+        'player.getInventoryContext': (
+            node: AuxScriptSimpleFunctionDependency
+        ) => {
+            return [
+                {
+                    type: 'tag',
+                    name: 'aux._userInventoryContext',
+                    dependencies: [],
+                },
+            ];
+        },
+        'player.hasFileInInventory': (
+            node: AuxScriptSimpleFunctionDependency
+        ) => {
+            return [
+                {
+                    type: 'all',
+                },
+            ];
         },
     };
 }
@@ -523,7 +647,8 @@ export type AuxScriptSimpleDependency =
     | AuxScriptSimpleTagDependency
     | AuxScriptSimpleFunctionDependency
     | AuxScriptSimpleMemberDependency
-    | AuxScriptSimpleLiteralDependency;
+    | AuxScriptSimpleLiteralDependency
+    | AuxScriptSimpleAllDependency;
 
 export interface AuxScriptSimpleFileDependency {
     type: 'file';
@@ -549,6 +674,10 @@ export interface AuxScriptSimpleMemberDependency {
 }
 
 export type AuxScriptSimpleLiteralDependency = AuxScriptLiteralDependency;
+
+export interface AuxScriptSimpleAllDependency {
+    type: 'all';
+}
 
 export interface AuxScriptReplacements {
     [key: string]: AuxScriptReplacement;

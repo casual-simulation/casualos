@@ -1526,5 +1526,214 @@ describe('Dependencies', () => {
                 ]);
             });
         });
+
+        const fileStackCases = [['getBotsInStack'], ['getNeighboringBots']];
+
+        describe.each(fileStackCases)('%s()', name => {
+            it('should replace with dependencies on the the context, x, and y tags', () => {
+                const tree = dependencies.dependencyTree(
+                    `${name}(this, 'abc')`
+                );
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'file',
+                        name: 'abc',
+                        dependencies: [],
+                    },
+                    {
+                        type: 'file',
+                        name: 'abc.x',
+                        dependencies: [],
+                    },
+                    {
+                        type: 'file',
+                        name: 'abc.y',
+                        dependencies: [],
+                    },
+                ]);
+            });
+
+            it('should fail when unable to determine what tag to use for the name', () => {
+                const tree = dependencies.dependencyTree(
+                    `${name}(this, myVar)`
+                );
+                const simple = dependencies.simplify(tree);
+
+                expect(() => {
+                    const replaced = dependencies.replaceAuxDependencies(
+                        simple
+                    );
+                }).toThrow();
+            });
+
+            it('should remove inner dependencies', () => {
+                const tree = dependencies.dependencyTree(
+                    `${name}(this, "abc", ${name}("#def"))`
+                );
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'file',
+                        name: 'abc',
+                        dependencies: [],
+                    },
+                    {
+                        type: 'file',
+                        name: 'abc.x',
+                        dependencies: [],
+                    },
+                    {
+                        type: 'file',
+                        name: 'abc.y',
+                        dependencies: [],
+                    },
+                ]);
+            });
+        });
+
+        describe('getBotTagValues()', () => {
+            it('should replace with dependency on the the tag', () => {
+                const tree = dependencies.dependencyTree(
+                    `getBotTagValues('#abc')`
+                );
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'tag',
+                        name: 'abc',
+                        dependencies: [],
+                    },
+                ]);
+            });
+
+            it('should fail when unable to determine what tag to use for the name', () => {
+                const tree = dependencies.dependencyTree(
+                    `getBotTagValues(myVar)`
+                );
+                const simple = dependencies.simplify(tree);
+
+                expect(() => {
+                    const replaced = dependencies.replaceAuxDependencies(
+                        simple
+                    );
+                }).toThrow();
+            });
+
+            it('should replace inner dependencies', () => {
+                const tree = dependencies.dependencyTree(
+                    `getBotTagValues("#abc", getBotTagValues("#def"))`
+                );
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'tag',
+                        name: 'abc',
+                        dependencies: [
+                            {
+                                type: 'tag',
+                                name: 'def',
+                                dependencies: [],
+                            },
+                        ],
+                    },
+                ]);
+            });
+        });
+
+        describe('player.isDesigner()', () => {
+            it('should replace with tag dependency on aux.designers', () => {
+                const tree = dependencies.dependencyTree(`player.isDesigner()`);
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'tag',
+                        name: 'aux.designers',
+                        dependencies: [],
+                    },
+                ]);
+            });
+
+            it('should remove inner dependencies', () => {
+                const tree = dependencies.dependencyTree(
+                    `player.isDesigner(player.isDesigner("#def"))`
+                );
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'tag',
+                        name: 'aux.designers',
+                        dependencies: [],
+                    },
+                ]);
+            });
+        });
+
+        describe('player.hasFileInInventory()', () => {
+            // TODO: Improve to use a more restricted dependency style
+            it('should replace with an all dependency', () => {
+                const tree = dependencies.dependencyTree(
+                    `player.hasFileInInventory(file)`
+                );
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'all',
+                    },
+                ]);
+            });
+        });
+
+        const playerContextCases = [
+            ['player.getMenuContext', 'aux._userMenuContext'],
+            ['player.getInventoryContext', 'aux._userInventoryContext'],
+            ['player.currentContext', 'aux._userContext'],
+        ];
+
+        describe.each(playerContextCases)('%s()', (name, tag) => {
+            it(`should replace with a tag dependency on ${tag}`, () => {
+                const tree = dependencies.dependencyTree(`${name}()`);
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'tag',
+                        name: tag,
+                        dependencies: [],
+                    },
+                ]);
+            });
+
+            it(`should remove inner dependencies`, () => {
+                const tree = dependencies.dependencyTree(
+                    `${name}(getBot('#abc'))`
+                );
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'tag',
+                        name: tag,
+                        dependencies: [],
+                    },
+                ]);
+            });
+        });
     });
 });
