@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.9.3
+
+### Date: 06/18/2019
+
+### Changes:
+
+-   Improvements
+    -   Changed labels to read "Bot" instead of "File".
+
 ## V0.9.2
 
 ### Date: 06/18/2019
