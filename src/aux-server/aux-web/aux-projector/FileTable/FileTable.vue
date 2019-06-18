@@ -16,7 +16,7 @@
                     @click="createFile()"
                 >
                     <cube-icon></cube-icon>
-                    <md-tooltip>Create Empty File</md-tooltip>
+                    <md-tooltip>Create Empty Bot</md-tooltip>
                 </md-button>
                 <md-button class="md-icon-button create-surface" @click="createSurface()">
                     <hex-icon></hex-icon>
@@ -58,10 +58,10 @@
         </div>
         <div>
             <p v-if="isSearch && searchResult === null" class="no-search-results-message">
-                No files found
+                No bots found
             </p>
             <p v-else-if="!hasFiles" class="no-files-message">
-                Select a file or search
+                Select a bot or search
             </p>
             <div v-else-if="hasFiles" class="file-table-wrapper">
                 <div class="file-section-holder-outer" v-if="getTagBlacklist().length > 0">
@@ -217,7 +217,7 @@
                                 Clear Tags
                             </md-button>
                             <md-button v-else class="md-dense" @click="deleteFile(file)">
-                                Destroy File
+                                Destroy Bot
                             </md-button>
                         </div>
                     </template>
