@@ -108,11 +108,7 @@ describe('DependencyManager', () => {
                         dependencies: [],
                     },
                 ],
-                extra: [
-                    // TODO:
-                    // { type: 'this', members: ['sum'] },
-                    // { type: 'this', members: ['num'] },
-                ],
+                extra: [{ type: 'this' }, { type: 'this' }],
             });
         });
 
@@ -141,8 +137,7 @@ describe('DependencyManager', () => {
             });
         });
 
-        // TODO:
-        it.skip('should be able to retrieve the dependents for a tag update on itself', async () => {
+        it('should be able to retrieve the dependents for a tag update on itself', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -154,7 +149,7 @@ describe('DependencyManager', () => {
                     sum: '=math.sum(#num)',
                     numObjs: '=math.sum(@num().length, @sum().length)',
                     num: 55,
-                    extra: '=this.sum + this.num',
+                    extra: '=getTag(this, "#sum") + getTag(this, "#num")',
                 })
             );
 
@@ -167,8 +162,7 @@ describe('DependencyManager', () => {
             });
         });
 
-        // TODO:
-        it.skip('should handle this references by adding a reference for each group of members', async () => {
+        it('should ignore this references (for now)', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -177,7 +171,7 @@ describe('DependencyManager', () => {
 
             await tree.addFile(
                 createFile('test', {
-                    extra: '=this.aux.label.color',
+                    extra: '=getTag(this, "#sum") + getTag(this, "#num")',
                 })
             );
 
@@ -187,27 +181,46 @@ describe('DependencyManager', () => {
 
             expect(deps).toEqual(
                 new Map([
-                    [
-                        'test:aux',
-                        {
-                            test: new Set(['extra']),
-                        },
-                    ],
-                    [
-                        'test:aux.label',
-                        {
-                            test: new Set(['extra']),
-                        },
-                    ],
-                    [
-                        'test:aux.label.color',
-                        {
-                            test: new Set(['extra']),
-                        },
-                    ],
+                    ['sum', { test: new Set(['extra']) }],
+                    ['num', { test: new Set(['extra']) }],
                 ])
             );
         });
+
+        // it('should handle this references by adding a reference for each accessed tag', async () => {
+        //     let subject = new DependencyManager();
+
+        //     let tree = new AuxCausalTree(storedTree(site(1)));
+
+        //     await tree.root();
+
+        //     await tree.addFile(
+        //         createFile('test', {
+        //             extra: '=getTag(this, "#aux.label.color") + getTag(this, "#aux.label")',
+        //         })
+        //     );
+
+        //     subject.addFile(tree.value['test']);
+
+        //     const deps = subject.getDependentMap();
+
+        //     expect(deps).toEqual(
+        //         new Map([
+        //             [
+        //                 'test:aux.label.color',
+        //                 {
+        //                     test: new Set(['extra']),
+        //                 },
+        //             ],
+        //             [
+        //                 'test:aux.label',
+        //                 {
+        //                     test: new Set(['extra']),
+        //                 },
+        //             ],
+        //         ])
+        //     );
+        // });
 
         it('should return a list of affected files for files with tag expressions', async () => {
             let subject = new DependencyManager();
@@ -545,7 +558,7 @@ describe('DependencyManager', () => {
             expect(files).toEqual(new Map([['test', ['newTag', 'tag']]]));
         });
 
-        it.skip('should update the file dependencies', async () => {
+        it('should update the file dependencies', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -554,7 +567,7 @@ describe('DependencyManager', () => {
 
             await tree.addFile(
                 createFile('test', {
-                    tag: '=this.sum',
+                    tag: '=getTag(this, "#sum")',
                     sum: '=#abc',
                     hello: '=#world',
                 })
@@ -582,12 +595,15 @@ describe('DependencyManager', () => {
                 sum: [{ type: 'tag', name: 'other', dependencies: [] }],
                 newTag: [{ type: 'file', name: 'num', dependencies: [] }],
                 tag: [
-                    // TODO:
-                    // { type: 'this', members: ['sum'] }
+                    {
+                        type: 'tag_value',
+                        name: 'sum',
+                        dependencies: [{ type: 'this' }],
+                    },
+                    { type: 'this' },
                 ],
             });
 
-            // TODO:
             expect(dependents).toEqual(
                 new Map([
                     [
@@ -597,7 +613,7 @@ describe('DependencyManager', () => {
                         },
                     ],
                     [
-                        'test:sum',
+                        'sum',
                         {
                             test: new Set(['tag']),
                         },
@@ -614,8 +630,7 @@ describe('DependencyManager', () => {
             );
         });
 
-        // TODO:
-        it.skip('should return a list of affected files for files with tag expressions', async () => {
+        it('should return a list of affected files for files with tag expressions', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -639,7 +654,7 @@ describe('DependencyManager', () => {
             await tree.addFile(
                 createFile('test3', {
                     sum: 55,
-                    formula3: '=this.sum',
+                    formula3: '=getTag(this, "#sum")',
                 })
             );
 
@@ -654,7 +669,7 @@ describe('DependencyManager', () => {
             await tree.updateFile(tree.value['test3'], {
                 tags: {
                     sum: 44,
-                    formula4: '=this.sum + 5',
+                    formula4: '=getTag(this, "#sum") + 5',
                 },
             });
 
@@ -670,8 +685,7 @@ describe('DependencyManager', () => {
             });
         });
 
-        // TODO:
-        it.skip('should return a list of affected files for files with file expressions', async () => {
+        it('should return a list of affected files for files with file expressions', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -696,7 +710,7 @@ describe('DependencyManager', () => {
                 createFile('test3', {
                     name: 'file3',
                     abc: 5,
-                    formula3: '=this.name',
+                    formula3: '=getTag(this, "#name")',
                 })
             );
 
@@ -711,7 +725,7 @@ describe('DependencyManager', () => {
             await tree.updateFile(tree.value['test3'], {
                 tags: {
                     name: 'awesomeFile',
-                    formula4: '=this.abc + 5',
+                    formula4: '=getTag(this, "#abc") + 5',
                 },
             });
 
@@ -727,8 +741,7 @@ describe('DependencyManager', () => {
             });
         });
 
-        // TODO:
-        it.skip('should handle removing a files tag that has dependencies', async () => {
+        it('should handle removing a files tag that has dependencies', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -753,7 +766,7 @@ describe('DependencyManager', () => {
                 createFile('test3', {
                     name: 'file3',
                     abc: 5,
-                    formula3: '=this.name',
+                    formula3: '=getTag(this, "#name")',
                 })
             );
 
@@ -840,8 +853,7 @@ describe('DependencyManager', () => {
             });
         });
 
-        // TODO:
-        it.skip('should handle nested dependencies and this references', async () => {
+        it('should handle nested dependencies and this references', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -850,7 +862,7 @@ describe('DependencyManager', () => {
 
             await tree.addFile(
                 createFile('test', {
-                    val: '=this.formula',
+                    val: '=getTag(this, "#formula")',
                     formula: '=#formula2',
                 })
             );
@@ -874,10 +886,8 @@ describe('DependencyManager', () => {
             );
 
             let updates = subject.addFile(tree.value['test']);
-            // expect(updates).toEqual({});
 
             updates = subject.addFile(tree.value['test2']);
-            // expect(updates).toEqual({});
 
             updates = subject.addFile(tree.value['test3']);
 

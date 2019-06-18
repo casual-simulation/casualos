@@ -370,28 +370,10 @@ export class DependencyManager {
         file: File
     ) {
         for (let dep of formulaDependencies) {
-            if (dep.type !== 'all') {
+            if (dep.type !== 'all' && dep.type !== 'this') {
                 const fileDeps = this._getFileDependents(dep.name, file.id);
                 fileDeps.add(tag);
             }
-            // TODO:
-            // if (dep.type === 'this') {
-            //     // let chain: string = null;
-            //     // for (let member of dep.members) {
-            //     //     if (!chain) {
-            //     //         chain = member;
-            //     //     } else {
-            //     //         chain += '.' + member;
-            //     //     }
-            //     //     const fileDeps = this._getFileDependents(
-            //     //         `${file.id}:${chain}`,
-            //     //         file.id
-            //     //     );
-            //     //     fileDeps.add(tag);
-            //     // }
-            // } else {
-
-            // }
         }
     }
 
@@ -402,7 +384,7 @@ export class DependencyManager {
     ) {
         const deps = dependencies[tag];
         for (let dep of deps) {
-            if (dep.type !== 'all') {
+            if (dep.type !== 'all' && dep.type !== 'this') {
                 const tagDeps = this._dependentMap.get(dep.name);
                 if (tagDeps) {
                     delete tagDeps[file.id];
