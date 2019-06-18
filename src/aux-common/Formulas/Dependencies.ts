@@ -16,7 +16,12 @@ export class Dependencies {
         const flat = this.flatten(replaced);
         return <AuxScriptExternalDependency[]>(
             flat.filter(
-                f => f.type === 'all' || f.type === 'tag' || f.type === 'file'
+                f =>
+                    f.type === 'all' ||
+                    f.type === 'tag' ||
+                    f.type === 'file' ||
+                    f.type === 'this' ||
+                    f.type === 'tag_value'
             )
         );
     }
@@ -60,7 +65,8 @@ export class Dependencies {
             if (
                 n.type === 'file' ||
                 n.type === 'tag' ||
-                n.type === 'function'
+                n.type === 'function' ||
+                n.type === 'tag_value'
             ) {
                 return [n, ...this.flatten(n.dependencies)];
             }
@@ -93,7 +99,11 @@ export class Dependencies {
         ): IterableIterator<AuxScriptSimpleDependency> {
             for (let node of nodes) {
                 let replaced = false;
-                if (node.type !== 'literal' && node.type !== 'all') {
+                if (
+                    node.type !== 'literal' &&
+                    node.type !== 'all' &&
+                    node.type !== 'this'
+                ) {
                     const replacement = replacements[node.name];
                     if (replacement) {
                         yield* replacement(node);
@@ -129,10 +139,15 @@ export class Dependencies {
         if (root) {
             return this._simpleRootDependencies(root);
         }
+
+        const name = this.getMemberName(node);
+        if (name.indexOf('this') === 0) {
+            return [{ type: 'this' }];
+        }
         return [
             <AuxScriptSimpleMemberDependency>{
                 type: 'member',
-                name: this.getMemberName(node),
+                name: name,
             },
         ];
     }
@@ -387,137 +402,151 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
     }
 
     return {
+        getTag: (node: AuxScriptSimpleFunctionDependency) => {
+            if (node.dependencies.length >= 2) {
+                const extras = node.dependencies.slice(1);
+                return extras.map((n, i) => {
+                    const name = getTagName(n);
+                    if (!name) {
+                        throw new Error(
+                            '[Dependencies] Unable to determine which tag the getTag() call is dependent on.'
+                        );
+                    }
+                    return {
+                        type: 'tag_value',
+                        name: name,
+                        dependencies:
+                            i === 0 ? replace([node.dependencies[0]]) : [],
+                    };
+                });
+            }
+            return [];
+        },
         getBot: (node: AuxScriptSimpleFunctionDependency) => {
             if (node.dependencies.length >= 1) {
                 const name = getTagName(node.dependencies[0]);
-                if (name) {
-                    return [
-                        {
-                            type: 'file',
-                            name: name,
-                            dependencies: replace(node.dependencies.slice(1)),
-                        },
-                    ];
-                } else {
+                if (!name) {
                     throw new Error(
                         '[Dependencies] Unable to determine which tag the getBot() call is dependent on.'
                     );
                 }
+                return [
+                    {
+                        type: 'file',
+                        name: name,
+                        dependencies: replace(node.dependencies.slice(1)),
+                    },
+                ];
             }
             return [];
         },
         getBots: (node: AuxScriptSimpleFunctionDependency) => {
             if (node.dependencies.length >= 1) {
                 const name = getTagName(node.dependencies[0]);
-                if (name) {
-                    return [
-                        {
-                            type: 'file',
-                            name: name,
-                            dependencies: replace(node.dependencies.slice(1)),
-                        },
-                    ];
-                } else {
+                if (!name) {
                     throw new Error(
                         '[Dependencies] Unable to determine which tag the getBots() call is dependent on.'
                     );
                 }
+                return [
+                    {
+                        type: 'file',
+                        name: name,
+                        dependencies: replace(node.dependencies.slice(1)),
+                    },
+                ];
             }
             return [];
         },
         getBotTagValues: (node: AuxScriptSimpleFunctionDependency) => {
             if (node.dependencies.length >= 1) {
                 const name = getTagName(node.dependencies[0]);
-                if (name) {
-                    return [
-                        {
-                            type: 'tag',
-                            name: name,
-                            dependencies: replace(node.dependencies.slice(1)),
-                        },
-                    ];
-                } else {
+                if (!name) {
                     throw new Error(
                         '[Dependencies] Unable to determine which tag the getBots() call is dependent on.'
                     );
                 }
+                return [
+                    {
+                        type: 'tag',
+                        name: name,
+                        dependencies: replace(node.dependencies.slice(1)),
+                    },
+                ];
             }
             return [];
         },
         getBotsInContext: (node: AuxScriptSimpleFunctionDependency) => {
             if (node.dependencies.length >= 1) {
                 const name = getNodeValue(node.dependencies[0]);
-                if (name) {
-                    return [
-                        {
-                            type: 'file',
-                            name: name,
-                            dependencies: [],
-                        },
-                    ];
-                } else {
+                if (!name) {
                     throw new Error(
                         '[Dependencies] Unable to determine which context the getBotsInContext() call is dependent on.'
                     );
                 }
+                return [
+                    {
+                        type: 'file',
+                        name: name,
+                        dependencies: [],
+                    },
+                ];
             }
             return [];
         },
         getBotsInStack: (node: AuxScriptSimpleFunctionDependency) => {
             if (node.dependencies.length >= 2) {
                 const name = getNodeValue(node.dependencies[1]);
-                if (name) {
-                    return [
-                        {
-                            type: 'file',
-                            name: name,
-                            dependencies: [],
-                        },
-                        {
-                            type: 'file',
-                            name: name + '.x',
-                            dependencies: [],
-                        },
-                        {
-                            type: 'file',
-                            name: name + '.y',
-                            dependencies: [],
-                        },
-                    ];
-                } else {
+                if (!name) {
                     throw new Error(
                         '[Dependencies] Unable to determine which context the getBotsInStack() call is dependent on.'
                     );
                 }
+                return [
+                    {
+                        type: 'file',
+                        name: name,
+                        dependencies: [],
+                    },
+                    {
+                        type: 'file',
+                        name: name + '.x',
+                        dependencies: [],
+                    },
+                    {
+                        type: 'file',
+                        name: name + '.y',
+                        dependencies: [],
+                    },
+                ];
             }
             return [];
         },
         getNeighboringBots: (node: AuxScriptSimpleFunctionDependency) => {
             if (node.dependencies.length >= 2) {
                 const name = getNodeValue(node.dependencies[1]);
-                if (name) {
-                    return [
-                        {
-                            type: 'file',
-                            name: name,
-                            dependencies: [],
-                        },
-                        {
-                            type: 'file',
-                            name: name + '.x',
-                            dependencies: [],
-                        },
-                        {
-                            type: 'file',
-                            name: name + '.y',
-                            dependencies: [],
-                        },
-                    ];
-                } else {
+                if (!name) {
                     throw new Error(
                         '[Dependencies] Unable to determine which context the getBotsInStack() call is dependent on.'
                     );
                 }
+                return [
+                    {
+                        type: 'file',
+                        name: name,
+                        dependencies: [],
+                    },
+                    {
+                        type: 'file',
+                        name: name + '.x',
+                        dependencies: [],
+                    },
+                    {
+                        type: 'file',
+                        name: name + '.y',
+                        dependencies: [],
+                    },
+                ];
             }
             return [];
         },
@@ -663,12 +692,16 @@ export type AuxScriptSimpleDependency =
     | AuxScriptSimpleFunctionDependency
     | AuxScriptSimpleMemberDependency
     | AuxScriptSimpleLiteralDependency
-    | AuxScriptSimpleAllDependency;
+    | AuxScriptSimpleAllDependency
+    | AuxScriptSimpleThisDependency
+    | AuxScriptSimpleTagValueDependency;
 
 export type AuxScriptExternalDependency =
     | AuxScriptSimpleFileDependency
     | AuxScriptSimpleTagDependency
-    | AuxScriptSimpleAllDependency;
+    | AuxScriptSimpleAllDependency
+    | AuxScriptSimpleThisDependency
+    | AuxScriptSimpleTagValueDependency;
 
 export interface AuxScriptSimpleFileDependency {
     type: 'file';
@@ -697,6 +730,16 @@ export type AuxScriptSimpleLiteralDependency = AuxScriptLiteralDependency;
 
 export interface AuxScriptSimpleAllDependency {
     type: 'all';
+}
+
+export interface AuxScriptSimpleThisDependency {
+    type: 'this';
+}
+
+export interface AuxScriptSimpleTagValueDependency {
+    type: 'tag_value';
+    name: string;
+    dependencies: AuxScriptSimpleDependency[];
 }
 
 export interface AuxScriptReplacements {

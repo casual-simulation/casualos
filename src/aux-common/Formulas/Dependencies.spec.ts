@@ -788,12 +788,10 @@ describe('Dependencies', () => {
                     name: 'test.abc',
                     dependencies: [
                         {
-                            type: 'member',
-                            name: 'this.xyz',
+                            type: 'this',
                         },
                         {
-                            type: 'member',
-                            name: 'this.def',
+                            type: 'this',
                         },
                         {
                             type: 'literal',
@@ -1317,6 +1315,11 @@ describe('Dependencies', () => {
                         },
                     ],
                 },
+                {
+                    type: 'tag_value',
+                    name: 'test',
+                    dependencies: [{ type: 'this' }],
+                },
             ]);
 
             expect(result).toEqual([
@@ -1393,6 +1396,14 @@ describe('Dependencies', () => {
                     type: 'tag',
                     name: 'qwerty',
                     dependencies: [],
+                },
+                {
+                    type: 'tag_value',
+                    name: 'test',
+                    dependencies: [{ type: 'this' }],
+                },
+                {
+                    type: 'this',
                 },
             ]);
         });
@@ -1733,6 +1744,45 @@ describe('Dependencies', () => {
                 ]);
             });
         });
+
+        describe('getTag()', () => {
+            it('should replace with a tag value dependency', () => {
+                const tree = dependencies.dependencyTree(
+                    `getTag(myVar, '#abc.xyz')`
+                );
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'tag_value',
+                        name: 'abc.xyz',
+                        dependencies: [{ type: 'member', name: 'myVar' }],
+                    },
+                ]);
+            });
+
+            it('should support multiple tags in a single call', () => {
+                const tree = dependencies.dependencyTree(
+                    `getTag(myVar, '#abc.xyz', '#test')`
+                );
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'tag_value',
+                        name: 'abc.xyz',
+                        dependencies: [{ type: 'member', name: 'myVar' }],
+                    },
+                    {
+                        type: 'tag_value',
+                        name: 'test',
+                        dependencies: [],
+                    },
+                ]);
+            });
+        });
     });
 
     describe('calculateAuxDependencies()', () => {
@@ -1752,6 +1802,20 @@ describe('Dependencies', () => {
         it.each(cases)('%s', (formula, expected) => {
             const tags = dependencies.calculateAuxDependencies(formula);
             expect(tags).toEqual(expected);
+        });
+
+        it('should return tag_value dependencies', () => {
+            const deps = dependencies.calculateAuxDependencies(
+                'getTag(abc, "#def")'
+            );
+
+            expect(deps).toEqual([
+                {
+                    type: 'tag_value',
+                    name: 'def',
+                    dependencies: [{ type: 'member', name: 'abc' }],
+                },
+            ]);
         });
     });
 });
