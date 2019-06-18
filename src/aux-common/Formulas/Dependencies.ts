@@ -7,6 +7,21 @@ export class Dependencies {
     private _transpiler: Transpiler = new Transpiler();
 
     /**
+     * Calculates which tags and files the given code is dependent on.
+     */
+    calculateAuxDependencies(code: string): AuxScriptExternalDependency[] {
+        const tree = this.dependencyTree(code);
+        const simple = this.simplify(tree);
+        const replaced = this.replaceAuxDependencies(simple);
+        const flat = this.flatten(replaced);
+        return <AuxScriptExternalDependency[]>(
+            flat.filter(
+                f => f.type === 'all' || f.type === 'tag' || f.type === 'file'
+            )
+        );
+    }
+
+    /**
      * Gets a dependency tree for the given code.
      * @param code The code to parse into a dependency tree.
      */
@@ -648,6 +663,11 @@ export type AuxScriptSimpleDependency =
     | AuxScriptSimpleFunctionDependency
     | AuxScriptSimpleMemberDependency
     | AuxScriptSimpleLiteralDependency
+    | AuxScriptSimpleAllDependency;
+
+export type AuxScriptExternalDependency =
+    | AuxScriptSimpleFileDependency
+    | AuxScriptSimpleTagDependency
     | AuxScriptSimpleAllDependency;
 
 export interface AuxScriptSimpleFileDependency {

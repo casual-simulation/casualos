@@ -908,9 +908,7 @@ describe('Dependencies', () => {
         });
 
         it('should include members that the tree is dependent on', () => {
-            const result = dependencies.simplify(<
-                AuxScriptExpressionDependencies
-            >{
+            const result = dependencies.simplify({
                 type: 'expression',
                 dependencies: [
                     {
@@ -1734,6 +1732,26 @@ describe('Dependencies', () => {
                     },
                 ]);
             });
+        });
+    });
+
+    describe('calculateAuxDependencies()', () => {
+        const cases: any = [
+            [
+                'getBot("#tag")',
+                [
+                    {
+                        type: 'file',
+                        name: 'tag',
+                        dependencies: [],
+                    },
+                ],
+            ],
+        ];
+
+        it.each(cases)('%s', (formula, expected) => {
+            const tags = dependencies.calculateAuxDependencies(formula);
+            expect(tags).toEqual(expected);
         });
     });
 });
